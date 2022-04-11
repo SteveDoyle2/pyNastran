@@ -59,36 +59,36 @@ def write_floats_13e(vals: List[float]) -> List[str]:
     return vals2
 
 
-def write_imag_floats_13e(vals: List[float], is_mag_phase: bool) -> str:
-    vals2 = []
+def write_imag_floats_13e(vals: List[float], is_mag_phase: bool) -> List[str]:
+    vals2 = []  # type: List[str]
 
     if is_mag_phase:
         for v in vals:
-            v2 = '%13.6E' % abs(v)
-            if v2 in (' 0.000000E+00', '-0.000000E+00'):
-                v2 = ' 0.0'
-            vals2.append(v2)
+            v_str = '%13.6E' % abs(v)
+            if v_str in (' 0.000000E+00', '-0.000000E+00'):
+                v_str = ' 0.0'
+            vals2.append(v_str)
 
         # phase
         for v in vals:
             v2 = np.angle(v, deg=True)
 
-            v3 = '%-13.4f' % v2 if v2 >= 0.0 else '%-13.4f' % (v2 + 360.)
-            if v3 == '0.0000       ':
-                v3 = '   0.0'
-            vals2.append(v3)
+            v_str = '%-13.4f' % v2 if v2 >= 0.0 else '%-13.4f' % (v2 + 360.)
+            if v_str == '0.0000       ':
+                v_str = '   0.0'
+            vals2.append(v_str)
     else:
         for v in vals:
-            v2 = '%13.6E' % v.real
-            if v2 in (' 0.000000E+00', '-0.000000E+00'):
-                v2 = ' 0.0'
-            vals2.append(v2)
+            v_str = '%13.6E' % v.real
+            if v_str in (' 0.000000E+00', '-0.000000E+00'):
+                v_str = ' 0.0'
+            vals2.append(v_str)
 
         for v in vals:
-            v3 = '%13.6E' % v.imag
-            if v3 in (' 0.000000E+00', '-0.000000E+00'):
-                v3 = ' 0.0'
-            vals2.append(v3)
+            v_str = '%13.6E' % v.imag
+            if v_str in (' 0.000000E+00', '-0.000000E+00'):
+                v_str = ' 0.0'
+            vals2.append(v_str)
     return vals2
 
 

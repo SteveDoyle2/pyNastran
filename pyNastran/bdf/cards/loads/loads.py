@@ -40,7 +40,7 @@ class Load(BaseCard):
         """get the node ids"""
         try:
             return self._node_ids()
-        except:
+        except Exception:
             #raise
             raise RuntimeError('error processing nodes for \n%s' % str(self))
 
@@ -314,7 +314,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         if load_id is None and temp_id is None:
             msg = 'LSEQ load_id/temp_id must not be None; load_id=%s temp_id=%s' % (load_id, temp_id)
             raise RuntimeError(msg)
-        assert len(card) <= 5, 'len(LSEQ card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(LSEQ card) = {len(card):d}\ncard={card}'
         return LSEQ(sid, excite_id, load_id, tid=temp_id, comment=comment)
 
     @classmethod
@@ -568,7 +568,7 @@ class LOADCYH(BaseCard):
         if load2 != 0:
             load_ids.append(load2)
             scales.append(scale2)
-        assert len(card) <= 7, 'len(LOADCYH card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(LOADCYH card) = {len(card):d}\ncard={card}'
         return LOADCYH(sid, scale, hid, htype, scales, load_ids, comment=comment)
 
     @classmethod
@@ -933,7 +933,7 @@ class SPCD(Load):
         msg = ', which is required by SPCD=%s' % (self.sid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         msg = ', which is required by SPCD=%s' % (self.sid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
@@ -1352,7 +1352,7 @@ class RFORCE(Load):
         racc = double_or_blank(card, 9, 'racc', default=0.)
         mb = integer_or_blank(card, 10, 'mb', default=0)
         idrf = integer_or_blank(card, 11, 'idrf', default=0)
-        assert len(card) <= 12, 'len(RFORCE card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(RFORCE card) = {len(card):d}\ncard={card}'
         return RFORCE(sid, nid, scale, [r1, r2, r3],
                       cid=cid, method=method, racc=racc, mb=mb, idrf=idrf, comment=comment)
 
@@ -1539,19 +1539,19 @@ class RFORCE1(Load):
 
         """
         sid = integer(card, 1, 'sid')
-        nid = integer_or_blank(card, 2, 'nid', 0)
-        cid = integer_or_blank(card, 3, 'cid', 0)
-        scale = double_or_blank(card, 4, 'scale', 1.)
+        nid = integer_or_blank(card, 2, 'nid', default=0)
+        cid = integer_or_blank(card, 3, 'cid', default=0)
+        scale = double_or_blank(card, 4, 'scale', default=1.)
         r123 = [
-            double_or_blank(card, 5, 'r1', 1.),
-            double_or_blank(card, 6, 'r2', 0.),
-            double_or_blank(card, 7, 'r3', 0.),
+            double_or_blank(card, 5, 'r1', default=1.),
+            double_or_blank(card, 6, 'r2', default=0.),
+            double_or_blank(card, 7, 'r3', default=0.),
         ]
-        method = integer_or_blank(card, 8, 'method', 1)
-        racc = double_or_blank(card, 9, 'racc', 0.)
-        mb = integer_or_blank(card, 10, 'mb', 0)
-        group_id = integer_or_blank(card, 11, 'group_id', 0)
-        assert len(card) <= 12, 'len(RFORCE1 card) = %i\ncard=%s' % (len(card), card)
+        method = integer_or_blank(card, 8, 'method', default=1)
+        racc = double_or_blank(card, 9, 'racc', default=0.)
+        mb = integer_or_blank(card, 10, 'mb', default=0)
+        group_id = integer_or_blank(card, 11, 'group_id', default=0)
+        assert len(card) <= 12, f'len(RFORCE1 card) = {len(card):d}\ncard={card}'
         return RFORCE1(sid, nid, scale, cid=cid, r123=r123, racc=racc,
                        mb=mb, group_id=group_id, method=method, comment=comment)
 

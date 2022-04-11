@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from numpy import setdiff1d, unique, array, hstack
+from numpy import setdiff1d, unique, hstack
 
 from qtpy import QtCore
 from qtpy.QtWidgets import (

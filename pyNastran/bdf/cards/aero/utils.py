@@ -296,12 +296,12 @@ def make_monpnt1s_from_cids(model: BDF, nids, cids, cid_to_inids,
 
         ids = nidsi
         model.add_set1(cid, ids, is_skin=False, comment='')
-        aecomp_name = 'ae%i' % cid
+        aecomp_name = 'ae%d' % cid
         list_type = 'SET1'
         lists = [cid]
         model.add_aecomp(aecomp_name, list_type, lists, comment='')
 
-        name = 'c%i' % cid
+        name = 'c%d' % cid
         axes = '123456'
         model.add_monpnt1(name, label, axes, aecomp_name, [0., 0., 0.], cp=cid, cd=None, comment='')
         nnodes_old = nnodes

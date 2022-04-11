@@ -7,7 +7,10 @@ defines:
                                    max_aspect_ratio=100., max_taper_ratio=4.0)
 
 """
+from typing import List
 import numpy as np
+from cpylog import SimpleLogger
+from pyNastran.bdf.bdf import BDF
 
 SIDE_MAP = {}
 SIDE_MAP['CHEXA'] = {
@@ -22,10 +25,11 @@ PIOVER2 = np.pi / 2.
 PIOVER3 = np.pi / 3.
 
 
-def delete_bad_shells(model,
-                      min_theta=0.1, max_theta=175.,
-                      max_skew=70., max_aspect_ratio=100.,
-                      max_taper_ratio=4.0):
+def delete_bad_shells(model: BDF,
+                      min_theta: float=0.1, max_theta: float=175.,
+                      max_skew: float=70., max_aspect_ratio: float=100.,
+                      max_taper_ratio: float=4.0,
+                      ) -> BDF:
     """
     Removes bad CQUAD4/CTRIA3 elements
 
@@ -67,9 +71,10 @@ def get_node_map(model):
         nid_map[nid] = i
     return nid_map
 
-def get_bad_shells(model, xyz_cid0, nid_map,
-                   min_theta=0.1, max_theta=175., max_skew=70.,
-                   max_aspect_ratio=100., max_taper_ratio=4.0):
+def get_bad_shells(model: BDF, xyz_cid0, nid_map,
+                   min_theta: float=0.1, max_theta: float=175., max_skew: float=70.,
+                   max_aspect_ratio: float=100., max_taper_ratio: float=4.0,
+                   ) -> List[int]:
     """
     Get the bad shell elements
 
@@ -103,6 +108,7 @@ def get_bad_shells(model, xyz_cid0, nid_map,
     shells with a edge length=0.0 are automatically added
 
     """
+    log = model.log
     min_theta_quad = min_theta
     min_theta_tri = min_theta
     min_theta_quad = np.radians(min_theta_quad)
@@ -688,7 +694,11 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
     return quality
 
 def tri_quality(p1, p2, p3):
-    """gets the quality metrics for a tri"""
+    """
+    gets the quality metrics for a tri
+
+    area, max_skew, aspect_ratio, min_theta, max_theta, dideal_theta, min_edge_length
+    """
     e1 = (p1 + p2) / 2.
     e2 = (p2 + p3) / 2.
     e3 = (p3 + p1) / 2.
@@ -780,8 +790,6 @@ def quad_quality(element, p1, p2, p3, p4):
     length14 = np.linalg.norm(v14)
     min_edge_length = min(length21, length32, length43, length14)
 
-    v42 = p4 - p2
-    v31 = p3 - p1
     p12 = (p1 + p2) / 2.
     p23 = (p2 + p3) / 2.
     p34 = (p3 + p4) / 2.

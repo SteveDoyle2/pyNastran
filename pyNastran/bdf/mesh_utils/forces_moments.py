@@ -9,7 +9,7 @@ defines methods to access force/moment/pressure/temperature data:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Tuple, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -20,8 +20,13 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
-def get_forces_moments_array(model: BDF, p0, load_case_id : int,
-                             eid_map, nnodes, normals, dependents_nodes,
+def get_forces_moments_array(model: BDF,
+                             p0,
+                             load_case_id: int,
+                             eid_map,
+                             nnodes: int,
+                             normals,
+                             dependents_nodes,
                              nid_map=None, include_grav=False):
     """
     Gets the forces/moments on the nodes.
@@ -36,7 +41,7 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
         ???
     eid_map : Dict[int eid : int index]
         ???
-    nnodes : ???
+    nnodes : int
         the number of nodes in nid_map
     normals : (nelements, 3) float ndarray
         the normal vectors for the shells
@@ -475,8 +480,11 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float3
     ----------
     load_case_id : int
         the load id
-    nid_map : ???; default=None -> auto
-        ???
+    nid_map : Dict[node_id, value] default=None -> auto
+        node_id : int
+            node id
+        value : int
+            index
     dtype : str; default='float32'
         the type of the temperature array
 
@@ -520,7 +528,9 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float3
             model.log.debug(load.rstrip())
     return is_temperatures, temperatures
 
-def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,
+def get_load_arrays(model: BDF, subcase_id: int,
+                    eid_map, node_ids,
+                    normals,
                     nid_map=None, stop_on_failure=True):
     """
     Gets the following load arrays

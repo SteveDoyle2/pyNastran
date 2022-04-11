@@ -126,7 +126,7 @@ class CDAMP1(LineDamper):
         #: component number
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 7, 'len(CDAMP1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(CDAMP1 card) = {len(card):d}\ncard={card}'
         return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
     @classmethod
@@ -321,7 +321,7 @@ class CDAMP2(LineDamper):
                 integer_or_blank(card, 5, 'n2', 0)]
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 7, 'len(CDAMP2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(CDAMP2 card) = {len(card):d}\ncard={card}'
         return CDAMP2(eid, b, nids, c1, c2, comment=comment)
 
     @classmethod
@@ -489,7 +489,7 @@ class CDAMP3(LineDamper):
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 's1', 0),
                 integer_or_blank(card, 4, 's2', 0)]
-        assert len(card) <= 5, 'len(CDAMP3 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(CDAMP3 card) = {len(card):d}\ncard={card}'
         return CDAMP3(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -638,7 +638,7 @@ class CDAMP4(LineDamper):
             integer_or_blank(card, 3 + ioffset, 'n1', 0),
             integer_or_blank(card, 4 + ioffset, 'n2', 0)
         ]
-        assert len(card) <= 9, 'len(CDAMP4 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(CDAMP4 card) = {len(card):d}\ncard={card}'
         return CDAMP4(eid, b, nids, comment=comment)
 
     @classmethod
@@ -795,7 +795,7 @@ class CDAMP5(LineDamper):
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1', 0),
                 integer_or_blank(card, 4, 'n2', 0)]
-        assert len(card) <= 5, 'len(CDAMP5 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(CDAMP5 card) = {len(card):d}\ncard={card}'
         return CDAMP5(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -960,7 +960,7 @@ class CVISC(LineDamper):
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'n1', 0),
                 integer_or_blank(card, 4, 'n2', 0)]
-        assert len(card) <= 5, 'len(CVISC card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(CVISC card) = {len(card):d}\ncard={card}'
         return CVISC(eid, pid, nids, comment=comment)
 
     @classmethod

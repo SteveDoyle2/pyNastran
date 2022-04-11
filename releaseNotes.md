@@ -8,7 +8,7 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 
 Release Notes
 =============
-v1.3.5 (2022/4/xx)
+v1.3.4 (2022/4/xx)
 ------------------
 This is a bug fix only release with the key reason being API dependency changes:
  - numpy
@@ -20,9 +20,59 @@ Requirements/Packages:
  - support for NX 2019.0, 2019.1
 
 Programmatics:
- - Supports Python 3.7 and 3.8
+ - supports Python 3.7-3.10
+ - support for nptyping 1.1.1-2.0
+ - 
 
+overall:
+ - typing
+ - spelling corrections
+ - cleaner setup.py files / packages.py
 BDF:
+ - require that nastran_format is a string
+ - stripping first line of card to fix bug (i thought it was to get the card name, but I don't remember...)
+ - FLUTTER method can be string_or_blank (default='L')
+ - MTRANS now supported for SOL 200 (vs only MTRAN; they're the same)
+ - subcase add_op2_data supports OUG1F
+
+
+BDF 2:
+ - bug fixes:
+   - SET1 (and more generally any card that has 1,THRU,10 or 1,THRU,10,BY,2) now supports blank values
+   - adding get_density to MAT11
+   - MATT1 g11_tid=0 update to None if it's 0
+   - MATT3 table_ids update to None if they're 0
+   - PARAM, DRESP1, DVCRELx now supports numpy int/floats
+   - better type checking of PARAMs
+   - correcting number of PLOAD2 elements allowed
+   - PLOAD4 surf_or_line, line_load_dir set to blank when they're default (to fix NX issue)
+   - I2 for BOX section
+   - I12 now returns I12 instead of [A, I1, I2, I12]
+   - AUTOSPC (from case control) now works in bdf_renumber
+ - added:
+   - GRID method get_position_wrt_coord_ref
+   - DVCRELx CMASS/M and CELAS4/K options
+   - DCONSTR support for FLUTTER/PK
+   - more DRESP1 PBEAM/PBEAML support
+   - DRESP1 FATIGUE support
+   - DRESP2 now references DNODE
+   - DVMREL2 now supports MAT2, MAT8
+   - collapse_bad_quads now removes degenerate quads
+   - bdf_convert now supports CFAST/PFAST
+f06 flutter:
+ - bug fixes:
+   - supporting any number modes
+ - adding:
+   - repr
+   - mach, dynamic pressure, altitude plots
+op2 geom:
+ - PSOLID/FFLUID support
+gui:
+ - fixed CELAS2 bug where nid2 is an SPOINT
+
+other:
+ - format_converter now has defaults if you're using the functions
+
 
 v1.3.3 (2020/6/28)
 ------------------

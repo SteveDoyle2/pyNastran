@@ -12,7 +12,7 @@ All cards are Method objects.
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import List, Any, TYPE_CHECKING
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -84,7 +84,7 @@ class EIGB(Method):
         self.G = G
         self.C = C
         if not self.L1 < self.L2:
-            msg = 'L1=%s L2=%s; L1<L2 is requried' % (self.L1, self.L2)
+            msg = 'L1=%s L2=%s; L1<L2 is required' % (self.L1, self.L2)
             raise RuntimeError(msg)
         if self.method not in ['INV', 'SINV', None]:
             msg = 'method must be INV or SINV.  method=%r' % self.method
@@ -120,7 +120,7 @@ class EIGB(Method):
         else:
             G = integer_or_blank(card, 10, 'G')
             C = components_or_blank(card, 11, 'C')
-        assert len(card) <= 12, 'len(EIGB card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(EIGB card) = {len(card):d}\ncard={card}'
         return EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, G, C,
                     comment=comment)
 
@@ -623,7 +623,7 @@ class EIGP(Method):
         alpha2 = double(card, 5, 'alpha2')
         omega2 = double(card, 6, 'omega2')
         m2 = integer(card, 7, 'm2')
-        assert len(card) == 8, 'len(EIGP card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 8, f'len(EIGP card) = {len(card):d}\ncard={card}'
         return EIGP(sid, alpha1, omega1, m1, alpha2, omega2, m2, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -647,6 +647,10 @@ class EIGP(Method):
 class EIGR(Method):
     """
     Defines data needed to perform real eigenvalue analysis
+
+    # msc/nx
+    | EIGR | SID  | METH| F1 | F2 | NE | ND |   |      |
+    |      | NORM |  G  |  C |    |    |    |   |      |
     """
     type = 'EIGR'
     allowed_methods = [
@@ -784,7 +788,7 @@ class EIGR(Method):
         else:
             G = blank(card, 10, 'G')
             C = blank(card, 11, 'C')
-        assert len(card) <= 12, 'len(EIGR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(EIGR card) = {len(card):d}\ncard={card}'
         return EIGR(sid, method, f1, f2, ne, nd, norm, G, C, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -962,12 +966,12 @@ class EIGRL(Method):
         #else:
         norm = string_or_blank(card, 8, 'norm')
 
-        #assert len(card) <= 9, 'len(EIGRL card) = %i\ncard=%s' % (len(card), card)
-        assert len(card) <= 10, 'len(EIGRL card) = %i\ncard=%s' % (len(card), card)
+        #assert len(card) <= 9, f'len(EIGRL card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 10, f'len(EIGRL card) = {len(card):d}\ncard={card}'
 
         #msg = 'norm=%s sol=%s' % (self.norm, sol)
         #assert self.norm in ['MASS', 'MAX'],msg
-        #assert card.nFields()<9,'card = %s' %(card.fields(0))
+        #assert len(card) < 9,'card = %s' % (card.fields(0))
         return EIGRL(sid, v1, v2, nd, msglvl, maxset, shfscl, norm,
                      options, values, comment=comment)
 
@@ -977,7 +981,7 @@ class EIGRL(Method):
         #if self.norm is None:
             #if model.is_modal_solution():
                 #self.norm = 'MASS'
-            #elif mdoel.is_buckling_solution():
+            #elif model.is_buckling_solution():
                 #self.norm = 'MAX'
 
     def raw_fields(self):

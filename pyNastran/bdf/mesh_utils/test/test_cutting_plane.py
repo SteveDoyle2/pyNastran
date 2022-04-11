@@ -1,7 +1,7 @@
 """defines cutting plane tests"""
 import os
 from itertools import count
-from typing import Tuple, Any
+from typing import Tuple, List, Any
 import unittest
 import numpy as np
 #import PySide

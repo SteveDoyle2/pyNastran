@@ -4,13 +4,25 @@ defines:
              is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False)
 
 """
+from __future__ import annotations
 from io import StringIO
+from pathlib import PurePath
+from typing import Tuple, List, Optional, Any, TYPE_CHECKING
+
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_renumber_starting_ids_from_model
+if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
+    MAPPER = Dict[str, Dict[int, int]]
 
-def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None, size=8,
-              is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False):
+def bdf_merge(bdf_filenames: List[str],
+              bdf_filename_out: Optional[str]=None,
+              renumber: bool=True, encoding: Optional[str]=None,
+              size: int=8, is_double: bool=False,
+              cards_to_skip: Optional[List[str]]=None,
+              skip_case_control_deck: bool=False,
+              log: Optional[SimpleLogger]=None) -> Tuple[BDF, List[MAPPER]]:
     """
     Merges multiple BDF into one file
 
@@ -72,7 +84,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     if not len(bdf_filenames) > 1:
         raise RuntimeError("You can't merge one BDF...bdf_filenames=%s" % str(bdf_filenames))
     for bdf_filename in bdf_filenames:
-        if not isinstance(bdf_filename, (str, BDF, StringIO)):
+        if not isinstance(bdf_filename, (str, BDF, StringIO, PurePath)):
             raise TypeError('bdf_filenames is not a string/BDF...%s' % bdf_filename)
 
         #bdf_filenames = [bdf_filenames]
@@ -114,7 +126,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         #for param, val in sorted(starting_id_dict.items()):
             #print('  %-3s %s' % (param, val))
 
-        model.log.info('secondary=%s' % bdf_filename)
+        model.log.debug('secondary=%s' % bdf_filename)
         if isinstance(bdf_filename, BDF):
             model2_renumber = bdf_filename
         else:
@@ -158,7 +170,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
     mapper_renumber = None
     if renumber:
-        model.log.info('final renumber...')
+        model.log.debug('final renumber...')
 
         starting_id_dict = {
             'cid' : 1,
@@ -187,7 +199,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
                                      mapper_renumber=mapper_renumber)
     return model, mappers_final
 
-def _apply_scalar_cards(model, model2_renumber):
+def _apply_scalar_cards(model: BDF, model2_renumber: BDF) -> None:
     """apply cards from model2 to model if they don't exist in model"""
     if model.aero is None and model2_renumber.aero:
         model.aero = model2_renumber.aero
@@ -198,7 +210,11 @@ def _apply_scalar_cards(model, model2_renumber):
         if key not in model.params:
             model.params[key] = param
 
-def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
+
+def _assemble_mapper(mappers: List[MAPPER],
+                     mapper_0: MAPPER,
+                     data_members: List[str],
+                     mapper_renumber: Optional[MAPPER]=None) -> None:
     """
     Assemble final mappings from all original ids to the ids in the merged and possibly
     renumbered model.
@@ -259,7 +275,7 @@ def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
 
     return mappers_all
 
-def _get_mapper_0(model):
+def _get_mapper_0(model: BDF) -> MAPPER:
     """
     Get the mapper for the first model.
 
@@ -375,7 +391,7 @@ def _get_mapper_0(model):
 
     return mapper
 
-def _renumber_mapper(mapper_0, mapper_renumber):
+def _renumber_mapper(mapper_0: MAPPER, mapper_renumber: MAPPER):
     """
     Renumbers a mapper
 
@@ -410,20 +426,39 @@ def _renumber_mapper(mapper_0, mapper_renumber):
     mapper = mapper_0.copy()
     # apply any renumbering
     for map_type, sub_mapper in mapper.items():
-        for id_ in sub_mapper.keys():
+        for id_ in sub_mapper:
             if sub_mapper[id_] == mapper_renumber[map_type][id_]:
                 continue
             sub_mapper[id_] = mapper_renumber[map_type][id_]
     return mapper
 
-def _dict_key_to_key(dictionary):
+def _dict_key_to_key(dictionary) -> Dict[int, int]:
     """creates a dummy map from the nominal key to the nominal key"""
     return {key : key for key in dictionary.keys()}
 
-def _dicts_key_to_key(dictionaries):
+def _dicts_key_to_key(dictionaries: List[Dict[int, Any]]) -> Dict[int, int]:
     """
-    creates a dummy map from the nominal key to the nominal key for
-    multiple input dictionaries
+    Creates a dummy map from the nominal key to the nominal key for
+    multiple input dictionaries.  This is intended for use with:
+     - SPCs, MPCs, Loads
+
+    Example
+    -------
+    spcs = {
+        # sid : List[SPCs]
+        1  : [
+                SPC1(1, '456', [1,2,3,4]),
+                SPC1(1, '23', [1,2,3]),
+            ]
+        10 : [
+                SPC1(10, '1', [1,2,3,4])
+            ],
+    }
+    properties = {}
+    dictionaries = [model.spcs, model.mpcs]
+    out_map = _dicts_key_to_key(dictionaries)
+    >>> out_map
+    {1:1, 2:2, 10:10}
 
     """
     out = {}

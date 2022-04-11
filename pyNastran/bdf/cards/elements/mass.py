@@ -36,7 +36,7 @@ class PointMassElement(Element):
     def __init__(self):
         Element.__init__(self)
 
-    def repr_fields(self) -> List[Optional[int, float, str]]:
+    def repr_fields(self) -> List[Union[int, float, str, None]]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -81,7 +81,7 @@ class CMASS1(PointMassElement):
         nids = [1, 2]
         return CMASS1(eid, pid, nids, c1=0, c2=0, comment='')
 
-    def __init__(self, eid, pid, nids, c1=0, c2=0, comment=''):
+    def __init__(self, eid: int, pid: int, nids: List[int], c1: int=0, c2: int=0, comment: str=''):
         # type: (int, int, [int, int], int, int, str) -> CMASS1
         """
         Creates a CMASS1 card
@@ -130,7 +130,7 @@ class CMASS1(PointMassElement):
         c1 = integer_or_blank(card, 4, 'c1')
         g2 = integer_or_blank(card, 5, 'g2')
         c2 = integer_or_blank(card, 6, 'c2')
-        assert len(card) <= 7, 'len(CMASS1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(CMASS1 card) = {len(card):d}\ncard={card}'
         return CMASS1(eid, pid, [g1, g2], c1, c2, comment=comment)
 
     @classmethod
@@ -367,7 +367,7 @@ class CMASS2(PointMassElement):
         c1 = integer_or_blank(card, 4, 'c1')
         g2 = integer_or_blank(card, 5, 'g2')
         c2 = integer_or_blank(card, 6, 'c2')
-        assert len(card) <= 7, 'len(CMASS2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(CMASS2 card) = {len(card):d}\ncard={card}'
         return CMASS2(eid, mass, [g1, g2], c1, c2, comment=comment)
 
     @classmethod
@@ -589,7 +589,7 @@ class CMASS3(PointMassElement):
         pid = integer_or_blank(card, 2, 'pid', eid)
         s1 = integer_or_blank(card, 3, 's1')
         s2 = integer_or_blank(card, 4, 's2')
-        assert len(card) <= 5, 'len(CMASS3 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(CMASS3 card) = {len(card):d}\ncard={card}'
         return CMASS3(eid, pid, [s1, s2], comment=comment)
 
     @classmethod
@@ -728,10 +728,10 @@ class CMASS4(PointMassElement):
     def add_card(cls, card, icard=0, comment=''):
         ioffset = icard * 4
         eid = integer(card, 1 + ioffset, 'eid')
-        mass = double_or_blank(card, 2 + ioffset, 'mass', 0.)
+        mass = double_or_blank(card, 2 + ioffset, 'mass', default=0.)
         s1 = integer(card, 3 + ioffset, 's1')
-        s2 = integer_or_blank(card, 4 + ioffset, 's2', 0)
-        assert len(card) <= 9, 'len(CMASS4 card) = %i\ncard=%s' % (len(card), card)
+        s2 = integer_or_blank(card, 4 + ioffset, 's2', default=0)
+        assert len(card) <= 9, f'len(CMASS4 card) = {len(card):d}\ncard={card}'
         return CMASS4(eid, mass, [s1, s2], comment=comment)
 
     @classmethod
@@ -982,7 +982,7 @@ class CONM1(PointMassElement):
         m[5, 3] = double_or_blank(card, 22, 'M64', 0.)
         m[5, 4] = double_or_blank(card, 23, 'M65', 0.)
         m[5, 5] = double_or_blank(card, 24, 'M66', 0.)
-        assert len(card) <= 25, 'len(CONM1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 25, f'len(CONM1 card) = {len(card):d}\ncard={card}'
         return CONM1(eid, nid, m, cid=cid, comment=comment)
 
     @classmethod
@@ -1388,7 +1388,7 @@ class CONM2(PointMassElement):
             # transform to global
             #dx = self.cid_ref.transform_node_to_global(self.X)
             #matrix = self.cid_ref.beta()
-            raise NotImplementedError('CONM2 intertia method for CID != 0 is not implemented.')
+            raise NotImplementedError('CONM2 inertia method for CID != 0 is not implemented.')
             #A2 = A * matrix
             #return A2  # correct for offset using dx???
 

@@ -362,7 +362,7 @@ def sum_forces_moments_elements(model: BDF, p0: int, loadcase_id: int,
     Element Types: PLOAD1, PLOAD2, PLOAD4, GRAV
 
     If you have a CQUAD4 (eid=3) with a PLOAD4 (sid=3) and a FORCE
-    card (nid=5) acting on it, you can incldue the PLOAD4, but
+    card (nid=5) acting on it, you can include the PLOAD4, but
     not the FORCE card by using:
 
     For just pressure:
@@ -1045,7 +1045,6 @@ def _get_dof_map(model: BDF) -> Dict[Tuple[int, int], int]:
             #i += 1
         else:
             raise NotImplementedError(node_ref)
-
     # we want the GRID points to be first
     assert len(spoints) == 0, spoints
 
@@ -1059,7 +1058,9 @@ def _get_dof_map(model: BDF) -> Dict[Tuple[int, int], int]:
 
 def _Fg_vector_from_loads(model: BDF, loads, ndof_per_grid: int, ndof: int,
                           fdtype: str='float64'):
-    """helper method for ``get_static_force_vector_from_subcase_id``"""
+    """
+    helper method for ``get_static_force_vector_from_subcase_id``
+    requires cross-referencing
     dof_map, unused_ps = _get_dof_map(model)
     Fg = np.zeros([ndof], dtype=fdtype)
     skipped_load_types = set([])
@@ -1155,10 +1156,13 @@ def _add_force(Fg: np.ndarray, dof_map: Dict[Tuple[int, int], int], model: BDF,
                 # rectangular
                 pass
             Tgb = Tbg.T
-            fglobal = np.dot(Tgb, fbasic)
+            fglobal = Tgb @ fbasic
     else:
         raise NotImplementedError(f'node_ref.cd={node_ref.cd} cid={cid} load:\n{str(load)}')
 
+    # TODO: how does this handle GRIDs vs. SPOINTs?
+    #       GRIDs have a DOF 1-3
+    #       SPOINTs have a DOF of 0
     for dof in range(3):
         irow = dof_map[(nid, dof+offset)]
         Fg[irow] += fglobal[dof]

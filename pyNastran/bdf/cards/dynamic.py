@@ -6,9 +6,9 @@ All dynamic control cards are defined in this file.  This includes:
  * FREQ
  * FREQ1
  * FREQ2
- * FREQ3 (not implemented)
+ * FREQ3
  * FREQ4
- * FREQ5 (not implemented)
+ * FREQ5
  * NLPCI
  * NLPARM
  * TSTEP
@@ -532,7 +532,7 @@ class FREQ1(BaseCard):
         f1 = double_or_blank(card, 2, 'f1', 0.0)
         df = double(card, 3, 'df')
         ndf = integer_or_blank(card, 4, 'ndf', 1)
-        assert len(card) <= 5, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(FREQ card) = {len(card):d}\ncard={card}'
         return FREQ1(sid, f1, df, ndf, comment=comment)
 
     def raw_fields(self):
@@ -621,7 +621,7 @@ class FREQ2(BaseCard):
         f1 = double(card, 2, 'f1')  # default=0.0 ?
         f2 = double(card, 3, 'f2')
         nf = integer_or_blank(card, 4, 'nf', 1)
-        assert len(card) <= 5, 'len(FREQ2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(FREQ2 card) = {len(card):d}\ncard={card}'
         return FREQ2(sid, f1, f2, nf, comment=comment)
         #return FREQ(sid, freqs, comment=comment)
 
@@ -792,7 +792,7 @@ class FREQ4(FREQ):
         f2 = double_or_blank(card, 3, 'f2', 1.e20)
         fspread = double_or_blank(card, 4, 'fspd', 0.1)
         nfm = integer_or_blank(card, 5, 'nfm', 3)
-        assert len(card) <= 6, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(FREQ card) = {len(card):d}\ncard={card}'
         return FREQ4(sid, f1=f1, f2=f2, fspread=fspread, nfm=nfm, comment=comment)
 
     def raw_fields(self):
@@ -1058,7 +1058,7 @@ class NLPARM(BaseCard):
         max_bisect = integer_or_blank(card, 17, 'max_bisect', default=5)
         max_r = double_or_blank(card, 21, 'max_r', default=20.)
         rtol_b = double_or_blank(card, 23, 'rtol_b', default=20.)
-        assert len(card) <= 24, 'len(NLPARM card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 24, f'len(NLPARM card) = {len(card):d}\ncard={card}'
         return NLPARM(nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv,
                       int_out, eps_u, eps_p, eps_w, max_div,
                       max_qn, max_ls, fstress,
@@ -2210,12 +2210,12 @@ class TSTEPNL(BaseCard):
         no = integer_or_blank(card, 4, 'no', 1)
 
         #: .. note:: not listed in all QRGs
-        method = string_or_blank(card, 5, 'method', 'ADAPT')
+        method = string_or_blank(card, 5, 'method', default='ADAPT')
         if method == 'ADAPT':
-            kstep = integer_or_blank(card, 6, 'kStep', 2)
+            kstep = integer_or_blank(card, 6, 'kStep', default=2)
         elif method == 'ITER':
-            kstep = integer_or_blank(card, 6, 'kStep', 10)
-        elif method in ['AUTO', 'TSTEP', 'SEMI']:
+            kstep = integer_or_blank(card, 6, 'kStep', default=10)
+        elif method in {'AUTO', 'TSTEP', 'SEMI'}:
             kstep = None
             #kstep = blank(card, 6, 'kStep') #: .. todo:: not blank
         else:
@@ -2245,7 +2245,7 @@ class TSTEPNL(BaseCard):
 
         # not listed in all QRGs
         min_iter = integer_or_blank(card, 24, 'minIter')
-        assert len(card) <= 25, 'len(TSTEPNL card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 25, f'len(TSTEPNL card) = {len(card):d}\ncard={card}'
         return TSTEPNL(
             sid, ndt, dt, no, method, kstep, max_iter, conv,
             eps_u, eps_p, eps_w, max_div, max_qn, max_ls, fstress,
@@ -2514,7 +2514,7 @@ class TIC(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         self.nodes_ref = model.Nodes(self.nodes)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:

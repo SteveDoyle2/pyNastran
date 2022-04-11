@@ -422,7 +422,7 @@ class GRAV(BaseCard):
                    double_or_blank(card, 5, 'N2', 0.0),
                    double_or_blank(card, 6, 'N3', 0.0)])
         mb = integer_or_blank(card, 7, 'mb', 0)
-        assert len(card) <= 8, 'len(GRAV card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(GRAV card) = {len(card):d}\ncard={card}'
         return GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
 
     @classmethod
@@ -1732,10 +1732,11 @@ class MOMENT(Load0):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
+        node_id = self.node_id
         if size == 8:
             scid = set_string8_blank_if_default(self.Cid(), 0)
             msg = 'MOMENT  %8i%8i%8s%8s%8s%8s%8s\n' % (
-                self.sid, self.node_id,
+                self.sid, node_id,
                 scid, print_float_8(self.mag), print_float_8(self.xyz[0]),
                 print_float_8(self.xyz[1]), print_float_8(self.xyz[2]))
         else:
@@ -1743,7 +1744,7 @@ class MOMENT(Load0):
             if is_double:
                 msg = ('MOMENT* %16i%16i%16s%s\n'
                        '*       %16s%16s%16s\n') % (
-                           self.sid, self.node_id,
+                           self.sid, node_id,
                            scid, print_scientific_double(self.mag),
                            print_scientific_double(self.xyz[0]),
                            print_scientific_double(self.xyz[1]),
@@ -1751,7 +1752,7 @@ class MOMENT(Load0):
             else:
                 msg = ('MOMENT* %16i%16i%16s%s\n'
                        '*       %16s%16s%16s\n') % (
-                           self.sid, self.node_id,
+                           self.sid, node_id,
                            scid, print_float_16(self.mag), print_float_16(self.xyz[0]),
                            print_float_16(self.xyz[1]), print_float_16(self.xyz[2]))
         return self.comment + msg
@@ -2030,10 +2031,10 @@ class PLOAD(Load):
         nodes = [integer(card, 3, 'n1'),
                  integer(card, 4, 'n2'),
                  integer(card, 5, 'n3')]
-        n4 = integer_or_blank(card, 6, 'n4', 0)
+        n4 = integer_or_blank(card, 6, 'n4', default=0)
         if n4:
             nodes.append(n4)
-        assert len(card) <= 7, 'len(PLOAD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(PLOAD card) = {len(card):d}\ncard={card}'
         return PLOAD(sid, pressure, nodes, comment=comment)
 
     @classmethod
@@ -2215,7 +2216,7 @@ class PLOAD1(Load):
         p1 = double(card, 6, 'p1')
         x2 = double_or_blank(card, 7, 'x2', x1)
         p2 = double_or_blank(card, 8, 'p2', p1)
-        assert len(card) <= 9, 'len(PLOAD1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(PLOAD1 card) = {len(card):d}\ncard={card}'
         return PLOAD1(sid, eid, load_type, scale, x1, p1, x2, p2, comment=comment)
 
     @classmethod
@@ -2340,7 +2341,8 @@ class PLOAD2(Load):
         eids = [1, 2]
         return PLOAD2(sid, pressure, eids, comment='')
 
-    def __init__(self, sid, pressure, eids, comment=''):
+    def __init__(self, sid: int, pressure: float,
+                 eids: List[int], comment: str=''):
         """
         Creates a PLOAD2 card, which defines an applied load normal to the quad/tri face
 
@@ -2386,9 +2388,10 @@ class PLOAD2(Load):
             e1 = integer(card, 3, 'Element1')
             e2 = integer(card, 5, 'Element1')
             eids = [i for i in range(e1, e2 + 1)]
-            assert len(card) == 6, 'len(PLOAD2 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) == 6, f'len(PLOAD2 card) = {len(card):d}\ncard={card}'
         else:
             eids = fields(integer, card, 'eid', i=3, j=len(card))
+            assert len(eids) <= 6, f'A maximum of 6 eids may be on the PLOAD2; n={len(eids)}\ncard={card}'
         return PLOAD2(sid, pressure, eids, comment=comment)
 
     @classmethod
@@ -2444,7 +2447,7 @@ class PLOAD2(Load):
     def raw_fields(self) -> List[Any]:
         list_fields = ['PLOAD2', self.sid, self.pressure]
         eids = self.element_ids
-        if len(eids) <= 5:
+        if len(eids) <= 6:
             list_fields += eids
         else:
             eids.sort()
@@ -2731,7 +2734,7 @@ class PLOAD4(Load):
 
         surf_or_line = string_or_blank(card, 13, 'sorl', 'SURF')
         line_load_dir = string_or_blank(card, 14, 'ldir', 'NORM')
-        assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 15, f'len(PLOAD4 card) = {len(card):d}\ncard={card}'
         return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector,
                       surf_or_line, line_load_dir, comment=comment)
 
@@ -2812,7 +2815,7 @@ class PLOAD4(Load):
         if self.eids:
             self.eids_ref = model.Elements(self.eids, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         msg = ', which is required by PLOAD4 sid=%s' % self.sid
         #self.eid = model.Element(self.eid, msg=msg)
         if self.cid is not None:
@@ -2905,7 +2908,7 @@ class PLOAD4(Load):
                 try:
                     list_fields.append('THRU')
                     eidi = eids[-1]
-                except:
+                except Exception:
                     print("g1  = %s" % self.g1)
                     print("g34 = %s" % self.g34)
                     print("self.eids = %s" % self.eids)
@@ -2926,8 +2929,8 @@ class PLOAD4(Load):
             n1, n2, n3 = self.nvector
             list_fields.append(cid)
             list_fields += [n1, n2, n3]
-            surf_or_line = self.surf_or_line
-            line_load_dir = self.line_load_dir
+            surf_or_line = set_blank_if_default(self.surf_or_line, 'SURF')
+            line_load_dir = set_blank_if_default(self.line_load_dir, 'NORM')
         else:
             list_fields += [None, None, None, None]
             surf_or_line = set_blank_if_default(self.surf_or_line, 'SURF')
@@ -2956,7 +2959,7 @@ class PLOAD4(Load):
                 try:
                     list_fields.append('THRU')
                     eidi = eids[-1]
-                except:
+                except Exception:
                     print("g1  = %s" % self.g1)
                     print("g34 = %s" % self.g34)
                     print("self.eids = %s" % self.eids)

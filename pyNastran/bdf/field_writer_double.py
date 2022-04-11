@@ -14,11 +14,11 @@ def print_scientific_double(value: float) -> str:
     Double Precision Scientific Notation:  5.0D+1
     """
     if value < 0:
-        Format = "%16.9e"
+        fmt = "%16.9e"
     else:
-        Format = "%16.10e"
+        fmt = "%16.10e"
 
-    svalue = Format % value
+    svalue = fmt % value
     field = svalue.replace('e', 'D')
 
     if field == '-0.0000000000D+00':
@@ -72,7 +72,7 @@ def print_card_double(fields: List[Union[int, float, str, None]], wipe_fields: b
               format where the first 8 is the card name or
               blank (continuation).  The last 8-character field indicates
               an optional continuation, but because it's a left-justified
-              unneccessary field, print_card doesnt use it.
+              unnecessary field, print_card doesnt use it.
 
     .. code-block:: python
 
@@ -95,7 +95,7 @@ def print_card_double(fields: List[Union[int, float, str, None]], wipe_fields: b
 
     try:
         out = '%-8s' % (fields[0] + '*')
-    except:
+    except Exception:
         print("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
         raise
@@ -104,7 +104,7 @@ def print_card_double(fields: List[Union[int, float, str, None]], wipe_fields: b
         field = fields[i]
         try:
             out += print_field_double(field)
-        except:
+        except Exception:
             print("bad fields = %s" % fields)
             raise
         if i % 4 == 0:  # allow 1+4 fields per line

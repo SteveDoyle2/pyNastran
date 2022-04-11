@@ -69,7 +69,7 @@ class CaseControlDeck:
 
         """
         # pulls the logger from the BDF object
-        self.log = get_logger(log, level="debug")
+        self.log = get_logger(log=log, level="debug")
         self.debug = False
 
         self.sol_200_map = {
@@ -959,13 +959,14 @@ class CaseControlDeck:
         subcase0.add_parameter_to_global_subcase('ANALYSIS', analysis)
         #subcase.add_parameter_to_global_subcase('DESSUB', dessub)
 
-    def _add_parameter_to_subcase(self, key, value, options, param_type, isubcase):
+    def _add_parameter_to_subcase(self, key: str, value: Any, options: List[str],
+                                  param_type: str, isubcase: int) -> int:
         """Internal method"""
         if self.debug:
-            a = 'key=%r' % key
-            b = 'value=%r' % value
-            c = 'options=%r' % options
-            d = 'param_type=%r' % param_type
+            a = f'key={key!r}'
+            b = f'value={value!r}'
+            c = f'options={options!r}'
+            d = f'param_type={param_type!r}'
             msg = "_adding isubcase=%s %-12s %-12s %-12s %-12s" % (isubcase, a,
                                                                    b, c, d)
             self.log.debug(msg)
@@ -977,7 +978,7 @@ class CaseControlDeck:
             self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
                               overwrite_subcase=True)
             if self.debug:
-                msg = "copied subcase i_from_subcase=%r to i_to_subcase=%r" % (0, isubcase)
+                msg = f'copied subcase i_from_subcase=0 to i_to_subcase={isubcase!r}'
                 self.log.debug(msg)
         elif isubcase not in self.subcases:  # initialize new subcase
             #self.isubcase += 1 # is handled in the read code

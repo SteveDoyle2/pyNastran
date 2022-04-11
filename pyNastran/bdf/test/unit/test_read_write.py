@@ -2,7 +2,7 @@ import os
 import unittest
 from io import StringIO
 
-from cpylog import get_logger
+from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.bdf_interface.pybdf import BDFInputPy
@@ -22,7 +22,7 @@ MODEL_PATH = os.path.join(ROOT_PATH, '../', 'models')
 class TestReadWriteFiles(unittest.TestCase):
     def test_read_include_dir_2_files(self):
         """tests a model that will write to multiple files"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         full_path = os.path.join(TEST_PATH)
         model = BDF(log=log, debug=False)
         bdf_filename = 'test_include2.bdf'
@@ -66,7 +66,7 @@ class TestReadWriteFiles(unittest.TestCase):
 
     def test_isat_files(self):
         """read/writes the isat model with the file structure"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'iSat', 'iSat_launch_100Hz.dat')
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          save_file_structure=True, skip_cards=None, read_cards=None,
@@ -110,7 +110,7 @@ class TestReadWrite(unittest.TestCase):
         """
         Tests 1 read method and various write methods
         """
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         model = BDF(log=log, debug=False)
 
         bdf_name = os.path.join(MESH_UTILS_PATH, 'test_mass.dat')
@@ -129,7 +129,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_punch_1(self):
         """Tests punch file reading"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         model = BDF(log=log, debug=False)
         bdf_name = os.path.join(TEST_PATH, 'include_dir', 'include_alt.inc')
         model.read_bdf(bdf_name, xref=False, punch=True)
@@ -141,7 +141,7 @@ class TestReadWrite(unittest.TestCase):
     def test_read_include_dir_1(self):
         """Tests various read methods using various include files"""
         # fails correctly
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         model = BDF(log=log, debug=False)
         bdf_name = os.path.join(TEST_PATH, 'test_include.bdf')
         model.read_bdf(bdf_name, xref=True, punch=False)
@@ -157,7 +157,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_read_include_dir_2(self):
         full_path = os.path.join(TEST_PATH)
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         model = BDF(log=log, debug=False)
         bdf_filename = 'test_include2.bdf'
         if not os.path.exists(bdf_filename):
@@ -169,7 +169,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_enddata_1(self):
         """There is an ENDDATA is in the baseline BDF, so None -> ENDDATA"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         model2 = BDF(log=log, debug=False)
 
         bdf_filename = 'test_include.bdf'
@@ -201,7 +201,7 @@ class TestReadWrite(unittest.TestCase):
         """
         There is no ENDDATA is in the baseline BDF, so None -> no ENDDATA
         """
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         model2 = BDF(log=log, debug=False)
         bdf_name = os.path.join(MESH_UTILS_PATH, 'test_mass.dat')
         model2.read_bdf(bdf_name, xref=True, punch=False)
@@ -228,7 +228,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_add_card_skip(self):
         """tests that a fake card 'JUNK' is skipped"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         model = BDF(log=log, debug=False)
 
         card_name = 'JUNK'
@@ -245,7 +245,7 @@ class TestReadWrite(unittest.TestCase):
         assert 'JUNK           a       b       c' in msg, msg
 
     def test_add_card_fail(self):
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         model = BDF(log=log, debug=False)
         card_lines1 = ['GRID', 1, 'a', 'b', 'c']
         card_lines2 = ['GRID', 1, 'd', 'e', 'f']
@@ -264,7 +264,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_end(self):
         """tests multiple levels of includes"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         with open('a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -297,7 +297,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_end_02(self):
         """tests multiple levels of includes"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         with open('a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -326,7 +326,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_03(self):
         """tests executive/case control includes"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         with open('a.bdf', 'w') as bdf_file:
             bdf_file.write("INCLUDE 'executive_control.inc'\n\n")
             bdf_file.write('CEND\n')
@@ -366,7 +366,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_include_04(self):
         """tests pyNastran: punch=True with includes"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         with open('include4.bdf', 'w') as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             bdf_file.write('$ pyNastran: dumplines=True\n')
@@ -392,7 +392,7 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 1, 'nnodes=%s' % model.nnodes)
 
     def test_include_05(self):
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         with open('include5.bdf', 'w') as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             bdf_file.write('$ pyNastran: dumplines=True\n')
@@ -431,7 +431,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_encoding_write(self):
         """tests encodings in BDF header"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         mesh = BDF(log=log, debug=False)
         mesh.add_card(['GRID', 100000, 0, 43.91715, -29., .8712984], 'GRID')
         mesh.write_bdf('out.bdf')
@@ -451,7 +451,7 @@ class TestReadWrite(unittest.TestCase):
 
 
     def test_include_stop(self):
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         with open('a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -477,7 +477,7 @@ class TestReadWrite(unittest.TestCase):
         read_includes = True
         dumplines = False
         encoding = 'ascii'
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         model = BDFInputPy(read_includes, dumplines, encoding, log=log, debug=False)
         model.active_filenames = ['fake.file']
         with self.assertRaises(IOError):
@@ -494,7 +494,7 @@ class TestReadWrite(unittest.TestCase):
             'RBE2    1500002215000014  123456 1000177 1000178 1000186 1000187\n',
         ]
         bdf_filename = 'xref_test.bdf'
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.writelines(lines)
         with self.assertRaises(RuntimeError):
@@ -505,7 +505,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_disable_cards(self):
         """tests disabling cards"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         bdf_filename = os.path.join(ROOT_PATH, '..', 'models',
                                     'solid_bending', 'solid_bending.bdf')
         model = BDF(log=log, debug=False)

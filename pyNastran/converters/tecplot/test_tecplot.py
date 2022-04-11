@@ -1,6 +1,6 @@
 import os
 import unittest
-from cpylog import get_logger
+from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
@@ -19,6 +19,7 @@ NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 class TestTecplot(unittest.TestCase):
 
     def test_split_headers(self):
+        log = SimpleLogger(level='debug', encoding='utf-8')
         headers = [
             ('Zone I=    17, J=    17, K=     1, F=POINT', 4)
         ]
@@ -55,7 +56,7 @@ class TestTecplot(unittest.TestCase):
             #'ascii/simpxy2.dat',  # no xyz; it's a plot -> bad
             'ascii/tiny.dat',  # good
         ]
-        log = get_logger(log=None, level='warning', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         junk_plt = os.path.join(MODEL_PATH, 'junk.plt')
         for fname in tecplot_filenames:
             tecplot_filename = os.path.join(MODEL_PATH, fname)
@@ -68,7 +69,7 @@ class TestTecplot(unittest.TestCase):
 
     def test_tecplot_01(self):
         """CTRIA3 elements"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         tecplot_filename1 = os.path.join(MODEL_PATH, 'ascii', 'point_fetri_2d_02.dat')
         #tecplot_filename2 = os.path.join(MODEL_PATH, 'ascii', 'point_fetri_2d_02.dat_out')
 
@@ -88,7 +89,7 @@ class TestTecplot(unittest.TestCase):
 
     def test_tecplot_02(self):
         """CTETRA10 elements"""
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         nastran_filename1 = os.path.join(NASTRAN_MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         nastran_filename2 = os.path.join(NASTRAN_MODEL_PATH, 'solid_bending', 'solid_bending2.bdf')
         tecplot_filename = os.path.join(NASTRAN_MODEL_PATH, 'solid_bending', 'solid_bending.plt')
@@ -106,7 +107,7 @@ class TestTecplot(unittest.TestCase):
         cmd_line_format_converter(argv=argv, quiet=True)
 
     def test_tecplot_03(self):
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         nastran_filename = os.path.join(NASTRAN_MODEL_PATH, 'elements', 'static_elements.bdf')
         tecplot_filename = os.path.join(NASTRAN_MODEL_PATH, 'elements', 'static_elements.plt')
         unused_tecplot = nastran_to_tecplot_filename(nastran_filename, tecplot_filename, log=log)

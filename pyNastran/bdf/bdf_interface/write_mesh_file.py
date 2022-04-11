@@ -164,11 +164,11 @@ class WriteMeshs(WriteMesh):
         elif relative_dirname == '':
             out_filename0 = list(out_filenames.keys())[0]
             relative_dirname = os.path.dirname(os.path.abspath(out_filename0))
-            self.log.debug('relative_dirname = %s' % relative_dirname)
+            self.log.debug(f'relative_dirname = {relative_dirname}')
 
         self.log.debug('include_filenames:')
         for ifile, include_filenames in self.include_filenames.items():
-            self.log.debug('ifile=%i %s' % (ifile, include_filenames))
+            self.log.debug(f'ifile={ifile:d} {include_filenames}')
             assert len(include_filenames) > 0, include_filenames
             bdf_file = bdf_files[ifile]
             if bdf_file is None:

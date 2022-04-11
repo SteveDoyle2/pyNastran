@@ -187,7 +187,7 @@ class CGEN(BaseCard):
         #"""
         #pass
 
-    #def cross_reference(self, model, grdset=None):
+    #def cross_reference(self, model: BDF, grdset=None):
         #"""
         #Cross links the card so referenced cards can be extracted directly
 

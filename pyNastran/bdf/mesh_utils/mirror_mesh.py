@@ -11,6 +11,7 @@ This file defines:
 from typing import Set, Tuple, Union, Optional
 import numpy as np
 
+from pyNastran.nptyping import NDArray33float
 from pyNastran.bdf.cards.coordinate_systems import CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 from pyNastran.bdf.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
@@ -140,7 +141,7 @@ def _mirror_nodes(model: BDF, plane: str='xz'):
     Mirrors the GRIDs
 
     .. warning:: doesn't consider coordinate systems;
-                  it could, but you'd need 20 new coordinate systems
+                 it could, but you'd need 20 new coordinate systems
     .. warning:: doesn't mirror SPOINTs, EPOINTs
 
     """
@@ -171,7 +172,7 @@ def _mirror_nodes(model: BDF, plane: str='xz'):
 
     return nid_offset, plane
 
-def _mirror_nodes_plane(model: BDF, mirror_model: BDF, plane,
+def _mirror_nodes_plane(model: BDF, mirror_model: BDF, plane: NDArray33float,
                         use_nid_offset: bool=True) -> Tuple[int, str]:
     """
     Mirrors the GRIDs about an arbitrary plane
@@ -179,13 +180,14 @@ def _mirror_nodes_plane(model: BDF, mirror_model: BDF, plane,
     Parameters
     ----------
     model : BDF
-        ???
+        the original geometry
     mirror_model : BDF
-        ???
-    plane : str
-        ???
+        the location of the new geometry
+    plane : (3,3) float ndarray
+        3 vectors that defines the origin, zaxis and xzplane;
+        same as a CORD2R
     use_nid_offset : bool
-        ???
+        should the node offset be applied
 
     Returns
     -------
@@ -266,11 +268,14 @@ def _plane_to_iy(plane: str) -> Tuple[int, str]:
     elif plane_sorted == 'xy':
         iy = 2
     else:  # pragma: no cover
-        raise NotImplementedError("plane=%r and must be 'yz', 'xz', or 'xy'." % plane)
+        raise NotImplementedError(f"plane={plane!r} and must be 'yz', 'xz', or 'xy'.")
     return iy, plane_sorted
 
-def _mirror_elements(model: BDF, mirror_model: BDF,
-                     nid_offset: int, use_eid_offset: bool=True, plane: str='xz') -> None:
+def _mirror_elements(model: BDF,
+                     mirror_model: BDF,
+                     nid_offset: int,
+                     use_eid_offset: bool=True,
+                     plane: str='xz') -> int:
     """
     Mirrors the elements
 
@@ -278,6 +283,8 @@ def _mirror_elements(model: BDF, mirror_model: BDF,
     ----------
     model : BDF
         the base model
+    model : BDF
+        the mirrored model
     mirror_model : BDF
         the mirrored model
     nid_offset : int
@@ -519,7 +526,8 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
         _asymmetrically_mirror_coords(model, element_cids, cid_offset, plane)
     return
 
-def __mirror_masses(model, mirror_model, nid_offset, eid_offset):
+def __mirror_masses(model: BDF, mirror_model: BDF,
+                    nid_offset: int, eid_offset: int) -> None:
     """mirrors model.masses"""
     for eid, element in sorted(model.masses.items()):
         eid_mirror = eid + eid_offset
@@ -634,7 +642,8 @@ def __mirror_rigid_elements(model: BDF, mirror_model: BDF,
             mirror_model.log.warning('skipping:\n%s' % str(rigid_element))
 
 
-def _mirror_loads(model: BDF, nid_offset: int=0, eid_offset: int=0) -> None:
+def _mirror_loads(model: BDF, mirror_model: BDF,
+                  nid_offset: int=0, eid_offset: int=0) -> None:
     """
     Mirrors the loads.  A mirrored force acts in the same direction.
 
@@ -742,7 +751,8 @@ def _mirror_loads(model: BDF, nid_offset: int=0, eid_offset: int=0) -> None:
         if loads_new:
             loads += loads_new
 
-def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz') -> None:
+def _mirror_aero(model: BDF,
+                 nid_offset: int, plane: str='xz') -> None:
     """
     Mirrors the aero cards
 
@@ -916,7 +926,7 @@ def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz') -> None:
             #cid2 = None
             #alid2 = None
             if aesurf.cid2:
-                model.log.warning("skipping aesurf='{aesurf.label}' second cid/aelist")
+                model.log.warning(f"skipping aesurf='{aesurf.label}' second cid/aelist")
                 # combine this into the first coordinate system
                 #
                 #  don't mirror the coordinate system because it's antisymmetric?
@@ -938,8 +948,8 @@ def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz') -> None:
     model.pop_parse_errors()
 
 def _asymmetrically_mirror_coords2(model: BDF,
-                                  cids_nominal_set: Set[int],
-                                  cid_offset: int, plane: str='xz') -> None:
+                                   cids_nominal_set: Set[int],
+                                   cid_offset: int, plane: str='xz') -> None:
     """
     We'll invert i, but not j, which will invert k.
 
@@ -966,7 +976,7 @@ def _asymmetrically_mirror_coords(model: BDF,
     }
     cids = list(cids_nominal_set)
     cids.sort()
-    model.log.debug(f'asymmetrically mirroring coordinate systems')
+    model.log.debug('asymmetrically mirroring coordinate systems')
     for cid in cids:
 
         coord = model.Coord(cid)
@@ -985,14 +995,14 @@ def _asymmetrically_mirror_coords(model: BDF,
                 origin[2] *= -1
                 j[2] *= -1
             else:
-                model.log.warning('skipping coord_id=%s' % coord.cid)
+                model.log.warning(f'skipping coord_id={coord.cid}')
                 return
             #k = np.cross(i, j)
             coord_obj = coord_map[coord.type]  # CORD2R/C/S
             coord_new = coord_obj.add_ijk(cid_new, origin=origin, i=i, j=j, k=None,
                                           rid=0, comment='')
         else:
-            model.log.warning('skipping coord_id=%s' % coord.cid)
+            model.log.warning(f'skipping coord_id={coord.cid}')
             continue
         model.coords[cid_new] = coord_new
     return

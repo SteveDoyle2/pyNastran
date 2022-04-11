@@ -14,7 +14,26 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
                       is_subpanel_model: bool=True,
                       pid_method: str='aesurf') -> None:
-    """write the CAERO cards as CQUAD4s that can be visualized"""
+    """
+    Write the CAERO cards as CQUAD4s that can be visualized
+
+    model: BDF
+        a valid geometry
+    caero_bdf_filename : str
+        the file to write
+    is_subpanel_model : bool; default=True
+        True : write the subpanels as CQUAD4s
+        False : write the macro elements as CQUAD4s
+    pid_method : str; default='aesurf'
+        'aesurf' : write the referenced AESURF as the property ID
+                   main structure will be pid=1
+        'caero' : write the CAERO1 as the property id
+        'paero' : write the PAERO1 as the property id
+
+    """
+    if not pid_method in {'aesurf', 'caero', 'paero'}:
+        raise RuntimeError(f'pid_method={pid_method!r} is not [aesurf, caero, paero]')
+
     inid = 1
     mid = 1
     model.log.debug('---starting export_caero_model of %s---' % caero_bdf_filename)
@@ -91,9 +110,9 @@ def _write_subpanel_strips(bdf_file, model, caero_eid, points, elements):
         p3 = points[elements[i, 3], :]
         le = (p1 + p4)*0.5
         te = (p2 + p3)*0.5
-        dx = (p4 - p1)[1]
-        dy = (p4 - p1)[2]
-        span = math.sqrt(dx**2 + dy**2)
+        dy = (p4 - p1)[1]
+        dz = (p4 - p1)[2]
+        span = math.sqrt(dy**2 + dz**2)
         chord = te[0] - le[0]
         bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
             caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span))
@@ -114,7 +133,7 @@ def _get_subpanel_property(model: BDF, caero_id: int, eid: int, pid_method: str=
         caero = model.caeros[caero_id]
         pid = caero.pid
     else:  # pragma: no cover
-        raise RuntimeError('pid_method={pid_method!r} is not [aesurf, caero, paero]')
+        raise RuntimeError(f'pid_method={pid_method!r} is not [aesurf, caero, paero]')
 
     if pid is None:
         pid = 1
@@ -134,7 +153,7 @@ def _write_properties(model: BDF, bdf_file, pid_method: str='aesurf') -> None:
             bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
             bdf_file.write('PSHELL,%s,%s,0.1\n' % (caero_eid, 1))
     else:  # pragma: no cover
-        raise RuntimeError('pid_method={repr(pid_method)} is not [aesurf, caero, paero]')
+        raise RuntimeError(f'pid_method={repr(pid_method)} is not [aesurf, caero, paero]')
 
 
 def _write_aesurf_properties(model: BDF, bdf_file):

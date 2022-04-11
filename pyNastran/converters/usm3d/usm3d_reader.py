@@ -234,7 +234,7 @@ class Usm3d:
             npoints = nodes.shape[0]
             try:
                 unused_node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
-            except:
+            except Exception:
                 self.log.error('Had trouble reading %r...' % flo_filename)
                 raise
         else:
@@ -460,7 +460,7 @@ class Usm3d:
         nodes = np.frombuffer(data, '>d').reshape(3, nnodes).T
 
         # the ravel creates a copy that we can then use to put in
-        # a contigous order
+        # a contiguous order
         nodes = np.asarray(nodes.ravel(), dtype='<d').reshape(nnodes, 3)
 
         dummy4 = cogsg_file.read(4) # nnodes * 3 * 8
@@ -541,7 +541,7 @@ def read_flo(flo_filename, n=None, node_ids=None):
         try:
             #file is messsed up
             mach = float(line)
-        except:
+        except Exception:
             raise
             #loads['Cp'] = e  # it's 0 anyways...
             #return node_id, loads

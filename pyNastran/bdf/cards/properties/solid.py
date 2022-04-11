@@ -105,7 +105,7 @@ class PLSOLID(Property):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         stress_strain = string_or_blank(card, 3, 'stress_strain', 'GRID')
-        assert len(card) <= 4, 'len(PLSOLID card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 4, f'len(PLSOLID card) = {len(card):d}\ncard={card}'
         return PLSOLID(pid, mid, stress_strain, comment=comment)
 
     @classmethod
@@ -243,13 +243,13 @@ class PCOMPS(Property):
         souts = []
         iply = 1
         while ifield < nfields:
-            global_ply_id = integer(card, ifield, 'global_ply_id_%i' % iply)
-            mid = integer(card, ifield + 1, 'mid_%i' % iply)
-            t = double(card, ifield + 2, 'thickness_%i' % iply)
-            theta = double(card, ifield + 3, 'theta_%i' % iply)
-            ft = string_or_blank(card, ifield + 4, 'failure_theory_%i' % iply)
-            ift = string_or_blank(card, ifield + 5, 'interlaminar_failure_theory_%i' % iply)
-            sout = string_or_blank(card, ifield + 6, 'sout_%i' % iply, 'NO')
+            global_ply_id = integer(card, ifield, 'global_ply_id_%d' % iply)
+            mid = integer(card, ifield + 1, 'mid_%d' % iply)
+            t = double(card, ifield + 2, 'thickness_%d' % iply)
+            theta = double(card, ifield + 3, 'theta_%d' % iply)
+            ft = string_or_blank(card, ifield + 4, 'failure_theory_%d' % iply)
+            ift = string_or_blank(card, ifield + 5, 'interlaminar_failure_theory_%d' % iply)
+            sout = string_or_blank(card, ifield + 6, 'sout_%d' % iply, 'NO')
             global_ply_ids.append(global_ply_id)
             mids.append(mid)
             thicknesses.append(t)
@@ -259,7 +259,7 @@ class PCOMPS(Property):
             souts.append(sout)
             iply += 1
             ifield += 8
-        assert len(card) <= ifield, 'len(PCOMPS card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= ifield, f'len(PCOMPS card) = {len(card):d}\ncard={card}'
         return PCOMPS(pid, global_ply_ids, mids, thicknesses, thetas,
                       cordm, psdir, sb, nb, tref, ge,
                       failure_theories, interlaminar_failure_theories, souts,
@@ -329,16 +329,16 @@ class PCOMPS(Property):
     def repr_fields(self):
         #cordm = set_blank_if_default(self.cordm, 0)
         #fctn = set_blank_if_default(self.fctn, 'SMECH')
-        fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
-                  self.nb, self.tref, self.ge, None]
+        list_fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
+                       self.nb, self.tref, self.ge, None]
         mids = self.material_ids
         for glply, mid, t, theta, ft, ift, sout in zip(self.global_ply_ids,
                                                        mids, self.thicknesses, self.thetas,
                                                        self.failure_theories,
                                                        self.interlaminar_failure_theories,
                                                        self.souts):
-            fields += [glply, mid, t, theta, ft, ift, sout, None]
-        return fields
+            list_fields += [glply, mid, t, theta, ft, ift, sout, None]
+        return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
@@ -543,7 +543,7 @@ class PSOLID(Property):
         stress = integer_string_or_blank(card, 5, 'stress')
         isop = integer_string_or_blank(card, 6, 'isop')
         fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
-        assert len(card) <= 8, 'len(PSOLID card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(PSOLID card) = {len(card):d}\ncard={card}'
         return cls(pid, mid, cordm, integ, stress, isop,
                    fctn, comment=comment)
 
@@ -600,6 +600,8 @@ class PSOLID(Property):
             fctn = 'SMECH'
         elif fctn == 'PFLU':
             fctn = 'PFLUID'
+        elif fctn == 'FFLU':
+            fctn = 'FFLUID'
         else:  # pragma: no cover
             raise NotImplementedError('PSOLID; fctn=%r' % fctn)
         return PSOLID(pid, mid, cordm, integ, stress, isop,

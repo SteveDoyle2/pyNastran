@@ -10,8 +10,8 @@ defines:
 #matplotlib.use(matplotlib_backend)
 #from pyNastran.gui.qt_version import qt_version
 
-PLOT_TYPES = '[--eas|--tas]'
-USAGE = (
+PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q]'
+USAGE_145 = (
     'Usage:\n'
     '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
     f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export] [--f06]\n'
@@ -26,7 +26,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     if argv is None:
         argv = sys.argv
     msg = (
-        USAGE +
+        USAGE_145 +
         '  f06 plot_145 -h | --help\n'
         '  f06 plot_145 -v | --version\n'
         '\n'
@@ -41,7 +41,11 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         '\n'
         'Plot Types for V-g/V-f:\n'
         '  --tas            plot true airspeed (default)\n'
-        '  --eas            plot eqivalent airspeed\n'
+        '  --eas            plot equivalent airspeed\n'
+        '  --density        plot density\n'
+        '  --mach           plot Mach number\n'
+        '  --alt            plot altitude\n'
+        '  --q              plot dynamic pressure\n'
         '\n'
         'Units:\n'
         '  --in_units IN    Selects the input unit system\n'
@@ -49,7 +53,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
         '                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
 
-        '  --out_units OUT  Selects the ouptut unit system\n'
+        '  --out_units OUT  Selects the output unit system\n'
         '                   si (kg, m, s) -> m/s\n'
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
         '                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
@@ -112,6 +116,14 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         plot_type = 'eas'
     elif data['--tas']:
         plot_type = 'tas'
+    elif data['--alt']:
+        plot_type = 'alt'
+    elif data['--mach']:
+        plot_type = 'mach'
+    elif data['--density']:
+        plot_type = 'rho'
+    elif data['--q']:
+        plot_type = 'q'
     else:
         sys.stderr.write('plot_type assumed to be --tas\n')
 
@@ -257,7 +269,7 @@ def cmd_line(argv=None, plot=True, show=True, log=None):
         argv = sys.argv
 
     msg = (
-        USAGE +
+        USAGE_145 +
         '\n'
         '  f06 plot_145 -h | --help\n'
         '  f06 -v | --version\n'

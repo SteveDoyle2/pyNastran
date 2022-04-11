@@ -3,13 +3,16 @@ defines the following card:
  - PARAM
 """
 # pylint: disable=C0103,R0902,R0904,R0914
+import numpy as np
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank, string, string_or_blank,
-    integer_double_string_or_blank)
+    integer_double_string_or_blank, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.utils.numpy_utils import integer_types, float_types
+from typing import Dict, Union
 
 #float_words_1 = [
     #b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
@@ -324,9 +327,13 @@ class PARAM(BaseCard):
         if comment:
             self.comment = comment
         self.key = key
-        if isinstance(values, (int, float, str)):
+        if isinstance(values, list):
+            pass
+        elif isinstance(values, (integer_types, float_types, str)):
             values = [values]
         self.values = values
+        if isinstance(self.values, tuple) or isinstance(self.values[0], (list, tuple)):
+            raise TypeError((key, self.values))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -387,20 +394,20 @@ class PARAM(BaseCard):
         elif key in string_params:
             default, allowed_values = string_params[key]
             value = string_or_blank(card, 2, 'value', default=default)
-            assert value in allowed_values, 'value=%s allowed=%s' % (value, allowed_values)
+            assert value in allowed_values, f'value={value} allowed={allowed_values}'
 
         # ints; has defaults
         elif key in int_params:
-            default = int_params[key]
+            default=int_params[key]
             value = integer_or_blank(card, 2, 'value', default=default)
         elif key in int_params_allowed:
             default, allowed_values = int_params_allowed[key]
             value = integer_or_blank(card, 2, 'value', default=default)
-            assert value in allowed_values, 'value=%s allowed=%s' % (value, allowed_values)
+            assert value in allowed_values, f'value={value} allowed={allowed_values}'
 
         # floats; has defaults
         elif key in float_params:
-            default = float_params[key]
+            default=float_params[key]
             value = double_or_blank(card, 2, 'value', default=default)
         elif key in float2_params:
             defaults = float2_params[key]
@@ -434,20 +441,20 @@ class PARAM(BaseCard):
         if value is None:
             # n=2 or blank
             if isinstance(value1, str):
-                assert ' ' not in value1, 'PARAM value1=%r' % value1
+                assert ' ' not in value1, f'PARAM value1={value1!r}'
             if isinstance(value2, str):
-                assert ' ' not in value2, 'PARAM value2=%r' % value2
+                assert ' ' not in value2, f'PARAM value2={value2!r}'
             values = [value1, value2]
         else:
             # n=1
             if isinstance(value, str):
-                assert ' ' not in value, 'PARAM value=%r' % value
+                assert ' ' not in value, f'PARAM value={value!r}'
             values = [value]
 
         if n == 1:
-            assert len(card) <= 3, 'len(PARAM card)=%i card=%r' % (len(card), card)
+            assert len(card) <= 3, f'len(PARAM card)={len(card):d} card={card!r}'
         else:
-            assert len(card) <= 4, 'len(PARAM card)=%i card=%r' % (len(card), card)
+            assert len(card) <= 4, f'len(PARAM card)={len(card):d} card={card!r}'
         return PARAM(key, values, comment=comment)
 
     def update_values(self, value1=None, value2=None):
@@ -475,28 +482,28 @@ class PARAM(BaseCard):
             if value1 is None:
                 value1 = 'PEAK'
             if not isinstance(value1, str):
-                msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
+                msg = f'key={self.key} value1={value1!r} must be a string.'
                 raise TypeError(msg)
 
         elif self.key == 'ACOWEAK':
             if value1 is None:
                 value1 = 'NO'
             if not isinstance(value1, str):
-                msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
+                msg = f'key={self.key} value1={value1!r} must be a string.'
                 raise TypeError(msg)
 
         elif self.key == 'ACSYM':
             if value1 is None:
                 value1 = 'YES'
             if not isinstance(value1, str):
-                msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
+                msg = f'key={self.key} value1={value1!r} must be a string.'
                 raise TypeError(msg)
 
         elif self.key == 'ADJMETH':
             if value1 is None:
                 value1 = 0
             if not isinstance(value1, int):
-                msg = 'key=%s value1=%r must be an integer.' % (self.key, value1)
+                msg = f'key={self.key} value1={value1!r} must be an integer.'
                 raise TypeError(msg)
 
         #elif self.key == 'ADMPOST': ## TODO: 0 is not a string
@@ -506,7 +513,7 @@ class PARAM(BaseCard):
             if value1 is None:
                 value1 = 'YES'
             if not isinstance(value1, str):
-                msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
+                msg = f'key={self.key} value1={value1!r} must be a string.'
                 raise TypeError(msg)
 
         elif self.key in ['ALPHA1', 'ALPHA2', 'ALPHA1FL', 'ALPHA2FL']:
@@ -515,10 +522,10 @@ class PARAM(BaseCard):
             if value2 is None:
                 value2 = 0.0
             if not isinstance(value1, float):
-                msg = 'key=%s value1=%r must be an float.' % (self.key, value1)
+                msg = f'key={self.key} value1={value1!r} must be a float.'
                 raise TypeError(msg)
             if isinstance(value2, float):
-                msg = 'key=%s value2=%r must be an float.' % (self.key, value2)
+                msg = f'key={self.key} value2={value2!r} must be a float.'
                 raise TypeError(msg)
 
         elif self.key in ['CB1', 'CB2', 'CK1', 'CK2', 'CK3', 'CM1', 'CM2', 'CP1', 'CP2']:
@@ -527,15 +534,15 @@ class PARAM(BaseCard):
             if value2 is None:
                 value2 = 0.0
             if not isinstance(value1, float):
-                msg = 'key=%s value1=%r must be an float.' % (self.key, value1)
+                msg = f'key={self.key} value1={value1!r} must be a float.'
                 raise TypeError(msg)
             if isinstance(value2, float):
-                msg = 'key=%s value2=%r must be an float.' % (self.key, value2)
+                msg = f'key={self.key} value2={value2!r} must be a float.'
                 raise TypeError(msg)
 
         else:
             if not isinstance(value1, (int, float, str)):
-                msg = 'key=%s value1=%r must be an integer, float, or string.' % (self.key, value1)
+                msg = f'key={self.key} value1={value1!r} must be an integer, float, or string.'
                 raise TypeError(msg)
 
         self.values = [value1]

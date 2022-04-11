@@ -6,14 +6,21 @@ Defines:
       get the mass & moment of inertia of the model
 
 """
+from __future__ import annotations
 from itertools import count
 from collections import defaultdict
+from typing import Tuple, List, TYPE_CHECKING
+
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore
 import numpy as np
+
 #from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
+
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 NO_MASS = {
     # has mass
@@ -157,12 +164,13 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
     assert mass_ids is not None, mass_ids
     return element_ids, elements, mass_ids, masses
 
-def mass_properties(model, element_ids=None, mass_ids=None,
+def mass_properties(model: BDF,
+                    element_ids=None, mass_ids=None,
                     reference_point=None,
-                    sym_axis=None, scale=None, inertia_reference='cg'):
+                    sym_axis=None, scale=None, inertia_reference: str='cg'):
     """
     Calculates mass properties in the global system about the
-    reference point.
+    reference point, while considering WTMASS.
 
     Parameters
     ----------
@@ -181,11 +189,11 @@ def mass_properties(model, element_ids=None, mass_ids=None,
     Returns
     -------
     mass : float
-        the mass of the model
-    cg : (3, ) float NDARRAY
+        the mass of the model; wtmass is considered
+    cg : (3, ) float ndarray
         the cg of the model as an array.
-    I : (6, ) float NDARRAY
-        moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+    I : (6, ) float ndarray
+        moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]); wtmass is considered
 
     .. seealso:: model.mass_properties
 
@@ -200,7 +208,8 @@ def mass_properties(model, element_ids=None, mass_ids=None,
     mass, cg, I = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I)
     return mass, cg, I
 
-def _update_reference_point(model, reference_point, inertia_reference='cg'):
+def _update_reference_point(model: BDF, reference_point: np.ndarray,
+                            inertia_reference: str='cg') -> Tuple[np.ndarray, bool]:
     """helper method for handling reference point"""
     inertia_reference = inertia_reference.lower()
     if inertia_reference == 'cg':
@@ -224,8 +233,13 @@ def _update_reference_point(model, reference_point, inertia_reference='cg'):
 
 def mass_properties_no_xref(model, element_ids=None, mass_ids=None,
                             reference_point=None,
-                            sym_axis=None, scale=None, inertia_reference='cg',):
-    """see model.mass_properties_no_xref"""
+                            sym_axis=None, scale=None, inertia_reference='cg'):
+    """
+    Calculates mass properties without cross-referencing the model.
+
+    .. see:: mass_properties
+
+    """
     reference_point, is_cg = _update_reference_point(
         model, reference_point, inertia_reference)
     element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
@@ -334,13 +348,13 @@ def _mass_properties_no_xref(model, elements, masses, reference_point, is_cg):  
         for element in pack:
             try:
                 p = element.Centroid_no_xref(model)
-            except:
+            except Exception:
                 #continue
                 raise
 
             try:
                 m = element.Mass_no_xref(model)
-            except:
+            except Exception:
                 # PLPLANE
                 pid_ref = model.Property(element.pid)
                 if pid_ref.type == 'PSHELL':
@@ -373,7 +387,10 @@ def _mass_properties_no_xref(model, elements, masses, reference_point, is_cg):  
         I = transform_inertia(mass, cg, xyz_ref, xyz_ref2, I)
     return mass, cg, I
 
-def _increment_inertia(centroid, reference_point, m, mass, cg, I):
+def _increment_inertia(centroid: np.ndarray, reference_point: np.ndarray,
+                       m: float, mass: float,
+                       cg: np.ndarray,
+                       inertia: List[float]) -> float:
     """helper method"""
     if m == 0.:
         return mass
@@ -381,12 +398,12 @@ def _increment_inertia(centroid, reference_point, m, mass, cg, I):
     x2 = x * x
     y2 = y * y
     z2 = z * z
-    I[0] += m * (y2 + z2)  # Ixx
-    I[1] += m * (x2 + z2)  # Iyy
-    I[2] += m * (x2 + y2)  # Izz
-    I[3] += m * x * y      # Ixy
-    I[4] += m * x * z      # Ixz
-    I[5] += m * y * z      # Iyz
+    inertia[0] += m * (y2 + z2)  # Ixx
+    inertia[1] += m * (x2 + z2)  # Iyy
+    inertia[2] += m * (x2 + y2)  # Izz
+    inertia[3] += m * x * y      # Ixy
+    inertia[4] += m * x * z      # Ixz
+    inertia[5] += m * y * z      # Iyz
     mass += m
     cg += m * centroid
     return mass
@@ -397,7 +414,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
                         xyz_cid0_dict=None, debug=False):
     """
     Calculates mass properties in the global system about the
-    reference point.  Considers NSM, NSM1, NSML, NSML1.
+    reference point.  Considers NSM, NSM1, NSML, NSML1, and WTMASS.
 
     Parameters
     ----------
@@ -434,11 +451,11 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     Returns
     -------
     mass : float
-        The mass of the model.
-    cg : ndarray
-        The cg of the model as an array.
-    inertia : ndarray
-        Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
+        The mass of the model; wtmass is considered
+    cg : (3,) float ndarray
+        The cg of the model
+    inertia : (6,) float ndarray
+        Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]); wtmass is considered
 
     inertia = mass * centroid * centroid
 
@@ -499,7 +516,8 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     inertia = array([0., 0., 0., 0., 0., 0., ])
 
     idtype = model._upcast_int_dtype(dtype='int32')
-    all_eids = np.array(list(model.elements.keys()), dtype=idtype)
+    eids_list = list(model.elements.keys())
+    all_eids = np.array(eids_list, dtype=idtype)
     all_eids.sort()
 
     all_mass_ids = np.array(list(model.masses.keys()), dtype=idtype)
@@ -537,7 +555,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
             area_eids_pids, nsm_centroids_area, areas,
             mass, cg, inertia, reference_point)
 
-    model_eids = np.array(list(model.elements.keys()), dtype=idtype)
+    model_eids = np.array(eids_list, dtype=idtype)
     model_pids = np.array(list(model.properties.keys()), dtype=idtype)
     if debug:  # pragma: no cover
         model.log.debug('model_pids = %s' % model_pids)
@@ -872,7 +890,7 @@ def _mass_catch_all(model, etype, etypes_skipped,
         #if elem.pid_ref.type in ['PPLANE']:
         try:
             m = elem.Mass()
-        except:
+        except Exception:
             model.log.error('etype = %r' % etype)
             model.log.error(elem)
             model.log.error(elem.pid_ref)
@@ -2299,7 +2317,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             mass = mpl * length
             nsm = npl * length
 
-        elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR', ]:
+        elif etype in {'CTRIA3', 'CTRIA6', 'CTRIAR', }:
             centroid, mass, nsm = _breakdown_tri(
                 xyz_cid0, nids, nelementsi, etype,
                 all_nids,
@@ -2311,7 +2329,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
                 all_nids,
                 pids_dict, pids_per_area_dict,
                 mass_per_area_dict, nsm_per_area_dict, thickness_dict)
-        elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD']:
+        elif etype in {'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD', }:
             centroid, mass, nsm = _breakdown_quad(
                 xyz_cid0, nids, nelementsi, etype,
                 all_nids,

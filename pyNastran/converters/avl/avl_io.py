@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from numpy import arange, amax, amin
+import numpy as np
 
 import vtk
 from vtk import vtkQuad, vtkLine
@@ -20,8 +20,8 @@ class AVL_IO:
                )
         return data
 
-    def load_avl_geometry(self, avl_filename,
-                          name='main', plot=True):
+    def load_avl_geometry(self, avl_filename: str,
+                          name: str='main', plot: bool=True) -> None:
         model_name = name
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -60,8 +60,8 @@ class AVL_IO:
 
         nid = 0
         #print('nxyz_nodes=%s' % nxyz_nodes)
-        mmax = amax(nodes, axis=0)
-        mmin = amin(nodes, axis=0)
+        mmax = np.amax(nodes, axis=0)
+        mmin = np.amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.gui.create_global_axes(dim_max)
         for i in range(nxyz_nodes):
@@ -114,7 +114,8 @@ class AVL_IO:
         #raise NotImplementedError()
 
 
-    def _fill_avl_case(self, cases, ID, nnodes, nelements, surfaces):
+    def _fill_avl_case(self, cases, ID: int, nnodes: int, nelements: int,
+                       surfaces: np.ndarray):
         #results_form = []
         geometry_form = [
             ('NodeID', 0, []),
@@ -122,8 +123,8 @@ class AVL_IO:
             ('SurfaceID', 2, []),
         ]
 
-        nids = arange(1, nnodes + 1)
-        eids = arange(1, nelements + 1)
+        nids = np.arange(1, nnodes + 1)
+        eids = np.arange(1, nelements + 1)
 
         assert len(eids) == nelements, len(eids)
 

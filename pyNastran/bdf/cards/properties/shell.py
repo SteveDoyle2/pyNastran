@@ -15,7 +15,7 @@ from __future__ import annotations
 import copy
 from itertools import count
 import warnings
-from typing import List, Optional, Union, TYPE_CHECKING
+from typing import Tuple, List, Dict, Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -29,6 +29,17 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT9
+
+FT_INT_TO_NAME = {
+    0: None,
+    1: 'HILL',
+    2: 'HOFF',
+    3: 'TSAI',
+    4: 'STRN',
+    5: 'HFAI',  # secret MSC
+    6: 'HTAP',  # secret MSC
+    7: 'HFAB',  # secret MSC
+}
 
 
 class CompositeShellProperty(Property):
@@ -94,7 +105,7 @@ class CompositeShellProperty(Property):
         mids_ref = []
         for iply in range(len(self.thicknesses)):
             mid = self.mids[iply]
-            msg = ', which is required by %s pid=%s iply=%s' % (self.type, self.pid, iply)
+            msg = f', which is required by {self.type} pid={self.pid:d} iply={iply:d}'
             mids_ref.append(model.Material(mid, msg))
         self.mids_ref = mids_ref
 
@@ -103,7 +114,7 @@ class CompositeShellProperty(Property):
         try:
             z2 = z1 + t
         except TypeError:
-            msg = 'Type=%s z1=%s t=%s; z2=z1+t is undefined' % (self.type, z1, t)
+            msg = f'Type={self.type} z1={z1} t={t}; z2=z1+t is undefined'
             raise TypeError(msg)
         if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
             msg = '%s pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
@@ -527,7 +538,7 @@ class CompositeShellProperty(Property):
                 return 2. * mass_per_area + self.nsm
             return mass_per_area + self.nsm
         else:
-            assert isinstance(iply, integer_types), 'iply must be an integer; iply=%r' % iply
+            assert isinstance(iply, integer_types), f'iply must be an integer; iply={iply!r}'
             #rho = self.get_density(iply)
             rho = rhos[iply]
             t = self.thicknesses[iply]
@@ -554,7 +565,7 @@ class CompositeShellProperty(Property):
                 thickness_total = self.get_thickness()
                 mass_per_area = t * (rho + self.nsm / thickness_total)
             else:
-                raise NotImplementedError('method=%r is not supported' % method)
+                raise NotImplementedError(f'method={method!r} is not supported')
             return mass_per_area
 
     def get_mass_per_area_structure(self, rhos: List[float]) -> float:
@@ -628,7 +639,7 @@ class PCOMP(CompositeShellProperty):
             elif word == 'THETA':
                 self.thetas[num - 1] = value
             else:
-                raise RuntimeError('pid=%s pname_fid=%r word=%s\n' % (self.pid, pname_fid, word))
+                raise RuntimeError(f'pid={self.pid} pname_fid={pname_fid!r} word={word}\n')
         else:
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
@@ -650,17 +661,17 @@ class PCOMP(CompositeShellProperty):
             self.ge = value
             return
 
-        assert n > 0, 'PCOMP pid=%s; negative indicies are not supported (pname_fid=%r)' % (self.pid, n)
+        assert n > 0, f'PCOMP pid={self.pid}; negative indicies are not supported (pname_fid={n!r})'
         nnew = n - 10
         if nnew <= 0:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            raise KeyError(f'Field {n!r}={value!r} is an invalid {self.type} entry.')
 
         # the + 1 is to tell us we're on row 1 at minimum (not row 0)
         irow = n // 10
         irow_start = irow * 10 + 2
         offset = n - irow_start
         if offset < 0:
-            raise RuntimeError('field=%s is invalid for the PCOMP' % n)
+            raise RuntimeError(f'field={n} is invalid for the PCOMP')
 
         irow_layer = irow - 1
         ilayer = irow_layer * 2 + offset // 4
@@ -1247,7 +1258,7 @@ class PCOMPG(CompositeShellProperty):
         ilayer = nnew // 10
         #print('ilayer=%s n=%s nnew=%s' % (ilayer, n, nnew))
         try:
-            ply = self.plies[ilayer]
+            unused_ply = self.plies[ilayer]
         except IndexError:
             msg = ('On PCOMPG pid=%r, ply %i is not defined.  '
                    'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
@@ -1292,8 +1303,20 @@ class PCOMPG(CompositeShellProperty):
                       thetas=None, souts=None, nsm=0.0, sb=0.0, ft=None,
                       tref=0.0, ge=0.0, lam=None, z0=None, comment='')
 
-    def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
-                 nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
+    def __init__(self, pid: int,
+                 global_ply_ids: List[int],
+                 mids: List[int],
+                 thicknesses: List[float],
+                 thetas: Optional[List[float]]=None,
+                 souts: Optional[List[str]]=None,
+                 nsm: float=0.0,
+                 sb: float=0.0,
+                 ft: Optional[str]=None,
+                 tref: float=0.0,
+                 ge: float=0.0,
+                 lam: Optional[str]=None,
+                 z0: Optional[float]=None,
+                 comment: str=''):
         """
         Creates a PCOMPG card
 
@@ -1787,7 +1810,7 @@ class PPLANE(Property):
         thickness = self.Thickness()  # Thickness(tflag=tflag, tscales=tscales)
         try:
             mass_per_area = self.nsm + rho * thickness
-        except:
+        except Exception:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area
@@ -1835,8 +1858,8 @@ class PSHEAR(Property):
         t = 0.1
         return PSHEAR(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
 
-    def __init__(self, pid, mid, t, nsm=0., f1=0., f2=0., comment=''):
-        # type: (int, int, float, float, float, float, str) -> None
+    def __init__(self, pid: int, mid: int, t: float, nsm: float=0.,
+                 f1: float=0., f2: float=0., comment: str=''):
         """
         Creates a PSHEAR card
 
@@ -1893,7 +1916,7 @@ class PSHEAR(Property):
         nsm = double_or_blank(card, 4, 'nsm', 0.0)
         f1 = double_or_blank(card, 5, 'f1', 0.0)
         f2 = double_or_blank(card, 6, 'f2', 0.0)
-        assert len(card) <= 7, 'len(PSHEAR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(PSHEAR card) = {len(card):d}\ncard={card}'
         return PSHEAR(pid, mid, t, nsm=nsm, f1=f1, f2=f2, comment=comment)
 
     @classmethod
@@ -2016,10 +2039,12 @@ class PSHELL(Property):
         8 : 'tst', #'T' : 't',
     }
 
-    def __init__(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
-                 mid3=None, tst=0.833333, nsm=0.0,
-                 z1=None, z2=None, mid4=None, comment=''):
-        # type: (int, Optional[int], float, Optional[int], float, Optional[int], float, float, Optional[float], Optional[float], Optional[int], str) -> None
+    def __init__(self, pid: int,
+                 mid1: Optional[int]=None, t: Optional[float]=None,
+                 mid2: Optional[int]=None, twelveIt3: float=1.0,
+                 mid3: Optional[int]=None, tst: float=0.833333, nsm: float=0.0,
+                 z1: Optional[float]=None, z2: Optional[float]=None,
+                 mid4: Optional[int]=None, comment: str=''):
         """
         Creates a PSHELL card
 
@@ -2178,7 +2203,7 @@ class PSHELL(Property):
 
         #if self.mid1 is not None and self.mid2 is not None:
         #    assert self.mid4 == None
-        assert len(card) <= 12, 'len(PSHELL card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(PSHELL card) = {len(card):d}\ncard={card}'
         return PSHELL(pid, mid1, t, mid2, twelveIt3,
                       mid3, tst, nsm,
                       z1, z2, mid4, comment=comment)
@@ -2275,7 +2300,7 @@ class PSHELL(Property):
             assert isinstance(nsm, float), 'nsm=%r' % nsm
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
 
-    def get_z_locations(self):
+    def get_z_locations(self) -> List[float]:
         """returns the locations of the bottom and top surface of the shell"""
         z = np.array([self.z1, self.z2])
         return z
@@ -2286,7 +2311,7 @@ class PSHELL(Property):
         return materials
 
     @property
-    def material_ids(self):
+    def material_ids(self) -> List[Optional[int]]:
         """returns the material ids"""
         return [self.Mid1(), self.Mid2(), self.Mid3(), self.Mid4()]
 
@@ -2581,7 +2606,7 @@ class PSHELL(Property):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-def get_2d_plate_transform(theta):
+def get_2d_plate_transform(theta: float) -> np.ndarray:
     """theta must be in radians"""
     ct = np.cos(theta)
     st = np.sin(theta)

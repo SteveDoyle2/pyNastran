@@ -1,16 +1,28 @@
 """Multi-input/output format converter"""
+from __future__ import annotations
 import os
 import sys
 import glob
+from typing import Dict, Optional, Any, TYPE_CHECKING
 
+IS_DEV = False
+if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
 # stl_to_plot3d ???
 
 
-def process_nastran(bdf_filename, fmt2, fname2, log, data=None, debug=True, quiet=False):
+def process_nastran(bdf_filename: str, fmt2: str, fname2: str,
+                    log: Optional[SimpleLogger]=None,
+                    data: Optional[Dict[str, Any]]=None,
+                    debug: bool=True,
+                    quiet: bool=False) -> None:
     """
     Converts Nastran to STL/Cart3d/Tecplot/UGRID3d
     """
     assert fmt2 in ['stl', 'cart3d', 'tecplot', 'ugrid', 'nastran', 'abaqus'], 'format2=%s' % fmt2
+    if data is None:
+        data = {'--scale': 1.0,}
+
     from pyNastran.bdf.bdf import BDF
     xref = True
     if fmt2 == 'ugrid':
@@ -50,11 +62,17 @@ def process_nastran(bdf_filename, fmt2, fname2, log, data=None, debug=True, quie
         raise NotImplementedError('fmt2=%s is not supported by process_nastran' % fmt2)
 
 
-def process_cart3d(cart3d_filename, fmt2, fname2, log, data, quiet=False):
+def process_cart3d(cart3d_filename: str, fmt2: str, fname2: str,
+                   log: SimpleLogger,
+                   data: Dict[str, Any],
+                   quiet: bool=False) -> None:
     """
     Converts Cart3d to STL/Nastran/Tecplot/Cart3d
     """
     assert fmt2 in ['stl', 'nastran', 'tecplot', 'cart3d'], 'format2=%s' % fmt2
+    if data is None:
+        data = {'--scale': 1.0,}
+
     from pyNastran.converters.cart3d.cart3d import read_cart3d
 
     model = read_cart3d(cart3d_filename, log=log)
@@ -79,11 +97,17 @@ def process_cart3d(cart3d_filename, fmt2, fname2, log, data, quiet=False):
         raise NotImplementedError('fmt2=%s is not supported by process_cart3d' % fmt2)
 
 
-def process_stl(stl_filename, fmt2, fname2, log, data=None, quiet=False):
+def process_stl(stl_filename: str, fmt2: str, fname2: str,
+                log: SimpleLogger,
+                data: Optional[Dict[str, Any]]=None,
+                quiet: bool=False) -> None:
     """
     Converts STL to Nastran/Cart3d
     """
     assert fmt2 in ['stl', 'nastran', 'cart3d'], 'format2=%s' % fmt2
+    if data is None:
+        data = {'--scale': 1.0,}
+
     if '*' in stl_filename:
         stl_filenames = glob.glob(stl_filename)
     else:
@@ -116,7 +140,7 @@ def process_stl(stl_filename, fmt2, fname2, log, data=None, quiet=False):
         raise NotImplementedError('fmt2=%s is not supported by process_stl' % fmt2)
 
 
-def element_slice(tecplot, data):
+def element_slice(tecplot, data: Dict[str, Any]) -> None:
     """removes solid elements from a tecplot model"""
     xslice = data['--xx']
     yslice = data['--yy']
@@ -134,7 +158,10 @@ def element_slice(tecplot, data):
     tecplot.slice_xyz(xslice, yslice, zslice)
 
 
-def process_tecplot(tecplot_filename, fmt2, fname2, log, data=None, quiet=False):
+def process_tecplot(tecplot_filename: str, fmt2: str, fname2: str,
+                    log: SimpleLogger,
+                    data: Optional[Dict[str, Any]]=None,
+                    quiet: bool=False) -> None:
     """
     Converts Tecplot to Tecplot
 
@@ -186,7 +213,10 @@ def process_tecplot(tecplot_filename, fmt2, fname2, log, data=None, quiet=False)
         raise NotImplementedError('fmt2=%s is not supported by process_tecplot' % fmt2)
 
 
-def process_ugrid(ugrid_filename, fmt2, fname2, log, data=None, quiet=False):
+def process_ugrid(ugrid_filename: str, fmt2: str, fname2: str,
+                  log: SimpleLogger,
+                  data: Optional[SimpleLogger]=None,
+                  quiet: bool=False) -> None:
     """
     Converts UGRID to Nastran/Cart3d/STL/Tecplot
     """
@@ -231,7 +261,11 @@ def process_ugrid(ugrid_filename, fmt2, fname2, log, data=None, quiet=False):
         raise NotImplementedError('fmt2=%s is not supported by process_ugrid' % fmt2)
 
 
-def run_format_converter(fmt1, fname1, fmt2, fname2, data, log, quiet=False):
+def run_format_converter(fmt1: str, fname1: str,
+                         fmt2: str, fname2: str,
+                         data: Dict[str, Any],
+                         log: SimpleLogger,
+                         quiet: bool=False) -> None:
     """
     Runs the format converter
     """
@@ -245,69 +279,75 @@ def run_format_converter(fmt1, fname1, fmt2, fname2, data, log, quiet=False):
         process_tecplot(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt1 == 'ugrid':
         process_ugrid(fname1, fmt2, fname2, log, data=data, quiet=quiet)
-    elif fmt1 == 'vrml':
+    elif fmt1 == 'vrml' and IS_DEV:
         process_vrml(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     else:
-        format1s = ['nastran', 'cart3d', 'stl', 'tecplot', 'ugrid', 'vrml']
+        format1s = ['nastran', 'cart3d', 'stl', 'tecplot', 'ugrid']
+        if IS_DEV:
+            format1s.append('vrml')
+
         #format2s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
         raise NotImplementedError(f'fmt1={fmt1} is not supported by run; '
                                   f'use {", ".join(format1s)}')
 
 
-def cmd_line_format_converter(argv=None, quiet=False):
+def cmd_line_format_converter(argv=None, quiet: str=False) -> None:
     """Interface for format_converter"""
     if argv is None:
         argv = sys.argv
-    msg = "Usage:\n"
-    #format1s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot', 'vrml']
-    #format2s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
-    msg += "  format_converter nastran   <INPUT> <format2> <OUTPUT> [-o <OP2>] --no_xref\n"
-    msg += "  format_converter <format1> <INPUT> tecplot   <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>] [--scale SCALE]\n"
-    msg += "  format_converter <format1> <INPUT> stl       <OUTPUT> [-b]  [--scale SCALE]\n"
-    msg += "  format_converter cart3d    <INPUT> <format2> <OUTPUT> [-b]  [--scale SCALE]\n"
-    msg += "  format_converter <format1> <INPUT> <format2> <OUTPUT> [--scale SCALE]\n"
-    #msg += "  format_converter nastran  <INPUT> <format2> <OUTPUT>\n"
-    #msg += "  format_converter cart3d   <INPUT> <format2> <OUTPUT>\n"
-    msg += '  format_converter -h | --help\n'
-    msg += '  format_converter -v | --version\n'
-    msg += "\n"
-    msg += "Required Arguments:\n"
-    msg += "  format1        format type (nastran, cart3d, stl, ugrid, tecplot, vrml)\n"
-    msg += "  format2        format type (nastran, cart3d, stl, ugrid, tecplot, abaqus)\n"
-    msg += "  INPUT          path to input file\n"
-    msg += "  OUTPUT         path to output file\n"
+    format1_dev = ', vrml' if IS_DEV else ''
+    msg = (
+        "Usage:\n"
+        #format1s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot', 'vrml']
+        #format2s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
+        "  format_converter nastran   <INPUT> <format2> <OUTPUT> [-o <OP2>] --no_xref\n"
+        "  format_converter <format1> <INPUT> tecplot   <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>] [--scale SCALE]\n"
+        "  format_converter <format1> <INPUT> stl       <OUTPUT> [-b]  [--scale SCALE]\n"
+        "  format_converter cart3d    <INPUT> <format2> <OUTPUT> [-b]  [--scale SCALE]\n"
+        "  format_converter <format1> <INPUT> <format2> <OUTPUT> [--scale SCALE]\n"
+        #"  format_converter nastran  <INPUT> <format2> <OUTPUT>\n"
+        #"  format_converter cart3d   <INPUT> <format2> <OUTPUT>\n"
+        '  format_converter -h | --help\n'
+        '  format_converter -v | --version\n'
+        "\n"
+        "Required Arguments:\n"
+        f"  format1        format type (nastran, cart3d, stl, ugrid, tecplot{format1_dev})\n"
+        "  format2        format type (nastran, cart3d, stl, ugrid, tecplot, abaqus)\n"
+        "  INPUT          path to input file\n"
+        "  OUTPUT         path to output file\n"
 
-    msg += "\n"
-    msg += "Nastran Options:\n"
-    msg += "  -o OP2, --op2 OP2  path to results file (nastran-specific)\n"
-    msg += "                 only used for Tecplot (not supported)\n"
-    msg += "  --no_xref      Don't cross-reference (nastran-specific)\n"
+        "\n"
+        "Nastran Options:\n"
+        "  -o OP2, --op2 OP2  path to results file (nastran-specific)\n"
+        "                 only used for Tecplot (not supported)\n"
+        "  --no_xref      Don't cross-reference (nastran-specific)\n"
 
-    msg += "\n"
-    msg += "Tecplot Options:\n"
-    msg += "  -x X, --xx X   Creates a constant x slice; keeps points < X\n"
-    msg += "  -y Y, --yy Y   Creates a constant y slice; keeps points < Y\n"
-    msg += "  -z Z, --zz Z   Creates a constant z slice; keeps points < Z\n"
-    msg += "  --block        Writes the data in BLOCK (vs. POINT) format\n"
-    msg += "  -r, --results  Specifies the results to write to limit output\n"
+        "\n"
+        "Tecplot Options:\n"
+        "  -x X, --xx X   Creates a constant x slice; keeps points < X\n"
+        "  -y Y, --yy Y   Creates a constant y slice; keeps points < Y\n"
+        "  -z Z, --zz Z   Creates a constant z slice; keeps points < Z\n"
+        "  --block        Writes the data in BLOCK (vs. POINT) format\n"
+        "  -r, --results  Specifies the results to write to limit output\n"
 
-    msg += "\n"
-    msg += "Tecplot/Cart3d/STL Options:\n"
-    msg += "  --scale SCALE  Apply a scale factor to the XYZ locations (default=1.0)\n"
-    msg += "  -b, --binary   writes the STL in binary (not supported for Tecplot)\n"
+        "\n"
+        "Tecplot/Cart3d/STL Options:\n"
+        "  --scale SCALE  Apply a scale factor to the XYZ locations (default=1.0)\n"
+        "  -b, --binary   writes the STL in binary (not supported for Tecplot)\n"
 
-    msg += "\n"
-    msg += "Info:\n"
-    msg += "  -h, --help     show this help message and exit\n"
-    msg += "  -v, --version  show program's version number and exit\n"
-    msg += '\n'
-    msg += 'Notes:\n'
-    msg += "  Nastran->Tecplot assumes sequential nodes and consistent types (shell/solid)\n"
-    msg += "  STL/Tecplot supports globbing as the input filename\n"
-    msg += "  Tecplot slicing doesn't support multiple slice values and will give bad results (not crash)\n"
-    msg += "  UGRID outfiles must be of the form model.b8.ugrid, where\n"
-    msg += "    b8, b4, lb8, lb4 are valid choices and periods are important\n"
-    msg += "  Scale has only been tested on STL -> STL\n"
+        "\n"
+        "Info:\n"
+        "  -h, --help     show this help message and exit\n"
+        "  -v, --version  show program's version number and exit\n"
+        '\n'
+        'Notes:\n'
+        "  Nastran->Tecplot assumes sequential nodes and consistent types (shell/solid)\n"
+        "  STL/Tecplot supports globbing as the input filename\n"
+        "  Tecplot slicing doesn't support multiple slice values and will give bad results (not crash)\n"
+        "  UGRID outfiles must be of the form model.b8.ugrid, where\n"
+        "    b8, b4, lb8, lb4 are valid choices and periods are important\n"
+        "  Scale has only been tested on STL -> STL\n"
+    )
 
     from docopt import docopt
     import pyNastran
@@ -354,7 +394,10 @@ def cmd_line_format_converter(argv=None, quiet=False):
     run_format_converter(format1, input_filename, format2, output_filename, data, log=log, quiet=quiet)
 
 
-def process_vrml(vrml_filename, fmt2, fname2, log, data, quiet=False):
+def process_vrml(vrml_filename: str, fmt2: str, fname2: str,
+                 log: SimpleLogger,
+                 data: Dict[str, Any],
+                 quiet: bool=False) -> None:
     """
     Converts VRML to Nastran
     """

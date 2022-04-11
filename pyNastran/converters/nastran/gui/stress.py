@@ -1,4 +1,4 @@
-# encoding: utf-8
+# coding: utf-8
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
@@ -112,7 +112,6 @@ def get_rod_stress_strains(eids, cases, model: OP2, times, key, icase,
         return icase
 
     scalars_array = concatenate_scalars(scalars_array)
-
     headers = [] # sidebar word
     res = SimpleTableResults(
         subcase_id, headers, rod_ieids, ieid_max, scalars_array, methods,
@@ -340,8 +339,8 @@ def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
             continue
 
         i2 = np.hstack([i, i + 1]).T.flatten()
-        print('i =', i)
-        print('i2 =', i2)
+        #print('i =', i)
+        #print('i2 =', i2)
         #aa
         #print('i =', i, i.max())
         #print('eids =', eids, len(eids))
@@ -355,7 +354,7 @@ def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
     beam_ieids = np.hstack(beam_ieids)
     #inid_max = len(nids)
     ieid_max = len(eids)
-    print('ieid_max =', ieid_max)
+    #print('ieid_max =', ieid_max)
 
     case = beam_cases[0]
     case_headers = case.get_headers()
@@ -459,9 +458,9 @@ def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
             icase += 1
     return icase
 
-def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
-                             form_dict, header_dict, keys_map, is_stress,
-                             prefix=''):
+def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
+                             form_dict, header_dict, keys_map, is_stress: bool,
+                             prefix: str=''):
     """
     helper method for _fill_op2_time_centroidal_stress.
     Gets the max/min stress for each layer.
@@ -563,8 +562,9 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
             'angle' : '胃',
             'emax' : '系max',
             'emin' : '系min',
+            'evm' : '系 von Mises',
             'von_mises' : '系 von Mises',
-            'max_shear' : '饾浘max',
+            'max_shear' : '頎淀痪max',
         }
     methods = [method_map[headeri] for headeri in case_headers]
     #if 'Mises' in methods:
@@ -591,7 +591,6 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
         #                                         txy, angle,
         #                                         majorP, minorP, ovm]
-
         keys_map[key] = (case.subtitle, case.label,
                          case.superelement_adaptivity_index, case.pval_step)
 
@@ -878,6 +877,7 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
             'omin' : '蟽min',
             'omid' : '蟽mid',
             'von_mises' : '蟽 von Mises',
+            'max_shear' : '蟽 max Shear',
         }
         data_format = '%.3f'
     else:
@@ -894,6 +894,7 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
             'emin' : '系min',
             'emid' : '系mid',
             'von_mises' : '系 von Mises',
+            'max_shear' : '系 max Shear',
         }
         data_format = '%.3e'
     methods = [method_map[headeri] for headeri in case_headers]
@@ -947,7 +948,6 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
         subcase_id, headers, solid_ieids, ieid_max, scalars_array, methods,
         data_format=data_format,
         colormap='jet', uname='Solid ' + word)
-
     icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
                                        form_dict, header_dict, methods,
                                        name='Solid')

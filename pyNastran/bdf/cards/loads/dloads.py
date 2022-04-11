@@ -505,13 +505,13 @@ class RLOAD1(DynamicLoad):
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        delay = integer_double_or_blank(card, 3, 'delay', 0)
-        dphase = integer_double_or_blank(card, 4, 'dphase', 0)
-        tc = integer_double_or_blank(card, 5, 'tc', 0)
-        td = integer_double_or_blank(card, 6, 'td', 0)
-        Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
+        delay = integer_double_or_blank(card, 3, 'delay', default=0)
+        dphase = integer_double_or_blank(card, 4, 'dphase', default=0)
+        tc = integer_double_or_blank(card, 5, 'tc', default=0)
+        td = integer_double_or_blank(card, 6, 'td', default=0)
+        Type = integer_string_or_blank(card, 7, 'Type', default='LOAD')
 
-        assert len(card) <= 8, 'len(RLOAD1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(RLOAD1 card) = {len(card):d}\ncard={card}'
         return RLOAD1(sid, excite_id, delay, dphase, tc, td, Type, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -942,7 +942,7 @@ class RLOAD2(DynamicLoad):
         tp = integer_double_or_blank(card, 6, 'tp', default=0)
         Type = integer_string_or_blank(card, 7, 'Type', default='LOAD')
 
-        assert len(card) <= 8, 'len(RLOAD2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(RLOAD2 card) = {len(card):d}\ncard={card}'
         return RLOAD2(sid, excite_id, delay, dphase, tb, tp, Type, comment=comment)
 
     def get_load_at_freq(self, freq, scale=1.):
@@ -1234,7 +1234,7 @@ class TLOAD1(DynamicLoad):
         us0 = double_or_blank(card, 6, 'us0', 0.0)
         vs0 = double_or_blank(card, 7, 'vs0', 0.0)
 
-        assert len(card) <= 8, 'len(TLOAD1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(TLOAD1 card) = {len(card):d}\ncard={card}'
         return TLOAD1(sid, excite_id, tid, delay=delay, Type=Type, us0=us0, vs0=vs0, comment=comment)
 
     def get_loads(self):
@@ -1256,7 +1256,7 @@ class TLOAD1(DynamicLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         msg = ', which is required by TLOAD1=%s' % (self.sid)
         _cross_reference_excite_id(self, model, msg)
         if self.tid:

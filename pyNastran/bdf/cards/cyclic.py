@@ -1,5 +1,6 @@
 """
 defines:
+ * CYAX
  * CYJOIN
 
 All cards are BaseCard objects.

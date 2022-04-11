@@ -99,7 +99,10 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
             raise RuntimeError(msg)
     return pids_to_length
 
-def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_area=True):
+def get_area_breakdown(model: BDF,
+                       property_ids=None,
+                       stop_if_no_area: bool=True,
+                       sum_bar_area: bool=True) -> Dict[int, float]:
     """
     Gets a breakdown of the area by property region.
 
@@ -111,8 +114,8 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
         prevents crashing if there are no elements
     sum_bar_area : bool; default=True
         sum the areas for CBAR/CBEAM/CROD/CONROD/CTUBE elements
-        True : get the area of the model by property id
-        False : only get the cross sectional properties
+        True : get the area of the model by property id (e.g., A=A_pid*Nelements)
+        False : only get the cross sectional properties (e.g., A=A_pid)
 
     Returns
     -------
@@ -155,10 +158,10 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
     for pid, eids in pid_eids.items():
         prop = model.properties[pid]
         areas = []
-        if prop.type in ['PSHELL', 'PCOMP', 'PSHEAR', 'PCOMPG', ]:
+        if prop.type in {'PSHELL', 'PCOMP', 'PSHEAR', 'PCOMPG', }:
             for eid in eids:
                 elem = model.elements[eid]
-                if elem.type in ['CQUADX']:
+                if elem.type in {'CQUADX'}:
                     continue
                 try:
                     areas.append(elem.Area())
@@ -193,7 +196,7 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
             raise RuntimeError(msg)
     return pids_to_area
 
-def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
+def get_volume_breakdown(model: BDF, property_ids=None, stop_if_no_volume=True):
     """
     Gets a breakdown of the volume by property region.
 
@@ -310,7 +313,9 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
             raise RuntimeError(msg)
     return pids_to_volume
 
-def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=False):
+def get_mass_breakdown(model: BDF, property_ids=None,
+                       stop_if_no_mass: bool=True,
+                       detailed: bool=False) -> Any:
     """
     Gets a breakdown of the mass by property region.
 
@@ -382,7 +387,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
             rho = prop.Rho()
             for eid in eids:
                 elem = model.elements[eid]
-                if elem.type in ['CQUADX']:
+                if elem.type == 'CQUADX':
                     continue
                 area = elem.Area()
                 if detailed:
@@ -390,7 +395,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
                     masses_nonstructural.append(area * nsm)
                 else:
                     masses.append(area * (rho * thickness + nsm))
-        elif prop.type in ['PCOMP', 'PCOMPG']:
+        elif prop.type in {'PCOMP', 'PCOMPG'}:
             # TODO: does the PCOMP support differential thickness?
             #       I don't think so...
             for eid in eids:
@@ -428,7 +433,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
             rho = prop.Rho()
             for eid in eids:
                 elem = model.elements[eid]
-                if elem.type in ['CTETRA', 'CPENTA', 'CHEXA']:
+                if elem.type in {'CTETRA', 'CPENTA', 'CHEXA'}:
                     masses.append(rho * elem.Volume())
                 else:
                     key = (elem.type, prop.type)
@@ -449,7 +454,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
                     masses_nonstructural.append(area * nsm)
                 else:
                     masses.append(area * (rho * thickness + nsm))
-        elif prop.type in ['PBRSECT', 'PBMSECT']:
+        elif prop.type in {'PBRSECT', 'PBMSECT'}:
             model.log.warning('skipping:\n%s' % prop)
             continue
         else:  # pragma: no cover

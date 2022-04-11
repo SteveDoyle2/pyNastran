@@ -19,12 +19,15 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 from pyNastran.bdf.mesh_utils.cut_edge_model_by_plane import cut_edge_model_by_coord
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
+from pyNastran.bdf.cards.coordinate_systems import Coord, xyz_to_rtz_array, rtz_to_xyz_array
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4
     from pyNastran.bdf.cards.coordinate_systems import Coord
+    from pyNastran.nptyping import NDArrayNint, NDArray3float, NDArrayNfloat
 
-def get_nid_cd_xyz_cid0(model: BDF):
+def get_nid_cd_xyz_cid0(model: BDF) -> Tuple[NDArrayNint, NDArrayNint,
+                                             Dict[int, NDArrayNint], NDArray3float]:
     out = model.get_displacement_index_xyz_cp_cd()
     icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
     nids = nid_cp_cd[:, 0]
@@ -64,7 +67,7 @@ def get_stations(model: BDF, p1, p2, p3, zaxis,
         defines the XZ plane for the shears/moments
     zaxis: (3,) float ndarray
         the direction of the z-axis
-    cid_p1 / cid_p2 / cid_p3
+    cid_p1 / cid_p2 / cid_p3 : int
         the coordinate systems for p1, p2, and p3
     method : str
         'Z-Axis Projection'
@@ -130,10 +133,11 @@ def _setup_faces(bdf_filename: Union[str, BDF]) -> Tuple[Any, Any, Any, Any]:
     #edge_to_eid_map = out['edge_to_eid_map']
     return nids, xyz_cid0, faces, face_eids
 
-def cut_face_model_by_coord(bdf_filename: Union[str, BDF], coord, tol,
+def cut_face_model_by_coord(bdf_filename: Union[str, BDF], coord: CORD2R, tol,
                             nodal_result, plane_atol=1e-5, skip_cleanup=True,
                             csv_filename=None,
-                            plane_bdf_filename='plane_face.bdf', plane_bdf_offset=0.):
+                            plane_bdf_filename='plane_face.bdf',
+                            plane_bdf_offset=0.):
     """
     Cuts a Nastran model with a cutting plane
 
@@ -156,13 +160,15 @@ def cut_face_model_by_coord(bdf_filename: Union[str, BDF], coord, tol,
         str : write a csv
     plane_bdf_filename : str; default='plane_face.bdf'
         the path to the simplified conrod model
+
     """
     assert isinstance(tol, float), tol
     nids, xyz_cid0, faces, face_eids = _setup_faces(bdf_filename)
     unique_geometry_array, unique_results_array, rods_array = _cut_face_model_by_coord(
         nids, xyz_cid0, faces, face_eids, coord, tol,
         nodal_result, plane_atol=plane_atol, skip_cleanup=skip_cleanup,
-        plane_bdf_filename=plane_bdf_filename, plane_bdf_offset=plane_bdf_offset)
+        plane_bdf_filename=plane_bdf_filename,
+        plane_bdf_offset=plane_bdf_offset)
     if csv_filename and unique_geometry_array is not None:
         export_face_cut(csv_filename, unique_geometry_array, unique_results_array)
     #print('unique_geometry_array=%s unique_results_array=%s' % (
@@ -218,9 +224,18 @@ def _project_z_axis(p1, p2, z_global):
     """
     p1-p2 defines the x-axis
     k is defined by the z-axis
+    k = z / |z|
+    xz = p2 - p1
+    xz /= |xz|
+    j = z × xz
+    j /= |j|
+    i = k × j
     """
     x = p2 - p1
-    iprime = x / np.linalg.norm(x)
+    norm_x = np.linalg.norm(x)
+    if norm_x == 0.:
+        raise RuntimeError(f'p1={p1} and p2={p2} are coincident; distance={norm_x}')
+    iprime = x / norm_x
     k = z_global / np.linalg.norm(z_global)
     j = np.cross(k, iprime)
     jhat = j / np.linalg.norm(j)
@@ -232,9 +247,32 @@ def _project_z_axis(p1, p2, z_global):
     return i, k, origin, zaxis, xzplane
 
 
-def _p1_p2_zaxis_to_cord2r(model: BDF, p1, p2, zaxis, method: str='Z-Axis Projection',
-                           cid_p1: int=0, cid_p2: int=0, cid_zaxis: int=0) -> Any:
-    """Creates the coordinate system that will define the cutting plane"""
+def _p1_p2_zaxis_to_cord2r(model: BDF,
+                           p1: NDArray3float, p2: NDArray3float, zaxis: NDArray3float,
+                           method: str='Z-Axis Projection',
+                           cid_p1: int=0, cid_p2: int=0,
+                           cid_zaxis: int=0) -> Tuple[NDArray3float, NDArray3float, NDArray3float,
+                                                      NDArray3float, NDArray3float,
+                                                      NDArray3float, NDArray3float, NDArray3float]:
+    """
+    Creates the coordinate system that will define the cutting plane
+
+    Parameters
+    ----------
+    model : BDF
+        the bdf object
+    method: str; default='Z-Axis Projection'
+        method = 'CORD2R'
+           p1:    origin
+           zaxis: origin + zaxis (zaxis)
+           p3:    origin + xzplane
+        method = 'Z-Axis Projection'
+           p1:    origin
+           zaxis: zaxis
+           p2:    origin + xzplane
+    cid_p1/p2/zaxis: int; default=0
+        the coordinate system for the points
+    """
     p1 = np.asarray(p1)
     p2 = np.asarray(p2)
     zaxis = np.asarray(zaxis)
@@ -264,7 +302,7 @@ def _p1_p2_zaxis_to_cord2r(model: BDF, p1, p2, zaxis, method: str='Z-Axis Projec
 def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord: Coord, tol: float,
                              nodal_result, plane_atol: float=1e-5, skip_cleanup: bool=True,
                              plane_bdf_filename: str='plane_face.bdf',
-                             plane_bdf_offset: float=0.) -> Tuple[Any, Any, ANy]:
+                             plane_bdf_offset: float=0.) -> Tuple[Any, Any, Any]:
     """
     Cuts a Nastran model with a cutting plane
 
@@ -287,6 +325,8 @@ def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord: Coord, tol
         the result to cut the model with
     plane_atol : float; default=1e-5
         the tolerance for a line that's located on the y=0 local plane
+    plane_bdf_offset : float; default=0.
+        ???
 
     Returns
     -------
@@ -327,7 +367,8 @@ def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord: Coord, tol
     unique_geometry_array, unique_results_array, rods_array = slice_faces(
         nids, xyz_cid0, xyz_cid, iclose_faces_array, close_face_eids_array,
         nodal_result, plane_atol=plane_atol, skip_cleanup=skip_cleanup,
-        plane_bdf_filename=plane_bdf_filename, plane_bdf_offset=plane_bdf_offset)
+        plane_bdf_filename=plane_bdf_filename,
+        plane_bdf_offset=plane_bdf_offset)
 
     #print(coord)
     return unique_geometry_array, unique_results_array, rods_array
@@ -574,6 +615,12 @@ def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
     is used.  If a node is not used twice, then it is a starting/ending point,
     so we can find the C-shaped loops and O-shaped loops.  This is not intended
     to handle 3+ connected points, only 1 or 2.
+
+    Parameters
+    ----------
+    skip_cleanup: bool; default=True
+        cleanup C and O loops
+
     """
     # temp
     nedges = geometry_array.shape[0]
@@ -759,6 +806,11 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
                              rod_elements, rod_nids, rod_xyzs,
                              plane_atol, plane_bdf_offset=0.):
     """
+    Parameters
+    ----------
+    plane_bdf_offset : float; default=0.
+        ???
+
     These edges have crossings.  We rework:
      y = m*x + b
 
@@ -791,7 +843,7 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
         e1 = e13 = p3 - p1
         e2 = e23 = p3 - p2
 
-    As metioned previously, only two vectors are used (e.g., e12 and e13).
+    As mentioned previously, only two vectors are used (e.g., e12 and e13).
     When combined with the percentage, we find that for a dot, using e12
     and e13, node 1 must be a source (both vectors originate from node 1).
     Thus the percentages for e12=0. and e13=0.  Similarly, node 3 is a

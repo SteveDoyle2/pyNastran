@@ -68,7 +68,7 @@ class BaseCard:
 
     def get_stats(self) -> str:
         """Prints out an easy to read summary of the card"""
-        msg = '---%s---\n' % self.type
+        msg = f'---{self.type}---\n'
         for name in sorted(self.object_attributes()):
             #if short and '_ref' in name:
                 #continue

@@ -3,7 +3,7 @@ Defines:
  - pierce_shell_model(bdf_filename, xyz_points, tol=1.0)
 """
 from itertools import count
-from typing import List, Optional
+from typing import Tuple, List, Optional, Union, Any
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
@@ -35,8 +35,8 @@ def quad_intersection(orig, direction, v0, v1, v2, v3):
         return ans
     return triangle_intersection(orig, direction, v0, v2, v3)
 
-def triangle_intersection(orig, direction, v0, v1, v2):
-    # type: (np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray) -> Optional[np.ndarray]
+def triangle_intersection(orig: np.ndarray, direction: np.ndarray,
+                          v0: np.ndarray, v1: np.ndarray, v2: np.ndarray) -> Optional[np.ndarray]:
     """
     Pierces a triangle
 
@@ -78,8 +78,8 @@ def triangle_intersection(orig, direction, v0, v1, v2):
     return orig + direction * (e2.dot(qvec) * inv_det)
 
 
-def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
-    # type: (Union[BDF, str], Any, float) -> List[int], np.ndarray, List[List[int]]
+def pierce_shell_model(bdf_filename: Union[BDF, str], xyz_points: Any,
+                       tol: float=1.0) -> Tuple[List[int], np.ndarray, List[List[int]]]:
     """
     Pierces a shell model with a <0., 0., 1.> vector.  In other words,
     models are pierced in the xy plane.

@@ -409,6 +409,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename)
 
     def test_thermal_01(self):
+        """runs models/thermal/thermal_test_153"""
         dirname = os.path.join(MODEL_PATH, 'thermal')
         bdf_filename = os.path.join(dirname, 'thermal_test_153.bdf')
         op2_filename = os.path.join(dirname, 'thermal_test_153.op2')

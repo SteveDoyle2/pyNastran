@@ -81,7 +81,7 @@ def get_solid_skin_faces(model: BDF) -> Any:
         raw_face = deepcopy(face)
         try:
             face.sort()
-        except:
+        except Exception:
             print('face = %s' % str(face))
             raise
         tface = tuple(face)

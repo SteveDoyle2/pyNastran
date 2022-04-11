@@ -113,7 +113,7 @@ class RANDPS(RandomLoad):
         x = double_or_blank(card, 4, 'x', 0.0)
         y = double_or_blank(card, 5, 'y', 0.0)
         tid = integer_or_blank(card, 6, 'tid', 0)
-        assert len(card) <= 7, 'len(RANDPS card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(RANDPS card) = {len(card):d}\ncard={card}'
         return RANDPS(sid, j, k, x, y, tid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -165,6 +165,7 @@ class RANDPS(RandomLoad):
         if is_double:
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
+
 
 class RANDT1(RandomLoad):
     type = 'RANDT1'
@@ -228,7 +229,7 @@ class RANDT1(RandomLoad):
         n = integer(card, 2, 'n')
         t0 = double(card, 3, 't0')
         tmax = double(card, 4, 'tmax')
-        assert len(card) <= 5, 'len(RANDT1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(RANDT1 card) = {len(card):d}\ncard={card}'
         return RANDT1(sid, n, t0, tmax, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:

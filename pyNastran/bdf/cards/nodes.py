@@ -45,6 +45,7 @@ from pyNastran.bdf.field_writer_double import print_scientific_double, print_car
 #u = str
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf import BDF
+    from pyNastran.bdf.cards.coordinate_systems import CORDx
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.nptyping import NDArray3float
     #from pyNastran.bdf.bdf_interface.typing import Coord, Element
@@ -168,6 +169,7 @@ class SEQGP(BaseCard):
                 list_fields = ['SEQGP']
             list_fields.append(nid)
             list_fields.append(seqid)
+
         if len(list_fields) > 1:
             msg += print_card_8(list_fields)
         return msg
@@ -300,7 +302,7 @@ class EPOINT(XPoint):
         """
         XPoint.__init__(self, nid, comment)
 
-def write_xpoints(cardtype, points, comment=''):
+def write_xpoints(cardtype: str, points, comment: str='') -> str:
     """writes SPOINTs/EPOINTs"""
     msg = comment
     if isinstance(points, dict):
@@ -320,17 +322,17 @@ def write_xpoints(cardtype, points, comment=''):
     return msg
 
 
-def compress_xpoints(point_type, xpoints):
+def compress_xpoints(point_type: str, xpoints: List[int]) -> List[List[int]]:
     """
     Gets the SPOINTs/EPOINTs in sorted, short form.
 
-      uncompresed:  SPOINT,1,3,5
+      uncompressed: SPOINT,1,3,5
       compressed:   SPOINT,1,3,5
 
-      uncompresed:  SPOINT,1,2,3,4,5
+      uncompressed: SPOINT,1,2,3,4,5
       compressed:   SPOINT,1,THRU,5
 
-      uncompresed:  SPOINT,1,2,3,4,5,7
+      uncompressed: SPOINT,1,2,3,4,5,7
       compressed:   SPOINT,7
                     SPOINT,1,THRU,5
 
@@ -580,7 +582,7 @@ class GRDSET(BaseCard):
         seid = 0
         return GRDSET(cp, cd, ps, seid, comment='')
 
-    def __init__(self, cp, cd, ps, seid, comment=''):
+    def __init__(self, cp: int, cd: int, ps: str, seid: int, comment: str=''):
         """
         Creates the GRDSET card
 
@@ -643,7 +645,7 @@ class GRDSET(BaseCard):
 
         ps = str(integer_or_blank(card, 7, 'ps', ''))
         seid = integer_or_blank(card, 8, 'seid', 0)
-        assert len(card) <= 9, 'len(GRDSET card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(GRDSET card) = {len(card):d}\ncard={card}'
         return GRDSET(cp, cd, ps, seid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -1192,7 +1194,7 @@ class GRID(BaseCard):
 
             #: Superelement ID
             seid = integer_or_blank(card, 8, 'seid', 0)
-            assert len(card) <= 9, 'len(GRID card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 9, f'len(GRID card) = {len(card):d}\ncard={card}'
         else:
             cd = 0
             ps = ''
@@ -1405,14 +1407,31 @@ class GRID(BaseCard):
         """
         if cid == self.Cp(): # same coordinate system
             return self.xyz
+        # a matrix global->local matrix is found
+        msg = ', which is required by GRID nid=%s' % (self.nid)
+        coord_b = model.Coord(cid, msg=msg) # type: CORDx
+        return self.get_position_wrt_coord_ref(coord_b)
 
+    def get_position_wrt_coord_ref(self, coord_out: CORDx) -> np.ndarray:
+        """
+        Gets the location of the GRID which started in some arbitrary
+        system and returns it in the desired coordinate system
+
+        Parameters
+        ----------
+        coord_out : CORDx
+            the desired coordinate system
+
+        Returns
+        -------
+        xyz : (3, ) float ndarray
+            the position of the GRID in an arbitrary coordinate system
+
+        """
         # converting the xyz point arbitrary->global
         p = self.cp_ref.transform_node_to_global(self.xyz)
 
-        # a matrix global->local matrix is found
-        msg = ', which is required by GRID nid=%s' % (self.nid)
-        coord_b = model.Coord(cid, msg=msg)
-        xyz = coord_b.transform_node_to_local(p)
+        xyz = coord_out.transform_node_to_local(p)
         return xyz
 
     def cross_reference(self, model: BDF, grdset: Optional[Any]=None) -> None:
@@ -1680,8 +1699,7 @@ class POINT(BaseCard):
         assert len(self.xyz) == 3
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment: str=''):
-        # type: (Any, str) -> POINT
+    def add_card(cls, card: BDFCard, comment: str='') -> POINT:
         """
         Adds a POINT card from ``BDF.add_card(...)``
 
@@ -1694,14 +1712,14 @@ class POINT(BaseCard):
 
         """
         nid = integer(card, 1, 'nid')
-        cp = integer_or_blank(card, 2, 'cp', 0)
+        cp = integer_or_blank(card, 2, 'cp', default=0)
 
         xyz = np.array([
-            double_or_blank(card, 3, 'x1', 0.),
-            double_or_blank(card, 4, 'x2', 0.),
-            double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
+            double_or_blank(card, 3, 'x1', default=0.),
+            double_or_blank(card, 4, 'x2', default=0.),
+            double_or_blank(card, 5, 'x3', default=0.)], dtype='float64')
 
-        assert len(card) <= 9, 'len(POINT card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(POINT card) = {len(card):d}\ncard={card}'
         return POINT(nid, xyz, cp=cp, comment=comment)
 
     @classmethod
@@ -1799,7 +1817,6 @@ class POINT(BaseCard):
         return self.cp_ref.cid
 
     def cross_reference(self, model: BDF) -> None:
-        # type: (Any) -> None
         """
         Cross links the card so referenced cards can be extracted directly
 

@@ -61,7 +61,7 @@ def dot_33_n33(A, B, debug=True):
         print('A.shape =', A.shape)
         for i, Bi in zip(count(), B):
             print('Bi.shape =', Bi.shape)
-            ABi = A.dot(Bi)
+            ABi = A @ Bi
             print('A @ Bi.shape =', ABi.shape)
             D[i, :, :] = ABi
             #print(D[i, :, :])
@@ -99,7 +99,7 @@ def dot_n33_33(A, B, debug=True):
         #print('dot_n33_33: A.shape=%s; B.shape=%s' % (str(A.shape), str(B.shape)))
         D = np.zeros(A.shape, dtype=dtype)
         for i, Ai in zip(count(), A):
-            AiB = Ai.dot(B)
+            AiB = Ai @ B
             #print(AiB.shape)
             D[i, :, :] = AiB
             #print(D[i, :, :])
@@ -131,7 +131,7 @@ def dot_n33_n33(A, B, debug=True):
         #print('------------------------')
         D = np.zeros(A.shape, dtype=dtype)
         for i, Ai, Bi in zip(count(), A, B):
-            D[i, :, :] = Ai.dot(Bi)
+            D[i, :, :] = Ai @ Bi
             #print(D[i, :, :])
             #print('------------------------')
     #if not np.all(np.allclose(C, D)):
@@ -162,7 +162,7 @@ def dot_n33_n3(A, B, debug=True):
         #print('dot_n33_n3')
         #print(Ai)
         #print(Bi)
-        D[i, :] = Ai.dot(Bi)
+        D[i, :] = Ai @ Bi
     return D
 
 def transpose3d(T):
@@ -211,16 +211,16 @@ def triple_n33_n33(A, T, tranpose=False, debug=True):
         D = np.full(A.shape, np.nan)
         if tranpose:
             for i, Ai, Ti in zip(count(), A, T):
-                Dia = Ti.T.dot(Ai.dot(Ti))
+                Dia = Ti.T @ Ai @ Ti
                 D[i, :, :] = Dia
         else:
             for i, Ai, Ti in zip(count(), A, T):
-                Dib = Ti.dot(Ai.dot(Ti.T))
+                Dib = Ti @ Ai @ Ti.T
                 D[i, :, :] = Dib
         assert np.all(np.allclose(C, D)), 'tranpose=%s' % tranpose
     return C
 
-def triple_n33_33(A, T, tranpose=False, debug=True):
+def triple_n33_33(A, T, tranpose: bool=False, debug: bool=True):
     """
     Calculates the matrix triple product  for a series of::
 
@@ -250,11 +250,11 @@ def triple_n33_33(A, T, tranpose=False, debug=True):
         D = np.full(A.shape, np.nan)
         if tranpose:
             for i, Ai in zip(count(), A):
-                Dia = T.T.dot(Ai.dot(T))
+                Dia = T.T @ Ai @ T
                 D[i, :, :] = Dia
         else:
             for i, Ai, Ti in zip(count(), A, T):
-                Dib = T.dot(Ai.dot(T.T))
+                Dib = T @ Ai @ T.T
                 D[i, :, :] = Dib
         assert np.all(np.allclose(C, D)), 'tranpose=%s' % tranpose
     return C

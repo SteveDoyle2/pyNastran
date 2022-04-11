@@ -27,7 +27,7 @@ from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.free_faces import write_skin_solid_faces
 
 
-def cmd_line_equivalence(argv=None, quiet=False):
+def cmd_line_equivalence(argv=None, quiet: bool=False) -> None:
     """command line interface to bdf_equivalence_nodes"""
     if argv is None:
         argv = sys.argv
@@ -68,7 +68,7 @@ def cmd_line_equivalence(argv=None, quiet=False):
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
         bdf_filename_out = 'merged.bdf'
-    tol = data['EQ_TOL']
+    tol = float(data['EQ_TOL'])
     size = 16
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 
@@ -262,7 +262,7 @@ def cmd_line_renumber(argv=None, quiet=False):
                      cards_to_skip=cards_to_skip, log=log)
 
 
-def cmd_line_mirror(argv=None, quiet=False):
+def cmd_line_mirror(argv=None, quiet: bool=False):
     """command line interface to write_bdf_symmetric"""
     if argv is None:
         argv = sys.argv
@@ -301,15 +301,19 @@ def cmd_line_mirror(argv=None, quiet=False):
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    if data['--tol'] is None:
+    if data['--tol'] is False:
         data['TOL'] = 0.000001
 
+    if isinstance(data['TOL'], str):
+        data['TOL'] = float(data['TOL'])
     tol = data['TOL']
-    if data['--noeq'] is not None:
+
+    assert data['--noeq'] in [True, False]
+    if data['--noeq']:
         tol = -1.
 
     plane = 'xz'
-    if data['--plane'] is not None:
+    if data['--plane'] is not None:  # None or str
         plane = data['--plane']
 
     if not quiet:  # pragma: no cover
@@ -652,14 +656,14 @@ def cmd_line_free_faces(argv=None, quiet=False):
         'Options:\n'
         '  -l, --large        writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double       writes the BDF in large field, double precision format (default=False)\n'
-        '  --encoding ENCODE  the encoding method (default=None -> %r)\n'
+        f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n'
         '\n'
         'Developer:\n'
         '  -f, --profile    Profiles the code (default=False)\n'
         '\n'
         "Info:\n"
         '  -h, --help     show this help message and exit\n'
-        "  -v, --version  show program's version number and exit\n" % encoding
+        "  -v, --version  show program's version number and exit\n"
     )
     if len(argv) == 1:
         sys.exit(arg_msg)

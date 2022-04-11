@@ -39,7 +39,7 @@ def set_blank_if_default(value: Any, default: Any) -> Union[int, float, str, Non
 
     .. note:: this method is used by almost every card when printing
     """
-    if isinstance(value, (float, float32)) and isnan(value):
+    if isinstance(value, (float, float32, float64)) and isnan(value):
         return None
     return None if is_same(value, default) else value
 
@@ -54,7 +54,7 @@ def set_default_if_blank(value: Any, default: Any) -> Union[int, float, str]:
 def print_scientific_8(value: float) -> str:
     """
     Prints a value in 8-character scientific notation.
-    This is a sub-method and shouldnt typically be called
+    This is a sub-method and shouldn't typically be called
 
     Notes
     -----
@@ -210,7 +210,7 @@ def print_float_8(value: float) -> str:
     #field : str
         #an 8-character string
     #"""
-    #if isinstance(value, (float, float32)):
+    #if isinstance(value, (float, float32, float64)):
         #field = print_float_8(value)
     #elif isinstance(value, int):
         #field = "%8i" % value
@@ -236,13 +236,13 @@ def print_field_8(value: Union[int, float, str, None]) -> str:
 
     """
     if isinstance(value, int):
-        field = "%8i" % value
-    elif isinstance(value, (float, float32)):
+        field = '%8i' % value
+    elif isinstance(value, (float, float32, float64)):
         field = print_float_8(value)
     elif value is None:
-        field = "        "
+        field = '        '
     else:
-        field = "%8s" % value
+        field = '%8s' % value
     if len(field) != 8:
         msg = 'field=%r is not 8 characters long...raw_value=%r' % (field, value)
         raise RuntimeError(msg)
@@ -269,20 +269,19 @@ def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
               format where the first 8 is the card name or
               blank (continuation).  The last 8-character field indicates
               an optional continuation, but because it's a left-justified
-              unneccessary field, print_card doesnt use it.
+              unnecessary field, print_card doesn't use it.
 
     .. code-block:: python
 
        >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
        >>> print_card_8(fields)
        DUMMY          1       2       3               4       5       6       7
-       DUMMY          1       2       3               4       5       6       7
                      8.
 
     """
     try:
         out = '%-8s' % fields[0]
-    except:
+    except Exception:
         print("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
         raise
@@ -291,7 +290,7 @@ def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
         field = fields[i]
         try:
             out += print_field_8(field)
-        except:
+        except Exception:
             print("bad fields = %s" % fields)
             raise
         if i % 8 == 0:  # allow 1+8 fields per line
@@ -321,11 +320,14 @@ def print_int_card(fields: List[Union[int]]) -> str:
     .. code-block:: python
 
        fields = ['SET', 1, 2, 3, 4, 5, 6, ..., n]
-
+       print_int_card(fields)
+       >>> fields
+       'SET1, 1, 2, 3, 4, 5, 6, ...'
+       '    , n'
     """
     try:
         out = '%-8s' % fields[0]
-    except:
+    except Exception:
         print("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
         raise
@@ -333,8 +335,9 @@ def print_int_card(fields: List[Union[int]]) -> str:
     for i in range(1, len(fields)):
         field = fields[i]
         try:
-            out += "%8i" % field  # balks if you have None or string fields
-        except:
+            # balks if you have None or string fields
+            out += '%8d' % field
+        except Exception:
             print("bad fields = %s" % fields)
             raise
         if i % 8 == 0:  # allow 1+8 fields per line
@@ -377,7 +380,7 @@ def print_int_card_blocks(fields_blocks: List[Any]) -> str:
     card_name = fields_blocks[0]
     try:
         out = '%-8s' % card_name
-    except:
+    except Exception:
         print("ERROR!  fields_blocks=%s" % fields_blocks)
         sys.stdout.flush()
         raise

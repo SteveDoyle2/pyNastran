@@ -18,7 +18,7 @@ All cards are Material objects.
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 from numpy import zeros, array
 
@@ -154,7 +154,7 @@ class CREEP(Material):
         e = double_or_blank(card, 14, 'e')
         f = double_or_blank(card, 15, 'f')
         g = double_or_blank(card, 16, 'g')
-        assert len(card) <= 17, 'len(CREEP card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 17, f'len(CREEP card) = {len(card):d}\ncard={card}'
         return CREEP(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
                      a, b, c, d, e, f, g, comment=comment)
 
@@ -324,7 +324,7 @@ class NXSTRAT(BaseCard):
         #nleftover = (nfields - 2) % 2
         #assert nleftover == ileftover, 'nparams=%s nleftover=%s card=%s' % (nparams, nleftover, card)
 
-        #assert len(card) <= 13, 'len(NXSTRAT card) = %i\ncard=%s' % (len(card), card)
+        #assert len(card) <= 13, f'len(NXSTRAT card) = {len(card):d}\ncard={card}'
         return NXSTRAT(sid, params, comment=comment)
 
     def raw_fields(self):
@@ -517,17 +517,18 @@ class MAT1(IsotropicMaterial):
         G = double_or_blank(card, 3, 'G')
         nu = double_or_blank(card, 4, 'nu')
 
-        rho = double_or_blank(card, 5, 'rho', 0.)
-        a = double_or_blank(card, 6, 'a', 0.0)
-        tref = double_or_blank(card, 7, 'tref', 0.0)
-        ge = double_or_blank(card, 8, 'ge', 0.0)
-        St = double_or_blank(card, 9, 'St', 0.0)
-        Sc = double_or_blank(card, 10, 'Sc', 0.0)
-        Ss = double_or_blank(card, 11, 'Ss', 0.0)
-        mcsid = integer_or_blank(card, 12, 'mcsid', 0)
-        assert len(card) <= 13, 'len(MAT1 card) = %i\ncard=%s' % (len(card), card)
-        return MAT1(mid, E, G, nu, rho, a, tref, ge,
-                    St, Sc, Ss, mcsid, comment=comment)
+        rho = double_or_blank(card, 5, 'rho', default=0.)
+        a = double_or_blank(card, 6, 'a', default=0.0)
+        tref = double_or_blank(card, 7, 'tref', default=0.0)
+        ge = double_or_blank(card, 8, 'ge', default=0.0)
+        St = double_or_blank(card, 9, 'St', default=0.0)
+        Sc = double_or_blank(card, 10, 'Sc', default=0.0)
+        Ss = double_or_blank(card, 11, 'Ss', default=0.0)
+        mcsid = integer_or_blank(card, 12, 'mcsid', default=0)
+        assert len(card) <= 13, f'len(MAT1 card) = {len(card):d}\ncard={card}'
+        return MAT1(mid, E, G, nu,
+                    rho=rho, a=a, tref=tref, ge=ge,
+                    St=St, Sc=Sc, Ss=Ss, mcsid=mcsid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -712,7 +713,6 @@ class MAT1(IsotropicMaterial):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-
     def D(self):
         E11 = self.E()
         E22 = E11
@@ -762,7 +762,7 @@ class MAT1(IsotropicMaterial):
     #def returnComplMat(self, th, **kwargs):
         #"""Returns the material 6x6 compliance matrix.
 
-        #Mainly inteded as a private method although kept public, and
+        #Mainly intended as a private method although kept public, and
         #fascilitated the transformation of the compliance matrix to another
         #coordinate system.
 
@@ -826,7 +826,8 @@ class MAT2(AnisotropicMaterial):
 
     def __init__(self, mid, G11, G12, G13, G22, G23, G33,
                  rho=0., a1=None, a2=None, a3=None, tref=0., ge=0.,
-                 St=None, Sc=None, Ss=None, mcsid=None, comment=''):
+                 St=None, Sc=None, Ss=None, mcsid=None,
+                 comment=''):
         AnisotropicMaterial.__init__(self)
         self.matt2_ref = None
         if comment:
@@ -917,19 +918,19 @@ class MAT2(AnisotropicMaterial):
 
         """
         mid = integer(card, 1, 'mid')
-        G11 = double_or_blank(card, 2, 'G11', 0.0)
-        G12 = double_or_blank(card, 3, 'G12', 0.0)
-        G13 = double_or_blank(card, 4, 'G13', 0.0)
-        G22 = double_or_blank(card, 5, 'G22', 0.0)
-        G23 = double_or_blank(card, 6, 'G23', 0.0)
-        G33 = double_or_blank(card, 7, 'G33', 0.0)
+        G11 = double_or_blank(card, 2, 'G11', default=0.0)
+        G12 = double_or_blank(card, 3, 'G12', default=0.0)
+        G13 = double_or_blank(card, 4, 'G13', default=0.0)
+        G22 = double_or_blank(card, 5, 'G22', default=0.0)
+        G23 = double_or_blank(card, 6, 'G23', default=0.0)
+        G33 = double_or_blank(card, 7, 'G33', default=0.0)
 
-        rho = double_or_blank(card, 8, 'rho', 0.0)
+        rho = double_or_blank(card, 8, 'rho', default=0.0)
         a1 = double_or_blank(card, 9, 'a1') # blank?
         a2 = double_or_blank(card, 10, 'a2') # blank?
         a3 = double_or_blank(card, 11, 'a3') # blank?
-        tref = double_or_blank(card, 12, 'tref', 0.0)
-        ge = double_or_blank(card, 13, 'ge', 0.0)
+        tref = double_or_blank(card, 12, 'tref', default=0.0)
+        ge = double_or_blank(card, 13, 'ge', default=0.0)
         St = double_or_blank(card, 14, 'St') # or blank?
         Sc = double_or_blank(card, 15, 'Sc') # or blank?
         Ss = double_or_blank(card, 16, 'Ss') # or blank?
@@ -1214,15 +1215,15 @@ class MAT3(OrthotropicMaterial):
         nuxth = double(card, 5, 'nuxth')
         nuthz = double(card, 6, 'nuthz')
         nuzx = double(card, 7, 'nuzx')
-        rho = double_or_blank(card, 8, 'rho', 0.0)
+        rho = double_or_blank(card, 8, 'rho', default=0.0)
 
         gzx = double_or_blank(card, 11, 'gzx')
-        ax = double_or_blank(card, 12, 'ax', 0.0)
-        ath = double_or_blank(card, 13, 'ath', 0.0)
-        az = double_or_blank(card, 14, 'az', 0.0)
-        tref = double_or_blank(card, 15, 'tref', 0.0)
-        ge = double_or_blank(card, 16, 'ge', 0.0)
-        assert len(card) <= 17, 'len(MAT3 card) = %i\ncard=%s' % (len(card), card)
+        ax = double_or_blank(card, 12, 'ax', default=0.0)
+        ath = double_or_blank(card, 13, 'ath', default=0.0)
+        az = double_or_blank(card, 14, 'az', default=0.0)
+        tref = double_or_blank(card, 15, 'tref', default=0.0)
+        ge = double_or_blank(card, 16, 'ge', default=0.0)
+        assert len(card) <= 17, f'len(MAT3 card) = {len(card):d}\ncard={card}'
         return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=rho, gzx=gzx,
                     ax=ax, ath=ath, az=az, tref=tref, ge=ge, comment=comment)
 
@@ -1394,16 +1395,16 @@ class MAT4(ThermalMaterial):
         """
         mid = integer(card, 1, 'mid')
         k = double_or_blank(card, 2, 'k')
-        cp = double_or_blank(card, 3, 'cp', 0.0)
-        rho = double_or_blank(card, 4, 'rho', 1.0)
+        cp = double_or_blank(card, 3, 'cp', default=0.0)
+        rho = double_or_blank(card, 4, 'rho', default=1.0)
         H = double_or_blank(card, 5, 'H')
         mu = double_or_blank(card, 6, 'mu')
-        hgen = double_or_blank(card, 7, 'hgen', 1.0)
+        hgen = double_or_blank(card, 7, 'hgen', default=1.0)
         ref_enthalpy = double_or_blank(card, 8, 'refEnthalpy')
         tch = double_or_blank(card, 9, 'tch')
         tdelta = double_or_blank(card, 10, 'tdelta')
         qlat = double_or_blank(card, 11, 'qlat')
-        assert len(card) <= 12, 'len(MAT4 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(MAT4 card) = {len(card):d}\ncard={card}'
         return MAT4(mid, k, cp=cp, rho=rho, H=H, mu=mu, hgen=hgen,
                     ref_enthalpy=ref_enthalpy, tch=tch, tdelta=tdelta,
                     qlat=qlat, comment=comment)
@@ -1574,17 +1575,17 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
         """
         mid = integer(card, 1, 'mid')
-        kxx = double_or_blank(card, 2, 'kxx', 0.0)
-        kxy = double_or_blank(card, 3, 'kxy', 0.0)
-        kxz = double_or_blank(card, 4, 'kxz', 0.0)
-        kyy = double_or_blank(card, 5, 'kyy', 0.0)
-        kyz = double_or_blank(card, 6, 'kyz', 0.0)
-        kzz = double_or_blank(card, 7, 'kzz', 0.0)
+        kxx = double_or_blank(card, 2, 'kxx', default=0.0)
+        kxy = double_or_blank(card, 3, 'kxy', default=0.0)
+        kxz = double_or_blank(card, 4, 'kxz', default=0.0)
+        kyy = double_or_blank(card, 5, 'kyy', default=0.0)
+        kyz = double_or_blank(card, 6, 'kyz', default=0.0)
+        kzz = double_or_blank(card, 7, 'kzz', default=0.0)
 
-        cp = double_or_blank(card, 8, 'cp', 0.0)
-        rho = double_or_blank(card, 9, 'rho', 1.0)
-        hgen = double_or_blank(card, 10, 'hgen', 1.0)
-        assert len(card) <= 11, 'len(MAT5 card) = %i\ncard=%s' % (len(card), card)
+        cp = double_or_blank(card, 8, 'cp', default=0.0)
+        rho = double_or_blank(card, 9, 'rho', default=1.0)
+        hgen = double_or_blank(card, 10, 'hgen', default=1.0)
+        assert len(card) <= 11, f'len(MAT5 card) = {len(card):d}\ncard={card}'
         return MAT5(mid, kxx, kxy, kxz, kyy, kyz, kzz,
                     cp, rho, hgen, comment=comment)
 
@@ -1874,7 +1875,7 @@ class MAT8(OrthotropicMaterial):
         ge = double_or_blank(card, 17, 'ge', 0.0)
         F12 = double_or_blank(card, 18, 'F12', 0.0)
         strn = double_or_blank(card, 19, 'strn', 0.0)
-        assert len(card) <= 20, 'len(MAT8 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 20, f'len(MAT8 card) = {len(card):d}\ncard={card}'
         return MAT8(mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, tref,
                     Xt, Xc, Yt, Yc, S, ge, F12, strn, comment=comment)
 
@@ -2059,6 +2060,7 @@ class MAT9(AnisotropicMaterial):
     |      | A2  | A3  | A4  | A5  | A6  | TREF | GE  |     |
     +------+-----+-----+-----+-----+-----+------+-----+-----+
 
+    .. warning:: MSC 2020: gelist is not supported.
     """
     type = 'MAT9'
     _field_map = {
@@ -2186,37 +2188,37 @@ class MAT9(AnisotropicMaterial):
 
         """
         mid = integer(card, 1, 'mid')
-        G11 = double_or_blank(card, 2, 'G11', 0.0)
-        G12 = double_or_blank(card, 3, 'G12', 0.0)
-        G13 = double_or_blank(card, 4, 'G13', 0.0)
-        G14 = double_or_blank(card, 5, 'G14', 0.0)
-        G15 = double_or_blank(card, 6, 'G15', 0.0)
-        G16 = double_or_blank(card, 7, 'G16', 0.0)
-        G22 = double_or_blank(card, 8, 'G22', 0.0)
-        G23 = double_or_blank(card, 9, 'G23', 0.0)
-        G24 = double_or_blank(card, 10, 'G24', 0.0)
-        G25 = double_or_blank(card, 11, 'G25', 0.0)
-        G26 = double_or_blank(card, 12, 'G26', 0.0)
-        G33 = double_or_blank(card, 13, 'G33', 0.0)
-        G34 = double_or_blank(card, 14, 'G34', 0.0)
-        G35 = double_or_blank(card, 15, 'G35', 0.0)
-        G36 = double_or_blank(card, 16, 'G36', 0.0)
-        G44 = double_or_blank(card, 17, 'G44', 0.0)
-        G45 = double_or_blank(card, 18, 'G45', 0.0)
-        G46 = double_or_blank(card, 19, 'G46', 0.0)
-        G55 = double_or_blank(card, 20, 'G55', 0.0)
-        G56 = double_or_blank(card, 21, 'G56', 0.0)
-        G66 = double_or_blank(card, 22, 'G66', 0.0)
-        rho = double_or_blank(card, 23, 'rho', 0.0)
-        A = [double_or_blank(card, 24, 'A1', 0.0),
-             double_or_blank(card, 25, 'A2', 0.0),
-             double_or_blank(card, 26, 'A3', 0.0),
-             double_or_blank(card, 27, 'A4', 0.0),
-             double_or_blank(card, 28, 'A5', 0.0),
-             double_or_blank(card, 29, 'A6', 0.0)]
-        tref = double_or_blank(card, 30, 'tref', 0.0)
-        ge = double_or_blank(card, 31, 'ge', 0.0)
-        assert len(card) <= 32, 'len(MAT9 card) = %i\ncard=%s' % (len(card), card)
+        G11 = double_or_blank(card, 2, 'G11', default=0.0)
+        G12 = double_or_blank(card, 3, 'G12', default=0.0)
+        G13 = double_or_blank(card, 4, 'G13', default=0.0)
+        G14 = double_or_blank(card, 5, 'G14', default=0.0)
+        G15 = double_or_blank(card, 6, 'G15', default=0.0)
+        G16 = double_or_blank(card, 7, 'G16', default=0.0)
+        G22 = double_or_blank(card, 8, 'G22', default=0.0)
+        G23 = double_or_blank(card, 9, 'G23', default=0.0)
+        G24 = double_or_blank(card, 10, 'G24', default=0.0)
+        G25 = double_or_blank(card, 11, 'G25', default=0.0)
+        G26 = double_or_blank(card, 12, 'G26', default=0.0)
+        G33 = double_or_blank(card, 13, 'G33', default=0.0)
+        G34 = double_or_blank(card, 14, 'G34', default=0.0)
+        G35 = double_or_blank(card, 15, 'G35', default=0.0)
+        G36 = double_or_blank(card, 16, 'G36', default=0.0)
+        G44 = double_or_blank(card, 17, 'G44', default=0.0)
+        G45 = double_or_blank(card, 18, 'G45', default=0.0)
+        G46 = double_or_blank(card, 19, 'G46', default=0.0)
+        G55 = double_or_blank(card, 20, 'G55', default=0.0)
+        G56 = double_or_blank(card, 21, 'G56', default=0.0)
+        G66 = double_or_blank(card, 22, 'G66', default=0.0)
+        rho = double_or_blank(card, 23, 'rho', default=0.0)
+        A = [double_or_blank(card, 24, 'A1', default=0.0),
+             double_or_blank(card, 25, 'A2', default=0.0),
+             double_or_blank(card, 26, 'A3', default=0.0),
+             double_or_blank(card, 27, 'A4', default=0.0),
+             double_or_blank(card, 28, 'A5', default=0.0),
+             double_or_blank(card, 29, 'A6', default=0.0)]
+        tref = double_or_blank(card, 30, 'tref', default=0.0)
+        ge = double_or_blank(card, 31, 'ge', default=0.0)
+        assert len(card) <= 32, f'len(MAT9 card) = {len(card):d}\ncard={card}'
         return MAT9(mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25,
                     G26, G33, G34, G35, G36, G44, G45, G46,
                     G55, G56, G66, rho, A, tref, ge,
@@ -2473,14 +2475,14 @@ class MAT10(Material):
         bulk = double_or_blank(card, 2, 'bulk')
         rho = double_or_blank(card, 3, 'rho')
         c = double_or_blank(card, 4, 'c')
-        ge = double_or_blank(card, 5, 'ge', 0.0)
+        ge = double_or_blank(card, 5, 'ge', default=0.0)
 
         gamma = double_or_blank(card, 6, 'gamma', None)
         tid_bulk = integer_or_blank(card, 10, 'tid_bulk')
         tid_rho = integer_or_blank(card, 11, 'tid_rho')
         tid_ge = integer_or_blank(card, 13, 'tid_ge')
         tid_gamma = integer_or_blank(card, 14, 'tid_gamma')
-        assert len(card) <= 15, 'len(MAT10 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 15, f'len(MAT10 card) = {len(card):d}\ncard={card}'
         return MAT10(mid, bulk, rho, c, ge, gamma,
                      tid_bulk, tid_rho, tid_ge, tid_gamma,
                      comment=comment)
@@ -2604,10 +2606,10 @@ def _mat10_get_bulk_rho_c(bulk, rho, c):
                 msg = 'bulk=%s rho=%s c=sqrt(bulk/rho)=NA' % (bulk, rho)
                 raise ValueError(msg)
         else:
-            msg = 'c, bulk, and rho are all undefined on tbe MAT10'
+            msg = 'c, bulk, and rho are all undefined on the MAT10'
             raise RuntimeError(msg)
     else:
-        msg = 'c, bulk, and rho are all undefined on tbe MAT10'
+        msg = 'c, bulk, and rho are all undefined on the MAT10'
         raise RuntimeError(msg)
 
     return bulk, rho, c
@@ -2727,7 +2729,7 @@ class MATG(Material):
         tab_gpl = integer_or_blank(card, 15, 'tabgpl')
         tab_gap = integer_or_blank(card, 16, 'tabgap')
 
-        assert len(card) <= 17, 'len(MATG card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 17, f'len(MATG card) = {len(card):d}\ncard={card}'
         return MATG(mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap,
                     tab_yprs, tab_epl, tab_gpl, tab_gap,
                     comment=comment)
@@ -2867,14 +2869,14 @@ class MAT11(Material):
         g13 = double(card, 9, 'g13')
         g23 = double(card, 10, 'g23')
 
-        rho = double_or_blank(card, 11, 'rho', 0.0)
-        a1 = double_or_blank(card, 12, 'a1', 0.0)
-        a2 = double_or_blank(card, 13, 'a2', 0.0)
-        a3 = double_or_blank(card, 14, 'a3', 0.0)
+        rho = double_or_blank(card, 11, 'rho', default=0.0)
+        a1 = double_or_blank(card, 12, 'a1', default=0.0)
+        a2 = double_or_blank(card, 13, 'a2', default=0.0)
+        a3 = double_or_blank(card, 14, 'a3', default=0.0)
 
-        tref = double_or_blank(card, 15, 'tref', 0.0)
-        ge = double_or_blank(card, 16, 'ge', 0.0)
-        assert len(card) <= 17, 'len(MAT11 card) = %i\ncard=%s' % (len(card), card)
+        tref = double_or_blank(card, 15, 'tref', default=0.0)
+        ge = double_or_blank(card, 16, 'ge', default=0.0)
+        assert len(card) <= 17, f'len(MAT11 card) = {len(card):d}\ncard={card}'
         return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
                      a1=a1, a2=a2, a3=a3, tref=tref, ge=ge, comment=comment)
 
@@ -2909,6 +2911,9 @@ class MAT11(Material):
         ge = data[15]
         return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
                      a1, a2, a3, tref, ge, comment=comment)
+
+    def get_density(self):
+        return self.rho
 
     def _verify(self, xref):
         """
@@ -3048,7 +3053,7 @@ class MAT3D(Material):
         g13 = double(card, 9, 'g13')
         g23 = double(card, 10, 'g23')
         rho = double_or_blank(card, 11, 'rho', 0.0)
-        assert len(card) <= 17, 'len(MAT3D card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 17, f'len(MAT3D card) = {len(card):d}\ncard={card}'
         return MAT3D(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, comment=comment)
 
     def uncross_reference(self) -> None:
@@ -3361,19 +3366,19 @@ class MATHE(HyperelasticMaterial):
                 c20, c11, c02,
                 c30, c21, c12, c03,
             ]
-            assert len(card) <= 29, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 29, f'len(MATHE card) = {len(card):d}\ncard={card}'
         elif model == 'SUSSBAT':
             tab1 = integer(card, 9, 'tab1')
             sstype = string_or_blank(card, 10, 'sstype', 'ENG')
             relerr = double_or_blank(card, 11, 'relerr', 0.01)
-            assert len(card) <= 12, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 12, f'len(MATHE card) = {len(card):d}\ncard={card}'
             sussbat = [tab1, sstype, relerr]
         elif model in ['ABOYCE']:
             # NX version
             # MSC version not supported (same as GENT)
             nkt = double_or_blank(card, 9, 'NKT', 1.0)
             n = double_or_blank(card, 10, 'N', 1.0)
-            assert len(card) <= 11, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 11, f'len(MATHE card) = {len(card):d}\ncard={card}'
             aboyce = [nkt, n]
         elif model in ['GENT']:
             # no NX version
@@ -3399,7 +3404,7 @@ class MATHE(HyperelasticMaterial):
             d5 = double_or_blank(card, 21, 'd5')
 
             # TODO: should this be 21?
-            assert len(card) <= 22, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 22, f'len(MATHE card) = {len(card):d}\ncard={card}'
 
             gent = [nkt, n, im, d1, d2, d3, d4, d5]
         else:  # pragma: no cover
@@ -3642,7 +3647,7 @@ class MATHP(HyperelasticMaterial):
         tab3 = integer_or_blank(card, 51, 'tab3')
         tab4 = integer_or_blank(card, 52, 'tab4')
         tabd = integer_or_blank(card, 56, 'tabd')
-        assert len(card) <= 57, 'len(MATHP card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 57, f'len(MATHP card) = {len(card):d}\ncard={card}'
         return MATHP(mid, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
                      a02, d2, a30, a21, a12, a03, d3, a40,
                      a31, a22, a13, a04, d4, a50, a41,

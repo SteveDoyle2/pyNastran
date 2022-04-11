@@ -175,7 +175,7 @@ class CTRAX3(AxisymmetricTri):
             integer_or_blank(card, 5, 'n3'),
             ]
         theta = integer_double_or_blank(card, 6, 'theta', 0.0)
-        assert len(card) <= 7, 'len(CTRAX3 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(CTRAX3 card) = {len(card):d}\ncard={card}'
         return CTRAX3(eid, pid, nids, theta=theta, comment=comment)
 
     def _verify(self, xref):
@@ -238,7 +238,7 @@ class CTRAX3(AxisymmetricTri):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -356,7 +356,7 @@ class CTRAX6(AxisymmetricTri):
             integer_or_blank(card, 8, 'n6'),
             ]
         theta = integer_double_or_blank(card, 9, 'theta', 0.0)
-        assert len(card) <= 10, 'len(CTRAX6 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 10, f'len(CTRAX6 card) = {len(card):d}\ncard={card}'
         return CTRAX6(eid, pid, nids, theta=theta, comment=comment)
 
     def _verify(self, xref):
@@ -416,7 +416,7 @@ class CTRAX6(AxisymmetricTri):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -544,8 +544,8 @@ class CTRIAX(AxisymmetricTri):
             integer_or_blank(card, 7, 'n5'),
             integer_or_blank(card, 8, 'n6'),
             ]
-        theta_mcid = integer_double_or_blank(card, 9, 'theta_mcsid', 0.0)
-        assert len(card) <= 10, 'len(CTRIAX card) = %i\ncard=%s' % (len(card), card)
+        theta_mcid = integer_double_or_blank(card, 9, 'theta_mcsid', default=0.0)
+        assert len(card) <= 10, f'len(CTRIAX card) = {len(card):d}\ncard={card}'
         return CTRIAX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     def _verify(self, xref):
@@ -736,8 +736,8 @@ class CTRIAX6(TriShell):
             integer(card, 7, 'n5'),
             integer_or_blank(card, 8, 'n6'),
         ]
-        theta = double_or_blank(card, 9, 'theta', 0.0)
-        assert len(card) <= 10, 'len(CTRIAX6 card) = %i\ncard=%s' % (len(card), card)
+        theta = double_or_blank(card, 9, 'theta', default=0.0)
+        assert len(card) <= 10, f'len(CTRIAX6 card) = {len(card):d}\ncard={card}'
         return CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
 
     @classmethod
@@ -1018,7 +1018,7 @@ class CQUADX(AxisymmetricQuad):
             integer_or_blank(card, 11, 'n9'),
         ]
         theta_mcid = integer_double_or_blank(card, 12, 'theta/mcid', 0.)
-        assert len(card) <= 13, 'len(CQUADX card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, f'len(CQUADX card) = {len(card):d}\ncard={card}'
         return CQUADX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     @classmethod
@@ -1198,7 +1198,7 @@ class CQUADX4(AxisymmetricQuad):
             integer(card, 6, 'n4'),
         ]
         theta = integer_double_or_blank(card, 7, 'theta', default=0.)
-        assert len(card) <= 8, 'len(CQUADX4 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(CQUADX4 card) = {len(card):d}\ncard={card}'
         return CQUADX4(eid, pid, nids, theta=theta, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -1214,7 +1214,7 @@ class CQUADX4(AxisymmetricQuad):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1273,6 +1273,7 @@ class CQUADX4(AxisymmetricQuad):
         nodes = self.node_ids
         data = ['CQUADX4', self.eid, self.Pid()] + nodes + [self.theta]
         return self.comment + print_card_8(data)
+
 
 class CQUADX8(AxisymmetricQuad):
     """
@@ -1347,7 +1348,7 @@ class CQUADX8(AxisymmetricQuad):
             integer_or_blank(card, 10, 'n8'),
         ]
         theta = integer_double_or_blank(card, 11, 'theta', 0.)
-        assert len(card) <= 12, 'len(CQUADX8 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(CQUADX8 card) = {len(card):d}\ncard={card}'
         return CQUADX8(eid, pid, nids, theta=theta, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -1363,7 +1364,7 @@ class CQUADX8(AxisymmetricQuad):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

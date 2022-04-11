@@ -45,7 +45,7 @@ class BDFMethods(BDFAttributes):
     def __init__(self):
         BDFAttributes.__init__(self)
 
-    def get_length_breakdown(self, property_ids=None, stop_if_no_length=True):
+    def get_length_breakdown(self, property_ids=None, stop_if_no_length: bool=True):
         """
         gets a breakdown of the length by property region
 

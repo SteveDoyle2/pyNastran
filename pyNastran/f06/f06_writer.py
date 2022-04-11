@@ -20,7 +20,7 @@ def make_stamp(title, today=None, build=None):
     if title is None:
         title = ''
 
-    #lenghts = [7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8]
+    #lengths = [7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8]
     months = [' January', 'February', 'March', 'April', 'May', 'June',
               'July', 'August', 'September', 'October', 'November', 'December']
     if today is None:
@@ -391,7 +391,7 @@ class F06Writer(OP2_F06_Common):
             should a dummy Nastran "END" table be made
         quiet : bool; default=False
             suppress print messages
-        repr_check: bool; defualt=False
+        repr_check: bool; default=False
             calls the object repr as a validation test (prints nothing)
         close : bool; default=True
             close the f06 file
@@ -493,8 +493,9 @@ class F06Writer(OP2_F06_Common):
             should objects be deleted after they're written to reduce memory
         quiet : bool; default=False
             suppress print messages
-        repr_check: bool; defualt=False
+        repr_check: bool; default=False
             calls the object repr as a validation test (prints nothing)
+
         """
         is_failed = False
         header = ['     DEFAULT                                                                                                                        \n',
@@ -556,7 +557,7 @@ class F06Writer(OP2_F06_Common):
 
                 self.page_num = result.write_f06(f06, header, page_stamp,
                                                  self.page_num, is_mag_phase=is_mag_phase, is_sort1=True)
-                assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
+                assert isinstance(self.page_num, int), f'page_num={self.page_num!r}'
                 if delete_objects:
                     del result
                 self.page_num += 1
@@ -637,7 +638,7 @@ class F06Writer(OP2_F06_Common):
 
                         #assert 'table_name=' in ''.join(result.get_stats())
                         assert isinstance(self.page_num, int), 'result=%s pageNum=%r' % (result, str(self.page_num))
-                    except:
+                    except Exception:
                         #print("result name = %r" % result.name())
                         raise
                     if delete_objects:

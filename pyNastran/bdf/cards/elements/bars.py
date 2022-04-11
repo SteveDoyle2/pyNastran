@@ -216,7 +216,7 @@ class BAROR(BaseCard):
         else:
             raise NotImplementedError('BAROR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
-        assert len(card) <= 9, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(BAROR card) = {len(card):d}\ncard={card}'
         return BAROR(pid, is_g0, g0, x, offt=offt, comment=comment)
 
     def raw_fields(self):
@@ -328,7 +328,7 @@ class CBARAO(BaseCard):
                 double_or_blank(card, 8, 'x6'),
             ]
             x = [xi for xi in x if xi is not None]
-        assert len(card) <= 9, 'len(CBARAO card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(CBARAO card) = {len(card):d}\ncard={card}'
         return CBARAO(eid, scale, x, comment=comment)
 
     def _verify(self, xref):
@@ -628,7 +628,7 @@ class CBAR(LineElement):
         wb = np.array([double_or_blank(card, 14, 'w1b', 0.0),
                        double_or_blank(card, 15, 'w2b', 0.0),
                        double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
-        assert len(card) <= 17, 'len(CBAR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 17, f'len(CBAR card) = {len(card):d}\ncard={card}'
         return CBAR(eid, pid, [ga, gb], x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
@@ -1111,7 +1111,7 @@ class CBEAM3(LineElement):  # was CBAR
         s = np.array([integer_or_blank(card, 21, 'sa', -1),
                       integer_or_blank(card, 22, 'sb', -1),
                       integer_or_blank(card, 23, 'sc', -1)], dtype='int32')
-        assert len(card) <= 24, 'len(CBEAM3 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 24, f'len(CBEAM3 card) = {len(card):d}\ncard={card}'
         return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
                       wa=wa, wb=wb, wc=wc, tw=tw, s=s, comment=comment)
 
@@ -2014,17 +2014,18 @@ def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
     try:
         z = np.cross(ihat, vhat) # k
     except ValueError:
-        msg = 'Invalid vector length\n'
-        msg += 'xyz1=%s\n' % str(xyz1)
-        msg += 'xyz2=%s\n' % str(xyz2)
-        msg += 'nid1=%s\n' % str(nid1)
-        msg += 'nid2=%s\n' % str(nid2)
-        msg += 'i   =%s\n' % str(i)
-        msg += 'Li  =%s\n' % str(Li)
-        msg += 'ihat=%s\n' % str(ihat)
-        msg += 'v   =%s\n' % str(v)
-        msg += 'vhat=%s\n' % str(vhat)
-        msg += 'z=cross(ihat, vhat)'
+        msg = (
+            'Invalid vector length\n'
+            f'xyz1={xyz1}\n'
+            f'xyz2={xyz2}\n'
+            f'nid1={nid1}\n'
+            f'nid2={nid2}\n'
+            f'i   ={i}\n'
+            f'Li  ={Li}\n'
+            f'ihat={ihat}\n'
+            f'v   ={v}\n'
+            f'vhat={vhat}\n'
+            f'z=cross(ihat, vhat)')
         print(msg)
         raise ValueError(msg)
 

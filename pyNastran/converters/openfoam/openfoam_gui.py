@@ -23,7 +23,7 @@ try:
     PKG_PATH = sys._MEIPASS #@UndefinedVariable
     SCRIPT_PATH = os.path.join(PKG_PATH, 'scripts')
     ICON_PATH = os.path.join(PKG_PATH, 'icons')
-except:
+except Exception:
     PKG_PATH = pyNastran.__path__[0]
     SCRIPT_PATH = os.path.join(PKG_PATH, 'gui', 'scripts')
     ICON_PATH = os.path.join(PKG_PATH, 'gui', 'icons')
@@ -118,7 +118,7 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
             fname = fnames[ifile + 1]
             try:
                 self.on_load_geometry(fname, self.format)
-            except:
+            except Exception:
                 self.infile_name = fname
 
         else:

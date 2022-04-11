@@ -72,21 +72,23 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_oug_oqg(self, cases, model: OP2, key, icase: int,
                           form_dict, header_dict, keys_map, log) -> int:
         """
-        loads nodal results bector results (e.g., dispalcements/temperatures)
+        loads nodal results vector results (e.g., displacements/temperatures)
         """
+        settings = self.gui.settings  # type: Settings
         nnodes = self.nnodes
         node_ids = self.node_ids
-        icase = _fill_nastran_displacements(
-            cases, model, key, icase,
-            form_dict, header_dict, keys_map,
-            self.xyz_cid0,
-            nnodes, node_ids, log, dim_max=self.gui.settings.dim_max)
 
         icase = _fill_nastran_displacements(
             cases, model, key, icase,
             form_dict, header_dict, keys_map,
             self.xyz_cid0,
-            nnodes, node_ids, log, dim_max=self.gui.settings.dim_max,
+            nnodes, node_ids, log, dim_max=settings.dim_max)
+
+        icase = _fill_nastran_displacements(
+            cases, model, key, icase,
+            form_dict, header_dict, keys_map,
+            self.xyz_cid0,
+            nnodes, node_ids, log, dim_max=settings.dim_max,
             prefix='acoustic',
         )
 
@@ -97,8 +99,8 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_gpstress(self, cases, model: OP2,
-                                times, key, icase: int,
-                                form_dict, header_dict, keys_map) -> int:
+                           times, key, icase: int,
+                           form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate grid point stress objects"""
         if key in model.grid_point_stress_discontinuities:
             case = model.grid_point_stress_discontinuities[key]
@@ -712,10 +714,10 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
 
-    def _fill_op2_centroidal_force(self, cases, model, times, key, icase,
+    def _fill_op2_centroidal_force(self, cases, model: OP2,
+                                   times, key, icase: int,
                                    force_dict, header_dict, keys_map) -> int:
         """Creates the time accurate force objects"""
-
         settings = self.settings  # type: Settings
         if settings.nastran_force:
             for itime, unused_dt in enumerate(times):
@@ -768,7 +770,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         return icase
 
-    def _fill_op2_centroidal_strain(self, cases, model, times, key, icase,
+    def _fill_op2_centroidal_strain(self, cases, model: OP2, times, key, icase: int,
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate strain objects"""
         settings = self.settings  # type: Settings
@@ -1083,7 +1085,7 @@ def _fill_nastran_displacements(cases, model: OP2, key, icase: int,
                                 nnodes: int, node_ids, log, dim_max: float=1.0,
                                 prefix: str='') -> int:
     """
-    loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
+    loads the nodal displacements/velocity/acceleration/eigenvector/spc/mpc forces
     """
     if prefix == 'acoustic':
         results = model.op2_results.acoustic

@@ -30,6 +30,7 @@ from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class Constraint(BaseCard):
@@ -1309,7 +1310,7 @@ class SPCOFF(Constraint):
             component = components_or_blank(card, ifield+1, 'C%i' % igrid, '0')
             nodes.append(node)
             components.append(component)
-        assert len(card) > 1, 'len(SPCOFF card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) > 1, f'len(SPCOFF card) = {len(card):d}\ncard={card}'
         return SPCOFF(nodes, components, comment=comment)
 
     @classmethod
@@ -1439,7 +1440,7 @@ class SPCOFF1(Constraint):
         """
         components = parse_components(card, 1, 'components')  # 246 = y; dx, dz dir
         nodes = card.fields(2)
-        assert len(card) > 2, 'len(SPCOFF1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) > 2, f'len(SPCOFF1 card) = {len(card):d}\ncard={card}'
         return cls(components, nodes, comment=comment)
 
     @classmethod

@@ -121,7 +121,7 @@ class Panel:
         self.log.debug("size(points) = (%s,%s)\n" % (len(points), len(points[0])))
         for i in range(self.nrows):
             for j in range(self.ncols):
-                points2[i][j] = scale * (dot(rot, points[i][j]) + translate)
+                points2[i][j] = scale * (rot @ points[i][j] + translate)
         self.points = points2
 
     def get_points(self):

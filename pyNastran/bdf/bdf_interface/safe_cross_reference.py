@@ -277,8 +277,7 @@ class SafeXrefMesh(XrefMesh):
                 msg += '%s = %s\n' % (key, upids)
             self.log.warning(msg.rstrip())
 
-    def _safe_cross_reference_loads(self):
-        # type: (bool) -> None
+    def _safe_cross_reference_loads(self) -> None:
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
@@ -440,12 +439,18 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['eid'].append((ref_id, eid))
         return eid_ref
 
-    def safe_elements(self, eids, ref_id, xref_errors, msg=''):
+    def safe_elements(self, eids, ref_id: int,
+                      xref_errors: Dict[str, Tuple[int, int]], msg=''):
         """
         Gets an series of elements
 
         Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE, RSSCON)
         or mass (CMASS1, CONM2)
+
+        Parameters
+        ----------
+        ref_id: int
+            typically a load_id
 
         """
         elements = []
@@ -502,14 +507,16 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['pid'].append((ref_id, pid))
         return pid_ref
 
-    def safe_material(self, mid, ref_id, xref_errors, msg=''):
+    def safe_material(self, mid: int, ref_id: int, xref_errors, msg=''):
         """
         Gets a material card
 
         Parameters
         ----------
+        mid : int
+            the material_id
         ref_id : int
-            the referencing value (e.g., an property references a material)
+            the referencing value (e.g., an property references a material, so use self.pid)
         """
         try:
             mid_ref = self.Material(mid, msg=msg)
@@ -519,7 +526,7 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['mid'].append((ref_id, mid))
         return mid_ref
 
-    def safe_coord(self, cid, ref_id, xref_errors, msg=''):
+    def safe_coord(self, cid: int, ref_id: int, xref_errors: Dict[str, Tuple[int, int]], msg=''):
         """
         Gets a CORDx card
 

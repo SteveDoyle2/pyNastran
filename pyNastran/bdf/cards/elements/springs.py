@@ -125,7 +125,7 @@ class CELAS1(SpringElement):
         #: component number
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 7, 'len(CELAS1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(CELAS1 card) = {len(card):d}\ncard={card}'
         return CELAS1(eid, pid, nids, c1, c2, comment=comment)
 
     @classmethod
@@ -328,13 +328,13 @@ class CELAS2(SpringElement):
         """
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
-        nids = [integer_or_blank(card, 3, 'g1', 0),
-                integer_or_blank(card, 5, 'g2', 0)]
-        c1 = integer_or_blank(card, 4, 'c1', 0)
-        c2 = integer_or_blank(card, 6, 'c2', 0)
-        ge = double_or_blank(card, 7, 'ge', 0.)
-        s = double_or_blank(card, 8, 's', 0.)
-        assert len(card) <= 9, 'len(CELAS2 card) = %i\ncard=%s' % (len(card), card)
+        nids = [integer_or_blank(card, 3, 'g1', default=0),
+                integer_or_blank(card, 5, 'g2', default=0)]
+        c1 = integer_or_blank(card, 4, 'c1', default=0)
+        c2 = integer_or_blank(card, 6, 'c2', default=0)
+        ge = double_or_blank(card, 7, 'ge', default=0.)
+        s = double_or_blank(card, 8, 's', default=0.)
+        assert len(card) <= 9, f'len(CELAS2 card) = {len(card):d}\ncard={card}'
         return CELAS2(eid, k, nids, c1, c2, ge, s, comment=comment)
 
     @classmethod
@@ -515,11 +515,11 @@ class CELAS3(SpringElement):
             a comment for the card
         """
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', eid)
+        pid = integer_or_blank(card, 2, 'pid', default=eid)
 
-        s1 = integer_or_blank(card, 3, 's1', 0)
-        s2 = integer_or_blank(card, 4, 's2', 0)
-        assert len(card) <= 5, 'len(CELAS3 card) = %i\ncard=%s' % (len(card), card)
+        s1 = integer_or_blank(card, 3, 's1', default=0)
+        s2 = integer_or_blank(card, 4, 's2', default=0)
+        assert len(card) <= 5, f'len(CELAS3 card) = {len(card):d}\ncard={card}'
         return CELAS3(eid, pid, [s1, s2], comment=comment)
 
     @classmethod
@@ -697,7 +697,7 @@ class CELAS4(SpringElement):
         k = double(card, 2, 'k')
         s1 = integer_or_blank(card, 3, 's1', 0)
         s2 = integer_or_blank(card, 4, 's2', 0)
-        assert len(card) <= 5, 'len(CELAS4 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(CELAS4 card) = {len(card):d}\ncard={card}'
         return CELAS4(eid, k, [s1, s2], comment=comment)
 
     @classmethod

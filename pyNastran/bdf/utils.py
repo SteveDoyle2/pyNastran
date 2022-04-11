@@ -9,7 +9,7 @@ Defines various utilities including:
 """
 from __future__ import annotations
 from copy import deepcopy
-from typing import List, Dict, TYPE_CHECKING
+from typing import Tuple, List, Dict, TYPE_CHECKING
 import numpy as np  # type: ignore
 from numpy import cross, dot  # type: ignore
 
@@ -102,8 +102,8 @@ def transform_load(F, M, cid: int, cid_new: int, model: BDF) -> Tuple[np.ndarray
     # Fglobal = Flocal1 * beta1
     # Flocal2 = (Flocal1 * beta1) * beta2.T
 
-    Fxyz_global = dot(Fxyz_local_1, cp_ref.beta())
-    Fxyz_local_2 = dot(dot(Fxyz_local_1, cp_ref.beta()), coord_to_ref.beta().T)
+    Fxyz_global = Fxyz_local_1 @ cp_ref.beta()
+    Fxyz_local_2 = (Fxyz_local_1 @ cp_ref.beta()) @ coord_to_ref.beta().T
 
     # find the moment about the new origin due to the force
     unused_Mxyz_global = cross(r, Fxyz_global)
@@ -156,7 +156,7 @@ def PositionWRT(xyz: NDArray3float, cid: int, cid_new: int, model: BDF) -> NDArr
 
         # transform xyz_1 to xyz_2
         p2_local = dot(
-            dot(p1_local, cp_ref.beta()) + cp_ref.origin - coord_to_ref.origin,
+            (p1_local @ cp_ref.beta()) + cp_ref.origin - coord_to_ref.origin,
             coord_to_ref.beta().T)
 
         # convert xyz_2 to R-Theta-Z_2

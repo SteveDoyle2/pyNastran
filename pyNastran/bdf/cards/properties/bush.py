@@ -140,8 +140,8 @@ class PBUSH(BushingProperty):
             Nominal structural damping constant in directions 1 through 6.
             len(ge) = 6
         rcv : List[float]; default=None -> (None, None, None, None)
-            [sa, st, ea, et] = rcv
-            length(mass_fields) = 4
+            [sa, st, ea, et] = rcv_fields
+            length(rcv_fields) = 4
         mass : float; default=None
             lumped mass of the CBUSH
             This is an MSC only parameter.

@@ -7,7 +7,7 @@ import traceback
 from itertools import chain
 from io import StringIO
 from collections import defaultdict, OrderedDict
-from typing import List, Dict, Tuple, Any, TYPE_CHECKING
+from typing import Tuple, List, Dict, Set, Optional, Any, TYPE_CHECKING
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -45,7 +45,7 @@ import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron,
-                 vtkPyramid) #vtkQuadraticPyramid
+                 vtkPyramid, vtkQuadraticPyramid)
 
 #from pyNastran import is_release
 from pyNastran import __version__
@@ -778,7 +778,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
         self.has_caero = has_caero
 
-        self.gui.log_info("nnodes=%i nelements=%i" % (self.nnodes, self.nelements))
+        #-----------------------------------------------------------------------
+        self.gui.log_info("nnodes=%d nelements=%d" % (self.nnodes, self.nelements))
         msg = model.get_bdf_stats(return_type='string')
         self.gui.log_debug(msg)
         msg = model.get_bdf_stats(return_type='list')
@@ -824,7 +825,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         if nconm2 > 0 and xref_nodes:
             self._set_conm_grid(nconm2, model)
-
 
         geometry_names = []
         if self.make_spc_mpc_supports and xref_nodes:
@@ -1559,13 +1559,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 #if 1:
                 elem = vtk.vtkVertex()
-                elem.GetPointIds().SetId(0, j)
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, j)
                 #else:
                     #elem = vtk.vtkSphere()
                     #elem.SetRadius(sphere_size)
                     #elem.SetCenter(points.GetPoint(j))
 
-                alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                alt_grid.InsertNextCell(elem.GetCellType(), point_ids)
                 j += 1
             elif element.type in ('CMASS1', 'CMASS2'):
                 centroid = element.Centroid()
@@ -1575,8 +1576,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 points.InsertPoint(j, *centroid)
 
                 elem = vtk.vtkVertex()
-                elem.GetPointIds().SetId(0, j)
-                alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, j)
+                alt_grid.InsertNextCell(elem.GetCellType(), point_ids)
                 j += 1
             else:
                 self.gui.log_info("skipping %s" % element.type)
@@ -1760,7 +1762,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     if prop.type not in ['PSOLID', 'PLSOLID']:
                         plot_node = True
                 if not plot_node:
-                    # don't include 456 constraints if they're ONLY on solid elemetns
+                    # don't include 456 constraints if they're ONLY on solid elements
                     # if we had any bar/plate/etc. elements that use this node, we'll plot the node
                     if not('1' in c1 or '2' in c1 or '3' in c1):
                         continue
@@ -1984,7 +1986,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             #if 1:
             elem = vtk.vtkVertex()
-            elem.GetPointIds().SetId(0, j)
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, j)
             #else:
                 #elem = vtk.vtkSphere()
                 #dim_max = 1.0
@@ -1992,7 +1995,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #elem.SetRadius(sphere_size)
                 #elem.SetCenter(points.GetPoint(j))
 
-            alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            alt_grid.InsertNextCell(elem.GetCellType(), point_ids)
             j += 1
 
         out_msg = ''
@@ -2042,8 +2045,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             points.InsertPoint(j, 0., 0., 0.)
 
             elem = vtk.vtkVertex()
-            elem.GetPointIds().SetId(0, j)
-            alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, j)
+            alt_grid.InsertNextCell(elem.GetCellType(), point_ids)
             j += 1
         alt_grid.SetPoints(points)
 
@@ -3464,11 +3468,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 if None not in node_ids:
                     elem = vtkQuadraticTriangle()
-                    elem.GetPointIds().SetId(3, nid_map[node_ids[1]])
-                    elem.GetPointIds().SetId(4, nid_map[node_ids[3]])
-                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(3, nid_map[node_ids[1]])
+                    point_ids.SetId(4, nid_map[node_ids[3]])
+                    point_ids.SetId(5, nid_map[node_ids[5]])
+                    eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4],
+                                           node_ids[1], node_ids[3], node_ids[5]]
                 else:
                     elem = vtkTriangle()
+                    point_ids = elem.GetPointIds()
+                    eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
 
                 n1 = nid_map[node_ids[0]]
                 n2 = nid_map[node_ids[2]]
@@ -3476,11 +3485,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #p1 = xyz_cid0[n1, :]
                 #p2 = xyz_cid0[n2, :]
                 #p3 = xyz_cid0[n3, :]
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CPLSTS4, CQUADX4)):
                 if isinstance(element, (CQUAD4, CQUADR)):
@@ -3492,7 +3500,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
-
                 eid_to_nid_map[eid] = node_ids
 
                 try:
@@ -3509,11 +3516,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #p4 = xyz_cid0[n4, :]
 
                 elem = vtkQuad()
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                elem.GetPointIds().SetId(3, n4)
-                grid.InsertNextCell(9, elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                point_ids.SetId(3, n4)
+                grid.InsertNextCell(9, point_ids)
 
             elif isinstance(element, (CQUAD8, CPLSTN8, CPLSTS8, CQUADX8)):
                 if isinstance(element, CQUAD8):
@@ -3525,7 +3533,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
-                self.eid_to_nid_map[eid] = node_ids[:4]
 
                 n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
                 #p1 = xyz_cid0[n1, :]
@@ -3534,17 +3541,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #p4 = xyz_cid0[n4, :]
                 if None not in node_ids:
                     elem = vtkQuadraticQuad()
-                    elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                    elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                    elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(4, nid_map[node_ids[4]])
+                    point_ids.SetId(5, nid_map[node_ids[5]])
+                    point_ids.SetId(6, nid_map[node_ids[6]])
+                    point_ids.SetId(7, nid_map[node_ids[7]])
+                    self.eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkQuad()
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                elem.GetPointIds().SetId(3, n4)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids = elem.GetPointIds()
+                    self.eid_to_nid_map[eid] = node_ids[:4]
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                point_ids.SetId(3, n4)
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif isinstance(element, (CQUAD, CQUADX)):
                 # CQUAD, CQUADX are 9 noded quads
@@ -3557,7 +3568,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
-                self.eid_to_nid_map[eid] = node_ids[:4]
 
                 n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
                 #p1 = xyz_cid0[n1, :]
@@ -3566,18 +3576,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #p4 = xyz_cid0[n4, :]
                 if None not in node_ids:
                     elem = vtk.vtkBiQuadraticQuad()
-                    elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                    elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                    elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                    elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(4, nid_map[node_ids[4]])
+                    point_ids.SetId(5, nid_map[node_ids[5]])
+                    point_ids.SetId(6, nid_map[node_ids[6]])
+                    point_ids.SetId(7, nid_map[node_ids[7]])
+                    point_ids.SetId(8, nid_map[node_ids[8]])
+                    self.eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkQuad()
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                elem.GetPointIds().SetId(3, n4)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids = elem.GetPointIds()
+                    self.eid_to_nid_map[eid] = node_ids[:4]
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                point_ids.SetId(3, n4)
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif isinstance(element, CTETRA4):
                 elem = vtkTetra()
@@ -3586,11 +3600,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     nid_to_pid_map[nid].append(pid)
                 eid_to_nid_map[eid] = node_ids[:4]
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                grid.InsertNextCell(10, elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                grid.InsertNextCell(10, point_ids)
                 #elem_nid_map = {nid:nid_map[nid] for nid in node_ids[:4]}
 
             elif isinstance(element, CTETRA10):
@@ -3599,22 +3614,25 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
-                eid_to_nid_map[eid] = node_ids[:4]
                 if None not in node_ids:
                     elem = vtkQuadraticTetra()
-                    elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                    elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                    elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                    elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
-                    elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(4, nid_map[node_ids[4]])
+                    point_ids.SetId(5, nid_map[node_ids[5]])
+                    point_ids.SetId(6, nid_map[node_ids[6]])
+                    point_ids.SetId(7, nid_map[node_ids[7]])
+                    point_ids.SetId(8, nid_map[node_ids[8]])
+                    point_ids.SetId(9, nid_map[node_ids[9]])
+                    eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkTetra()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids = elem.GetPointIds()
+                    eid_to_nid_map[eid] = node_ids[:4]
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif isinstance(element, CPENTA6):
                 elem = vtkWedge()
@@ -3623,13 +3641,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     nid_to_pid_map[nid].append(pid)
                 eid_to_nid_map[eid] = node_ids[:6]
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                grid.InsertNextCell(13, elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                grid.InsertNextCell(13, point_ids)
 
             elif isinstance(element, CPENTA15):
                 node_ids = element.node_ids
@@ -3637,27 +3656,30 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
-                eid_to_nid_map[eid] = node_ids[:6]
                 if None not in node_ids:
                     elem = vtkQuadraticWedge()
-                    elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                    elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                    elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
-                    elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
-                    elem.GetPointIds().SetId(10, nid_map[node_ids[10]])
-                    elem.GetPointIds().SetId(11, nid_map[node_ids[11]])
-                    elem.GetPointIds().SetId(12, nid_map[node_ids[12]])
-                    elem.GetPointIds().SetId(13, nid_map[node_ids[13]])
-                    elem.GetPointIds().SetId(14, nid_map[node_ids[14]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(6, nid_map[node_ids[6]])
+                    point_ids.SetId(7, nid_map[node_ids[7]])
+                    point_ids.SetId(8, nid_map[node_ids[8]])
+                    point_ids.SetId(9, nid_map[node_ids[9]])
+                    point_ids.SetId(10, nid_map[node_ids[10]])
+                    point_ids.SetId(11, nid_map[node_ids[11]])
+                    point_ids.SetId(12, nid_map[node_ids[12]])
+                    point_ids.SetId(13, nid_map[node_ids[13]])
+                    point_ids.SetId(14, nid_map[node_ids[14]])
+                    eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkWedge()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids = elem.GetPointIds()
+                    eid_to_nid_map[eid] = node_ids[:6]
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif isinstance(element, (CHEXA8, CIHEX1)):
                 node_ids = element.node_ids
@@ -3666,15 +3688,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid_to_pid_map[nid].append(pid)
                 eid_to_nid_map[eid] = node_ids[:8]
                 elem = vtkHexahedron()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                grid.InsertNextCell(12, elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                point_ids.SetId(6, nid_map[node_ids[6]])
+                point_ids.SetId(7, nid_map[node_ids[7]])
+                grid.InsertNextCell(12, point_ids)
 
             elif isinstance(element, (CHEXA20, CIHEX2)):
                 node_ids = element.node_ids
@@ -3684,34 +3707,37 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         nid_to_pid_map[nid].append(pid)
                 if None not in node_ids:
                     elem = vtkQuadraticHexahedron()
-                    elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
-                    elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
-                    elem.GetPointIds().SetId(10, nid_map[node_ids[10]])
-                    elem.GetPointIds().SetId(11, nid_map[node_ids[11]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(8, nid_map[node_ids[8]])
+                    point_ids.SetId(9, nid_map[node_ids[9]])
+                    point_ids.SetId(10, nid_map[node_ids[10]])
+                    point_ids.SetId(11, nid_map[node_ids[11]])
 
                     # these two blocks are flipped
-                    elem.GetPointIds().SetId(12, nid_map[node_ids[16]])
-                    elem.GetPointIds().SetId(13, nid_map[node_ids[17]])
-                    elem.GetPointIds().SetId(14, nid_map[node_ids[18]])
-                    elem.GetPointIds().SetId(15, nid_map[node_ids[19]])
+                    point_ids.SetId(12, nid_map[node_ids[16]])
+                    point_ids.SetId(13, nid_map[node_ids[17]])
+                    point_ids.SetId(14, nid_map[node_ids[18]])
+                    point_ids.SetId(15, nid_map[node_ids[19]])
 
-                    elem.GetPointIds().SetId(16, nid_map[node_ids[12]])
-                    elem.GetPointIds().SetId(17, nid_map[node_ids[13]])
-                    elem.GetPointIds().SetId(18, nid_map[node_ids[14]])
-                    elem.GetPointIds().SetId(19, nid_map[node_ids[15]])
+                    point_ids.SetId(16, nid_map[node_ids[12]])
+                    point_ids.SetId(17, nid_map[node_ids[13]])
+                    point_ids.SetId(18, nid_map[node_ids[14]])
+                    point_ids.SetId(19, nid_map[node_ids[15]])
+                    eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkHexahedron()
+                    eid_to_nid_map[eid] = node_ids[:8]
 
-                eid_to_nid_map[eid] = node_ids[:8]
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                point_ids.SetId(6, nid_map[node_ids[6]])
+                point_ids.SetId(7, nid_map[node_ids[7]])
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif isinstance(element, CPYRAM5):
                 node_ids = element.node_ids
@@ -3720,40 +3746,52 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid_to_pid_map[nid].append(pid)
                 eid_to_nid_map[eid] = node_ids[:5]
                 elem = vtkPyramid()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
                 # etype = 14
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
             elif isinstance(element, CPYRAM13):
                 node_ids = element.node_ids
                 pid = element.Pid()
-                #if None not in node_ids:
-                    #print(' node_ids =', node_ids)
-                    #elem = vtkQuadraticPyramid()
-                    # etype = 27
-                    #elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                    #elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                    #elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                    #elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
-                    #elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
-                    #elem.GetPointIds().SetId(10, nid_map[node_ids[10]])
-                    #elem.GetPointIds().SetId(11, nid_map[node_ids[11]])
-                    #elem.GetPointIds().SetId(12, nid_map[node_ids[12]])
-                #else:
-                elem = vtkPyramid()
+                if None not in node_ids:
+                    elem = vtkQuadraticPyramid()
+                    point_ids = elem.GetPointIds()
+                    #etype = 27
+                    _nids = [nid_map[node_ids[i]] for i in range(13)]
+                    point_ids.SetId(0, _nids[0])
+                    point_ids.SetId(1, _nids[1])
+                    point_ids.SetId(2, _nids[2])
+                    point_ids.SetId(3, _nids[3])
+                    point_ids.SetId(4, _nids[4])
+
+                    point_ids.SetId(5, _nids[5])
+                    point_ids.SetId(6, _nids[6])
+                    point_ids.SetId(7, _nids[7])
+                    point_ids.SetId(8, _nids[8])
+
+                    point_ids.SetId(9, _nids[9])
+                    point_ids.SetId(10, _nids[10])
+                    point_ids.SetId(11, _nids[11])
+                    point_ids.SetId(12, _nids[12])
+                    eid_to_nid_map[eid] = node_ids
+                else:
+                    elem = vtkPyramid()
+                    point_ids = elem.GetPointIds()
+                    eid_to_nid_map[eid] = node_ids[:5]
+                    point_ids.SetId(0, nid_map[node_ids[0]])
+                    point_ids.SetId(1, nid_map[node_ids[1]])
+                    point_ids.SetId(2, nid_map[node_ids[2]])
+                    point_ids.SetId(3, nid_map[node_ids[3]])
+                    point_ids.SetId(4, nid_map[node_ids[4]])
                 #print('*node_ids =', node_ids[:5])
 
-                eid_to_nid_map[eid] = node_ids[:5]
 
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                #if min(node_ids) > 0:
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif etype in {'CBUSH', 'CBUSH1D', 'CFAST',
                            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -3774,7 +3812,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
 
-                if node_ids[0] is None and node_ids[0] is None: # CELAS2
+                if node_ids[0] is None and node_ids[1] is None: # CELAS2
                     log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
                     del self.eid_map[eid]
                     continue
@@ -3796,14 +3834,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #if 1:
                     #print(str(element))
                     elem = vtk.vtkVertex()
-                    elem.GetPointIds().SetId(0, j)
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(0, j)
                     #else:
                         #elem = vtk.vtkSphere()
                         #elem = vtk.vtkSphereSource()
                         #if d == 0.:
                         #d = sphere_size
                         #elem.SetRadius(sphere_size)
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(elem.GetCellType(), point_ids)
                 else:
                     # 2 points
                     #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
@@ -3827,7 +3866,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     pid = element.Pid()
                     #try:
                         #areai = element.pid_ref.Area()
-                    #except:
+                    #except Exception:
                         #print(element)
                         #raise
 
@@ -3851,7 +3890,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 point_ids = elem.GetPointIds()
                 point_ids.SetId(0, n1)
                 point_ids.SetId(1, n2)
-                grid.InsertNextCell(line_type, elem.GetPointIds())
+                grid.InsertNextCell(line_type, point_ids)
 
             elif etype == 'CBEND':
                 pid = element.Pid()
@@ -3866,9 +3905,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 eid_to_nid_map[eid] = node_ids
 
                 elem = vtk.vtkLine()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif etype == 'CHBDYG':
                 node_ids = element.node_ids
@@ -3888,36 +3928,40 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #p4 = xyz_cid0[n4, :]
                     if element.surface_type == 'AREA4' or None in node_ids:
                         elem = vtkQuad()
+                        point_ids = elem.GetPointIds()
                     else:
                         elem = vtkQuadraticQuad()
-                        elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                        elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                        elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                        elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
+                        point_ids = elem.GetPointIds()
+                        point_ids.SetId(4, nid_map[node_ids[4]])
+                        point_ids.SetId(5, nid_map[node_ids[5]])
+                        point_ids.SetId(6, nid_map[node_ids[6]])
+                        point_ids.SetId(7, nid_map[node_ids[7]])
 
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
-                    elem.GetPointIds().SetId(2, n3)
-                    elem.GetPointIds().SetId(3, n4)
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids.SetId(0, n1)
+                    point_ids.SetId(1, n2)
+                    point_ids.SetId(2, n3)
+                    point_ids.SetId(3, n4)
+                    grid.InsertNextCell(elem.GetCellType(), point_ids)
                 elif element.surface_type in ['AREA3', 'AREA6']:
                     eid_to_nid_map[eid] = node_ids[:3]
                     if element.Type == 'AREA3' or None in node_ids:
                         elem = vtkTriangle()
+                        point_ids = elem.GetPointIds()
                     else:
                         elem = vtkQuadraticTriangle()
-                        elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                        elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                        elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
+                        point_ids = elem.GetPointIds()
+                        point_ids.SetId(3, nid_map[node_ids[3]])
+                        point_ids.SetId(4, nid_map[node_ids[4]])
+                        point_ids.SetId(5, nid_map[node_ids[5]])
 
                     n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
                     #p1 = xyz_cid0[n1, :]
                     #p2 = xyz_cid0[n2, :]
                     #p3 = xyz_cid0[n3, :]
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
-                    elem.GetPointIds().SetId(2, n3)
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids.SetId(0, n1)
+                    point_ids.SetId(1, n2)
+                    point_ids.SetId(2, n3)
+                    grid.InsertNextCell(elem.GetCellType(), point_ids)
                 else:
                     #print('removing\n%s' % (element))
                     self.log.warning('removing eid=%s; %s' % (eid, element.type))
@@ -3953,9 +3997,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #p3 = xyz_cid0[n3, :]
 
                     elem = vtkTriangle()
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
-                    elem.GetPointIds().SetId(2, n3)
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(0, n1)
+                    point_ids.SetId(1, n2)
+                    point_ids.SetId(2, n3)
                 elif len(side_inids) == 4:
                     n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
                     #p1 = xyz_cid0[n1, :]
@@ -3964,10 +4009,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #p4 = xyz_cid0[n4, :]
 
                     elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
-                    elem.GetPointIds().SetId(2, n3)
-                    elem.GetPointIds().SetId(3, n4)
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(0, n1)
+                    point_ids.SetId(1, n2)
+                    point_ids.SetId(2, n3)
+                    point_ids.SetId(3, n4)
                 else:
                     msg = 'element_solid:\n%s' % (str(element_solid))
                     msg += 'mapped_inids = %s\n' % mapped_inids
@@ -3975,13 +4021,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     msg += 'nodes = %s\n' % nodes
                     #msg += 'side_nodes = %s\n' % side_nodes
                     raise NotImplementedError(msg)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
             elif etype == 'GENEL':
                 node_ids = element.node_ids
                 pid = 0
                 elem = vtk.vtkLine()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
             else:
                 log.warning('removing\n%s' % (element))
                 log.warning('removing eid=%s; %s' % (eid, element.type))
@@ -4322,10 +4369,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 (areai, max_skew, aspect_ratio,
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
 
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
             elif isinstance(element, (CTRIA6, CPLSTN6, CTRIAX)):
                 # the CTRIAX is a standard 6-noded element
                 if isinstance(element, CTRIA6):
@@ -4334,17 +4382,20 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     material_theta[i] = theta
                 node_ids = element.node_ids
                 pid = element.Pid()
-                eid_to_nid_map[eid] = node_ids[:3]
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
                 if None not in node_ids:
                     elem = vtkQuadraticTriangle()
-                    elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                    elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(3, nid_map[node_ids[3]])
+                    point_ids.SetId(4, nid_map[node_ids[4]])
+                    point_ids.SetId(5, nid_map[node_ids[5]])
+                    eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkTriangle()
+                    point_ids = elem.GetPointIds()
+                    eid_to_nid_map[eid] = node_ids[:3]
 
                 n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
                 p1 = xyz_cid0[n1, :]
@@ -4353,10 +4404,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 out = tri_quality(p1, p2, p3)
                 (areai, max_skew, aspect_ratio,
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
             elif isinstance(element, CTRIAX6):
                 # the CTRIAX6 is not a standard second-order triangle
                 #
@@ -4378,11 +4429,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 if None not in node_ids:
                     elem = vtkQuadraticTriangle()
-                    elem.GetPointIds().SetId(3, nid_map[node_ids[1]])
-                    elem.GetPointIds().SetId(4, nid_map[node_ids[3]])
-                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(3, nid_map[node_ids[1]])
+                    point_ids.SetId(4, nid_map[node_ids[3]])
+                    point_ids.SetId(5, nid_map[node_ids[5]])
                 else:
                     elem = vtkTriangle()
+                    point_ids = elem.GetPointIds()
 
                 n1 = nid_map[node_ids[0]]
                 n2 = nid_map[node_ids[2]]
@@ -4393,11 +4446,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 out = tri_quality(p1, p2, p3)
                 (areai, max_skew, aspect_ratio,
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
                 eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
                 if isinstance(element, (CQUAD4, CQUADR)):
@@ -4429,11 +4482,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
 
                 elem = vtkQuad()
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                elem.GetPointIds().SetId(3, n4)
-                grid.InsertNextCell(9, elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                point_ids.SetId(3, n4)
+                grid.InsertNextCell(9, point_ids)
 
             elif isinstance(element, (CQUAD8, CPLSTN8, CQUADX8)):
                 if isinstance(element, CQUAD8):
@@ -4445,7 +4499,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
-                self.eid_to_nid_map[eid] = node_ids[:4]
 
                 n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
                 p1 = xyz_cid0[n1, :]
@@ -4457,17 +4510,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                 if None not in node_ids:
                     elem = vtkQuadraticQuad()
-                    elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                    elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                    elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(4, nid_map[node_ids[4]])
+                    point_ids.SetId(5, nid_map[node_ids[5]])
+                    point_ids.SetId(6, nid_map[node_ids[6]])
+                    point_ids.SetId(7, nid_map[node_ids[7]])
+                    self.eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkQuad()
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                elem.GetPointIds().SetId(3, n4)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids = elem.GetPointIds()
+                    self.eid_to_nid_map[eid] = node_ids[:4]
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                point_ids.SetId(3, n4)
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif isinstance(element, (CQUAD, CQUADX)):
                 # CQUAD, CQUADX are 9 noded quads
@@ -4480,7 +4537,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
-                self.eid_to_nid_map[eid] = node_ids[:4]
 
                 n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
                 p1 = xyz_cid0[n1, :]
@@ -4492,18 +4548,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                 if None not in node_ids:
                     elem = vtk.vtkBiQuadraticQuad()
-                    elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                    elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                    elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                    elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(4, nid_map[node_ids[4]])
+                    point_ids.SetId(5, nid_map[node_ids[5]])
+                    point_ids.SetId(6, nid_map[node_ids[6]])
+                    point_ids.SetId(7, nid_map[node_ids[7]])
+                    point_ids.SetId(8, nid_map[node_ids[8]])
+                    self.eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkQuad()
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                elem.GetPointIds().SetId(3, n4)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids = elem.GetPointIds()
+                    self.eid_to_nid_map[eid] = node_ids[:4]
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                point_ids.SetId(3, n4)
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif isinstance(element, CTETRA4):
                 elem = vtkTetra()
@@ -4512,11 +4572,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     nid_to_pid_map[nid].append(pid)
                 eid_to_nid_map[eid] = node_ids[:4]
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                grid.InsertNextCell(10, elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                grid.InsertNextCell(10, point_ids)
                 #elem_nid_map = {nid:nid_map[nid] for nid in node_ids[:4]}
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
@@ -4527,22 +4588,25 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
-                eid_to_nid_map[eid] = node_ids[:4]
                 if None not in node_ids:
                     elem = vtkQuadraticTetra()
-                    elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                    elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                    elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                    elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
-                    elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(4, nid_map[node_ids[4]])
+                    point_ids.SetId(5, nid_map[node_ids[5]])
+                    point_ids.SetId(6, nid_map[node_ids[6]])
+                    point_ids.SetId(7, nid_map[node_ids[7]])
+                    point_ids.SetId(8, nid_map[node_ids[8]])
+                    point_ids.SetId(9, nid_map[node_ids[9]])
+                    eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkTetra()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids = elem.GetPointIds()
+                    eid_to_nid_map[eid] = node_ids[:4]
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
 
@@ -4553,13 +4617,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     nid_to_pid_map[nid].append(pid)
                 eid_to_nid_map[eid] = node_ids[:6]
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                grid.InsertNextCell(13, elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                grid.InsertNextCell(13, point_ids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
 
@@ -4569,27 +4634,30 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
-                eid_to_nid_map[eid] = node_ids[:6]
                 if None not in node_ids:
                     elem = vtkQuadraticWedge()
-                    elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                    elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                    elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
-                    elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
-                    elem.GetPointIds().SetId(10, nid_map[node_ids[10]])
-                    elem.GetPointIds().SetId(11, nid_map[node_ids[11]])
-                    elem.GetPointIds().SetId(12, nid_map[node_ids[12]])
-                    elem.GetPointIds().SetId(13, nid_map[node_ids[13]])
-                    elem.GetPointIds().SetId(14, nid_map[node_ids[14]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(6, nid_map[node_ids[6]])
+                    point_ids.SetId(7, nid_map[node_ids[7]])
+                    point_ids.SetId(8, nid_map[node_ids[8]])
+                    point_ids.SetId(9, nid_map[node_ids[9]])
+                    point_ids.SetId(10, nid_map[node_ids[10]])
+                    point_ids.SetId(11, nid_map[node_ids[11]])
+                    point_ids.SetId(12, nid_map[node_ids[12]])
+                    point_ids.SetId(13, nid_map[node_ids[13]])
+                    point_ids.SetId(14, nid_map[node_ids[14]])
+                    eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkWedge()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids = elem.GetPointIds()
+                    eid_to_nid_map[eid] = node_ids[:6]
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
 
@@ -4600,15 +4668,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid_to_pid_map[nid].append(pid)
                 eid_to_nid_map[eid] = node_ids[:8]
                 elem = vtkHexahedron()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                grid.InsertNextCell(12, elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                point_ids.SetId(6, nid_map[node_ids[6]])
+                point_ids.SetId(7, nid_map[node_ids[7]])
+                grid.InsertNextCell(12, point_ids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _chexa_faces, node_ids[:8], nid_map, xyz_cid0)
 
@@ -4620,34 +4689,37 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         nid_to_pid_map[nid].append(pid)
                 if None not in node_ids:
                     elem = vtkQuadraticHexahedron()
-                    elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
-                    elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
-                    elem.GetPointIds().SetId(10, nid_map[node_ids[10]])
-                    elem.GetPointIds().SetId(11, nid_map[node_ids[11]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(8, nid_map[node_ids[8]])
+                    point_ids.SetId(9, nid_map[node_ids[9]])
+                    point_ids.SetId(10, nid_map[node_ids[10]])
+                    point_ids.SetId(11, nid_map[node_ids[11]])
 
                     # these two blocks are flipped
-                    elem.GetPointIds().SetId(12, nid_map[node_ids[16]])
-                    elem.GetPointIds().SetId(13, nid_map[node_ids[17]])
-                    elem.GetPointIds().SetId(14, nid_map[node_ids[18]])
-                    elem.GetPointIds().SetId(15, nid_map[node_ids[19]])
+                    point_ids.SetId(12, nid_map[node_ids[16]])
+                    point_ids.SetId(13, nid_map[node_ids[17]])
+                    point_ids.SetId(14, nid_map[node_ids[18]])
+                    point_ids.SetId(15, nid_map[node_ids[19]])
 
-                    elem.GetPointIds().SetId(16, nid_map[node_ids[12]])
-                    elem.GetPointIds().SetId(17, nid_map[node_ids[13]])
-                    elem.GetPointIds().SetId(18, nid_map[node_ids[14]])
-                    elem.GetPointIds().SetId(19, nid_map[node_ids[15]])
+                    point_ids.SetId(16, nid_map[node_ids[12]])
+                    point_ids.SetId(17, nid_map[node_ids[13]])
+                    point_ids.SetId(18, nid_map[node_ids[14]])
+                    point_ids.SetId(19, nid_map[node_ids[15]])
+                    eid_to_nid_map[eid] = node_ids
                 else:
                     elem = vtkHexahedron()
+                    point_ids = elem.GetPointIds()
+                    eid_to_nid_map[eid] = node_ids[:8]
 
-                eid_to_nid_map[eid] = node_ids[:8]
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                point_ids.SetId(5, nid_map[node_ids[5]])
+                point_ids.SetId(6, nid_map[node_ids[6]])
+                point_ids.SetId(7, nid_map[node_ids[7]])
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _chexa_faces, node_ids[:8], nid_map, xyz_cid0)
 
@@ -4658,42 +4730,46 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid_to_pid_map[nid].append(pid)
                 eid_to_nid_map[eid] = node_ids[:5]
                 elem = vtkPyramid()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
                 # etype = 14
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
             elif isinstance(element, CPYRAM13):
                 node_ids = element.node_ids
                 pid = element.Pid()
-                #if None not in node_ids:
+                if None not in node_ids:
                     #print(' node_ids =', node_ids)
-                    #elem = vtkQuadraticPyramid()
+                    elem = vtkQuadraticPyramid()
+                    point_ids = elem.GetPointIds()
                     # etype = 27
-                    #elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                    #elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                    #elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                    #elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
-                    #elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
-                    #elem.GetPointIds().SetId(10, nid_map[node_ids[10]])
-                    #elem.GetPointIds().SetId(11, nid_map[node_ids[11]])
-                    #elem.GetPointIds().SetId(12, nid_map[node_ids[12]])
-                #else:
-                elem = vtkPyramid()
+                    point_ids.SetId(5, nid_map[node_ids[5]])
+                    point_ids.SetId(6, nid_map[node_ids[6]])
+                    point_ids.SetId(7, nid_map[node_ids[7]])
+                    point_ids.SetId(8, nid_map[node_ids[8]])
+                    point_ids.SetId(9, nid_map[node_ids[9]])
+                    point_ids.SetId(10, nid_map[node_ids[10]])
+                    point_ids.SetId(11, nid_map[node_ids[11]])
+                    point_ids.SetId(12, nid_map[node_ids[12]])
+                    eid_to_nid_map[eid] = node_ids
+                else:
+                    elem = vtkPyramid()
+                    point_ids = elem.GetPointIds()
+                    eid_to_nid_map[eid] = node_ids[:5]
                 #print('*node_ids =', node_ids[:5])
 
-                eid_to_nid_map[eid] = node_ids[:5]
 
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[node_ids[2]])
+                point_ids.SetId(3, nid_map[node_ids[3]])
+                point_ids.SetId(4, nid_map[node_ids[4]])
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
 
@@ -4737,7 +4813,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                     #if 1:
                     elem = vtk.vtkVertex()
-                    elem.GetPointIds().SetId(0, j)
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(0, j)
                     #else:
                         #elem = vtk.vtkSphere()
                         #elem = vtk.vtkSphereSource()
@@ -4749,15 +4826,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
                     eid_to_nid_map[eid] = node_ids
                     elem = vtk.vtkLine()
+                    point_ids = elem.GetPointIds()
                     try:
-                        elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                        elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
+                        point_ids.SetId(0, nid_map[node_ids[0]])
+                        point_ids.SetId(1, nid_map[node_ids[1]])
                     except KeyError:
                         print("node_ids =", node_ids)
                         print(str(element))
                         continue
 
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif etype in ('CBAR', 'CBEAM', 'CROD', 'CONROD', 'CTUBE'):
                 if etype == 'CONROD':
@@ -4767,9 +4845,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     pid = element.Pid()
                     try:
                         areai = element.pid_ref.Area()
-                    except:
+                    except AttributeError:
                         print(element)
-                        raise
+                        areai = -1.
 
                 node_ids = element.node_ids
                 for nid in node_ids:
@@ -4780,7 +4858,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                         #element.nodes_ref[1].get_position())
                 try:
                     n1, n2 = np.searchsorted(nids, element.nodes)
-                except:
+                except Exception:
                     print(element.get_stats())
                     n1i, n2i = element.nodes
                     print('nids =', nids)
@@ -4802,7 +4880,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 point_ids = elem.GetPointIds()
                 point_ids.SetId(0, n1)
                 point_ids.SetId(1, n2)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif etype == 'CBEND':
                 pid = element.Pid()
@@ -4825,10 +4903,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     raise NotImplementedError(msg)
                 # only supports g0 as an integer
                 elem = vtk.vtkQuadraticEdge()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[g0])
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, nid_map[node_ids[0]])
+                point_ids.SetId(1, nid_map[node_ids[1]])
+                point_ids.SetId(2, nid_map[g0])
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif etype == 'CHBDYG':
                 node_ids = element.node_ids
@@ -4851,27 +4930,31 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                      min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                     if element.surface_type == 'AREA4' or None in node_ids:
                         elem = vtkQuad()
+                        point_ids = elem.GetPointIds()
                     else:
                         elem = vtkQuadraticQuad()
-                        elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                        elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                        elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
-                        elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
+                        point_ids = elem.GetPointIds()
+                        point_ids.SetId(4, nid_map[node_ids[4]])
+                        point_ids.SetId(5, nid_map[node_ids[5]])
+                        point_ids.SetId(6, nid_map[node_ids[6]])
+                        point_ids.SetId(7, nid_map[node_ids[7]])
 
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
-                    elem.GetPointIds().SetId(2, n3)
-                    elem.GetPointIds().SetId(3, n4)
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids.SetId(0, n1)
+                    point_ids.SetId(1, n2)
+                    point_ids.SetId(2, n3)
+                    point_ids.SetId(3, n4)
+                    grid.InsertNextCell(elem.GetCellType(), point_ids)
                 elif element.surface_type in ['AREA3', 'AREA6']:
                     eid_to_nid_map[eid] = node_ids[:3]
                     if element.Type == 'AREA3' or None in node_ids:
                         elem = vtkTriangle()
+                        point_ids = elem.GetPointIds()
                     else:
                         elem = vtkQuadraticTriangle()
-                        elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                        elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                        elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
+                        point_ids = elem.GetPointIds()
+                        point_ids.SetId(3, nid_map[node_ids[3]])
+                        point_ids.SetId(4, nid_map[node_ids[4]])
+                        point_ids.SetId(5, nid_map[node_ids[5]])
 
                     n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
                     p1 = xyz_cid0[n1, :]
@@ -4880,10 +4963,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     out = tri_quality(p1, p2, p3)
                     (areai, max_skew, aspect_ratio,
                      min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
-                    elem.GetPointIds().SetId(2, n3)
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    point_ids.SetId(0, n1)
+                    point_ids.SetId(1, n2)
+                    point_ids.SetId(2, n3)
+                    grid.InsertNextCell(elem.GetCellType(), point_ids)
                 else:
                     #print('removing\n%s' % (element))
                     log.warning('removing eid=%s; %s' % (eid, element.type))
@@ -4901,8 +4984,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     p1 = xyz_cid0[n1, :]
                     p2 = xyz_cid0[n2, :]
                     elem = vtk.vtkLine()
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(0, n1)
+                    point_ids.SetId(1, n2)
                 else:
                     msg = 'element_solid:\n%s' % (str(element_solid))
                     msg += 'mapped_inids = %s\n' % mapped_inids
@@ -4910,7 +4994,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     msg += 'nodes = %s\n' % nodes
                     #msg += 'side_nodes = %s\n' % side_nodes
                     raise NotImplementedError(msg)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif etype == 'CHBDYE':
                 #|   1    |  2  |   3  |  4   |   5    |    6   |    7    |    8    |
@@ -4940,8 +5024,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #p1 = xyz_cid0[n1, :]
                     #p2 = xyz_cid0[n2, :]
                     #elem = vtk.vtkLine()
-                    #elem.GetPointIds().SetId(0, n1)
-                    #elem.GetPointIds().SetId(1, n2)
+                    #point_ids = elem.GetPointIds()
+                    #point_ids.SetId(0, n1)
+                    #point_ids.SetId(1, n2)
                 if len(side_inids) == 3:
                     n1, n2, n3 = [nid_map[nid] for nid in node_ids[:3]]
                     p1 = xyz_cid0[n1, :]
@@ -4952,9 +5037,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                      min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
 
                     elem = vtkTriangle()
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
-                    elem.GetPointIds().SetId(2, n3)
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(0, n1)
+                    point_ids.SetId(1, n2)
+                    point_ids.SetId(2, n3)
                 elif len(side_inids) == 4:
                     n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
                     p1 = xyz_cid0[n1, :]
@@ -4966,10 +5052,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                      min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
 
                     elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
-                    elem.GetPointIds().SetId(2, n3)
-                    elem.GetPointIds().SetId(3, n4)
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(0, n1)
+                    point_ids.SetId(1, n2)
+                    point_ids.SetId(2, n3)
+                    point_ids.SetId(3, n4)
                 else:
                     msg = 'element_solid:\n%s' % (str(element_solid))
                     msg += 'mapped_inids = %s\n' % mapped_inids
@@ -4977,7 +5064,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     msg += 'nodes = %s\n' % nodes
                     #msg += 'side_nodes = %s\n' % side_nodes
                     raise NotImplementedError(msg)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif etype == 'GENEL':
                 genel_nids = []
@@ -5000,7 +5087,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 point_ids = elem.GetPointIds()
                 point_ids.SetId(0, n1)
                 point_ids.SetId(1, n2)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
 
                 #areai = np.nan
                 pid = 0
@@ -5236,7 +5323,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _plot_pressures(self, model: BDF, cases, form0, icase: int, subcase_id: int) -> int:
         """
-        pressure act normal to a shell (as opposed to anti-normal to a solid face)
+        pressure act normal to a shell (as opposed to anti-normal to a
+        solid face)
         """
         # quit out if we're going to make pressure plots anyways
         #if self.plot_applied_loads:
@@ -5406,7 +5494,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             print(sout)
         return icase
 
-    def load_nastran_results(self, results_filename):
+    def load_nastran_results(self, results_filename: str):
         """
         Loads the Nastran results into the GUI
         """
@@ -6017,7 +6105,7 @@ def _build_normals_quality(settings: Settings,
             #if isfinite(max_warp_angle):
 
             # offsets
-            if make_offset_normals_dim:
+            if make_offset_normals_dim and np.any(np.isfinite(xoffset)):
                 offset_res = GuiResult(
                     0, header='Offset', title='Offset',
                     location='centroid', scalar=offset, data_format='%g')
@@ -6250,7 +6338,7 @@ def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
                     icase += 1
                 elif is_e11:
                     # isotropic
-                    assert np.nanmax(e11) > 0, np.nanmax(e11)
+                    assert np.nanmax(e11) >= 0, np.nanmax(e11)
                     e11_res = GuiResult(0, header='E', title='E',
                                         location='centroid', scalar=e11, data_format='%.3e')
                     cases[icase] = (e11_res, (0, 'E'))

@@ -1,7 +1,7 @@
 """tests the Nastran converters"""
 import os
 import unittest
-from cpylog import get_logger
+from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
@@ -27,7 +27,7 @@ class TestNastran(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         tecplot_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.plt')
         tecplot_filename2 = os.path.join(MODEL_PATH, 'elements', 'static_elements2.plt')
-        log = get_logger(log=None, level='warning', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         model = read_bdf(bdf_filename, log=log)
         with self.assertRaises(RuntimeError):
             nastran_to_tecplot(model)
@@ -42,7 +42,7 @@ class TestNastran(unittest.TestCase):
 
         size = 8
         debug = False
-        log = get_logger(log=None, level='warning', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         model = read_bdf(bdf_filename, log=log, debug=debug)
         #log = model.log
         #model.get_element_faces()
@@ -103,7 +103,7 @@ class TestNastran(unittest.TestCase):
         """tests nastran_to_stl"""
         bdf_filename = os.path.join(MODEL_PATH, 'plate', 'plate.bdf')
         stl_filename = os.path.join(MODEL_PATH, 'plate', 'plate.stl')
-        log = get_logger(log=None, level='warning', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=log)
 
     def test_format_converter(self):
@@ -199,7 +199,7 @@ class TestNastran(unittest.TestCase):
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(deck)
 
-        log = get_logger(log=None, level='warning', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         model = read_bdf(bdf_filename, xref=False, log=log)
         clear_out_solids(model, bdf_clean_filename, renumber=True,
                          equivalence=False, equivalence_tol=0.01)

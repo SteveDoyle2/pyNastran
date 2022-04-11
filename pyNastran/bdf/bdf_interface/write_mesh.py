@@ -209,12 +209,12 @@ class WriteMesh(BDFAttributes):
 
         if self.executive_control_lines:
             msg += '$EXECUTIVE CONTROL DECK\n'
-            if self.sol == 600:
-                new_sol = 'SOL 600,%s' % self.sol_method
-            else:
-                new_sol = 'SOL %s' % self.sol
 
             if self.sol_iline is not None:
+                if self.sol == 600 and self.sol_method:
+                    new_sol = f'SOL 600,{self.sol_method}'
+                else:
+                    new_sol = f'SOL {self.sol}'
                 self.executive_control_lines[self.sol_iline] = new_sol
 
             for line in self.executive_control_lines:
@@ -245,9 +245,8 @@ class WriteMesh(BDFAttributes):
                 for (eid, element) in sorted(self.elements.items()):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
-                    except:
-                        print('failed printing element...'
-                              'type=%s eid=%s' % (element.type, eid))
+                    except Exception:
+                        print(f'failed printing element...type={element.type} eid={eid}')
                         raise
         if self.ao_element_flags:
             for (eid, element) in sorted(self.ao_element_flags.items()):
@@ -269,9 +268,8 @@ class WriteMesh(BDFAttributes):
                 for nsm in nsms:
                     try:
                         bdf_file.write(nsm.write_card(size, is_double))
-                    except:
-                        print('failed printing nsm...type=%s key=%r'
-                              % (nsm.type, key))
+                    except Exception:
+                        print(f'failed printing nsm...type={nsm.type} key={key!r}')
                         raise
 
     def _write_elements_interspersed(self, bdf_file: Any, size: int=8, is_double: bool=False,
@@ -295,9 +293,8 @@ class WriteMesh(BDFAttributes):
                     element = self.elements[eid]
                     try:
                         bdf_file.write(element.write_card(size, is_double))
-                    except:
-                        print('failed printing element...' 'type=%r eid=%s'
-                              % (element.type, eid))
+                    except Exception:
+                        print(f'failed printing element...type={element.type!r} eid={eid}')
                         raise
                 eids_written += eids
             else:
@@ -311,9 +308,8 @@ class WriteMesh(BDFAttributes):
                 element = self.elements[eid]
                 try:
                     bdf_file.write(element.write_card(size, is_double))
-                except:
-                    print('failed printing element...'
-                          'type=%s eid=%s' % (element.type, eid))
+                except Exception:
+                    print(f'failed printing element...type={element.type} eid={eid}')
                     raise
 
         if missing_properties or self.pdampt or self.pbusht or self.pelast:
@@ -703,8 +699,7 @@ class WriteMesh(BDFAttributes):
                 try:
                     bdf_file.write(mass.write_card(size, is_double))
                 except Exception:
-                    print('failed printing mass property...'
-                          'type=%s eid=%s' % (mass.type, pid))
+                    print(f'failed printing mass property...type={mass.type} pid={pid}')
                     raise
 
         if self.masses:
@@ -713,8 +708,7 @@ class WriteMesh(BDFAttributes):
                 try:
                     bdf_file.write(mass.write_card(size, is_double))
                 except Exception:
-                    print('failed printing masses...'
-                          'type=%s eid=%s' % (mass.type, eid))
+                    print(f'failed printing masses...type={mass.type} eid={eid}')
                     raise
 
     def _write_materials(self, bdf_file: Any, size: int=8, is_double: bool=False,
@@ -1069,16 +1063,14 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(element.write_card_16(is_double))
                     except Exception:
-                        print('failed printing element...'
-                              'type=%s eid=%s' % (element.type, eid))
+                        print(f'failed printing element...type={element.type} eid={eid}')
                         raise
             else:
                 for (eid, element) in sorted(self.rigid_elements.items()):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
                     except Exception:
-                        print('failed printing element...'
-                              'type=%s eid=%s' % (element.type, eid))
+                        print(f'failed printing element...type={element.type} eid={eid}')
                         raise
         if self.plotels:
             bdf_file.write('$PLOT ELEMENTS\n')

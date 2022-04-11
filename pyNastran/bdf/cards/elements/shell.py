@@ -500,9 +500,13 @@ class CTRIA3(TriShell):
         h5_file.create_dataset('zoffset', data=zoffsets)
         #self.tflag = tflag
 
-    def __init__(self, eid, pid, nids, zoffset=0., theta_mcid=0.0,
-                 tflag=0, T1=None, T2=None, T3=None, comment=''):
-        # (int, int, List[int], float, Union[int, float], int, Optional[float], Optional[float], Optional[float], str) -> None
+    def __init__(self, eid: int, pid: int, nids: List[int],
+                 zoffset: float=0., theta_mcid: Union[int, float]=0.0,
+                 tflag: int=0,
+                 T1: Optional[float]=None,
+                 T2: Optional[float]=None,
+                 T3: Optional[float]=None,
+                 comment: str='') -> None:
         """
         Creates a CTRIA3 card
 
@@ -3574,15 +3578,15 @@ class CQUADR(QuadShell):
                 integer_or_blank(card, 5, 'n3'),
                 integer_or_blank(card, 6, 'n4'),]
 
-        theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', 0.0)
-        zoffset = double_or_blank(card, 8, 'zoffset', 0.0)
+        theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', default=0.0)
+        zoffset = double_or_blank(card, 8, 'zoffset', default=0.0)
 
-        tflag = integer_or_blank(card, 10, 'tflag', 0)
+        tflag = integer_or_blank(card, 10, 'tflag', default=0)
         T1 = double_or_blank(card, 11, 'T1')
         T2 = double_or_blank(card, 12, 'T2')
         T3 = double_or_blank(card, 13, 'T3')
         T4 = double_or_blank(card, 14, 'T4')
-        assert len(card) <= 15, 'len(CQUADR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 15, f'len(CQUADR card) = {len(card):d}\ncard={card}'
         return CQUADR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
 
@@ -3840,7 +3844,7 @@ class CPLSTS3(TriShell):
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
-            assert len(card) <= 14, 'len(CPLSTS3 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 14, f'len(CPLSTS3 card) = {len(card):d}\ncard={card}'
         else:
             theta = 0.0
             tflag = 0
@@ -4073,8 +4077,8 @@ class CQUAD(QuadShell):
                 integer_or_blank(card, 9, 'n7'),
                 integer_or_blank(card, 10, 'n8'),
                 integer_or_blank(card, 11, 'n9'),]
-        theta_mcid = integer_double_or_blank(card, 12, 'theta_mcid', 0.)
-        assert len(card) <= 13, 'len(CQUAD card) = %i\ncard=%s' % (len(card), card)
+        theta_mcid = integer_double_or_blank(card, 12, 'theta_mcid', default=0.)
+        assert len(card) <= 13, f'len(CQUAD card) = {len(card):d}\ncard={card}'
         return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     @classmethod
@@ -4199,7 +4203,7 @@ class CQUAD(QuadShell):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
-        nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
+        nodes2 = ['' if node is None else '%8d' % node for node in nodes[4:]]
         theta_mcid = self.theta_mcid
 
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2 + [theta_mcid]
@@ -4615,7 +4619,7 @@ class SNORM(BaseCard):
             double_or_blank(card, 5, 'n3', default=0.0),
         ]
 
-        assert len(card) <= 6, 'len(SNORM card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(SNORM card) = {len(card):d}\ncard={card}'
         return SNORM(nid, normal, cid=cid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:

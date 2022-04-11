@@ -9,7 +9,7 @@ import itertools
 from typing import List
 
 import numpy as np
-from cpylog import get_logger2
+from cpylog import SimpleLogger, get_logger2
 
 from pyNastran.utils import is_binary_file
 from pyNastran.converters.tecplot.zone import Zone, CaseInsensitiveDict, is_3d
@@ -59,7 +59,7 @@ class Tecplot:
             msg += str(zone)
         return msg
 
-    def __init__(self, log=None, debug=False):
+    def __init__(self, log=None, debug: bool=False):
         # defines binary file specific features
         self._endian = b'<'
         self._n = 0
@@ -79,6 +79,8 @@ class Tecplot:
 
         # mesh = False : this is a plot file
         self.use_cols = None
+
+        # TODO: what is this for?
         self.dtype = None
 
         self._uendian = ''
@@ -1140,7 +1142,7 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str], varia
     return headers_dict
 
 def _simplify_header(headers_dict, variables: List[str]) -> None:
-    """cast the integer headers adn sets the variables"""
+    """cast the integer headers and sets the variables"""
     # unstructured
     if 'N' in headers_dict: # nnodes
         headers_dict['N'] = int(headers_dict['N'])
@@ -1457,7 +1459,7 @@ def _read_header_lines(lines, iline, line, log):
             continue
         if line[0].isdigit() or line[0] == '-':
             #print(line)
-            log.debug('breaking...')
+            log.debug('breaking after finding header lines...')
             break
 
         uline = line.upper()
@@ -1659,7 +1661,7 @@ def main():  # pragma: no cover
         #try:
             #plt.read_tecplot_binary(tecplot_filename, nnodes=nnodes, nelements=nelements)
             #plt.write_tecplot('processor%i.plt' % ip)
-        #except:
+        #except Exception:
             #raise
         ##break
 

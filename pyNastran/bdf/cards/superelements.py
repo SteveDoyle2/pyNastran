@@ -84,13 +84,13 @@ class SEBNDRY(BaseCard):
             if idi:
                 i += 1
                 ids.append(idi)
-        assert len(card) >= 3, 'len(SEBNDRY card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 3, f'len(SEBNDRY card) = {len(card):d}\ncard={card}'
         return SEBNDRY(seid_a, seid_b, ids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -157,13 +157,13 @@ class RELEASE(BaseCard):
             idi = integer_or_string(card, ifield, 'ID%i' % i)
             nids.append(idi)
             i += 1
-        assert len(card) >= 3, 'len(RELEASE card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 3, f'len(RELEASE card) = {len(card):d}\ncard={card}'
         return RELEASE(seid, comp, nids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -216,7 +216,7 @@ class SEELT(BaseCard):
             if eid:
                 i += 1
                 eids.append(eid)
-        assert len(card) <= 9, 'len(SEELT card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(SEELT card) = {len(card):d}\ncard={card}'
         return SEELT(seid, eids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -249,7 +249,7 @@ class SEELT(BaseCard):
             raise KeyError('eids=%s not found%s' % (missing_eids, msg))
         return eids_ref
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -312,7 +312,7 @@ class SELOAD(BaseCard):
         seid = integer(card, 2, 'seid')
         lid_se = integer(card, 3, 'lid_se')
 
-        assert len(card) <= 4, 'len(SELOAD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 4, f'len(SELOAD card) = {len(card):d}\ncard={card}'
         return SELOAD(lid_s0, seid, lid_se, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -321,7 +321,7 @@ class SELOAD(BaseCard):
     def uncross_reference(self) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def raw_fields(self):
@@ -380,13 +380,13 @@ class SEEXCLD(BaseCard):
             if nid:
                 i += 1
                 nodes.append(nid)
-        assert len(card) >= 3, 'len(SEEXCLD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 3, f'len(SEEXCLD card) = {len(card):d}\ncard={card}'
         return SEEXCLD(seid_a, seid_b, nodes, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -446,7 +446,7 @@ class SEMPLN(BaseCard):
         p2 = integer(card, 4, 'p2')
         p3 = integer(card, 5, 'p3')
         assert plane == 'PLANE', plane
-        assert len(card) <= 6, 'len(SEMPLN card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(SEMPLN card) = {len(card):d}\ncard={card}'
         return SEMPLN(seid, p1, p2, p3, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -462,7 +462,7 @@ class SEMPLN(BaseCard):
         msg = ', which is required by SEMPLN seid=%s' % self.seid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -544,7 +544,7 @@ class SELABEL(BaseCard):
         """
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -641,7 +641,7 @@ class SELOC(BaseCard):
             nid_b = integer(card, ifield, 'nid_%i' % i)
             nodes0.append(nid_b)
 
-        assert len(card) <= 8, 'len(SELOC card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(SELOC card) = {len(card):d}\ncard={card}'
         return SELOC(seid, nodes_seid, nodes0, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -668,7 +668,7 @@ class SELOC(BaseCard):
         # either GRID or POINT entries
         self.nodes_0_ref = model.get_point_grids(self.nodes_0, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -784,7 +784,7 @@ class SETREE(BaseCard):
             if superelement:
                 i += 1
                 superelements.append(superelement)
-        assert len(card) >= 3, 'len(SETREE card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 3, f'len(SETREE card) = {len(card):d}\ncard={card}'
         return SETREE(seid, superelements, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -811,7 +811,7 @@ class SETREE(BaseCard):
             raise KeyError('cannot find superelements=%s%s' % (missing_superelements, msg))
         self.superelements_ref = superelements_ref
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -884,7 +884,7 @@ class CSUPER(BaseCard):
             if nid:
                 i += 1
                 nodes.append(nid)
-        assert len(card) >= 3, 'len(CSUPER card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 3, f'len(CSUPER card) = {len(card):d}\ncard={card}'
         return CSUPER(seid, psid, nodes, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -900,7 +900,7 @@ class CSUPER(BaseCard):
         msg = ', which is required by CSUPER seid=%s' % self.seid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -973,7 +973,7 @@ class CSUPEXT(BaseCard):
             if nid:
                 i += 1
                 nodes.append(nid)
-        assert len(card) <= 9, 'len(CSUPEXT card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(CSUPEXT card) = {len(card):d}\ncard={card}'
         return CSUPEXT(seid, nodes, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -989,7 +989,7 @@ class CSUPEXT(BaseCard):
         msg = ', which is required by CSUPEXT eid=%s' % self.seid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1066,7 +1066,7 @@ class SEBULK(BaseCard):
         tol : float; default=1e-5
             Location tolerance to be used when searching for boundary grid points.
         loc : str; default='YES'
-            Coincident location check option for manual conection option.
+            Coincident location check option for manual connection option.
             {YES, NO}
         unitno : int / None
             FORTRAN unit number for the OUTPUT2 file (applicable and
@@ -1093,7 +1093,7 @@ class SEBULK(BaseCard):
         tol = double_or_blank(card, 5, 'tol', 1e-5)
         loc = string_or_blank(card, 6, 'loc', 'YES')
         unitno = integer_or_blank(card, 7, 'seid')
-        assert len(card) <= 8, 'len(SEBULK card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(SEBULK card) = {len(card):d}\ncard={card}'
         return SEBULK(seid, superelement_type, rseid, method=method, tol=tol,
                       loc=loc, unitno=unitno, comment=comment)
 
@@ -1114,7 +1114,7 @@ class SEBULK(BaseCard):
         """
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1223,11 +1223,11 @@ class SECONCT(BaseCard):
         loc = string_or_blank(card, 4, 'loc', 'YES')
         fields = card[9:]
         if len(fields) < 2:
-            assert len(card) >= 9, 'len(SECONCT card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) >= 9, f'len(SECONCT card) = {len(card):d}\ncard={card}'
 
         assert len(fields) % 2 == 0, 'card=%s\nfields=%s' % (card, fields)
         if 'THRU' in fields:
-            raise NotImplementedError(fields)
+            raise NotImplementedError(f'THRU not supported in SECONCT card; fields={fields}')
             #start_a = integer(card, 9, 'start_a')
             #thru_a = string(card, 10, 'thru_a')
             #end_a = integer(card, 11, 'end_a')
@@ -1270,7 +1270,7 @@ class SECONCT(BaseCard):
         self.nodes_a_ref = model.superelement_nodes(self.seid_a, self.nodes_a, msg=msg)
         self.nodes_b_ref = model.superelement_nodes(self.seid_b, self.nodes_b, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1355,7 +1355,7 @@ class SENQSET(BaseCard):
     def add_card(cls, card, comment=''):
         set_id = integer_or_string(card, 1, 'set_id')
         n = integer_or_blank(card, 2, 'n', 0)
-        assert len(card) <= 3, 'len(SENQSET card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 3, f'len(SENQSET card) = {len(card):d}\ncard={card}'
         return SENQSET(set_id, n, comment=comment)
 
     def raw_fields(self):
@@ -1397,14 +1397,14 @@ def _node_ids(card, nodes, nodes_ref, allow_empty_nodes=False, msg=''):
                     #node_ids = [node for node in nodes]
                 #else:
                     #node_ids = [node.nid for node in nodes]
-            except:
+            except Exception:
                 print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
                     card.type, nodes, allow_empty_nodes, msg))
                 raise
             assert 0 not in node_ids, 'node_ids = %s' % node_ids
             assert node_ids is not None, str(card)
             return node_ids
-    except:
+    except Exception:
         print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
             card.type, nodes, allow_empty_nodes, msg))
         raise

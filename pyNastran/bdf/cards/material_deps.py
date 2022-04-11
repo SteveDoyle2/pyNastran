@@ -160,7 +160,7 @@ class MATS1(MaterialDependence):
             else:
                 #limit2 = blank(card, 8, 'limit2')
                 limit2 = None
-        assert len(card) <= 9, 'len(MATS1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(MATS1 card) = {len(card):d}\ncard={card}'
         return MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
 
     @classmethod
@@ -355,7 +355,7 @@ class MATT1(MaterialDependenceThermal):
         sc_table = integer_or_blank(card, 10, 'T(sc)')
         ss_table = integer_or_blank(card, 11, 'T(ss)')
 
-        assert len(card) <= 12, 'len(MATT1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(MATT1 card) = {len(card):d}\ncard={card}'
         return MATT1(mid, e_table, g_table, nu_table, rho_table, a_table,
                      ge_table, st_table, sc_table, ss_table, comment=comment)
 
@@ -552,6 +552,8 @@ class MATT2(MaterialDependenceThermal):
         if comment:
             self.comment = comment
 
+        if g11_table == 0:
+            g11_table = None
         if g12_table == 0:
             g12_table = None
         if g13_table == 0:
@@ -641,7 +643,7 @@ class MATT2(MaterialDependenceThermal):
         sc_table = integer_or_blank(card, 15, 'T(sc)')
         ss_table = integer_or_blank(card, 16, 'T(ss)')
 
-        assert len(card) <= 17, 'len(MATT2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 17, f'len(MATT2 card) = {len(card):d}\ncard={card}'
         return MATT2(mid, g11_table, g12_table, g13_table, g22_table, g23_table,
                      g33_table, rho_table, a1_table,
                      a2_table, a3_table, ge_table,
@@ -791,6 +793,18 @@ class MATT3(MaterialDependenceThermal):
         if comment:
             self.comment = comment
 
+        ex_table = None if ex_table == 0 else ex_table
+        eth_table = None if eth_table == 0 else eth_table
+        ez_table = None if ez_table == 0 else ez_table
+        nuth_table = None if nuth_table == 0 else nuth_table
+        nuxz_table = None if nuxz_table == 0 else nuxz_table
+        rho_table = None if rho_table == 0 else rho_table
+        gzx_table = None if gzx_table == 0 else gzx_table
+        ax_table = None if ax_table == 0 else ax_table
+        ath_table = None if ath_table == 0 else ath_table
+        az_table = None if az_table == 0 else az_table
+        ge_table = None if ge_table == 0 else ge_table
+
         self.mid = mid
         self.ex_table = ex_table
         self.eth_table = eth_table
@@ -902,7 +916,7 @@ class MATT3(MaterialDependenceThermal):
         az_table = integer_or_blank(card, 14, 'T(AZ)')
         ge_table = integer_or_blank(card, 16, 'T(GE)')
 
-        assert len(card) <= 16, 'len(MATT3 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 16, f'len(MATT3 card) = {len(card):d}\ncard={card}'
         return MATT3(mid, ex_table, eth_table, ez_table,
                      nuth_table, nuxz_table, rho_table, gzx_table,
                      ax_table, ath_table, az_table, ge_table, comment=comment)
@@ -1051,7 +1065,7 @@ class MATT4(MaterialDependenceThermal):
         mu_table = integer_or_blank(card, 6, 'T(mu)')
         hgen_table = integer_or_blank(card, 7, 'T(HGEN)')
 
-        assert len(card) <= 8, 'len(MATT4 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, 'len(MATT4 card) = {len(card):d}\ncard={card}'
         return MATT4(mid, k_table, cp_table, h_table, mu_table,
                      hgen_table, comment=comment)
 
@@ -1213,7 +1227,7 @@ class MATT5(MaterialDependenceThermal):
         cp_table = integer_or_blank(card, 9, 'T(Kyz)')
         hgen_table = integer_or_blank(card, 11, 'T(HGEN)')
 
-        assert len(card) <= 12, 'len(MATT5 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(MATT5 card) = {len(card):d}\ncard={card}'
         return MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
                      kyz_table, kzz_table, cp_table, hgen_table,
                      comment=comment)
@@ -1447,7 +1461,7 @@ class MATT8(MaterialDependenceThermal):
         ge_table = integer_or_blank(card, 17, 'T(GE)')
         f12_table = integer_or_blank(card, 18, 'T(F12)')
 
-        assert len(card) <= 19, 'len(MATT8 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 19, f'len(MATT8 card) = {len(card):d}\ncard={card}'
         return MATT8(mid, e1_table, e2_table, nu12_table, g12_table,
                      g1z_table, g2z_table, rho_table,
                      a1_table, a2_table, xt_table,
@@ -1762,7 +1776,7 @@ class MATT9(MaterialDependenceThermal):
 
         ge_table = integer_or_blank(card, 31, 'T(GE)')
 
-        assert len(card) <= 32, 'len(MATT9 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 32, f'len(MATT9 card) = {len(card):d}\ncard={card}'
         return MATT9(mid, g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
                      g22_table, g23_table, g24_table, g25_table, g26_table,
                      g33_table, g34_table, g35_table, g36_table,

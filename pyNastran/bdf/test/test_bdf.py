@@ -16,7 +16,7 @@ from typing import List, Any, Optional, Union
 from io import StringIO
 
 import numpy as np
-from cpylog import get_logger2, WarningRedirector
+from cpylog import get_logger2, SimpleLogger, WarningRedirector
 #warnings.simplefilter('always')
 warnings.simplefilter('default')
 
@@ -165,7 +165,7 @@ def run_lots_of_files(filenames: List[str], folder: str='',
     npass = 1
     nfailed = 1
     log = get_logger2(log=None, debug=debug, encoding='utf-8')
-    with WarningRedirector(log) as warn:
+    with WarningRedirector(log) as unused_warn:
         for filename in filenames2:
             abs_filename = os.path.abspath(os.path.join(folder, filename))
             if folder != '':
@@ -216,7 +216,7 @@ def run_lots_of_files(filenames: List[str], folder: str='',
                     raise
             except SystemExit:
                 sys.exit('sys.exit...')
-            except:
+            except Exception:
                 traceback.print_exc(file=sys.stdout)
                 #raise
             print('-' * 80)
@@ -240,13 +240,15 @@ def run_lots_of_files(filenames: List[str], folder: str='',
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             mesh_form='separate', is_folder=False, print_stats=False,
-            encoding=None, sum_load=True, size=8, is_double=False,
+            encoding=None, sum_load=True,
+            size=8, is_double=False,
             hdf5=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False,
             run_extract_bodies=False, run_skin_solids=True,
             save_file_structure=False,
-            nerrors=0, dev=False, crash_cards=None, safe_xref=False, pickle_obj=False,
+            nerrors=0, dev=False, crash_cards=None,
+            safe_xref=False, pickle_obj=False,
             stop_on_failure=True, log=None):
     """
     Runs a single BDF
@@ -368,7 +370,7 @@ def run_and_compare_fems(
         fem1.set_dynamic_syntax(dynamic_vars)
 
     if not quiet:
-        fem1.log.info('starting fem1')
+        fem1.log.info('starting fem1 (read/write)')
     sys.stdout.flush()
     fem2 = None
     diff_cards = []

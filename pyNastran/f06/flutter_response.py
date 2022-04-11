@@ -21,6 +21,36 @@ from pyNastran.utils import object_attributes, object_methods
 class FlutterResponse:
     """storage object for single subcase SOL 145 results"""
 
+    def __repr__(self) -> str:
+        xyz_sym = ''
+        if hasattr(self, 'xysym'):
+            xyz_sym += f'xysym  = {self.xysym!r}\n'
+            xyz_sym += f'xzsym  = {self.xzsym!r}\n'
+
+        msg = (
+            'FlutterResponse:\n'
+            f'subcase= {self.subcase:d}\n'
+            f'{xyz_sym}'
+            f'f06_units  = {self.f06_units}\n'
+            f'out_units  = {self.out_units}\n'
+            f'names  = {self.names}; n={len(self.names)}\n\n'
+            f'method  = {self.method!r}\n'
+            f'modes  = {self.modes}; n={len(self.modes)}\n'
+            f'results.shape = {self.results.shape}; (nmodes, npoint, nresults)\n'
+            #configuration : 'AEROSG2D'
+            #density_ratio : 1.0
+            #ikfreq : 0
+            #ikfreq_inv : 1
+            #ivelocity : 2
+            #idamping : 3
+            #ieigi  : 6
+            #ieigr  : 5
+            #ifreq  : 4
+            #mach   : 0.0
+            #make_alt : False
+        )
+        return msg
+
     def __init__(self, subcase: int, configuration: str,
                  xysym: str, xzsym: str,
                  mach: float, density_ratio: float, method: str,
@@ -57,7 +87,7 @@ class FlutterResponse:
                 f06_units = {'velocity' : 'in/s'}
                 The velocity units are the units for the FLFACT card in the BDF
             PKNL method:
-                f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3'}
+                f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3', 'altitude' : 'ft', 'dynamic_pressure': 'psi'}
                 The velocity/density units are the units for the FLFACT card in the BDF
 
         out_units dict[str] = str (default=None -> no units conversion)
@@ -69,7 +99,8 @@ class FlutterResponse:
                     'velocity' : 'ft/s',
                     'eas' : 'knots',
                     'density' : 'slinch/in^3',
-                    'altitude' : 'ft'
+                    'altitude' : 'ft',
+                    'dynamic_pressure' : 'psf',
                 }
 
         Unused Parameters
@@ -199,7 +230,7 @@ class FlutterResponse:
         kdensityi = convert_density(1., density_units_in, 'slug/ft^3')
         kvel = self._get_unit_factor('velocity')[0]
         kdensity = self._get_unit_factor('density')[0]
-        kpressure = kdensityi * kvel ** 2
+        kpressure = self._get_unit_factor('dynamic_pressure')[0]
 
         vel *= kvel
         if self.make_alt:
@@ -366,8 +397,8 @@ class FlutterResponse:
         if fig is None:
             fig = plt.figure()
             axes = fig.add_subplot(111)
-        symbols = self._symbols
-        colors = self._colors
+
+        symbols, colors = self._get_symbols_colors_from_modes(modes)
         linestyle = 'None' if self.noline else '-'
 
         for i, imode, mode in zip(count(), imodes, modes):
@@ -448,8 +479,7 @@ class FlutterResponse:
         if ylim2:
             axes2.set_ylim(ylim2)
 
-        symbols = self._symbols
-        colors = self._colors
+        symbols, colors = self._get_symbols_colors_from_modes(modes)
 
         linestyle = 'None' if noline else '-'
         if nopoints: # and noline is False:
@@ -610,6 +640,28 @@ class FlutterResponse:
         # 4. find the critical mode
         # 5. ???
 
+    def _get_symbols_colors_from_modes(self, modes) -> Tuple[List[str], List[str]]:
+        """
+        We need to make sure we have a symbol and color for each mode,
+        even if we repeat them.
+
+        For the colors, calculate how many more we need N = ceil(nmodes/ncolors)
+        and just duplicate colors N times.
+        """
+        nmodes = len(modes)
+        colors = self._colors
+        ncolors = len(colors)
+        if ncolors < nmodes:
+            kcolor = int(np.ceil(nmodes / ncolors))
+            colors = self._colors * kcolor
+
+        symbols = self._symbols
+        nsymbols = len(symbols)
+        if nsymbols < nmodes:
+            ksymbol = int(np.ceil(nmodes / nsymbols))
+            symbols = self._symbols * ksymbol
+        return symbols, colors
+
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None,
                    plot_type='tas',
                    clear=False, close=False, legend=True,
@@ -634,8 +686,7 @@ class FlutterResponse:
 
         #self._set_xy_limits(xlim, ylim)
         modes, imodes = _get_modes_imodes(self.modes, modes)
-        symbols = self._symbols
-        colors = self._colors
+        symbols, colors = self._get_symbols_colors_from_modes(modes)
 
         if nopoints:
             symbols = ['None'] * len(symbols)
@@ -909,6 +960,13 @@ class FlutterResponse:
             ix = self.idensity
             density_units = self.out_units['density']
             xlabel = 'Density [%s]' % density_units
+        elif plot_type == 'q':
+            ix = self.iq
+            pressure_unit = self.out_units['dynamic_pressure']
+            xlabel = 'Dynamic Pressure [%s]' % pressure_unit
+        elif plot_type == 'mach':
+            ix = self.imach
+            xlabel = 'Mach'
         elif plot_type == 'freq':
             ix = self.ifreq
             xlabel = 'Frequency [Hz]'
@@ -926,7 +984,7 @@ class FlutterResponse:
             xlabel = 'Damping'
         else:
             raise NotImplementedError("plot_type=%r not in ['tas', 'eas', 'alt', 'kfreq', "
-                                      "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi']")
+                                      "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']")
         return ix, xlabel
 
     def object_attributes(self, mode='public', keys_to_skip=None,
@@ -1016,7 +1074,7 @@ def _asarray(results):
     """casts the results array"""
     try:
         results = np.asarray(results, dtype='float64')
-    except:
+    except Exception:
         results2 = []
         fix_kfreq = False
         for mode_result in results:
@@ -1035,7 +1093,7 @@ def _asarray(results):
                     else:
                         try:
                             row_entry2 = float(row_entry)
-                        except:
+                        except Exception:
                             raise ValueError(f'i={i} row_entry={row_entry!r}')
                     row2.append(row_entry2)
                 mode_result2.append(row2)

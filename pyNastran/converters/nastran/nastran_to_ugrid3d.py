@@ -8,11 +8,13 @@ defines:
                                        tol=0.01, renumber=True)
 
 """
+from __future__ import annotations
 import os
 from struct import Struct
 from numpy import array, unique #, hstack
+from typing import List, Optional, TYPE_CHECKING
 
-from cpylog import get_logger2
+from cpylog import SimpleLogger, get_logger2
 from pyNastran.utils import check_path
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
@@ -20,11 +22,18 @@ from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
 from pyNastran.converters.aflr.ugrid.ugrid_reader import (
     UGRID, determine_dytpe_nfloat_endian_from_ugrid_filename)
+if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
+    from pyNastran.bdf.bdf import BDF
 
 
-def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugrid_filename_out,
-                                              pshell_pids_to_remove,
-                                              update_equivalence=True, tol=0.01, log=None):
+def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename: str,
+                                              bdf_filename: str,
+                                              ugrid_filename_out: str,
+                                              pshell_pids_to_remove: List[int],
+                                              update_equivalence: bool=True,
+                                              tol: float=0.01,
+                                              log: Optional[SimpleLogger]=None):
     """
     assumes cid=0
 
@@ -42,6 +51,7 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
         the equivalence tolerance
     update_equivalence : bool; default=True
         calls ``equivalence_ugrid3d_and_bdf_to_bdf`` to equivalence nodes
+
     """
     #base, ext = os.path.splitext(ugrid_filename_out)
     #bdf_filename = base + '.bdf'
@@ -196,9 +206,10 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
 
 
 
-def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
-                                       pshell_pids_to_remove,
-                                       tol=0.01, renumber=True, log=None):
+def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename: str, bdf_filename: str,
+                                       pshell_pids_to_remove: List[int],
+                                       tol: float=0.01, renumber: bool=True,
+                                       log: Optional[SimpleLogger]=None):
     """
     Merges a UGRID3D (*.ugrid) with a BDF and exports a BDF that is
     equivalenced and renumbered.

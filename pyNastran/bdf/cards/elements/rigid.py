@@ -374,11 +374,11 @@ class RBAR(RigidElement):
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
-        cna = components_or_blank(card, 4, 'cna', '')
-        cnb = components_or_blank(card, 5, 'cnb', '')
-        cma = components_or_blank(card, 6, 'cma', '')
-        cmb = components_or_blank(card, 7, 'cmb', '')
-        alpha = double_or_blank(card, 8, 'alpha', 0.0)
+        cna = components_or_blank(card, 4, 'cna', default='')
+        cnb = components_or_blank(card, 5, 'cnb', default='')
+        cma = components_or_blank(card, 6, 'cma', default='')
+        cmb = components_or_blank(card, 7, 'cmb', default='')
+        alpha = double_or_blank(card, 8, 'alpha', default=0.0)
         assert len(card) <= 9, 'len(RBAR card) = %i\ncard=%s' % (len(card), card)
         return RBAR(eid, [ga, gb], cna, cnb, cma, cmb, alpha, comment=comment)
 
@@ -452,7 +452,7 @@ class RBAR(RigidElement):
         self.ga_ref = model.Node(self.Ga(), msg=msg)
         self.gb_ref = model.Node(self.Gb(), msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -603,7 +603,7 @@ class RBAR1(RigidElement):
         self.ga_ref = model.Node(self.Ga(), msg=msg)
         self.gb_ref = model.Node(self.Gb(), msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -782,7 +782,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gni_ref = model.EmptyNodes(self.Gni, msg=msg)
         self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

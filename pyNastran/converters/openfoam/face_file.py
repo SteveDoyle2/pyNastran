@@ -4,9 +4,7 @@ defines:
 
 """
 from copy import deepcopy
-
 import numpy as np
-
 from cpylog import get_logger2
 
 
@@ -70,7 +68,7 @@ class FaceFile:
                     msg += 'sline = %s\n' % str(sline)
                     msg += 'line = %r\n' % face_line.rstrip()
                     raise RuntimeError(msg)
-            except:
+            except Exception:
                 print('face = %r' % face_line)
                 print(sline, i, len(sline))
                 raise
@@ -99,7 +97,7 @@ class FaceFile:
             i += 1
             try:
                 ni_face = ifaces_to_read_sorted[ni]
-            except:
+            except Exception:
                 raise
             #if j % 5000 == 0 or j == ni_face:
                 #print('j=%s ni=%s' % (j, ni))
@@ -117,7 +115,7 @@ class FaceFile:
                         msg += 'sline = %s\n' % str(sline)
                         msg += 'line = %r\n' % face_line
                         raise RuntimeError(msg)
-                except:
+                except Exception:
                     print('face = %r' % face_line.rstrip())
                     print(sline, i, j, ni)
                     raise

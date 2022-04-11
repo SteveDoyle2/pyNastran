@@ -404,7 +404,7 @@ def box_section(class_name, beam_type, dim, prop):
     A = b * h - bi * hi
 
     I1 = (b * h ** 3 - bi * hi ** 3) / 12
-    I2 = (h * b ** 3 - bi * hi ** 3) / 12
+    I2 = (h * b ** 3 - hi * bi ** 3) / 12
     I12 = 0.
     #j = (2*t2*t1*(b-t2)**2*(h-t1)**2)/(b*t2+h*t1-t2**2-t1**2)
     return A, I1, I2, I12
@@ -1264,7 +1264,7 @@ class PBAR(LineProperty):
             #: default=infinite; assume 1e8
             k2 = double_or_blank(card, 18, 'K2', 1e8)
 
-        assert len(card) <= 20, 'len(PBAR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 20, f'len(PBAR card) = {len(card):d}\ncard={card}'
         return PBAR(pid, mid, A, i1, i2, i12, j, nsm,
                     c1, c2, d1, d2, e1, e2,
                     f1, f2, k1, k2, comment=comment)
@@ -1583,7 +1583,7 @@ class PBARL(LineProperty):
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
-        group = string_or_blank(card, 3, 'group', 'MSCBML0')
+        group = string_or_blank(card, 3, 'group', default='MSCBML0')
         Type = string(card, 4, 'Type')
 
         try:
@@ -1623,7 +1623,7 @@ class PBARL(LineProperty):
         assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
         #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
-        nsm = double_or_blank(card, 9 + ndim, 'nsm', 0.0)
+        nsm = double_or_blank(card, 9 + ndim, 'nsm', default=0.0)
         return PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
 
     @classmethod
@@ -1748,10 +1748,10 @@ class PBARL(LineProperty):
         """gets the section I12 moment of inertia"""
         try:
             I12 = A_I1_I2_I12(self, self.beam_type, self.dim)
-        except:
+        except Exception:
             print(str(self))
             raise
-        return I12
+        return I12[3]
 
     #def I1_I2_I12(self):
         #"""gets the section I1, I2, I12 moment of inertia"""
@@ -3101,7 +3101,7 @@ class PBEND(LineProperty):
 
         #: Arc angle :math:`\theta_B` of element  (optional)
         theta_b = double_or_blank(card, 8, 'thetab')
-        assert len(card) <= 23, 'len(PBEND card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 23, f'len(PBEND card) = {len(card):d}\ncard={card}'
         return PBEND(pid, mid, beam_type, A, i1, i2, j, c1, c2, d1, d2,
                      e1, e2, f1, f2, k1, k2, nsm,
                      rc, zc, delta_n, fsi, rm, t,
@@ -3176,8 +3176,8 @@ class PBEND(LineProperty):
         return self.comment + print_card_16(card)
 
 
-def split_arbitrary_thickness_section(key, value):
-    # type: (str, Union[str, float, List[int]]) -> Tuple[int, Union[float, List[int]]]
+def split_arbitrary_thickness_section(key: str,
+                                      value: Union[str, float, List[int]]) -> Tuple[int, Union[float, List[int]]]:
     """
     Helper method for PBRSECT/PBMSECT
 

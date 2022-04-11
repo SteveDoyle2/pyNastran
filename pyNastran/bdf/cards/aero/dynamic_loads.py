@@ -630,10 +630,10 @@ class FLUTTER(BaseCard):
 
     def validate(self):
         msg = ''
-        if self.method not in ['K', 'KE', 'PK', 'PKNL', 'PKS', 'PKNLS']:
-            msg += 'method = %r; allowed=[K, KE, PKS, PKNLS, PKNL, PK]\n' % self.method
-        if self.imethod not in ['L', 'S', 'TCUB']:
-            msg += 'imethod = %r; allowed=[L, S, TCUB]\n' % self.imethod
+        if self.method not in {'K', 'KE', 'PK', 'PKNL', 'PKS', 'PKNLS'}:
+            msg += f'method = {self.method!r}; allowed=[K, KE, PKS, PKNLS, PKNL, PK]\n'
+        if self.imethod not in {'L', 'S', 'TCUB'}:
+            msg += f'imethod = {self.imethod!r}; allowed=[L, S, TCUB]\n'
         if msg:
             raise ValueError(msg + str(self))
 
@@ -678,7 +678,7 @@ class FLUTTER(BaseCard):
 
         assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
         epsilon = double_or_blank(card, 8, 'epsilon', 1e-3)  # not defined in QRG
-        assert len(card) <= 9, 'len(FLUTTER card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
         return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
                        imethod=imethod, nvalue=nvalue, omax=omax,
                        epsilon=epsilon, comment=comment)
@@ -1029,7 +1029,7 @@ class GUST(BaseCard):
         wg = double(card, 3, 'wg')
         x0 = double(card, 4, 'x0')
         V = double_or_blank(card, 5, 'V')
-        assert len(card) <= 6, 'len(GUST card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(GUST card) = {len(card):d}\ncard={card}'
         return GUST(sid, dload, wg, x0, V=V, comment=comment)
 
     @classmethod

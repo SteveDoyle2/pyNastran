@@ -7,8 +7,11 @@ defines some methods for cleaning up a model
 from pyNastran.bdf.bdf import BDF, read_bdf
 #from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
-def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
-                  remove_pids=True, remove_mids=True, remove_spcs=True, remove_mpcs=True):
+def remove_unused(bdf_filename: str,
+                  remove_nids: bool=True, remove_cids: bool=True,
+                  remove_pids: bool=True, remove_mids: bool=True,
+                  remove_spcs: bool=True, remove_mpcs: bool=True,
+                  ) -> BDF:
     """
     Takes an uncross-referenced bdf and removes unused data
 
@@ -40,7 +43,9 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     mids_used = set()
     mids_thermal_used = set()
     sets_used = set()
+
     desvars_used = set()
+
     mpcs_used = set()
     spcs_used = set()
     #nsms_used = set()
@@ -291,9 +296,9 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                     else:
                         raise NotImplementedError(spc)
 
-        elif card_type in ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
+        elif card_type in {'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
                            'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
-                           'TABDMP1', 'TABRND1', 'TABLES1',]:
+                           'TABDMP1', 'TABRND1', 'TABLES1',}:
             pass
         elif card_type == 'SUPORT':
             for suport in model.suport:
@@ -358,7 +363,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             for unused_id, set_card in sorted(sets.items()):
                 nids_used.update(set_card.ids)
 
-        elif card_type in ['DCONSTR']:
+        elif card_type == 'DCONSTR':
             pass
         elif card_type == 'DRESP1':
             _store_dresp1(model, ids, nids_used, pids_used)
@@ -384,7 +389,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type == 'DRESP3':
             pass
 
-        elif card_type in ['DVPREL1', 'DVPREL2']:
+        elif card_type in {'DVPREL1', 'DVPREL2'}:
             for dvprel_id in ids:
                 dvprel = model.dvprels[dvprel_id]
                 desvars_used.update(dvprel.desvar_ids)
@@ -534,6 +539,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         remove_spcs=remove_spcs, remove_mpcs=remove_mpcs,
         unused_remove_desvars=remove_desvars,
     )
+    return model
 
 
 def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids_used):

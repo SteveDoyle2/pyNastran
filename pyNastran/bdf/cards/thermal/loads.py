@@ -84,7 +84,7 @@ class QVOL(ThermalLoad):
         i = 1
         eids = []
         for ifield in range(4, len(card)):
-            eid = integer_or_string(card, ifield, 'eid_%i' % i)
+            eid = integer_or_string(card, ifield, 'eid_%d' % i)
             eids.append(eid)
             i += 1
         elements = expand_thru_by(eids)
@@ -270,7 +270,7 @@ class QVECT(ThermalLoad):
         i = 1
         eids = []
         for ifield in range(9, len(card)):
-            eid = integer_or_string(card, ifield, 'eid_%i' % i)
+            eid = integer_or_string(card, ifield, 'eid_%d' % i)
             eids.append(eid)
             assert eid != 0, card
             i += 1
@@ -519,7 +519,7 @@ class QBDY2(ThermalLoad):  # not tested
         qfluxs = []
         j = 1
         for i in range(3, len(card)):
-            q = double_or_blank(card, i, 'qFlux%i' % j)
+            q = double_or_blank(card, i, 'qFlux%d' % j)
             qfluxs.append(q)
             j += 1
 

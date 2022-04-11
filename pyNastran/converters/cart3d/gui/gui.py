@@ -29,7 +29,7 @@ try:
     PKG_PATH = sys._MEIPASS #@UndefinedVariable
     SCRIPT_PATH = os.path.join(PKG_PATH, 'scripts')
     ICON_PATH = os.path.join(PKG_PATH, 'icons')
-except:
+except Exception:
     PKG_PATH = pyNastran.__path__[0]
     SCRIPT_PATH = os.path.join(PKG_PATH, 'gui', 'scripts')
     ICON_PATH = os.path.join(PKG_PATH, 'gui', 'icons')

@@ -4,7 +4,8 @@ SOL 145 plotter
 
 kfreq = ?c/(2V)
 """
-from typing import  Optional, Dict, Union
+from typing import  List, Dict, Optional, Union
+import numpy as np
 #import PySide
 try:
     import matplotlib.pyplot as plt  # pylint: disable=unused-import
@@ -17,11 +18,11 @@ except ImportError:  # pragma: no cover
 #try:  # pragma: no cover
     #plt.figure()
     #plt.close()
-#except:  # pragma: no cover
+#except Exception:  # pragma: no cover
     #plt.switch_backend('Agg')
 
 
-from cpylog import get_logger2
+from cpylog import get_logger2, SimpleLogger
 from pyNastran.f06.flutter_response import FlutterResponse
 
 
@@ -250,8 +251,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
         flutters[subcase] = flutter
     return flutters
 
-def _get_units(units):
-    # type: (Optional[Union[str, Dict[str, str]]]) -> Optional[Union[str, Dict[str, str]]]
+def _get_units(units: Optional[Union[str, Dict[str, str]]]) -> Optional[Union[str, Dict[str, str]]]:
     """gets the units"""
     if units is None:
         units = 'english_in'
@@ -293,7 +293,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                      vg_vf_filename=None,
                      root_locus_filename=None,
                      kfreq_damping_filename=None,
-                     plot=True, show=True, clear=False, close=False,
+                     plot: bool=True, show: bool=True, clear: bool=False, close: bool=False,
                      log=None):
     """
     Plots a flutter (SOL 145) deck
@@ -312,6 +312,9 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
     plot_type : str; default='tas'
         'tas' : true airspeed
         'eas' : equivalent airspeed
+        'alt' : altitude
+        'dynamic_pressure' : dynamic pressure
+        'mach' : Mach number
     plot_vg : bool; default=False
         make a V-damping plot
     plot_vg_vf : bool; default=False
@@ -357,6 +360,9 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
      o fixing unconverged points
 
     """
+    if plot_type == 'alt':
+        make_alt = True
+
     flutters = make_flutter_response(
         f06_filename, f06_units=f06_units, out_units=out_units, make_alt=make_alt, log=log)
 
@@ -375,7 +381,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                            show=show, clear=clear, close=close)
     return flutters
 
-def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
+def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
+                       xlim, ylim_damping, ylim_freq, ylim_kfreq,
                        plot_type,
                        plot_vg: bool,
                        plot_vg_vf: bool,
@@ -393,6 +400,8 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfre
                        kfreq_damping_filename: Optional[str]=None,
                        show: bool=True, clear: bool=False, close: bool=False):
     """actually makes the flutter plots"""
+    assert len(flutters) > 0, flutters
+    subcases_flutter_set = set(list(flutters.keys()))
     for subcase, flutter in sorted(flutters.items()):
         if plot_vg:
             filenamei = None if vg_filename is None else vg_filename % subcase

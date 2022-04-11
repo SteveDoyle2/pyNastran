@@ -16,8 +16,8 @@ Defines general coordinate system related functions including:
 import numpy as np
 
 # xyz to xxx transforms
-def xyz_to_rtz_array(xyz):
-    """
+def xyz_to_rtz_array(xyz: np.ndarray) -> np.ndarray:
+    r"""
     xyz to R-theta-z transform::
 
       y       R
@@ -43,7 +43,7 @@ def xyz_to_rtz_array(xyz):
     R = np.sqrt(x * x + y * y)
     return np.array([R, theta, xyz[:, 2]], dtype=xyz.dtype).T
 
-def xyz_to_rtp_array(xyz):
+def xyz_to_rtp_array(xyz: np.ndarray) -> np.ndarray:
     """rho-theta-phi to xyz transform"""
     xyz = np.atleast_2d(xyz)
     assert len(xyz.shape) == 2, xyz.shape
@@ -62,7 +62,7 @@ def xyz_to_rtp_array(xyz):
 
 #---------------------------------------------------------------
 # xxx to xyz transforms
-def rtz_to_xyz_array(rtz):
+def rtz_to_xyz_array(rtz: np.ndarray) -> np.ndarray:
     r"""
     R-theta-z to xyz transform::
 
@@ -90,7 +90,7 @@ def rtz_to_xyz_array(rtz):
     xyz = np.array([x, y, rtz[:, 2]], dtype=rtz.dtype).T
     return xyz
 
-def rtp_to_xyz_array(rtp):
+def rtp_to_xyz_array(rtp: np.ndarray) -> np.ndarray:
     """
     rho-theta-phi to xyz transform
 
@@ -112,7 +112,7 @@ def rtp_to_xyz_array(rtp):
 
 #---------------------------------------------------------------
 # rtz/rtp and rtp/rtz transforms
-def rtz_to_rtp_array(rtz):
+def rtz_to_rtp_array(rtz: np.ndarray) -> np.ndarray:
     """R-theta-z to rho-theta-phi transform"""
     rtz = np.atleast_2d(rtz)
     r = rtz[:, 0]
@@ -136,7 +136,7 @@ def rtz_to_rtp_array(rtz):
     phi[irho0] = np.degrees(np.arccos(z[irho0] / rho[irho0]))
     return np.array([rho, thetad, phi], dtype=dtype).T
 
-def rtp_to_rtz_array(rtp):
+def rtp_to_rtz_array(rtp: np.ndarray) -> np.ndarray:
     """rho-theta-phi to R-theta-z transform"""
     rtp = np.atleast_2d(rtp)
     rho = rtp[:, 0]
@@ -147,7 +147,7 @@ def rtp_to_rtz_array(rtp):
     z = rho * np.cos(phi)
     return np.array([r, thetad, z], dtype=rtp.dtype).T
 
-def cylindrical_rotation_matrix(thetar, dtype='float64'):
+def cylindrical_rotation_matrix(thetar: np.ndarray, dtype: str='float64') -> np.ndarray:
     """
     Creates a series transformation matrices to rotate by some angle theta
 

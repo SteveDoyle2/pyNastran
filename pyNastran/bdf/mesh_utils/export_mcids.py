@@ -3,11 +3,13 @@ Defines:
  - nodes, bars = export_mcids(bdf_filename, csv_filename=None)
 
 """
+from __future__ import annotations
 from collections import defaultdict
-from typing import Union, Optional, List, Tuple, Dict # Set
+from typing import Tuple, List, Dict, Union, Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf, PCOMP, PCOMPG, PSHELL, CTRIA3, CQUAD4
-
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 SKIP_ETYPES = {
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CELAS5',
@@ -386,10 +388,13 @@ def _get_tri_vectors(elem: CTRIA3):
     xyz2 = node2.get_position()
     xyz3 = node3.get_position()
 
+    # take the mean edge length to size the vectors in the GUI
     dxyz21 = np.linalg.norm(xyz2 - xyz1)
     dxyz32 = np.linalg.norm(xyz3 - xyz2)
     dxyz13 = np.linalg.norm(xyz1 - xyz3)
     dxyz = np.mean([dxyz21, dxyz32, dxyz13]) / 2.
+    # adjusted for element coordinate system
+    # equivalent to PCOMP thetad=0.0
     centroid, imat, jmat, normal = elem.material_coordinate_system()
     return dxyz, centroid, imat, jmat, normal
 
@@ -405,11 +410,15 @@ def _get_quad_vectors(elem: CQUAD4):
     xyz3 = node3.get_position()
     xyz4 = node4.get_position()
 
+    # take the mean length to size the vectors in the GUI
     dxyz21 = np.linalg.norm(xyz2 - xyz1)
     dxyz32 = np.linalg.norm(xyz3 - xyz2)
     dxyz43 = np.linalg.norm(xyz4 - xyz3)
     dxyz14 = np.linalg.norm(xyz1 - xyz4)
     dxyz = np.mean([dxyz21, dxyz32, dxyz43, dxyz14]) / 2.
+
+    # adjusted for element coordinate system
+    # equivalent to PCOMP thetad=0.0
     centroid, imat, jmat, normal = elem.material_coordinate_system()
     return dxyz, centroid, imat, jmat, normal
 
@@ -434,7 +443,10 @@ def _export_tria(model: BDF,
     else:
         raise NotImplementedError(pid_ref)
 
+    # adjusted for element coordinate system
+    # equivalent to PCOMP thetad=0.0
     dxyz, centroid, imat, jmat, normal = _get_tri_vectors(elem)
+
     nid, eid = _rotate_single_coord(
         elem, pid_ref, iply,
         nid, eid, nodes, bars,
@@ -443,19 +455,22 @@ def _export_tria(model: BDF,
         consider_property_rotation=consider_property_rotation)
     return nid, eid
 
-def _rotate_single_coord(elem, pid_ref, iply: int,
+def _rotate_single_coord(elem: ShellElement,
+                         pid_ref, iply: int,
                          nid, eid, nodes, bars,
-                         dxyz, centroid, imat, jmat, normal,
+                         dxyz: float,
+                         centroid: np.ndarray,
+                         imat: np.ndarray,
+                         jmat: np.ndarray,
+                         normal: np.ndarray,
                          export_both_axes: bool, export_xaxis: bool,
                          consider_property_rotation: bool) -> Tuple[int, int]:
-    #try:
+    # rotate the coord
     imat, jmat = _rotate_mcid(
         elem, pid_ref, iply, imat, jmat, normal,
         consider_property_rotation=consider_property_rotation)
-    #except IndexError:
-        #pids_failed.add(pid_ref.pid)
-        #return nid, eid
 
+    # size the axes based on the mean edge length
     iaxis = centroid + imat * dxyz
     jaxis = centroid + jmat * dxyz
     nid, eid = _add_elements(nid, eid, nodes, bars,
@@ -472,15 +487,17 @@ def _export_coord_axes(nodes, bars, csv_filename: str):
             for bari in bars:
                 out_file.write('BAR,%i,%i,%i\n' % bari)
 
-def _rotate_mcid(elem,
+def _rotate_mcid(elem: ShellElement,
                  pid_ref: Union[PCOMP, PCOMPG, PSHELL], iply: int,
                  imat: np.ndarray, jmat: np.ndarray, normal: np.ndarray,
                  consider_property_rotation: bool=True):
-    """rotates a material coordinate system"""
+    """
+    Rotates a material coordinate system.  Assumes the element theta/mcid
+    has already been acounted for.
+    """
     if not consider_property_rotation:
         return imat, jmat
 
-    #pid_ref = elem.pid_ref
     if pid_ref.type == 'PSHELL':
         theta_mcid = elem.theta_mcid
         if isinstance(theta_mcid, float):
@@ -491,7 +508,6 @@ def _rotate_mcid(elem,
             raise TypeError(f'theta/mcid={theta_mcid} is not an int/float; '
                             f'type={type(theta_mcid)}\n{elem}')
     elif pid_ref.type in ['PCOMP', 'PCOMPG']:
-        #print(pid_ref.nplies)
         thetad = pid_ref.get_theta(iply)
     else:
         raise NotImplementedError(f'property type={elem.pid_ref.type!r} is not supported\n'
@@ -518,7 +534,9 @@ def _rotate_mcid(elem,
 def _add_elements(nid: int, eid: int,
                   nodes: List[Tuple[int, float, float, float]],
                   bars: List[Tuple[int, int, int]],
-                  centroid: np.ndarray, iaxis: np.ndarray, jaxis: np.ndarray,
+                  centroid: np.ndarray,
+                  iaxis: np.ndarray,
+                  jaxis: np.ndarray,
                   export_both_axes: bool, export_xaxis: bool) -> Tuple[int, int]:
     """adds the element data"""
     if export_both_axes:
@@ -554,11 +572,14 @@ def _add_elements(nid: int, eid: int,
     #eid += 2
     #return eid, nid
 
-def _export_xaxis(nid, nodes, bars, centroid, iaxis):
+def _export_xaxis(nid: int,
+                  nodes: List[np.ndarray],
+                  bars: List[np.ndarray],
+                  centroid: np.ndarray,
+                  iaxis: np.ndarray) -> int:
     nodes.append(centroid)
     nodes.append(iaxis)
-    #print(nid, bars)
-    elemi = (nid, nid + 1, )
+    elemi = (nid, nid + 1)
     bars.append(elemi)  # x-axis
     nid += 2
     return nid

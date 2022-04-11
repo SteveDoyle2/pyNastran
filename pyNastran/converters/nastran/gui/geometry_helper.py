@@ -133,7 +133,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             'beam' : [], # PBEAM
             'pbcomp' : [], # PBCOMP
 
-            # PBEAML specfic
+            # PBEAML specific
             "L" : [],
         }  # for GROUP="MSCBML0"
 

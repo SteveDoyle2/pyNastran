@@ -54,7 +54,7 @@ class AXIC(BaseCard):
 
         """
         nharmonics = integer(card, 1, 'nharmonics')
-        assert len(card) == 2, 'len(AXIC card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 2, f'len(AXIC card) = {len(card):d}\ncard={card}'
         return AXIC(nharmonics, comment=comment)
 
     def raw_fields(self):
@@ -146,7 +146,7 @@ class AXIF(BaseCard):
         #Ni : List[int]
 
 
-        assert len(card) >= 7, 'len(AXIF card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 7, f'len(AXIF card) = {len(card):d}\ncard={card}'
         return AXIF(cid, g, drho, db, no_sym, f, n, comment=comment)
 
     def raw_fields(self):
@@ -215,7 +215,7 @@ class POINTAX(BaseCard):
         nid = integer(card, 1, 'nid')
         ringax = integer(card, 2, 'ringax')
         phi = double(card, 3, 'phi')
-        assert len(card) <= 4, 'len(POINTAX card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 4, f'len(POINTAX card) = {len(card):d}\ncard={card}'
         return POINTAX(nid, ringax, phi, comment=comment)
 
     def raw_fields(self):
@@ -272,7 +272,7 @@ class RINGFL(BaseCard):
         ringfl = integer(card, 1+ioffset, 'ringfl_%i' % j)
         xa = double(card, 2+ioffset, 'xa_%i' % j)
         xb = double_or_blank(card, 3+ioffset, 'xa_%i' % j)
-        assert len(card) <= 9, 'len(RINGFL card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(RINGFL card) = {len(card):d}\ncard={card}'
         return RINGFL(ringfl, xa, xb, comment=comment)
 
     @classmethod
@@ -345,8 +345,7 @@ class RINGAX(BaseCard):
         z = 1.
         return RINGAX(nid, R, z, ps=None, comment='')
 
-    def __init__(self, nid, R, z, ps=None, comment=''):  # this card has missing fields
-        # type: (int, float, float, Optional[str], str) -> None
+    def __init__(self, nid: int, R: float, z: float, ps: Optional[str]=None, comment: str=''):  # this card has missing fields
         """
         Creates the RINGAX card
         """
@@ -386,7 +385,7 @@ class RINGAX(BaseCard):
         blank(card, 6, 'blank')
 
         ps = integer_or_blank(card, 7, 'ps')
-        assert len(card) <= 8, 'len(RINGAX card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(RINGAX card) = {len(card):d}\ncard={card}'
         return RINGAX(nid, R, z, ps, comment=comment)
 
     @classmethod

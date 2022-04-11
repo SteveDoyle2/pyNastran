@@ -470,7 +470,7 @@ class ACOORD(Coord):  # not done
         origin = [origin_x, origin_y, origin_z]
         delta = double(card, 5, 'delta')
         theta = double(card, 6, 'theta')
-        assert len(card) <= 7, 'len(ACOORD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(ACOORD card) = {len(card):d}\ncard={card}'
         return ACOORD(cid, origin, delta, theta, comment=comment)
 
     def setup(self):
@@ -638,7 +638,7 @@ class AESURFZ(BaseCard):
         panlst = integer(card, 4, 'PANLST/SETK') # PANLST1, PANLST2, PANLST3
         setg = integer(card, 5, 'SETG') # SET1, SETADD
         actuator_tf = integer_or_blank(card, 6, 'ACTID') # ACTU card
-        assert len(card) <= 7, 'len(AESURFZ card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(AESURFZ card) = {len(card):d}\ncard={card}'
         assert surface_type in ['SYM', 'ANTISYM', 'ASYM']
         return AESURFZ(label, surface_type, cid, panlst, setg, actuator_tf, comment=comment)
 
@@ -685,7 +685,7 @@ class AESURFZ(BaseCard):
         self.panlst_ref.cross_reference(model)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by AESURF aesid=%s' % self.aesid
         self.cid_ref = model.safe_coord(self.cid, self.aesid, xref_errors, msg=msg)
         #if self.cid2 is not None:
@@ -933,7 +933,7 @@ class AEROZ(Aero):
         zref = double_or_blank(card, 11, 'zref', 0.)
         xyz_ref = [xref, yref, zref]
 
-        assert len(card) <= 12, 'len(AEROZ card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(AEROZ card) = {len(card):d}\ncard={card}'
 
         # faking data to not change gui
         rcsid = 0
@@ -976,7 +976,7 @@ class AEROZ(Aero):
 
     def cross_reference(self, model: BDF) -> None:
         """
-        Cross refernece aerodynamic coordinate system.
+        Cross reference aerodynamic coordinate system.
 
         Parameters
         ----------
@@ -988,9 +988,9 @@ class AEROZ(Aero):
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
         self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
-        Safe cross refernece aerodynamic coordinate system.
+        Safe cross reference aerodynamic coordinate system.
 
         Parameters
         ----------
@@ -1228,7 +1228,7 @@ class PANLST1(Spline):
         macro_id = integer(card, 2, 'macro_id')
         box1 = integer(card, 3, 'box1')
         box2 = integer(card, 4, 'box2')
-        assert len(card) == 5, 'len(PANLST1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 5, f'len(PANLST1 card) = {len(card):d}\ncard={card}'
         return PANLST1(eid, macro_id, box1, box2, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -1339,7 +1339,7 @@ class PANLST3(Spline):
         self.caero_refs = caero_refs
         self.aero_element_ids = aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def raw_fields(self):
@@ -1456,7 +1456,7 @@ class PAFOIL7(BaseCard):
         i_camber_tip = integer(card, 7, 'i_camber_tip')
         le_radius_tip = double_or_blank(card, 8, 'le_radius_tip')
 
-        assert len(card) <= 9, 'len(PAFOIL7 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(PAFOIL7 card) = {len(card):d}\ncard={card}'
         return PAFOIL7(pid, i_axial,
                        i_thickness_root, i_camber_root, le_radius_root,
                        i_thickness_tip, i_camber_tip, le_radius_tip,
@@ -1666,7 +1666,7 @@ class BODY7(BaseCard):
         """
         eid = integer(card, 1, 'eid')
         label = string(card, 2, 'label')
-        assert len(card) >= 3, 'len(BODY7 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 3, f'len(BODY7 card) = {len(card):d}\ncard={card}'
         pid = integer_or_blank(card, 3, 'pid')
         acoord = integer_or_blank(card, 4, 'acoord', 0)
         nseg = integer_or_blank(card, 5, 'nseg')
@@ -1675,7 +1675,7 @@ class BODY7(BaseCard):
         for i, ifield in enumerate(range(6, len(card))):
             segmesh = integer(card, ifield, 'idmesh_%i' % (i+1))
             idmeshes.append(segmesh)
-        assert len(card) <= 13, 'len(BODY7 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, f'len(BODY7 card) = {len(card):d}\ncard={card}'
         return BODY7(eid, label, pid, nseg, idmeshes, acoord=acoord, comment=comment)
 
     def ACoord(self):
@@ -1921,7 +1921,8 @@ class BODY7(BaseCard):
         paero2.validate()
         return caero2, paero2, aefact_xs, aefact_width, aefact_theta1, aefact_theta2
 
-    def _get_nthetas(self):
+    def _get_nthetas(self) -> int:
+        """gets the number of thetas for the body"""
         return self.segmesh_refs[0].nradial  # npoints
         #nthetas = 17
         #for itype, idy_ref, unused_idz_ref in zip(itypes, idys_ref2, idzs_ref2):
@@ -1931,12 +1932,13 @@ class BODY7(BaseCard):
                 #break
         #return nthetas
 
-    def _get_thetas(self):
+    def _get_thetas(self) -> np.ndarray:
+        """gets the thetas for the body"""
         nthetas = self._get_nthetas()
         thetas = np.radians(np.linspace(0., 360., nthetas))
         return thetas
 
-    def get_points(self):
+    def get_points(self) -> List[np.ndarray, np.ndarray]:
         """creates a 1D representation of the BODY7"""
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
@@ -1946,7 +1948,8 @@ class BODY7(BaseCard):
         return [p1, p2]
 
     @property
-    def npanels(self):
+    def npanels(self) -> int:
+        """gets the number of panels for the body"""
         nz = len(self.segmesh_refs)
         unused_segmesh = self.segmesh_refs[0]
         nthetas = self._get_nthetas()
@@ -1979,7 +1982,7 @@ class BODY7(BaseCard):
 
         return xyzs, elements
 
-    def _get_points_elements_3di(self, segmesh):
+    def _get_points_elements_3di(self, segmesh: SEGMESH) -> Tuple[np.ndarray, np.ndarray]:
         """
         points (nchord, nspan) float ndarray; might be backwards???
             the points
@@ -2066,7 +2069,7 @@ class BODY7(BaseCard):
         #"""shifts the aero panel"""
         #self.p1 += dxyz
 
-    def raw_fields(self):
+    def raw_fields(self) -> List[Any]:
         """
         Gets the fields in their unmodified form
 
@@ -2080,7 +2083,7 @@ class BODY7(BaseCard):
                        self.nseg] + self.idmeshes
         return list_fields
 
-    def repr_fields(self):
+    def repr_fields(self) -> List[Any]:
         """
         Gets the fields in their simplified form
 
@@ -2124,10 +2127,10 @@ class SEGMESH(BaseCard):
     type = 'SEGMESH'
 
     @property
-    def pid(self):
+    def pid(self) -> int:
         return self.segmesh_id
     @pid.setter
-    def pid(self, segmesh_id):
+    def pid(self, segmesh_id: int) -> None:
         self.segmesh_id = segmesh_id
 
     def __init__(self, segmesh_id, naxial, nradial, nose_radius, iaxis,
@@ -2237,7 +2240,7 @@ class SEGMESH(BaseCard):
         cambers = []
         idys = []
         idzs = []
-        assert len(card) >= 9, 'len(SEGMESH card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 9, f'len(SEGMESH card) = {len(card):d}\ncard={card}'
 
         for counter, ifield in enumerate(range(9, len(card), 8)):
             itype = integer(card, ifield, 'itype%i' % (counter+1))
@@ -2289,7 +2292,7 @@ class SEGMESH(BaseCard):
         self.idzs_ref = idzs_ref
         #print(self.idys_ref)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -2579,7 +2582,7 @@ class CAERO7(BaseCard):
         unused_attach_tip = integer_or_blank(card, 22, 'attach_tip')
         unused_achord_tip = integer_or_blank(card, 23, 'achord_tip')
 
-        assert len(card) <= 23, 'len(CAERO7 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 23, f'len(CAERO7 card) = {len(card):d}\ncard={card}'
         return CAERO7(eid, name, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, nchord=nchord, lspan=lspan,
                       p_airfoil=p_airfoil, ztaic=ztaic,
@@ -2602,7 +2605,7 @@ class CAERO7(BaseCard):
         npanels = nchord * nspan
         try:
             self.box_ids = np.arange(self.eid, self.eid + npanels,
-                                     dtype=dtype).reshape(nspan, nchord).T
+                                     dtype=dtype).reshape(nspan, nchord) # .T
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
@@ -2631,7 +2634,7 @@ class CAERO7(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by CAERO1 eid=%s' % self.eid
+        msg = ', which is required by CAERO7 eid=%s' % self.eid
         #self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
@@ -2647,7 +2650,7 @@ class CAERO7(BaseCard):
             self.pafoil_ref = model.zona.PAFOIL(self.p_airfoil, msg)
         self._init_ids()
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3115,7 +3118,7 @@ class TRIM_ZONA(BaseCard):
             uxs.append(ux)
             i += 2
             n += 1
-        assert len(card) >= 25, 'len(TRIM card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 25, f'len(TRIM card) = {len(card):d}\ncard={card}'
         return TRIM_ZONA(sid, mkaeroz, qinf, cg, true_g, nxyz, pqr, loadset,
                          labels, uxs, comment=comment)
 
@@ -3287,7 +3290,7 @@ class TRIMLNK(BaseCard):
             coeffs.append(coeff)
             var_ids.append(var_id)
             icoeff += 1
-        assert len(card) >= 5, 'len(TRIMLNK card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 5, f'len(TRIMLNK card) = {len(card):d}\ncard={card}'
         return TRIMLNK(link_id, sym, coeffs, var_ids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -3577,7 +3580,7 @@ class FLUTTER_ZONA(Spline):
         mlist = integer(card, 6, 'mlist')
         conmlst = integer(card, 7, 'conmlst')
         nkstep = integer_or_blank(card, 8, 'nkstep', 25)
-        assert len(card) <= 9, 'len(FLUTTER card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
         return FLUTTER_ZONA(sid, sym, fix, nmode, tabdmp, mlist, conmlst, nkstep,
                             comment=comment)
 

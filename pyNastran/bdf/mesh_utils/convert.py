@@ -16,7 +16,8 @@ if TYPE_CHECKING:  # pragma: no cover
                                    PBAR, PBEAM, PBEAM3, PBUSH, PBUSH1D)
 
 
-def convert(model: BDF, units_to: List[str], units: Optional[List[str]]=None) -> None:
+def convert(model: BDF, units_to: List[str],
+            units: Optional[List[str]]=None) -> None:
     """
     Converts a model from a set of defined units
 
@@ -438,6 +439,12 @@ def _convert_elements(model: BDF,
             if elem.si[0] is not None:  # vector
                 elem.si = [sii*xyz_scale for sii in elem.si]
 
+        elif elem_type == 'CFAST':
+            if elem.gs is None:
+                elem.xs *= xyz_scale
+                elem.ys *= xyz_scale
+                elem.zs *= xyz_scale
+
         elif elem_type == 'GENEL':
             # I'm pretty sure [S] this is unitless
             if elem.k is not None:
@@ -458,9 +465,7 @@ def _convert_elements(model: BDF,
             elem.I = [moi * mass_moi_scale for moi in elem.I]
         elif elem.type == 'CONM1':
             elem.mass_matrix *= mass_scale
-        elif elem.type == 'CMASS2':
-            elem.mass *= mass_scale
-        elif elem.type == 'CMASS4':
+        elif elem.type in {'CMASS2', 'CMASS4'}:
             elem.mass *= mass_scale
         else:
             raise NotImplementedError(elem)
@@ -603,6 +608,35 @@ def _convert_properties(model: BDF,
             prop.nsm *= nsm_plate_scale
             prop.z1 *= xyz_scale
             prop.z2 *= xyz_scale
+        elif prop_type == 'PFAST':
+            #d : float
+            #    diameter of the fastener
+            #kt1, kt2, kt3 : float
+            #    stiffness values in directions 1-3
+            #mcid : int; default=01
+            #    specifies the element stiffness coordinate system
+            #mflag : int; default=0
+            #    0-absolute; 1-relative
+            #kr1, kr2, kr3 : float; default=0.0
+            #    rotational stiffness values in directions 1-3
+            #mass : float; default=0.0
+            #    lumped mass of the fastener
+            #ge : float; default=0.0
+            #    structural damping
+
+            # diameter
+            prop.d *= xyz_scale
+
+            # translational stiffness (F/L)
+            prop.kt1 *= stiffness_scale
+            prop.kt2 *= stiffness_scale
+            prop.kt3 *= stiffness_scale
+
+            # rotational stiffness (F*L/L)
+            prop.kr1 *= stiffness_scale
+            prop.kr2 *= stiffness_scale
+            prop.kr3 *= stiffness_scale
+            prop.mass *= mass_scale
 
         #elif prop.type == 'PBCOMP':
             #pass
@@ -1674,7 +1708,7 @@ def convert_length(length_from, length_to):
     """
     Determines the length scale factor
 
-    We crate a gravity_scale_length for any non-standard unit (ft, m)
+    We create a gravity_scale_length for any non-standard unit (ft, m)
 
     """
     xyz_scale = 1.0

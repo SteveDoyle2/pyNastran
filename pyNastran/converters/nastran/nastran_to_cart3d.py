@@ -155,7 +155,7 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
             out = element.node_ids
             try:
                 n1, n2, n3 = out
-            except:
+            except Exception:
                 print("type =", element.type)
                 raise
             n1 = node_id_shift[n1]

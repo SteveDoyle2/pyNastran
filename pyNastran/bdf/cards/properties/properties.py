@@ -142,7 +142,7 @@ class PFAST(Property):
         kr3 = double_or_blank(card, 10, 'kr3', 0.0)
         mass = double_or_blank(card, 11, 'mass', 0.0)
         ge = double_or_blank(card, 12, 'ge', 0.0)
-        assert len(card) <= 13, 'len(PFAST card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, f'len(PFAST card) = {len(card):d}\ncard={card}'
         return PFAST(pid, d, kt1, kt2, kt3, mcid=mcid, mflag=mflag,
                      kr1=kr1, kr2=kr2, kr3=kr3, mass=mass, ge=ge,
                      comment=comment)
@@ -354,7 +354,7 @@ class PGAP(Property):
         tmax = double_or_blank(card, 9, 'tmax', default=0.)
         mar = double_or_blank(card, 10, 'mar', default=100.)
         trmin = double_or_blank(card, 11, 'trmin', default=0.001)
-        assert len(card) <= 12, 'len(PGAP card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(PGAP card) = {len(card):d}\ncard={card}'
         return PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                     comment=comment)
 
@@ -508,7 +508,7 @@ class PRAC2D(CrackProperty):
         nsm = double_or_blank(card, 5, 'nsm', 0.)
         gamma = double_or_blank(card, 6, 'gamma', 0.5)
         phi = double_or_blank(card, 7, 'phi', 180.)
-        assert len(card) <= 8, 'len(PRAC2D card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(PRAC2D card) = {len(card):d}\ncard={card}'
         return PRAC2D(pid, mid, thick, iplane, nsm, gamma, phi,
                       comment=comment)
 
@@ -596,7 +596,7 @@ class PRAC3D(CrackProperty):
         mid = integer(card, 2, 'mid')
         gamma = double_or_blank(card, 3, 'gamma', 0.5)
         phi = double_or_blank(card, 4, 'gamma', 180.)
-        assert len(card) <= 5, 'len(PRAC3D card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(PRAC3D card) = {len(card):d}\ncard={card}'
         return PRAC3D(pid, mid, gamma, phi, comment=comment)
 
     def _verify(self, xref):

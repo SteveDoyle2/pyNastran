@@ -145,7 +145,7 @@ class BLSEG(BaseCard):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
     def uncross_reference(self) -> None:
-        msg = f', which is required by BLSEG line_id={self.line_id}'
+        #msg = f', which is required by BLSEG line_id={self.line_id}'
         self.nodes = self.node_ids
         self.nodes_ref = None
 

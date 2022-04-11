@@ -96,7 +96,7 @@ class CHACAB(Element):
             integer_or_blank(card, 21, 'nid19'),
             integer_or_blank(card, 22, 'nid20'),
         ]
-        assert len(card) <= 23, 'len(CHACAB card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
         return CHACAB(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -184,7 +184,7 @@ class CHACBR(Element):
             integer_or_blank(card, 21, 'nid19'),
             integer_or_blank(card, 22, 'nid20'),
         ]
-        assert len(card) <= 23, 'len(CHACAB card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
         return CHACAB(eid, pid, nids, comment=comment)
 
     def raw_fields(self):
@@ -257,7 +257,7 @@ class CAABSF(Element):
             integer_or_blank(card, 5, 'nid3', 0),
             integer_or_blank(card, 6, 'nid4', 0),
         ]
-        assert len(card) <= 7, 'len(CAABSF card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(CAABSF card) = {len(card):d}\ncard={card}'
         return CAABSF(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -333,7 +333,7 @@ class PACBAR(Property):
         mseptm = double(card, 3, 'mseptm')
         freson = double_or_blank(card, 4, 'freson')
         kreson = double_or_blank(card, 5, 'kreson')
-        assert len(card) <= 6, 'len(PACBAR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(PACBAR card) = {len(card):d}\ncard={card}'
         return PACBAR(pid, mback, mseptm, freson, kreson, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -433,7 +433,7 @@ class PAABSF(Property):
         b = double_or_blank(card, 6, 'b', 0.0)
         k = double_or_blank(card, 7, 'k', 0.0)
         rhoc = double_or_blank(card, 8, 'rhoc', 1.0)
-        assert len(card) <= 9, 'len(PAABSF card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(PAABSF card) = {len(card):d}\ncard={card}'
         return PAABSF(pid, tzreid, tzimid, s, a, b, k, rhoc, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -533,7 +533,7 @@ class PACABS(Element):
         b = double_or_blank(card, 8, 'b')
         k = double_or_blank(card, 9, 'k')
         m = double_or_blank(card, 10, 'm')
-        assert len(card) <= 8, 'len(PACABS card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(PACABS card) = {len(card):d}\ncard={card}'
 
         assert synth in ['YES', 'NO'], synth
         is_synth = synth == 'YES'
@@ -719,7 +719,7 @@ class ACMODL(Element):
         intol = double_or_blank(card, 9, 'intol', 0.2)
         area_op = integer_or_blank(card, 10, 'area_op', 0)
         ctype = string_or_blank(card, 11, 'ctype', 'STRONG')
-        assert len(card) <= 8, 'len(ACMODL card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(ACMODL card) = {len(card):d}\ncard={card}'
 
         return ACMODL(infor, fset, sset,
                       normal=normal, olvpang=olvpang,
@@ -742,7 +742,7 @@ class ACMODL(Element):
         intol = double_or_blank(card, 9, 'intol', 0.2)
         all_set = string_or_blank(card, 10, 'all_set', 'NO') #
         search_unit = string_or_blank(card, 11, 'search_unit', 'REL')
-        assert len(card) <= 12, 'len(ACMODL card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(ACMODL card) = {len(card):d}\ncard={card}'
         return ACMODL(infor, fset, sset,
                       inter=inter, normal=normal, method=method,
                       sk_neps=sk_neps, dsk_neps=dsk_neps, all_set=all_set,
