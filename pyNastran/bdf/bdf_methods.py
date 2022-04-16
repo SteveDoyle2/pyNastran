@@ -27,7 +27,7 @@ from pyNastran.bdf.mesh_utils.breakdowns import (
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 from pyNastran.bdf.utils import transform_load
 
-from pyNastran.nptyping import NDArray3float
+from pyNastran.nptyping_interface import NDArray3float
 
 class BDFMethods(BDFAttributes):
     """

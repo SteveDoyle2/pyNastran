@@ -4,7 +4,8 @@ defines methods to access force/moment/pressure/temperature data:
                             eid_map, nnodes, normals, dependents_nodes,
                             nid_map=None, include_grav=False)
   - get_pressure_array(model, load_case, eids, stop_on_failure=True)
-  - get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float32')
+  - get_temperatures_array(model, load_case_id, nid_map=None,
+                           fdtype='float32')
   - get_load_arrays(model, subcase_id, nid_map, eid_map, node_ids, normals)
 
 """
@@ -472,7 +473,10 @@ def get_pressure_array(model: BDF, load_case_id, eids, stop_on_failure=True):
         model.log.warning(f'skipping pressure on {list(etypes_skipped)}')
     return True, pressures
 
-def get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float32'):
+def get_temperatures_array(model: BDF,
+                           load_case_id: int,
+                           nid_map: Optional[Dict[int, int]]=None,
+                           dtype: str='float32') -> Tuple[bool, np.ndarray]:
     """
     Builds the temperature array based on thermal cards.
 
@@ -506,14 +510,15 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float3
     tempd = model.tempds[load_case_id].temperature if load_case_id in model.tempds else 0.
     temperatures = np.ones(len(nid_map), dtype=dtype) * tempd
 
-    skip_loads = [
+    skip_loads = {
         'FORCE', 'FORCE1', 'FORCE2',
         'MOMENT', 'MOMENT1', 'MOMENT2',
         'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
         'GRAV', 'ACCEL', 'ACCEL1', 'GMLOAD',
         'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
         'RFORCE', 'RFORCE1', 'SPCD', 'DEFORM',
-    ]
+        'TEMPD',
+    }
     for load, scale in zip(loads, scale_factors):
         if load.type in skip_loads:
             continue
@@ -525,13 +530,15 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float3
                 nidi = nid_map[nid]
                 temperatures[nidi] = val
         else:
-            model.log.debug(load.rstrip())
+            model.log.debug(f'skipping card in get_temperatures_array\n{load.rstrip()}')
     return is_temperatures, temperatures
 
 def get_load_arrays(model: BDF, subcase_id: int,
                     eid_map, node_ids,
                     normals,
-                    nid_map=None, stop_on_failure=True):
+                    nid_map=None,
+                    stop_on_failure: bool=True,
+                    ):
     """
     Gets the following load arrays
 

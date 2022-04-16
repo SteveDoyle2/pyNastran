@@ -10,7 +10,7 @@ import numpy as np
 
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
-from pyNastran.nptyping import NDArray3float, NDArrayNint
+from pyNastran.nptyping_interface import NDArray3float, NDArrayNint
 
 def find_closest_nodes(nodes_xyz: NDArray3float, nids: NDArrayNint,
                        xyz_compare: NDArray3float,

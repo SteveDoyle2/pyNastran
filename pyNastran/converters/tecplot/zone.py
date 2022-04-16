@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Tuple, List, Dict, TextIO, Optional, Any, TYPE_CHECKING
 
 import numpy as np
-from pyNastran.nptyping import NDArrayN3float, NDArrayN3int, NDArrayN4int
+from pyNastran.nptyping_interface import NDArrayN3float, NDArrayN3int, NDArrayN4int
 
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger

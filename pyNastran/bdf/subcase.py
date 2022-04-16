@@ -1,6 +1,7 @@
 """Subcase creation/extraction class"""
 from __future__ import annotations
 from typing import Tuple, List, Dict, Union, Any, TYPE_CHECKING
+import numpy as np
 from numpy import ndarray
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -1155,7 +1156,7 @@ class Subcase:
 def _load_hdf5_param(group, key: str, encoding: str) -> Tuple[str, List[str], str]:
     """('ALL', ['SORT2'], 'STRESS-type')"""
     import h5py
-    from pyNastran.utils.dict_to_h5py import _cast
+    from pyNastran.utils.dict_to_h5py import _cast, _cast_array
     #print('-----------------------------------------')
     #print(type(key), key)
     sub_group = group[key]
@@ -1170,8 +1171,9 @@ def _load_hdf5_param(group, key: str, encoding: str) -> Tuple[str, List[str], st
         options = _cast(sub_group['options'])
         if isinstance(options, (integer_types, str)):
             pass
+        elif isinstance(options, bytes):
+            options = options.decode(encoding)
         else:
-            options = options.tolist()
             options = [
                 option.decode(encoding) if isinstance(option, bytes) else option
                 for option in options]
@@ -1181,6 +1183,8 @@ def _load_hdf5_param(group, key: str, encoding: str) -> Tuple[str, List[str], st
     param_type = None
     if 'param_type' in sub_group:
         param_type = _cast(sub_group['param_type'])
+        if isinstance(param_type, bytes):
+            param_type = param_type.decode(encoding)
         keys.remove('param_type')
 
     #print('param_type ', param_type)
@@ -1192,8 +1196,10 @@ def _load_hdf5_param(group, key: str, encoding: str) -> Tuple[str, List[str], st
             value = value.decode(encoding)
         elif isinstance(value, (integer_types, str)):
             pass
-        else:
+        elif isinstance(value, np.ndarray):
             value = value.tolist()
+        #else:
+            #value = value.tolist()
 
     elif 'object' in sub_group:
         value, options = _load_hdf5_object(key, keys, sub_group, encoding)
@@ -1223,7 +1229,7 @@ def _load_hdf5_object(key, keys, sub_group, encoding):
 
     use_data = True
     if 'options' in sub_groupi:
-        options2 = _cast(sub_groupi['options']).tolist()
+        options2 = _cast(sub_groupi['options'])
         value = _cast(sub_groupi['value'])
         #print('sub_keys =', sub_groupi, sub_groupi.keys())
 
@@ -1231,9 +1237,11 @@ def _load_hdf5_object(key, keys, sub_group, encoding):
             option.decode(encoding) if isinstance(option, bytes) else option
             for option in options2]
         use_data = False
+    if isinstance(value, bytes):
+        value = value.decode(encoding)
 
     data_group = sub_groupi['data']
-    keys2 = _cast(data_group['keys']).tolist()
+    keys2 = _cast(data_group['keys'])
 
     h5_values = data_group['values']
     if isinstance(h5_values, h5py._hl.group.Group):
@@ -1243,7 +1251,7 @@ def _load_hdf5_object(key, keys, sub_group, encoding):
             h5_value = _cast(h5_values[ih5])
             values2[ih5_int] = h5_value
     else:
-        values2 = _cast(h5_values).tolist()
+        values2 = _cast(h5_values)
     #print('data_keys =', data_group, data_group.keys())
 
     unused_keys_str = [
@@ -1264,7 +1272,7 @@ def _load_hdf5_object(key, keys, sub_group, encoding):
         for keyi, valuei in zip(keys2, values2):
             data.append((keyi, valuei))
         class_obj = cls(data)
-        assert options is None, options
+        #assert options is None, options
     else:
         class_obj = cls(key, value, options_str)
         options = options_str

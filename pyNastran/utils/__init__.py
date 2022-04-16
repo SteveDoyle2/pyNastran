@@ -13,8 +13,9 @@ import sys
 import getpass
 import inspect
 import warnings
+from pathlib import PurePath
 from abc import abstractmethod
-from typing import List, Optional, Any
+from typing import List, Optional, Union, Any
 import pyNastran
 
 
@@ -59,7 +60,7 @@ def remove_files(filenames):
         except OSError:
             pass
 
-def is_binary_file(filename: str) -> bool:
+def is_binary_file(filename: Union[str, PurePath]) -> bool:
     """
     Return true if the given filename is binary.
 
@@ -80,7 +81,7 @@ def is_binary_file(filename: str) -> bool:
     that file is binary if it contains null.
 
     .. warning:: this may not work for unicode."""
-    assert isinstance(filename, str), '%r is not a valid filename' % filename
+    assert isinstance(filename, (str, PurePath)), f'{filename!r} is not a valid filename'
     check_path(filename)
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
@@ -114,11 +115,13 @@ def print_bad_path(path: str) -> str:
     Returns
     -------
     msg : str
-        string with informations whether access to parts of the path
+        string with information whether access to parts of the path
         is possible
 
     """
     #raw_path = path
+    if isinstance(path, PurePath):
+        path = str(path)
     if len(path) > 255:
         path = os.path.abspath(_filename(path))
         npath = os.path.dirname(path)
@@ -187,7 +190,7 @@ def __object_attr(obj, mode, keys_to_skip, attr_type, filter_properties: bool=Fa
                     out.append(key)
             else:
                 out.append(key)
-        except:
+        except Exception:
             pass
     out.sort()
     return out
@@ -219,6 +222,7 @@ def object_methods(obj: Any, mode: str='public',
     method : List[str]
         sorted list of the names of methods of a given type
         or None if the mode is wrong
+
     """
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
@@ -265,6 +269,7 @@ def object_attributes(obj: Any, mode: str='public',
     attribute_names : List[str]
         sorted list of the names of attributes of a given type or None
         if the mode is wrong
+
     """
     #if hasattr(obj, '__properties__'):
         #keys_to_skip += obj.__properties__()
@@ -288,7 +293,7 @@ def object_attributes(obj: Any, mode: str='public',
 
 def int_version(name: str, version: str) -> List[int]:
     """splits the version into a tuple of integers"""
-    sversion = version.split('-')[0]
+    sversion = version.split('-')[0].split('+')[0].split('a')[0].split('b')[0].split('rc')[0]
     #numpy
     #scipy
     #matplotlib
@@ -296,10 +301,10 @@ def int_version(name: str, version: str) -> List[int]:
     #vtk
     #cpylog
     #pyNastran
-    if 'rc' not in name:
-        # it's gotta be something...
-        # matplotlib3.1rc1
-        sversion = sversion.split('rc')[0]
+    # '1.20.0rc1'
+    # '1.4.0+dev.8913610a0'
+    # matplotlib 3.1rc1
+    # matplotlib 3.5.5b1
 
     try:
         return [int(val) for val in sversion.split('.')]
@@ -350,7 +355,7 @@ def deprecated(old_name: str, new_name: str, deprecated_version: str,
         try:
             #filename = os.path.basename(frame.f_globals['__file__'])
             filename = os.path.basename(inspect.getfile(code))
-        except:
+        except Exception:
             print(code)
             raise
 

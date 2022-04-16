@@ -16,7 +16,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.utils import get_xyz_cid0_dict
 from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import NDArray3float
+    from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF, Subcase
 
 
@@ -225,7 +225,7 @@ def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p)
     L = norm(bar_vector)
     try:
         Ldir = bar_vector / L
-    except:
+    except Exception:
         msg = 'Length=0.0; nid1=%s nid2=%s\n' % (nodes[0], nodes[1])
         msg += '%s%s' % (str(elem.nodes[0]), str(elem.nodes[1]))
         raise FloatingPointError(msg)
@@ -1061,6 +1061,7 @@ def _Fg_vector_from_loads(model: BDF, loads, ndof_per_grid: int, ndof: int,
     """
     helper method for ``get_static_force_vector_from_subcase_id``
     requires cross-referencing
+    """
     dof_map, unused_ps = _get_dof_map(model)
     Fg = np.zeros([ndof], dtype=fdtype)
     skipped_load_types = set([])

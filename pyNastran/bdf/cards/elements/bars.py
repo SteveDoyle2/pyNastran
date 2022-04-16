@@ -24,7 +24,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import NDArray3float, NDArray33float
+    from pyNastran.nptyping_interface import NDArray3float, NDArray33float
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF
 

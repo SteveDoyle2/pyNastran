@@ -19,7 +19,7 @@ from pyNastran.bdf.patran_utils.colon_syntax import (
     parse_patran_syntax, parse_patran_syntax_dict, parse_patran_syntax_dict_map,
     write_patran_syntax_dict)  # pragma: disable=unused-import
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import NDArray3float
+    from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import Coord
 

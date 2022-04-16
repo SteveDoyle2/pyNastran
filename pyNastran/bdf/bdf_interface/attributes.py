@@ -80,6 +80,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
     from pyNastran.bdf.subcase import Subcase
 
+BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona'}
 
 class BDFAttributes:
     """defines attributes of the BDF"""
@@ -568,6 +569,11 @@ class BDFAttributes:
         self.doptprm = None  # type: Optional[DOPTPRM]
         self.dscreen = {}  # type: Dict[int, DSCREEN]
 
+        # nx optimization
+        self.group = {}    # type: Dict[int, GROUP]
+        self.dmncon = {}   # type: Dict[int, DMNCON]
+        self.dvtrels = {}  # type: Dict[int, Union[DVTREL1, DVTREL2]]
+
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
         self.nlpcis = {}  # type: Dict[int, NLPCI]
@@ -683,7 +689,6 @@ class BDFAttributes:
         self.bcbodys = {}  # type: Dict[int, BCBODY]
         self.bcparas = {}  # type: Dict[int, BCPARA]
         self.bcrparas = {}  # type: Dict[int, BCRPARA]
-        self.bctadds = {}  # type: Dict[int, BCTADD]
         self.bctparas = {}  # type: Dict[int, BCTPARA]
 
         self.bctadds = {}  # type: Dict[int, BCTADD]
@@ -717,6 +722,7 @@ class BDFAttributes:
         self._type_to_id_map = defaultdict(list)  # type: Dict[int, List[Any]]
         self._slot_to_type_map = {
             'params' : ['PARAM'],
+            'mdlprm': ['MDLPRM'],
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
             'points' : ['POINT'],
             'ringaxs' : ['RINGAX', 'POINTAX'],
@@ -1092,7 +1098,7 @@ class BDFAttributes:
     def nastran_format(self, nastran_format: str) -> None:
         assert isinstance(nastran_format, str), nastran_format
         fmt_lower = nastran_format.lower().strip()
-        if fmt_lower not in ['nx', 'msc', 'zona', 'nasa95']:
+        if fmt_lower not in BDF_FORMATS:
             raise RuntimeError(nastran_format)
         self._nastran_format = fmt_lower
 
@@ -1102,6 +1108,15 @@ class BDFAttributes:
         #if self._nastran_format == 'nx' or self._is_long_ids:
             #return True
         #return False
+
+    def _set_punch(self) -> None:
+        """updates the punch flag"""
+        if self.punch is None:
+            # writing a mesh without using read_bdf
+            if self.system_command_lines or self.executive_control_lines or self.case_control_deck:
+                self.punch = False
+            else:
+                self.punch = True
 
     @property
     def sol(self) -> int:

@@ -22,22 +22,19 @@ Requirements/Packages:
 Programmatics:
  - supports Python 3.7-3.10
  - support for nptyping 1.1.1-2.0
- - 
+ - support for h5py 3.0
 
 overall:
  - typing
  - spelling corrections
  - cleaner setup.py files / packages.py
 BDF:
- - require that nastran_format is a string
- - stripping first line of card to fix bug (i thought it was to get the card name, but I don't remember...)
- - FLUTTER method can be string_or_blank (default='L')
- - MTRANS now supported for SOL 200 (vs only MTRAN; they're the same)
- - subcase add_op2_data supports OUG1F
-
-
-BDF 2:
  - bug fixes:
+   - require that nastran_format is a string
+   - stripping first line of card to fix bug (i thought it was to get the card name, but I don't remember...)
+   - FLUTTER method can be string_or_blank (default='L')
+   - MTRANS now supported for SOL 200 (vs only MTRAN; they're the same)
+   - subcase add_op2_data supports OUG1F
    - SET1 (and more generally any card that has 1,THRU,10 or 1,THRU,10,BY,2) now supports blank values
    - adding get_density to MAT11
    - MATT1 g11_tid=0 update to None if it's 0
@@ -58,7 +55,9 @@ BDF 2:
    - DRESP2 now references DNODE
    - DVMREL2 now supports MAT2, MAT8
    - collapse_bad_quads now removes degenerate quads
-   - bdf_convert now supports CFAST/PFAST
+   - bdf_convert now supports:
+      - CFAST/PFAST
+      - rho, area conversion
 f06 flutter:
  - bug fixes:
    - supporting any number modes
@@ -74,6 +73,14 @@ other:
  - format_converter now has defaults if you're using the functions
 
 
+----------------
+bdf:
+ - bug fixes:
+   - applying np.clip to get_oml (to account for cos out of range precision issues)
+   - correcting case where eid_offset isn't calculated in bdf_mirror
+other:
+ - atmosphere not supports velocity in cm/s
+ 
 v1.3.3 (2020/6/28)
 ------------------
 This is a bug fix only release outside of:

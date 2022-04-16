@@ -1,3 +1,4 @@
+# encoding: utf-8
 """
 defines:
  - local_points_array, global_points_array, result_array = cut_edge_model_by_axes(
@@ -24,7 +25,7 @@ from pyNastran.bdf.cards.coordinate_systems import Coord, xyz_to_rtz_array, rtz_
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4
     from pyNastran.bdf.cards.coordinate_systems import Coord
-    from pyNastran.nptyping import NDArrayNint, NDArray3float, NDArrayNfloat
+    from pyNastran.nptyping_interface import NDArrayNint, NDArray3float, NDArrayNfloat
 
 def get_nid_cd_xyz_cid0(model: BDF) -> Tuple[NDArrayNint, NDArrayNint,
                                              Dict[int, NDArrayNint], NDArray3float]:
@@ -227,9 +228,9 @@ def _project_z_axis(p1, p2, z_global):
     k = z / |z|
     xz = p2 - p1
     xz /= |xz|
-    j = z × xz
+    j = z Ã— xz
     j /= |j|
-    i = k × j
+    i = k Ã— j
     """
     x = p2 - p1
     norm_x = np.linalg.norm(x)
@@ -272,9 +273,17 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
            p2:    origin + xzplane
     cid_p1/p2/zaxis: int; default=0
         the coordinate system for the points
+
+    Returns
+    -------
+    p1 / p2 / p3 : (3,) float ndarray
+        A, B, C in the CORD2R in the rid=0 frame
+    i, k : the i/k vectors for the coord_out frame
+    origin, zaxis, xzplane : (3,) float ndarray
+        the CORD2R-ready coordinate system
     """
-    p1 = np.asarray(p1)
-    p2 = np.asarray(p2)
+    p1 = np.asarray(p1) # origin
+    p2 = np.asarray(p2) # xz-plane
     zaxis = np.asarray(zaxis)
     #print("coord:")
     #print('  p1 =', p1)

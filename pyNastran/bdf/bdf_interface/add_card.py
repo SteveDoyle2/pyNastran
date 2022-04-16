@@ -7,7 +7,7 @@ Defines a method to add a card that is faster than add_card.
 from typing import Optional, List, Dict, Union, Any
 import numpy as np
 
-from pyNastran.nptyping import NDArray3float
+from pyNastran.nptyping_interface import NDArray3float
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 

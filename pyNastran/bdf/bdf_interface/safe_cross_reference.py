@@ -5,7 +5,7 @@ Safe cross-referencing skips failed xref's
 
 """
 from collections import defaultdict
-from typing import Tuple, List, Any
+from typing import Tuple, List, Dict, Any
 
 import numpy as np
 from numpy import zeros, argsort, arange, array_equal

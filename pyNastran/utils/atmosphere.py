@@ -29,7 +29,7 @@ from math import log, exp
 from typing import List, Tuple, TYPE_CHECKING
 import numpy as np
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import NDArrayNfloat
+    from pyNastran.nptyping_interface import NDArrayNfloat
 
 
 def get_alt_for_density(density: float, density_units: str='slug/ft^3',
@@ -303,6 +303,8 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     factor = 1.0
     if velocity_units_in == 'm/s':
         factor /= 0.3048
+    elif velocity_units_in == 'cm/s':
+        factor /= 30.48
     elif velocity_units_in == 'ft/s':
         pass
     elif velocity_units_in == 'in/s':
@@ -310,11 +312,13 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     elif velocity_units_in == 'knots':
         factor *= 1.68781
     else:
-        msg = 'velocity_units_in=%r is not valid; use [ft/s, m/s, knots]' % velocity_units_in
+        msg = 'velocity_units_in=%r is not valid; use [ft/s, m/s, cm/s, in/s, knots]' % velocity_units_in
         raise RuntimeError(msg)
 
     if velocity_units_out == 'm/s':
         factor *= 0.3048
+    elif velocity_units_out == 'cm/s':
+        factor *= 30.48
     elif velocity_units_out == 'ft/s':
         pass
     elif velocity_units_out == 'in/s':
@@ -322,7 +326,7 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     elif velocity_units_out == 'knots':
         factor /= 1.68781
     else:
-        msg = 'velocity_units_out=%r is not valid; use [ft/s, m/s, in/s, knots]' % (
+        msg = 'velocity_units_out=%r is not valid; use [ft/s, m/s, cm/s, in/s, knots]' % (
             velocity_units_out)
         raise RuntimeError(msg)
     return factor
@@ -501,7 +505,8 @@ def atm_pressure(alt: float,
     return p * factor
 
 def atm_dynamic_pressure(alt: float, mach: float,
-                         alt_units: str='ft', pressure_units: str='psf') -> float:
+                         alt_units: str='ft',
+                         pressure_units: str='psf') -> float:
     r"""
     Freestream Dynamic Pressure  \f$ q_{\infty} \f$
 
@@ -538,8 +543,10 @@ def atm_dynamic_pressure(alt: float, mach: float,
     q2 = q * factor
     return q2
 
-def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4):
-    # type : (float, str, str, float) -> float
+def atm_speed_of_sound(alt: float,
+                       alt_units: str='ft',
+                       velocity_units: str='ft/s',
+                       gamma: float=1.4) -> float:
     r"""
     Freestream Speed of Sound  \f$ a_{\infty} \f$
 
@@ -570,7 +577,9 @@ def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4):
     a2 = a * factor
     return a2
 
-def atm_velocity(alt: float, mach: float, alt_units: str='ft', velocity_units: str='ft/s') -> float:
+def atm_velocity(alt: float, mach: float,
+                 alt_units: str='ft',
+                 velocity_units: str='ft/s') -> float:
     r"""
     Freestream Velocity  \f$ V_{\infty} \f$
 
@@ -710,7 +719,9 @@ def atm_density(alt: float,
     rho2 = convert_density(rho, 'slug/ft^3', density_units)
     return rho2
 
-def atm_kinematic_viscosity_nu(alt: float, alt_units: str='ft', visc_units: str='ft^2/s') -> float:
+def atm_kinematic_viscosity_nu(alt: float,
+                               alt_units: str='ft',
+                               visc_units: str='ft^2/s') -> float:
     r"""
     Freestream Kinematic Viscosity \f$ \nu_{\infty} \f$
 
@@ -747,7 +758,9 @@ def atm_kinematic_viscosity_nu(alt: float, alt_units: str='ft', visc_units: str=
         raise NotImplementedError('visc_units=%r' % visc_units)
     return nu * factor
 
-def atm_dynamic_viscosity_mu(alt: float, alt_units: str='ft', visc_units: str='(lbf*s)/ft^2') -> float:
+def atm_dynamic_viscosity_mu(alt: float,
+                             alt_units: str='ft',
+                             visc_units: str='(lbf*s)/ft^2') -> float:
     r"""
     Freestream Dynamic Viscosity  \f$ \mu_{\infty} \f$
 
@@ -782,7 +795,8 @@ def atm_dynamic_viscosity_mu(alt: float, alt_units: str='ft', visc_units: str='(
     return mu * factor
 
 def atm_unit_reynolds_number2(alt: float, mach: float,
-                              alt_units: str='ft', reynolds_units: str='1/ft') -> float:
+                              alt_units: str='ft',
+                              reynolds_units: str='1/ft') -> float:
     r"""
     Returns the Reynolds Number per unit length.
 
@@ -805,7 +819,7 @@ def atm_unit_reynolds_number2(alt: float, mach: float,
     \f[ \large Re_L = \frac{ \rho V}{\mu} = \frac{p M a}{\mu R T} \f]
 
     .. note ::
-        this version of Reynolds number directly caculates the base quantities, so multiple
+        this version of Reynolds number directly calculates the base quantities, so multiple
         calls to atm_press and atm_temp are not made
 
     """
@@ -823,7 +837,8 @@ def atm_unit_reynolds_number2(alt: float, mach: float,
     return ReL
 
 def atm_unit_reynolds_number(alt: float, mach: float,
-                             alt_units: str='ft', reynolds_units: str='1/ft') -> float:
+                             alt_units: str='ft',
+                             reynolds_units: str='1/ft') -> float:
     r"""
     Returns the Reynolds Number per unit length.
 

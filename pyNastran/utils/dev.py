@@ -34,9 +34,11 @@ def get_files_of_type(dirname: str, extension: str='.txt',
 
     filenames2 = []  # type: List[str]
     filenames = os.listdir(dirname)
+
     allow_digging = True
     if limit_file in filenames:
         allow_digging = False
+
     for filenamei in filenames:
         filename = os.path.join(dirname, filenamei)
         if os.path.isdir(filename):
@@ -90,5 +92,5 @@ def list_print(lst: List[Any], float_fmt: str='%-4.2f') -> str:
                     [float_fmt % lst[i, j]
                      for j in range(col)]) + "]" for i in range(row)])+"]")
         return "[" + ", ".join([_print(a) for a in lst]) + "]"
-    except: # not a list
+    except Exception: # not a list
         return _print(lst)

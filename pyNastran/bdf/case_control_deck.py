@@ -27,6 +27,7 @@ from typing import List, Tuple, Dict, Any, Optional, TYPE_CHECKING
 from cpylog import get_logger
 
 #from pyNastran.bdf import subcase
+from pyNastran.bdf.bdf_interface.encoding import decode_lines
 from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.bdf_interface.subcase_cards import (
     EXTSEOUT, WEIGHTCHECK, GROUNDCHECK,
@@ -147,8 +148,9 @@ class CaseControlDeck:
                 value = _cast(hdf5_file[key])
                 setattr(self, key, value)
             elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
-                value_bytes = _cast(hdf5_file[key]).tolist()
-                unused_value_str = [line.decode(encoding) for line in value_bytes]
+                unused_lines_str = decode_lines(
+                    _cast(hdf5_file[key]),
+                    encoding)
             elif key == 'subcases':
                 subcase_group = hdf5_file[key]
                 keys = list(subcase_group.keys())
@@ -972,9 +974,11 @@ class CaseControlDeck:
             self.log.debug(msg)
 
         if key == 'SUBCASE':
-            assert value not in self.subcases, 'key=%s value=%s already exists' % (key, value)
             assert isinstance(value, int)
             isubcase = value
+            if isubcase == 0:
+                return isubcase
+            assert value not in self.subcases, f'key={key} value={value} already exists'
             self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
                               overwrite_subcase=True)
             if self.debug:

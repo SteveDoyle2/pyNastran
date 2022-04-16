@@ -8,10 +8,11 @@ This file defines:
         enddata=None, close=True, plane='xz')
 
 """
+from copy import deepcopy
 from typing import Set, Tuple, Union, Optional
 import numpy as np
 
-from pyNastran.nptyping import NDArray33float
+from pyNastran.nptyping_interface import NDArray33float
 from pyNastran.bdf.cards.coordinate_systems import CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 from pyNastran.bdf.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
@@ -23,7 +24,8 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 
 
-def bdf_mirror_plane(bdf_filename: Union[str, BDF], plane, mirror_model=None,
+def bdf_mirror_plane(bdf_filename: Union[str, BDF],
+                     plane: NDArray33float, mirror_model=None,
                      log=None, debug: bool=True, use_nid_offset: bool=True):
     """mirrors a model about an arbitrary plane"""
     model = get_bdf_model(bdf_filename, xref=True, log=log, debug=debug)
@@ -271,6 +273,30 @@ def _plane_to_iy(plane: str) -> Tuple[int, str]:
         raise NotImplementedError(f"plane={plane!r} and must be 'yz', 'xz', or 'xy'.")
     return iy, plane_sorted
 
+def _get_eid_offset(model: BDF, use_eid_offset: bool) -> int:
+    eid_offset = 0
+    eid_max_elements = 0
+    eid_max_masses = 0
+    eid_max_rigid = 0
+    eid_max_plotels = 0
+    if use_eid_offset:
+        if model.elements:
+            eid_max_elements = max(model.elements.keys())
+        if model.masses:
+            eid_max_masses = max(model.masses.keys())
+        if model.rigid_elements:
+            eid_max_rigid = max(model.rigid_elements.keys())
+        if model.plotels:
+            eid_max_plotels = max(model.plotels.keys())
+        eid_offset = max(eid_max_elements, eid_max_masses, eid_max_rigid, eid_max_plotels)
+    return eid_offset
+
+def _get_cid_offset(model: BDF, use_cid_offset: bool) -> int:
+    cid_offset = 0
+    if use_cid_offset:
+        cid_offset = 1 if len(model.coords) == 1 else max(model.coords.keys())
+    return cid_offset
+
 def _mirror_elements(model: BDF,
                      mirror_model: BDF,
                      nid_offset: int,
@@ -316,22 +342,9 @@ def _mirror_elements(model: BDF,
     Do I need to invert the solids?
 
     """
-    # why eid_offset not always calculated?
-    eid_max_elements = 0
-    eid_max_masses = 0
-    eid_max_rigid = 0
-    eid_max_plotels = 0
-    if use_eid_offset:
-        if model.elements:
-            eid_max_elements = max(model.elements.keys())
-        if model.masses:
-            eid_max_masses = max(model.masses.keys())
-        if model.rigid_elements:
-            eid_max_rigid = max(model.rigid_elements.keys())
-        if model.plotels:
-            eid_max_plotels = max(model.plotels.keys())
-    eid_offset = max(eid_max_elements, eid_max_masses, eid_max_rigid, eid_max_plotels)
-    cid_offset = 1 if len(model.coords) == 1 else max(model.coords.keys())
+    eid_offset = _get_eid_offset(model, use_eid_offset)
+    use_cid_offset = True
+    cid_offset = _get_cid_offset(model, use_cid_offset)
 
     if model.elements:
         __mirror_elements(model, mirror_model, nid_offset, eid_offset, cid_offset,
@@ -522,7 +535,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
     if element_cids:
         cids = list(element_cids)
         cids.sort()
-        model.log.warning(f'verify material coordinate systems %s' % cids)
+        model.log.warning(f'verify material coordinate systems {cids}')
         _asymmetrically_mirror_coords(model, element_cids, cid_offset, plane)
     return
 
@@ -935,16 +948,18 @@ def _mirror_aero(model: BDF,
                 #aero_cids_set.add(aesurf.cid1)
                 #alid2 = aesurf.alid1 + aelist_id_offset * 2
 
-            model.add_aesurf(aesurf_id_new, label, cid1, alid1,
-                             cid2=None, alid2=None,
-                             eff=aesurf.eff, ldw=aesurf.ldw,
-                             crefc=aesurf.crefc, crefs=aesurf.crefs,
-                             pllim=aesurf.pllim, pulim=aesurf.pulim,
-                             hmllim=aesurf.hmllim, hmulim=aesurf.hmulim,
-                             tqllim=aesurf.tqllim, tqulim=aesurf.tqulim, comment='')
+            mirror_model.add_aesurf(
+                aesurf_id_new, label, cid1, alid1,
+                cid2=None, alid2=None,
+                eff=aesurf.eff, ldw=aesurf.ldw,
+                crefc=aesurf.crefc, crefs=aesurf.crefs,
+                pllim=aesurf.pllim, pulim=aesurf.pulim,
+                hmllim=aesurf.hmllim, hmulim=aesurf.hmulim,
+                tqllim=aesurf.tqllim, tqulim=aesurf.tqulim, comment='')
 
     if is_aero:
-        _asymmetrically_mirror_coords(model, aero_cids_set, cid_offset, plane=plane)
+        _asymmetrically_mirror_coords(model,
+                                      aero_cids_set, cid_offset, plane=plane)
     model.pop_parse_errors()
 
 def _asymmetrically_mirror_coords2(model: BDF,

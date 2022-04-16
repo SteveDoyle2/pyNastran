@@ -1,7 +1,7 @@
 """Defines functions for single precision 8 character field writing."""
 import sys
 from typing import List, Union, Any
-from numpy import float32, isnan
+from numpy import float32, float64, isnan
 
 
 def set_string8_blank_if_default(value: Any, default: Any) -> str:

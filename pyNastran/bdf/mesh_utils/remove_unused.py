@@ -23,6 +23,8 @@ def remove_unused(bdf_filename: str,
      - spcs
      - mpcs
 
+    cannot be removed:
+     - loads
     """
     if isinstance(bdf_filename, BDF):
         model = bdf_filename

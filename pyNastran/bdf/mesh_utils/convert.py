@@ -61,8 +61,8 @@ def scale_by_terms(bdf_filename: Union[BDF, str], terms: List[float], scales: Li
     bdf_filename : str / BDF()
         a BDF filename
     terms : List[str]; length=3
-        the names {M, L, T, F, P, V}
-        mass, length, time, force, pressure, velocity
+        the names {M, L, T, F, P, V, A, rho}
+        mass, length, time, force, pressure, velocity, area, mass_density
     scales : List[float]; length=3
         the scaling factors
     bdf_filename_out : str; default=None
@@ -105,10 +105,12 @@ def _setup_scale_by_terms(scales: List[float],
         'M' : [1., 0., 0.],
         'L' : [0., 1., 0.],
         'T' : [0., 0., 1.],
+        'rho': [1., 0., -3.],
 
         'F' : [1., 1., -2.],
         'P' : [1., -1., -2.],
         'V' : [0., 1., -1.],
+        'A' : [0., 1., -2.],
     }
     assert len(terms) == 3, terms
     A = np.zeros((3, 3), dtype='float64')
@@ -126,7 +128,7 @@ def _setup_scale_by_terms(scales: List[float],
     if detA == 0.0:
         raise RuntimeError('the equations are not independent '
                            '(e.g., length, time, and velocity) '
-                           'and cannot determine mass, legnth, and time')
+                           'and cannot determine mass, length, and time')
     M = np.linalg.solve(A, [1., 0., 0.])
     L = np.linalg.solve(A, [0., 1., 0.])
     T = np.linalg.solve(A, [0., 0., 1.])

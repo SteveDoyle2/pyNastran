@@ -62,6 +62,9 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'dconadds', 'dconstrs', 'desvars', 'topvar', 'ddvals', 'dlinks', 'dresps',
         'dvcrels', 'dvmrels', 'dvprels', 'dvgrids',
 
+        # nx optimization - dict
+        'dmncon', 'dvtrels', 'group',
+
         # SESETx - dict
         'suport1',
 
@@ -83,6 +86,8 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         # contact
         'bsurf', 'bsurfs', 'blseg', 'bfric',
         'bconp', 'bcrparas', 'bctadds', 'bctparas', 'bctsets',
+        'bgadds', 'bgsets', 'bctparms',
+        'bcbodys', 'bcparas',
 
         # sets
         'sets', 'usets',
@@ -107,6 +112,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
     scalar_attrs = [
         'aero', 'aeros', 'grdset', # handled below
         'axic', 'axif', 'cyax', 'modtrak',
+        'mdlprm',
 
         # not handled
         'acmodl',

@@ -39,7 +39,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
-    from pyNastran.nptyping import NDArray3float
+    from pyNastran.nptyping_interface import NDArray3float
 
 __all__ = ['CTRIA3', 'CTRIA6', 'CSHEAR',
            'CQUAD', 'CQUAD4', 'CQUAD8', 'CQUADR',

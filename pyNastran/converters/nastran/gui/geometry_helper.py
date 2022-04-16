@@ -24,7 +24,7 @@ from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 from .beams3d import faces_to_element_facelist, get_bar_type
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import NDArray3float
+    from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF
 
 

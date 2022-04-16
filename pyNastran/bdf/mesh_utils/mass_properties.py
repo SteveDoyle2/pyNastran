@@ -275,8 +275,8 @@ def _mass_properties(model, elements, masses, reference_point, is_cg):
 
             try:
                 m = element.Mass()
-                #print('eid=%s type=%s mass=%s'  %(element.eid, element.type, m))
-            except:
+                #print(f'eid={element.eid:d} type={element.type} mass={m}')
+            except Exception:
                 #raise
                 if element.type in no_mass:
                     continue
@@ -479,7 +479,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     --------
     **mass properties of entire structure**
 
-    >>> mass, cg, inertia = model.mass_properties()
+    >>> mass, cg, inertia = mass_properties(model)
     >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
 
 
@@ -2228,7 +2228,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             all_pids = np.array(pids_per_length_dict['bar'], dtype='int32')
             #g0 = np.array(g0_dict['CBAR'], dtype='int32')
             #offt = np.array(offt_dict['CBAR'], dtype='|S3')
-            x = np.vstack(x_dict['CBAR'])
+            #x = np.vstack(x_dict['CBAR'])
 
             #jaxis = _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelementsi)
 
@@ -2273,7 +2273,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             all_pids = np.array(pids_per_length_dict['beam'], dtype='int32')
             #g0 = np.array(g0_dict['CBEAM'], dtype='int32')
             #offt = np.array(offt_dict['CBEAM'], dtype='|S3')
-            x = np.vstack(x_dict['CBEAM'])
+            #x = np.vstack(x_dict['CBEAM'])
 
             #jaxis = _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelementsi)
 

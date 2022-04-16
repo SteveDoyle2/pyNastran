@@ -165,7 +165,7 @@ def integrate_unit_line(x, y):
 
         #f = np.interp(_xi, x, y, left=y[0], right=y[-1])
         out = quad(np.interp, 0., 1., args=(x, y, y[0], y[-1]))
-    except:
+    except Exception:
         # print('spline Error x=%s y=%s' % (x, y))
         raise
     return out[0]

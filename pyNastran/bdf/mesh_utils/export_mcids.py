@@ -7,7 +7,10 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Tuple, List, Dict, Union, Optional, TYPE_CHECKING
 import numpy as np
-from pyNastran.bdf.bdf import BDF, read_bdf, PCOMP, PCOMPG, PSHELL, CTRIA3, CQUAD4
+from pyNastran.bdf.bdf import BDF, read_bdf, PCOMP, PCOMPG, PSHELL
+from pyNastran.bdf.cards.elements.shell import (
+    CTRIA3, CTRIA6, CQUAD4, CQUAD8, CTRIAR, CQUADR)
+ShellElement = Union[CTRIA3, CTRIA6, CQUAD4, CQUAD8, CTRIAR, CQUADR]
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
 
@@ -112,23 +115,23 @@ def export_mcids(bdf_filename: Union[BDF, str], csv_filename: Optional[str]=None
             nplies = pid_to_nplies[pid]
             if iply >= nplies:
                 continue
-            nid, eid = _export_quad(model, elem, nodes,
-                                    iply, nid, eid,
-                                    #pids_failed,
-                                    bars,
-                                    export_both_axes, export_xaxis,
-                                    consider_property_rotation)
+            nid, eid = _export_quad_mcid(model, elem, nodes,
+                                         iply, nid, eid,
+                                         #pids_failed,
+                                         bars,
+                                         export_both_axes, export_xaxis,
+                                         consider_property_rotation)
         elif elem.type in {'CTRIA3', 'CTRIA6', 'CTRIAR'}:
             pid = elem.pid
             nplies = pid_to_nplies[pid]
             if iply >= nplies:
                 continue
-            nid, eid = _export_tria(model, elem, nodes,
-                                    iply, nid, eid,
-                                    #pids_failed,
-                                    bars,
-                                    export_both_axes, export_xaxis,
-                                    consider_property_rotation)
+            nid, eid = _export_tria_mcid(model, elem, nodes,
+                                         iply, nid, eid,
+                                         #pids_failed,
+                                         bars,
+                                         export_both_axes, export_xaxis,
+                                         consider_property_rotation)
         elif elem.type in SKIP_ETYPES:
             continue
         else:
@@ -161,10 +164,13 @@ def _get_elements(model, eids):
 
 def export_mcids_all(bdf_filename: Union[BDF, str],
                      eids: Optional[List[int]]=None,
-                     log=None, debug=False):
+                     log: Optional[SimpleLogger]=None, debug: bool=False):
     """
     Exports the element material coordinates systems for non-isotropic
     materials.
+
+    Note that for two quads identically oriented/numbered PSHELL quads
+    with theta different between the two, the mcid will be different.
 
     Parameters
     ----------
@@ -224,7 +230,7 @@ def export_mcids_all(bdf_filename: Union[BDF, str],
             nplies = pid_to_nplies[pid]
             if nplies == 0:
                 continue
-            _export_quad_all(
+            _export_quad_mcid_all(
                 model, elem, nplies,
                 iply_to_nids,
                 iply_to_nodes,
@@ -234,13 +240,13 @@ def export_mcids_all(bdf_filename: Union[BDF, str],
             nplies = pid_to_nplies[pid]
             if nplies == 0:
                 continue
-            _export_tri_all(
+            _export_tri_mcid_all(
                 model, elem, nplies,
                 iply_to_nids,
                 iply_to_nodes,
                 iply_to_bars)
         elif elem.type in SKIP_ETYPES:
-            pass
+            continue
         else:
             raise NotImplementedError(f'element type={elem.type!r} is not supported\n{elem}')
     #print(iply_to_nids)
@@ -274,13 +280,13 @@ def get_pid_ref_prop_type(model: BDF, elem) -> Tuple[Union[PCOMP, PCOMPG, PSHELL
     assert hasattr(elem, 'theta_mcid'), elem.get_stats()
     return pid_ref, prop_type
 
-def _export_quad(model: BDF,
-                 elem, nodes,
-                 iply: int, nid: int, eid: int,
-                 #pids_failed: Set[int],
-                 bars: List[List[int]],
-                 export_both_axes: bool, export_xaxis: bool,
-                 consider_property_rotation: bool) -> Tuple[int, int]:
+def _export_quad_mcid(model: BDF,
+                      elem, nodes,
+                      iply: int, nid: int, eid: int,
+                      #pids_failed: Set[int],
+                      bars: List[List[int]],
+                      export_both_axes: bool, export_xaxis: bool,
+                      consider_property_rotation: bool) -> Tuple[int, int]:
     """helper method for ``export_mcids``"""
     pid_ref, prop_type = get_pid_ref_prop_type(model, elem)
 
@@ -296,7 +302,7 @@ def _export_quad(model: BDF,
     else:
         raise NotImplementedError(pid_ref)
 
-    dxyz, centroid, imat, jmat, normal = _get_quad_vectors(elem)
+    dxyz, centroid, imat, jmat, normal = _get_quad_vectors_mcid(elem)
 
     nid, eid = _rotate_single_coord(
         elem, pid_ref, iply,
@@ -306,11 +312,12 @@ def _export_quad(model: BDF,
         consider_property_rotation=consider_property_rotation)
     return nid, eid
 
-def _export_quad_all(model: BDF,
-                     elem, nplies: int,
-                     nids: Dict[int, int],
-                     nodes: Dict[int, List[np.ndarray]],
-                     bars: Dict[int, List[Tuple[int, int]]]) -> None:
+def _export_quad_mcid_all(model: BDF,
+                          elem: ShellElement,
+                          nplies: int,
+                          nids: Dict[int, int],
+                          nodes: Dict[int, List[np.ndarray]],
+                          bars: Dict[int, List[Tuple[int, int]]]) -> None:
     """helper method for ``export_mcids``"""
     pid_ref, prop_type = get_pid_ref_prop_type(model, elem)
 
@@ -327,20 +334,27 @@ def _export_quad_all(model: BDF,
     else:
         raise NotImplementedError(pid_ref)
 
-    dxyz, centroid, imat, jmat, normal = _get_quad_vectors(elem)
+    dxyz, centroid, imat, jmat, normal = _get_quad_vectors_mcid(elem)
     _rotate_coords(elem, pid_ref, nplies, nids, nodes, bars, dxyz, centroid, imat, jmat, normal)
 
-def _make_element_coord_tri(elem, pid_ref, nids, nodes, bars):
-    dxyz, centroid, imat, jmat, normal = _get_tri_vectors(elem)
+def _make_element_coord_tri(elem: ShellElement, pid_ref, nids, nodes, bars):
+    dxyz, centroid, imat, jmat, normal = _get_tri_vectors_mcid(elem)
     nplies = 0 # only make the element coordinate system
     _rotate_coords(elem, pid_ref, nplies, nids, nodes, bars, dxyz, centroid, imat, jmat, normal)
 
-def _make_element_coord_quad(elem, pid_ref, nids, nodes, bars):
-    dxyz, centroid, imat, jmat, normal = _get_quad_vectors(elem)
+def _make_element_coord_quad(elem: ShellElement, pid_ref, nids, nodes, bars):
+    dxyz, centroid, imat, jmat, normal = _get_quad_vectors_mcid(elem)
     nplies = 0 # only make the element coordinate system
     _rotate_coords(elem, pid_ref, nplies, nids, nodes, bars, dxyz, centroid, imat, jmat, normal)
 
-def _rotate_coords(elem, pid_ref, nplies, nids, nodes, bars, dxyz, centroid, imat, jmat, normal):
+def _rotate_coords(elem: ShellElement, pid_ref,
+                   nplies: int,
+                   nids: Dict[int, int],
+                   nodes: Dict[int, List[Any]],
+                   bars: Dict[int, List[Any]],
+                   dxyz: float,
+                   centroid: np.ndarray, imat: np.ndarray, jmat: np.ndarray,
+                   normal: np.ndarray) -> None:
     # element coordinate system
     iaxis = centroid + imat * dxyz
     nids[-1] = _export_xaxis(nids[-1], nodes[-1], bars[-1], centroid, iaxis)
@@ -354,11 +368,12 @@ def _rotate_coords(elem, pid_ref, nplies, nids, nodes, bars, dxyz, centroid, ima
         #jaxis = centroid + jmati * dxyz
         nids[iply] = _export_xaxis(nids[iply], nodes[iply], bars[iply], centroid, iaxis)
 
-def _export_tri_all(model: BDF,
-                    elem, nplies: int,
-                    nids: Dict[int, int],
-                    nodes: Dict[int, List[np.ndarray]],
-                    bars: Dict[int, List[Tuple[int, int]]]) -> None:
+def _export_tri_mcid_all(model: BDF,
+                         elem: ShellElement,
+                         nplies: int,
+                         nids: Dict[int, int],
+                         nodes: Dict[int, List[np.ndarray]],
+                         bars: Dict[int, List[Tuple[int, int]]]) -> None:
     """helper method for ``export_mcids``"""
     pid_ref, prop_type = get_pid_ref_prop_type(model, elem)
 
@@ -375,10 +390,11 @@ def _export_tri_all(model: BDF,
     else:
         raise NotImplementedError(pid_ref)
 
-    dxyz, centroid, imat, jmat, normal = _get_tri_vectors(elem)
-    _rotate_coords(elem, pid_ref, nplies, nids, nodes, bars, dxyz, centroid, imat, jmat, normal)
+    dxyz, centroid, imat, jmat, normal = _get_tri_vectors_mcid(elem)
+    _rotate_coords(elem, pid_ref, nplies, nids, nodes, bars, dxyz, centroid,
+                   imat, jmat, normal)
 
-def _get_tri_vectors(elem: CTRIA3):
+def _get_tri_vectors_mcid(elem: CTRIA3):
     try:
         node1, node2, node3 = elem.nodes_ref[:3]
     except (IndexError, ValueError):
@@ -393,12 +409,13 @@ def _get_tri_vectors(elem: CTRIA3):
     dxyz32 = np.linalg.norm(xyz3 - xyz2)
     dxyz13 = np.linalg.norm(xyz1 - xyz3)
     dxyz = np.mean([dxyz21, dxyz32, dxyz13]) / 2.
+
     # adjusted for element coordinate system
     # equivalent to PCOMP thetad=0.0
     centroid, imat, jmat, normal = elem.material_coordinate_system()
     return dxyz, centroid, imat, jmat, normal
 
-def _get_quad_vectors(elem: CQUAD4):
+def _get_quad_vectors_mcid(elem: CQUAD4):
     try:
         node1, node2, node3, node4 = elem.nodes_ref[:4]
     except (IndexError, ValueError):
@@ -422,13 +439,14 @@ def _get_quad_vectors(elem: CQUAD4):
     centroid, imat, jmat, normal = elem.material_coordinate_system()
     return dxyz, centroid, imat, jmat, normal
 
-def _export_tria(model: BDF,
-                 elem, nodes,
-                 iply: int, nid: int, eid: int,
-                 #pids_failed: Set[int],
-                 bars,
-                 export_both_axes: bool, export_xaxis: bool,
-                 consider_property_rotation: bool) -> Tuple[int, int]:
+def _export_tria_mcid(model: BDF,
+                      elem: ShellElement,
+                      nodes,
+                      iply: int, nid: int, eid: int,
+                      #pids_failed: Set[int],
+                      bars,
+                      export_both_axes: bool, export_xaxis: bool,
+                      consider_property_rotation: bool) -> Tuple[int, int]:
     """helper method for ``export_mcids``"""
     pid_ref, prop_type = get_pid_ref_prop_type(model, elem)
     if prop_type == 'PSHELL':
@@ -445,7 +463,7 @@ def _export_tria(model: BDF,
 
     # adjusted for element coordinate system
     # equivalent to PCOMP thetad=0.0
-    dxyz, centroid, imat, jmat, normal = _get_tri_vectors(elem)
+    dxyz, centroid, imat, jmat, normal = _get_tri_vectors_mcid(elem)
 
     nid, eid = _rotate_single_coord(
         elem, pid_ref, iply,
@@ -490,7 +508,7 @@ def _export_coord_axes(nodes, bars, csv_filename: str):
 def _rotate_mcid(elem: ShellElement,
                  pid_ref: Union[PCOMP, PCOMPG, PSHELL], iply: int,
                  imat: np.ndarray, jmat: np.ndarray, normal: np.ndarray,
-                 consider_property_rotation: bool=True):
+                 consider_property_rotation: bool=True) -> Tuple[np.ndarray, np.ndarray]:
     """
     Rotates a material coordinate system.  Assumes the element theta/mcid
     has already been acounted for.
@@ -562,16 +580,6 @@ def _add_elements(nid: int, eid: int,
         eid += 1
     return nid, eid
 
-#def _export_both_axes(eid, nid, nodes, bars, centroid, iaxis, jaxis):
-    #nodes.append((nid, centroid[0], centroid[1], centroid[2]))
-    #nodes.append((nid + 1, iaxis[0], iaxis[1], iaxis[2]))
-    #nodes.append((nid + 2, jaxis[0], jaxis[1], jaxis[2]))
-    #bars.append((eid, nid, nid + 1))  # x-axis
-    #bars.append((eid + 1, nid, nid + 2))  # y-axis
-    #nid += 3
-    #eid += 2
-    #return eid, nid
-
 def _export_xaxis(nid: int,
                   nodes: List[np.ndarray],
                   bars: List[np.ndarray],
@@ -583,11 +591,3 @@ def _export_xaxis(nid: int,
     bars.append(elemi)  # x-axis
     nid += 2
     return nid
-
-#def _export_yaxis(eid, nid, nodes, bars, centroid, iaxis, jaxis):
-    #nodes.append((nid, centroid[0], centroid[1], centroid[2]))
-    #nodes.append((nid + 1, jaxis[0], jaxis[1], jaxis[2]))
-    #bars.append((eid, nid, nid + 1))  # y-axis
-    #nid += 2
-    #eid += 1
-    #return eid, nid

@@ -28,6 +28,19 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
     cmd_args : List[str]
         the nastran commands that go into subprocess
 
+    Example
+    -------
+    keywords_str = 'scr=yes old=no mem=1024mb'
+    keywords_list = ['scr=yes', 'old=no', 'mem=1024mb']
+    keywords_dict = {
+        'scr' : 'yes',
+        'old' : 'no',
+        'mem' : '1024mb',
+    }
+    run_nastran(bdf_filename, keywords_str)
+    run_nastran(bdf_filename, keywords_list)
+    run_nastran(bdf_filename, keywords_dict)
+
     """
     if keywords is None:
         keywords_list = ['scr=yes', 'bat=no', 'old=no', 'news=no'] # 'mem=1024mb',
@@ -41,7 +54,7 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
             for keyword, value in keywords.items():
                 if value is None:
                     continue
-                keywords_list.append('%s=%s' % (keyword, value))
+                keywords_list.append(f'{keyword}={value}')
 
     pwd = os.getcwd()
     bdf_directory = os.path.dirname(bdf_filename)

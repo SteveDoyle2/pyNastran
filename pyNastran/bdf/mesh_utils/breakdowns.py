@@ -17,6 +17,10 @@ defines:
        stop_if_no_mass=True, detailed=True)
 
 """
+from __future__ import annotations
+from typing import Dict, Any, TYPE_CHECKING
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
 
 def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):

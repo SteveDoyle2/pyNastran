@@ -9,8 +9,9 @@ defines:
                                   crash_on_collapse=False, log=None, debug=True)
 
 """
+from __future__ import annotations
 from itertools import combinations
-from typing import List, Tuple, Dict, Union, Optional, Any
+from typing import Tuple, List, Set, Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
@@ -18,20 +19,25 @@ from numpy.linalg import norm  # type: ignore
 import scipy
 import scipy.spatial
 
-from pyNastran.nptyping import NDArrayNint, NDArrayN3float
+from pyNastran.nptyping_interface import NDArrayNint, NDArrayN3float
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
+if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
 
 
-def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out: str, tol: float,
+def bdf_equivalence_nodes(bdf_filename: str,
+                          bdf_filename_out: Optional[str],
+                          tol: float,
                           renumber_nodes: bool=False, neq_max: int=4, xref: bool=True,
-                          node_set: Union[List[int], NDArrayNint]=None,
+                          node_set: Optional[Union[List[int], NDArrayNint]]=None,
                           size: int=8, is_double: bool=False,
                           remove_collapsed_elements: bool=False,
                           avoid_collapsed_elements: bool=False,
                           crash_on_collapse: bool=False,
-                          log=None, debug: bool=True, method: str='new'):
+                          log: Optional[SimpleLogger]=None,
+                          debug: bool=True, method: str='new') -> BDF:
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
@@ -41,7 +47,8 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out: str, tol: float,
         str : bdf file path
         BDF : a BDF model that is fully valid (see xref)
     bdf_filename_out : str
-        a bdf_filename to write
+        str: a bdf_filename to write
+        None: don't write the deck
     tol : float
         the spherical tolerance
     renumber_nodes : bool
@@ -88,7 +95,7 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out: str, tol: float,
     .. warning:: I doubt SPOINTs/EPOINTs work correctly
     .. warning:: xref not fully implemented (assumes cid=0)
 
-    .. todo:: node_set stil does work on the all the nodes in the big
+    .. todo:: node_set still does work on the all the nodes in the big
                kdtree loop, which is very inefficient
     .. todo:: remove_collapsed_elements is not supported
     .. todo:: avoid_collapsed_elements is not supported
@@ -220,7 +227,7 @@ def _eq_nodes_setup_node(model: BDF, renumber_nodes: bool=False,
     return nids, all_nids, nid_map
 
 def _check_for_referenced_nodes(model: BDF,
-                                node_set: NDArrayNint,
+                                node_set: Optional[NDArrayNint],
                                 nids: NDArrayNint,
                                 all_nids: NDArrayNint,
                                 nodes_xyz: NDArrayN3float) -> Optional[NDArrayNint]:
@@ -334,7 +341,7 @@ def _eq_nodes_final(nid_pairs, model: BDF, tol: float,
 def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
                                  nids: NDArrayNint,
                                  tol: float,
-                                 log,
+                                 log: SimpleLogger,
                                  inew: NDArrayNint,
                                  node_set=None, neq_max: int=4, method: str='new',
                                  debug: bool=False) -> None:
@@ -431,11 +438,13 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol, log,
     assert isinstance(nid_pairs, list), nid_pairs
     return kdt, nid_pairs
 
-def _eq_nodes_build_tree_new(kdt,
+def _eq_nodes_build_tree_new(kdt: scipy.spatial.cKDTree,
                              nodes_xyz: NDArrayN3float,
-                             nids, nnodes, is_not_node_set: bool,
+                             nids: NDArrayNint,
+                             nnodes: int,
+                             is_not_node_set: bool,
                              tol: float,
-                             log,
+                             log: SimpleLogger,
                              inew=None, node_set=None, neq_max: int=4, msg: str='',
                              debug: float=False) -> Tuple[Any, List[Tuple[int, int]]]:
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
@@ -458,7 +467,7 @@ def _eq_nodes_build_tree_new(kdt,
 
     return kdt, nid_pairs
 
-def _get_tree(nodes_xyz, msg=''):
+def _get_tree(nodes_xyz: NDArrayN3float, msg: str='') -> scipy.spatial.cKDTree:
     """gets the kdtree"""
     assert isinstance(nodes_xyz, np.ndarray), type(nodes_xyz)
     assert nodes_xyz.shape[0] > 0, 'nnodes=0%s' % msg

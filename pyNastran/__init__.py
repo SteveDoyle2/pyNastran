@@ -15,15 +15,15 @@ else:
         raise ImportError('Upgrade your Python to >= 3.7.0; version=(%s.%s.%s)' % (
             IMAJOR, MINOR1, MINOR2))
 
-    __version__ = '1.3.3'
-    __releaseDate__ = '2020/6/28'
-    __releaseDate2__ = 'JUNE 28, 2020'
+    __version__ = '1.3.4'
+    __releaseDate__ = '2022/4/xx'
+    __releaseDate2__ = 'APRIL xx, 2022'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'
 __desc__ = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __license__ = 'BSD-3'
-__copyright__ = f'Copyright {__license__}; 2011-2020'
+__copyright__ = f'Copyright {__license__}; 2011-2022'
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
