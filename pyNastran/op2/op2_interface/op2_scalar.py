@@ -1,6 +1,6 @@
 #pylint: disable=R0913
 """
-Defines the sub-OP2 class.  This should never be called outisde of the OP2 class.
+Defines the sub-OP2 class.  This should never be called outside of the OP2 class.
 
  - OP2_Scalar(debug=False, log=None, debug_file=None)
 
@@ -44,7 +44,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
 import os
 from struct import Struct, unpack
 from collections import defaultdict
-from typing import List, Tuple, Dict, Union, Optional, Any
+from typing import List, Tuple, Dict, Set, Union, Optional, Any
 
 from numpy import array
 import numpy as np
@@ -203,6 +203,8 @@ MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + 
 # TODO: these are weird...
 #   RPOSTS1, MAXRATI, RESCOMP, PDRMSG
 INT_PARAMS_1 = {
+    b'OMODES', b'LGSTRN', b'ADJFRQ', b'BSHDMP', b'BSHDMP4',
+
     b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
     b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
     b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
@@ -234,26 +236,27 @@ INT_PARAMS_1 = {
     b'SEFINAL', b'SEMAP1', b'SKPLOAD', b'SKPMTRX', b'SOLID1', b'SSG3',
     b'PEDGEP', b'ACMSPROC', b'ACMSSEID', b'ACOUS', b'ACOUSTIC', b'ADJFLG',
     b'ADJLDF', b'AEDBCP', b'AESRNDM', b'ARCSIGNS', b'ATVUSE', b'BADMESH', b'BCHNG',
-    b'BCTABLE', b'ROTCSV', b'ROTGPF', b'BEARDMP', b'BEARFORC', b'BOV', b'OP2FMT',
+    b'BCTABLE', b'ROTCSV', b'ROTGPF', b'BEARDMP', b'BEARFORC', b'OP2FMT',
+    b'LRDISP',
 
     # ???
-    b'CHKSEC', b'CMSMETH', b'CNTNSUB', b'CNTSCL', b'CNTSTPS', b'CONCHG',
+    b'CHKSEC', b'CMSMETH', b'CNTNSUB', b'CNTSTPS', b'CONCHG', b'CP',
     b'DBDRPRJ', b'DBDRVER', b'DDAMRUN', b'DESCONX', b'DESEIG', b'DESFINAL',
     b'DESMAX', b'DESSOLAP', b'DIAGOPT',
 
     b'DOBUCKL', b'DOF123', b'DOMODES', b'DOSTATIC', b'DOTRIP', b'DRESP', b'DSGNOPTX',
-    b'DSNOKD', b'DYNAMICX', b'EBULK', b'EIGNFREQ', b'ELOOPID',
+    b'DYNAMICX', b'EBULK', b'EIGNFREQ', b'ELOOPID',
     b'FDEPCB', b'FLUIDMP', b'FLUIDSE', b'FMODE', b'FREQDEP', b'FREQDEPS',
     b'GENEL', b'GEOMFLAG', b'GEOMU', b'GKCHNG', b'GLUSET', b'GMCONV', b'GNSTART',
     b'GOODVER', b'GOPH2', b'GRIDFMP', b'GRIDMP', b'HNNLK', b'ICTASET', b'IFPCHNG',
-    b'INEP', b'INP2FMT', b'INP4FMT', b'INREL0', b'ITAPE', b'ITODENS', b'ITOITCNT',
+    b'INEP', b'INP2FMT', b'INP4FMT', b'INREL0', b'ITAPE', b'ITOITCNT',
     b'ITOMXITR', b'ITONDVAR', b'ITONGHBR', b'ITONOBJF', b'ITOOPITR', b'ITOPALG',
-    b'ITOPALLR', b'ITOPCONV', b'ITOPDIAG', b'ITOPOPT', b'ITORMAS', b'ITOSIMP',
-    b'ITOSIMP1', b'ITOSIMP2', b'IUNIT', b'K4CHNG', b'KCHNG', b'KREDX', b'LANGLES',
+    b'ITOPALLR', b'ITOPDIAG', b'ITOPOPT', b'ITOSIMP',
+    b'IUNIT', b'K4CHNG', b'KCHNG', b'KREDX', b'LANGLES',
     b'LBEARING', b'LDSTI1', b'LMDYN', b'LMODESFL', b'LMSTAT', b'LNUMROT',
     b'LOADGENX', b'LOADREDX', b'LOADU', b'LODCHG', b'LROTOR', b'LTOPOPT',
     b'LUSET', b'LUSETD', b'LUSETS', b'LUSETX', b'MATGENX',
-    b'MAXITER', b'MAXRPM', b'MAXSEIDX', b'MBDIFB', b'MBDIFO', b'MBDLMN',
+    b'MAXITER', b'MAXSEIDX', b'MBDIFB', b'MBDIFO', b'MBDLMN',
     b'MCHNG', b'MDOF', b'MDTRKFLG', b'MELPG', b'MGRID', b'MLTIMSTR', b'MODESX',
     b'MODETRAK', b'MPIFRHD', b'MPNFLG', b'MREDX', b'MSCOP2', b'NACEXTRA',
     b'NCNOFFST', b'NDISOFP', b'NDVAR', b'NEWSET', b'NGELS', b'NJ', b'NK',
@@ -263,65 +266,82 @@ INT_PARAMS_1 = {
     b'NORADMAT', b'NORBM', b'NOSE', b'NOSIMP', b'NOSSET', b'NOUE', b'NOUP',
     b'NOYSET', b'NOZSET', b'NQSET', b'NR1OFFST', b'NR2OFFST', b'NR3OFFST',
     b'NROTORS', b'NSE', b'NSKIP0', b'NSOL', b'NSOLF', b'NUMPAN', b'NX',
-    b'O2E', b'OADPMAX', b'OALTSHP', b'OBJIN', b'ODESMAX', b'ODSFLG', b'OMAXR',
+    b'O2E', b'OADPMAX', b'OALTSHP', b'ODESMAX', b'ODSFLG', b'OMAXR',
     b'OP2SE', b'OP4FMT', b'OP4SE', b'OPGEOM', b'OPTIFCS',
     b'OPTII231', b'OPTII408', b'OPTII411', b'OPTII420', b'OPTIIDMP', b'OPTISNS',
     b'OTAPE', b'OUNIT1', b'OUNIT2', b'OUNIT2R', b'OUTFMP', b'OUTSMP', b'PANELMP',
-    b'PBCONT', b'PCHNG', b'PITIME', b'PKLLR', b'POSTU', b'PRTMAT', b'PSLGDVX',
+    b'PBCONT', b'PCHNG', b'PKLLR', b'POSTU', b'PRTMAT', b'PSLGDVX',
     b'PSLOAD', b'PSORT', b'PVALINIT', b'PVALLAST', b'PVALLIST', b'PYCHNG',
-    b'REFOPT', b'RESLTOPT', b'RESPSENX', b'RGBEAMA', b'RGBEAME', b'RGLCRIT',
-    b'RGSPRGK', b'RMXPANEL', b'ROTPRES', b'ROTPRT', b'RPDFRD', b'RVCHG', b'RVCHG1',
+    b'REFOPT', b'RESLTOPT', b'RESPSENX',
+    b'RMXPANEL', b'ROTPRES', b'ROTPRT', b'RPDFRD', b'RVCHG', b'RVCHG1',
     b'RVCHG2', b'S1AG', b'SAVERSTL', b'SDSRFLAG', b'SEBULK',
     b'SEDMP231', b'SEDMP265', b'SEDMP408', b'SEDMP411', b'SEDMP445', b'SEDMPFLG',
     b'SELDPRS', b'SKIPSE', b'SNDSEIDX', b'SOLFINAL',
     b'SOLNLX', b'SOLNX', b'SOLVSUB', b'SPLINE', b'STOP0', b'STRUCTMP', b'SWEXIST',
-    b'TORSIN', b'UACCEL', b'UNIQIDS', b'VOL', b'VOLS', b'VUELJUMP', b'VUENEXT',
-    b'VUGJUMP', b'VUGNEXT', b'WGT', b'WGTS', b'WRTMAT',
-    b'XSMALLQ',
+    b'TORSIN', b'UACCEL', b'UNIQIDS', b'VUELJUMP', b'VUENEXT',
+    b'VUGJUMP', b'VUGNEXT', b'WRTMAT',
     b'XNTIPS', b'XRESLTOP', b'XSEMEDIA', b'XSEUNIT', b'XTIPSCOL',
-    b'XUPFAC', b'XYUNIT', b'XZCOLLCT', b'Z2XSING',
+    b'XYUNIT', b'XZCOLLCT', b'Z2XSING',
     b'ZUZRI1', b'ZUZRI2', b'ZUZRI3', b'ZUZRI4', b'ZUZRI5', b'ZUZRI6', b'ZUZRI7', b'ZUZRI8', b'ZUZRI9', b'ZUZRI10',
     b'ZUZRL1', b'ZUZRL2', b'ZUZRL3', b'ZUZRL4', b'ZUZRL5', b'ZUZRL6', b'ZUZRL7', b'ZUZRL8', b'ZUZRL9', b'ZUZRL10',
-    b'ZUZRR1', b'ZUZRR2', b'ZUZRR3', b'ZUZRR4', b'ZUZRR5', b'ZUZRR6', b'ZUZRR7', b'ZUZRR8', b'ZUZRR9', b'ZUZRR10',
-
+    b'DBCPAE', b'DBCPATH',
+    b'EXTBEMI', b'EXTBEMO', b'EXTDRUNT', b'EXTUNIT',
+    b'UZROLD',
+    b'HIRES'
     # no
     #b'SEPS', b'SMALLQ', b'FEPS',
 }
 FLOAT_PARAMS_1 = {
-    b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
+    b'EPPRT',
+    b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
     b'SIGMA', b'TABS', b'AUNITS', b'BOLTFACT', b'LMSCAL',
     'DSZERO', b'G', b'GFL', b'LFREQ', b'HFREQ', b'ADPCON',
     b'W3', b'W4', b'W3FL', b'W4FL', b'PREFDB',
     b'EPZERO', b'DSZERO', b'TINY', b'TOLRSC',
     b'FRSPD', b'HRSPD', b'LRSPD', b'MTRFMAX', b'ROTCMRF', b'MTRRMAX',
     b'LAMLIM', b'BIGER', b'BIGER1', b'BIGER2', b'CLOSE',
-    b'EPSBIG', b'EPSMALC', b'EPSMALU', b'HIRES', b'KDIAG', b'MACH', b'VREF',
+    b'EPSBIG', b'EPSMALC', b'EPSMALU', b'KDIAG', b'MACH', b'VREF',
     b'STIME', b'TESTSE', b'LFREQFL', b'Q', b'ADPCONS', b'AFNORM', b'AFZERO',
     b'GE', b'MASSDENS',
 
     # should this be FLOAT_PARAMS_1???
-    b'EPPRT', b'HFREQFL',
+    b'HFREQFL',
 
     # not defined
-    b'PRPA', b'PRPHIVZ', b'PRPJ', b'PRRULV', b'RMAX', b'ADJFRQ', b'ARF',
+    b'CNTSCL',
+    b'PRPA', b'PRPHIVZ', b'PRPJ', b'PRRULV', b'RMAX', b'ARF', b'BOV',
     b'ARS', # b'BSHDAMP',
     b'EPSRC',
 
     # floats - not verified
     b'THRSHOLD', b'SEPS', b'SMALLQ', b'FEPS',
+    b'DSNOKD',
 
     # or integer (not string)
-    b'BSHDMP',
-    b'BSHDMP4',
     b'CONFAC',
-    b'CP',
-    b'DBCPAE',
-    b'DBCPATH',
     b'DFREQ', b'DFRSPCF', b'DSTSPCF', b'DTRSPCF',
     b'DUCTFMAX',
-    b'EXTBEMI', b'EXTBEMO', b'EXTDONE', b'EXTDRUNT', b'EXTUNIT',
+    b'EXTDONE',
     b'FZERO', b'LMFACT', b'MPCZERO',
-    b'RESVPGF', b'RESVRAT', b'SWPANGLE',  b'UPFAC', b'UZROLD',
+    b'RESVPGF', b'RESVRAT', b'SWPANGLE', b'UPFAC',
+    b'ITODENS',
+    b'ITOPCONV',
+    b'ITORMAS',
+    b'ITOSIMP1',
+    b'ITOSIMP2',
+    b'MAXRPM',
+    b'OBJIN',
+    b'PITIME',
+    b'RGBEAMA', b'RGBEAME', b'RGLCRIT', b'RGSPRGK',
+    b'VOL', b'VOLS',
+    b'WGT', b'WGTS',
+    b'XSMALLQ',
+    b'XUPFAC',
+    b'ZUZRR1', b'ZUZRR2', b'ZUZRR3', b'ZUZRR4', b'ZUZRR5', b'ZUZRR6', b'ZUZRR7', b'ZUZRR8', b'ZUZRR9', b'ZUZRR10',
+    b'K6ROT',
+
+    # models/msc/units_mass_spring_damper.op2
+    b'RBTR',
 }
 FLOAT_PARAMS_2 = {
     b'BETA', b'CB1', b'CB2', b'CK1', b'CK2', b'CK3', b'CK41', b'CK42',
@@ -331,6 +351,8 @@ FLOAT_PARAMS_2 = {
     b'ALPHA1', b'ALPHA2',
     b'CA1', b'CA2',
     b'CP1', b'CP2',
+    b'LOADFACS',
+    b'ZUZRC1', b'ZUZRC2', b'ZUZRC3', b'ZUZRC4', b'ZUZRC5', b'ZUZRC6', b'ZUZRC7', b'ZUZRC8', b'ZUZRC9', b'ZUZRC10',
 
 
     # should this be FLOAT_PARAMS_1???
@@ -340,7 +362,7 @@ INT_PARAMS_2 = {
     b'LOADFACS',
     b'ZUZRC1', b'ZUZRC2', b'ZUZRC3', b'ZUZRC4', b'ZUZRC5', b'ZUZRC6', b'ZUZRC7', b'ZUZRC8', b'ZUZRC9', b'ZUZRC10',
 }
-DOUBLE_PARAMS_1 = [] # b'Q'
+#DOUBLE_PARAMS_1 = [] # b'Q'
 STR_PARAMS_1 = {
     b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
     b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
@@ -372,7 +394,7 @@ STR_PARAMS_1 = {
     b'FLEXINCR', b'FTL', b'GDAMPF', b'GEOCENT', b'IFPSCR', b'IFPSOPT',
     b'IFPX', b'IFPXOPT', b'MASTER', b'MODEOUT',
     b'NXVER', b'OAPP', b'OCMP', b'OEE', b'OEEX', b'OEF', b'OEFX', b'OEPT',
-    b'OES', b'OESE', b'OESX', b'OGPF', b'OMPT', b'OPG', b'OPTIM',  b'OQG',
+    b'OES', b'OESE', b'OESX', b'OGPF', b'OMPT', b'OPG', b'OPTIM', b'OQG',
     b'OUG', b'OUMU', b'OUTSCR', b'PANAME', b'QSETREM', b'RESVSE', b'RESVSLI',
     b'RESVSO', b'RSATT', b'SAVEOFP', b'SAVERST', b'SCRATCH', b'SDRPOPT',
     b'SECOMB0', b'SELRNG', b'SERST', b'SOFTEXIT', b'SOLAPPI', b'SOLTYPI',
@@ -397,6 +419,16 @@ STR_PARAMS_1 = {
     b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', b'DEBUG',
     b'AEDBX', b'AERO', b'AUTOSUP0', b'AXIOPT',
 }
+def _check_unique_sets(*sets: List[Set[str]]):
+    """verifies that the sets are unique"""
+    for i, seti in enumerate(sets):
+        for unused_j, setj in enumerate(sets[i+1:]):
+            intersectioni = seti.intersection(setj)
+            assert len(intersectioni) == 0, intersectioni
+
+_check_unique_sets(INT_PARAMS_1, FLOAT_PARAMS_1, FLOAT_PARAMS_2, STR_PARAMS_1)
+
+
 
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
@@ -573,7 +605,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             #: the set of valid subcases -> set([1,2,3])
             self.valid_subcases = set(subcases)
-        self.log.debug("set_subcases - subcases = %s" % self.valid_subcases)
+        self.log.debug(f'set_subcases - subcases = {self.valid_subcases}')
 
     def set_transient_times(self, times):  # TODO this name sucks...
         """
@@ -859,9 +891,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTR1C'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - composite
             b'OESTRCP' : [self._read_oes1_3, self._read_ostr1_4],
 
-            b'OSTR1PL' : [self._table_passer, self._table_passer], # ????
+            b'OSTR1PL' : [self._table_passer, self._table_passer],  # Table of ply strains-plastic in SORT1 format
             b'OSTR1THC' : [self._table_passer, self._table_passer], # ????
-            b'OSTR1CR' : [self._table_passer, self._table_passer], # ????
+            b'OSTR1CR' : [self._table_passer, self._table_passer],  # ????
             #b'OEFIIP'
 
             # special nonlinear tables
@@ -990,8 +1022,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQGGF2' : [self._table_passer, self._table_passer],
 
             # Table of Euler Angles for transformation from material to basic coordinate system
-            # in the undeformed configuration
-            b'TRMBU' : [self._nx_table_passer, self._table_passer],
+            # Table of Euler Angles for transformation from material to basic coordinate system in the:
+            b'TRMBU' : [self._nx_table_passer, self._table_passer], # undeformed configuration
             b'TRMBD' : [self._nx_table_passer, self._table_passer],
             #=======================
             # OGPWG
@@ -1004,6 +1036,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # grid point stresses
             b'OGS1' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
             #b'OGS2' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
+
             #=======================
             # eigenvalues
             b'BLAMA' : [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4], # buckling eigenvalues
@@ -1017,7 +1050,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'EQEXINS': [self._table_passer, self._table_passer],
 
             b'GPDT' : [self._table_passer, self._table_passer],     # grid points?
-            b'BGPDT' : [self._table_passer, self._table_passer],    # basic grid point defintion table
+            b'BGPDT' : [self._table_passer, self._table_passer],    # basic grid point definition table
             b'BGPDTS' : [self._table_passer, self._table_passer],
             b'BGPDTOLD' : [self._table_passer, self._table_passer],
 
@@ -1037,7 +1070,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             # DSCMCOL - Correlation table for normalized design sensitivity coefficient matrix.
             #           Output by DSTAP2.
-            # DBCOPT - Design optimization history table for
+            # DBCOPT - Design optimization history table for ???
 
             b'OEKE1' : [self._table_passer, self._table_passer],
             #b'DSCMCOL' : [self._table_passer, self._table_passer],
@@ -1054,6 +1087,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OPMPF2M' : [self._read_mpf_3, self._read_mpf_4],
             # OPMPF2M Panel mode participation factors by normal mode.
             b'OSMPF2M' : [self._read_mpf_3, self._read_mpf_4],
+
             # OGMPF2M Grid mode participation factors by normal mode.
             b'OGPMPF2M' : [self._read_mpf_3, self._read_mpf_4],
 
@@ -1134,6 +1168,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OEFPSD2' : [self._read_oef2_3, self._read_oef2_4],
             #b'OEFRMS2' : [self._read_oef2_3, self._read_oef2_4], # buggy on isat random
         }
+
         if self.is_nx and 0:
             table_mapper2 = {
                 #b'OUGRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
@@ -1291,7 +1326,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_mpf_4(self, data, ndata):
+    def _read_mpf_4(self, data: bytes, ndata: int):
         """unused"""
         if self.read_mode == 1: # or self.table_name_str not in ['OFMPF2M']:
             return ndata
@@ -1313,12 +1348,28 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.log.warning('%s results were read, but not saved' % self.table_name_str)
         return ndata
 
-    def _read_pvto_3(self, data, ndata):
+    def _read_pvto_3(self, data: bytes, ndata: int):
         """unused"""
         raise RuntimeError(self.read_mode)
 
-    def _read_pvto_4(self, data, ndata):
-        """reads PARAM cards"""
+    def _read_pvto_4(self, data: bytes, ndata: int) -> int:
+        """
+        Reads PARAM cards
+
+        data = (
+            AUTOSPC, 3, YES,
+            GRDPNT, 1, 0,
+            K6ROT, 2, 100.0,
+            OUGCORD, 3, GLOBAL,
+            POST, 1, -1,
+            POST, 1, -2,
+            POSTEXT, 3, YES,
+            K6ROT, 2, 100.0,
+            OIBULK, 3, YES,
+            OMACHPR, 3, YES,
+            POSTEXT, 3, YES,
+            UNITSYS, 3, MN-MM)
+        """
         if self.read_mode == 2:
             return ndata
 
@@ -1332,30 +1383,34 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 raise  # only for testing
             self.f.seek(iloc)
             ndata2 = ndata
+
         if 'NXVER' in self.params and not self.is_nx:
             self.set_as_nx()
             self.log.debug('found PARAM,NXVER -> setting as NX')
         return ndata2
 
-    def _read_pvto_4_helper(self, data, ndata: int) -> int:
+    def _read_pvto_4_helper(self, data: bytes, ndata: int) -> int:
         """reads PARAM cards"""
         xword = (4 * self.factor)
         nvalues = ndata // xword
         assert ndata % xword == 0, ndata
 
         if self.size == 4:
+            structi = self.struct_i
+            structf = Struct(b'f')
             structs8 = self.struct_8s
             #struct2s8 = Struct(b'4s8s')
-            struct2i = self.struct_2i
+            #struct2i = self.struct_2i
             struct2f = Struct(b'ff')
-            struct2d = Struct(b'dd')
+            #struct2d = Struct(b'dd')
         else:
-            struct2i = self.struct_2q
+            structi = self.struct_q
+            structf = Struct(b'd')
+            #struct2i = self.struct_2q
             structs8 = self.struct_16s
             struct2f = Struct(b'dd')
 
         i = 0
-
         #print('---------------------------')
         #self.show_data(data, types='ifsqL')
         while i < nvalues:
@@ -1371,62 +1426,124 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 word = reshape_bytes_block(bword).rstrip()
             else:
                 raise RuntimeError(self.size)
+            key = word.decode('latin1')
+            flag_data = data[(i+2)*xword:(i+3)*xword]
+            flag = structi.unpack(flag_data)[0]
 
-            #print('word=%r' % word)
+            # =1
+            # 4 INT     I* =2
+            # 4 REAL    RS* =3
+            # 4 BCD(2)  CHAR4* =4
+            # 4 REALDBL RD
+            # =5 4 CMPLXS  CS*
+            # =6 4 CMPLXD  CD
+            # =7 4 LOGICAL LOGIC*
+
+            # ----------------
+            #wrong...
+            # 1 PARAM(2) CHAR4
+            # 3 I
+            # =1 4 INT     I*
+            # =2 4 REAL    RS*
+            # =3 4 BCD(2)  CHAR4*
+            # =4 4 REALDBL RD
+            # =5 4 CMPLXS  CS*
+            # =6 4 CMPLXD  CD
+            # =7 4 LOGICAL LOGIC*
+
+            #print(f'word={word!r} flag={flag}')
             #word = s8.unpack(word)[0]#.decode(self._encoding)
 
-            # the first two entries are typically trash, then we can get values
-            if word in INT_PARAMS_1:
-                slot = data[(i+2)*xword:(i+4)*xword]
-                value = struct2i.unpack(slot)[1]
-                i += 4
-            elif word in FLOAT_PARAMS_1:
-                slot = data[(i+2)*xword:(i+4)*xword]
-                value = struct2f.unpack(slot)[1]
-                i += 4
-            elif word in FLOAT_PARAMS_2:
-                slot = data[(i+3)*xword:(i+5)*xword]
-                value = struct2f.unpack(slot)
-                i += 5
-            elif word in INT_PARAMS_2:
-                slot = data[(i+3)*xword:(i+5)*xword]
-                value = struct2i.unpack(slot)
-                i += 5
-            elif word in DOUBLE_PARAMS_1:
-                slot = data[(i+1)*xword:(i+8)*xword]
-                try:
-                    value = struct2d.unpack(slot)[1]
-                except:
-                    print(word)
-                    raise
-                i += 8
-            #elif word in [b'VUHEXA']:
-                #self.show_data(data[i*4:(i+5)*4], types='ifs', endian=None)
-                #aaa
-            elif word in STR_PARAMS_1:
-                i += 3
-                slot = data[i*xword:(i+2)*xword]
-                bvalue = structs8.unpack(slot)[0]
-                if self.size == 8:
-                    bvalue = reshape_bytes_block(bvalue)
-                value = bvalue.decode('latin1').rstrip()
-                i += 2
-            else:
-                if self.size == 4:
-                    self.show_data(data[i*xword+12:i*4+i*4+12], types='ifs')
-                    self.show_data(data[i*xword+8:(i+4)*4], types='ifs')
-                else:
-                    self.show_data(data[i*xword+24:i*8+i*8+24], types='sdq')
-                    self.show_data(data[i*xword+16:(i+4)*8], types='sdq')
-                    #print(i*xword+24, i*8+i*8+24)
-                    #print(i*xword+16, (i+4)*8)
-                self.log.error('%r' % word)
-                raise NotImplementedError('%r is not a supported PARAM' % word)
+            #if flag == 1:
+                #flag_str = 'int'
+            #elif flag == 2:
+                #flag_str = 'float'
+            #elif flag == 3:
+                #flag_str = 'str'
 
-            key = word.decode('latin1')
-            param = PARAM(key, [value], comment='')
+            # the first two entries are typically trash, then we can get values
+            if flag == 1: # int
+                #self.show_data(data[i*xword:(i+4)*xword], types='isq', endian=None, force=False)
+                assert self.size in [4, 8], (key, self.size, flag)
+                #assert word in INT_PARAMS_1, f'word={word}'
+                slot = data[(i+3)*xword:(i+4)*xword]
+                i += 4
+                #slot = data[(i+4)*xword:(i+5)*xword]
+                #i += 5
+                value, = structi.unpack(slot)
+                values = [value]
+            elif flag == 2: # float
+                assert self.size in [4, 8], (key, self.size, flag)
+                slot = data[(i+3)*xword:(i+4)*xword]
+                value, = structf.unpack(slot)
+                values = [value]
+                #assert word in FLOAT_PARAMS_1, f'word={word}'
+                i += 4
+
+            elif flag == 3: # float / string
+                assert self.size in [4, 8], (key, self.size, flag)
+                #slot = data[(i+3)*xword:(i+4)*xword]
+                #i += 4
+                slot = data[(i+3)*xword:(i+5)*xword]
+                try:
+                    bvalue, = structs8.unpack(slot)
+                    if self.size == 8:
+                        bvalue = reshape_bytes_block(bvalue)
+                    value = bvalue.decode('latin1').rstrip()
+                    if value:
+                        if word == b'NXVER':
+                            assert value.replace('.', '').isalnum(), f'{key} = {value!r}'
+                        elif word == b'UNITSYS':
+                            assert value.replace('-', '').isalnum(), f'{key} = {value!r}'
+                        else:
+                            assert value.isalnum(), f'{key} = {value!r}'
+                except AssertionError:
+                    value, = structf.unpack(slot[4:])
+                values = [value]
+
+                if isinstance(value, str):
+                    assert word in STR_PARAMS_1, f'word={word}'
+                else:
+                    #if self.size == 4:
+                        #self.show_data(data[istart:istart+20], types='sifqd')
+                    #elif self.size == 8:
+                        #self.show_data(data[istart:istart+40], types='sifqd')
+                    assert word in FLOAT_PARAMS_1, f'float/str; word={word} value={value}'
+                i += 5
+            #elif flag == 3: # string
+                #assert self.size in [4, 8], (key, self.size, flag)
+                #slot = data[(i+3)*xword:(i+5)*xword]
+                ##self.show_data(slot)
+                #assert word in STR_PARAMS_1, f'word={word}'
+                #i += 5
+
+            elif flag == 5:  # CMPLXS  CS - FLOAT_PARAMS_2
+                assert self.size in [4, 8], (key, self.size, flag)
+                slot = data[(i+3)*xword:(i+5)*xword]
+                #self.show_data(data[(i+3)*xword:(i+5)*xword], types='ifsqd', endian=None, force=False)
+                values = struct2f.unpack(slot)
+                values = list(values)
+                assert word in FLOAT_PARAMS_2, f'word={word}'
+                i += 5
+
+            elif flag == 7: # logical/int
+                assert self.size in [4, 8], (key, self.size, flag)
+                slot = data[(i+3)*xword:(i+4)*xword]
+                value, = structi.unpack(slot)
+                values = [value]
+                i += 4
+            else:
+                self.show_data(data[i*xword:], types='ifsqd', endian=None, force=False)
+                self.log.error('%r' % word)
+                raise NotImplementedError(f'{word!r} is not a supported PARAM; flag={flag}')
+
+            #i, value = self._old_pvto(word, data, i, xword,
+                                      #struct2i, struct2f, structs8)
+
+            param = PARAM(key, values, comment='')
             self.params[key] = param
-            #print(f'{key} = {value}')
+            del key, values
+            #print(f'{key} ({flag}) = {value!r}')
             #print(param.rstrip())
         return nvalues
 
@@ -1434,12 +1551,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """testing function"""
         if ndata > 0:
             raise RuntimeError('this should never be called...'
-                               'table_name=%r len(data)=%s' % (self.table_name, ndata))
+                               'table_name={self.table_name!r} len(data)={ndata}')
 
-    def _table_crasher(self, data, ndata):
+    def _table_crasher(self, data: bytes, ndata: int):
         """auto-table crasher"""
         if self.is_debug_file:
-            self.binary_debug.write('  crashing table = %s\n' % self.table_name)
+            self.binary_debug.write(f'  crashing table = {self.table_name}\n')
             raise NotImplementedError(self.table_name)
         return ndata
 
@@ -1657,9 +1774,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.n = 0
         self.table_name = None
 
+
         if not hasattr(self, 'f') or self.f is None:
             #: the OP2 file object
-            self.f = open(self.op2_filename, 'rb')
+            op2_filename = self.op2_filename
+            self.f = open(op2_filename, 'rb')
             #: the endian in bytes
             self._endian = None
             #: the endian in unicode
@@ -1674,7 +1793,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._uendian = '>'
                 self._endian = b'>'
                 size = big_data[0]
-            elif little_data[0] in [4, 8] or 1:
+            elif little_data[0] in [4, 8]:
                 self._uendian = '<'
                 self._endian = b'<'
                 size = little_data[0]
@@ -1704,7 +1823,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #table_mapper = self._get_table_mapper()
         #RESULT_TABLES = table_mapper.keys()
 
-    def _read_tables(self, table_name: bytes) -> List[bytes]:
+    def _read_tables(self, table_name: bytes) -> None:
         """
         Reads all the geometry/result tables.
         The OP2 header is not read by this function.
@@ -1713,9 +1832,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ----------
         table_name : bytes str
             the first table's name
-
-        Returns
-        -------
         table_names : List[bytes str]
             the table names that were read
 
@@ -1729,10 +1845,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             if self.is_debug_file:
                 self.binary_debug.write('-' * 80 + '\n')
-                self.binary_debug.write('table_name = %r\n' % (table_name))
+                self.binary_debug.write(f'table_name = {table_name!r}\n')
 
             if is_release:
-                self.log.debug('  table_name=%r' % table_name)
+                self.log.debug(f'  table_name={table_name!r}')
 
             self.table_name = table_name
             #if 0:
@@ -1760,9 +1876,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             else:
                 #self.show(1000, types='ifsq')
                 msg = (
-                    'Invalid Table = %r\n\n'
+                    f'Invalid Table = {table_name!r}\n\n'
                     'If you have matrices that you want to read, see:\n'
-                    '  model.set_additional_matrices_to_read(matrices)'
+                    '  model.set_additional_matrices_to_read(matrices)\n'
                     '  matrices = {\n'
                     "      b'BHH' : True,\n"
                     "      b'KHH' : False,\n"

@@ -628,6 +628,7 @@ MSC_TABLE_CONTENT = {
     #53: 'OPMPF2M - ???',
     #54: 'OLMPF2M - ???',
     #55: 'OGMPF2M - ???',
+    56: 'OESRT - Ply strength ratios???',
     89: 'OESRT - Ply strength ratios',
 } # type: Dict[int, str]
 MSC_OEF_REAL_MAPPER = {

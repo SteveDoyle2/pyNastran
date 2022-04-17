@@ -2495,7 +2495,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         headers = self.get_headers()
 
         node = pd.Series(self.element_node[:, 1])
-        node.replace({'NodeID': {0:'CEN'}}, inplace=True)
+        #node.replace({'NodeID': {0:'CEN'}}, inplace=True)
         element_node = [self.element_node[:, 0], node]
 
         if self.nonlinear_factor not in (None, np.nan):

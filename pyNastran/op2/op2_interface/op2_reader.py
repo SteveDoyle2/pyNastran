@@ -182,11 +182,11 @@ class OP2Reader:
         #try:
         op2 = self.op2
         markers = self.get_nmarkers(1, rewind=True)
-        #except:
+        #except Exception:
             #self._goto(0)
             #try:
                 #self.f.read(4)
-            #except:
+            #except Exception:
                 #raise FatalError("The OP2 is empty.")
             #raise
         if self.is_debug_file:

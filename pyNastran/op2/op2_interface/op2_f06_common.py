@@ -38,7 +38,7 @@ class OP2_F06_Common:
         self.__objects_init__()
         self.__objects_common_init__()
 
-    def has_result(self, result_name):
+    def has_result(self, result_name: str) -> bool:
         """checks to see if a result exists"""
         if '.' in result_name:
             sline = result_name.split('.')
@@ -1424,7 +1424,7 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
                 if hasattr(subcase, 'get_stats'):
                     try:
                         stats = subcase.get_stats() # short=short
-                    except:
+                    except Exception:
                         msgi = 'errored reading %s %s[%s]\n\n' % (
                             class_name, table_type_print, isubcase)
                         msg.append(msgi)
@@ -1437,7 +1437,7 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
                     msgi = 'skipping %s %s[%s]\n\n' % (class_name, table_type_print, isubcase)
                     msg.append(msgi)
                     raise RuntimeError(msgi)
-        except:
+        except Exception:
             log.warning(f'table_type={table_type}; type(table)={type(table)}')
             log.warning(str(table))
             raise

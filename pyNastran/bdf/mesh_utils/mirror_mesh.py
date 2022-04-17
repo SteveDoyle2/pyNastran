@@ -8,7 +8,7 @@ This file defines:
         enddata=None, close=True, plane='xz')
 
 """
-from copy import deepcopy
+#from copy import deepcopy
 from typing import Set, Tuple, Union, Optional
 import numpy as np
 
@@ -67,10 +67,10 @@ def bdf_mirror(bdf_filename: Union[str, BDF],
     """
     model = get_bdf_model(bdf_filename, xref=True, log=log, debug=debug)
     mirror_model = model
-    nid_offset, plane = _mirror_nodes(model, plane=plane)
+    nid_offset, plane = _mirror_nodes(model, mirror_model, plane=plane)
     eid_offset = _mirror_elements(model, mirror_model, nid_offset, plane=plane)
-    _mirror_loads(model, nid_offset, eid_offset)
-    _mirror_aero(model, nid_offset, plane=plane)
+    _mirror_loads(model, mirror_model, nid_offset, eid_offset)
+    _mirror_aero(model, mirror_model, nid_offset, plane=plane)
     return model, nid_offset, eid_offset
 
 def write_bdf_symmetric(bdf_filename: Union[str, BDF],
@@ -138,7 +138,9 @@ def write_bdf_symmetric(bdf_filename: Union[str, BDF],
                     interspersed=False, enddata=enddata, close=close)
     return model, nid_offset, eid_offset
 
-def _mirror_nodes(model: BDF, plane: str='xz'):
+def _mirror_nodes(model: BDF,
+                  mirror_model: BDF,
+                  plane: str='xz') -> Tuple[int, str]:
     """
     Mirrors the GRIDs
 
@@ -161,15 +163,15 @@ def _mirror_nodes(model: BDF, plane: str='xz'):
             nid2 = nid + nid_offset
             xyz2 = xyz.copy()
             xyz2[iy] *= -1.
-            model.add_grid(nid2, xyz2, cp=0, cd=node.cd, ps=node.ps, seid=node.seid)
+            mirror_model.add_grid(nid2, xyz2, cp=0, cd=node.cd, ps=node.ps, seid=node.seid)
     if model.spoints:
         for nid in list(model.spoints):
             nid2 = nid + nid_offset
-            model.add_spoint(nid2)
+            mirror_model.add_spoint(nid2)
     if model.epoints:
         for nid in list(model.epoints):
             nid2 = nid + nid_offset
-            model.add_spoint(nid2)
+            mirror_model.add_spoint(nid2)
     #if model.epoints:
 
     return nid_offset, plane
@@ -404,6 +406,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
     update_mcids = False
     element_cids = set([])
     etypes_skipped = set([])
+    skip_invert_eids = []
     for eid, element in sorted(model.elements.items()):
         etype = element.type
         if etype in ['CHBDYG', 'CHBDYE']:
@@ -435,8 +438,65 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             # what about inverting solids?
             nodes2 = [node_id + nid_offset if node_id is not None else None
                      for node_id in nodes1]
+            if etype == 'CHEXA':
+                if len(nodes1) == 8:
+                    n1, n2, n3, n4, n5, n6, n7, n8 = nodes2
+                    nodes3 = [n4, n3, n2, n1, n8, n7, n6, n5]
+                else:
+                    (n1, n2, n3, n4,
+                     n5, n6, n7, n8,
+                     n9, n10, n11, n12,
+                     n13, n14, n15, n16,
+                     n17, n18, n19, n20) = nodes2
+                    nodes3 = [n4, n3, n2, n1,
+                              n8, n7, n6, n5,
+                              n12, n11, n10, n9,
+                              n16, n15, n14, n13,
+                              n20, n19, n18, n17]
+                    nodes3 = nodes2
+                    skip_invert_eids.append(eid)
+            elif etype == 'CTETRA':
+                if len(nodes1) == 4:  # TODO: not validated
+                    n1, n2, n3, n4 = nodes2
+                    nodes3 = [n3, n2, n1, n4]
+                else:  # TODO: not validated
+                    (n1, n2, n3, n4,
+                     n5, n6, n7,
+                     n8, n9, n10) = nodes2
+                    nodes3 = [
+                        n3, n2, n1, n4,
+                        n7, n6, n5,
+                        n10, n9, n8]
+            elif etype == 'CPENTA':
+                if len(nodes1) == 6:  # TODO: not validated
+                    n1, n2, n3, n4, n5, n6 = nodes2
+                    nodes3 = [n3, n2, n1,
+                              n6, n5, n4]
+                else:  # TODO: not validated
+                    n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15 = nodes2
+                    nodes3 = [n3, n2, n1,
+                              n6, n5, n4,
+                              n9, n8, n9,
+                              n12, n11, n10,
+                              n15, n14, n13]
+            elif etype == 'CPYRAM':
+                if len(nodes1) == 5:  # TODO: not validated
+                    n1, n2, n3, n4, n5 = nodes2
+                    nodes3 = [n4, n3, n2, n1, n5]
+                else:  # TODO: not validated
+                    (n1, n2, n3, n4,
+                     n5,
+                     n6, n7, n8, n9,
+                     n10, n11, n12, n13) = nodes2
+                    nodes3 = [n4, n3, n2, n1,
+                              n5,
+                              n9, n8, n7, n6,
+                              n13, n12, n11, n10]
+            else:  # pragma: no cover
+                nodes3 = nodes2
+                skip_invert_eids.append(eid)
             etypes_skipped.add(etype)
-            element2.nodes2 = nodes2
+            element2.nodes = nodes3
             element2.cross_reference(model)
             vol = element2.Volume()
             assert vol >= 0., vol
@@ -532,6 +592,8 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
         etypes = list(etypes_skipped)
         etypes.sort()
         model.log.warning(f'Verify element_types={etypes}')
+    if skip_invert_eids:
+        model.log.warning(f'skip inverting solid eids={skip_invert_eids}')
     if element_cids:
         cids = list(element_cids)
         cids.sort()
@@ -672,7 +734,7 @@ def _mirror_loads(model: BDF, mirror_model: BDF,
     skip_loads = {
         'FORCEAX', 'TEMPAX', 'PRESAX',
     }
-    for unused_load_id, loads in model.loads.items():
+    for sid_, loads in model.loads.items():
         for load in loads:
             loads_new = []
             load_type = load.type
@@ -762,9 +824,10 @@ def _mirror_loads(model: BDF, mirror_model: BDF,
             else:  # pragma: no cover
                 model.log.warning('skipping:\n%s' % load.rstrip())
         if loads_new:
-            loads += loads_new
+            mirror_model.loads[sid_].extend(loads_new)
 
 def _mirror_aero(model: BDF,
+                 mirror_model: BDF,
                  nid_offset: int, plane: str='xz') -> None:
     """
     Mirrors the aero cards
@@ -909,9 +972,9 @@ def _mirror_aero(model: BDF,
                 model.log.error('skipping (only support SET1):\n%s' % set_card.rstrip())
 
         for spline in splines:
-            model._add_spline_object(spline)
+            mirror_model._add_spline_object(spline)
         for set_card in sets_to_add:
-            model._add_set_object(set_card)
+            mirror_model._add_set_object(set_card)
 
     aelist_id_offset = 0
     if len(model.aelists):
@@ -925,7 +988,7 @@ def _mirror_aero(model: BDF,
         for aelist_id, aelist in sorted(model.aelists.items()):
             aelist_id_new = aelist_id + aelist_id_offset
             elements = [eid + caero_id_offset for eid in aelist.elements]
-            model.add_aelist(aelist_id_new, elements, comment='')
+            mirror_model.add_aelist(aelist_id_new, elements, comment='')
 
         for aesurf_id, aesurf in sorted(model.aesurf.items()):
             # TODO: doesn't handle cid2/aelist2
@@ -958,11 +1021,12 @@ def _mirror_aero(model: BDF,
                 tqllim=aesurf.tqllim, tqulim=aesurf.tqulim, comment='')
 
     if is_aero:
-        _asymmetrically_mirror_coords(model,
+        _asymmetrically_mirror_coords(model, mirror_model,
                                       aero_cids_set, cid_offset, plane=plane)
     model.pop_parse_errors()
 
 def _asymmetrically_mirror_coords2(model: BDF,
+                                   mirror_model: BDF,
                                    cids_nominal_set: Set[int],
                                    cid_offset: int, plane: str='xz') -> None:
     """
@@ -975,6 +1039,7 @@ def _asymmetrically_mirror_coords2(model: BDF,
     return
 
 def _asymmetrically_mirror_coords(model: BDF,
+                                  mirror_model: BDF,
                                   cids_nominal_set: Set[int],
                                   cid_offset: int, plane: str='xz') -> None:
     """we'll leave i the same, flip j, and invert k"""
@@ -1019,5 +1084,5 @@ def _asymmetrically_mirror_coords(model: BDF,
         else:
             model.log.warning(f'skipping coord_id={coord.cid}')
             continue
-        model.coords[cid_new] = coord_new
+        mirror_model.coords[cid_new] = coord_new
     return

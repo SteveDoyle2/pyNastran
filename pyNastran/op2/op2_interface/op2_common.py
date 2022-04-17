@@ -342,7 +342,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.nonlinear_factor = np.nan #np.float32(None)
         self.data_code['nonlinear_factor'] = np.nan
 
-    def _read_title_helper(self, data):
+    def _read_title_helper(self, data: bytes) -> None:
         if self.size == 4:
             assert len(data) == 584, len(data)
             # title_subtitle_label
@@ -417,7 +417,7 @@ class OP2Common(Op2Codes, F06Writer):
                     'pval_step', self.pval_step,
                     'superelement_adaptivity_index', self.superelement_adaptivity_index))
 
-    def _read_title(self, data):
+    def _read_title(self, data: bytes) -> None:
         self._read_title_helper(data)
 
         if hasattr(self, 'isubcase'):
@@ -753,15 +753,17 @@ class OP2Common(Op2Codes, F06Writer):
                 result_name, nnodes, storage_obj, complex_vector)
             if auto_return:
                 return ndata
+            is_mag = self.is_magnitude_phase()
+
             if self.is_sort1:
-                if self.is_magnitude_phase():
+                if is_mag:
                     n = self._read_complex_table_sort1_mag(
                         data, is_vectorized, nnodes, result_name, node_elem)
                 else:
                     n = self._read_complex_table_sort1_imag(
                         data, is_vectorized, nnodes, result_name, node_elem)
             else:
-                if self.is_magnitude_phase():
+                if is_mag:
                     n = self._read_complex_table_sort2_mag(
                         data, is_vectorized, nnodes, result_name, node_elem)
                 else:
@@ -779,7 +781,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _read_scalar_table_vectorized(self, data, ndata, result_name, storage_obj,
                                       real_vector, complex_vector,
-                                      node_elem, random_code=None, is_cid=False):
+                                      node_elem, random_code=None, is_cid: bool=False):
         """
         Reads a table
 

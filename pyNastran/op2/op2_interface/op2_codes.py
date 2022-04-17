@@ -101,27 +101,27 @@ NASA95_ELEMENTS = {
     83 : 'CTRIA3',  # done   done
 }
 ANALYSIS_CODE_MAP = {
-    1 : "Statics",
-    2 : "Normal modes or buckling (real eigenvalues)",
-    3 : "Differential Stiffness 0 - obsolete",
-    4 : "Differential Stiffness 1 - obsolete",
-    5 : "Frequency",
-    6 : "Transient",
-    7 : "Pre-buckling",
-    8 : "Post-buckling",
-    9 : "Complex eigenvalues",
-    10 : "Nonlinear statics",
-    11 : "Geometric nonlinear statics",
+    1 : 'Statics',
+    2 : 'Normal modes or buckling (real eigenvalues)',
+    3 : 'Differential Stiffness 0 - obsolete',
+    4 : 'Differential Stiffness 1 - obsolete',
+    5 : 'Frequency',
+    6 : 'Transient',
+    7 : 'Pre-buckling',
+    8 : 'Post-buckling',
+    9 : 'Complex eigenvalues',
+    10 : 'Nonlinear statics',
+    11 : 'Geometric nonlinear statics',
 }
 
 DEVICE_CODE_MAP = {
-    1 : "Print",
-    2 : "Plot",
-    3 : "Print and Plot",
-    4 : "Punch",
-    5 : "Print and Punch",
-    6 : "Plot and Punch",
-    7 : "Print, Plot, and Punch",
+    1 : 'Print',
+    2 : 'Plot',
+    3 : 'Print and Plot',
+    4 : 'Punch',
+    5 : 'Print and Punch',
+    6 : 'Plot and Punch',
+    7 : 'Print, Plot, and Punch',
 }
 
 THERMAL_MAP = {
@@ -385,7 +385,7 @@ class Op2Codes:
         if thermal is not None:
             msg += "  thermal       = %-3s %s\n" % (thermal, thermal_word)
             if hasattr(self, 'thermal_bits'):
-                msg += "  thermal_bits  = %s\n" % str(self.thermal_bits)
+                msg += f"  thermal_bits  = {self.thermal_bits}\n"
 
         if hasattr(self, 'num_wide'):
             msg += "  num_wide      = %-3s\n" % self.num_wide
@@ -467,7 +467,7 @@ class Op2Codes:
         table_name_str : str
             the table name as a string
 
-        ..note :: Refers to bytes/str in the Python 3 sense.
+        .. note:: Refers to bytes/str in the Python 3 sense.
         """
         table_name = self.table_name
         if isinstance(table_name, bytes):
@@ -739,7 +739,7 @@ def get_table_from_table_code(table_code: int, table_name: str, is_msc: bool=Tru
             table = MSC_TABLE_CONTENT[table_code]
         else:
             table = NX_TABLE_CONTENT[table_code]
-    except:
+    except Exception:
         print(f'count not determine the table description for {table_name}')
         raise
 
