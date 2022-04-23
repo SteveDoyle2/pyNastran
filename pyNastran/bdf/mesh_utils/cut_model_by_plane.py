@@ -24,7 +24,7 @@ from pyNastran.bdf.cards.coordinate_systems import Coord, xyz_to_rtz_array, rtz_
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4
     from pyNastran.bdf.cards.coordinate_systems import Coord
-    from pyNastran.nptyping import NDArrayNint, NDArray3float, NDArrayNfloat
+    from pyNastran.nptyping_interface import NDArrayNint, NDArray3float, NDArrayNfloat
 
 def get_nid_cd_xyz_cid0(model: BDF) -> Tuple[NDArrayNint, NDArrayNint,
                                              Dict[int, NDArrayNint], NDArray3float]:
@@ -347,6 +347,7 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
                                                       NDArray3float, NDArray3float, NDArray3float]:
     """
     Creates the coordinate system that will define the cutting plane
+
     Parameters
     ----------
     model : BDF

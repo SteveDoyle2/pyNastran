@@ -30,7 +30,7 @@ from pyNastran.bdf.cards.properties.shell import get_2d_plate_transform
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF  # , MAT1, MAT8, MAT9
-    #from pyNastran.nptyping import NDArray3float
+    #from pyNastran.nptyping_interface import NDArray3float
 
 class CQUAD1(QuadShell):
     """

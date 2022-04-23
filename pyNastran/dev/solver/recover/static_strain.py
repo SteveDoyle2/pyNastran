@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Union, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.nptyping import NDArrayNfloat
+from pyNastran.nptyping_interface import NDArrayNfloat
 from pyNastran.dev.solver.utils import lambda1d, get_ieids_eids
 from pyNastran.dev.solver.build_stiffness import ke_cbar
 from .static_spring import recover_celas

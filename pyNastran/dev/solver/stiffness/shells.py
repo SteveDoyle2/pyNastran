@@ -10,7 +10,7 @@ from pyNastran.bdf.cards.elements.shell import transform_shell_material_coordina
 from ..utils import DOF_MAP
 #from pyNastran.bdf.cards.elements.bars import get_bar_vector, get_bar_yz_transform
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import NDArrayN3float, NDArrayNNfloat
+    from pyNastran.nptyping_interface import NDArrayN3float, NDArrayNNfloat
     from pyNastran.bdf.bdf import (
         BDF,
         CQUAD4, CQUAD8, MAT1

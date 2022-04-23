@@ -9,7 +9,7 @@ from pyNastran.dev.solver.stiffness.shells import build_kbb_cquad4, build_kbb_cq
 from .utils import lambda1d, DOF_MAP
 #from pyNastran.bdf.cards.elements.bars import get_bar_vector, get_bar_yz_transform
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import NDArrayNNfloat
+    from pyNastran.nptyping_interface import NDArrayNNfloat
     from pyNastran.bdf.bdf import (
         BDF,
         CELAS1, CELAS2, CELAS3, CELAS4,

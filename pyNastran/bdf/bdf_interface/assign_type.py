@@ -366,7 +366,7 @@ def integer_or_blank(card: BDFCard, ifield: int, fieldname: str, default: Option
 
 def double(card: BDFCard, ifield: int, fieldname: str, end: str='') -> float:
     """
-    Casts a value to an double
+    Casts a value to a double
 
     Parameters
     ----------
@@ -438,7 +438,7 @@ def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
                     default: Optional[float]=None,
                     end: str='') -> float:
     """
-    Casts a value to an double/blank
+    Casts a value to a double/blank
 
     Parameters
     ----------
@@ -476,7 +476,7 @@ def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
 
 def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[float, str]:
     """
-    Casts a value to an double/string
+    Casts a value to a double/string
 
     Parameters
     ----------

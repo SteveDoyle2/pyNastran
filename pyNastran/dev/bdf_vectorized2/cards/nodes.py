@@ -15,7 +15,7 @@ from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
-    from pyNastran.nptyping import NDArrayN3int, NDArrayN3float, NDArrayNint
+    from pyNastran.nptyping_interface import NDArrayN3int, NDArrayN3float, NDArrayNint
 
 
 class Nodes:

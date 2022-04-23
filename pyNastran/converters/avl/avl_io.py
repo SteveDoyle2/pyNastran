@@ -1,6 +1,5 @@
 from collections import OrderedDict
 import numpy as np
-#from numpy import arange, amax, amin
 
 import vtk
 from vtk import vtkQuad, vtkLine

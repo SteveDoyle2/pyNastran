@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 try:
     import nptyping
     if nptyping.__version__ > '2.0':

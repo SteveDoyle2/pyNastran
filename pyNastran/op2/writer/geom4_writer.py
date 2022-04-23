@@ -62,6 +62,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
 
     if not is_constraints:
         return
+    cards_written = {}
     write_geom_header(b'GEOM4', op2_file, op2_ascii)
     itable = -3
     for card_type, cards in sorted(loads_by_type.items()):
@@ -73,6 +74,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
         try:
             nbytes = write_card(op2_file, op2_ascii, card_type, cards, endian,
                                 log=log, nastran_format=nastran_format)
+            cards_written[card_type] = len(cards)
         except Exception:  # pragma: no cover
             obj.log.error('failed GEOM4-%s' % card_type)
             raise
@@ -89,7 +91,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
     #-------------------------------------
     #print('itable', itable)
     close_geom_table(op2_file, op2_ascii, itable)
-
+    obj.log.debug(str(cards_written))
     #-------------------------------------
 
 

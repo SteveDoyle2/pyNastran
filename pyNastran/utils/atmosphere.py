@@ -29,7 +29,7 @@ from math import log, exp
 from typing import List, Tuple, TYPE_CHECKING
 import numpy as np
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import NDArrayNfloat
+    from pyNastran.nptyping_interface import NDArrayNfloat
 
 
 def get_alt_for_density(density: float, density_units: str='slug/ft^3',

@@ -44,7 +44,7 @@ BEAM_SETUP_MAP = {
 }
 
 if TYPE_CHECKING:  # pragma: no cover
-    #from pyNastran.nptyping import NDArray3float
+    #from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF, CBAR, CBEAM
 
 def get_bar_nids(model: BDF, bar_beam_eids: List[int]) -> Tuple[List[int],

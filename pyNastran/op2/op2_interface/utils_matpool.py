@@ -7,7 +7,7 @@ import numpy as np
 import scipy  # type: ignore
 
 from cpylog import SimpleLogger
-from pyNastran.nptyping import NDArrayNint
+from pyNastran.nptyping_interface import NDArrayNint
 from pyNastran.op2.result_objects.matrix import Matrix
 from pyNastran.op2.op2_interface.utils import reshape_bytes_block
 

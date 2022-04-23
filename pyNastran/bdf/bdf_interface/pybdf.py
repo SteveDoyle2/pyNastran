@@ -29,7 +29,7 @@ from io import StringIO
 
 import numpy as np
 from cpylog import get_logger2
-from pyNastran.nptyping import NDArrayN2int
+from pyNastran.nptyping_interface import NDArrayN2int
 from pyNastran.utils import print_bad_path, _filename
 
 from pyNastran.bdf import BULK_DATA_CARDS, CASE_BULK_CARDS

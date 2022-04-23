@@ -192,7 +192,6 @@ def load_bdf_from_hdf5_file(h5_file, model):
                 ikey = int(keyi)
                 class_obj_hdf5 = values[keyi]
                 card_type = cast_string(class_obj_hdf5['type'], encoding)
-                #print(card_type, class_obj_hdf5)
                 class_instance = _load_from_class(class_obj_hdf5, card_type, encoding)
                 lst[ikey] = class_instance
             _put_keys_values_into_list(model, key, keys, lst)
@@ -1149,14 +1148,11 @@ def hdf5_load_dti(model, group, encoding):
             #print(sub_group, sub_groupi)
             if 'keys' in sub_groupi:
                 lst = _load_indexed_list(irecord, sub_groupi, encoding)
-                #print('indexe_lst', lst)
                 lst2 = [val.decode(encoding) if isinstance(val, bytes) else val for val in lst]
             else:
                 if isinstance(sub_groupi, h5py._hl.dataset.Dataset):
-                    #print('dataset')
                     #print(sub_group, sub_groupi)
                     lst = _cast(sub_groupi).tolist()
-                    #print('lst =', lst)
                     lst2 = [val.decode(encoding) if isinstance(val, bytes) else val for val in lst]
                 else:
                     #print(sub_group, sub_groupi, len(sub_groupi.keys()))
@@ -1591,7 +1587,6 @@ def _load_class(key: str, value, card_type: str, encoding: str):
         card_type = card_type.decode(encoding)
     keys_to_read = list(value.keys())
     class_obj = CARD_MAP[card_type]  # see add_card.py ~line 200
-    #print(f'--{card_type}--')
     if hasattr(class_obj, '_init_from_empty'):
         class_instance = class_obj._init_from_empty()
     else:
@@ -1663,10 +1658,8 @@ def _cast_encoding(value_h5, encoding: str):
 def _get_casted_value(value, key_to_cast: str, encoding: str) -> Any:
     value_h5 = value[key_to_cast]
     if isinstance(value_h5, h5py._hl.dataset.Dataset):
-        #print('A', key_to_cast)
         valuei = _cast_encoding(value_h5, encoding)
     else:
-        #print('B', key_to_cast)
         h5_keys = list(value_h5.keys())
         if len(h5_keys) == 0:
             valuei = _cast_encoding(value_h5, encoding)

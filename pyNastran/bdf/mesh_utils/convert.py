@@ -468,10 +468,6 @@ def _convert_elements(model: BDF,
                 elem.si = [sii*xyz_scale for sii in elem.si]
 
         elif elem_type == 'CFAST':
-            #xs = double_or_blank(card, 9, 'xs')
-            #ys = double_or_blank(card, 10, 'ys')
-            #zs = double_or_blank(card, 11, 'zs')
-            #print(elem.get_stats())
             if elem.gs is None:
                 scales.add('length')
                 elem.xs *= xyz_scale

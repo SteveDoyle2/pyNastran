@@ -10,7 +10,7 @@ import scipy as sp
 import scipy.sparse as sci_sparse
 
 import pyNastran
-from pyNastran.nptyping import (
+from pyNastran.nptyping_interface import (
     NDArrayNbool, NDArrayNint, NDArrayN2int, NDArrayNfloat, NDArrayNNfloat)
 from pyNastran.bdf.bdf import BDF, Subcase
 

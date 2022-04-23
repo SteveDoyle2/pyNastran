@@ -48,7 +48,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import CORDx
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-    from pyNastran.nptyping import NDArray3float
+    from pyNastran.nptyping_interface import NDArray3float
     #from pyNastran.bdf.bdf_interface.typing import Coord, Element
 
 

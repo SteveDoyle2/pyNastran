@@ -25,12 +25,19 @@ import pyNastran
 from pyNastran.f06.utils import (split_float_colons, split_int_colon,
                                  cmd_line_plot_flutter, cmd_line as cmd_line_f06)
 from pyNastran.f06.parse_flutter import plot_flutter_f06, make_flutter_plots
+from pyNastran.f06.parse_trim import read_f06_trim
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class TestF06Utils(unittest.TestCase):
+    def _test_f06_trim(self):
+        """tests split_float_colon"""
+        f06_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm.f06')
+        _trim_results = read_f06_trim(f06_filename,
+                                     log=None, nlines_max=1_000_000, debug=False)
+
     def test_split_float_colon(self):
         """tests split_float_colon"""
         a = split_float_colons('1:')

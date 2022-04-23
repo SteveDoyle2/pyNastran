@@ -15,7 +15,7 @@ defines:
 from io import StringIO
 from typing import Optional, Tuple, Any
 import numpy as np
-from pyNastran.nptyping import NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float
+from pyNastran.nptyping_interface import NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model

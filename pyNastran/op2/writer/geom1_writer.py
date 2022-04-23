@@ -17,6 +17,7 @@ def write_geom1(op2_file, op2_ascii, obj: OP2, endian: bytes=b'<'):
     ngeom1 = nnodes or ncoords
     if not ngeom1:
         return
+    cards_written = {}
     write_geom_header(b'GEOM1', op2_file, op2_ascii)
     itable = -3
 
@@ -30,6 +31,7 @@ def write_geom1(op2_file, op2_ascii, obj: OP2, endian: bytes=b'<'):
         #assert nnodes == 72, nnodes
         nfields = 8 # nid, cp, x, y, z, cd, ps, seid
         nvalues = nfields * nnodes + 3 # 3 comes from the keys
+        cards_written['GRID'] = nnodes
         #assert nbytes == 2316, nbytes
         #op2_file.write(pack('6i', *[4, 0, 4, 4, 1, 4]))
 
@@ -87,6 +89,7 @@ def write_geom1(op2_file, op2_ascii, obj: OP2, endian: bytes=b'<'):
 
             key = coord_type_key_map[coord_type]
             ncards = len(cids)
+            cards_written[coord_type] = ncards
             if '2' in coord_type:
                 coord_int = 2
             elif '1' in coord_type:
@@ -146,6 +149,7 @@ def write_geom1(op2_file, op2_ascii, obj: OP2, endian: bytes=b'<'):
     #_write_markers(op2_file, op2_ascii, [2, 4])
     #-------------------------------------
     close_geom_table(op2_file, op2_ascii, itable)
+    obj.log.debug(str(cards_written))
 
 def write_block(op2_file, op2_ascii, nvalues, key):
     nbytes = nvalues * 4

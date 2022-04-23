@@ -20,7 +20,7 @@ from numpy.linalg import norm  # type: ignore
 import scipy
 import scipy.spatial
 
-from pyNastran.nptyping import NDArrayNint, NDArrayN3float
+from pyNastran.nptyping_interface import NDArrayNint, NDArrayN3float
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model

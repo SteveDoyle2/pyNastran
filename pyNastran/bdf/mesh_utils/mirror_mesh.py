@@ -12,7 +12,7 @@ from copy import deepcopy
 from typing import Set, Tuple, Union, Optional
 import numpy as np
 
-from pyNastran.nptyping import NDArray33float
+from pyNastran.nptyping_interface import NDArray33float
 from pyNastran.bdf.cards.coordinate_systems import CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 from pyNastran.bdf.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
@@ -1024,7 +1024,7 @@ def _mirror_aero(model: BDF,
             aesurf_id_new = aesurf_id + aesurf_id_offset
             label = aesurf.label + 'M'
             cid1 = aesurf.cid1 + cid_offset
-            alid1 = aesurf.alid1 + aelist_id_offset
+            aelist_id1 = aesurf.aelist_id1 + aelist_id_offset
             if cid_offset > 0:
                 aero_cids_set.add(aesurf.cid1)
 
@@ -1038,11 +1038,11 @@ def _mirror_aero(model: BDF,
                 #cid2 = aesurf.cid1 + cid_offset * 2
                 # how is the second coord and aelist made?
                 #aero_cids_set.add(aesurf.cid1)
-                #alid2 = aesurf.alid1 + aelist_id_offset * 2
+                #alid2 = aesurf.aelist_id1 + aelist_id_offset * 2
 
             mirror_model.add_aesurf(
-                aesurf_id_new, label, cid1, alid1,
-                cid2=None, alid2=None,
+                aesurf_id_new, label, cid1, aelist_id1,
+                cid2=None, aelist_id2=None,
                 eff=aesurf.eff, ldw=aesurf.ldw,
                 crefc=aesurf.crefc, crefs=aesurf.crefs,
                 pllim=aesurf.pllim, pulim=aesurf.pulim,

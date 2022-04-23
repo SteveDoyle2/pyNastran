@@ -3332,7 +3332,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 point_ids.SetId(0, n1)
                 point_ids.SetId(1, n2)
                 point_ids.SetId(2, n3)
-
                 grid.InsertNextCell(elem.GetCellType(), point_ids)
 
             elif isinstance(element, CTRSHL):  # nastran95
@@ -6379,7 +6378,7 @@ def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
                     icase += 1
                 elif is_e11:
                     # isotropic
-                    assert np.nanmax(e11) > 0, np.nanmax(e11)
+                    assert np.nanmax(e11) >= 0, np.nanmax(e11)
                     e11_res = GuiResult(0, header='E', title='E',
                                         location='centroid', scalar=e11, data_format='%.3e')
                     cases[icase] = (e11_res, (0, 'E'))
@@ -7177,55 +7176,64 @@ def _create_monpnt(gui: MainWindow,
                    model: BDF,
                    xyz_cid0: np.ndarray,
                    nid_cp_cd: np.ndarray):
+    from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
     cell_type_point = 1  # vtk.vtkVertex().GetCellType()
 
     all_nids = nid_cp_cd[:, 0]
     log = model.log
     for monpnt in model.monitor_points:
-        from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
         monpnt = monpnt # type: MONPNT1
         coord = model.coords[monpnt.cp]
         coord = coord # type: CORD2R
         xyz_global = coord.transform_node_to_global(monpnt.xyz).reshape(1, 3)
-        aecomp = model.aecomps[monpnt.comp]  # type: AECOMP
         label = monpnt.label
-        if aecomp.list_type == 'SET1':
-            #set1_ids = aecomp.lists
-            nids = []
-            for set1_id in aecomp.lists:
-                set1 = model.sets[set1_id]  # type: SET1
-                nids += set1.ids
-
-            nids = np.unique(nids)
-            inids = np.searchsorted(all_nids, nids)
-            xyz = xyz_cid0[inids, :]
-
-            name = f'MONPNT1: {monpnt.name} GRIDs; cid={monpnt.cp}'
-            #------------------------------------------------------------
-            gui.create_alternate_vtk_grid(
-                name, color=RED_FLOAT, point_size=5, opacity=1.0,
-                representation='point', is_visible=False, is_pickable=False)
-            grid = gui.alt_grids[name]
-
-            npoints = len(xyz)
-            points = numpy_to_vtk_points(xyz, points=None, dtype='<f', deep=1)
-            grid.SetPoints(points)
-            elements = np.arange(npoints).reshape(npoints, 1)
-            create_vtk_cells_of_constant_element_type(grid, elements, cell_type_point)
-            #------------------------------------------------------------
-            name = f'MONPNT1: {monpnt.name} xyz'
-            gui.create_alternate_vtk_grid(
-                name, color=BLUE_FLOAT, point_size=5, opacity=1.0,
-                representation='point', is_visible=False, is_pickable=False)
-            grid = gui.alt_grids[name]
-
-            points = numpy_to_vtk_points(xyz_global, points=None, dtype='<f', deep=1)
-            grid.SetPoints(points)
-            elements = np.array([[0]], dtype='int32')
-            create_vtk_cells_of_constant_element_type(grid, elements, cell_type_point)
-        else:
-            log.warning(f'skipping:\n{monpnt}')
+        try:
+            aecomp = model.aecomps[monpnt.comp]  # type: AECOMP
+        except KeyError:
+            key = monpnt.comp
+            keys = list(model.aecomps.keys())
+            log.warning(f'skipping:\n{monpnt}\nbecause AECOMP/L={key} does not exist\nkeys={keys}')
             continue
+
+        if aecomp.type == 'AECOMP':
+            if aecomp.list_type == 'SET1':
+                #set1_ids = aecomp.lists
+                nids = []
+                for set1_id in aecomp.lists:
+                    set1 = model.sets[set1_id]  # type: SET1
+                    nids += set1.ids
+
+                nids = np.unique(nids)
+                inids = np.searchsorted(all_nids, nids)
+                xyz = xyz_cid0[inids, :]
+
+                name = f'MONPNT1: {monpnt.name} GRIDs; cid={monpnt.cp}'
+                #------------------------------------------------------------
+                gui.create_alternate_vtk_grid(
+                    name, color=RED_FLOAT, point_size=5, opacity=1.0,
+                    representation='point', is_visible=False, is_pickable=False)
+                grid = gui.alt_grids[name]
+
+                npoints = len(xyz)
+                points = numpy_to_vtk_points(xyz, points=None, dtype='<f', deep=1)
+                grid.SetPoints(points)
+                elements = np.arange(npoints).reshape(npoints, 1)
+                create_vtk_cells_of_constant_element_type(grid, elements, cell_type_point)
+                #------------------------------------------------------------
+                name = f'MONPNT1: {monpnt.name} xyz'
+                gui.create_alternate_vtk_grid(
+                    name, color=BLUE_FLOAT, point_size=5, opacity=1.0,
+                    representation='point', is_visible=False, is_pickable=False)
+                grid = gui.alt_grids[name]
+
+                points = numpy_to_vtk_points(xyz_global, points=None, dtype='<f', deep=1)
+                grid.SetPoints(points)
+                elements = np.array([[0]], dtype='int32')
+                create_vtk_cells_of_constant_element_type(grid, elements, cell_type_point)
+        elif aecomp.type == 'AECOMPL':
+            log.warning(f'skipping:\n{monpnt}\nbecause AECOMPL is not supported{aecomp}')
+        else:
+            raise NotImplementedError(aecomp)
 
 
 def get_results_to_exclude(nastran_settings: NastranSettings) -> Set[str]:

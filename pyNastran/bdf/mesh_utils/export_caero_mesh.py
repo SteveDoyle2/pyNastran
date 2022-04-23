@@ -138,7 +138,7 @@ def _get_subpanel_property(model: BDF, caero_id: int, eid: int, pid_method: str=
     pid = None
     if pid_method == 'aesurf':
         for aesurf_id, aesurf in model.aesurf.items():
-            aelist_id = aesurf.aelist_id1()
+            aelist_id = aesurf.Aelist_id1()
             aelist = model.aelists[aelist_id]
             if eid in aelist.elements:
                 pid = aesurf_id

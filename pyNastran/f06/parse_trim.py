@@ -1,8 +1,9 @@
-from typing import Optional, TextIO, Tuple
+from typing import Tuple, List, Dict, Optional, TextIO
 import os
 import numpy as np
 #import scipy.sparse
 from cpylog import SimpleLogger, get_logger
+from pyNastran.utils import print_bad_path
 
 #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
 
@@ -52,6 +53,8 @@ class TrimResults:
         self.aero_pressure = {}
         self.aero_force = {}
         self.structural_monitor_loads = {}
+        self.controller_state = {}
+        self.trim_variables = {} # TODO: not supported
 
     def __repr__(self) -> str:
         msg = (
@@ -77,6 +80,8 @@ def read_f06_trim(f06_filename: str,
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
     log = get_logger(log=log, level='debug', encoding='utf-8')
     dirname = os.path.dirname(os.path.abspath(f06_filename))
+    assert os.path.exists(f06_filename), print_bad_path(f06_filename)
+    log.info(f'reading {f06_filename!r}')
     with open(f06_filename, 'r') as f06_file:
         trim_results, tables, matrices = _read_f06_trim(f06_file, log, nlines_max, dirname,
                                                         debug=debug)
@@ -86,6 +91,15 @@ def read_f06_trim(f06_filename: str,
         log.info('found the following matrices in the f06: %s' % (list(matrices)))
     str(trim_results)
     return trim_results
+
+def _skip_to_page_stamp_and_rewind(f06_file: TextIO, line: str, i: int,
+                                   nlines_max: int) -> Tuple[str, int, int]:
+    seek0 = f06_file.tell()
+    line_end, iend = _skip_to_page_stamp(f06_file, line, i, nlines_max)
+    seek1 = f06_file.tell()
+
+    f06_file.seek(seek0)
+    return line_end, iend, seek1
 
 def _skip_to_page_stamp(f06_file: TextIO, line: str, i: int,
                         nlines_max: int) -> Tuple[str, int]:
@@ -104,7 +118,7 @@ def _skip_to_page_stamp(f06_file: TextIO, line: str, i: int,
 
 def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
                    nlines_max: int, dirname: str,
-                   debug: bool=False) -> dict[TrimResults, str, np.ndarray]:
+                   debug: bool=False) -> Tuple[TrimResults, str, np.ndarray]:
     i = 0
     #debug = True
     tables = {}
@@ -221,7 +235,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     '                                           MACH = 1.000000E-01                Q = 1.587000E-01'
     '
     '        CONTROLLER STATE:'
-    '        ANGLEA   =   2.0420E-01'
+    '        ANGLEA   =   1.0000E-01'
     '
     '        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               '
     '        LABEL = Full Vehicle Integrated Loads                           '
@@ -254,11 +268,8 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     if 'MONITOR POINT NAME' not in line:
         asfd
 
-    seek0 = f06_file.tell()
-    line_end, iend = _skip_to_page_stamp(f06_file, line, i, nlines_max)
-    seek1 = f06_file.tell()
-
-    f06_file.seek(seek0)
+    controller_state = _get_controller_state(header_lines)
+    line_end, iend, seek1 = _skip_to_page_stamp_and_rewind(f06_file, line, i, nlines_max)
 
     names = []
     comps = []
@@ -269,6 +280,10 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     xyzs = []
     cids = []
     all_coeffs = []
+    axis_to_index = {
+        'CX': 0, 'CY': 1, 'CZ': 2,
+        'CMX': 3, 'CMY': 4, 'CMZ': 5,}
+
     while i < iend and 'MONITOR POINT NAME' in line:
         #'        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               '
         #'        LABEL = Full Vehicle Integrated Loads                           '
@@ -301,55 +316,74 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
                float(sline[3][:-1]),
                float(sline[4])]
 
-        line = f06_file.readline()
-        line = f06_file.readline()
+        line0a = f06_file.readline()
+        line0b = f06_file.readline().strip()
         i += 2
-        #AXIS      RIGID AIR       ELASTIC REST.   RIGID APPLIED    REST. APPLIED
 
-        line = f06_file.readline()
-        i += 1
-        coeffs = np.zeros((6, 4), dtype='float64')
+        if line0b == 'AXIS      RIGID AIR       ELASTIC REST.   RIGID APPLIED    REST. APPLIED':
+            #AXIS      RIGID AIR       ELASTIC REST.   RIGID APPLIED    REST. APPLIED
+            line = f06_file.readline()
+            i += 1
+            coeffs = np.zeros((6, 4), dtype='float64')
 
-        line = f06_file.readline()
-        i += 1
-        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
-        assert axis == 'CX', axis
-        coeffs[0, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+            line = f06_file.readline()
+            i += 1
+            axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+            assert axis == 'CX', axis
+            coeffs[0, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
 
-        line = f06_file.readline()
-        i += 1
-        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
-        assert axis == 'CY', axis
-        coeffs[1, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+            line = f06_file.readline()
+            i += 1
+            axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+            assert axis == 'CY', axis
+            coeffs[1, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
 
-        line = f06_file.readline()
-        i += 1
-        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
-        assert axis == 'CZ', axis
-        coeffs[2, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+            line = f06_file.readline()
+            i += 1
+            axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+            assert axis == 'CZ', axis
+            coeffs[2, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
 
-        # -----
-        line = f06_file.readline()
-        i += 1
-        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
-        assert axis == 'CMX', axis
-        coeffs[3, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+            # -----
+            line = f06_file.readline()
+            i += 1
+            axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+            assert axis == 'CMX', axis
+            coeffs[3, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
 
-        line = f06_file.readline()
-        i += 1
-        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
-        assert axis == 'CMY', axis
-        coeffs[4, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+            line = f06_file.readline()
+            i += 1
+            axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+            assert axis == 'CMY', axis
+            coeffs[4, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
 
-        line = f06_file.readline()
-        i += 1
-        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
-        assert axis == 'CMZ', axis
-        coeffs[5, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+            line = f06_file.readline()
+            i += 1
+            axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+            assert axis == 'CMZ', axis
+            coeffs[5, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
 
-        line = f06_file.readline()
-        line = f06_file.readline()
-        i += 2
+            line = f06_file.readline()
+            line = f06_file.readline()
+            i += 2
+
+        elif line0b == 'AXIS      RIGID AIR       ELASTIC REST.      INERTIAL      RIGID APPLIED    REST. APPLIED':
+            line = f06_file.readline()
+            i += 1
+            coeffs = np.zeros((6, 5), dtype='float64')
+
+            while i < iend - 1:
+                line = f06_file.readline().strip()
+                #print(line)
+                i += 1
+                if len(line) == 0: # or 'PAGE' in line or 'NASTRAN' in line:
+                    break
+                axis, rigid_air, elastic_rest, inertial, rigid_applied, rest_applied = line.split()
+                iaxis = axis_to_index[axis]
+                coeffs[iaxis, :] = [rigid_air, elastic_rest, inertial, rigid_applied, rest_applied]
+            line = f06_file.readline()
+            i += 1
+
         names.append(name)
         comps.append(comp)
         classes.append(classi)
@@ -359,6 +393,8 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         xyzs.append(xyz)
         all_coeffs.append(coeffs)
     all_coeffs = np.stack(all_coeffs, axis=0)
+    nrows = len(names)
+    assert all_coeffs.shape == (nrows, 6, 4), all_coeffs.shape
 
     names = np.array(names)
     comps = np.array(comps)
@@ -372,9 +408,121 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     trim_results.structural_monitor_loads[isubcase] = MonitorLoads(
         names, comps, classes, labels,
         cids, xyzs, all_coeffs)
-
+    trim_results.controller_state[isubcase] = controller_state
     f06_file.seek(seek1)
     return line_end, iend
+
+def _get_controller_state(header_lines: List[str]) -> Dict[str, float]:
+    controller_state = {}
+    controller_lines = []
+    for i, line in enumerate(header_lines):
+        if 'CONTROLLER STATE:' in line:
+            controller_lines = header_lines[i+1:]
+            break
+    for line in controller_lines:
+        line2 = line.strip()
+        if not line2:
+            continue
+
+        #name, value = line2.split('=')
+        sline = line2.replace('=', '').strip().split()
+        nsline = len(sline)
+        assert nsline % 2 == 0, sline
+        for j in range(0, nsline, 2):
+            name = sline[j]
+            value = sline[j+1]
+            controller_state[name] = float(value)
+    return controller_state
+
+def _read_aeroelastic_trim_variables(f06_file: TextIO,
+                                     line: str, i: int, nlines_max: int,
+                                     trim_results: TrimResults, isubcase: int) -> Tuple[str, int]:
+    """
+    '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
+    '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = SYMMETRIC      XZ-SYMMETRY = SYMMETRIC'
+    '                                           MACH = 1.000000E-01                Q = 1.000000E-01'
+    '                         CHORD = 1.0000E+01           SPAN = 1.0000E+02            AREA = 1.0000E+03'
+    ''
+    '          TRIM ALGORITHM USED: LINEAR TRIM SOLUTION WITHOUT REDUNDANT CONTROL SURFACES.'       <---------- you are here
+    ''
+    ''
+    '                                                      AEROELASTIC TRIM VARIABLES'
+    ''
+    '                                  ID     LABEL                 TYPE        TRIM STATUS      VALUE OF UX'
+    ''
+    '                                         INTERCEPT          RIGID BODY           FIXED      1.000000E+00'
+    '                                 101     ANGLEA             RIGID BODY           FIXED      1.000000E-01  RADIANS'
+    '1    144                                                                      MARCH  12, 2020  SIMCENTER NASTRAN  3/12/20   PAGE    42'
+    """
+    while 'AEROELASTIC TRIM VARIABLES' not in line:
+        line = f06_file.readline()
+        i += 1
+    #print(i, line)
+
+    line = f06_file.readline()
+    line = f06_file.readline()
+    i += 2
+    # ID     LABEL                 TYPE        TRIM STATUS      VALUE OF UX
+
+    line = f06_file.readline()
+    line = f06_file.readline()
+    i += 2
+
+    trim_variables = {}
+    assert 'INTERCEPT' in line, line
+    idi, name, Type, trim_status, ux, ux_unit = _split_trim_variable(line)
+    trim_variables[name] = [idi, Type, trim_status, ux, ux_unit]
+
+    line_end, iend, seek1 = _skip_to_page_stamp_and_rewind(f06_file, line, i, nlines_max)
+
+    while i < iend:
+        line = f06_file.readline()
+        if 'NASTRAN' in line and 'PAGE' in line or 'CONTROL SURFACE POSITION AND HINGE MOMENT RESULTS' in line:
+            break
+        line2 = line.rstrip()
+        if len(line2) == 0:
+            continue
+        idi, name, Type, trim_status, ux, ux_unit = _split_trim_variable(line2)
+        trim_variables[name] = [idi, Type, trim_status, ux, ux_unit]
+    trim_results.trim_variables[isubcase] = trim_variables
+    f06_file.seek(seek1)
+
+    return line_end, iend
+
+
+def _split_trim_variable(line: str) -> Tuple[int, str, str, str, float, str]:
+    """101     ANGLEA             RIGID BODY           FIXED      1.000000E-01  RADIANS'"""
+    line2 = line.rstrip() # s.split()
+
+    # old
+    #id_str = line2[30:40].strip()
+    #name = line2[40:50].strip()
+    #Type = line2[50:70].strip()
+    #trim_status = line2[70:90].strip()
+    #ux = line2[90:106]
+    #ux_unit = line2[106:130]
+
+    id_str = line2[30:40].strip()
+    name = line2[40:50].strip()
+    Type = line2[50:70].strip()
+    trim_status = line2[70:90].strip()
+    ux = line2[90:106]
+    ux_unit = line2[106:130]
+    assert line2[130:].strip() == '', line2[130:]
+    #idi, name, type, trim_status, ux, ux_unit
+
+    if id_str:
+        int_id = int(id_str)
+    else:
+        int_id = 0
+
+    #print('%r %r %r %r ux=%r %r' % (int_id, name, Type, trim_status, ux, ux_unit))
+    ux = float(ux)
+    assert Type in {'RIGID BODY', 'CONTROL SURFACE'}, Type
+    assert trim_status in {'FIXED', 'FREE', 'LINKED'}, trim_status
+    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE'}, ux_unit
+
+    return int_id, name, Type, trim_status, ux, ux_unit
 
 def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                                                 line: str, i: int, nlines_max: int,
@@ -382,7 +530,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                                                 title: str, subtitle: str, subcase: str,
                                                 dirname: str,
                                                 ipressure: int, iforce: int,
-                                                log: SimpleLogger):
+                                                log: SimpleLogger) -> Tuple[str, int, int, int]:
     """
     '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'      <----- you are here
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
@@ -397,7 +545,8 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     '        1        2   LS     0.000000E+00      0.000000E+00      2.964140E-03      0.000000E+00      3.705175E-05      0.000000E+00'
 
     """
-    'CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
+    isubcase = int(subcase)
+    #'CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
     line = f06_file.readline()
     i += 1
     assert 'CONFIGURATION' in line, line.strip()
@@ -414,8 +563,8 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     line2 = f06_file.readline()
     i += 2
     if 'TRIM ALGORITHM USED: LINEAR TRIM SOLUTION WITHOUT REDUNDANT CONTROL SURFACES.' in line2:
-        line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
-        #line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
+        line, i = _read_aeroelastic_trim_variables(f06_file, line, i, nlines_max,
+                                                   trim_results, isubcase)
         return line, i, ipressure, iforce
 
     line3 = f06_file.readline()

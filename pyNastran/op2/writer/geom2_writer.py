@@ -21,6 +21,7 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
     nelements = len(obj.elements)
     if nelements == 0 and nplotels == 0 and nspoints == 0:
         return
+    cards_written = {}
     write_geom_header(b'GEOM2', op2_file, op2_ascii)
     itable = -3
 
@@ -38,6 +39,9 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
     out = defaultdict(list)
     for eid, element in obj.elements.items():
         out[element.type].append(eid)
+    for eid, element in obj.masses.items():  # CONM2
+        out[element.type].append(eid)
+
     if nspoints:
         out['SPOINT'] = list(obj.spoints.keys())
     if nplotels:
@@ -80,6 +84,9 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
         'CQUADX4' : ((6112, 61, 997), b'6if', 7),
         'CQUADX8' : ((6114, 61, 999), b'10if', 11),
         'CTRAX6' : ((6113, 61, 998), b'8if', 9),
+
+        # masses :
+        'CONM2' : ((1501, 15, 64), b'3i 10f', 13),
     }
     for name, eids in sorted(out.items()):
         nelements = len(eids)
@@ -99,6 +106,7 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
             #obj.log.warning('skipping GEOM2-%s' % name)
             #continue
 
+        cards_written[name] = nelements
         if name in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM']:
             itable = _write_solid(obj, name, eids, nelements, itable, op2_file, op2_ascii, endian)
             continue
@@ -132,8 +140,17 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
             key = (5551, 49, 105)
             spack = None
             nfields = 1
+        # -------------------
+        # masses
+        #elif name == 'CONM2':
+            #key = (1501, 15, 64)
+            #spack = None
+            #nfields = 13
+
+        # -------------------
         else:
             obj.log.warning('skipping %s' % name)
+            del cards_written[name]
             continue
         #else:  # pragma: no cover
             #raise NotImplementedError(name)
@@ -153,6 +170,7 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
     #-------------------------------------
     #print('itable', itable)
     close_geom_table(op2_file, op2_ascii, itable)
+    obj.log.debug(str(cards_written))
 
     #-------------------------------------
 
@@ -792,6 +810,18 @@ def write_card(name, eids, spack, obj, op2_file, op2_ascii, endian):
         spack = Struct('%ii' % len(nids))
         op2_ascii.write('  spoints%s\n' % str(nids))
         op2_file.write(spack.pack(*nids))
+    #--------------------------------------
+    # masses
+    elif name == 'CONM2':
+        for eid in sorted(eids):
+            elem = obj.masses[eid]
+            # 3i 10f
+            #(eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
+            data = [eid, elem.nid, elem.cid, elem.mass] + list(elem.X) + list(elem.I)
+            assert None not in data, '%s data=%s' % (name, data)
+            #assert len(data) == 13, data
+            op2_ascii.write('  CONM2 eid=%s data=%s\n' % (eid, str(data)))
+            op2_file.write(spack.pack(*data))
     else:  # pragma: no cover
         raise NotImplementedError(name)
 

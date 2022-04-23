@@ -487,6 +487,150 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename: str,
                 raise
     #os.remove(bdf_filename)
 
+def get_test_op2_data(argv=None) -> Dict[str, str]:
+    if argv is None:
+        argv = sys.argv[1:]  # same as argparse
+        #print('get_inputs; argv was None -> %s' % argv)
+    else:
+        # drop the pyNastranGUI; same as argparse
+        argv = argv[1:]
+
+    #encoding = sys.getdefaultencoding()
+    ver = str(pyNastran.__version__)
+    is_dev = 'dev' in ver
+    import argparse
+    parent_parser = argparse.ArgumentParser()
+    parent_parser.add_argument('OP2_FILENAME', help='path to OP2 file', type=str)
+    parent_parser.add_argument('-v', '--version', action='version',
+                               version=pyNastran.__version__)
+
+    format_group = parent_parser.add_mutually_exclusive_group()
+    format_group.add_argument('--msc', action='store_false', default=True, help='selects MSC Nastran')
+    format_group.add_argument('--autodesk', action='store_false', default=False, help='selects Autodesk Nastran')
+    format_group.add_argument('--nx', action='store_false', default=False, help='selects Simcenter/NX Nastran')
+    if is_dev:
+        format_group.add_argument('--nasa95', action='store_false', default=False, help='selects Nastran 95')
+
+    parent_parser.add_argument('--post', default=-2, type=int, help='sets the PARAM,POST,x flag')
+
+    parent_parser.add_argument('-b', '--binarydebug', action='store_true', help='Dumps the OP2 as a readable text file')
+    parent_parser.add_argument('-c', '--disablecompare', action='store_true', help="Doesn't do a validation of the vectorized result")
+    parent_parser.add_argument('-q', '--quiet', action='store_true', help="Suppresses debug messages")
+    parent_parser.add_argument('-t', '--short_stats', action='store_true', help="Short get_op2_stats printout")
+
+    parent_parser.add_argument('-g', '--geometry', action='store_true', help="Reads the OP2 for geometry, which can be written out")
+    parent_parser.add_argument('-n', '--write_bdf', action='store_true', help="Writes the bdf to fem.test_op2.bdf")
+    parent_parser.add_argument('-f', '--write_f06', action='store_true', help="Writes the f06 to fem.test_op2.f06")
+    parent_parser.add_argument('-d', '--write_hdf5', action='store_true', help="Writes the h5 to fem.test_op2.h5")
+    parent_parser.add_argument('-o', '--write_op2', action='store_true', help="Writes the op2 to fem.test_op2.op2")
+
+    parent_parser.add_argument('-z', '--is_mag_phase', action='store_true', help="F06 Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)")
+    parent_parser.add_argument('--load_hdf5', action='store_true', help='loads the data into an HDF5 file')
+    parent_parser.add_argument('-p', '--pandas', action='store_true', help="Enables pandas dataframe building")
+
+    parent_parser.add_argument('-s', '--subcase', type=str, default='', help="Specify one or more subcases to parse; (e.g. 2_5)")
+    parent_parser.add_argument('-w', '--is_sort2',  action='store_true', default=False, help="Sets the F06 transient to SORT2")
+    parent_parser.add_argument('-x', '--exclude', type=str, default=None, help="Exclude specific results")
+
+    parent_parser.add_argument('--safe', action='store_true', help="Safe cross-references BDF")
+    if is_dev:
+        parent_parser.add_argument('--profile', action='store_true', help="Profiles the code")
+        parent_parser.add_argument('--nocombine', action='store_true', help="Disables case combination")
+        parent_parser.add_argument('--test', action='store_true', help="Adds additional table checks")
+
+
+    nasa95 = '|--nasa95' if is_dev else ''
+    version = f'[--nx|--autodesk{nasa95}]'
+    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
+    if is_dev:
+        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
+    else:
+        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] {options} OP2_FILENAME\n"
+
+    while '  ' in line1:
+        line1 = line1.replace('  ', ' ')
+
+    usage = "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
+    usage += "Usage:  "
+    usage += line1
+    usage += "        test_op2 -h | --help\n"
+    usage += "        test_op2 -v | --version\n"
+    usage += "\n"
+
+    args = (
+        "\n"
+        "Positional Arguments:\n"
+        "  OP2_FILENAME         Path to OP2 file\n"
+        "\n"
+        "Options:\n"
+        "  -b, --binarydebug      Dumps the OP2 as a readable text file\n"
+        "  -c, --disablecompare   Doesn't do a validation of the vectorized result\n"
+        "  -q, --quiet            Suppresses debug messages [default: False]\n"
+        "  -t, --short_stats      Short get_op2_stats printout\n"
+        #if not is_release:
+        "  -g, --geometry         Reads the OP2 for geometry, which can be written out\n"
+        # n is for NAS
+        "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
+        "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
+        "  -d, --write_hdf5       Writes the h5 to fem.test_op2.h5\n"
+        "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
+        "  -z, --is_mag_phase     F06 Writer writes Magnitude/Phase instead of\n"
+        "                         Real/Imaginary (still stores Real/Imag); [default: False]\n"
+        "  --load_hdf5            Load as HDF5 (default=False)\n"
+        "  -p, --pandas           Enables pandas dataframe building; [default: False]\n"
+    )
+    if is_dev:
+        args += "  --nocombine            Disables case combination\n"
+    args += "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
+    args += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
+    args += "  -x <arg>, --exclude    Exclude specific results\n"
+    args += "  --nx                   Assume NX Nastran\n"
+    args += "  --autodesk             Assume Autodesk Nastran\n"
+    if is_dev:
+        args += "  --nasa95               Assume Nastran 95\n"
+    args += "  --post POST            Set the PARAM,POST flag\n"
+    args += "  --safe                 Safe cross-references BDF (default=False)\n"
+
+    if is_dev:
+        args += (
+            "\n"
+            "Developer:\n"
+            '  --profile         Profiles the code (default=False)\n'
+            '  --test            Adds additional table checks (default=False)\n'
+        )
+
+    args += (
+        "\n"
+        "Info:\n"
+        "  -h, --help     Show this help message and exit\n"
+        "  -v, --version  Show program's version number and exit\n"
+    )
+    examples = ''
+    #if len(argv) == 1:
+        #msg = usage + args + examples
+        #print(argv)
+        #sys.exit(msg)
+
+    from pyNastran.utils.arg_handling import argparse_to_dict, update_message # swap_key
+    update_message(parent_parser, usage, args, examples)
+
+    #try:
+        #args = parent_parser.parse_args(args=argv)
+    #except SystemExit:
+        #fobj = StringIO()
+        ##args = parent_parser.format_usage()
+        #parent_parser.print_usage(file=fobj)
+        #args = fobj.getvalue()
+        #raise
+    args = parent_parser.parse_args(args=argv)
+
+    args2 = argparse_to_dict(args)
+    #_set_version(args2)
+
+    data = _update_data(args2, is_dev)
+    x = 1
+    return data
+
 def get_test_op2_data(argv) -> Dict[str, str]:
     """defines the docopt interface"""
     from docopt import docopt
@@ -561,6 +705,29 @@ def get_test_op2_data(argv) -> Dict[str, str]:
         sys.exit(msg)
 
     data = docopt(msg, version=ver, argv=argv[1:])
+    data2 = _update_data2(data, is_dev)
+    #print("data", data)
+    return data2
+
+def _update_data(data, is_dev: bool):
+    if not is_dev:
+        # just set the defaults for these so we don't need special code later
+        data['profile'] = False
+        data['write_xlsx'] = False
+        data['nocombine'] = False
+        data['nasa95'] = False
+
+    if 'geometry' not in data:
+        data['geometry'] = False
+    if 'write_bdf' not in data:
+        data['write_bdf'] = False
+    #data['is_sort2'] = bool(data['is_sort2'])
+
+    if data['subcase'] == '':
+        data['subcase'] = None
+    return data
+
+def _update_data2(data, is_dev: bool):
     if not is_dev:
         # just set the defaults for these so we don't need special code later
         data['--profile'] = False
@@ -573,8 +740,10 @@ def get_test_op2_data(argv) -> Dict[str, str]:
     if '--write_bdf' not in data:
         data['--write_bdf'] = False
     data['--is_sort2'] = bool(data['--is_sort2'])
-    #print("data", data)
-    return data
+    data2 = {}
+    for key, value in data.items():
+        data2[key.lstrip('-')] = value
+    return data2
 
 def remove_file(filename):
     try:
@@ -623,35 +792,35 @@ def main(argv=None, show_args: bool=True) -> None:
 
     time0 = time.time()
 
-    if data['--profile']:
+    if data['profile']:
         import pstats
         import cProfile
         prof = cProfile.Profile()
         prof.runcall(
             run_op2,
             data['OP2_FILENAME'],
-            make_geom=data['--geometry'],
-            combine=not data['--nocombine'],
-            load_as_h5=data['--load_hdf5'],
-            write_bdf=data['--write_bdf'],
-            write_f06=data['--write_f06'],
-            write_op2=data['--write_op2'],
-            write_hdf5=data['--write_hdf5'],
-            is_mag_phase=data['--is_mag_phase'],
-            build_pandas=data['--pandas'],
-            subcases=data['--subcase'],
-            exclude=data['--exclude'],
-            debug=not data['--quiet'],
-            binary_debug=data['--binarydebug'],
-            is_sort2=data['--is_sort2'],
-            compare=not data['--disablecompare'],
-            quiet=data['--quiet'],
-            is_nx=data['--nx'],
-            is_autodesk=data['--autodesk'],
-            is_nasa95=data['--nasa95'],
-            safe=data['--safe'],
-            post=data['--post'],
-            is_testing=data['--test'],
+            make_geom=data['geometry'],
+            combine=not data['nocombine'],
+            load_as_h5=data['load_hdf5'],
+            write_bdf=data['write_bdf'],
+            write_f06=data['write_f06'],
+            write_op2=data['write_op2'],
+            write_hdf5=data['write_hdf5'],
+            is_mag_phase=data['is_mag_phase'],
+            build_pandas=data['pandas'],
+            subcases=data['subcase'],
+            exclude=data['exclude'],
+            debug=not data['quiet'],
+            binary_debug=data['binarydebug'],
+            is_sort2=data['is_sort2'],
+            compare=not data['disablecompare'],
+            quiet=data['quiet'],
+            is_nx=data['nx'],
+            is_autodesk=data['autodesk'],
+            is_nasa95=data['nasa95'],
+            safe=data['safe'],
+            post=data['post'],
+            is_testing=data['test'],
         )
         prof.dump_stats('op2.profile')
 
@@ -663,29 +832,29 @@ def main(argv=None, show_args: bool=True) -> None:
     else:
         run_op2(
             data['OP2_FILENAME'],
-            make_geom=data['--geometry'],
-            combine=not data['--nocombine'],
-            load_as_h5=data['--load_hdf5'],
-            write_bdf=data['--write_bdf'],
-            write_f06=data['--write_f06'],
-            write_op2=data['--write_op2'],
-            write_hdf5=data['--write_hdf5'],
-            is_mag_phase=data['--is_mag_phase'],
-            build_pandas=data['--pandas'],
-            subcases=data['--subcase'],
-            exclude=data['--exclude'],
-            short_stats=data['--short_stats'],
-            debug=not data['--quiet'],
-            binary_debug=data['--binarydebug'],
-            is_sort2=data['--is_sort2'],
-            compare=not data['--disablecompare'],
-            quiet=data['--quiet'],
-            is_nx=data['--nx'],
-            is_autodesk=data['--autodesk'],
-            is_nasa95=data['--nasa95'],
-            xref_safe=data['--safe'],
-            post=data['--post'],
-            is_testing=data['--test'],
+            make_geom=data['geometry'],
+            combine=not data['nocombine'],
+            load_as_h5=data['load_hdf5'],
+            write_bdf=data['write_bdf'],
+            write_f06=data['write_f06'],
+            write_op2=data['write_op2'],
+            write_hdf5=data['write_hdf5'],
+            is_mag_phase=data['is_mag_phase'],
+            build_pandas=data['pandas'],
+            subcases=data['subcase'],
+            exclude=data['exclude'],
+            short_stats=data['short_stats'],
+            debug=not data['quiet'],
+            binary_debug=data['binarydebug'],
+            is_sort2=data['is_sort2'],
+            compare=not data['disablecompare'],
+            quiet=data['quiet'],
+            is_nx=data['nx'],
+            is_autodesk=data['autodesk'],
+            is_nasa95=data['nasa95'],
+            xref_safe=data['safe'],
+            post=data['post'],
+            is_testing=data['test'],
         )
     print("dt = %f" % (time.time() - time0))
 

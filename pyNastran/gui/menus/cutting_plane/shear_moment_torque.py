@@ -25,6 +25,7 @@ from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float
 from pyNastran.gui.menus.cutting_plane.cutting_plane import get_zaxis
 from pyNastran.gui.utils.wildcards import wildcard_csv
 
+
 class ShearMomentTorqueWindow(PyDialog):
     """
     +-------------------------+

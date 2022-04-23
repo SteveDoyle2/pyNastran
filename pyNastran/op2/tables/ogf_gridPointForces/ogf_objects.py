@@ -19,7 +19,7 @@ from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import (
+    from pyNastran.nptyping_interface import (
         NDArrayN3float, NDArray3float, NDArrayN2int, NDArrayNint, NDArrayNfloat)
     from pyNastran.bdf.bdf import (BDF, CORD, SimpleLogger)
 

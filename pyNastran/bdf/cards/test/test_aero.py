@@ -272,8 +272,8 @@ class TestAero(unittest.TestCase):
             (7, 'FROG', 101),
             (8, 'DOG', 101),
         ]
-        for (aesid, label, alid1) in aesid_label_alids:
-            model.add_aesurf(aesid, label, cid1, alid1, cid2=None, alid2=None,
+        for (aesid, label, aelist_id1) in aesid_label_alids:
+            model.add_aesurf(aesid, label, cid1, aelist_id1, cid2=None, aelist_id2=None,
                              eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
                              pllim=-np.pi/2., pulim=np.pi/2.,
                              hmllim=None, hmulim=None,
@@ -307,8 +307,8 @@ class TestAero(unittest.TestCase):
             (3, 'FROG', 101),
             (4, 'DOG', 101),
         ]
-        for (aesid, label, alid1) in aesid_label_alids:
-            model.add_aesurf(aesid, label, cid1, alid1, cid2=None, alid2=None,
+        for (aesid, label, aelist_id1) in aesid_label_alids:
+            model.add_aesurf(aesid, label, cid1, aelist_id1, cid2=None, aelist_id2=None,
                              eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
                              pllim=-np.pi/2., pulim=np.pi/2.,
                              hmllim=None, hmulim=None,
@@ -749,9 +749,9 @@ class TestAero(unittest.TestCase):
 
         label = 'FLAP'
         cid1 = 0
-        alid1 = aelist_id
+        aelist_id1 = aelist_id
         unused_aesurf = model.add_aesurf(
-            aesurf_id, label, cid1, alid1, cid2=None, alid2=None,
+            aesurf_id, label, cid1, aelist_id1, cid2=None, aelist_id2=None,
             eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
             hmllim=None, hmulim=None, tqllim=None, tqulim=None, comment='')
         model.cross_reference()
@@ -2088,15 +2088,15 @@ class TestAero(unittest.TestCase):
         cid1 = 0
         aelist_id1 = 10
         cid2 = None
-        alid2 = None
-        aesurf1 = AESURF(aesid, label, cid1, aelist_id1, cid2, alid2,
+        aelist_id2 = None
+        aesurf1 = AESURF(aesid, label, cid1, aelist_id1, cid2, aelist_id2,
                          #eff, ldw,
                          #crefc, crefs, pllim, pulim,
                          #hmllim, hmulim, tqllim, tqulim,
                          comment='aesurf comment')
         aesurf2 = AESURF.add_card(BDFCard(
             [
-                'AESURF', aesid, label, cid1, aelist_id1, cid2, alid2,
+                'AESURF', aesid, label, cid1, aelist_id1, cid2, aelist_id2,
                 #eff, ldw,
                 #crefc, crefs, pllim, pulim,
                 #hmllim, hmulim, tqllim, tqulim,
@@ -2133,7 +2133,7 @@ class TestAero(unittest.TestCase):
 
         aesid += 1
         model.add_aesurf(
-            aesid, label, cid1, aelist_id2, cid2=None, alid2=None,
+            aesid, label, cid1, aelist_id1, cid2=None, aelist_id2=None,
             eff=1.0, ldw='LDW',
             crefc=1.0, crefs=1.2,
             pllim=-np.pi/2, pulim=np.pi/2.,
@@ -2715,17 +2715,17 @@ class TestAero(unittest.TestCase):
 
         label = 'ELEV'
         cid1 = 0
-        alid1 = 37
+        aelist_id1 = 37
         unused_aesurf = model.add_aesurf(
-            aesid, label, cid1, alid1, cid2=None, alid2=None,
+            aesid, label, cid1, aelist_id1, cid2=None, aelist_id2=None,
             eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
             pllim=-np.pi/2., pulim=np.pi/2.,
             hmllim=None, hmulim=None,
             tqllim=None, tqulim=None, comment='aesurf')
 
-        unused_aelist = model.add_aelist(alid1, [1, 2, 3], comment='')
+        unused_aelist = model.add_aelist(aelist_id1, [1, 2, 3], comment='')
 
-        aefact_sid = alid1
+        aefact_sid = aelist_id1
         fractions = [0., 0.5, 1.]
         unused_aefact_elev = model.add_aefact(aefact_sid, fractions, comment='aefact')
 

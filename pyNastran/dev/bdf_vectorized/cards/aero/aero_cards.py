@@ -643,7 +643,8 @@ class AESURF(BaseCard):
         13:'hmllim', 14:'hmulim', 15:'tqllim', '16':'tqulim',
     }
 
-    def __init__(self, aesid, label, cid1, alid1, cid2=None, alid2=None, eff=1.0, ldw='LDW',
+    def __init__(self, aesid, label, cid1, aelist_id1,
+                 cid2=None, aelist_id2=None, eff=1.0, ldw='LDW',
                  crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
                  hmllim=None, hmulim=None, # hinge moment lower/upper limits
                  tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
@@ -696,10 +697,10 @@ class AESURF(BaseCard):
         #: Identification of an AELIST Bulk Data entry that identifies all
         #: aerodynamic elements that make up the control surface
         #: component. (Integer > 0)
-        self.alid1 = alid1
+        self.alid1 = aelist_id1
 
         self.cid2 = cid2
-        self.alid2 = alid2
+        self.alid2 = aelist_id2
 
         #: Control surface effectiveness. See Remark 4. (Real != 0.0;
         #: Default=1.0)

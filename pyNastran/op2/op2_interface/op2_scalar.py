@@ -1604,57 +1604,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #print(param.rstrip())
         return nvalues
 
-
-    def _old_pvto(self, word: bytes, data: bytes, i: int, xword: int,
-                  struct2i, struct2f, structs8) -> Tuple[int, Any]:  # pragma: no cover
-        if word in INT_PARAMS_1:
-            slot = data[(i+2)*xword:(i+4)*xword]
-            value = struct2i.unpack(slot)[1]
-            i += 4
-        elif word in FLOAT_PARAMS_1:
-            slot = data[(i+2)*xword:(i+4)*xword]
-            value = struct2f.unpack(slot)[1]
-            i += 4
-        elif word in FLOAT_PARAMS_2:
-            slot = data[(i+3)*xword:(i+5)*xword]
-            value = struct2f.unpack(slot)
-            i += 5
-        elif word in INT_PARAMS_2:
-            slot = data[(i+3)*xword:(i+5)*xword]
-            value = struct2i.unpack(slot)
-            i += 5
-        #elif word in DOUBLE_PARAMS_1:
-            #slot = data[(i+1)*xword:(i+8)*xword]
-            #try:
-                #value = struct2d.unpack(slot)[1]
-            #except Exception:
-                #print(word)
-                #raise
-            #i += 8
-        #elif word in [b'VUHEXA']:
-            #self.show_data(data[i*4:(i+5)*4], types='ifs', endian=None)
-            #aaa
-        elif word in STR_PARAMS_1:
-            i += 3
-            slot = data[i*xword:(i+2)*xword]
-            bvalue = structs8.unpack(slot)[0]
-            if self.size == 8:
-                bvalue = reshape_bytes_block(bvalue)
-            value = bvalue.decode('ascii').rstrip()
-            i += 2
-        else:
-            if self.size == 4:
-                self.show_data(data[i*xword+12:i*4+i*4+12], types='ifs')
-                self.show_data(data[i*xword+8:(i+4)*4], types='ifs')
-            else:
-                self.show_data(data[i*xword+24:i*8+i*8+24], types='sdq')
-                self.show_data(data[i*xword+16:(i+4)*8], types='sdq')
-                #print(i*xword+24, i*8+i*8+24)
-                #print(i*xword+16, (i+4)*8)
-            self.log.error('%r' % word)
-            raise NotImplementedError(f'{word!r} is not a supported PARAM')
-        return i, value
-
     def _not_available(self, data: bytes, ndata: int):
         """testing function"""
         if ndata > 0:

@@ -38,7 +38,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import NDArray3float
+    from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF, BDFCard
     import matplotlib
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
@@ -56,6 +56,10 @@ class AECOMP(BaseCard):
     |        | LIST7 |   etc.   |       |       |       |       |       |       |
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
     | AECOMP | WING  |  AELIST  | 1001  | 1002  |       |       |       |       |
+    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+    | AECOMP | WING  |   SET1   | 1001  | 1002  |       |       |       |       |
+    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+    | AECOMP | WING  |   CAERO1 | 1001  | 2001  |       |       |       |       |
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
 
     Attributes
@@ -238,6 +242,8 @@ class AECOMP(BaseCard):
 
 class AECOMPL(BaseCard):
     """
+    Makes a "AECOMP" that is a combination of other AECOMPs or AECOMPLs.
+
     +---------+--------+--------+--------+---------+--------+--------+--------+--------+
     |    1    |    2   |    3   |    4   |    5    |    6   |    7   |    8   |    9   |
     +=========+========+========+========+=========+========+========+========+========+
@@ -399,7 +405,6 @@ class AEFACT(BaseCard):
 
         """
         sid = integer(card, 1, 'sid')
-
         fractions = []
         for i in range(2, len(card)):
             fraction = double(card, i, 'factor_%d' % (i - 1))
@@ -865,14 +870,14 @@ class AESURF(BaseCard):
         aesurf_id = 1
         label = 'name'
         cid1 = 1
-        alid1 = 1
-        return AESURF(aesurf_id, label, cid1, alid1,
-                      cid2=None, alid2=None, eff=1.0, ldw='LDW',
+        aelist_id1 = 1
+        return AESURF(aesurf_id, label, cid1, aelist_id1,
+                      cid2=None, aelist_id2=None, eff=1.0, ldw='LDW',
                       crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
                       hmllim=None, hmulim=None, tqllim=None, tqulim=None, comment='')
 
-    def __init__(self, aesurf_id: int, label: str, cid1: int, alid1: int,
-                 cid2: Optional[int]=None, alid2: Optional[int]=None,
+    def __init__(self, aesurf_id: int, label: str, cid1: int, aelist_id1: int,
+                 cid2: Optional[int]=None, aelist_id2: Optional[int]=None,
                  eff: float=1.0, ldw: str='LDW',
                  crefc: float=1.0, crefs: float=1.0,
                  pllim: float=-np.pi/2., pulim: float=np.pi/2.,
@@ -892,8 +897,8 @@ class AESURF(BaseCard):
             controller name
         cid1 / cid2 : int / None
             coordinate system id for primary/secondary control surface
-        alid1 / alid2 : int / None
-            AELIST id for primary/secondary control surface
+        aelist_id1 / aelist_id2 : int / None
+            AELIST id for primary/secondary control surface (alid1/alid2)
         eff : float; default=1.0
             Control surface effectiveness
         ldw : str; default='LDW'
@@ -931,10 +936,10 @@ class AESURF(BaseCard):
         #: Identification of an AELIST Bulk Data entry that identifies all
         #: aerodynamic elements that make up the control surface
         #: component. (Integer > 0)
-        self.alid1 = alid1
+        self.aelist_id1 = aelist_id1
 
         self.cid2 = cid2
-        self.alid2 = alid2
+        self.aelist_id2 = aelist_id2
 
         #: Control surface effectiveness. See Remark 4. (Real != 0.0;
         #: Default=1.0)
@@ -966,8 +971,8 @@ class AESURF(BaseCard):
         self.tqulim = tqulim
         self.cid1_ref = None
         self.cid2_ref = None
-        self.alid1_ref = None
-        self.alid2_ref = None
+        self.aelist_id1_ref = None
+        self.aelist_id2_ref = None
         self.tqllim_ref = None
         self.tqulim_ref = None
         assert self.ldw in {'LDW', 'NOLDW'}, self.ldw
@@ -1017,10 +1022,22 @@ class AESURF(BaseCard):
     @property
     def aesid(self) -> int:
         return self.aesurf_id
+    @property
+    def alid1(self) -> int:
+        return self.aelist_id1
+    @property
+    def alid2(self) -> int:
+        return self.aelist_id2
 
     @aesid.setter
     def aesid(self, aesid: int) -> None:
         self.aesurf_id = aesid
+    @alid1.setter
+    def alid1(self, alid1: int) -> None:
+        self.aelist_id1 = alid1
+    @aesid.setter
+    def alid2(self, alid2: int) -> None:
+        self.aelist_id2 = alid2
 
     #@property
     #def aesid_ref(self):
@@ -1036,15 +1053,15 @@ class AESURF(BaseCard):
             return self.cid2_ref.cid
         return self.cid2
 
-    def aelist_id1(self) -> int:
-        if self.alid1_ref is not None:
-            return self.alid1_ref.sid
-        return self.alid1
+    def Aelist_id1(self) -> int:
+        if self.aelist_id1_ref is not None:
+            return self.aelist_id1_ref.sid
+        return self.aelist_id1
 
-    def aelist_id2(self) -> Optional[int]:
-        if self.alid2_ref is not None:
-            return self.alid2_ref.sid
-        return self.alid2
+    def Aelist_id2(self) -> Optional[int]:
+        if self.aelist_id2_ref is not None:
+            return self.aelist_id2_ref.sid
+        return self.aelist_id2
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -1060,28 +1077,28 @@ class AESURF(BaseCard):
         self.cid1_ref = model.Coord(self.cid1, msg=msg)
         if self.cid2 is not None:
             self.cid2_ref = model.Coord(self.cid2)
-        self.alid1_ref = model.AELIST(self.alid1)
-        if self.alid2:
-            self.alid2_ref = model.AELIST(self.alid2)
+        self.aelist_id1_ref = model.AELIST(self.aelist_id1)
+        if self.aelist_id2:
+            self.aelist_id2_ref = model.AELIST(self.aelist_id2)
         if self.tqllim is not None:
             self.tqllim_ref = model.TableD(self.tqllim)
         if self.tqulim is not None:
             self.tqulim_ref = model.TableD(self.tqulim)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
-        msg = ', which is required by AESURF aesid=%s' % self.aesid
-        self.cid1_ref = model.safe_coord(self.cid1, self.aesid, xref_errors, msg=msg)
+        msg = ', which is required by AESURF aesid=%s' % self.aesurf_id
+        self.cid1_ref = model.safe_coord(self.cid1, self.aesurf_id, xref_errors, msg=msg)
         if self.cid2 is not None:
-            self.cid2_ref = model.safe_coord(self.cid2, self.aesid, xref_errors, msg=msg)
+            self.cid2_ref = model.safe_coord(self.cid2, self.aesurf_id, xref_errors, msg=msg)
 
-        self.alid1_ref = model.safe_aelist(self.alid1, self.aesid, xref_errors, msg=msg)
-        if self.alid2:
-            self.alid2_ref = model.safe_aelist(self.alid2, self.aesid, xref_errors, msg=msg)
+        self.aelist_id1_ref = model.safe_aelist(self.aelist_id1, self.aesurf_id, xref_errors, msg=msg)
+        if self.aelist_id2:
+            self.aelist_id2_ref = model.safe_aelist(self.aelist_id2, self.aesurf_id, xref_errors, msg=msg)
 
         if self.tqllim is not None:
-            self.tqllim_ref = model.safe_tabled(self.tqllim, self.aesid, xref_errors, msg=msg)
+            self.tqllim_ref = model.safe_tabled(self.tqllim, self.aesurf_id, xref_errors, msg=msg)
         if self.tqulim is not None:
-            self.tqulim_ref = model.safe_tabled(self.tqulim, self.aesid, xref_errors, msg=msg)
+            self.tqulim_ref = model.safe_tabled(self.tqulim, self.aesurf_id, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -1090,10 +1107,10 @@ class AESURF(BaseCard):
         self.cid1_ref = None
         self.cid2_ref = None
 
-        self.alid1 = self.aelist_id1()
-        self.alid2 = self.aelist_id2()
-        self.alid1_ref = None
-        self.alid2_ref = None
+        self.aelist_id1 = self.Aelist_id1()
+        self.aelist_id2 = self.Aelist_id2()
+        self.aelist_id1_ref = None
+        self.aelist_id2_ref = None
         #self.tqulim
         #self.tqllim
         self.tqllim_ref = None
@@ -1120,8 +1137,8 @@ class AESURF(BaseCard):
             the fields that define the card
 
         """
-        list_fields = ['AESURF', self.aesurf_id, self.label, self.Cid1(), self.aelist_id1(),
-                       self.Cid2(), self.aelist_id2(), self.eff, self.ldw,
+        list_fields = ['AESURF', self.aesurf_id, self.label, self.Cid1(), self.Aelist_id1(),
+                       self.Cid2(), self.Aelist_id2(), self.eff, self.ldw,
                        self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim,
                        self.hmulim, self.tqllim, self.tqulim]
         return list_fields
@@ -1144,8 +1161,8 @@ class AESURF(BaseCard):
         pllim = set_blank_if_default(self.pllim, -np.pi / 2.)
         pulim = set_blank_if_default(self.pulim, np.pi / 2.)
 
-        list_fields = ['AESURF', self.aesurf_id, self.label, self.Cid1(), self.aelist_id1(),
-                       self.Cid2(), self.aelist_id2(), eff, ldw, crefc, crefs,
+        list_fields = ['AESURF', self.aesurf_id, self.label, self.Cid1(), self.Aelist_id1(),
+                       self.Cid2(), self.Aelist_id2(), eff, ldw, crefc, crefs,
                        pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
                        self.tqulim]
         return list_fields
@@ -6526,7 +6543,7 @@ def build_caero_paneling(model: BDF, create_secondary_actors: bool=True) -> Tupl
                 cs_box_ids['caero_control_surfaces'].extend(aero_element_ids)
                 cs_box_ids[cs_name].extend(aero_element_ids)
             else:
-                aelist_ref = aesurf.alid1_ref
+                aelist_ref = aesurf.aelist_id1_ref
                 if aelist_ref is None:
                     log.error('AESURF does not reference an AELIST\n%s' % (
                         aesurf.rstrip()))
@@ -6541,8 +6558,8 @@ def build_caero_paneling(model: BDF, create_secondary_actors: bool=True) -> Tupl
 
                 cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)
                 cs_box_ids[cs_name].extend(aelist_ref.elements)
-                if aesurf.alid2 is not None:
-                    aelist_ref = aesurf.alid2_ref
+                if aesurf.aelist_id2 is not None:
+                    aelist_ref = aesurf.aelist_id2_ref
                     ncaeros_cs += len(aelist_ref.elements)
                     cs_box_ids[cs_name].extend(aelist_ref.elements)
                     cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)

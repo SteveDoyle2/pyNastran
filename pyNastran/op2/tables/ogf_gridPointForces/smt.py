@@ -25,7 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
-from pyNastran.nptyping import NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float
+from pyNastran.nptyping_interface import NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float
 
 def smt_setup(model: BDF) -> Tuple[NDArrayNint, NDArrayN2int, NDArrayN3float,
                                    Dict[int, NDArrayNint], NDArrayNint, NDArrayN3float]:

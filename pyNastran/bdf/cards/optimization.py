@@ -2356,7 +2356,6 @@ class DRESP1(OptConstraint):
         return self.comment + print_card_16(card)
 
 def _dresp_verify_eids(dresp: DRESP1, model: BDF, property_type: str):
-    #print(property_type)
     #if property_type == 'ELEM':
     eids2 = dresp.atti
     valid_etypes = {
@@ -3286,7 +3285,7 @@ class DCONADD(OptConstraint):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         """
-        Adds an SPCADD card from the OP2
+        Adds a DCONADD card from the OP2
 
         Parameters
         ----------

@@ -533,7 +533,7 @@ class MAT1(IsotropicMaterial):
         St = double_or_blank(card, 9, 'St', default=0.0)
         Sc = double_or_blank(card, 10, 'Sc', default=0.0)
         Ss = double_or_blank(card, 11, 'Ss', default=0.0)
-        mcsid = integer_or_blank(card, 12, 'mcsid', 0)
+        mcsid = integer_or_blank(card, 12, 'mcsid', default=0)
         assert len(card) <= 13, f'len(MAT1 card) = {len(card):d}\ncard={card}'
         return MAT1(mid, E, G, nu,
                     rho=rho, a=a, tref=tref, ge=ge,

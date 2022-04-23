@@ -7,7 +7,7 @@ from itertools import count
 from typing import Tuple, List, Dict, Optional, Union, Any
 import numpy as np
 
-from pyNastran.nptyping import NDArray3float, NDArray66float
+from pyNastran.nptyping_interface import NDArray3float, NDArray66float
 from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
@@ -6238,7 +6238,7 @@ class AddCards:
         self._add_methods._add_csschd_object(csschd)
         return csschd
 
-    def add_aesurf(self, aesid, label, cid1, alid1, cid2=None, alid2=None,
+    def add_aesurf(self, aesid, label, cid1, aelist_id1, cid2=None, aelist_id2=None,
                    eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
                    pllim=-np.pi/2., pulim=np.pi/2.,
                    hmllim=None, hmulim=None, # hinge moment lower/upper limits
@@ -6255,7 +6255,7 @@ class AddCards:
             controller name
         cid1 / cid2 : int / None
             coordinate system id for primary/secondary control surface
-        alid1 / alid2 : int / None
+        aelist_id1 / aelist_id2 : int / None
             AELIST id for primary/secondary control surface
         eff : float; default=1.0
             Control surface effectiveness
@@ -6278,7 +6278,7 @@ class AddCards:
             a comment for the card
 
         """
-        aesurf = AESURF(aesid, label, cid1, alid1, cid2=cid2, alid2=alid2,
+        aesurf = AESURF(aesid, label, cid1, aelist_id1, cid2=cid2, aelist_id2=aelist_id2,
                         eff=eff, ldw=ldw, crefc=crefc, crefs=crefs,
                         pllim=pllim, pulim=pulim,
                         hmllim=hmllim, hmulim=hmulim,

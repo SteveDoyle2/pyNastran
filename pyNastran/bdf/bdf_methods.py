@@ -16,7 +16,7 @@ from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.mesh_utils.breakdowns import (
     get_length_breakdown, get_area_breakdown, get_volume_breakdown, get_mass_breakdown)
 
-from pyNastran.nptyping import NDArray3float
+from pyNastran.nptyping_interface import NDArray3float
 
 class BDFMethods(BDFAttributes):
     """

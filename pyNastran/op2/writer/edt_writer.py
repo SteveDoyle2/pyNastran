@@ -777,13 +777,13 @@ def _write_aesurf(model: Union[BDF, OP2Geom], name: str,
         else:
             raise NotImplementedError(aesurf.ldw)
         cid2 = 0 if aesurf.cid2 is None else aesurf.cid2
-        alid2 = 0 if aesurf.alid2 is None else aesurf.alid2
+        aelist_id2 = 0 if aesurf.aelist_id2 is None else aesurf.aelist_id2
 
         #print(aesurf.get_stats())
         data = [
             aesurf.aesid, label_bytes,
-            aesurf.cid1, aesurf.alid1,
-            cid2, alid2,
+            aesurf.cid1, aesurf.aelist_id1,
+            cid2, aelist_id2,
             aesurf.eff, ldw_int,
             aesurf.crefc, aesurf.crefs,
         ]

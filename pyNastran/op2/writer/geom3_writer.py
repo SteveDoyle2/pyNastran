@@ -59,6 +59,7 @@ def write_geom3(op2_file, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     if not is_loads:
         return
     write_geom_header(b'GEOM3', op2_file, op2_ascii)
+    cards_written = {}
 
     itable = -3
     for load_type, loads in sorted(loads_by_type.items()):
@@ -74,6 +75,7 @@ def write_geom3(op2_file, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         try:
             nbytes = write_card(op2_file, op2_ascii, load_type, loads, endian, obj.log,
                                 nastran_format=nastran_format)
+            cards_written[load_type] = len(loads)
         except Exception:  # pragma: no cover
             obj.log.error('failed GEOM3-%s' % load_type)
             raise
@@ -90,6 +92,7 @@ def write_geom3(op2_file, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     #-------------------------------------
     #print('itable', itable)
     close_geom_table(op2_file, op2_ascii, itable)
+    obj.log.debug(str(cards_written))
 
     #-------------------------------------
 

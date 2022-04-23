@@ -83,8 +83,10 @@ class ResultSet:
 
     def add(self, results: Union[str, List[str]])  -> List[str]:
         """adds a list/str of results"""
-        all_matched_results = self._get_matched_results(results)
         added = []
+        if len(results) == 0:
+            return added
+        all_matched_results = self._get_matched_results(results)
         for result in all_matched_results:
             if result not in self.saved:
                 self.saved.add(result)
@@ -93,8 +95,10 @@ class ResultSet:
 
     def remove(self, results: Union[str, List[str]]) -> List[str]:
         """removes a list/str of results"""
-        all_matched_results = self._get_matched_results(results)
         removed = []
+        if len(results) == 0:
+            return removed
+        all_matched_results = self._get_matched_results(results)
         for result in all_matched_results:
             if result in self.saved:
                 self.saved.remove(result)

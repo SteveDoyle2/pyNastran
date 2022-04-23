@@ -16,7 +16,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.utils import get_xyz_cid0_dict, transform_load
 from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector, PLOAD, PLOAD2, PLOAD4
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping import NDArray3float
+    from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF, Subcase
 
 

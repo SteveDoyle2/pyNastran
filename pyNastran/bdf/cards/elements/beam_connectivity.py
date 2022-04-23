@@ -37,7 +37,7 @@ The following shapes aren't supported:
 """
 from typing import Tuple, List
 import numpy as np
-from pyNastran.nptyping import NDArray3float, NDArray33float, NDArrayN3float
+from pyNastran.nptyping_interface import NDArray3float, NDArray33float, NDArrayN3float
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, tri_cap
 
 Faces = List[List[int]]

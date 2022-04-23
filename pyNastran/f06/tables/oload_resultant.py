@@ -4,7 +4,7 @@ Defines:
 
 """
 from numpy import array
-from pyNastran.nptyping import NDArray6float
+from pyNastran.nptyping_interface import NDArray6float
 
 class Resultant:
     """interface for making the OLOAD Resultant Table"""

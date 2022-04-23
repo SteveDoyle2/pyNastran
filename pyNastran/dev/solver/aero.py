@@ -4,7 +4,7 @@ from typing import List, Dict
 import numpy as np
 from pyNastran.bdf import read_bdf, BDF
 from pyNastran.op2 import read_op2
-from pyNastran.nptyping import NDArray3float
+from pyNastran.nptyping_interface import NDArray3float
 
 
 def remove_duplicate_nodes(node_list, model, log=None):

@@ -219,7 +219,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
                     #node_ids = self.nodes[4:]
                     nnodesi = 9
                     z0 = np.nan
-                elif etype in 'CQUADX4':
+                elif etype == 'CQUADX4':
                     #node_ids = self.nodes[4:]
                     nnodesi = 4
                     z0 = np.nan

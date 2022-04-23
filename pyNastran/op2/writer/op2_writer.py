@@ -211,8 +211,8 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OUGV1', 'BOUGV1',
         'OUGF1', 'OUG1F', 'BOUGF1',
         'TOUGV1', 'OTEMP1',
-        'OUG1', 'OUGV1PAT',
-        'OAG1', 'OVG1',
+
+        'OAG1', 'OVG1', 'OUG1', 'OUGV1PAT',
 
         # eigenvectors, basic eigenvectors, basic fluid eigenvectors
         'OPHIG', 'BOPHIG', 'BOPHIGF',
@@ -305,6 +305,8 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
             raise TypeError(table_type)
 
         for key, res in res_dict.items():
+            #print(key)
+            #print(res)
             _fix_subcase_id(key, res)
 
             if hasattr(res, 'table_name_str'): # params

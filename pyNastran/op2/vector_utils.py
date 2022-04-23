@@ -34,7 +34,7 @@ from numpy import arccos, sqrt, pi, in1d, cos, unique, cross, ndarray
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import CORDx
-    from pyNastran.nptyping import NDArrayN3float, NDArrayN2int, NDArrayNint, NDArray3float
+    from pyNastran.nptyping_interface import NDArrayN3float, NDArrayN2int, NDArrayNint, NDArray3float
 
 
 def filter1d(a: ndarray, b: Optional[ndarray]=None, zero_tol: float=0.001):

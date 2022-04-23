@@ -19,7 +19,7 @@ def argparse_to_dict(args):
         argdict[name] = value
     return argdict
 
-def update_message(parser, usage, arg_msg, examples):
+def update_message(parser, usage: str, arg_msg: str, examples: str):
     """overwrites the default argparse help message"""
     def _print_message(message, file=None):
         """overwrites the argparse print to get a better help message"""

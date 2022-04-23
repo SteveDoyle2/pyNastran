@@ -2396,7 +2396,10 @@ class EDT:
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out1 = struct1.unpack(edata)
-            (aesurf_id, label_bytes, cid1, alid1, cid2, alid2, eff, ldw_int, crefc, crefs,
+            (aesurf_id, label_bytes,
+             cid1, aelist_id1,
+             cid2, aelist_id2,
+             eff, ldw_int, crefc, crefs,
              pllim, pulim, hmllim, hmulim, tqllim, tqulim) = out1
             #print(out1)
             label = reshape_bytes_block_size(label_bytes, self.size)
@@ -2428,7 +2431,7 @@ class EDT:
                 tqulim = tqulim2 if tqulim != nan else None
                 #print('pllim, pulim, hmllim, hmulim, tqllim, tqulim', pllim, pulim, hmllim, hmulim, tqllim, tqulim)
 
-            op2.add_aesurf(aesurf_id, label, cid1, alid1, cid2=None, alid2=None,
+            op2.add_aesurf(aesurf_id, label, cid1, aelist_id1, cid2=None, aelist_id2=None,
                            eff=eff, ldw=ldw, crefc=crefc, crefs=crefs,
                            #pllim=-np.pi/2., pulim=np.pi/2.,
                            pllim=pllim, pulim=pulim,

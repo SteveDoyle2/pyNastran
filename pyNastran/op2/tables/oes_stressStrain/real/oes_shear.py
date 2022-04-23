@@ -9,7 +9,7 @@ from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, set_element_case,
-    set_modal_case, set_transient_case)
+    set_static_case, set_modal_case, set_transient_case, set_post_buckling_case)
 from pyNastran.f06.f06_formatting import _eigenvalue_header #, get_key0
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype, view_idtype_as_fdtype
 
@@ -146,6 +146,18 @@ class RealShearArray(OES_Object):
         data_code['element_name'] = element_name
         data_code['element_type'] = element_type
         return data_code
+
+    @classmethod
+    def add_static_case(cls, table_name, element_name: str, element, data, isubcase,
+                        is_sort1=True, is_random=False, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              set_element_case, (element, data))
+        return obj
 
     @classmethod
     def add_modal_case(cls, table_name, element_name: str, element, data, isubcase,
