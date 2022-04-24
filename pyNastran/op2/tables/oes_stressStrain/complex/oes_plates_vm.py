@@ -66,7 +66,7 @@ class ComplexPlateVMArray(OES_Object):
         #return self.nnodes_per_element()
 
     def build(self) -> None:
-        """sizes the vectorized attributes of the ComplexPlateArray
+        r"""sizes the vectorized attributes of the ComplexPlateArray
 
         SORT1:
          - etype   SORT ndata numwide size  -> nelements     ntimes                 nnodes ntotal_layers

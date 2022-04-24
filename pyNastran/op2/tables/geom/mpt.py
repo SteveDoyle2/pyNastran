@@ -888,7 +888,7 @@ class MPT:
         return n, cards
 
     def _read_matt3(self, data: bytes, n: int) -> int:
-        """
+        r"""
         Word Name Type Description
         1 MID     I Material identification number
         2 TID(15) I entry identification numbers

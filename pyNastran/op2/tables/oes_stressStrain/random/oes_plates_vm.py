@@ -52,7 +52,7 @@ class RandomPlateVMArray(OES_Object):
         return get_nnodes(self)
 
     def build(self) -> None:
-        """sizes the vectorized attributes of the RandomPlateVMArray
+        r"""sizes the vectorized attributes of the RandomPlateVMArray
 
         SORT1:
          - etype   ndata numwide size  -> nelements     nnodes nlayers

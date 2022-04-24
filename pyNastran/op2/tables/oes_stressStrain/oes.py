@@ -4452,7 +4452,7 @@ class OES(OP2Common2):
 
     def _oes_fast_126(self, data, ndata, dt, is_magnitude_phase,
                       result_type, prefix, postfix):
-        """
+        r"""
         reads stress/strain for element type:
          - 126 : FASTP
 

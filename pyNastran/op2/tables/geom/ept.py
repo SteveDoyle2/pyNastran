@@ -1897,7 +1897,7 @@ class EPT:
         return n2
 
     def _read_pcomp_64_bit(self, data: bytes, n: int) -> Tuple[int, List[PCOMP]]:
-        """
+        r"""
         PCOMP(2706,27,287) - the marker for Record 22
 
         1  PID   I  Property identification number
@@ -2604,7 +2604,6 @@ class EPT:
 
     def _read_pbeam3_456(self, card_obj, data: bytes, n: int) -> int:
         r"""
-
         # per C:\MSC.Software\msc_nastran_runs\b3plod3.op2
         ints    = (2201, 1, 1.0, 0.1833, 0.0833, 0, -1.0, 0, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
                          2, 1.0, 0.1833, 0.0833, 0, -1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

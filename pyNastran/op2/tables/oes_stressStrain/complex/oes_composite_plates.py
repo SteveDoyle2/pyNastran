@@ -56,7 +56,7 @@ class ComplexLayeredCompositesArray(OES_Object):
         #return self.nnodes_per_element()
 
     def build(self) -> None:
-        """sizes the vectorized attributes of the ComplexPlateArray
+        r"""sizes the vectorized attributes of the ComplexPlateArray
 
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbx111.op2
         name;      nelements  numwide ndata size ntotal     nelements     nnodes nlayers

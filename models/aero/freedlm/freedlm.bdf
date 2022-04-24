@@ -15,8 +15,10 @@ ECHO = NONE
 MAXLINES = 999999
 AECONFIG = Freedom4
 $
+LINE = 1000000
+MAXLINES = 10000000
 DISPLACEMENT(SORT1,REAL,plot)=ALL
-SPCFORCES(SORT1,REAL)=ALL
+SPCFORCES(SORT1,REAL,plot)=ALL
 OLOAD(SORT1,REAL,plot)=ALL
 STRESS(SORT1,REAL,VONMISES,BILIN,plot)=ALL
 $
@@ -42,6 +44,7 @@ AESYMXY = Asymmetric
 $--------
 $ Direct Text Input for this Subcase
 BEGIN BULK
+MDLPRM,HDF5,1
 PARAM	AESMETH	RITZ
 PARAM       POST      -1
 PARAM    AUTOSPC YES
@@ -9163,7 +9166,7 @@ MONPNT1 ElvRS4  Right Elevator Structure MX
         4       ElvRS           312.572 26.     15.6707
 MONPNT1 ElvRS5  Right Elevator Structure MY
         5       ElvRS           312.572 26.     15.6707
-MONPNT1 ElRSBal6Right Elevator Structure MZ
+MONPNT1 ElvRS6  Right Elevator Structure MZ
         6       ElRSBal         312.572 26.     15.6707
 $
 $

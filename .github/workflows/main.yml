@@ -37,7 +37,7 @@ jobs:
     strategy:
       matrix:
          #python-version: [3.9]  # testing
-         python-version: [3.7, 3.8, 3.9]   # TODO: should be enabled...disabled for testing...
+         python-version: [3.8, 3.9, 3.10]   # TODO: should be enabled...disabled for testing...
          os: [ubuntu-latest]
          # , macos-latest, windows-latest
          #mode: ['latest', 'latest_basic', 'old']  # works...
@@ -128,12 +128,12 @@ jobs:
       - name: Install latest gui packages (PySide2)
         if: matrix.mode == 'latest_pyside_gui'
         run: |
-          pip install PySide2 vtk imageio pillow>5.2,!=7.1.0
+          pip install PySide2 vtk imageio<3 pillow>5.2,!=7.1.0
 
       - name: Install latest gui packages (PyQt5)
-        if: ${{ matrix.mode == 'latest_pyqt_gui' && matrix.python-version != '3.9' }}
+        if: ${{ matrix.mode == 'latest_pyqt_gui' && matrix.python-version != '3.10' }}
         run: |
-          pip install PyQt5 vtk imageio pillow>5.2,!=7.1.0
+          pip install PyQt5 vtk imageio<3 pillow>5.2,!=7.1.0
 
       - name: Install latest basic packages
         if: matrix.mode == 'latest_basic'
@@ -143,7 +143,7 @@ jobs:
 # old
       # was matplotlib 2.2.2
       # pandas 0.23.2
-      # pandas<0.25 
+      # pandas<0.25
       - name: Install old packages (3.7)
         if: ${{ matrix.mode == 'old' && matrix.python-version == '3.7' }}
         run: |
@@ -166,7 +166,7 @@ jobs:
         if: ${{ matrix.python-version == '3.7' }}
         run: |
          python setup.py develop
-         
+
         # we'll make python 3.8 test "setup.py install"
         # "test" runs all_tests.py, so all the tests (including the gui) are run
         # we drop the "latest_pyqt_gui" because it core dumps
@@ -189,7 +189,7 @@ jobs:
         if: ${{ (matrix.python-version == '3.9') || (matrix.python-version == '3.8' && (matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old')) }}
         run: |
          python setup.py develop
-      
+
       - name: List dependencies
         run: |
          pip list

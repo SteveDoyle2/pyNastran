@@ -51,7 +51,7 @@ class RandomPlateArray(OES_Object):
         self.ielement = 0
 
     def build(self):
-        """sizes the vectorized attributes of the RandomPlateArray
+        r"""sizes the vectorized attributes of the RandomPlateArray
 
         SORT1:
          - etype     ndata numwide size  -> nelements     nnodes nlayers
