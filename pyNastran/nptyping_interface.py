@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 try:
     import nptyping
     if nptyping.__version__ > '2.0':
@@ -56,7 +56,6 @@ try:
         NDArrayN20int = NDArray[Shape['Size, 20'], Int]
     else:
         from nptyping import NDArray
-        from typing import Any
         # vector:
         # [0., 0., 0.]
         NDArray3float = NDArray[(3, ), float]
