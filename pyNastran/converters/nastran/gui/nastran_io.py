@@ -69,6 +69,7 @@ from pyNastran.bdf.bdf import (BDF,
                                CTRAX3, CTRIAX6, CTRIAX, #CTRAX6,
                                CQUADX4, CQUADX8, CQUADX,
                                CONM2,
+                               PCOMP, PCOMPG, PCOMPS, PCOMPLS,
                                # nastran95
                                CQUAD1)
 from pyNastran.bdf.cards.aero.aero import get_caero_subpanel_grid, build_caero_paneling
@@ -5071,10 +5072,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         mids_pcomp = None
         thickness_pcomp = None
+        theta_pcomp = None
         nplies_pcomp = None
         pcomp = {
             'mids' : mids_pcomp,
             'thickness' : thickness_pcomp,
+            'theta': theta_pcomp,
             'nplies' : nplies_pcomp,
         }
 
@@ -5115,16 +5118,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             properties.update(superelement.properties)
 
         if pids_pcomp:
-            npliesi = 0
-            pcomp_nplies = 0
-            for pid in pids_pcomp:
-                prop = properties[pid]
-                pcomp_nplies = max(pcomp_nplies, prop.nplies + 1)
-            npliesi = max(npliesi, pcomp_nplies)
+            npliesi = _get_pcomp_nplies(properties, pids_pcomp)
 
             nplies_pcomp = np.zeros(nelements, dtype='int32')
-            mids_pcomp = np.zeros((nelements, npliesi), dtype='int32')
             thickness_pcomp = np.full((nelements, npliesi), np.nan, dtype='float32')
+            theta_pcomp = np.full((nelements, npliesi), np.nan, dtype='float32')
             mids_pcomp = np.zeros((nelements, npliesi), dtype='int32')
             is_pcomp = True
 
@@ -5172,12 +5170,16 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 i = np.where(pids == pid)[0]
                 npliesi = prop.nplies
                 nplies_pcomp[i] = npliesi
-                thickness_pcomp[i, 0] = 0.
+                total_pcomp_thickness = 0.
                 for iply in range(npliesi):
-                    mids_pcomp[i, iply+1] = prop.Mid(iply)
                     thickniess_ply = prop.Thickness(iply)
+                    total_pcomp_thickness += thickniess_ply
+
+                    mids_pcomp[i, iply+1] = prop.Mid(iply)
+                    theta_pcomp[i, iply+1] = prop.Theta(iply)
                     thickness_pcomp[i, iply+1] = thickniess_ply
-                    thickness_pcomp[i, 0] += thickniess_ply
+                thickness_pcomp[i, 0] = total_pcomp_thickness
+                del total_pcomp_thickness
                 #mids[i, 0] = mids[i, 1]
 
             #elif prop.type == 'PSHEAR':  # element has the thickness
@@ -5205,6 +5207,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         pcomp = {
             'mids' : mids_pcomp,
             'thickness' : thickness_pcomp,
+            'theta': theta_pcomp,
             'nplies' : nplies_pcomp,
         }
         pshell = {
@@ -6277,6 +6280,7 @@ def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
         mids = pshell_pcompi['mids']
         thickness = pshell_pcompi['thickness']
 
+        theta = None
         if 'nplies' in pshell_pcompi:
             nplies = pshell_pcompi['nplies']
             if nplies is not None and nplies.max() > 0:
@@ -6285,6 +6289,8 @@ def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
                 cases[icase] = (nplies_res, (0, 'Number of Plies'))
                 form0.append(('Number of Plies', icase, []))
                 icase += 1
+
+            theta = pshell_pcompi['theta']
 
         if mids is None:
             continue
@@ -6317,6 +6323,16 @@ def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
                     cases[icase] = (t_res, (0, tword))
                     form_layer.append((tword, icase, []))
                     icase += 1
+
+            if ilayer > 0 and theta is not None:
+                # ilayer=0 is null
+                # theta is None for pshell
+                thetai = theta[:, ilayer]
+                t_res = GuiResult(0, header='Theta', title='Theta',
+                                  location='centroid', scalar=thetai)
+                cases[icase] = (t_res, (0, 'Theta'))
+                form_layer.append(('Theta', icase, []))
+                icase += 1
 
             midsi = mids[:, ilayer]
             if midsi.max() == 0:
@@ -7258,3 +7274,25 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> Set[str]:
     if not nastran_settings.grid_point_force:
         exclude_results.add('grid_point_forces')
     return exclude_results
+
+def _get_pcomp_nplies(properties: Dict[int, Union[PCOMP, PCOMPG, PCOMPS, PCOMPLS]],
+                      property_ids_pcomp: List[int]) -> int:
+    """
+    layer 0 will be defined as the total, so:
+    thickness   -> total thickness
+    material_id -> null because it's meaningless
+    theta       -> null because it's meaningless
+
+    If we have no property_ids, then it's just 0.
+
+    """
+    if len(property_ids_pcomp) == 0:
+        return 0
+
+    npliesi = 0
+    pcomp_nplies = 0
+    for pid in property_ids_pcomp:
+        prop = properties[pid]
+        pcomp_nplies = max(pcomp_nplies, prop.nplies + 1)
+    npliesi = max(npliesi, pcomp_nplies)
+    return npliesi

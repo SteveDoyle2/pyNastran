@@ -6,6 +6,7 @@ defines:
     bdf mirror       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
     bdf export_mcids IN_BDF_FILENAME [-o OUT_GEOM_FILENAME]\n'
     bdf split_cbars_by_pin_flags IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+    bdf flutter UNITS [-o OUT_BDF_FILENAME]
 
 """
 import os
@@ -1442,6 +1443,95 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     export_caero_mesh(model, caero_bdf_filename,
                       is_subpanel_model=is_subpanel_model, pid_method=pid_method)
 
+def cmd_line_create_flutter(argv=None, quiet: bool=False):
+    """command line interface to flip_shell_normals"""
+    if argv is None:
+        argv = sys.argv
+
+    from docopt import docopt
+    import pyNastran
+    msg = (
+        "Usage:\n"
+        "  bdf flutter UNITS [-o OUT_BDF_FILENAME]\n"
+        '  bdf flutter -h | --help\n'
+        '  bdf flutter -v | --version\n'
+        '\n'
+
+        "Positional Arguments:\n"
+        "  UNITS               model units (SI, english_in, english_ft)"
+        '\n'
+
+        'Options:\n'
+        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
+        "\n" #  (default=0.000001)
+
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
+    if len(argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    #type_defaults = {
+    #    '--nerrors' : [int, 100],
+    #}
+    data = docopt(msg, version=ver, argv=argv[1:])
+
+    if not quiet:  # pragma: no cover
+        print(data)
+
+    import numpy as np
+    from pyNastran.bdf.bdf import BDF
+
+    size = 16
+    units = data['UNITS']
+    bdf_filename_out = data['--output']
+    if bdf_filename_out is None:
+        bdf_filename_out = 'flutter_cards.inc'
+
+    #from io import StringIO
+    #from pyNastran.bdf.cards.aero.dynamic_loads import
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    model = BDF(log=log)
+    model.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
+                            nxref_errors=100, stop_on_xref_error=False)
+    method = 'PKNL'
+    sid = 1
+    density = 0
+    mach = 0
+    reduced_freq_velocity = 0
+    flutter = model.add_flutter(
+        sid, method, density, mach, reduced_freq_velocity,
+        imethod='L', nvalue=None, omax=None, epsilon=1.0e-3,
+        comment='', validate=True)
+
+    alt = 2500.
+    eass = np.linspace(20., 500, num=201)
+
+    units_map = {
+        # (alt, velocity, density, eas)
+        'english_in': ('ft', 'in/s', 'slinch/in^3', 'knots'),
+        'english_ft': ('ft', 'ft/s', 'slug/ft^3', 'knots'),
+        'SI': ('m', 'm/s', 'kg/m^3', 'knots'),
+    }
+    try:
+        alt_units, velocity_units, density_units, eas_units = units_map[units]
+    except KeyError:
+        raise NotImplementedError(units)
+    flutter.make_flfacts_eas_sweep(
+        model, alt, eass,
+        alt_units=alt_units,
+        velocity_units=velocity_units,
+        density_units=density_units,
+        eas_units=eas_units)
+
+    model.punch = True
+    model.write_bdf(bdf_filename_out, encoding=None, size=16,
+                    nodes_size=None, elements_size=None, loads_size=None,
+                    is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
+
 def cmd_line(argv=None, quiet=False):
     """command line interface to multiple other command line scripts"""
     if argv is None:
@@ -1501,42 +1591,45 @@ def cmd_line(argv=None, quiet=False):
 
     #assert sys.argv[0] != 'bdf', msg
 
-    if argv[1] == 'merge':
+    method = argv[1]
+    if method == 'merge':
         cmd_line_merge(argv, quiet=quiet)
-    elif argv[1] == 'equivalence':
+    elif method == 'equivalence':
         cmd_line_equivalence(argv, quiet=quiet)
-    elif argv[1] == 'renumber':
+    elif method == 'renumber':
         cmd_line_renumber(argv, quiet=quiet)
-    elif argv[1] == 'mirror':
+    elif method == 'mirror':
         cmd_line_mirror(argv, quiet=quiet)
-    elif argv[1] == 'convert':
+    elif method == 'convert':
         cmd_line_convert(argv, quiet=quiet)
-    elif argv[1] == 'delete_bad_shells':
+    elif method == 'delete_bad_shells':
         cmd_line_delete_bad_shells(argv, quiet=quiet)
-    elif argv[1] == 'scale':
+    elif method == 'scale':
         cmd_line_scale(argv, quiet=quiet)
-    elif argv[1] == 'export_mcids':
+    elif method == 'export_mcids':
         cmd_line_export_mcids(argv, quiet=quiet)
-    elif argv[1] == 'remove_unused':
+    elif method == 'remove_unused':
         cmd_line_remove_unused(argv, quiet=quiet)
 
-    elif argv[1] == 'split_cbars_by_pin_flags':
+    elif method == 'split_cbars_by_pin_flags':
         cmd_line_split_cbars_by_pin_flag(argv, quiet=quiet)
-    elif argv[1] == 'export_caero_mesh':
+    elif method == 'export_caero_mesh':
         cmd_line_export_caero_mesh(argv, quiet=quiet)
-    elif argv[1] == 'transform':
+    elif method == 'transform':
         cmd_line_transform(argv, quiet=quiet)
-    elif argv[1] == 'filter':
+    elif method == 'filter':
         cmd_line_filter(argv, quiet=quiet)
-    elif argv[1] == 'free_faces':
+    elif method == 'free_faces':
         cmd_line_free_faces(argv, quiet=quiet)
-    elif argv[1] == 'flip_shell_normals':
+    elif method == 'flip_shell_normals':
         cmd_line_flip_shell_normals(argv=argv, quiet=quiet)
-    elif argv[1] == 'bin' and dev:
+    elif method == 'bin' and dev:
         cmd_line_bin(argv, quiet=quiet)
-    elif argv[1] == 'create_vectorized_numbered' and dev:
+    elif method == 'create_vectorized_numbered' and dev:
         cmd_line_create_vectorized_numbered(argv, quiet=quiet)
-    elif argv[1] in ['-v', '--version']:
+    elif method == 'flutter' and dev:
+        cmd_line_create_flutter(argv, quiet=quiet)
+    elif method in ['-v', '--version']:
         print(pyNastran.__version__)
     else:
         print(argv)

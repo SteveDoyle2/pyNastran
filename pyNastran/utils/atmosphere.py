@@ -1019,7 +1019,12 @@ def make_flfacts_eas_sweep(alt: float, eass: List[float],
     rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
     velocity = eass * np.sqrt(rho0 / rho)
     machs = velocity / sos
-    return rho, machs, velocity
+
+    nvelocity = len(velocity)
+    rhos = np.ones(nvelocity, dtype=velocity.dtype) * rho
+    assert len(rhos) == len(machs)
+    assert len(rhos) == len(velocity)
+    return rhos, machs, velocity
 
 def _limit_eas(rho: float, machs: NDArrayNfloat, velocity: NDArrayNfloat,
                eas_limit: float=1000.,

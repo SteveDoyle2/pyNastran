@@ -22,7 +22,8 @@ from pyNastran.bdf.cards.elements.beam_connectivity import (
 )
 from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
-from .beams3d import create_3d_beams, update_3d_beams, faces_to_element_facelist, get_bar_type
+from .beams3d import create_3d_beams, faces_to_element_facelist, get_bar_type # update_3d_beams,
+from pyNastran.femutils.utils import vstack_lists
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF
@@ -194,7 +195,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             ugrid = create_3d_beams(model, bar_pid_to_eids)
         else:
             assert len(points_list), points_list
-            points_array = _make_points_array(points_list)
+            points_array = vstack_lists(points_list)
             points = numpy_to_vtk_points(points_array)
             ugrid.SetPoints(points)
         if ugrid is None:
@@ -245,7 +246,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     n1+wa, n2+wb, xform,
                     ugridi, node0b, points_list, add_to_ugrid=False)
 
-            points_array = _make_points_array(points_list)
+            points_array = vstack_lists(points_list)
             points_array2 = numpy_to_vtk(
                 num_array=points_array,
                 deep=1,
@@ -273,16 +274,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
             ugrid=ugrid,
         )
 
-def _make_points_array(points_list):
-    if len(points_list) == 1:
-        points_array = points_list[0]
-    else:
-        points_array = np.vstack(points_list)
-    return points_array
-
 def _apply_points_list(points_list, ugrid):
     if points_list:
-        points_array = _make_points_array(points_list)
+        points_array = vstack_lists(points_list)
         points = numpy_to_vtk_points(points_array)
         ugrid.SetPoints(points)
 

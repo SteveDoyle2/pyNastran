@@ -725,6 +725,10 @@ class FLUTTER(BaseCard):
         flfact_velocity = self.sid + 3
         flfact_eas = self.sid + 4
 
+        self.mach = flfact_mach
+        self.reduced_freq_velocity = flfact_velocity
+        self.density = flfact_rho
+
         comment = ' density: min=%.3e max=%.3e %s' % (
             rho.min(), rho.max(), density_units,
         )
