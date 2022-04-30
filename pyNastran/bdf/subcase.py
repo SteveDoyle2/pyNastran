@@ -524,6 +524,10 @@ class Subcase:
                             'OSTRMS1C', 'OSTRRMS1', 'OSTRRMS1C',
                             'OQMPSD2']:
             pass
+        elif table_name in ['OESC1']:
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+        elif table_name in ['DOES1']:
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
         else:  # pragma: no cover
             self._write_op2_error_msg(log, self.log, msg, data_code)
         #print(self)

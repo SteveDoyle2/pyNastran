@@ -14,7 +14,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 
 """
 from collections import defaultdict
-from typing import List, Tuple, Dict, Any, Optional, Union
+from typing import Tuple, List, Dict, Any, Optional, Union
 
 import numpy as np
 

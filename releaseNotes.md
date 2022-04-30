@@ -7,8 +7,8 @@ If you like it/want to help leave some feedback:
 If you have a bug/want a new feature or card, leave some feedback on the [Issue Tracker](https://github.com/SteveDoyle2/pyNastran/issues)
 
 Release Notes
-=============
-v1.3.4 (2022/4/xx)
+==================
+v1.3.4 (2022/5/xx)
 ------------------
 This is a bug fix only release with the key reason being API dependency changes:
  - numpy
@@ -30,6 +30,7 @@ overall:
  - cleaner setup.py files / packages.py
 BDF:
  - bug fixes:
+   - renaming pyNastran/nptyping.py to pyNastran/nptyping_interface.py to avoid namespace conflicts
    - require that nastran_format is a string
    - stripping first line of card to fix bug (i thought it was to get the card name, but I don't remember...)
    - FLUTTER method can be string_or_blank (default='L')
@@ -55,6 +56,8 @@ BDF:
    - DRESP2 now references DNODE
    - DVMREL2 now supports MAT2, MAT8
    - collapse_bad_quads now removes degenerate quads
+   - CAERO1/2.aefact_ids
+   - bdf_mirror: solid support
    - bdf_convert now supports:
       - CFAST/PFAST
       - rho, area conversion
@@ -65,6 +68,7 @@ f06 flutter:
    - repr
    - mach, dynamic pressure, altitude plots
 op2 geom:
+ - improved PARAM (PVT/PVT0 table) loading
  - PSOLID/FFLUID support
 gui:
  - fixed CELAS2 bug where nid2 is an SPOINT

@@ -34,7 +34,7 @@ NO_MASS = {
     'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT10', 'MAT11', 'MAT3D', 'CREEP',
     'MATT1', 'MATT3',
 
-    'PELAS', 'PVISC', 'PBUSH1D',
+    'PELAS', 'PVISC', 'PBUSH', 'PBUSH1D',
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', #'CLEAS5',
     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
     'PDAMP', 'PGAP',
@@ -127,7 +127,9 @@ def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
     #print('  Inew = %s' % str(I_new))
     return I_new
 
-def _mass_properties_elements_init(model, element_ids, mass_ids):
+def _mass_properties_elements_init(model: BDF,
+                                   element_ids: Union[int, List[int]],
+                                   mass_ids: Union[int, List[int]]):
     """helper method"""
     # if neither element_id nor mass_ids are specified, use everything
     if isinstance(element_ids, integer_types):
@@ -814,7 +816,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
-    elif etype == 'CHEXA':
+    elif etype in ['CHEXA', 'CHEXA1', 'CHEXA2']:
         eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
