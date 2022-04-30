@@ -12,15 +12,36 @@ class ResultsWindow(QWidget):
                  include_clear=True, include_export_case=True,
                  include_delete=True,
                  include_results=True):
+        """
+        Parameters
+        ----------
+        actions : varies
+            None:
+                use the default actions
+            List[Tuple[str, Any, bool]]:
+                action : (name, function, return_icase)
+                name : str
+                    the name of the action
+                function : the callback function of the form:
+                    def return_icase(icase):
+                        pass
+                    def dont_return_icase():
+                        pass
+                    the chosen function (return_icase/dont_return_icase) is determined by
+                    return icase
+                return_icase : bool
+                    selects the corresponding function
+
+        """
         QWidget.__init__(self)
         self.name = name
         self.data = data
         self.choices = choices
         self.parent = parent
 
-        def on_modify(icase):
+        def on_modify(icase: int):
             print('modify...%i' % icase)
-        def on_case(icase):
+        def on_case(icase: int):
             print('case...%i' % icase)
         def on_delete():
             print('delete...')
@@ -63,7 +84,7 @@ class ResultsWindow(QWidget):
         self.data = data
         try:
             self.addItems(self.model, data)
-        except:
+        except Exception:
             raise
             raise RuntimeError('cannot add data=\n%s' % data)
             #if isinstance(data, str):

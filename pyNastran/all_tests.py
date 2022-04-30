@@ -3,8 +3,15 @@ import numpy as np
 try:
     import matplotlib
     IS_MATPLOTLIB = True
-except ImportError:
+except ModuleNotFoundError:
     IS_MATPLOTLIB = False
+
+try:
+    import h5py
+    IS_H5PY = True
+except ModuleNotFoundError:
+    IS_H5PY = False
+
 
 if IS_MATPLOTLIB:
     from pyNastran.gui.matplotlib_backend import matplotlib_backend

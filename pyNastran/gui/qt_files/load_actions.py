@@ -2,6 +2,7 @@ import os
 import sys
 import traceback
 import time as time_module
+from typing import Tuple, Optional, Any
 
 import numpy as np
 from qtpy.compat import getopenfilename
@@ -87,7 +88,7 @@ class LoadActions:
                 try:
                     dy_method = getattr(self, clear_name)  # 'self.clear_nastran()'
                     dy_method()
-                except:
+                except Exception:
                     print("method %r does not exist" % clear_name)
             self.gui.log_info("reading %s file %r" % (geometry_format, infile_name))
 
@@ -95,7 +96,7 @@ class LoadActions:
                 time0 = time_module.time()
 
                 if geometry_format2 in self.gui.format_class_map:
-                    # intialize the class
+                    # initialize the class
                     #print('geometry_format=%r geometry_format2=%s' % (geometry_format, geometry_format2))
 
                     # TODO: was geometry_format going into this...
@@ -150,14 +151,14 @@ class LoadActions:
         self.gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
             infile_name, self.gui.format, main_str))
 
-    def _load_geometry_filename(self, geometry_format, infile_name):
+    def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> Tuple[bool, Any]:
         """gets the filename and format"""
         wildcard = ''
         is_failed = False
 
         if geometry_format and geometry_format.lower() not in self.gui.supported_formats:
             is_failed = True
-            msg = 'The import for the %r module failed.\n' % geometry_format
+            msg = f'The import for the {geometry_format!r} module failed.\n'
             self.gui.log_error(msg)
             if IS_TESTING:  # pragma: no cover
                 raise RuntimeError(msg)
@@ -294,7 +295,7 @@ class LoadActions:
 
             try:
                 load_function(out_filenamei)
-            except: #  as e
+            except Exception: #  as e
                 msg = traceback.format_exc()
                 self.gui.log_error(msg)
                 print(msg)
@@ -347,7 +348,7 @@ class LoadActions:
                 restype = 'Patran_nod'
             else:
                 raise NotImplementedError('iwildcard = %s' % iwildcard)
-        except:
+        except Exception:
             msg = traceback.format_exc()
             self.gui.log_error(msg)
             if stop_on_failure:  # pragma: no cover
@@ -433,7 +434,7 @@ class LoadActions:
         """
         try:
             self._load_csv(result_type, out_filename, stop_on_failure=stop_on_failure)
-        except:
+        except Exception:
             msg = traceback.format_exc()
             self.gui.log_error(msg)
             if stop_on_failure:  # pragma: no cover
@@ -591,7 +592,8 @@ class LoadActions:
         if update:
             self.gui.res_widget.update_results(form, 'main')
 
-    def create_load_file_dialog(self, qt_wildcard, title, default_filename=None):
+    def create_load_file_dialog(self, qt_wildcard: str, title: str,
+                                default_filename: Optional[str]=None) -> Tuple[str, str]:
         #options = QFileDialog.Options()
         #options |= QFileDialog.DontUseNativeDialog
         #fname, flt = QFileDialog.getOpenFileName(

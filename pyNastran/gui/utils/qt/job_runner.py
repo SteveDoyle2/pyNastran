@@ -69,7 +69,7 @@ class JobRunner(QWidget):
     def prime_requested(self):
         try:
             n = int(self._iteration_edit.text())
-        except:
+        except Exception:
             return
         #command_list = [str(n)]
         command_list = ['python', 'ls.py']
