@@ -438,6 +438,7 @@ def update_version_file():
     This is handy
     """
     import pyNastran
+    args = sys.argv
 
     if 'install' not in args:
         return
