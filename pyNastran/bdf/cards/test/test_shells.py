@@ -531,7 +531,11 @@ class TestShells(unittest.TestCase):
         mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         m = MAT1.add_op2_data(mat1)
 
-        for iply in range(len(p.plies)):
+        nplies = len(p.plies)
+        assert nplies == 6
+        assert len(p.mids) == 3
+        # todo: old-style -> update
+        for iply in range(nplies//2):
             mid = p.plies[iply][0]
             p.mids[iply] = m # MAT1
         p.mids_ref = p.mids

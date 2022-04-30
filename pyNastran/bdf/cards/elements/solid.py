@@ -15,7 +15,7 @@ All solid elements are SolidElement and Element objects.
 
 """
 from __future__ import annotations
-from typing import Tuple, Any, TYPE_CHECKING
+from typing import Tuple, List, Union, Any, TYPE_CHECKING
 import numpy as np
 from numpy import dot, cross
 from numpy.linalg import norm  # type: ignore
@@ -224,15 +224,15 @@ class CHEXA8(SolidElement):
     type = 'CHEXA'
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         data = [self.eid, self.Pid()] + self.node_ids
-        msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
-               '        %8i%8i\n' % tuple(data))
+        msg = ('CHEXA   %8d%8d%8d%8d%8d%8d%8d%8d\n'
+               '        %8d%8d\n' % tuple(data))
         return self.comment + msg
 
     def write_card_16(self, is_double=False):
         data = [self.eid, self.Pid()] + self.node_ids
-        msg = ('CHEXA*  %16i%16i%16i%16i\n'
-               '*       %16i%16i%16i%16i\n'
-               '*       %16i%16i\n' % tuple(data))
+        msg = ('CHEXA*  %16d%16d%16d%16d\n'
+               '*       %16d%16d%16d%16d\n'
+               '*       %16d%16d\n' % tuple(data))
         return self.comment + msg
 
     def __init__(self, eid, pid, nids, comment=''):
@@ -284,7 +284,7 @@ class CHEXA8(SolidElement):
             integer(card, 9, 'nid7'),
             integer(card, 10, 'nid8')
         ]
-        assert len(card) == 11, 'len(CHEXA8 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 11, f'len(CHEXA8 card) = {len(card):d}\ncard={card}'
         return CHEXA8(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -320,7 +320,7 @@ class CHEXA8(SolidElement):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -401,7 +401,7 @@ class CHEXA8(SolidElement):
         ye /= np.linalg.norm(ye)
         return centroid, xe, ye, ze
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool):
         eid = self.eid
         pid = self.Pid()
         assert isinstance(eid, int)
@@ -546,11 +546,11 @@ class CHEXA20(SolidElement):
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
-        nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
+        nodes2 = ['' if node is None else '%8d' % node for node in nodes[8:]]
         data = [self.eid, self.Pid()] + nodes[:8] + nodes2
-        msg = ('CHEXA*  %16i%16i%16i%16i\n'
-               '*       %16i%16i%16i%16i\n'
-               '*       %16i%16i%16s%16s\n'
+        msg = ('CHEXA*  %16d%16d%16d%16d\n'
+               '*       %16d%16d%16d%16d\n'
+               '*       %16d%16d%16s%16s\n'
                '*       %16s%16s%16s%16s\n'
                '*       %16s%16s%16s%16s%16s%16s' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
@@ -616,7 +616,7 @@ class CHEXA20(SolidElement):
             integer_or_blank(card, 21, 'nid19'),
             integer_or_blank(card, 22, 'nid20'),
         ]
-        assert len(card) <= 23, 'len(CHEXA20 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 23, f'len(CHEXA20 card) = {len(card):d}\ncard={card}'
         return CHEXA20(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -649,7 +649,7 @@ class CHEXA20(SolidElement):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -849,14 +849,14 @@ class CPENTA6(SolidElement):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
-        msg = 'CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n' % tuple(data)
+        msg = 'CPENTA  %8d%8d%8d%8d%8d%8d%8d%8d\n' % tuple(data)
         return self.comment + msg
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
-        msg = ('CPENTA  %16i%16i%16i%16i\n'
-               '        %16i%16i%16i%16i\n' % tuple(data))
+        msg = ('CPENTA* %16d%16d%16d%16d\n'
+               '*       %16d%16d%16d%16d\n' % tuple(data))
         return self.comment + msg
 
     def __init__(self, eid, pid, nids, comment=''):
@@ -905,7 +905,7 @@ class CPENTA6(SolidElement):
             integer(card, 7, 'nid5'),
             integer(card, 8, 'nid6'),
         ]
-        assert len(card) == 9, 'len(CPENTA6 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 9, f'len(CPENTA6 card) = {len(card):d}\ncard={card}'
         return CPENTA6(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -939,7 +939,7 @@ class CPENTA6(SolidElement):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1334,7 +1334,7 @@ class CPENTA15(SolidElement):
             integer_or_blank(card, 16, 'nid14'),
             integer_or_blank(card, 17, 'nid15'),
         ]
-        assert len(card) <= 18, 'len(CPENTA15 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 18, f'len(CPENTA15 card) = {len(card):d}\ncard={card}'
         return CPENTA15(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -1368,7 +1368,7 @@ class CPENTA15(SolidElement):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1442,7 +1442,7 @@ class CPENTA15(SolidElement):
             tuple(sorted([node_ids[2], node_ids[5]])),
         ]
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1486,18 +1486,18 @@ class CPENTA15(SolidElement):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
-        nodes2 = ['' if node is None else '%8i' % node for node in nodes[6:]]
+        nodes2 = ['' if node is None else '%8d' % node for node in nodes[6:]]
         data = [self.eid, self.Pid()] + nodes[:6] + nodes2
-        msg = ('CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n'
+        msg = ('CPENTA  %8d%8d%8d%8d%8d%8d%8d%8d\n'
                '        %8s%8s%8s%8s%8s%8s%8s%8s\n'
                '        %8s' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
-        nodes2 = ['' if node is None else '%16i' % node for node in nodes[6:]]
+        nodes2 = ['' if node is None else '%16d' % node for node in nodes[6:]]
         data = [self.eid, self.Pid()] + nodes[:6] + nodes2
-        msg = ('CPENTA* %16i%16i%16i%16i\n'
+        msg = ('CPENTA* %16d%16d%16d%16d\n'
                '*       %16s%16s%16s%16s\n'
                '*       %16s%16s%16s%16s\n'
                '*       %16s%16s%16s%16s\n'
@@ -1544,7 +1544,7 @@ class CPYRAM5(SolidElement):
         nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
                 integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
                 integer(card, 7, 'nid5')]
-        assert len(card) == 8, 'len(CPYRAM5 1card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 8, f'len(CPYRAM5 1card) = {len(card):d}\ncard={card}'
         return CPYRAM5(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -1577,7 +1577,7 @@ class CPYRAM5(SolidElement):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1640,7 +1640,7 @@ class CPYRAM5(SolidElement):
             tuple(sorted([node_ids[3], node_ids[4]])),
         ]
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1684,14 +1684,14 @@ class CPYRAM5(SolidElement):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
-        msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i' % tuple(data))
+        msg = ('CPYRAM  %8d%8d%8d%8d%8d%8d%8d' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
-        msg = ('CPYRAM  %16i%16i%16i%16i\n'
-               '        %16i%16i%16i' % tuple(data))
+        msg = ('CPYRAM* %16d%16d%16d%16d\n'
+               '*       %16d%16d%16d' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
 
@@ -1749,7 +1749,7 @@ class CPYRAM13(SolidElement):
             integer_or_blank(card, 14, 'nid12'),
             integer_or_blank(card, 15, 'nid13')
         ]
-        assert len(card) <= 16, 'len(CPYRAM13 1card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 16, f'len(CPYRAM13 1card) = {len(card):d}\ncard={card}'
         return CPYRAM13(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -1782,7 +1782,7 @@ class CPYRAM13(SolidElement):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1872,7 +1872,7 @@ class CPYRAM13(SolidElement):
         centroid = (c1 + n5) / 2.
         return centroid
 
-    def Volume(self):
+    def Volume(self) -> float:
         """
         .. seealso:: CPYRAM5.Volume
 
@@ -1893,18 +1893,18 @@ class CPYRAM13(SolidElement):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
-        nodes2 = ['' if node is None else '%8i' % node for node in nodes[5:]]
+        nodes2 = ['' if node is None else '%8d' % node for node in nodes[5:]]
         data = [self.eid, self.Pid()] + nodes[:5] + nodes2
-        msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8s\n'
+        msg = ('CPYRAM  %8d%8d%8d%8d%8d%8d%8d%8s\n'
                '        %8s%8s%8s%8s%8s%8s%s' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
-        nodes2 = ['' if node is None else '%16i' % node for node in nodes[5:]]
+        nodes2 = ['' if node is None else '%16d' % node for node in nodes[5:]]
         data = [self.eid, self.Pid()] + nodes[:5] + nodes2
-        msg = ('CPYRAM* %16i%16i%16i%16i\n'
-               '*       %16i%16i%16i%16s\n'
+        msg = ('CPYRAM* %16d%16d%16d%16d\n'
+               '*       %16d%16d%16d%16s\n'
                '*       %16s%16s%16s%16s\n'
                '*       %16s%16s%s\n' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
@@ -1982,8 +1982,8 @@ class CTETRA4(SolidElement):
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
-        msg = ('CTETRA  %16i%16i%16i%16i\n'
-               '        %16i%16i\n' % tuple(data))
+        msg = ('CTETRA* %16d%16d%16d%16d\n'
+               '*       %16d%16d\n' % tuple(data))
         return self.comment + msg
 
     def __init__(self, eid, pid, nids, comment=''):
@@ -2029,7 +2029,7 @@ class CTETRA4(SolidElement):
                 integer(card, 4, 'nid2'),
                 integer(card, 5, 'nid3'),
                 integer(card, 6, 'nid4'), ]
-        assert len(card) == 7, 'len(CTETRA4 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 7, f'len(CTETRA4 card) = {len(card):d}\ncard={card}'
         return CTETRA4(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -2063,7 +2063,7 @@ class CTETRA4(SolidElement):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2216,20 +2216,20 @@ class CTETRA10(SolidElement):
     type = 'CTETRA'
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
-        nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
+        nodes2 = ['' if node is None else '%8d' % node for node in nodes[4:]]
 
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2
-        msg = ('CTETRA  %8i%8i%8i%8i%8i%8i%8s%8s\n'
+        msg = ('CTETRA  %8d%8d%8d%8d%8d%8d%8s%8s\n'
                '        %8s%8s%8s%8s' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
-        nodes2 = ['' if node is None else '%16i' % node for node in nodes[4:]]
+        nodes2 = ['' if node is None else '%16d' % node for node in nodes[4:]]
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2
-        msg = ('CTETRA  %16i%16i%16i%16i\n'
-               '        %16i%16i%16s%16s\n'
-               '        %16s%16s%16s%16s' % tuple(data))
+        msg = ('CTETRA* %16d%16d%16d%16d\n'
+               '*       %16d%16d%16s%16s\n'
+               '*       %16s%16s%16s%16s' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
     def get_face_area_centroid_normal(self, nid_opposite, nid=None):
@@ -2286,7 +2286,7 @@ class CTETRA10(SolidElement):
                 integer_or_blank(card, 10, 'nid8'),
                 integer_or_blank(card, 11, 'nid9'),
                 integer_or_blank(card, 12, 'nid10'), ]
-        assert len(card) <= 13, 'len(CTETRA10 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, f'len(CTETRA10 card) = {len(card):d}\ncard={card}'
         return CTETRA10(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -2320,7 +2320,7 @@ class CTETRA10(SolidElement):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2329,7 +2329,7 @@ class CTETRA10(SolidElement):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by CTETRA eid=%s' % self.eid
+        msg = f', which is required by CTETRA eid={self.eid}'
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 

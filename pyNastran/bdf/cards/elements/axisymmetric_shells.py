@@ -1125,7 +1125,7 @@ class CQUADX(AxisymmetricQuad):
         theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
         row2 = ['        ' if node is None else '%8i' % node for node in nodes[4:]
                  ] + [print_field_8(theta_mcid)]
-        msg = ('CQUADX  %8i%8i%8i%8i%8i%8i%8s%8s\n'
+        msg = ('CQUADX  %8d%8d%8d%8d%8d%8d%8s%8s\n'
                '        %8s%8s%8s%s' % tuple(data + row2))
         return self.comment + msg.rstrip() + '\n'
 

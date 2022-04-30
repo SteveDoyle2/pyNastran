@@ -147,7 +147,7 @@ class OPG(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_opg2_3(self, data, ndata):
+    def _read_opg2_3(self, data: bytes, ndata: int):
         """reads the SORT2 version of table 4 (the data table)"""
         self.nonlinear_factor = np.nan
         self.is_table_1 = False
@@ -283,7 +283,7 @@ class OPG(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_opg1_4(self, data, ndata):
+    def _read_opg1_4(self, data: bytes, ndata: int) -> int:
         if self.table_code == 2:  # load vector
             prefixs = {
                 b'BOPG1' : '',
@@ -345,7 +345,7 @@ class OPG(OP2Common):
             raise NotImplementedError('table_name=%r table_code=%r' % (self.table_name, self.table_code))
         return n
 
-    def _read_load_vector(self, data, ndata, prefix='', postfix=''):
+    def _read_load_vector(self, data, ndata, prefix='', postfix='') -> int:
         """
         table_code = 2
         """
@@ -376,7 +376,7 @@ class OPG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_force_vector(self, data, ndata):
+    def _read_force_vector(self, data: bytes, ndata: int) -> int:
         """
         table_code = 12
         """

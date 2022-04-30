@@ -3,7 +3,7 @@
 import os
 import unittest
 import numpy as np
-from cpylog import get_logger
+from cpylog import SimpleLogger
 
 try:
     import h5py  # pylint: disable=unused-import
@@ -21,33 +21,37 @@ class TestDictToH5(unittest.TestCase):
     @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_dict_to_h5py(self):
         model = BDF()
-        log = get_logger(log=None, level='warning', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         obj = {
             'bdf' : model,
             'key' : 'value',
+            # doesn't support mixed types
             #1 : 2,
             #3.0 : 4.0,
             'int_list' : [1, 2, 3],
             'float_list' : [1.1, 2.2, 3.3],
             'mydict' : {'one' : 1},
-            'five' : np.zeros(5),
+            'np_array' : np.zeros(5),
             'None' : None,
-            'nan' : np.nan,
+            'np_nan' : np.nan,
             'variable_type_list' : [1, 2.2, b'3.14s', u'4.4u'],
             'variable_type_tuple' : (1, 2.2, b'3.14s', u'4.4u'),
-            'str_key_unicode_value' : u'helló wörld from two',
-            'helló wörld from two' : b'cat',
+            'str' : u'helló wörld',
+            #'bytes' : b'bytes',
+            #'str_key_helló wörld' : b'str',
         }
 
         custom_types = {
             'BDF' : BDF,
         }
+        # save and reload
         export_obj_to_hdf5('test.h5', obj, log=log)
-        #export_obj_to_hdf5_file('test.h5', ap, log)
         new_dict = load_obj_from_hdf5('test.h5', custom_types, log=log)
         #print('new_dict[ap]', new_dict['ap'])
         #print('variable_type_list', new_dict['variable_type_list'])
         #print('variable_type_tuple', new_dict['variable_type_tuple'])
+
+        # verify we can resave it
         export_obj_to_hdf5('test_new.h5', new_dict, log=log)
 
 
@@ -69,15 +73,15 @@ class TestDictToH5(unittest.TestCase):
             #'helló wörld from two' : 'cat',
         #}
 
-        #print('new_dict[ap]', new_dict['ap'])
         assert isinstance(new_dict['variable_type_list'], list)
         assert isinstance(new_dict['variable_type_tuple'], tuple)
-        assert isinstance(new_dict['five'], np.ndarray)
-        assert len(new_dict['five']) == 5
-        assert isinstance(new_dict['str_key_unicode_value'], str)
-        assert isinstance(new_dict[u'helló wörld from two'], bytes), type(new_dict[u'helló wörld from two'])
+        assert isinstance(new_dict['np_array'], np.ndarray)
+        assert len(new_dict['np_array']) == 5
+        assert isinstance(new_dict['str'], str)
+        #assert isinstance(new_dict['bytes'], bytes), type(new_dict['bytes'])
+        #assert isinstance(new_dict[u'helló wörld from two'], bytes), type(new_dict[u'helló wörld from two'])
         assert new_dict['None'] is None, new_dict['None']
-        assert np.isnan(new_dict['nan']), new_dict['nan']
+        assert np.isnan(new_dict['np_nan']), new_dict['np_nan']
         #str_key_unicode_value
 
 if __name__ == '__main__':   # pragma: no cover

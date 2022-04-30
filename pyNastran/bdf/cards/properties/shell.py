@@ -13,7 +13,7 @@ All shell properties are Property objects.
 """
 from __future__ import annotations
 import copy
-from itertools import count
+from itertools import count, zip_longest
 import warnings
 from typing import Tuple, List, Dict, Union, Optional, Any, TYPE_CHECKING
 import numpy as np
@@ -85,10 +85,8 @@ class CompositeShellProperty(Property):
 
     def Rho(self, iply: int) -> float:
         return self.get_density(iply)
-
     def Theta(self, iply: int) -> float:
         return self.get_theta(iply)
-
     def sout(self, iply: int) -> str:
         return self.get_sout(iply)
 
@@ -685,10 +683,10 @@ class PCOMP(CompositeShellProperty):
         try:
             ply = self.plies[iply]
         except IndexError:
-            msg = 'PCOMP pid=%s; n=%s nnew=%s ilayer=%s slot=%r\n' % (
-                self.pid, n, nnew, ilayer, slot)
-            msg += ('On PCOMP pid=%r, ply %i is not defined.  '
-                    'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
+            msg = (
+                f'PCOMP pid={self.pid}; n={n} nnew={nnew} ilayer={ilayer} slot={slot!r}\n'
+                f'On PCOMP pid={self.pid!r}, ply {ilayer:d} is not defined.  '
+                f'iply_min=0; iply_max={len(self.plies):d}')
             raise IndexError(msg)
 
         if slot == 0:
@@ -797,7 +795,9 @@ class PCOMP(CompositeShellProperty):
         self.z0 = z0
 
     def validate(self):
-        assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], 'ft=%r' % self.ft
+        assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN',
+                           'HFAI', 'HFAB', 'HTAP',
+                           0.0, None], f'ft={self.ft!r}'
 
         # 'NO' is not an option!
         allowed_lam = [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE']
@@ -936,7 +936,7 @@ class PCOMP(CompositeShellProperty):
         thicknesses = []
         thetas = []
         souts = []
-        for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
+        for (mid, t, theta, sout) in zip_longest(Mid, T, Theta, Sout):
             if sout == 0:
                 sout = 'NO'
             elif sout == 1:
@@ -971,8 +971,8 @@ class PCOMP(CompositeShellProperty):
     @property
     def plies(self):
         plies = []
-        for mid, t, theta, sout in zip(self.material_ids, self.thicknesses,
-                                       self.thetas, self.souts):
+        for mid, t, theta, sout in zip_longest(self.material_ids, self.thicknesses,
+                                               self.thetas, self.souts):
             plies.append([mid, t, theta, sout])
         return plies
 
@@ -1272,12 +1272,12 @@ class PCOMPG(CompositeShellProperty):
         elif slot == 5:
             self.thetas[ilayer] = value
         else:
-            raise NotImplementedError('On PCOMPG: cannot update n=%s; slot=%i\n'
+            raise NotImplementedError(f'On PCOMPG: cannot update n={n}; slot={slot:d}\n'
                                       '  slot=2: Global Ply ID\n'
                                       '  slot=3: Material ID\n'
                                       '  slot=4: Thickness\n'
                                       '  slot=5: Theta\n'
-                                      '  slot=6: SOUT\n' % (n, slot))
+                                      '  slot=6: SOUT\n')
             #ply[slot] = value
 
         #for mid, t, theta, sout, global_ply_id in zip(self.mids, self.thicknesses,
@@ -1287,9 +1287,9 @@ class PCOMPG(CompositeShellProperty):
     @property
     def plies(self) -> List[Tuple[int, float, float, str, int]]:
         plies = []
-        for mid, t, theta, sout, global_ply_id in zip(self.mids, self.thicknesses,
-                                                      self.thetas, self.souts,
-                                                      self.global_ply_ids):
+        for mid, t, theta, sout, global_ply_id in zip_longest(self.mids, self.thicknesses,
+                                                              self.thetas, self.souts,
+                                                              self.global_ply_ids):
             plies.append((mid, t, theta, sout, global_ply_id))
         return plies
 
@@ -1540,7 +1540,7 @@ class PCOMPG(CompositeShellProperty):
         list_fields = [
             'PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
             self.tref, self.ge, self.lam, ]
-        for (mid, t, theta, sout, global_ply_id) in zip(
+        for (mid, t, theta, sout, global_ply_id) in zip_longest(
                 self.material_ids, self.thicknesses, self.thetas, self.souts,
                 self.global_ply_ids):
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
@@ -1556,8 +1556,8 @@ class PCOMPG(CompositeShellProperty):
         list_fields = [
             'PCOMPG', self.pid, z0, nsm, sb, self.ft, tref, ge,
             self.lam]
-        zipi = zip(self.material_ids, self.thicknesses, self.thetas, self.souts,
-                   self.global_ply_ids)
+        zipi = zip_longest(self.material_ids, self.thicknesses, self.thetas, self.souts,
+                           self.global_ply_ids)
         for (mid, t, theta, sout, global_ply_id) in zipi:
             sout = set_blank_if_default(sout, 'NO')
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
@@ -1653,8 +1653,8 @@ class PLPLANE(Property):
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')  # MATHE, MATHP
-        cid = integer_or_blank(card, 3, 'cid', 0)
-        stress_strain_output_location = string_or_blank(card, 4, 'str', 'GRID')
+        cid = integer_or_blank(card, 3, 'cid', default=0)
+        stress_strain_output_location = string_or_blank(card, 4, 'str', default='GRID')
         return PLPLANE(pid, mid, cid=cid,
                        stress_strain_output_location=stress_strain_output_location,
                        comment=comment)

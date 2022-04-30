@@ -1,7 +1,7 @@
 """defines various methods to access low level BDF data"""
 from __future__ import annotations
 from itertools import chain
-from typing import List, Union, Optional, Iterable, TYPE_CHECKING
+from typing import List, Dict, Union, Optional, Iterable, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -32,7 +32,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.dynamic import (
         DELAY, DPHASE,
         NLPARM)
-    from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+    from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
     from pyNastran.bdf.cards.loads.loads import SLOAD, DAREA
     from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
     from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
@@ -404,7 +404,7 @@ class GetMethods(BDFAttributes):
 
     def DLoad(self, sid: int, consider_dload_combinations: bool=True, msg: str='') -> DLOAD:
         """
-        Gets a DLOAD, TLOAD1, TLOAD2, etc. associcated with the
+        Gets a DLOAD, TLOAD1, TLOAD2, etc. associated with the
         Case Control DLOAD entry
 
         """
@@ -618,14 +618,13 @@ class GetMethods(BDFAttributes):
 
         if self.aero is not None:
             if self.aeros is not None:
-                assert acsid_aero == acsid_aeros, 'AERO acsid=%s, AEROS acsid=%s' % (acsid_aero,
-                                                                                     acsid_aeros)
+                assert acsid_aero == acsid_aeros, f'AERO acsid={acsid_aero}, AEROS acsid={acsid_aeros}'
             coord = self.Coord(acsid_aero, msg=msg)
         elif self.aeros is not None:
             coord = self.Coord(acsid_aeros, msg=msg)
         else:
             ## TODO: consider changing this...
-            self.log.error('neither AERO nor AEROS cards exist; assuming global (cid=0).')
+            self.log.error(f'neither AERO nor AEROS cards exist; assuming global (cid=0){msg}.')
             return self.Coord(0, msg=msg)
         return coord
 
@@ -883,3 +882,7 @@ class GetMethods(BDFAttributes):
         except KeyError:
             raise KeyError('equation_id=%s not found%s.  Allowed DEQATNs=%s'
                            % (equation_id, msg, np.unique(list(self.dequations.keys()))))
+
+def _unique_keys(mydict: Dict[int, Any]) -> str:
+    """helper method"""
+    return np.unique(list(mydict.keys()))

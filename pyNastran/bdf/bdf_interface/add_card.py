@@ -3,11 +3,11 @@
 """
 Defines a method to add a card that is faster than add_card.
 """
-
-from typing import Optional, List, Dict, Union, Any
+from itertools import count
+from typing import Tuple, List, Dict, Optional, Union, Any
 import numpy as np
 
-from pyNastran.nptyping_interface import NDArray3float
+from pyNastran.nptyping_interface import NDArray3float, NDArray66float
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
@@ -225,6 +225,7 @@ CARD_MAP = {
     # msgmesh
     'GMCORD' : GMCORD,
     'CGEN' : CGEN,
+    'GMLOAD' : GMLOAD,
 
     'PLOTEL' : PLOTEL,
     'RINGFL' : RINGFL,
@@ -304,9 +305,12 @@ CARD_MAP = {
     'CSHEAR' : CSHEAR,
     'PSHEAR' : PSHEAR,
 
+    # nastran95
     'CIHEX1' : CIHEX1,
     'CIHEX2' : CIHEX2,
     'PIHEX' : PIHEX,
+
+    # msc/nx
     'PSOLID' : PSOLID,
     'PLSOLID' : PLSOLID,
     'PCOMPS' : PCOMPS,
@@ -462,7 +466,6 @@ CARD_MAP = {
     'RFORCE' : RFORCE,
     'RFORCE1' : RFORCE1,
     'SLOAD' : SLOAD,
-    'GMLOAD' : GMLOAD,
     'SPCD' : SPCD,
     'QVOL' : QVOL,
     'PRESAX' : PRESAX,
@@ -1046,7 +1049,7 @@ class AddCards(AddMethods):
         self._add_plotel_object(elem)
         return elem
 
-    def add_conm1(self, eid, nid, mass_matrix, cid=0, comment='') -> CONM1:
+    def add_conm1(self, eid: int, nid: int, mass_matrix: NDArray66float, cid=0, comment='') -> CONM1:
         """
         Creates a CONM1 card
 
@@ -2138,7 +2141,8 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pbarl(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment='') -> PBARL:
+    def add_pbarl(self, pid: int, mid: int, Type: str, dim: List[float],
+                  group: str='MSCBML0', nsm: float=0., comment: str='') -> PBARL:
         """
         Creates a PBARL card, which defines A, I1, I2, I12, and J using
         dimensions rather than explicit values.
@@ -2369,8 +2373,9 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pbeaml(self, pid, mid, beam_type, xxb, dims, so=None, nsm=None,
-                   group='MSCBML0', comment='') -> PBEAML:
+    def add_pbeaml(self, pid: int, mid: int, beam_type: str,
+                   xxb: List[float], dims: List[List[float]], so=None, nsm=None,
+                   group: str='MSCBML0', comment: str='') -> PBEAML:
         """
         Creates a PBEAML card
 
@@ -4558,7 +4563,7 @@ class AddCards(AddMethods):
         nodes : List[int]
             the nodes to release
         Cs : List[str]
-            compoents to support at each node
+            components to support at each node
         comment : str; default=''
             a comment for the card
 
@@ -4578,7 +4583,7 @@ class AddCards(AddMethods):
         nodes : List[int]
             the nodes to release
         Cs : List[str]
-            compoents to support at each node
+            components to support at each node
         comment : str; default=''
             a comment for the card
 
@@ -4646,8 +4651,12 @@ class AddCards(AddMethods):
         self._add_aero_object(aero)
         return aero
 
-    def add_caero1(self, eid, pid, igroup, p1, x12, p4, x43,
-                   cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment='') -> CAERO1:
+    def add_caero1(self, eid: int, pid: int, igroup: int,
+                   p1: NDArray3float, x12: float,
+                   p4: NDArray3float, x43: float,
+                   cp: int=0,
+                   nspan: int=0, lspan: int=0,
+                   nchord: int=0, lchord: int=0, comment: str='') -> CAERO1:
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
         (e.g., wing/tail).
@@ -4656,9 +4665,8 @@ class AddCards(AddMethods):
         ----------
         eid : int
             element id
-        pid : int, PAERO1
+        pid : int
             int : PAERO1 ID
-            PAERO1 : PAERO1 object (xref)
         igroup : int
             Group number
         p1 : (1, 3) ndarray float
@@ -4669,9 +4677,8 @@ class AddCards(AddMethods):
             distance along the flow direction from node 1 to node 2; (typically x, root chord)
         x43 : float
             distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
             int = 0 : use lchord
@@ -4754,9 +4761,8 @@ class AddCards(AddMethods):
         ----------
         eid : int
             element id
-        pid : int, PAERO4
+        pid : int
             int : PAERO4 ID
-            PAERO4 : PAERO4 object (xref)
         p1 : (1, 3) ndarray float
             xyz location of point 1 (leading edge; inboard)
         p4 : (1, 3) ndarray float
@@ -4767,16 +4773,14 @@ class AddCards(AddMethods):
         x43 : float
             distance along the flow direction from node 4 to node 3
             (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
             int = 0 : use lchord
-        lspan : int, AEFACT; default=0
+        lspan : int; default=0
             int > 0 : AEFACT reference for non-uniform nspan
             int = 0 : use nspan
-            AEFACT : AEFACT object  (xref)
         comment : str; default=''
              a comment for the card
 
@@ -6027,8 +6031,10 @@ class AddCards(AddMethods):
         self._add_dtable_object(dtable)
         return dtable
 
-    def add_tabled1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0,
-                    comment='') -> TABLED1:
+    def add_tabled1(self, tid: int,
+                    x: np.ndarray, y: np.ndarray,
+                    xaxis: str='LINEAR', yaxis: str='LINEAR', extrap: int=0,
+                    comment: str='') -> TABLED1:
         """
         Creates a TABLED1, which is a dynamic load card that is applied
         by the DAREA card
@@ -6100,7 +6106,8 @@ class AddCards(AddMethods):
         self._add_tablem_object(table)
         return table
 
-    def add_tables1(self, tid, x, y, Type=1, comment='') -> TABLES1:
+    def add_tables1(self, tid: int, x: np.ndarray, y: np.ndarray,
+                    Type: int=1, comment: str='') -> TABLES1:
         """
         Adds a TABLES1 card, which defines a stress dependent material
 
@@ -6356,7 +6363,7 @@ class AddCards(AddMethods):
         Gmi : List[int]
             dependent nodes
         alpha : float; default=0.0
-            ???
+            thermal expansion coefficient
 
         """
         elem = RBE2(eid, gn, cm, Gmi, alpha=alpha, comment=comment)
@@ -6524,8 +6531,10 @@ class AddCards(AddMethods):
         self._add_deqatn_object(deqatn)
         return deqatn
 
-    def add_desvar(self, desvar_id, label, xinit, xlb=-1e20, xub=1e20,
-                   delx=None, ddval=None, comment='') -> DESVAR:
+    def add_desvar(self, desvar_id: int, label: str, xinit: float,
+                   xlb: float=-1e20, xub: float=1e20,
+                   delx=None, ddval: Optional[int]=None,
+                   comment: str='') -> DESVAR:
         """
         Creates a DESVAR card
 
@@ -6584,7 +6593,7 @@ class AddCards(AddMethods):
         ----------
         dresp_id : int
             response id
-        lable : str
+        label : str
             Name of the response
         response_type : str
             Response type

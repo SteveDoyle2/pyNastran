@@ -1,13 +1,22 @@
-from typing import List
+from __future__ import annotations
+import sys
+from typing import List, Dict, TYPE_CHECKING
+
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
+
 from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, _eigenvalue_header, write_imag_floats_13e)
 from pyNastran.op2.vector_utils import (
     transform_force_moment, transform_force_moment_sum, sortedsum1d)
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
+
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping_interface import (
+        NDArrayN3float, NDArray3float, NDArrayN2int, NDArrayNint, NDArrayNfloat)
+    from pyNastran.bdf.bdf import (BDF, CORD, SimpleLogger)
 
 
 class GridPointForces(BaseElement):
@@ -151,29 +160,29 @@ class RealGridPointForcesArray(GridPointForces):
         #self.nelements = 0  # result specific
         #self.nnodes = None
 
-    def finalize(self):
+    def finalize(self) -> bool:
         """required so the OP2 writer works..."""
         self.format_code = 1
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         #self.ielement = 0
 
     @property
-    def element_name(self):
+    def element_name(self) -> str:
         headers = [name.strip() for name in unique(self.element_names) if name.strip()]
         #headers = unique(self.element_names)
         return str(', '.join(headers))
 
-    def build(self):
+    def build(self) -> None:
         """sizes the vectorized attributes of the RealGridPointForcesArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
@@ -216,7 +225,7 @@ class RealGridPointForcesArray(GridPointForces):
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
-    def build_dataframe(self):
+    def build_dataframe(self) -> None:
         """
         major-axis - the axis
 
@@ -427,7 +436,7 @@ class RealGridPointForcesArray(GridPointForces):
             value : CORDx
         nid_cd : (Nnodes, 2) int ndarray
             the (BDF.point_ids, cd) array
-        icd_transform : dict[cd] = (Nondesi, ) int ndarray
+        icd_transform : dict[cd] = (Nnodesi, ) int ndarray
             the mapping for nid_cd
         summation_point : (3, ) float ndarray
             the summation point in output??? coordinate system
@@ -497,11 +506,18 @@ class RealGridPointForcesArray(GridPointForces):
             debug=debug, log=log)
         return force, moment
 
-    def extract_interface_loads(self, nids, eids,
+
+    def extract_interface_loads(self,
+                                nids: NDArrayNint,
+                                eids: NDArrayNint,
                                 coord_out, coords, nid_cd, icd_transform,
-                                xyz_cid0, summation_point=None,
-                                consider_rxf=True,
-                                itime=0, debug=True, log=None):
+                                xyz_cid0: NDArrayN3float,
+                                summation_point: Optional[NDArray3float]=None,
+                                consider_rxf: bool=True,
+                                itime: int=0,
+                                debug: bool=False,
+                                log: Optional[SimpleLogger]=None,
+                                ) -> Tuple[NDArray3float, NDArray3float]:
         """
         Extracts Patran-style interface loads.  Interface loads are the
         internal loads at a cut.
@@ -799,13 +815,13 @@ class RealGridPointForcesArray(GridPointForces):
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
-                '  _ntotals: %s\n' % self._ntotals,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
+                f'  _ntotals: {self._ntotals}\n',
             ]
 
         #nelements = self.nelements
@@ -819,13 +835,13 @@ class RealGridPointForcesArray(GridPointForces):
             msgi = '  type=%s ntimes=%i nelements=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, ntotal)
             if self.ntotal != min(self._ntotals):
-                msgi += '  _ntotals=%s\n' % (self._ntotals)
+                msgi += f'  _ntotals={self._ntotals}\n'
             ntimes_word = 'ntimes'
         else:
             msgi = '  type=%s nelements=%i total=%i\n' % (
                 self.__class__.__name__, nelements, ntotal)
             if self.ntotal != min(self._ntotals):
-                msgi += '  _ntotals=%s\n' % (self._ntotals)
+                msgi += f'  _ntotals={self._ntotals}\n'
             ntimes_word = '1'
         msg.append(msgi)
         headers = self.get_headers()
@@ -835,7 +851,7 @@ class RealGridPointForcesArray(GridPointForces):
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (
             ntimes_word, n, n, ', '.join(headers)))
         msg.append('  data.shape=%s\n' % str(self.data.shape))
-        msg.append('  element type: %s\n' % self.element_name)
+        msg.append(f'  element type: {self.element_name}\n')
         msg += self.get_data_code()
         return msg
 
@@ -881,7 +897,7 @@ class RealGridPointForcesArray(GridPointForces):
         return
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         msg = self._get_f06_msg()
@@ -1164,14 +1180,14 @@ class ComplexGridPointForcesArray(GridPointForces):
         #self.nnodes = None
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         #self.ielement = 0
 
@@ -1340,8 +1356,7 @@ class ComplexGridPointForcesArray(GridPointForces):
                 msg += '%s\n' % str(self.code_information())
                 i = 0
                 for itime in range(self.ntimes):
-                    print('is_unique =', self.is_unique)
-                    import sys
+                    #print('is_unique =', self.is_unique)
                     sys.stdout.flush()
                     for ie, e in enumerate(self.node_element[itime, :, :]):
                         print(e)
@@ -1410,12 +1425,12 @@ class ComplexGridPointForcesArray(GridPointForces):
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         #nelements = self.nelements

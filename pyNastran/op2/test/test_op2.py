@@ -76,16 +76,16 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
     for i, op2file in enumerate(files[nstart:nstop], nstart):  # 149
         basename = os.path.basename(op2file)
         #if basename not in skip_files and not basename.startswith('acms') and i not in nskip:
-        sys.stderr.write('%s file=%s\n' % (i, op2file))
+        sys.stderr.write(f'{i} file={op2file}\n')
         if basename not in skip_files and '#' not in op2file:
             print("%" * 80)
-            print('file=%s\n' % op2file)
+            print(f'file={op2file}\n')
             #n = '%s ' % i
             ntotal += 1
 
             is_passed = True
             for binary_debugi in binary_debug:
-                print('------running binary_debug=%s------' % binary_debugi)
+                print(f'------running binary_debug={binary_debugi}------')
                 is_passedi = run_op2(op2file, make_geom=make_geom, combine=combine,
                                      write_bdf=write_bdf, write_f06=write_f06, write_op2=write_op2,
                                      is_mag_phase=False,
@@ -106,7 +106,7 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
                     break
 
             if not is_passed:
-                sys.stderr.write('**file=%s\n' % op2file)
+                sys.stderr.write(f'**file={op2file}\n')
                 failed_cases.append(op2file)
                 nfailed += 1
             else:
@@ -223,7 +223,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     else:
         sort_methods = is_sort2
 
-    assert '.op2' in op2_filename.lower(), 'op2_filename=%s is not an OP2' % op2_filename
+    assert '.op2' in op2_filename.lower(), f'op2_filename={op2_filename} is not an OP2'
     is_passed = False
 
     fname_base = os.path.splitext(op2_filename)[0]
@@ -289,7 +289,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         op2.object_attributes()
         op2.object_methods()
         if not quiet:
-            print("---stats for %s---" % op2_filename)
+            print(f'---stats for {op2_filename}---')
             print(op2.get_op2_stats(short=short_stats))
             op2.print_subcase_key()
 
@@ -576,7 +576,7 @@ def set_versions(op2s, is_nx, is_autodesk, is_nasa95, post):
         for op2 in op2s:
             op2.post = -4
 
-def main(argv=None, show_args=True):
+def main(argv=None, show_args: bool=True) -> None:
     """the interface for test_op2"""
     if argv is None:
         argv = sys.argv

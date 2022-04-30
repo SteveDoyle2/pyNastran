@@ -6,13 +6,13 @@ class RealAccelerationArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s', page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         words = ['                                             A C C E L E R A T I O N   V E C T O R\n', ]
         #' \n',
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        if self.table_name in ['OUGV1', 'OUGV2', 'OUPV1', 'BOUGV1']:
+        if self.table_name in ['OUGV1', 'OUGV2', 'OUPV1', 'BOUGV1', 'OAG1']:
             pass
         elif self.table_name in ['OUXY1', 'OUXY2']:
             words = ['                                       A C C E L E R A T I O N   V E C T O R   (SOLUTION SET)']
@@ -45,7 +45,7 @@ class ComplexAccelerationArray(ComplexTableArray):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         words = ['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n']

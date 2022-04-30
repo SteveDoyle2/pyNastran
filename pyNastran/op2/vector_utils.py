@@ -32,7 +32,9 @@ from typing import Optional, Dict, TYPE_CHECKING
 import numpy as np
 from numpy import arccos, sqrt, pi, in1d, cos, unique, cross, ndarray
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import CORDx # , CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+    from pyNastran.nptyping_interface import NDArrayN3float, NDArrayN2int, NDArrayNint, NDArray3float
 
 
 def filter1d(a: ndarray, b: Optional[ndarray]=None, zero_tol: float=0.001):
@@ -259,7 +261,7 @@ def abs_max_min_vector(values):
     Parameters
     ----------
     values: ndarray/listtuple
-        an array of values, where the rows are interated over
+        an array of values, where the rows are iterated over
         and the columns are going to be compressed
 
         common NDARRAY/list/tuple shapes:
@@ -388,7 +390,7 @@ def transform_force(force_in_local,
     cds = nid_cd[:, 1]
     ucds = unique(cds)
 
-    coord_out_cid = coord_out.cid
+    unused_coord_out_cid = coord_out.cid
     coord_out_T = coord_out.beta()
 
     for cd in ucds:
@@ -410,9 +412,9 @@ def transform_force_moment(force_in_local, moment_in_local,
                            coord_out: CORDx, coords: Dict[int, CORDx],
                            nid_cd: int, icd_transform: Dict[int, ndarray],
                            xyz_cid0: ndarray,
-                           summation_point_cid0: Optional[ndarray]=None,
+                           summation_point_cid0: Optional[NDArray3float]=None,
                            consider_rxf: bool=True,
-                           debug: bool=False, log=None):
+                           debug: bool=False, log: Optional[SimpleLogger]=None):
     """
     Transforms force/moment from global to local and returns all the forces.
 
@@ -487,7 +489,7 @@ def transform_force_moment(force_in_local, moment_in_local,
 
     if debug:
         log.debug('beta_out =\n%s' % beta_out)
-        log.debug(coord_out)
+        log.debug(str(coord_out))
         if consider_rxf:
             for ii in range(xyz_cid0.shape[0]):
                 log.debug('***i=%s xyz=%s nid=%s cd=%s' % (
@@ -536,8 +538,8 @@ def transform_force_moment(force_in_local, moment_in_local,
         # rotate the forces/moments into a coordinate system coincident
         # with the local frame and with the same primary directions
         # as the global frame
-        force_in_globali = force_in_locali.dot(beta_cd)
-        moment_in_globali = moment_in_locali.dot(beta_cd)
+        force_in_globali = force_in_locali @ beta_cd
+        moment_in_globali = moment_in_locali @ beta_cd
 
         # rotate the forces and moments into a coordinate system coincident
         # with the output frame and with the same primary directions
@@ -546,8 +548,8 @@ def transform_force_moment(force_in_local, moment_in_local,
         #if 0 and np.array_equal(beta_out, eye):
             #force_outi = force_in_globali
             #moment_outi = moment_in_globali
-        force_outi = force_in_globali.dot(beta_out)
-        moment_outi = moment_in_globali.dot(beta_out)
+        force_outi = force_in_globali @ beta_out
+        moment_outi = moment_in_globali @ beta_out
 
         if debug:
             #if show_local:
@@ -570,7 +572,7 @@ def transform_force_moment(force_in_local, moment_in_local,
             delta = xyz_cid0[i, :] - summation_point_cid0[np.newaxis, :]
             rxf = cross(delta, force_in_globali)
 
-            rxf_in_cid = rxf.dot(beta_out)
+            rxf_in_cid = rxf @ beta_out
             if debug:
                 log.debug('delta_moment = %s' % delta)
                 #log.debug('rxf = %s' % rxf.T)
@@ -588,7 +590,7 @@ def transform_force_moment(force_in_local, moment_in_local,
 
 def transform_force_moment_sum(force_in_local, moment_in_local,
                                coord_out, coords,
-                               nid_cd, icd_transform,
+                               nid_cd: NDArrayN2int, icd_transform: Dict[int, NDArrayNint],
                                xyz_cid0, summation_point_cid0=None,
                                consider_rxf=True,
                                debug=False, log=None):

@@ -481,7 +481,7 @@ def write_pbush(name, pids, itable, op2, op2_ascii, obj, endian=b'<',
         #n += ntotal
     #return n, props
 
-def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
+def write_pbarl(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
     """writes the PBARL"""
     key = (9102, 91, 52)
     fmt0 = endian + b'2i8s8sf'
@@ -495,10 +495,10 @@ def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
 
     nvalues = 8 * nproperties + ndims + 3 # +3 comes from the keys
     nbytes = nvalues * 4
-    op2.write(pack('3i', *[4, nvalues, 4]))
-    op2.write(pack('i', nbytes)) #values, nbtyes))
+    op2_file.write(pack('3i', *[4, nvalues, 4]))
+    op2_file.write(pack('i', nbytes)) #values, nbtyes))
 
-    op2.write(pack('3i', *key))
+    op2_file.write(pack('3i', *key))
     op2_ascii.write('%s %s\n' % (name, str(key)))
 
     for pid in sorted(pids):
@@ -516,20 +516,20 @@ def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
         data_in += prop.dim
         data_in.append(prop.nsm)
         data_in.append(-1)
-        op2.write(struct1.pack(*data_in))
+        op2_file.write(struct1.pack(*data_in))
         op2_ascii.write(str(data_in) + '\n')
 
-    op2.write(pack('i', nbytes))
+    op2_file.write(pack('i', nbytes))
     itable -= 1
     data = [
         4, itable, 4,
         4, 1, 4,
         4, 0, 4]
-    op2.write(pack('9i', *data))
+    op2_file.write(pack('9i', *data))
     op2_ascii.write(str(data) + '\n')
     return itable
 
-def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
+def write_pcomp(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
     """writes the PCOMP"""
     key = (2706, 27, 287)
 
@@ -546,10 +546,10 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
 
     nvalues = 8 * nproperties + (4  * nlayers) + 3 # +3 comes from the keys
     nbytes = nvalues * 4
-    op2.write(pack('3i', *[4, nvalues, 4]))
-    op2.write(pack('i', nbytes)) #values, nbtyes))
+    op2_file.write(pack('3i', *[4, nvalues, 4]))
+    op2_file.write(pack('i', nbytes)) #values, nbtyes))
 
-    op2.write(pack('3i', *key))
+    op2_file.write(pack('3i', *key))
     op2_ascii.write('%s %s\n' % (name, str(key)))
 
     #is_symmetrical = 'NO'
@@ -586,7 +586,7 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
             symmetric_factor = -1
         data = [pid, symmetric_factor * nplies, prop.z0,
                 prop.nsm, prop.sb, ft, prop.tref, prop.ge]
-        op2.write(s1.pack(*data))
+        op2_file.write(s1.pack(*data))
         op2_ascii.write(str(data) + '\n')
 
         for (mid, t, theta, sout) in zip(prop.mids, prop.thicknesses, prop.thetas, prop.souts):
@@ -598,7 +598,7 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
                 raise RuntimeError(f'unsupported sout.  sout={sout!r} and must be 0 or 1.'
                                    f'\nPCOMP = {data}')
             data2 = [mid, t, theta, sout]
-            op2.write(s2.pack(*data2))
+            op2_file.write(s2.pack(*data2))
             op2_ascii.write(str(data2) + '\n')
 
 
@@ -606,13 +606,13 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
         #pid, z0, nsm, sb, ft, Tref, ge,
         #is_symmetrical, mids, T, thetas, souts]
 
-    op2.write(pack('i', nbytes))
+    op2_file.write(pack('i', nbytes))
     itable -= 1
     data = [
         4, itable, 4,
         4, 1, 4,
         4, 0, 4]
-    op2.write(pack('9i', *data))
+    op2_file.write(pack('9i', *data))
     op2_ascii.write(str(data) + '\n')
 
     return itable

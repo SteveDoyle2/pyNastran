@@ -1580,7 +1580,7 @@ class CBEND(LineElement):
             raise ValueError('invalid x1Go=%r on CBEND' % x1_g0)
         geom = integer(card, 8, 'geom')
 
-        assert len(card) == 9, 'len(CBEND card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 9, f'len(CBEND card) = {len(card):d}\ncard={card}'
         return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
 
     @classmethod
@@ -1967,7 +1967,6 @@ def rotate_v_wa_wb(model: BDF, elem, xyz1, xyz2, node1, node2, ihat_offset, i_of
     Li = norm(i)
     ihat = i / Li
     yhat, zhat = get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, node1.nid, node2.nid, i, Li)
-
     #print('  n1=%s n2=%s' % (n1, n2))
     #print('  ib=%s ia=%s' % (ib, ia))
     #print('  wa=%s wb=%s' % (wa, wb))

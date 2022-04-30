@@ -27,9 +27,10 @@ defines various methods to access high level BDF data:
 
 """
 # pylint: disable=C0103
+from __future__ import annotations
 from copy import deepcopy
 from collections import defaultdict
-from typing import List, Dict, Set, Tuple, Optional, Union, Any
+from typing import List, Dict, Set, Tuple, Optional, Union, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -46,6 +47,9 @@ from pyNastran.bdf.mesh_utils.mpc_dependency import (
     get_rigid_elements_with_node_ids, get_dependent_nid_to_components,
     get_lines_rigid, get_mpcs)
 
+if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
+    from pyNastran.bdf.bdf import BDF
 
 class GetCard(GetMethods):
     """defines various methods to access high level BDF data"""
@@ -1342,6 +1346,8 @@ class GetCard(GetMethods):
         elements_without_properties = {
             'CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4',
             'CHBDYG', 'GENEL'}
+
+        log = self.log
         for eid, element in self.elements.items():
             try:
                 pid = element.Pid()
@@ -1358,7 +1364,7 @@ class GetCard(GetMethods):
             raise RuntimeError('no elements with properties found%s\ncard_count=%s' % (
                 msg, str(self.card_count)))
         elif elem_count == 0:
-            self.log.warning('no elements with properties found%s' % msg)
+            log.warning('no elements with properties found%s' % msg)
         return pid_to_eids_map
 
     def get_node_id_to_element_ids_map(self) -> Dict[int, List[int]]:
@@ -1460,7 +1466,8 @@ class GetCard(GetMethods):
 
         elements_without_properties = {
             'CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4',
-            'GENEL', 'CHACAB', 'CAABSF', }
+            'GENEL', 'CHACAB', 'CAABSF',
+        }
         thermal_elements = {'CHBDYP'}
         elements_without_properties.update(thermal_elements)
         skip_elements = elements_without_properties

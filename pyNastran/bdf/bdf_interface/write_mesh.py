@@ -6,6 +6,7 @@ This file defines:
 """
 import sys
 from io import StringIO, IOBase
+from pathlib import PurePath
 from collections import defaultdict, OrderedDict
 from typing import List, Dict, Union, Optional, Tuple, Any, cast
 
@@ -39,47 +40,25 @@ class WriteMesh(BDFAttributes):
             encoding = self._encoding
             if encoding is None:
                 encoding = sys.getdefaultencoding()
-        encoding = cast(str, encoding)
+            elif isinstance(encoding, bytes):
+                # needed for hdf5 loader for some reason...
+                encoding = self._encoding.decode('latin1')
+                self._encoding = encoding
+        encoding = cast(str, encoding)  # just for typing
+        assert isinstance(encoding, str), encoding
         return encoding
 
     def _output_helper(self, out_filename: Optional[str], interspersed: bool,
                        size: int, is_double: bool) -> str:
-        """
-        Performs type checking on the write_bdf inputs
-        """
-        if out_filename is None:
-            from pyNastran.utils.gui_io import save_file_dialog
-            wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
-                "*.bdf;*.dat;*.nas;*.pch|" \
-                "All files (*.*)|*.*"
-            wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch);;All files (*)"
-            title = 'Save BDF/DAT/PCH'
-            out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
-            assert out_filename is not None, out_filename
-
-        has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
-        if has_read_write or isinstance(out_filename, IOBase):
-            return out_filename
-        elif not isinstance(out_filename, str):
-            msg = 'out_filename=%r must be a string; type=%s' % (
-                out_filename, type(out_filename))
-            raise TypeError(msg)
-
-        if size == 8:
-            assert is_double is False, 'is_double=%r' % is_double
-        elif size == 16:
-            assert is_double in [True, False], 'is_double=%r' % is_double
-        else:
-            assert size in [8, 16], size
-
-        assert isinstance(interspersed, bool)
-        #fname = print_filename(out_filename)
-        #self.log.debug("***writing %s" % fname)
+        """Performs type checking on the write_bdf inputs"""
+        out_filename = _output_helper(out_filename, interspersed,
+                                      size, is_double)
         return out_filename
 
     def write_bdf(self, out_filename: Optional[Union[str, StringIO]]=None,
                   encoding: Optional[str]=None,
-                  size: int=8, is_double: bool=False,
+                  size: int=8,
+                  is_double: bool=False,
                   interspersed: bool=False, enddata: Optional[bool]=None,
                   write_header: bool=True, close: bool=True) -> None:
         """
@@ -191,11 +170,11 @@ class WriteMesh(BDFAttributes):
                 self.punch = True
 
         if self.nastran_format and write_header:
-            bdf_file.write('$pyNastran: version=%s\n' % self.nastran_format)
-            bdf_file.write('$pyNastran: punch=%s\n' % self.punch)
-            bdf_file.write('$pyNastran: encoding=%s\n' % encoding)
-            bdf_file.write('$pyNastran: nnodes=%s\n' % len(self.nodes))
-            bdf_file.write('$pyNastran: nelements=%s\n' % len(self.elements))
+            bdf_file.write(f'$pyNastran: version={self.nastran_format}\n')
+            bdf_file.write(f'$pyNastran: punch={self.punch}\n')
+            bdf_file.write(f'$pyNastran: encoding={encoding}\n')
+            bdf_file.write(f'$pyNastran: nnodes={len(self.nodes):d}\n')
+            bdf_file.write(f'$pyNastran: nelements={len(self.elements):d}\n')
 
         if not self.punch:
             self._write_executive_control_deck(bdf_file)
@@ -349,7 +328,7 @@ class WriteMesh(BDFAttributes):
         self.zona.write_bdf(bdf_file, size=8, is_double=False)
 
     def _write_aero_control(self, bdf_file: Any, size: int=8, is_double: bool=False,
-                           is_long_ids: Optional[bool]=None) -> None:
+                            is_long_ids: Optional[bool]=None) -> None:
         """Writes the aero control surface cards"""
         if(self.aecomps or self.aefacts or self.aeparams or self.aelinks or
            self.aelists or self.aestats or self.aesurf or self.aesurfs):
@@ -635,8 +614,7 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(load_combination.write_card(size, is_double))
                     except Exception:
-                        print('failed printing load...type=%s key=%r'
-                              % (load_combination.type, key))
+                        print(f'failed printing load...type={load_combination.type} key={key!r}')
                         raise
 
             if is_long_ids:
@@ -645,8 +623,7 @@ class WriteMesh(BDFAttributes):
                         try:
                             bdf_file.write(load.write_card_16(is_double))
                         except Exception:
-                            print('failed printing load...type=%s key=%r'
-                                  % (load.type, key))
+                            print(f'failed printing load...type={load.type} key={key!r}')
                             raise
             else:
                 for (key, loadcase) in sorted(self.loads.items()):
@@ -654,8 +631,7 @@ class WriteMesh(BDFAttributes):
                         try:
                             bdf_file.write(load.write_card(size, is_double))
                         except Exception:
-                            print('failed printing load...type=%s key=%r'
-                                  % (load.type, key))
+                            print(f'failed printing load...type={load.type} key={key!r}')
                             raise
 
             for unused_key, tempd in sorted(self.tempds.items()):
@@ -675,8 +651,7 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(load.write_card(size, is_double))
                     except Exception:
-                        print('failed printing load...type=%s key=%r'
-                              % (load.type, key))
+                        print(f'failed printing load...type={load.type} key={key!r}')
                         raise
 
             for (key, loadcase) in sorted(self.dload_entries.items()):
@@ -684,8 +659,7 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(load.write_card(size, is_double))
                     except Exception:
-                        print('failed printing load...type=%s key=%r'
-                              % (load.type, key))
+                        print(f'failed printing load...type={load.type} key={key!r}')
                         raise
 
 
@@ -964,7 +938,7 @@ class WriteMesh(BDFAttributes):
 
         bdf_file.write('$PROPERTIES\n')
         for prop_class, prop_types in propertys_class_to_property_types.items():
-            print(prop_class, prop_types)
+            #print(prop_class, prop_types)
             #for prop_type in prop_types:
                 #if prop_type not in properties_by_class:
                     #continue
@@ -1219,6 +1193,38 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$THERMAL MATERIALS\n')
             for (unused_mid, material) in sorted(self.thermal_materials.items()):
                 bdf_file.write(material.write_card(size, is_double))
+
+def _output_helper(out_filename: Optional[str], interspersed: bool,
+                   size: int, is_double: bool) -> str:
+    """Performs type checking on the write_bdf inputs"""
+    if out_filename is None:
+        from pyNastran.utils.gui_io import save_file_dialog
+        wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
+            "*.bdf;*.dat;*.nas;*.pch|" \
+            "All files (*.*)|*.*"
+        wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch);;All files (*)"
+        title = 'Save BDF/DAT/PCH'
+        out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
+        assert out_filename is not None, out_filename
+
+    has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
+    if has_read_write or isinstance(out_filename, IOBase):
+        return out_filename
+    if not isinstance(out_filename, (str, PurePath)):
+        msg = f'out_filename={out_filename!r} must be a string; type={type(out_filename)}'
+        raise TypeError(msg)
+
+    if size == 8:
+        assert is_double is False, 'is_double=%r' % is_double
+    elif size == 16:
+        assert is_double in [True, False], 'is_double=%r' % is_double
+    else:
+        assert size in [8, 16], size
+
+    assert isinstance(interspersed, bool)
+    #fname = print_filename(out_filename)
+    #self.log.debug("***writing %s" % fname)
+    return out_filename
 
 def _write_dict(bdf_file, my_dict: Dict[int, Any], size: int, is_double: bool, is_long_ids: bool) -> None:
     """writes a dictionary that may require long format"""

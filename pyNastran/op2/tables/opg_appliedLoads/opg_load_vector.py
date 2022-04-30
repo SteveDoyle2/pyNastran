@@ -9,7 +9,7 @@ class RealLoadVectorArray(RealTableArray):  # table_code=2, sort_code=0, thermal
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         words = ['                                                     L O A D   V E C T O R\n', ]
@@ -30,7 +30,7 @@ class ComplexLoadVectorArray(ComplexTableArray):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         words = ['                                               C O M P L E X   L O A D   V E C T O R\n', ]
@@ -43,7 +43,7 @@ class RealTemperatureVectorArray(RealScalarTableArray):
         RealScalarTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         words = [
@@ -65,7 +65,7 @@ class RealThermalVelocityVectorArray(RealScalarTableArray):
         RealScalarTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         words = [

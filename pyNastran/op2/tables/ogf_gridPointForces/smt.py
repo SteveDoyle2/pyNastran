@@ -23,13 +23,16 @@ from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, CORD2R
 
+from pyNastran.nptyping_interface import NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float
+
 def smt_setup(model: BDF):
     nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
     eids, element_centroids_cid0 = get_element_centroids(model)
     return nids, nid_cd, xyz_cid0, icd_transform, eids, element_centroids_cid0
 
 def setup_coord_from_plane(model: BDF, xyz_cid0,
-                           p1, p2, p3, zaxis,
+                           p1: NDArray3float, p2: NDArray3float, p3: NDArray3float,
+                           zaxis: NDArray3float,
                            method: str='Z-Axis Projection',
                            cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                            nplanes: int=11, ):

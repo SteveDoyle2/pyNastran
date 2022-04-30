@@ -20,6 +20,7 @@ from pyNastran.bdf.errors import MissingDeckSections
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 
+# these allow spaces
 FILE_MANAGEMENT = (
     'ACQUIRE ', 'ASSIGN ', 'CONNECT ', 'DBCLEAN ', 'DBDICT ', 'DBDIR ',
     'DBFIX ', 'DBLOAD ', 'DBLOCATE ', 'DBSETDEL ', 'DBUNLOAD ',
@@ -246,8 +247,8 @@ class BDFInputPy:
                 line = lines[i].rstrip('\r\n\t')
             except IndexError:
                 break
-            uline = line.upper()
-            if uline.startswith('INCLUDE'):
+            line_upper = line.upper()
+            if line_upper.startswith('INCLUDE'):
                 j, include_lines = self._get_include_lines(lines, line, i, nlines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
                 #bdf_filenames.append(bdf_filename2)
@@ -926,19 +927,20 @@ def _lines_to_decks_main(lines: List[str],
     for i, ifile_iline, line in zip(count(), ilines, lines):
         #print('%s %-8s %s' % (ifile_iline, flag_word, line.rstrip()))
         #print('%s %i %s' % (ifile_iline, flag, line.rstrip()))
-        uline = line.split('$')[0].upper().strip()
+        line_upper = line.split('$')[0].upper().strip()
 
-        if guess_deck_sections and flag == 1 and uline.startswith('BEGIN'):
+        if guess_deck_sections and flag == 1 and line_upper.startswith('BEGIN'):
+            # we're in the executive deck and found the bulk data deck
             section_name_map = {
                 1 : 'executive control',
                 2 : 'case control',
             }
             section_name = section_name_map[flag]
 
-            if _is_begin_bulk(uline):
+            if _is_begin_bulk(line_upper):
                 #old_flags.append(flag)
-                log.warning('currently in %s deck and skipping directly '
-                            'to bulk data section' % section_name)
+                log.warning(f'currently in {section_name} deck and skipping '
+                            'directly to bulk data section')
                 flag = 3
                 current_ilines = bulk_data_ilines
                 current_lines = bulk_data_lines
@@ -946,18 +948,20 @@ def _lines_to_decks_main(lines: List[str],
                     lines, ilines, bulk_data_lines, i,
                     make_ilines=make_ilines, keep_enddata=keep_enddata)
             else:
-                raise RuntimeError('currently in %s deck and unexpectedly found the following '
-                                   'line:\n%s' % (section_name, line))
+                raise RuntimeError(f'currently in {section_name} deck and unexpectedly '
+                                   f'found the following line:\n{line}')
             break
 
         if guess_deck_sections and flag in [1, 2] and _is_bulk_data_line(line):
+            # we found the case control deck successfully from the executive deck
+            # then we found the bulk data deck unexpectedly
             section_name_map = {
                 1 : 'executive control',
                 2 : 'case control',
             }
             section_name = section_name_map[flag]
-            log.warning('currently in %s deck and skipping directly '
-                        'to bulk data section\n%s' % (section_name, line))
+            log.warning(f'currently in {section_name} deck and skipping directly '
+                        f'to bulk data section\n{line}')
             log.warning(line)
             flag = 3
             current_ilines = bulk_data_ilines
@@ -968,9 +972,8 @@ def _lines_to_decks_main(lines: List[str],
             break
 
         elif flag == 1:
-            # I don't think we need to handle the comment because
-            # this uses a startswith
-            if line.upper().startswith('CEND'):
+            # handles ' CEND'
+            if line_upper.startswith('CEND'):
                 # case control
                 old_flags.append(flag)
                 if flag != 1:
@@ -1009,9 +1012,10 @@ def _lines_to_decks_main(lines: List[str],
                 current_lines.append('$' + comment.rstrip())
                 #print('%s: %s' % (flag_word, '$' + comment.rstrip()))
 
-            uline = line.upper().strip()
-            if uline.startswith('BEGIN'):
-                if _is_begin_bulk(uline):
+            # just reuse the existing one
+            #line_upper = line.upper().strip()
+            if line_upper.startswith('BEGIN'):
+                if _is_begin_bulk(line_upper):
                     old_flags.append(flag)
                     #assert flag == 2, flag
 
@@ -1036,15 +1040,15 @@ def _lines_to_decks_main(lines: List[str],
                     case_control_lines.append(line.rstrip())
                     continue
 
-                elif 'SUPER' in uline and '=' in uline:
-                    super_id = _get_super_id(line, uline)
+                elif 'SUPER' in line_upper and '=' in line_upper:
+                    super_id = _get_super_id(line, line_upper)
                     old_flags.append(flag)
                     flag = -super_id
                     #flag_word = 'SUPER=%s' % super_id
                     current_lines = superelement_lines[super_id]
                     current_ilines = superelement_ilines[super_id]
 
-                elif ('AUXMODEL' in uline or 'AFPM' in uline) and '=' in uline:
+                elif ('AUXMODEL' in line_upper or 'AFPM' in line_upper) and '=' in line_upper:
                     out = _read_bulk_for_auxmodel(
                         ifile_iline, line, flag, bulk_data_lines,
                         current_lines, current_ilines,
@@ -1062,34 +1066,34 @@ def _lines_to_decks_main(lines: List[str],
                     if is_broken:
                         break
                 else:
-                    msg = 'expected "BEGIN BULK" or "BEGIN SUPER=1"\nline = %s' % line
+                    msg = f'expected "BEGIN BULK" or "BEGIN SUPER=1"\nline = {line}'
                     raise RuntimeError(msg)
 
                 #print('%s: %s' % (flag_word, line.rstrip()))
                 current_lines.append(line.rstrip())
-            elif uline.startswith('SUPER'):
+            elif line_upper.startswith('SUPER'):
                 # case control line
                 # SUPER = ALL
-                #auxmodel_idi = int(uline.split('=')[1])
+                #auxmodel_idi = int(line_upper.split('=')[1])
                 #auxmodels_to_find.append(auxmodel_idi)
                 if flag != 2:
                     raise RuntimeError('expected a flag of 2 (case control deck) '
                                        'when going to an SUPER model')
 
                 is_superelement = True
-            elif uline.startswith('AUXMODEL'):
+            elif line_upper.startswith('AUXMODEL'):
                 # case control line
                 # AUXMODEL = 10
-                auxmodel_idi = int(uline.split('=')[1])
+                auxmodel_idi = int(line_upper.split('=')[1])
                 auxmodels_to_find.append(auxmodel_idi)
                 if flag != 2:
                     raise RuntimeError('expected a flag of 2 (case control deck) '
                                        'when going to an AUXMODEL')
                 is_auxmodel = True
-            elif uline.startswith('AFPM'):
+            elif line_upper.startswith('AFPM'):
                 # case control line
                 # AFPM = 10
-                afpm_idi = int(uline.split('=')[1])
+                afpm_idi = int(line_upper.split('=')[1])
                 afpms_to_find.append(afpm_idi)
                 if flag != 2:
                     raise RuntimeError('expected a flag of 2 (case control deck) '
@@ -1101,8 +1105,8 @@ def _lines_to_decks_main(lines: List[str],
         elif flag == 3:
             if not(is_auxmodel is True or is_superelement is True or consider_superelements):
                 raise RuntimeError(f'one must be True: is_auxmodel={is_auxmodel}; '
-                                   'is_superelement={is_superelement}; '
-                                   'consider_superelements={consider_superelements}')
+                                   f'is_superelement={is_superelement}; '
+                                   f'consider_superelements={consider_superelements}')
             #assert is_auxmodel is True or is_superelement is True or consider_superelements
 
             # we have to handle the comment because we could incorrectly
@@ -1188,7 +1192,7 @@ def _bulk_data_lines_extract(lines: List[str],
         #raise RuntimeError(msg)
     return bulk_data_ilines
 
-def _is_begin_bulk(uline: str) -> bool:
+def _is_begin_bulk(line_upper: str) -> bool:
     """
     is this a:
       'BEGIN BULK'
@@ -1198,10 +1202,10 @@ def _is_begin_bulk(uline: str) -> bool:
       'BEGIN BULK AFPM=2'
 
     """
-    is_begin_bulk = 'BULK' in uline and (
-        'AUXMODEL' not in uline and
-        'AFPM' not in uline and
-        'SUPER' not in uline)
+    is_begin_bulk = 'BULK' in line_upper and (
+        'AUXMODEL' not in line_upper and
+        'AFPM' not in line_upper and
+        'SUPER' not in line_upper)
     return is_begin_bulk
 
 def _read_bulk_for_auxmodel(ifile_iline, line, flag: int, bulk_data_lines: List[str],
@@ -1306,6 +1310,7 @@ def _break_system_lines(executive_control_lines: List[str]) -> Tuple[List[str], 
     DBUPDATE  Specifies the time between updates of the database directory.
     ENDJOB    Terminates a job upon completion of FMS statements.
     EXPAND    Concatenates additional DBset members to an existing DBset.
+    ID        Flag to name the run.
     INCLUDE   Inserts an external file in the input file.
     INIT      Creates a temporary or permanent DBset.
     NASTRAN   Specifies values for system cells.
@@ -1383,8 +1388,8 @@ def _check_valid_deck(flag: int, old_flags: List[int]) -> None:
             raise RuntimeError('flag=%r is not [1, 2, 3]' % flag)
 
         msg = 'This is not a valid BDF (a BDF capable of running Nastran).\n\n'
-        msg += 'The following sections were found:\n%s\n' % found
-        msg += 'The following sections are missing:\n%s\n' % missing
+        msg += f'The following sections were found:\n{found}\n'
+        msg += f'The following sections are missing:\n{missing}\n'
         msg += 'If you do not have an Executive Control Deck or a Case Control Deck:\n'
         msg += '  1.  call read_bdf(...) with `punch=True`\n'
         msg += "  2.  Add '$ pyNastran : punch=True' to the top of the main file\n"
@@ -1437,7 +1442,7 @@ def _show_bad_file(self: Any, bdf_filename: Union[str, StringIO],
             iline += 1
             lines.append(line)
 
-def _get_auxmodel_id(line: str, uline: str) -> int:
+def _get_auxmodel_id(line: str, line_upper: str) -> int:
     """
     parses the superelement header::
 
@@ -1446,10 +1451,10 @@ def _get_auxmodel_id(line: str, uline: str) -> int:
         BEGIN BULK AUXMODEL = 2
 
     """
-    #if '=' in uline:
-    sline = uline.split('=')
+    #if '=' in line_upper:
+    sline = line_upper.split('=')
     #else:
-        #sline = uline.split()
+        #sline = line_upper.split()
     try:
         auxmodel_id = int(sline[1])
     except (IndexError, ValueError):
@@ -1461,7 +1466,7 @@ def _get_auxmodel_id(line: str, uline: str) -> int:
             auxmodel_id, line))
     return auxmodel_id
 
-def _get_afpm_id(line: str, uline: str) -> int:
+def _get_afpm_id(line: str, line_upper: str) -> int:
     """
     parses the superelement header::
 
@@ -1470,7 +1475,7 @@ def _get_afpm_id(line: str, uline: str) -> int:
         BEGIN BULK AFPM = 2
 
     """
-    sline = uline.split('=')
+    sline = line_upper.split('=')
     try:
         afpm_id = int(sline[1])
     except (IndexError, ValueError):
@@ -1482,7 +1487,7 @@ def _get_afpm_id(line: str, uline: str) -> int:
             afpm_id, line))
     return afpm_id
 
-def _get_super_id(line: str, uline: str) -> int:
+def _get_super_id(line: str, line_upper: str) -> int:
     """
     parses the superelement header::
 
@@ -1492,14 +1497,14 @@ def _get_super_id(line: str, uline: str) -> int:
         BEGIN BULK SUPER 2
 
     """
-    if '=' in uline:
-        sline = uline.split('=')
+    if '=' in line_upper:
+        sline = line_upper.split('=')
         super_id_str = sline[1]
         if len(sline) != 2:
             msg = 'expected "BEGIN SUPER=1"\nline = %s' % line
             raise SyntaxError(msg)
     else:
-        sline = uline.split()
+        sline = line_upper.split()
         if len(sline) not in [3, 4]:
             msg = 'expected "BEGIN SUPER=1"\nline = %s' % line
             raise SyntaxError(msg)

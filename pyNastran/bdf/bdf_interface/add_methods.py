@@ -1,6 +1,6 @@
 # pylint: disable=R0902,R0904,R0914
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 if TYPE_CHECKING:  # pragma: no cover

@@ -5321,7 +5321,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self._build_mcid_vectors(model, nplies)
         return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
 
-    def _plot_pressures(self, model: BDF, cases, form0, icase: int, subcase_id: int) -> int:
+    def _plot_pressures(self, model: BDF, cases, form0,
+                        icase: int, subcase_id: int) -> int:
         """
         pressure act normal to a shell (as opposed to anti-normal to a
         solid face)

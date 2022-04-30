@@ -3,6 +3,7 @@ Defines:
  - FortranFormat
 
 """
+from typing import Optional
 from pyNastran.utils import object_attributes
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.op2.errors import FortranMarkerError, SortCodeError
@@ -51,7 +52,7 @@ class FortranFormat:
     def _finish(self):
         raise NotImplementedError('overwrite this')
 
-    def _read_subtable_results(self, table4_parser, record_len):
+    def _read_subtable_results(self, table4_parser, record_len: int) -> Optional[int]:
         """
         # if reading the data
         # 1 - 1st pass to size the array (vectorized)
@@ -67,7 +68,7 @@ class FortranFormat:
         Returns
         -------
         n : None / int
-            None : an error occurred or we're in read_mode=1/array sizeing (???)
+            None : an error occurred or we're in read_mode=1/array sizing (???)
             int : the number of bytes that have been read
 
         """
@@ -162,12 +163,12 @@ class FortranFormat:
             # can it happen any other time?
             #
             # yup, when you have sort2...
-            msga = 'self.obj.name=%r has itime' % self.obj.__class__.__name__
+            msga = f'self.obj.name={self.obj.__class__.__name__!r} has itime'
             self.log.debug(msga)
             msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s\n' % (
                 self.obj.ntotal, str(self.obj.data.shape),
                 self.obj.data.shape[1], self._data_factor)
-            msgb += 'obj._ntotals=%s' % self.obj._ntotals
+            msgb += f'obj._ntotals={self.obj._ntotals}'
             self.log.error(msgb)
             raise RuntimeError(msga + '\n' + msgb)
 
@@ -212,7 +213,7 @@ class FortranFormat:
             self.log.warning('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
         return
 
-    def _cleanup_data_members(self):
+    def _cleanup_data_members(self) -> None:
         """deletes variables from previous tables"""
         del_words = [
             'words',
