@@ -2,8 +2,11 @@
 Defines methods for the op2 & hdf5 writer
 """
 from struct import Struct, pack
+from typing import List
+
 import numpy as np
 import scipy.sparse as sp
+
 
 def set_table3_field(str_fields, ifield, value):
     """
@@ -28,7 +31,7 @@ def _write_markers(op2_file, fascii, markers):
     for marker in markers:
         out += [4, marker, 4]
         n += 3
-        fascii.write('marker = [4, %i, 4]\n' % marker)
+        fascii.write(f'marker = [4, {marker:d}, 4]\n')
     op2_file.write(pack(b'<%ii' % n, *out))
 
 
@@ -50,9 +53,67 @@ def write_table_header(op2_file, fascii, table_name):
     ]
     assert len(table_name) == 8, table_name
     table0_format = '<4i 8s i'
-    st = Struct(table0_format)
-    op2_file.write(st.pack(*table0))
+    struct_table = Struct(table0_format)
+    op2_file.write(struct_table.pack(*table0))
     fascii.write('%s header0 = %s\n' % (table_name, table0))
+
+
+def to_column_bytes(data_list: List[np.ndarray], dtype_out: str,
+                    debug: bool=False) -> np.ndarray:
+    """
+    Takes an stackable numpy array of mixed types (e.g., ints/strings)
+    and casts them to the appropriate output datatype
+    (typically float32/float64).
+
+    An array is stackable if it's the same shape (e.g., ints/floats).  This
+    requirement is a bit looser for strings (4 characters per 32-bit float)
+    """
+    #shape = data_list[0].shape
+    for i, datai in enumerate(data_list):
+        #if isinstance(datai, bytes):
+            ##print('bytes')
+            #data_list[i] = np.frombuffer(datai, dtype=dtype_out)
+        if datai.dtype != dtype_out:
+            #print(datai.dtype, dtype_out)
+            data_list[i] = view_dtype(datai, dtype_out)  # TODO: is this faster/correct?
+            #data_list[i] = datai.view(dtype_out)  # TODO: is this faster/correct?
+            #data_list[i] = np.frombuffer(datai.tobytes(), dtype=dtype_out)
+        elif debug:
+            #print('floats...')
+            print(datai.shape)
+        if debug:
+            print(data_list[i].shape)
+    try:
+        out = np.column_stack(data_list)
+    except ValueError:
+        for i, datai in enumerate(data_list):
+            print(i, datai.shape)
+        raise
+    return out
+
+def get_complex_fdtype(dtype):
+    """complex64 -> float32; complex128 -> float64"""
+    if dtype.itemsize == 8:
+        return np.float32(1).dtype
+    return np.float64(1).dtype # 8
+
+def view_idtype_as_fdtype(int_array, fdtype):
+    """
+    If we're downcasting from int64 to float32, we can't directly go to float32.
+    We need to first go to int32, then to float32.
+    """
+    if int_array.dtype == np.int64:
+        int_array = view_dtype(int_array.astype('int32'), fdtype)
+    else:
+        #print(f'array_obj.dtype.itemsize={nodedevice_gridtype.dtype.itemsize} dtype.itemsize={fdtype.itemsize}')
+        int_array = view_dtype(int_array, fdtype)
+    return int_array
+
+def view_dtype(array_obj, dtype):
+    """handles downcasting data"""
+    if array_obj.dtype.itemsize == dtype.itemsize:
+        return array_obj.view(dtype)
+    return array_obj.astype(dtype)
 
 def export_to_hdf5(self, group, log):
     """exports the object to HDF5 format"""

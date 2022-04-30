@@ -37,7 +37,7 @@ from pyNastran.op2.result_objects.monpnt import MONPNT1, MONPNT3
 
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import (SortCodeError, DeviceCodeError,
-                                  FortranMarkerError,  SixtyFourBitError,
+                                  FortranMarkerError, SixtyFourBitError,
                                   OverwriteTableError)
 from pyNastran.op2.writer.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
@@ -345,15 +345,15 @@ class OP2(OP2_Scalar, OP2Writer):
             raise RuntimeError(f'mode={mode!r} and must be in [msc, nx, '
                                f'autodesk, nasa95, optistruct]')
 
-    def to_nx(self) -> None:
+    def to_nx(self, msg='') -> None:
         if self.is_msc:
-            self.log.warning('switching to NX')
+            self.log.warning(f'switching to NX{msg}')
             self.set_as_nx()
             self.set_table_type()
 
-    def to_msc(self) -> None:
+    def to_msc(self, msg='') -> None:
         if self.is_nx:
-            self.log.warning('switching to MSC')
+            self.log.warning(f'switching to MSC{msg}')
             self.set_as_msc()
 
     def include_exclude_results(self,
@@ -539,7 +539,7 @@ class OP2(OP2_Scalar, OP2Writer):
         self.skip_undefined_matrices = skip_undefined_matrices
         assert self.ask in [True, False], self.ask
         self.is_vectorized = True
-        self.log.debug('combine=%s' % combine)
+        self.log.debug(f'combine={combine}')
         self.log.debug('-------- reading op2 with read_mode=1 (array sizing) --------')
         self.read_mode = 1
         self._close_op2 = False
@@ -1090,7 +1090,7 @@ class OP2(OP2_Scalar, OP2Writer):
             if len(keys) == 1:
                 self.log.info('subcase_id=%s : keys=%s' % (isubcase, keys))
             else:
-                self.log.info('subcase_id=%s' % isubcase)
+                self.log.info(f'subcase_id={isubcase}')
                 for key in keys:
                     self.log.info('  %s' % str(key))
         #self.log.info('subcase_key = %s' % self.subcase_key)
@@ -1296,6 +1296,7 @@ def read_op2(op2_filename: Optional[str]=None,
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
                    skip_undefined_matrices=skip_undefined_matrices, combine=combine,
                    encoding=encoding)
+
     ## TODO: this will go away when OP2 is refactored
     ## TODO: many methods will be missing, but it's a start...
     ## doesn't support F06 writer

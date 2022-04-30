@@ -3,6 +3,8 @@ defines:
  - cmd_line_plot_flutter()
 
 """
+from __future__ import annotations
+from typing import List, Optional, TYPE_CHECKING
 #import matplotlib
 #matplotlib.use('Qt5Agg')
 #from pyNastran.gui.matplotlib_backend import  matplotlib_backend
@@ -16,6 +18,9 @@ USAGE_145 = (
     '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
     f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export] [--f06]\n'
 )
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
+
 def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     """the interface to ``f06 plot_145`` on the command line"""
     import sys
@@ -164,7 +169,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
                      root_locus_filename=root_locus_filename,
                      kfreq_damping_filename=kfreq_damping_filename, show=show, log=log)
 
-def split_float_colons(string_values):
+def split_float_colons(string_values: str) -> List[float]:
     """
     Uses numpy-ish syntax to parse a set of two floats.  Blanks are interpreted as None.
 
@@ -192,7 +197,7 @@ def split_float_colons(string_values):
         values = None # all values
     return values
 
-def split_int_colon(modes, nmax=1000, start_value=0):
+def split_int_colon(modes: str, nmax: int=1000, start_value: int=0) -> List[int]:
     """
     Uses numpy-ish syntax to parse a set of integers.  Values are inclusive.
     Blanks are interpreted as 0 unless start_value is specified.

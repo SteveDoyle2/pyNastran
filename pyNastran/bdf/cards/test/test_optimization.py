@@ -948,6 +948,7 @@ class TestOpt(unittest.TestCase):
         tests:
          - DTABLE
          - DRESP2
+
         """
         log = get_logger(level='warning')
         model = BDF(log=log)

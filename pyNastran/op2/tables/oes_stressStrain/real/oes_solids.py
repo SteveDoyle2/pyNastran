@@ -30,17 +30,17 @@ class RealSolidArray(OES_Object):
             #raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
     def get_headers(self):
         raise NotImplementedError()
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -177,7 +177,13 @@ class RealSolidArray(OES_Object):
     def add_eid_sort1(self, unused_etype, cid, dt, eid, unused_node_id,
                       oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
                       unused_acos, unused_bcos, unused_ccos, unused_pressure, ovm):
-        assert cid >= -1, cid
+        # See the CHEXA, CPENTA, or CTETRA entry for the definition of the element coordinate systems.
+        # The material coordinate system (CORDM) may be the basic system (0 or blank), any defined system
+        # (Integer > 0), or the standard internal coordinate system of the element designated as:
+        # -1: element coordinate system (-1)
+        # -2: element system based on eigenvalue techniques to insure non bias in the element formulation(-2).
+        #     C:\MSC.Software\msc_nastran_runs\ecs-2-rg.op2
+        assert cid >= -2, cid
         assert eid >= 0, eid
 
         #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
@@ -274,12 +280,12 @@ class RealSolidArray(OES_Object):
             raise NotImplementedError(f'element_name={self.element_name} self.element_type={self.element_type}')
         return nnodes
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -307,7 +313,7 @@ class RealSolidArray(OES_Object):
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  element_cid.shape = %s\n' % str(self.element_cid.shape).replace('L', ''))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         #print(''.join(msg))
@@ -562,14 +568,13 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'emax', 'emid', 'emin', von_mises]
         return headers
 
-def _get_solid_msgs(self):
+def _get_solid_msgs(self: RealSolidArray):
     if self.is_von_mises:
         von_mises = 'VON MISES'
     else:
         von_mises = 'MAX SHEAR'
 
     if self.is_stress:
-
         base_msg = [
             '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
             '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises]
@@ -591,7 +596,7 @@ def _get_solid_msgs(self):
     hexa_msg += base_msg
     return tetra_msg, penta_msg, hexa_msg, pyram_msg
 
-def _get_f06_header_nnodes(self, is_mag_phase=True):
+def _get_f06_header_nnodes(self: RealSolidArray, is_mag_phase=True):
     tetra_msg, penta_msg, hexa_msg, pyram_msg = _get_solid_msgs(self)
     if self.element_type == 39: # CTETRA
         msg = tetra_msg

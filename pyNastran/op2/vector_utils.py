@@ -33,7 +33,7 @@ import numpy as np
 from numpy import arccos, sqrt, pi, in1d, cos, unique, cross, ndarray
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
-    from pyNastran.bdf.bdf import CORDx # , CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+    from pyNastran.bdf.bdf import CORDx
     from pyNastran.nptyping_interface import NDArrayN3float, NDArrayN2int, NDArrayNint, NDArray3float
 
 
@@ -471,7 +471,6 @@ def transform_force_moment(force_in_local, moment_in_local,
     """
     #print('consider_rxf =', consider_rxf)
     #debug = True
-    assert log is not None
     assert nid_cd.shape[0] == force_in_local.shape[0]
     dtype = force_in_local.dtype
     #dtype = 'float64'
@@ -488,6 +487,7 @@ def transform_force_moment(force_in_local, moment_in_local,
     beta_out = coord_out.beta().T
 
     if debug:
+        assert log is not None
         log.debug('beta_out =\n%s' % beta_out)
         log.debug(str(coord_out))
         if consider_rxf:
@@ -587,9 +587,8 @@ def transform_force_moment(force_in_local, moment_in_local,
     #return force_out2, moment_out2
     return force_out, moment_out
 
-
-def transform_force_moment_sum(force_in_local, moment_in_local,
-                               coord_out, coords,
+def transform_force_moment_sum(force_in_local: NDArrayN3float, moment_in_local: NDArrayN3float,
+                               coord_out: CORDx, coords: Dict[int, CORDx],
                                nid_cd: NDArrayN2int, icd_transform: Dict[int, NDArrayNint],
                                xyz_cid0, summation_point_cid0=None,
                                consider_rxf=True,

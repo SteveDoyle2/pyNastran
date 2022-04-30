@@ -31,7 +31,7 @@ class RealShearArray(OES_Object):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -150,12 +150,12 @@ class RealShearArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [max_shear, avg_shear, margin]
         self.ielement += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -177,7 +177,7 @@ class RealShearArray(OES_Object):
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element type: %s\n' % self.element_name)
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 
@@ -185,7 +185,7 @@ class RealShearArray(OES_Object):
         raise NotImplementedError('CSHEAR...')
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header()
@@ -253,7 +253,7 @@ class RealShearStrainArray(RealShearArray, StrainObject):
         headers = ['max_shear', 'avg_shear', 'margin']
         return headers
 
-    def get_f06_header(self):
+    def get_f06_header(self) -> List[str]:
         msg = [
             '                                     S T R A I N S   I N   S H E A R   P A N E L S      ( C S H E A R )\n'
             '      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY\n'

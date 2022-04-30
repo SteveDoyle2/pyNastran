@@ -55,7 +55,7 @@ class RealNonlinearPlateArray(OES_Object):
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
         return nnodes_per_element
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -78,7 +78,7 @@ class RealNonlinearPlateArray(OES_Object):
         #elif self.element_type in [144, 64, 82, 70, 75]:  # CQUAD4
             #return True
         #else:
-            #raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+            #raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
 
     def build(self):
         """sizes the vectorized attributes of the RealNonlinearPlateArray"""
@@ -242,9 +242,9 @@ class RealNonlinearPlateArray(OES_Object):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
 
                     # TODO: this name order is wrong
                     #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
@@ -271,12 +271,12 @@ class RealNonlinearPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -301,7 +301,7 @@ class RealNonlinearPlateArray(OES_Object):
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
         msg.append('  data.shape=%s\n' % str(self.data.shape))
-        msg.append('  element type: %s\n' % self.element_name)
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 
@@ -453,7 +453,7 @@ class RealNonlinearSolidArray(OES_Object):
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
         return nnodes_per_element
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -475,7 +475,7 @@ class RealNonlinearSolidArray(OES_Object):
         #elif self.element_type in [144, 64, 82, 70, 75]:  # CQUAD4
             #return True
         #else:
-            #raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+            #raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
 
     def build(self):
         """sizes the vectorized attributes of the RealNonlinearPlateArray"""

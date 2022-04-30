@@ -1,9 +1,14 @@
+"""
+defines:
+ - fnames = get_files_of_type(dirname, extension='.txt',
+                              max_size=100., limit_file='no_dig.txt')
+ - msg = list_print(lst, float_fmt='%-4.2f')
+
+"""
 import os
 from typing import List, Any
 
 import numpy as np
-
-#from pyNastran.utils import object_attributes
 
 
 def get_files_of_type(dirname: str, extension: str='.txt',
@@ -68,6 +73,7 @@ def list_print(lst: List[Any], float_fmt: str='%-4.2f') -> str:
     -------
     msg : str
         the clean string representation of the object
+
     """
     def _print(val):
         if val is None or isinstance(val, str):

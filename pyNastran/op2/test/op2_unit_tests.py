@@ -2,6 +2,7 @@
 import os
 import unittest
 import getpass
+from pathlib import Path
 
 import numpy as np
 from cpylog import get_logger
@@ -46,9 +47,9 @@ from pyNastran.femutils.test.utils import is_array_close
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
-OP2_TEST_PATH = os.path.abspath(os.path.join(PKG_PATH, 'op2', 'test', 'examples'))
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = (PKG_PATH / '..'/ 'models').resolve()
+OP2_TEST_PATH = (PKG_PATH / 'op2' / 'test' / 'examples').resolve()
 
 
 class TestOP2Unit(Tester):

@@ -73,8 +73,8 @@ def transform_displacement_to_global(subcase, result, icd_transform, coords, xyz
                 continue
                 translation = data[:, inode[:nnodesi], :3]
                 rotation = data[:, inode[:nnodesi], 3:]
-            data[:, inode, :3] = translation.dot(cid_transform)
-            data[:, inode, 3:] = rotation.dot(cid_transform)
+            data[:, inode, :3] = translation @ cid_transform
+            data[:, inode, 3:] = rotation @ cid_transform
 
         elif coord_type in ['CORD2C', 'CORD1C']:
             #self.log.debug('cylindrical')
@@ -150,8 +150,8 @@ def _transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transf
                 print('translation2a.shape =', translation2a.shape)
                 assert translation.shape == translation2a.shape
 
-                translation2 = translation2a.dot(cid_transform)
-                rotation2 = rotation2a.dot(cid_transform)
+                translation2 = translation2a @ cid_transform
+                rotation2 = rotation2a @ cid_transform
 
             elif 0:  ## pragma: no cover
                 # bad shape
@@ -160,8 +160,8 @@ def _transform_cylindrical_displacement(inode, data, coord, xyz_cid0, cid_transf
                 print('translation2a.shape =', translation2a.shape)
                 assert translation.shape == translation2a.shape
 
-                translation2 = cid_transform.dot(translation2a.dot(cid_transform))
-                rotation2 = cid_transform.dot(rotation2a.dot(cid_transform))
+                translation2 = cid_transform @ translation2a @ cid_transform
+                rotation2 = cid_transform @ rotation2a @ cid_transform
             else:  ## pragma: no cover
                 raise NotImplementedError('pick an option...')
         #print('translation.shape', translation.shape)
@@ -190,8 +190,8 @@ def _transform_spherical_displacement(inode, data, coord, xyz_cid0, cid_transfor
             data[itime, inode, :3] = translation
             data[itime, inode, 3:] = rotation
             return
-        data[itime, inode, :3] = translation.dot(cid_transform)
-        data[itime, inode, 3:] = rotation.dot(cid_transform)
+        data[itime, inode, :3] = translation @ cid_transform
+        data[itime, inode, 3:] = rotation @ cid_transform
 
 def transform_gpforce_to_globali(subcase, result,
                                  nids_all, nids_transform,
@@ -259,8 +259,8 @@ def transform_gpforce_to_globali(subcase, result,
             #print('rectangular')
             translation = data[:, inode_gp, :3]
             rotation = data[:, inode_gp, 3:]
-            data[:, inode_gp, :3] = translation.dot(cid_transform)
-            data[:, inode_gp, 3:] = rotation.dot(cid_transform)
+            data[:, inode_gp, :3] = translation @ cid_transform
+            data[:, inode_gp, 3:] = rotation @ cid_transform
         elif coord_type in ['CORD2C', 'CORD1C']:
             #print('cylindrical')
             if xyz_cid0 is None:
@@ -305,8 +305,8 @@ def _transform_cylindrical_gpforce(unused_inode_xyz, inode_gp, data, cid_transfo
             # horrible
             translation = coord.coord_to_xyz_array(data[itime, inode_gp, :3])
             rotation = coord.coord_to_xyz_array(data[itime, inode_gp, 3:])
-            data[itime, inode_gp, :3] = translation.dot(cid_transform)
-            data[itime, inode_gp, 3:] = rotation.dot(cid_transform)
+            data[itime, inode_gp, :3] = translation @ cid_transform
+            data[itime, inode_gp, 3:] = rotation @ cid_transform
         #elif 0:
             ## expectedly horrible
             #translation[:, 1] += theta
