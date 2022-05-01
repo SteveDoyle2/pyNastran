@@ -234,7 +234,7 @@ class Settings:
         self.nastran_beam_force = True
         self.nastran_plate_force = True
 
-    def load(self, settings):
+    def load(self, settings: QSettings) -> bool:
         """helper method for ``setup_gui``"""
         #red = (1.0, 0.0, 0.0)
         screen_shape_default = (1100, 700)
