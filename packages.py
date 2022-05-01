@@ -208,7 +208,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True,
 
     if not is_rtd:
         _add_typish(all_reqs, install_requires)
-        _add_nptyping(all_reqs, install_requires)
+        #_add_nptyping(all_reqs, install_requires)
 
     if bdist:
         all_reqs['docopt-ng'] = '>= 0.7.2'
