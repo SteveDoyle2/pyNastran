@@ -23,7 +23,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 
 """
 from __future__ import annotations
-from typing import List, Tuple, Union, Any, TYPE_CHECKING
+from typing import List, Tuple, Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import cross, allclose
@@ -778,6 +778,7 @@ class CTRIA3(TriShell):
         msg = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
                '                %8s%8s%8s%8s\n' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
+
 
 class CPLSTx3(TriShell):
     """

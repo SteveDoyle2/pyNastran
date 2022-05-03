@@ -56,6 +56,17 @@ class MPT(GeomCommon):
             (903, 9, 336) : ['MATT8', self._read_matt8],
             (8902, 89, 423) : ['RADMT', self._read_radmt],
             (9002, 90, 410) : ['RADBND', self._read_radbnd],
+            (4801, 48, 961): ['MATPOR', self._read_fake],
+            (5101, 51, 642): ['MATDMG', self._read_fake],
+            (14403, 144, 840): ['NLSTEP', self._read_fake],
+            (4603, 46, 623): ['MATCRP', self._read_fake],
+            (4701, 50, 965): ['MAT10C', self._read_fake],
+            (3403, 34, 902): ['MATFT', self._read_fake],
+            (2008, 20, 249): ['MATTC', self._read_fake],
+            (4201, 42, 966): ['MATSR', self._read_fake],
+            (8310, 83, 403): ['MATG', self._read_fake],
+
+            (5303, 53, 906): ['MATCZ', self._read_fake],
         }
 
     def add_op2_material(self, mat):
@@ -290,7 +301,9 @@ class MPT(GeomCommon):
         """
         ntotal = 20 * self.factor # 5*4
         s = Struct(mapfmt(self._endian + b'i4f', self.size))
-        nmaterials = (len(data) - n) // ntotal
+        ndatai = (len(data) - n)
+        nmaterials = ndatai // ntotal
+        assert ndatai % ntotal == 0
         assert nmaterials > 0, nmaterials
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]

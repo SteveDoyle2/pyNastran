@@ -2,13 +2,18 @@
 defines:
  - AnimationCallback
 """
+from __future__ import annotations
 from itertools import cycle
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.main_window import MainWindow
+
 
 class AnimationCallback:
     """
     http://www.vtk.org/Wiki/VTK/Examples/Python/Animation
     """
-    def __init__(self, parent, scales, phases,
+    def __init__(self, parent: MainWindow, scales, phases,
                  icases_fringe, icases_disp, icases_vector,
                  animate_fringe, animate_vector,
                  min_value, max_value):

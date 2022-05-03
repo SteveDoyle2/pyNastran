@@ -87,6 +87,16 @@ class EDT(GeomCommon):
             #(10500, 105, 14) : ['???', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
+            (7108, 82, 251): ['BOLT', self._read_fake],
+            (11204, 112, 821): ['ERPPNL', self._read_fake],
+            (8001, 80, 511): ['SET3', self._read_fake],
+            (9400, 94, 641): ['MDLPRM', self._read_fake],
+            (11004, 110, 1820_720): ['HADACRI', self._read_fake],
+            (8804, 88, 628): ['MONDSP1', self._read_fake],
+
+            (10904, 109, 719): ['HADAPTL', self._read_fake],
+            (8204, 82, 621): ['MONPNT2', self._read_fake],
+            (8304, 83, 622): ['MONPNT3', self._read_fake],
         }
     def _read_group(self, data: bytes, n: int) -> int:
         """

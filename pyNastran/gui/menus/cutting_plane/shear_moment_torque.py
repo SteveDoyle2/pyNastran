@@ -17,7 +17,8 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox)
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, make_combo_box, make_font, check_color
+from pyNastran.utils.locale import func_str
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, make_combo_box, make_font, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float
@@ -182,21 +183,21 @@ class ShearMomentTorqueWindow(PyDialog):
         self.p3_cid_pulldown.setToolTip('Defines the coordinate system for Point P3')
         self.zaxis_cid_pulldown.setToolTip('Defines the coordinate system for the Z Axis')
 
-        self.p1_x_edit = QLineEdit('')
-        self.p1_y_edit = QLineEdit('')
-        self.p1_z_edit = QLineEdit('')
+        self.p1_x_edit = QFloatEdit('')
+        self.p1_y_edit = QFloatEdit('')
+        self.p1_z_edit = QFloatEdit('')
 
-        self.p2_x_edit = QLineEdit('')
-        self.p2_y_edit = QLineEdit('')
-        self.p2_z_edit = QLineEdit('')
+        self.p2_x_edit = QFloatEdit('')
+        self.p2_y_edit = QFloatEdit('')
+        self.p2_z_edit = QFloatEdit('')
 
-        self.p3_x_edit = QLineEdit('')
-        self.p3_y_edit = QLineEdit('')
-        self.p3_z_edit = QLineEdit('')
+        self.p3_x_edit = QFloatEdit('')
+        self.p3_y_edit = QFloatEdit('')
+        self.p3_z_edit = QFloatEdit('')
 
-        self.zaxis_x_edit = QLineEdit('')
-        self.zaxis_y_edit = QLineEdit('')
-        self.zaxis_z_edit = QLineEdit('')
+        self.zaxis_x_edit = QFloatEdit('')
+        self.zaxis_y_edit = QFloatEdit('')
+        self.zaxis_z_edit = QFloatEdit('')
 
         self.additional_params_label = QLabel('Plane Parameters:')
         self.case_info_label = QLabel('Case Info:')
@@ -223,7 +224,7 @@ class ShearMomentTorqueWindow(PyDialog):
             times = ['0.', '0.5', '1.' , '1.5', '2.']
             time = '0.'
         else:
-            times = [str(time) for time in self.gpforce._times]
+            times = [func_str(time) for time in self.gpforce._times]
             time = times[0]
         self.times_pulldown = make_combo_box(times, time)
         self.time_label.setEnabled(False)

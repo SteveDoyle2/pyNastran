@@ -62,7 +62,43 @@ class CBEAM(LineElement):
         17:'sa', 18:'sb',
     }
 
-    def _update_field_helper(self, n, value):
+    def _get_field_helper(self, n: int) -> Union[int, float]:
+        if n == 11:
+            value = self.wa[0]
+        elif n == 12:
+            value = self.wa[1]
+        elif n == 13:
+            value = self.wa[2]
+
+        elif n == 14:
+            value = self.wb[0]
+        elif n == 15:
+            value = self.wb[1]
+        elif n == 16:
+            value = self.wb[2]
+        elif n in {5, 6, 7}:
+            if self.g0 is not None:
+                if n == 5:
+                    value = self.g0
+                else:  # offt
+                    msg = f'Field {n!r} is an invalid {self.type} entry or is unsupported.'
+                    raise KeyError(msg)
+            else:
+                if n == 5:
+                    value = self.x[0]
+                elif n == 6:
+                    value = self.x[1]
+                elif n == 7:
+                    value = self.x[2]
+                else:
+                    msg = f'Field {n!r} is an invalid {self.type} entry or is unsupported.'
+                    raise KeyError(msg)
+        else:
+            msg = f'Field {n!r} is an invalid {self.type} entry or is unsupported.'
+            raise KeyError(msg)
+        return value
+
+    def _update_field_helper(self, n: int, value):
         if n == 11:
             self.wa[0] = value
         elif n == 12:
@@ -926,7 +962,7 @@ class BEAMOR(BaseCard):
         else:
             raise NotImplementedError('BEAMOR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
-        assert len(card) <= 9, 'len(BEAMOR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(BEAMOR card) = {len(card):d}\ncard={card}'
         return BEAMOR(pid, is_g0, g0, x, offt=offt, comment=comment)
 
     def raw_fields(self):

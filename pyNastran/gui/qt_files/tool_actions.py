@@ -11,6 +11,7 @@ from qtpy.compat import getsavefilename
 
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.locale import func_str
 from pyNastran.gui import font_file
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, update_axis_text_size
@@ -174,26 +175,26 @@ class ToolActions:
         """
         if location == 'node':
             nodes = self.gui.node_ids
-            min_msgi = f'Node: %i' % nodes[imin]
-            max_msgi = f'Node: %i' % nodes[imax]
+            min_msgi = f'Node: %d' % nodes[imin]
+            max_msgi = f'Node: %d' % nodes[imax]
         elif location == 'centroid':
             elements = self.gui.element_ids
-            min_msgi = f'Element: %i' % elements[imin]
-            max_msgi = f'Element: %i' % elements[imax]
+            min_msgi = f'Element: %d' % elements[imin]
+            max_msgi = f'Element: %d' % elements[imax]
         else:
             raise NotImplementedError(location)
 
 
         if isinstance(max_value, integer_types):
-            max_msg = 'Max:  %i' % max_value
-            min_msg = 'Min:  %i' % min_value
+            max_msg = 'Max:  %d' % max_value
+            min_msg = 'Min:  %d' % min_value
         elif isinstance(max_value, str):
             max_msg = 'Max:  %s' % str(max_value)
             min_msg = 'Min:  %s' % str(min_value)
         elif (isinstance(max_value, float) or
               hasattr(max_value, 'dtype') and max_value.dtype.name in ['float32', 'float64']):
-            max_msg = 'Max:  %g' % max_value
-            min_msg = 'Min:  %g' % min_value
+            max_msg = 'Max:  %s' % func_str(max_value)
+            min_msg = 'Min:  %s' % func_str(min_value)
 
         elif hasattr(max_value, 'dtype') and max_value.dtype.name in ['complex64', 'complex128']:
             raise RuntimeError(f'{max_value.dtype.name} should be a magnitude')

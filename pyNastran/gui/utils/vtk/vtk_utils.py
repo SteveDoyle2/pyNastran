@@ -4,6 +4,8 @@ defines:
 
 """
 from collections import defaultdict
+from typing import Optional
+
 import numpy as np
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk # vtk_to_numpy
@@ -33,7 +35,37 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     return points
 
 
-def create_vtk_cells_of_constant_element_type(grid, elements, etype):
+def _check_shape(etype: int, elements: np.ndarray, nnodes_per_element: int) -> None:
+    """
+    The following table lists the supported vtk types
+
+    ID  Class.GetCellType()
+    ==  ===================
+    1   vtkVertex
+    3   vtkLine
+    5   vtkTriangle
+    9   vtkQuad
+    10  vtkTetra
+    #vtkPenta().GetCellType()
+    #vtkHexa().GetCellType()
+    #vtkPyram().GetCellType()
+
+    """
+    if etype == 1: # vertex
+        assert nnodes_per_element == 1, elements.shape
+    if etype == 3: # line
+        assert nnodes_per_element == 2, elements.shape
+    elif etype == 5:  # tri
+        assert nnodes_per_element == 3, elements.shape
+    elif etype in [9, 10]:  # quad, tet4
+        assert nnodes_per_element == 4, elements.shape
+    else:
+        raise RuntimeError(etype)
+
+
+def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
+                                              elements: np.ndarray,
+                                              etype: int) -> None:
     """
     Adding constant type elements is overly complicated.
 
@@ -51,25 +83,9 @@ def create_vtk_cells_of_constant_element_type(grid, elements, etype):
     The documentation in this method is triangle-specific as it was
     developed for a tri mesh.  It's more general than that though.
 
-    1 = vtk.vtkVertex().GetCellType()
-    3 = vtkLine().GetCellType()
-    5 = vtkTriangle().GetCellType()
-    9 = vtk.vtkQuad().GetCellType()
-    10 = vtkTetra().GetCellType()
-    #vtkPenta().GetCellType()
-    #vtkHexa().GetCellType()
-    #vtkPyram().GetCellType()
-
     """
     nelements, nnodes_per_element = elements.shape
-    if etype == 1: # vertex
-        assert nnodes_per_element == 1, elements.shape
-    if etype == 3: # line
-        assert nnodes_per_element == 2, elements.shape
-    elif etype == 5:  # tri
-        assert nnodes_per_element == 3, elements.shape
-    elif etype in [9, 10]:  # quad, tet4
-        assert nnodes_per_element == 4, elements.shape
+    _check_shape(etype, elements, nnodes_per_element)
 
     # We were careful about how we defined the arrays, so the data
     # is contiguous when we ravel it.  Otherwise, you need to
@@ -96,7 +112,7 @@ def create_vtk_cells_of_constant_element_type(grid, elements, etype):
 
     # Cell types
     # 5 = vtkTriangle().GetCellType()
-    cell_types = np.ones(nelements, dtype='int32') * etype
+    cell_types = np.full(nelements, etype, dtype='int32')
     vtk_cell_types = numpy_to_vtk(
         cell_types, deep=0,
         array_type=vtk.vtkUnsignedCharArray().GetDataType())
@@ -241,7 +257,9 @@ def _convert_ids_to_vtk_idtypearray(ids):
         id_type_array.InsertNextValue(idi)
     return id_type_array
 
-def find_point_id_closest_to_xyz(grid, cell_id, node_xyz):
+def find_point_id_closest_to_xyz(grid: vtk.vtkUnstructuredGrid,
+                                 cell_id: int,
+                                 node_xyz: np.ndarray) -> Optional[int]:
     cell = grid.GetCell(cell_id)
     nnodes = cell.GetNumberOfPoints()
     points = cell.GetPoints()

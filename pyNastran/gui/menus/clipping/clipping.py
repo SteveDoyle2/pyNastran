@@ -7,7 +7,8 @@ from qtpy import QtCore
 from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, check_float
+from pyNastran.utils.locale import func_str
+from pyNastran.gui.utils.qt.pydialog import PyDialog, check_float, QFloatEdit
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 
 class ClippingPropertiesWindow(PyDialog):
@@ -43,12 +44,12 @@ class ClippingPropertiesWindow(PyDialog):
     def create_widgets(self):
         # Min
         self.min_label = QLabel("Min:")
-        self.min_edit = QLineEdit(str(self._default_min))
+        self.min_edit = QFloatEdit(func_str(self._default_min))
         self.min_button = QPushButton("Default")
 
         # Max
         self.max_label = QLabel("Max:")
-        self.max_edit = QLineEdit(str(self._default_max))
+        self.max_edit = QFloatEdit(func_str(self._default_max))
         self.max_button = QPushButton("Default")
 
         # closing
@@ -69,7 +70,7 @@ class ClippingPropertiesWindow(PyDialog):
         vbox.addLayout(grid)
 
         vbox.addStretch()
-        vbox.addLayout(self.ok_button)
+        vbox.addWidget(self.ok_button)
         self.setLayout(vbox)
 
     def set_connections(self):
@@ -81,11 +82,11 @@ class ClippingPropertiesWindow(PyDialog):
         self.ok_button.clicked.connect(self.on_ok)
 
     def on_default_min(self):
-        self.min_edit.setText(str(self._default_min))
+        self.min_edit.setText(func_str(self._default_min))
         self.min_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_max(self):
-        self.max_edit.setText(str(self._default_max))
+        self.max_edit.setText(func_str(self._default_max))
         self.max_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_validate(self):

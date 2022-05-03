@@ -17,7 +17,8 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QColorDialog, QLineEdit, QCheckBox, QComboBox)
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, check_color
+from pyNastran.utils.locale import func_str
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import (
@@ -126,23 +127,25 @@ class CuttingPlaneWindow(PyDialog):
         self.p2_cid_pulldown.setToolTip('Defines the coordinate system for the Point P2')
         self.zaxis_cid_pulldown.setToolTip('Defines the coordinate system for the Z Axis')
 
-        self.p1_x_edit = QLineEdit('')
-        self.p1_y_edit = QLineEdit('')
-        self.p1_z_edit = QLineEdit('')
+        self.p1_x_edit = QFloatEdit('')
+        self.p1_y_edit = QFloatEdit('')
+        self.p1_z_edit = QFloatEdit('')
 
-        self.p2_x_edit = QLineEdit('')
-        self.p2_y_edit = QLineEdit('')
-        self.p2_z_edit = QLineEdit('')
+        self.p2_x_edit = QFloatEdit('')
+        self.p2_y_edit = QFloatEdit('')
+        self.p2_z_edit = QFloatEdit('')
 
-        self.zaxis_x_edit = QLineEdit('')
-        self.zaxis_y_edit = QLineEdit('')
-        self.zaxis_z_edit = QLineEdit('')
+        self.zaxis_x_edit = QFloatEdit('')
+        self.zaxis_y_edit = QFloatEdit('')
+        self.zaxis_z_edit = QFloatEdit('')
 
         self.ytol_label = QLabel('Y Tolerance:')
         self.zero_tol_label = QLabel('Zero Tolerance:')
 
-        self.ytol_edit = QLineEdit('10.0')
-        self.zero_tol_edit = QLineEdit('1e-5')
+        ytol = 10.
+        zero_tol = 1e-5
+        self.ytol_edit = QFloatEdit(func_str(ytol))
+        self.zero_tol_edit = QFloatEdit(func_str(zero_tol))
 
         if not show_tol:
             self.ytol_label.setVisible(False)

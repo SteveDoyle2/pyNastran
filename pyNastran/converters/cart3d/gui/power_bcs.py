@@ -12,6 +12,7 @@ from qtpy.QtWidgets import (
     QVBoxLayout, QGridLayout, QPushButton, QHeaderView,
 )
 from qtpy import QtGui
+from pyNastran.utils.locale import func_str
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.manage_actors import Model, SingleChoiceQTableView
 #from pyNastran.gui.qutils.pydialog import check_format
@@ -176,9 +177,9 @@ class BreakSurfaceMenu(QDialog):
         elif point[2] == 'S':
             self.radio_spherical.setChecked(True)
 
-        self.location_x_edit.setText(str(point[3]))
-        self.location_y_edit.setText(str(point[4]))
-        self.location_z_edit.setText(str(point[5]))
+        self.location_x_edit.setText(func_str(point[3]))
+        self.location_y_edit.setText(func_str(point[4]))
+        self.location_z_edit.setText(func_str(point[5]))
         #obj = self.out_data[name]
         #point_size = obj.point_size
         #opacity = obj.opacity

@@ -6,7 +6,7 @@ Defines:
 
 """
 import os
-from typing import List
+from typing import Tuple, List, Optional
 
 import numpy as np
 try:
@@ -105,7 +105,7 @@ def setup_animation(scale, istep=None,
             # double the number of frames
             # drop the duplicate end frame if necessary
     if istep is not None:
-        assert isinstance(istep, integer_types), 'istep=%r' % istep
+        assert isinstance(istep, integer_types), f'istep={istep!r}'
         scales = (scales2[istep],)
         phases = (phases2[istep],)
         isteps = (istep,)
@@ -113,11 +113,10 @@ def setup_animation(scale, istep=None,
     return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2, analysis_time, onesided, endpoint
 
 
-def fix_nframes(nframes, profile):
+def fix_nframes(nframes: int, profile: str) -> int:
     """
-    # make sure we break at the "true scale" max
-    #
-    # should this be in terms of fps or nframes?
+    make sure we break at the "true scale" max
+    should this be in terms of fps or nframes? (I think nframes)
     """
     fix_nframes_even = nframes == 1 or nframes % 2 == 0
     fix_nframes_sin = nframes == 1 or nframes % 4 != 1
@@ -398,7 +397,7 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
     elif phases is None:
         phases = [0.] * len(scales)
     else:
-        raise RuntimeError('phases=%r' % phases)
+        raise RuntimeError(f'phases={phases!r}')
 
     # icase_disp must not be None
     if isinstance(icases_disp, integer_types):
@@ -412,26 +411,18 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
 
     assert icases_fringe is not None
     if len(icases_fringe) != len(scales):
-        msg = 'ncases_fringe=%s nscales=%s' % (len(icases_fringe), len(scales))
-        #print(msg)
-        raise ValueError(msg)
+        raise ValueError(f'ncases_fringe={len(icases_fringe):d} nscales={len(scales):d}')
 
     assert icases_disp is not None
     if len(icases_disp) != len(scales):
-        msg = 'ncases_disp=%s nscales=%s' % (len(icases_disp), len(scales))
-        #print(msg)
-        raise ValueError(msg)
+        raise ValueError(f'ncases_disp={len(icases_disp)} nscales={len(scales)}')
 
     assert icases_vector is not None
     if len(icases_vector) != len(scales):
-        msg = 'ncases_vector=%s nscales=%s' % (len(icases_vector), len(scales))
-        #print(msg)
-        raise ValueError(msg)
+        raise ValueError(f'ncases_vector={len(icases_vector):d} nscales={len(scales):d}')
 
     if len(icases_fringe) != len(phases):
-        msg = 'ncases_fringe=%s nphases=%s' % (len(icases_fringe), len(phases))
-        #print(msg)
-        raise ValueError(msg)
+        raise ValueError(f'ncases_fringe={len(icases_fringe):d} nphases={len(phases):d}')
 
     if isteps is None:
         isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
@@ -453,7 +444,8 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
     scales2 = np.array(scales)
     return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2
 
-def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector, isteps, is_symmetric, endpoint):
+def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector,
+                   isteps, is_symmetric, endpoint):
     """
     Chop the frames in half at the middle frame
 

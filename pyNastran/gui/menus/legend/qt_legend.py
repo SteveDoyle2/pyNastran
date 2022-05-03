@@ -4,6 +4,7 @@ defines:
 
 """
 import os
+from typing import Union
 
 from qtpy import QtCore
 from qtpy.QtGui import QFont
@@ -12,10 +13,12 @@ from qtpy.QtWidgets import (
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
 
 from pyNastran.utils.numpy_utils import float_types
+from pyNastran.utils.locale import func_str, func_str_or_none
 from pyNastran.gui.utils.colormaps import colormap_keys
 from pyNastran.gui.utils.qt.pydialog import (
-    PyDialog, check_float, check_format, check_name_str,
+    PyDialog, QIntEdit, QFloatEdit, check_float, check_format, check_name_str,
     check_positive_int_or_blank)
+
 from pyNastran.gui.qt_version import qt_int as qt_version
 
 ANIMATE_TOOLTIP_OFF = 'This must be a displacement-like result to animate'
@@ -270,10 +273,10 @@ class LegendPropertiesWindow(PyDialog):
             self.title_edit.setText(title)
             self.title_edit.setStyleSheet("QLineEdit{background: white;}")
 
-            self.min_edit.setText(str(min_value))
+            self.min_edit.setText(func_str_or_none(min_value))
             self.min_edit.setStyleSheet("QLineEdit{background: white;}")
 
-            self.max_edit.setText(str(max_value))
+            self.max_edit.setText(func_str_or_none(max_value))
             self.max_edit.setStyleSheet("QLineEdit{background: white;}")
 
             self.format_edit.setText(str(data_format))
@@ -383,12 +386,12 @@ class LegendPropertiesWindow(PyDialog):
 
         # Min
         self.min_label = QLabel("Min:")
-        self.min_edit = QLineEdit(str(self._default_min))
+        self.min_edit = QFloatEdit(func_str_or_none(self._default_min))
         self.min_button = QPushButton("Default")
 
         # Max
         self.max_label = QLabel("Max:")
-        self.max_edit = QLineEdit(str(self._default_max))
+        self.max_edit = QFloatEdit(func_str_or_none(self._default_max))
         self.max_button = QPushButton("Default")
 
         #---------------------------------------
@@ -400,16 +403,15 @@ class LegendPropertiesWindow(PyDialog):
         #---------------------------------------
         # Scale
         self.scale_label = QLabel("True Scale:")
-        self.scale_edit = QLineEdit(str(self._scale))
+        self.scale_edit = QFloatEdit(func_str_or_none(self._scale))
         self.scale_button = QPushButton("Default")
         if self._icase_disp is None:
             self.scale_label.setVisible(False)
             self.scale_edit.setVisible(False)
             self.scale_button.setVisible(False)
-
         # Phase
         self.phase_label = QLabel("Phase (deg):")
-        self.phase_edit = QLineEdit(str(self._phase))
+        self.phase_edit = QFloatEdit(func_str_or_none(self._phase))
         self.phase_button = QPushButton("Default")
         if self._icase_disp is None or self._default_phase is None:
             self.phase_label.setVisible(False)
@@ -419,7 +421,7 @@ class LegendPropertiesWindow(PyDialog):
 
         #---------------------------------------
         self.arrow_scale_label = QLabel("Arrow Scale:")
-        self.arrow_scale_edit = QLineEdit(str(self._arrow_scale))
+        self.arrow_scale_edit = QFloatEdit(func_str_or_none(self._arrow_scale))
         self.arrow_scale_button = QPushButton("Default")
         if self._icase_vector is None:
             self.arrow_scale_label.setVisible(False)
@@ -433,15 +435,15 @@ class LegendPropertiesWindow(PyDialog):
         #---------------------------------------
         # nlabels
         self.nlabels_label = QLabel("Number of Labels:")
-        self.nlabels_edit = QLineEdit(str(self._nlabels))
+        self.nlabels_edit = QIntEdit(func_str_or_none(self._nlabels))
         self.nlabels_button = QPushButton("Default")
 
         self.labelsize_label = QLabel("Label Size:")
-        self.labelsize_edit = QLineEdit(str(self._labelsize))
+        self.labelsize_edit = QIntEdit(func_str_or_none(self._labelsize))
         self.labelsize_button = QPushButton("Default")
 
         self.ncolors_label = QLabel("Number of Colors:")
-        self.ncolors_edit = QLineEdit(str(self._ncolors))
+        self.ncolors_edit = QIntEdit(func_str_or_none(self._ncolors))
         self.ncolors_button = QPushButton("Default")
 
         self.colormap_label = QLabel("Color Map:")
@@ -710,37 +712,37 @@ class LegendPropertiesWindow(PyDialog):
 
     def on_default_min(self):
         """action when user clicks 'Default' for min value"""
-        self.min_edit.setText(str(self._default_min))
+        self.min_edit.setText(func_str_or_none(self._default_min))
         self.min_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_max(self):
         """action when user clicks 'Default' for max value"""
-        self.max_edit.setText(str(self._default_max))
+        self.max_edit.setText(func_str_or_none(self._default_max))
         self.max_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_format(self):
         """action when user clicks 'Default' for the number format"""
-        self.format_edit.setText(str(self._default_format))
+        self.format_edit.setText(func_str_or_none(self._default_format))
         self.format_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_scale(self):
         """action when user clicks 'Default' for scale factor"""
-        self.scale_edit.setText(str(self._default_scale))
+        self.scale_edit.setText(func_str_or_none(self._default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_arrow_scale(self):
         """action when user clicks 'Default' for arrow_scale factor"""
-        self.arrow_scale_edit.setText(str(self._default_arrow_scale))
+        self.arrow_scale_edit.setText(func_str_or_none(self._default_arrow_scale))
         self.arrow_scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_phase(self):
         """action when user clicks 'Default' for phase angle"""
-        self.phase_edit.setText(str(self._default_phase))
+        self.phase_edit.setText(func_str_or_none(self._default_phase))
         self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_ncolors(self):
         """action when user clicks 'Default' for number of colors"""
-        self.ncolors_edit.setText(str(self._default_ncolors))
+        self.ncolors_edit.setText(func_str_or_none(self._default_ncolors))
         self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_colormap(self):
@@ -750,11 +752,11 @@ class LegendPropertiesWindow(PyDialog):
     def on_default_nlabels(self):
         """action when user clicks 'Default' for number of labels"""
         self.nlabels_edit.setStyleSheet("QLineEdit{background: white;}")
-        self.nlabels_edit.setText(str(self._default_nlabels))
+        self.nlabels_edit.setText(func_str_or_none(self._default_nlabels))
 
     def on_default_labelsize(self):
         """action when user clicks 'Default' for number of labelsize"""
-        self.labelsize_edit.setText(str(self._default_labelsize))
+        self.labelsize_edit.setText(func_str_or_none(self._default_labelsize))
         self.labelsize_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_show_hide(self):
@@ -875,7 +877,7 @@ def set_cell_to_blank_if_value_is_none(cell_edit, value):
     if value is None:
         cell_edit.setText('0.0')
     else:
-        cell_edit.setText(str(value))
+        cell_edit.setText(func_str(value))
     cell_edit.setStyleSheet("QLineEdit{background: white;}")
     return value
 

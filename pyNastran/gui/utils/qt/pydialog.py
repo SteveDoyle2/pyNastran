@@ -7,8 +7,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from pyNastran.gui.qt_version import qt_version
 from qtpy.QtCore import Qt
-from qtpy.QtGui import QFont
-from qtpy.QtWidgets import QDialog, QComboBox
+from qtpy.QtGui import QFont, QIntValidator, QDoubleValidator
+from qtpy.QtWidgets import QDialog, QComboBox, QLineEdit
 
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
@@ -30,6 +30,19 @@ def make_font(font_size, is_bold=False):
     if is_bold:
         font.setBold(is_bold)
     return font
+
+class QIntEdit(QLineEdit):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        qfloat_validator = QIntValidator()
+        self.setValidator(qfloat_validator)
+
+class QFloatEdit(QLineEdit):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        qfloat_validator = QDoubleValidator()
+        self.setValidator(qfloat_validator)
+
 class PyDialog(QDialog):
     """
     common class for QDialog so value checking & escape/close code

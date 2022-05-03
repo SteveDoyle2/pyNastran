@@ -99,6 +99,9 @@ class MainWindow(GuiCommon, NastranIO):
         fmt_order = [
             # no results unless specified
             'nastran',  # results
+        ]
+
+        fmt_order += [
             'abaqus',
             'avus',
             'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr

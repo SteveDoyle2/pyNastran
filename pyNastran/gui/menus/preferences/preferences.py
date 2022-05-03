@@ -16,6 +16,7 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox)
 
+from pyNastran.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
@@ -200,12 +201,12 @@ class PreferencesWindow(PyDialog):
         #-----------------------------------------------------------------------
         # Clipping Min
         self.clipping_min_label = QLabel("Clipping Min:")
-        self.clipping_min_edit = QLineEdit(str(self._default_clipping_min))
+        self.clipping_min_edit = QLineEdit(func_str(self._default_clipping_min))
         self.clipping_min_button = QPushButton("Default")
 
         # Clipping Max
         self.clipping_max_label = QLabel("Clipping Max:")
-        self.clipping_max_edit = QLineEdit(str(self._default_clipping_max))
+        self.clipping_max_edit = QLineEdit(func_str(self._default_clipping_max))
         self.clipping_max_button = QPushButton("Default")
 
         #-----------------------------------------------------------------------
@@ -482,6 +483,18 @@ class PreferencesWindow(PyDialog):
         vbox.addLayout(ok_cancel_box)
         self.setLayout(vbox)
 
+    def _set_nastran_connections(self):
+        # format-specific
+        self.nastran_is_element_quality_checkbox.clicked.connect(self.on_nastran_is_element_quality)
+        self.nastran_is_properties_checkbox.clicked.connect(self.on_nastran_is_properties)
+        self.nastran_is_3d_bars_checkbox.clicked.connect(self.on_nastran_is_3d_bars)
+        self.nastran_is_3d_bars_update_checkbox.clicked.connect(self.on_nastran_is_3d_bars_update)
+        self.nastran_is_bar_axes_checkbox.clicked.connect(self.on_nastran_is_bar_axes)
+        self.nastran_create_coords_checkbox.clicked.connect(self.on_nastran_create_coords)
+        self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
+
+        #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids2)
+
     def set_connections(self):
         """creates the actions for the menu"""
         self.font_size_button.clicked.connect(self.on_default_font_size)
@@ -522,16 +535,7 @@ class PreferencesWindow(PyDialog):
         self.clipping_max_button.clicked.connect(self.on_default_clipping_max)
 
         #------------------------------------
-        # format-specific
-        self.nastran_is_element_quality_checkbox.clicked.connect(self.on_nastran_is_element_quality)
-        self.nastran_is_properties_checkbox.clicked.connect(self.on_nastran_is_properties)
-        self.nastran_is_3d_bars_checkbox.clicked.connect(self.on_nastran_is_3d_bars)
-        self.nastran_is_3d_bars_update_checkbox.clicked.connect(self.on_nastran_is_3d_bars_update)
-        self.nastran_is_bar_axes_checkbox.clicked.connect(self.on_nastran_is_bar_axes)
-        self.nastran_create_coords_checkbox.clicked.connect(self.on_nastran_create_coords)
-        self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
-
-        #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids2)
+        self._set_nastran_connections()
         #------------------------------------
 
         self.apply_button.clicked.connect(self.on_apply)
@@ -725,7 +729,7 @@ class PreferencesWindow(PyDialog):
         return True, color_int, color_float
 
     def on_picker_size(self):
-        self._picker_size = float(self.picker_size_edit.text())
+        self._picker_size = float_locale(self.picker_size_edit.text())
         if self.win_parent is not None:
             self.win_parent.element_picker_size = self._picker_size / 100.
         #self.on_apply(force=True)
@@ -770,11 +774,11 @@ class PreferencesWindow(PyDialog):
         self.on_annotation_size(self._default_annotation_size)
 
     def on_default_clipping_min(self):
-        self.clipping_min_edit.setText(str(self._default_clipping_min))
+        self.clipping_min_edit.setText(func_str(self._default_clipping_min))
         self.clipping_min_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_clipping_max(self):
-        self.clipping_max_edit.setText(str(self._default_clipping_max))
+        self.clipping_max_edit.setText(func_str(self._default_clipping_max))
         self.clipping_max_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_validate(self):
@@ -784,8 +788,8 @@ class PreferencesWindow(PyDialog):
         assert isinstance(self.annotation_color_int[0], int), self.annotation_color_int
         picker_size_value, flag2 = check_float(self.picker_size_edit)
 
-        clipping_min_value, flag3 = check_label_float(self.clipping_min_edit)
-        clipping_max_value, flag4 = check_label_float(self.clipping_max_edit)
+        clipping_min_value, flag3 = check_float(self.clipping_min_edit)
+        clipping_max_value, flag4 = check_float(self.clipping_max_edit)
 
         if all([flag0, flag1, flag2, flag3, flag4]):
             self._annotation_size = annotation_size_value
@@ -823,7 +827,7 @@ class PreferencesWindow(PyDialog):
 
 def check_float(cell):
     text = cell.text()
-    value = float(text)
+    value = float_locale(text)
     return value, True
 
 def check_label_float(cell):

@@ -16,9 +16,10 @@ from qtpy.QtWidgets import (
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory
 
+from pyNastran.utils.locale import func_str, func_str_or_none
 from pyNastran.gui.utils.qt.pydialog import (
     PyDialog, check_int, check_float, check_name_str, check_path,
-    set_combo_box_text)
+    QFloatEdit, set_combo_box_text)
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.menus.results_sidebar import ResultsWindow
 from pyNastran.gui.menus.results_sidebar_utils import (
@@ -192,13 +193,13 @@ class AnimationWindow(PyDialog):
             self.icase_vector_edit.setValue(self._icase_vector)
 
         self.scale_label = QLabel("True Scale:")
-        self.scale_edit = QLineEdit(str(self._scale))
+        self.scale_edit = QFloatEdit(func_str_or_none(self._scale))
         self.scale_button = QPushButton("Default")
         self.scale_edit.setToolTip('Scale factor of the "deflection"')
         self.scale_button.setToolTip('Sets the scale factor of the gif to %s' % self._scale)
 
         self.arrow_scale_label = QLabel("Arrow Scale:")
-        self.arrow_scale_edit = QLineEdit(str(self._scale))
+        self.arrow_scale_edit = QFloatEdit(func_str_or_none(self._scale))
         self.arrow_scale_button = QPushButton("Default")
         self.arrow_scale_edit.setToolTip('Scale factor of the "arrows"')
         self.arrow_scale_button.setToolTip('Sets the arrow scale factor of the gif to %s' % (
@@ -282,7 +283,7 @@ class AnimationWindow(PyDialog):
 
         self.min_value_enable = QCheckBox()
         self.min_value_label = QLabel('Min Fringe:')
-        self.min_value_edit = QLineEdit('')
+        self.min_value_edit = QFloatEdit('')
         #self.min_value_edit.setRange(1, 1000)
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)
@@ -290,7 +291,7 @@ class AnimationWindow(PyDialog):
 
         self.max_value_enable = QCheckBox()
         self.max_value_label = QLabel('Max Value:')
-        self.max_value_edit = QLineEdit('')
+        self.max_value_edit = QFloatEdit('')
         #self.min_value_edit.setRange(1, 1000)  # TODO: update 1000
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)
@@ -757,7 +758,7 @@ class AnimationWindow(PyDialog):
         """When max default icase is pressued, update the value"""
         icase = self.icase_disp_start_edit.value()
         max_value = self.get_min_max(icase)[1]
-        self.max_value_edit.setText(str(max_value))
+        self.max_value_edit.setText(func_str_or_none(max_value))
         self.max_value_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_browse_folder(self):
@@ -791,7 +792,7 @@ class AnimationWindow(PyDialog):
             unused_scale, unused_phase, default_scale, unused_default_phase = out
         else:
             default_scale = self._default_scale
-        self.scale_edit.setText(str(default_scale))
+        self.scale_edit.setText(func_str_or_none(default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_arrow_scale(self):
@@ -802,7 +803,7 @@ class AnimationWindow(PyDialog):
             unused_arrow_scale, default_arrow_scale = out
         else:
             default_arrow_scale = self._default_arrow_scale
-        self.arrow_scale_edit.setText(str(default_arrow_scale))
+        self.arrow_scale_edit.setText(func_str(default_arrow_scale))
         self.arrow_scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_time(self):

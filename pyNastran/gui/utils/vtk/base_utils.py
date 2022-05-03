@@ -9,7 +9,8 @@ from vtk.util.numpy_support import (
 
 
 IS_TESTING = 'test' in sys.argv[0]
-VTK_VERSION = [int(val) for val in vtk.VTK_VERSION.split('.')]
+_VTK_VERSION = vtk.vtkVersion.GetVTKVersion()
+VTK_VERSION = [int(val) for val in _VTK_VERSION.split('.')]
 if VTK_VERSION[0] < 7:
     msg = f'VTK version={vtk.VTK_VERSION!r} is no longer supported (use vtk 7 or 8)'
     raise NotImplementedError(msg)
@@ -68,8 +69,13 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):  # pragma: no cover
     Notes
     -----
     This was pulled from VTK and modified to eliminate numpy 1.14 warnings.
-    VTK uses a BSD license, so it's OK to do  that.
+    VTK uses a BSD license, so it's OK to do that.
 
+    #vtk_typecode = int64 3
+    #vtk_typecode = int64 12
+    #vtk_typecode = int64 16
+    #vtk_typecode = float32 10
+    #vtk_typecode = float64 11
     """
     z = np.asarray(num_array)
     if not z.flags.contiguous:
@@ -94,7 +100,7 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):  # pragma: no cover
     # Fixup shape in case its empty or scalar.
     try:
         test_var = shape[0]
-    except:
+    except Exception:
         shape = (0,)
 
     # Find the shape and set number of components.

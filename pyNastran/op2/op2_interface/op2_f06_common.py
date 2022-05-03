@@ -512,7 +512,7 @@ class OP2_F06_Common:
 
     @property
     def cvisc_force(self):
-        return self.op2_results.force.vu_tria_force
+        return self.op2_results.force.cvisc_force
     @property
     def vu_tria_force(self):
         return self.op2_results.force.vu_tria_force
@@ -525,7 +525,7 @@ class OP2_F06_Common:
 
     @cvisc_force.setter
     def cvisc_force(self, cvisc_force):
-        self.op2_results.force.vu_tria_force = cvisc_force
+        self.op2_results.force.cvisc_force = cvisc_force
     @vu_tria_force.setter
     def vu_tria_force(self, vu_tria_force):
         self.op2_results.force.vu_tria_force = vu_tria_force

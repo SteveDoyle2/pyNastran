@@ -1,5 +1,7 @@
+"""pyNastranGUI argument parsing"""
 import os
 import sys
+from typing import List, Dict, Optional, Any
 
 import pyNastran
 from pyNastran.utils import check_path
@@ -43,7 +45,8 @@ FORMAT_TO_EXTENSION = {
 }
 
 
-def determine_format(input_filename, allowed_formats=None):
+def determine_format(input_filename: str,
+                     allowed_formats: Optional[List[str]]=None) -> str:
     """
     Tries to map the input filename to an extension.
 

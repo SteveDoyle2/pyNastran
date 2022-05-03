@@ -1,6 +1,7 @@
 """various mesh_utils tests"""
 import os
 import unittest
+from pathlib import Path
 from io import StringIO
 
 from docopt import DocoptExit
@@ -30,13 +31,14 @@ from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
 
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
+BWB_PATH = MODEL_PATH / 'bwb'
 
 np.set_printoptions(edgeitems=3, infstr='inf',
                     linewidth=75, nanstr='nan', precision=3,
                     suppress=True, threshold=1000, formatter=None)
-DIRNAME = os.path.dirname(__file__)
+DIRNAME = Path(os.path.dirname(__file__))
 
 class TestMeshUtils(unittest.TestCase):
     """various mesh_utils tests"""
@@ -255,13 +257,13 @@ class TestMeshUtils(unittest.TestCase):
     def test_merge_01(self):
         """merges multiple bdfs into a single deck"""
         log = SimpleLogger(level='error')
-        bdf_filename1 = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        bdf_filename1 = BWB_PATH / 'bwb_saero.bdf'
         bdf_filename2 = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         bdf_filename3 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         bdf_filename4 = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm.dat')
-        bdf_filename_out1 = os.path.join(MODEL_PATH, 'bwb', 'BWBsaero_staticbar_8.out')
-        bdf_filename_out2 = os.path.join(MODEL_PATH, 'bwb', 'BWBsaero_static_bar_16.out')
-        bdf_filename_out3 = os.path.join(MODEL_PATH, 'bwb', 'BWBsaero_staticbar_isat.out')
+        bdf_filename_out1 = MODEL_PATH / 'bwb' / 'BWBsaero_staticbar_8.out'
+        bdf_filename_out2 = MODEL_PATH / 'bwb' / 'BWBsaero_static_bar_16.out'
+        bdf_filename_out3 = MODEL_PATH / 'bwb' / 'BWBsaero_staticbar_isat.out'
 
         bdf_filenames1 = [bdf_filename1, bdf_filename2]
         bdf_filenames2 = [bdf_filename1, bdf_filename2, bdf_filename3, bdf_filename4]
@@ -632,7 +634,7 @@ class TestMeshUtils(unittest.TestCase):
         bdf_file.seek(0)
         assert np.allclose(mass, 0.1), mass # t=0.1; A=1.0; nsm=0.; mass=0.1
 
-        csv_filename = 'mcids.csv'
+        csv_filename = DIRNAME / 'mcids.csv'
         export_mcids(model, csv_filename=csv_filename, eids=[12, 13],
                      export_xaxis=True, export_yaxis=True,
                      iply=0)
@@ -705,7 +707,7 @@ class TestMeshUtils(unittest.TestCase):
             [0., 0., 1.],
             [1., 0., 0.],
         ])
-        model, unsed_mirror_model, unused_nid_offset, unused_eid_offset = bdf_mirror_plane(
+        model, unused_mirror_model, unused_nid_offset, unused_eid_offset = bdf_mirror_plane(
             model, plane, mirror_model=None, log=None, debug=True,
             use_nid_offset=False)
         #for nid, node in sorted(mirror_model.nodes.items()):
@@ -728,7 +730,7 @@ class TestMeshUtils(unittest.TestCase):
     def test_mirror2(self):
         """mirrors the BDF (we care about the aero cards)"""
         log = SimpleLogger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         model = bdf_mirror(bdf_filename, plane='xz', log=log)[0]
         model.uncross_reference()
         model.cross_reference()
@@ -821,7 +823,7 @@ class TestEquiv(unittest.TestCase):
             'MAT1,1,3.0,, 0.3\n'
             'ENDDATA'
         )
-        bdf_filename = os.path.join(DIRNAME, 'nonunique.bdf')
+        bdf_filename = DIRNAME / 'nonunique.bdf'
         #bdf_filename_out = os.path.join(DIRNAME, 'unique.bdf')
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
@@ -875,8 +877,8 @@ class TestEquiv(unittest.TestCase):
             'MAT1,1,3.0,, 0.3\n'
             'ENDDATA'
         )
-        bdf_filename = os.path.join(DIRNAME, 'nonunique.bdf')
-        bdf_filename_out = os.path.join(DIRNAME, 'unique.bdf')
+        bdf_filename = DIRNAME / 'nonunique.bdf'
+        bdf_filename_out = DIRNAME / 'unique.bdf'
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
@@ -927,8 +929,8 @@ class TestEquiv(unittest.TestCase):
             'MAT1,1000,3.0,, 0.3\n'
             'ENDDATA'
         )
-        bdf_filename = os.path.join(DIRNAME, 'nonunique.bdf')
-        bdf_filename_out = os.path.join(DIRNAME, 'unique.bdf')
+        bdf_filename = DIRNAME / 'nonunique.bdf'
+        bdf_filename_out = DIRNAME / 'unique.bdf'
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
@@ -1029,8 +1031,9 @@ class TestEquiv(unittest.TestCase):
         # Only collpase 2 nodes
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
-                              node_set=node_set, crash_on_collapse=False, debug=False,
-                              method='old')
+                              node_set=node_set, crash_on_collapse=False,
+                              #log=log,
+                              debug=False, method='old')
         model = save_check_nodes(bdf_filename_out, log, nnodes=5)
         node_ids = list(sorted(model.nodes))
         assert node_ids == [1, 3, 5, 6, 40], node_ids
@@ -1089,8 +1092,8 @@ class TestEquiv(unittest.TestCase):
             '$MATERIALS',
             'MAT1           1      3.              .3',
         ]
-        bdf_filename = os.path.join(DIRNAME, 'nonunique2.bdf')
-        bdf_filename_out = os.path.join(DIRNAME, 'unique2.bdf')
+        bdf_filename = DIRNAME / 'nonunique2.bdf'
+        bdf_filename_out = DIRNAME / 'unique2.bdf'
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write('\n'.join(lines))
@@ -1126,26 +1129,28 @@ class TestEquiv(unittest.TestCase):
 
         """
         log = SimpleLogger(level='error')
-        msg = 'CEND\n'
-        msg += 'BEGIN BULK\n'
-        msg += 'GRID,1, , 0.,   0.,   0.\n'
-        msg += 'GRID,20,, 1.,   0.,   0.\n'
-        msg += 'GRID,3, , 1.01, 0.,   0.\n'
+        msg = (
+            'CEND\n'
+            'BEGIN BULK\n'
+            'GRID,1, , 0.,   0.,   0.\n'
+            'GRID,20,, 1.,   0.,   0.\n'
+            'GRID,3, , 1.01, 0.,   0.\n'
 
-        msg += 'GRID,41,, 1.,   1.,   0.\n'  # eq
-        msg += 'GRID,4,, 1.,   1.,   0.\n'  # eq
-        msg += 'GRID,40,, 1.,   1.,   0.\n'  # eq
-        msg += 'GRID,4,, 1.,   1.,   0.\n'  # eq
+            'GRID,41,, 1.,   1.,   0.\n'  # eq
+            'GRID,4,, 1.,   1.,   0.\n'  # eq
+            'GRID,40,, 1.,   1.,   0.\n'  # eq
+            'GRID,4,, 1.,   1.,   0.\n'  # eq
 
-        msg += 'GRID,5, , 0.,   1.,   0.\n'
-        msg += 'GRID,6, , 0.,   1.01, 0.\n'
-        msg += 'CTRIA3,1, 100,1,20,6\n'
-        msg += 'CTRIA3,10,100,3,40,5\n'
-        msg += 'PSHELL,100,1000,0.1\n'
-        msg += 'MAT1,1000,3.0,, 0.3\n'
-        msg += 'ENDDATA'
-        bdf_filename = os.path.join(DIRNAME, 'nonunique.bdf')
-        bdf_filename_out = os.path.join(DIRNAME, 'unique.bdf')
+            'GRID,5, , 0.,   1.,   0.\n'
+            'GRID,6, , 0.,   1.01, 0.\n'
+            'CTRIA3,1, 100,1,20,6\n'
+            'CTRIA3,10,100,3,40,5\n'
+            'PSHELL,100,1000,0.1\n'
+            'MAT1,1000,3.0,, 0.3\n'
+            'ENDDATA'
+        )
+        bdf_filename = DIRNAME / 'nonunique.bdf'
+        bdf_filename_out = DIRNAME / 'unique.bdf'
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
@@ -1165,7 +1170,7 @@ class TestEquiv(unittest.TestCase):
 
     def test_eq5(self):
         log = SimpleLogger(level='info')
-        bdf_filename_out = 'eq5.bdf'
+        bdf_filename_out = DIRNAME / 'eq5.bdf'
 
         model = BDF(debug=True, log=log, mode='msc')
         for nid in range(1, 11):

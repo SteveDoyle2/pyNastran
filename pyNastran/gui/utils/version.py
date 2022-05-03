@@ -53,7 +53,7 @@ def get_latest_version_from_data(data: str) -> Tuple[Optional[str], List[str]]:
 
 def check_for_newer_version(version_current: Optional[str]=None,
                             version_latest: Optional[str]=None,
-                            quiet=False) -> Tuple[Optional[str], Optional[str], bool]:
+                            quiet: bool=False) -> Tuple[Optional[str], Optional[str], bool]:
     """
     Checks to see if a newer version of pyNastran has been released.
     Only checks this for the GUI.

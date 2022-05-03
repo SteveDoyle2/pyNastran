@@ -264,6 +264,7 @@ MSC_GEOM_TABLES = [
     b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S', # superelements
     b'GEOM1N', b'GEOM1VU', b'GEOM2VU',
     b'GEOM1OLD', b'GEOM2OLD', b'GEOM4OLD',
+    b'GEOM1X', b'GEOM2X',b'GEOM4X',
 
     b'EPT', b'EPTS', b'EPTOLD',
     b'EDTS',
@@ -296,6 +297,16 @@ MSC_GEOM_TABLES = [
 ]
 
 MSC_MATRIX_TABLES = [
+    # 2020
+    b'MATB', b'MATK4', b'MATP', b'MUG1', b'MUG1O', # b'TQG1', # b'TUG1',
+    #b'MUG1B',
+    b'MATAKA',
+    b'MATPH2',
+    b'MATAMA',
+    b'MATK',
+    b'MATV',
+    # -----------
+
     #b'TOLD',
     b'SDT', #b'STDISP',
     b'TOLB2', b'ADSPT', #b'MONITOR',
@@ -376,6 +387,9 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # Qualifier Information Table - which is what???
     b'QUALINFO',
 
+    b'OGPSR',
+
+
     # new
     b'TOLD',
     b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS',
@@ -402,6 +416,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # DOEF1 - Scaled Response Spectra
     b'OEFIT', b'OEF1X', b'OEF1', b'DOEF1',
     b'OEFITSTN', # output.op2
+    b'OGPSTRS', b'OGPFI', b'OQS2SGT1', b'OGTEMP', b'OERPM',
 
 
     # Table of Max values?
@@ -437,9 +452,9 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # applied loads
     # OPG1 - Applied static loads
     b'OPNL1', # nonlinear applied loads - sort 1
-    b'OPG1', # applied loads - gset? - sort 1
+    b'OPG1',  # applied loads - gset? - sort 1
     b'OPGV1',
-    b'OPG2', # applied loads - sort 2 - v0.8
+    b'OPG2',  # applied loads - sort 2 - v0.8
 
     # grid point stresses
     b'OGS1', # grid point stresses/strains - sort 1
@@ -478,6 +493,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OQGATO2', b'OQGCRM2', b'OQGPSD2', b'OQGRMS2', b'OQGNO2',
 
     # nx mpc forces
+    b'OQMATO1', b'OQMCRM1', b'OQMPSD1', b'OQMRMS1', b'OQMNO1',
     b'OQMATO2', b'OQMCRM2', b'OQMPSD2', b'OQMRMS2', b'OQMNO2',
 
     # stress
@@ -498,10 +514,30 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OEFATO2', b'OEFCRM2', b'OEFPSD2', b'OEFRMS2', b'OEFNO2',
     #b'OEFPSD2', b'OEFCRM2', b'OEFRMS2', b'OEFATO2', b'OEFNO2',
 
+    # 2020
+    # Output Frequency Response Result to ADF Format File
+    # This module support the output table block of:
+    # - OUGx, OSMPF1, OAFMPF1, OASMPF1, OAPMPF1, OAPPF1, OAGPF1 and OSPPF1
+    #   (TCODE=1, 10, 11 and 61 to 67).
+
+    # SORT1
+    b'OSMPF1',  # structural          modal participation factors
+    b'OAFMPF1', # acoustic fluid      modal participation factors
+    b'OASMPF1', # acoustic structural modal participation
+    b'OAPMPF1', # acoustic panel      modal participation factor
+    b'OAPPF1',  # acoustic panel participation
+    b'OAGPF1',  # normalized acoustic grid participation factors
+    b'OSPPF1',  # structure panel participation
+
     #-----------------------------------------------------
     # other
-    b'OFMPF2M',
-    b'OSMPF2M', b'OPMPF2M', b'OLMPF2M', b'OGPMPF2M',
+
+    # SORT2
+    b'OFMPF2M',  # fluid      modal participation factors by natural modes
+    b'OSMPF2M',  # structural modal participation factors by natural modes
+    b'OLMPF2M',  # load       modal participation factors by natural modes
+    b'OPMPF2M',  # panel      modal participation factors by natural modes
+    b'OGPMPF2M', # panel grid modal participation factors by natural modes
 
     b'OCRUG',
     b'OCRPG',
@@ -544,13 +580,13 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
 
     b'OQG2', # single point forces - sort 2 - v0.8
     b'OBC1', b'OBC2', # contact pressures and tractions at grid points
-    b'OBG1', # glue normal and tangential tractions at grid points in basic coordinate system
-    b'OES2', # element stresses - sort 2 - v0.8
-    b'OEF2', # element forces - sort 2 - v0.8
+    b'OBG1',  # glue normal and tangential tractions at grid points in basic coordinate system
+    b'OES2',  # element stresses - sort 2 - v0.8
+    b'OEF2',  # element forces - sort 2 - v0.8
     b'OUGV2', # absolute displacements/velocity/acceleration - sort 2
 
     # contact
-    b'OSPDSI1', # intial separation distance
+    b'OSPDSI1', # initial separation distance
     b'OSPDS1',  # final separation distance
     b'OQGCF1', b'OQGCF2', # contact force at grid point
     b'OQGGF1', b'OQGGF2', # glue forces in grid point basic coordinate system
@@ -564,13 +600,46 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'ROUGV2',  # relative displacement
     b'CDDATA',  # cambpell diagram table
     b'OEKE1',
-    b'OES1MX', # extreme stresses?
+    b'OES1MX',  # extreme stresses?
     b'OESNLBR2',
-    b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
+    b'BGPDTVU', # basic grid point definition table for a superelement and related to geometry with view-grids added
 
     b'OUG2T',
-    b'AEMONPT',
+    b'AEMONPT', # Aerodynamic monitor points
     #b'KDICT',
+    #---------------------
+    # 2020
+    b'OCNTCHK0', # OUG-type table of contact check of active nodes status and distance
+    b'OCOMP',
+    b'META',     #  User to store additional info by SE
+    b'OFCRFMD',
+    b'OEXTFIB',  # EXTREME PLY composite element output in SORT1 format
+    b'OELAFG',   # OFP table of Elastic Forces
+    b'OQS2SGN1',
+    b'MATRV', b'TUG1', # b'MUG1',
+
+    #2020 - could these be matrices?
+    b'OFCON3DD', b'OFCON3D0',  # glued contact
+    b'OFGCOND',
+    b'OCOMPQT',
+    b'OGS1X',
+    b'OVINT',  # element vibration intensities
+
+    # for sure results
+    b'OUTSFLOW',
+    b'OERPDSN',
+    b'OUG1S',
+    b'OVG1',
+    b'OUGSTRS0', # OUG-type table of geometry adjustment by initial stress-free contact
+    b'OBCNURB0', # Table of analytical contact surface spline
+    b'OBCNURBD',
+    b'OETEMP',
+    b'OCNTCHKD',
+
+    #C:\MSC.Software\msc_nastran_runs\pcomp1.op2
+    #C:\MSC.Software\msc_nastran_runs\pcdyn111s2.op2
+    b'OGPSTRN', b'OGPFIN', b'OESRTN', b'OGPSRN',
+
 ]
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):  # pragma: no cover
     counter = Counter(MSC_RESULT_TABLES)

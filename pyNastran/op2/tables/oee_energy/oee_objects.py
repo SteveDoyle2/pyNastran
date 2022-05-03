@@ -47,14 +47,14 @@ class RealStrainEnergyArray(BaseElement):
             #raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -301,9 +301,9 @@ class RealStrainEnergyArray(BaseElement):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element[itime, :]):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element[itime, :]):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     (energyi1, percenti1, densityi1) = t1
                     (energyi2, percenti2, densityi2) = t2
 
@@ -392,12 +392,12 @@ class RealStrainEnergyArray(BaseElement):
             setattr(self, self.analysis_method + 's', self._times)
         del self.analysis_method
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -424,7 +424,7 @@ class RealStrainEnergyArray(BaseElement):
         return msg
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         # '      EIGENVALUE =  2.005177E+05'
@@ -515,7 +515,7 @@ class RealStrainEnergyArray(BaseElement):
         from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
             self._write_table_header(op2, op2_ascii, date)
@@ -535,7 +535,7 @@ class RealStrainEnergyArray(BaseElement):
             eids = self.element[itime, :]
             nelements = len(eids)
             ntotal = ntotali * nelements
-            op2_ascii.write('nelements=%i\n' % nelements)
+            op2_ascii.write(f'nelements={nelements:d}\n')
 
             eids_device = eids * 10 + self.device_code
             self._write_table_3(op2, op2_ascii, new_result, itable, itime)
@@ -660,7 +660,7 @@ class RealStrainEnergyArray(BaseElement):
             ##elif hasattr(self, 'dts'):
                 ##field5 = self.times[itime]
             #else:  # pragma: no cover
-            except:
+            except Exception:
                 print(self.get_stats())
                 raise NotImplementedError('cant find times or dts on analysis_code=8')
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
@@ -768,14 +768,14 @@ class ComplexStrainEnergyArray(BaseElement):
             raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -920,9 +920,9 @@ class ComplexStrainEnergyArray(BaseElement):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element[itime, :]):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element[itime, :]):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     (energyi1r, engery1i, percenti1, densityi1) = t1
                     (energyi2r, engery2i, percenti2, densityi2) = t2
                     #print(t1, t2)
@@ -972,12 +972,12 @@ class ComplexStrainEnergyArray(BaseElement):
         self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -1003,7 +1003,7 @@ class ComplexStrainEnergyArray(BaseElement):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s', page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         msg_temp = (

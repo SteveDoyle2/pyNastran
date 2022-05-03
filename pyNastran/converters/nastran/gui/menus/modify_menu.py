@@ -5,6 +5,7 @@ from qtpy.QtWidgets import (
     QGridLayout, QTextEdit, QLineEdit)
 
 import numpy as np
+from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 from .modify_map import Var, TransposedVars
 
@@ -389,7 +390,11 @@ def add_transposed_vars(model, variables_tranposed, obj, grid, grid_objs, i):
 def set_qlineedit(value):
     box = QLineEdit()
     if value is not None:
-        box.setText(str(value))
+        if isinstance(value, float):
+            func_val = func_str(value)
+        else:
+            func_val = str(value)
+        box.setText(func_val)
     return box
 
 def get_pulldown_items(model, var, value):

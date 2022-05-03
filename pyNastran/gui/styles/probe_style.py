@@ -23,8 +23,8 @@ class ProbeResultStyle(vtk.vtkInteractorStyleTrackballCamera):
         #print('_rotation_center_cell_picker', cell_id)
 
         if cell_id < 0:
-            pass
-        else:
+            return
+        if 1:
             world_position = picker.GetPickPosition()
             if 0:
                 camera = self.parent.rend.GetActiveCamera()

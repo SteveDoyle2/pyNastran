@@ -154,7 +154,7 @@ class LAMA(OP2Common):
         #self.print_block(data)
         self._read_title(data)
 
-    def _read_real_eigenvalue_4(self, data, ndata):
+    def _read_real_eigenvalue_4(self, data: bytes, ndata: int):
         """parses the Real Eigenvalues Table 4 Data"""
         if self.read_mode == 1:
             return ndata

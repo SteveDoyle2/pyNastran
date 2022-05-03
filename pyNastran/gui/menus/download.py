@@ -18,7 +18,7 @@ if qt_int == 4:
             else:
                 # ????
                 pass
-elif qt_int == 5:
+elif qt_int in {5, 6}:
     pass
     #class ClickableQLabel(QPushButton):
         #def __init(self, text):

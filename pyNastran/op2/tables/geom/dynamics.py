@@ -75,6 +75,25 @@ class DYNAMICS(GeomCommon):
 
             #F:\work\pyNastran\examples\Dropbox\move_tpl\rcross01.op2
             (3201, 24, 54) : ['RCROSS', self._read_rcross],
+
+            (9010, 90, 569): ['CBEAR', self._read_fake],
+
+            (9010, 90, 569): ['CBEAR', self._read_fake],
+            (9110, 91, 570): ['PBEAR', self._read_fake],
+            (9310, 93, 633): ['ROTPARM', self._read_fake],
+            (9010, 90, 569): ['CBEAR', self._read_fake],
+
+            (9407, 94, 659): ['ACADAPT', self._read_fake],
+            (11701, 117, 656): ['CAMPBLL', self._read_fake],
+
+            (9607, 96, 660): ['ACORDER', self._read_fake],
+            (2601, 26, 58): ['FRFFLEX', self._read_fake],
+            (3501, 35, 56): ['RCROSSC', self._read_fake],
+            (5807, 59, 653): ['ACPLNW', self._read_fake],
+            (2807, 28, 79): ['FRFOMAP', self._read_fake],
+            (7307, 73, 647): ['TLOAD3', self._read_fake],
+            (5407, 54, 649): ['ALOAD', self._read_fake],
+            (2701, 27, 62): ['FRFOTM', self._read_fake],
         }
 
     def _read_acsrce(self, data: bytes, n: int) -> int:
@@ -1624,7 +1643,7 @@ class DYNAMICS(GeomCommon):
         return n, dloads
 
     def _read_tload1_msc(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
-        """
+        r"""
         TLOAD1(7107,71,138) - Record 37
 
         1 SID    I  Load set identification number
@@ -1637,6 +1656,13 @@ class DYNAMICS(GeomCommon):
         7 V0     RS Initial velocity factor for enforced motion (MSC; NX undocumented)
         8 T      RS Time delay (MSC)
 
+        # C:\MSC.Software\msc_nastran_runs\pbxsfsd.op2
+        # why are there 9 fields?
+        $       sid excite  delay    type    tid/f us vs
+        TLOAD1  5   2                         2    0. 0.
+                   sid excite ?    ?    tid ?    ?    ?    ?
+        ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
+        floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
         """
         ntotal = 32 * self.factor # 8*4
         #self.show_data(data[n:], 'if')

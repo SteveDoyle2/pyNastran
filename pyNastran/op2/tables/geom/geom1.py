@@ -48,13 +48,11 @@ class GEOM1(GeomCommon):
             (1701, 17, 6): ['CORD1C', self._read_cord1c],    # record 1
             (1801, 18, 5): ['CORD1R', self._read_cord1r],    # record 2
             (1901, 19, 7): ['CORD1S', self._read_cord1s],    # record 3
+
             (2001, 20, 9): ['CORD2C', self._read_cord2c],    # record 4
-
-            #F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_consolid31.op2
-            (2001, 20, 2220009): ['GRIDx?', self._read_fake],
-
             (2101, 21, 8): ['CORD2R', self._read_cord2r],    # record 5
             (2201, 22, 10): ['CORD2S', self._read_cord2s],   # record 6
+
             (14301,143,651): ['CORD3G', self._read_cord3g],  # record 7
 
             (4501,  45,  1): ['GRID',   self._read_grid],    # record 17
@@ -94,7 +92,11 @@ class GEOM1(GeomCommon):
             (3901,   39,  50): ['CVISC', self._read_cvisc],  # record
             (13301, 133, 509): ['', self._read_fake],  # record
             (1127,   11, 461) : ['SELOAD', self._read_fake],  # record NX
-            (4501, 45, 1120001): ['GRID/BCT?/BOLT?', self._read_grid_maybe],  # record ???; test_ibulk
+            (4501, 45, 1120001): ['GRID', self._read_grid_maybe],  # record ???; test_ibulk
+
+
+            #F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_consolid31.op2
+            (2001, 20, 2220009): ['GRIDx?', self._read_fake],
 
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold01d.op2
             (2101, 21, 2220008) : ['CORDx?', self._read_fake],

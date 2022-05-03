@@ -767,8 +767,8 @@ def _store_dresp1(model, ids, nids_used, pids_used):
         #elif dresp.property_type == 'STRESS':
 
         elif dresp.property_type is None:
-            if dresp.response_type in ['WEIGHT', 'EIGN', 'VOLUME', 'LAMA', 'CEIG',
-                                       'FREQ', 'STABDER']:
+            if dresp.response_type in {'WEIGHT', 'EIGN', 'VOLUME', 'LAMA', 'CEIG',
+                                       'FREQ', 'STABDER'}:
                 pass
             elif dresp.response_type in ['DISP', 'FRDISP', 'TDISP', 'RMSDISP', 'PSDDISP',
                                          'TVELO', 'FRVELO', 'RMSVELO',

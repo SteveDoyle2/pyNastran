@@ -113,6 +113,19 @@ class GEOM4(GeomCommon):
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sdr_s111se.op2
             (210, 2, 0) : ['', self._read_fake],
             (810, 8, 318) : ['SESET?', self._read_fake],
+
+            (8420, 84, 641) : ['CYCADD', self._read_fake],
+            (8510, 85, 643) : ['CYCAXIS', self._read_fake],
+            (8220, 82, 640) : ['CYCSET', self._read_fake],
+
+            # MSC
+            (16010, 160, 934) : ['???', self._read_fake],
+            (15010, 150, 841) : ['???', self._read_fake],
+            (12000, 120, 255) : ['???', self._read_fake],
+
+            # ???
+            (4901, 49, 320017) : ['???', self._read_fake],
+            (12101, 121, 696) : ['JCON', self._read_fake],
         }
 
     def _read_aset(self, data: bytes, n: int) -> int:
@@ -1115,12 +1128,12 @@ class GEOM4(GeomCommon):
         5 D     RX   Enforced displacement
 
         """
-        struct_4if = Struct(self._endian + b'4if')
-        ntotal = 20 # 5*4
+        ntotal = 20 * self.factor  # 5*4
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, nentries
         assert (len(data) - n) % ntotal == 0
         constraints = []
+        struct_4if = Struct(self._endian + b'4if')
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_4if.unpack(edata)

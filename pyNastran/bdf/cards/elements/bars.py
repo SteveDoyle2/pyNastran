@@ -1318,7 +1318,7 @@ class CBEAM3(LineElement):  # was CBAR
 
     def Nsm(self):
         if isinstance(self.pid_ref, integer_types):
-            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            msg = f'Element eid={self.eid} has not been cross referenced.\n{self}'
             raise RuntimeError(msg)
         nsm = self.pid_ref.Nsm()
         assert isinstance(nsm, float), nsm

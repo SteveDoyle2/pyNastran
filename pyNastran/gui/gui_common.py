@@ -148,7 +148,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.resize(1100, 700)
         self.statusBar().showMessage('Ready')
 
-        # windows title and aplication icon
+        # windows title and application icon
         self.setWindowTitle('Statusbar')
         if self._logo is not None:
             self.setWindowIcon(QtGui.QIcon(self._logo))
@@ -1582,6 +1582,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
          - time should be two-sided
          - analysis_time should be one-sided
          - set onesided=False
+
         """
         if stop_animation:
             self.stop_animation()

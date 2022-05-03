@@ -3,12 +3,13 @@ from typing import List, Dict
 import numpy as np
 
 NX_VERSIONS = [
-    '8.0', '8.5', 
-    '9.1', 
-    '10.1',
-    '11.0', '11.0.1',
+    '7.0', '7.1',
+    '8.0', '8.1', '8.2', '8.3', '8.4', '8.5',
+    '9.0', '9.1',
+    '10.0', '10.1',
+    '11.0', '11.0.1', '11.0.2',
     '12.0', '12.0.2',
-    '2019.2',
+    '2019.0', '2019.1', '2019.2',
 ]
 
 NX_ELEMENTS = {
@@ -418,6 +419,10 @@ NX_MATRIX_TABLES = [
     b'ATV',
     b'XSOP2DIR',
     b'RADEFMP', # Modal Effective Inertia Matrix - Modal Matrix (per Vibrata)
+    b'K4HH', # K4HH - Modal Structural Damping Matrix
+    b'RAFGEN',  # RAFGEN - Generalized Forces
+    b'RADAMPZ', # Matrix N x N equivalent viscous damping ratios
+    b'RADAMPG', # Matrix N X N equivalent structural damping ratio
 
     # hasn't been validated
     #b'RAFGEN', # Load Set Modal Forces  - Modal generalized force vectors  (per Vibrata)
@@ -431,11 +436,12 @@ NX_MATRIX_TABLES = [
 
     # not-MATPOOL
     # hasn't been validated
-    #b'DELTAK', b'DELTAM', b'RBM0', b'DELTAM0',
+    b'DELTAK', b'DELTAM', b'RBM0', b'DELTAM0',
 
     # MATPOOL
     # hasn't been validated
-    #b'MRGGT', b'UEXPT',
+    b'MRGGT', b'UEXPT', # b'DELTAK',
+    #b'MRGGT',
 
     # MATRIX/MATPOOL - testing-remove this
     # hasn't been validated
@@ -516,6 +522,7 @@ NX_RESULT_TABLES = [
     b'ODAMGCZD',
     b'XCASECC',
     b'RST',
+    b'OVG',  # flutter velocity
 
     # displacements, velocity, acceleration
     # BOUGV1 - G-set results (displacement, velocity, acceleration, eigenvector)

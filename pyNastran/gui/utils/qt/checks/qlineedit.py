@@ -1,4 +1,9 @@
 import os
+from pyNastran.gui.utils.qt.checks.utils import (check_locale_float, is_ranged_value,
+                                                 check_format_str)
+
+QLINE_EDIT_BASIC = 'QLineEdit{background: white;}'
+QLINE_EDIT_ERROR = 'QLineEdit{background: red;}'
 
 def check_path(cell):
     """verifies that the path exists"""
@@ -7,13 +12,13 @@ def check_path(cell):
         return None, False
 
     if not os.path.exists(path):
-        cell.setStyleSheet("QLineEdit{background: red;}")
+        cell.setStyleSheet(QLINE_EDIT_ERROR)
         return None, False
-    cell.setStyleSheet("QLineEdit{background: white;}")
+    cell.setStyleSheet(QLINE_EDIT_BASIC)
     return path, True
 
 def check_save_path(cell):
-    """verifies that the path is savable..."""
+    """verifies that the path is saveable"""
     text, passed = check_name_str(cell)
     if not passed:
         return None, False
@@ -91,14 +96,13 @@ def check_float(cell):
         is this a valid float
     """
     text = cell.text()
-    try:
-        value = float(text)
+    value, is_valid = check_locale_float(text)
+    if is_valid:
         cell.setStyleSheet("QLineEdit{background: white;}")
         return value, True
-    except ValueError:
+    else:
         cell.setStyleSheet("QLineEdit{background: red;}")
         return None, False
-
 
 def check_float_ranged(cell, min_value=None, max_value=None,
                        min_inclusive=True, max_inclusive=True):
@@ -132,7 +136,7 @@ def check_float_ranged(cell, min_value=None, max_value=None,
         #print("failed %r" % value)
         return value, is_passed
 
-    is_ranged = _is_ranged_value(
+    is_ranged = is_ranged_value(
         value, min_value=min_value, max_value=max_value,
         min_inclusive=min_inclusive, max_inclusive=max_inclusive)
 
@@ -143,67 +147,6 @@ def check_float_ranged(cell, min_value=None, max_value=None,
     cell.setStyleSheet("QLineEdit{background: %s;}" % color)
 
     return value, is_ranged
-
-def _is_ranged_value(value, min_value=None, max_value=None,
-                     min_inclusive=True, max_inclusive=True):
-    """
-    Parameters
-    ----------
-    value : float
-        float : the value as a float
-    min_value / max_value : float / None
-        float : the constraint is active
-        None : the constraint is inactive
-    min_inclusive / max_inclusive; bool; default=True
-        flips [min_value, max_value] to:
-          - (min_value, max_value)
-          - [min_value, max_value)
-          - (min_value, max_value]
-
-    Returns
-    -------
-    is_ranged : bool
-        is the value in range
-    """
-    is_ranged = True
-    if min_value is not None:
-        #print("min:")
-        if min_inclusive:
-            # ( is the goal
-            if value < min_value:
-                is_ranged = False
-                #print('  min_exclusive, %s %s' % (value, min_value))
-            #else:
-                #print('  passed minA=%s' % value)
-        else:
-            # [ is the goal
-            if value <= min_value:
-                is_ranged = False
-                #print('  min_inclusive, %s %s' % (value, min_value))
-            #else:
-                #print('  passed minB=%s' % value)
-    #else:
-        #print('no limit on min')
-
-    if max_value is not None:
-        #print("max:")
-        if max_inclusive:
-            # ] is the goal
-            if value > max_value:
-                #print('  max_exclusive, %s %s' % (value, max_value))
-                is_ranged = False
-            #else:
-                #print('  passed maxA=%s' % value)
-        else:
-            # ) is the goal
-            if value >= max_value:
-                is_ranged = False
-                #print('  max_inclusive, %s %s' % (value, max_value))
-            #else:
-                #print('  passed maxB=%s' % value)
-    #else:
-        #print('no limit on max')
-    return is_ranged
 
 #-------------------------------------------------------------------------------
 def check_name_str(cell):
@@ -257,7 +200,7 @@ def check_format(cell):
     ----------
     cell : QLineEdit
         a QLineEdit containing a string formatter like:
-        {'%s', '%i', '%f', '%g', '%.3f', '%e'}
+        {'%s', '%i', '%d', %f', '%g', '%.3f', '%e'}
 
     Returns
     -------
@@ -275,53 +218,3 @@ def check_format(cell):
         return text2, True
     cell.setStyleSheet("QLineEdit{background: red;}")
     return None, False
-
-def check_format_str(text):
-    """
-    Checks a QLineEdit string formatter
-
-    Parameters
-    ----------
-    text : str
-        a QLineEdit containing a string formatter like:
-        {'%s', '%i', '%f', '%g', '%.3f', '%e'}
-
-    Returns
-    -------
-    text : str / None
-        str : the validated text of the QLineEdit
-        None : the format is invalid
-    is_valid : bool
-        The str/None flag to indicate if the string formatter is valid
-    """
-    text = text.strip()
-    is_valid = True
-
-    # basic length checks
-    if len(text) < 2:
-        is_valid = False
-    elif 's' in text.lower():
-        is_valid = False
-    elif '%' not in text[0]:
-        is_valid = False
-    elif text[-1].lower() not in ['g', 'f', 'i', 'e']:
-        is_valid = False
-
-    # the float formatter handles ints/floats?
-    try:
-        text % 1
-        text % .2
-        text % 1e3
-        text % -5.
-        text % -5
-    except ValueError:
-        is_valid = False
-
-    # the float formatter isn't supposed to handle strings?
-    # doesn't this break %g?
-    try:
-        text % 's'
-        is_valid = False
-    except TypeError:
-        pass
-    return text, is_valid

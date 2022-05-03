@@ -19,7 +19,6 @@ class TestLoadSum(unittest.TestCase):
         bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
         model.read_bdf(bdf_filename)
         loadcase_id = 1
-        #print("keys1", model.loads.keys())
 
         p0 = array([0., 0., 0.])
         F_expected = array([23000., 0., 0.])
@@ -40,7 +39,6 @@ class TestLoadSum(unittest.TestCase):
         bdf_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         model.read_bdf(bdf_filename)
         loadcase_id = 10000
-        #print("keys2", model.loads.keys())
 
         p0 = array([0., 0., 0.])
         F_expected = array([0., 0., 10000.])
@@ -74,7 +72,6 @@ class TestLoadSum(unittest.TestCase):
             bdf_filename = os.path.join(model_path, 'iSat', 'ISat_Launch_Sm_4pt.dat')
             model.read_bdf(bdf_filename)
             loadcase_id = 1
-            #print("keys3", model.loads.keys())
 
             p0 = array([0., 0., 0.])
             F_expected = array([0., 0., 1.])
@@ -104,9 +101,7 @@ class TestLoadSum(unittest.TestCase):
         p0 = array([0., 0., 0.])
         model = BDF(log=log, debug=False)
         bdf_filename = os.path.join(model_path, 'plate', 'plate.bdf')
-        #print(bdf_filename)
         model.read_bdf(bdf_filename)
-        #print("keys4", model.loads.keys())
 
         loadcase_id = 1
         F_expected = array([600., 0., 0.])
@@ -406,7 +401,7 @@ class TestLoadSum(unittest.TestCase):
         model.write_bdf(bdf_file, size=16)
 
     def _test_loads_sum_06(self):
-        model = BDF(log=log, debug=False)
+        model = BDF(log=None, debug=False)
         bdf_filename = os.path.join(model_path, 'real', 'loads', 'bars.bdf')
         model.read_bdf(bdf_filename)
         p0 = array([0., 0., 0.])

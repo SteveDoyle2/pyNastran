@@ -1,7 +1,10 @@
 # coding: utf-8
+from typing import Optional, Any, TYPE_CHECKING
 import vtk
 
 #from pyNastran.gui.gui_objects.coord_properties import CoordProperties
+if TYPE_CHECKING:  # pragma: no cover
+    import numpy as np
 
 
 class ViewActions:
@@ -124,15 +127,15 @@ class ViewActions:
         self.Render()
 
     #---------------------------------------------------------------------------
-    def on_increase_magnification(self):
+    def on_increase_magnification(self) -> None:
         """zoom in"""
         self.zoom(1.1)
 
-    def on_decrease_magnification(self):
+    def on_decrease_magnification(self) -> None:
         """zoom out"""
         self.zoom(1.0 / 1.1)
 
-    def azimuth(self, azimuth_deg, render=True):
+    def azimuth(self, azimuth_deg: float, render: bool=True) -> None:
         """see the gui"""
         camera = self.GetCamera()
         camera.Azimuth(-azimuth_deg)
@@ -141,7 +144,7 @@ class ViewActions:
             self.vtk_interactor.Render()
         self.gui.log_command('azimuth(%s)' % azimuth_deg)
 
-    def pitch(self, pitch_deg, render=True):
+    def pitch(self, pitch_deg: float, render: bool=True) -> None:
         """see the gui"""
         camera = self.GetCamera()
         camera.Pitch(-pitch_deg)
@@ -193,7 +196,7 @@ class ViewActions:
         if render:
             self.vtk_interactor.Render()
 
-    def on_surface(self, render=True):
+    def on_surface(self, render: bool=True) -> None:
         """sets the main/toggle actors to surface"""
         if self.is_wireframe:
             self.gui.log_command('on_surface()')
@@ -210,7 +213,7 @@ class ViewActions:
             if render:
                 self.vtk_interactor.Render()
 
-    def on_wireframe(self, render=True):
+    def on_wireframe(self, render: bool=True) -> None:
         """sets the main/toggle actors to wirefreme"""
         if not self.is_wireframe:
             self.gui.log_command('on_wireframe()')
@@ -235,7 +238,7 @@ class ViewActions:
 
     #---------------------------------------------------------------------------
     # camera
-    def update_camera(self, code):
+    def update_camera(self, code: str) -> None:
         camera = self.GetCamera()
         #print("code =", code)
         if code == '+x':  # set x-axis
@@ -289,17 +292,17 @@ class ViewActions:
         self.rend.ResetCamera()
         self.gui.log_command('update_camera(%r)' % code)
 
-    def _update_camera(self, camera=None):
+    def _update_camera(self, camera: Optional[vtk.vtkCamera]=None) -> None:
         if camera is None:
             camera = self.GetCamera()
         camera.Modified()
         self.vtk_interactor.Render()
 
     #---------------------------------------------------------------------------
-    def Render(self):
+    def Render(self) -> None:
         self.vtk_interactor.GetRenderWindow().Render()
 
-    def GetCamera(self):
+    def GetCamera(self) -> vtk.vtkCamera:
         return self.rend.GetActiveCamera()
 
     #@property
@@ -307,9 +310,9 @@ class ViewActions:
         #return self.gui.settings
 
     @property
-    def rend(self):
+    def rend(self) -> vtk.vtkRenderer:
         return self.gui.rend
 
     @property
-    def vtk_interactor(self):
+    def vtk_interactor(self) -> Any:
         return self.gui.vtk_interactor

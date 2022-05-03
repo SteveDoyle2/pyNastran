@@ -160,17 +160,17 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
     #assert np.array_equal(nids[inew], nids_new), 'some nodes are not defined'
     return nodes_xyz, model, nids, inew
 
-def _get_xyz_cid0(model, nids):
+def _get_xyz_cid0(model: BDF, nids: NDArrayNint, fdtype: str='float32') -> NDArrayN3float:
     """gets xyz_cid0"""
     coord_ids = model.coord_ids
     needs_get_position = (coord_ids == [0])
 
     if needs_get_position:
         nodes_xyz = array([model.nodes[nid].get_position()
-                           for nid in nids], dtype='float32')
+                           for nid in nids], dtype=fdtype)
     else:
         nodes_xyz = array([model.nodes[nid].xyz
-                           for nid in nids], dtype='float32')
+                           for nid in nids], dtype=fdtype)
     return nodes_xyz
 
 def _eq_nodes_setup_node_set(model: BDF, node_set, renumber_nodes: bool=False,
@@ -181,7 +181,7 @@ def _eq_nodes_setup_node_set(model: BDF, node_set, renumber_nodes: bool=False,
     all_nids = array(list(model.nodes.keys()), dtype='int32')
 
     # B - A
-    # these are all the nodes that are requested from node_set that are missing
+    # these are all the nodes that are requested from all_node_set that are missing
     #   thus len(diff_nodes) == 0
     diff_nodes = setdiff1d(node_set, all_nids)
     if len(diff_nodes) != 0:
@@ -345,9 +345,18 @@ def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
                                  inew: NDArrayNint,
                                  node_set=None, neq_max: int=4, method: str='new',
                                  debug: bool=False) -> None:
-    """helper for equivalencing"""
+    """
+    Helper for equivalencing
+
+    Returns
+    -------
+    nid_pairs : List[Tuple[int, int]]
+        a series of (nid1, nid2) pairs
+
+    """
     unused_kdt, nid_pairs = _eq_nodes_build_tree(
-        nodes_xyz, nids, tol, log,
+        nodes_xyz, nids,
+        tol, log,
         inew=inew, node_set=node_set,
         neq_max=neq_max, method=method, debug=debug)
     return nid_pairs
@@ -447,6 +456,7 @@ def _eq_nodes_build_tree_new(kdt: scipy.spatial.cKDTree,
                              log: SimpleLogger,
                              inew=None, node_set=None, neq_max: int=4, msg: str='',
                              debug: float=False) -> Tuple[Any, List[Tuple[int, int]]]:
+    assert isinstance(nnodes, int), nnodes
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
     slots = np.where(ieq[:, :] < nnodes)
     nid_pairs_expected = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)

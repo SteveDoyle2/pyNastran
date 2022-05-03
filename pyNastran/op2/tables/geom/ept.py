@@ -65,6 +65,7 @@ class EPT(GeomCommon):
             (3201, 32, 991) : ['NSM', self._read_fake],  # record
             (3301, 33, 992) : ['NSM1', self._read_fake],  # record
             (3701, 37, 995) : ['NSML1', self._read_fake],    # record
+            (3601, 36, 62): ['NSML1', self._read_fake],  # record 7
             (15006, 150, 604): ['PCOMPG', self._read_pcompg],  # record
 
             (702, 7, 38): ['PBUSHT', self._read_pbusht],  # record 1
@@ -72,7 +73,6 @@ class EPT(GeomCommon):
             (3401, 34, 57) : ['NSMADD', self._read_fake],    # record 5
             (3501, 35, 58): ['NSML', self._read_fake],  # record 6
             (3501, 35, 994) : ['NSML', self._read_fake],
-            (3601, 36, 62): ['NSML1', self._read_fake],  # record 7
             (1502, 15, 36): ['PAABSF', self._read_fake],  # record 8
             (8300, 83, 382): ['PACABS', self._read_fake],  # record 9
             (8500, 85, 384): ['PACBAR', self._read_fake],  # record 10
@@ -92,12 +92,32 @@ class EPT(GeomCommon):
             (3002, 30, 415): ['VIEW3D', self._read_fake],  # record 63
 
             (13501, 135, 510) : ['PFAST', self._read_pfast_msc],  # MSC-specific
-
-            # NX-specific
             (3601, 36, 55) : ['PFAST', self._read_pfast_nx],  # NX-specific
             (3801, 38, 979) : ['PPLANE', self._read_fake],
             (11801, 118, 560) : ['PWELD', self._read_fake],
             (3401, 34, 993) : ['NSMADD', self._read_fake],
+            (9300, 93, 684) : ['ELAR', self._read_fake],
+            (9400, 94, 685) : ['ELAR2', self._read_fake],
+            (16006, 160, 903) : ['PCOMPS', self._read_fake],
+
+            # MSC-specific
+            (14602, 146, 692): ['PSLDN1', self._read_fake],
+            (16502, 165, 916): ['PAXSYMH', self._read_fake],
+            (13201, 132, 513): ['PBRSECT', self._read_fake],
+
+            (13701, 137, 638): ['PWSEAM', self._read_fake],
+            (7001, 70, 632): ['???', self._read_fake],
+            (15106, 151, 953): ['PCOMPG1', self._read_fake],
+            (3901, 39, 969): ['PSHL3D', self._read_fake],
+            (17006, 170, 901): ['MATCID', self._read_fake],
+
+            (9601, 96, 691): ['PJOINT', self._read_fake],
+            (16502, 165, 916): ['???', self._read_fake],
+
+            (9701, 97, 692): ['PJOINT2', self._read_fake],
+            (13401, 134, 611): ['PBEAM3', self._read_fake],
+            (8901, 89, 905): ['PSOLCZ', self._read_fake],
+            (9801, 98, 698): ['DESC', self._read_desc],
         }
 
     def _add_op2_property(self, prop):
@@ -328,26 +348,27 @@ class EPT(GeomCommon):
         NSM is at the end of the element.
         """
         valid_types = {
-            "ROD": 1,
-            "TUBE": 2,
-            "I": 6,
-            "CHAN": 4,
-            "T": 4,
-            "BOX": 4,
-            "BAR": 2,
-            "CROSS": 4,
-            "H": 4,
-            "T1": 4,
-            "I1": 4,
-            "CHAN1": 4,
-            "Z": 4,
-            "CHAN2": 4,
+            'ROD': 1,
+            'TUBE': 2,
+            'TUBE2': 2,
+            'I': 6,
+            'CHAN': 4,
+            'T': 4,
+            'BOX': 4,
+            'BAR': 2,
+            'CROSS': 4,
+            'H': 4,
+            'T1': 4,
+            'I1': 4,
+            'CHAN1': 4,
+            'Z': 4,
+            'CHAN2': 4,
             "T2": 4,
-            "BOX1": 6,
-            "HEXA": 3,
-            "HAT": 4,
-            "HAT1": 5,
-            "DBOX": 10,  # was 12
+            'BOX1': 6,
+            'HEXA': 3,
+            'HAT': 4,
+            'HAT1': 5,
+            'DBOX': 10,  # was 12
             #'MLO TUBE' : 2,
         }  # for GROUP="MSCBML0"
 
@@ -947,8 +968,8 @@ class EPT(GeomCommon):
         """
         type_map = {
             0 : None,  # NULL
-            1 : 'EQUAT',
-            2 : 'TABLE',
+            1 : 'TABLE',
+            2 : 'EQUAT',
         }
         ntotal = 152 * self.factor  # 38*4
         struct1 = Struct(mapfmt(self._endian + b'i 6f i 4f 24i 2f', self.size))
@@ -985,8 +1006,8 @@ class EPT(GeomCommon):
                 #+pb4, shocka, table, 1000., , 1., , 214, , +pb41
                 #+pb41, spring, table, 205
 
-                idts = idtsu if typea_str == 'TABLE' else 0
-                idets = idtsu if typea_str == 'EQUAT' else 0
+                idts = idtsu # if typea_str == 'TABLE' else 0
+                idets = idtsu # if typea_str == 'EQUAT' else 0
                 optional_vars['SHOCKA'] = [typea_str, cvt, cvc, expvt, expvc,
                                            idts, idets, idtcu, idtsud, idcsud]
                 #(shock_type, shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
@@ -1062,6 +1083,16 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pbusht_80(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 PID     I Property identification number
+        2 TKID(6) I TABLEDi entry identification numbers for stiffness
+        8 TBID(6) I TABLEDi entry identification numbers for viscous damping
+        14 TGEID  I TABLEDi entry identification number for structural damping
+        15 TKNID(6) I TABLEDi entry identification numbers for force versus deflection
+        16,17,18,19,20
+        ???
+        """
         ntotal = 80 * self.factor
         struct1 = Struct(self._endian + b'20i')
         nentries = (len(data) - n) // ntotal
@@ -1583,9 +1614,9 @@ class EPT(GeomCommon):
 
     def _read_pelas(self, data: bytes, n: int) -> int:
         """PELAS(302,3,46) - the marker for Record 39"""
-        struct_i3f = Struct(mapfmt(self._endian + b'i3f', self.size))
         ntotal = 16 * self.factor # 4*4
         nproperties = (len(data) - n) // ntotal
+        struct_i3f = Struct(mapfmt(self._endian + b'i3f', self.size))
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_i3f.unpack(edata)
@@ -1628,10 +1659,10 @@ class EPT(GeomCommon):
         """
         self.to_nx()
         ntotal = 48
-        struct1 = Struct(self._endian + b'ifii 8f')
         nproperties = (len(data) - n) // ntotal
         delta = (len(data) - n) % ntotal
         assert delta == 0, 'len(data)-n=%s n=%s' % (len(data) - n, (len(data) - n) / 48.)
+        struct1 = Struct(self._endian + b'ifii 8f')
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -1793,8 +1824,8 @@ class EPT(GeomCommon):
         PMASS(402,4,44) - the marker for Record 48
         """
         ntotal = 8 * self.factor # 2*4
-        struct_if = Struct(mapfmt(self._endian + b'if', self.size))
         nentries = (len(data) - n) // ntotal
+        struct_if = Struct(mapfmt(self._endian + b'if', self.size))
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_if.unpack(edata)
@@ -1830,8 +1861,8 @@ class EPT(GeomCommon):
         PSHEAR(1002,10,42) - the marker for Record 50
         """
         ntotal = 24 * self.factor
-        struct_2i4f = Struct(mapfmt(self._endian + b'2i4f', self.size))
         nproperties = (len(data) - n) // ntotal
+        struct_2i4f = Struct(mapfmt(self._endian + b'2i4f', self.size))
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_2i4f.unpack(edata)
@@ -1849,8 +1880,8 @@ class EPT(GeomCommon):
         PSHELL(2302,23,283) - the marker for Record 51
         """
         ntotal = 44 * self.factor  # 11*4
-        s = Struct(mapfmt(self._endian + b'iififi4fi', self.size))
         nproperties = (len(data) - n) // ntotal
+        s = Struct(mapfmt(self._endian + b'iififi4fi', self.size))
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -1922,8 +1953,9 @@ class EPT(GeomCommon):
 
         .. warning:: assuming OD2 is not written (only done for thermal)
         """
+        ntotal = 20 * self.factor # 5*4
+        nproperties = (len(data) - n) // ntotal
         struct_2i3f = Struct(self._endian + b'2i3f')
-        nproperties = (len(data) - n) // 20
         for unused_i in range(nproperties):
             edata = data[n:n+20]  # or 24???
             out = struct_2i3f.unpack(edata)
@@ -2031,11 +2063,11 @@ class EPT(GeomCommon):
 # PWELD
 # PWSEAM
     def _read_view(self, data: bytes, n: int) -> int:
-        self.log.info('skipping VIEW in EPT')
+        self.log.info('geom skipping VIEW in EPT')
         return len(data)
 
     def _read_view3d(self, data: bytes, n: int) -> int:
-        self.log.info('skipping VIEW3D in EPT')
+        self.log.info('geom skipping VIEW3D in EPT')
         return len(data)
 
 def break_by_minus1(idata):

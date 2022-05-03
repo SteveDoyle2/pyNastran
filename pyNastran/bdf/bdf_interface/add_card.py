@@ -1012,6 +1012,14 @@ class AddCards(AddMethods):
         self._add_coord_object(coord)
         return coord
 
+    def add_gmload(self, sid, normal, entity, entity_id, method, load_magnitudes,
+                   cid=0, comment='') -> GMLOAD:
+        """Creates a GMLOAD object"""
+        load = GMLOAD(sid, normal, entity, entity_id, method, load_magnitudes,
+                      cid=cid, comment=comment)
+        self._add_load_object(load)
+        return load
+
     def add_param(self, key: str, values: List[Union[int, float, str]],
                   comment: str='') -> PARAM:
         """
@@ -4419,14 +4427,6 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_gmload(self, sid, normal, entity, entity_id, method, load_magnitudes,
-                   cid=0, comment='') -> GMLOAD:
-        """Creates a GMLOAD object"""
-        load = GMLOAD(sid, normal, entity, entity_id, method, load_magnitudes,
-                      cid=cid, comment=comment)
-        self._add_load_object(load)
-        return load
-
     def add_spc(self, conid, nodes, components, enforced, comment='') -> SPC:
         """
         Creates an SPC card, which defines the degree of freedoms to be
@@ -4703,7 +4703,8 @@ class AddCards(AddMethods):
         self._add_caero_object(caero)
         return caero
 
-    def add_caero2(self, eid: int, pid: int, igroup: int, p1: List[float], x12: float,
+    def add_caero2(self, eid: int, pid: int, igroup: int,
+                   p1: List[float], x12: float,
                    cp: int=0,
                    nsb: int=0, nint: int=0,
                    lsb: int=0, lint: int=0, comment: str='') -> CAERO2:
@@ -4717,16 +4718,14 @@ class AddCards(AddMethods):
             element id
         pid : int, PAERO2
             int : PAERO2 ID
-            PAERO2 : PAERO2 object (xref)
         igroup : int
             Group number
         p1 : (1, 3) ndarray float
             xyz location of point 1 (forward position)
         x12 : float
             length of the CAERO2
-        cp : int, CORDx; default=0
+        cp : int; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
         nsb : int; default=0
             Number of slender body elements
         lsb : int; default=0

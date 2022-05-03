@@ -16,11 +16,13 @@ from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
 #from pyNastran.gui.menus.manage_actors import Model
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
 from pyNastran.gui.utils.qt.qelement_edit import QElementEdit
+from pyNastran.gui.utils.qt.checks.qlineedit import QLINE_EDIT_BASIC
 
 from pyNastran.gui.menus.groups_modify.groups import Group, _get_collapsed_text
 #from .groups_modify.color_display import ColorDisplay
 from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui, remove_actors_from_gui
 from pyNastran.gui.menus.highlight.highlight import create_highlighted_actors
+from .utils import get_groups_sorted_by_name
 
 #import pyNastran
 from pyNastran.gui import ICON_PATH
@@ -51,8 +53,8 @@ class GroupsModify(PyDialog):
         #self.out_data = data
 
         #print(data)
-        self.keys = [group.name for key, group in sorted(data.items())
-                     if isinstance(key, int)]
+        self.keys = get_groups_sorted_by_name(data)
+
         self.active_key = self.keys.index(group_active)
 
         group_obj = data[self.active_key]
@@ -102,13 +104,13 @@ class GroupsModify(PyDialog):
 
         # add
         self.add_label = QLabel('Add Elements:')
-        self.add_edit = QElementEdit(self, self.model_name, pick_style='area')
+        self.add_edit = QElementEdit(self, self.model_name, pick_style='area', max_length=100_000)
         self.add_button = QPushButton('Add')
         self.add_highlight_button = QPushButton('Show')
 
         # remove
         self.remove_label = QLabel('Remove Elements:')
-        self.remove_edit = QElementEdit(self, self.model_name, pick_style='area')
+        self.remove_edit = QElementEdit(self, self.model_name, pick_style='area', max_length=100_000)
         self.remove_button = QPushButton('Remove')
         self.remove_highlight_button = QPushButton('Show')
 
@@ -279,8 +281,7 @@ class GroupsModify(PyDialog):
         #make the new group the default
         self.active_key = self.nrows - 1
 
-        self.keys = [group.name for key, group in sorted(self.out_data.items())
-                     if isinstance(key, int)]
+        self.keys = get_groups_sorted_by_name(self.out_data)
         self.recreate_table()
 
     def recreate_table(self):
@@ -447,7 +448,7 @@ class GroupsModify(PyDialog):
         self._apply_cids_eids()
 
         self.remove_edit.clear()
-        self.remove_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.remove_edit.setStyleSheet(QLINE_EDIT_BASIC)
         self.on_update_main()
 
     def on_default_name(self):

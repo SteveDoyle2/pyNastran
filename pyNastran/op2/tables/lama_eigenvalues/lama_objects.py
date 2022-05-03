@@ -1,6 +1,6 @@
 from math import sqrt
 from struct import pack
-from typing import List
+from typing import Tuple, List
 
 import numpy as np
 
@@ -31,7 +31,7 @@ class RealEigenvalues(BaseScalarObject):
     def __eq__(self, table):  # pragma: no cover
         return True
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         msg = []
         neigenvalues = len(self.extraction_order)
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__,
@@ -41,11 +41,11 @@ class RealEigenvalues(BaseScalarObject):
         return msg
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
     def add_f06_line(self, data, imode):
@@ -292,7 +292,7 @@ class RealEigenvalues(BaseScalarObject):
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
         op2.write(pack(fmt, *data))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.data_frame is not None:
             return str(self.data_frame)
 
@@ -394,7 +394,7 @@ class ComplexEigenvalues(BaseScalarObject):
     def __eq__(self, table):  # pragma: no cover
         return True
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         neigenvalues = len(self.extraction_order)
         msg = []
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues))
@@ -403,11 +403,11 @@ class ComplexEigenvalues(BaseScalarObject):
         return msg
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
 
     def add_op2_line(self, data, i):
@@ -475,7 +475,7 @@ class ComplexEigenvalues(BaseScalarObject):
         from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
             _write_table_header(self.table_name, op2, op2_ascii, date)
@@ -682,7 +682,7 @@ class BucklingEigenvalues(BaseScalarObject):
     def __eq__(self, table):  # pragma: no cover
         return True
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         neigenvalues = len(self.extraction_order)
         msg = []
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues))
@@ -691,11 +691,11 @@ class BucklingEigenvalues(BaseScalarObject):
         return msg
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
     def is_buckling(self):

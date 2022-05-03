@@ -6,6 +6,7 @@ creates:
 
 """
 from functools import partial
+from typing import Tuple
 from qtpy import QtGui
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QTreeView, QMessageBox, QMenu

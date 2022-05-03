@@ -808,6 +808,7 @@ def _convert_pbush1d(model: BDF,
                      mass_scale: float,
                      damping_scale: float,
                      stiffness_scale: float) -> None:
+    """converts the PBUSH1D"""
     prop.c *= damping_scale # Viscous damping (force/velocity)
     prop.k *= stiffness_scale
     prop.m *= mass_scale

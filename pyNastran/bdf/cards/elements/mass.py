@@ -1499,6 +1499,12 @@ class CONM2(PointMassElement):
             X2 = nid_ref.get_position() + dx
         return X2
 
+    def centroid_mass_inertia(self) -> Tuple[np.ndarray, float, np.ndarray]:
+        centroid = self.Centroid()
+        mass = self.mass
+        inertia = self.Inertia()
+        return centroid, mass, inertia
+
     def center_of_mass(self) -> np.ndarray:
         return self.Centroid()
 

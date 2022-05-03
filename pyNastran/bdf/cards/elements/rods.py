@@ -32,8 +32,10 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
         .. math:: m = \left( \rho A + nsm \right) L
         """
+        rho = self.Rho()
+        nsm = self.Nsm()
         L = self.Length()
-        mass = (self.Rho() * self.Area() + self.Nsm()) * L
+        mass = (rho * self.Area() + nsm) * L
         return mass
 
 
@@ -454,7 +456,8 @@ class CTUBE(RodElement):
         if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        return self.pid_ref.MassPerLength() * self.Length()
+        mpa = self.pid_ref.MassPerLength()
+        return mpa * self.Length()
 
     def Nsm(self) -> float:
         if self.pid_ref is None:

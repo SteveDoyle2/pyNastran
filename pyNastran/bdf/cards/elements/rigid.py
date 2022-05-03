@@ -124,8 +124,8 @@ class RROD(RigidElement):
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
-        cma = components_or_blank(card, 4, 'cma')
-        cmb = components_or_blank(card, 5, 'cmb')
+        cma = components_or_blank(card, 4, 'cma', None)
+        cmb = components_or_blank(card, 5, 'cmb', None)
         alpha = double_or_blank(card, 6, 'alpha', 0.0)
         assert len(card) <= 7, f'len(RROD card) = {len(card):d}\ncard={card}'
         return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
@@ -394,6 +394,7 @@ class RBAR(RigidElement):
         comment : str; default=''
             a comment for the card
         """
+        tref = 0.0
         eid = data[0]
         ga = data[1]
         gb = data[2]
@@ -402,6 +403,9 @@ class RBAR(RigidElement):
         cma = str(data[5])
         cmb = str(data[6])
         alpha = data[7]
+        if len(data) > 8:
+            assert len(data) == 9, f'data={data} ndata={len(data)}'
+            tref = data[8]
         return RBAR(eid, [ga, gb], cna, cnb, cma, cmb, alpha, comment=comment)
 
     # def convert_to_MPC(self, mpcID):
