@@ -973,6 +973,8 @@ def make_flfacts_mach_sweep(alt: float, machs: List[float], eas_limit: float=100
         the equivalent airspeed units; ft/s, m/s, in/s, knots
 
     """
+    assert machs[0] <= machs[-1], machs
+
     machs = np.asarray(machs)
     rho = np.ones(len(machs)) * atm_density(alt, R=1716., alt_units=alt_units,
                                             density_units=density_units)
@@ -1010,6 +1012,8 @@ def make_flfacts_eas_sweep(alt: float, eass: List[float],
         the equivalent airspeed units; ft/s, m/s, in/s, knots
 
     """
+    assert eass[0] <= eass[-1], eass
+
     # convert eas to output units
     eass = np.atleast_1d(eass) * _velocity_factor(eas_units, velocity_units)
     rho = atm_density(alt, R=1716., alt_units=alt_units,

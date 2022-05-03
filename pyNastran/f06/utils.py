@@ -16,7 +16,8 @@ PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q]'
 USAGE_145 = (
     'Usage:\n'
     '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export] [--f06]\n'
+    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export] [--f06] '
+    '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT]\n'
 )
 USAGE_200 = (
     'Usage:\n'
@@ -31,7 +32,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     import os
     from docopt import docopt
     import pyNastran
-    from pyNastran.f06.parse_flutter import plot_flutter_f06
+    from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
     if argv is None:
         argv = sys.argv
     msg = (
@@ -76,11 +77,13 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         '  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
         "  --nopoints       don't plot the points\n"
         "  --noline         don't plot the lines\n"
-        "  --export         export a zona file\n"
-        "  --f06            export an F06 file (temporary)\n"
+        '  --export         export a zona file\n'
+        '  --f06            export an F06 file (temporary)\n'
+        '  --vd_limit VD_LIMIT            add a Vd and 1.15*Vd line\n'
+        '  --damping_limit DAMPING_LIMIT  add a damping limit\n'
         '\n'
         'Info:\n'
-        '  -h, --help      show this help message and exit\n'''
+        '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
     if len(argv) == 1:
@@ -136,6 +139,15 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     else:
         sys.stderr.write('plot_type assumed to be --tas\n')
 
+    vd_limit = None
+    if data['--vd_limit']:
+        vd_limit = get_cmd_line_float(data, '--vd_limit')
+        print('vd_limit =', vd_limit)
+
+    damping_limit = None
+    if data['--damping_limit']:
+        damping_limit = get_cmd_line_float(data, '--damping_limit')
+
     plot_kfreq_damping = data['--kfreq']
     plot_root_locus = data['--rootlocus']
 
@@ -155,6 +167,10 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     root_locus_filename = None if export_zona is  None else 'root_locus_subcase_%i.png'
     if not plot:
         return
+
+    assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
+    assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
+
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
                      f06_units=in_units,
@@ -163,6 +179,8 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
                      plot_kfreq_damping=plot_kfreq_damping,
                      xlim=xlim,
                      ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+                     vd_limit=vd_limit,
+                     damping_limit=damping_limit,
                      nopoints=nopoints,
                      noline=noline,
                      export_veas_filename=export_veas_filename,
@@ -172,6 +190,15 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
                      vg_vf_filename=vg_vf_filename,
                      root_locus_filename=root_locus_filename,
                      kfreq_damping_filename=kfreq_damping_filename, show=show, log=log)
+
+def get_cmd_line_float(data: Dict[str, str], key: str) -> float:
+    try:
+        svalue = data[key]
+    except KeyError:
+        print(data)
+        raise
+    value = float(svalue)
+    return value
 
 def split_float_colons(string_values: str) -> List[float]:
     """

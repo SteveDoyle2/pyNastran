@@ -812,6 +812,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             nplies = max(nplies, pcomp_nplies + 1)
             mids = np.zeros((nelements, nplies), dtype='int32')
             thickness = np.full((nelements, nplies), np.nan, dtype='float32')
+            theta = np.full((nelements, nplies), np.nan, dtype='float32')
             #rho = np.full((nelements, nplies), np.nan, dtype='float32')
             nplies = np.zeros(nelements, dtype='int32')
 
@@ -834,11 +835,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     if prop.type == 'PSHELL':
                         nplies[ipid] = 4
                         thickness[ipid, 0] = prop.Thickness()
-                    elif prop.type in ['PCOMP', 'PCOMPG']:
+                    elif prop.type in {'PCOMP', 'PCOMPG'}:
                         nplies[ipid] = prop.nplies
                         for iply in range(prop.nplies):
                             mids[ipid, iply+1] = prop.Mid(iply)
                             thickness[ipid, iply+1] = prop.Thickness(iply)
+                            theta[ipid, iply+1] = prop.Theta(iply)
                     else:
                         self.log.error(f'skipping setting mids (vectorized) for {prop.type}')
                     iupid += 1
@@ -868,6 +870,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 'mids' : mids,
                 'thickness' : nplies,
                 'nplies' : nplies,
+                'theta': theta,
             }
             icase = _build_materials(model, pshell, pcomp, is_pshell_pcomp,
                                      cases, form0, icase)
@@ -6289,7 +6292,6 @@ def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
                 cases[icase] = (nplies_res, (0, 'Number of Plies'))
                 form0.append(('Number of Plies', icase, []))
                 icase += 1
-
             theta = pshell_pcompi['theta']
 
         if mids is None:

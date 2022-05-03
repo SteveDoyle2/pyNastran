@@ -4,6 +4,7 @@ defines some methods for cleaning up a model
                          remove_pids=True, remove_mids=True)
 
 """
+import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 #from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
@@ -184,6 +185,7 @@ def remove_unused(bdf_filename: str,
     pconv_used = set([])
 
     friction_ids_used = set([])
+    sets_splines_nodes = set([])
 
     log = model.log
     for key, subcase in model.subcases.items():
@@ -370,11 +372,12 @@ def remove_unused(bdf_filename: str,
                     cids_used.add(cid2)
 
         elif card_type in ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5']:
-            pass
-            #for spline_id in ids:
-                #spline = model.splines[spline_id]
-                #if card_type in ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5']:
-                    #sets_used.add(spline.Set())
+            for spline_id in ids:
+                spline = model.splines[spline_id]
+                if card_type in ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5']:
+                    set_id = spline.Set()
+                    sets_used.add(set_id)
+                    sets_splines_nodes.add(set_id)
 
         elif card_type == 'CAERO1':
             for eid in ids:
@@ -383,8 +386,10 @@ def remove_unused(bdf_filename: str,
                 cids_used.add(caero.Cp())
 
         elif card_type in unreferenced_types:
+            log.debug(card_type)
             pass
         elif card_type in set_types_simple:
+            log.debug(card_type)
             # handled based on context in other blocks
             pass
         elif card_type in ['USET', 'USET1']:
@@ -579,6 +584,20 @@ def remove_unused(bdf_filename: str,
             #mids_used.extend(prop.Mids())
         #else:
             #raise NotImplementedError(prop)
+
+    for set_id in sets_splines_nodes:
+        set_card = model.sets[set_id]
+        nids_used.update(set_card.ids)
+
+    aeros = model.aeros
+    if aeros is not None:
+        cids_used.update([aeros.acsid, aeros.rcsid])
+
+    aero = model.aero
+    if aero is not None:
+        print(aeros.get_stats())
+        asdf
+
     remove_desvars = False
     _remove(
         model,
@@ -925,30 +944,36 @@ def _remove(model: BDF,
         for nid in nids_to_remove:
             del model.nodes[nid]
         nids_to_remove.sort()
-        model.log.debug('removed nodes %s' % nids_to_remove)
+        if nids_to_remove:
+            nodes_array = np.array(nids_to_remove)
+            model.log.debug(f'removed nodes {nodes_array}; n={len(nodes_array)}')
 
     if remove_cids and cids_to_remove:
         for cid in cids_to_remove:
             del model.coords[cid]
         cids_to_remove.sort()
-        model.log.debug('removing coords %s' % cids_to_remove)
+        if cids_to_remove:
+            model.log.debug('removing coords %s' % cids_to_remove)
 
     if remove_pids and pids_to_remove:
         for pid in pids_mass_to_remove:
             del model.properties_mass[pid]
         pids_mass_to_remove.sort()
-        model.log.debug('removing properties_mass %s' % pids_mass_to_remove)
+        if pids_mass_to_remove:
+            model.log.debug('removing properties_mass %s' % pids_mass_to_remove)
 
         for pid in pids_to_remove:
             del model.properties[pid]
         pids_to_remove.sort()
-        model.log.debug('removing properties %s' % pids_to_remove)
+        if pids_to_remove:
+            model.log.debug('removing properties %s' % pids_to_remove)
 
     if remove_mids and mids_to_remove:
         for mid in mids_to_remove:
             del model.materials[mid]
         mids_to_remove.sort()
-        model.log.debug('removing materials %s' % mids_to_remove)
+        if mids_to_remove:
+            model.log.debug('removing materials %s' % mids_to_remove)
 
     #if remove_spcs and spcs_to_remove:
     #    for spc_id in spcs_to_remove:

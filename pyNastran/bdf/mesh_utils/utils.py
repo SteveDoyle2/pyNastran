@@ -12,11 +12,10 @@ defines:
 import os
 import sys
 from io import StringIO
-from typing import List, Dict, Any
+from typing import Dict, Any
 from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
-from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
@@ -25,13 +24,18 @@ from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 # if something is imported and tested, it should be removed from here
 from pyNastran.bdf.mesh_utils.shift import update_nodes
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
-from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
+#from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_bad_shells
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.dev.create_vectorized_numbered import create_vectorized_numbered
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.free_faces import write_skin_solid_faces
 from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
+
+from .cmd_line.bdf_merge import cmd_line_merge
+from .cmd_line.bdf_equivalence import cmd_line_equivalence
+from .cmd_line.export_caero_mesh import cmd_line_export_caero_mesh
+from .cmd_line.utils import filter_no_args
 
 
 def cmd_line_create_vectorized_numbered(argv=None, quiet=False):  # pragma: no cover
@@ -199,73 +203,6 @@ def _apply_float_values_to_dict(data: Dict[str, Any], defaults: Dict[str, float]
         if data[name] is None:
             #print(f'applying {name}')
             data[name] = default_value
-
-def cmd_line_equivalence(argv=None, quiet: bool=False) -> None:
-    """command line interface to bdf_equivalence_nodes"""
-    if argv is None:
-        argv = sys.argv
-
-    from docopt import docopt
-    msg = (
-        'Usage:\n'
-        '  bdf equivalence IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME]\n'
-        '  bdf equivalence -h | --help\n'
-        '  bdf equivalence -v | --version\n'
-        '\n'
-
-        "Positional Arguments:\n"
-        "  IN_BDF_FILENAME   path to input BDF/DAT/NAS file\n"
-        "  EQ_TOL            the spherical equivalence tolerance\n"
-        #"  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
-        '\n'
-
-        'Options:\n'
-        "  -o OUT, --output OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
-    if len(argv) == 1:
-        sys.exit(msg)
-
-    ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
-    if not quiet:  # pragma: no cover
-        print(data)
-    bdf_filename = data['IN_BDF_FILENAME']
-    bdf_filename_out = data['--output']
-    if bdf_filename_out is None:
-        dirname = os.path.dirname(bdf_filename)
-        bdf_filename_out = os.path.join(dirname, 'merged.bdf')
-    else:
-        dirname = os.path.dirname(bdf_filename_out)
-
-    tol = float(data['EQ_TOL'])
-    size = 16
-    from pyNastran.bdf.bdf import read_bdf
-    from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
-
-    level = 'debug' if not quiet else 'warning'
-    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
-    bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
-                          renumber_nodes=False,
-                          neq_max=10, xref=True,
-                          node_set=None, size=size,
-                          is_double=False,
-                          remove_collapsed_elements=False,
-                          avoid_collapsed_elements=False,
-                          crash_on_collapse=False,
-                          log=log, debug=True)
-
-    bdf_filename_out2 = os.path.join(dirname, 'merged_collapsed.bdf')
-    model = read_bdf(bdf_filename_out, xref=False, validate=False, log=log)
-    convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge_length=0.0)
-    model.write_bdf(bdf_filename_out2, size=size)
-
 
 def cmd_line_bin(argv=None, quiet=False):  # pragma: no cover
     """bins the model into nbins"""
@@ -657,54 +594,6 @@ def cmd_line_flip_shell_normals(argv=None, quiet: bool=False):
                     size=size, nodes_size=16, elements_size=8, loads_size=8,
                     is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
 
-def cmd_line_merge(argv=None, quiet=False):
-    """command line interface to bdf_merge"""
-    if argv is None:
-        argv = sys.argv
-
-    from docopt import docopt
-    import pyNastran
-    msg = (
-        "Usage:\n"
-        '  bdf merge (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
-        '  bdf merge -h | --help\n'
-        '  bdf merge -v | --version\n'
-        '\n'
-
-        'Positional Arguments:\n'
-        '  IN_BDF_FILENAMES   path to input BDF/DAT/NAS files\n'
-        '\n'
-
-        'Options:\n'
-        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
-    if len(argv) == 1:
-        sys.exit(msg)
-
-    ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
-    if not quiet:  # pragma: no cover
-        print(data)
-    size = 16
-    bdf_filenames = data['IN_BDF_FILENAMES']
-    bdf_filename_out = data['--output']
-    if bdf_filename_out is None:
-        bdf_filename_out = 'merged.bdf'
-
-    #cards_to_skip = [
-        #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
-        #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
-    cards_to_skip = []
-    bdf_merge(bdf_filenames, bdf_filename_out, renumber=True,
-              encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
-
 
 def cmd_line_convert(argv=None, quiet=False):
     """command line interface to bdf_merge"""
@@ -893,7 +782,7 @@ def cmd_line_export_mcids(argv=None, quiet=False):
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    _filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
@@ -960,7 +849,7 @@ def cmd_line_remove_unused(argv=None, quiet=False):
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    _filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
@@ -999,12 +888,6 @@ def cmd_line_remove_unused(argv=None, quiet=False):
                      #export_xaxis=export_xaxis, export_yaxis=export_yaxis, iply=iply)
         #model.log.info('wrote %s' % csv_filename)
 
-def _filter_no_args(msg: str, argv: List[str], quiet: bool=False):
-    if len(argv) == 1:
-        if quiet:
-            sys.exit()
-        sys.exit(msg)
-
 def cmd_line_free_faces(argv=None, quiet=False):
     """command line interface to bdf free_faces"""
     if argv is None:
@@ -1036,7 +919,7 @@ def cmd_line_free_faces(argv=None, quiet=False):
         '  -h, --help     show this help message and exit\n'
         "  -v, --version  show program's version number and exit\n"
     )
-    _filter_no_args(arg_msg, argv, quiet=quiet)
+    filter_no_args(arg_msg, argv, quiet=quiet)
 
     arg_msg += '\n'
 
@@ -1134,7 +1017,7 @@ def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False):
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    _filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
@@ -1181,7 +1064,7 @@ def cmd_line_transform(argv=None, quiet=False):
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    _filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
@@ -1257,7 +1140,7 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
         '2. remove GRID points and associated cards with y value < 0:\n'
         "   >>> bdf filter fem.bdf --y '< 0.'"
     )
-    _filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
@@ -1361,88 +1244,6 @@ def _union(xval, iunion, ix):
     return iunion
 
 
-def cmd_line_export_caero_mesh(argv=None, quiet=False):
-    """command line interface to export_caero_mesh"""
-    if argv is None:
-        argv = sys.argv
-
-    from docopt import docopt
-    import pyNastran
-    msg = (
-        'Usage:\n'
-        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
-        '  bdf export_caero_mesh -h | --help\n'
-        '  bdf export_caero_mesh -v | --version\n'
-        '\n'
-
-        'Positional Arguments:\n'
-        '  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n'
-        '\n'
-
-        'Options:\n'
-        '  -o OUT, --output  OUT_CAERO_BDF_FILENAME  path to output BDF file\n'
-        '  --subpanels                               write the subpanels (default=False)\n'
-        '  --pid PID                                 sets the pid; {aesurf, caero, paero} [default: aesurf]\n'
-        '\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
-    _filter_no_args(msg, argv, quiet=quiet)
-
-    ver = str(pyNastran.__version__)
-    #type_defaults = {
-    #    '--nerrors' : [int, 100],
-    #}
-    data = docopt(msg, version=ver, argv=argv[1:])
-    if not quiet:  # pragma: no cover
-        print(data)
-    #size = 16
-    bdf_filename = data['IN_BDF_FILENAME']
-    caero_bdf_filename = data['--output']
-    if caero_bdf_filename is None:
-        caero_bdf_filename = 'caero.bdf'
-    is_subpanel_model = data['--subpanels']
-
-    pid_method = 'aesurf'
-    if data['--pid']:
-        pid_method = data['--pid']
-
-    from pyNastran.bdf.bdf import read_bdf
-    from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
-    skip_cards = [
-        # elements
-        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CONM2',
-        'CROD', 'CTUBE', 'CONROD', 'CBAR', 'CBEAM',
-        'CQUAD4', 'CTRIA3',
-        'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM',
-        'RBE1', 'RBE2', 'RBE3', 'RBAR',
-
-        # properties
-        'PELAS', 'PDAMP', 'PROD', 'PTUBE',
-        'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
-        'PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG', 'PSOLID',
-        'MAT1', 'MAT8',
-
-        # loads
-        'PLOAD', 'PLOAD2', 'PLOAD4', 'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
-        'GRAV', 'ACCEL', 'ACCEL1',
-        # constraints
-        'SPC', 'SPC1', 'MPC', 'SPCADD', 'MPCADD', 'DEQATN',
-
-        #  optimization
-        'DVPREL1', 'DVPREL2', 'DVMREL1', 'DVMREL2', 'DVCREL1', 'DVCREL2', 'DCONADD',
-        'DRESP1', 'DRESP2', 'DRESP3', 'DESVAR',
-        #  aero: maybe enable later
-        'TRIM', 'AESTAT', 'FLUTTER', 'FLFACT',
-    ]
-    level = 'debug' if not quiet else 'warning'
-    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
-    model = read_bdf(bdf_filename, log=log, skip_cards=skip_cards)
-    export_caero_mesh(model, caero_bdf_filename,
-                      is_subpanel_model=is_subpanel_model, pid_method=pid_method)
-
 def cmd_line_create_flutter(argv=None, quiet: bool=False):
     """command line interface to flip_shell_normals"""
     if argv is None:
@@ -1451,23 +1252,35 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     from docopt import docopt
     import pyNastran
     msg = (
-        "Usage:\n"
-        "  bdf flutter UNITS [-o OUT_BDF_FILENAME]\n"
+        'Usage:\n'
+        '  bdf flutter UNITS eas  EAS1  EAS2  N CONST_TYPE CONST_VAL [-o OUT_BDF_FILENAME] [--size SIZE]\n'
+        '  bdf flutter UNITS tas  TAS1  TAS2  N CONST_TYPE CONST_VAL [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE]\n'
+        '  bdf flutter UNITS alt  ALT1  ALT2  N CONST_TYPE CONST_VAL [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE]\n'
+        '  bdf flutter UNITS mach MACH1 MACH2 N CONST_TYPE CONST_VAL [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE]\n'
         '  bdf flutter -h | --help\n'
         '  bdf flutter -v | --version\n'
         '\n'
 
-        "Positional Arguments:\n"
-        "  UNITS               model units (SI, english_in, english_ft)"
+        'Positional Arguments:\n'
+        '  ALT, ALT1, ALT2     altitude (SI->m, english->ft)\n'
+        '  EAS1, EAS2          equivalent airspeed (SI->m/s, english_in->ft/s, english_ft->ft/s, english_kt->knots)\n'
+        '  TAS1, EAS2          true airspeed       (SI->m/s, english_in->ft/s, english_ft->ft/s, english_kt->knots)\n'
+        '  MACH1, MACH2        mach number\n'
+        #"  MACH                mach number\n"
         '\n'
 
         'Options:\n'
-        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
-        "\n" #  (default=0.000001)
+        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file (default=flutter_cards.inc)\n'
+        ' --size SIZE                          size of the BDF (8/16; default=16)'
+        '\n'
 
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
+        '\n'
+        'Examples:\n'
+        '  bdf flutter english_in mach .05 0.5 101 alt 2500\n'
+        '  bdf flutter english_in mach .05 0.5 101 alt 2500 --eas_limit 300 knots --out flutter_cards_temp.inc --size 16\n'
     )
     if len(argv) == 1:
         sys.exit(msg)
@@ -1485,7 +1298,57 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     from pyNastran.bdf.bdf import BDF
 
     size = 16
+    if data['--size']:
+        size = int(data['--size'])
     units = data['UNITS']
+    npoints = int(data['N'])
+
+    const_type = data['CONST_TYPE'].lower()
+    assert const_type in {'alt', 'mach', 'eas', 'tas'}, const_type
+    const_value = float(data['CONST_VAL'])
+    if const_type == 'alt':
+        alt = const_value
+    elif const_type == 'mach':
+        mach = const_value
+    else:
+        raise NotImplementedError(const_type)
+
+    eas_units = ''
+    eas_limit = 1_000_000.
+    if data['--eas_limit']:
+        eas_limit = float(data['EAS'])
+        eas_units = data['EAS_UNITS']
+        assert eas_units is not None, eas_units
+        eas_units = eas_units.lower()
+        assert eas_units in {'m/s', 'cm/s', 'in/s', 'ft/s', 'knots'}
+
+    method = ''
+    if data['alt']:
+        method = 'alt'
+        alt1 = float(data['ALT1'])
+        alt2 = float(data['ALT2'])
+        alts = np.linspace(alt1, alt2, num=npoints)
+
+    elif data['mach']:
+        method = 'mach'
+        mach1 = float(data['MACH1'])
+        mach2 = float(data['MACH2'])
+        machs = np.linspace(mach1, mach2, num=npoints)
+
+    elif data['eas']:
+        method = 'eas'
+        eas1 = float(data['EAS1'])
+        eas2 = float(data['EAS2'])
+        eass = np.linspace(eas1, eas2, num=npoints)
+
+    elif data['tas']:
+        method = 'tas'
+        tas1 = float(data['TAS1'])
+        tas2 = float(data['TAS2'])
+        tass = np.linspace(tas1, tas2, num=npoints)
+    else:
+        raise NotImplementedError(data)
+
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
         bdf_filename_out = 'flutter_cards.inc'
@@ -1497,18 +1360,18 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     model = BDF(log=log)
     model.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
                             nxref_errors=100, stop_on_xref_error=False)
-    method = 'PKNL'
+    flutter_method = 'PKNL'
     sid = 1
-    density = 0
-    mach = 0
-    reduced_freq_velocity = 0
+
+    flfact_density = sid + 1
+    flfact_mach = sid + 2
+    flfact_velocity = sid + 3
+    #flfact_eas = sid + 4
+
     flutter = model.add_flutter(
-        sid, method, density, mach, reduced_freq_velocity,
+        sid, flutter_method, flfact_density, flfact_mach, flfact_velocity,
         imethod='L', nvalue=None, omax=None, epsilon=1.0e-3,
         comment='', validate=True)
-
-    alt = 2500.
-    eass = np.linspace(20., 500, num=201)
 
     units_map = {
         # (alt, velocity, density, eas)
@@ -1517,18 +1380,41 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         'SI': ('m', 'm/s', 'kg/m^3', 'knots'),
     }
     try:
-        alt_units, velocity_units, density_units, eas_units = units_map[units]
+        alt_units, velocity_units, density_units, eas_units_default = units_map[units]
     except KeyError:
         raise NotImplementedError(units)
-    flutter.make_flfacts_eas_sweep(
-        model, alt, eass,
-        alt_units=alt_units,
-        velocity_units=velocity_units,
-        density_units=density_units,
-        eas_units=eas_units)
+
+    if eas_units is None:
+        eas_units = eas_units_default
+
+    if method == 'eas' and const_type == 'alt':
+        flutter.make_flfacts_eas_sweep(
+            model, alt, eass,
+            alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+    elif method == 'mach' and const_type == 'alt':
+        flutter.make_flfacts_mach_sweep(
+            model, alt, machs,
+            eas_limit=eas_limit,
+            alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+    elif method == 'alt' and const_type == 'mach':
+        flutter.make_flfacts_alt_sweep(
+            model, mach, alts,
+            eas_limit=eas_limit,
+            alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+    else:
+        raise NotImplementedError((method, const_type))
 
     model.punch = True
-    model.write_bdf(bdf_filename_out, encoding=None, size=16,
+    model.write_bdf(bdf_filename_out, encoding=None, size=size,
                     nodes_size=None, elements_size=None, loads_size=None,
                     is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
 
@@ -1543,6 +1429,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf merge                       (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL\n'
         '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
+        '  bdf remove_unused               IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
         '  bdf filter                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--x YSIGN X] [--y YSIGN Y] [--z YSIGN Z]\n'
         '  bdf delete_bad_shells           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--skew SKEW] [--max_theta MAX_THETA] [--min_theta MIN_THETA] [--max_ar MAX_AR] [--max_taper MAX_TAPER] [--max_warp MAX_WARP]\n'
         '  bdf mirror                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
@@ -1565,6 +1452,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf merge              -h | --help\n'
         '  bdf equivalence        -h | --help\n'
         '  bdf renumber           -h | --help\n'
+        '  bdf remove_unused      -h | --help\n'
         '  bdf delete_bad_shells  -h | --help\n'
         '  bdf filter             -h | --help\n'
         '  bdf mirror             -h | --help\n'
@@ -1587,7 +1475,7 @@ def cmd_line(argv=None, quiet=False):
     msg += '  bdf -v | --version\n'
     msg += '\n'
 
-    _filter_no_args(msg + 'Not enough arguments.\n', argv, quiet=quiet)
+    filter_no_args(msg + 'Not enough arguments.\n', argv, quiet=quiet)
 
     #assert sys.argv[0] != 'bdf', msg
 

@@ -794,7 +794,7 @@ class FLUTTER(BaseCard):
                                 eas_units='m/s'):
         """makes a mach sweep"""
         machs.sort()
-        machs = machs[::-1]
+        #machs = machs[::-1]
         rho, mach, velocity = make_flfacts_mach_sweep(
             alt, machs, eas_limit=eas_limit,
             alt_units=alt_units,
