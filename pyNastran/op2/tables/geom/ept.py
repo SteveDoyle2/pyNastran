@@ -117,7 +117,7 @@ class EPT(GeomCommon):
             (9701, 97, 692): ['PJOINT2', self._read_fake],
             (13401, 134, 611): ['PBEAM3', self._read_fake],
             (8901, 89, 905): ['PSOLCZ', self._read_fake],
-            (9801, 98, 698): ['DESC', self._read_desc],
+            (9801, 98, 698): ['DESC', self._read_fake],
         }
 
     def _add_op2_property(self, prop):

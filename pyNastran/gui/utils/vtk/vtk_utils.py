@@ -47,7 +47,7 @@ def _check_shape(etype: int, elements: np.ndarray, nnodes_per_element: int) -> N
     9   vtkQuad
     10  vtkTetra
     #vtkPenta().GetCellType()
-    #vtkHexa().GetCellType()
+    12  vtkHexa
     #vtkPyram().GetCellType()
 
     """
@@ -59,6 +59,8 @@ def _check_shape(etype: int, elements: np.ndarray, nnodes_per_element: int) -> N
         assert nnodes_per_element == 3, elements.shape
     elif etype in [9, 10]:  # quad, tet4
         assert nnodes_per_element == 4, elements.shape
+    elif etype in [12]:  # hex
+        pass
     else:
         raise RuntimeError(etype)
 
