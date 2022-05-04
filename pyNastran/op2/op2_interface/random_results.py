@@ -11,6 +11,7 @@ class RandomObjects:
         self.load_vectors = {}
         self.spc_forces = {}
         self.mpc_forces = {}
+        self.pressures = {}
 
         self.crod_force = {}
         self.conrod_force = {}
@@ -109,7 +110,7 @@ class RandomObjects:
 
     def get_table_types(self):
         tables = [
-            'displacements', 'velocities', 'accelerations',
+            'displacements', 'velocities', 'accelerations', 'pressures',
             'load_vectors', 'spc_forces', 'mpc_forces',
 
             'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',

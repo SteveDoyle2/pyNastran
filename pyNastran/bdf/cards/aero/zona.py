@@ -741,7 +741,8 @@ class AESURFZ(BaseCard):
         """
         assert self.surface_type == 'ASYM', str(self)
         aelist = AELIST(aelist_id, self.aero_element_ids)
-        aesurf = AESURF(aesurf_id, self.label, self.cid, aelist_id, cid2=None, alid2=None,
+        aesurf = AESURF(aesurf_id, self.label, self.cid, aelist_id,
+                        cid2=None, alid2=None,
                         eff=1.0, ldw='LDW', crefc=1.0,
                         crefs=1.0, pllim=-np.pi/2.,
                         pulim=np.pi/2., hmllim=None,

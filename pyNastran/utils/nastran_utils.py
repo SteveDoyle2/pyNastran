@@ -42,6 +42,27 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
     run_nastran(bdf_filename, keywords_dict)
 
     """
+    keywords_list = _get_keywords_list(keywords=keywords)
+
+    pwd = os.getcwd()
+    bdf_directory = os.path.dirname(bdf_filename)
+    switch_dir = bdf_directory != '' and run_in_bdf_dir
+    if switch_dir:
+        os.chdir(bdf_directory)
+
+    assert os.path.exists(bdf_filename), bdf_filename
+    call_args = [nastran_cmd, str(bdf_filename)] + keywords_list
+    return_code = None
+    if run:
+        return_code = subprocess.call(call_args)
+
+    if switch_dir:
+        os.chdir(pwd)
+    return return_code, call_args
+
+def _get_keywords_list(keywords: Optional[Union[str,
+                                                List[str],
+                                                Dict[str, str]]]=None) -> List[str]:
     if keywords is None:
         keywords_list = ['scr=yes', 'bat=no', 'old=no', 'news=no'] # 'mem=1024mb',
     elif isinstance(keywords, str):
@@ -55,16 +76,4 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
                 if value is None:
                     continue
                 keywords_list.append(f'{keyword}={value}')
-
-    pwd = os.getcwd()
-    bdf_directory = os.path.dirname(bdf_filename)
-    if run_in_bdf_dir:
-        os.chdir(bdf_directory)
-    call_args = [nastran_cmd, bdf_filename] + keywords_list
-    return_code = None
-    if run:
-        return_code = subprocess.call(call_args)
-
-    if run_in_bdf_dir:
-        os.chdir(pwd)
-    return return_code, call_args
+    return keywords_list

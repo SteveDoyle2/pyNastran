@@ -139,7 +139,7 @@ class OQG(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_oqg2_3(self, data, ndata):
+    def _read_oqg2_3(self, data: bytes, ndata: int) -> None:
         """reads the SORT2 version of table 4 (the data table)"""
         self.nonlinear_factor = np.nan
         self.is_table_1 = False
@@ -336,7 +336,7 @@ class OQG(OP2Common):
             raise RuntimeError(self.code_information())
         return n
 
-    def _read_spc_forces(self, data, ndata):
+    def _read_spc_forces(self, data: bytes, ndata: int):
         """
         table_code = 3
         """
@@ -390,7 +390,7 @@ class OQG(OP2Common):
             #return self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def _read_oqg_mpc_forces(self, data, ndata):
+    def _read_oqg_mpc_forces(self, data: bytes, ndata: int):
         """
         table_code = 39
         """
@@ -423,7 +423,7 @@ class OQG(OP2Common):
         assert isinstance(n, int), 'table_name=%s n=%s' % (self.table_name, n)
         return n
 
-    def _read_oqg_spc_psd(self, data, ndata):
+    def _read_oqg_spc_psd(self, data: bytes, ndata: int):
         """
         table_code = 601/610/611
         """
@@ -446,7 +446,7 @@ class OQG(OP2Common):
                                     random_code=self.random_code)
         return n
 
-    def _read_oqg_spc_rms(self, data, ndata):
+    def _read_oqg_spc_rms(self, data: bytes, ndata: int):
         """
         table_code = 3/???/?10/?11
         """
@@ -493,7 +493,7 @@ class OQG(OP2Common):
         assert n is not None, n
         return n
 
-    def _read_oqg_spc_crm(self, data, ndata):
+    def _read_oqg_spc_crm(self, data: bytes, ndata: int) -> int:
         """
         table_code = 3/???/?10/?11
         """
@@ -537,7 +537,7 @@ class OQG(OP2Common):
                                     random_code=self.random_code)
         return n
 
-    def _read_oqg_mpc_psd(self, data, ndata):
+    def _read_oqg_mpc_psd(self, data: bytes, ndata: int) -> int:
         """
         table_code = 603
         """
@@ -567,7 +567,7 @@ class OQG(OP2Common):
         assert n is not None, n
         return n
 
-    def _read_oqg_mpc_ato(self, data, ndata):
+    def _read_oqg_mpc_ato(self, data: bytes, ndata: int) -> int:
         """
         table_code = ???
         """
@@ -597,7 +597,7 @@ class OQG(OP2Common):
         assert n is not None, n
         return n
 
-    def _read_oqg_mpc_crm(self, data, ndata):
+    def _read_oqg_mpc_crm(self, data: bytes, ndata: int) -> int:
         """
         table_code = ???
         """
@@ -626,7 +626,7 @@ class OQG(OP2Common):
         assert n is not None, n
         return n
 
-    def _read_oqg_mpc_rms(self, data, ndata):
+    def _read_oqg_mpc_rms(self, data: bytes, ndata: int) -> int:
         """
         table_code = ???
         """
@@ -655,7 +655,7 @@ class OQG(OP2Common):
         assert n is not None, n
         return n
 
-    def _read_oqg_mpc_no(self, data, ndata):
+    def _read_oqg_mpc_no(self, data: bytes, ndata: int) -> int:
         """
         table_code = ???
         """

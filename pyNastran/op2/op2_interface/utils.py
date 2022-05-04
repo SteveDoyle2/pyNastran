@@ -1,7 +1,77 @@
 from itertools import count
 from typing import List, Any
 import numpy as np
+from pyNastran.op2.op2_helper import polar_to_real_imag
 
+
+def reshape_bytes_block(block: bytes) -> bytes:
+    """
+    Converts the nonsense 64-bit string to 32-bit format.
+
+    Note
+    ----
+    Requires a multiple of 8 characters.
+    """
+    nwords = len(block) // 2
+    block2 = b''.join([block[8*i:8*i+4] for i in range(nwords)])
+    return block2
+
+def reshape_bytes_block_size(name_bytes: bytes, size: int=4) -> bytes:
+    """
+    Converts the nonsense 64-bit string to 32-bit format.  Right strips
+    the output
+
+    Example
+    -------
+    >>> reshape_bytes_block_size('1234567 ', size=4)
+    '1234567'
+    >>> reshape_bytes_block_size('1234    567     ', size=8)
+    '1234567'
+    """
+    if size == 4:
+        name_str = name_bytes.decode('latin1').rstrip()
+    else:
+        name_str = reshape_bytes_block(name_bytes).decode('latin1').rstrip()
+    return name_str
+
+def reshape_bytes_block_strip(name_bytes: bytes, size: int=4) -> str:
+    """
+    Converts the nonsense 64-bit string to 32-bit format.  Strips
+    the output.
+
+    Example
+    -------
+    >>> reshape_bytes_block_strip('1234567 ', size=4)
+    '1234567'
+    >>> reshape_bytes_block_strip('1234    567     ', size=8)
+    '1234567'
+    """
+    if size == 4:
+        name_str = name_bytes.decode('latin1').strip()
+    else:
+        name_str = reshape_bytes_block(name_bytes).decode('latin1').strip()
+    return name_str
+
+def mapfmt(fmt: bytes, size: int) -> bytes:
+    """
+    Changes the type of of a format string from 32-bit to 64-bit.
+
+    WARNING: doesn't handle strings.
+
+    Example
+    -------
+    >>> mapfmt(b'2i 6f')
+    b'2q 6d'
+    """
+    if size == 4:
+        return fmt
+    return fmt.replace(b'i', b'q').replace(b'f', b'd')
+
+def mapfmt_str(fmt: str, size: int) -> str:
+    """Same as mapfmt, but works on strings instead of bytes."""
+    if size == 4:
+        return fmt
+    return fmt.replace('i', 'q').replace('f', 'd')
 
 def build_obj(obj):
     """
@@ -17,8 +87,7 @@ def apply_mag_phase(floats: Any, is_magnitude_phase: bool,
     if is_magnitude_phase:
         mag = floats[:, isave1]
         phase = floats[:, isave2]
-        rtheta = np.radians(phase)
-        real_imag = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
+        real_imag = polar_to_real_imag(mag, phase)
     else:
         real = floats[:, isave1]
         imag = floats[:, isave2]
@@ -69,8 +138,8 @@ def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
             raise RuntimeError(split_superelement)
     return superelement_adaptivity_index
 
-def update_subtitle_with_adaptivity_index(subtitle, superelement_adaptivity_index,
-                                          adpativity_index):
+def update_subtitle_with_adaptivity_index(subtitle: str, superelement_adaptivity_index: str,
+                                          adpativity_index: str) -> str:
     """
     Parameters
     ----------

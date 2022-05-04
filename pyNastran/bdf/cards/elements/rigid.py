@@ -16,7 +16,7 @@ All rigid elements are RigidElement and Element objects.
 from __future__ import annotations
 import warnings
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import Tuple, List, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -127,7 +127,7 @@ class RROD(RigidElement):
         cma = components_or_blank(card, 4, 'cma')
         cmb = components_or_blank(card, 5, 'cmb')
         alpha = double_or_blank(card, 6, 'alpha', 0.0)
-        assert len(card) <= 7, 'len(RROD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(RROD card) = {len(card):d}\ncard={card}'
         return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
 
     @classmethod
@@ -172,7 +172,7 @@ class RROD(RigidElement):
         msg = ', which is required by RROD eid=%s' % (self.eid)
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -925,7 +925,7 @@ class RBE2(RigidElement):
         Gmi : List[int]
             dependent nodes
         alpha : float; default=0.0
-            ???
+            thermal expansion coefficient
         """
         RigidElement.__init__(self)
         if comment:
@@ -1083,7 +1083,7 @@ class RBE2(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by RBE2 eid=%s' % (self.eid)
+        msg = f', which is required by RBE2 eid={self.eid:d}'
         self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
         self.gn_ref = model.Node(self.Gn(), msg=msg)
 
@@ -1096,7 +1096,7 @@ class RBE2(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by RBE2 eid=%s' % (self.eid)
+        msg = f', which is required by RBE2 eid={self.eid:d}'
         self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
         self.gn_ref = model.Node(self.Gn(), msg=msg)
 
@@ -1374,7 +1374,7 @@ class RBE3(RigidElement):
                     Gmi=gmi, Cmi=cmi, alpha=alpha, comment=comment)
 
     @property
-    def wt_cg_groups(self):
+    def wt_cg_groups(self) -> List[Tuple[float, str, int]]:
         wt_cg_groups = []
         for weight, comp, gijs in zip(self.weights, self.comps, self.Gijs):
             wt_cg_groups.append((weight, comp, gijs))

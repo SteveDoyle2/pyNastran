@@ -92,7 +92,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
                 try:
                     os.remove(model+'.test_op4_ascii.op4')
                     os.remove(model+'.test_op4_binary.op4')
-                except:
+                except Exception:
                     pass
 
         is_passed = True
@@ -119,7 +119,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
         #print_exc(file=sys.stdout)
         #sys.exit('stopping on sys.exit')
         raise
-    #except NameError:  # variable isnt defined
+    #except NameError:  # variable isn't defined
     #    if stop_on_failure:
     #        raise
     #    else:
@@ -130,7 +130,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
         if stop_on_failure:
             raise
         is_passed = True
-    except:
+    except Exception:
         #print(e)
         if stop_on_failure:
             raise
@@ -146,11 +146,10 @@ def main():
     ver = str(pyNastran.__version__)
 
     msg = "Usage:\n"
-
     # all
     # release
     # current
-    msg += "test_op4 [-o] [-d] OP4_FILENAME\n"
+    msg += "  test_op4 [-o] [-d] OP4_FILENAME\n"
     msg += "  test_op4 -h | --help\n"
     msg += "  test_op4 -v | --version\n"
     msg += "\n"

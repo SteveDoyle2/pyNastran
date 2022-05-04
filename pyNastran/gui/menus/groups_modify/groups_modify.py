@@ -212,9 +212,9 @@ class GroupsModify(PyDialog):
             self.keys[self.active_key] = name
             self.recreate_table()
         elif name != self.keys[self.active_key]:
-            self.name_edit.setStyleSheet("QLineEdit{background: red;}")
+            self.name_edit.setStyleSheet('QLineEdit{background: red;}')
         elif name == self.keys[self.active_key]:
-            self.name_edit.setStyleSheet("QLineEdit{background: white;}")
+            self.name_edit.setStyleSheet('QLineEdit{background: white;}')
 
     def on_pick_element(self):
         self.add_edit.pick_style = 'single'
@@ -252,10 +252,10 @@ class GroupsModify(PyDialog):
         self.remove_highlight_actor()
 
         irow = self.nrows
-        new_key = 'Group %s' % irow
+        new_key = f'Group {irow:d}'
         while new_key in self.keys:
             irow += 1
-            new_key = 'Group %s' % irow
+            new_key = f'Group {irow:d}'
         irow = self.nrows
 
         self.keys.append(new_key)

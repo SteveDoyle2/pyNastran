@@ -6,7 +6,7 @@ import os
 import sys
 import traceback
 from collections import OrderedDict
-from typing import List
+from typing import List, Dict, Any, Optional
 
 import numpy as np
 import vtk
@@ -73,7 +73,7 @@ class GeometryObject:
         #pass
     #def create_point(self):
         #pass
-    #def crate_surface(self):
+    #def create_surface(self):
         #pass
     #def create_coord(self):
         #pass
@@ -292,8 +292,8 @@ class GuiAttributes:
 
     def start_stop_performance_mode(func):
         """
-        Supresses logging.  If we started with logging suppressed,
-        we won't unsupress logging at the end of the function.
+        Suppresses logging.  If we started with logging suppressed,
+        we won't unsuppress logging at the end of the function.
         """
         def new_func(self, *args, **kwargs):
             """The actual function exec'd by the decorated function."""
@@ -302,7 +302,7 @@ class GuiAttributes:
                 self.performance_mode = True
             try:
                 n = func(self, *args, **kwargs)
-            except:
+            except Exception:
                 if not performance_mode_initial:
                     self.performance_mode = False
                 raise
@@ -313,8 +313,7 @@ class GuiAttributes:
 
     #-------------------------------------------------------------------
     # deprecated attributes
-    def deprecated(self, old_name, new_name, deprecated_version):
-        # type: (str, str, str, Optional[List[int]]) -> None
+    def deprecated(self, old_name: str, new_name: str, deprecated_version: Optional[List[int]]) -> None:
         """
         Throws a deprecation message and crashes if past a specific version.
 
@@ -415,7 +414,7 @@ class GuiAttributes:
         """gets the element_id map"""
         try:
             return self.eid_maps[self.name]
-        except:
+        except Exception:
             msg = 'KeyError: key=%r; keys=%s' % (self.name, list(self.eid_maps.keys()))
             raise KeyError(msg)
 
@@ -836,7 +835,7 @@ class GuiAttributes:
 
         try:
             data_format % 1
-        except:
+        except Exception:
             msg = ("failed applying the data formatter format=%r and "
                    "should be of the form: '%i', '%8f', '%.2f', '%e', etc.")
             self.log_error(msg)
@@ -1212,7 +1211,7 @@ class GuiAttributes:
         unused_zaxis_xyz = self.model.coords[cid_zaxis].transform_node_to_global(zaxis)
 
     #---------------------------------------------------------------------------
-    def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
+    def get_result_by_xyz_cell_id(self, node_xyz, cell_id: int):
         """won't handle multiple cell_ids/node_xyz"""
         result_name, result_values, node_id, xyz = self.mark_actions.get_result_by_xyz_cell_id(
             node_xyz, cell_id)
@@ -1224,8 +1223,9 @@ class GuiAttributes:
             cell_id, world_position, icase=icase)
         return res_name, result_values, xyz
 
-    def mark_elements(self, eids,
-                      stop_on_failure: bool=False, show_command: bool=True):
+    def mark_elements(self, eids: List[int],
+                      stop_on_failure: bool=False,
+                      show_command: bool=True):
         """mark the elements by the ElementID"""
         icase_result = 1 # ElementID
         icase_to_apply = self.icase
@@ -1234,8 +1234,9 @@ class GuiAttributes:
             stop_on_failure=stop_on_failure, show_command=False)
         self.log_command(f'mark_elements(eids={eids})')
 
-    def mark_elements_by_case(self, eids,
-                              stop_on_failure: bool=False, show_command: bool=True):
+    def mark_elements_by_case(self, eids: List[int],
+                              stop_on_failure: bool=False,
+                              show_command: bool=True):
         """mark the elements by the current case"""
         icase_result = self.icase
         icase_to_apply = self.icase
@@ -1244,8 +1245,11 @@ class GuiAttributes:
             stop_on_failure=stop_on_failure, show_command=False)
         self.log_command(f'mark_elements_by_case(eids={eids})')
 
-    def mark_elements_by_different_case(self, eids, icase_result: int, icase_to_apply: int,
-                                        stop_on_failure: bool=False, show_command: bool=False):
+    def mark_elements_by_different_case(self, eids: List[int],
+                                        icase_result: int,
+                                        icase_to_apply: int,
+                                        stop_on_failure: bool=False,
+                                        show_command: bool=False):
         """
         Marks a series of elements with custom text labels
 
@@ -1348,7 +1352,7 @@ class GuiAttributes:
     @start_stop_performance_mode
     def on_update_geometry_properties_override_dialog(self, geometry_properties):
         """
-        Update the goemetry properties and overwite the options in the
+        Update the goemetry properties and overwrite the options in the
         edit geometry properties dialog if it is open.
 
         Parameters
@@ -1634,7 +1638,7 @@ class GuiAttributes:
         """wrapper around node_ids"""
         if ids is None:
             return np.array([])
-        # include all but the indicies sepecified
+        # include all but the indicies specified
         include_ids = np.ones(self.node_ids.shape, dtype=self.node_ids.dtype)
         include_ids[ids] = 0
         return self.node_ids[include_ids]
@@ -1669,7 +1673,7 @@ class GuiAttributes:
     def Render(self):  # pragma: no cover
         pass
 
-def _add_fmt(fmts, fmt, geom_results_funcs, data):
+def _add_fmt(fmts: List[str], fmt: str, geom_results_funcs, data):
     """
     Adds a format
 

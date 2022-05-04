@@ -362,7 +362,6 @@ def integer_or_blank(card: BDFCard, ifield: int, fieldname: str, default: Option
     raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-
 def double(card: BDFCard, ifield: int, fieldname: str) -> float:
     """
     Casts a value to a double
@@ -529,6 +528,8 @@ def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[float,
 def double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     # type (BDFCard, int, str, Optional[Union[float, str]]) -> Optional[Union[float, str]]
     """
+    Casts a value to an double/string/blank
+
     Parameters
     ----------
     card : BDFCard()
@@ -565,7 +566,7 @@ def double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=N
     if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
         try:
             return double(card, ifield, fieldname)
-        except:
+        except Exception:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be a float, string '
                               'or blank (not %s).\n'
@@ -585,7 +586,7 @@ def double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=N
 
 def integer_or_double(card: BDFCard, ifield: int, fieldname: str) -> Union[int, float]:
     """
-    Converts a field into an integer or double
+    Casts a value to an integer/double
 
     Parameters
     ----------
@@ -637,6 +638,8 @@ def integer_or_double(card: BDFCard, ifield: int, fieldname: str) -> Union[int, 
 
 def integer_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     """
+    Casts a value to an integer/double/blank
+
     Parameters
     ----------
     card : BDFCard()
@@ -727,7 +730,7 @@ def integer_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[int, 
 
 def integer_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     """
-    Converts a field into an integer, string or sets the default using a blank value
+    Casts a value to an integer/string/blank
 
     Parameters
     ----------
@@ -756,7 +759,7 @@ def integer_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=
         # integer/string
         try:
             return integer_or_string(card, ifield, fieldname)
-        except:
+        except Exception:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer, '
                               'string (without a blank space), or blank (not %s).\n'
@@ -780,7 +783,7 @@ def _get_dtype(value):
     """
     try:
         value = interpret_value(value)
-    except:
+    except Exception:
         pass
     if value is None:
         dtype = 'blank'
@@ -797,7 +800,7 @@ def _get_dtype(value):
 
 def integer_double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[int, float, str]:
     """
-    Converts a field into an integer, double or a string
+    Casts a value to an integer/double/string
 
     Parameters
     ----------
@@ -853,7 +856,7 @@ def integer_double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Unio
 
 def string(card: BDFCard, ifield: int, fieldname: str) -> str:
     """
-    Converts a field into a string
+    Casts a value to a string
 
     Parameters
     ----------
@@ -895,6 +898,10 @@ def string(card: BDFCard, ifield: int, fieldname: str) -> str:
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
 def check_string(svalue: str, ifield: int, fieldname: str) -> str:
+    """
+    strings can't have the following characters: ' '
+    strings can't have the following characters in the 0th position: '.', '+', '-', 1-9
+    """
     if isinstance(svalue, str):
         svalue = svalue.strip()
         if ' ' in svalue:

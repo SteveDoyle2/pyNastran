@@ -162,7 +162,7 @@ def expand_tabs(line: str) -> str:
     line = line.expandtabs()
     if ',' in line:
         line = line.replace('\t', '')
-        msg = 'tabs and commas in the same line are not supported...\nline=%r' % line
+        msg = f'tabs and commas in the same line are not supported...\nline={line!r}'
         raise CardParseSyntaxError(msg)
     return line
 
@@ -175,7 +175,7 @@ def parse_executive_control_deck(
     for (i, eline) in enumerate(executive_control_lines):
         uline = eline.strip().upper()  # uppercase line
         uline = uline.split('$')[0].expandtabs()
-        if uline[:4] in ['SOL ']:
+        if uline[:4] == 'SOL ':
             if ',' in uline:
                 sline = uline.split(',')  # SOL 600,method
                 sol_value = sline[0].strip()
@@ -188,7 +188,7 @@ def parse_executive_control_deck(
                 sol = sol_value[3:].strip()
             else:
                 raise ValueError('cannot overwrite solution existing='
-                                 '|SOL %s| new =|%s|' % (sol, uline))
+                                 f'|SOL {sol}| new={uline!r}')
             sol_iline = i
     return sol, method, sol_iline
 

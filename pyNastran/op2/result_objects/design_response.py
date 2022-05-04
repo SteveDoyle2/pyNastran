@@ -2,7 +2,7 @@ import warnings
 import numpy as np
 
 class Responses:
-    """Defines SOL 200 responses"""
+    """Defines SOL 200 responses from the R1TABRG table"""
     def __init__(self):
         self.convergence_data = None
         self.desvars = None
@@ -16,8 +16,9 @@ class Responses:
         self.composite_strain_response = None
         self.flutter_response = None
         self.fractional_mass_response = None
+        self.normalized_mass_density = None
 
-    def get_stats(self, short=False) -> str:
+    def get_stats(self, short: bool=False) -> str:
         objects = [
             self.convergence_data,
             self.desvars,
@@ -31,6 +32,7 @@ class Responses:
             self.composite_strain_response,
             self.flutter_response,
             self.fractional_mass_response,
+            self.normalized_mass_density,
         ]
         msg = []
         for obj in objects:
@@ -44,7 +46,7 @@ class Responses:
             'displacement_response', 'weight_response',
             'stress_response', 'strain_response', 'force_response',
             'composite_stress_response', 'composite_strain_response', 'flutter_response',
-            'fractional_mass_response',
+            'fractional_mass_response', 'normalized_mass_density',
         ]
         return ['responses.' + table for table in tables
                 #if getattr(self, table) is not None
@@ -173,7 +175,7 @@ class WeightResponse:
         #msg += '  velocity=%s\n' % (velocity)
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.weight_response (%s)\n' % (self.n)
         return self.__repr__() + '\n'
@@ -212,7 +214,7 @@ class PropertyResponse:
         msg += '  pid = %s\n' % np.array(self.pid)
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
         return self.__repr__() + '\n'
@@ -232,7 +234,7 @@ class FractionalMassResponse:
         self.type_flag = []
         self.seid = []
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
         return self.__repr__() + '\n'
@@ -290,7 +292,7 @@ class DisplacementResponse:
         self.seid.append(seid)
         self._n += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
         return self.__repr__() + '\n'
@@ -347,7 +349,7 @@ class FlutterResponse:
         msg += '  velocity=%s\n' % np.array(self.velocity)
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
         return self.__repr__() + '\n'
@@ -439,6 +441,7 @@ class DSCMCOL:
     def get_responses_by_group(self):
         response_groups_order = [
             'weight_volume', 'static', 'eigenvalue',
+            'buckling',
             '???', 'psd',
             '2',
         ]
@@ -454,6 +457,8 @@ class DSCMCOL:
             'static strain': 'static',
             'composite failure': 'static',
             'composite strain': 'static',
+
+            'buckling': 'buckling',
 
             'psd displacement': 'psd',
             'psd acceleration': 'psd',
@@ -477,6 +482,9 @@ class DSCMCOL:
             'static displacement': 'DISP',
             'composite failure': 'CFAILURE',
             'composite strain': 'CSTRAIN',
+
+            # buckling
+            'buckling': 'BUCK',
 
             # psd
             'psd displacement': 'DISP',
@@ -527,9 +535,15 @@ class DSCMCOL:
                     msg += f'         {i+1:8d}        {external_id:8d}        {response_type:8s}\n'
             elif group_name == 'static':
                 msg += self._write_static(ids, response_name_to_f06_response_type)
-            elif group_name == 'eigenvalue':
+            elif group_name in ['eigenvalue', 'buckling']:
+                if group_name == 'eigenvalue':
+                    msg += '             -----  EIGENVALUE RESPONSES  -----\n'
+                elif group_name == 'buckling':
+                    msg += '             ------  BUCKLING RESPONSES  ------\n'
+                else:  # pragma: no cover
+                    raise RuntimeError(group_name)
+
                 msg += (
-                    '             -----  EIGENVALUE RESPONSES  -----\n'
                     '          --------------------------------------------------------------------------\n'
                     '            COLUMN         DRESP1         RESPONSE          MODE            SUB  \n'
                     '              NO.         ENTRY ID          TYPE             NO.            CASE \n'
@@ -707,7 +721,7 @@ class DSCMCOL:
                 msg += f'    {response_type:2d}: name={name!r}; names={names2}\n'
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return f'responses.dscmcol ({len(self.responses)})\n'
         return self.__repr__() + '\n'
@@ -727,10 +741,16 @@ class Desvars:
 
         encoding = 'ascii'
         for i, (internal_id, desvar_id, label, lower, upper, delxv, dunno) in enumerate(desvars):
-            #print((internal_id, desvar_id, label, lower, upper, delxv, dunno))
+            try:
+                label_str = label.decode(encoding)
+                #print((internal_id, desvar_id, label_str, lower, upper, delxv, dunno))
+            except Exception:
+                label_str = 'fake_%d' % i
+                #warnings.warn(str([internal_id, desvar_id, label, label_str, lower, upper, delxv, dunno]))
+                #raise
             self.internal_id[i] = internal_id
             self.desvar_id[i] = desvar_id
-            self.label[i] = label.decode(encoding).strip()
+            self.label[i] = label_str.strip()
             self.lower[i] = lower
             self.upper[i] = upper
             self.delxv[i] = delxv
@@ -748,7 +768,7 @@ class Desvars:
         msg += '  dunno = %s\n' % self.dunno
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return f'responses.desvars ({len(self.internal_id)})\n'
         return self.__repr__() + '\n'
@@ -829,7 +849,7 @@ class Convergence:
         msg += f'  desvar_values; shape=({self.n}, {self.ndesign_variables}):\n{self.desvar_values}'
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.convergence_data (%s, %s)\n' % (self.n, self.ndesign_variables)
         return self.__repr__() + '\n'

@@ -2,7 +2,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Set, List, TYPE_CHECKING
+from typing import Set, List, Optional, TYPE_CHECKING
 from cpylog import get_logger2
 
 #import pyNastran
@@ -39,8 +39,9 @@ class OP2Writer(OP2_F06_Common):
         self.card_count = {}
 
     def write_op2(self, op2_outname: str,
-                  post: int=-1, endian: bytes=b'<',
-                  skips: List[str]=None,
+                  post: int=-1,
+                  endian: bytes=b'<',
+                  skips: Optional[List[str]]=None,
                   nastran_format: str='nx') -> int:
         """
         Writes an OP2 file based on the data we have stored in the object
@@ -49,8 +50,12 @@ class OP2Writer(OP2_F06_Common):
         ----------
         op2_outname : str
             the name of the F06 file to write
-        obj : OP2(); default=None -> self
-            the OP2 object if you didn't inherit the class
+        post : int; default=-1
+            the PARAM,POST flag
+        endian : bytes; default='<'
+            little endian is strongly recommended
+        skips : List[str]; default=None
+            list of results to skip
         #is_mag_phase : bool; default=False
             #should complex data be written using Magnitude/Phase
             #instead of Real/Imaginary (default=False; Real/Imag)
@@ -136,26 +141,31 @@ def _write_op2(fop2, fop2_ascii, obj: OP2,
 
 def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: Set[str]):
     """writes the op2 result tables"""
+    table_names_found = []
     date = obj.date
+    log = obj.log
     res_categories2 = defaultdict(list)
     table_order = [
-        'OUGV1', 'OPHIG',
-        'BOUGV1', 'BOPHIG', 'BOPHIGF',
-        'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA',
-        'OUGF1',
-        'BOUGF1',
+        'OUGV1', 'BOUGV1',
+        'OUGF1', 'BOUGF1',
         'TOUGV1', 'OTEMP1',
-        'OUG1',
-        'OUGV1PAT',
-        'BOPG1',
-        'OPHIG',
 
+        'OUG1', 'OUGV1PAT',
+
+        # eigenvectors, basic eigenvectors, basic fluid eigenvectors
+        'OPHIG', 'BOPHIG', 'BOPHIGF',
+        # eigenvectors in SOL 401 - NX
+        'OUXY1', 'OUXY2', 'OPHSA',
+
+        # spc/mpc forces
         'OQG1',
         'OQGV1',
         'OQP1',
         'OQMG1',
+        # contact/glue forces
         'OQGCF1', 'OQGGF1',
-        'OPGV1', 'OPG1', 'OPNL1',
+        # load vectors
+        'OPG1', 'BOPG1', 'OPGV1', 'OPNL1',
 
         # ---------------
         # random displacement-style tables
@@ -181,7 +191,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
 
         # ---------------
         # force/heat flux
-        'DOEF1', 'HOEF1',
+        'HOEF1',
         'OEF1', 'OEF1X', 'OEF2',
         'OEFATO1', 'OEFCRM1', 'OEFNO1', 'OEFPSD1', 'OEFRMS1',
         'OEFATO2', 'OEFCRM2', 'OEFNO2', 'OEFPSD2', 'OEFRMS2',
@@ -201,7 +211,6 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
 
         # ---------------
         #strain
-
         'OSTR1', 'OSTR1X', 'OSTR1C', 'OSTRVM1',
         'OSTR2',
         'OESTRCP',
@@ -209,9 +218,12 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
         'OSTRATO1', 'OSTRCRM1', 'OSTRNO1', 'OSTRPSD1', 'OSTRRMS1',
         'OSTRATO2', 'OSTRCRM2', 'OSTRNO2', 'OSTRPSD2', 'OSTRRMS2',
         'OSTRVM2',
+        # ---------------
+        # shock response spectra
+        'OUPV1', # displacment
+        'DOEF1', # force
 
         # ---------------
-
         'OGPFB1',
         'ONRGY', 'ONRGY1',
         'OGS1',
@@ -236,7 +248,6 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
 
     total_case_count = 0
     pretables = ['LAMA', 'BLAMA', ] # 'CLAMA'
-
     if 'eigenvalues' not in skips:
         for unused_title, eigenvalue in obj.eigenvalues.items():
             res_categories2[eigenvalue.table_name].append(eigenvalue)
@@ -272,7 +283,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
                         #isubcase, element_name, itable, new_result))
                     itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
                                               date, is_mag_phase=False, endian=endian)
-                except:
+                except Exception:
                     print(f' {result.__class__.__name__} - isubcase={isubcase}{element_name}')
                     raise
             elif hasattr(result, 'element_name'):
@@ -281,7 +292,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
                     continue
             else:
                 raise NotImplementedError(f'  *op2 - {result.__class__.__name__} not written')
-                obj.log.warning(f'  *op2 - {result.__class__.__name__} not written')
+                log.warning(f'  *op2 - {result.__class__.__name__} not written')
                 #continue
 
             case_count += 1
@@ -310,7 +321,8 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
 
     #if total_case_count == 0:
         #raise FatalError('total_case_count = 0')
-    # close off the op2
+
+    # close off the op2 - [4, 0, 4]
     footer = [4, 0, 4]
     fop2.write(struct_3i.pack(*footer))
     fop2_ascii.write('close_b = %s\n' % footer)

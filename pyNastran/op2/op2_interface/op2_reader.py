@@ -47,11 +47,12 @@ import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct, error as struct_error
-from typing import Tuple, Optional, TYPE_CHECKING
+from typing import Tuple, Optional, Callable, TYPE_CHECKING
 
 import numpy as np
 import scipy  # type: ignore
 
+from cpylog import SimpleLogger
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
@@ -78,11 +79,8 @@ class SubTableReadError(Exception):
     pass
 
 DENSE_MATRICES = [
-    b'KELM',
-    b'MELM',
-    b'BELM',
-    b'KELMP',
-    b'MELMP',
+    b'KELM', b'MELM', b'BELM',
+    b'KELMP', b'MELMP',
 ]
 
 class OP2Reader:
@@ -178,7 +176,12 @@ class OP2Reader:
         }
 
     def read_nastran_version(self, mode: str):
-        """reads the version header"""
+        """
+        reads the version header
+          ints = (3, 4, 12, 1, 28, 12, 12, 4, 7, 4,
+          28, 1414742350, 541999442, 1414680390, 1346458656, 1145643077, 1146045216, 539828293, 28,
+          4, 2, 4, 8, 1482184792, 1482184792, 8, 4, -1, 4, 4, 0, 4, 4, 2, 4, 8, 1297040711, 538976305, 8, 4, -1
+          """
         #try:
         op2 = self.op2
         markers = self.get_nmarkers(1, rewind=True)
@@ -267,7 +270,7 @@ class OP2Reader:
         elif mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
             mode = 'msc'
-        self.log.debug('mode = %r' % mode)
+        self.log.debug(f'mode = {mode!r}')
         self.op2.set_mode(mode)
         self.op2.set_table_type()
 
@@ -361,11 +364,12 @@ class OP2Reader:
         self.read_3_markers([-2, 1, 0])
         self.read_table_name(['EQEXIN', 'EQEXINS', 'EQEXNOUT'])
         #print('----------------------')
-        # ints
+        # ints - sort order
         self.read_3_markers([-3, 1, 0])
         data = self._read_record()
         eqexin1 = np.frombuffer(data, dtype=op2.idtype)
 
+        # ints - nid, dof_type
         self.read_3_markers([-4, 1, 0])
         data = self._read_record()
         eqexin2 = np.frombuffer(data, dtype=op2.idtype)
@@ -378,7 +382,10 @@ class OP2Reader:
         #print('doftype = %s' % doftype.tolist())
 
     def read_aemonpt(self):
-        """reads the AEMONPT table"""
+        r"""
+        reads the AEMONPT table
+        D:\NASA\git\examples\backup\aeroelasticity\loadf.op2
+        """
         #self.log.debug("table_name = %r" % op2.table_name)
         unused_table_name = self._read_table_name(rewind=False)
 
@@ -390,10 +397,10 @@ class OP2Reader:
         if self.read_mode == 2:
             a, bi, c, d, e, f, g = unpack(self._endian + b'7i', data)
             assert a == 101, a
-            assert bi == 1, bi
+            assert bi in [0, 1, 3], bi
             assert c == 27, c
             assert d == 1, d
-            assert e == 6, e
+            assert e in [6, 11], e
             assert f == 0, f
             assert g == 0, g
         #print('-----------------------')
@@ -402,7 +409,7 @@ class OP2Reader:
         data = self._read_record()
 
         word, = unpack(self._endian + b'8s', data)
-        assert word == b'AECFMON ', word
+        assert word in [b'AECFMON ', b'AEMON   '], word
         #self.show_data(data)
         #print('-----------------------')
         #print('record 3')
@@ -710,7 +717,7 @@ class OP2Reader:
         """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
-        self.log.debug('table_name = %r' % op2.table_name)
+        #self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
@@ -745,7 +752,13 @@ class OP2Reader:
         marker = self._read_cmodext_helper(marker, debug=True)
         op2.show_ndata(100)
 
-    def _read_cmodext_helper(self, marker_orig, debug=False):
+    def _read_cmodext_helper(self, marker_orig, debug=False) -> Tuple[int, bool]:
+        r"""
+
+        64-bit:
+          C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\mbdrecvr_c_0.op2
+          C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cntlmtl05_0.op2
+        """
         op2 = self.op2
         marker = marker_orig
         #markers = self.read_nmarkers([marker, 1, 1]) # -3
@@ -754,7 +767,7 @@ class OP2Reader:
             op2.show_ndata(100)
         markers = self.get_nmarkers(3, rewind=False)
         assert markers == [marker_orig, 1, 1], markers
-        print('markers =', markers)
+        #print('markers =', markers)
 
         #marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
         val_old = 0
@@ -904,6 +917,8 @@ class OP2Reader:
                     print(op2.coords)
                 raise RuntimeError(msg)
 
+            if not is_geometry:
+                return
             for intsi, valuesi in zip(ints, floats):
                 cid = intsi[0]
                 coord_type_int = intsi[1]
@@ -1472,7 +1487,7 @@ class OP2Reader:
 
         """
         op2 = self.op2
-        op2.log.debug("table_name = %r" % op2.table_name)
+        #op2.log.debug("table_name = %r" % op2.table_name)
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
@@ -1498,7 +1513,7 @@ class OP2Reader:
             op2._frequencies = freqs
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
                 self.binary_debug.write('  freqs = %s' % freqs)
         self._read_subtables()
 
@@ -2645,7 +2660,7 @@ class OP2Reader:
             read_record_ndata = self._skip_record_ndata
         return read_record_ndata
 
-    def _read_r1tabrg(self, data, ndata):
+    def _read_r1tabrg(self, data: bytes, ndata: int):
         """
         Design Responses:
           - Weight
@@ -2721,10 +2736,13 @@ class OP2Reader:
                     responses.flutter_response = FlutterResponse()
                 else:
                     responses.flutter_response.n += 1
+            else:
+                self.log.warning('skipping response_type=%d' % response_type)
             return ndata
             #else: # response not added...
                 #pass
 
+        # fill the result object
         read_r1tabrg = True
         if read_r1tabrg:
             #self.show_data(data, types='ifs', endian=None)
@@ -2874,7 +2892,7 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (
                     subtable_name, dummy_a, dummy_b))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
                 assert dummy_a == 170, dummy_a
                 assert dummy_b == 170, dummy_b
         else:
@@ -3346,6 +3364,19 @@ class OP2Reader:
         |  9   | Pseudo identity |
         +------+-----------------+
 
+
+        Record 2  - BNDFL(9614,96,0)
+        Record 3  - DMIAX(214,2,221)
+        Record 4  - DMIG(114,1,120)
+        Record 5  - DMIJ(514,5,578)
+        Record 6  - DMIJI(614,6,579)
+        Record 7  - DMIK(714,7,580)
+        Record 8  - ELIST(314,3,279)
+        Record 9  - MFLUID(414,4,284)
+        Record 10 - RADCAV(2509,25,418)
+        Record 11 - RADSET(8602,86,421)
+        Record 12 - RADLST(2014,20,243)
+        Record 13 - RADMTX(3014,30,244)
         """
         #print('-------------------------------------')
 
@@ -3835,7 +3866,7 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
 
-    def read_markers8(self, markers, macro_rewind=True):
+    def read_markers8(self, markers: List[int], macro_rewind: int=True) -> None:
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
         The "marker" corresponds to the value, so 3 markers takes up 9 integers.
@@ -3862,15 +3893,15 @@ class OP2Reader:
             data = self.read_block8()
             imarker, = op2.struct_q.unpack(data)
             if marker != imarker:
-                #self.show_data(data)
+                #self.show_data(data, types='iq')
                 msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r; iloc=%s/%s' % (
                     marker, imarker, markers, i, op2.table_name,
                     op2.f.tell(), os.path.getsize(op2.op2_filename))
                 raise FortranMarkerError(msg)
             if self.is_debug_file:
-                self.binary_debug.write('  read_markers -> [8, %i, 8]\n' % marker)
+                self.binary_debug.write(f'  read_markers -> [8, {marker:d}, 8]\n')
 
-    def _skip_table(self, table_name, warn=True):
+    def _skip_table(self, table_name: str, warn: bool=True) -> None:
         """bypasses the next table as quickly as possible"""
         #if table_name in ['DIT', 'DITS']:  # tables
             #self._read_dit()
@@ -3879,7 +3910,7 @@ class OP2Reader:
         else:
             self._skip_table_helper(warn=warn)
 
-    def _print_month(self, month, day, year, zero, one):
+    def _print_month(self, month: int, day: int, year: int, zero: int, one: int) -> None:
         """
         Creates the self.date attribute from the 2-digit year.
 
@@ -3912,7 +3943,7 @@ class OP2Reader:
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one in [0, 1], one  # 0, 50
 
-    def _set_op2_date(self, month, day, year):
+    def _set_op2_date(self, month: int, day: int, year: int) -> Tuple[int, int, int]:
         """sets the date the job was run"""
         date = (month, day, year)
         self.op2.date = date
@@ -3937,12 +3968,13 @@ class OP2Reader:
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)[0]
 
     def _read_record_ndata(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
+        """reads a record and the length of the record"""
         if self.size == 4:
             return self._read_record_ndata4(debug=debug, macro_rewind=macro_rewind)
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)
 
     def _read_record_ndata4(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
-        """reads a record and the length of the record"""
+        """reads a record and the length of the record for size=4"""
         op2 = self.op2
         markers0 = self.get_nmarkers4(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
@@ -3984,7 +4016,7 @@ class OP2Reader:
         return record, nrecord
 
     def _read_record_ndata8(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
-        """reads a record and the length of the record"""
+        """reads a record and the length of the record for size=8"""
         op2 = self.op2
         markers0 = self.get_nmarkers8(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
@@ -4049,11 +4081,35 @@ class OP2Reader:
         return data_out, ndata
 
     def _read_block_ndata(self):
+        """
+        Reads a block following a pattern of:
+            [nbytes, data, nbytes]
+
+        Returns
+        -------
+        data : bytes
+            the data in binary
+        ndata : int
+            len(data)
+
+        """
         if self.size == 4:
             return self._read_block_ndata4()
         return self._read_block_ndata8()
 
     def _read_block_ndata8(self):
+        """
+        Reads a block following a pattern of:
+            [nbytes, data, nbytes]
+
+        Returns
+        -------
+        data : bytes
+            the data in binary
+        ndata : int
+            len(data)
+
+        """
         op2 = self.op2
         data = op2.f.read(4)
         ndata, = op2.struct_i.unpack(data)
@@ -4143,7 +4199,7 @@ class OP2Reader:
                 table_name = self.unpack_table_name(data)
             except (NameError, MemoryError):
                 raise
-            except: # struct_error:
+            except Exception: # struct_error:
                 # we're done reading
                 op2.n = ni
                 op2.f.seek(op2.n)
@@ -4151,7 +4207,7 @@ class OP2Reader:
                 try:
                     # we have a trailing 0 marker
                     self.read_markers([0], macro_rewind=rewind)
-                except: #struct_error:
+                except Exception: #struct_error:
                     # if we hit this block, we have a FATAL error
                     is_special_nastran = op2._nastran_format.lower().startswith(('imat', 'autodesk'))
                     if not is_special_nastran and op2.post != -4:
@@ -4296,12 +4352,12 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
 
-    def get_marker1(self, rewind=True, macro_rewind=False) -> int:
+    def get_marker1(self, rewind: bool=True, macro_rewind: bool=False) -> int:
         if self.size == 4:
             return self.get_marker1_4(rewind=rewind, macro_rewind=macro_rewind)
         return self.get_marker1_8(rewind=rewind, macro_rewind=macro_rewind)
 
-    def get_marker1_4(self, rewind=True, macro_rewind=False) -> int:
+    def get_marker1_4(self, rewind: bool=True, macro_rewind: bool=False) -> int:
         """
         Gets 1 marker
         See get_n_markers(...)
@@ -4608,15 +4664,18 @@ class OP2Reader:
         """
         return self._skip_block_ndata()[0]
 
-    def _skip_block_ndata(self):
+    def _skip_block_ndata(self) -> Tuple[None, int]:
         """
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
 
         Returns
         -------
-        data :  since data can never be None, a None value
-                indicates something bad happened.
+        data : None
+            since data can never be None, a None value
+            indicates something bad happened.
+        ndata : int
+            the length of the data block that was skipped
 
         """
         op2 = self.op2
@@ -4627,7 +4686,7 @@ class OP2Reader:
         return None, ndata
 
     #---------------------------------------------------------------------------
-    def _goto(self, n):
+    def _goto(self, n: int) -> None:
         """
         Jumps to position n in the file
 
@@ -4640,7 +4699,7 @@ class OP2Reader:
         self.op2.n = n
         self.op2.f.seek(n)
 
-    def is_valid_subcase(self):
+    def is_valid_subcase(self) -> bool:
         """
         Lets the code check whether or not to read a subcase
 
@@ -4685,11 +4744,11 @@ class OP2Reader:
         op2.subtable_name = subtable_name
         self._read_subtables()
 
-    def read_results_table8(self):
+    def read_results_table8(self) -> None:
         """Reads a results table"""
         op2 = self.op2
         if self.is_debug_file:
-            self.binary_debug.write('read_results_table - %s\n' % op2.table_name)
+            self.binary_debug.write(f'read_results_table - {op2.table_name}\n')
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers8([-1])
         if self.is_debug_file:
@@ -4712,23 +4771,23 @@ class OP2Reader:
             subtable_name = op2.struct_16s.unpack(data)
             subtable_name = reshape_bytes_block(subtable_name)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 32: # 16*2
             #(name1, name2, 170, 170)
             subtable_name, = op2.struct_16s.unpack(data[:16])
             assert len(subtable_name) == 16, len(subtable_name)
             subtable_name = reshape_bytes_block(subtable_name)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 56: # 28*2
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'16s5q', data)
             subtable_name = reshape_bytes_block(subtable_name)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
                     subtable_name, month, day, year, zero, one))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
             self._print_month(month, day, year, zero, one)
         else:
             self.show_data(data, types='ifsqd', endian=None)
@@ -4739,26 +4798,26 @@ class OP2Reader:
         if ndata == 8:
             subtable_name = op2.struct_8s.unpack(data)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 12:
             subtable_name, unused_ten = unpack(self._endian + b'8si', data)  # type: Tuple[bytes, int]
             subtable_name = subtable_name.strip().decode(self._encoding)
             #assert ten == 10, self.show_data(data, types='ifs', endian=None)
             assert subtable_name in ['GPL', 'GPLS'], subtable_name
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 28:
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
                     subtable_name, month, day, year, zero, one))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
             self._print_month(month, day, year, zero, one)
         elif ndata == 612: # ???
             strings, ints, floats = self.show_data(data)
-            msg = 'len(data) = %i\n' % ndata
+            msg = f'len(data) = {ndata:d}\n'
             #msg += 'strings  = %r\n' % strings
             #msg += 'ints     = %r\n' % str(ints)
             #msg += 'floats   = %r' % str(floats)
@@ -4776,16 +4835,16 @@ class OP2Reader:
             msg += 'floats   = %r' % str(floats)
             raise NotImplementedError(msg)
         if hasattr(self, 'subtable_name'):
-            raise RuntimeError('the file hasnt been cleaned up; subtable_name_old=%s new=%s' % (
+            raise RuntimeError('the file has not been cleaned up; subtable_name_old=%s new=%s' % (
                 op2.subtable_name, subtable_name))
         return subtable_name
 
-    def generic_stop_table(self, data, ndata):  # pragma: no cover
+    def generic_stop_table(self, data: bytes, ndata: int):  # pragma: no cover
         """print table data when things get weird"""
         strings, ints, floats = self.show_data(data)
         msg = 'Unhandled table length error\n'
-        msg += 'table_name = %s\n' % self.op2.table_name
-        msg += 'len(data) = %i\n' % ndata
+        msg += f'table_name = {self.op2.table_name}\n'
+        msg += f'len(data) = {ndata:d}\n'
         msg += 'strings  = %r\n' % strings
         msg += 'ints     = %r\n' % str(ints)
         msg += 'floats   = %r' % str(floats)
@@ -4797,9 +4856,9 @@ class OP2Reader:
         op2.table_name = self._read_table_name(rewind=False)
 
         if self.is_debug_file:
-            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
+            self.binary_debug.write(f'read_geom_table - {op2.table_name}\n')
         self.read_markers([-1])
-        data = self._read_record() # length=28
+        data = self._read_record() # length=28=7*4
 
         self.read_3_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
@@ -4826,7 +4885,7 @@ class OP2Reader:
         op2.subtable_name = subtable_name.rstrip()
         self._read_subtables()
 
-    def _read_subtables(self):
+    def _read_subtables(self) -> None:
         """reads a series of subtables"""
         # this parameters is used for numpy streaming
         op2 = self.op2
@@ -4838,7 +4897,7 @@ class OP2Reader:
         op2.isubtable = -3
         self.read_3_markers([-3, 1, 0])
         if self.is_debug_file:
-            self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
+            self.binary_debug.write(f'***isubtable = {op2.isubtable:d}\n')
             self.binary_debug.write('---markers = [-3, 1, 0]---\n')
 
         # get the parsing functions (table3_parser, table4_parser)
@@ -4852,16 +4911,16 @@ class OP2Reader:
         # back at table 3 (with isubtable=-5), which will occur in the case of multiple
         # times/element types/results in a single macro table (e.g. OUG, OES).
         table_mapper = op2._get_table_mapper()
-        if op2.table_name in table_mapper:
+        table_name = op2.table_name
+        if table_name in table_mapper:
             #if self.read_mode == 2:
-                #self.log.debug("table_name = %r" % op2.table_name)
-
-            table3_parser, table4_parser = table_mapper[op2.table_name]
+                #self.log.debug("table_name = %r" % table_name)
+            table3_parser, table4_parser = table_mapper[table_name]
             passer = False
         else:
             if self.read_mode == 2:
-                self.log.info("skipping table_name = %r" % op2.table_name)
-                    #raise NotImplementedError(op2.table_name)
+                self.log.info(f'skipping table_name = {table_name!r}')
+                    #raise NotImplementedError(table_name)
             table3_parser = None
             table4_parser = None
             passer = True
@@ -4874,17 +4933,18 @@ class OP2Reader:
             #return
 
         if self.is_debug_file:
-            self.binary_debug.write('---marker0 = %s---\n' % markers)
+            self.binary_debug.write(f'---marker0 = {markers}---\n')
 
         # while the subtables aren't done
         while markers[0] != 0:
             op2.is_start_of_subtable = True
             if self.is_debug_file:
-                self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
+                self.binary_debug.write(f'***isubtable = {op2.isubtable:d}\n')
+
             try:
                 self._read_subtable_3_4(table3_parser, table4_parser, passer)
-            except:  # pragma: no cover
-                print('failed reading %s isubtable=%s' % (op2.table_name, op2.isubtable))
+            except Exception:  # pragma: no cover
+                print(f'failed reading {table_name} isubtable={op2.isubtable:d}')
                 raise
             #force_table4 = self._read_subtable_3_4(table3_parser, table4_parser, passer)
             op2.isubtable -= 1
@@ -4894,7 +4954,7 @@ class OP2Reader:
                 self.read_3_markers([op2.isubtable, 1, 0])
                 #self.log.debug('markers=%s' % [op2.isubtable, 1, 0])
             except FortranMarkerError:
-                self.log.error('isubtable=%s' % op2.isubtable)
+                self.log.error(f'isubtable={op2.isubtable:d}')
                 op2.f.seek(iloc)
                 op2.n = iloc
 
@@ -4914,13 +4974,17 @@ class OP2Reader:
             markers = self.get_nmarkers(1, rewind=True)
 
         if self.is_debug_file:
-            self.binary_debug.write('breaking on marker=%r\n' % str(markers))
+            self.binary_debug.write(f'breaking on marker={markers}\n')
 
         # we've finished reading all subtables, but have one last marker to read
-        self.read_markers([0])
+        marker = self.get_marker1(rewind=False, macro_rewind=False)
+        assert marker == 0, marker
         op2._finish()
 
-    def _read_subtable_3_4(self, table3_parser, table4_parser, passer) -> Optional[bool]:
+    def _read_subtable_3_4(self,
+                           table3_parser: Optional[Callable],
+                           table4_parser: Optional[Callable],
+                           passer: Optional[Callable]) -> Optional[bool]:
         """
         Reads a series of subtable 3/4
 

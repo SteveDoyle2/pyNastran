@@ -7,7 +7,8 @@ import unittest
 import numpy as np
 
 import pyNastran
-from pyNastran.utils import is_binary_file, object_methods, object_attributes, print_bad_path
+from pyNastran.utils import (is_binary_file, object_methods, object_attributes, object_stats,
+                             print_bad_path, int_version)
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import (
     get_abs_max, get_max_index, get_min_index, get_abs_index,
@@ -44,6 +45,20 @@ class B1(A1):
 
 
 class TestUtils(unittest.TestCase):
+    def test_int_version(self):
+        """tests int_version"""
+        assert int_version('numpy', '1.20.0rc1') == [1, 20, 0], int_version('numpy', '1.20.0rc1')
+        assert int_version('scipy', '1.6.0rc2') == [1, 6, 0], int_version('scipy', '1.6.0rc2')
+        assert int_version('matplotlib', '3.3.3') == [3, 3, 3], int_version('matplotlib', '3.3.3')
+        assert int_version('matplotlib', '3.5.0b1'), int_version('matplotlib', '3.5.0')
+        assert int_version('pyNastran', '1.4.0+dev.8913610a0') == [1, 4, 0], int_version('pyNastran', '1.4.0+dev.8913610a0')
+
+    def test_object_stats(self):
+        """tests object_stats"""
+        b = B1(42)
+        out = object_stats(b, mode='public', keys_to_skip=None, filter_properties=False)
+        assert len(out) > 0, out
+        str(out)
 
     def test_gauss(self):
         """tests ``gauss``"""

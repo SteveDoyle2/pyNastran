@@ -31,15 +31,15 @@ class GridPointSurfaceStressesArray(ScalarObject):
         self.location = None
         self._times = None
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
     def build(self):
@@ -89,12 +89,12 @@ class GridPointSurfaceStressesArray(ScalarObject):
         self.data[self.itime, self.itotal, :] = [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         ntimes, nelements, _ = self.data.shape
@@ -124,7 +124,7 @@ class GridPointSurfaceStressesArray(ScalarObject):
         return headers
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
 
@@ -265,15 +265,15 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
                 raise ValueError(msg)
         return True
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
     def build(self):
@@ -298,12 +298,12 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.is_built = True
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         ntimes, nelements, _ = self.data.shape
@@ -388,12 +388,12 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.is_built = True
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         ntimes, nelements, _ = self.data.shape
@@ -426,7 +426,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self.itotal += 1
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         """
         '    D I R E C T   S T R E S S E S   A T   G R I D   P O I N T S   - -       V O L U M E      101'
         '        OUTPUT COORDINATE SYSTEM =       0  BASIC   '
@@ -545,15 +545,15 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'pressure']
         return headers
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
     def build(self):
@@ -581,12 +581,12 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.is_built = True
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         ntimes, nelements, _ = self.data.shape

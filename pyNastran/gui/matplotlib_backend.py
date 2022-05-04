@@ -26,3 +26,4 @@ else:
         except ImportError:
             # no-gui backend
             matplotlib_backend = 'Agg'
+print('matplotlib_backend', matplotlib_backend)

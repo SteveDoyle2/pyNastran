@@ -36,6 +36,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF, BDFCard
 
 
@@ -303,7 +304,7 @@ class AECOMPL(BaseCard):
         labels = []
         j = 1
         for i in range(2, len(card)):
-            label = string(card, i, 'label_%i' % j)
+            label = string(card, i, 'label_%d' % j)
             labels.append(label)
             j += 1
         return AECOMPL(name, labels, comment=comment)
@@ -402,7 +403,7 @@ class AEFACT(BaseCard):
         sid = integer(card, 1, 'sid')
         fractions = []
         for i in range(2, len(card)):
-            fraction = double(card, i, 'factor_%i' % (i - 1))
+            fraction = double(card, i, 'factor_%d' % (i - 1))
             fractions.append(fraction)
         assert len(card) > 2, 'len(AEFACT card) = %i\n%s' % (len(card), card)
         return AEFACT(sid, fractions, comment=comment)
@@ -790,7 +791,7 @@ class AEPARM(BaseCard):
         units = card.field(3)
         units = '' if units is None else units
 
-        assert len(card) <= 4, 'len(AEPARM card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 4, f'len(AEPARM card) = {len(card):d}\ncard={card}'
         return AEPARM(aeparm_id, label, units, comment=comment)
 
     @classmethod
@@ -1235,7 +1236,7 @@ class AESURFS(BaseCard):
         label = string(card, 2, 'label')
         list1 = integer(card, 4, 'list1')
         list2 = integer(card, 6, 'list2')
-        assert len(card) <= 7, 'len(AESURFS card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(AESURFS card) = {len(card):d}\ncard={card}'
         return AESURFS(aesid, label, list1, list2, comment=comment)
 
     @classmethod
@@ -1343,9 +1344,8 @@ class CAERO1(BaseCard):
     ----------
     eid : int
         element id
-    pid : int, PAERO1
+    pid : int
         int : PAERO1 ID
-        PAERO1 : PAERO1 object (xref)
     igroup : int
         Group number
     p1 : (1, 3) ndarray float
@@ -1356,23 +1356,20 @@ class CAERO1(BaseCard):
         distance along the flow direction from node 1 to node 2; (typically x, root chord)
     x43 : float
         distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-    cp : int, CORDx
+    cp : int
         int : coordinate system
-        CORDx : Coordinate object (xref)
     nspan : int
         int > 0 : N spanwise boxes distributed evenly
         int = 0 : use lchord
     nchord : int
         int > 0 : N chordwise boxes distributed evenly
         int = 0 : use lchord
-    lspan : int, AEFACT
+    lspan : int
         int > 0 : AEFACT reference for non-uniform nspan
         int = 0 : use nspan
-        AEFACT : AEFACT object  (xref)
-    lchord : int, AEFACT
+    lchord : int
         int > 0 : AEFACT reference for non-uniform nchord
         int = 0 : use nchord
-        AEFACT : AEFACT object  (xref)
     comment : str; default=''
          a comment for the card
 
@@ -1457,8 +1454,12 @@ class CAERO1(BaseCard):
         self.p1 = np.asarray(self.p1)
         self.p4 = np.asarray(self.p4)
 
-    def __init__(self, eid, pid, igroup, p1, x12, p4, x43,
-                 cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
+    def __init__(self, eid: int, pid: int, igroup: int,
+                   p1: NDArray3float, x12: float,
+                   p4: NDArray3float, x43: float,
+                   cp: int=0,
+                   nspan: int=0, lspan: int=0,
+                   nchord: int=0, lchord: int=0, comment: str=''):
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
         (e.g., wing/tail).
@@ -1616,7 +1617,7 @@ class CAERO1(BaseCard):
             double_or_blank(card, 15, 'z4', 0.0)])
         x43 = double_or_blank(card, 16, 'x43', 0.)
 
-        assert len(card) <= 17, 'len(CAERO1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 17, f'len(CAERO1 card) = {len(card):d}\ncard={card}'
         return CAERO1(eid, pid, igroup, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                       comment=comment)
@@ -1714,6 +1715,18 @@ class CAERO1(BaseCard):
                     self.eid, self.lchord, self.lspan, nchord)
                 raise OverflowError(msg)
             self._init_ids(dtype='int64')
+        return self.box_ids
+
+    @property
+    def aefact_ids(self) -> List[int]:
+        aefact_ids = []
+        lchord = self.get_LChord()
+        lspan = self.get_LSpan()
+        if lchord:
+            aefact_ids.append(lchord)
+        if lspan:
+            aefact_ids.append(lspan)
+        return aefact_ids
 
     def Cp(self) -> int:
         if self.cp_ref is not None:
@@ -2188,18 +2201,16 @@ class CAERO2(BaseCard):
         ----------
         eid : int
             element id
-        pid : int, PAERO2
+        pid : int
             int : PAERO2 ID
-            PAERO2 : PAERO2 object (xref)
         igroup : int
             Group number
         p1 : (1, 3) ndarray float
             xyz location of point 1 (forward position)
         x12 : float
             length of the CAERO2
-        cp : int, CORDx; default=0
+        cp : int; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
         nsb : int; default=0
             Number of slender body elements
         lsb : int; default=0
@@ -2271,7 +2282,7 @@ class CAERO2(BaseCard):
         self.lsb_ref = None
         self.ascid_ref = None
 
-    def validate(self):
+    def validate(self) -> None:
         #print('nsb=%s lsb=%s' % (self.nsb, self.lsb))
         #print('nint=%s lint=%s' % (self.nint, self.lint))
         assert isinstance(self.lsb, integer_types), self.lsb
@@ -2313,7 +2324,7 @@ class CAERO2(BaseCard):
             double_or_blank(card, 10, 'y1', 0.0),
             double_or_blank(card, 11, 'z1', 0.0)])
         x12 = double_or_blank(card, 12, 'x12', 0.)
-        assert len(card) <= 13, 'len(CAERO2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, f'len(CAERO2 card) = {len(card):d}\ncard={card}'
         return CAERO2(eid, pid, igid, p1, x12,
                       cp=cp, nsb=nsb, nint=nint, lsb=lsb, lint=lint,
                       comment=comment)
@@ -2327,6 +2338,17 @@ class CAERO2(BaseCard):
         if self.pid_ref is not None:
             return self.pid_ref.pid
         return self.pid
+
+    @property
+    def aefact_ids(self) -> List[int]:
+        aefact_ids = []
+        lsb = self.Lsb()
+        lint = self.Lint()
+        if lsb:
+            aefact_ids.append(lsb)
+        if lint:
+            aefact_ids.append(lint)
+        return aefact_ids
 
     def Lsb(self):  # AEFACT
         if self.lsb_ref is not None:
@@ -2563,11 +2585,11 @@ class CAERO3(BaseCard):
         p1 : (3,) float ndarray
             ???
         x12 : float
-            ???
+            distance from p1 to p3
         p4 : (3,) float ndarray
             ???
         x43 : float
-            ???
+            distance from p4 to p3
         cp : int; default=0
             coordinate system for locating point 1
         list_w : int
@@ -2579,6 +2601,12 @@ class CAERO3(BaseCard):
         comment : str; default=''
             a comment for the card
 
+
+        1--------5----------4
+        |                   |
+        |     7--9---11     |
+        |     |       |     |
+        2-----8--10--12-----3
         """
         assert cp != 100
         BaseCard.__init__(self)
@@ -2595,6 +2623,8 @@ class CAERO3(BaseCard):
 
         #: Coordinate system for locating point 1.
         self.cp = cp
+
+        # aefacts
         self.list_w = list_w
         self.list_c1 = list_c1
         self.list_c2 = list_c2
@@ -2889,9 +2919,8 @@ class CAERO4(BaseCard):
         ----------
         eid : int
             element id
-        pid : int, PAERO4
+        pid : int
             int : PAERO4 ID
-            PAERO4 : PAERO4 object (xref)
         p1 : (1, 3) ndarray float
             xyz location of point 1 (leading edge; inboard)
         p4 : (1, 3) ndarray float
@@ -2902,13 +2931,12 @@ class CAERO4(BaseCard):
         x43 : float
             distance along the flow direction from node 4 to node 3
             (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
             int = 0 : use lchord
-        lspan : int, AEFACT; default=0
+        lspan : int; default=0
             int > 0 : AEFACT reference for non-uniform nspan
             int = 0 : use nspan
         comment : str; default=''
@@ -3008,7 +3036,7 @@ class CAERO4(BaseCard):
             self.lspan_ref = model.AEFact(self.lspan, msg)
         self._init_ids()
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CAERO4 eid=%s' % self.eid
         self.pid_ref = model.safe_paero(self.pid, self.eid, xref_errors, msg=msg)  # links to PAERO4 (not added)
         self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
@@ -3133,7 +3161,7 @@ class CAERO4(BaseCard):
         x, y = self.xy
         return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
-    def get_LSpan(self):
+    def get_LSpan(self) -> int:
         if isinstance(self.lspan, integer_types):
             return self.lspan
         return self.lspan_ref.sid
@@ -3229,12 +3257,12 @@ class CAERO5(BaseCard):
             distance along the flow direction from node 1 to node 2; (typically x, root chord)
         x43 : float
             distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int; default=0
             int : coordinate system
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
             int = 0 : use lchord
-        lspan : int, AEFACT; default=0
+        lspan : int; default=0
             int > 0 : AEFACT reference for non-uniform nspan
             int = 0 : use nspan
         ntheory : int; default=0
@@ -3312,7 +3340,7 @@ class CAERO5(BaseCard):
             double_or_blank(card, 14, 'y4', 0.0),
             double_or_blank(card, 15, 'z4', 0.0)])
         x43 = double_or_blank(card, 16, 'x43', 0.0)
-        assert len(card) <= 17, 'len(CAERO3 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 17, f'len(CAERO3 card) = {len(card):d}\ncard={card}'
         return CAERO5(eid, pid, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, lspan=lspan, ntheory=ntheory, nthick=nthick,
                       comment=comment)
@@ -3372,6 +3400,13 @@ class CAERO5(BaseCard):
         nelements = nchord * nspan
         npoints = (nchord + 1) * (nspan + 1)
         return npoints, nelements
+
+
+    @property
+    def nboxes(self):
+        if self.nspan > 0:
+            return self.nspan
+        return len(self.lspan_ref.fractions) # AEFACT
 
     def panel_points_elements(self):
         p1, p2, p3, p4 = self.get_points()
@@ -4860,6 +4895,41 @@ class PAERO4(BaseCard):
 
     def __init__(self, pid, docs, caocs, gapocs,
                  cla=0, lcla=0, circ=0, lcirc=0, comment=''):
+        """
+        Parameters
+        ----------
+        PID : int
+            Property identification number. (Integer > 0)
+        CLA : int; default=0
+            Select Prandtl-Glauert correction. (Integer = -1, 0, 1)
+            -1 Compressibility correction made to lift curve slope data for a reference Mach number.
+            0  No correction and no list needed. (Default)
+            +1 No correction and lift curve slope provided by a list as a
+               function of strip location and Mach number.
+        LCLA : int
+            ID number of the AEFACT entry that lists the lift curve slope
+            on all strips for each Mach number on the MKAEROi entry. See
+            Remark 2 below. (Integer = 0 if CLA = 0, > 0 if CLA ≠ 0)
+        CIRC : int; default=0
+            Select Theodorsen’s function C(k) or the number of exponential
+            coefficients used to approximate C(k).
+            (Integer = 0, 1, 2, 3; Must be zero if CLA ≠ 0.)
+            0 Theodorsen function.
+            1, 2, 3 Approximate function with b0, b1, β1, ..., bn, βn n = 1, 2, 3.
+        LCIRC : int
+            Identification number of the AEFACT entry that lists the b, β values
+            for each Mach number. See Remark 3, 4, and 5 below; variable b’s
+            and β’s for each mi on the MKAEROi entry.
+            (Integer = 0 if CIRC = 0, > 0 if CIRC ≠ 0)
+        DOCi : List[float]
+            d/c = distance of the control surface hinge aft of the quarter-chord
+            divided by the strip chord (Real ≥ 0.0)
+        CAOCi : List[float]
+            ca/c = control surface chord divided by the strip chord. (Real ≥ 0.0)
+        GAPOCi : List[float]
+            g/c = control surface gap divided by the strip chord. (Real ≥ 0.0)
+
+        """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -4902,9 +4972,9 @@ class PAERO4(BaseCard):
         caocs = []
         gapocs = []
         for i in range(6, nfields, 3):
-            doc = double(card, i, 'doc_%i' % j)
-            caoc = double(card, i + 1, 'caoc_%i' % j)
-            gapoc = double(card, i + 2, 'gapoc_%i' % j)
+            doc = double(card, i, 'doc_%d' % j)
+            caoc = double(card, i + 1, 'caoc_%d' % j)
+            gapoc = double(card, i + 2, 'gapoc_%d' % j)
             docs.append(doc)
             caocs.append(caoc)
             gapocs.append(gapoc)
@@ -5565,7 +5635,7 @@ class SPLINE3(Spline):
                     i, disp_component)
 
         if self.usage not in ['FORCE', 'DISP', 'BOTH']:
-            msg += 'usage=%r must be in [FORCE, DISP, BOTH]\n' % self.usage
+            msg += f'usage={self.usage} must be in [FORCE, DISP, BOTH]\n'
 
         if msg:
             msg += str(self)

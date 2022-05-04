@@ -1605,11 +1605,11 @@ class PBARL(LineProperty):
             for i in range(ndim):
                 if i in [4, 5, 6, 7]:
                     dim4 = dim[3]
-                    dimi = double_or_blank(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1),
+                    dimi = double_or_blank(card, 9 + i, f'ndim={ndim}; dim{i+1}',
                                            default=dim4)
                 elif i in [8, 9]:
                     dim6 = dim[5]
-                    dimi = double_or_blank(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1),
+                    dimi = double_or_blank(card, 9 + i, f'ndim={ndim}; dim{i+1}',
                                            default=dim6)
                 else:
                     dimi = double(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1))

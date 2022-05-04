@@ -6,8 +6,10 @@ from pyNastran import is_pynastrangui_exe
 
 IS_DEV = (
     'TRAVIS' in os.environ or
+    'TRAVIS_PYTHON_VERSION' in os.environ or
     'APPVEYOR' in os.environ or
-    'READTHEDOCS' in os.environ
+    'READTHEDOCS' in os.environ or
+    'GITHUB_ACTOR' in os.environ
 )
 #IS_TRAVIS = 'TRAVIS' in os.environ
 #IS_RTD = 'READTHEDOCS' in os.environ

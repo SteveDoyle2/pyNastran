@@ -494,25 +494,25 @@ class OUG(OP2Common):
             raise NotImplementedError(self.code_information())
         return n
 
-    #def _read_eigenvector_displacement_solution_set(self, data, ndata):
+    #def _read_eigenvector_displacement_solution_set(self, data: bytes, ndata: int):
         #"""
         #table_code = 14
         #"""
         #raise NotImplementedError()
 
-    #def _read_displacement_solution_set(self, data, ndata):
+    #def _read_displacement_solution_set(self, data: bytes, ndata: int):
         #"""
         #table_code = 15
         #"""
         #raise NotImplementedError()
 
-    #def _read_velocity_solution_set(self, data, ndata):
+    #def _read_velocity_solution_set(self, data: bytes, ndata: int):
         #"""
         #table_code = 16
         #"""
         #raise NotImplementedError()
 
-    #def _read_acceleration_solution_set(self, data, ndata):
+    #def _read_acceleration_solution_set(self, data: bytes, ndata: int):
         #"""
         #table_code = 17
         #"""
@@ -654,7 +654,7 @@ class OUG(OP2Common):
             #raise NotImplementedError(self.thermal)
         return n
 
-    def _read_oug_velocity(self, data, ndata):
+    def _read_oug_velocity(self, data: bytes, ndata: int):
         """
         table_code = 10
         """
@@ -799,7 +799,7 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_oug_eigenvector(self, data, ndata):
+    def _read_oug_eigenvector(self, data: bytes, ndata: int):
         """
         table_code = 7
         """
@@ -1149,7 +1149,7 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_oug_ato(self, data, ndata):
+    def _read_oug_ato(self, data: bytes, ndata: int):
         """
         table_code = 901  # /610/611
         """
@@ -1181,7 +1181,7 @@ class OUG(OP2Common):
                                     random_code=self.random_code)
         return n
 
-    def _read_oug_crm(self, data, ndata):
+    def _read_oug_crm(self, data: bytes, ndata: int):
         """
         table_code = 501  # /510/511
         """

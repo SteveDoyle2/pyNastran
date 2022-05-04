@@ -214,7 +214,7 @@ class OGS(OP2Common):
         assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
     #-----------------------------------------------------------------------------------
-    def _read_ogs1_table26(self, data, ndata):
+    def _read_ogs1_table26(self, data: bytes, ndata: int) -> int:
         """reads grid point stresses"""
         if self.num_wide == 11:  # real/random
             n = self._read_ogs1_table26_numwide11(data, ndata)
@@ -223,7 +223,7 @@ class OGS(OP2Common):
             raise NotImplementedError(msg)
         return n
 
-    def _read_ogs1_table26_numwide11(self, data, ndata):
+    def _read_ogs1_table26_numwide11(self, data: bytes, ndata: int) -> int:
         """surface stresses"""
         result_name = 'grid_point_surface_stresses'
         obj_vector_real = GridPointSurfaceStressesArray
@@ -302,7 +302,7 @@ class OGS(OP2Common):
             raise RuntimeError(msg)
         return n
 
-    def _read_ogs1_table27_numwide9(self, data, ndata):
+    def _read_ogs1_table27_numwide9(self, data: bytes, ndata: int) -> int:
         """
         TCODE =27 Volume with direct
         1 EKEY I 10*grid point identification number + Device Code
@@ -371,7 +371,7 @@ class OGS(OP2Common):
         return n
 
 
-    def _read_ogs1_table35(self, data, ndata):
+    def _read_ogs1_table35(self, data: bytes, ndata: int) -> int:
         """
         grid point stress discontinuities (plane stress/strain)
 

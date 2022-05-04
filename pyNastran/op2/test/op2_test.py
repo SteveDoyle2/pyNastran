@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import List, Optional
 
 import pyNastran
 from pyNastran.utils.dev import get_files_of_type
@@ -50,7 +51,7 @@ def parse_skipped_cards(fname):
     return files_to_analyze
 
 
-def get_all_files(folders_file, file_type, max_size=4.2):
+def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> List[str]:
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
 

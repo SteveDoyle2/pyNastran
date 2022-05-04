@@ -37,7 +37,7 @@ from pyNastran.op2.result_objects.monpnt import MONPNT1, MONPNT3
 
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import (SortCodeError, DeviceCodeError,
-                                  FortranMarkerError,  SixtyFourBitError,
+                                  FortranMarkerError, SixtyFourBitError,
                                   OverwriteTableError)
 from pyNastran.op2.writer.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
@@ -301,7 +301,7 @@ class OP2(OP2_Scalar, OP2Writer):
         aname = a_obj.__class__.__name__
         bname = b_obj.__class__.__name__
         if not aname == bname:
-            self.log.warning('type(a)=%s type(b)=%s' % (aname, bname))
+            self.log.warning(f'type(a)={aname} type(b)={bname}')
             return False
 
         if aname == 'PARAM': # TODO: update this
@@ -309,9 +309,9 @@ class OP2(OP2_Scalar, OP2Writer):
 
         # does this ever hit?
         if not any(word in aname for word in ['Array', 'Eigenvalues', 'GridPointWeight']):
-            msg = '%s is not an Array ... assume equal' % aname
+            msg = f'{aname} is not an Array ... assume equal'
             self.log.warning(msg)
-            raise NotImplementedError('%s __eq__' % aname)
+            raise NotImplementedError(f'{aname} __eq__')
             #continue
 
         # use the array methods to check for equality
@@ -345,15 +345,15 @@ class OP2(OP2_Scalar, OP2Writer):
             raise RuntimeError(f'mode={mode!r} and must be in [msc, nx, '
                                f'autodesk, nasa95, optistruct]')
 
-    def to_nx(self) -> None:
+    def to_nx(self, msg='') -> None:
         if self.is_msc:
-            self.log.warning('switching to NX')
+            self.log.warning(f'switching to NX{msg}')
             self.set_as_nx()
             self.set_table_type()
 
-    def to_msc(self) -> None:
+    def to_msc(self, msg='') -> None:
         if self.is_nx:
-            self.log.warning('switching to MSC')
+            self.log.warning(f'switching to MSC{msg}')
             self.set_as_msc()
 
     def include_exclude_results(self,
@@ -372,8 +372,8 @@ class OP2(OP2_Scalar, OP2Writer):
         if exclude_results and include_results:
             msg = (
                 'exclude_results or include_results must be None\n'
-                'exclude_results=%r\n'
-                'include_results=%r\n' % (exclude_results, include_results)
+                f'exclude_results={exclude_results!r}\n'
+                f'include_results={include_results!r}\n'
             )
             raise RuntimeError(msg)
 
@@ -479,7 +479,7 @@ class OP2(OP2_Scalar, OP2Writer):
             try:
                 val = getattr(obj, key)
             except NameError:
-                self.log.warning('key=%r val=%s' % (key, val))
+                self.log.warning(f'key={key!r} val={val}')
                 continue
             #print(key)
             #if isinstance(val, types.FunctionType):
@@ -487,7 +487,7 @@ class OP2(OP2_Scalar, OP2Writer):
             try:
                 setattr(self, key, val)
             except AttributeError:
-                print('key=%r val=%s' % (key, val))
+                print(f'key={key!r} val={val}')
                 raise
 
         #self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
@@ -539,7 +539,7 @@ class OP2(OP2_Scalar, OP2Writer):
         self.skip_undefined_matrices = skip_undefined_matrices
         assert self.ask in [True, False], self.ask
         self.is_vectorized = True
-        self.log.debug('combine=%s' % combine)
+        self.log.debug(f'combine={combine}')
         self.log.debug('-------- reading op2 with read_mode=1 (array sizing) --------')
         self.read_mode = 1
         self._close_op2 = False
@@ -673,14 +673,14 @@ class OP2(OP2_Scalar, OP2Writer):
                         assert obj.data_frame is not None
                     except MemoryError:
                         raise
-                    except:
+                    except Exception:
                         self.log.error(obj)
-                        self.log.error('build_dataframe is broken for %s' % class_name)
+                        self.log.error(f'build_dataframe is broken for {class_name}')
                         raise
                     continue
                 if obj.is_sort2:
                     #self.log.warning(obj)
-                    self.log.warning('build_dataframe is not supported for %s - SORT2' % class_name)
+                    self.log.warning(f'build_dataframe is not supported for {class_name} - SORT2')
                     continue
 
                 # SORT1
@@ -693,11 +693,11 @@ class OP2(OP2_Scalar, OP2Writer):
                     raise
                 except NotImplementedError:
                     self.log.warning(obj)
-                    self.log.warning('build_dataframe is broken for %s' % class_name)
+                    self.log.warning(f'build_dataframe is broken for {class_name}')
                     raise
-                except:
+                except Exception:
                     self.log.error(obj)
-                    self.log.error('build_dataframe is broken for %s' % class_name)
+                    self.log.error(f'build_dataframe is broken for {class_name}')
                     raise
 
     def load_hdf5(self, hdf5_filename: str, combine: bool=True) -> None:  # praga: no cover
@@ -722,7 +722,7 @@ class OP2(OP2_Scalar, OP2Writer):
         import h5py
         self.op2_filename = hdf5_filename
 
-        self.log.info('hdf5_op2_filename = %r' % hdf5_filename)
+        self.log.info(f'hdf5_op2_filename = {hdf5_filename!r}')
         debug = False
         with h5py.File(hdf5_filename, 'r') as h5_file:
             load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
@@ -920,11 +920,12 @@ class OP2(OP2_Scalar, OP2Writer):
                         continue
 
                     res1 = result[key1]
+                    class_name = res1.__class__.__name__
                     if not hasattr(res1, 'combine'):
-                        self.log.info("res=%s has no method combine" % res1.__class__.__name__)
+                        self.log.info(f'res={class_name} has no method combine')
                         continue
 
-                    self.log.info("res=%s has combine" % res1.__class__.__name__)
+                    self.log.info(f'res={class_name} has combine')
                     res2 = result[key2]
                     del result[key1]
                     del result[key2]
@@ -947,13 +948,13 @@ class OP2(OP2_Scalar, OP2Writer):
             try:
                 case_keys = list(result.keys())
             except AttributeError:
-                self.log.error('result_type = %s' % result_type)
+                self.log.error(f'result_type = {result_type}')
                 raise
 
             try:
                 case_keys = sorted(case_keys)  # TODO: causes DeprecationWarning
             except TypeError:
-                self.log.error('result.keys() = %s' % case_keys)
+                self.log.error(f'result.keys() = {case_keys}')
 
             if len(result) == 0:
                 continue
@@ -1003,7 +1004,7 @@ class OP2(OP2_Scalar, OP2Writer):
             for key in result_type_dict:
                 if isinstance(key, str):
                     if table_type not in ['eigenvalues', 'eigenvalues_fluid', 'params']:
-                        self.log.warning('table_type = %s' % table_type)
+                        self.log.warning(f'table_type = {table_type}')
                     continue
                 if key not in keys:
                     keys.append(key)
@@ -1089,12 +1090,14 @@ class OP2(OP2_Scalar, OP2Writer):
             if len(keys) == 1:
                 self.log.info('subcase_id=%s : keys=%s' % (isubcase, keys))
             else:
-                self.log.info('subcase_id=%s' % isubcase)
+                self.log.info(f'subcase_id={isubcase}')
                 for key in keys:
                     self.log.info('  %s' % str(key))
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
-    def transform_displacements_to_global(self, icd_transform: Any, coords: Dict[int, Any], xyz_cid0: Any=None,
+    def transform_displacements_to_global(self, icd_transform: Any,
+                                          coords: Dict[int, Any],
+                                          xyz_cid0: Any=None,
                                           debug: bool=False) -> None:
         """
         Transforms the ``data`` of displacement-like results into the
@@ -1293,6 +1296,7 @@ def read_op2(op2_filename: Optional[str]=None,
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
                    skip_undefined_matrices=skip_undefined_matrices, combine=combine,
                    encoding=encoding)
+
     ## TODO: this will go away when OP2 is refactored
     ## TODO: many methods will be missing, but it's a start...
     ## doesn't support F06 writer
@@ -1305,7 +1309,7 @@ def read_op2(op2_filename: Optional[str]=None,
     return model
 
 
-def _create_hdf5_info(h5_file, op2_model):
+def _create_hdf5_info(h5_file: H5File, op2_model: OP2) -> None:
     """exports the h5 info group"""
     load_as_h5 = False
     if hasattr(op2_model, 'load_as_h5'):

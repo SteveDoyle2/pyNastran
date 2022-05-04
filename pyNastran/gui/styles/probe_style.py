@@ -12,11 +12,12 @@ class ProbeResultStyle(vtk.vtkInteractorStyleTrackballCamera):
         self.parent = parent
         self.probe_result_button = self.parent.actions['probe_result']
 
-    def left_button_press_event(self, obj, event):
+    def left_button_press_event(self, obj, event) -> None:
         """pick a point and apply the label based on the current displayed result"""
-        picker = self.parent.cell_picker
-        pixel_x, pixel_y = self.parent.vtk_interactor.GetEventPosition()
-        picker.Pick(pixel_x, pixel_y, 0, self.parent.rend)
+        gui = self.parent # type: MainWindow
+        picker = gui.cell_picker
+        pixel_x, pixel_y = gui.vtk_interactor.GetEventPosition()
+        picker.Pick(pixel_x, pixel_y, 0, gui.rend)
 
         cell_id = picker.GetCellId()
         #print('_rotation_center_cell_picker', cell_id)

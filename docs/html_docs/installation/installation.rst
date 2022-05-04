@@ -29,7 +29,8 @@ The software is tested on Windows and Linux against:
 Packages
 --------
 pyNastran is tested against a range of package versions (lowest to highest
-based on availbility), so should work.  The recommended set of packages are:
+based on availbility), so it should work.  The recommended set of packages are:
+
  * **Required**:
 
    * numpy >= 1.14
@@ -54,7 +55,7 @@ based on availbility), so should work.  The recommended set of packages are:
      * PySide2 >= 5.11.2
    * QScintilla >= 2.13.0 **(optional for fancy scripting; PyQt5 only)**
    * pygments >= 2.2.0 **(optional for fancy scripting; PyQt5 only)**
-   * imageio >= 2.4.1 **(optional for animation support)**
+   * imageio >= 2.4.1,<3  **(optional for animation support)**
 
 *****************************************************
 Install Procedure - From Regular Python (recommended)

@@ -3,6 +3,8 @@ defines:
  - PyDialog()
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.gui.qt_version import qt_version
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont
@@ -17,6 +19,9 @@ from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_float, check_float_ranged,
     check_name_str, check_name_length, check_format, check_format_str,
 )
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.main_window import MainWindow
+
 
 def make_font(font_size, is_bold=False):
     """creates a QFont"""
@@ -25,13 +30,12 @@ def make_font(font_size, is_bold=False):
     if is_bold:
         font.setBold(is_bold)
     return font
-
 class PyDialog(QDialog):
     """
     common class for QDialog so value checking & escape/close code
     is not repeated
     """
-    def __init__(self, data, win_parent):
+    def __init__(self, data, win_parent: MainWindow):
         super(PyDialog, self).__init__(win_parent)
         self.out_data = data
         self.win_parent = win_parent

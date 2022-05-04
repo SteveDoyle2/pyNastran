@@ -15,7 +15,7 @@ that were needed (e.g., aero panels) that were not supported natively in
 Patran 2005, were added.  The goal is not to replace a code like Patran or
 FEMAP, but instead complement it.
 
-Since the intial development, the GUI has become significantly more capable
+Since the initial development, the GUI has become significantly more capable
 by adding features such as displacements and forces, so the need for a code like
 Patran has decreased, but will not be eliminated.
 
@@ -85,7 +85,7 @@ useful when creating aero panels and you want to see your changes.  The groups
 functionality benefits all formats.
 
 
-Additonal formats include:
+Additional formats include:
 
    - panair
    - cart3d
@@ -106,11 +106,13 @@ Download the entire package from Github or just the `GUI
 If you download the source, make sure you follow the :doc:`installation` and use
 **setup.py develop** and not **setup.py install**.
 
-Python 2.7 with ``vtk==5.10.1`` or ``vtk==6.3.0`` with PyQt4 will give you the
-best looking GUI with v1.0; ``vtk==7`` will work though.
-
-The master **requires** ``vtk==7`` or ``vtk==8`` and works in either
-Python 2.7/3.5+ and PyQt4/5.
+For the GUI, the master **requires**:
+ - Python 3.7-3.8
+ - any version of numpy
+ - any version of scipy
+ - ``vtk==7`` or ``vtk==8`` or ``vtk==9`` (best in 7 or 8)
+ - ``PyQt5`` or ``PySide2``
+ - other minor packages
 
 
 Running the GUI
@@ -412,7 +414,7 @@ quantity will appear on the model.  You can also press the ``p`` button.
 
 .. image:: ../../../pyNastran/gui/images/picking_results.png
 
-For "NodeID", the xyz of the selcted point and the node in global XYZ space will be shown.
+For "NodeID", the xyz of the selected point and the node in global XYZ space will be shown.
 Labels may be cleared from the ``View`` menu.
 Text color may also be changed from the ``View -> Preferences`` menu.
 

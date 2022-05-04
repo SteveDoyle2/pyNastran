@@ -29,7 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def is_positive_semi_definite(A, tol=1e-8):
     """is the 3x3 matrix positive within tolerance"""
-    vals = np.linalg.eigh(A)[0]
+    vals = np.linalg.eigvalsh(A)
     return np.all(vals > -tol), vals
 
 class PointMassElement(Element):
@@ -82,7 +82,6 @@ class CMASS1(PointMassElement):
         return CMASS1(eid, pid, nids, c1=0, c2=0, comment='')
 
     def __init__(self, eid: int, pid: int, nids: List[int], c1: int=0, c2: int=0, comment: str=''):
-        # type: (int, int, [int, int], int, int, str) -> CMASS1
         """
         Creates a CMASS1 card
 
@@ -1095,6 +1094,7 @@ class CONM1(PointMassElement):
         cid = set_blank_if_default(self.Cid(), 0)
         nid = self.Nid()
         m = self.mass_matrix
+        # lower triangular
         list_fields = [
             'CONM1', self.eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
             m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
@@ -1331,7 +1331,7 @@ class CONM2(PointMassElement):
             double_or_blank(card, 13, 'I32', 0.0),
             double_or_blank(card, 14, 'I33', 0.0),
         ]
-        assert len(card) <= 15, 'len(CONM2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 15, 'len(CONM2 card) = {len(card):d}\ncard={card}'
         return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
     @classmethod

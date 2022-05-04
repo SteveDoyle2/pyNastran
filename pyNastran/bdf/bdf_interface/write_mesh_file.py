@@ -6,17 +6,16 @@ This file defines:
 """
 from __future__ import annotations
 import os
-from typing import Any, Union, Optional, Any
 from collections import defaultdict
-from typing import Optional, TYPE_CHECKING
-if TYPE_CHECKING:  # pragma: no cover
-    from io import StringIO
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
+from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh, _output_helper
 from pyNastran.bdf.write_path import write_include
+if TYPE_CHECKING:  # pragma: no cover
+    from io import StringIO
 
 
 class WriteMeshs(WriteMesh):
@@ -101,7 +100,7 @@ class WriteMeshs(WriteMesh):
         interspersed = False
         out_filename = self._output_helper(out_filename0,
                                            interspersed, size, is_double)
-        self.log.debug('---starting BDF.write_bdf of %s---' % out_filename)
+        self.log.debug(f'---starting BDF.write_bdf of {out_filename}---')
         encoding = self.get_encoding(encoding)
 
         #class DevNull:

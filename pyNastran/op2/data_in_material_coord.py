@@ -5,7 +5,7 @@ Defines:
 """
 from __future__ import annotations
 import copy
-from typing import Optional, TYPE_CHECKING
+from typing import Tuple, Dict, Union, TYPE_CHECKING
 
 import numpy as np
 from numpy import cos, sin, cross
@@ -14,6 +14,7 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
 
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.op2 import OP2
 
@@ -24,8 +25,10 @@ stress_vectors = ['cquad4_stress', 'cquad8_stress', 'cquadr_stress',
 strain_vectors = ['cquad4_strain', 'cquad8_strain', 'cquadr_strain',
                   'ctria3_strain', 'ctria6_strain', 'ctriar_strain']
 
-
-def transf_Mohr(Sxx, Syy, Sxy, thetarad):
+def transf_Mohr(Sxx: np.ndarray,
+                Syy: np.ndarray,
+                Sxy: np.ndarray,
+                theta_rad: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Mohr's Circle-based Plane Stress Transformation
 
     Parameters
@@ -33,7 +36,7 @@ def transf_Mohr(Sxx, Syy, Sxy, thetarad):
     Sxx, Syy, Sxy : array-like
         Sigma_xx, Sigma_yy, Sigma_xy stresses.
     thetarad : array-like
-        Array with angles for wich the stresses should be transformed.
+        Array with angles for which the stresses should be transformed.
 
     Returns
     -------
@@ -44,18 +47,20 @@ def transf_Mohr(Sxx, Syy, Sxy, thetarad):
     Sxx = np.asarray(Sxx)
     Syy = np.asarray(Syy)
     Sxy = np.asarray(Sxy)
-    thetarad = np.asarray(thetarad)
-    Scenter = (Sxx + Syy)/2.
+    theta_rad = np.asarray(theta_rad)
+    Scenter = (Sxx + Syy) / 2.
     R = np.sqrt((Sxx - Scenter)**2 + Sxy**2)
-    thetarad_Mohr = np.arctan2(-Sxy, Sxx - Scenter) + 2*thetarad
-    cos_Mohr = cos(thetarad_Mohr)
+    theta_rad_Mohr = np.arctan2(-Sxy, Sxx - Scenter) + 2*theta_rad
+    cos_Mohr = cos(theta_rad_Mohr)
     Sxx_theta = Scenter + R*cos_Mohr
     Syy_theta = Scenter - R*cos_Mohr
-    Sxy_theta = -R*sin(thetarad_Mohr)
+    Sxy_theta = -R*sin(theta_rad_Mohr)
     return Sxx_theta, Syy_theta, Sxy_theta
 
 
-def thetadeg_to_principal(Sxx, Syy, Sxy):
+def thetadeg_to_principal(Sxx: np.ndarray,
+                           Syy: np.ndarray,
+                           Sxy: np.ndarray) -> np.ndarray:
     """Calculate the angle to the principal plane stress state
 
     Parameters
@@ -70,9 +75,9 @@ def thetadeg_to_principal(Sxx, Syy, Sxy):
         principal stress state.
 
     """
-    Scenter = (Sxx + Syy)/2.
+    Scenter = (Sxx + Syy) / 2.
     thetarad = np.arctan2(Sxy, Scenter - Syy)
-    return np.rad2deg(thetarad)/2.
+    return np.rad2deg(thetarad) / 2.
 
 
 def get_eids_from_op2_vector(vector):
@@ -126,7 +131,7 @@ def check_theta(elem) -> float:
         raise ValueError('MCID is accepted by this function')
     return theta
 
-def angle2vec(v1, v2):
+def angle2vec(v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
     """
     Using the definition of the dot product to get the angle
 
@@ -135,10 +140,11 @@ def angle2vec(v1, v2):
 
     """
     denom = norm(v1, axis=1) * norm(v2, axis=1)
-    return np.arccos((v1 * v2).sum(axis=1) / denom)
+    theta = np.arccos((v1 * v2).sum(axis=1) / denom)
+    return theta
 
 
-def calc_imat(normals, csysi):
+def calc_imat(normals: np.ndarray, csysi: np.ndarray) -> np.ndarray:
     """
     Calculates the i vector in the material coordinate system.
 
@@ -157,12 +163,14 @@ def calc_imat(normals, csysi):
     return imat
 
 
-def data_in_material_coord(bdf: BDF, op2: OP2, in_place: bool=False) -> OP2:
+def data_in_material_coord(bdf: BDF, op2: OP2,
+                           in_place: bool=False,
+                           debug: bool=False) -> OP2:
     """Convert OP2 2D element outputs to material coordinates
 
     Nastran allows the use of 'PARAM,OMID,YES' to print 2D element forces,
     stresses and strains based on the material direction. However, the
-    convertion only takes place in the F06 output file, whereas the OP2 output
+    conversion only takes place in the F06 output file, whereas the OP2 output
     file remains in the element coordinate system.
 
     This function converts the 2D element vectors to the material OP2
@@ -333,18 +341,21 @@ def data_in_material_coord(bdf: BDF, op2: OP2, in_place: bool=False) -> OP2:
                 # transverse terms
                 Qx = vector.data[:, slicei, 6]
                 Qy = vector.data[:, slicei, 7]
+                cos_theta = cos(vecthetarad)
+                sin_theta = sin(vecthetarad)
                 if vector.data.dtype == np.complex64 or vector.data.dtype == np.complex128:
-                    Qx_new_real = cos(vecthetarad)*Qx.real + sin(vecthetarad)*Qy.real
-                    Qy_new_real = -sin(vecthetarad)*Qx.real + cos(vecthetarad)*Qy.real
+                    Qx_new_real = cos_theta*Qx.real + sin_theta*Qy.real
+                    Qy_new_real = -sin_theta*Qx.real + cos_theta*Qy.real
                     new_vector.data[:, slicei, 6].real = Qx_new_real
                     new_vector.data[:, slicei, 7].real = Qy_new_real
-                    Qx_new_imag = cos(vecthetarad)*Qx.imag + sin(vecthetarad)*Qy.imag
-                    Qy_new_imag = -sin(vecthetarad)*Qx.imag + cos(vecthetarad)*Qy.imag
+
+                    Qx_new_imag = cos_theta*Qx.imag + sin_theta*Qy.imag
+                    Qy_new_imag = -sin_theta*Qx.imag + cos_theta*Qy.imag
                     new_vector.data[:, slicei, 6].imag = Qx_new_imag
                     new_vector.data[:, slicei, 7].imag = Qy_new_imag
                 else:
-                    Qx_new = cos(vecthetarad)*Qx + sin(vecthetarad)*Qy
-                    Qy_new = -sin(vecthetarad)*Qx + cos(vecthetarad)*Qy
+                    Qx_new = cos_theta*Qx + sin_theta*Qy
+                    Qy_new = -sin_theta*Qx + cos_theta*Qy
                     new_vector.data[:, slicei, 6] = Qx_new
                     new_vector.data[:, slicei, 7] = Qy_new
 

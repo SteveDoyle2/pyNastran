@@ -9,6 +9,7 @@ This file defines functions related to the result updating that are VTK specific
 import sys
 from copy import deepcopy
 from collections import namedtuple
+from typing import Tuple, List, Union, Optional, Any
 
 import numpy as np
 from numpy import issubdtype
@@ -542,15 +543,16 @@ class GuiQtCommon(GuiAttributes):
         if render:
             self.Render()
 
-    def show_hide_max_actor(self, render=True):
+    def show_hide_max_actor(self, render: bool=True) -> None:
         """flips the status of the max label actor"""
         actor = self.min_max_actors[1]
         show_hide_actor(actor)
         if render:
             self.Render()
 
-    def _update_min_max_actors(self, location, icase_fringe,
-                               imin, min_value, imax, max_value):
+    def _update_min_max_actors(self, location, icase_fringe: int,
+                               imin: int, min_value: float,
+                               imax: int, max_value: float) -> None:
         """updates the values for the min and max actors"""
         settings = self.settings
         self.is_min_actor = True
@@ -591,7 +593,7 @@ class GuiQtCommon(GuiAttributes):
             text_prop.SetColor(settings.annotation_color)
             text_actor.Modified()
 
-    def _update_vtk_fringe(self, icase, scale=None):
+    def _update_vtk_fringe(self, icase: int, scale=None) -> Tuple[bool, Any]:
         """helper method for ``on_fringe``"""
         is_valid, (grid_result, name, name_str, data) = self._get_fringe_data(icase, scale)
         #print("is_valid=%s scale=%s" % (is_valid, scale))
@@ -650,16 +652,23 @@ class GuiQtCommon(GuiAttributes):
                              stop_on_failure=stop_on_failure)
         self.res_widget.result_case_window.treeView.disp.setChecked(True)
 
-    def on_vector(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True,
-                  stop_on_failure=False):
+    def on_vector(self, icase: int,
+                  apply_fringe: bool=False,
+                  update_legend_window: bool=True,
+                  show_msg: bool=True,
+                  stop_on_failure: bool=False) -> None:
         """Sets the icase data to the active vector"""
         is_disp = False
         self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg,
                              stop_on_failure=stop_on_failure)
         self.res_widget.result_case_window.treeView.vector.setChecked(True)
 
-    def _on_disp_vector(self, icase, is_disp, apply_fringe=False,
-                        update_legend_window=True, show_msg=True, stop_on_failure=False):
+    def _on_disp_vector(self, icase: int,
+                        is_disp: bool,
+                        apply_fringe: bool=False,
+                        update_legend_window: bool=True,
+                        show_msg: bool=True,
+                        stop_on_failure: bool=False) -> None:
         """
         Sets the icase data to the active displacement/vector
 
@@ -753,8 +762,10 @@ class GuiQtCommon(GuiAttributes):
         self.vtk_interactor.Render()
 
 
-    def cycle_results_explicit(self, case=None, explicit=True, min_value=None, max_value=None,
-                               show_msg=True):
+    def cycle_results_explicit(self, case=None, explicit: bool=True,
+                               min_value: Optional[Union[int, float]]=None,
+                               max_value: Optional[Union[int, float]]=None,
+                               show_msg: bool=True) -> int:
         """
         Forces the result to cycle regardless of whether or not the
         icase value is the same.  You'd do this when you've just
@@ -774,7 +785,7 @@ class GuiQtCommon(GuiAttributes):
             icase = None
         return icase
 
-    def get_name_result_data(self, icase):
+    def get_name_result_data(self, icase: int) -> Tuple[str, Any]:
         key = self.case_keys[icase]
         assert isinstance(key, integer_types), key
         (obj, (i, name)) = self.result_cases[key]
@@ -782,7 +793,7 @@ class GuiQtCommon(GuiAttributes):
         case = obj.get_result(i, name)
         return name, case
 
-    def delete_cases(self, icases_to_delete, ask=True):
+    def delete_cases(self, icases_to_delete: List[int], ask: bool=True) -> None:
         """
         Used by the Sidebar to delete results
 
@@ -803,9 +814,9 @@ class GuiQtCommon(GuiAttributes):
             # we leave this, so we can still cycle the results without renumbering the cases
             #self.ncases -= 1
         self.res_widget.set_case_keys(self.case_keys)
-        self.log_command('delete_cases(icases_to_delete=%s, ask=%s)' % (icases_to_delete, ask))
+        self.log_command(f'delete_cases(icases_to_delete={icases_to_delete}, ask={ask})')
 
-    def _get_sidebar_data(self, unused_name: str):
+    def _get_sidebar_data(self, unused_name: str) -> List[Any]:
         """
         gets the form for the selected name
 
@@ -822,9 +833,13 @@ class GuiQtCommon(GuiAttributes):
         """
         return []
 
-    def _set_case(self, unused_result_name, icase, explicit=False, cycle=False,
-                  skip_click_check=False, min_value=None, max_value=None,
-                  is_legend_shown=None, show_msg=True):
+    def _set_case(self, unused_result_name, icase: int,
+                  explicit: bool=False,
+                  cycle: bool=False,
+                  skip_click_check: bool=False,
+                  min_value: Optional[Union[int, float]]=None,
+                  max_value: Optional[Union[int, float]]=None,
+                  is_legend_shown: Optional[bool]=None, show_msg: bool=True) -> Optional[int]:
         """
         Internal method for doing results updating
 
@@ -1026,7 +1041,7 @@ class GuiQtCommon(GuiAttributes):
         assert self.icase is not False, self.icase
         return self.icase
 
-    def set_normal_result(self, icase, name, unused_subcase_id):
+    def set_normal_result(self, icase: int, name: str, unused_subcase_id: int) -> None:
         """plots a NormalResult"""
         unused_name_str = self._names_storage.get_name_string(name)
         prop = self.geom_actor.GetProperty()
@@ -1082,7 +1097,8 @@ class GuiQtCommon(GuiAttributes):
                                 #min_value, max_value, label)
         self.vtk_interactor.Render()
 
-    def set_grid_values(self, name, case, vector_size: int, phase: float):
+    def set_grid_values(self, name: str, case: Any,
+                        vector_size: int, phase: float) -> Optional[Any]:
         """
         https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
         """
@@ -1142,7 +1158,10 @@ class GuiQtCommon(GuiAttributes):
             )
         return grid_result
 
-    def update_grid_by_icase_scale_phase(self, icase, scale, phase=0.0):
+    def update_grid_by_icase_scale_phase(self,
+                                         icase: int,
+                                         scale: float,
+                                         phase: float=0.0) -> np.ndarray:
         """
         Updates to the deflection state defined by the cases
 
@@ -1573,7 +1592,7 @@ class GuiQtCommon(GuiAttributes):
             surface - always surface
             bar - can use bar scale
         is_visible : bool; default=True
-            is this actor currently visable
+            is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
         follower_nodes : List[int]
@@ -1621,7 +1640,7 @@ class GuiQtCommon(GuiAttributes):
         bar_scale : float
             the scale for the CBAR / CBEAM elements
         is_visible : bool; default=True
-            is this actor currently visable
+            is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
         follower_nodes : List[int]

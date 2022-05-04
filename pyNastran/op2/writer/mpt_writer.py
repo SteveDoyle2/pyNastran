@@ -5,7 +5,7 @@ from struct import pack, Struct
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_header
 
-def write_mpt(op2, op2_ascii, model, endian=b'<'):
+def write_mpt(op2_file, op2_ascii, model, endian=b'<'):
     """writes the MPT/MPTS table"""
     if not hasattr(model, 'materials'):
         return
@@ -67,7 +67,7 @@ def write_mpt(op2, op2_ascii, model, endian=b'<'):
 
     if nmaterials == 0 and len(out) == 0:
         return
-    write_geom_header(b'MPT', op2, op2_ascii, endian=endian)
+    write_geom_header(b'MPT', op2_file, op2_ascii, endian=endian)
     itable = -3
 
     for mid, mat in model.materials.items():
@@ -86,72 +86,72 @@ def write_mpt(op2, op2_ascii, model, endian=b'<'):
         #if nmaterials == 0:
             #continue
         if name == 'MAT1':
-            nbytes = _write_mat1(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_mat1(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MAT2':
-            nbytes = _write_mat2(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_mat2(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MAT3':
-            nbytes = _write_mat3(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_mat3(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MAT4':
-            nbytes = _write_mat4(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_mat4(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MAT5':
-            nbytes = _write_mat5(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_mat5(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MAT8':
-            nbytes = _write_mat8(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_mat8(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MAT9':
-            nbytes = _write_mat9(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_mat9(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MAT10':
-            nbytes = _write_mat10(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_mat10(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
 
         elif name == 'MATS1':
-            nbytes = _write_mats1(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_mats1(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MATT1':
-            nbytes = _write_matt1(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_matt1(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MATT2':
-            nbytes = _write_matt2(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_matt2(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MATT4':
-            nbytes = _write_matt4(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_matt4(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MATT5':
-            nbytes = _write_matt5(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_matt5(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
         elif name == 'MATT8':
-            nbytes = _write_matt8(model, name, mids, nmaterials, op2, op2_ascii, endian)
+            nbytes = _write_matt8(model, name, mids, nmaterials, op2_file, op2_ascii, endian)
 
         else:  # pragma: no cover
             raise NotImplementedError(name)
-        op2.write(pack('i', nbytes))
+        op2_file.write(pack('i', nbytes))
         itable -= 1
         data = [
             4, itable, 4,
             4, 1, 4,
             4, 0, 4]
-        op2.write(pack('9i', *data))
+        op2_file.write(pack('9i', *data))
         op2_ascii.write(str(data) + '\n')
 
     #-------------------------------------
     #print('itable', itable)
-    close_geom_table(op2, op2_ascii, itable)
+    close_geom_table(op2_file, op2_ascii, itable)
     #-------------------------------------
 
-def _write_mat1(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_mat1(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MAT1"""
     key = (103, 1, 77)
     nfields = 12
     spack = Struct(endian + b'i10fi')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.materials[mid]
         #mid, E, G, nu, rho, A, tref, ge, St, Sc, Ss, mcsid
         data = [mid, mat.e, mat.g, mat.nu, mat.rho, mat.a, mat.tref,
                 mat.ge, mat.St, mat.Sc, mat.Ss, mat.mcsid]
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_mat2(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_mat2(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MAT2"""
     key = (203, 2, 78)
     nfields = 17
     spack = Struct(endian + b'i15fi')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.materials[mid]
         #(mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
@@ -172,15 +172,15 @@ def _write_mat2(model, name, mids, nmaterials, op2, op2_ascii, endian):
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
         assert None not in data, 'MAT2 %s' % data
         #print('MAT2', data)
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_mat3(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_mat3(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MAT3"""
     key = (1403, 14, 122)
     nfields = 16
     spack = Struct(endian + b'i8fi5fi')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.materials[mid]
         #(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
@@ -195,15 +195,15 @@ def _write_mat3(model, name, mids, nmaterials, op2, op2_ascii, endian):
             mat.ge, 0]
         assert None not in data, 'MAT3 %s' % data
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_mat4(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_mat4(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MAT4"""
     key = (2103, 21, 234)
     nfields = 11
     spack = Struct(endian + b'i10f')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.thermal_materials[mid]
         #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
@@ -223,15 +223,15 @@ def _write_mat4(model, name, mids, nmaterials, op2, op2_ascii, endian):
         #print('MAT4 -', data)
         #print(data)
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_mat5(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_mat5(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MAT5"""
     key = (2203, 22, 235)
     nfields = 10
     spack = Struct(endian + b'i9f')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.thermal_materials[mid]
         #(mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
@@ -242,15 +242,15 @@ def _write_mat5(model, name, mids, nmaterials, op2, op2_ascii, endian):
         ]
         #print('MAT5 -', data)
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_mat8(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_mat8(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MAT8"""
     key = (2503, 25, 288)
     nfields = 19
     spack = Struct(endian + b'i18f')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.materials[mid]
         #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
@@ -262,15 +262,15 @@ def _write_mat8(model, name, mids, nmaterials, op2, op2_ascii, endian):
 
         #print('MAT8 -', data)
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_mat9(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_mat9(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MAT9"""
     key = (2603, 26, 300)
     nfields = 35
     spack = Struct(endian + b'i 30f 4i')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.materials[mid]
         #(mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
@@ -290,15 +290,15 @@ def _write_mat9(model, name, mids, nmaterials, op2, op2_ascii, endian):
 
         #print('MAT9 -', data, len(data))
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_mat10(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_mat10(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MAT10"""
     key = (2801, 28, 365)
     nfields = 5
     spack = Struct(endian + b'i4f')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.materials[mid]
         #(mid, bulk, rho, c, ge) = out
@@ -307,15 +307,15 @@ def _write_mat10(model, name, mids, nmaterials, op2, op2_ascii, endian):
 
         #print('MAT10 -', data, len(data))
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_mats1(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_mats1(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MATS1"""
     key = (503, 5, 90)
     nfields = 11
     spack = Struct(endian + b'3ifiiff3i')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.MATS1[mid]
         #(mid, tid, Type, h, yf, hr, limit1, limit2, a, bmat, c) = out
@@ -345,15 +345,15 @@ def _write_mats1(model, name, mids, nmaterials, op2, op2_ascii, endian):
         assert None not in data, f'MATS1 {data}'
         assert len(data) == nfields
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_matt1(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_matt1(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MATT1"""
     key = (703, 7, 91)
     nfields = 12
     spack = Struct(endian + b'12i')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.MATT1[mid]
         #(mid, E_table, G_table, nu_table, rho_table, A_table, dunno_a, ge_table,
@@ -386,10 +386,10 @@ def _write_matt1(model, name, mids, nmaterials, op2, op2_ascii, endian):
         assert min(data) == 0, f'MATT1 data={data}'
         assert len(data) == nfields
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_matt2(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_matt2(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MATT2"""
     #Record - MATT2(803,8,102)
     #Word Name Type Description
@@ -399,7 +399,7 @@ def _write_matt2(model, name, mids, nmaterials, op2, op2_ascii, endian):
     key = (803, 8, 102)
     nfields = 17
     spack = Struct(endian + b'17i')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.MATT2[mid]
         data = [
@@ -429,15 +429,15 @@ def _write_matt2(model, name, mids, nmaterials, op2, op2_ascii, endian):
         #print('MATT2', data, len(data))
         assert len(data) == nfields, len(data)
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_matt4(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_matt4(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MATT4"""
     key = (2303, 23, 237)
     nfields = 7
     spack = Struct(endian + b'7i')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.MATT4[mid]
         k_table = mat.k_table if mat.k_table is not None else 0
@@ -452,15 +452,15 @@ def _write_matt4(model, name, mids, nmaterials, op2, op2_ascii, endian):
         assert min(data) >= 0, f'MATT4 data={data}'
         assert len(data) == nfields
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_matt5(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_matt5(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MATT5"""
     key = (2403, 24, 238)
     nfields = 10
     spack = Struct(endian + b'10i')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.MATT5[mid]
         kxx_table = mat.kxx_table if mat.kxx_table is not None else 0
@@ -483,10 +483,10 @@ def _write_matt5(model, name, mids, nmaterials, op2, op2_ascii, endian):
         assert min(data) == 0, f'MATT5 data={data}'
         assert len(data) == nfields
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
-def _write_matt8(model, name, mids, nmaterials, op2, op2_ascii, endian):
+def _write_matt8(model, name, mids, nmaterials, op2_file, op2_ascii, endian):
     """writes the MATT8"""
     key = (903, 9, 336)
     nfields = 19
@@ -499,7 +499,7 @@ def _write_matt8(model, name, mids, nmaterials, op2, op2_ascii, endian):
     # 12 TID(7) I TABLEMi entry identification numbers
     # 19 UNDEF None
     spack = Struct(endian + b'19i')
-    nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, nmaterials, key, op2_file, op2_ascii)
     for mid in sorted(mids):
         mat = model.MATT8[mid]
         #mat.uncross_reference()
@@ -528,5 +528,5 @@ def _write_matt8(model, name, mids, nmaterials, op2, op2_ascii, endian):
 
         assert len(data) == nfields
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes

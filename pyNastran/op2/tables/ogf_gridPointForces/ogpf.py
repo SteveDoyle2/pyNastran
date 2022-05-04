@@ -16,10 +16,10 @@ class OGPF(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
-    def _read_ogpf1_3(self, data, ndata):
+    def _read_ogpf1_3(self, data: bytes, ndata: int):
         self._read_opg1_3(data, ndata)  # TODO: this is wrong...
 
-    def _read_ogpf1_4(self, data, ndata):
+    def _read_ogpf1_4(self, data: bytes, ndata: int) -> int:
         prefix = ''
         if self.table_code == 19:  # grid point force balance
             if self.table_name == b'OGPFB1':

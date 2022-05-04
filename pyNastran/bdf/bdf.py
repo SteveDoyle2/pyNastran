@@ -11,8 +11,10 @@ import os
 import sys
 from copy import deepcopy
 from io import StringIO, IOBase
-import traceback
+from pathlib import PurePath
+from functools import partial
 from collections import defaultdict
+import traceback
 
 from typing import List, Dict, Set, Tuple, Sequence, Optional, Union, Any # , cast
 from pickle import load, dump, dumps  # type: ignore
@@ -69,7 +71,7 @@ from pyNastran.bdf.cards.elements.shell import (
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
     CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
-    SNORM)
+    SNORM,)
 from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from .cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
@@ -109,8 +111,8 @@ from .cards.loads.random_loads import RANDPS, RANDT1
 
 from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                               MAT8, MAT9, MAT10, MAT11, MAT3D,
-                              MATG, MATHE, MATHP, CREEP, EQUIV,
-                              NXSTRAT)
+                              MATG, MATHE, MATHP,
+                              CREEP, EQUIV, NXSTRAT)
 from .cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
@@ -631,7 +633,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         attrs = self.object_attributes(mode='both', keys_to_skip=None)
         return attrs
 
-    def export_hdf5_filename(self, hdf5_filename:str) -> None:
+    def export_hdf5_filename(self, hdf5_filename: str) -> None:
         """
         Converts the BDF objects into hdf5 object
 
@@ -645,9 +647,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         """
         import h5py
-        with h5py.File(hdf5_filename, 'w') as hdf5_file:
-            #self.log.info('starting export_hdf5_file of %r' % hdf5_filename)
-            self.export_hdf5_file(hdf5_file)
+        try:
+            with h5py.File(hdf5_filename, 'w') as hdf5_file:
+                #self.log.info('starting export_hdf5_file of %r' % hdf5_filename)
+                self.export_hdf5_file(hdf5_file)
+        except OSError:
+            self.log.error(f'failed to export {hdf5_filename!r}')
+            raise
 
     def export_hdf5_file(self, hdf5_file, exporter=None) -> None:
         """
@@ -664,7 +670,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         from pyNastran.bdf.bdf_interface.hdf5_exporter import export_bdf_to_hdf5_file
         export_bdf_to_hdf5_file(hdf5_file, self)
 
-    def load_hdf5_filename(self, hdf5_filename:str) -> None:
+    def load_hdf5_filename(self, hdf5_filename: str) -> None:
         """
         Loads a BDF object from an hdf5 filename
 
@@ -882,7 +888,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def include_zip(self, bdf_filename: Optional[str]=None,
                     encoding: Optional[str]=None,
-                    make_ilines: bool=True) -> (List[str], Any):
+                    make_ilines: bool=True) -> Tuple[List[str], Any]:
         """
         Read a bdf without perform any other operation, except (optionally)
         insert the INCLUDE files in the bdf
@@ -1103,7 +1109,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
             assert bdf_filename is not None, bdf_filename
 
-        elif isinstance(bdf_filename, str):
+        elif isinstance(bdf_filename, (str, PurePath)):
             pass
         elif isinstance(bdf_filename, (StringIO, IOBase)):
             self.bdf_filename = bdf_filename
@@ -1113,7 +1119,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             raise NotImplementedError(bdf_filename)
 
         check_path(bdf_filename, 'bdf_filename')
-        if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
+        ext = os.path.splitext(bdf_filename)[1]
+        if ext == '.pch':  # .. todo:: should this be removed???
             punch = True
 
         #: the active filename (string)
@@ -1121,7 +1128,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         #: is this a punch file (no executive control deck)
         self.punch = punch
-        assert not bdf_filename.lower().endswith('.op2'), bdf_filename
+        assert ext != '.op2', bdf_filename
 
     def pop_parse_errors(self) -> None:
         """raises an error if there are parsing errors"""
@@ -1230,9 +1237,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             if self._ixref_errors == 1 and self._nxref_errors == 0:
                 raise
             if self._stored_xref_errors:
-                #filename_note = ''
-                #if self.bdf_filename:
-                    #filename_note = f' in {os.path.abspath(self.bdf_filename)!r}'
+                filename_note = ''
+                if self.bdf_filename and not isinstance(self.bdf_filename, StringIO):
+                    filename_note = f' in {os.path.abspath(self.bdf_filename)!r}'
                 msg = f'There are cross-reference errors{filename_note}.\n\n'
                 for (card, an_error) in self._stored_xref_errors:
                     msg += '%scard=%s\n' % (an_error[0], card)
@@ -1241,8 +1248,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 if is_error and self._stop_on_xref_error:
                     raise CrossReferenceError(msg.rstrip())
 
-    def get_bdf_cards(self, bulk_data_lines, bulk_data_ilines=None):
-        # type: (List[str], Optional[Any]) -> Any, Any, Any
+    def get_bdf_cards(self, bulk_data_lines: List[str],
+                      bulk_data_ilines: Optional[Any]=None) -> Tuple[Any, Any, Any]:
         """Parses the BDF lines into a list of card_lines"""
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
@@ -3979,7 +3986,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #values = [int(value) for value in value.upper().split(',')]
                 values = parse_patran_syntax(value)
                 if type_to_skip not in self.object_attributes():
-                    raise RuntimeError('%r is an invalid key' % type_to_skip)
+                    raise RuntimeError(f'{type_to_skip!r} is an invalid key')
                 if type_to_skip not in self.values_to_skip:
                     self.values_to_skip[type_to_skip] = values
                 else:

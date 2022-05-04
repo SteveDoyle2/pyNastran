@@ -179,7 +179,7 @@ RADEFMP - Displacement PHA^T * Effective Inertia Mode
 RADAMPZ - Viscous Damping Ratio Matrix
 RADAMPG - Structural Damping Ratio Matrix
 
-RAFGEN  - Generalized Forces
+RAFGEN  - Generalized Forces Matrix
 BHH     - Modal Viscous Damping Matrix
 K4HH    - Modal Structural Damping Matrix
 """
@@ -675,7 +675,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #F:\work\pyNastran\examples\Dropbox\pyNastran\bdf\cards\test\test_mass_01.op2
             #F:\work\pyNastran\examples\matpool\gpsc1.op2
             b'AXIC': [self._table_passer, self._table_passer],
-
 
             # EDT - aero cards
             #       element deformation, aerodynamics, p-element, divergence analysis,
@@ -1562,24 +1561,24 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _nx_table_passer(self, data, ndata: int):
         """auto-table skipper"""
-        self.to_nx()
+        self.to_nx(f' because table_name={self.table_name} was found')
         self._table_passer(data, ndata)
 
     def _table_passer(self, data, ndata: int):
         """auto-table skipper"""
         if self.is_debug_file:
-            self.binary_debug.write('  skipping table = %s\n' % self.table_name)
+            self.binary_debug.write(f'  skipping table = {self.table_name}\n')
         if self.table_name not in GEOM_TABLES and self.isubtable > -4:
-            self.log.warning('    skipping table: %s' % self.table_name_str)
+            self.log.warning(f'    skipping table: {self.table_name_str}')
         if not is_release and self.isubtable > -4:
             if self.table_name in GEOM_TABLES and not self.make_geom:
                 pass
             else:
-                print('dont skip table %r' % self.table_name_str)
-                raise RuntimeError('dont skip table %r' % self.table_name_str)
+                print(f'dont skip table {self.table_name_str!r}')
+                raise RuntimeError(f'dont skip table {self.table_name_str!r}')
         return ndata
 
-    def _validate_op2_filename(self, op2_filename):
+    def _validate_op2_filename(self, op2_filename: Optional[str]) -> str:
         """
         Pops a GUI if the op2_filename hasn't been set.
 
@@ -1670,11 +1669,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         if self.read_mode != 2:
             op2_filename = self._validate_op2_filename(op2_filename)
-            self.log.info('op2_filename = %r' % op2_filename)
+            self.log.info(f'op2_filename = {op2_filename!r}')
             if not is_binary_file(op2_filename):
                 if os.path.getsize(op2_filename) == 0:
-                    raise IOError('op2_filename=%r is empty.' % op2_filename)
-                raise IOError('op2_filename=%r is not a binary OP2.' % op2_filename)
+                    raise IOError(f'op2_filename={op2_filename!r} is empty.')
+                raise IOError(f'op2_filename={op2_filename!r} is not a binary OP2.')
 
         self._create_binary_debug()
         self._setup_op2()
@@ -2044,7 +2043,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if hasattr(self, 'subtable_name'):
             del self.subtable_name
 
-    def _read_psdf_3(self, data, ndata):
+    def _read_psdf_3(self, data: bytes, ndata: int):
         """reads the PSDF table"""
         #(50, 2011, 4001, 0, 302130, 3
         # strip off the title
@@ -2088,8 +2087,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #del self.data_code['sort_method']
         #print(self.data_code)
 
-        #aaa
-        #self._read_oug1_3(data, ndata)
         if self.read_mode == 1:
             return ndata
         # just stripping off title
@@ -2152,7 +2149,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.show_data(data, types='ifs', endian=None)
         #aaaa
 
-    def _read_psdf_4(self, data, ndata):
+    def _read_psdf_4(self, data: bytes, ndata: int):
         """reads the PSDF table"""
         if self.read_mode == 1:
             return ndata
