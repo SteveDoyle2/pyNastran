@@ -11,7 +11,7 @@ defines:
 """
 from __future__ import annotations
 from itertools import combinations
-from typing import Tuple, List, Set, Union, Optional, Any, TYPE_CHECKING
+from typing import Tuple, List, Dict, Set, Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
@@ -173,12 +173,16 @@ def _get_xyz_cid0(model, nids):
                            for nid in nids], dtype='float32')
     return nodes_xyz
 
-def _eq_nodes_setup_node_set(model: BDF, node_set, renumber_nodes: bool=False,
+def _eq_nodes_setup_node_set(model: BDF,
+                             node_set: List[NDArrayNint],
+                             renumber_nodes: bool=False,
                              ) -> Tuple[NDArrayNint, NDArrayNint, Dict[int, int]]:
     """helper function for ``_eq_nodes_setup``"""
     inode = 0
     nid_map = {}
-    all_nids = array(list(model.nodes.keys()), dtype='int32')
+    idtype = 'int32'
+    node_list = list(model.nodes.keys())
+    all_nids = array(node_list, dtype=idtype)
 
     # B - A
     # these are all the nodes that are requested from node_set that are missing
@@ -447,6 +451,7 @@ def _eq_nodes_build_tree_new(kdt: scipy.spatial.cKDTree,
                              log: SimpleLogger,
                              inew=None, node_set=None, neq_max: int=4, msg: str='',
                              debug: float=False) -> Tuple[Any, List[Tuple[int, int]]]:
+    assert isinstance(nnodes, int), nnodes
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
     slots = np.where(ieq[:, :] < nnodes)
     nid_pairs_expected = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)

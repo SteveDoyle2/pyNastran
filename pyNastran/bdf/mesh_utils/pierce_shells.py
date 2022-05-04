@@ -9,8 +9,8 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
 
-def quad_intersection(orig, direction, v0, v1, v2, v3):
-    # type: (np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray) -> Optional[np.ndarray]
+def quad_intersection(orig: np.ndarray, direction: np.ndarray,
+                      v0: np.ndarray, v1: np.ndarray, v2: np.ndarray, v3: np.ndarray) -> np.ndarray:
     """
     Pierces a quad
 

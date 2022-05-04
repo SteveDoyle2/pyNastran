@@ -7,7 +7,7 @@ defines:
 from __future__ import annotations
 from io import StringIO
 from pathlib import PurePath
-from typing import Tuple, List, Optional, Any, TYPE_CHECKING
+from typing import Tuple, List, Dict, Optional, Any, TYPE_CHECKING
 
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck

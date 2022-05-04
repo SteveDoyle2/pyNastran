@@ -10,7 +10,7 @@ defines methods to access force/moment/pressure/temperature data:
 
 """
 from __future__ import annotations
-from typing import Tuple, TYPE_CHECKING
+from typing import Tuple, Dict, Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types

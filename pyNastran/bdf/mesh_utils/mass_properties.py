@@ -9,7 +9,7 @@ Defines:
 from __future__ import annotations
 from itertools import count
 from collections import defaultdict
-from typing import Tuple, List, TYPE_CHECKING
+from typing import Tuple, List, Union, TYPE_CHECKING
 
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore

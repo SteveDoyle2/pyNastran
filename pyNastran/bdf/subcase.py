@@ -306,6 +306,14 @@ class Subcase:
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
+        elif table_name == 'OVG1':
+            if table_code in [11, 10]:
+                thermal = data_code['thermal']
+                assert thermal == 0, data_code
+                self.add('VELOCITY', 'ALL', options, 'STRESS-type')
+            else:
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+
         elif table_name == 'OAG1':
             if table_code == 11:
                 thermal = data_code['thermal']
@@ -376,7 +384,7 @@ class Subcase:
                 self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name in ['OEF1X', 'OEF1', 'RAFCONS', 'RAFEATC']:
+        elif table_name in ['OEF1X', 'OEF1', 'DOEF1', 'RAFCONS', 'RAFEATC']:
             if table_code in [4]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
@@ -490,7 +498,7 @@ class Subcase:
 
         elif table_name in ['OESRT']:
             #assert data_code['is_stress_flag'] == True, data_code
-            if table_code in [25, 89]:
+            if table_code in [25, 56, 89]:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)

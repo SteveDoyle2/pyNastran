@@ -344,12 +344,7 @@ def get_mass_breakdown(model: BDF, property_ids=None,
         Used for CONM2s
 
     TODO: What about CONRODs?
-    #'PBCOMP',
-    #'PBMSECT',
-    #'PBEAM3',
-    #'PBEND',
-    #'PIHEX',
-    #'PCOMPS',
+        #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
 
     """
     pid_eids = model.get_element_ids_dict_with_pids(

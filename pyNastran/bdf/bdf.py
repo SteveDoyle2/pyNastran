@@ -20,7 +20,7 @@ from typing import List, Dict, Set, Tuple, Sequence, Optional, Union, Any # , ca
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
-from cpylog import get_logger2
+from cpylog import get_logger2, SimpleLogger
 
 from pyNastran.utils import object_attributes, check_path
 from .utils import parse_patran_syntax
