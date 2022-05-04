@@ -15,6 +15,7 @@ from cpylog import SimpleLogger
 
 # testing these imports are up to date
 # if something is imported and tested, it should be removed from here
+import pyNastran
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 
 def cmd_line_equivalence(argv=None, quiet: bool=False) -> None:

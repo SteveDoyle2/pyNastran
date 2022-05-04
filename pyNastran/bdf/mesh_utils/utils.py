@@ -1410,6 +1410,14 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
             velocity_units=velocity_units,
             density_units=density_units,
             eas_units=eas_units)
+    elif method == 'tas' and const_type == 'alt':
+        flutter.make_flfacts_tas_sweep_constant_alt(
+            model, alt, tass,
+            eas_limit=eas_limit,
+            alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
     else:
         raise NotImplementedError((method, const_type))
 

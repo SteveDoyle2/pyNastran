@@ -272,7 +272,7 @@ class TestNastranGUI(unittest.TestCase):
 
         # map strain energy
         keys = list(test.result_cases.keys())
-        assert len(keys) == 689, len(keys)
+        assert len(keys) == 694, len(keys)
         icase = keys[-1]
         obj, (itime, name) = test.result_cases[icase]
         test.icase_fringe = icase
@@ -448,7 +448,7 @@ class TestNastranGUI(unittest.TestCase):
         #test.load_nastran_geometry(bdf_filename)
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
-        assert len(test.result_cases) == 218, len(test.result_cases)
+        assert len(test.result_cases) == 236, len(test.result_cases)
         #print(test.result_cases)
 
     def test_aero(self):

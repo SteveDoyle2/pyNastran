@@ -6,7 +6,7 @@ this is no longer true...but should be
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import List, Dict, TYPE_CHECKING
+from typing import Tuple, List, Dict, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -338,7 +338,9 @@ def _get_material(materials, thermal_materials, mid):
         mat = thermal_materials[mid]
     return mat
 
-def get_material_arrays(model, mids):
+def get_material_arrays(model: BDF,
+                        mids: np.ndarray) -> Tuple[bool, bool,
+                                                   np.ndarray, np.ndarray, np.ndarray]:
     """gets e11, e22, e33"""
     #e11 = np.zeros(mids.shape, dtype='float32')
     #e22 = np.zeros(mids.shape, dtype='float32')

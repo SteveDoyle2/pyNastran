@@ -1160,14 +1160,15 @@ def _asarray(results):
 def _add_damping_limit(plot_type: str,
                       damp_axes: Axes,
                       damping_limit: Optional[float],
-                      linestyle: str='--',
                       linewidth: int=2) -> None:
     if damping_limit is None:
         return
     #damp_label = f'Damping={damping_limit*100:.1f}'
     #plt.axhline(y=1.0, color="black", linestyle="--")
-    damp_axes.axhline(y=damping_limit, color='k', linestyle=linestyle, linewidth=linewidth,
-                      label=f'Damping={damping_limit*100:.1f}')
+    damp_axes.axhline(y=0., color='k', linestyle='--', linewidth=linewidth,
+                      label=f'Damping=0%')
+    damp_axes.axhline(y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
+                      label=f'Abs Damping={damping_limit*100:.1f}%')
 
 def _add_vd_limit(plot_type: str,
                   damp_axes: Axes, freq_axes: Axes,
@@ -1177,14 +1178,15 @@ def _add_vd_limit(plot_type: str,
     if vd_limit is None or plot_type not in {'tas', 'eas'}:
         return
     # ax.text(0, vd_limit, 'Damping Limit')
-    label = f'Vd={vd_limit:.1f}'
+    label1 = f'Vd={vd_limit:.1f}'
     damp_axes.axvline(x=vd_limit, color='k', linestyle='--',
-                      linewidth=linewidth, label=label)
+                      linewidth=linewidth, label=label1)
     freq_axes.axvline(x=vd_limit, color='k', linestyle='--',
                       linewidth=linewidth)
 
     vd_limit_115 = 1.15 * vd_limit
+    label2 = f'1.15 Vd={vd_limit_115:.1f}'
     damp_axes.axvline(x=vd_limit_115, color='k', linestyle='-',
-                      linewidth=linewidth, label=label)
+                      linewidth=linewidth, label=label2)
     freq_axes.axvline(x=vd_limit_115, color='k', linestyle='-',
                       linewidth=linewidth)

@@ -743,7 +743,8 @@ class FLUTTER(BaseCard):
             eass.min(), eass.max(), eas_units)
         model.add_flfact(flfact_eas, eass, comment=comment)
 
-    def make_flfacts_alt_sweep(self, model: BDF, mach, alts, eas_limit: float=1000.,
+    def make_flfacts_alt_sweep(self, model: BDF, mach, alts,
+                               eas_limit: float=1000.,
                                alt_units: str='m',
                                velocity_units: str='m/s',
                                density_units: str='kg/m^3',
@@ -787,6 +788,53 @@ class FLUTTER(BaseCard):
 
         comment = ' Alt: min=%.3f max=%.3f %s' % (alts2.min(), alts2.max(), alt_units)
         model.add_flfact(flfact_alt, alts2, comment=comment)
+
+    def make_flfacts_tas_sweep_constant_alt(model, alt: float, tass,
+                                            eas_limit: float=1000.,
+                                            alt_units: str='m',
+                                            velocity_units: str='m/s',
+                                            density_units: str='kg/m^3',
+                                            eas_units: str='m/s') -> Tuple[Any, Any, Any]:
+        """makes an altitude sweep (dev...not validated)"""
+        tass.sort()
+        rho, mach, velocity = make_flfacts_tas_sweep_constant_alt(
+            mach, tass, eas_limit=eas_limit,
+            alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+
+        flfact_rho = self.sid + 1
+        flfact_mach = self.sid + 2
+        flfact_velocity = self.sid + 3
+        flfact_eas = self.sid + 4
+        flfact_alt = self.sid + 5
+
+        alts2 = alts[:len(rho)]
+        assert len(rho) == len(alts2)
+        comment = ' density: min=%.3e max=%.3e %s; alt min=%.0f max=%.0f %s' % (
+            rho.min(), rho.max(), density_units,
+            alts2.min(), alts2.max(), alt_units,
+        )
+        model.add_flfact(flfact_rho, rho, comment=comment)
+        model.add_flfact(flfact_mach, mach, comment=' Mach: %s' % mach.min())
+        comment = ' velocity: min=%.3f max=%.3f %s' % (
+            velocity.min(), velocity.max(), velocity_units)
+        model.add_flfact(flfact_velocity, velocity, comment=comment)
+
+        # eas in velocity units
+        rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
+        eas = velocity * np.sqrt(rho / rho0)
+        kvel = _velocity_factor(velocity_units, eas_units)
+
+        eas_in_eas_units = eas * kvel
+        comment = ' EAS: min=%.3f max=%.3f %s' % (
+            eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units)
+        model.add_flfact(flfact_eas, eas_in_eas_units, comment=comment)
+
+        comment = ' Alt: min=%.3f max=%.3f %s' % (alts2.min(), alts2.max(), alt_units)
+        model.add_flfact(flfact_alt, alts2, comment=comment)
+
 
     def make_flfacts_mach_sweep(self, model, alt, machs, eas_limit=1000., alt_units='m',
                                 velocity_units='m/s',

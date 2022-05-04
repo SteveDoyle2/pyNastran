@@ -4,6 +4,7 @@ defines some methods for cleaning up a model
                          remove_pids=True, remove_mids=True)
 
 """
+from typing import Set, List
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 #from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
@@ -185,7 +186,7 @@ def remove_unused(bdf_filename: str,
     pconv_used = set([])
 
     friction_ids_used = set([])
-    sets_splines_nodes = set([])
+    spline_set_nodes = set([])
 
     log = model.log
     for key, subcase in model.subcases.items():
@@ -215,6 +216,7 @@ def remove_unused(bdf_filename: str,
             #raise NotImplementedError(coord)
 
     for card_type, ids in model._type_to_id_map.items():
+        #print(card_type, ids)
     #for card_type, ids in card_map.items():
         if card_type in ['CORD1R', 'CORD1C', 'CORD1S']:
             for cid in ids:
@@ -371,13 +373,9 @@ def remove_unused(bdf_filename: str,
                 if cid2 is not None:
                     cids_used.add(cid2)
 
-        elif card_type in ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5']:
-            for spline_id in ids:
-                spline = model.splines[spline_id]
-                if card_type in ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5']:
-                    set_id = spline.Set()
-                    sets_used.add(set_id)
-                    sets_splines_nodes.add(set_id)
+        elif card_type in {'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5'}:
+            _store_splines(model, card_type, ids,
+                           nids_used, sets_used, spline_set_nodes)
 
         elif card_type == 'CAERO1':
             for eid in ids:
@@ -392,7 +390,7 @@ def remove_unused(bdf_filename: str,
             log.debug(card_type)
             # handled based on context in other blocks
             pass
-        elif card_type in ['USET', 'USET1']:
+        elif card_type in {'USET', 'USET1'}:
             for set_cards in model.usets.values():
                 for set_card in set_cards:
                     nids_used.update(set_card.ids)
@@ -585,18 +583,8 @@ def remove_unused(bdf_filename: str,
         #else:
             #raise NotImplementedError(prop)
 
-    for set_id in sets_splines_nodes:
-        set_card = model.sets[set_id]
-        nids_used.update(set_card.ids)
-
-    aeros = model.aeros
-    if aeros is not None:
-        cids_used.update([aeros.acsid, aeros.rcsid])
-
-    aero = model.aero
-    if aero is not None:
-        print(aeros.get_stats())
-        asdf
+    _store_aero(model, spline_set_nodes,
+                nids_used, cids_used)
 
     remove_desvars = False
     _remove(
@@ -616,6 +604,36 @@ def remove_unused(bdf_filename: str,
     )
     return model
 
+def _store_splines(model: BDF, card_type: str, ids: np.ndarray,
+                   nids_used: Set[int],
+                   sets_used: Set[int],
+                   spline_set_nodes: Set[int]):
+    for spline_id in ids:
+        spline = model.splines[spline_id]
+        if card_type in ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5']:
+            set_id = spline.Set()
+            sets_used.add(set_id)
+            spline_set_nodes.add(set_id)
+        else:
+            #print('  spline.node_ids =', spline.node_ids)
+            nids_used.update(spline.node_ids)
+            #print(spline.get_stats())
+
+def _store_aero(model: BDF,
+                spline_set_nodes: Set[int],
+                nids_used: Set[int],
+                cids_used: Set[int]) -> None:
+    for set_id in spline_set_nodes:
+        set_card = model.sets[set_id]
+        nids_used.update(set_card.ids)
+
+    aeros = model.aeros
+    if aeros is not None:
+        cids_used.update([aeros.acsid, aeros.rcsid])
+
+    aero = model.aero
+    if aero is not None:
+        cids_used.add(aero.acsid)
 
 def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids_used):
     if card_type in ['CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA', 'CHACAB']:
@@ -895,15 +913,22 @@ def _store_masses(card_type, model, ids, nids_used, pids_mass_used, cids_used) -
         raise NotImplementedError(card_type)
 
 def _remove(model: BDF,
-            nids_used, cids_used,
-            pids_used, pids_mass_used, mids_used, spcs_used, mpcs_used,
-            pconv_used, tableht_used, tableh1_used,
-            desvars_used, dresps_used,
-            remove_nids=True, remove_cids=True,
-            remove_pids=True, remove_mids=True,
-            remove_spcs=True, remove_mpcs=True,
-            remove_desvars=True,
-            remove_optimization=True) -> None:
+            nids_used: Set[int],
+            cids_used: Set[int],
+            pids_used: Set[int],
+            pids_mass_used: Set[int],
+            mids_used: Set[int],
+            spcs_used: Set[int],
+            mpcs_used: Set[int],
+            pconv_used: Set[int],
+            tableht_used: Set[int],
+            tableh1_used: Set[int],
+            desvars_used: Set[int],
+            dresps_used: Set[int],
+            remove_nids: bool=True, remove_cids: bool=True,
+            remove_pids: bool=True, remove_mids: bool=True,
+            remove_spcs: bool=True, remove_mpcs: bool=True,
+            remove_desvars: bool=True, remove_optimization: bool=True) -> None:
     """actually removes the cards"""
     nids = set(model.nodes.keys())
     pids = set(model.properties.keys())
@@ -989,7 +1014,10 @@ def _remove(model: BDF,
     if remove_optimization:
         _remove_optimization(model, pids_to_remove, desvars_to_remove, dresps_to_remove)
 
-def _remove_optimization(model: BDF, pids_to_remove, desvars_to_remove, dresps_to_remove) -> None:
+def _remove_optimization(model: BDF,
+                         pids_to_remove: List[int],
+                         desvars_to_remove: List[int],
+                         dresps_to_remove: List[int]) -> None:
     for desvar_id in desvars_to_remove:
         del model.desvars[desvar_id]
     if desvars_to_remove:

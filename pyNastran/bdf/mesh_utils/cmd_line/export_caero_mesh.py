@@ -1,6 +1,7 @@
 import sys
 from cpylog import SimpleLogger
 import pyNastran
+from .utils import filter_no_args
 
 def cmd_line_export_caero_mesh(argv=None, quiet=False):
     """command line interface to export_caero_mesh"""
@@ -30,7 +31,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    _filter_no_args(msg, argv, quiet=quiet)
+    filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {

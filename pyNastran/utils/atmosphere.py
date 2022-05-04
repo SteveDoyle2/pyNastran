@@ -947,6 +947,31 @@ def make_flfacts_alt_sweep(mach: float, alts: List[float],
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
+
+def make_flfacts_tas_sweep_constant_alt(alt: float, tass,
+                                        eas_limit: float=1000.,
+                                        alt_units: str='m',
+                                        velocity_units: str='m/s',
+                                        density_units: str='kg/m^3',
+                                        eas_units: str='m/s') -> Tuple[Any, Any, Any]:
+    """TODO: not validated"""
+    rhoi = atm_density(alt, R=1716., alt_units=alt_units,
+                      density_units=density_units)
+    nvel = len(tass)
+    rho = np.ones(nvel, dtype=tass.dtype) * rhoi
+
+    sosi = atm_speed_of_sound(alt, alt_units=alt_units,
+                              velocity_units=velocity_units)
+    machs = tass / sosi
+
+    velocity = sos * machs
+    rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
+                                      alt_units=alt_units,
+                                      density_units=density_units,
+                                      velocity_units=velocity_units,
+                                      eas_units=eas_units,)
+    return rho, machs, velocity
+
 def make_flfacts_mach_sweep(alt: float, machs: List[float], eas_limit: float=1000.,
                             alt_units: str='m',
                             velocity_units: str='m/s',

@@ -6267,16 +6267,14 @@ def _build_normals_quality(settings: Settings,
         icase += 1
     return icase, normals
 
-def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
+def _build_materials(model: BDF, pcomp, pshell, is_pshell_pcomp,
                      cases, form0, icase):
     """
     creates:
       - Thickness
-      - nPlies (composite only)
+      - nPlies, Theta (composite only)
       - Material ID
-      - E_11
-      - E_22
-      - E_33
+      - E_11 / E_22 / E_33 / E
       - Is Isotropic?
     """
     for i, pshell_pcompi in enumerate([pshell, pcomp]):
@@ -6326,90 +6324,111 @@ def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
                     form_layer.append((tword, icase, []))
                     icase += 1
 
-            if ilayer > 0 and theta is not None:
+            if i == 1 and ilayer > 0 and theta is not None:
+                # i=1 -> PCOMP
                 # ilayer=0 is null
                 # theta is None for pshell
                 thetai = theta[:, ilayer]
-                t_res = GuiResult(0, header='Theta', title='Theta',
-                                  location='centroid', scalar=thetai)
-                cases[icase] = (t_res, (0, 'Theta'))
-                form_layer.append(('Theta', icase, []))
-                icase += 1
+                if isfinite(thetai):
+                    t_res = GuiResult(0, header='Theta', title='Theta',
+                                      location='centroid', scalar=thetai)
+                    cases[icase] = (t_res, (0, 'Theta'))
+                    form_layer.append(('Theta', icase, []))
+                    icase += 1
+                else:
+                    raise RuntimeError(f'i={i} ilayer={ilayer} and theta=nan')
 
             midsi = mids[:, ilayer]
-            if midsi.max() == 0:
-                pass
-                #if not(i == 1 and ilayer == 0):
-                    #print('cant find anything in ilayer=%s' % ilayer)
-                #continue
-            else:
-                imids_masked = midsi == 0
-                has_mat8, has_mat11, e11, e22, e33 = get_material_arrays(model, midsi)
-                mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
-                                    location='centroid', scalar=midsi, mask_value=0)
-                cases[icase] = (mid_res, (0, 'MaterialID'))
-                form_layer.append(('MaterialID', icase, []))
-                icase += 1
+            icase = _add_material_mid_e11_e22(model, icase, midsi,
+                                              cases, form_layer)
 
-                if has_mat11: # also implicitly has_mat8
-                    is_orthotropic = not (np.array_equal(e11, e22) and np.array_equal(e11, e33))
-                elif has_mat8:
-                    is_orthotropic = not np.array_equal(e11, e22)
-                else:
-                    is_orthotropic = False
-
-                # np.nanmax(e11) > 0. can fail if e11=[nan, nan]
-                e112 = np.fmax.reduce(e11)
-                is_e11 = True
-                if np.isnan(e112):
-                    is_e11 = False
-                    #
-                if is_orthotropic:
-                    e11_res = GuiResult(0, header='E_11', title='E_11',
-                                        location='centroid', scalar=e11, data_format='%.3e')
-                    e22_res = GuiResult(0, header='E_22', title='E_22',
-                                        location='centroid', scalar=e22, data_format='%.3e')
-                    cases[icase] = (e11_res, (0, 'E_11'))
-                    cases[icase + 1] = (e22_res, (0, 'E_22'))
-                    form_layer.append(('E_11', icase, []))
-                    form_layer.append(('E_22', icase + 1, []))
-                    icase += 2
-
-                    is_isotropic = np.zeros(len(e11), dtype='int8')
-                    is_isotropic[imids_masked] = -1
-                    if has_mat11:
-                        is_isotropic[(e11 == e22) | (e11 == e33)] = 1
-                        e33_res = GuiResult(0, header='E_33', title='E_33',
-                                            location='centroid', scalar=e33, data_format='%.3e')
-                        cases[icase] = (e33_res, (0, 'E_33'))
-                        form_layer.append(('E_33', icase, []))
-                        icase += 1
-                    else:
-                        is_isotropic[e11 == e22] = 1
-
-                    iso_res = GuiResult(
-                        0, header='IsIsotropic?', title='IsIsotropic?',
-                        location='centroid', scalar=is_isotropic, data_format='%i',
-                        mask_value=-1)
-                    cases[icase] = (iso_res, (0, 'Is Isotropic?'))
-                    form_layer.append(('Is Isotropic?', icase, []))
-                    icase += 1
-                elif is_e11:
-                    # isotropic
-                    assert np.nanmax(e11) >= 0, np.nanmax(e11)
-                    e11_res = GuiResult(0, header='E', title='E',
-                                        location='centroid', scalar=e11, data_format='%.3e')
-                    cases[icase] = (e11_res, (0, 'E'))
-                    form_layer.append(('E', icase, []))
-                    icase += 1
-
-            #print('form_layer =', form_layer)
             if form_layer:
                 if nlayers == 1:
                     form0 += form_layer
                 else:
                     word = get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp)
                     form0.append((word, None, form_layer))
+    return icase
+
+def _add_material_mid_e11_e22(model: BDF, icase: int,
+                              midsi: np.ndarray,
+                              cases: Dict[int, Any],
+                              form_layer: Any) -> int:
+    """
+    Adds material results:
+     - MaterialID
+     - E11 / E22 / E33 / E
+     - IsOrthtropic -> no
+     - IsIsotropic
+    """
+    if midsi.max() == 0:
+        pass
+        #if not(i == 1 and ilayer == 0):
+            #print('cant find anything in ilayer=%s' % ilayer)
+        #continue
+        return icase
+
+    imids_masked = midsi == 0
+    has_mat8, has_mat11, e11, e22, e33 = get_material_arrays(model, midsi)
+    mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
+                        location='centroid', scalar=midsi, mask_value=0)
+    cases[icase] = (mid_res, (0, 'MaterialID'))
+    form_layer.append(('MaterialID', icase, []))
+    icase += 1
+
+    if has_mat11: # also implicitly has_mat8
+        is_orthotropic = not (np.array_equal(e11, e22) and np.array_equal(e11, e33))
+    elif has_mat8:
+        is_orthotropic = not np.array_equal(e11, e22)
+    else:
+        is_orthotropic = False
+
+    # np.nanmax(e11) > 0. can fail if e11=[nan, nan]
+    e112 = np.fmax.reduce(e11)
+    is_e11 = True
+    if np.isnan(e112):
+        is_e11 = False
+        #
+    if is_orthotropic:
+        e11_res = GuiResult(0, header='E_11', title='E_11',
+                            location='centroid', scalar=e11, data_format='%.3e')
+        e22_res = GuiResult(0, header='E_22', title='E_22',
+                            location='centroid', scalar=e22, data_format='%.3e')
+        cases[icase] = (e11_res, (0, 'E_11'))
+        cases[icase + 1] = (e22_res, (0, 'E_22'))
+        form_layer.append(('E_11', icase, []))
+        form_layer.append(('E_22', icase + 1, []))
+        icase += 2
+
+        is_isotropic = np.zeros(len(e11), dtype='int8')
+        is_isotropic[imids_masked] = -1
+        if has_mat11:
+            is_isotropic[(e11 == e22) | (e11 == e33)] = 1
+            e33_res = GuiResult(0, header='E_33', title='E_33',
+                                location='centroid', scalar=e33, data_format='%.3e')
+            cases[icase] = (e33_res, (0, 'E_33'))
+            form_layer.append(('E_33', icase, []))
+            icase += 1
+        else:
+            is_isotropic[e11 == e22] = 1
+
+        iso_res = GuiResult(
+            0, header='IsIsotropic?', title='IsIsotropic?',
+            location='centroid', scalar=is_isotropic, data_format='%i',
+            mask_value=-1)
+        cases[icase] = (iso_res, (0, 'Is Isotropic?'))
+        form_layer.append(('Is Isotropic?', icase, []))
+        icase += 1
+    elif is_e11:
+        # isotropic
+        assert np.nanmax(e11) >= 0, np.nanmax(e11)
+        e11_res = GuiResult(0, header='E', title='E',
+                            location='centroid', scalar=e11, data_format='%.3e')
+        cases[icase] = (e11_res, (0, 'E'))
+        form_layer.append(('E', icase, []))
+        icase += 1
+
+    #print('form_layer =', form_layer)
     return icase
 
 def _build_optimization(model: BDF, pids: np.ndarray, upids: np.ndarray, nelements: int,

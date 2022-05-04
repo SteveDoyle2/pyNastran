@@ -59,14 +59,14 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         '\n'
         'Units:\n'
         '  --in_units IN    Selects the input unit system\n'
-        '                   si (kg, m, s) -> m/s\n'
+        '                   si (kg, m, s) -> m/s (default)\n'
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
-        '                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
+        '                   english_in (slinch/in^3, in, s) -> in/s\n'
 
-        '  --out_units OUT  Selects the output unit system\n'
+        '  --out_units OUT  Selects the output unit system (default=in_units)\n'
         '                   si (kg, m, s) -> m/s\n'
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
-        '                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
+        '                   english_in (slinch/in^3, in, s) -> in/s\n'
         '                   english_kt (slinch/in^3, nm, s) -> knots\n'
         '\n'
         'Options:\n'
@@ -113,12 +113,18 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     if data['--ylimfreq']:
         ylim_freq = split_float_colons(data['--ylimfreq'])
 
+    # the default units is in SI because there isn't a great default unit
+    # system for English.  Better to just make it easy for one system.
+    # I rarely want my --out_units to be english_in (I use english_kt), whereas
+    # SI has consistent in_units/out_units.
     in_units = 'si'
     if data['--in_units']:
         in_units = data['IN'].lower()
     assert in_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'in_units=%r' % in_units
 
-    out_units = 'si'
+    # The default used to be SI, but it's really weird when I'm working in
+    # English units and my output is in SI
+    out_units = in_units
     if data['--out_units']:
         out_units = data['OUT'].lower()
     assert out_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'out_units=%r' % out_units
@@ -142,7 +148,6 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     vd_limit = None
     if data['--vd_limit']:
         vd_limit = get_cmd_line_float(data, '--vd_limit')
-        print('vd_limit =', vd_limit)
 
     damping_limit = None
     if data['--damping_limit']:
