@@ -16,7 +16,8 @@ def write_geom1(op2, op2_ascii, obj: OP2, endian: bytes=b'<'):
     ngeom1 = nnodes or ncoords
     if not ngeom1:
         return
-    write_geom_header(b'GEOM1', op2, op2_ascii)
+    op2_file = op2
+    write_geom_header(b'GEOM1', op2_file, op2_ascii)
     itable = -3
 
     if nnodes:
@@ -30,10 +31,10 @@ def write_geom1(op2, op2_ascii, obj: OP2, endian: bytes=b'<'):
         nfields = 8 # nid, cp, x, y, z, cd, ps, seid
         nvalues = nfields * nnodes + 3 # 3 comes from the keys
         #assert nbytes == 2316, nbytes
-        #op2.write(pack('6i', *[4, 0, 4, 4, 1, 4]))
+        #op2_file.write(pack('6i', *[4, 0, 4, 4, 1, 4]))
 
         key = (4501, 45, 1)
-        nbytes = write_block(op2, op2_ascii, nvalues, key)
+        nbytes = write_block(op2_file, op2_ascii, nvalues, key)
 
         spack = Struct('ii 3f 3i')
         for unused_nid, node in sorted(obj.nodes.items()):
@@ -50,15 +51,15 @@ def write_geom1(op2, op2_ascii, obj: OP2, endian: bytes=b'<'):
             else:
                 seidi = int(seid)
             data = [node.nid, node.Cp(), xyz[0], xyz[1], xyz[2], node.Cd(), psi, seidi]
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
             op2_ascii.write('  nid=%s cp=%s xyz=(%s, %s, %s) cd=%s ps=%s seid=%s\n' % tuple(data))
-        op2.write(pack('i', nbytes))
+        op2_file.write(pack('i', nbytes))
         itable -= 1
         data = [
             4, itable, 4,
             4, 1, 4,
             4, 0, 4]
-        op2.write(pack('9i', *data))
+        op2_file.write(pack('9i', *data))
         op2_ascii.write(str(data) + '\n')
         #-------------------------------------
 
@@ -105,18 +106,18 @@ def write_geom1(op2, op2_ascii, obj: OP2, endian: bytes=b'<'):
             if coord_type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 nvalues = 13 * ncards + 3
                 spack = Struct(b'4i 9f')
-                nbytes = write_block(op2, op2_ascii, nvalues, key)
+                nbytes = write_block(op2_file, op2_ascii, nvalues, key)
 
                 for cid in sorted(cids):
                     coord = obj.coords[cid]
                     data = ([cid, coord_rcs_int, coord_int, coord.Rid(), ] +
                             list(coord.e1) + list(coord.e2) + list(coord.e3))
-                    op2.write(spack.pack(*data))
+                    op2_file.write(spack.pack(*data))
                     op2_ascii.write(' cid=%s data=%s' % (cid, str(data[1:])))
             elif coord_type in ['CORD1R', 'CORD1C', 'CORD1S']:
                 nvalues = 6 * ncards + 3
                 spack = Struct(b'6i')
-                nbytes = write_block(op2, op2_ascii, nvalues, key)
+                nbytes = write_block(op2_file, op2_ascii, nvalues, key)
                 nids = []
                 for cid in cids:
                     coord = obj.coords[cid]
@@ -129,32 +130,32 @@ def write_geom1(op2, op2_ascii, obj: OP2, endian: bytes=b'<'):
                 for cid in sorted(cids):
                     coord = obj.coords[cid]
                     data = [cid, coord_rcs_int, coord_int, coord.G1(), coord.G2(), coord.G3()]
-                    op2.write(spack.pack(*data))
+                    op2_file.write(spack.pack(*data))
                     op2_ascii.write(' cid=%s data=%s' % (cid, str(data[1:])))
             else:
                 raise NotImplementedError(coord_type)
-            op2.write(pack('i', nbytes))
+            op2_file.write(pack('i', nbytes))
             itable -= 1
             data = [
                 4, itable, 4,
                 4, 1, 4,
                 4, 0, 4]
-            op2.write(pack('9i', *data))
+            op2_file.write(pack('9i', *data))
             op2_ascii.write(str(data) + '\n')
 
-    #_write_markers(op2, op2_ascii, [2, 4])
+    #_write_markers(op2_file, op2_ascii, [2, 4])
     #-------------------------------------
-    close_geom_table(op2, op2_ascii, itable)
+    close_geom_table(op2_file, op2_ascii, itable)
 
-def write_block(op2, op2_ascii, nvalues, key):
+def write_block(op2_file, op2_ascii, nvalues, key):
     nbytes = nvalues * 4
-    op2.write(pack('3i', *[4, nvalues, 4]))
-    op2.write(pack('i', nbytes)) #values, nbtyes))
-    op2.write(pack('3i', *key))
+    op2_file.write(pack('3i', *[4, nvalues, 4]))
+    op2_file.write(pack('i', nbytes)) #values, nbtyes))
+    op2_file.write(pack('3i', *key))
     op2_ascii.write(str(key) + '\n')
     return nbytes
 
-def init_table(table_name):
+def init_table(table_name: bytes) -> List[int]:
     data = [
         4, 2, 4,
         #4, 2,4,
@@ -165,10 +166,10 @@ def init_table(table_name):
     ]
     return data
 
-def write_geom_header(table_name, op2, op2_ascii, endian=b'<'):
+def write_geom_header(table_name: bytes, op2_file, op2_ascii, endian: bytes=b'<'):
     op2_ascii.write('----------\n')
     data = init_table(table_name)
-    op2.write(pack('4i 8s i 3i', *data))
+    op2_file.write(pack('4i 8s i 3i', *data))
     op2_ascii.write(str(data) + '\n')
 
     data = [
@@ -176,7 +177,7 @@ def write_geom_header(table_name, op2, op2_ascii, endian=b'<'):
         28, 1, 2, 3, 4, 5, 6, 7, 28,
     ]
     #struct_3i = Struct(endian + b'3i')
-    op2.write(pack('3i 9i', *data))
+    op2_file.write(pack('3i 9i', *data))
     op2_ascii.write(str(data) + '\n')
 
     #-------------------------------------
@@ -184,7 +185,7 @@ def write_geom_header(table_name, op2, op2_ascii, endian=b'<'):
         4, -2, 4,
         4, 1, 4,
         4, 0, 4]
-    op2.write(pack('9i', *data))
+    op2_file.write(pack('9i', *data))
     op2_ascii.write(str(data) + '\n')
 
     data = [
@@ -192,25 +193,25 @@ def write_geom_header(table_name, op2, op2_ascii, endian=b'<'):
         4, 2, 4,
         8, 1, 2, 8,
     ]
-    op2.write(pack('3i 4i', *data))
+    op2_file.write(pack('3i 4i', *data))
     op2_ascii.write(str(data) + '\n')
     #data = [8, 1, 2, 8]
-    #op2.write(pack('4i', *data))
+    #op2_file.write(pack('4i', *data))
     #-------------------------------------
 
     data = [
         4, -3, 4,
         4, 1, 4,
         4, 0, 4]
-    op2.write(pack('9i', *data))
+    op2_file.write(pack('9i', *data))
     op2_ascii.write(str(data) + '\n')
 
 
-def close_geom_table(op2, op2_ascii, itable):
+def close_geom_table(op2_file, op2_ascii, itable):
     data = [
         4, 3, 4,
         12, 1, 2, 3, 12]
-    op2.write(pack('3i 5i', *data))
+    op2_file.write(pack('3i 5i', *data))
     op2_ascii.write(str(data) + '\n')
     itable -= 1
     #-------------------------------------
@@ -219,14 +220,14 @@ def close_geom_table(op2, op2_ascii, itable):
         4, itable, 4,
         4, 1, 4,
         4, 0, 4]
-    op2.write(pack('9i', *data))
+    op2_file.write(pack('9i', *data))
     op2_ascii.write(str(data) + '\n')
 
     data = [
         4, 0, 4,
         #4, 2, 4
     ]
-    op2.write(pack('3i', *data))
+    op2_file.write(pack('3i', *data))
     op2_ascii.write(str(data) + '\n')
     itable -= 1
 
@@ -247,4 +248,3 @@ def fill_defaultdict(typed_dict, direct_dict=None):  # pragma: no cover
             obj0 = dicti[value0]
             out[obj0.type] = values
     return out
-
