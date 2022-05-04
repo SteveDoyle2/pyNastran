@@ -13,6 +13,7 @@ import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh, _output_helper
+from pyNastran.bdf.bdf_interface.write_mesh_utils import find_aero_location
 from pyNastran.bdf.write_path import write_include
 if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
@@ -299,7 +300,7 @@ class WriteMeshs(WriteMesh):
         self._write_aero_control_file(bdf_files, size, is_double, is_long_ids=is_long_ids)
         self._write_static_aero_file(bdf_files, size, is_double, is_long_ids=is_long_ids)
 
-        write_aero_in_flutter, write_aero_in_gust = self._find_aero_location()
+        write_aero_in_flutter, write_aero_in_gust = find_aero_location(self)
         self._write_flutter_file(bdf_files, size, is_double, write_aero_in_flutter,
                                  is_long_ids=is_long_ids)
         self._write_gust_file(bdf_files, size, is_double, write_aero_in_gust,

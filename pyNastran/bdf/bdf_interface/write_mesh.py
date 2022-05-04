@@ -13,6 +13,8 @@ from typing import List, Dict, Union, Optional, Tuple, Any, cast
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
+from pyNastran.bdf.bdf_interface.write_mesh_utils import (
+    find_aero_location, write_dict)
 from pyNastran.bdf.cards.nodes import write_xpoints
 
 
@@ -121,7 +123,8 @@ class WriteMesh(BDFAttributes):
         if has_read_write:
             bdf_file = out_filename
         else:
-            self.log.debug('---starting BDF.write_bdf of %s---' % out_filename)
+            self.log.debug(f'---starting BDF.write_bdf of {out_filename}---')
+            assert isinstance(encoding, str), encoding
             bdf_file = open(out_filename, 'w', encoding=encoding)
         self._write_header(bdf_file, encoding, write_header=write_header)
 
@@ -129,14 +132,53 @@ class WriteMesh(BDFAttributes):
         if self.superelement_models:
             bdf_file.write('$' + '*'*80+'\n')
             for superelement_id, superelement in sorted(self.superelement_models.items()):
-                bdf_file.write('BEGIN SUPER=%s\n' % superelement_id)
+                bdf_file.write(f'BEGIN SUPER={superelement_id}\n')
                 superelement.write_bdf(out_filename=bdf_file, encoding=encoding,
                                        size=size, is_double=is_double,
                                        interspersed=interspersed, enddata=False,
                                        write_header=False, close=False)
                 bdf_file.write('$' + '*'*80+'\n')
             bdf_file.write('BEGIN BULK\n')
+        self.write_bulk_data(bdf_file, size=size, is_double=is_double,
+                             interspersed=interspersed,
+                             enddata=enddata, close=close,
+                             is_long_ids=is_long_ids)
 
+    def write_bulk_data(self, bdf_file,
+                        size: int=8, is_double: bool=False,
+                        interspersed: bool=False,
+                        enddata: Optional[bool]=None, close: bool=True,
+                        is_long_ids: bool=False) -> None:
+        """
+        Writes the BDF.
+
+        Parameters
+        ----------
+        bdf_file : varies
+            file       - a file object
+            StringIO() - a StringIO object
+        size : int; {8, 16}
+            the field size
+        is_double : bool; default=False
+            False : small field
+            True : large field
+        interspersed : bool; default=True
+            Writes a bdf with properties & elements
+            interspersed like how Patran writes the bdf.  This takes
+            slightly longer than if interspersed=False, but makes it
+            much easier to compare to a Patran-formatted bdf and is
+            more clear.
+        enddata : bool; default=None
+            bool - enable/disable writing ENDDATA
+            None - depends on input BDF
+        close : bool; default=True
+            should the output file be closed
+
+        .. note:: is_long_ids is only needed if you have ids longer
+                  than 8 characters. It's an internal parameter, but if
+                  you're calling the new sub-function, you might need
+                  it.  Chances are you won't.
+        """
         self._write_params(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_nodes(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
@@ -366,19 +408,6 @@ class WriteMesh(BDFAttributes):
             for (unused_id, diverg) in sorted(self.divergs.items()):
                 bdf_file.write(diverg.write_card(size, is_double))
 
-    def _find_aero_location(self) -> Tuple[bool, bool]:
-        """Determines where the AERO card should be written"""
-        write_aero_in_flutter = False
-        write_aero_in_gust = False
-        if self.aero:
-            if self.flfacts or self.flutters or self.mkaeros:
-                write_aero_in_flutter = True
-            elif self.gusts:
-                write_aero_in_gust = True
-            else:
-                # an AERO card exists, but no FLUTTER, FLFACT, MKAEROx or GUST card
-                write_aero_in_flutter = True
-        return write_aero_in_flutter, write_aero_in_gust
 
     def _write_flutter(self, bdf_file: Any, size: int=8, is_double: bool=False,
                        write_aero_in_flutter: bool=True,
@@ -428,7 +457,7 @@ class WriteMesh(BDFAttributes):
         self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_static_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
-        write_aero_in_flutter, write_aero_in_gust = self._find_aero_location()
+        write_aero_in_flutter, write_aero_in_gust = find_aero_location(self)
         self._write_flutter(bdf_file, size, is_double, write_aero_in_flutter,
                             is_long_ids=is_long_ids)
         self._write_gust(bdf_file, size, is_double, write_aero_in_gust, is_long_ids=is_long_ids)
@@ -774,7 +803,7 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$NODES\n')
             if self.grdset:
                 bdf_file.write(self.grdset.write_card(size))
-            _write_dict(bdf_file, self.nodes, size, is_double, is_long_ids)
+            write_dict(bdf_file, self.nodes, size, is_double, is_long_ids)
 
     #def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
         #"""
@@ -814,11 +843,13 @@ class WriteMesh(BDFAttributes):
     def _write_optimization(self, bdf_file: Any, size: int=8, is_double: bool=False,
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the optimization cards sorted by ID"""
-        is_optimization = (self.dconadds or self.dconstrs or self.desvars or self.ddvals or
-                           self.dresps or
-                           self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
-                           self.dlinks or self.dequations or self.dtable is not None or
-                           self.dvgrids or self.dscreen or self.topvar or self.modtrak)
+        is_optimization = (
+            self.dconadds or self.dconstrs or self.desvars or self.ddvals or
+            self.dresps or
+            self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
+            self.dlinks or self.dequations or self.dtable is not None or
+            self.dvgrids or self.dscreen or self.topvar or self.modtrak
+        )
         if is_optimization:
             bdf_file.write('$OPTIMIZATION\n')
             for (unused_id, dconadd) in sorted(self.dconadds.items()):
@@ -1048,7 +1079,7 @@ class WriteMesh(BDFAttributes):
                         raise
         if self.plotels:
             bdf_file.write('$PLOT ELEMENTS\n')
-            _write_dict(bdf_file, self.plotels, size, is_double, is_long_ids)
+            write_dict(bdf_file, self.plotels, size, is_double, is_long_ids)
 
     def _write_sets(self, bdf_file: Any, size: int=8, is_double: bool=False,
                     is_long_ids: Optional[bool]=None) -> None:
@@ -1226,11 +1257,3 @@ def _output_helper(out_filename: Optional[str], interspersed: bool,
     #self.log.debug("***writing %s" % fname)
     return out_filename
 
-def _write_dict(bdf_file, my_dict: Dict[int, Any], size: int, is_double: bool, is_long_ids: bool) -> None:
-    """writes a dictionary that may require long format"""
-    if is_long_ids:
-        for (unused_nid, node) in sorted(my_dict.items()):
-            bdf_file.write(node.write_card_16(is_double))
-    else:
-        for (unused_nid, node) in sorted(my_dict.items()):
-            bdf_file.write(node.write_card(size, is_double))
