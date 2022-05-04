@@ -1,10 +1,14 @@
+from __future__ import annotations
 from struct import pack, Struct
 from collections import defaultdict
-from typing import List, Dict, Tuple, Union, Any
+from typing import List, Dict, Tuple, Union, Any, TYPE_CHECKING
 
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.op2.op2_geom import OP2Geom
 
 def write_geom4(op2, op2_ascii, obj, endian: bytes=b'<', nastran_format: str='nx') -> None:
     if not hasattr(obj, 'rigid_elements'):

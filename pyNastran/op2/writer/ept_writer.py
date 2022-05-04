@@ -458,13 +458,13 @@ def write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
         op2_file.write(struct1.pack(*data_in))
         op2_ascii.write(str(data_in) + '\n')
 
-    op2.write(pack('i', nbytes))
+    op2_file.write(pack('i', nbytes))
     itable -= 1
     data = [
         4, itable, 4,
         4, 1, 4,
         4, 0, 4]
-    op2.write(pack('9i', *data))
+    op2_file.write(pack('9i', *data))
     op2_ascii.write(str(data) + '\n')
     return itable
     #"""PBUSH"""
