@@ -1,5 +1,6 @@
+from __future__ import annotations
 from itertools import count
-from typing import  List, Dict, Union, Tuple, Iterable, Optional, Any
+from typing import  List, Dict, Union, Tuple, Iterable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -16,12 +17,38 @@ from pyNastran.utils.atmosphere import (
     convert_altitude, convert_velocity, convert_density, convert_pressure,
 )
 from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils.numpy_utils import float_types
+
+if TYPE_CHECKING and IS_MATPLOTLIB:
+    from matplotlib.axes import Axes
 
 
 class FlutterResponse:
     """storage object for single subcase SOL 145 results"""
 
     def __repr__(self) -> str:
+        #from pyNastran.utils import object_stats
+        #print(object_stats(self))
+        #configuration : 'AEROSG2D'
+        #f06_units : {'velocity': 'm/s', 'density': 'kg/m^3', 'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'm/s'}
+        #ialt   : 11
+        #idamping : 5
+        #idensity : 2
+        #ieas   : 9
+        #ieigi  : 8
+        #ieigr  : 7
+        #ifreq  : 6
+        #ikfreq : 0
+        #ikfreq_inv : 1
+        #imach  : 3
+        #iq     : 10
+        #ivelocity : 4
+        #make_alt : False
+        #method : 'PKNL'
+        #modes  : array([1, 2])
+        #names  : ['kfreq', '1/kfreq', 'density', 'velocity', 'damping', 'freq', 'eigr', 'eigi', 'eas', 'q', 'alt']
+        #noline : False
+        #out_units : {'velocity': 'in/s', 'density': 'slinch/in^3', 'altitude': 'ft', 'dynamic_pressure': 'psi', 'eas': 'in/s'}
         xyz_sym = ''
         if hasattr(self, 'xysym'):
             xyz_sym += f'xysym  = {self.xysym!r}\n'
@@ -562,6 +589,7 @@ class FlutterResponse:
                            png_filename=None,
                            ylim_damping=None,
                            ylim_kfreq=None,
+                           vd_limit=None, damping_limit=None,
                            nopoints=False, noline=False,
                            **kwargs):
         """
@@ -569,6 +597,9 @@ class FlutterResponse:
 
         See ``plot_root_locus`` for arguments
         """
+        assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
+        assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
+
         ylabel1 = 'Damping'
         ylabel2 = 'KFreq [rad]'
 
@@ -576,6 +607,7 @@ class FlutterResponse:
         iy1 = self.idamping
         iy2 = self.ikfreq
         scatter = True
+
         self._plot_x_y2(ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
                         modes=modes, fig=fig, axes1=damp_axes, axes2=freq_axes,
                         xlim=xlim, ylim1=ylim_damping, ylim2=ylim_kfreq,
@@ -666,6 +698,7 @@ class FlutterResponse:
                    plot_type='tas',
                    clear=False, close=False, legend=True,
                    xlim=None, ylim_damping=None, ylim_freq=None,
+                   vd_limit=None, damping_limit=None,
                    nopoints=False, noline=False, png_filename=None, show=None):
         """
         Make a V-g and V-f plot
@@ -676,7 +709,10 @@ class FlutterResponse:
             the modes; typically 1 to N
         legend : bool; default=True
             should the legend be shown
+
         """
+        assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
+        assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
         #self.fix()
         if fig is None:
             fig = plt.figure() # figsize=(12,9), self.subcase
@@ -692,7 +728,10 @@ class FlutterResponse:
             symbols = ['None'] * len(symbols)
         linestyle = 'None' if noline else '-'
 
+
+        #plot_type = ['tas', 'eas', 'alt', 'kfreq', '1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
+
         for i, imode, mode in zip(count(), imodes, modes):
             color = colors[i]
             symbol = symbols[i]
@@ -738,6 +777,9 @@ class FlutterResponse:
         damp_axes.set_title(title)
         #plt.suptitle(title)
 
+        _add_damping_limit(plot_type, damp_axes, damping_limit)
+        _add_vd_limit(plot_type, damp_axes, freq_axes, vd_limit)
+
         if legend:
             damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2)
             #fig.subplots_adjust(hspace=0.25)
@@ -780,14 +822,14 @@ class FlutterResponse:
         omega_modes = []
         for mode in modes:
             if mode < 10:
-                gmode = '   G,MODE--%i' % mode
-                wmode = ' WHZ,MODE--%i' % mode
+                gmode = '   G,MODE--%d' % mode
+                wmode = ' WHZ,MODE--%d' % mode
             elif mode < 100:
-                gmode = '   G,MODE-%2i' % mode
-                wmode = ' WHZ,MODE-%2i' % mode
+                gmode = '   G,MODE-%2d' % mode
+                wmode = ' WHZ,MODE-%2d' % mode
             else:
-                gmode = '   G,MODE%3i' % mode
-                wmode = ' WHZ,MODE%3i' % mode
+                gmode = '   G,MODE%3d' % mode
+                wmode = ' WHZ,MODE%3d' % mode
             damping_modes.append(gmode)
             omega_modes.append(wmode)
 
@@ -938,7 +980,7 @@ class FlutterResponse:
             zona_file.write(msg)
         return msg
 
-    def _plot_type_to_ix_xlabel(self, plot_type):
+    def _plot_type_to_ix_xlabel(self, plot_type: str) -> Tuple[int, str]:
         """helper method for ``plot_vg_vf``"""
         plot_type = plot_type.lower()
         if plot_type == 'tas':
@@ -1114,3 +1156,37 @@ def _asarray(results):
                 #print(inan)
                 results[imode, inan, 0] = 1. / results[imode, inan, 1]
     return results
+
+def _add_damping_limit(plot_type: str,
+                      damp_axes: Axes,
+                      damping_limit: Optional[float],
+                      linewidth: int=2) -> None:
+    if damping_limit is None:
+        return
+    #damp_label = f'Damping={damping_limit*100:.1f}'
+    #plt.axhline(y=1.0, color="black", linestyle="--")
+    damp_axes.axhline(y=0., color='k', linestyle='--', linewidth=linewidth,
+                      label=f'Damping=0%')
+    damp_axes.axhline(y=damping_limit, color='k', linestyle='-', linewidth=linewidth,
+                      label=f'Abs Damping={damping_limit*100:.1f}%')
+
+def _add_vd_limit(plot_type: str,
+                  damp_axes: Axes, freq_axes: Axes,
+                  vd_limit: Optional[float],
+                  #linestyle: str='--',
+                  linewidth: int=2) -> None:
+    if vd_limit is None or plot_type not in {'tas', 'eas'}:
+        return
+    # ax.text(0, vd_limit, 'Damping Limit')
+    label1 = f'Vd={vd_limit:.1f}'
+    damp_axes.axvline(x=vd_limit, color='k', linestyle='--',
+                      linewidth=linewidth, label=label1)
+    freq_axes.axvline(x=vd_limit, color='k', linestyle='--',
+                      linewidth=linewidth)
+
+    vd_limit_115 = 1.15 * vd_limit
+    label2 = f'1.15 Vd={vd_limit_115:.1f}'
+    damp_axes.axvline(x=vd_limit_115, color='k', linestyle='-',
+                      linewidth=linewidth, label=label2)
+    freq_axes.axvline(x=vd_limit_115, color='k', linestyle='-',
+                      linewidth=linewidth)

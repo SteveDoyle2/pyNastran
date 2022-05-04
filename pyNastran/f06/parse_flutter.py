@@ -4,7 +4,7 @@ SOL 145 plotter
 
 kfreq = ?c/(2V)
 """
-from typing import  List, Dict, Optional, Union
+from typing import  List, Dict, Optional, Union, cast
 import numpy as np
 #import PySide
 try:
@@ -24,6 +24,7 @@ except ImportError:  # pragma: no cover
 
 from cpylog import get_logger2, SimpleLogger
 from pyNastran.f06.flutter_response import FlutterResponse
+from pyNastran.utils.numpy_utils import float_types
 
 
 def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt=False, log=None):
@@ -285,6 +286,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                      plot_vg=False, plot_vg_vf=False, plot_root_locus=False,
                      plot_kfreq_damping=False,
                      xlim=None, ylim_damping=None, ylim_freq=None, ylim_kfreq=None,
+                     vd_limit=None, damping_limit=None,
                      nopoints=False, noline=False,
                      export_zona_filename=None,
                      export_veas_filename=None,
@@ -293,6 +295,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                      vg_vf_filename=None,
                      root_locus_filename=None,
                      kfreq_damping_filename=None,
+                     subcases: Optional[List[int]]=None,
                      plot: bool=True, show: bool=True, clear: bool=False, close: bool=False,
                      log=None):
     """
@@ -335,6 +338,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
         suppress the points
     noline : bool; default=False
         suppress the lines
+    subcases: list[int]; default=None
+        the list of subcases that should be considered
 
     Returns
     -------
@@ -360,6 +365,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
      o fixing unconverged points
 
     """
+    assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
+    assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
     if plot_type == 'alt':
         make_alt = True
 
@@ -371,6 +378,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                            plot_type,
                            plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                            nopoints, noline,
+                           vd_limit=vd_limit, damping_limit=damping_limit,
                            export_zona_filename=export_zona_filename,
                            export_veas_filename=export_veas_filename,
                            export_f06_filename=export_f06_filename,
@@ -378,6 +386,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                            vg_vf_filename=vg_vf_filename,
                            root_locus_filename=root_locus_filename,
                            kfreq_damping_filename=kfreq_damping_filename,
+                           subcases=subcases,
                            show=show, clear=clear, close=close)
     return flutters
 
@@ -391,6 +400,8 @@ def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
                        nopoints: bool,
                        noline: bool,
                        legend: bool=True,
+                       vd_limit: Optional[float]=None,
+                       damping_limit: Optional[float]=None,
                        export_zona_filename: Optional[str]=None,
                        export_veas_filename: Optional[str]=None,
                        export_f06_filename: Optional[str]=None,
@@ -398,11 +409,32 @@ def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
                        vg_vf_filename: Optional[str]=None,
                        root_locus_filename: Optional[str]=None,
                        kfreq_damping_filename: Optional[str]=None,
-                       show: bool=True, clear: bool=False, close: bool=False):
+                       subcases: Optional[List[int]]=None,
+                       show: bool=True, clear: bool=False, close: bool=False,
+                       log: SimpleLogger=None):
     """actually makes the flutter plots"""
+    assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
+    assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
+
     assert len(flutters) > 0, flutters
     subcases_flutter_set = set(list(flutters.keys()))
+    if subcases is None:
+        subcases_set = subcases_flutter_set
+    else:
+        subcases_set = set(subcases)
+    missing_cases_set = subcases_set - subcases_flutter_set
+
+    log = get_logger2(log=log, debug=True, encoding='utf-8')
+    if missing_cases_set:
+        missing_cases_list = list(missing_cases_set)
+        missing_cases_list.sort()
+        log.warning(f'missing subcases={missing_cases_list}')
+
     for subcase, flutter in sorted(flutters.items()):
+        if subcase not in subcases_set:
+            continue
+        flutter = cast(FlutterResponse, flutter)  # type: FlutterResponse
+
         if plot_vg:
             filenamei = None if vg_filename is None else vg_filename % subcase
             flutter.plot_vg(modes=modes,
@@ -415,6 +447,7 @@ def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
                                plot_type=plot_type,
                                xlim=xlim,
                                ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+                               vd_limit=vd_limit, damping_limit=damping_limit,
                                nopoints=nopoints, noline=noline,
                                legend=legend,
                                png_filename=filenamei, show=False, clear=clear, close=close)
@@ -433,6 +466,7 @@ def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
                                        plot_type=plot_type,
                                        ylim_damping=ylim_damping,
                                        ylim_kfreq=ylim_kfreq,
+                                       vd_limit=vd_limit, damping_limit=damping_limit,
                                        nopoints=nopoints, noline=noline,
                                        png_filename=filenamei, show=False, clear=clear, close=close)
         if export_zona_filename:
