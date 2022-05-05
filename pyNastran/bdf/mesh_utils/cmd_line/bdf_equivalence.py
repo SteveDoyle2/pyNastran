@@ -1,14 +1,3 @@
-"""
-defines:
-    bdf merge        (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
-    bdf equivalence  IN_BDF_FILENAME EQ_TOL\n'
-    bdf renumber     IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
-    bdf mirror       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
-    bdf export_mcids IN_BDF_FILENAME [-o OUT_GEOM_FILENAME]\n'
-    bdf split_cbars_by_pin_flags IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
-    bdf flutter UNITS [-o OUT_BDF_FILENAME]
-
-"""
 import os
 import sys
 from cpylog import SimpleLogger
