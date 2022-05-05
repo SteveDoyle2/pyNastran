@@ -22,6 +22,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.utils.atmosphere import (
     make_flfacts_eas_sweep, make_flfacts_alt_sweep, make_flfacts_mach_sweep,
+    make_flfacts_tas_sweep_constant_alt,
     atm_density, _velocity_factor)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
@@ -743,7 +744,8 @@ class FLUTTER(BaseCard):
             eass.min(), eass.max(), eas_units)
         model.add_flfact(flfact_eas, eass, comment=comment)
 
-    def make_flfacts_alt_sweep(self, model: BDF, mach, alts,
+    def make_flfacts_alt_sweep(self,
+                               model: BDF, mach, alts,
                                eas_limit: float=1000.,
                                alt_units: str='m',
                                velocity_units: str='m/s',
@@ -789,7 +791,8 @@ class FLUTTER(BaseCard):
         comment = ' Alt: min=%.3f max=%.3f %s' % (alts2.min(), alts2.max(), alt_units)
         model.add_flfact(flfact_alt, alts2, comment=comment)
 
-    def make_flfacts_tas_sweep_constant_alt(model, alt: float, tass,
+    def make_flfacts_tas_sweep_constant_alt(self,
+                                            model: BDF, alt: float, tass,
                                             eas_limit: float=1000.,
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
@@ -798,7 +801,7 @@ class FLUTTER(BaseCard):
         """makes an altitude sweep (dev...not validated)"""
         tass.sort()
         rho, mach, velocity = make_flfacts_tas_sweep_constant_alt(
-            mach, tass, eas_limit=eas_limit,
+            alt, tass, eas_limit=eas_limit,
             alt_units=alt_units,
             velocity_units=velocity_units,
             density_units=density_units,
@@ -808,13 +811,13 @@ class FLUTTER(BaseCard):
         flfact_mach = self.sid + 2
         flfact_velocity = self.sid + 3
         flfact_eas = self.sid + 4
-        flfact_alt = self.sid + 5
+        #flfact_alt = self.sid + 5
 
-        alts2 = alts[:len(rho)]
-        assert len(rho) == len(alts2)
+        #alts2 = alts[:len(rho)]
+        #assert len(rho) == len(alts2)
         comment = ' density: min=%.3e max=%.3e %s; alt min=%.0f max=%.0f %s' % (
             rho.min(), rho.max(), density_units,
-            alts2.min(), alts2.max(), alt_units,
+            alt, alt, alt_units,
         )
         model.add_flfact(flfact_rho, rho, comment=comment)
         model.add_flfact(flfact_mach, mach, comment=' Mach: %s' % mach.min())
@@ -832,8 +835,8 @@ class FLUTTER(BaseCard):
             eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units)
         model.add_flfact(flfact_eas, eas_in_eas_units, comment=comment)
 
-        comment = ' Alt: min=%.3f max=%.3f %s' % (alts2.min(), alts2.max(), alt_units)
-        model.add_flfact(flfact_alt, alts2, comment=comment)
+        #comment = ' Alt: min=%.3f max=%.3f %s' % (alt, al, alt_units)
+        #model.add_flfact(flfact_alt, alts2, comment=comment)
 
 
     def make_flfacts_mach_sweep(self, model, alt, machs, eas_limit=1000., alt_units='m',

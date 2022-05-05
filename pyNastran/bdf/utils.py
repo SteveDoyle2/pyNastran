@@ -105,8 +105,6 @@ def Position(xyz: NDArray3float, cid: int, model: BDF) -> np.ndarray:
     return xyz2
 
 
-def TransformLoadWRT(F, M, cid, cid_new, model):
-    deprecated('TransformLoadWRT', 'transform_load', '1.3', levels=[0, 1, 2])
 
 def transform_load(F, M, cid: int, cid_new: int, model: BDF) -> Tuple[np.ndarray, np.ndarray]:
     """

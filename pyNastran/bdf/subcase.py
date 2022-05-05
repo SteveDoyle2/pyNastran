@@ -314,7 +314,6 @@ class Subcase:
                 assert thermal == 0, data_code
                 self.add('VELOCITY', 'ALL', options, 'STRESS-type')
             else:
-                print("table_code = %r" % table_code)
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
         elif table_name == 'OAG1':

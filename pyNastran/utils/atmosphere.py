@@ -905,7 +905,7 @@ def sutherland_viscoscity(T: float) -> float:
         viscosity = 2.27E-8 * (T ** 1.5) / (T + 198.6)
     return viscosity
 
-def make_flfacts_alt_sweep(mach: float, alts: List[float],
+def make_flfacts_alt_sweep(mach: float, alts: np.ndarray,
                            eas_limit: float=1000.,
                            alt_units: str='m',
                            velocity_units: str='m/s',
@@ -948,13 +948,15 @@ def make_flfacts_alt_sweep(mach: float, alts: List[float],
     return rho, machs, velocity
 
 
-def make_flfacts_tas_sweep_constant_alt(alt: float, tass,
+def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
                                         eas_limit: float=1000.,
                                         alt_units: str='m',
                                         velocity_units: str='m/s',
                                         density_units: str='kg/m^3',
                                         eas_units: str='m/s') -> Tuple[Any, Any, Any]:
     """TODO: not validated"""
+    assert tass[0] <= tass[-1], tass
+
     rhoi = atm_density(alt, R=1716., alt_units=alt_units,
                       density_units=density_units)
     nvel = len(tass)
@@ -964,12 +966,12 @@ def make_flfacts_tas_sweep_constant_alt(alt: float, tass,
                               velocity_units=velocity_units)
     machs = tass / sosi
 
-    velocity = sos * machs
+    velocity = tass # sosi * machs
     rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
                                       alt_units=alt_units,
                                       density_units=density_units,
                                       velocity_units=velocity_units,
-                                      eas_units=eas_units,)
+                                      eas_units=eas_units)
     return rho, machs, velocity
 
 def make_flfacts_mach_sweep(alt: float, machs: List[float], eas_limit: float=1000.,
