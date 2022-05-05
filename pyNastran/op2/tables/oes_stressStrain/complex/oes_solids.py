@@ -6,6 +6,7 @@ from numpy import zeros, concatenate
 
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.op2_interface.write_utils import to_column_bytes, get_complex_fdtype
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
 
 
@@ -27,11 +28,11 @@ class ComplexSolidArray(OES_Object):
             raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
 
     def combine(self, results):
@@ -59,12 +60,12 @@ class ComplexSolidArray(OES_Object):
 
         self.data = concatenate(data, axis=1)
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
     @property
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         if self.element_type == 39: # CTETRA
             nnodes = 5
         elif self.element_type == 68: # CPENTA
@@ -73,7 +74,7 @@ class ComplexSolidArray(OES_Object):
             nnodes = 9
         elif self.element_type == 255: # CPYRAM
             nnodes = 6
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.element_name)
         return nnodes
 
@@ -300,7 +301,7 @@ class ComplexSolidArray(OES_Object):
         from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
             self._write_table_header(op2, op2_ascii, date)
@@ -322,7 +323,7 @@ class ComplexSolidArray(OES_Object):
         ntotal = ntotali * nelements
 
         device_code = self.device_code
-        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
         eids = self.element_node[:, 0]
         eids_device = eids * 10 + self.device_code

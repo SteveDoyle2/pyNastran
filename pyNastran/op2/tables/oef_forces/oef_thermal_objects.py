@@ -37,7 +37,7 @@ class Real1DHeatFluxArray(BaseElement):
         """is the result complex?"""
         return False
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -100,11 +100,26 @@ class Real1DHeatFluxArray(BaseElement):
                 column_values, column_names,
                 headers, self.element, self.data)
         else:
-            data_frame = pd.Panel(self.data,
-                                  major_axis=self.element,
-                                  minor_axis=headers).to_frame()
-            data_frame.columns.names = ['Static']
-            data_frame.index.names = ['ElementID', 'Item']
+            #    ElementID     xgrad         ygrad  ...     xflux         yflux         zflux
+            # 0          1  3.670189  1.401298e-45  ... -2.202113  1.401298e-45  1.401298e-45
+            # 1          2  2.427845  1.401298e-45  ... -1.456707  1.401298e-45  1.401298e-45
+            # 2          3  0.282165  1.401298e-45  ... -0.169299  1.401298e-45  1.401298e-45
+            # 3          4  0.276702  1.401298e-45  ... -0.166021  1.401298e-45  1.401298e-45
+            # 4          5 -0.059711  1.401298e-45  ...  0.035827  1.401298e-45  1.401298e-45
+            # 5          6 -0.156313  1.401298e-45  ...  0.093788  1.401298e-45  1.401298e-45
+            # 6          7 -0.042596  1.401298e-45  ...  0.025558  1.401298e-45  1.401298e-45
+            # 7          8 -2.334058  1.401298e-45  ...  1.400435  1.401298e-45  1.401298e-45
+            # 8          9 -3.946891  1.401298e-45  ...  2.368135  1.401298e-45  1.401298e-45
+            df1 = pd.DataFrame(self.element)
+            df1.columns = ['ElementID']
+            df2 = pd.DataFrame(self.data[0])
+            df2.columns = headers
+            data_frame = df1.join(df2)
+            #data_frame = pd.Panel(self.data,
+                                  #major_axis=self.element,
+                                  #minor_axis=headers).to_frame()
+            #data_frame.columns.names = ['Static']
+            #data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
@@ -158,12 +173,12 @@ class Real1DHeatFluxArray(BaseElement):
         self.data[self.itime, self.ielement, :] = [xgrad, ygrad, zgrad, xflux, yflux, zflux]
         self.ielement += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -190,7 +205,7 @@ class Real1DHeatFluxArray(BaseElement):
         return msg
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         msg_temp = [
@@ -691,7 +706,7 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
         self.data_frame = data_frame
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         words = [
@@ -736,7 +751,7 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         """is the result complex?"""
         return False
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -787,7 +802,6 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                 #column_values, column_names,
                 #headers, self.element, self.data)
             #print(data_frame)
-            #asdf
             data_frame = pd.Panel(self.data, items=column_values,
                                   major_axis=element_node,
                                   minor_axis=headers).to_frame()
@@ -859,12 +873,12 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.data[self.itime, self.ielement, :] = [free_conv, free_conv_k]
         self.ielement += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -957,7 +971,7 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
     def nnodes_per_element(self) -> int:
         return 1
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -1112,7 +1126,7 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s', page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
 
@@ -1180,15 +1194,15 @@ class RealHeatFluxVUShellArray(BaseElement):
         """is the result complex?"""
         return False
 
-    def data_type(self):
+    def data_type(self) -> str:
         return 'float32'
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
         #ngrids = len(self.gridTypes)
         msg = []
@@ -1229,7 +1243,7 @@ class RealHeatFluxVUShellArray(BaseElement):
     def _get_headers(self):
         return self.headers
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -1350,5 +1364,5 @@ class RealHeatFluxVUShellArray(BaseElement):
         self.itotal += 1
 
     #def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  #page_num=1, is_mag_phase=False, is_sort1=True):
+                  #page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         #pass

@@ -4,6 +4,7 @@ from numpy import zeros, searchsorted, allclose
 
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
@@ -16,14 +17,14 @@ class ComplexCBushArray(OES_Object):
         self.nelements = 0  # result specific
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -45,14 +46,12 @@ class ComplexCBushArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element = zeros(self.nelements, dtype=idtype)
 
         #[tx, ty, tz, rx, ry, rz]
-        self.data = zeros((self.ntimes, self.nelements, 6), dtype='complex64')
+        self.data = zeros((self.ntimes, self.nelements, 6), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -115,12 +114,12 @@ class ComplexCBushArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [tx, ty, tz, rx, ry, rz]
         self.ielement += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         ntimes, nelements, _ = self.data.shape
@@ -142,7 +141,7 @@ class ComplexCBushArray(OES_Object):
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element type: %s\n' % self.element_name)
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 
@@ -154,7 +153,7 @@ class ComplexCBushArray(OES_Object):
         ind = searchsorted(eids, self.element)
         return ind
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s', page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase)
@@ -205,7 +204,7 @@ class ComplexCBushArray(OES_Object):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         # see TestOP2.test_op2_other_01
@@ -213,10 +212,10 @@ class ComplexCBushArray(OES_Object):
         from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -243,7 +242,7 @@ class ComplexCBushArray(OES_Object):
         #assert self.ntimes == 1, self.ntimes
 
         device_code = self.device_code
-        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
         eids_device = self.element * 10 + self.device_code
 
@@ -256,11 +255,11 @@ class ComplexCBushArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
-        op2_ascii.write('nelements=%i\n' % nelements)
+        op2_ascii.write(f'nelements={nelements:d}\n')
 
         for itime in range(self.ntimes):
             #print('3, %s' % itable)
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -271,10 +270,10 @@ class ComplexCBushArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
-            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             tx = self.data[itime, :, 0]
             ty = self.data[itime, :, 1]
@@ -283,18 +282,16 @@ class ComplexCBushArray(OES_Object):
             ry = self.data[itime, :, 4]
             rz = self.data[itime, :, 5]
             for eid, itx, ity, itz, irx, iry, irz in zip(eids, tx, ty, tz, rx, ry, rz):
-                [txr, tyr, tzr, rxr, ryr, rzr,
-                 txi, tyi, tzi, rxi, ryi, rzi] = write_imag_floats_13e([itx, ity, itz, irx, iry, irz], is_mag_phase)
                 data = [
                     eid,
                     itx.real, ity.real, itz.real, irx.real, iry.real, irz.real,
                     itx.imag, ity.imag, itz.imag, irx.imag, iry.imag, irz.imag]
                 op2_ascii.write('  eid=%s data=%s\n' % (eids_device, str(data)))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

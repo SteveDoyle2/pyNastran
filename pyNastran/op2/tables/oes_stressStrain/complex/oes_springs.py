@@ -33,7 +33,7 @@ class ComplexSpringDamperArray(OES_Object):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -80,9 +80,9 @@ class ComplexSpringDamperArray(OES_Object):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     if not np.array_equal(t1, t2):
                         msg += '%s    (%s, %s)  (%s, %s)\n' % (
                             eid,
@@ -105,12 +105,12 @@ class ComplexSpringDamperArray(OES_Object):
         self.data[self.itime, self.ielement, 0] = stress
         self.ielement += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -173,7 +173,7 @@ class ComplexSpringDamperArray(OES_Object):
         return msg
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -208,17 +208,17 @@ class ComplexSpringDamperArray(OES_Object):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
         from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #eids = self.element
@@ -238,7 +238,7 @@ class ComplexSpringDamperArray(OES_Object):
         #assert self.ntimes == 1, self.ntimes
 
         #device_code = self.device_code
-        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
         eids_device = self.element * 10 + self.device_code
 
@@ -252,7 +252,7 @@ class ComplexSpringDamperArray(OES_Object):
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -261,10 +261,10 @@ class ComplexSpringDamperArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
-            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             from pyNastran.op2.op2_interface.utils import to_mag_phase
             stress = self.data[itime, :, 0]
@@ -273,11 +273,11 @@ class ComplexSpringDamperArray(OES_Object):
             for eid, stress_real, stress_imag in zip(eids_device, reals, imags):
                 data = [eid, stress_real, stress_imag]
                 op2_ascii.write(f'  eid={eid} stress={[stress_real, stress_imag]}\n')
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

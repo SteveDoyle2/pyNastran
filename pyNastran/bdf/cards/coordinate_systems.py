@@ -915,14 +915,9 @@ class Coord(BaseCard):
             t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
         return t
 
-    @staticmethod
-    def _check_square(matrix):
-        nx, ny = matrix.shape
-        assert nx == ny, f'nx={nx} ny={ny}'
-        assert nx % 3 == 0, f'nx={nx} is not a multiple of 3'
 
     def transform_matrix_to_global(self, matrix):
-        self._check_square(matrix)
+        _check_square(matrix)
         n = matrix.shape[0] // 3
         T = self.beta_n(n)
         matrix_out = T.T @ matrix @ T
@@ -931,7 +926,7 @@ class Coord(BaseCard):
     def transform_matrix_to_global_from_element_coord(self, matrix, n: int,
                                                       i, j, k):
         Tlocal = np.vstack([i, j, k])
-        self._check_square(Tlocal)
+        _check_square(Tlocal)
         n = matrix.shape[0] // 3
 
         T = self.beta_n(n) @ Tlocal
@@ -941,7 +936,7 @@ class Coord(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def move_origin(self, xyz, maintain_rid=False):
+    def move_origin(self, xyz: NDArray3float, maintain_rid: bool=False) -> None:
         """
         Move the coordinate system to a new origin while maintaining
         the orientation
@@ -965,8 +960,13 @@ class Coord(BaseCard):
             raise RuntimeError('Cannot move %s; cid=%s' % (self.type, self.cid))
         self.origin = xyz
 
+def _check_square(matrix: np.ndarray):
+    nx, ny = matrix.shape
+    assert nx == ny, f'nx={nx} ny={ny}'
+    assert nx % 3 == 0, f'nx={nx} is not a multiple of 3'
 
-def _fix_xyz_shape(xyz, name='xyz'):
+
+def _fix_xyz_shape(xyz: NDArray3float, name: str='xyz') -> NDArray3float:
     """
     Checks the shape of a grid point location and fixes it if possible
 
@@ -991,7 +991,12 @@ def _fix_xyz_shape(xyz, name='xyz'):
     return xyz
 
 
-def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
+def define_spherical_cutting_plane(model: BDF,
+                                   origin: NDArray3float,
+                                   rid: int,
+                                   cids: List[int],
+                                   thetas: List[float],
+                                   phis: List[float]):
     r"""
     Creates a series of coordinate systems defined as constant origin,
     with a series of theta and phi angles, which are defined about the
@@ -1574,6 +1579,22 @@ class Cord2x(Coord):
         # if setup:
         self._finish_setup()
 
+    def __deepcopy__(self, memo_dict):
+        if self.type == 'CORD2R':
+            cls = CORD2R
+        elif self.type == 'CORD2C':
+            cls = CORD2C
+        elif self.type == 'CORD2S':
+            cls = CORD2S
+
+        cid = self.cid
+        origin = copy.deepcopy(self.e1)
+        zaxis = copy.deepcopy(self.e2)
+        xzplane = copy.deepcopy(self.e3)
+        new_coood = cls(cid, origin, zaxis, xzplane, rid=self.rid,
+                        setup=True, comment=self.comment)
+        return new_coood
+
     @classmethod
     def export_to_hdf5(cls, h5_file, model, cids):
         """exports the coords in a vectorized way"""
@@ -1873,7 +1894,7 @@ class Cord2x(Coord):
         self.cid = cid_map[self.cid]
         self.rid = cid_map[self.rid]
 
-    def update_e123(self, maintain_rid=False):
+    def update_e123(self, maintain_rid: bool=False) -> None:
         """
         If you move the coordinate frame, e1, e2, e3 does not update.
         This updates the coordinate system.
