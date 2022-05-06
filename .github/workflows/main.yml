@@ -167,10 +167,10 @@ jobs:
       # was matplotlib 2.2.2
       # pandas 0.23.2
       # pandas<0.25
-      - name: Install old packages (3.7)
-        if: ${{ matrix.mode == 'old' && matrix.python-version == '3.7' }}
-        run: |
-          pip install numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py==2.8.0 pandas==0.23.2
+      #- name: Install old packages (3.7)
+      #  if: ${{ matrix.mode == 'old' && matrix.python-version == '3.7' }}
+      #  run: |
+      #    pip install numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py==2.8.0 pandas==0.23.2
 
       #  pandas==0.25.2
       - name: Install old packages (3.8)
@@ -209,7 +209,7 @@ jobs:
       - name: Install dependencies (bdist_wheel & develop)
          #pip install dist/pyNastran*.whl
          #python setup.py bdist_wheel
-        if: ${{ (matrix.python-version == '3.9') || (matrix.python-version == '3.8' && (matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old')) }}
+        if: ${{  (matrix.python-version == '3.9') || (matrix.python-version == '3.10') || (matrix.python-version == '3.8' && (matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old')) }}
         run: |
          python setup.py develop
 
@@ -218,7 +218,7 @@ jobs:
          pip list
 
       - name: Run No GUI
-        if: ${{ matrix.python-version == '3.9' || (matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
+        if: ${{ matrix.python-version == '3.10' || (matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests_no_gui.py
@@ -226,7 +226,7 @@ jobs:
 
         # 3.9 - No matching distribution found for vtk
       - name: Run GUI
-        if: ${{ matrix.python-version != '3.9' && (matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'old_pyside_gui' || matrix.mode == 'old_pyqt_gui') }}
+        if: ${{ matrix.python-version != '3.10' && (matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'old_pyside_gui' || matrix.mode == 'old_pyqt_gui') }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests.py
