@@ -7,6 +7,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'properties'):
         return
 
+    op2_file = op2
     out = defaultdict(list)
     for pid, phbdy in obj.phbdys.items():
         out[phbdy.type].append(pid)
@@ -22,7 +23,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
     nproperties = len(obj.properties) + len(obj.properties_mass) + len(out)
     if nproperties == 0:
         return
-    write_geom_header(b'EPT', op2, op2_ascii, endian=endian)
+    write_geom_header(b'EPT', op2_file, op2_ascii, endian=endian)
     struct_3i = Struct(endian + b'3i')
 
     itable = -3
@@ -58,16 +59,16 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
 
         #print('EPT', itable, name)
         if name == 'PBARL':
-            itable = write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=endian)
+            itable = write_pbarl(name, pids, itable, op2_file, op2_ascii, obj, endian=endian)
             continue
         elif name == 'PCOMP':
-            itable = write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=endian)
+            itable = write_pcomp(name, pids, itable, op2_file, op2_ascii, obj, endian=endian)
             continue
         elif name == 'PCOMPG':
-            itable = write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=endian)
+            itable = write_pcompg(name, pids, itable, op2_file, op2_ascii, obj, endian=endian)
             continue
         elif name == 'PBUSH':
-            itable = write_pbush(name, pids, itable, op2, op2_ascii, obj, endian=endian,
+            itable = write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
                                  nastran_format=nastran_format)
             continue
 
@@ -150,54 +151,54 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
 
         nvalues = nfields * nproperties + 3 # +3 comes from the keys
         nbytes = nvalues * 4
-        op2.write(struct_3i.pack(*[4, nvalues, 4]))
-        op2.write(pack('i', nbytes)) #values, nbtyes))
+        op2_file.write(struct_3i.pack(*[4, nvalues, 4]))
+        op2_file.write(pack('i', nbytes)) #values, nbtyes))
 
-        op2.write(struct_3i.pack(*key))
+        op2_file.write(struct_3i.pack(*key))
         op2_ascii.write('%s %s\n' % (name, str(key)))
 
         try:
-            write_card(op2, op2_ascii, obj, name, pids, spack, endian)
-        except:
+            write_card(op2_file, op2_ascii, obj, name, pids, spack, endian)
+        except Exception:
             obj.log.error('failed EPT-%s' % name)
             raise
-        op2.write(pack('i', nbytes))
+        op2_file.write(pack('i', nbytes))
         itable -= 1
 
         data = [
             4, itable, 4,
             4, 1, 4,
             4, 0, 4]
-        op2.write(pack('9i', *data))
+        op2_file.write(pack('9i', *data))
         op2_ascii.write(str(data) + '\n')
 
     #-------------------------------------
     #print('itable', itable)
-    close_geom_table(op2, op2_ascii, itable)
+    close_geom_table(op2_file, op2_ascii, itable)
     #-------------------------------------
 
-def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
+def write_card(op2_file, op2_ascii, obj, name, pids, spack, endian):
     op2_ascii.write('EPT-%s\n' % name)
     if name == 'PELAS':
         for pid in sorted(pids):
             prop = obj.properties[pid]
             #(pid, k, ge, s) = out
             data = [pid, prop.k, prop.ge, prop.s]
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PDAMP':
         for pid in sorted(pids):
             prop = obj.properties[pid]
             #(pid, b) = out
             data = [pid, prop.b]
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PVISC':
         for pid in sorted(pids):
             prop = obj.properties[pid]
             #(pid, ce, cr) = out
             data = [pid, prop.ce, prop.cr]
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PBUSH1D':
-        _write_pbush1d(name, obj, pids, spack, op2, op2_ascii, endian)
+        _write_pbush1d(name, obj, pids, spack, op2_file, op2_ascii, endian)
     elif name == 'PTUBE':
         #.. todo:: OD2 only exists for heat transfer...
         #          how do i know if there's heat transfer?
@@ -208,7 +209,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             prop = obj.properties[pid]
             #(pid, mid, OD, t, nsm) = out
             data = [pid, prop.mid, prop.OD1, prop.t, prop.nsm]
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
 
     elif name == 'PGAP':
         for pid in sorted(pids):
@@ -218,7 +219,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
                     prop.mu1, prop.mu2, prop.tmax, prop.mar, prop.trmin]
             assert None not in data, data
             op2_ascii.write('  pid=%s data=%s' % (pid, data[1:]))
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
 
     elif name == 'PBAR':
         for pid in sorted(pids):
@@ -233,9 +234,9 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
                 fe, prop.c1, prop.c2, prop.d1, prop.d2, prop.e1, prop.e2,
                 prop.f1, prop.f2, k1, k2, prop.i12]
             assert None not in data, data
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PBEAM':  # probably wrong stations
-        _write_pbeam(name, obj, pids, op2, op2_ascii, endian)
+        _write_pbeam(name, obj, pids, op2_file, op2_ascii, endian)
 
     elif name == 'PSOLID':
         #pid = data[0]
@@ -279,6 +280,8 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
                 isop = 1
             elif  prop.isop is None:  # TODO: not sure
                 isop = 0
+            elif  prop.isop == 2: # 'TWO':
+                isop = 2
             else:
                 raise NotImplementedError('isop=%s and must be [0, 1]' % prop.isop)
 
@@ -286,19 +289,21 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
                 fctn = b'SMEC'
             elif prop.fctn == 'PFLUID':
                 fctn = b'PFLU'
+            elif prop.fctn == 'FFLUID':
+                fctn = b'FFLU'
             else:
                 raise NotImplementedError('PSOLID; fctn=%r' % prop.fctn)
 
             data = [pid, mid, cordm, integ, stress, isop, fctn]
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, mid, data[2:]))
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PSHEAR':
         for pid in sorted(pids):
             prop = obj.properties[pid]
             #(pid, mid, t, nsm, f1, f2) = out
             data = [pid, prop.mid, prop.t, prop.nsm, prop.f1, prop.f2]
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PSHELL':
         for pid in sorted(pids):
             #(pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
@@ -314,7 +319,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
 
             op2_ascii.write(f'  {name} pid={pid} mid1={mid1} data={data[2:]}\n')
             assert None not in data, f'  {name} pid={pid} mid1={mid1} data={data[2:]}'
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PLPLANE':
         #NX 10
         #1 PID     I Property identification number
@@ -343,14 +348,14 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
                     0, 0, 0, 0, 0]
             #print(name, data)
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PROD':
         for pid in sorted(pids):
             prop = obj.properties[pid]
             #(pid, mid, a, j, c, nsm) = out
             data = [pid, prop.mid, prop.A, prop.j, prop.c, prop.nsm]
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PLSOLID':
         #MSC 2016
         #1 PID I Property identification number
@@ -377,19 +382,19 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             data = [pid, prop.mid, location, csopt, 0, 0, 0]
             #print(name, data)
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid, data[2:]))
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PMASS':
         for pid in sorted(pids):
             prop = obj.properties_mass[pid]
             data = [pid, prop.mass]
             op2_ascii.write('  pid=%s mass=%s\n' % (pid, prop.mass))
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PELAST':
         for pid in sorted(pids):
             prop = obj.pelast[pid]
             data = [pid, prop.tkid, prop.tgeid, prop.tknid]
             op2_ascii.write('  pid=%s tables=%s\n' % (pid, data[1:]))
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
     elif name == 'PHBDY':
         for pid in sorted(pids):
             prop = obj.phbdys[pid]
@@ -399,29 +404,28 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             data = [pid, af, d1, d2]
             op2_ascii.write('  pid=%s [af,d1,d2]=%s\n' % (pid, data[1:]))
             #print('  pid=%s [af,d1,d2]=%s\n' % (pid, data[1:]))
-            op2.write(spack.pack(*data))
+            op2_file.write(spack.pack(*data))
             #(pid, af, d1, d2) = out
     else:  # pragma: no cover
         raise NotImplementedError(name)
 
 
-def write_pbush(name, pids, itable, op2, op2_ascii, obj, endian=b'<',
+def write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
                 nastran_format='nx'):
     """writes the PBUSH"""
-
     # TODO: there are 3 different types of PBUSH cards...
     key = (1402, 14, 37) # 23 fields
+    nfields = 23
     fmt = endian + b'i22f'
     struct1 = Struct(fmt)
-
     nproperties = len(pids)
 
-    nvalues = 23 * nproperties + 3 # +3 comes from the keys
+    nvalues = nfields * nproperties + 3 # +3 comes from the keys
     nbytes = nvalues * 4
-    op2.write(pack('3i', *[4, nvalues, 4]))
-    op2.write(pack('i', nbytes)) #values, nbtyes))
+    op2_file.write(pack('3i', *[4, nvalues, 4]))
+    op2_file.write(pack('i', nbytes)) #values, nbtyes))
 
-    op2.write(pack('3i', *key))
+    op2_file.write(pack('3i', *key))
     op2_ascii.write('%s %s\n' % (name, str(key)))
 
     for pid in sorted(pids):
@@ -438,7 +442,7 @@ def write_pbush(name, pids, itable, op2, op2_ascii, obj, endian=b'<',
         if prop.GEi:
             (g1, g2, g3, g4, g5, g6) = [
                 gi if gi is not None else 0.0 for gi in prop.GEi] # ???
-        # TODO: not 100%
+
         sa = prop.sa if prop.sa is not None else 0.
         st = prop.st if prop.st is not None else 0.
         ea = prop.ea if prop.ea is not None else 0.
@@ -451,16 +455,16 @@ def write_pbush(name, pids, itable, op2, op2_ascii, obj, endian=b'<',
 
         assert len(data_in) == 23, data_in
         assert None not in data_in
-        op2.write(struct1.pack(*data_in))
+        op2_file.write(struct1.pack(*data_in))
         op2_ascii.write(str(data_in) + '\n')
 
-    op2.write(pack('i', nbytes))
+    op2_file.write(pack('i', nbytes))
     itable -= 1
     data = [
         4, itable, 4,
         4, 1, 4,
         4, 0, 4]
-    op2.write(pack('9i', *data))
+    op2_file.write(pack('9i', *data))
     op2_ascii.write(str(data) + '\n')
     return itable
     #"""PBUSH"""
@@ -573,6 +577,12 @@ def write_pcomp(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
             ft = 3
         elif prop.ft == 'STRN':
             ft = 4
+        elif prop.ft == 'HFAI':  # secret MSC
+            ft = 5
+        elif prop.ft == 'HTAP':  # secret MSC
+            ft = 6
+        elif prop.ft == 'HFAB':  # secret MSC
+            ft = 7
         else:
             raise RuntimeError(f'unsupported ft.  pid={pid} ft={prop.ft!r}.'
                                f'\nPCOMP = {prop}')
@@ -617,7 +627,7 @@ def write_pcomp(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
 
     return itable
 
-def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
+def write_pcompg(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
     """writes the PCOMPG"""
     key = (15006, 150, 604)
 
@@ -635,10 +645,10 @@ def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
 
     nvalues = 8 * nproperties + (5 * nlayers) + 3 # +3 comes from the keys
     nbytes = nvalues * 4
-    op2.write(pack('3i', *[4, nvalues, 4]))
-    op2.write(pack('i', nbytes)) #values, nbtyes))
+    op2_file.write(pack('3i', *[4, nvalues, 4]))
+    op2_file.write(pack('i', nbytes)) #values, nbtyes))
 
-    op2.write(pack('3i', *key))
+    op2_file.write(pack('3i', *key))
     op2_ascii.write('%s %s\n' % (name, str(key)))
 
     #is_symmetrical = 'NO'
@@ -654,21 +664,21 @@ def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
     lam_map = {
         None : 0,
     }
+    ft_to_int_map = {
+        None: 0,
+        'HILL': 1,
+        'HOFF': 2,
+        'TSAI': 3,
+        'STRN': 4,
+    }
+
     for pid in sorted(pids):
         prop = obj.properties[pid]
         #print(prop.get_stats())
 
-        if prop.ft is None:
-            ft = 0
-        elif prop.ft == 'HILL':
-            ft = 1
-        elif prop.ft == 'HOFF':
-            ft = 2
-        elif prop.ft == 'TSAI':
-            ft = 3
-        elif prop.ft == 'STRN':
-            ft = 4
-        else:
+        try:
+            ft = ft_to_int_map[prop.ft]
+        except KeyError:
             raise RuntimeError(f'unsupported ft.  pid={pid} ft={prop.ft!r}.'
                                f'\nPCOMP = {prop}')
 
@@ -678,7 +688,7 @@ def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
         #(pid, lam_int, z0, nsm, sb, ft_int, tref, ge) = out
         data = [pid, lam, prop.z0,
                 prop.nsm, prop.sb, ft, prop.tref, prop.ge]
-        op2.write(s1.pack(*data))
+        op2_file.write(s1.pack(*data))
         op2_ascii.write(str(data) + '\n')
 
         for (glply, mid, t, theta, sout) in zip(prop.global_ply_ids, prop.mids, prop.thicknesses, prop.thetas, prop.souts):
@@ -690,28 +700,28 @@ def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
                 raise RuntimeError(f'unsupported sout.  sout={sout!r} and must be 0 or 1.'
                                    f'\nPCOMPG = {data}')
             data2 = [glply, mid, t, theta, sout]
-            op2.write(s2.pack(*data2))
+            op2_file.write(s2.pack(*data2))
             op2_ascii.write(str(data2) + '\n')
         data2 = [-1, -1, -1, -1, -1]
-        op2.write(struct_i5.pack(*data2))
+        op2_file.write(struct_i5.pack(*data2))
         op2_ascii.write(str(data2) + '\n')
 
     #data_in = [
         #pid, z0, nsm, sb, ft, Tref, ge,
         #is_symmetrical, mids, T, thetas, souts]
 
-    op2.write(pack('i', nbytes))
+    op2_file.write(pack('i', nbytes))
     itable -= 1
     data = [
         4, itable, 4,
         4, 1, 4,
         4, 0, 4]
-    op2.write(pack('9i', *data))
+    op2_file.write(pack('9i', *data))
     op2_ascii.write(str(data) + '\n')
 
     return itable
 
-def _write_pbeam(name, model, pids, op2, op2_ascii, endian):
+def _write_pbeam(name, model, pids, op2_file, op2_ascii, endian):
     struct1 = Struct(endian + b'4if')
     struct2 = Struct(endian + b'16f')
     struct3 = Struct(endian + b'16f')
@@ -735,9 +745,10 @@ def _write_pbeam(name, model, pids, op2, op2_ascii, endian):
         x = 0.
         data = [pid, prop.mid, nsegments, ccf, x]
         nfieldsi += len(data)
-        op2.write(struct1.pack(*data))
+        op2_file.write(struct1.pack(*data))
 
         nzero_segments = nsegments - 1
+        #print(f'nsegments={nsegments} nzero_segments={nzero_segments}')
         j = 0
         for i in range(11):
             if i > nzero_segments:
@@ -781,7 +792,7 @@ def _write_pbeam(name, model, pids, op2, op2_ascii, endian):
                 #so_str = str(soi)
             assert None not in data, data
             nfieldsi += len(data)
-            op2.write(struct2.pack(*data))
+            op2_file.write(struct2.pack(*data))
 
         #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
 
@@ -811,11 +822,11 @@ def _write_pbeam(name, model, pids, op2, op2_ascii, endian):
         #n1b / n2b : float; default=0. / n1b
         assert None not in data, data
         nfieldsi += len(data)
-        op2.write(struct3.pack(*data))
+        op2_file.write(struct3.pack(*data))
         assert nfieldsi == 197, nfieldsi
     return
 
-def _write_pbush1d(name, model, pids, spack, op2, op2_ascii, endian):
+def _write_pbush1d(name, model, pids, spack, op2_file, op2_ascii, endian):
     type_map = {
         None : 0,  # NULL
         'EQUAT' : 1,
@@ -903,7 +914,7 @@ def _write_pbush1d(name, model, pids, spack, op2, op2_ascii, endian):
                 typef, idtf, idcf,
                 ut, uc]
         assert len(data) == 38, len(data)
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     #ntotal = 152  # 38*4
     #struct1 = Struct(self._endian + b'i 6f i 4f 24i 2f')
     #nentries = (len(data) - n) // ntotal

@@ -1079,27 +1079,28 @@ class OP4:
             endian = self._endian
             assert endian is not None, endian
 
+        data4 = data[:nints * 4]
         if 's' in types:
             strings = unpack(b'%s%is' % (endian, n), data)
             f.write("strings(s) = %s\n" % str(strings))
         if 'i' in types:
-            ints = unpack(b'%s%ii' % (endian, nints), data)
+            ints = unpack(b'%s%ii' % (endian, nints), data4)
             f.write("ints(i)    = %s\n" % str(ints))
         if 'f' in types:
-            floats = unpack(b'%s%if' % (endian, nints), data)
+            floats = unpack(b'%s%if' % (endian, nints), data4)
             f.write("floats(f)  = %s\n" % str(floats))
         if 'd' in types:
             doubles = unpack(b'%s%id' % (endian, ndoubles), data[:ndoubles*8])
             f.write("doubles(d)  = %s\n" % str(doubles))
 
         if 'l' in types:
-            longs = unpack(b'%s%il' % (endian, nints), data)
+            longs = unpack(b'%s%il' % (endian, nints), data4)
             f.write("long(l)  = %s\n" % str(longs))
         if 'I' in types:
-            ints2 = unpack(b'%s%iI' % (endian, nints), data)
+            ints2 = unpack(b'%s%iI' % (endian, nints), data4)
             f.write("unsigned int(I) = %s\n" % str(ints2))
         if 'L' in types:
-            longs2 = unpack(b'%s%iL' % (endian, nints), data)
+            longs2 = unpack(b'%s%iL' % (endian, nints), data4)
             f.write("unsigned long(L) = %s\n" % str(longs2))
         if 'q' in types:
             longs = unpack(b'%s%iq' % (endian, ndoubles), data[:ndoubles*8])

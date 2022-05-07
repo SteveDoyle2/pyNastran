@@ -17,7 +17,7 @@ from pyNastran.bdf.utils import get_xyz_cid0_dict
 from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float
-    from pyNastran.bdf.bdf import BDF, Subcase
+    from pyNastran.bdf.bdf import BDF, Subcase, PLOAD4
 
 
 def isnan(value):

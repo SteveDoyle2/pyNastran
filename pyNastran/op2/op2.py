@@ -564,7 +564,7 @@ class OP2(OP2_Scalar, OP2Writer):
             OP2_Scalar.read_op2(self, op2_filename=self.op2_filename, mode=mode)
         except FileNotFoundError:
             raise
-        except:
+        except Exception:
             OP2_Scalar.close_op2(self, force=True)
             raise
         self._finalize()

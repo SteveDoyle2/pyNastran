@@ -316,7 +316,8 @@ class GEOM4(GeomCommon):
         return self._read_xset(data, n, 'CSET', CSET, self._add_cset_object)
 
     def _read_cset1(self, data: bytes, n: int) -> int:
-        return self._read_xset1(data, n, 'CSET1', CSET1, self._add_cset_object)
+        return n
+        #return self._read_xset1(data, n, 'CSET1', CSET1, self._add_cset_object)
 
     def _read_cyax(self, data: bytes, n: int) -> int:
         """CYAX(1510,15,328) - Record 8 """

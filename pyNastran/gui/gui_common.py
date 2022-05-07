@@ -213,10 +213,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def _on_execute_python_button(self, clear=False):
         """executes the docked python console"""
-        txt = str(self.python_dock_widget.enter_data.toPlainText()).rstrip()
+        enter_data = self.python_dock_widget.enter_data
+        txt = str(enter_data.toPlainText()).rstrip()
         is_passed = self._execute_python_code(txt)
         if is_passed and clear:
-            self.python_dock_widget.enter_data.clear()
+            enter_data.clear()
 
     def set_tools(self,
                   tools: List[Tuple[str, str, str, Optional[str], str, Callable]]=None,

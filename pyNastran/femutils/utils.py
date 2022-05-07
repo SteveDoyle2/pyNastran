@@ -8,10 +8,18 @@ This includes:
  - augmented_identity(A)
 
 """
+from typing import List
 import numpy as np
 
 #ver = np.lib.NumpyVersion(np.__version__)
 #if ver < '1.13.0':
+
+def vstack_lists(list_of_arrays: List[np.ndarray]) -> np.ndarray:
+    if len(list_of_arrays) == 1:
+        array = list_of_arrays[0]
+    else:
+        array = np.vstack(list_of_arrays)
+    return array
 
 def pivot_table(data, rows, cols):
     """PCOMP: rows=element_ids, cols=layer"""
@@ -91,11 +99,11 @@ def duplicates(ids):
     counts = np.bincount(ids)
     return np.where(counts > 1)[0]
 
-def is_monotonic(int_array):
+def is_monotonic(int_array: np.ndarray):
     """is the array monotonic?"""
     return np.all(int_array[1:] >= int_array[:-1])
 
-def unique_rows(A, return_index=False, return_inverse=False):
+def unique_rows(A: np.ndarray, return_index=False, return_inverse=False):
     """
     Similar to MATLAB's unique(A, 'rows'), this returns B, I, J
     where B is the unique rows of A and I and J satisfy
@@ -132,7 +140,7 @@ def unique_rows(A, return_index=False, return_inverse=False):
     else:
         return B.view(A.dtype).reshape((-1, A.shape[1]), order='C')
 
-def cross2d(a, b):
+def cross2d(a: np.ndarray, b: np.ndarray):
     """
     Interface to np.cross for 2d matrices
 
@@ -144,7 +152,7 @@ def cross2d(a, b):
     # axisa=-1, axisb=-1, axisc=-1,
     return np.cross(a, b, axis=1)
 
-def augmented_identity(nx, ny):
+def augmented_identity(nx: int, ny: int) -> np.ndarray:
     """
     Creates an Identity Matrix augmented with zeros.
     The location of the extra zeros depends on nx/ny.
@@ -159,7 +167,7 @@ def augmented_identity(nx, ny):
     eye = np.eye(max(nx, ny), dtype='float64')
     return eye[:nx, :ny]
 
-def perpendicular_vector(v):
+def perpendicular_vector(v: np.ndarray) -> np.ndarray:
     """
     Finds an arbitrary perpendicular vector to *v*.
 
@@ -198,7 +206,7 @@ def perpendicular_vector(v):
     #     c = -(x + y)/z
     return np.array([1., 1., -1.0 * (v[0] + v[1]) / v[2]])
 
-def perpendicular_vector2d(v_array):
+def perpendicular_vector2d(v_array: np.ndarray) -> np.ndarray:
     """
     Finds an array of arbitrary perpendicular vector to *v_array*.
 
@@ -264,7 +272,7 @@ def perpendicular_vector2d(v_array):
     vout[is_3d, 2] = -1. * (v[is_3d, 0] + v[is_3d, 1]) / v[is_3d, 2]
     return vout
 
-def underflow_norm(x, ord=None, axis=None, keepdims=False):
+def underflow_norm(x: np.ndarray, ord=None, axis=None, keepdims: bool=False) -> np.ndarray:
     """see numpy.linalg.norm"""
     try:
         normi = np.linalg.norm(x, axis=axis)

@@ -291,7 +291,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
         """
         return self._read_geom_4(self._contact_map, data, ndata)
 
-    def _read_viewtb_4(self, data, ndata):
+    def _read_viewtb_4(self, data: bytes, ndata: int):
         """
         View information table
         Contains the relationship between each p-element and its view-elements

@@ -13,7 +13,7 @@ defines:
 from __future__ import annotations
 import os
 from itertools import count
-from typing import Tuple, Union, Any, TYPE_CHECKING
+from typing import Tuple, Dict, Union, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
