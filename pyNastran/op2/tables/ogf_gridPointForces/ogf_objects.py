@@ -1,5 +1,7 @@
 from __future__ import annotations
 import sys
+import inspect
+from struct import Struct, pack
 from typing import List, Dict, TYPE_CHECKING
 
 import numpy as np
@@ -12,6 +14,7 @@ from pyNastran.op2.vector_utils import (
     transform_force_moment, transform_force_moment_sum, sortedsum1d)
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.writer.utils import fix_table3_types
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import (
@@ -28,9 +31,7 @@ class GridPointForces(BaseElement):
         self.ntotal = 0
         self.itotal = 0
 
-    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
-        import inspect
-        from struct import pack
+    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -46,7 +47,7 @@ class GridPointForces(BaseElement):
                 4, 0, 4,
                 4, 146, 4,
             ]
-        op2.write(pack(b'%ii' % len(header), *header))
+        op2_file.write(pack(b'%ii' % len(header), *header))
         op2_ascii.write('table_3_header = %s\n' % header)
 
         approach_code = self.approach_code
@@ -116,23 +117,14 @@ class GridPointForces(BaseElement):
         ]
         assert table3[22] == thermal
 
-        n = 0
-        for v in table3:
-            if isinstance(v, (int, float)):
-                n += 4
-            elif isinstance(v, str):
-                n += len(v)
-            else:
-                #print('write_table_3', v)
-                n += len(v)
-        assert n == 584, n
+        table3 = fix_table3_types(table3, size=4)
         data = [584] + table3 + [584]
         fmt = b'i' + ftable3 + b'i'
         #print(fmt)
         #print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
-        op2.write(pack(fmt, *data))
+        op2_file.write(pack(fmt, *data))
 
 
 class RealGridPointForcesArray(GridPointForces):
@@ -417,9 +409,13 @@ class RealGridPointForcesArray(GridPointForces):
                         raise ValueError(msg)
         return True
 
-    def extract_freebody_loads(self, eids,
-                               coord_out, coords, nid_cd, icd_transform,
-                               itime=0, debug=True, log=None):
+    def extract_freebody_loads(self, eids: NDArrayNint,
+                               coord_out: CORD,
+                               coords: Dict[int, CORD],
+                               nid_cd: NDArrayN2int,
+                               icd_transform: Dict[int, NDArrayNint],
+                               itime=0, debug=True,
+                               log: Optional[SimpleLogger]=None):
         """
         Extracts Patran-style freebody loads.  Freebody loads are the
         external loads.
@@ -505,7 +501,6 @@ class RealGridPointForcesArray(GridPointForces):
             consider_rxf=False,
             debug=debug, log=log)
         return force, moment
-
 
     def extract_interface_loads(self,
                                 nids: NDArrayNint,
@@ -1273,24 +1268,25 @@ class ComplexGridPointForcesArray(GridPointForces):
             df2.columns = ['ElementType']
             df3 = pd.DataFrame(self.data[0])
             df3.columns = headers
-            self.data_frame = df1.join([df2, df3])
-            #print(self.data_frame)
+            data_frame = df1.join([df2, df3])
+            #print(data_frame)
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
             if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
-                self.data_frame = pd.Panel(
+                data_frame = pd.Panel(
                     self.data, items=column_values,
                     major_axis=node_element, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = column_names
-                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+                data_frame.columns.names = column_names
+                data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             else:
-                self.data_frame = pd.Panel(
+                data_frame = pd.Panel(
                     self.data,
                     major_axis=node_element, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = ['Static']
-                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+                data_frame.columns.names = ['Static']
+                data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             #print(self.data_frame)
+        self.data_frame = data_frame
 
     def _build_dataframe(self):
         """::
@@ -1458,7 +1454,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         msg.append('  node_element.shape=%s\n' % str(self.node_element.shape).replace('L', ''))
         msg.append('  element_names.shape=%s\n' % str(self.element_names.shape).replace('L', ''))
         msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element type: %s\n' % self.element_name)
+        msg.append(f'  element type: {self.element_name}\n')
         msg += self.get_data_code()
         return msg
 
@@ -1471,7 +1467,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         #return ind
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         msg = self._get_f06_msg(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -1641,17 +1637,17 @@ class ComplexGridPointForcesArray(GridPointForces):
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
         from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         # table 4 info
@@ -1666,7 +1662,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         #print('shape = %s' % str(self.data.shape))
 
         #device_code = self.device_code
-        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
         #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
@@ -1677,7 +1673,7 @@ class ComplexGridPointForcesArray(GridPointForces):
             raise NotImplementedError('SORT2')
 
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -1705,10 +1701,10 @@ class ComplexGridPointForcesArray(GridPointForces):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
-            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             #zero = ' '
             ntotal = self._ntotals[itime]
@@ -1731,12 +1727,12 @@ class ComplexGridPointForcesArray(GridPointForces):
                         t1i.imag, t2i.imag, t3i.imag, r1i.imag, r2i.imag, r3i.imag]
                 #print('  nid=%s eid=%s data=%s' % (nid, eid, str(data[2:])))
                 op2_ascii.write('  nid=%-3s eid=%-3s data=%s\n' % (nid, eid, str(data[2:])))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
                 assert len(data) + 1 == self.num_wide
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

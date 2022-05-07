@@ -1,7 +1,7 @@
 # pylint: disable=C0301,C0103,R0913,R0914,R0904,C0111,R0201,R0902
 from itertools import count
 from struct import Struct, pack
-from typing import List
+from typing import Tuple, List, Any
 
 import numpy as np
 from numpy import zeros, where, searchsorted
@@ -11,6 +11,7 @@ from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.op2_interface.write_utils import to_column_bytes
 
 
 class RealSolidArray(OES_Object):
@@ -115,7 +116,7 @@ class RealSolidArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         _times = zeros(self.ntimes, dtype=dtype)
 
         # TODO: could be more efficient by using nelements for cid
@@ -404,17 +405,17 @@ class RealSolidArray(OES_Object):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
             #print('***************', itable)
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -427,14 +428,18 @@ class RealSolidArray(OES_Object):
 
         eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
+        nelements_nodes = len(nodes)
 
         eids3 = self.element_cid[:, 0]
         cids3 = self.element_cid[:, 1]
+        element_device = eids3 * 10 + self.device_code
 
         # table 4 info
         #ntimes = self.data.shape[0]
         nnodes = self.data.shape[1]
         nelements = len(np.unique(eids2))
+        #if len(ueids2) == 1 and len(eids3) != 1:
+            #raise RuntimeError(f'SORT2: ueids2={ueids2}')
 
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
@@ -449,7 +454,7 @@ class RealSolidArray(OES_Object):
         #assert self.ntimes == 1, self.ntimes
 
         #device_code = self.device_code
-        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
         #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
@@ -463,9 +468,9 @@ class RealSolidArray(OES_Object):
             raise NotImplementedError('SORT2')
 
         cen = b'GRID'
-        op2_ascii.write('nelements=%i\n' % nelements)
+        op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -475,10 +480,10 @@ class RealSolidArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
-            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             oxx = self.data[itime, :, 0]
             oyy = self.data[itime, :, 1]
@@ -516,7 +521,7 @@ class RealSolidArray(OES_Object):
                 if i % cnnodes == 0:
                     data = [deid * 10 + self.device_code, cid, cen, nnodes_expected]
                     op2_ascii.write('  eid=%s cid=%s cen=%s nnodes = %s\n' % tuple(data))
-                    op2.write(
+                    op2_file.write(
                         struct1.pack(*data)
                         #pack(b'2i 4s i', *data)
                     )
@@ -530,12 +535,12 @@ class RealSolidArray(OES_Object):
                 op2_ascii.write('      oxx, txy, o1, v01, v02, v00, p, ovm = %s\n' % data[1:8])
                 op2_ascii.write('      oyy, tyz, o2, v11, v12, v10         = %s\n' % data[8:14])
                 op2_ascii.write('      ozz, txz, o3, v21, v22, v20         = %s\n' % data[14:])
-                op2.write(struct2.pack(*data))
+                op2_file.write(struct2.pack(*data))
                 i += 1
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

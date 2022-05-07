@@ -1081,7 +1081,7 @@ class OES(OP2Common):
             raise
             #return None, None
 
-    def get_oes_prefix_postfix(self):
+    def get_oes_prefix_postfix(self) -> Tuple[str, str]:
         """
         Creates the prefix/postfix that splits off ATO, CRM, PSD, nonlinear,
         etc. results.  We also fix some of the sort bits as typing:

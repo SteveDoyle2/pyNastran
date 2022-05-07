@@ -62,6 +62,10 @@ from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
 from pyNastran.op2.result_objects.design_response import DSCMCOL
 from pyNastran.op2.op2_interface.nx_tables import NX_VERSIONS
 
+from pyNastran.op2.op2_interface.utils import (
+    mapfmt, reshape_bytes_block,
+    reshape_bytes_block_size)
+
 
 from pyNastran.op2.result_objects.design_response import (
     WeightResponse, DisplacementResponse, StressResponse, StrainResponse, ForceResponse,

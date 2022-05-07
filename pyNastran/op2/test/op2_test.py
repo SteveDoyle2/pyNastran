@@ -127,7 +127,7 @@ def run(regenerate=True, make_geom=False, combine=True,
         files2 += files
         assert len(files2) > 0, files2
     else:
-        print('failed_cases_filename = %r' % failed_cases_filename)
+        print(f'failed_cases_filename = {failed_cases_filename!r}')
         files2 = get_failed_files(failed_cases_filename)
     assert len(files2) > 0, files2
     files = list(set(files2))
@@ -193,11 +193,11 @@ def main():
     #is_release = False
     is_dev = 'dev' in ver
     msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [--safe] [--skip_dataframe] [--nocombine]\n"
-    msg += "        op2_test -h | --help\n"
-    msg += "        op2_test -v | --version\n"
-    msg += "\n"
-    msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
-    msg += "\n"
+    msg += '        op2_test -h | --help\n'
+    msg += '        op2_test -v | --version\n'
+    msg += '\n'
+    msg += f'Tests to see if an OP2 will work with pyNastran {ver}.\n'
+    msg += '\n'
     #msg += "Positional Arguments:\n"
     #msg += "  OP2_FILENAME         Path to OP2 file\n"
     #msg += "\n"

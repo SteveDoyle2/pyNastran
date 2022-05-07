@@ -1,5 +1,6 @@
 from struct import unpack
 from numpy import array
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 
@@ -53,23 +54,29 @@ class OGPWG(OP2Common):
         if self.read_mode == 1:
             return ndata
         #print('  num_wide = %r' % self.num_wide)
-        MO = array(unpack('36f', data[:4*36]))
+        size = self.size
+        fmt_mo = mapfmt(b'36f', size)
+        fmt_s = mapfmt(b'9f', size)
+        fmt_mxyz = mapfmt(b'12f', size)
+        fmt_iq = mapfmt(b'3f', size)
+        assert ndata == 78 * size, ndata
+        MO = array(unpack(fmt_mo, data[:36*size]))
         MO = MO.reshape(6, 6)
 
-        S = array(unpack('9f', data[4*36:4*(36+9)]))
+        S = array(unpack(fmt_s, data[36*size:(36+9)*size]))
         S = S.reshape(3, 3)
 
-        mxyz = array(unpack('12f', data[4*(36+9):4*(36+9+12)]))
+        mxyz = array(unpack(fmt_mxyz, data[(36+9)*size:(36+9+12)*size]))
         mxyz = mxyz.reshape(3, 4)
         mass = mxyz[:, 0]
         cg = mxyz[:, 1:]
 
-        IS = array(unpack('9f', data[4*(36+9+12):4*(36+9+12+9)]))
+        IS = array(unpack(fmt_s, data[(36+9+12)*size:(36+9+12+9)*size]))
         IS = IS.reshape(3, 3)
 
-        IQ = array(unpack('3f', data[4*(36+9+12+9):4*(36+9+12+9+3)]))
+        IQ = array(unpack(fmt_iq, data[(36+9+12+9)*size:(36+9+12+9+3)*size]))
 
-        Q = array(unpack('9f', data[4*(36+9+12+9+3):4*(36+9+12+9+3+9)]))
+        Q = array(unpack(fmt_s, data[(36+9+12+9+3)*size:(36+9+12+9+3+9)*size]))
         Q = Q.reshape(3, 3)
 
         #print(self.object_attributes())
@@ -86,6 +93,7 @@ class OGPWG(OP2Common):
             title=self.title, subtitle=self.subtitle, label=self.label,
             superelement_adaptivity_index=self.superelement_adaptivity_index,
         )
+        str(weight)
         self.grid_point_weight[self.superelement_adaptivity_index] = weight
         #del self.reference_point
         return ndata

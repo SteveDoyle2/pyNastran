@@ -2,7 +2,7 @@
 import copy
 from itertools import count
 from struct import pack
-from typing import List, Tuple
+from typing import Tuple, List, Union
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -98,7 +98,7 @@ class BaseScalarObject(Op2Codes):
         """creates a pandas dataframe"""
         print('build_dataframe is not implemented in %s' % self.__class__.__name__)
 
-    def export_to_hdf5(self, group, log) -> None:
+    def export_to_hdf5(self, group, log: SimpleLogger) -> None:
         """exports the object to HDF5 format"""
         export_to_hdf5(self, group, log)
 
@@ -126,7 +126,7 @@ class BaseScalarObject(Op2Codes):
     def __repr__(self) -> str:
         return ''.join(self.get_stats())
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         msg = 'get_stats is not implemented in %s\n' % self.__class__.__name__
         if not is_release:
             raise NotImplementedError(msg)
@@ -217,7 +217,7 @@ class ScalarObject(BaseScalarObject):
         #raise NotImplementedError(str(self.get_stats()))
         return False
 
-    def _eq_header(self, table):
+    def _eq_header(self, table) -> None:
         is_nan = (self.nonlinear_factor is not None and
                   np.isnan(self.nonlinear_factor) and
                   np.isnan(table.nonlinear_factor))
@@ -295,7 +295,7 @@ class ScalarObject(BaseScalarObject):
     def _sort_method(self) -> int:
         try:
             sort_method, unused_is_real, unused_is_random = self._table_specs()
-        except:
+        except Exception:
             sort_method = get_sort_method_from_table_name(self.table_name)
         #is_sort1 = self.table_name.endswith('1')
         #is_sort1 = self.is_sort1  # uses the sort_bits
@@ -307,7 +307,7 @@ class ScalarObject(BaseScalarObject):
         """alternate way to get the dataframe"""
         return self.data_frame
 
-    def apply_data_code(self):
+    def apply_data_code(self) -> None:
         #print(self.__class__.__name__)
         if self.table_name is not None and self.table_name != self.data_code['table_name']:
             #print(self.data_code)
@@ -320,7 +320,7 @@ class ScalarObject(BaseScalarObject):
             self.__setattr__(key, value)
             #print("  key=%s value=%s" % (key, value))
 
-    def get_data_code(self, prefix='  '):
+    def get_data_code(self, prefix: str='  ') -> List[str]:
         msg = ''
         if 'data_names' not in self.data_code:
             return ['']
@@ -371,7 +371,7 @@ class ScalarObject(BaseScalarObject):
                 value = self._get_var(value_name)
                 try:
                     n = len(listA)
-                except:
+                except Exception:
                     print("listA = ", listA)
                     raise
                 listA.append(value)
@@ -796,7 +796,8 @@ class BaseElement(ScalarObject):
         #print(data_frame)
         return data_frame
 
-def get_times_dtype(nonlinear_factor, size):
+def get_times_dtype(nonlinear_factor: Union[int, float], size: int,
+                    analysis_code_fmt=None) -> Tuple[str, str, str]:
     dtype = 'float'
     if isinstance(nonlinear_factor, integer_types):
         dtype = 'int'
@@ -809,9 +810,13 @@ def get_times_dtype(nonlinear_factor, size):
         dtype += '64'
         fdtype = 'float64'
         idtype = 'int64'
+
+    if analysis_code_fmt:
+        dtype = analysis_code_fmt
+        return dtype, idtype, fdtype
     return dtype, idtype, fdtype
 
-def get_complex_times_dtype(nonlinear_factor, size):
+def get_complex_times_dtype(nonlinear_factor: Union[int, float], size: int) -> Tuple[str, str, str]:
     dtype = 'float'
     if isinstance(nonlinear_factor, integer_types):
         dtype = 'int'

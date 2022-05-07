@@ -31,17 +31,18 @@ class TestMaterialCoordReal(unittest.TestCase):
             bdf = BDF(debug=False, log=log)
             op2 = OP2(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
-            op2.read_op2(os.path.join(basepath, prefix + '.op2'))
+            bdf_filename = os.path.join(basepath, f'{prefix}.bdf')
+            op2_filename = os.path.join(basepath, f'{prefix}.op2')
+            bdf.read_bdf(bdf_filename)
+            op2.read_op2(op2_filename)
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in force_vectors:
                 vector = getattr(op2_new, vecname).get(subcase)
                 if vector is None:
                     continue
-                name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
+                name = os.path.join(basepath, f'{vecname}_subcase_{subcase:02d}.txt')
                 if not os.path.isfile(name):
-                    raise AssertionError('Not found reference result {0}\n{1}'.format(
-                        name, print_bad_path(name)))
+                    raise AssertionError(f'Not found reference result {name}\n{print_bad_path(name)}')
                 ref_result = np.loadtxt(name)
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
@@ -58,21 +59,22 @@ class TestMaterialCoordReal(unittest.TestCase):
             bdf = BDF(debug=False, log=log)
             op2 = OP2(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
-            op2.read_op2(os.path.join(basepath, prefix + '.op2'))
+            bdf_filename = os.path.join(basepath, prefix + '.bdf')
+            op2_filename = os.path.join(basepath, prefix + '.op2')
+            bdf.read_bdf(bdf_filename)
+            op2.read_op2(op2_filename)
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in stress_vectors:
                 vector = getattr(op2_new, vecname).get(subcase)
                 if vector is None:
                     continue
-                name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
+                name = os.path.join(basepath, f'{vecname}_subcase_{subcase:02d}.txt')
                 if not os.path.isfile(name):
-                    raise AssertionError('Not found reference result {0}\n{1}'.format(
-                        name, print_bad_path(name)))
+                    raise AssertionError(f'Not found reference result {name}\n{print_bad_path(name)}')
                 ref_result = np.loadtxt(name)
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
-                check = eids != 0
+                check = (eids != 0)
                 if 'cquad8' in vecname:
                     assert np.allclose(data[:, check][:, 0::10, :], ref_result[0::10], rtol=RTOL, atol=ATOL)
                     assert np.allclose(data[:, check][:, 1::10, :], ref_result[1::10], rtol=RTOL, atol=ATOL)
@@ -86,17 +88,18 @@ class TestMaterialCoordReal(unittest.TestCase):
             bdf = BDF(debug=False, log=log)
             op2 = OP2(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
-            op2.read_op2(os.path.join(basepath, prefix + '.op2'))
+            bdf_filename = os.path.join(basepath, prefix + '.bdf')
+            op2_filename = os.path.join(basepath, prefix + '.op2')
+            bdf.read_bdf(bdf_filename)
+            op2.read_op2(op2_filename)
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in strain_vectors:
                 vector = getattr(op2_new, vecname).get(subcase)
                 if vector is None:
                     continue
-                name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
+                name = os.path.join(basepath, f'{vecname}_subcase_{subcase:02d}.txt')
                 if not os.path.isfile(name):
-                    raise AssertionError('Not found reference result {0}\n{1}'.format(
-                        name, print_bad_path(name)))
+                    raise AssertionError(f'Not found reference result {name}\n{print_bad_path(name)}')
                 ref_result = np.loadtxt(name)
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)

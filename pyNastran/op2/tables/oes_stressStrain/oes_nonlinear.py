@@ -110,7 +110,7 @@ class RealNonlinearPlateArray(OES_Object):
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.element = np.zeros(self.nelements, dtype=idtype)
 
@@ -507,9 +507,7 @@ class RealNonlinearSolidArray(OES_Object):
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.element_node = np.zeros((self.ntotal, 2), dtype='int32')
 
@@ -568,19 +566,20 @@ class RealNonlinearSolidArray(OES_Object):
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg = f'table_name={self.table_name!r} class_name={self.__class__.__name__}\n'
             msg += '%s\n' % str(self.code_information())
             i = 0
             eids = self.element_node[:, 0]
             nids = self.element_node[:, 1]
             for itime in range(self.ntimes):
-                for ie, eid, nid in zip(count(), eids, nids):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid, nid in zip(count(), eids, nids):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
 
                     # TODO: this name order is wrong?
                     #[sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
                     # ex, ey, ez, exy, eyz, exz]
+                    t1, t2 = nan_filter(t1, t2)
                     (sx1, sy1, sz1, sxy1, syz1, sxz1, se1, eps1, ecs1, ex1, ey1, ez1, exy1, eyz1, exz1) = t1
                     (sx2, sy2, sz2, sxy2, syz2, sxz2, se2, eps2, ecs2, ex2, ey2, ez2, exy2, eyz2, exz2) = t2
 
@@ -603,12 +602,12 @@ class RealNonlinearSolidArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -632,7 +631,7 @@ class RealNonlinearSolidArray(OES_Object):
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
         msg.append('  data.shape=%s\n' % str(self.data.shape))
-        msg.append('  element type: %s\n' % self.element_name)
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 
@@ -777,3 +776,11 @@ class RealNonlinearSolidArray(OES_Object):
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
+
+def nan_filter(t1, t2):
+    is_nan1 = np.isnan(t1)
+    is_nan2 = np.isnan(t2)
+    assert np.array_equal(is_nan1, is_nan2)
+    t1[is_nan1] = 0.
+    t2[is_nan1] = 0.
+    return t1, t2

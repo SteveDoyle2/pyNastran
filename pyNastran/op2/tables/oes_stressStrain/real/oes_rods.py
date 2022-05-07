@@ -5,6 +5,7 @@ from numpy import zeros, searchsorted, allclose
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_data_code)
+from pyNastran.op2.op2_interface.write_utils import view_dtype, view_idtype_as_fdtype
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
@@ -79,7 +80,7 @@ class RealRodArray(OES_Object):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -105,7 +106,7 @@ class RealRodArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self.build_data(self.ntimes, self.nelements, dtype, idtype, fdtype)
 
     def build_data(self, ntimes, nelements, dtype, idtype, fdtype):
@@ -133,7 +134,6 @@ class RealRodArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
-
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -204,12 +204,12 @@ class RealRodArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [axial, SMa, torsion, SMt]
         self.ielement += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         ntimes, nelements, _ = self.data.shape
@@ -231,7 +231,7 @@ class RealRodArray(OES_Object):
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element type: %s\n' % self.element_name)
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 
@@ -259,7 +259,7 @@ class RealRodArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s', page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         (unused_elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
@@ -303,17 +303,17 @@ class RealRodArray(OES_Object):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        from struct import Struct, pack
+        from struct import pack # Struct,
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -339,7 +339,7 @@ class RealRodArray(OES_Object):
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
 
-        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
         eids_device = self.element * 10 + self.device_code
 
@@ -347,16 +347,27 @@ class RealRodArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if self.is_sort1:
-            struct1 = Struct(endian + b'i4f')
-        else:
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
+        #struct1 = Struct(endian + b'i4f')
 
-        op2_ascii.write('nelements=%i\n' % nelements)
+        fdtype = self.data.dtype
+        if self.size == fdtype.itemsize:
+            pass
+        else:
+            print(f'downcasting {self.class_name}...')
+            #idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+
+        # [eid, axial, SMa, torsion, SMt]
+        data_out = np.empty((nelements, 5), dtype=fdtype)
+        data_out[:, 0] = view_idtype_as_fdtype(eids_device, fdtype)
+
+        op2_ascii.write(f'nelements={nelements:d}\n')
 
         for itime in range(self.ntimes):
             #print('3, %s' % itable)
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -367,24 +378,18 @@ class RealRodArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
-            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            axial = self.data[itime, :, 0]
-            SMa = self.data[itime, :, 1]
-            torsion = self.data[itime, :, 2]
-            SMt = self.data[itime, :, 3]
-
-            for eid, axiali, SMai, torsioni, SMti in zip(eids_device, axial, SMa, torsion, SMt):
-                data = [eid, axiali, SMai, torsioni, SMti]
-                op2_ascii.write('  eid=%s axial=%s SMa=%s torsion=%s SMt=%s\n' % tuple(data))
-                op2.write(struct1.pack(*data))
+            # [eid, axial, SMa, torsion, SMt]
+            data_out[:, 1:] = self.data[itime, :, :]
+            op2_file.write(data_out)
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

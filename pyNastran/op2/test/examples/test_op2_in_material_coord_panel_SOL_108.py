@@ -35,9 +35,11 @@ class TestMaterialCoordComplex(unittest.TestCase):
         for folder, prefix, freqs in CASES:
             bdf = BDF(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
+            bdf_filename = os.path.join(basepath, f'{prefix}.bdf')
+            op2_filename = os.path.join(basepath, f'{prefix}.op2')
+            bdf.read_bdf(bdf_filename)
             op2 = read_op2(
-                os.path.join(basepath, prefix + '.op2'),
+                op2_filename,
                 debug=False, log=log,
                 exclude_results=['stress', 'strain'],
             )
@@ -49,11 +51,11 @@ class TestMaterialCoordComplex(unittest.TestCase):
                     if vector is None:
                         continue
                     if 'center' in prefix:
-                        name = os.path.join(basepath, '%s_center_freq_%1.1f.txt' % (vecname, freq))
+                        name = os.path.join(basepath, f'{vecname}_center_freq_{freq:1.1f}.txt')
                     else:
-                        name = os.path.join(basepath, '%s_corner_freq_%1.1f.txt' % (vecname, freq))
+                        name = os.path.join(basepath, f'{vecname}_corner_freq_{freq:1.1f}.txt')
                     if not os.path.isfile(name):
-                        raise AssertionError('Not found reference result {0}'.format(name))
+                        raise AssertionError(f'Not found reference result {name}')
                     ref_force = np.loadtxt(name)
                     mag = ref_force[0::2]
                     phase = ref_force[1::2]
@@ -71,9 +73,11 @@ class TestMaterialCoordComplex(unittest.TestCase):
         for folder, prefix, freqs in CASES:
             bdf = BDF(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
+            bdf_filename = os.path.join(basepath, f'{prefix}.bdf')
+            op2_filename = os.path.join(basepath, f'{prefix}.op2')
+            bdf.read_bdf(bdf_filename)
             op2 = read_op2(
-                os.path.join(basepath, prefix + '.op2'),
+                op2_filename,
                 debug=False, log=log,
                 exclude_results=['element_forces', 'strain'],
             )
@@ -85,11 +89,11 @@ class TestMaterialCoordComplex(unittest.TestCase):
                     if vector is None:
                         continue
                     if 'center' in prefix:
-                        name = os.path.join(basepath, '%s_center_freq_%1.1f.txt' % (vecname, freq))
+                        name = os.path.join(basepath, f'{vecname}_center_freq_{freq:1.1f}.txt')
                     else:
-                        name = os.path.join(basepath, '%s_corner_freq_%1.1f.txt' % (vecname, freq))
+                        name = os.path.join(basepath, f'{vecname}_corner_freq_{freq:1.1f}.txt')
                     if not os.path.isfile(name):
-                        raise AssertionError('Not found reference result {0}'.format(name))
+                        raise AssertionError(f'Not found reference result {name}')
                     ref_stress = np.loadtxt(name)
                     mag = ref_stress[:, 1::2]
                     phase = ref_stress[:, 2::2]
@@ -111,9 +115,11 @@ class TestMaterialCoordComplex(unittest.TestCase):
         for folder, prefix, freqs in CASES:
             bdf = BDF(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
+            bdf_filename = os.path.join(basepath, f'{prefix}.bdf')
+            op2_filename = os.path.join(basepath, f'{prefix}.op2')
+            bdf.read_bdf(bdf_filename)
             op2 = read_op2(
-                os.path.join(basepath, prefix + '.op2'),
+                op2_filename,
                 debug=False, log=log,
                 exclude_results=['element_forces', 'stress'],
             )
@@ -125,11 +131,11 @@ class TestMaterialCoordComplex(unittest.TestCase):
                     if vector is None:
                         continue
                     if 'center' in prefix:
-                        name = os.path.join(basepath, '%s_center_freq_%1.1f.txt' % (vecname, freq))
+                        name = os.path.join(basepath, f'{vecname}_center_freq_{freq:1.1f}.txt')
                     else:
-                        name = os.path.join(basepath, '%s_corner_freq_%1.1f.txt' % (vecname, freq))
+                        name = os.path.join(basepath, f'{vecname}_corner_freq_{freq:1.1f}.txt')
                     if not os.path.isfile(name):
-                        raise AssertionError('Not found reference result {0}'.format(name))
+                        raise AssertionError(f'Not found reference result {name}')
                     ref_strain = np.loadtxt(name)
                     mag = ref_strain[:, 1::2]
                     phase = ref_strain[:, 2::2]

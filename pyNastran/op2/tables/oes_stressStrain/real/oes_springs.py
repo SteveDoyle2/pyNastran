@@ -177,11 +177,7 @@ class RealSpringArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        float_fmt = 'float32' if self.size == 4 else 'float64'
-        dtype = float_fmt
-        if isinstance(self.nonlinear_factor, integer_types):
-            int_fmt = 'int32' if self.size == 4 else 'int64'
-            dtype = int_fmt
+        dtype, unused_idtype, unused_fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self.build_data(self.ntimes, self.nelements, dtype)
 
     def build_data(self, ntimes, nelements, dtype):
@@ -189,7 +185,7 @@ class RealSpringArray(OES_Object):
         self.ntimes = ntimes
         self.nelements = nelements
         _times = zeros(ntimes, dtype=dtype)
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         element = zeros(nelements, dtype=idtype)
 
         #[stress]
@@ -428,7 +424,15 @@ class RealSpringArray(OES_Object):
 
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
+        #struct1 = Struct(endian + b'if')
+
         fdtype = self.data.dtype
+        if self.size == fdtype.itemsize:
+            pass
+        else:
+            print(f'downcasting {self.class_name}...')
+            #idtype = np.int32(1)
+            fdtype = np.float32(1.0)
 
         # [eid, stress]
         data_out = np.empty((nelements, 2), dtype=fdtype)
@@ -585,9 +589,7 @@ class RealNonlinearSpringStressArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         _times = zeros(self.ntimes, dtype=dtype)
         element = zeros(self.nelements, dtype='int32')
 
