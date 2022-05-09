@@ -1118,6 +1118,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:
             raise NotImplementedError(bdf_filename)
 
+        #-------------------------------
         check_path(bdf_filename, 'bdf_filename')
         ext = os.path.splitext(bdf_filename)[1]
         if ext == '.pch':  # .. todo:: should this be removed???
@@ -1404,7 +1405,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     self.card_count['ENDDATA'] = 1
                     if nlines - iline_bulk > 1:
                         nleftover = nlines - iline_bulk - 1
-                        msg = 'exiting due to ENDDATA found with %i lines left' % nleftover
+                        msg = f'exiting due to ENDDATA found with {nleftover:d} lines left'
                         self.log.debug(msg)
                     return cards_dict, card_count
                 #print("card_name = %s" % card_name)
@@ -1886,9 +1887,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CSHEAR' : (CSHEAR, self._add_element_object),
             'PSHEAR' : (PSHEAR, self._add_property_object),
 
+            # nastran95
             'CIHEX1' : (CIHEX1, self._add_element_object),
             'CIHEX2' : (CIHEX2, self._add_element_object),
             'PIHEX' : (PIHEX, self._add_property_object),
+            # msc/nx
             'PSOLID' : (PSOLID, self._add_property_object),
             'PLSOLID' : (PLSOLID, self._add_property_object),
             'PCOMPS' : (PCOMPS, self._add_property_object),
@@ -2337,14 +2340,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if card_name not in self.card_count:
             _check_for_spaces(card_name, card_lines, comment, self.log)
             if card_name == '\ufeff':
-                self.log.warning('    rejecting card_name = %r' % card_name)
+                self.log.warning(f'    rejecting card_name = {card_name!r}')
                 self.log.warning('    comment:\n')
                 print(comment)
                 self.log.warning('    lines:\n')
                 for line in card_lines:
                     print(line)
             elif show_log:
-                self.log.info('    rejecting card_name = %r' % card_name)
+                self.log.info(f'    rejecting card_name = {card_name!r}')
             assert isinstance(show_log, bool), show_log
         self.increase_card_count(card_name)
         self.reject_lines.append([_format_comment(comment)] + card_lines)
@@ -2957,7 +2960,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 print(add_card_function)
                 print(card)
                 print(card_obj)
-                raise RuntimeError('_prepare_%s needs to implement obj' % card_name.lower())
+                raise RuntimeError(f'_prepare_{card_name.lower()} needs to implement obj')
             elif isinstance(obj, list):
                 for obji in obj:
                     obji.ifile = ifile

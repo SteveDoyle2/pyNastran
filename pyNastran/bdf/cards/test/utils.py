@@ -3,7 +3,8 @@ import os
 from io import StringIO
 import inspect
 import numpy as np
-from cpylog import get_logger
+from cpylog import SimpleLogger
+
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.delete_bad_elements import element_quality
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
@@ -68,7 +69,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
     model2.write_bdf('model2.bdf')
     if run_test_bdf:
         folder = ''
-        log_error = get_logger(log=None, level='error', encoding='utf-8')
+        log_error = SimpleLogger(level='error', encoding='utf-8')
         test_bdf(folder, 'model2.bdf', stop_on_failure=True,
                  punch=punch,
                  quiet=True, log=log_error)
@@ -124,7 +125,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
 
         op2_filename = 'spike.op2'
         bkp_log = op2_geom_model.log
-        op2_geom_model.log = get_logger(log=None, level=op2_log_level, encoding='utf-8')
+        op2_geom_model.log = SimpleLogger(level=op2_log_level, encoding='utf-8')
         op2_geom_model.write_op2(op2_filename, post=-1, endian=b'<', skips=None,
                                  nastran_format='nx')
         if run_op2_reader:
@@ -188,10 +189,11 @@ def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):
     #assert np.allclose(mass1, mass3), 'mass1=%s mass3=%s' % (mass1, mass3)
     #assert np.allclose(cg1, cg3), 'mass=%s\ncg1=%s cg3=%s' % (mass1, cg1, cg3)
 
-def _run_loads(model, nelements, run_loads=True):
+def _run_loads(model, nelements: int, run_loads=True):
     """helper method"""
     if not run_loads:
         return
+    assert isinstance(nelements, int), nelements
     eid_map = {}
     normals = np.zeros((nelements, 3), dtype='float64')
     ieid = 0

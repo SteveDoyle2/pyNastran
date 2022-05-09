@@ -4,15 +4,21 @@ defines:
                            is_symmetric=True, consider_flippped_normals=True)
 
 """
+from io import StringIO
 from copy import deepcopy
+from pathlib import PurePath
+from typing import Set, Union
 import numpy as np
 
-from pyNastran.bdf.bdf import read_bdf
+from pyNastran.bdf.bdf import read_bdf, BDF
 #from pyNastran.bdf.bdf_interface.dev_utils import get_free_edges
 
 
-def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
-                 is_symmetric=True, consider_flippped_normals=True):
+def get_oml_eids(bdf_filename: Union[str, BDF, PurePath, StringIO],
+                 eid_start: int,
+                 theta_tol: float=30.,
+                 is_symmetric: bool=True,
+                 consider_flippped_normals: bool=True) -> Set[int]:
     """
     Extracts the OML faces (outer mold line) of a shell model.  In other words,
     find all the shell elements touching the current element without crossing
@@ -58,7 +64,7 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
     #---------------------------------
     normals = {}
     etypes_skipped = set()
-    shells = {'CTRIA3', 'CQUAD4'}
+    shells = {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD'}
     for eid, elem in model.elements.items():
         if elem.type in shells:
             normals[eid] = elem.Normal()
@@ -137,6 +143,7 @@ def main():  # pragma: no cover
     bdf_filename = 'bwb_saero.bdf'
     eid_start = 2810
     eids_oml = get_oml_eids(bdf_filename, eid_start)
+    del eids_oml
 
 if __name__ == '__main__':  # pragma: no cover
     main()

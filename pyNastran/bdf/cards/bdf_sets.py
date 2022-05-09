@@ -1190,7 +1190,8 @@ class SET1(Set):
             skin = ['SKIN']
 
         # checked in NX 2014 / MSC 2005.1
-        return self.comment + print_card_8(['SET1', self.sid] + skin + self.get_ids())
+        card = ['SET1', self.sid] + skin + self.get_ids()
+        return self.comment + print_card_8(card)
 
         # I thought this worked in the new MSC Nastran...
         # Doesn't work in NX 2014 / MSC 2005.1 (multiple duplicate sids).
@@ -1397,7 +1398,7 @@ class SET3(Set):
 
     """
     type = 'SET3'
-    valid_descs = ['GRID', 'POINT', 'ELEMENT', 'PROP', 'RBEIN', 'RBEEX']
+    valid_descs = ['GRID', 'POINT', 'ELEMENT', 'PROP', 'RBEin', 'RBEex']
 
     @classmethod
     def _init_from_empty(cls):
@@ -1417,6 +1418,10 @@ class SET3(Set):
         #:  'POINT' and 'PROP'.
         if desc == 'ELEM':
             desc = 'ELEMENT'
+        elif desc == 'RBEIN':
+            desc = 'RBEin'
+        elif desc == 'RBEEX':
+            desc = 'RBEex'
         self.desc = desc
 
         #:  Identifiers of grids points, elements, points or properties.

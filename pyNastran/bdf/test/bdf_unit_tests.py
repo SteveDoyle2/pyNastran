@@ -31,7 +31,8 @@ class Tester(unittest.TestCase):
                        debug=debug, quiet=quiet,
                        sum_load=True, run_extract_bodies=run_extract_bodies,
                        run_skin_solids=run_skin_solids,
-                       save_file_structure=save_file_structure, log=log)
+                       save_file_structure=save_file_structure,
+                       log=log)
 
 
 class TestBDF(Tester):

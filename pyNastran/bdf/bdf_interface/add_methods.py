@@ -200,7 +200,7 @@ class AddMethods(BDFAttributes):
             self.params[key] = param
             self._type_to_id_map[param.type].append(key)
 
-    def _add_node_object(self, node: Union[GRID], allow_overwrites: bool=False) -> None:
+    def _add_node_object(self, node: GRID, allow_overwrites: bool=False) -> None:
         """adds a GRID card"""
         key = node.nid
         if key in self.nodes and not allow_overwrites:
@@ -1239,7 +1239,7 @@ class AddMethods(BDFAttributes):
         self.flfacts[key] = flfact  # set id...
         self._type_to_id_map[flfact.type].append(key)
 
-    def _add_dconstr_object(self, dconstr: [DCONSTR, DCONADD]) -> None:
+    def _add_dconstr_object(self, dconstr: Union[DCONSTR, DCONADD]) -> None:
         """adds a DCONSTR object"""
         #key = (dconstr.oid, dconstr.rid)
         key = dconstr.oid

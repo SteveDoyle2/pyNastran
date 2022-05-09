@@ -5,9 +5,7 @@ from pyNastran.bdf.bdf_interface.utils import to_fields
 
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, # integer_or_string,
-    #parse_components, components_or_blank as fcomponents_or_blank,
-    string, string_or_blank, # integer_string_or_blank,
+    integer, integer_or_blank, string, string_or_blank,
 )
 
 class PSET(BaseCard):

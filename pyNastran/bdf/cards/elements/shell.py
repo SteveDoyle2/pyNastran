@@ -110,8 +110,7 @@ def _normal(a, b):
     normal = vector / norm(vector)
     if not allclose(norm(normal), 1.):
         msg = ('function _normal, check...\n'
-               'a = {0}\nb = {1}\nnormal = {2}\n'.format(
-                   a, b, normal))
+               f'a = {a}\nb = {b}\nnormal = {normal}\n')
         raise RuntimeError(msg)
     return normal
 
@@ -202,7 +201,6 @@ class ShellElement(Element):
         .. math:: m = \frac{m}{A} A  \f]
 
         """
-        A = self.Area()
         tscales = self.get_thickness_scale()
         try:
             mpa = self.pid_ref.MassPerArea(tflag=self.tflag, tscales=tscales)
@@ -210,6 +208,7 @@ class ShellElement(Element):
             print(self.pid_ref)
             raise
 
+        A = self.Area()
         try:
             return mpa * A
         except TypeError:
@@ -358,7 +357,10 @@ class TriShell(ShellElement):
         #self.pid = self.Pid()
         #del self.nodes_ref, self.pid_ref
 
-    def material_coordinate_system(self, normal=None, xyz123=None):
+    def material_coordinate_system(self,
+                                   normal=None,
+                                   xyz123=None) -> Tuple[np.ndarray, np.ndarray,
+                                                         np.ndarray, np.ndarray]:
         """
         Determines the material coordinate system
 

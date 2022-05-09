@@ -1131,33 +1131,34 @@ def cmd_line(argv=None, quiet=False):
 
     #assert sys.argv[0] != 'bdf', msg
 
-    if argv[1] == 'merge':
+    method = argv[1]
+    if method == 'merge':
         cmd_line_merge(argv, quiet=quiet)
-    elif argv[1] == 'equivalence':
+    elif method == 'equivalence':
         cmd_line_equivalence(argv, quiet=quiet)
-    elif argv[1] == 'renumber':
+    elif method == 'renumber':
         cmd_line_renumber(argv, quiet=quiet)
-    elif argv[1] == 'mirror':
+    elif method == 'mirror':
         cmd_line_mirror(argv, quiet=quiet)
-    elif argv[1] == 'convert':
+    elif method == 'convert':
         cmd_line_convert(argv, quiet=quiet)
-    elif argv[1] == 'scale':
+    elif method == 'scale':
         cmd_line_scale(argv, quiet=quiet)
-    elif argv[1] == 'export_mcids':
+    elif method == 'export_mcids':
         cmd_line_export_mcids(argv, quiet=quiet)
-    elif argv[1] == 'split_cbars_by_pin_flags':
+    elif method == 'split_cbars_by_pin_flags':
         cmd_line_split_cbars_by_pin_flag(argv, quiet=quiet)
-    elif argv[1] == 'export_caero_mesh':
+    elif method == 'export_caero_mesh':
         cmd_line_export_caero_mesh(argv, quiet=quiet)
-    elif argv[1] == 'transform':
+    elif method == 'transform':
         cmd_line_transform(argv, quiet=quiet)
-    elif argv[1] == 'filter' and dev:  # TODO: make better name
+    elif method == 'filter':
         cmd_line_filter(argv, quiet=quiet)
-    elif argv[1] == 'free_faces':
+    elif method == 'free_faces':
         cmd_line_free_faces(argv, quiet=quiet)
-    elif argv[1] == 'bin' and dev:
+    elif method == 'bin' and dev:
         cmd_line_bin(argv, quiet=quiet)
-    elif argv[1] in ['-v', '--version']:
+    elif method in ['-v', '--version']:
         import pyNastran
         print(pyNastran.__version__)
     else:

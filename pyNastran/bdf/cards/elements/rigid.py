@@ -379,7 +379,7 @@ class RBAR(RigidElement):
         cma = components_or_blank(card, 6, 'cma', default='')
         cmb = components_or_blank(card, 7, 'cmb', default='')
         alpha = double_or_blank(card, 8, 'alpha', default=0.0)
-        assert len(card) <= 9, 'len(RBAR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(RBAR card) = {len(card):d}\ncard={card}'
         return RBAR(eid, [ga, gb], cna, cnb, cma, cmb, alpha, comment=comment)
 
     @classmethod
@@ -552,7 +552,7 @@ class RBAR1(RigidElement):
         gb = integer(card, 3, 'gb')
         cb = components_or_blank(card, 4, 'cb')
         alpha = double_or_blank(card, 5, 'alpha', 0.0)
-        assert len(card) <= 6, 'len(RBAR1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(RBAR1 card) = {len(card):d}\ncard={card}'
         return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
     @classmethod
@@ -873,13 +873,15 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
 class RBE2(RigidElement):
     """
-    +-------+-----+-----+-----+------+-------+-----+-----+-----+
-    |   1   |  2  |  3  |  4  |  5   |   6   |  7  |  8  |  9  |
-    +=======+=====+=====+=====+======+=======+=====+=====+=====+
-    |  RBE2 | EID | GN  | CM  | GM1  |  GM2  | GM3 | GM4 | GM5 |
-    +-------+-----+-----+-----+------+-------+-----+-----+-----+
-    |       | GM6 | GM7 | GM8 | etc. | ALPHA |     |     |     |
-    +-------+-----+-----+-----+------+-------+-----+-----+-----+
+    +-------+-----+-----+-----+------+-------+------+-----+-----+
+    |   1   |  2  |  3  |  4  |  5   |   6   |  7   |  8  |  9  |
+    +=======+=====+=====+=====+======+=======+======+=====+=====+
+    |  RBE2 | EID | GN  | CM  | GM1  |  GM2  | GM3  | GM4 | GM5 |
+    +-------+-----+-----+-----+------+-------+------+-----+-----+
+    |       | GM6 | GM7 | GM8 | etc. | ALPHA | TREF |     |     |
+    +-------+-----+-----+-----+------+-------+------+-----+-----+
+
+    TREF was added in MSC 2021 (not supported)
     """
     type = 'RBE2'
     _field_map = {1: 'eid', 2:'gn', 3:'cm'}
@@ -912,7 +914,11 @@ class RBE2(RigidElement):
             raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
         return value
 
-    def __init__(self, eid, gn, cm, Gmi, alpha=0.0, comment=''):
+    def __init__(self, eid: int,
+                 gn: int,  # independent
+                 cm: str, Gmi: List[int], # dependent
+                 alpha: float=0.0,
+                 comment: str=''):
         """
         Creates an RBE2 element
 
@@ -990,7 +996,7 @@ class RBE2(RigidElement):
         for i in range(len(card) - 4 - n):
             gmi = integer(card, j + i, 'Gm%i' % (i + 1))
             Gmi.append(gmi)
-        return RBE2(eid, gn, cm, Gmi, alpha, comment=comment)
+        return RBE2(eid, gn, cm, Gmi, alpha=alpha, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1009,6 +1015,10 @@ class RBE2(RigidElement):
         cm = data[2]
         Gmi = data[3]
         alpha = data[4]
+        if len(data) == 5:
+            tref = 0.0
+        else:
+            tref = data[5]
         #print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
               #% (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
         #raise NotImplementedError('RBE2 data...')
@@ -1157,8 +1167,6 @@ class RBE2(RigidElement):
 
 class RBE3(RigidElement):
     """
-    .. todo:: not done, needs testing badly
-
     +------+---------+---------+---------+------+--------+--------+------+--------+
     |   1  |    2    |    3    |    4    |  5   |    6   |    7   |   8  |    9   |
     +======+=========+=========+=========+======+========+========+======+========+
@@ -1191,8 +1199,10 @@ class RBE3(RigidElement):
         return RBE3(eid, refgrid, refc, weights, comps, Gijs,
                     Gmi=None, Cmi=None, alpha=0.0, comment='')
 
-    def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
-                 Gmi=None, Cmi=None, alpha=0.0, comment=''):
+    def __init__(self, eid: int, refgrid: int, refc: str,
+                 weights: List[float], comps: List[str], Gijs: List[int],
+                 Gmi=None, Cmi=None,
+                 alpha: float=0.0, comment: str=''):
         """
         Creates an RBE3 element
 
@@ -1274,6 +1284,7 @@ class RBE3(RigidElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
@@ -1373,7 +1384,11 @@ class RBE3(RigidElement):
         comment : str; default=''
             a comment for the card
         """
-        eid, refgrid, refc, weights, comps, gijs, gmi, cmi, alpha = data
+        if len(data) == 9:
+            eid, refgrid, refc, weights, comps, gijs, gmi, cmi, alpha = data
+            tref = 0.0
+        else:
+            eid, refgrid, refc, weights, comps, gijs, gmi, cmi, alpha, tref = data
         return RBE3(eid, refgrid, refc, weights, comps, gijs,
                     Gmi=gmi, Cmi=cmi, alpha=alpha, comment=comment)
 
@@ -1517,7 +1532,8 @@ class RBE3(RigidElement):
         if nspaces < 8:
             list_fields += [None] * nspaces
 
-        if self.alpha > 0.:  # handles the default value
+        is_alpha = (self.alpha != 0.0)
+        if is_alpha:  # handles the default value
             list_fields += ['ALPHA', self.alpha]
         return list_fields
 

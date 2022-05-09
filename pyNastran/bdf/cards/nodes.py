@@ -517,7 +517,7 @@ class SPOINTs(XPoints):
             spoints.append(spoint)
         if hasattr(self, 'ifile'):
             for spoint in spoints:
-                spoint.ifile = self.ifile # type: int
+                spoint.ifile = self.ifile
         return spoints
 
 

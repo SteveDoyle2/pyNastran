@@ -74,7 +74,9 @@ NO_MASS = {
     'CHACAB', 'CAABSF',
 }
 
-def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
+def transform_inertia(mass: float, xyz_cg: np.ndarray,
+                      xyz_ref: np.ndarray, xyz_ref2: np.ndarray,
+                      I_ref: np.ndarray) -> np.ndarray:
     """
     Transforms mass moment of inertia using parallel-axis theorem.
 
@@ -290,18 +292,7 @@ def _mass_properties(model, elements, masses, reference_point, is_cg):
                 model.log.warning("could not get the inertia for element/property\n%s%s" % (
                     element, element.pid_ref))
                 continue
-            mass += m
-            cg += m * p
-            (x, y, z) = p - reference_point
-            x2 = x * x
-            y2 = y * y
-            z2 = z * z
-            inertia[0] += m * (y2 + z2)  # Ixx
-            inertia[1] += m * (x2 + z2)  # Iyy
-            inertia[2] += m * (x2 + y2)  # Izz
-            inertia[3] += m * x * y      # Ixy
-            inertia[4] += m * x * z      # Ixz
-            inertia[5] += m * y * z      # Iyz
+            mass = _increment_inertia(p, reference_point, m, mass, cg, inertia)
 
     if mass:
         cg /= mass

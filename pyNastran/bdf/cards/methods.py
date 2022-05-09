@@ -356,6 +356,7 @@ class EIGC(Method):
     def validate(self):
         assert self.norm in ['MAX', 'POINT'], 'norm=%r' % self.norm
         nalpha_a = len(self.alphaAjs)
+        nalpha_b = len(self.alphaBjs)
         assert nalpha_a == len(self.omegaAjs), 'alphaAjs=%s omegaAj=%s' % (self.alphaAjs, self.omegaAjs)
         if self.method in ['HESS', 'INV']:
             assert nalpha_a == len(self.alphaBjs), 'alphaAjs=%s alphaBj=%s' % (self.alphaAjs, self.alphaBjs)
@@ -480,9 +481,10 @@ class EIGC(Method):
 
         elif self.method == 'CLAN':
             nalpha_a = len(self.alphaAjs)
+            nalpha_b = len(self.alphaBjs)
             assert nalpha_a == len(self.omegaAjs)
             if nalpha_a == len(self.alphaBjs):  # pragma:no cover
-                assert nalpha_a == len(self.alphaBjs), f'nalpha_a={nalpha_a} nalpha_b={nalpha_b}'
+                assert nalpha_a == nalpha_b, f'nalpha_a={nalpha_a} nalpha_b={nalpha_b}'
                 assert nalpha_a == len(self.omegaBjs), f'nalpha_a={nalpha_a} nomega_b={len(self.omegaBjs)}'
                 assert nalpha_a == len(self.LJs)
                 assert nalpha_a == len(self.NEJs)

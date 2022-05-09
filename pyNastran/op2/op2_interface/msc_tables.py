@@ -605,7 +605,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'BGPDTVU', # basic grid point definition table for a superelement and related to geometry with view-grids added
 
     b'OUG2T',
-    b'AEMONPT', # Aerodynamic monitor points
+    b'AEMONPT', # Aerodynamic monitor points.
     #b'KDICT',
     #---------------------
     # 2020
@@ -624,6 +624,12 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OCOMPQT',
     b'OGS1X',
     b'OVINT',  # element vibration intensities
+    #b'TUG1',
+    #b'MUG1',
+    b'TEF1', # b'MEF1',
+    b'TQG1', # b'MKQG1',
+    b'MUG1B',
+
 
     # for sure results
     b'OUTSFLOW',
@@ -640,6 +646,11 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     #C:\MSC.Software\msc_nastran_runs\pcdyn111s2.op2
     b'OGPSTRN', b'OGPFIN', b'OESRTN', b'OGPSRN',
 
+    # msc/units_mass_spring_damper/units_mass_spring_damper/op2
+    b'UNITS', # b'CPHSF',
+
+    # nasa95
+    b'OQPC1', b'OUPVC1', b'OESC1',
 ]
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):  # pragma: no cover
     counter = Counter(MSC_RESULT_TABLES)

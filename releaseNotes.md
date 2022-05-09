@@ -10,9 +10,11 @@ Release Notes
 ==================
 v1.3.4 (2022/5/xx)
 ------------------
-This is a bug fix only release with the key reason being API dependency changes:
+This is a bug fix release with the key reason being API dependency changes:
  - numpy
  - nptyping
+Additional minor changes (e.g., support for CFAST/PFAST in bdf_convert) were 
+added when fixing bugs.
 
 Requirements/Packages:
  - adding support for vtk 9 (GUI)
@@ -30,6 +32,10 @@ overall:
  - cleaner setup.py files / packages.py
 BDF:
  - bug fixes:
+   - fixing EAS sorting bug in make_flfacts_mach_sweep (mach should be sorted to give sorted EAS)
+   - fixed g4 bug in FORCE2/MOMENT2 (can't be blank)
+   - fixed I1 bug in PBARL
+
    - renaming pyNastran/nptyping.py to pyNastran/nptyping_interface.py to avoid namespace conflicts
    - require that nastran_format is a string
    - stripping first line of card to fix bug (i thought it was to get the card name, but I don't remember...)
@@ -48,6 +54,7 @@ BDF:
    - I12 now returns I12 instead of [A, I1, I2, I12]
    - AUTOSPC (from case control) now works in bdf_renumber
  - added:
+   - pathlib support
    - GRID method get_position_wrt_coord_ref
    - DVCRELx CMASS/M and CELAS4/K options
    - DCONSTR support for FLUTTER/PK
@@ -57,6 +64,7 @@ BDF:
    - DVMREL2 now supports MAT2, MAT8
    - collapse_bad_quads now removes degenerate quads
    - CAERO1/2.aefact_ids
+   - CTRIA6, CQUAD8, CQUAD support in get_oml
    - bdf_mirror: solid support
    - bdf_convert now supports:
       - CFAST/PFAST
@@ -64,12 +72,25 @@ BDF:
 f06 flutter:
  - bug fixes:
    - supporting any number modes
+   - correcting default for in/out_units (documentation error)
+ - added:
+   - subcases support
+   - vd_limit and damping_limit
+
  - adding:
    - repr
    - mach, dynamic pressure, altitude plots
+op2:
+ - pathlib support
 op2 geom:
  - improved PARAM (PVT/PVT0 table) loading
  - PSOLID/FFLUID support
+ - PSOLID isop=2 support
+ - PCOMP ft (failure theory) HFAI, HTAP, HFAB support
+ - skipping QVECT
+ - fixed SPC bug (was double writing header)
+ - fixed RBE2 bug (alpha vs. non alpha cases were flipped)
+ - fixed BSET1/CSET1 (were flipped)
 gui:
  - fixed CELAS2 bug where nid2 is an SPOINT
 

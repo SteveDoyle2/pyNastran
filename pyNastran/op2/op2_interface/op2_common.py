@@ -459,74 +459,76 @@ class OP2Common(Op2Codes, F06Writer):
         stress_bits[4] = 0 -> material coordinate system flag
 
         """
-        if self.is_debug_file:
-            msg = ''
-            assert len(self.words) in [0, 28], f'table_name={self.table_name!r} len(self.words)={len(self.words)} words={self.words}'
-            for i, param in enumerate(self.words):
-                if param == 's_code':
-                    try:
-                        s_word = get_scode_word(self.s_code, self.stress_bits)
-                    except AttributeError:
-                        raise
-                    self.binary_debug.write('  s_code         = %s -> %s\n' % (self.s_code, s_word))
-                    self.binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises))
-                    self.binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain))
-                    self.binary_debug.write('    stress_bits[2] = %i -> strain_curvature=%-5s vs fiber_dist\n' % (self.stress_bits[2], self.is_curvature))
-                    self.binary_debug.write('    stress_bits[3] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[3], self.is_strain))
-                    self.binary_debug.write('    stress_bits[4] = %i -> material coordinate system flag=%s vs ???\n' % (self.stress_bits[4], self.stress_bits[4]))
-                elif param == '???':
-                    param = 0
-                msg += '%s, ' % param
-                if i % 5 == 4:
-                    msg += '\n             '
-
-            if hasattr(self, 'format_code'):
+        if not self.is_debug_file:
+            return
+        msg = ''
+        binary_debug = self.binary_debug
+        assert len(self.words) in [0, 28], f'table_name={self.table_name!r} len(self.words)={len(self.words)} words={self.words}'
+        for i, param in enumerate(self.words):
+            if param == 's_code':
                 try:
-                    is_complex = self.is_complex
-                except AssertionError:
-                    self.binary_debug.write('\n  ERROR: cannot determine is_complex properly; '
-                                            'check_sort_bits!!!\n')
-                    is_complex = '???'
+                    s_word = get_scode_word(self.s_code, self.stress_bits)
+                except AttributeError:
+                    raise
+                binary_debug.write('  s_code         = %s -> %s\n' % (self.s_code, s_word))
+                binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises))
+                binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain))
+                binary_debug.write('    stress_bits[2] = %i -> strain_curvature=%-5s vs fiber_dist\n' % (self.stress_bits[2], self.is_curvature))
+                binary_debug.write('    stress_bits[3] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[3], self.is_strain))
+                binary_debug.write('    stress_bits[4] = %i -> material coordinate system flag=%s vs ???\n' % (self.stress_bits[4], self.stress_bits[4]))
+            elif param == '???':
+                param = 0
+            msg += '%s, ' % param
+            if i % 5 == 4:
+                msg += '\n             '
 
-                try:
-                    is_random = self.is_random
-                except AssertionError:
-                    is_random = '???'
+        if hasattr(self, 'format_code'):
+            try:
+                is_complex = self.is_complex
+            except AssertionError:
+                binary_debug.write('\n  ERROR: cannot determine is_complex properly; '
+                                   'check_sort_bits!!!\n')
+                is_complex = '???'
 
-                try:
-                    is_sort1 = self.is_sort1
-                except AssertionError:
-                    is_sort1 = '???'
+            try:
+                is_random = self.is_random
+            except AssertionError:
+                is_random = '???'
 
-                try:
-                    is_real = self.is_real
-                except AssertionError:
-                    is_real = '???'
+            try:
+                is_sort1 = self.is_sort1
+            except AssertionError:
+                is_sort1 = '???'
 
-                if is_complex:
-                    msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
-                        'format_code', self.format_code)
-                    self.binary_debug.write(msg)
-                else:
-                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
-                self.binary_debug.write('    sort_bits[0] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[0], is_random))
-                self.binary_debug.write('    sort_bits[1] = %i -> is_sort1 =%s vs sort2\n' % (self.sort_bits[1], is_sort1))
-                self.binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], is_real))
+            try:
+                is_real = self.is_real
+            except AssertionError:
+                is_real = '???'
 
-                try:
-                    sort_method, is_real, is_random = self._table_specs()
-                    self.binary_debug.write('    sort_method = %s\n' % sort_method)
-                except AssertionError:
-                    self.binary_debug.write('    sort_method = ???\n')
+            if is_complex:
+                msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
+                    'format_code', self.format_code)
+                binary_debug.write(msg)
+            else:
+                binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
+            binary_debug.write('    sort_bits[0] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[0], is_random))
+            binary_debug.write('    sort_bits[1] = %i -> is_sort1 =%s vs sort2\n' % (self.sort_bits[1], is_sort1))
+            binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], is_real))
 
-                if is_complex:
-                    msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
-                        'format_code', self.format_code)
-                    self.binary_debug.write(msg)
-                else:
-                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
+            try:
+                sort_method, is_real, is_random = self._table_specs()
+                binary_debug.write('    sort_method = %s\n' % sort_method)
+            except AssertionError:
+                binary_debug.write('    sort_method = ???\n')
 
-            self.binary_debug.write('  recordi = [%s]\n\n' % msg)
+            if is_complex:
+                msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
+                    'format_code', self.format_code)
+                binary_debug.write(msg)
+            else:
+                binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
+
+        binary_debug.write('  recordi = [%s]\n\n' % msg)
 
     def get_table_count(self) -> int:
         """identifiers superelements"""
@@ -621,6 +623,11 @@ class OP2Common(Op2Codes, F06Writer):
         self.card_name = name
         n = func(data, n)  # gets all the grid/mat cards
         assert n is not None, name
+        if n != ndata:  # pragma: no cover
+            assert isinstance(n, int), f'mishandled geometry table for {name}; n must be an int; n={n}'
+            msg = f'mishandled geometry table for {name}; n={n} len(data)={ndata}; should be equal'
+            self.log.error(msg)
+            #raise RuntimeError(msg)
         del self.card_name
 
         self.geom_keys = keys
@@ -1108,18 +1115,8 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:].copy()
             obj.itotal = itotal2
         else:
-            n = 0
-            dt = np.nan
-            fmt = mapfmt(self._endian + b'2i6f', self.size)
-            s = Struct(fmt)
-            for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+ntotal])
-                (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
-                eid = eid_device // 10
-                if self.is_debug_file:
-                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += ntotal
+            n = read_real_table_static(self, obj, flag,
+                                       data, nnodes, ntotal)
         return n
 
     def _read_real_table_sort1(self, data, is_vectorized, nnodes,
@@ -1159,18 +1156,8 @@ class OP2Common(Op2Codes, F06Writer):
             obj._times[itime] = dt
             obj.itotal = itotal2
         else:
-            n = 0
-            assert nnodes > 0, nnodes
-            fmt = mapfmt(self._endian + b'2i6f', self.size)
-            s = Struct(fmt)
-            for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+ntotal])
-                (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
-                eid = eid_device // 10
-                if self.is_debug_file:
-                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += ntotal
+            n = read_real_table_sort1(self, obj, dt, flag,
+                                      data, nnodes, ntotal)
         return n
 
     def _read_real_table_sort2(self, data, is_vectorized, nnodes, result_name, flag,
@@ -1212,24 +1199,9 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[itotal:itotal2, obj.itime, :] = floats[:, 2:]
             obj.itotal = itotal2
         else:
-            n = 0
-            assert nnodes > 0
             flag = self.data_code['analysis_method']
-            fmt = mapfmt(self._endian + self._analysis_code_fmt + b'i6f', self.size)
-            structi = Struct(fmt)
-
-            #psds = ('CRM2', 'NO2', 'PSD2', 'RMS2')
-            #print('sort_method=%s' % self.sort_method)
-            #if self.table_name_str.endswith(psds):
-            for unused_inode in range(nnodes):
-                edata = data[n:n+ntotal]
-                out = structi.unpack(edata)
-                (dt, grid_type, tx, ty, tz, rx, ry, rz) = out
-                if self.is_debug_file:
-                    self.binary_debug.write(
-                        f'  nid={nid} {flag}={dt} ({type(dt)}); {str(out)}\n')
-                obj.add_sort2(dt, nid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += ntotal
+            n = read_real_table_sort2(self, obj, flag, nid,
+                                      data, nnodes, ntotal)
         #if self.table_name_str == 'OQMRMS1':
             #print(obj.node_gridtype)
             #print('------------')
@@ -1670,7 +1642,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         table_code = tCode % 1000
         if table_code in NX_TABLES:
-            self.to_nx()
+            self.to_nx(f' because table_code={table_code}')
 
         #: the type of result being processed
         self.table_code = table_code
@@ -1819,7 +1791,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.thermal_bits = bits
         self.data_code['thermal_bits'] = self.thermal_bits
 
-    def _parse_sort_code(self):
+    def _parse_sort_code(self) -> None:
         """
         +------------+------------+
         | sort_code  | sort_bits  |
@@ -1906,7 +1878,7 @@ class OP2Common(Op2Codes, F06Writer):
     def is_mag_phase(self) -> bool:
         return self.is_magnitude_phase()
 
-    def is_magnitude_phase(self):
+    def is_magnitude_phase(self) -> bool:
         if self.format_code == 3:
             return True
         return False
@@ -2023,6 +1995,7 @@ class OP2Common(Op2Codes, F06Writer):
         ----------
         nelements :  int
             the number of elements to preallocate for vectorization
+            of the main self.data attribute
         result_name : str
             the name of the dictionary to store the object in (e.g. 'displacements')
         slot : dict[(int, int, str)=obj
@@ -2070,7 +2043,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.result_names.add(result_name)
                 #print('self.obj =', self.obj)
                 self.obj.nelements += nelements
-                assert self.obj.table_name is not None
+                assert self.obj.table_name is not None, 'you probably need to apply the data_code...'
                 auto_return = True
             elif self.read_mode == 2:
                 self.code = self._get_code()
@@ -2080,13 +2053,13 @@ class OP2Common(Op2Codes, F06Writer):
                 try:
                     self.obj = slot[self.code] # if this is failing, you probably set obj_vector to None...
                 except KeyError:
-                    msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
-                    msg += "There's probably an extra check for read_mode=1...%s" % result_name
+                    msg = f'Could not find key={self.code} in result={result_name!r}\n'
+                    msg += f"There's probably an extra check for read_mode=1...{result_name}"
                     self.log.error(msg)
                     raise
                 if not self.obj.table_name == self.table_name.decode('utf-8'):
                     print(self.obj)
-                    msg = 'obj.table_name=%s table_name=%s; this shouldnt happen for read_mode=2' %  (
+                    msg = 'obj.table_name=%s table_name=%s; this should not happen for read_mode=2' %  (
                         self.obj.table_name, self.table_name)
                     raise OverwriteTableError(msg)
 
@@ -2103,7 +2076,7 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             auto_return = True
 
-        assert is_vectorized, '%r is not vectorized; obj=%s' % (result_name, obj_vector)
+        assert is_vectorized, f'{result_name!r} is not vectorized; obj={obj_vector}'
         return auto_return, is_vectorized
 
     def _is_vectorized(self, obj_vector) -> bool:
@@ -2176,7 +2149,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.op2_reader.factor = size // 4
 
     def del_structs(self) -> None:
-        """deepcopy(OP2) fails on Python 3.6 without doing this"""
+        """deepcopy(OP2) fails without doing this"""
         del self.fdtype, self.idtype, self.double_dtype, self.long_dtype
         if hasattr(self, 'struct_2q'):
             del self.struct_i, self.struct_2q, self.struct_16s, self.struct_16s_q

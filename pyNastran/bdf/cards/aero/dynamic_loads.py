@@ -13,7 +13,7 @@ All cards are BaseCard objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import Tuple, List, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -558,7 +558,7 @@ class FLUTTER(BaseCard):
 
     def __init__(self, sid: int, method, density, mach, reduced_freq_velocity,
                  imethod: str='L', nvalue=None, omax=None, epsilon: float=1.0e-3, comment='',
-                 ):
+                 validate: bool=False):
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
         analysis.
@@ -627,6 +627,8 @@ class FLUTTER(BaseCard):
         self.density_ref = None
         self.mach_ref = None
         self.reduced_freq_velocity_ref = None
+        if validate:
+            self.validate()
 
     def validate(self):
         msg = ''
@@ -720,6 +722,10 @@ class FLUTTER(BaseCard):
         flfact_velocity = self.sid + 3
         flfact_eas = self.sid + 4
 
+        self.mach = flfact_mach
+        self.reduced_freq_velocity = flfact_velocity
+        self.density = flfact_rho
+
         comment = ' density: min=%.3e max=%.3e %s' % (
             rho.min(), rho.max(), density_units,
         )
@@ -734,7 +740,9 @@ class FLUTTER(BaseCard):
             eass.min(), eass.max(), eas_units)
         model.add_flfact(flfact_eas, eass, comment=comment)
 
-    def make_flfacts_alt_sweep(self, model: BDF, mach, alts, eas_limit: float=1000.,
+    def make_flfacts_alt_sweep(self,
+                               model: BDF, mach, alts,
+                               eas_limit: float=1000.,
                                alt_units: str='m',
                                velocity_units: str='m/s',
                                density_units: str='kg/m^3',
@@ -785,7 +793,7 @@ class FLUTTER(BaseCard):
                                 eas_units='m/s'):
         """makes a mach sweep"""
         machs.sort()
-        machs = machs[::-1]
+        #machs = machs[::-1]
         rho, mach, velocity = make_flfacts_mach_sweep(
             alt, machs, eas_limit=eas_limit,
             alt_units=alt_units,
