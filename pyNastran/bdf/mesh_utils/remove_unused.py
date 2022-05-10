@@ -56,6 +56,8 @@ def remove_unused(bdf_filename: str,
     spcs_used = set()
     #nsms_used = set()
 
+    aecomps_used = set()
+
     #card_types = list(model.card_count.keys())
     #card_map = model.get_card_ids_by_card_types(
         #card_types=card_types,
@@ -65,13 +67,25 @@ def remove_unused(bdf_filename: str,
     #for nid, node in model.nodes.items():
         #cids_used.update([node.Cp(), node.Cd()])
 
-    # ureferenced types aren't referenced by anything
+    unreferenced_types_quiet = {
+        'ENDDATA', 'PARAM',
+        'PAERO1', 'PAERO2', #'PAERO3', 'PAERO5',
+    }
+    unreferenced_types_case_control = {
+        'EIGR', 'EIGRL', 'EIGB', 'EIGP', 'EIGC',
+        'FREQ', 'FREQ1', 'FREQ2',
+        'TSTEP', 'TSTEPNL',
+        'NLPCI', 'NLPARM',
+
+        # aero
+        'TRIM', 'TRIM2', 'DIVERG', 'GUST', 'FLUTTER',
+    }
+
+    # ureferenced types aren't referenced by any card
+    # (but may be referenced by the case control deck)
     unreferenced_types = {
-        'ENDDATA', 'PARAM', 'EIGR', 'EIGRL', 'EIGB', 'EIGP', 'EIGC',
         'SPOINT', 'EPOINT', 'DESVAR',
-        'SET1', 'FREQ', 'FREQ1', 'FREQ2',
-        'TSTEP', 'TSTEPNL', 'NLPCI',
-        'NLPARM', 'ROTORG', 'ROTORD',
+        'ROTORG', 'ROTORD',
         'DAREA', 'DEQATN',
         'DMIG', 'DMI', 'DMIJ', 'DMIK', 'DMIJI', 'DMIAX',
         'POINT', 'EPOINT',
@@ -83,15 +97,14 @@ def remove_unused(bdf_filename: str,
         'PELAST', 'PDAMPT', 'PBUSHT',
         'PGAP', 'PBUSH1D', 'PFAST', 'PVISC', 'PMASS',
 
-        'FLFACT', 'FLUTTER', 'DLINK', 'DDVAL', 'DIVERG', 'GUST',
-        'AELINK', 'AELIST', 'TRIM', 'TRIM2', 'PAERO1', 'AEFACT', 'AESTAT',
+        'FLFACT', 'DLINK', 'DDVAL',
+        'AELINK', 'AELIST', 'AEFACT', 'AESTAT',
 
         # contact
         'BCTPARA', 'BCRPARA', 'BSURF', 'BSURFS', 'BCTADD',
         'BCTSET', 'BFRIC',
 
         'TABRNDG', 'DTI', 'TABLEH1',
-
     }
 
     # this are things that haven't been referenced yet
@@ -124,7 +137,8 @@ def remove_unused(bdf_filename: str,
         'BGSET',
     }
     set_types_simple = [
-        'SET1', 'SET3',
+        'SET1',  # handled elsewhere (e.g,. by SPLINEx)
+        'SET3',
     ]
     set_types = {
         'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
@@ -383,13 +397,15 @@ def remove_unused(bdf_filename: str,
                 # PID, LSPAN, LCHORD
                 cids_used.add(caero.Cp())
 
-        elif card_type in unreferenced_types:
-            log.debug(card_type)
-            pass
         elif card_type in set_types_simple:
-            log.debug(card_type)
             # handled based on context in other blocks
             pass
+        elif card_type in unreferenced_types_quiet:
+            pass
+        elif card_type in unreferenced_types_case_control:
+            log.debug(f'{card_type} (case control) is unreferenced')
+        elif card_type in unreferenced_types:
+            log.debug(f'{card_type} is unreferenced')
         elif card_type in {'USET', 'USET1'}:
             for set_cards in model.usets.values():
                 for set_card in set_cards:
@@ -557,6 +573,27 @@ def remove_unused(bdf_filename: str,
             #pass
             #ring_id
             #sid
+        elif card_type == 'MONPNT1':
+            for idi in ids:
+                monpnt = model.monitor_points[idi]
+                #print(monpnt.get_stats())
+                cids_used.add(monpnt.cd)
+                cids_used.add(monpnt.cp)
+                aecomp_name = monpnt.comp
+                aecomps_used.add(aecomp_name)
+
+        elif card_type == 'AECOMP':
+            for aecomp_name in ids:
+                aecomp = model.aecomps[aecomp_name]
+                if aecomp.list_type == 'SET1':
+                    spline_set_nodes.update(aecomp.lists)
+                elif aecomp.list_type == 'AELIST':
+                    #print(aecomp.get_stats())
+                    log.warning('skipping AELIST in MONPNT1/AECOMP')
+                elif aecomp.list_type == 'CAERO':
+                    log.warning('skipping CAERO in MONPNT1/AECOMP')
+                else:
+                    raise NotImplementedError(aecomp)
         elif card_type in not_implemented_types:
             model.log.warning(f'skipping {card_type}')
         else:
