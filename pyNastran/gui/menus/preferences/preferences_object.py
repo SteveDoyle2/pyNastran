@@ -34,6 +34,7 @@ class PreferencesObject:
             'annotation_color' : settings.annotation_color,
 
             'use_gradient_background' : settings.use_gradient_background,
+            'use_parallel_projection': settings.use_parallel_projection,
             'background_color' : settings.background_color,
             'background_color2' : settings.background_color2,
 

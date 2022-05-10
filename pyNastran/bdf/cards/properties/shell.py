@@ -202,7 +202,7 @@ class CompositeShellProperty(Property):
         Parameters
         ----------
         iply : int
-            the ply ID
+            the ply ID (0-based)
 
         Raises
         ------
@@ -245,20 +245,27 @@ class CompositeShellProperty(Property):
         # iply2 = 4 - 3 = 1
         # iply2 = 5 - 3 = 0
         nplies = len(self.thicknesses)
+        nplies_total = self.nplies
         if iply >= nplies:
-            if iply < self.nplies:
-                iply = nplies - iply - 1
+            if iply < nplies_total:
+                dply = nplies - iply - 1
+                iply2 = nplies + dply
+                assert iply2 >= 0, iply2
+                return iply2
             else:
                 raise IndexError('invalid value for nplies=%s iply=%r (iply is 0-based)\n%s' % (
                     nplies, iply, str(self)))
         elif iply < 0:
             raise IndexError('invalid value for nplies=%s iply=%r (iply is 0-based)\n%s' % (
                 nplies, iply, str(self)))
+
+        assert iply >= 0, iply
         return iply
 
     def get_material_id(self, iply: int) -> int:
+        """iply - 0 based"""
         iply = self._adjust_ply_id(iply)
-        mid = self.mids[iply]
+        mid = self.Mid(iply) #self.mids[iply]
         return mid
 
     def get_thickness(self, iply: Union[int, str]='all') -> float:

@@ -757,8 +757,19 @@ class Settings:
             text_prop.SetFontSize(text_size)
 
     def set_magnify(self, magnify: int=5) -> None:
-        """sets the screenshot magnification factor (int)"""
+        """sets the screenshot magnification factor"""
         self.magnify = magnify
+
+    def set_parallel_projection(self, parallel_projection: bool, render: bool=True) -> None:
+        """sets the parallel_projection flag"""
+        self.use_parallel_projection = parallel_projection
+        camera = self.parent.rend.GetActiveCamera()
+        if parallel_projection:
+            camera.ParallelProjectionOn()
+        else:
+            camera.ParallelProjectionOff()
+        if render:
+            self.parent.vtk_interactor.Render()
 
     def __repr__(self) -> str:
         msg = '<Settings>\n'

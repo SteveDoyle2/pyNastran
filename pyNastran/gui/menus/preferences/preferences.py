@@ -27,7 +27,7 @@ from pyNastran.gui.gui_objects.settings import (
     NASTRAN_BOOL_KEYS,
 )
 if TYPE_CHECKING:
-    from pyNastran.gui.gui_objects.settings import NastranSettings
+    from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
 
 
 class PreferencesWindow(PyDialog):
@@ -70,6 +70,7 @@ class PreferencesWindow(PyDialog):
         #self._default_annotation_size = data['annotation_size'] # int
         #self.default_magnify = data['magnify']
 
+        self._parallel_projection = data['use_parallel_projection']
         self._use_gradient_background = data['use_gradient_background'] # bool
         self._show_corner_coord = data['show_corner_coord']
         self._annotation_size = data['annotation_size'] # int
@@ -223,6 +224,10 @@ class PreferencesWindow(PyDialog):
         self.picker_size_edit.setDecimals(decimals)
         self.picker_size_edit.setSingleStep(10. / 5000.)
         self.picker_size_edit.setValue(self._picker_size)
+
+        self.parallel_projection_label = QLabel('Parallel Projection:')
+        self.parallel_projection_edit = QCheckBox()
+        self.parallel_projection_edit.setChecked(self._parallel_projection)
 
         #-----------------------------------------------------------------------
         # Clipping Min
@@ -494,6 +499,10 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.picker_size_edit, irow, 1)
         irow += 1
 
+        grid.addWidget(self.parallel_projection_label, irow, 0)
+        grid.addWidget(self.parallel_projection_edit, irow, 1)
+        irow += 1
+
         #--------------------------------------------------
 
         grid_nastran = self._get_grid_nastran_layout()
@@ -644,6 +653,8 @@ class PreferencesWindow(PyDialog):
         self.picker_size_edit.valueChanged.connect(self.on_picker_size)
         self.picker_size_edit.editingFinished.connect(self.on_picker_size)
 
+        self.parallel_projection_edit.clicked.connect(self.on_parallel_projection)
+
         self.coord_scale_edit.valueChanged.connect(self.on_coord_scale)
         self.coord_scale_edit.editingFinished.connect(self.on_coord_scale)
         self.coord_scale_button.clicked.connect(self.on_default_coord_scale)
@@ -693,6 +704,7 @@ class PreferencesWindow(PyDialog):
         #is_checked = self.nastran_is_conm2_update.isChecked()
         #if self.win_parent is not None:
             #self.nastran_settings.is_update_conm2 = is_checked
+
     def on_nastran_is_bar_axes(self):
         """set the nastran properties preferences"""
         is_checked = self.nastran_is_bar_axes_checkbox.isChecked()
@@ -761,10 +773,13 @@ class PreferencesWindow(PyDialog):
         if self.win_parent is not None:
             self.nastran_settings.strain_energy = is_checked
 
+    @property
+    def settings(self) -> Settings:
+        return self.win_parent.settings  # type: Settings
 
     @property
     def nastran_settings(self) -> NastranSettings:
-        return self.win_parent.settings.nastran_settings  # type: NastranSettings
+        return self.settings.nastran_settings  # type: NastranSettings
     #def on_nastran_is_shell_mcids2(self):
         #"""set the nastran properties preferences"""
         #is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
@@ -793,14 +808,14 @@ class PreferencesWindow(PyDialog):
 
     def update_annotation_size_color(self):
         if self.win_parent is not None:
-            self.win_parent.settings.set_annotation_size_color(size=self._annotation_size)
+            self.settings.set_annotation_size_color(size=self._annotation_size)
 
     def on_gradient_scale(self):
         is_checked = self.gradient_scale_checkbox.isChecked()
         self.background_color2_label.setEnabled(is_checked)
         self.background_color2_edit.setEnabled(is_checked)
         if self.win_parent is not None:
-            self.win_parent.settings.set_gradient_background(use_gradient_background=is_checked)
+            self.settings.set_gradient_background(use_gradient_background=is_checked)
 
     def on_corner_coord(self):
         is_checked = self.corner_coord_checkbox.isChecked()
@@ -858,14 +873,14 @@ class PreferencesWindow(PyDialog):
             value = self.highlight_opacity_edit.value()
         self._highlight_opacity = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_highlight_opacity(value)
+            self.settings.set_highlight_opacity(value)
 
     def on_highlight_point_size(self, value=None):
         if value is None:
             value = self.highlight_point_size_edit.value()
         self._highlight_point_size = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_highlight_point_size(value)
+            self.settings.set_highlight_point_size(value)
 
     def _background_color(self, title, color_edit, rgb_color_ints, func_name):
         """helper method for ``on_background_color`` and ``on_background_color2``"""
@@ -873,7 +888,7 @@ class PreferencesWindow(PyDialog):
             color_edit, rgb_color_ints, title)
         if passed:
             if self.win_parent is not None:
-                settings = self.win_parent.settings
+                settings = self.settings
                 func_background_color = getattr(settings, func_name)
                 func_background_color(rgb_color_floats)
         return passed, rgb_color_ints, rgb_color_floats
@@ -888,7 +903,7 @@ class PreferencesWindow(PyDialog):
             self.text_color_int = rgb_color_ints
             self.text_color_float = rgb_color_floats
             if self.win_parent is not None:
-                self.win_parent.settings.set_text_color(rgb_color_floats)
+                self.settings.set_text_color(rgb_color_floats)
 
     def on_default_text_size(self):
         self.text_size_edit.setValue(self._default_text_size)
@@ -899,7 +914,7 @@ class PreferencesWindow(PyDialog):
             value = self.text_size_edit.value()
         self._text_size = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_text_size(value)
+            self.settings.set_text_size(value)
 
     def on_color(self, color_edit, rgb_color_ints, title):
         """pops a color dialog"""
@@ -927,12 +942,18 @@ class PreferencesWindow(PyDialog):
             self.win_parent.element_picker_size = self._picker_size / 100.
         #self.on_apply(force=True)
 
+    def on_parallel_projection(self):
+        """set the nastran properties preferences"""
+        is_checked = self.parallel_projection_edit.isChecked()
+        if self.win_parent is not None:
+            self.settings.set_parallel_projection(is_checked)
+
     def on_magnify(self, value=None):
         if value is None:
             value = self.magnify_edit.value()
         self._magnify = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_magnify(value)
+            self.settings.set_magnify(value)
 
     #---------------------------------------------------------------------------
     def on_coord_scale(self, value=None):
@@ -940,7 +961,7 @@ class PreferencesWindow(PyDialog):
             value = self.coord_scale_edit.value()
         self._coord_scale = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_coord_scale(value / 100.)
+            self.settings.set_coord_scale(value / 100.)
 
     def on_default_coord_scale(self):
         self.coord_scale_edit.setValue(self._default_coord_scale)
@@ -951,7 +972,7 @@ class PreferencesWindow(PyDialog):
             value = self.coord_text_scale_edit.value()
         self._coord_text_scale = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_coord_text_scale(value / 100.)
+            self.settings.set_coord_text_scale(value / 100.)
 
     def on_default_coord_text_scale(self):
         self.coord_text_scale_edit.setValue(self._default_coord_text_scale)
@@ -999,9 +1020,9 @@ class PreferencesWindow(PyDialog):
         passed = self.on_validate()
 
         if (passed or force) and self.win_parent is not None:
-            self.win_parent.settings.on_set_font_size(self.out_data['font_size'])
+            self.settings.on_set_font_size(self.out_data['font_size'])
 
-            #self.win_parent.settings.set_annotation_size_color(self._annotation_size)
+            #self.settings.set_annotation_size_color(self._annotation_size)
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
             self.win_parent.clipping_obj.apply_clipping(self.out_data)
@@ -1062,6 +1083,7 @@ def main():  # pragma: no cover
         'highlight_opacity' : 0.8,
         'highlight_point_size' : 10.0,
 
+        'parallel_projection': True,
         'annotation_color' : (1., 0., 0.), # red
         'annotation_size' : 11,
         'picker_size' : 10.,
