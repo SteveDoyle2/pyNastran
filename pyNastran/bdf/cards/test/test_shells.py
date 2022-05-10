@@ -400,12 +400,10 @@ class TestShells(unittest.TestCase):
         G = 42.
         mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         m = MAT1.add_op2_data(mat1)
-        nplies = len(p.plies)
+        nplies = p.nplies
         p.mids_ref = [None] * nplies
         for iply in range(nplies):
-            mid = p.plies[iply][0]
             p.mids_ref[iply] = m # MAT1
-            #p.mids = [m, m, m]
         p.mids = [mid_ref.mid for mid_ref in p.mids_ref]
 
         #Rho
@@ -533,7 +531,7 @@ class TestShells(unittest.TestCase):
         mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         m = MAT1.add_op2_data(mat1)
 
-        nplies = len(p.plies)
+        nplies = p.nplies
         assert nplies == 6
         assert len(p.mids) == 3
 
@@ -541,7 +539,6 @@ class TestShells(unittest.TestCase):
         npliesi = nplies//2
         p.mids_ref = [None] * npliesi
         for iply in range(npliesi):
-            mid = p.plies[iply][0]
             p.mids_ref[iply] = m # MAT1
         p.mids = [mid_ref.mid for mid_ref in p.mids_ref]
 

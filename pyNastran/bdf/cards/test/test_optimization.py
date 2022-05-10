@@ -972,7 +972,8 @@ class TestOpt(unittest.TestCase):
             (0, 'DTABLE'): ['B1', 'C', 'A'],
         }
         dresp2 = model.add_dresp2(dresp_id, label, dequation, region, params,
-                                  method='MIN', c1=1., c2=0.005, c3=10., validate=True, comment='')
+                                  method='MIN', c1=1., c2=0.005, c3=10., validate=True,
+                                  comment='')
         str(dresp2)
         #print(dresp2)
 
