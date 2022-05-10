@@ -18,7 +18,7 @@ import warnings
 from typing import Tuple, List, Dict, Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types, zip_strict
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
@@ -292,7 +292,7 @@ class CompositeShellProperty(Property):
         mid_ref = self.mids_ref[iply]
         return mid_ref.rho
 
-    def Mid(self, iply) -> int:
+    def Mid(self, iply: int) -> int:
         """
         Gets the Material ID of the :math:`i^{th}` ply.
 
@@ -310,12 +310,13 @@ class CompositeShellProperty(Property):
         """
         iply = self._adjust_ply_id(iply)
         if self.mids_ref is not None:
-            mid = self.mids_ref[iply].mid
+            mid_ref = self.mids_ref[iply]
+            mid = mid_ref.mid
         else:
             mid = self.mids[iply]
         return mid
 
-    def Material(self, iply) -> Union[MAT1, MAT8, MAT9]:
+    def Material(self, iply: int) -> Union[MAT1, MAT8, MAT9]:
         """
         Gets the material of the :math:`i^{th}` ply (not the ID unless
         it is not cross-referenced).
@@ -333,7 +334,7 @@ class CompositeShellProperty(Property):
             mid = self.mids[iply]
         return mid
 
-    def get_theta(self, iply) -> float:
+    def get_theta(self, iply: int) -> float:
         """
         Gets the ply angle of the :math:`i^{th}` ply (not the ID)
 
@@ -347,7 +348,7 @@ class CompositeShellProperty(Property):
         theta = self.thetas[iply]
         return theta
 
-    def get_sout(self, iply) -> str:
+    def get_sout(self, iply: int) -> str:
         """
         Gets the the flag identifying stress/strain outpur of the
         :math:`i^{th}` ply (not the ID).  default='NO'.
@@ -362,26 +363,37 @@ class CompositeShellProperty(Property):
         sout = self.souts[iply]
         return sout
 
-    def get_material_ids(self):
-        thickness = []
-        for i in range(self.nplies):
-            thick = self.get_material_id(i)
-            thickness.append(thick)
-        return np.array(thickness, dtype='int32')
+    def get_material_ids(self, include_symmetry: bool=True):
+        nplies = self.nplies if include_symmetry else len(self.thicknesses)
+        material_ids = np.zeros(nplies, dtype='int32')
+        for i in range(nplies):
+            mid = self.get_material_id(i)
+            material_ids[i] = mid
+        return material_ids
 
-    def get_thicknesses(self) -> np.ndarray:
-        thickness = []
-        for i in range(self.nplies):
-            thick = self.get_thickness(i)
-            thickness.append(thick)
-        return np.array(thickness, dtype='float64')
+    def get_thicknesses(self, include_symmetry: bool=True) -> np.ndarray:
+        nplies = self.nplies if include_symmetry else len(self.thicknesses)
+        thickness = np.zeros(nplies, dtype='float64')
+        for i in range(nplies):
+            thicknessi = self.get_thickness(i)
+            thickness[i] = thicknessi
+        return thickness
 
-    def get_thetas(self) -> np.ndarray:
-        thetas = []
-        for i in range(self.nplies):
-            theta = self.get_theta(i)
-            thetas.append(theta)
-        return np.array(thetas, dtype='float64')
+    def get_thetas(self, include_symmetry: bool=True) -> np.ndarray:
+        nplies = self.nplies if include_symmetry else len(self.thicknesses)
+        theta = np.zeros(nplies, dtype='float64')
+        for i in range(nplies):
+            thetai = self.get_theta(i)
+            theta[i] = thetai
+        return theta
+
+    def get_souts(self, include_symmetry: bool=True) -> np.ndarray:
+        nplies = self.nplies if include_symmetry else len(self.thicknesses)
+        sout = np.zeros(nplies, dtype='|U8')
+        for i in range(nplies):
+            souti = self.get_sout(i)
+            sout[i] = souti
+        return sout
 
     def get_z_locations(self) -> np.ndarray:
         """
@@ -799,6 +811,9 @@ class PCOMP(CompositeShellProperty):
                            'HFAI', 'HFAB', 'HTAP',
                            0.0, None], f'ft={self.ft!r}'
 
+        assert len(self.mids) == len(self.thicknesses)
+        assert len(self.mids) == len(self.thetas)
+        assert len(self.mids) == len(self.souts)
         # 'NO' is not an option!
         allowed_lam = [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE']
         if self.lam not in allowed_lam:
@@ -897,8 +912,13 @@ class PCOMP(CompositeShellProperty):
         #    self.plies = plies_lower + plies
         #    #print str(self)
         z0 = double_or_blank(card, 2, 'z0')
-        return PCOMP(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, tref, ge,
+        card = PCOMP(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, tref, ge,
                      lam, z0, comment=comment)
+        if len(mids) == 0 or len(thicknesses) == 0 or len(thetas) == 0 or len(souts) == 0:
+            msg = 'No PCOMP layers defined\n%s' % str(card)
+            msg += PCOMP.__doc__
+            raise RuntimeError(msg)
+        return card
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -920,7 +940,7 @@ class PCOMP(CompositeShellProperty):
         z0 = data[1]
         nsm = data[2]
         sb = data[3]
-        ft = data[4]
+        ft_int = data[4]
         tref = data[5]
         ge = data[6]
         lam = data[7]
@@ -946,33 +966,28 @@ class PCOMP(CompositeShellProperty):
             #elif sout == 3:  #: .. todo:: what?!!
                 #sout = 'YES'
             else:
-                raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
-                                   '\nPCOMP = %s' % (sout, data))
+                raise RuntimeError(f'unsupported sout.  sout={sout!r} and must be 0 or 1.'
+                                   f'\nPCOMP = {data}')
             mids.append(mid)
             thicknesses.append(t)
             thetas.append(theta)
             souts.append(sout)
-        if ft == 0:
-            ft = None
-        elif ft == 1:
-            ft = 'HILL'
-        elif ft == 2:
-            ft = 'HOFF'
-        elif ft == 3:
-            ft = 'TSAI'
-        elif ft == 4:
-            ft = 'STRN'
-        else:
-            raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
-                               '\nPCOMP = %s' % (pid, ft, data))
+            try:
+                ft = map_failure_theory_int(ft_int)
+            except NotImplementedError:
+                raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft_int!r}.'
+                               f'\nPCOMP = {data}')
         return PCOMP(pid, mids, thicknesses, thetas, souts,
                      nsm, sb, ft, tref, ge, lam, z0, comment=comment)
 
     @property
     def plies(self):
         plies = []
-        for mid, t, theta, sout in zip_longest(self.material_ids, self.thicknesses,
-                                               self.thetas, self.souts):
+        material_ids = self.get_material_ids(include_symmetry=True)
+        thicknesses = self.get_thicknesses(include_symmetry=True)
+        thetas = self.get_thetas(include_symmetry=True)
+        souts = self.get_souts(include_symmetry=True)
+        for mid, t, theta, sout in zip_strict(material_ids, thicknesses, thetas, souts):
             plies.append([mid, t, theta, sout])
         return plies
 
@@ -1068,6 +1083,7 @@ class PCOMP(CompositeShellProperty):
             rotates the ABD matrix; measured in degrees
 
         """
+        assert isinstance(theta_offset, float_types), theta_offset
         mids = self.get_material_ids()
         thicknesses = self.get_thicknesses()
         thetad = self.get_thetas()
@@ -1086,13 +1102,13 @@ class PCOMP(CompositeShellProperty):
         #Q = np.zeros((3, 3), dtype='float64')
 
         mids_ref = copy.deepcopy(self.mids_ref)
-        assert mids_ref is not None, f'The following material hasnt been cross-referenced:\n{self}'
+        assert mids_ref is not None, f'The following material has not been cross-referenced:\n{self}'
         if self.is_symmetrical:
             mids_ref += mids_ref[::-1]
 
-        assert len(mids) == len(mids_ref), 'mids=%s (%s) mids_ref:\n%s; %s' % (mids, len(mids), mids_ref, len(mids_ref))
-        for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip(mids, mids_ref, theta,
-                                                                    thicknesses, zmeans, z0, z1):
+        assert len(mids) == len(mids_ref), f'mids={mids} ({len(mids)}) mids_ref:\n{mids_ref}; {len(mids_ref)}'
+        for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip_longest(mids, mids_ref, theta,
+                                                                            thicknesses, zmeans, z0, z1):
             Qbar = self.get_Qbar_matrix(mid_ref, thetai)
             A += Qbar * thickness
             #B += Qbar * thickness * zmean
@@ -1116,6 +1132,7 @@ class PCOMP(CompositeShellProperty):
             rotates the ABD matrix; measured in degrees
 
         """
+        assert isinstance(theta_offset, float_types), theta_offset
         A, B, D = self.get_individual_ABD_matrices(theta_offset)
         ABD = np.block([
             [A, B],
@@ -1125,8 +1142,11 @@ class PCOMP(CompositeShellProperty):
         #print(ABD)
         return ABD
 
-    def get_Qbar_matrix(self, mid_ref, theta: float) -> np.ndarray:
+    def get_Qbar_matrix(self,
+                        mid_ref: Union[MAT1, MAT8],
+                        theta: float) -> np.ndarray:
         """theta must be in radians"""
+        assert isinstance(theta, float_types), theta
         S2, unused_S3 = get_mat_props_S(mid_ref)
         T = get_2d_plate_transform(theta)
 
@@ -1160,32 +1180,32 @@ class PCOMP(CompositeShellProperty):
         nsm = self.Nsm()
         mids = self.Mids()
 
-        assert isinstance(pid, integer_types), 'pid=%r' % pid
-        assert isinstance(is_sym, bool), 'is_sym=%r' % is_sym
-        assert isinstance(nplies, integer_types), 'nplies=%r' % nplies
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mids, list), 'mids=%r' % mids
+        assert isinstance(pid, integer_types), f'pid={pid!r}'
+        assert isinstance(is_sym, bool), f'is_sym={is_sym!r}'
+        assert isinstance(nplies, integer_types), f'nplies={nplies!r}'
+        assert isinstance(nsm, float), f'nsm={nsm!r}'
+        assert isinstance(mids, list), f'mids={mids}'
 
         t = self.Thickness()
-        assert isinstance(t, float), 'thickness=%r' % t
+        assert isinstance(t, float), f'thickness={t!r}'
         if xref:
             mpa = self.MassPerArea()
-            assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+            assert isinstance(mpa, float), f'mass_per_area={mpa!r}'
 
         for iply in range(nplies):
             mid2 = self.Mid(iply)
             assert mids[iply] == mid2
             t = self.Thickness(iply)
-            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(t, float), f'thickness={t!r}'
 
             if xref:
                 rho = self.Rho(iply)
                 mpa = self.MassPerArea(iply)
-                assert isinstance(rho, float), 'rho=%r' % rho
-                assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+                assert isinstance(rho, float), f'rho={rho!r}'
+                assert isinstance(mpa, float), f'mass_per_area={mpa!r}'
                 iplyi = self._adjust_ply_id(iply)
                 mid = self.mids_ref[iplyi]
-                assert mid.type in ['MAT1', 'MAT2', 'MAT8'], 'PCOMP: mid.type=%r' % mid.type
+                assert mid.type in ['MAT1', 'MAT2', 'MAT8'], f'PCOMP: mid.type={mid.type!r}'
 
         for ply in self.plies:
             assert len(ply) == 4, ply
@@ -1193,8 +1213,9 @@ class PCOMP(CompositeShellProperty):
     def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                        self.tref, self.ge, self.lam, ]
-        for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses,
-                                         self.thetas, self.souts):
+        material_ids = self.get_material_ids(include_symmetry=False)
+        for (mid, t, theta, sout) in zip_strict(material_ids, self.thicknesses,
+                                                self.thetas, self.souts):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
@@ -1206,8 +1227,9 @@ class PCOMP(CompositeShellProperty):
         z0 = set_blank_if_default(self.z0, -0.5 * self.get_thickness())
 
         list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, tref, ge, self.lam]
-        for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses,
-                                         self.thetas, self.souts):
+        material_ids = self.get_material_ids(include_symmetry=False)
+        for (mid, t, theta, sout) in zip_strict(material_ids, self.thicknesses,
+                                                self.thetas, self.souts):
             #theta = set_blank_if_default(theta, 0.0)
             str_sout = set_blank_if_default(sout, 'NO')
             list_fields += [mid, t, theta, str_sout]
@@ -1219,6 +1241,12 @@ class PCOMP(CompositeShellProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+def map_failure_theory_int(ft: int) -> Optional[str]:
+    try:
+        ft_str = FT_INT_TO_NAME[ft]
+    except KeyError:
+        raise NotImplementedError(ft)
+    return ft_str
 
 class PCOMPG(CompositeShellProperty):
     """
@@ -1536,13 +1564,23 @@ class PCOMPG(CompositeShellProperty):
         global_ply_id = self.global_ply_ids[iply]
         return global_ply_id
 
+    def get_global_ply_ids(self, include_symmetry: bool=True) -> np.ndarray:
+        nplies = self.nplies if include_symmetry else len(self.thicknesses)
+        global_ply = np.zeros(nplies, dtype='int32')
+        for i in range(nplies):
+            global_plyi = self.GlobalPlyID(i)
+            global_ply[i] = global_plyi
+        return global_ply
+
     def raw_fields(self):
         list_fields = [
             'PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
             self.tref, self.ge, self.lam, ]
-        for (mid, t, theta, sout, global_ply_id) in zip_longest(
-                self.material_ids, self.thicknesses, self.thetas, self.souts,
-                self.global_ply_ids):
+
+        material_ids = self.get_material_ids(include_symmetry=False)
+        for (mid, t, theta, sout, global_ply_id) in zip_strict(
+             material_ids, self.thicknesses, self.thetas, self.souts,
+             self.global_ply_ids):
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
         return list_fields
 
@@ -1556,9 +1594,11 @@ class PCOMPG(CompositeShellProperty):
         list_fields = [
             'PCOMPG', self.pid, z0, nsm, sb, self.ft, tref, ge,
             self.lam]
-        zipi = zip_longest(self.material_ids, self.thicknesses, self.thetas, self.souts,
-                           self.global_ply_ids)
-        for (mid, t, theta, sout, global_ply_id) in zipi:
+
+        material_ids = self.get_material_ids(include_symmetry=False)
+        for (mid, t, theta, sout, global_ply_id) in zip_strict(
+             material_ids, self.thicknesses, self.thetas, self.souts,
+             self.global_ply_ids):
             sout = set_blank_if_default(sout, 'NO')
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
         return list_fields
@@ -2314,14 +2354,6 @@ class PSHELL(Property):
     def material_ids(self) -> List[Optional[int]]:
         """returns the material ids"""
         return [self.Mid1(), self.Mid2(), self.Mid3(), self.Mid4()]
-
-    #@property
-    #def mid(self):
-        #raise RuntimeError('use self.mid1, self.mid2, self.mid3, or self.mid4')
-
-    #@mid.setter
-    #def mid(self, value):
-        #raise RuntimeError('use self.mid1, self.mid2, self.mid3, or self.mid4')
 
     @property
     def mid_ref(self):

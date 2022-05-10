@@ -1103,7 +1103,11 @@ def _lines_to_decks_main(lines: List[str],
             #print('%s: %s' % (flag_word, line.rstrip()))
             current_lines.append(line.rstrip())
         elif flag == 3:
-            if not(is_auxmodel is True or is_superelement is True or consider_superelements):
+            is_special_flag = (
+                is_auxmodel is True or
+                is_superelement is True or
+                consider_superelements)
+            if not is_special_flag:
                 raise RuntimeError(f'one must be True: is_auxmodel={is_auxmodel}; '
                                    f'is_superelement={is_superelement}; '
                                    f'consider_superelements={consider_superelements}')
@@ -1208,7 +1212,7 @@ def _is_begin_bulk(line_upper: str) -> bool:
         'SUPER' not in line_upper)
     return is_begin_bulk
 
-def _read_bulk_for_auxmodel(ifile_iline, line, flag: int, bulk_data_lines: List[str],
+def _read_bulk_for_auxmodel(ifile_iline, line: str, flag: int, bulk_data_lines: List[str],
                             current_lines, current_ilines,
                             old_flags,
                             unused_is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,

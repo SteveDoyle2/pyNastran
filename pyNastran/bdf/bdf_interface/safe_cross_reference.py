@@ -255,8 +255,7 @@ class SafeXrefMesh(XrefMesh):
             self.log.warning('These cards dont support safe_xref; %s' %
                              str(list(missing_safe_xref)))
 
-    def _show_safe_xref_errors(self, elements_word, xref_errors):
-        # type: (str, bool) -> None
+    def _show_safe_xref_errors(self, elements_word: str, xref_errors: bool) -> None:
         """helper method to show errors"""
         if xref_errors:
             msg = 'Failed to safe xref %s\n' % elements_word

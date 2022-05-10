@@ -32,39 +32,42 @@ overall:
  - cleaner setup.py files / packages.py
 BDF:
  - bug fixes:
-   - fixing EAS sorting bug in make_flfacts_mach_sweep (mach should be sorted to give sorted EAS)
-   - fixed g4 bug in FORCE2/MOMENT2 (can't be blank)
-   - fixed I1 bug in PBARL
-
    - renaming pyNastran/nptyping.py to pyNastran/nptyping_interface.py to avoid namespace conflicts
    - require that nastran_format is a string
-   - stripping first line of card to fix bug (i thought it was to get the card name, but I don't remember...)
-   - FLUTTER method can be string_or_blank (default='L')
+   - FORCE2/MOMENT2: fixed g4 bug (can't be blank)
+   - FLUTTER: method can be string_or_blank (default='L')
+   - FLUTTER: fixing EAS sorting bug in make_flfacts_mach_sweep (mach should be sorted to give sorted EAS)
    - MTRANS now supported for SOL 200 (vs only MTRAN; they're the same)
-   - subcase add_op2_data supports OUG1F
-   - SET1 (and more generally any card that has 1,THRU,10 or 1,THRU,10,BY,2) now supports blank values
-   - adding get_density to MAT11
-   - MATT1 g11_tid=0 update to None if it's 0
-   - MATT3 table_ids update to None if they're 0
+   - SET1: (and more generally any card that has 1,THRU,10 or 1,THRU,10,BY,2) now supports blank values
+   - MATT1: g11_tid=0 update to None if it's 0
+   - MATT3: table_ids update to None if they're 0
    - PARAM, DRESP1, DVCRELx now supports numpy int/floats
-   - better type checking of PARAMs
-   - correcting number of PLOAD2 elements allowed
-   - PLOAD4 surf_or_line, line_load_dir set to blank when they're default (to fix NX issue)
-   - I2 for BOX section
-   - I12 now returns I12 instead of [A, I1, I2, I12]
+   - PARAMs: better type checking
+   - PLOAD2: correcting number elements allowed
+   - PLOAD4: surf_or_line, line_load_dir set to blank when they're default (to fix NX issue)
+   - PBARL/PBEAML: I2 for BOX section
+   - PBARL: fixed I1 bug
+   - PBARL: I12 now returns I12 instead of [A, I1, I2, I12]
    - AUTOSPC (from case control) now works in bdf_renumber
+   - BCTSET: fixing bug where defaults were mishandled (poor documentation in QRG)
+   - DEQATN: better builtin handling
+   - DMIG: better size/is_double handling
+   - Subcase: add_op2_data supports OUG1F
  - added:
    - pathlib support
-   - GRID method get_position_wrt_coord_ref
-   - DVCRELx CMASS/M and CELAS4/K options
-   - DCONSTR support for FLUTTER/PK
-   - more DRESP1 PBEAM/PBEAML support
-   - DRESP1 FATIGUE support
-   - DRESP2 now references DNODE
-   - DVMREL2 now supports MAT2, MAT8
-   - collapse_bad_quads now removes degenerate quads
-   - CAERO1/2.aefact_ids
-   - CTRIA6, CQUAD8, CQUAD support in get_oml
+   - GRID: method get_position_wrt_coord_ref
+   - MAT11: adding get_density
+   - DVCRELx: CMASS/M and CELAS4/K options
+   - DCONSTR: support for FLUTTER/PK
+   - DRESP1: PBEAM/PBEAML, FATIGUE support
+   - DRESP2: now references DNODE
+   - DVMREL2: now supports MAT2, MAT8
+   - PCOMP/G: layers must now be the same
+   - PCOMP:  added get_material_ids(include_symmetry=True), get_thetas(include_symmetry=True), get_souts(include_symmetry=True) methods
+   - PCOMPG: added get_global_ply_ids(include_symmetry=True) in addition to PCOMP methods
+   - CAERO1/2: added aefact_ids property
+   - get_oml: CTRIA6/CQUAD8/CQUAD support
+   - collapse_bad_quads: now removes degenerate quads
    - bdf_mirror: solid support
    - bdf_convert now supports:
       - CFAST/PFAST
