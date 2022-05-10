@@ -26,7 +26,7 @@ from qtpy import QtGui
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.utils import get_setting
-from pyNastran.utils import object_attributes
+from pyNastran.utils import object_attributes #, object_stats
 if TYPE_CHECKING:  # pragma: no cover
     import vtk
     from qtpy.QtCore import QSettings
@@ -125,6 +125,17 @@ class NastranSettings:
         self.strain_energy = True
         self.grid_point_force = True
 
+    def __repr__(self) -> str:
+        msg = '<NastranSettings>\n'
+        keys = object_attributes(self, mode='public', keys_to_skip=['parent'])
+        for key in keys:
+            if key.startswith('nastran'):
+                raise RuntimeError(key)
+            value = getattr(self, key)
+            if isinstance(value, tuple):
+                value = str(value)
+            msg += '  %r = %r\n' % (key, value)
+        return msg
 
 class Settings:
     """storage class for various settings"""
@@ -230,6 +241,12 @@ class Settings:
 
         self.nastran_settings = NastranSettings()
 
+    def add_model_settings_to_dict(self, data: Dict[str, Any]):
+        nastran_settings = self.nastran_settings
+        for key in NASTRAN_BOOL_KEYS:
+            base, key2 = key.split('_', 1)
+            data[key] = getattr(nastran_settings, key2)
+
     def load(self, settings: QSettings) -> bool:
         """helper method for ``setup_gui``"""
         #red = (1.0, 0.0, 0.0)
@@ -305,8 +322,7 @@ class Settings:
                           #HIGHLIGHT_OPACITY, auto_type=float)
 
         # default colormap for legend
-        self._set_setting(settings, setting_keys, ['colormap'],
-                          'jet')
+        self._set_setting(settings, setting_keys, ['colormap'], 'jet')
 
 
         # general gui sizing
@@ -324,17 +340,7 @@ class Settings:
         except (TypeError, AttributeError):
             pass
 
-        nastran_settings = self.nastran_settings
-        for key in NASTRAN_BOOL_KEYS:
-            # nastran_is_properties -> nastran, is_properties
-            base, key2 = key.split('_', 1)
-
-            # we get default from the nastran_settings
-            default = getattr(nastran_settings, key2)
-
-            # pull it from the QSettings
-            self._set_setting(settings, setting_keys, [key],
-                              default, save=True, auto_type=bool)
+        self._load_nastran_settings(settings, setting_keys)
 
         #w = screen_shape.width()
         #h = screen_shape.height()
@@ -359,6 +365,27 @@ class Settings:
             #self.resize(1100, 700)
         is_loaded = True
         return is_loaded
+
+    def _load_nastran_settings(self, settings: QSettings, setting_keys: List[str]) -> None:
+        """
+        loads the settings from 'nastran_displacement' (or similar)
+        and save it to 'nastran_settings.displacement'
+        """
+        nastran_settings = self.nastran_settings
+        #print('-----default------')
+        #print(nastran_settings)
+        for key in NASTRAN_BOOL_KEYS:
+            # nastran_is_properties -> nastran, is_properties
+            base, key2 = key.split('_', 1)
+
+            # we get default from the nastran_settings
+            default = getattr(nastran_settings, key2)
+
+            # pull it from the QSettings
+            value = self._set_setting(settings, setting_keys, [key],
+                                      default, save=True, auto_type=bool)
+            #print(f'key={key!r} key2={key2!r} default={default!r} value={value!r}')
+            setattr(nastran_settings, key2, value)
 
     def _set_setting(self, settings, setting_keys: List[str],
                      setting_names: List[str], default: Any,
@@ -414,11 +441,12 @@ class Settings:
 
         # format-specific
         nastran_settings = self.nastran_settings
+        #print(nastran_settings)
         for key in NASTRAN_BOOL_KEYS:
             base, key2 = key.split('_', 1)
             value = getattr(nastran_settings, key2)
             settings.setValue(key, value)
-
+            #print(f'*key={key!r} key2={key2!r} value={value!r}')
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
         if not is_testing:

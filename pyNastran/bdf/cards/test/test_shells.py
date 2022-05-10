@@ -402,11 +402,13 @@ class TestShells(unittest.TestCase):
         G = 42.
         mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, mcsid]
         m = MAT1.add_op2_data(mat1)
-        for iply in range(len(p.plies)):
+        nplies = len(p.plies)
+        p.mids_ref = [None] * nplies
+        for iply in range(nplies):
             mid = p.plies[iply][0]
-            p.mids[iply] = m # MAT1
+            p.mids_ref[iply] = m # MAT1
             #p.mids = [m, m, m]
-        p.mids_ref = p.mids
+        p.mids = [mid_ref.mid for mid_ref in p.mids_ref]
 
         #Rho
         self.assertAlmostEqual(p.Rho(0), 1.0)
@@ -536,11 +538,14 @@ class TestShells(unittest.TestCase):
         nplies = len(p.plies)
         assert nplies == 6
         assert len(p.mids) == 3
+
         # todo: old-style -> update
-        for iply in range(nplies//2):
+        npliesi = nplies//2
+        p.mids_ref = [None] * npliesi
+        for iply in range(npliesi):
             mid = p.plies[iply][0]
-            p.mids[iply] = m # MAT1
-        p.mids_ref = p.mids
+            p.mids_ref[iply] = m # MAT1
+        p.mids = [mid_ref.mid for mid_ref in p.mids_ref]
 
         #Rho
         self.assertAlmostEqual(p.Rho(0), 1.0)

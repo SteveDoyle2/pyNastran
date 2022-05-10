@@ -57,8 +57,7 @@ class PreferencesObject:
             'clicked_ok' : False,
             'close' : False,
         }
-        for name in NASTRAN_BOOL_KEYS:
-            data[name] = getattr(settings, name)
+        settings.add_model_settings_to_dict(data)
 
         if not self._preferences_window_shown:
             self._preferences_window = PreferencesWindow(data, win_parent=self.gui)

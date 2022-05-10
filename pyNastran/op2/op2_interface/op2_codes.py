@@ -329,7 +329,7 @@ class Op2Codes:
             fmts = ('int32', 'int64')
         else:
             raise NotImplementedError(self.code_information())
-        index = self.size // 4 - 1  # factir is size/4 -> subtract 1
+        index = self.size // 4 - 1  # factor is size/4 -> subtract 1
         return fmts[index]
 
     def code_information(self, include_time: bool=True) -> str:

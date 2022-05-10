@@ -311,7 +311,6 @@ class QVECT(ThermalLoad):
                     comment='')
         return obj
 
-
     def get_loads(self):
         return [self]
 

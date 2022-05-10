@@ -1,9 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from pyNastran.bdf.cards.properties.shell import PCOMP
+from pyNastran.bdf.cards.materials import MAT8
 
-def plot_equivalent_lamina_vs_theta(pcomp, mid_ref, thetad,
-                                    plot=False, show=False,
-                                    close=True, png_filename_base=None):
+def plot_equivalent_lamina_vs_theta(pcomp: PCOMP,
+                                    mid_ref: MAT8,
+                                    thetad: np.ndarray,
+                                    plot: bool=False,
+                                    show: bool=False,
+                                    close: bool=True,
+                                    png_filename_base=None):
     """plots a PCOMP mid vs. theta"""
     e22 = mid_ref.e22
     g12 = mid_ref.g12
@@ -52,12 +58,18 @@ def plot_equivalent_lamina_vs_theta(pcomp, mid_ref, thetad,
         ax = fig1.gca()
 
         ax.plot(thetad, Q66/Q66.max(), label='Q66=%g' % Q66.max())
-        ax.plot(thetad, Ex/Ex.max(), label='Ex=%g' % Ex.max())
-        ax.plot(thetad, Ey/Ey.max(), label='Ey=%g' % Ey.max())
-        ax.plot(thetad, Gxy/Gxy.max(), label='Gxy=%g' % Gxy.max())
-        ax.plot(thetad, Ex/e22, label='Ex/E2=%g' % Ex.max())
-        ax.plot(thetad, Ey, label='Ey=%g' % Ey.max())
-        ax.plot(thetad, Gxy/g12, label='Gxy/G12=%g' % Gxy.max())
+        if Ex.max() != 0.:
+            ax.plot(thetad, Ex/Ex.max(), label='Ex/|Ex|=%g' % Ex.max())
+        if Ey.max() != 0.:
+            ax.plot(thetad, Ey/Ey.max(), label='Ey/|Ey|=%g' % Ey.max())
+        if Gxy.max() != 0.:
+            ax.plot(thetad, Gxy/Gxy.max(), label='Gxy=%g' % Gxy.max())
+        if e22 != 0.:
+            ax.plot(thetad, Ex/e22, label='Ex/E2=%g' % Ex.max())
+        if g12 != 0.:
+            ax.plot(thetad, Gxy/g12, label='Gxy/G12=%g' % Gxy.max())
+        ax.plot(thetad, Ex, label='Ex=%g' % Ex.max(), linestyle='--')
+        ax.plot(thetad, Ey, label='Ey=%g' % Ey.max(), linestyle='--')
         ax.set_xlim(min_max_theta)
         ax.legend()
         ax.grid()

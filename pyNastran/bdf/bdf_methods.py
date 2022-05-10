@@ -156,36 +156,8 @@ class BDFMethods(BDFAttributes):
             stop_if_no_mass=stop_if_no_mass, detailed=True)
         return pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass
 
-    def mass_properties(self, element_ids=None, mass_ids=None,
-                        reference_point=None,
-                        sym_axis=None, scale=None, inertia_reference: str='cg'):  # pragma: no cover
-        """.. see:: pyNastran.bdf.mesh_utils.mass_properties.mass_properties"""
-        self.deprecated(
-            'mass, cg, inertia = model.mass_properties(...)',
-            'from pyNastran.bdf.mesh_utils.mass_properties import mass_properties\n'
-            'mass, cg, inertia = mass_properties(model, ...)',
-            '1.3')
 
-    def mass_properties_no_xref(self, element_ids=None, mass_ids=None,
-                                reference_point=None,
-                                sym_axis=None, scale=None, inertia_reference='cg'):  # pragma: no cover
-        """.. see:: pyNastran.bdf.mesh_utils.mass_properties.mass_properties_no_xref"""
-        self.deprecated(
-            'mass, cg, inertia = model.mass_properties_no_xref(...)',
-            'from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_no_xref\n'
-            'mass, cg, inertia = mass_properties_no_xref(model, ...)',
-            '1.3')
 
-    def mass_properties_nsm(self, element_ids=None, mass_ids=None, nsm_id=None,
-                            reference_point=None,
-                            sym_axis=None, scale=None, inertia_reference='cg',
-                            xyz_cid0_dict=None, debug=False):  # pragma: no cover
-        """.. see:: pyNastran.bdf.mesh_utils.mass_properties.mass_properties_nsm"""
-        self.deprecated(
-            'mass, cg, inertia = model.mass_properties_nsm(...)',
-            'from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_nsm\n'
-            'mass, cg, inertia = mass_properties_nsm(model, ...)',
-            '1.3')
 
     #def __gravity_load(self, loadcase_id):
         #"""
@@ -202,36 +174,7 @@ class BDFMethods(BDFAttributes):
         #p0 = array([0., 0., 0.])  ## .. todo:: hardcoded
         #mass, cg, I = mass_properties(self, reference_point=p0, sym_axis=None)
 
-    def sum_forces_moments_elements(self, p0: int, loadcase_id: int,
-                                    eids: List[int], nids: List[int],
-                                    cid: int=0,
-                                    include_grav: bool=False,
-                                    xyz_cid0: Union[None, Dict[int, NDArray3float]]=None):  # pragma: no cover
-        """..see :: pyNastran.bdf.mesh_utils.loads.sum_forces_moments_elements"""
-        self.deprecated(
-            'forces, moments = model.sum_forces_moments_elements(...)',
-            'from pyNastran.bdf.mesh_utils.loads import sum_forces_moments_elements\n'
-            'forces, moments = sum_forces_moments_elements(model, ...)',
-            '1.3')
 
-    def sum_forces_moments(self, p0: int,
-                           loadcase_id: int,
-                           cid: int=0,
-                           include_grav: bool=False,
-                           xyz_cid0: Union[None, Dict[int, NDArray3float]]=None):  # pragma: no cover
-        """..see :: pyNastran.bdf.mesh_utils.loads.sum_forces_moments"""
-        self.deprecated(
-            'forces, moments = model.sum_forces_moments(...)',
-            'from pyNastran.bdf.mesh_utils.loads import sum_forces_moments\n'
-            'forces, moments = sum_forces_moments(model, ...)',
-            '1.3')
-        #forces, moments = sum_forces_moments(self, p0, loadcase_id,
-                                             #include_grav=include_grav, xyz_cid0=xyz_cid0)
-        #if cid == 0:
-            #return forces, moments
-        #cid0 = 0
-        #forces, moments = transform_load(forces, moments, cid0, cid, self)
-        #return forces, moments
 
     def get_element_faces(self, element_ids: Optional[List[int]]=None, allow_blank_nids: bool=True) -> Any:
         """
@@ -277,15 +220,6 @@ class BDFMethods(BDFAttributes):
                         eid_faces.append((eid, face))
         return eid_faces
 
-    def write_skin_solid_faces(self, skin_filename,
-                               write_solids=False, write_shells=True,
-                               size=8, is_double=False, encoding=None):
-        """.. see:: pyNastran.bdf.mesh_utils.skin_solid_elements.write_skin_solid_faces"""
-        self.deprecated(
-            'model.write_skin_solid_faces(...)',
-            'from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces\n'
-            'write_skin_solid_faces(model, ...)',
-            '1.3')
 
     def update_model_by_desvars(self, xref=True, desvar_values=None):
         """doesn't require cross referenceing"""

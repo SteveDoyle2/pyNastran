@@ -389,11 +389,6 @@ def _aero_stats(model: BDF, msg: List[str]) -> None:
         msg.append('bdf.aero')
         msg.append('  %-8s 1' % ('AERO:'))
 
-    # aero
-    if model.aero:
-        msg.append('bdf.aero')
-        msg.append('  %-8s 1' % ('AERO:'))
-
     # aeros
     if model.aeros:
         msg.append('bdf:aeros')

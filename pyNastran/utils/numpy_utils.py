@@ -9,6 +9,6 @@ bytes_type = (bytes, np.bytes_)
 
 def zip_strict(*arrays):
    lengths = [len(array) for array in arrays]
-   assert min(lengths) == max(lengths)
+   assert min(lengths) == max(lengths), f'lengths={lengths} should be the same'
    assert len(lengths) > 0, lengths
    return zip(*arrays)

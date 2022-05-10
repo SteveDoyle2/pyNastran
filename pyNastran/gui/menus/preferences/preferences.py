@@ -9,7 +9,9 @@ The preferences menu handles:
  - Clipping Max
 
 """
+from __future__ import annotations
 from math import log10, ceil
+from typing import TYPE_CHECKING
 
 from qtpy import QtGui
 from qtpy.QtWidgets import (
@@ -24,6 +26,8 @@ from pyNastran.gui.gui_objects.settings import (
     COORD_SCALE, COORD_TEXT_SCALE, ANNOTATION_SIZE, TEXT_SIZE, FONT_SIZE,
     NASTRAN_BOOL_KEYS,
 )
+if TYPE_CHECKING:
+    from pyNastran.gui.gui_objects.settings import NastranSettings
 
 
 class PreferencesWindow(PyDialog):
@@ -614,6 +618,8 @@ class PreferencesWindow(PyDialog):
         self.nastran_strain_checkbox.clicked.connect(self.on_nastran_strain)
         self.nastran_stress_checkbox.clicked.connect(self.on_nastran_stress)
 
+        self.nastran_strain_energy_checkbox.clicked.connect(self.on_nastran_strain_energy)
+
     def set_connections(self):
         """creates the actions for the menu"""
         self.font_size_button.clicked.connect(self.on_default_font_size)
@@ -682,6 +688,11 @@ class PreferencesWindow(PyDialog):
         is_checked = self.nastran_is_3d_bars_update_checkbox.isChecked()
         if self.win_parent is not None:
             self.nastran_settings.is_3d_bars_update = is_checked
+    #def on_nastran_is_update_conm2(self):
+        #"""set the nastran properties preferences"""
+        #is_checked = self.nastran_is_conm2_update.isChecked()
+        #if self.win_parent is not None:
+            #self.nastran_settings.is_update_conm2 = is_checked
     def on_nastran_is_bar_axes(self):
         """set the nastran properties preferences"""
         is_checked = self.nastran_is_bar_axes_checkbox.isChecked()
@@ -701,59 +712,59 @@ class PreferencesWindow(PyDialog):
     def on_nastran_displacement(self):
         is_checked = self.nastran_displacement_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_displacement = is_checked
+            self.nastran_settings.displacement = is_checked
     def on_nastran_velocity(self):
         is_checked = self.nastran_velocity_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_velocity = is_checked
+            self.nastran_settings.velocity = is_checked
     def on_nastran_acceleration(self):
         is_checked = self.nastran_acceleration_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_acceleration = is_checked
+            self.nastran_settings.acceleration = is_checked
     def on_nastran_eigenvector(self):
         is_checked = self.nastran_eigenvector_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_eigenvector = is_checked
+            self.nastran_settings.eigenvector = is_checked
 
     def on_nastran_spc_force(self):
         is_checked = self.nastran_spc_forces_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_spc_force = is_checked
+            self.nastran_settings.spc_force = is_checked
     def on_nastran_mpc_force(self):
         is_checked = self.nastran_mpc_forces_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_mpc_force = is_checked
+            self.nastran_settings.mpc_force = is_checked
 
     def on_nastran_applied_load(self):
         is_checked = self.nastran_applied_load_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_applied_load = is_checked
+            self.nastran_settings.applied_load = is_checked
     def on_nastran_grid_point_force(self):
         is_checked = self.nastran_grid_point_force_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_grid_point_force = is_checked
+            self.nastran_settings.grid_point_force = is_checked
 
     def on_nastran_force(self):
         is_checked = self.nastran_force_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_force = is_checked
+            self.nastran_settings.force = is_checked
     def on_nastran_strain(self):
         is_checked = self.nastran_strain_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_strain = is_checked
+            self.nastran_settings.strain = is_checked
     def on_nastran_stress(self):
         is_checked = self.nastran_stress_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_stress = is_checked
+            self.nastran_settings.stress = is_checked
     def on_nastran_strain_energy(self):
         is_checked = self.nastran_strain_energy_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_strain_energy = is_checked
+            self.nastran_settings.strain_energy = is_checked
 
 
     @property
-    def nastran_settings(self):
-        return self.win_parent.settings.nastran_settings
+    def nastran_settings(self) -> NastranSettings:
+        return self.win_parent.settings.nastran_settings  # type: NastranSettings
     #def on_nastran_is_shell_mcids2(self):
         #"""set the nastran properties preferences"""
         #is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
