@@ -174,11 +174,13 @@ class TestDMIG(unittest.TestCase):
         B_expected = mag_expected * sin(radians(45))
         pole_expected = A_expected + B_expected * 1j
 
+        np.set_printoptions(precision=20)
         msg = '\n%s_actual\n%s\n\n----' % ('POLE', pole_actual)
         msg += '\n%s_expected\n%s\n----' % ('POLE', pole_expected)
         msg += '\n%s_delta\n%s\n----' % ('POLE', pole_actual - pole_expected)
         #print(msg)
-        self.assertTrue(array_equal(pole_expected, pole_actual), msg)
+        self.assertTrue(np.allclose(pole_expected, pole_actual), msg)
+        np.set_printoptions(precision=6)
         a_matrix.get_matrix()
         save_load_deck(model)
 

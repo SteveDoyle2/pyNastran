@@ -5057,7 +5057,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         )
         return out
 
-    def _build_properties(self, model: BDF, nelements: int, eids, pids,
+    def _build_properties(self, model: BDF, nelements: int,
+                          eids: np.ndarray, pids: np.ndarray,
                           cases, form0, icase: int) -> int:
         """
         creates:
@@ -6277,6 +6278,7 @@ def _build_materials(model: BDF, pcomp, pshell, is_pshell_pcomp,
       - E_11 / E_22 / E_33 / E
       - Is Isotropic?
     """
+    log = model.log
     for i, pshell_pcompi in enumerate([pshell, pcomp]):
         mids = pshell_pcompi['mids']
         thickness = pshell_pcompi['thickness']
@@ -6336,7 +6338,8 @@ def _build_materials(model: BDF, pcomp, pshell, is_pshell_pcomp,
                     form_layer.append(('Theta', icase, []))
                     icase += 1
                 else:
-                    raise RuntimeError(f'i={i} ilayer={ilayer} and theta=nan')
+                    log.warning(f'i={i} ilayer={ilayer} and theta=nan')
+                    #raise RuntimeError(f'i={i} ilayer={ilayer} and theta=nan')
 
             midsi = mids[:, ilayer]
             icase = _add_material_mid_e11_e22(model, icase, midsi,
@@ -7291,7 +7294,7 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> Set[str]:
     if not nastran_settings.strain:
         exclude_results.add('strain')
     if not nastran_settings.strain_energy:
-        exclude_results.add('strain_energy')
+        exclude_results.add('strain_energy*')
     if not nastran_settings.grid_point_force:
         exclude_results.add('grid_point_forces')
     return exclude_results

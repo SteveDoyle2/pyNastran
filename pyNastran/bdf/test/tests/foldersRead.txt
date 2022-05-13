@@ -17,6 +17,9 @@ F:\work\pyNastran\femap_examples\Support\nast\misc\sssalter\IA
 F:\work\pyNastran\femap_examples\Support\nast\tpl
 F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl
 
+# simcenter
+C:\MSC.Software\simcenter_nastran_2019.2
+
 #-------------------------------------------------
 # desktop2
 
@@ -49,6 +52,9 @@ C:\MSC.Software\MSC_Nastran_2020\msc20200\nast\demo
 C:\MSC.Software\msc_nastran_docs_2020\doc
 C:\MSC.Software\msc_nastran_docs_2020\tpl
 C:\MSC.Software\msc_nastran_docs_2020\tpl6
+
+# msc 2020
+C:\MSC.Software\msc_nastran_runs
 
 # these don't work - nx 10.2
 "C:\Program Files\Siemens\NXNastran\nxn10p2\nxn10p2\nast"

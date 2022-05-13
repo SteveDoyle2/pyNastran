@@ -6018,7 +6018,7 @@ class OP2Reader:
                                     'macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
 
         if marker0*4 != nrecord:
-            self.log.debug(marker0)
+            self.log.debug(str(marker0))
             op2.f.seek(na)
             op2.n = na
             if nrecord == 4:

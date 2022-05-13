@@ -243,19 +243,21 @@ def get_bdf_stats(model: BDF, return_type: str='string',
 
     # dloads
     for (lid, loads) in sorted(model.dloads.items()):
-        msg.append('bdf.dloads[%s]' % lid)
         groups_dict = {}  # type: Dict[str, Any]
         for loadi in loads:
             groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
+        added_messge = _get_added_message_from_dict(groups_dict)
+        msg.append(f'bdf.dloads[{lid}]{added_messge}')
         for name, count_name in sorted(groups_dict.items()):
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
 
     for (lid, loads) in sorted(model.dload_entries.items()):
-        msg.append('bdf.dload_entries[%s]' % lid)
         groups_dict = {}
         for loadi in loads:
             groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
+        added_messge = _get_added_message_from_dict(groups_dict)
+        msg.append(f'bdf.dload_entries[{lid}]{added_messge}')
         for name, count_name in sorted(groups_dict.items()):
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
@@ -300,10 +302,12 @@ def get_bdf_stats(model: BDF, return_type: str='string',
                 groups.add(card.type)
 
         group_msg = []
+        ncards_total = 0
         for card_name in sorted(groups):
             try:
                 ncards = model.card_count[card_name]
                 group_msg.append('  %-8s : %s' % (card_name, ncards))
+                ncards_total += ncards
             except KeyError:
                 # we get in here because we used add_grid or similar method, which
                 # doesn't increase the card_count, so instead we'll use _type_to_id_map
@@ -316,7 +320,8 @@ def get_bdf_stats(model: BDF, return_type: str='string',
                 group_msg.append('  %-8s : %s' % (card_name, counter))
                 #assert card_name == 'CORD2R', model.card_count
         if group_msg:
-            msg.append('bdf.%s' % card_group_name)
+            added_msg = _get_added_message(group_msg, ncards_total)
+            msg.append(f'bdf.{card_group_name}{added_msg}')
             msg.append('\n'.join(group_msg))
             msg.append('')
 
@@ -334,33 +339,47 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         return '\n'.join(msg)
     return msg
 
+def _get_added_message_from_dict(groups_dict: Dict[str, int]) -> str:
+    ncards_total = sum(groups_dict.values())
+    msg = _get_added_message(groups_dict, ncards_total)
+    return msg
+
+def _get_added_message(group_msg: List[str], ncards_total) -> str:
+    #added_msg = ''
+    #if len(group_msg) > 1:
+    added_msg = f': {ncards_total}'
+    return added_msg
+
 def _constraint_stats(model: BDF, msg: List[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
     # spcs
     for (spc_id, spcadds) in sorted(model.spcadds.items()):
-        msg.append('bdf.spcadds[%s]' % spc_id)
         groups_dict = {}
         for spcadd in spcadds:
             groups_dict[spcadd.type] = groups_dict.get(spcadd.type, 0) + 1
+        added_messge = _get_added_message_from_dict(groups_dict)
+        msg.append(f'bdf.spcadds[{spc_id}]{added_messge}')
         for name, count_name in sorted(groups_dict.items()):
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
 
     for (spc_id, spcs) in sorted(model.spcs.items()):
-        msg.append('bdf.spcs[%s]' % spc_id)
         groups_dict = {}
         for spc in spcs:
             groups_dict[spc.type] = groups_dict.get(spc.type, 0) + 1
+        added_messge = _get_added_message_from_dict(groups_dict)
+        msg.append(f'bdf.spcs[{spc_id}]{added_messge}')
         for name, count_name in sorted(groups_dict.items()):
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
 
     # mpcs
     for (mpc_id, mpcadds) in sorted(model.mpcadds.items()):
-        msg.append('bdf.mpcadds[%s]' % mpc_id)
         groups_dict = {}
         for mpcadd in mpcadds:
             groups_dict[mpcadd.type] = groups_dict.get(mpcadd.type, 0) + 1
+        added_messge = _get_added_message_from_dict(groups_dict)
+        msg.append(f'bdf.mpcadds[{mpc_id}]{added_messge}')
         for name, count_name in sorted(groups_dict.items()):
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
@@ -370,6 +389,8 @@ def _constraint_stats(model: BDF, msg: List[str]) -> None:
         groups_dict = {}
         for mpc in mpcs:
             groups_dict[mpc.type] = groups_dict.get(mpc.type, 0) + 1
+        added_messge = _get_added_message_from_dict(groups_dict)
+        msg.append(f'bdf.mpcs[{mpc_id}]{added_messge}')
         for name, count_name in sorted(groups_dict.items()):
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
@@ -434,19 +455,21 @@ def _get_bdf_stats_loads(model: BDF) -> List[str]:
 
     else:
         for (lid, load_combinations) in sorted(model.load_combinations.items()):
-            msg.append('bdf.load_combinations[%s]' % lid)
             groups_dict = {}  # type: Dict[str, int]
             for load_combination in load_combinations:
                 groups_dict[load_combination.type] = groups_dict.get(load_combination.type, 0) + 1
+            added_messge = _get_added_message_from_dict(groups_dict)
+            msg.append(f'bdf.load_combinations[{lid}]{added_messge}')
             for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
         for (lid, loads) in sorted(model.loads.items()):
-            msg.append('bdf.loads[%s]' % lid)
             groups_dict = {}
             for loadi in loads:
                 groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
+            added_messge = _get_added_message_from_dict(groups_dict)
+            msg.append(f'bdf.loads[{lid}]{added_messge}')
             for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')

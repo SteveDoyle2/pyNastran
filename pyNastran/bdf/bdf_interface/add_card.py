@@ -7,6 +7,7 @@ from itertools import count
 from typing import Tuple, List, Dict, Optional, Union, Any
 import numpy as np
 
+from pyNastran.utils.numpy_utils import integer_string_types
 from pyNastran.nptyping_interface import NDArray3float, NDArray66float
 from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -4777,6 +4778,8 @@ class AddCards:
             a comment for the card
 
         """
+        for nid in nodes:
+            assert isinstance(nid, integer_string_types), nid
         spc = SPC1(conid, components, nodes, comment=comment)
         self._add_methods._add_constraint_spc_object(spc)
         return spc

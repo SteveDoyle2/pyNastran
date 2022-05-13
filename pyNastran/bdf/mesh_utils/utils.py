@@ -607,13 +607,19 @@ def cmd_line_convert(argv=None, quiet=False):
         '\n'
 
         'Options:\n'
-        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n'
-        '  --in_units  IN_UNITS                length,mass\n\n'
+        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
+        '  --in_units  IN_UNITS                length,mass\n'
         '  --out_units  OUT_UNITS              length,mass\n\n'
 
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
+        "  -v, --version   show program's version number and exit\n\n"
+
+        'Example:\n'
+        '  bdf convert model.bdf --in_units m,kg  --out_units in,lbm\n'
+        '  bdf convert model.bdf --in_units m,kg  --out_units in,slinch\n'
+        '  bdf convert model.bdf --in_units m,kg  --out_units ft,slug\n'
+        '  bdf convert model.bdf --in_units m,kg  --out_units ft,lbm\n'
     )
     if len(argv) == 1:
         sys.exit(msg)
@@ -644,6 +650,20 @@ def cmd_line_convert(argv=None, quiet=False):
     length_out, mass_out = out_units.split(',')
     units_to = [length_out, mass_out, 's']
     units = [length_in, mass_in, 's']
+
+    length_to_mass = {
+        'in': {'lbm', 'slinch'},
+        'ft': {'lbm', 'slug'},
+        'm': {'g', 'kg', 'Mg'},
+        'cm': {'g', 'kg', 'Mg'},
+        'mm': {'g', 'kg', 'Mg'},
+    }
+    length_allowed = {'in', 'ft', 'm', 'cm', 'mm'}
+    assert length_in in length_allowed, f'mass_out={mass_out!r} allowed={length_allowed}'
+    assert length_out in {'in', 'ft', 'm', 'cm', 'mm'}, f'mass_out={mass_out!r} allowed={length_allowed}'
+    assert mass_in in length_to_mass[length_in], f'mass_out={mass_out!r} allowed={length_to_mass[length_in]}'
+    assert mass_out in length_to_mass[length_out], f'mass_out={mass_out!r} allowed={length_to_mass[length_out]}'
+
     #cards_to_skip = [
         #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
         #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']

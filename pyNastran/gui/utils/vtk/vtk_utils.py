@@ -3,9 +3,10 @@ defines:
  - create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
 """
+from __future__ import annotations
 import warnings
 from collections import defaultdict
-from typing import Optional
+from typing import Tuple, Optional, TYPE_CHECKING
 
 import numpy as np
 import vtk
@@ -13,7 +14,8 @@ from vtk.util.numpy_support import numpy_to_vtk # vtk_to_numpy
 from pyNastran.gui.utils.vtk.base_utils import (
     vtkConstants, numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk)
-
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 # // Linear cells
 # VTK_EMPTY_CELL = 0
 # VTK_VERTEX = 1
@@ -391,7 +393,11 @@ def find_point_id_closest_to_xyz(grid: vtk.vtkUnstructuredGrid,
     point_id = cell.GetPointId(imin)
     return point_id
 
-def map_element_centroid_to_node_fringe_result(ugrid, location, log):
+def map_element_centroid_to_node_fringe_result(
+        ugrid: vtk.vtkUnstructuredGrid,
+        location: str,
+        log: SimpleLogger) -> Tuple[bool,
+                                    Tuple[int, int, float, float]]:
     """
     Maps elemental fringe results to nodal fringe results.
 

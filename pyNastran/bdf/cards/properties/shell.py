@@ -369,10 +369,10 @@ class CompositeShellProperty(Property):
         iply = self._adjust_ply_id(iply)
         if self.mids_ref is not None:
             mid_ref = self.mids_ref[iply]
-            #if mid_ref is None:
-            #mid = self.mids[iply]
-            #else:
-            mid = mid_ref.mid
+            if mid_ref is None:
+                mid = self.mids[iply]
+            else:
+                mid = mid_ref.mid
         else:
             mid = self.mids[iply]
         return mid
@@ -1134,21 +1134,29 @@ class PCOMP(CompositeShellProperty):
         return z0, z1, zmeans
 
     def get_individual_ABD_matrices(
-            self, theta_offset: float=0.) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+            self, theta_offset: float=0.,
+            degrees: bool=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Gets the ABD matrix
 
         Parameters
         ----------
         theta_offset : float
-            rotates the ABD matrix; measured in degrees
+            rotates the ABD matrix
+        degrees: bool; default=True
+            True: theta_offset is measured in degrees
+            False: theta_offset is measured in radians
 
         """
         assert isinstance(theta_offset, float_types), theta_offset
         mids = self.get_material_ids()
         thicknesses = self.get_thicknesses()
         thetad = self.get_thetas()
-        theta = np.radians(thetad + theta_offset)
+
+        if degrees:
+            theta = np.radians(thetad + theta_offset)
+        else:
+            theta = np.radians(thetad) + theta_offset
         assert len(mids) == len(thicknesses)
         assert len(mids) == len(thetad)
         z0, z1, zmeans = self.get_z0_z1_zmean()
@@ -1184,18 +1192,22 @@ class PCOMP(CompositeShellProperty):
         #M /= 2.
         return A, B, D
 
-    def get_ABD_matrices(self, theta_offset: float=0.) -> np.ndarray:
+    def get_ABD_matrices(self, theta_offset: float=0.,
+                         degrees: bool=True) -> np.ndarray:
         """
         Gets the ABD matrix
 
         Parameters
         ----------
         theta_offset : float
-            rotates the ABD matrix; measured in radians
+            rotates the ABD matrix
+        degrees: bool; default=True
+            True: theta_offset is measured in degrees
+            False: theta_offset is measured in radians
 
         """
         assert isinstance(theta_offset, float_types), theta_offset
-        A, B, D = self.get_individual_ABD_matrices(theta_offset)
+        A, B, D = self.get_individual_ABD_matrices(theta_offset, degrees=degrees)
         ABD = np.block([
             [A, B],
             [B, D],
@@ -1205,11 +1217,19 @@ class PCOMP(CompositeShellProperty):
         return ABD
 
     def get_Ainv_equivalent_pshell(self,
-                                   imat_rotation_angle_deg: float,
-                                   thickness: float) -> Tuple[float, float, float, float]:
-        """imat_rotation_angle is in degrees"""
-        assert isinstance(imat_rotation_angle_deg, float_types), imat_rotation_angle_deg
-        ABD = self.get_ABD_matrices(imat_rotation_angle_deg)
+                                   imat_rotation_angle: float,
+                                   thickness: float,
+                                   degrees: bool=True) -> Tuple[float, float, float, float]:
+        """imat_rotation_angle is in degrees
+
+        Parameters
+        ----------
+        imat_rotation_angle_deg : float
+            what angle you want
+
+        """
+        assert isinstance(imat_rotation_angle, float_types), imat_rotation_angle
+        ABD = self.get_ABD_matrices(imat_rotation_angle, degrees=degrees)
         A = ABD[:3, :3]
         Ainv = np.linalg.inv(A)
 
