@@ -18,7 +18,7 @@ from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 from pyNastran.bdf.mesh_utils.loads import _mean_pressure_on_pload4
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, PLOAD4
 
 
 def get_forces_moments_array(model: BDF,
@@ -28,7 +28,10 @@ def get_forces_moments_array(model: BDF,
                              nnodes: int,
                              normals,
                              dependents_nodes,
-                             nid_map=None, include_grav=False):
+                             nid_map=None,
+                             include_grav: bool=False,
+                             fdtype: str='float32') -> Tuple[bool,
+                                                             Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
     Gets the forces/moments on the nodes.
 
@@ -93,11 +96,11 @@ def get_forces_moments_array(model: BDF,
         load_case_id, skip_scale_factor0=True)[:2]
 
     #eids = sorted(model.elements.keys())
-    centroidal_pressures = np.zeros(len(model.elements), dtype='float32')
-    nodal_pressures = np.zeros(len(model.node_ids), dtype='float32')
+    centroidal_pressures = np.zeros(len(model.elements), dtype=fdtype)
+    nodal_pressures = np.zeros(len(model.node_ids), dtype=fdtype)
 
-    forces = np.zeros((nnodes, 3), dtype='float32')
-    spcd = np.zeros((nnodes, 3), dtype='float32')
+    forces = np.zeros((nnodes, 3), dtype=fdtype)
+    spcd = np.zeros((nnodes, 3), dtype=fdtype)
     # loop thru scaled loads and plot the pressure
     cards_ignored = set()
 
@@ -105,8 +108,10 @@ def get_forces_moments_array(model: BDF,
     fail_nids = set()
     fail_count = 0
     fail_count_max = 3
-    loads_to_skip = ['MOMENT', 'MOMENT1', 'MOMENT2', 'FORCE1', 'TEMP']
+    loads_to_skip = {'MOMENT', 'MOMENT1', 'MOMENT2', 'FORCE1', 'TEMP'}
     nodes = model.nodes
+
+    log = model.log
     for load, scale in zip(loads, scale_factors):
         load_type = load.type
         if load_type in loads_to_skip:
@@ -139,7 +144,7 @@ def get_forces_moments_array(model: BDF,
                 xyz3 = nodes[n3].get_position()
                 normal_area = np.cross(xyz2 - xyz1, xyz3 - xyz1)  # TODO: not validated
             else:
-                model.log.debug('    case=%s nnodes=%r loadtype=%r not supported' % (
+                log.debug('    case=%s nnodes=%r loadtype=%r not supported' % (
                     load_case_id, nnodes, load.type))
                 continue
             forcei = pressure * normal_area / nnodes
@@ -150,8 +155,7 @@ def get_forces_moments_array(model: BDF,
             pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
             for eid in load.eids:
                 elem = model.elements[eid]
-                if elem.type in ['CTRIA3',
-                                 'CQUAD4', 'CSHEAR']:
+                if elem.type in {'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR', 'CSHEAR'}:
                     node_ids = elem.node_ids
                     nnodes = len(node_ids)
                     ie = eid_map[eid]
@@ -173,165 +177,18 @@ def get_forces_moments_array(model: BDF,
                     # F += f
                     # M += m
                 else:
-                    model.log.debug('    case=%s etype=%r loadtype=%r not supported' % (
+                    log.debug('    case=%s etype=%r loadtype=%r not supported' % (
                         load_case_id, elem.type, load.type))
 
         elif load_type == 'PLOAD4':
-            # multiple elements
-            eids_missing = []
-            for elem in load.eids_ref:
-                if isinstance(elem, integer_types):
-                    # Nastran is NOT OK with missing element ids
-                    eids_missing.append(elem)
-                    continue
-                ie = eid_map[elem.eid]
-                normal = normals[ie, :]
-                # pressures[eids.index(elem.eid)] += p
-                if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR']:
-                    area = elem.get_area()
-                    elem_node_ids = elem.node_ids
-                    nface = len(elem_node_ids)
-
-                    if load.surf_or_line == 'SURF':
-                        cid = load.Cid()
-                        normal = update_pload4_vector(load, normal, cid)
-                    else:
-                        msg = (f'surf_or_line={load.surf_or_line!r} on PLOAD4 is not supported\n'
-                               f'{load}')
-                        model.log.debug(msg)
-                        continue
-
-                    pressures = load.pressures[:nface]
-                    pressure = _mean_pressure_on_pload4(pressures, load, elem)
-
-                    forcei = pressure * area * normal / nface
-                    for nid in elem_node_ids:
-                        if nid in dependents_nodes:
-                            fail_nids.add(nid)
-                            fail_count += 1
-                            if fail_count < fail_count_max:
-                                print('    nid=%s is a dependent node and has a'
-                                      ' PLOAD4 applied\n%s' % (nid, str(load)))
-                        #forces[nids.index(nid)] += F
-                        i = nid_map[nid]
-                        try:
-                            forces[i, :] += forcei
-                        except IndexError:
-                            print(f'i = {i}')
-                            print('normals.shape = %s' %  str(normals.shape))
-                            print('forces.shape = %s' % str(forces.shape))
-                            print('normal = ', normal)
-                            print('forces[i, :] = ', forces[i, :])
-                            raise
-                    #nface = 3
-                elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
-                    area = elem.get_area()
-                    elem_node_ids = elem.node_ids
-                    nface = len(elem_node_ids)
-
-                    if load.surf_or_line == 'SURF':
-                        cid = load.Cid()
-                        if cid in [0, None] and np.abs(load.nvector).max() == 0.0:
-                            # element surface normal
-                            pass
-                        else:
-                            if np.linalg.norm(load.nvector) != 0.0 and cid in [0, None]:
-                                normal = load.nvector / np.linalg.norm(load.nvector)
-                            else:
-                                raise NotImplementedError('cid=%r nvector=%s on a PLOAD4 is not supported\n%s' % (
-                                    cid, load.nvector, str(load)))
-                    else:  # pragma: no cover
-                        msg = (f'surf_or_line={load.surf_or_line} on PLOAD4 is not supported\n'
-                               f'{load}')
-                        model.log.debug(msg)
-                        continue
-
-                    pressures = load.pressures[:nface]
-                    pressure = _mean_pressure_on_pload4(pressures, load, elem)
-
-                    forcei = pressure * area * normal / nface
-
-                    for nid in elem_node_ids:
-                        if nid in dependents_nodes:
-                            fail_nids.add(nid)
-                            fail_count += 1
-                            if fail_count < fail_count_max:
-                                print('    nid=%s is a dependent node and has a'
-                                      ' PLOAD4 applied\n%s' % (nid, str(load)))
-                        #forces[nids.index(nid)] += F
-                        i = nid_map[nid]
-                        try:
-                            forces[i, :] += forcei
-                        except IndexError:
-                            print('i = %s' % i)
-                            print('normals.shape = %s' %  str(normals.shape))
-                            print('forces.shape = %s' % str(forces.shape))
-                            print('normal = ', normal)
-                            print('forces[i, :] = ', forces[i, :])
-                            raise
-                        nface = 4
-                else:
-                    elem_node_ids = elem.node_ids
-                    if elem.type == 'CTETRA':
-                        #face1 = elem.get_face(load.g1_ref.nid, load.g34_ref.nid)
-                        facn = elem.get_face_area_centroid_normal(
-                            load.g1_ref.nid, load.g34_ref.nid)
-                        face, area, face_centroid, normal = facn
-                        #assert face == face1
-                        nface = 3
-                    elif elem.type == 'CHEXA':
-                        #face1 = elem.get_face(load.g34_ref.nid, load.g1_ref.nid)
-                        facn = elem.get_face_area_centroid_normal(
-                            load.g34_ref.nid, load.g1_ref.nid)
-                        face, area, face_centroid, normal = facn
-                        #assert face == face1
-                        nface = 4
-                    elif elem.type == 'CPENTA':
-                        g1 = load.g1_ref.nid
-                        if load.g34 is None:
-                            #face1 = elem.get_face(g1)
-                            facn = elem.get_face_area_centroid_normal(g1)
-                            face, area, face_centroid, normal = facn
-                            nface = 3
-                        else:
-                            #face1 = elem.get_face(g1, load.g34.nid)
-                            facn = elem.get_face_area_centroid_normal(g1, load.g34_ref.nid)
-                            face, area, face_centroid, normal = facn
-                            nface = 4
-                        #assert face == face1
-                    #elif elem.type == 'CPYRAM':
-                    else:
-                        msg = (f'case={load_case_id} eid={eid} etype={elem.type!r} '
-                               f'loadtype={load.type!r} not supported')
-                        model.log.debug(msg)
-                        continue
-
-                    pressures = load.pressures[:nface]
-                    assert len(pressures) == nface
-                    cid = load.Cid()
-                    if load.surf_or_line == 'SURF':
-                        pressure = _mean_pressure_on_pload4(pressures, load, elem)
-                        load_dir = update_pload4_vector(load, normal, cid)
-
-                        f = pressure * area * load_dir * scale
-                    else:
-                        msg = (f'surf_or_line={load.surf_or_line!r} on PLOAD4 is not supported\n'
-                               '{load}')
-                        model.log.debug(msg)
-                        continue
-
-                    for inid in face:
-                        inidi = nid_map[elem_node_ids[inid]]
-                        nodal_pressures[inid] += pressure * scale / nface
-                        forces[inidi, :] += f / nface
-                    centroidal_pressures[ie] += pressure
-
-                    #r = centroid - p
-                    #load.cid.transformToGlobal()
-                    #m = cross(r, f)
-                    #M += m
+            eids_missing = _get_forces_moments_pload4(
+                model, nid_map, eid_map, normals, load,
+                dependents_nodes,
+                nodal_pressures, centroidal_pressures,
+                forces, scale,
+                fail_nids, fail_count, fail_count_max)
             if eids_missing:
-                model.log.error('missing PLOAD4 element ids=%s on:\n%s' % (
+                log.error('missing PLOAD4 element ids=%s on:\n%s' % (
                     eids_missing, load.rstrip()))
 
         elif load_type == 'SPCD':
@@ -343,10 +200,10 @@ def get_forces_moments_array(model: BDF,
                     fail_nids.add(nid)
                     fail_count += 1
                     if fail_count < fail_count_max:
-                        model.log.warning('    nid=%s is a dependent node and has an'
-                                          ' SPCD applied\n%s' % (nid, str(load)))
+                        log.warning(f'    nid={nid} is a dependent node and has an'
+                                    f' SPCD applied\n{load}')
                 c1 = int(c1)
-                assert c1 in [1, 2, 3, 4, 5, 6], c1
+                assert c1 in {1, 2, 3, 4, 5, 6}, c1
                 if c1 < 4:
                     spcd[nid_map[nid], c1 - 1] = d1
         elif load_type == 'SLOAD':
@@ -355,15 +212,184 @@ def get_forces_moments_array(model: BDF,
         else:
             if load_type not in cards_ignored:
                 cards_ignored.add(load_type)
-                model.log.warning('  get_forces_moments_array - unsupported '
-                                  f'load.type = {load_type}')
+                log.warning('  get_forces_moments_array - unsupported '
+                            f'load.type = {load_type}')
     if fail_count:
         fail_nids_list = list(fail_nids)
         fail_nids_list.sort()
-        model.log.warning('fail_nids = %s' % np.array(fail_nids_list))
+        log.warning('fail_nids = %s' % np.array(fail_nids_list))
     return centroidal_pressures, forces, spcd
 
-def get_pressure_array(model: BDF, load_case_id, eids, stop_on_failure=True):
+def _get_forces_moments_pload4(model: BDF,
+                               nid_map, eid_map,
+                               normals,
+                               load: PLOAD4,
+                               dependents_nodes,
+                               nodal_pressures: np.ndarray,
+                               centroidal_pressures: np.ndarray,
+                               forces: np.ndarray,
+                               scale: float,
+                               fail_nids: List[int],
+                               fail_count: int, fail_count_max: int) -> List[int]:
+    # multiple elements
+    eids_missing = []
+
+    log = model.log  # type: SimpleLogger
+    for elem in load.eids_ref:
+        if isinstance(elem, integer_types):
+            # Nastran is NOT OK with missing element ids
+            eids_missing.append(elem)
+            continue
+        ie = eid_map[elem.eid]
+        normal = normals[ie, :]
+        # pressures[eids.index(elem.eid)] += p
+        if elem.type in {'CTRIA3', 'CTRIA6', 'CTRIAR'}:
+            area = elem.get_area()
+            elem_node_ids = elem.node_ids
+            nface = len(elem_node_ids)
+
+            if load.surf_or_line == 'SURF':
+                cid = load.Cid()
+                normal = update_pload4_vector(load, normal, cid)
+            else:
+                msg = (f'surf_or_line={load.surf_or_line!r} on PLOAD4 is not supported\n'
+                       f'{load}')
+                log.debug(msg)
+                continue
+
+            pressures = load.pressures[:nface]
+            pressure = scale * _mean_pressure_on_pload4(pressures, load, elem)
+
+            forcei = pressure * area * normal / nface
+            for nid in elem_node_ids:
+                if nid in dependents_nodes:
+                    fail_nids.add(nid)
+                    fail_count += 1
+                    if fail_count < fail_count_max:
+                        print('    nid=%s is a dependent node and has a'
+                              ' PLOAD4 applied\n%s' % (nid, str(load)))
+                #forces[nids.index(nid)] += F
+                i = nid_map[nid]
+                try:
+                    forces[i, :] += forcei
+                except IndexError:
+                    print(f'i = {i}')
+                    print('normals.shape = %s' %  str(normals.shape))
+                    print('forces.shape = %s' % str(forces.shape))
+                    print('normal = ', normal)
+                    print('forces[i, :] = ', forces[i, :])
+                    raise
+            #nface = 3
+        elif elem.type in {'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR'}:
+            area = elem.get_area()
+            elem_node_ids = elem.node_ids
+            nface = len(elem_node_ids)
+
+            if load.surf_or_line == 'SURF':
+                cid = load.Cid()
+                if cid in [0, None] and np.abs(load.nvector).max() == 0.0:
+                    # element surface normal
+                    pass
+                else:
+                    if np.linalg.norm(load.nvector) != 0.0 and cid in {0, None}:
+                        normal = load.nvector / np.linalg.norm(load.nvector)
+                    else:
+                        raise NotImplementedError(f'cid={cid:d} nvector={load.nvector} on a '
+                                                  f'PLOAD4 is not supported\n{load}')
+            else:  # pragma: no cover
+                msg = (f'surf_or_line={load.surf_or_line} on PLOAD4 is not supported\n'
+                       f'{load}')
+                log.debug(msg)
+                continue
+
+            pressures = load.pressures[:nface]
+            pressure = scale * _mean_pressure_on_pload4(pressures, load, elem)
+
+            forcei = pressure * area * normal / nface
+
+            for nid in elem_node_ids:
+                if nid in dependents_nodes:
+                    fail_nids.add(nid)
+                    fail_count += 1
+                    if fail_count < fail_count_max:
+                        log.warning(f'    nid={nid:d} is a dependent node and has a'
+                                    f' PLOAD4 applied\n{load}')
+                #forces[nids.index(nid)] += F
+                i = nid_map[nid]
+                try:
+                    forces[i, :] += forcei
+                except IndexError:
+                    print('i = %s' % i)
+                    print('normals.shape = %s' %  str(normals.shape))
+                    print('forces.shape = %s' % str(forces.shape))
+                    print('normal = ', normal)
+                    print('forces[i, :] = ', forces[i, :])
+                    raise
+                nface = 4
+        else:
+            elem_node_ids = elem.node_ids
+            if elem.type == 'CTETRA':
+                #face1 = elem.get_face(load.g1_ref.nid, load.g34_ref.nid)
+                facn = elem.get_face_area_centroid_normal(
+                    load.g1_ref.nid, load.g34_ref.nid)
+                face, area, face_centroid, normal = facn
+                #assert face == face1
+                nface = 3
+            elif elem.type == 'CHEXA':
+                #face1 = elem.get_face(load.g34_ref.nid, load.g1_ref.nid)
+                facn = elem.get_face_area_centroid_normal(
+                    load.g34_ref.nid, load.g1_ref.nid)
+                face, area, face_centroid, normal = facn
+                #assert face == face1
+                nface = 4
+            elif elem.type == 'CPENTA':
+                g1 = load.g1_ref.nid
+                if load.g34 is None:
+                    #face1 = elem.get_face(g1)
+                    facn = elem.get_face_area_centroid_normal(g1)
+                    face, area, face_centroid, normal = facn
+                    nface = 3
+                else:
+                    #face1 = elem.get_face(g1, load.g34.nid)
+                    facn = elem.get_face_area_centroid_normal(g1, load.g34_ref.nid)
+                    face, area, face_centroid, normal = facn
+                    nface = 4
+                #assert face == face1
+            #elif elem.type == 'CPYRAM':
+            else:
+                msg = (f'case={load_case_id} eid={eid} etype={elem.type!r} '
+                       f'loadtype={load.type!r} not supported')
+                model.log.debug(msg)
+                continue
+
+            pressures = load.pressures[:nface]
+            assert len(pressures) == nface
+            cid = load.Cid()
+            if load.surf_or_line == 'SURF':
+                pressure = scale * _mean_pressure_on_pload4(pressures, load, elem)
+                load_dir = update_pload4_vector(load, normal, cid)
+
+                f = pressure * area * load_dir
+            else:
+                msg = (f'surf_or_line={load.surf_or_line!r} on PLOAD4 is not supported\n'
+                       f'{load}')
+                log.debug(msg)
+                continue
+
+            for inid in face:
+                inidi = nid_map[elem_node_ids[inid]]
+                nodal_pressures[inid] += pressure / nface
+                forces[inidi, :] += f / nface
+            centroidal_pressures[ie] += pressure
+
+            #r = centroid - p
+            #load.cid.transformToGlobal()
+            #m = cross(r, f)
+            #M += m
+    return eids_missing
+
+def get_pressure_array(model: BDF, load_case_id: int, eids, stop_on_failure: bool=True,
+                       fdtype: str='float32') -> Tuple[bool, np.ndarray]:
     """
     Gets the shell pressures for a load case.
 
@@ -389,7 +415,7 @@ def get_pressure_array(model: BDF, load_case_id, eids, stop_on_failure=True):
                 'PLOAD4' in model.card_count]):
         return False, None
     cards_ignored = set()
-    pressure_loads = ['PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4']
+    pressure_loads = {'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4'}
 
     if not isinstance(load_case_id, integer_types):
         msg = 'load_case_id must be an integer; type=%s, load_case_id=\n%r' % (
@@ -400,7 +426,7 @@ def get_pressure_array(model: BDF, load_case_id, eids, stop_on_failure=True):
         load_case_id, stop_on_failure=stop_on_failure)[:2]
     if len(scale_factors) == 0:
         return False, None
-    pressures = np.zeros(len(model.elements), dtype='float32')
+    pressures = np.zeros(len(model.elements), dtype=fdtype)
 
     shells = {
         'CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
@@ -500,7 +526,7 @@ def get_temperatures_array(model: BDF,
         the temperatures
 
     """
-    if 'TEMP' not in model.card_count:
+    if 'TEMP' not in model.card_count and 'TEMPD' not in model.card_count:
         return False, None
     is_temperatures = True
 
@@ -538,7 +564,7 @@ def get_load_arrays(model: BDF, subcase_id: int,
                     normals,
                     nid_map=None,
                     stop_on_failure: bool=True,
-                    ):
+                    fdtype: str='float32'):
     """
     Gets the following load arrays
 
@@ -629,7 +655,7 @@ def get_load_arrays(model: BDF, subcase_id: int,
             continue
 
         if key == 'LOAD':
-            p0 = np.array([0., 0., 0.], dtype='float32')
+            p0 = np.array([0., 0., 0.], dtype=fdtype)
             centroidal_pressures, forces, spcd = get_forces_moments_array(
                 model, p0, load_case_id,
                 eid_map=eid_map,
