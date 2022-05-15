@@ -4778,8 +4778,9 @@ class AddCards:
             a comment for the card
 
         """
-        for nid in nodes:
-            assert isinstance(nid, integer_string_types), nid
+        if isinstance(nodes, list):
+            for nid in nodes:
+                assert isinstance(nid, integer_string_types), nid
         spc = SPC1(conid, components, nodes, comment=comment)
         self._add_methods._add_constraint_spc_object(spc)
         return spc
