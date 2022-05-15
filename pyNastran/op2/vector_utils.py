@@ -637,6 +637,7 @@ def transform_force_moment_sum(force_in_local: NDArrayN3float, moment_in_local: 
     .. todo:: doesn't seem to handle cylindrical/spherical systems
 
     """
+    assert log is not None
     out = transform_force_moment(
         force_in_local, moment_in_local,
         coord_out, coords, nid_cd,
@@ -645,7 +646,6 @@ def transform_force_moment_sum(force_in_local: NDArrayN3float, moment_in_local: 
         debug=debug, log=log)
     force_out, moment_out = out
     if debug:
-        assert log is not None
         log.debug('force_sum = %s' % force_out.sum(axis=0))
         if consider_rxf:
             log.debug('moment_sum = %s' % moment_out.sum(axis=0))

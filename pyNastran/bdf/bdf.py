@@ -1557,7 +1557,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             if self._ixref_errors == 1 and self._nxref_errors == 0:
                 raise
             if self._stored_xref_errors:
-                msg = 'There are cross-reference errors.\n\n'
+                filename_note = ''
+                if self.bdf_filename and not isinstance(self.bdf_filename, StringIO):
+                    filename_note = f' in {os.path.abspath(self.bdf_filename)!r}'
+                msg = f'There are cross-reference errors{filename_note}.\n\n'
                 for (card, an_error) in self._stored_xref_errors:
                     msg += '%scard=%s\n' % (an_error[0], card)
                     is_error = True

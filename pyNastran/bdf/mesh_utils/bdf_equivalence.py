@@ -10,7 +10,6 @@ defines:
 
 """
 from __future__ import annotations
-#import warnings
 from itertools import combinations
 from typing import Tuple, List, Set, Union, Optional, Any, TYPE_CHECKING
 import numpy as np

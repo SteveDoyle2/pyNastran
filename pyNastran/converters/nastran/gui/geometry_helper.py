@@ -267,8 +267,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
         gui.create_alternate_vtk_grid(
             '3d_bars', color=BLUE_FLOAT, opacity=0.2,
-            #'3d_bars', color=BLUE_FLOAT, opacity=1.0,
-            #representation='wire', is_visible=True,
             representation='surface', is_visible=True,
             follower_function=update_grid_function,
             ugrid=ugrid,
