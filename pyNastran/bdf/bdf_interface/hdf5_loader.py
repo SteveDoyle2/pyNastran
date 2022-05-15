@@ -281,7 +281,7 @@ def _load_minor_attributes(unused_key: str, group, model: BDF,
         elif keyi == 'reject_cards':
             reject_keys = list(sub_group.keys())
             for ireject in sub_group.keys():
-                reject_card = _cast(sub_group[ireject]).tolist()
+                reject_card = _cast(sub_group[ireject])
                 if not isinstance(reject_card, list):
                     reject_card = reject_card.tolist()
                 fields = decode_lines(reject_card, encoding)

@@ -1829,46 +1829,11 @@ class BODY7(BaseCard):
             thetas = self._get_thetas()
             for itype, camber, yrad, zrad, idy_ref, idz_ref in zip(
                     itypes, cambers, yrads, zrads, idys_ref2, idzs_ref2):
-                if itype == 1:
-                    # Body of Revolution
-                    # Xi, CAMi, YRi
-                    radius = yrad
-                    aspect_ratio = 1.
-                    yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
-                    ypoints = yz[:, 0]
-                    zpoints = camber + yz[:, 1]
-                elif itype == 2:
-                    # Elliptical body
-                    height = zrad
-                    width = yrad
-                    aspect_ratio = height / width
-                    radius = height
-                    yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
-                    ypoints = yz[:, 0]
-                    zpoints = yz[:, 1]
+                out = self._get_body7_width_height_radius(
+                    thetas, itype, camber, yrad, zrad, idy_ref, idz_ref)
+                width, height, average_radius, ymeani, zmeani = out
 
-                elif itype == 3:
-                    # Arbitrary body using AEFACTss
-                    try:
-                        ypoints = idy_ref.fractions
-                        zpoints = idz_ref.fractions
-                    except AttributeError:  # pragma: no cover
-                        print('idy_ref = %s' % idy_ref)
-                        print('idz_ref = %s' % idz_ref)
-                        print(self.get_stats())
-                        raise
-                else:  # pramga: no cover
-                    msg = 'Unsupported itype=%s (must be 1/2/3)\n%s' % (itype, str(self))
-                    raise NotImplementedError(msg)
-
-                width = ypoints.max() - ypoints.min()
-                height = zpoints.max() - zpoints.min()
-                #elliptical_area = pi * width * height
-                average_radius = (width + height) / 4.
                 half_widths.append(average_radius)
-
-                ymeani = ypoints.mean()
-                zmeani = zpoints.mean()
                 yz_mean.append([ymeani, zmeani])
 
             # I think you could area weight this and get a better mean...
@@ -1921,6 +1886,49 @@ class BODY7(BaseCard):
         caero2.validate()
         paero2.validate()
         return caero2, paero2, aefact_xs, aefact_width, aefact_theta1, aefact_theta2
+
+    def _get_body7_width_height_radius(self, thetas: np.ndarray,
+                                       itype: int, camber: float,
+                                       yrad: float, zrad: float,
+                                       idy_ref, idz_ref) -> Tuple[float, float, float, float, float]:
+        if itype == 1:
+            # Body of Revolution
+            # Xi, CAMi, YRi
+            radius = yrad
+            aspect_ratio = 1.
+            yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
+            ypoints = yz[:, 0]
+            zpoints = camber + yz[:, 1]
+        elif itype == 2:
+            # Elliptical body
+            height = zrad
+            width = yrad
+            aspect_ratio = height / width
+            radius = height
+            yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
+            ypoints = yz[:, 0]
+            zpoints = yz[:, 1]
+
+        elif itype == 3:
+            # Arbitrary body using AEFACTss
+            try:
+                ypoints = idy_ref.fractions
+                zpoints = idz_ref.fractions
+            except AttributeError:  # pragma: no cover
+                print('idy_ref = %s' % idy_ref)
+                print('idz_ref = %s' % idz_ref)
+                print(self.get_stats())
+                raise
+        else:  # pramga: no cover
+            msg = f'Unsupported itype={itype} (must be 1/2/3)\n{str(self)}'
+            raise NotImplementedError(msg)
+        width = ypoints.max() - ypoints.min()
+        height = zpoints.max() - zpoints.min()
+        average_radius = (width + height) / 4.
+        #elliptical_area = pi * width * height
+        ymeani = ypoints.mean()
+        zmeani = zpoints.mean()
+        return width, height, average_radius, ymeani, zmeani
 
     def _get_nthetas(self) -> int:
         """gets the number of thetas for the body"""
@@ -2009,48 +2017,13 @@ class BODY7(BaseCard):
                 segmesh.xs, segmesh.ys, segmesh.zs,
                 segmesh.cambers,
                 segmesh.idys_ref, segmesh.idzs_ref):
-            y = 0.
-            z = 0.
-            if itype == 1:
-                # Body of Revolution
-                # Xi, CAMi, YRi
-                ## TODO: doesn't consider camber
-                radius = yrad
-                aspect_ratio = 1.
-                yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
-                ypoints = yz[:, 0]
-                zpoints = camber + yz[:, 1]
-            elif itype == 2:
-                # Elliptical body
-                #  Xi, YRi, ZRi
-                height = zrad
-                width = yrad
-                aspect_ratio = height / width
-                radius = height
-                yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
-                ypoints = yz[:, 0]
-                zpoints = yz[:, 1]
 
-            elif itype == 3:
-                # Arbitrary body using AEFACTss
-                #  Xi, IDYi, IDZi
-                ypoints = idy_ref.fractions
-                zpoints = idz_ref.fractions
-                y = yrad
-                z = zrad
-            else:  # pramga: no cover
-                msg = 'Unsupported itype=%s (must be 1/2/3)\n%s' % (itype, str(self))
-                raise NotImplementedError(msg)
-
-            assert len(ypoints) == len(zpoints), 'len(ypoints)=%s len(zpoints)=%s' % (len(ypoints), len(zpoints))
-            nnodes = len(ypoints)
-
-            x_offset = origin_x + x
-            y_offset = origin_y + y
-            z_offset = origin_z + z
-            xs.append([x_offset] * nnodes)
-            ys.append(y_offset + ypoints)
-            zs.append(z_offset + zpoints)
+            xsi, ysi, zsi = self._get_xyzs_offset(
+                origin_x, origin_y, origin_z, thetas,
+                itype, x, yrad, zrad, camber, idy_ref, idz_ref)
+            xs.append(xsi)
+            ys.append(ysi)
+            zs.append(zsi)
 
         xyz = np.vstack([
             np.hstack(xs),
@@ -2059,6 +2032,54 @@ class BODY7(BaseCard):
         ]).T
         elements = elements_from_quad(nx, ny, dtype='int32')  # nx,ny are points
         return xyz, elements
+
+    def _get_xyzs_offset(self, origin_x, origin_y, origin_z, thetas,
+                         itype: int, x: float, yrad: float, zrad: float, camber: float,
+                         idy_ref, idz_ref) -> Tuple[List[float], np.ndarray, np.ndarray]:
+        y = 0.
+        z = 0.
+        if itype == 1:
+            # Body of Revolution
+            # Xi, CAMi, YRi
+            ## TODO: doesn't consider camber
+            radius = yrad
+            aspect_ratio = 1.
+            yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
+            ypoints = yz[:, 0]
+            zpoints = camber + yz[:, 1]
+        elif itype == 2:
+            # Elliptical body
+            #  Xi, YRi, ZRi
+            height = zrad
+            width = yrad
+            aspect_ratio = height / width
+            radius = height
+            yz = create_ellipse(aspect_ratio, radius, thetas=thetas)
+            ypoints = yz[:, 0]
+            zpoints = yz[:, 1]
+
+        elif itype == 3:
+            # Arbitrary body using AEFACTss
+            #  Xi, IDYi, IDZi
+            ypoints = idy_ref.fractions
+            zpoints = idz_ref.fractions
+            y = yrad
+            z = zrad
+        else:  # pramga: no cover
+            msg = 'Unsupported itype=%s (must be 1/2/3)\n%s' % (itype, str(self))
+            raise NotImplementedError(msg)
+
+        assert len(ypoints) == len(zpoints), 'len(ypoints)=%s len(zpoints)=%s' % (len(ypoints), len(zpoints))
+        nnodes = len(ypoints)
+
+        x_offset = origin_x + x
+        y_offset = origin_y + y
+        z_offset = origin_z + z
+
+        xsi = [x_offset] * nnodes
+        ysi = y_offset + ypoints
+        zsi = z_offset + zpoints
+        return xsi, ysi, zsi
 
     #def set_points(self, points):
         #self.p1 = np.asarray(points[0])

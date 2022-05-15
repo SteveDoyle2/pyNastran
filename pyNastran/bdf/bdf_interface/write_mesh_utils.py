@@ -25,6 +25,7 @@ def write_dict(bdf_file, my_dict: Dict[int, Any], size: int,
         for (unused_nid, node) in sorted(my_dict.items()):
             bdf_file.write(node.write_card(size, is_double))
 
+
 def find_aero_location(model: BDF) -> Tuple[bool, bool]:
     """Determines where the AERO card should be written"""
     write_aero_in_flutter = False
