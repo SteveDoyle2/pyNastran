@@ -10,7 +10,6 @@ import os
 import sys
 
 API = os.environ.get('QT_API', '').lower()
-print('API', API)
 if API:
     from qtpy import API as qt_version
 elif 'PySide2' in sys.modules:

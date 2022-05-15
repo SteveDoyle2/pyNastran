@@ -1601,7 +1601,7 @@ class ComplexGridPointForcesArray(GridPointForces):
                 data_frame.columns.names = ['Static']
                 data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             #print(self.data_frame)
-            self.data_frame = data_frame
+        self.data_frame = data_frame
 
     def _build_dataframe(self):
         """::

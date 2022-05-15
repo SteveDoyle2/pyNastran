@@ -437,6 +437,7 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
         used for logging
     fps : int
         used for logging
+
     """
     if phases is not None:
         pass

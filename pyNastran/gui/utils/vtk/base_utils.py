@@ -95,7 +95,6 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):  # pragma: no cover
         vtk_typecode = array_type
     else:
         vtk_typecode = get_vtk_array_type(z.dtype)
-    #print('vtk_typecode =', z.dtype, vtk_typecode)
     result_array = create_vtk_array(vtk_typecode)
 
     # Fixup shape in case its empty or scalar.

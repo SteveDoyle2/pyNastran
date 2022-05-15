@@ -74,7 +74,6 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
 
     if switch_dir:
         os.chdir(pwd)
-
     return return_code, call_args
 
 def _get_keywords_list(keywords: Optional[Union[str,

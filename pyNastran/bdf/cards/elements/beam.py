@@ -719,25 +719,6 @@ class CBEAM(LineElement):
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
-    #@property
-    #def nodes(self):
-        #return [self.ga, self.gb]
-
-    #@nodes.setter
-    #def nodes(self, values):
-        #self.ga = values[0]
-        #self.gb = values[1]
-
-    #@property
-    #def nodes_ref(self):
-        #return [self.ga_ref, self.gb_ref]
-
-    #@nodes_ref.setter
-    #def nodes_ref(self, values):
-        #assert values is not None, values
-        #self.ga_ref = values[0]
-        #self.gb_ref = values[1]
-
     def Mid(self):
         if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '

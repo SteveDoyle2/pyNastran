@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Set, List, TYPE_CHECKING
+from typing import Set, List, Optional, TYPE_CHECKING
 from cpylog import get_logger2
 
 #import pyNastran
@@ -282,7 +282,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OSTRATO1', 'OSTRCRM1', 'OSTRNO1', 'OSTRPSD1', 'OSTRRMS1',
         'OSTRATO2', 'OSTRCRM2', 'OSTRNO2', 'OSTRPSD2', 'OSTRRMS2',
         'OSTRVM2',
-        # -------------
+        # ---------------
         # shock response spectra
         'OUPV1', # displacment
         'DOEF1', # force

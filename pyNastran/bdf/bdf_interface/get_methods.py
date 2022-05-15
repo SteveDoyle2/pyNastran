@@ -1,6 +1,7 @@
 """defines various methods to access low level BDF data"""
 from __future__ import annotations
 from itertools import chain
+from collections import defaultdict
 from typing import List, Dict, Union, Optional, Iterable, Any, TYPE_CHECKING
 import numpy as np
 
@@ -918,7 +919,6 @@ class GetMethods(BDFAttributes):
                            % (equation_id, msg, _unique_keys(self.dequations)))
 
 def get_pid_to_eid_map(model: BDF) -> Dict[int, List[int]]:
-    from collections import defaultdict
     pid_to_eid_map = defaultdict(set)
     for eid, elem in model.elements.items():
         pid = elem.pid

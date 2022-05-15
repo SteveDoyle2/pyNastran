@@ -26,7 +26,7 @@ The software is tested on Windows and Linux against:
  * Python 3.7
  * Python 3.8
  * Python 3.9  (availible in pyNastran 1.4)
- * Python 3.10  (availible in pyNastran 1.4, RC1)
+ * Python 3.10  (availible in pyNastran 1.4)
 
 Packages
 --------
@@ -57,7 +57,7 @@ based on availbility), so it should work.  The recommended set of packages are:
      * PySide2 >= 5.11.2
    * QScintilla >= 2.13.0 **(optional for fancy scripting; PyQt5 only)**
    * pygments >= 2.2.0 **(optional for fancy scripting; PyQt5 only)**
-   * imageio >= 2.4.1  **(optional for animation support)**
+   * imageio >= 2.4.1,<3  **(optional for animation support)**
 
 *****************************************************
 Install Procedure - From Regular Python (recommended)

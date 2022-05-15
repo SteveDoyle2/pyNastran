@@ -483,7 +483,6 @@ class RealSpringArray(OES_Object):
         data_out = np.empty((nelements, 2), dtype=fdtype)
         data_out[:, 0] = view_idtype_as_fdtype(eids_device, fdtype)
 
-
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)

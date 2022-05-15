@@ -678,7 +678,6 @@ class RealSolidArray(OES_Object):
         ntotali = self.num_wide
         ntotal = ntotali * nelements
 
-
         #print('shape = %s' % str(self.data.shape))
         assert nnodes > 1, nnodes
         #assert self.ntimes == 1, self.ntimes

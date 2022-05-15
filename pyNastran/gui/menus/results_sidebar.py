@@ -582,10 +582,6 @@ class Sidebar(QWidget):
                 self.case_spinner.setValue(icase)
         result_name = None
         #self._set_case(i)
-
-        #if self.icase is None:
-            #self.log.warning("icase is None and you're trying to set a result...")
-            #return
         self.parent._set_case(result_name, icase, explicit=True)
 
     @property

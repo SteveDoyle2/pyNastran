@@ -47,7 +47,6 @@ class ResultSet:
         # the set of results to be saved
         self.saved = deepcopy(self.allowed)
         self.results_map = results_map
-        #print(results_map)
 
     def is_saved(self, result: str) -> bool:
         """checks to see if a result is saved"""
