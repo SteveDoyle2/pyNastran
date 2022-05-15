@@ -121,19 +121,19 @@ jobs:
         #       'old_basic', 'old_pyside_gui', 'old_pyqt_gui'.
         #
       - name: Install latest packages - ${{ matrix.mode }}
-        if: ${{ matrix.mode == 'latest' || matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' }}
+        if: matrix.mode == 'latest'
         run: |
           pip install numpy scipy pandas>=0.25 h5py matplotlib
 
       - name: Install latest gui packages (PySide2)
         if: matrix.mode == 'latest_pyside_gui'
         run: |
-          pip install PySide2 vtk imageio<3 pillow>5.2,!=7.1.0
+          pip install numpy scipy pandas>=0.25 h5py matplotlib PySide2 vtk imageio<3 pillow>5.2,!=7.1.0
 
       - name: Install latest gui packages (PyQt5)
-        if: ${{ matrix.mode == 'latest_pyqt_gui' && matrix.python-version != '3.9' }}
+        if: matrix.mode == 'latest_pyqt_gui'
         run: |
-          pip install PyQt5 vtk imageio<3 pillow>5.2,!=7.1.0
+          pip install numpy scipy pandas>=0.25 h5py matplotlib PyQt5   vtk imageio<3 pillow>5.2,!=7.1.0
 
       - name: Install latest basic packages
         if: matrix.mode == 'latest_basic'
