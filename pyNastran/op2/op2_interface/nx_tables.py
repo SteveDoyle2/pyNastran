@@ -471,6 +471,9 @@ NX_EXTRA_TABLES = [
     # RADx...
     b'RADCONS', b'RADEFFM', b'RADEATC',
 
+    # shock (103) stress
+    b'DOES1',  # scaled response spectra
+
     # stress
     b'OES1', b'OES1X', b'OES1X1', b'OES1C',
     b'OES2',

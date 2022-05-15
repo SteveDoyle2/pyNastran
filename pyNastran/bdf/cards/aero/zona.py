@@ -9,7 +9,7 @@ All cards are BaseCard objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import List, Optional, TYPE_CHECKING
+from typing import Tuple, List, Optional, Union, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods

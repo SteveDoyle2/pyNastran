@@ -397,6 +397,9 @@ class Op2Codes:
         msg += "  analysis_code = %-3s %s\n" % (analysis_code, analysis)
         msg += "  table_code    = %-3s %s-%s\n" % (self_table_code, self.table_name_str, table)
         msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
+        if hasattr(self, 'result_type'):
+            result_word = get_result_word(self.result_type)
+            msg += "  result_type   = %-3s %s\n" % (self.result_type, result_word)
 
         msg += (
             f'  sort_method   = {self.sort_method}\n'
@@ -753,17 +756,17 @@ def determine_sort_bits_meaning(table_code: int, sort_code: int,
         if is_random:
             assert sort_bits[0] == 1, 'should be RANDOM; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
         else:
-            assert sort_bits[0] == 0, 'should be NOT RANDOM; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+            assert sort_bits[0] == 0, f'should be NOT RANDOM; sort_bits={sort_bits}; sort_code={sort_code}'
 
         if sort_method == 1:
-            assert sort_bits[1] == 0, 'should be SORT1; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+            assert sort_bits[1] == 0, f'should be SORT1; sort_bits={sort_bits}; sort_code={sort_code}'
         else:
-            assert sort_bits[1] == 1, 'should be SORT2; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+            assert sort_bits[1] == 1, f'should be SORT2; sort_bits={sort_bits}; sort_code={sort_code}'
 
         if is_real:
-            assert sort_bits[2] == 0, 'should be REAL; sort_bits=%s; sort_code=%s; table_code=%s table_code%%1000=%s' % (sort_bits, sort_code, table_code, table_code % 1000)
+            assert sort_bits[2] == 0, f'should be REAL; sort_bits={sort_bits}; sort_code={sort_code}; table_code={table_code} table_code%%1000={table_code % 1000}'
         else:
-            assert sort_bits[2] == 1, 'should be IMAG; sort_bits=%s; sort_code=%s; table_code=%s table_code%%1000=%s' % (sort_bits, sort_code, table_code, table_code % 1000)
+            assert sort_bits[2] == 1, f'should be IMAG; sort_bits={sort_bits}; sort_code={sort_code}; table_code={table_code} table_code%%1000={table_code % 1000}'
     except AssertionError:
         #print('sort_method=%r; is_real=%r is_random=%r' % (sort_method, is_real, is_random))
         raise

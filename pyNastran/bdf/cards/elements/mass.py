@@ -1294,9 +1294,9 @@ class CONM2(PointMassElement):
         ], dtype='float32')
         is_psd, eigi = is_positive_semi_definite(I)
         if not is_psd:
-            msg = 'The eig(I) >= 0.\n'
-            msg += 'I=\n%s\n' % str(I)
-            msg += 'eigenvalues=%s' % str(eigi)
+            msg = (f'The eig(I) >= 0. for CONM2 eid={self.eid:d}\n'
+                   f'I=\n{I}\n'
+                   f'eigenvalues={eigi}')
             raise RuntimeError(msg)
 
     @classmethod

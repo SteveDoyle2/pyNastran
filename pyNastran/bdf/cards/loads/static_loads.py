@@ -1387,6 +1387,7 @@ class Load2(BaseCard):
         assert self.g1 is not None, self.g1
         assert self.g2 is not None, self.g2
         assert self.g3 is not None, self.g3
+        assert self.g4 is not None, self.g4
         assert self.g1 != self.g2, 'g1=%s g2=%s' % (self.g1, self.g2)
         assert self.g3 != self.g4, 'g3=%s g4=%s' % (self.g3, self.g4)
 
@@ -1409,8 +1410,8 @@ class Load2(BaseCard):
         g1 = integer(card, 4, 'g1')
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
-        g4 = integer_or_blank(card, 7, 'g4')
-        assert len(card) in [7, 8], 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
+        g4 = integer(card, 7, 'g4')
+        assert len(card) == 8, 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
         return cls(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     @classmethod
@@ -1450,10 +1451,12 @@ class Load2(BaseCard):
         self.g1_ref = model.Node(self.g1, msg=msg)
         self.g2_ref = model.Node(self.g2, msg=msg)
         self.g3_ref = model.Node(self.g3, msg=msg)
+        self.g4_ref = model.Node(self.g4, msg=msg)
 
         xyz1 = self.g1_ref.get_position()
         xyz2 = self.g2_ref.get_position()
         xyz3 = self.g3_ref.get_position()
+        xyz4 = self.g4_ref.get_position()
         v21 = xyz2 - xyz1
 
         try:
@@ -1464,30 +1467,17 @@ class Load2(BaseCard):
             msg += 'g2.get_position()=%s' % xyz2
             raise FloatingPointError(msg)
 
-        if self.g4 is None:
-            xyz4 = None
-            v2 = xyz3 - xyz1
-            try:
-                v2 /= norm(v2)
-            except FloatingPointError:
-                msg = 'v2=v31=%s norm(v31)=%s\n' % (v2, norm(v2))
-                msg += 'g3.get_position()=%s\n' % xyz3
-                msg += 'g1.get_position()=%s' % xyz1
-                raise FloatingPointError(msg)
-            xyz = cross(v21, v2)
-        else:
-            self.g4_ref = model.Node(self.g4, msg=msg)
-            xyz4 = self.g4_ref.get_position()
-            v2 = xyz4 - xyz3
 
-            try:
-                v2 /= norm(v2)
-            except FloatingPointError:
-                msg = 'v2=v43=%s norm(v43)=%s\n' % (v2, norm(v2))
-                msg += 'g3.get_position()=%s\n' % xyz3
-                msg += 'g4.get_position()=%s' % xyz4
-                raise FloatingPointError(msg)
-            xyz = cross(v21, v2)
+        v2 = xyz4 - xyz3
+
+        try:
+            v2 /= norm(v2)
+        except FloatingPointError:
+            msg = 'v2=v43=%s norm(v43)=%s\n' % (v2, norm(v2))
+            msg += 'g3.get_position()=%s\n' % xyz3
+            msg += 'g4.get_position()=%s' % xyz4
+            raise FloatingPointError(msg)
+        xyz = cross(v21, v2)
 
         self.xyz = xyz
 

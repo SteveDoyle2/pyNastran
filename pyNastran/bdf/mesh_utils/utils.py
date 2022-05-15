@@ -414,13 +414,19 @@ def cmd_line_convert(argv=None, quiet=False):
         '\n'
 
         'Options:\n'
-        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n'
-        '  --in_units  IN_UNITS                length,mass\n\n'
+        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
+        '  --in_units  IN_UNITS                length,mass\n'
         '  --out_units  OUT_UNITS              length,mass\n\n'
 
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
+        "  -v, --version   show program's version number and exit\n\n"
+
+        'Example:\n'
+        '  bdf convert model.bdf --in_units m,kg  --out_units in,lbm\n'
+        '  bdf convert model.bdf --in_units m,kg  --out_units in,slinch\n'
+        '  bdf convert model.bdf --in_units m,kg  --out_units ft,slug\n'
+        '  bdf convert model.bdf --in_units m,kg  --out_units ft,lbm\n'
     )
     if len(argv) == 1:
         sys.exit(msg)
@@ -451,6 +457,20 @@ def cmd_line_convert(argv=None, quiet=False):
     length_out, mass_out = out_units.split(',')
     units_to = [length_out, mass_out, 's']
     units = [length_in, mass_in, 's']
+
+    length_to_mass = {
+        'in': {'lbm', 'slinch'},
+        'ft': {'lbm', 'slug'},
+        'm': {'g', 'kg', 'Mg'},
+        'cm': {'g', 'kg', 'Mg'},
+        'mm': {'g', 'kg', 'Mg'},
+    }
+    length_allowed = {'in', 'ft', 'm', 'cm', 'mm'}
+    assert length_in in length_allowed, f'mass_out={mass_out!r} allowed={length_allowed}'
+    assert length_out in {'in', 'ft', 'm', 'cm', 'mm'}, f'mass_out={mass_out!r} allowed={length_allowed}'
+    assert mass_in in length_to_mass[length_in], f'mass_out={mass_out!r} allowed={length_to_mass[length_in]}'
+    assert mass_out in length_to_mass[length_out], f'mass_out={mass_out!r} allowed={length_to_mass[length_out]}'
+
     #cards_to_skip = [
         #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
         #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
@@ -692,7 +712,8 @@ def cmd_line_free_faces(argv=None, quiet=False):
     from pyNastran.utils.arg_handling import argparse_to_dict, update_message
 
     update_message(parent_parser, usage, arg_msg, examples)
-    print(argv)
+    if not quiet:
+        print(argv)
     args = parent_parser.parse_args(args=argv[2:])
     data = argparse_to_dict(args)
 
@@ -736,7 +757,7 @@ def cmd_line_free_faces(argv=None, quiet=False):
         size=size, is_double=is_double, encoding=None, log=log,
     )
     if not quiet:  # pragma: no cover
-        print("total time:  %.2f sec" % (time.time() - time0))
+        print('total time:  %.2f sec' % (time.time() - time0))
 
 
 def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False):
@@ -753,13 +774,15 @@ def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False):
         '  bdf split_cbars_by_pin_flags -v | --version\n'
         '\n'
 
-        "Positional Arguments:\n"
-        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+        'Positional Arguments:\n'
+        '  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n'
         '\n'
 
         'Options:\n'
-        " -o OUT, --output  OUT_BDF_FILENAME         path to output BDF file\n"
-        " -p PIN, --pin     PIN_FLAGS_CSV_FILENAME  path to pin_flags_csv file\n\n"
+        ' -o OUT, --output  OUT_BDF_FILENAME         path to output BDF file\n'
+        ' -p PIN, --pin     PIN_FLAGS_CSV_FILENAME  path to pin_flags_csv file\n'
+        '\n'
+
         'Info:\n'
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
@@ -864,8 +887,8 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
     import pyNastran
     msg = (
         'Usage:\n'
-        '  bdf filter IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME]\n'
-        '  bdf filter IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME] [--x YSIGN_X] [--y YSIGN_Y] [--z YSIGN_Z]\n'
+        '  bdf filter IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+        '  bdf filter IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--x YSIGN_X] [--y YSIGN_Y] [--z YSIGN_Z]\n'
         '  bdf filter -h | --help\n'
         '  bdf filter -v | --version\n'
         '\n'
@@ -875,10 +898,10 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
         '\n'
 
         'Options:\n'
-        ' -o OUT, --output  OUT_BDF_FILENAME         path to output BDF file (default=filter.bdf)\n'
-        " --x YSIGN_X                                a string (e.g., '< 0.')\n"
-        " --y YSIGN_Y                                a string (e.g., '< 0.')\n"
-        " --z YSIGN_Z                                a string (e.g., '< 0.')\n"
+        ' -o OUT, --output  OUT_BDF_FILENAME    path to output BDF file (default=filter.bdf)\n'
+        " --x YSIGN_X                           a string (e.g., '< 0.')\n"
+        " --y YSIGN_Y                           a string (e.g., '< 0.')\n"
+        " --z YSIGN_Z                           a string (e.g., '< 0.')\n"
         '\n'
 
         'Info:\n'
@@ -1131,33 +1154,34 @@ def cmd_line(argv=None, quiet=False):
 
     #assert sys.argv[0] != 'bdf', msg
 
-    if argv[1] == 'merge':
+    method = argv[1]
+    if method == 'merge':
         cmd_line_merge(argv, quiet=quiet)
-    elif argv[1] == 'equivalence':
+    elif method == 'equivalence':
         cmd_line_equivalence(argv, quiet=quiet)
-    elif argv[1] == 'renumber':
+    elif method == 'renumber':
         cmd_line_renumber(argv, quiet=quiet)
-    elif argv[1] == 'mirror':
+    elif method == 'mirror':
         cmd_line_mirror(argv, quiet=quiet)
-    elif argv[1] == 'convert':
+    elif method == 'convert':
         cmd_line_convert(argv, quiet=quiet)
-    elif argv[1] == 'scale':
+    elif method == 'scale':
         cmd_line_scale(argv, quiet=quiet)
-    elif argv[1] == 'export_mcids':
+    elif method == 'export_mcids':
         cmd_line_export_mcids(argv, quiet=quiet)
-    elif argv[1] == 'split_cbars_by_pin_flags':
+    elif method == 'split_cbars_by_pin_flags':
         cmd_line_split_cbars_by_pin_flag(argv, quiet=quiet)
-    elif argv[1] == 'export_caero_mesh':
+    elif method == 'export_caero_mesh':
         cmd_line_export_caero_mesh(argv, quiet=quiet)
-    elif argv[1] == 'transform':
+    elif method == 'transform':
         cmd_line_transform(argv, quiet=quiet)
-    elif argv[1] == 'filter' and dev:  # TODO: make better name
+    elif method == 'filter':
         cmd_line_filter(argv, quiet=quiet)
-    elif argv[1] == 'free_faces':
+    elif method == 'free_faces':
         cmd_line_free_faces(argv, quiet=quiet)
-    elif argv[1] == 'bin' and dev:
+    elif method == 'bin' and dev:
         cmd_line_bin(argv, quiet=quiet)
-    elif argv[1] in ['-v', '--version']:
+    elif method in ['-v', '--version']:
         import pyNastran
         print(pyNastran.__version__)
     else:

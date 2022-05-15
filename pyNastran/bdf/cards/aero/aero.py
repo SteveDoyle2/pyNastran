@@ -20,7 +20,7 @@ All cards are BaseCard objects.
 from __future__ import annotations
 import math
 from itertools import count
-from typing import List, Union, Any, TYPE_CHECKING
+from typing import Tuple, List, Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 

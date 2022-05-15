@@ -6,6 +6,7 @@ The capitalization of the sub-functions is important.
 
 """
 from __future__ import annotations
+import re
 from typing import Tuple, List, Dict, Union, Any, TYPE_CHECKING
 import numpy as np
 from numpy import (
@@ -717,10 +718,12 @@ def write_function_header(func_header: str, eq: str,
     msg += _write_variables(variables)
     for builtin in BUILTINS:
         ubuiltin = '_' + builtin
-        if builtin in func_line and ubuiltin not in func_line:
-            raise RuntimeError('cannot have an equation with %r\n%s' % (builtin, func_line))
+        if re.search(r'\b%s\b' % builtin, func_line):
+        #if builtin in func_line and ubuiltin not in func_line:
+            raise RuntimeError(f'cannot have an equation with {builtin!r}\n{func_line}')
+        #if re.search(r'\b%s\b' % builtin, variables):
         if builtin in variables and ubuiltin not in variables:
-            raise RuntimeError('cannot have an equation with %r\n%s' % (builtin, variables))
+            raise RuntimeError(f'cannot have an equation with {builtin:!r}\n{variables}')
             #import re
             #eq = 'YIELD_A_YIELD'
             #eq = '/YIELD'

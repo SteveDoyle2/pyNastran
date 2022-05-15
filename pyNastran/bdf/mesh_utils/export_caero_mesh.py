@@ -13,7 +13,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 
 def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
                       is_subpanel_model: bool=True,
-                      pid_method: str='aesurf') -> None:
+                      pid_method: str='aesurf',
+                      write_panel_xyz: bool=True) -> None:
     """
     Write the CAERO cards as CQUAD4s that can be visualized
 
@@ -29,6 +30,8 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
                    main structure will be pid=1
         'caero' : write the CAERO1 as the property id
         'paero' : write the PAERO1 as the property id
+    write_panel_xyz : bool; default=True
+        write the caero table
 
     """
     if not pid_method in {'aesurf', 'caero', 'paero'}:
@@ -54,7 +57,8 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
 
                 #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
                 points, elements = caero.panel_points_elements()
-                _write_subpanel_strips(bdf_file, model, caero_eid, points, elements)
+                if write_panel_xyz:
+                    _write_subpanel_strips(bdf_file, model, caero_eid, points, elements)
 
                 npoints = points.shape[0]
                 #nelements = elements.shape[0]

@@ -276,8 +276,8 @@ class PCOMPS(Property):
         """
         pass
 
-    def Mid(self):
-        return self.mids[0]
+    def Mid(self, iply: int=0):
+        return self.mids[iply]
 
     def Rho(self):
         """

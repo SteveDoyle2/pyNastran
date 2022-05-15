@@ -22,6 +22,15 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
+
+# 0 means the same as tin
+# we won't handle it with this
+TOUT_DTYPE_MAP = {
+    1: 'float32',
+    2: 'float64',
+    3: 'complex64',
+    4: 'complex128',
+}
 class DTI(BaseCard):
     """
     +-----+-------+-----+------+-------+--------+------+-------------+
@@ -588,13 +597,8 @@ class NastranMatrix(BaseCard):
         return
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        if self.tin in [1, 3]:
-            is_double = False
-        elif self.tin in [2, 4]:
-            is_double = True
-            size = 16
-        else:
-            raise RuntimeError('tin=%r must be 1, 2, 3, or 4' % self.tin)
+        size, is_double = _determine_size_double_from_tin(
+            self.tin, size, is_double)
 
         assert isinstance(self.GCi, (list, np.ndarray)), 'type(GCi)=%s' % type(self.GCi)
         assert isinstance(self.GCj, (list, np.ndarray)), 'type(GCj)=%s' % type(self.GCj)
@@ -656,6 +660,20 @@ class NastranMatrix(BaseCard):
         #assert isinstance(self.Real[0], (list, np.ndarray)), msg
         return msg
 
+def _determine_size_double_from_tin(tin: int,
+                                    size: int, is_double: bool) -> Tuple[int, bool]:
+    """
+    we ignore the requested is_double flag because otherwise Nastran
+    can't read in the matrix
+    """
+    if tin in {1, 3}:
+        is_double = False
+    elif tin in {2, 4}:
+        is_double = True
+        size = 16
+    else:
+        raise RuntimeError('tin=%r must be 1, 2, 3, or 4' % tin)
+    return size, is_double
 
 class DMIG_UACCEL(BaseCard):
     """
@@ -1784,6 +1802,7 @@ class DMI(NastranMatrix):
                         i += 1
                         i1 += 1
                     else:
+                        assert real_value == 'THRU', real_value
                         real_value = self.Real[-1]
                         end_i = fields[i + 1]
                         for ii in range(i1, end_i + 1):
@@ -1887,8 +1906,9 @@ class DMI(NastranMatrix):
             i = np.where(gcj == self.GCj)[0]
             gcis = self.GCi[i]
             reals = self.Real[i]
-            isort = np.argsort(gcis)
+
             list_fields = ['DMI', self.name, gcj]
+            isort = np.argsort(gcis)
 
             # will always write the first one
             gci_last = -1
@@ -1937,7 +1957,9 @@ class DMI(NastranMatrix):
                 msg += func(list_fields)
         return msg
 
-    def get_matrix(self, is_sparse=False, apply_symmetry=True):
+    def get_matrix(self,
+                   is_sparse: bool=False,
+                   apply_symmetry: bool=True) -> Tuple[np.array, None, None]:
         """
         Builds the Matrix
 
@@ -1970,7 +1992,7 @@ class DMI(NastranMatrix):
 
     def write_card_double(self):
         """writes the card in double precision"""
-        return self._write_card(print_card_16)
+        return self._write_card(print_card_double)
 
     def _write_card(self, func):
         """writes the card in single/double precision"""
@@ -1987,6 +2009,9 @@ class DMI(NastranMatrix):
         return msg
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
+        size, is_double = _determine_size_double_from_tin(
+            self.tin, size, is_double)
+
         if size == 8:
             return self.write_card_8()
         if is_double:
@@ -2078,22 +2103,20 @@ def _get_row_col_map_2d(matrix, GCi, GCj, ifo):
 
     #for j, (nid, comp) in enumerate(GCj):
         #cols_array[j, :] = [nid, comp]
-    #print('cols_array = \n%s' % cols_array)
 
     i = 0
     for (nid, comp) in GCi:
         gci = (nid, comp)
         if gci not in rows:
-            #print('row.gci = %s' % str(gci))
             rows[gci] = i
             rows_reversed[i] = gci
             i += 1
+
     if ifo == 6:
         # symmetric
         for (nid, comp) in GCj:
             gcj = (nid, comp)
             if gcj not in rows:
-                #print('row.gcj = %s' % str(gcj))
                 rows[gcj] = i
                 rows_reversed[i] = gcj
                 i += 1
@@ -2104,14 +2127,13 @@ def _get_row_col_map_2d(matrix, GCi, GCj, ifo):
         for (nid, comp) in GCj:
             gcj = (nid, comp)
             if gcj not in cols:
-                #print('col.gcj = %s' % str(gcj))
                 cols[gcj] = j
                 cols_reversed[j] = gcj
                 j += 1
     return rows, cols, rows_reversed, cols_reversed
 
-def _fill_sparse_matrix(matrix, nrows, ncols):
-    """helper method for get_matrix"""
+def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int):
+    """helper method for ``get_matrix``"""
     GCj = array(matrix.GCj, dtype='int32') - 1
     GCi = array(matrix.GCi, dtype='int32') - 1
     reals = array(matrix.Real, dtype='float32')
@@ -2347,16 +2369,20 @@ def get_dmi_matrix(matrix: DMI,
         #raise RuntimeError(matrix.get_stats())
     return M, None, None
 
-def get_matrix(self, is_sparse=False, apply_symmetry=True):
+def get_matrix(self: DMIG,
+               is_sparse: bool=False,
+               apply_symmetry: bool=False) -> Tuple[Any,
+                                                   Dict[int, Any],
+                                                   Dict[int, Any]]:
     """
     Builds the Matrix
 
     Parameters
     ----------
-    is_sparse : bool
-        should the matrix be returned as a sparse matrix (default=True).
+    is_sparse : bool; default=False
+        should the matrix be returned as a sparse matrix.
         Slower for dense matrices.
-    apply_symmetry: bool
+    apply_symmetry: bool; default=False
         If the matrix is symmetric (matrix_form=6), returns a symmetric matrix.
         Supported as there are symmetric matrix routines.
         TODO: unused...
@@ -2544,3 +2570,12 @@ def _get_dtype(is_complex: bool, type_flag: int) -> str:
         raise RuntimeError(f'invalid option for matrix format {type_flag}')
     return dtype
 
+def _get_real_dtype(type_flag: int) -> str:
+    """A complex64 array is made up of two float32 arrays."""
+    if type_flag in {1, 3}:
+        dtype = 'float32'
+    elif type_flag in {0, 2, 4}:
+        dtype = 'float64'
+    else:  # pragma: no cover
+        raise RuntimeError(f'invalid option for matrix format {type_flag}')
+    return dtype

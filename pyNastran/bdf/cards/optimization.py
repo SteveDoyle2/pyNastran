@@ -270,9 +270,9 @@ def validate_dvprel(prop_type, pname_fid, validate):
             pass
         elif pname_fid in [8]:  # TS/T doesn't support strings?
             pass
-        elif pname_fid in ['Z1']:
+        elif pname_fid in ['Z1', 12]:
             pname_fid = 'Z1'
-        elif pname_fid in ['Z2']:
+        elif pname_fid in ['Z2', 13]:
             pname_fid = 'Z2'
         else:
             allowed = ("['T', 4, \n"
@@ -1545,7 +1545,7 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
         property_type, response_type, atta, attb, atti)
 
     if response_type == 'WEIGHT':
-        assert atta in [1, 2, 3, 4, 5, 6, None], msg
+        assert atta in [1, 2, 3, 4, 5, 6, 33, None], msg
         assert attb in [1, 2, 3, 4, 5, 6, None], msg
         if len(atti) == 0:
             atti = ['ALL']
@@ -1641,6 +1641,14 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
         #   2 -> inverse approximation
         assert attb in [None, 1, 2], msg
         assert len(atti) == 0, msg
+    elif response_type == 'STABDER':
+        # atta=517
+        #attb = None
+        #atti = [4]
+        assert isinstance(atta, integer_types), msg
+        assert atta > 0, msg
+        assert attb is None, msg
+        assert len(atti) == 1, msg
     else:
         raise RuntimeError(msg)
     return atta, atti
@@ -2591,7 +2599,7 @@ class DRESP2(OptConstraint):
         for key, values in self.params.items():
             nvalues = len(values)
 
-            assert isinstance(key, tuple), f'key={key}'
+            assert isinstance(key, tuple), f"key={key} should be of the form (0, 'DRESP1'), (1, 'DTABLE'), (2, 'DRESP1'), ..."
             assert len(key) == 2, f'key={key}'
             iorder, name = key
             assert isinstance(iorder, int), f'iorder={iorder} key={key}'

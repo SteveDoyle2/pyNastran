@@ -3,6 +3,7 @@ C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2
 
 # desktop1
 F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike
+D:\NASA\git\examples
 
 # nx 10.1
 F:\work\pyNastran\femap_examples\Support\nast\demo
@@ -15,6 +16,9 @@ F:\work\pyNastran\femap_examples\Support\nast\misc\sssalter
 F:\work\pyNastran\femap_examples\Support\nast\misc\sssalter\IA
 F:\work\pyNastran\femap_examples\Support\nast\tpl
 F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl
+
+# msc 2020
+C:\MSC.Software\msc_nastran_runs
 
 #-------------------------------------------------
 # desktop2

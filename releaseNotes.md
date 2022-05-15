@@ -10,9 +10,11 @@ Release Notes
 ==================
 v1.3.4 (2022/5/xx)
 ------------------
-This is a bug fix only release with the key reason being API dependency changes:
+This is a bug fix release with the key reason being API dependency changes:
  - numpy
  - nptyping
+Additional minor changes (e.g., support for CFAST/PFAST in bdf_convert) were 
+added when fixing bugs.
 
 Requirements/Packages:
  - adding support for vtk 9 (GUI)
@@ -32,31 +34,40 @@ BDF:
  - bug fixes:
    - renaming pyNastran/nptyping.py to pyNastran/nptyping_interface.py to avoid namespace conflicts
    - require that nastran_format is a string
-   - stripping first line of card to fix bug (i thought it was to get the card name, but I don't remember...)
-   - FLUTTER method can be string_or_blank (default='L')
+   - FORCE2/MOMENT2: fixed g4 bug (can't be blank)
+   - FLUTTER: method can be string_or_blank (default='L')
+   - FLUTTER: fixing EAS sorting bug in make_flfacts_mach_sweep (mach should be sorted to give sorted EAS)
    - MTRANS now supported for SOL 200 (vs only MTRAN; they're the same)
-   - subcase add_op2_data supports OUG1F
-   - SET1 (and more generally any card that has 1,THRU,10 or 1,THRU,10,BY,2) now supports blank values
-   - adding get_density to MAT11
-   - MATT1 g11_tid=0 update to None if it's 0
-   - MATT3 table_ids update to None if they're 0
+   - SET1: (and more generally any card that has 1,THRU,10 or 1,THRU,10,BY,2) now supports blank values
+   - MATT1: g11_tid=0 update to None if it's 0
+   - MATT3: table_ids update to None if they're 0
    - PARAM, DRESP1, DVCRELx now supports numpy int/floats
-   - better type checking of PARAMs
-   - correcting number of PLOAD2 elements allowed
-   - PLOAD4 surf_or_line, line_load_dir set to blank when they're default (to fix NX issue)
-   - I2 for BOX section
-   - I12 now returns I12 instead of [A, I1, I2, I12]
+   - PARAMs: better type checking
+   - PLOAD2: correcting number elements allowed
+   - PLOAD4: surf_or_line, line_load_dir set to blank when they're default (to fix NX issue)
+   - PBARL/PBEAML: I2 for BOX section
+   - PBARL: fixed I1 bug
+   - PBARL: I12 now returns I12 instead of [A, I1, I2, I12]
    - AUTOSPC (from case control) now works in bdf_renumber
+   - BCTSET: fixing bug where defaults were mishandled (poor documentation in QRG)
+   - DEQATN: better builtin handling
+   - DMIG: better size/is_double handling
+   - Subcase: add_op2_data supports OUG1F
  - added:
-   - GRID method get_position_wrt_coord_ref
-   - DVCRELx CMASS/M and CELAS4/K options
-   - DCONSTR support for FLUTTER/PK
-   - more DRESP1 PBEAM/PBEAML support
-   - DRESP1 FATIGUE support
-   - DRESP2 now references DNODE
-   - DVMREL2 now supports MAT2, MAT8
-   - collapse_bad_quads now removes degenerate quads
-   - CAERO1/2.aefact_ids
+   - pathlib support
+   - GRID: method get_position_wrt_coord_ref
+   - MAT11: adding get_density
+   - DVCRELx: CMASS/M and CELAS4/K options
+   - DCONSTR: support for FLUTTER/PK
+   - DRESP1: PBEAM/PBEAML, FATIGUE support
+   - DRESP2: now references DNODE
+   - DVMREL2: now supports MAT2, MAT8
+   - PCOMP/G: layers must now be the same
+   - PCOMP:  added get_material_ids(include_symmetry=True), get_thetas(include_symmetry=True), get_souts(include_symmetry=True) methods
+   - PCOMPG: added get_global_ply_ids(include_symmetry=True) in addition to PCOMP methods
+   - CAERO1/2: added aefact_ids property
+   - get_oml: CTRIA6/CQUAD8/CQUAD support
+   - collapse_bad_quads: now removes degenerate quads
    - bdf_mirror: solid support
    - bdf_convert now supports:
       - CFAST/PFAST
@@ -64,12 +75,25 @@ BDF:
 f06 flutter:
  - bug fixes:
    - supporting any number modes
+   - correcting default for in/out_units (documentation error)
+ - added:
+   - subcases support
+   - vd_limit and damping_limit
+
  - adding:
    - repr
    - mach, dynamic pressure, altitude plots
+op2:
+ - pathlib support
 op2 geom:
  - improved PARAM (PVT/PVT0 table) loading
  - PSOLID/FFLUID support
+ - PSOLID isop=2 support
+ - PCOMP ft (failure theory) HFAI, HTAP, HFAB support
+ - skipping QVECT
+ - fixed SPC bug (was double writing header)
+ - fixed RBE2 bug (alpha vs. non alpha cases were flipped)
+ - fixed BSET1/CSET1 (were flipped)
 gui:
  - fixed CELAS2 bug where nid2 is an SPOINT
 

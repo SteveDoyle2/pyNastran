@@ -17,6 +17,9 @@ F:\work\pyNastran\femap_examples\Support\nast\misc\sssalter\IA
 F:\work\pyNastran\femap_examples\Support\nast\tpl
 F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl
 
+# simcenter
+C:\MSC.Software\simcenter_nastran_2019.2
+
 #-------------------------------------------------
 # desktop2
 
@@ -31,6 +34,10 @@ C:\NASA\m4\formats\git\examples
 C:\NASA\m4\formats\git\examples\move
 C:\NASA\m4\formats\git\examples\move_tpl
 C:\NASA\m4\formats\git\examples\move_tpl\works
+D:\NASA\git\examples
+C:\NASA\git\examples\move
+C:\NASA\git\examples\move_tpl
+C:\NASA\git\examples\move_tpl\works
 
 C:\MSC.Software\MSC.Nastran\msc20051\nast\nast
 C:\MSC.Software\MSC.Nastran\msc20051\nast\demo
@@ -42,6 +49,16 @@ C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\nast
 C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\demo
 C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\doc
 C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\tpl
+
+# MSC 2020
+C:\MSC.Software\MSC_Nastran_2020\msc20200\nast
+C:\MSC.Software\MSC_Nastran_2020\msc20200\nast\demo
+C:\MSC.Software\msc_nastran_docs_2020\doc
+C:\MSC.Software\msc_nastran_docs_2020\tpl
+C:\MSC.Software\msc_nastran_docs_2020\tpl6
+
+# msc 2020
+C:\MSC.Software\msc_nastran_runs
 
 # these don't work - nx 10.2
 "C:\Program Files\Siemens\NXNastran\nxn10p2\nxn10p2\nast"
@@ -57,6 +74,10 @@ C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\tpl
 
 # NX 2019
 C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2
+
+# NX 2020
+#"C:\Program Files\Siemens\SimcenterNastran_2020.1/scnas/nast"
+
 #-------------------------------------------------
 # laptop
 D:\work\move

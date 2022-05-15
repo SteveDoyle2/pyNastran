@@ -309,8 +309,9 @@ class SUPORT(Constraint):
         nodes = []
         components = []
         for i in range(0, len(fields), 2):
-            nodes.append(fields[i])
-            components.append(fields[i + 1])
+            nid, comp = fields[i:i+2]
+            nodes.append(nid)
+            components.append(comp)
         return SUPORT(nodes, components, comment=comment)
 
     @property
@@ -629,37 +630,37 @@ class MPC(Constraint):
         return self.write_card_16(is_double)
 
     def write_card_8(self):
-        msg = 'MPC     %8s' % self.conid
+        msg = 'MPC     %8d' % self.conid
         grids, components, coefficients = self.node_ids, self.components, self.coefficients
         for i, grid, component, coefficient in zip(count(), grids, components, coefficients):
-            msg += '%8i%8s%8s' % (grid, component, print_float_8(coefficient))
+            msg += '%8d%8s%8s' % (grid, component, print_float_8(coefficient))
             if i % 2 == 1 and i > 0:
                 msg += '\n%8s%8s' % ('', '')
         return self.comment + msg.rstrip() + '\n'
 
     def write_card_16(self, is_double=False):
-        msg = 'MPC*    %16s' % self.conid
+        msg = 'MPC*    %16d' % self.conid
         grids, components, coefficients = self.node_ids, self.components, self.coefficients
         if is_double:
             for i, grid, component, coefficient in zip(count(), grids, components, coefficients):
                 if i == 0:
-                    msg += '%16i%16s%16s\n' % (
+                    msg += '%16d%16s%16s\n' % (
                         grid, component, print_scientific_double(coefficient))
                 elif i % 2 == 1:
-                    msg += '%-8s%16i%16s%16s\n' % (
+                    msg += '%-8s%16d%16s%16s\n' % (
                         '*', grid, component, print_scientific_double(coefficient))
                 else:
-                    msg += '%-8s%16s%16i%16s%16s\n' % (
+                    msg += '%-8s%16s%16d%16s%16s\n' % (
                         '*', '', grid, component, print_scientific_double(coefficient))
         else:
             for i, grid, component, coefficient in zip(count(), grids, components, coefficients):
                 if i == 0:
-                    msg += '%16i%16s%16s\n' % (grid, component, print_float_16(coefficient))
+                    msg += '%16d%16s%16s\n' % (grid, component, print_float_16(coefficient))
                 elif i % 2 == 1:
-                    msg += '%-8s%16i%16s%16s\n' % (
+                    msg += '%-8s%16d%16s%16s\n' % (
                         '*', grid, component, print_float_16(coefficient))
                 else:
-                    msg += '%-8s%16s%16i%16s%16s\n' % (
+                    msg += '%-8s%16s%16d%16s%16s\n' % (
                         '*', '', grid, component, print_float_16(coefficient))
         if i % 2 == 0:
             msg += '*'

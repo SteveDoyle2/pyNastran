@@ -537,10 +537,10 @@ class CHEXA20(SolidElement):
     type = 'CHEXA'
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
-        nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
+        nodes2 = ['' if node is None else '%8d' % node for node in nodes[8:]]
         data = [self.eid, self.Pid()] + nodes[:8] + nodes2
-        msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
-               '        %8i%8i%8s%8s%8s%8s%8s%8s\n'
+        msg = ('CHEXA   %8d%8d%8d%8d%8d%8d%8d%8d\n'
+               '        %8d%8d%8s%8s%8s%8s%8s%8s\n'
                '        %8s%8s%8s%8s%8s%8s' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
@@ -1846,7 +1846,7 @@ class CPYRAM13(SolidElement):
             tuple(sorted([node_ids[3], node_ids[4]])),
         ]
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1976,7 +1976,7 @@ class CTETRA4(SolidElement):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
-        msg = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
+        msg = 'CTETRA  %8d%8d%8d%8d%8d%8d\n' % tuple(data)
         return self.comment + msg
 
     def write_card_16(self, is_double=False):
@@ -2393,7 +2393,7 @@ class CTETRA10(SolidElement):
             tuple(sorted([node_ids[2], node_ids[3]])),
         ]
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids

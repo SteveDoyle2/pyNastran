@@ -448,21 +448,21 @@ class CSSCHD(Aero):
 
         """
         sid = integer(card, 1, 'sid')
-        aesid = integer(card, 2, 'aesid')             # AESURF
+        aesurf_id = integer(card, 2, 'aesid')         # AESURF
         lalpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
         lmach = integer_or_blank(card, 4, 'lMach')    # AEFACT
         lschd = integer(card, 5, 'lSchd')             # AEFACT
         assert len(card) <= 6, f'len(CSSCHD card) = {len(card):d}\ncard={card}'
-        return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
+        return CSSCHD(sid, aesurf_id, lalpha, lmach, lschd, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         sid = data[0]
-        aesid = data[1]   # AESURF
-        lalpha = data[2]  # AEFACT
-        lmach = data[3]   # AEFACT
-        lschd = data[4]   # AEFACT
-        return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
+        aesurf_id = data[1]   # AESURF
+        lalpha = data[2]      # AEFACT
+        lmach = data[3]       # AEFACT
+        lschd = data[4]       # AEFACT
+        return CSSCHD(sid, aesurf_id, lalpha, lmach, lschd, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """

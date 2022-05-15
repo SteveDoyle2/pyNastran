@@ -6,7 +6,7 @@ this is no longer true...but should be
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import List, Dict, TYPE_CHECKING
+from typing import List, Dict, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm

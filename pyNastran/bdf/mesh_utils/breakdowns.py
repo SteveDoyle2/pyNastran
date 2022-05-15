@@ -184,7 +184,7 @@ def get_area_breakdown(model: BDF,
                     areas = [area]
         elif prop.type in skip_props:
             pass
-        elif prop.type in ['PBRSECT', 'PBMSECT']:
+        elif prop.type in {'PBRSECT', 'PBMSECT'}:
             model.log.warning('skipping:\n%s' % prop)
             continue
         else:  # pragma: no cover
@@ -343,7 +343,7 @@ def get_mass_breakdown(model: BDF, property_ids=None,
         Map from mass id to mass for mass elements.
         Used for CONM2s
 
-    TODO: What about CONRODs?
+    TODO: What about CONRODs, CONM2s
         #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
 
     """
@@ -418,10 +418,12 @@ def get_mass_breakdown(model: BDF, property_ids=None,
                 area = prop.Area()
                 length = elem.Length()
                 if detailed:
-                    masses.append(length * (rho * area))
+                    structural_mass_per_length = rho * area
+                    masses.append(length * structural_mass_per_length)
                     masses_nonstructural.append(length * nsm)
                 else:
-                    masses.append(length * (rho * area + nsm))
+                    mass_per_length = rho * area + nsm
+                    masses.append(length * mass_per_length)
         #elif prop.type in ['PBEAM3']:
             #for eid in eids:
                 #elem = model.elements[eid]

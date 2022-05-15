@@ -511,10 +511,13 @@ class GetCard(GetMethods):
         #"""see ``pyNastran.bdf.mesh_utils.forces_moments.get_temperatures_array(...)``"""
         #return get_temperatures_array(self, load_case_id, nid_map=nid_map, dtype=dtype)
 
-    def get_reduced_loads(self, load_case_id, scale=1.,
-                          consider_load_combinations=True,
-                          skip_scale_factor0=False,
-                          stop_on_failure=True, msg=''):
+    def get_reduced_loads(self,
+                          load_case_id: int,
+                          scale: float=1.,
+                          consider_load_combinations: bool=True,
+                          skip_scale_factor0: bool=False,
+                          stop_on_failure: bool=True,
+                          msg: str=''):
         """
         Accounts for scale factors.
 

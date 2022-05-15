@@ -1419,6 +1419,17 @@ class PBAR(LineProperty):
         return self.comment + print_card_16(card)
 
 
+PBARL_MSG = '\n' + """
++-------+------+------+-------+------+------+------+------+------+
+|   1   |   2  |   3  |   4   |   5  |   6  |   7  |   8  |   9  |
++=======+======+======+=======+======+======+======+======+======+
+| PBARL | PID  | MID  | GROUP | TYPE |      |      |      |      |
++-------+------+------+-------+------+------+------+------+------+
+|       | DIM1 | DIM2 | DIM3  | DIM4 | DIM5 | DIM6 | DIM7 | DIM8 |
++-------+------+------+-------+------+------+------+------+------+
+|       | DIM9 | etc. |  NSM  |      |      |      |      |      |
++-------+------+------+-------+------+------+------+------+------+""".strip()
+
 class PBARL(LineProperty):
     """
     .. todo:: doesnt support user-defined types
@@ -1606,17 +1617,17 @@ class PBARL(LineProperty):
                 if i in [4, 5, 6, 7]:
                     dim4 = dim[3]
                     dimi = double_or_blank(card, 9 + i, f'ndim={ndim}; dim{i+1}',
-                                           default=dim4)
+                                           default=dim4, end=PBARL_MSG)
                 elif i in [8, 9]:
                     dim6 = dim[5]
                     dimi = double_or_blank(card, 9 + i, f'ndim={ndim}; dim{i+1}',
-                                           default=dim6)
+                                           default=dim6, end=PBARL_MSG)
                 else:
-                    dimi = double(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1))
+                    dimi = double(card, 9 + i, f'ndim={ndim}; dim{i+1}', end=PBARL_MSG)
                 dim.append(dimi)
         else:
             for i in range(ndim):
-                dimi = double(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1))
+                dimi = double(card, 9 + i, f'ndim={ndim}; dim{i+1}', end=PBARL_MSG)
                 dim.append(dimi)
 
         #: dimension list
@@ -1730,13 +1741,13 @@ class PBARL(LineProperty):
         .. math:: \frac{m}{L} = A \rho + nsm
         """
         rho = self.Rho()
-        area = self.Area()
         nsm = self.Nsm()
+        area = self.Area()
         return area * rho + nsm
 
     def I1(self) -> float:
         """gets the section I1 moment of inertia"""
-        I1 = A_I1_I2_I12(self, self.beam_type, self.dim)
+        I1 = A_I1_I2_I12(self, self.beam_type, self.dim)[1]
         return I1
 
     def I2(self) -> float:

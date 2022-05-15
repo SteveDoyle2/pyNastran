@@ -162,12 +162,12 @@ class BaseCard:
         (e.g., node.update_field(3, 0.1) to update z)
 
         """
-        msg = '%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__
+        msg = f'{self.__class__.__name__} has not overwritten _update_field_helper; out of range'
         raise IndexError(msg)
 
     def _get_field_helper(self, n: int):
         """dynamic method for non-standard attributes (e.g., node.get_field(3, 0.1) to get z)"""
-        msg = '%s has not overwritten _get_field_helper; out of range' % self.__class__.__name__
+        msg = f'{self.__class__.__name__} has not overwritten _get_field_helper; out of range'
         raise IndexError(msg)
 
     def get_field(self, n: int) -> Optional[Union[int, float, str]]:
@@ -382,14 +382,14 @@ class Material(BaseCard):
     @property
     def TRef(self) -> float:  # pramga: no cover
         if not hasattr(self, 'tref'):
-            raise AttributeError('%r object has no attribute tref' % self.type)
+            raise AttributeError(f'{self.type!r} object has no attribute tref')
         return self.tref
 
     @TRef.setter
     def TRef(self, tref: float) -> None:  # pramga: no cover
         """sets the self.Tref attributes"""
         if not hasattr(self, 'tref'):
-            raise AttributeError('%r object has no attribute tref' % self.type)
+            raise AttributeError(f'{self.type!r} object has no attribute tref')
         self.tref = tref
 
     def cross_reference(self, model: BDF) -> None:
@@ -560,7 +560,7 @@ def _format_comment(comment: str) -> str:
     """
     if comment.strip() == '':  # deals with a bunch of spaces
         return ''
-    return ''.join([u'${}\n'.format(comment_line)
+    return ''.join(['${}\n'.format(comment_line)
                     for comment_line in comment.rstrip().split('\n')])
 
 

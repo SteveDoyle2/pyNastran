@@ -77,7 +77,7 @@ if TYPE_CHECKING:  # pragma: no cover
     )
     #Coord = Union[CORD1R, CORD1C, CORD1S,
     #              CORD2R, CORD2C, CORD2S]
-    from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
+    from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIAX
     from pyNastran.bdf.subcase import Subcase
 
 BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona'}

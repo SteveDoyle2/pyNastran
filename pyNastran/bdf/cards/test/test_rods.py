@@ -19,13 +19,14 @@ class TestRods(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        card = CROD.add_card(cardi)
-        card.write_card(size, 'dummy')
-        card.raw_fields()
-        self.assertEqual(card.eid, 10)
-        self.assertEqual(card.Pid(), 100)
-        node_ids = card.node_ids
+        crod = CROD.add_card(cardi)
+        crod.write_card(size, 'dummy')
+        crod.raw_fields()
+        self.assertEqual(crod.eid, 10)
+        self.assertEqual(crod.Pid(), 100)
+        node_ids = crod.node_ids
         assert node_ids == [10, 2], node_ids # probably wrong
+        assert crod.get_edge_ids() == [(2, 10)]
 
     def test_prod_nsm(self):
         model = BDF(debug=False)
@@ -113,6 +114,7 @@ class TestRods(unittest.TestCase):
         model.safe_cross_reference()
         model.uncross_reference()
         model.cross_reference()
+        assert ctube.get_edge_ids() == [(10, 12)]
         mass, cg, inertia = model.mass_properties(
             element_ids=None, mass_ids=None,
             reference_point=None, sym_axis=None,
@@ -135,13 +137,14 @@ class TestRods(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        card = CONROD.add_card(cardi)
-        card.write_card(size, 'dummy')
-        card.raw_fields()
-        self.assertEqual(card.eid, eid)
-        self.assertEqual(card.Mid(), mid)
-        node_ids = card.node_ids
+        conrod = CONROD.add_card(cardi)
+        conrod.write_card(size, 'dummy')
+        conrod.raw_fields()
+        self.assertEqual(conrod.eid, eid)
+        self.assertEqual(conrod.Mid(), mid)
+        node_ids = conrod.node_ids
         assert node_ids == [nid1, nid2], node_ids
+        assert conrod.get_edge_ids() == [(2, 3)]
 
     def test_conrod_nsm(self):
         model = BDF(debug=False)
@@ -154,6 +157,7 @@ class TestRods(unittest.TestCase):
         nids = [1, 2]
         conrod = model.add_conrod(eid, mid, nids, A=A, j=0.0, c=0.0, nsm=nsm,
                                comment='')
+        assert conrod.get_edge_ids() == [(1, 2)]
 
         E = 1.0
         G = None
@@ -167,6 +171,7 @@ class TestRods(unittest.TestCase):
                        has_none=True)
         model.pop_parse_errors()
         conrod2 = model.elements[2]
+        assert conrod2.get_edge_ids() == [(1, 2)]
 
         #------------------
         model.cross_reference()
@@ -217,6 +222,7 @@ class TestRods(unittest.TestCase):
         card = model.elements[eid]
         node_ids = card.node_ids
         assert node_ids == [nid1, nid2], node_ids # probably wrong
+        assert conrod.get_edge_ids() == [(nid1, nid2)]
 
         lines = ['crod,%i, %i, %i, %i' % (eid+1, pid, nid1, nid2)]
         card = model._process_card(lines)
@@ -226,6 +232,7 @@ class TestRods(unittest.TestCase):
         card = model.elements[eid+1]
         node_ids = card.node_ids
         assert node_ids == [nid1, nid2], node_ids # probably wrong
+        assert crod.get_edge_ids() == [(nid1, nid2)]
 
         lines = ['ctube,%i, %i, %i, %i' % (eid+2, pid+1, nid1, nid2)]
         card = model._process_card(lines)
@@ -235,6 +242,7 @@ class TestRods(unittest.TestCase):
         card = model.elements[eid+2]
         node_ids = card.node_ids
         assert node_ids == [nid1, nid2], node_ids # probably wrong
+        assert ctube.get_edge_ids() == [(nid1, nid2)]
 
         lines = ['prod,%i, %i, %f, %f, %f, %f' % (pid, mid, A, J, c, nsm)]
         card = model._process_card(lines)

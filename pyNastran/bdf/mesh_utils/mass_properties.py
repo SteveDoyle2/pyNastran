@@ -18,6 +18,7 @@ import numpy as np
 #from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
+CHECK_MASS = False  # should additional checks be done
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -74,7 +75,9 @@ NO_MASS = {
     'CHACAB', 'CAABSF',
 }
 
-def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
+def transform_inertia(mass: float, xyz_cg: np.ndarray,
+                      xyz_ref: np.ndarray, xyz_ref2: np.ndarray,
+                      I_ref: np.ndarray) -> np.ndarray:
     """
     Transforms mass moment of inertia using parallel-axis theorem.
 
@@ -290,18 +293,7 @@ def _mass_properties(model, elements, masses, reference_point, is_cg):
                 model.log.warning("could not get the inertia for element/property\n%s%s" % (
                     element, element.pid_ref))
                 continue
-            mass += m
-            cg += m * p
-            (x, y, z) = p - reference_point
-            x2 = x * x
-            y2 = y * y
-            z2 = z * z
-            inertia[0] += m * (y2 + z2)  # Ixx
-            inertia[1] += m * (x2 + z2)  # Iyy
-            inertia[2] += m * (x2 + y2)  # Izz
-            inertia[3] += m * x * y      # Ixy
-            inertia[4] += m * x * z      # Ixz
-            inertia[5] += m * y * z      # Iyz
+            mass = _increment_inertia(p, reference_point, m, mass, cg, inertia)
 
     if mass:
         cg /= mass
@@ -708,7 +700,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             else:
                 raise NotImplementedError(prop.type)
             m = area * mpa
-            if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+            if CHECK_MASS and (m != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
                 msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
@@ -784,7 +776,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             #volume = area1 / 3. * norm(c1 - n5)
             volume = area1 / 3. * norm(centroid1 - centroid5)
             m = elem.Rho() * volume
-            if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+            if CHECK_MASS and (m != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
                 msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
@@ -983,7 +975,7 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         nsm_centroids_length['PBEAM'].append(nsm_centroid)
         m = mass_per_length * length
         nsm = nsm_per_length * length
-        if (m + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+        if CHECK_MASS and ((m + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
             msg = 'CBEAM; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
                 eid, pid, prop.type, mass_per_length, nsm_per_length, length)
             msg += 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
@@ -1015,7 +1007,7 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         cg += m * centroid + nsm * nsm_centroid
         #print('length=%s mass=%s mass_per_length=%s nsm_per_length=%s m=%s nsm=%s centroid=%s nsm_centroid=%s' % (
             #length, mass, mass_per_length, nsm_per_length, m, nsm, centroid, nsm_centroid))
-        if massi != elem.Mass():  # pragma: no cover
+        if CHECK_MASS and massi != elem.Mass():  # pragma: no cover
             msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
             msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                 str(centroid), str(elem.Centroid()), str(elem))
@@ -1083,7 +1075,7 @@ def _get_cbeam_mass_no_nsm(model, elem, mass, cg, inertia, reference_point):
 
     m = mass_per_length * length
     nsm = nsm_per_length * length
-    if (m + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+    if CHECK_MASS and ((m + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
         msg = 'CBEAM; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
             elem.eid, elem.pid, prop.type, mass_per_length, nsm_per_length, length)
         msg += 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
@@ -1173,7 +1165,7 @@ def _get_tri_mass(model, xyz, element_ids, all_eids,
         #nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
         #m = area * (mpa + nsm)
         massi = area * mpa
-        if not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+        if CHECK_MASS and not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
             msg = 'centroid_new=%s centroid_old=%s\n%s' % (
                 str(centroid), str(elem.Centroid()), str(elem))
             raise RuntimeError(msg)
@@ -1239,7 +1231,7 @@ def _get_quad_mass(model, xyz, element_ids, all_eids,
         #nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
         #m = area * (mpa + nsm)
         m = area * mpa
-        if not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+        if CHECK_MASS and not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
             msg = 'centroid_new=%s centroid_old=%s\n%s' % (
                 str(centroid), str(elem.Centroid()), str(elem))
             raise RuntimeError(msg)
