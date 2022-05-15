@@ -209,7 +209,7 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
 
     if not is_rtd:
         _add_typish(all_reqs, install_requires)
-        _add_nptyping(all_reqs, install_requires)
+        #_add_nptyping(all_reqs, install_requires)
 
     if bdist:
         all_reqs['docopt-ng'] = '>= 0.7.2'
@@ -409,15 +409,11 @@ def _add_imageio(found_numpy, all_reqs, install_requires):
     # pip messes up dependency resolution if you use newer versions of numpy
     imageio_str_ver = '>= 2.2.0, <3'
 
-    if found_numpy:
-        numpy_int_ver = int_version('numpy', all_reqs['numpy'])
-        if found_numpy and numpy_int_ver < [1, 20, 0]:
-            imageio_str_ver = '>=2.2.0,<2.16.0'
     try:
         import imageio
         imageio_int_ver = int_version('imageio', imageio.__version__)
-        if found_numpy and imageio_int_ver > [2, 16, 0] and numpy_int_ver > [1, 20, 0]:
-            print("imageio.version = %r >2.16.0' with numpy>1.20.0" % imageio.__version__)
+        if imageio_int_ver > [3, ]:
+            print("imageio.version = %r > 3.0'" % imageio.__version__)
             all_reqs['imageio'] = imageio_str_ver
             install_requires.append('imageio %s' % imageio_str_ver)
         elif imageio_int_ver < [2, 2, 0]:

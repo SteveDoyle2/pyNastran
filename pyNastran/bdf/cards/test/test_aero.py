@@ -1929,25 +1929,38 @@ class TestAero(unittest.TestCase):
         spline3b.coeffs.append(0.1)
         spline3b.validate()
 
-        del model.splines[spline_id]
+        #del model.splines[spline_id]
+        #model._type_to_id_map['SPLINE3'].remove(spline_id)
         model.validate()
 
-        #spline3.cross_reference(model)
-        model.cross_reference()
-        spline3.write_card()
-        spline3.raw_fields()
-        save_load_deck(model, run_renumber=False)
-        spline3b.eid = 1000
-
-        spline3b.nodes.append(42)
-        spline3b.displacement_components.append(4)
-        spline3b.coeffs.append(0.5)
-        spline3b.validate()
 
         model.add_grid(5, [0., 0., 0.])
         model.add_grid(6, [1., 0., 0.])
         model.add_grid(7, [1., 1., 0.])
         model.add_grid(42, [0., 1., 0.])
+
+        #spline3.cross_reference(model)
+        model.cross_reference()
+        model.pop_xref_errors()
+        spline3.write_card()
+        spline3.raw_fields()
+        save_load_deck(model, run_renumber=False)
+        spline3b.eid = 1000
+
+        #spline3b = model.splines[102]
+        #del model.splines[102]
+        #model._type_to_id_map['SPLINE3'].remove(102)
+        #model.splines[1000] = spline3b
+        #spline3b.eid = 1000
+        #print(model.splines)
+
+        model.uncross_reference()
+        model.add_grid(42, [0., 1., 0.])
+        spline3b.nodes.append(42)
+        spline3b.displacement_components.append(4)
+        spline3b.coeffs.append(0.5)
+        spline3b.validate()
+        model.cross_reference()
 
         eid = 100
         pid = 100
@@ -1965,10 +1978,14 @@ class TestAero(unittest.TestCase):
         model.add_card(lines, 'SPLINE3', is_list=False)
         spline = model.splines[1000]
         assert spline.node_ids == [5, 6, 7, 42], spline.node_ids
+
         model.cross_reference()
+        model.pop_xref_errors()
         model.validate()
         #spline3.raw_fields()
-        save_load_deck(model, run_renumber=False)
+
+        # have one earlier...
+        #save_load_deck(model, run_renumber=False)
 
     def test_spline4(self):
         """checks the SPLINE4 card"""
@@ -2019,7 +2036,7 @@ class TestAero(unittest.TestCase):
         model.add_spline4(eid, caero, aelist, setg, dz, method, usage,
                           nelements, melements, comment='spline4')
         spline = model.splines[eid]
-        del model.splines[eid]
+        #del model.splines[eid]
         spline.cross_reference(model)
 
         model.pop_parse_errors()

@@ -31,7 +31,8 @@ class ResultSet:
     It's an interface tool between the code and the results the user requests.
 
     """
-    def __init__(self, allowed_results, results_map, unused_log):
+    def __init__(self, allowed_results: List[int],
+                 results_map, unused_log):
         #self.log = log
         #allowed_results.sort()
         #for a in allowed_results:
@@ -115,35 +116,8 @@ class ResultSet:
             if result in self.allowed:
                 all_matched_results.append(result)
                 continue
-            #if
-            # tack on a word boundary if we have a * at the beginning of the regex
-            #resulti = r'\w' + result if not result.startswith('*') else result  # old
 
-            if '\b' in result:
-                # the user has gotten too fancy, so we'll let them do exactly what they want
-                resulti = result
-                #print(f'A: resulti = {resulti}')
-            else:
-                if '*' not in result:
-                    resulti = fr'\w{result}\w'
-                    #print(f'B: resulti = {resulti!r}')
-                else:
-                    wdot = r'\w.'  # \w or \.
-                    if result.startswith('*') and result.endswith('*'):
-                        #wdot = '\w'  # works
-                        resulti = f'{wdot}{result}'
-                        if result[-2] != '.':
-                            resulti = f'{resulti[:-1]}.*'
-                        #print(f'C: resulti = {resulti!r}')
-                    elif result.startswith('*'):
-                        resulti = f'{wdot}{result}'
-                        #print(f'D: resulti = {resulti!r}')
-                    else:  # endswith
-                        resulti = result
-                        if result[-2] != '.':
-                            resulti = f'{result[:-1]}.*'
-                        #print(f'E: resulti = {resulti!r}')
-
+            resulti = _get_regex(result)
             regex = re.compile(resulti)
             matched_results = list(filter(regex.match, self.allowed))
             #print('matched_results =', matched_results)
@@ -180,3 +154,63 @@ class ResultSet:
             else:
                 msg += f'  {result} (disabled)\n'
         return msg
+
+def _get_regex(result: str) -> str:
+    """
+    Tack on a word boundary if we have a * at the beginning of the regex
+
+    Case Input           Output              Description
+    ==== =============   =============       ============
+    1    \b*strain       \b*strain           null because \b was found
+    2    strain          \wstrain\w          add word boundaries (to only find strain exactly)
+    3    *strain*        \w.*strain.*\w      any letter/number before/after the star
+    4    *strain         \w.*strain          any letter/number before the star
+    5    strain*         strain.*\w          any letter/number after the star
+
+    Notes
+    =====
+    \w    letter/number [A-Za-z0-9_]
+    \b    word boundary  -> trigger
+    \.    period
+    .     any character
+
+    TODO: validate
+    """
+    #resulti = r'\w' + result if not result.startswith('*') else result  # old
+    if '\b' in result:
+        # Case 1
+        # the user has gotten too fancy, so we'll let them do exactly what they want
+        resulti = result
+        #print(f'A: resulti = {resulti}')
+        return resulti
+
+    if '*' not in result:
+        # Case 2 - add word boundaries to only find "result"
+        resulti = fr'\w{result}\w'
+        #print(f'B: resulti = {resulti!r}')
+        return resulti
+
+    # basically we replace * with .*
+    # then we add a word boundary to either side
+    wdot = r'\w.'  # \w or \.
+    res_startswith_star = result.startswith('*')
+    res_endswith_star = result.endswith('*')
+    if res_startswith_star and res_endswith_star:
+        #wdot = '\w'  # works
+        resulti = f'{wdot}{result}'
+        if result[-2] != '.':
+            resulti = f'{resulti[:-1]}.*'
+        #print(f'C: resulti = {resulti!r}')
+        return resulti
+
+    if res_startswith_star:
+        resulti = f'{wdot}{result}'
+        #print(f'D: resulti = {resulti!r}')
+        return resulti
+
+    # endswith
+    resulti = result
+    if result[-2] != '.':
+        resulti = f'{result[:-1]}.*'
+    #print(f'E: resulti = {resulti!r}')
+    return resulti

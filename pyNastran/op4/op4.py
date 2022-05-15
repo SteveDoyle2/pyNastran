@@ -900,7 +900,7 @@ class OP4:
     def _read_real_sparse_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         if self.debug:
             self.log.info('_read_real_sparse_binary')
-        self._show(op4, 200, types='ifsdq', endian=None)
+        #self._show(op4, 200, types='ifsdq', endian=None)
         out = self._get_matrix_info(matrix_type, debug=False)
         (nwords_per_value, nbytes_per_value, data_format, dtype) = out
         rows = []

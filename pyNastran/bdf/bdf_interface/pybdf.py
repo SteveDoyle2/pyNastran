@@ -1247,10 +1247,11 @@ def _lines_to_decks_main(lines: List[str],
             #print('%s: %s' % (flag_word, line.rstrip()))
             current_lines.append(line.rstrip())
         elif flag == 3:
-            is_special_flag = (is_module is True or
-                               is_auxmodel is True or
-                               is_superelement is True or
-                               consider_superelements)
+            is_special_flag = (
+                is_module is True or
+                is_auxmodel is True or
+                is_superelement is True or
+                consider_superelements)
             if not is_special_flag:
                 raise RuntimeError(f'one must be True: is_auxmodel={is_auxmodel}; '
                                    f'is_superelement={is_superelement}; '

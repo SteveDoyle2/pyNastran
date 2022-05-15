@@ -1449,7 +1449,7 @@ def _get_shell_inertia(element: Union[CTRIA3, CQUAD4],
         nu_xy = 0.
     else:
         Ex, Ey, Gxy, nu_xy = pid_ref.get_Ainv_equivalent_pshell(
-            imat_rotation_angle_deg, thicknessi)
+            imat_rotation_angle_deg, thicknessi, degrees=True)
 
         #thicknessi = prop.Thickness()
         areai = thicknessi * lengthi

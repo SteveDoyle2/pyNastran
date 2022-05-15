@@ -1005,7 +1005,7 @@ class GEOM2:
         fe2 = 44 * self.factor
         nelements = (len(data) - n) // ntotal
         struct_i = op2.struct_i if self.size == 4 else self.struct_q
-        print(mapfmt(op2._endian + b'6i3f3i6f', self.size))
+        #print(mapfmt(op2._endian + b'6i3f3i6f', self.size))
         s1 = Struct(mapfmt(op2._endian + b'6i3f3i6f', self.size))
         s3 = Struct(mapfmt(op2._endian + b'12i6f', self.size))
         for unused_i in range(nelements):
@@ -1054,7 +1054,7 @@ class GEOM2:
                                [f, g0]]
             else:
                 raise RuntimeError(f'invalid f value...f={f!r}')
-            print(f'eid={eid} fe={fe} f={f}')
+            #print(f'eid={eid} fe={fe} f={f}')
             if op2.is_debug_file:
                 op2.binary_debug.write('  CBEAM eid=%s f=%s fe=%s %s\n' % (
                     eid, f, fe, str(data_in)))

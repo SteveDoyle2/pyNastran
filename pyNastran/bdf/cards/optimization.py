@@ -2836,7 +2836,6 @@ class DRESP2(OptConstraint):
         return self.dequation_ref.equation_id
 
     def _pack_params(self):
-        """"""
         if self.params_ref is None:
             # not cross-referenced
             return self._pack(self.params)

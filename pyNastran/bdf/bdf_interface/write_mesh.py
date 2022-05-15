@@ -881,7 +881,8 @@ class WriteMesh(BDFAttributes):
             self.dlinks or self.dequations or self.dtable is not None or
             self.dvgrids or self.dscreen or self.topvar or self.modtrak or
             # nx optimization
-            self.dvtrels or self.group or self.dmncon)
+            self.dvtrels or self.group or self.dmncon
+        )
         if is_optimization:
             bdf_file.write('$OPTIMIZATION\n')
             for (unused_id, dconadd) in sorted(self.dconadds.items()):

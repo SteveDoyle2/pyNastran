@@ -16,7 +16,8 @@ PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q]'
 USAGE_145 = (
     'Usage:\n'
     '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export] [--f06]\n'
+    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export_csv] [--export_zona] [--f06] '
+    '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT]\n'
 )
 USAGE_200 = (
     'Usage:\n'
@@ -31,7 +32,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     import os
     from docopt import docopt
     import pyNastran
-    from pyNastran.f06.parse_flutter import plot_flutter_f06
+    from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
     if argv is None:
         argv = sys.argv
     msg = (
@@ -58,14 +59,14 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         '\n'
         'Units:\n'
         '  --in_units IN    Selects the input unit system\n'
-        '                   si (kg, m, s) -> m/s\n'
+        '                   si (kg, m, s) -> m/s (default)\n'
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
-        '                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
+        '                   english_in (slinch/in^3, in, s) -> in/s\n'
 
-        '  --out_units OUT  Selects the output unit system\n'
+        '  --out_units OUT  Selects the output unit system (default=in_units)\n'
         '                   si (kg, m, s) -> m/s\n'
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
-        '                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
+        '                   english_in (slinch/in^3, in, s) -> in/s\n'
         '                   english_kt (slinch/in^3, nm, s) -> knots\n'
         '\n'
         'Options:\n'
@@ -76,11 +77,14 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         '  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
         "  --nopoints       don't plot the points\n"
         "  --noline         don't plot the lines\n"
-        "  --export         export a zona file\n"
-        "  --f06            export an F06 file (temporary)\n"
+        '  --export_csv     export a CSV file\n'
+        '  --export_zona    export a zona file\n'
+        '  --f06            export an F06 file (temporary)\n'
+        '  --vd_limit VD_LIMIT            add a Vd and 1.15*Vd line\n'
+        '  --damping_limit DAMPING_LIMIT  add a damping limit\n'
         '\n'
         'Info:\n'
-        '  -h, --help      show this help message and exit\n'''
+        '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
     if len(argv) == 1:
@@ -92,7 +96,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
     f06_filename = data['F06_FILENAME']
-    if not f06_filename.lower().endswith('.f06'):
+    if f06_filename.lower().endswith(('.bdf', '.op2')):
         base = os.path.splitext(f06_filename)[0]
         f06_filename = base + '.f06'
 
@@ -110,12 +114,18 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     if data['--ylimfreq']:
         ylim_freq = split_float_colons(data['--ylimfreq'])
 
+    # the default units is in SI because there isn't a great default unit
+    # system for English.  Better to just make it easy for one system.
+    # I rarely want my --out_units to be english_in (I use english_kt), whereas
+    # SI has consistent in_units/out_units.
     in_units = 'si'
     if data['--in_units']:
         in_units = data['IN'].lower()
     assert in_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'in_units=%r' % in_units
 
-    out_units = 'si'
+    # The default used to be SI, but it's really weird when I'm working in
+    # English units and my output is in SI
+    out_units = in_units
     if data['--out_units']:
         out_units = data['OUT'].lower()
     assert out_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'out_units=%r' % out_units
@@ -136,6 +146,14 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     else:
         sys.stderr.write('plot_type assumed to be --tas\n')
 
+    vd_limit = None
+    if data['--vd_limit']:
+        vd_limit = get_cmd_line_float(data, '--vd_limit')
+
+    damping_limit = None
+    if data['--damping_limit']:
+        damping_limit = get_cmd_line_float(data, '--damping_limit')
+
     plot_kfreq_damping = data['--kfreq']
     plot_root_locus = data['--rootlocus']
 
@@ -143,18 +161,24 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     noline = data['--noline']
 
     export_f06 = data['--f06']
-    export_zona = data['--export']
+    export_zona = data['--export_zona']
+    export_csv = data['--export_csv']
     export_f06_filename = None if export_f06 is False else 'nastran.f06'
     export_zona_filename = None if export_zona is False else 'nastran.zona'
     export_veas_filename = None if export_zona is False else 'nastran.veas'
+    export_csv_filename = None if export_csv is False else 'flutter_subcase_%d.csv'
 
     # TODO: need a new parameter
-    vg_filename = None if export_zona is  None else 'vg_subcase_%i.png'
-    vg_vf_filename = None if export_zona is  None else 'vg_vf_subcase_%i.png'
-    kfreq_damping_filename = None if export_zona is  None else 'kfreq_damping_subcase_%i.png'
-    root_locus_filename = None if export_zona is  None else 'root_locus_subcase_%i.png'
+    vg_filename = None if export_zona is  None else 'vg_subcase_%d.png'
+    vg_vf_filename = None if export_zona is  None else 'vg_vf_subcase_%d.png'
+    kfreq_damping_filename = None if export_zona is  None else 'kfreq_damping_subcase_%d.png'
+    root_locus_filename = None if export_zona is  None else 'root_locus_subcase_%d.png'
     if not plot:
         return
+
+    assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
+    assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
+
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
                      f06_units=in_units,
@@ -163,15 +187,27 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
                      plot_kfreq_damping=plot_kfreq_damping,
                      xlim=xlim,
                      ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+                     vd_limit=vd_limit,
+                     damping_limit=damping_limit,
                      nopoints=nopoints,
                      noline=noline,
                      export_veas_filename=export_veas_filename,
                      export_zona_filename=export_zona_filename,
                      export_f06_filename=export_f06_filename,
+                     export_csv_filename=export_csv_filename,
                      vg_filename=vg_filename,
                      vg_vf_filename=vg_vf_filename,
                      root_locus_filename=root_locus_filename,
                      kfreq_damping_filename=kfreq_damping_filename, show=show, log=log)
+
+def get_cmd_line_float(data: Dict[str, str], key: str) -> float:
+    try:
+        svalue = data[key]
+    except KeyError:
+        print(data)
+        raise
+    value = float(svalue)
+    return value
 
 def split_float_colons(string_values: str) -> List[float]:
     """

@@ -2688,7 +2688,7 @@ def get_matrix(self: DMIG,
 
     Parameters
     ----------
-    is_sparse : bool; default=True
+    is_sparse : bool; default=False
         should the matrix be returned as a sparse matrix.
         Slower for dense matrices.
     apply_symmetry: bool; default=False

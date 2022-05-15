@@ -63,7 +63,7 @@ if TYPE_CHECKING:  # pragma: no cover
         DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
         TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
     from pyNastran.bdf.cards.loads.loads import (
-        LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, 
+        LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM,
         LOADCYN, LOADCYH)
     from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
     from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
@@ -1273,15 +1273,14 @@ class AddMethods:
     def _add_monpnt_object(self, monitor_point: Union[MONPNT1, MONPNT2, MONPNT3]) -> None:
         """adds an MONPNT object"""
         key = monitor_point.name
-        assert key not in self.model.monitor_points, '\nmonitor_point=\n%soldMOTPNT=\n%s' % (
-            monitor_point, self.model.monitor_points[key])
+        assert key not in self.model.monitor_points, f'\nmonitor_point:\n{monitor_point}oldMOTPNT:\n{self.model.monitor_points[key]}'
         self.model.monitor_points.append(monitor_point)
         self.model._type_to_id_map[monitor_point.type].append(len(self.model.monitor_points) - 1)
 
     def _add_spline_object(self, spline: Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5]) -> None:
         """adds an SPLINE1/SPLINE2/SPLINE3/SPLINE4/SPLINE5 object"""
         key = spline.eid
-        assert spline.eid not in self.model.splines, f'\nspline={spline}\n%sold_spline=\n{self.model.splines[key]}'
+        assert spline.eid not in self.model.splines, f'\nspline:\n{spline}\nold_spline:\n{self.model.splines[key]}'
         assert spline.eid > 0, spline
         self.model.splines[key] = spline
         self.model._type_to_id_map[spline.type].append(key)

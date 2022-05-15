@@ -4,7 +4,7 @@ SOL 145 plotter
 
 kfreq = ωc/(2V)
 """
-from typing import  List, Dict, Optional, Union
+from typing import  List, Dict, Optional, Union, cast
 import numpy as np
 #import PySide
 try:
@@ -24,6 +24,7 @@ except ImportError:  # pragma: no cover
 
 from cpylog import get_logger2, SimpleLogger
 from pyNastran.f06.flutter_response import FlutterResponse
+from pyNastran.utils.numpy_utils import float_types
 
 
 def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt=False, log=None):
@@ -281,22 +282,35 @@ def _get_units(units: Optional[Union[str, Dict[str, str]]]) -> Optional[Union[st
     return units
 
 
-def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=False,
-                     plot_type='tas', modes=None,
-                     plot_vg=False, plot_vg_vf=False, plot_root_locus=False,
-                     plot_kfreq_damping=False,
-                     xlim=None, ylim_damping=None, ylim_freq=None, ylim_kfreq=None,
-                     nopoints=False, noline=False,
-                     export_zona_filename=None,
-                     export_veas_filename=None,
-                     export_f06_filename=None,
-                     vg_filename=None,
-                     vg_vf_filename=None,
-                     root_locus_filename=None,
-                     kfreq_damping_filename=None,
+def plot_flutter_f06(f06_filename: str,
+                     f06_units: Dict[str, str]=None,
+                     out_units: Dict[str, str]=None,
+                     make_alt: bool=False,
+                     plot_type: str='tas',
+                     modes: Optional[List[int]]=None,
+                     plot_vg: bool=False,
+                     plot_vg_vf: bool=False,
+                     plot_root_locus: bool=False,
+                     plot_kfreq_damping: bool=False,
+                     xlim: Optional[List[float]]=None,
+                     ylim_damping: Optional[List[float]]=None,
+                     ylim_freq: Optional[List[float]]=None,
+                     ylim_kfreq: Optional[List[float]]=None,
+                     vd_limit: Optional[float]=None,
+                     damping_limit: Optional[float]=None,
+                     nopoints: bool=False,
+                     noline: bool=False,
+                     export_zona_filename: Optional[str]=None,
+                     export_veas_filename: Optional[str]=None,
+                     export_f06_filename: Optional[str]=None,
+                     export_csv_filename: Optional[str]=None,
+                     vg_filename: Optional[str]=None,
+                     vg_vf_filename: Optional[str]=None,
+                     root_locus_filename: Optional[str]=None,
+                     kfreq_damping_filename: Optional[str]=None,
                      subcases: Optional[List[int]]=None,
                      plot: bool=True, show: bool=True, clear: bool=False, close: bool=False,
-                     log=None):
+                     log: Optional[SimpleLogger]=None) -> Dict[int, FlutterResponse]:
     """
     Plots a flutter (SOL 145) deck
 
@@ -364,6 +378,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
      o fixing unconverged points
 
     """
+    assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
+    assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
     if plot_type == 'alt':
         make_alt = True
 
@@ -375,9 +391,11 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                            plot_type,
                            plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                            nopoints, noline,
+                           vd_limit=vd_limit, damping_limit=damping_limit,
                            export_zona_filename=export_zona_filename,
                            export_veas_filename=export_veas_filename,
                            export_f06_filename=export_f06_filename,
+                           export_csv_filename=export_csv_filename,
                            vg_filename=vg_filename,
                            vg_vf_filename=vg_vf_filename,
                            root_locus_filename=root_locus_filename,
@@ -386,9 +404,12 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                            show=show, clear=clear, close=close)
     return flutters
 
-def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
-                       xlim, ylim_damping, ylim_freq, ylim_kfreq,
-                       plot_type,
+def make_flutter_plots(modes: List[int], flutters: Dict[int, FlutterResponse],
+                       xlim: Optional[List[float]],
+                       ylim_damping: Optional[List[float]],
+                       ylim_freq: Optional[List[float]],
+                       ylim_kfreq: Optional[List[float]],
+                       plot_type: str,
                        plot_vg: bool,
                        plot_vg_vf: bool,
                        plot_root_locus: bool,
@@ -396,17 +417,23 @@ def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
                        nopoints: bool,
                        noline: bool,
                        legend: bool=True,
+                       vd_limit: Optional[float]=None,
+                       damping_limit: Optional[float]=None,
                        export_zona_filename: Optional[str]=None,
                        export_veas_filename: Optional[str]=None,
                        export_f06_filename: Optional[str]=None,
+                       export_csv_filename: Optional[str]=None,
                        vg_filename: Optional[str]=None,
                        vg_vf_filename: Optional[str]=None,
                        root_locus_filename: Optional[str]=None,
                        kfreq_damping_filename: Optional[str]=None,
                        subcases: Optional[List[int]]=None,
                        show: bool=True, clear: bool=False, close: bool=False,
-                       log: SimpleLogger=None):
+                       log: SimpleLogger=None) -> None:
     """actually makes the flutter plots"""
+    assert vd_limit is None or isinstance(vd_limit, float_types), vd_limit
+    assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
+
     assert len(flutters) > 0, flutters
     subcases_flutter_set = set(list(flutters.keys()))
     if subcases is None:
@@ -424,13 +451,58 @@ def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
     for subcase, flutter in sorted(flutters.items()):
         if subcase not in subcases_set:
             continue
+        flutter = cast(FlutterResponse, flutter)  # type: FlutterResponse
+        _make_flutter_subcase_plot(
+            modes, flutter, subcase, xlim, ylim_damping, ylim_freq, ylim_kfreq,
+            plot_type, plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
+            nopoints, noline, legend=legend,
+            vd_limit=vd_limit, damping_limit=damping_limit,
+            vg_filename=vg_filename,
+            vg_vf_filename=vg_vf_filename,
+            root_locus_filename=root_locus_filename,
+            kfreq_damping_filename=kfreq_damping_filename,
+            show=show, clear=clear, close=close, log=log)
 
+        if export_zona_filename:
+            flutter.export_to_zona(export_zona_filename, modes=modes,
+                                   xlim=xlim, plot_type=plot_type)
+        if export_veas_filename:
+            flutter.export_to_veas(export_veas_filename, modes=modes)
+        if export_f06_filename:
+            flutter.export_to_f06(export_f06_filename, modes=modes)
+        #if export_csv_filename:
+            #flutter.export_to_csv(export_csv_filename % subcase, modes=modes)
+
+    if show:
+        plt.show()
+    #if close:
+        #plt.close()
+
+def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
+                               xlim, ylim_damping, ylim_freq, ylim_kfreq,
+                               plot_type,
+                               plot_vg: bool,
+                               plot_vg_vf: bool,
+                               plot_root_locus: bool,
+                               plot_kfreq_damping: bool,
+                               nopoints: bool,
+                               noline: bool,
+                               legend: bool=True,
+                               vd_limit: Optional[float]=None,
+                               damping_limit: Optional[float]=None,
+                               vg_filename: Optional[str]=None,
+                               vg_vf_filename: Optional[str]=None,
+                               root_locus_filename: Optional[str]=None,
+                               kfreq_damping_filename: Optional[str]=None,
+                               show: bool=True, clear: bool=False, close: bool=False,
+                               log: SimpleLogger=None):
         #_remove_neutrinos(flutter, log)
         if plot_vg:
             filenamei = None if vg_filename is None else vg_filename % subcase
             flutter.plot_vg(modes=modes,
                             plot_type=plot_type,
                             xlim=xlim, ylim_damping=ylim_damping,
+                            #vd_limit=vd_limit,
                             png_filename=filenamei, show=False, clear=clear, close=close)
         if plot_vg_vf:
             filenamei = None if vg_vf_filename is None else vg_vf_filename % subcase
@@ -438,6 +510,7 @@ def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
                                plot_type=plot_type,
                                xlim=xlim,
                                ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+                               vd_limit=vd_limit, damping_limit=damping_limit,
                                nopoints=nopoints, noline=noline,
                                legend=legend,
                                png_filename=filenamei, show=False, clear=clear, close=close)
@@ -456,19 +529,9 @@ def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
                                        plot_type=plot_type,
                                        ylim_damping=ylim_damping,
                                        ylim_kfreq=ylim_kfreq,
+                                       vd_limit=vd_limit, damping_limit=damping_limit,
                                        nopoints=nopoints, noline=noline,
                                        png_filename=filenamei, show=False, clear=clear, close=close)
-        if export_zona_filename:
-            flutter.export_to_zona(export_zona_filename, modes=modes,
-                                   xlim=xlim, plot_type=plot_type)
-        if export_veas_filename:
-            flutter.export_to_veas(export_veas_filename, modes=modes)
-        if export_f06_filename:
-            flutter.export_to_f06(export_f06_filename, modes=modes)
-    if show:
-        plt.show()
-    #if close:
-        #plt.close()
 
 
 def _remove_neutrinos(flutter: FlutterResponse, log: SimpleLogger):

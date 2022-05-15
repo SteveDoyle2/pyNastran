@@ -1372,6 +1372,9 @@ def _check_case_sol_200(sol: int,
     assert 'ANALYSIS' in subcase, 'sol=%s\n%s' % (sol, subcase)
 
     analysis = subcase.get_parameter('ANALYSIS')[0]
+    if analysis.startswith('SE'):
+        analysis = analysis[2:]
+
     # BUCKLING
     if 'DESOBJ' in subcase:
         value = subcase.get_parameter('DESOBJ')[0]
@@ -1429,7 +1432,7 @@ def _check_case_sol_200(sol: int,
     elif analysis in ['SAERO', 'DIVERG', 'DIVERGE']:
         solution = 144
         check_case(solution, subcase, fem2, p0, isubcase, subcases)
-    elif analysis in ['FLUT', 'FLUTTER']:
+    elif analysis in ['FLUT', 'FLUTTER', 'FLUTTR']:
         solution = 145
         check_case(solution, subcase, fem2, p0, isubcase, subcases)
     elif analysis == 'DCEIG': # direct complex eigenvalues

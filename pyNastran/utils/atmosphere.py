@@ -905,7 +905,7 @@ def sutherland_viscoscity(T: float) -> float:
         viscosity = 2.27E-8 * (T ** 1.5) / (T + 198.6)
     return viscosity
 
-def make_flfacts_alt_sweep(mach: float, alts: List[float],
+def make_flfacts_alt_sweep(mach: float, alts: np.ndarray,
                            eas_limit: float=1000.,
                            alt_units: str='m',
                            velocity_units: str='m/s',
@@ -947,6 +947,33 @@ def make_flfacts_alt_sweep(mach: float, alts: List[float],
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
+
+def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
+                                        eas_limit: float=1000.,
+                                        alt_units: str='m',
+                                        velocity_units: str='m/s',
+                                        density_units: str='kg/m^3',
+                                        eas_units: str='m/s') -> Tuple[Any, Any, Any]:
+    """TODO: not validated"""
+    assert tass[0] <= tass[-1], tass
+
+    rhoi = atm_density(alt, R=1716., alt_units=alt_units,
+                      density_units=density_units)
+    nvel = len(tass)
+    rho = np.ones(nvel, dtype=tass.dtype) * rhoi
+
+    sosi = atm_speed_of_sound(alt, alt_units=alt_units,
+                              velocity_units=velocity_units)
+    machs = tass / sosi
+
+    velocity = tass # sosi * machs
+    rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
+                                      alt_units=alt_units,
+                                      density_units=density_units,
+                                      velocity_units=velocity_units,
+                                      eas_units=eas_units)
+    return rho, machs, velocity
+
 def make_flfacts_mach_sweep(alt: float, machs: List[float], eas_limit: float=1000.,
                             alt_units: str='m',
                             velocity_units: str='m/s',
@@ -973,6 +1000,8 @@ def make_flfacts_mach_sweep(alt: float, machs: List[float], eas_limit: float=100
         the equivalent airspeed units; ft/s, m/s, in/s, knots
 
     """
+    assert machs[0] <= machs[-1], machs
+
     machs = np.asarray(machs)
     rho = np.ones(len(machs)) * atm_density(alt, R=1716., alt_units=alt_units,
                                             density_units=density_units)
@@ -1010,6 +1039,8 @@ def make_flfacts_eas_sweep(alt: float, eass: List[float],
         the equivalent airspeed units; ft/s, m/s, in/s, knots
 
     """
+    assert eass[0] <= eass[-1], eass
+
     # convert eas to output units
     eass = np.atleast_1d(eass) * _velocity_factor(eas_units, velocity_units)
     rho = atm_density(alt, R=1716., alt_units=alt_units,
@@ -1019,7 +1050,12 @@ def make_flfacts_eas_sweep(alt: float, eass: List[float],
     rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
     velocity = eass * np.sqrt(rho0 / rho)
     machs = velocity / sos
-    return rho, machs, velocity
+
+    nvelocity = len(velocity)
+    rhos = np.ones(nvelocity, dtype=velocity.dtype) * rho
+    assert len(rhos) == len(machs)
+    assert len(rhos) == len(velocity)
+    return rhos, machs, velocity
 
 def _limit_eas(rho: float, machs: NDArrayNfloat, velocity: NDArrayNfloat,
                eas_limit: float=1000.,
