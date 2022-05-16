@@ -21,10 +21,10 @@ for instructions on installing pyNastran.
 Also, check out the:
   * [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
-  * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
+  * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the main branch)
   * [Docs](https://pynastran-git.readthedocs.io/en/1.3/)
-  * [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md)
-  * [Contributing](https://github.com/SteveDoyle2/pyNastran/blob/master/contributing.rst)
+  * [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/main/code_of_conduct.md)
+  * [Contributing](https://github.com/SteveDoyle2/pyNastran/blob/main/contributing.rst)
 
 for more detailed information.
 
@@ -98,7 +98,7 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a
 commercial program.
 
-![GUI](https://github.com/SteveDoyle2/pynastran/blob/master/pyNastran/gui/images/caero.png)
+![GUI](https://github.com/SteveDoyle2/pynastran/blob/main/pyNastran/gui/images/caero.png)
 
 
 # News
@@ -107,7 +107,21 @@ commercial program.
 
 This should be hidden...
 
+### v1.3.4 has NOT been released (2022/5/xx)
+This is a a substantial bug fix release mainly to address dependency changes:
+
+Programmatics:
+ - supports Python 3.7-3.10
+ - support for nptyping 1.1.1-2.0 (removed as a required dependency)
+ - support for h5py >3.0
+ - GUI is compatible with PyQt5 and PySide2 and VTK 7-10
+
+There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser). 
+
+See pyNastran `v1.3.4 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
 --->
+
+
 ### v1.3.3 has been released (2020/6/28)
 
 This is a bug fix only release outside of:
@@ -116,7 +130,6 @@ This is a bug fix only release outside of:
      ```
 
 which was overly complicated to do before.
-
 
 Programmatics:
  - Supports Python 3.7 and 3.8
