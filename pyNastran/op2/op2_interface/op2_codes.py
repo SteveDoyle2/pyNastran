@@ -3,15 +3,20 @@ from pyNastran.op2.op2_interface.nx_tables import NX_ELEMENTS, NX_TABLE_CONTENT
 from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTENT
 
 # strings
-SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
-                b'OESRMS2', b'OESNO2', b'OESXRMS1',
-                b'OES1C', b'OSTR1C',
-                'OES1C', 'OSTR1C', 'OESNLXR']
-SORT2_TABLES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
-                b'OES2C', b'OSTR2C',
-                b'OFMPF2M', b'OLMPF2M', b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',
-                'OFMPF2M', 'OLMPF2M', 'OPMPF2M', 'OSMPF2M', 'OGPMPF2M',
-                'OES2C', 'OSTR2C']
+SORT1_TABLES = [
+    'OSTRMS1C', 'OSTNO1C', 'OES1X', 'OSTR1X',
+    'OESRMS2', 'OESNO2', 'OESXRMS1',
+    'OES1C', 'OSTR1C',
+    'OES1C', 'OSTR1C', 'OESNLXR', 'OUG1', 'OAG1']
+SORT1_TABLES += [table_name.encode('latin1') for table_name in SORT1_TABLES]
+
+SORT2_TABLES = [
+    'OUGPSD2', 'OUGATO2', 'OESCP',
+    'OES2C', 'OSTR2C',
+    'OFMPF2M', 'OLMPF2M', 'OPMPF2M', 'OSMPF2M', 'OGPMPF2M',
+]
+SORT2_TABLES += [table_name.encode('latin1') for table_name in SORT2_TABLES]
+
 NO_SORT_METHOD = [b'QHHA']
 
 NASA95_ELEMENTS = {

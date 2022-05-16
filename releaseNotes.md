@@ -13,7 +13,8 @@ v1.3.4 (2022/5/xx)
 This is a bug fix release with the key reason being API dependency changes:
  - numpy
  - nptyping
-Additional minor changes (e.g., support for CFAST/PFAST in bdf_convert) were 
+ - h5py
+Additional minor changes (e.g., support for CFAST/PFAST in bdf_convert) were
 added when fixing bugs.
 
 Requirements/Packages:
@@ -30,6 +31,7 @@ overall:
  - typing
  - spelling corrections
  - cleaner setup.py files / packages.py
+
 BDF:
  - bug fixes:
    - renaming pyNastran/nptyping.py to pyNastran/nptyping_interface.py to avoid namespace conflicts
@@ -66,12 +68,17 @@ BDF:
    - PCOMP:  added get_material_ids(include_symmetry=True), get_thetas(include_symmetry=True), get_souts(include_symmetry=True) methods
    - PCOMPG: added get_global_ply_ids(include_symmetry=True) in addition to PCOMP methods
    - CAERO1/2: added aefact_ids property
-   - get_oml: CTRIA6/CQUAD8/CQUAD support
-   - collapse_bad_quads: now removes degenerate quads
-   - bdf_mirror: solid support
-   - bdf_convert now supports:
-      - CFAST/PFAST
-      - rho, area conversion
+   - mesh_utils:
+     - get_oml:
+        - CTRIA6/CQUAD8/CQUAD support
+        - applying np.clip to get_oml (to account for cos out of range precision issues)
+     - collapse_bad_quads: now removes degenerate quads
+     - bdf_mirror:
+        - solid support
+        - correcting case where eid_offset isn't calculated
+     - bdf_convert now supports:
+        - CFAST/PFAST
+        - rho, area conversion
 f06 flutter:
  - bug fixes:
    - supporting any number modes
@@ -79,7 +86,6 @@ f06 flutter:
  - added:
    - subcases support
    - vd_limit and damping_limit
-
  - adding:
    - repr
    - mach, dynamic pressure, altitude plots
@@ -96,19 +102,10 @@ op2 geom:
  - fixed BSET1/CSET1 (were flipped)
 gui:
  - fixed CELAS2 bug where nid2 is an SPOINT
-
 other:
  - format_converter now has defaults if you're using the functions
-
-
-----------------
-bdf:
- - bug fixes:
-   - applying np.clip to get_oml (to account for cos out of range precision issues)
-   - correcting case where eid_offset isn't calculated in bdf_mirror
-other:
  - atmosphere not supports velocity in cm/s
- 
+
 v1.3.3 (2020/6/28)
 ------------------
 This is a bug fix only release outside of:

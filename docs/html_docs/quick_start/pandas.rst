@@ -6,7 +6,7 @@ pyNastran also supports Pandas dataframes for the OP2 objects.  This is most use
 
 Pandas Introduction
 ===================
-https://github.com/fonnesbeck/statistical-analysis-python-tutorial/blob/master/1.%20Introduction%20to%20Pandas.ipynb
+https://github.com/fonnesbeck/statistical-analysis-python-tutorial/blob/main/1.%20Introduction%20to%20Pandas.ipynb
 
 Another Pandas Intro
 ====================
@@ -18,18 +18,18 @@ Another Pandas Intro
 
 Static & Transient DataFrames in PyNastran
 ==========================================
-.. https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_multi_case.ipynb
+.. https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_pandas_multi_case.ipynb
 
 op2_pandas_multi_case
 
 Transient DataFrames in PyNastran
 ==================================
-.. https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_DataFrames.ipynb
+.. https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_pandas_DataFrames.ipynb
 
 op2_pandas_DataFrames
 
 Manipulating the Pandas DataFrame
 =================================
-.. https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_unstack.ipynb
+.. https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_pandas_unstack.ipynb
 
 op2_pandas_unstack

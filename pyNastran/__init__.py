@@ -27,7 +27,6 @@ __copyright__ = f'Copyright {__license__}; 2011-2022'
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
-#__docs__ = 'http://pynastran.m4-engineering.com/master'  # still not setup...
 if 'dev' in  __version__:
     __docs_rtd__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
     __docs__ = __docs_rtd__
