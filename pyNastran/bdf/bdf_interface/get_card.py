@@ -131,6 +131,77 @@ class GetCard(GetMethods):
             return out_list
         return out_dict
 
+    def _reset_type_to_id_map(self) -> None:
+        type_to_id_map = {}
+        skip_keys = {'ENDDATA'}
+
+        coords = defaultdict(list)
+        elements = defaultdict(list)
+        rigid_elements = defaultdict(list)
+        properties = defaultdict(list)
+        materials = defaultdict(list)
+        thermal_materials = defaultdict(list)
+
+        loads = defaultdict(list)
+        mpcs = defaultdict(list)
+        spcs = defaultdict(list)
+        for cid, coord in self.coords.items():
+            coords[coord.type].append(cid)
+        for eid, elem in self.elements.items():
+            elements[elem.type].append(eid)
+        for eid, elem in self.rigid_elements.items():
+            rigid_elements[elem.type].append(eid)
+
+        for pid, prop in self.properties.items():
+            properties[prop.type].append(pid)
+        for mid, mat in self.materials.items():
+            materials[mat.type].append(mid)
+        for mid, mat in self.thermal_materials.items():
+            thermal_materials[mat.type].append(mid)
+
+        for load_id, loadsi in self.loads.items():
+            for loadi in loadsi:
+                loads[loadi.type].append(load_id)
+        for spc_id, spcsi in self.spcs.items():
+            for spci in spcsi:
+                spcs[spci.type].append(spc_id)
+
+        for key in self.card_count:
+            if key in skip_keys:
+                continue
+            if key == 'GRID':
+                datai = list(self.nodes)
+            elif key in coords:
+                datai = list(coords[key])
+            elif key in elements:
+                datai = list(elements[key])
+            elif key in rigid_elements:
+                datai = list(rigid_elements[key])
+            elif key in properties:
+                datai = list(properties[key])
+            elif key in materials:
+                datai = list(materials[key])
+            elif key in thermal_materials:
+                datai = list(thermal_materials[key])
+            elif key in loads:
+                datai = list(loads[key])
+            elif key in spcs:
+                datai = list(spcs[key])
+
+            elif key == 'LOAD':
+                datai = list(self.load_combinations)
+            elif key == 'NLPARM':
+                datai = list(self.nlparms)
+            elif key == 'NLPCI':
+                datai = list(self.nlpcis)
+            elif key == 'PARAM':
+                datai = list(self.params)
+            else:
+                raise NotImplementedError(key)
+            datai.sort()
+            type_to_id_map[key] = datai
+        self._type_to_id_map = type_to_id_map
+
     def _reset_type_to_slot_map(self) -> Dict[str, str]:
         """resets self._type_to_slot_map"""
         rslot_map = defaultdict(list)

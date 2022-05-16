@@ -113,7 +113,6 @@ def get_forces_moments_array(model: BDF,
     fail_count = 0
     fail_count_max = 3
     loads_to_skip = {'MOMENT1', 'MOMENT2', 'FORCE1', 'TEMP'}
-    log = model.log
     nodes = model.nodes
 
     log = model.log
