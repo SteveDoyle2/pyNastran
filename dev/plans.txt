@@ -2,7 +2,6 @@ Most of these are ideas and not officially planned
 
 typing using:
  - monkeytype (makes Python 3 format)
- - pyannotate (makes Python 2 format)
 
 
 OP2
@@ -19,6 +18,7 @@ PCH Reader
  - HDF5
 
 XDB Reader
+  - no
 
 SOL 101 Solver
  - CTETRA4
