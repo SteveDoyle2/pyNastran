@@ -4,14 +4,42 @@ from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTE
 
 # strings
 SORT1_TABLES = [
-    'OSTRMS1C', 'OSTNO1C', 'OES1X', 'OSTR1X',
-    'OESRMS2', 'OESNO2', 'OESXRMS1',
-    'OES1C', 'OSTR1C',
-    'OES1C', 'OSTR1C', 'OESNLXR', 'OUG1', 'OAG1']
+    'OES1', 'OES1C', 'OES1X', 'OES1X1', 'OESVM1', 'OESVM1C',
+    'OSTR1C', 'OSTR1X', 'OSTRVM1', 'OSTRVM1C',
+
+    'OESNLXR', 'OESTRCP',
+    # ----------
+    'OEF1X', 'OEF1', 'OEFIT',
+    'HOEF1', 'DOEF1',
+    'OEFITSTN',
+    # --------
+    # random
+
+    # properly labeled
+    'OESXRMS1', 'OESPSD1C', 'OESXNO1', 'OESXNO1C', 'OESXRM1C',
+    'OSTRMS1C', 'OSTPSD1C', 'OSTNO1C', 'OSTRRMS1',
+    'OEFATO1', 'OEFRMS1',  'OEFPSD1',  'OEFNO1', 'OEFCRM1',
+    'OESPSD1',
+    'OSTRNO1',
+    'OSTRPSD1',
+
+    #'OESRMS2', 'OESNO2',
+    'OESXRMS1',
+    'OUG1', 'OAG1',
+]
 SORT1_TABLES += [table_name.encode('latin1') for table_name in SORT1_TABLES]
 
 SORT2_TABLES = [
     'OUGPSD2', 'OUGATO2', 'OESCP',
+
+    'OES2', 'OES2C', 'OESVM2',
+    'OSTR2', 'OSTR2C', 'OSTRVM2',
+    'OEF2',
+
+    # random
+    'OEFATO2', 'OEFCRM2', 'OEFPSD2',
+    'OESATO2', 'OESCRM2', 'OESPSD2C', 'OESPSD2',
+    'OSTRATO2', 'OSTRCRM2', 'OSTPSD2C', 'OSTRPSD2',
     'OES2C', 'OSTR2C',
     'OFMPF2M', 'OLMPF2M', 'OPMPF2M', 'OSMPF2M', 'OGPMPF2M',
 ]
@@ -298,7 +326,7 @@ class Op2Codes:
             fmts = ('int32', 'int64')
         else:
             raise NotImplementedError(self.code_information())
-        index = self.size // 4 - 1  # factir is size/4 -> subtract 1
+        index = self.size // 4 - 1  # factor is size/4 -> subtract 1
         return fmts[index]
 
     def code_information(self, include_time: bool=True) -> str:
@@ -331,7 +359,11 @@ class Op2Codes:
                 stress_word = 'Stress'
             else:
                 stress_word = 'Strain'
-            s_word = get_scode_word(s_code, self.stress_bits)
+            try:
+                s_word = get_scode_word_assert(s_code, self.stress_bits)
+            except AssertionError:
+                s_word = get_scode_word(s_code, self.stress_bits)
+                s_word += ' (*assert)'
 
         element_type = None
         if hasattr(self, 'element_type'):
@@ -409,8 +441,9 @@ class Op2Codes:
         msg += (
             f'  sort_method   = {self.sort_method}\n'
             f'  sort_code     = {self.sort_code}\n'
+            f'    sort_bits   = {tuple(self.sort_bits)}\n'
         )
-        msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
+        #msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
         msg += "    data_format = %-3s %s\n" % (self.sort_bits[0], sort_word1)
         msg += "    sort_type   = %-3s %s\n" % (self.sort_bits[1], sort_word2)
         msg += "    is_random   = %-3s %s\n" % (self.sort_bits[2], sort_word3)

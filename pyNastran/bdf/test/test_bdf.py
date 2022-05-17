@@ -406,6 +406,7 @@ def run_and_compare_fems(
             return fem1, None, None
 
         ierror = 0
+        fem1.log.info('running fem2')
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
                         safe_xref=safe_xref,
                         encoding=encoding, debug=debug, quiet=quiet,
@@ -610,7 +611,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                           save_file_structure=save_file_structure)
             for card in crash_cards:
                 if card in fem1.card_count:
-                    raise DisabledCardError('card=%r has been disabled' % card)
+                    raise DisabledCardError(f'card={card!r} has been disabled')
             #fem1.geom_check(geom_check=True, xref=False)
             if not stop and not xref and run_skin_solids:
                 log.info('fem1-write_skin_solid_faces')
@@ -874,10 +875,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
 
         sol_200_map = fem2.case_control_deck.sol_200_map
         sol_base = fem2.sol
-        is_restart = False
-        for line in fem2.system_command_lines:
-            if line.strip().upper().startswith('RESTART'):
-                is_restart = True
+        is_restart = _has_restart(fem2)
         if not is_restart:
             ierror = validate_case_control(
                 fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
@@ -893,6 +891,13 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
     #fem2.write_as_ctria3(out_model_2)
     return fem2
 
+def _has_restart(fem: BDF):
+    is_restart = False
+    for line in fem.system_command_lines:
+        if line.strip().upper().startswith('RESTART'):
+            is_restart = True
+    return is_restart
+
 def _assert_has_spc(subcase, fem):
     """
     SPCs may be defined on SPC/SPC1 cards or may be defined on
@@ -907,14 +912,21 @@ def _assert_has_spc(subcase, fem):
                 break
         assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
 
-def validate_case_control(fem2: BDF, p0: Any, sol_base: int, subcase_keys: List[int],
-                          subcases: Any, unused_sol_200_map: Any,
-                          stop_on_failure: bool=True,
-                          ierror: int=0, nerrors: int=100) -> None:
-    for isubcase in subcase_keys[1:]:  # drop isubcase = 0
+def _validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: List[int],
+                           subcases: Any, unused_sol_200_map: Any,
+                           stop_on_failure: bool=True,
+                           ierror: int=0, nerrors: int=100) -> None:
+    if len(subcase_keys) > 1:
+        subcase_keys = subcase_keys[1:]  # drop isubcase = 0
+
+    for isubcase in subcase_keys:
         subcase = subcases[isubcase]
+        if len(subcase.params) == 0:
+            fem.log.error(f'Subcase {isubcase:d} is empty')
+            continue
         str(subcase)
-        assert sol_base is not None, sol_base
+        if sol_base is None:
+            raise RuntimeError('subcase: %s\n' % subcase)
         #print('case\n%s' % subcase)
         #if sol_base == 200:
             #analysis = subcase.get_parameter('ANALYSIS')[0]
@@ -925,7 +937,7 @@ def validate_case_control(fem2: BDF, p0: Any, sol_base: int, subcase_keys: List[
         #else:
             #sol = sol_base
         ierror = check_case(
-            sol_base, subcase, fem2, p0, isubcase, subcases,
+            sol_base, subcase, fem, p0, isubcase, subcases,
             ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
     return ierror
 

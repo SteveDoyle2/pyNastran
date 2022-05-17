@@ -24,7 +24,7 @@ Requirements/Packages:
 
 Programmatics:
  - supports Python 3.7-3.10
- - support for nptyping 1.1.1-2.0
+ - support for nptyping 1.1.1-2.0 (removed as a required dependency)
  - support for h5py 3.0
 
 overall:
@@ -92,14 +92,14 @@ f06 flutter:
 op2:
  - pathlib support
 op2 geom:
- - improved PARAM (PVT/PVT0 table) loading
- - PSOLID/FFLUID support
- - PSOLID isop=2 support
- - PCOMP ft (failure theory) HFAI, HTAP, HFAB support
- - skipping QVECT
- - fixed SPC bug (was double writing header)
- - fixed RBE2 bug (alpha vs. non alpha cases were flipped)
- - fixed BSET1/CSET1 (were flipped)
+ - PARAM: improved (PVT/PVT0 table) loading
+ - PSOLID: FFLUID support
+ - PSOLID: isop=2 support
+ - PCOMP: ft (failure theory) HFAI, HTAP, HFAB support
+ - QVECT: skipping
+ - SPC: fixed bug (was double writing header)
+ - RBE2: fixed bug (alpha vs. non alpha cases were flipped)
+ - BSET1/CSET1: fixed mixup (were flipped)
 gui:
  - fixed CELAS2 bug where nid2 is an SPOINT
 other:
