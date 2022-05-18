@@ -8,38 +8,21 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 
 Release Notes
 =============
-v1.5.0 (2022/?/?)
------------------
-bdf:
- - faster mass checks
-OP2:
-
-op2_geom:
- - adding DVTREL1, DMNCON, GROUP
- - params: MDLPRM  (unreleased)
-
-OP2 writer:
- - SET1
-gui:
- - adding nastran_to_vtk
-
-v1.4.0 (2021/8/??)
------------------
+v1.4.0 (2022/8/??)
+------------------
 Programmatics:
- - Supports Python 3.7-3.10
+ - Supports Python 3.8-3.10
  - much improved MSC 2020/2021 and OptiStruct support
  - GUI is compatible with PyQt5 and PySide2
  - support for latest numpy/h5py
+
 
 BDF:
  - new cards:
    - BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV, PCOMPLS, TABDMP1
  - convert:
-   - now supports A/acceleration, V/velocity
    - messages should be clearer (only the relevant conversions to your model are written)
  - mirror:
-   - now supports solid elements (they have to be inverted); double check your loads
-   - fixed bug where tolerance was ignored
    - adding punch flag
  - mass_properties:
    - CONM2 considers inertia
@@ -56,15 +39,11 @@ BDF:
    - ge_matrix support for MSC MAT2
    - added support for MSC 2021 PBUSH alpha, tref, coinl parameters
  - new features
-   - read_bdf now supports Path objects
    - added node now has a get_position_wrt_coord_ref method
    - aero panels now have a 'plot' method, which will plot aero subpanels and points
    - FLUTTER card initialization now has a validate option (default=False)
    - MPC now has dependent_dofs, independent_dofs, independent_nodes, dependent_nodes properties
  - fixing:
-   - fixed test_bdf bug that dropped the global subcase
-     - it's not used unless there are no local subcases
-   - deepcopying a card now supports comments
    - CAERO1, CAERO5, CAERO7 paneling bug (nodes and sub-elements should be defined chordwise)
    - adding more fields to add_* methods for CPLSTS*, CPLSTN*
    - better DEQATN python-builtin prevention (allows for executing Nastran equations)
@@ -75,12 +54,8 @@ BDF:
    - RBE3.get_field now works
    - better NLPARM checks
    - get_oml now clips the normal to [-1., -1.] to avoid out of bounds normal values
-   - CBAR/CBEAM: A(), I1(), I2(), I12() methods all return floats
-   - large field solid writing (forgot the *)
    - DVMREL2 support for MAT8
-   - PLOAD2 can have 6 eids (not 5)
    - PBUSH1D parsing is more lax
-   - test_bdf bug when subcase=0 was the only subcase
  - changes:
    - more use of warnings.warn instead of print when log doesn't exist
    - CONM2 positive semi-definite check is relaxed as it's the sum of masses on a node
@@ -119,12 +94,13 @@ OP2:
  - vectorized most op2 writing
  - bug fixes:
    - GPL bug
-   - PARAM reading is much more robust
    - improved regex support for including/excluding results
    - GPDT/S and BGPDT/S tables bugs fixed
    - fixes for composite strength ratios and failure indices
 
 OP2 Geom:
+ - adding DVTREL1, DMNCON, GROUP
+ - params: MDLPRM
  - now works when no subcases are included :)
  - added many aero (EDT) and optimization (EDOM) cards
  - 32/64-bit modern MSC support
@@ -132,9 +108,6 @@ OP2 Geom:
    - many cards changed (e.g., the CQUAD4) to simplify I/O
  - 64-bit NX support
  - improved:
-   - MSC PCOMP ft support
-   - MSC PSOLID fctn support
-   - PSOLID isop=2
    - DSCREEN support
    - much better CBAR/CBEAM offt flag 
  - dual cards:
@@ -156,18 +129,16 @@ OP2 Geom:
    - NLRSFD bug
    - SPLINE3 bug
    - PBUSH1D parsing bug (swapped equations for tables)
-   - BSET1 and CSET1 were flipped
 
 OP2 writer:
+ - SET1
  - adding AELINK, MONPNT1, MONPNT2, MONPNT3, MONDSP1, SET1, CAEROx
  - fixed: 64-bit ints before writing ids (to avoid improperly sized arrays)
  
-F06 Flutter Plotter:
- - supports --mach, --q, --alt on the x-axis
- - supports cm/s for velocities
 
 GUI:
  - nastran:
+   - adding nastran_to_vtk
    - transient/complex fringe only animations now supported
    - MOMENT card supported in gui
    - NX nonlinear solid element supported
@@ -187,6 +158,110 @@ GUI:
  - fixing:
    - fixed bug in gif writing for profile='0 to scale to -scale to 0'
    - better validation of floats
+
+v1.3.4 (2022/5/xx)
+------------------
+This is a bug fix release with the key reason being API dependency changes:
+ - numpy
+ - nptyping
+ - h5py
+Additional minor changes (e.g., support for CFAST/PFAST in bdf_convert) were
+added when fixing bugs.
+
+Requirements/Packages:
+ - adding support for vtk 9 (GUI)
+ - adding support for nptyping 1.1 (not 1.1.0)
+ - support for NX 2019.0, 2019.1
+
+Programmatics:
+ - supports Python 3.7-3.10
+ - support for nptyping 1.1.1-2.0
+ - support for h5py 3.0
+
+overall:
+ - typing
+ - spelling corrections
+ - cleaner setup.py files / packages.py
+
+BDF:
+ - bug fixes:
+   - renaming pyNastran/nptyping.py to pyNastran/nptyping_interface.py to avoid namespace conflicts
+   - require that nastran_format is a string
+   - FORCE2/MOMENT2: fixed g4 bug (can't be blank)
+   - FLUTTER: method can be string_or_blank (default='L')
+   - FLUTTER: fixing EAS sorting bug in make_flfacts_mach_sweep (mach should be sorted to give sorted EAS)
+   - MTRANS now supported for SOL 200 (vs only MTRAN; they're the same)
+   - SET1: (and more generally any card that has 1,THRU,10 or 1,THRU,10,BY,2) now supports blank values
+   - MATT1: g11_tid=0 update to None if it's 0
+   - MATT3: table_ids update to None if they're 0
+   - PARAM, DRESP1, DVCRELx now supports numpy int/floats
+   - PARAMs: better type checking
+   - PLOAD2: correcting number elements allowed
+   - PLOAD4: surf_or_line, line_load_dir set to blank when they're default (to fix NX issue)
+   - PBARL/PBEAML: I2 for BOX section
+   - PBARL: fixed I1 bug
+   - PBARL: I12 now returns I12 instead of [A, I1, I2, I12]
+   - AUTOSPC (from case control) now works in bdf_renumber
+   - BCTSET: fixing bug where defaults were mishandled (poor documentation in QRG)
+   - DEQATN: better builtin handling
+   - DMIG: better size/is_double handling
+   - large field solid writing (forgot the *)
+   - deepcopying a card now supports comments
+   - Subcase: add_op2_data supports OUG1F
+   - test_bdf: fixed bug when subcase=0 was the only subcase
+   - test_bdf: fixed bug that dropped the global subcase
+     - it's not used unless there are no local subcases
+ - added:
+   - pathlib support
+   - GRID: method get_position_wrt_coord_ref
+   - MAT11: adding get_density
+   - DVCRELx: CMASS/M and CELAS4/K options
+   - DCONSTR: support for FLUTTER/PK
+   - DRESP1: PBEAM/PBEAML, FATIGUE support
+   - DRESP2: now references DNODE
+   - DVMREL2: now supports MAT2, MAT8
+   - PCOMP/G: layers must now be the same
+   - PCOMP:  added get_material_ids(include_symmetry=True), get_thetas(include_symmetry=True), get_souts(include_symmetry=True) methods
+   - PCOMPG: added get_global_ply_ids(include_symmetry=True) in addition to PCOMP methods
+   - CAERO1/2: added aefact_ids property
+   - mesh_utils:
+     - get_oml:
+        - CTRIA6/CQUAD8/CQUAD support
+        - applying np.clip to get_oml (to account for cos out of range precision issues)
+     - collapse_bad_quads: now removes degenerate quads
+     - bdf_mirror:
+        - solid support
+        - correcting case where eid_offset isn't calculated
+        - fixed bug where tolerance was ignored
+     - bdf_convert now supports:
+        - CFAST/PFAST
+        - rho, area conversion
+f06 flutter:
+ - bug fixes:
+   - supporting any number modes
+   - correcting default for in/out_units (documentation error)
+ - added:
+   - subcases support
+   - vd_limit and damping_limit
+ - adding:
+   - repr
+   - mach, dynamic pressure, altitude plots
+op2:
+ - pathlib support
+op2 geom:
+ - improved PARAM (PVT/PVT0 table) loading
+ - PSOLID/FFLUID support
+ - PSOLID isop=2 support
+ - PCOMP ft (failure theory) HFAI, HTAP, HFAB support
+ - skipping QVECT
+ - fixed SPC bug (was double writing header)
+ - fixed RBE2 bug (alpha vs. non alpha cases were flipped)
+ - fixed BSET1/CSET1 (were flipped)
+gui:
+ - fixed CELAS2 bug where nid2 is an SPOINT
+other:
+ - format_converter now has defaults if you're using the functions
+ - atmosphere not supports velocity in cm/s
 
 v1.3.3 (2020/6/28)
 ------------------

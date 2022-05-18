@@ -2,7 +2,6 @@ import unittest
 
 import os
 import numpy as np
-from numpy import array, array_equal, sin, cos, radians
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, read_bdf, DMI, DMIG, fill_dmigs
@@ -64,7 +63,7 @@ class TestDMIG(unittest.TestCase):
         a_matrix = model.dmigs['REALS']
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-        self.assertTrue(array_equal(reals_expected, reals_actual))
+        self.assertTrue(np.allclose(reals_expected, reals_actual))
         a_matrix.get_matrix()
 
     def test_dmig_2(self):
@@ -84,7 +83,7 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
-        self.assertTrue(array_equal(real_expected, real_actual))
+        self.assertTrue(np.allclose(real_expected, real_actual))
         a_matrix.get_matrix()
 
         #model2 = BDF(debug=False)
@@ -114,8 +113,8 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
-        imag_expected = array(imag_expected_real) + array(imag_expected_imag)*1j
-        self.assertTrue(array_equal(imag_expected, imag_actual))
+        imag_expected = np.array(imag_expected_real) + np.array(imag_expected_imag)*1j
+        self.assertTrue(np.allclose(imag_expected, imag_actual))
         a_matrix.get_matrix()
         save_load_deck(model)
 
@@ -141,11 +140,11 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
-        imags_expected = array(imags_expected_real) + array(imags_expected_imag)*1j
+        imags_expected = np.array(imags_expected_real) + np.array(imags_expected_imag)*1j
         msg = '\n%s_actual\n%s\n\n----' % ('IMAGS', imags_actual)
         msg += '\n%s_expected\n%s\n----' % ('IMAGS', imags_expected)
         msg += '\n%s_delta\n%s\n----' % ('IMAGS', imags_actual-imags_expected)
-        self.assertTrue(array_equal(imags_expected, imags_actual), msg)
+        self.assertTrue(np.allclose(imags_expected, imags_actual), msg)
         a_matrix.get_matrix()
         save_load_deck(model)
 
@@ -157,7 +156,7 @@ class TestDMIG(unittest.TestCase):
 
         pole_actual, unused_rows_reversed, unused_cols_reversed = out
         #print("---pole_actual---\n", pole_actual)
-        mag_expected = array([
+        mag_expected = np.array([
             [1.0, 4.0, 5.0],
             [0.0, 2.0, 6.0],
             [0.0, 0.0, 3.0],
@@ -170,8 +169,8 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
-        A_expected = mag_expected * cos(radians(45))
-        B_expected = mag_expected * sin(radians(45))
+        A_expected = mag_expected * np.cos(np.radians(45))
+        B_expected = mag_expected * np.sin(np.radians(45))
         pole_expected = A_expected + B_expected * 1j
 
         np.set_printoptions(precision=20)
@@ -425,9 +424,9 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         w2gj_new = model.dmis['W2GJ']
         assert w2gj_new.shape == (1200, 1), w2gj_new.shape
 
-        assert array_equal(w2gj.GCi, w2gj_new.GCi)
-        assert array_equal(w2gj.GCj, w2gj_new.GCj)
-        assert array_equal(w2gj.Real, w2gj_new.Real)
+        assert np.allclose(w2gj.GCi, w2gj_new.GCi)
+        assert np.allclose(w2gj.GCj, w2gj_new.GCj)
+        assert np.allclose(w2gj.Real, w2gj_new.Real)
         os.remove('dmi.bdf')
         os.remove('dmi_out.bdf')
         save_load_deck(model2)
