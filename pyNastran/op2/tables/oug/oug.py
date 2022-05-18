@@ -445,7 +445,7 @@ class OUG(OP2Common):
             if table_name_bytes in [b'OUGV1', b'OUGV2',
                                     b'OUG1',
                                     b'BOUGV1',
-                                    b'OUPV1']:
+                                    b'OUPV1', b'OUG1F']:
                 # OUG1F - acoustic displacements?
                 #msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                 #raise AssertionError(msg)
@@ -533,7 +533,7 @@ class OUG(OP2Common):
                 self.subcase = self.case_control_deck.subcases[self.isubcase]
             self.subcase.add_op2_data(self.data_code, word, self.log)
 
-    def _read_oug_displacement(self, data, ndata, is_cid):
+    def _read_oug_displacement(self, data: bytes, ndata: int, is_cid: bool) -> int:
         """
         Table     Description
         -----     -----------
@@ -659,7 +659,7 @@ class OUG(OP2Common):
         table_code = 10
         """
         self._setup_op2_subcase('velocity')
-        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'OVG1']:
             assert self.thermal in [0, 1], self.code_information()
             result_name = 'velocities'
         elif self.table_name in [b'OUXY1', b'OUXY2']:

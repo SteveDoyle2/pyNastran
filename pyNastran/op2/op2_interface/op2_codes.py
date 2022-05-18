@@ -745,6 +745,15 @@ SCODE_MAP = {
     31: ('Coordinate Material - Strain Fiber von Mises', (1, 1, 1, 1, 1)),
 }
 
+def get_scode_word_assert(s_code: int, stress_bits: List[int]) -> str:
+    try:
+        s_word, stress_bits_expected = SCODE_MAP[s_code]
+        assert stress_bits == stress_bits_expected, f's_code={s_code} stress_bits={stress_bits} != {stress_bits_expected}'
+    except KeyError:
+        #s_word = 'Stress or Strain - UNDEFINED'
+        s_word = '???'
+    return s_word
+
 def get_scode_word(s_code: int, stress_bits: List[int]) -> str:
     try:
         s_word, stress_bits_expected = SCODE_MAP[s_code]

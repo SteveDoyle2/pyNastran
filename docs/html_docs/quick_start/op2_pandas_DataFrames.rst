@@ -4,7 +4,7 @@ Transient DataFrames in PyNastran
 
 The Jupyter notebook for this demo can be found in: -
 docs/quick_start/demo/op2_pandas_DataFrames.ipynb -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_DataFrames.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_pandas_DataFrames.ipynb
 
 We’ll use standard pyNastran methods to load a model. We’ll set ``build_dataframe=True`` to make pandas objects
 ---------------------------------------------------------------------------------------------------------------
