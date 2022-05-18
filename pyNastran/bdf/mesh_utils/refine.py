@@ -4,7 +4,7 @@ from typing import Dict
 
 import numpy as np
 from pyNastran.utils.numpy_utils import zip_strict
-from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4, GRID, CBAR #CTRIA6, CQUAD8,
+from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4, GRID, CBAR, CHEXA8 #CTRIA6, CQUAD8,
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model, BDF_FILETYPE
 
 
@@ -61,6 +61,13 @@ def refine_model(bdf_filename: BDF_FILETYPE, refinement_ratio: int=2) -> BDF:
                 eid, elem,
                 nid0, eid0,
                 nelements, nnodes_to_add_with_ends)
+        elif elem.type == 'CHEXA':
+            nid0, eid0, nelements = _refine_hexa(
+                model, all_nodes, xyz_cid0,
+                nodes, elements, edges_to_center,
+                eid, elem,
+                nid0, eid0,
+                nelements, nnodes_to_add_with_ends)
         elif elem.type == 'CBAR':
             n1, n2 = elem.nodes
             n3 = nid0
@@ -82,8 +89,8 @@ def refine_model(bdf_filename: BDF_FILETYPE, refinement_ratio: int=2) -> BDF:
             eid0 += 1
         #elif elem.type in {'CROD', 'CONROD', 'CTUBE', 'CBAR', 'CBEAM'}:
             #continue
-        elif elem.type == 'CHEXA':
-            continue
+        #elif elem.type == 'CHEXA':
+            #continue
         else:
             print(elem)
     #model.nodes = nodes
@@ -283,6 +290,135 @@ def _refine_quad(model: BDF,
     #break
     return nid0, eid0, nelements
 
+def _refine_hexa(model: BDF,
+                all_nodes, xyz_cid0,
+                nodes, elements, edges_to_center,
+                eid, elem,
+                nid0, eid0,
+                nelements, nnodes_to_add_with_ends):
+    n1i, n2i, n3i, n4i, n5i, n6i, n7i, n8i = elem.nodes
+    (in1, in2, in3, in4, in5, in6, in7, in8) = np.searchsorted(all_nodes, elem.nodes)
+    xyz1 = xyz_cid0[in1, :]
+    xyz2 = xyz_cid0[in2, :]
+    xyz3 = xyz_cid0[in3, :]
+    xyz4 = xyz_cid0[in4, :]
+
+    xyz5 = xyz_cid0[in5, :]
+    xyz6 = xyz_cid0[in6, :]
+    xyz7 = xyz_cid0[in7, :]
+    xyz8 = xyz_cid0[in8, :]
+
+    #centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+
+    edges = elem.get_edge_ids()
+    forward_edges = [
+        (n1i, n2i), (n2i, n3i), (n3i, n4i), (n4i, n1i),
+        (n5i, n6i), (n6i, n7i), (n7i, n8i), (n8i, n5i),
+        (n1i, n5i), (n2i, n6i), (n3i, n7i), (n4i, n8i),
+    ]
+    assert len(edges) == len(forward_edges), len(edges)
+    nids_array = np.zeros(
+        (nnodes_to_add_with_ends, nnodes_to_add_with_ends, nnodes_to_add_with_ends),
+        dtype='int32')
+    nids_array[0, 0, 0] = n1i
+    nids_array[-1, 0, 0] = n2i
+    nids_array[-1, -1, 0] = n3i
+    nids_array[0, -1, 0] = n4i
+
+    nids_array[0, 0, -1] = n5i
+    nids_array[-1, 0, -1] = n6i
+    nids_array[-1, -1, -1] = n7i
+    nids_array[0, -1, -1] = n8i
+
+    assert nids_array[0, 0, 0] == n1i
+    assert nids_array[-1, 0, 0] == n2i
+    assert nids_array[-1, -1, 0] == n3i
+    assert nids_array[0, -1, 0] == n4i
+    assert nids_array[0, 0, -1] == n5i
+    assert nids_array[-1, 0, -1] == n6i
+    assert nids_array[-1, -1, -1] == n7i
+    assert nids_array[0, -1, -1] == n8i
+
+    #if eid == 28286:
+        #debug = True
+        #x = 1
+
+    debug = False
+    if debug:
+        print('nids_array0:\n', nids_array)
+    nid0 = _insert_hexa_nodes(
+        nodes, nids_array, nid0,
+        edges, forward_edges, edges_to_center,
+        nnodes_to_add_with_ends,
+        xyz1, xyz2, xyz3, xyz4,
+        xyz5, xyz6, xyz7, xyz8,
+        debug=debug,
+    )
+    unids1 = np.unique([n1i, n2i, n3i, n4i, n5i, n6i, n7i, n8i])
+    assert len(unids1) == 8, unids1
+    assert nids_array[0, 0, 0] == n1i
+    assert nids_array[-1, 0, 0] == n2i
+    assert nids_array[-1, -1, 0] == n3i
+    assert nids_array[0, -1, 0] == n4i
+    assert nids_array[0, 0, -1] == n5i
+    assert nids_array[-1, 0, -1] == n6i
+    assert nids_array[-1, -1, -1] == n7i
+    assert nids_array[0, -1, -1] == n8i
+    #assert unids1 == unids2
+
+    nodes_hexas = _hexa_nids_to_node_ids(nids_array)
+
+    nelementsi = nodes_hexas.shape[0] - 1
+    eids = [eid] + [eid0 + i for i in range(nelementsi)]
+
+    debug = True
+    pid = elem.pid
+    for eidi, nidsi in zip_strict(eids, nodes_hexas):
+        if debug:
+            print('hexa', eidi, nidsi)
+        #elem1 = CHEXA(eidi, pid, nidsi, **args)
+        elem1 = CHEXA8(eidi, pid, nidsi, comment='')
+        #print(elem1)
+        elem1.validate()
+        elem1.cross_reference(model)
+        try:
+            elem1.Volume()
+        except:
+            print(elem1.nodes)
+            raise
+        elements[eidi] = elem1
+        nelements += 1
+    eid0 += nelementsi
+
+    #xyz5 = (xyz1 + xyz2) / 2.
+    #xyz6 = (xyz2 + xyz3) / 2.
+    #xyz7 = (xyz3 + xyz4) / 2.
+    #xyz8 = (xyz4 + xyz1) / 2.
+    #nodes.update({
+        #n5: GRID(n5, xyz5, cp=0, cd=0, ps='', seid=0, comment=''),
+        #n6: GRID(n6, xyz6, cp=0, cd=0, ps='', seid=0, comment=''),
+        #n7: GRID(n7, xyz7, cp=0, cd=0, ps='', seid=0, comment=''),
+        #n8: GRID(n8, xyz8, cp=0, cd=0, ps='', seid=0, comment=''),
+        #n9: GRID(n9, centroid, cp=0, cd=0, ps='', seid=0, comment=''),
+    #})
+    #nodes_new.extend([n5, n6, n7, n8, n9])
+    #xyz_new.extend([xyz5, xyz6, xyz7, xyz8, centroid])
+
+    #elem1.cross_reference(model)
+    #elem2.cross_reference(model)
+    #elem3.cross_reference(model)
+    #elem4.cross_reference(model)
+    #elem1.Normal()
+    #elem2.Normal()
+    #elem3.Normal()
+    #elem4.Normal()
+    #nid0 += 5
+    #del n1, n2, n3, n4, xyz1, xyz2, xyz3, xyz4
+    #print(list(elements.keys()))
+    assert len(elements) == nelements
+    #break
+    return nid0, eid0, nelements
+
 def _get_edge_to_center_nodes(model: BDF,
                               all_nodes: np.ndarray, xyz_cid0: np.ndarray,
                               nid0: int, nnodes_to_add: int, debug=False):
@@ -290,7 +426,7 @@ def _get_edge_to_center_nodes(model: BDF,
     edges_to_center = {}
     nodes = model.nodes
     for elem in model.elements.values():
-        if elem.type in {'CTRIA3', 'CQUAD4', 'CBAR'}:
+        if elem.type in {'CTRIA3', 'CQUAD4', 'CBAR', 'CHEXA'}:
             edges = elem.get_edge_ids()
             for edge in edges:
                 if edge in edges_to_center:
@@ -383,8 +519,11 @@ def _insert_tri_nodes(nodes: Dict[int, GRID],
 
 def _insert_quad_nodes(nodes: Dict[int, GRID],
                        nids_array, nid0: int,
-                       edges, forward_edges, edges_to_center, nnodes_to_add_with_ends: int,
-                       xyz1, xyz2, xyz3, xyz4, debug=False):
+                       edges, forward_edges,
+                       edges_to_center,
+                       nnodes_to_add_with_ends: int,
+                       xyz1, xyz2, xyz3, xyz4,
+                       debug=False):
     for i, edge, fwd_edge in zip(count(), edges, forward_edges):
         nids_center = edges_to_center[edge]
         if debug:
@@ -426,15 +565,15 @@ def _insert_quad_nodes(nodes: Dict[int, GRID],
             xi = np.linspace(0., 1., num=nnodes_to_add_with_ends, endpoint=True)#[1:-1]
             xj = np.linspace(0., 1., num=nnodes_to_add_with_ends, endpoint=True)#[1:-1]
 
+            xii_ = xi[i]
+            xjj_ = xj[j]
             # bilinear interpolation
-            for ii, jj in zip(i, j):
-                xii = xi[ii]
-                xjj = xj[jj]
+            for ii, jj, xii, xjj in zip(i, j, xii_, xjj_):
                 xyz12 = xyz1 * (1. - xii) + xyz2 * xii
                 xyz34 = xyz3 * (1. - xii) + xyz4 * xii
                 xyzc = xyz12 * (1. - xjj) + xyz34 * xjj
                 nodes[nid0] = GRID(nid0, xyzc)
-                nids_array[i, j] = nid0
+                nids_array[ii, jj] = nid0
                 nid0 += 1
         x = 1
 
@@ -449,14 +588,166 @@ def _insert_quad_nodes(nodes: Dict[int, GRID],
     unids2 = np.unique(new_corner_nids)
     assert len(unids2) == 4, unids2
     #print('nid0*** =', nid0)
+    assert len(np.unique(nids_array)) == nids_array.size
+    return nid0
+
+def _insert_hexa_nodes(nodes: Dict[int, GRID],
+                       nids_array, nid0: int,
+                       edges, forward_edges,
+                       edges_to_center,
+                       nnodes_to_add_with_ends: int,
+                       xyz1, xyz2, xyz3, xyz4,
+                       xyz5, xyz6, xyz7, xyz8,
+                       debug=False):
+    for i, edge, fwd_edge in zip(count(), edges, forward_edges):
+        nids_center = edges_to_center[edge]
+        if debug:
+            print('nids_center =', nids_center)
+        flag = ' '
+        if edge == fwd_edge:
+            nids_set = nids_center
+        else:
+            #flag = '*'
+            nids_set = list(nids_center)
+            nids_set.reverse()
+            if debug:
+                print('nids_set =', nids_set)
+        if i == 0:
+            nids_array[:, 0, 0] = nids_set # [1,2]
+        elif i == 1:
+            nids_array[-1, :, 0] = nids_set #[2,3]
+        elif i == 2:
+            nids_array[::-1, -1, 0] = nids_set #[3,4]
+        elif i == 3:
+            # this column is added in reverse
+            #nids_set = list(nids_set)
+            #nids_set.reverse()
+            nids_array[0, ::-1, 0] = nids_set #[4, 1]
+
+        elif i == 4:
+            nids_array[:, 0, -1] = nids_set
+        elif i == 5:
+            nids_array[-1, :, -1] = nids_set
+        elif i == 6:
+            nids_array[::-1, -1, -1] = nids_set
+        elif i == 7:
+            # this column is added in reverse
+            #nids_set = list(nids_set)
+            #nids_set.reverse()
+            nids_array[0, :, -1] = nids_set
+
+        # verticals
+        elif i == 8:
+            nids_array[0, 0, :] = nids_set
+        elif i == 9:
+            nids_array[-1, 0, :] = nids_set
+        elif i == 10:
+            nids_array[-1, -1, :] = nids_set
+        elif i == 11:
+            nids_array[0, -1, :] = nids_set
+        else:
+            raise NotImplementedError(i)
+
+        if debug:
+            print(f'{flag}i={i} nids={nids_set} edge={edge} fwd_edge={fwd_edge}')
+            print(nids_array)
+            print('---------')
+
+
+    #if nnodes_to_add_with_ends == 3 and 0:
+        ##nids_array[1, 1] = nid0
+        #xyzc = (xyz1 + xyz2 + xyz3 + xyz4 + xyz5 + xyz6 + xyz7 + xyz8) / 8.
+        #nodes[nid0] = GRID(nid0, xyzc)
+        #nid0 += 1
+    #else:
+    if nids_array.min() == 0:
+        i, j, k = np.where(nids_array == 0)
+        xarray = np.linspace(0., 1., num=nnodes_to_add_with_ends, endpoint=True)
+
+        xi = xarray[i]
+        xj = xarray[j]
+        xk = xarray[k]
+        # trilinear interpolation
+        for ii, jj, kk, xii, xjj, xkk in zip(i, j, k, xi, xj, xk):
+            xyz12 = xyz1 * (1. - xii) + xyz2 * xii
+            xyz43 = xyz4 * (1. - xii) + xyz3 * xii
+            xyz56 = xyz5 * (1. - xii) + xyz6 * xii
+            xyz87 = xyz8 * (1. - xii) + xyz7 * xii
+
+            xyz1234 = xyz12 * (1. - xjj) + xyz43 * xjj
+            xyz5678 = xyz56 * (1. - xjj) + xyz87 * xjj
+
+            xyz = xyz1234 * (1. - xkk) + xyz5678 * xkk
+            nodes[nid0] = GRID(nid0, xyz)
+            nids_array[ii, jj, kk] = nid0
+            print(f'ijk=({ii},{jj},{kk}) nid={nid0} xyz={xyz}')
+            nid0 += 1
+        x = 1
+
+    if debug:
+        print('nids_array1:\n', nids_array)
+    new_corner_nids = [
+        nids_array[0, 0, 0],
+        nids_array[0, -1, 0],
+        nids_array[-1, -1, 0],
+        nids_array[-1, 0, 0],
+
+        nids_array[0, 0, -1],
+        nids_array[0, -1, -1],
+        nids_array[-1, -1, -1],
+        nids_array[-1, 0, -1],
+    ]
+    unids2 = np.unique(new_corner_nids)
+    assert len(unids2) == 8, unids2
+    #print('nid0*** =', nid0)
+    assert nids_array.min() == 1, nids_array
+    assert len(np.unique(nids_array)) == nids_array.size
     return nid0
 
 def _quad_nids_to_node_ids(nids_array):
+    assert nids_array.min() == 1, nids_array
     n1 = nids_array[:-1, :-1].ravel()
     n2 = nids_array[:-1, 1:].ravel()
     n3 = nids_array[1:, 1:].ravel()
     n4 = nids_array[1:, :-1].ravel()
+
+    nnodes = len(n1)
+    nodes = np.stack([n1, n2, n3, n4], axis=1)
+    assert nodes.shape == (nnodes, 4), nodes.shape
+
+    nodes = np.zeros((nnodes, 4), dtype=nids_array.dtype)
+    nodes[:, 0] = n1
+    nodes[:, 1] = n2
+    nodes[:, 2] = n3
+    nodes[:, 3] = n4
     return n1, n2, n3, n4
+
+def _hexa_nids_to_node_ids(nids_array):
+    assert nids_array.min() == 1, nids_array
+    n1 = nids_array[:-1, :-1, :-1].ravel()
+    n2 = nids_array[1:, :-1,  :-1].ravel()
+    n3 = nids_array[1:, 1:,   :-1].ravel()
+    n4 = nids_array[:-1, 1:,  :-1].ravel()
+
+    n5 = nids_array[:-1, :-1, 1:].ravel() # good
+    n6 = nids_array[1:, :-1,  1:].ravel()
+    n7 = nids_array[1:, 1:,   1:].ravel() # good
+    n8 = nids_array[:-1, 1:,  1:].ravel()
+
+    nodes = np.stack([n1, n2, n3, n4, n5, n6, n7, n8], axis=1)
+    nnodes = len(n1)
+    assert nodes.shape == (nnodes, 8), nodes.shape
+    nodes = np.zeros((nnodes, 8), dtype=nids_array.dtype)
+    nodes[:, 0] = n1
+    nodes[:, 1] = n2
+    nodes[:, 2] = n3
+    nodes[:, 3] = n4
+
+    nodes[:, 4] = n5
+    nodes[:, 5] = n6
+    nodes[:, 6] = n7
+    nodes[:, 7] = n8
+    return nodes
 
 def test_insert_tri_nodes():
     #[[  10196 1206947   10184]
@@ -528,6 +819,53 @@ def test_quad_nids_to_node_ids():
     assert np.array_equal(n3, [9, 6, 7, 3]), n3
     assert np.array_equal(n4, [8, 9, 4, 7]), n4
 
+def test_hexa_nids_to_node_ids():
+    nids = np.array([
+        [
+            [ 1, 17,  5],
+            [ 9, 21, 13],
+            [ 2, 18,  6]],
+
+        [
+            [12, 22, 16],
+            [23, 24, 25],
+            [10, 26, 14]],
+
+        [
+            [ 4, 20,  8],
+            [11, 27, 15],
+            [ 3, 19,  7]]]
+    )
+    nodes = _hexa_nids_to_node_ids(nids)
+    n1 = nodes[:, 0]
+    n2 = nodes[:, 1]
+    n3 = nodes[:, 2]
+    n4 = nodes[:, 3]
+    n5 = nodes[:, 4]
+    n6 = nodes[:, 5]
+    n7 = nodes[:, 6]
+    n8 = nodes[:, 7]
+    un1 = np.unique(n1)
+    un2 = np.unique(n2)
+    un3 = np.unique(n3)
+    un4 = np.unique(n4)
+    un5 = np.unique(n5)
+    un6 = np.unique(n6)
+    un7 = np.unique(n7)
+    un8 = np.unique(n8)
+    assert np.array_equal(un1, np.unique([1, 9, 23, 12,
+                                          17, 22, 24, 21])), un1
+    assert np.array_equal(un2, np.unique([9, 2, 10, 23,
+                                          22, 18, 27, 24])), un2
+    assert np.array_equal(un3, np.unique([23, 10, 3, 11,
+                                          24, 27, 19, 26])), un3
+    assert np.array_equal(un4, np.unique([12, 23, 11, 4, 21, 24, 26, 20])), un4
+    #assert np.array_equal(n1, [1, 5, 8, 9]), n1
+    #assert np.array_equal(n2, [5, 2, 9, 6]), n2
+    #assert np.array_equal(n3, [9, 6, 7, 3]), n3
+    #assert np.array_equal(n4, [8, 9, 4, 7]), n4
+    x = 1
+
 def test_tri():
     import os
     import pyNastran
@@ -577,6 +915,37 @@ def test_quad():
     model.write_bdf(bdf_filename_out)
     model.validate()
     assert len(model.elements) == nquads * 4
+    model.cross_reference()
+    x = 1
+
+def test_hexa():
+    import os
+    import pyNastran
+    pkg_path = pyNastran.__path__[0]
+    model_path = os.path.join(pkg_path, '..', 'models')
+    bwb_path = os.path.join(model_path, 'bwb')
+    bdf_filename_out = os.path.join(bwb_path, 'hexa.bdf')
+
+    model = BDF()
+    model.add_grid(1, [0., 0., 0.])
+    model.add_grid(2, [1., 0., 0.])
+    model.add_grid(3, [1., 1., 0.])
+    model.add_grid(4, [0., 1., 0.])
+
+    model.add_grid(5, [0., 0., 1.])
+    model.add_grid(6, [1., 0., 1.])
+    model.add_grid(7, [1., 1., 1.])
+    model.add_grid(8, [0., 1., 1.])
+
+    model.add_chexa(1, 1, [1, 2, 3, 4, 5, 6, 7, 8])
+    model.add_psolid(1, 1)
+    model.add_mat1(1, 3.0e7, None, 0.3)
+    nhexas = len(model.elements)
+
+    model = refine_model(model, refinement_ratio=2)
+    model.write_bdf(bdf_filename_out)
+    model.validate()
+    assert len(model.elements) == nhexas * 8
     model.cross_reference()
     x = 1
 
@@ -646,6 +1015,8 @@ if __name__ == '__main__':
     #test_insert_tri_nodes()
     #test_tri()
     #test_quad()
-    test_split_quad2()
-    test_quad2()
-    test_refine()
+    #test_split_quad2()
+    #test_quad2()
+    #test_refine()
+    #test_hexa_nids_to_node_ids()
+    test_hexa()
