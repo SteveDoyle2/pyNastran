@@ -351,6 +351,7 @@ class CBARAO(BaseCard):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
 class CBAR(LineElement):
     """
     +-------+-----+-----+-----+-----+-----+-----+-----+------+

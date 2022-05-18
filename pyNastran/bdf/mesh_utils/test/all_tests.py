@@ -6,7 +6,7 @@ from pyNastran.bdf.mesh_utils.test.test_mesh_utils import TestMeshUtils, TestEqu
 from pyNastran.bdf.mesh_utils.test.test_renumber import TestRenumber
 from pyNastran.bdf.mesh_utils.test.test_remove_unused import TestRemoveUnused
 from pyNastran.bdf.mesh_utils.test.test_sum_loads import TestLoadSum
-
+from pyNastran.bdf.mesh_utils.test.test_refine import TestRefine
 
 if __name__ == "__main__":  # pragma: no cover
     import os
@@ -14,4 +14,3 @@ if __name__ == "__main__":  # pragma: no cover
     on_rtd = os.environ.get('READTHEDOCS', None)
     if on_rtd is None:
         unittest.main()
-
