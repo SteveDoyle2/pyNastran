@@ -161,6 +161,34 @@ class TestRefine(unittest.TestCase):
         model.cross_reference()
         x = 1
 
+    def test_quad_bar(self):
+        bdf_filename_out = os.path.join(DIRNAME, 'quad_bar.bdf')
+
+        model = BDF()
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, 1, [1, 2, 3, 4])
+        x = [0., 0., 1.]
+        g0 = None
+        model.add_cbar(2, 2, [1, 2], x, g0,
+                       offt='GGG', pa=0, pb=0, wa=None, wb=None, comment='', validate=False)
+        model.add_pbarl(2, 1, 'BAR', [0., 1.])
+        model.add_pshell(1, mid1=1, t=0.1)
+        model.add_mat1(1, 3.0e7, None, 0.3)
+
+        nquads = 1
+        nbars = 1
+
+        model = refine_model(model, refinement_ratio=2)
+        model.write_bdf(bdf_filename_out)
+        model.validate()
+        assert len(model.elements) == nbars * 2 + nquads * 4
+        assert len(model.nodes) == nquads * 9, len(model.nodes)
+        model.cross_reference()
+        x = 1
+
     def test_quad(self):
         bdf_filename_out = os.path.join(DIRNAME, 'quad.bdf')
 
@@ -205,6 +233,79 @@ class TestRefine(unittest.TestCase):
         model.validate()
         assert len(model.elements) == nhexas * 8
         model.cross_reference()
+        x = 1
+
+    def test_hexa_quad(self):
+        bdf_filename_out = os.path.join(DIRNAME, 'hexa_quad.bdf')
+
+        model = BDF()
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [1., 0., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [0., 1., 1.])
+        model.add_cquad4(2, 2, [4, 3, 2, 1])
+        model.add_pshell(2, mid1=1, t=0.1)
+
+        model.add_chexa(1, 1, [1, 2, 3, 4, 5, 6, 7, 8])
+        model.add_psolid(1, 1)
+        model.add_mat1(1, 3.0e7, None, 0.3)
+        nquads = 1
+        nhexas = 1
+        nelements = 4 * nquads + 8 * nhexas
+
+        nlayers = 3
+        nnodes_nlayers = 9
+        nnodes = nhexas * nlayers * nnodes_nlayers
+
+
+        model = refine_model(model, refinement_ratio=2)
+        model.write_bdf(bdf_filename_out)
+        model.validate()
+        assert len(model.elements) == nelements
+        assert len(model.nodes) == nnodes
+        model.cross_reference()
+
+        x = 1
+
+    def _test_tri_penta(self):
+        bdf_filename_out = os.path.join(DIRNAME, 'penta_tri.bdf')
+
+        model = BDF()
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+
+        model.add_grid(4, [0., 0., 1.])
+        model.add_grid(5, [1., 0., 1.])
+        model.add_grid(6, [1., 1., 1.])
+        model.add_ctria3(1, 1, [1, 2, 3])
+        model.add_pshell(1, mid1=1, t=0.1)
+
+        model.add_cpenta(2, 1, [1, 2, 3, 4, 5, 6])
+        model.add_psolid(2, 1)
+        model.add_mat1(1, 3.0e7, None, 0.3)
+        ntri = 1
+        npenta = 1
+        nelements = 6 * npenta + ntri
+
+        nlayers = 3
+        nnodes_nlayers = 6
+        nnodes = npenta * nlayers * nnodes_nlayers
+
+
+        model = refine_model(model, refinement_ratio=2)
+        model.write_bdf(bdf_filename_out)
+        model.validate()
+        assert len(model.elements) == npenta * 8
+        model.cross_reference()
+
+        assert len(model.elements) == nelements
+        assert len(model.nodes) == nnodes
         x = 1
 
     def test_hexa2(self):
@@ -275,6 +376,20 @@ class TestRefine(unittest.TestCase):
             [10, 14, 8],
             [4, 9, 3], ], dtype='int32')
         n1, n2, n3, n4 = _quad_nids_to_node_ids(nids_array)
+        x = 1
+
+
+    def _test_refine_bwb(self):
+        model_path = os.path.join(pkg_path, '..', 'models')
+        bwb_path = os.path.join(model_path, 'bwb')
+        bdf_filename = os.path.join(bwb_path, 'bwb_saero.bdf')
+        bdf_filename_out = os.path.join(bwb_path, 'bwb_saero_fine.bdf')
+
+        #bdf_filename = os.path.join(model_path, 'plate', 'plate.bdf')
+        model = refine_model(bdf_filename, refinement_ratio=2)
+        model.write_bdf(bdf_filename_out)
+        model.validate()
+        model.cross_reference()
         x = 1
 
 if __name__ == '__main__':

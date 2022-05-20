@@ -4,7 +4,7 @@ from typing import Tuple, Dict, Union
 
 import numpy as np
 from pyNastran.utils.numpy_utils import zip_strict
-from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4, GRID, CBAR, CHEXA8 #CTRIA6, CQUAD8,
+from pyNastran.bdf.bdf import BDF, CTRIA3, CQUAD4, GRID, CBAR, CHEXA8, CPENTA6 #CTRIA6, CQUAD8,
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model, BDF_FILETYPE
 
 
@@ -28,21 +28,20 @@ def refine_model(bdf_filename: BDF_FILETYPE, refinement_ratio: int=2,
 
     Handles:
      - nodal continuity across elements
-     - CTRIA3, CQUAD4, CHEXA8...
+     - CBAR, CTRIA3, CQUAD4, CHEXA8...
      - handles overlapping CQUAD4s (that share the same nodes)
      - handles rotated/flipped interface between elememts
        (e.g., CQUAD4/CQUAD4 or CQUAD4/CHEXA8)
 
     .. todo:: support refinement_ratio != 2...minor
-    .. todo:: doesn't support CPENTA6...major
-    .. todo:: doesn't support CPENTA6/CQUAD4 interface
-    .. todo:: doesn't support CPENTA6/CTRIA3 interface
+    .. todo:: doesn't support CPENTA6...high priority, not bad
+    .. todo:: doesn't support CPENTA6/CQUAD4 interface...high priority, not bad
+    .. todo:: doesn't support CPENTA6/CTRIA3 interface...high priority, not bad
 
-    .. todo:: doesn't support CTETRA4...minor
-    .. todo:: doesn't support CTETRA4/CTRIA3 interface...minor
+    .. todo:: doesn't support CTETRA4...low priority, not bad
+    .. todo:: doesn't support CTETRA4/CTRIA3 interface...low priority, not bad
 
-    .. warning:: doesn't handle overlapping solid elements...trivial
-    .. warning:: CBAR is a buyer beware...
+    .. warning:: doesn't handle overlapping solid elements...low priority, pain
     .. warning:: doesn't handle CBAR wa/wb
     .. warning:: probably doesn't handle CBAR orientation vector correctly
 
@@ -122,26 +121,39 @@ def refine_model(bdf_filename: BDF_FILETYPE, refinement_ratio: int=2,
                 eid, elem,
                 nid0, eid0,
                 nelements, nnodes_to_add_with_ends)
+        elif elem.type == 'CPENTA':
+            nid0, eid0, nelements = _refine_penta(
+                model, all_nodes, xyz_cid0,
+                nodes, elements,
+                edges_to_center, faces_to_center,
+                eid, elem,
+                nid0, eid0,
+                nelements, nnodes_to_add_with_ends)
         elif elem.type == 'CBAR':
             n1, n2 = elem.nodes
-            n3 = nid0
-            (in1, in2) = np.searchsorted(all_nodes, elem.nodes)
-            xyz1 = xyz_cid0[in1, :]
-            xyz2 = xyz_cid0[in2, :]
+            #n3 = nid0
+            #(in1, in2) = np.searchsorted(all_nodes, elem.nodes)
+            #xyz1 = xyz_cid0[in1, :]
+            #xyz2 = xyz_cid0[in2, :]
 
-            # TODO: has a bug because we're not using edge_to_center
-            centroid = (xyz1 + xyz2) / 2.
-            nodes.update({
-                n3: GRID(n3, centroid, cp=0, cd=0, ps='', seid=0, comment=''),
-            })
+            edge = elem.get_edge_ids()[0]
+            nodes = edges_to_center[edge]
+            assert len(nodes) == 3, nodes
+            forward_edge = (n1, n2)
+            if edge == forward_edge:
+                n3 = nodes[1]
+            else:
+                n3 = nodes[1]
+
+            assert n3 in model.nodes, n3
             elem1 = CBAR(eid, elem.pid, [n1, n3], elem.x, elem.g0,
-                         pa=elem.pa, wa=elem.wa, wb=None, offt=elem.offt, comment=elem.comment)
+                         pa=elem.pa, wa=elem.wa, wb=None, offt=elem.offt,
+                         comment=elem.comment)
             elem2 = CBAR(eid0, elem.pid, [n3, n2], elem.x, elem.g0,
                          pb=elem.pb, wa=None, wb=elem.wb, offt=elem.offt)
             elements.update({
                 elem1.eid: elem1,
                 elem2.eid: elem2})
-            nid0 += 1
             eid0 += 1
         #elif elem.type in {'CROD', 'CONROD', 'CTUBE', 'CBAR', 'CBEAM'}:
             #continue
@@ -236,11 +248,7 @@ def _refine_tri(model: BDF,
     elem2.Normal()
     elem3.Normal()
     elem4.Normal()
-    #xyz_new.extend([xyz4, xyz5, xyz6])
-    #nodes_new.extend([n4, n5, n6])
-    #nid0 += 3
     eid0 += 3
-    del n1i, n2i, n3i, n4i, n5i, n6i, xyz1, xyz2, xyz3 #, centroid
     assert len(elements) == nelements
     return nid0, eid0, nelements
 
@@ -345,11 +353,7 @@ def _refine_quad(model: BDF,
     #elem2.Normal()
     #elem3.Normal()
     #elem4.Normal()
-    #nid0 += 5
-    #del n1, n2, n3, n4, xyz1, xyz2, xyz3, xyz4
-    #print(list(elements.keys()))
     assert len(elements) == nelements
-    #break
     return nid0, eid0, nelements
 
 def _refine_hexa(model: BDF,
@@ -402,10 +406,6 @@ def _refine_hexa(model: BDF,
     assert nids_array[-1, -1, -1] == n7i
     assert nids_array[0, -1, -1] == n8i
 
-    #if eid == 28286:
-        #debug = True
-        #x = 1
-
     debug = False
     if debug:
         print('nids_array0:\n', nids_array)
@@ -441,7 +441,6 @@ def _refine_hexa(model: BDF,
     for eidi, nidsi in zip_strict(eids, nodes_hexas):
         if debug:
             print('hexa', eidi, nidsi)
-        #elem1 = CHEXA(eidi, pid, nidsi, **args)
         elem1 = CHEXA8(eidi, pid, nidsi, comment='')
         #print(elem1)
         elem1.validate()
@@ -477,11 +476,124 @@ def _refine_hexa(model: BDF,
     #elem2.Normal()
     #elem3.Normal()
     #elem4.Normal()
-    #nid0 += 5
-    #del n1, n2, n3, n4, xyz1, xyz2, xyz3, xyz4
     #print(list(elements.keys()))
     assert len(elements) == nelements
-    #break
+    return nid0, eid0, nelements
+
+def _refine_penta(model: BDF,
+                  all_nodes, xyz_cid0,
+                  nodes, elements,
+                  edges_to_center, faces_to_center,
+                  eid, elem,
+                  nid0, eid0,
+                  nelements, nnodes_to_add_with_ends):
+    n1i, n2i, n3i, n4i, n5i, n6i = elem.nodes
+    (in1, in2, in3, in4, in5, in6) = np.searchsorted(all_nodes, elem.nodes)
+    xyz1 = xyz_cid0[in1, :]
+    xyz2 = xyz_cid0[in2, :]
+    xyz3 = xyz_cid0[in3, :]
+    xyz4 = xyz_cid0[in4, :]
+
+    xyz5 = xyz_cid0[in5, :]
+    xyz6 = xyz_cid0[in6, :]
+
+
+    edges = elem.get_edge_ids()
+    forward_edges = [
+        (n1i, n2i), (n2i, n3i), (n3i, n1i),
+        (n4i, n5i), (n5i, n6i), (n6i, n1i),
+        (n1i, n4i), (n2i, n5i), (n3i, n6i),
+    ]
+    assert len(edges) == len(forward_edges), len(edges)
+    nids_array = np.zeros(
+        (nnodes_to_add_with_ends, nnodes_to_add_with_ends, nnodes_to_add_with_ends),
+        dtype='int32')
+    nids_array[0, 0, 0] = n1i
+    nids_array[-1, 0, 0] = n2i
+    nids_array[-1, -1, 0] = n3i
+
+    nids_array[0, 0, -1] = n4i
+    nids_array[-1, 0, -1] = n5i
+    nids_array[-1, -1, -1] = n6i
+
+    assert nids_array[0, 0, 0] == n1i
+    assert nids_array[-1, 0, 0] == n2i
+    assert nids_array[-1, -1, 0] == n3i
+
+    assert nids_array[0, 0, -1] == n4i
+    assert nids_array[-1, 0, -1] == n5i
+    assert nids_array[-1, -1, -1] == n6i
+
+    debug = False
+    if debug:
+        print('nids_array0:\n', nids_array)
+    faces = penta_get_sorted_faces(elem)
+    nid0 = _insert_penta_nodes(
+        nodes, nids_array, nid0,
+        edges, forward_edges,
+        edges_to_center, faces_to_center, faces,
+        nnodes_to_add_with_ends,
+        xyz1, xyz2, xyz3,
+        xyz4, xyz5, xyz6,
+        debug=debug,
+    )
+    unids1 = np.unique([n1i, n2i, n3i, n4i, n5i, n6i])
+    assert len(unids1) == 6, unids1
+    assert nids_array[0, 0, 0] == n1i
+    assert nids_array[-1, 0, 0] == n2i
+    assert nids_array[-1, -1, 0] == n3i
+
+    assert nids_array[0, 0, -1] == n4i
+    assert nids_array[-1, 0, -1] == n5i
+    assert nids_array[-1, -1, -1] == n6i
+    #assert unids1 == unids2
+
+    nodes_hexas = _penta_nids_to_node_ids(nids_array)
+
+    nelementsi = nodes_hexas.shape[0] - 1
+    eids = [eid] + [eid0 + i for i in range(nelementsi)]
+
+    debug = False
+    pid = elem.pid
+    for eidi, nidsi in zip_strict(eids, nodes_hexas):
+        if debug:
+            print('penta', eidi, nidsi)
+        elem1 = CPENTA6(eidi, pid, nidsi, comment='')
+        #print(elem1)
+        elem1.validate()
+        elem1.cross_reference(model)
+        try:
+            elem1.Volume()
+        except:
+            print(elem1.nodes)
+            raise
+        elements[eidi] = elem1
+        nelements += 1
+    eid0 += nelementsi
+
+    #xyz5 = (xyz1 + xyz2) / 2.
+    #xyz6 = (xyz2 + xyz3) / 2.
+    #xyz7 = (xyz3 + xyz4) / 2.
+    #xyz8 = (xyz4 + xyz1) / 2.
+    #nodes.update({
+        #n5: GRID(n5, xyz5, cp=0, cd=0, ps='', seid=0, comment=''),
+        #n6: GRID(n6, xyz6, cp=0, cd=0, ps='', seid=0, comment=''),
+        #n7: GRID(n7, xyz7, cp=0, cd=0, ps='', seid=0, comment=''),
+        #n8: GRID(n8, xyz8, cp=0, cd=0, ps='', seid=0, comment=''),
+        #n9: GRID(n9, centroid, cp=0, cd=0, ps='', seid=0, comment=''),
+    #})
+    #nodes_new.extend([n5, n6, n7, n8, n9])
+    #xyz_new.extend([xyz5, xyz6, xyz7, xyz8, centroid])
+
+    #elem1.cross_reference(model)
+    #elem2.cross_reference(model)
+    #elem3.cross_reference(model)
+    #elem4.cross_reference(model)
+    #elem1.Normal()
+    #elem2.Normal()
+    #elem3.Normal()
+    #elem4.Normal()
+    assert len(elements) == nelements
     return nid0, eid0, nelements
 
 def _extract_edges(edges_to_center,
@@ -549,83 +661,145 @@ def _setup_refine(model: BDF,
     for elem in model.elements.values():
         ## TODO: handle CTRIA3/CPENTA6 interface
 
-        if elem.type in {'CQUAD4'}:
-            xi = np.linspace(0., 1., num=nnodes_to_add_with_ends, endpoint=True)[1:-1]
-            xj = np.linspace(0., 1., num=nnodes_to_add_with_ends, endpoint=True)[1:-1]
-            face0 = elem.nodes
-            face = _sort_face(face0)
-            if face in faces_to_center:
-                continue
+        xarray = np.linspace(0., 1., num=nnodes_to_add_with_ends, endpoint=True)
 
-            nodes_list = []
-            (in1, in2, in3, in4) = np.searchsorted(all_nodes, elem.nodes)
-            xyz1 = xyz_cid0[in1, :]
-            xyz2 = xyz_cid0[in2, :]
-            xyz3 = xyz_cid0[in3, :]
-            xyz4 = xyz_cid0[in4, :]
-            for xii, xjj in zip(xi, xj):
-                xyz12 = xyz1 * (1. - xii) + xyz2 * xii
-                xyz34 = xyz3 * (1. - xii) + xyz4 * xii # TODO: probably backwards
-                xyzc = xyz12 * (1. - xjj) + xyz34 * xjj
-                nodes[nid0] = GRID(nid0, xyzc)
-                nodes_list.append(nid0)
-                nid0 += 1
-            faces_to_center[face] = nodes_list
-            if debug:
-                print(f'*adding face={face} nodes={nodes_list}')
+        if elem.type in {'CQUAD4'}:
+            nid0 = _setup_quad_face(
+                nodes, all_nodes, xyz_cid0,
+                elem, xarray, faces_to_center, nid0,
+                debug=debug)
 
         elif elem.type in {'CHEXA'}:
-            #faces = elem.get_sorted_faces()
-            xarray = np.linspace(0., 1., num=nnodes_to_add_with_ends, endpoint=True)
-            faces = hexa_get_sorted_faces(elem)
+            nid0 = _setup_hexa_faces(
+                nodes, all_nodes, xyz_cid0,
+                elem, xarray, faces_to_center, nid0,
+                debug=debug)
 
-            #(in1, in2, in3, in4,
-             #in5, in6, in7, in8) = np.searchsorted(all_nodes, elem.nodes)
-            #xyz1 = xyz_cid0[in1, :]
-            #xyz2 = xyz_cid0[in2, :]
-            #xyz3 = xyz_cid0[in3, :]
-            #xyz4 = xyz_cid0[in4, :]
-
-            #xyz5 = xyz_cid0[in5, :]
-            #xyz6 = xyz_cid0[in6, :]
-            #xyz7 = xyz_cid0[in7, :]
-            #xyz8 = xyz_cid0[in8, :]
-
-            for face in faces:
-                if face in faces_to_center:
-                    continue
-                nodes_list = []
-                (in1, in2, in3, in4) = np.searchsorted(all_nodes, face)
-                xyz1 = xyz_cid0[in1, :]
-                xyz2 = xyz_cid0[in2, :]
-                xyz3 = xyz_cid0[in3, :]
-                xyz4 = xyz_cid0[in4, :]
-
-                for xi in xarray:
-                    xyz12 = xyz1 * (1. - xi) + xyz2 * xi
-                    xyz43 = xyz4 * (1. - xi) + xyz3 * xi
-                    for xj in xarray:
-                        if xi in {0., 1.} or xj in {0., 1.}:
-                            # or because it's 2d
-                            # and edges have been handled
-                            continue
-                        xyz = xyz12 * (1. - xj) + xyz43 * xj
-
-                        if debug:
-                            print(xi, xj, xyz)
-                        nodes[nid0] = GRID(nid0, xyz)
-                        nodes_list.append(nid0)
-                        nid0 += 1
-                if debug:
-                    print(f'face={face} nodes_list={nodes_list}')
-                faces_to_center[face] = nodes_list
-                # end of face
-            # end of faces
         elif elem.type in elements_skip:
             continue
         else:
             log.warning(elem.rstrip())
     return nid0, edges_to_center, faces_to_center
+
+def _setup_quad_face(nodes, all_nodes, xyz_cid0,
+                     elem: CQUAD4, xarray, faces_to_center,
+                     nid0: int, debug: bool=False) -> int:
+    xi = xarray[1:-1]
+    xj = xarray[1:-1]
+    face0 = elem.nodes
+    face = _sort_face(face0)
+    if face in faces_to_center:
+        return nid0
+
+    nodes_list = []
+    (in1, in2, in3, in4) = np.searchsorted(all_nodes, elem.nodes)
+    xyz1 = xyz_cid0[in1, :]
+    xyz2 = xyz_cid0[in2, :]
+    xyz3 = xyz_cid0[in3, :]
+    xyz4 = xyz_cid0[in4, :]
+    for xii, xjj in zip(xi, xj):
+        xyz12 = xyz1 * (1. - xii) + xyz2 * xii
+        xyz34 = xyz3 * (1. - xii) + xyz4 * xii # TODO: probably backwards
+        xyzc = xyz12 * (1. - xjj) + xyz34 * xjj
+        nodes[nid0] = GRID(nid0, xyzc)
+        nodes_list.append(nid0)
+        nid0 += 1
+    faces_to_center[face] = nodes_list
+    if debug:
+        print(f'*adding face={face} nodes={nodes_list}')
+    return nid0
+
+def _setup_hexa_faces(nodes, all_nodes, xyz_cid0,
+                      elem: CHEXA8, xarray, faces_to_center,
+                      nid0: int, debug: bool=False) -> int:
+    #faces = elem.get_sorted_faces()
+    faces = hexa_get_sorted_faces(elem)
+
+    #(in1, in2, in3, in4,
+     #in5, in6, in7, in8) = np.searchsorted(all_nodes, elem.nodes)
+    #xyz1 = xyz_cid0[in1, :]
+    #xyz2 = xyz_cid0[in2, :]
+    #xyz3 = xyz_cid0[in3, :]
+    #xyz4 = xyz_cid0[in4, :]
+
+    #xyz5 = xyz_cid0[in5, :]
+    #xyz6 = xyz_cid0[in6, :]
+    #xyz7 = xyz_cid0[in7, :]
+    #xyz8 = xyz_cid0[in8, :]
+
+    for face in faces:
+        if face in faces_to_center:
+            continue
+        nodes_list = []
+        (in1, in2, in3, in4) = np.searchsorted(all_nodes, face)
+        xyz1 = xyz_cid0[in1, :]
+        xyz2 = xyz_cid0[in2, :]
+        xyz3 = xyz_cid0[in3, :]
+        xyz4 = xyz_cid0[in4, :]
+
+        for xi in xarray:
+            xyz12 = xyz1 * (1. - xi) + xyz2 * xi
+            xyz43 = xyz4 * (1. - xi) + xyz3 * xi
+            for xj in xarray:
+                if xi in {0., 1.} or xj in {0., 1.}:
+                    # or because it's 2d
+                    # and edges have been handled
+                    continue
+
+                # (xi=0.5, xj=0.5), (xi=0.25, xj=0.5)
+                xyz = xyz12 * (1. - xj) + xyz43 * xj
+
+                if debug:
+                    print(xi, xj, xyz)
+                nodes[nid0] = GRID(nid0, xyz)
+                nodes_list.append(nid0)
+                nid0 += 1
+        if debug:
+            print(f'face={face} nodes_list={nodes_list}')
+        faces_to_center[face] = nodes_list
+        # end of face
+    # end of faces
+    return nid0
+
+def _setup_penta_faces(nodes, all_nodes, xyz_cid0,
+                       elem: CPENTA6, xarray, faces_to_center,
+                       nid0: int, debug: bool=False) -> int:
+    #faces = elem.get_sorted_faces()
+    faces = penta_get_sorted_faces(elem)
+
+    for face in faces:
+        if face in faces_to_center:
+            continue
+        if len(face) == 3:
+            continue
+        nodes_list = []
+        (in1, in2, in3, in4) = np.searchsorted(all_nodes, face)
+        xyz1 = xyz_cid0[in1, :]
+        xyz2 = xyz_cid0[in2, :]
+        xyz3 = xyz_cid0[in3, :]
+        xyz4 = xyz_cid0[in4, :]
+
+        for xi in xarray:
+            xyz12 = xyz1 * (1. - xi) + xyz2 * xi
+            xyz43 = xyz4 * (1. - xi) + xyz3 * xi
+            for xj in xarray:
+                if xi in {0., 1.} or xj in {0., 1.}:
+                    # or because it's 2d
+                    # and edges have been handled
+                    continue
+                xyz = xyz12 * (1. - xj) + xyz43 * xj
+
+                if debug:
+                    print(xi, xj, xyz)
+                nodes[nid0] = GRID(nid0, xyz)
+                nodes_list.append(nid0)
+                nid0 += 1
+        if debug:
+            print(f'face={face} nodes_list={nodes_list}')
+        faces_to_center[face] = nodes_list
+        # end of face
+    # end of faces
+    return nid0
 
 def hexa_get_sorted_faces(elem: CHEXA8):
     (n1, n2, n3, n4, n5, n6, n7, n8) = elem.nodes
@@ -641,6 +815,24 @@ def hexa_get_sorted_faces(elem: CHEXA8):
         # left/right
         [n1, n4, n8, n5],
         [n2, n3, n7, n6],
+    ]
+    sorted_faces = []
+    for face in faces:
+        face2 = _sort_face(face)
+        sorted_faces.append(face2)
+    return sorted_faces
+
+def penta_get_sorted_faces(elem: CPENTA6):
+    (n1, n2, n3, n4, n5, n6) = elem.nodes
+    faces = [
+        # top/btm
+        [n1, n2, n3],
+        [n4, n5, n6],
+
+        # 3 sides
+        [n1, n3, n6, n4],
+        [n2, n3, n6, n5],
+        [n1, n2, n5, n4],
     ]
     sorted_faces = []
     for face in faces:
@@ -966,6 +1158,158 @@ def _insert_hexa_nodes(nodes: Dict[int, GRID],
     assert len(np.unique(nids_array)) == nids_array.size
     return nid0
 
+def _insert_penta_nodes(nodes: Dict[int, GRID],
+                        nids_array, nid0: int,
+                        edges, forward_edges,
+                        edges_to_center,
+                        faces_to_center, faces,
+                        nnodes_to_add_with_ends: int,
+                        xyz1, xyz2, xyz3,
+                        xyz4, xyz5, xyz6,
+                        debug=False):
+
+    # apply edges_to_center
+    for i, edge, fwd_edge in zip(count(), edges, forward_edges):
+        nids_center = edges_to_center[edge]
+        if debug:
+            print('nids_center =', nids_center)
+        flag = ' '
+        if edge == fwd_edge:
+            nids_set = nids_center
+        else:
+            #flag = '*'
+            nids_set = list(nids_center)
+            nids_set.reverse()
+            if debug:
+                print('nids_set =', nids_set)
+        if i == 0:
+            asdf
+            nids_array[:, 0, 0] = nids_set # [1,2]
+        elif i == 1:
+            nids_array[-1, :, 0] = nids_set #[2,3]
+        elif i == 2:
+            nids_array[::-1, -1, 0] = nids_set #[3,4]
+        elif i == 3:
+            # this column is added in reverse
+            #nids_set = list(nids_set)
+            #nids_set.reverse()
+            nids_array[0, ::-1, 0] = nids_set #[4, 1]
+
+        elif i == 4:
+            nids_array[:, 0, -1] = nids_set
+        elif i == 5:
+            nids_array[-1, :, -1] = nids_set
+        elif i == 6:
+            nids_array[::-1, -1, -1] = nids_set
+        elif i == 7:
+            # this column is added in reverse
+            #nids_set = list(nids_set)
+            #nids_set.reverse()
+            nids_array[0, :, -1] = nids_set
+
+        # verticals
+        elif i == 8:
+            nids_array[0, 0, :] = nids_set
+        elif i == 9:
+            nids_array[-1, 0, :] = nids_set
+        elif i == 10:
+            nids_array[-1, -1, :] = nids_set
+        elif i == 11:
+            nids_array[0, -1, :] = nids_set
+        else:
+            raise NotImplementedError(i)
+
+        if debug:
+            print(f'{flag}i={i} nids={nids_set} edge={edge} fwd_edge={fwd_edge}')
+            print(nids_array)
+            print('---------')
+
+
+    if nnodes_to_add_with_ends == 3:
+        # apply faces_to_center
+        for i, face in enumerate(faces):
+            # bottom/top
+            # left/right
+            # front/back
+            center_nids = faces_to_center[face] # length=1
+            assert len(center_nids) == 1, center_nids
+            center_nid = center_nids[0]
+            if i == 0:
+                asdf
+                plane = nids_array[:, :, 0]
+            elif i == 1:
+                plane = nids_array[:, :, -1]
+            elif i == 2:
+                plane = nids_array[:, 0, :]
+            elif i == 4:
+                plane = nids_array[0, :, :]
+            else:
+                raise NotImplementedError(i)
+            plane[1, 1] = center_nid
+
+    else:
+        raise NotImplementedError(nnodes_to_add_with_ends)
+
+    if nnodes_to_add_with_ends == 3:
+        #nids_array[1, 1] = nid0
+        xyzc = (xyz1 + xyz2 + xyz3 + xyz4 + xyz5 + xyz6) / 6.
+        nodes[nid0] = GRID(nid0, xyzc)
+        nid0 += 1
+
+    #else:
+    if nids_array.min() == 0:
+        i, j, k = np.where(nids_array == 0)
+        xarray = np.linspace(0., 1., num=nnodes_to_add_with_ends, endpoint=True)
+
+
+
+        xi = xarray[i]
+        xj = xarray[j]
+        xk = xarray[k]
+        # trilinear interpolation
+
+        #https://en.wikipedia.org/wiki/Barycentric_coordinate_system
+        # in 2d plane
+        x1, y1, z1 = xyz1
+        x2, y2, z2 = xyz2
+        x3, y3, z3 = xyz3
+        #denom = (y2-y3) * (x1-x3) + (x3-x2) * (y1-y3)
+        #m1 = ((y2-y3) * (x-x3) + (x3-x2) * (y-y3)) / denom
+        #m2 = ((y3-y1) * (x-x3) + (x1-x3) * (y-y3)) / denom
+        #m3 = 1- m1 - m2
+
+        for ii, jj, kk, xii, xjj, xkk in zip(i, j, k, xi, xj, xk):
+            xyz12 = xyz1 * (1. - xii) + xyz2 * xii
+            xyz43 = xyz4 * (1. - xii) + xyz3 * xii
+            xyz56 = xyz5 * (1. - xii) + xyz6 * xii
+            xyz1234 = xyz12 * (1. - xjj) + xyz43 * xjj
+            xyz5678 = xyz56 * (1. - xjj) + xyz87 * xjj
+
+            xyz = xyz1234 * (1. - xkk) + xyz5678 * xkk
+            nodes[nid0] = GRID(nid0, xyz)
+            nids_array[ii, jj, kk] = nid0
+            if debug:
+                print(f'ijk=({ii},{jj},{kk}) nid={nid0} xyz={xyz}')
+            nid0 += 1
+
+    if debug:
+        print('nids_array1:\n', nids_array)
+    new_corner_nids = [
+        nids_array[0, 0, 0],
+        nids_array[0, -1, 0],
+        nids_array[-1, -1, 0],
+
+        nids_array[0, 0, -1],
+        nids_array[0, -1, -1],
+        nids_array[-1, -1, -1],
+    ]
+    unids2 = np.unique(new_corner_nids)
+    assert len(unids2) == 8, unids2
+    #print('nid0*** =', nid0)
+    assert nids_array.min() >= 1, nids_array
+    assert len(np.unique(nids_array)) == nids_array.size
+    return nid0
+
 def _quad_nids_to_node_ids(nids_array):
     assert nids_array.min() >= 1, nids_array
     n1 = nids_array[:-1, :-1].ravel()
@@ -1011,29 +1355,29 @@ def _hexa_nids_to_node_ids(nids_array):
     nodes[:, 7] = n8
     return nodes
 
-def test_refine():
-    import os
-    import pyNastran
-    pkg_path = pyNastran.__path__[0]
-    model_path = os.path.join(pkg_path, '..', 'models')
-    bwb_path = os.path.join(model_path, 'bwb')
-    bdf_filename = os.path.join(bwb_path, 'bwb_saero.bdf')
-    bdf_filename_out = os.path.join(bwb_path, 'bwb_saero_fine.bdf')
+def _penta_nids_to_node_ids(nids_array):
+    assert nids_array.min() >= 1, nids_array
+    n1 = nids_array[:-1, :-1, :-1].ravel()
+    n2 = nids_array[1:, :-1,  :-1].ravel()
+    n3 = nids_array[1:, 1:,   :-1].ravel()
 
-    #bdf_filename = os.path.join(model_path, 'plate', 'plate.bdf')
-    #model = BDF()
-    #model.add_grid(1, [0., 0., 0.])
-    #model.add_grid(2, [1., 0., 0.])
-    #model.add_grid(3, [1., 1., 0.])
-    #model.add_grid(4, [0., 1., 0.])
-    #model.add_cquad4(1, 1, [1, 2, 3, 4])
-    #model.add_pshell(1, mid1=1, t=0.1)
-    #model.add_mat1(1, 3.0e7, None, 0.3)
-    model = refine_model(bdf_filename, refinement_ratio=2)
-    model.write_bdf(bdf_filename_out)
-    model.validate()
-    model.cross_reference()
-    x = 1
+    n4 = nids_array[:-1, :-1, 1:].ravel()
+    n5 = nids_array[1:, :-1,  1:].ravel()
+    n6 = nids_array[1:, 1:,   1:].ravel()
 
-if __name__ == '__main__':
-    test_refine()
+    nodes = np.stack([n1, n2, n3, n4, n5, n6], axis=1)
+    nnodes = len(n1)
+    assert nodes.shape == (nnodes, 6), nodes.shape
+    nodes = np.zeros((nnodes, 6), dtype=nids_array.dtype)
+    nodes[:, 0] = n1
+    nodes[:, 1] = n2
+    nodes[:, 2] = n3
+    nodes[:, 3] = n4
+
+    nodes[:, 4] = n5
+    nodes[:, 5] = n6
+    return nodes
+
+
+#if __name__ == '__main__':
+    #test_refine()
