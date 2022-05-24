@@ -457,6 +457,8 @@ TABLE_OBJ_MAP = {
     'force.cfast_force': (RealCFastForceArrayNX, RealCFastForceArrayMSC),
     'force.cbear_force': (RealCBearForceArray, ComplexCBearForceArray, ),
 
+
+    # lines
     'nrl.cbar_force' : (RealCBarForceArray, ),
     'RAFCONS.cbar_force' : (RealCBarForceArray, ),
     'RAFEATC.cbar_force' : (RealCBarForceArray, ),

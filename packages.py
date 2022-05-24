@@ -1,6 +1,7 @@
 """helper for setup.py"""
 import os
 import sys
+from typing import List
 
 # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
 CLASSIFIERS = [
@@ -71,7 +72,7 @@ REQS = {
 }
 MAX_VERSION = '3.10'
 
-def check_python_version():
+def check_python_version() -> None:
     """verifies the python version"""
     imajor, minor1, minor2 = sys.version_info[:3]
     if sys.version_info < (3, 7, 0):  # 3.7.4 used
@@ -79,7 +80,7 @@ def check_python_version():
             imajor, minor1, minor2))
 
 
-def int_version(name, version):
+def int_version(name: str, version: str) -> List[int]:
     """splits the version into a tuple of integers"""
     sversion = version.split('-')[0]
     #numpy
@@ -100,13 +101,13 @@ def int_version(name, version):
         raise SyntaxError('cannot determine version for %s %s' % (name, sversion))
 
 
-def str_version(version):
+def str_version(version: str) -> str:
     """converts a tuple of integers to a version number"""
     return '.'.join(str(versioni) for versioni in version)
 
 
-def get_package_requirements(is_gui=True, add_vtk_qt=True,
-                             python_version=None, bdist=False):
+def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
+                             python_version: str=None, bdist: bool=False):
     """
     Gets the requirements for setup.py
 

@@ -3,15 +3,48 @@ from pyNastran.op2.op2_interface.nx_tables import NX_ELEMENTS, NX_TABLE_CONTENT
 from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTENT
 
 # strings
-SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
-                b'OESRMS2', b'OESNO2', b'OESXRMS1',
-                b'OES1C', b'OSTR1C',
-                'OES1C', 'OSTR1C', 'OESNLXR']
-SORT2_TABLES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
-                b'OES2C', b'OSTR2C',
-                b'OFMPF2M', b'OLMPF2M', b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',
-                'OFMPF2M', 'OLMPF2M', 'OPMPF2M', 'OSMPF2M', 'OGPMPF2M',
-                'OES2C', 'OSTR2C']
+SORT1_TABLES = [
+    'OES1', 'OES1C', 'OES1X', 'OES1X1', 'OESVM1', 'OESVM1C',
+    'OSTR1C', 'OSTR1X', 'OSTRVM1', 'OSTRVM1C',
+
+    'OESNLXR', 'OESTRCP',
+    # ----------
+    'OEF1X', 'OEF1', 'OEFIT',
+    'HOEF1', 'DOEF1',
+    'OEFITSTN',
+    # --------
+    # random
+
+    # properly labeled
+    'OESXRMS1', 'OESPSD1C', 'OESXNO1', 'OESXNO1C', 'OESXRM1C',
+    'OSTRMS1C', 'OSTPSD1C', 'OSTNO1C', 'OSTRRMS1',
+    'OEFATO1', 'OEFRMS1',  'OEFPSD1',  'OEFNO1', 'OEFCRM1',
+    'OESPSD1',
+    'OSTRNO1',
+    'OSTRPSD1',
+
+    #'OESRMS2', 'OESNO2',
+    'OESXRMS1',
+    'OUG1', 'OAG1',
+]
+SORT1_TABLES += [table_name.encode('latin1') for table_name in SORT1_TABLES]
+
+SORT2_TABLES = [
+    'OUGPSD2', 'OUGATO2', 'OESCP',
+
+    'OES2', 'OES2C', 'OESVM2',
+    'OSTR2', 'OSTR2C', 'OSTRVM2',
+    'OEF2',
+
+    # random
+    'OEFATO2', 'OEFCRM2', 'OEFPSD2',
+    'OESATO2', 'OESCRM2', 'OESPSD2C', 'OESPSD2',
+    'OSTRATO2', 'OSTRCRM2', 'OSTPSD2C', 'OSTRPSD2',
+    'OES2C', 'OSTR2C',
+    'OFMPF2M', 'OLMPF2M', 'OPMPF2M', 'OSMPF2M', 'OGPMPF2M',
+]
+SORT2_TABLES += [table_name.encode('latin1') for table_name in SORT2_TABLES]
+
 NO_SORT_METHOD = [b'QHHA']
 
 NASA95_ELEMENTS = {
@@ -293,7 +326,7 @@ class Op2Codes:
             fmts = ('int32', 'int64')
         else:
             raise NotImplementedError(self.code_information())
-        index = self.size // 4 - 1  # factir is size/4 -> subtract 1
+        index = self.size // 4 - 1  # factor is size/4 -> subtract 1
         return fmts[index]
 
     def code_information(self, include_time: bool=True) -> str:
@@ -326,7 +359,11 @@ class Op2Codes:
                 stress_word = 'Stress'
             else:
                 stress_word = 'Strain'
-            s_word = get_scode_word(s_code, self.stress_bits)
+            try:
+                s_word = get_scode_word_assert(s_code, self.stress_bits)
+            except AssertionError:
+                s_word = get_scode_word(s_code, self.stress_bits)
+                s_word += ' (*assert)'
 
         element_type = None
         if hasattr(self, 'element_type'):
@@ -404,8 +441,9 @@ class Op2Codes:
         msg += (
             f'  sort_method   = {self.sort_method}\n'
             f'  sort_code     = {self.sort_code}\n'
+            f'    sort_bits   = {tuple(self.sort_bits)}\n'
         )
-        msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
+        #msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
         msg += "    data_format = %-3s %s\n" % (self.sort_bits[0], sort_word1)
         msg += "    sort_type   = %-3s %s\n" % (self.sort_bits[1], sort_word2)
         msg += "    is_random   = %-3s %s\n" % (self.sort_bits[2], sort_word3)
@@ -706,6 +744,15 @@ SCODE_MAP = {
     27: ('Coordinate Material - Strain Curvature von Mises', (1, 1, 0, 1, 1)),
     31: ('Coordinate Material - Strain Fiber von Mises', (1, 1, 1, 1, 1)),
 }
+
+def get_scode_word_assert(s_code: int, stress_bits: List[int]) -> str:
+    try:
+        s_word, stress_bits_expected = SCODE_MAP[s_code]
+        assert stress_bits == stress_bits_expected, f's_code={s_code} stress_bits={stress_bits} != {stress_bits_expected}'
+    except KeyError:
+        #s_word = 'Stress or Strain - UNDEFINED'
+        s_word = '???'
+    return s_word
 
 def get_scode_word(s_code: int, stress_bits: List[int]) -> str:
     try:

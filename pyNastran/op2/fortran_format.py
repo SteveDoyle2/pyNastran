@@ -72,7 +72,7 @@ class FortranFormat:
             int : the number of bytes that have been read
 
         """
-        op2_reader = self.op2_reader
+        op2_reader = self.op2_reader  # type: OP2Reader
         #datai = b''
         n = 0
         if self.read_mode == 2:
@@ -122,7 +122,7 @@ class FortranFormat:
         they have obj.itime which is their table3 counter
         """
         if not(hasattr(self, 'obj') and hasattr(self.obj, 'itime')):
-            #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
+            #print(f'self.obj.name={self.obj.__class__.__name__!r} doesnt have itime')
             return
         #ntotal = record_len // (self.num_wide * 4) * self._data_factor
 
@@ -194,7 +194,7 @@ class FortranFormat:
                 #raise RuntimeError(msg)
             self.obj._reset_indices()
             self.obj.ntimes += 1
-            ntotal = record_len // (self.num_wide * 4) * self._data_factor
+            ntotal = record_len // (self.num_wide * self.size) * self._data_factor
 
             # this has a problem with XYPLOT data if there is a result
             #    request in the same format (e.g. OESNLXD/OES1X1 tables

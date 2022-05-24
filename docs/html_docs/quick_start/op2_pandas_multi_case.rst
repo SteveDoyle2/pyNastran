@@ -4,7 +4,7 @@ Static & Transient DataFrames in PyNastran
 
 The Jupyter notebook for this demo can be found in: -
 docs/quick_start/demo/op2_pandas_multi_case.ipynb -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_multi_case.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_pandas_multi_case.ipynb
 
 .. code:: ipython3
 

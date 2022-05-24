@@ -1393,7 +1393,7 @@ class ComplexTableArray(TableArray):
         #is_sort1_table = self.is_sort1
         is_sort1_table = SORT1_TABLES # self.table_name[-1] == '1'
         if is_sort1_table:
-            assert self.table_name in SORT1_TABLES, self.table_name
+            assert self.table_name in SORT1_TABLES, f'table_name={self.table_name!r}'
             if is_sort1:
                 words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
                 page_num = self.write_sort1_as_sort1(f06_file, page_num, page_stamp, header, words, is_mag_phase)

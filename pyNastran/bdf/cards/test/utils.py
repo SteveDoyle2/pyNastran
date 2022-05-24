@@ -1,11 +1,14 @@
 """defines testing utils"""
 import os
 from io import StringIO
+from collections import ChainMap
 import inspect
+from typing import Tuple, List, Dict
+
 import numpy as np
 from cpylog import SimpleLogger
 
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf, DMIAX
 from pyNastran.bdf.mesh_utils.delete_bad_elements import element_quality
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.convert import convert
@@ -18,7 +21,7 @@ from pyNastran.bdf.mesh_utils.forces_moments import get_load_arrays, get_pressur
 from pyNastran.bdf.test.test_bdf import run_bdf as test_bdf
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
-from pyNastran.op2.op2_geom import attach_op2_results_to_bdf
+from pyNastran.op2.op2_geom import read_op2_geom, attach_op2_results_to_bdf, OP2Geom
 
 
 try:
@@ -32,6 +35,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
                    run_save_load=True, run_quality=True, write_saves=True,
                    run_save_load_hdf5=True, run_mass_properties=True, run_loads=True,
                    run_test_bdf=True, run_op2_writer=True, run_op2_reader=True,
+                   nastran_format: str='nx',
                    op2_log_level: str='warning') -> BDF:
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     if os.path.exists('junk.bdf'):
@@ -109,39 +113,55 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
     if model.elements and run_quality:
         element_quality(model)
 
-    if run_op2_writer:
-        op2_geom_model = attach_op2_results_to_bdf(model, op2_model=None)
-        from pyNastran.op2.op2_geom import read_op2_geom
-
-        table_name = 'OUGV1'
-        node_gridtype = np.zeros((10, 2), dtype='int32')
-        node_gridtype[:, 0] = np.arange(1, 11)
-        data = np.zeros((1, 10, 6), dtype='float32')
-        isubcase = 1
-        disp = RealDisplacementArray.add_static_case(
-            table_name, node_gridtype, data, isubcase, is_sort1=True)
-        op2_geom_model.displacements[isubcase] = disp
-
-
-        op2_filename = 'spike.op2'
-        bkp_log = op2_geom_model.log
-        op2_geom_model.log = SimpleLogger(level=op2_log_level, encoding='utf-8')
-        op2_geom_model.write_op2(op2_filename, post=-1, endian=b'<', skips=None,
-                                 nastran_format='nx')
-        if run_op2_reader:
-            unused_op2_geom = read_op2_geom(op2_filename, log=op2_geom_model.log, xref=False)
-        else:
-            frame = inspect.currentframe()
-            call_frame = inspect.getouterframes(frame, 2)
-            op2_geom_model.log.warning('skipping op2 reader for %s' % call_frame[1][3])
-        op2_geom_model.log = bkp_log
-        os.remove(op2_filename)
+    read_write_op2_geom(
+        model,
+        run_op2_writer=run_op2_writer,
+        run_op2_reader=run_op2_reader,
+        nastran_format=nastran_format,
+        op2_log_level=op2_log_level)
 
     if run_remove_unused:
         remove_unused(model)
 
     return model3
 
+def read_write_op2_geom(model: BDF,
+                        run_op2_writer: bool=True,
+                        run_op2_reader: bool=True,
+                        nastran_format: str='nx',
+                        op2_log_level: str='warning') -> None:
+    """helper method for ``save_load_deck``"""
+    if not run_op2_writer:
+        return
+    op2_geom_model = attach_displacement_to_bdf_model(model)
+
+    op2_filename = 'spike.op2'
+    bkp_log = op2_geom_model.log
+    op2_geom_model.log = SimpleLogger(level=op2_log_level, encoding='utf-8')
+    op2_geom_model.write_op2(op2_filename, post=-1, endian=b'<', skips=None,
+                             nastran_format=nastran_format)
+    if run_op2_reader:
+        unused_op2_geom = read_op2_geom(op2_filename, log=op2_geom_model.log, xref=False)
+    else:
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_geom_model.log.warning('skipping op2 reader for %s' % call_frame[1][3])
+    op2_geom_model.log = bkp_log
+    os.remove(op2_filename)
+
+def attach_displacement_to_bdf_model(model: BDF) -> OP2Geom:
+    """helper method for ``save_load_deck``"""
+    op2_geom_model = attach_op2_results_to_bdf(model, op2_model=None)
+
+    table_name = 'OUGV1'
+    node_gridtype = np.zeros((10, 2), dtype='int32')
+    node_gridtype[:, 0] = np.arange(1, 11)
+    data = np.zeros((1, 10, 6), dtype='float32')
+    isubcase = 1
+    disp = RealDisplacementArray.add_static_case(
+        table_name, node_gridtype, data, isubcase, is_sort1=True)
+    op2_geom_model.displacements[isubcase] = disp
+    return op2_geom_model
 
 def _run_hdf5(model2, log, run_save_load_hdf5=True):
     """helper method"""
@@ -194,9 +214,6 @@ def _run_loads(model, nelements: int, run_loads=True):
     if not run_loads:
         return
     assert isinstance(nelements, int), nelements
-    eid_map = {}
-    normals = np.zeros((nelements, 3), dtype='float64')
-    ieid = 0
     #node_ids = None
 
     #nnodes = model.nnodes
@@ -208,13 +225,7 @@ def _run_loads(model, nelements: int, run_loads=True):
         return
     unused_icd_transformi, unused_icp_transformi, unused_xyz_cpi, nid_cp_cd = out
     node_ids = nid_cp_cd[:, 0]
-    eids = []
-    for eid, elem in model.elements.items():
-        if hasattr(elem, 'Normal'):
-            normals[ieid, :] = elem.Normal()
-        eid_map[eid] = ieid
-        eids.append(eid)
-        ieid += 1
+    normals, eids, eid_map = _normals_eid_map(model, nelements, fdtype='float64')
 
     nsubcases = len(model.subcases)
     if nsubcases == 0:
@@ -230,6 +241,21 @@ def _run_loads(model, nelements: int, run_loads=True):
     if nsubcases == 0:
         del model.case_control_deck
 
+def _normals_eid_map(model: BDF, nelements: int,
+                     fdtype='float64') -> Tuple[np.ndarray,
+                                                List[int],
+                                                Dict[int, int]]:
+    ieid = 0
+    eids = []
+    eid_map = {}
+    normals = np.zeros((nelements, 3), dtype=fdtype)
+    for eid, elem in model.elements.items():
+        if hasattr(elem, 'Normal'):
+            normals[ieid, :] = elem.Normal()
+        eid_map[eid] = ieid
+        eids.append(eid)
+        ieid += 1
+    return normals, eids, eid_map
 
 def _cross_reference(model, xref):
     """helper method for ``_cross_reference``"""
@@ -260,3 +286,16 @@ def renumber(bdf_filename, log):
     model4 = BDF(debug=False, log=log)
     model4.read_bdf(bdf_filename_out)
     os.remove('junk.bdf')
+
+def get_matrices(model: BDF):
+    """tests the ``get_matrix`` method for every type of matrix"""
+    dicts = ChainMap(model.dmig, model.dmij, model.dmiji, model.dmik,
+                     model.dmi, model.dmiax)
+    for key, matrix in dicts.items():
+        if key == 'UACCEL' or isinstance(matrix, DMIAX):
+            model.log.warning(f'skipping get_matrix() for name={key!r}; type={matrix.type}')
+            continue
+        sparse, *junk = matrix.get_matrix(is_sparse=True, apply_symmetry=False)
+        dense, *junk = matrix.get_matrix(is_sparse=False, apply_symmetry=False)
+        dense2 = sparse.toarray()
+        assert np.array_equal(dense, dense2)
