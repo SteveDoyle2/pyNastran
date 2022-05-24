@@ -245,7 +245,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             hdf5=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False,
-            run_extract_bodies=False, run_skin_solids=True,
+            run_extract_bodies=False,
+            run_skin_solids=True,
+            run_loads=True,
             save_file_structure=False,
             nerrors=0, dev=False, crash_cards=None,
             safe_xref=False, pickle_obj=False,
@@ -338,6 +340,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         safe_xref=safe_xref,
         run_extract_bodies=run_extract_bodies,
         run_skin_solids=run_skin_solids,
+        run_loads=run_loads,
         save_file_structure=save_file_structure,
         pickle_obj=pickle_obj,
         validate_case_control=validate_case_control,
@@ -372,6 +375,7 @@ def run_and_compare_fems(
         dev: bool=False,
         crash_cards=None,
         safe_xref: bool=True,
+        run_loads :bool=True,
         run_extract_bodies: bool=False,
         run_skin_solids: bool=True,
         pickle_obj: bool=False,
@@ -430,6 +434,7 @@ def run_and_compare_fems(
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
                         safe_xref=safe_xref,
                         encoding=encoding, debug=debug, quiet=quiet,
+                        run_loads=run_loads,
                         ierror=ierror, nerrors=nerrors,
                         stop_on_failure=stop_on_failure,
                         validate_case_control=validate_case_control, log=log)
@@ -830,7 +835,9 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
              sum_load: bool, size: int, is_double: bool, mesh_form: str,
              safe_xref: bool=False,
              encoding: Optional[str]=None, debug: bool=False, quiet: bool=False,
-             stop_on_failure: bool=True, validate_case_control: bool=True,
+             run_loads:bool=True,
+             stop_on_failure: bool=True,
+             validate_case_control: bool=True,
              ierror: int=0, nerrors: int=100, log=None) -> BDF:
     """
     Reads/writes the BDF to verify nothing has been lost
@@ -900,6 +907,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
         if validate_case_control and not is_restart:
             ierror = _validate_case_control(
                 fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
+                run_loads=run_loads,
                 ierror=ierror, nerrors=nerrors,
                 stop_on_failure=stop_on_failure)
 
@@ -935,6 +943,7 @@ def _assert_has_spc(subcase, fem):
 
 def _validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: List[int],
                            subcases: Any, unused_sol_200_map: Any,
+                           run_loads=True,
                            stop_on_failure: bool=True,
                            ierror: int=0, nerrors: int=100) -> None:
     if len(subcase_keys) > 1:
@@ -959,6 +968,7 @@ def _validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: List[
             #sol = sol_base
         ierror = check_case(
             sol_base, subcase, fem, p0, isubcase, subcases,
+            run_loads=run_loads,
             ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
     return ierror
 
@@ -1027,8 +1037,16 @@ def check_sol(sol: int,
         ierror += 1
     return ierror
 
-def check_case(sol, subcase, fem2, p0, isubcase, subcases,
-               ierror=0, nerrors=100, stop_on_failure=True):
+def check_case(sol: int,
+               subcase: Subcase,
+               fem2: BDF,
+               p0: np.ndarray,
+               isubcase: int,
+               subcases,
+               run_loads: bool=True,
+               ierror: int=0,
+               nerrors: int=100,
+               stop_on_failure: bool=True):
     """
     Checks to see if the case has all the required case control fields
     and that they are valid.
@@ -1176,7 +1194,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
             assert any(subcase.has_parameter('TEMPERATURE(LOAD)', 'TEMPERATURE(INITIAL)')), msg
 
     elif sol == 200:
-        _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log)
+        _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log,
+                            run_loads=run_loads)
     elif sol in [114, 116, 118]:
         # cyclic statics, buckling, frequency
         pass
@@ -1194,6 +1213,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         raise NotImplementedError(msg)
     ierror = _check_case_parameters(
         subcase, fem2, p0, isubcase, sol,
+        run_loads=run_loads,
         ierror=ierror, nerrors=nerrors,
         stop_on_failure=stop_on_failure)
     return ierror
@@ -1307,7 +1327,8 @@ def _check_case_sol_200(sol: int,
                         fem2: BDF,
                         p0: Any,
                         isubcase: int, subcases: int,
-                        log: Any):
+                        log: Any,
+                        run_loads: bool=True):
     """
     helper method for ``check_case``
 
@@ -1365,41 +1386,52 @@ def _check_case_sol_200(sol: int,
 
     if analysis in ['STATIC', 'STATICS']:
         solution = 101
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     elif analysis in ['MODE', 'MODES']:
         solution = 103
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     elif analysis in ['BUCK', 'BUCKLING']:
         solution = 105
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     elif analysis == 'DFREQ':
         solution = 108
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     elif analysis == 'MFREQ':
         if 'GUST' in subcase:
             solution = 146
         else:
             solution = 111
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     elif analysis in ['MTRAN', 'MTRANS']:
         solution = 112
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     elif analysis in ['SAERO', 'DIVERG', 'DIVERGE']:
         solution = 144
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     elif analysis in ['FLUT', 'FLUTTER', 'FLUTTR']:
         solution = 145
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     elif analysis == 'DCEIG': # direct complex eigenvalues
         solution = 107
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     #elif analysis == 'MCEIG': # modal direct complex eigenvalues
     elif analysis == 'HEAT': # heat transfer analysis
         solution = 159
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     elif analysis == 'MCEIG': # modal complex eigenvalues
         solution = 110
-        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+        check_case(solution, subcase, fem2, p0, isubcase, subcases,
+                   run_loads=run_loads)
     else:
         msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
         raise NotImplementedError(msg)
@@ -1457,6 +1489,7 @@ def _tstep_msg(fem: BDF,
 def _check_case_parameters(subcase: Subcase, fem: BDF,
                            p0: np.ndarray,
                            isubcase: int, sol: int,
+                           run_loads: bool=True,
                            ierror: int=0, nerrors: int=100,
                            stop_on_failure: bool=True) -> int:
     """helper method for ``check_case``"""
@@ -1591,15 +1624,16 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
         cid_new = 0
         cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
         loadcase_id = subcase.get_parameter('LOAD')[0]
-        force, moment = fem.sum_forces_moments(p0, loadcase_id, cid=cid_new, include_grav=False)
-        unused_fvec = get_static_force_vector_from_subcase_id(fem, isubcase)
-        eids = None
-        nids = None
-        force2, moment2 = fem.sum_forces_moments_elements(
-            p0, loadcase_id, eids, nids, cid=cid_new, include_grav=False)
-        assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
-        assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
-        print('  isubcase=%i F=%s M=%s%s' % (isubcase, force, moment, cid_msg))
+        if run_loads:
+            force, moment = fem.sum_forces_moments(p0, loadcase_id, cid=cid_new, include_grav=False)
+            unused_fvec = get_static_force_vector_from_subcase_id(fem, isubcase)
+            eids = None
+            nids = None
+            force2, moment2 = fem.sum_forces_moments_elements(
+                p0, loadcase_id, eids, nids, cid=cid_new, include_grav=False)
+            assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
+            assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
+            print('  isubcase=%i F=%s M=%s%s' % (isubcase, force, moment, cid_msg))
         allowed_sols = [
             1, 5, 24, 38, 61, 64, 66, 100, 101, 103, 105, 106, 107,
             108, 109, 110, 111, 112, 114, 144, 145, 153, 200, 400, 401, 600, 601,
@@ -1657,7 +1691,9 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
     if 'LOADSET' in subcase:
         loadset_id = subcase.get_parameter('LOADSET')[0]
         unused_lseq = fem.Load(loadset_id)
-        fem.get_reduced_loads(loadset_id)
+        if run_loads:
+            assert run_loads is False
+            fem.get_reduced_loads(loadset_id)
 
     if 'DLOAD' in subcase:
         allowed_sols = [
