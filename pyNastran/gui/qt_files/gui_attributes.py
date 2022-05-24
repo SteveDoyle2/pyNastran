@@ -678,7 +678,7 @@ class GuiAttributes:
     def _remove_labels(self):
         """
         Remove all labels from the current result case.
-        This happens when the user explictly selects the clear label button.
+        This happens when the user explicitly selects the clear label button.
         """
         if len(self.label_actors) == 0:
             self.log.warning('No actors to remove')
@@ -1213,11 +1213,11 @@ class GuiAttributes:
     #---------------------------------------------------------------------------
     def get_result_by_xyz_cell_id(self, node_xyz, cell_id: int):
         """won't handle multiple cell_ids/node_xyz"""
-        result_name, result_values, node_id, xyz = self.mark_actions.get_result_by_xyz_cell_id(
-            node_xyz, cell_id)
+        out = self.mark_actions.get_result_by_xyz_cell_id(node_xyz, cell_id)
+        result_name, result_values, node_id, xyz = out
         return result_name, result_values, node_id, xyz
 
-    def get_result_by_cell_id(self, cell_id, world_position, icase=None):
+    def get_result_by_cell_id(self, cell_id: int, world_position, icase=None):
         """should handle multiple cell_ids"""
         res_name, result_values, xyz = self.mark_actions.get_result_by_cell_id(
             cell_id, world_position, icase=icase)

@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 A simple VTK widget for PyQt or PySide.
 See http://www.trolltech.com for Qt documentation,
@@ -42,7 +43,6 @@ Changes by Fabian Wenzel, Jan. 2016
 import vtk
 from pyNastran.gui.qt_version import qt_int, qt_version
 
-print('qt_version = %r' % qt_version)
 
 if qt_version == "pyqt5":
     from PyQt5.QtWidgets import QWidget, QSizePolicy, QApplication

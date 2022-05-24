@@ -4,6 +4,7 @@ import sys
 from typing import List, Dict, Optional, Any
 
 import pyNastran
+from pyNastran import DEV
 from pyNastran.utils import check_path
 from pyNastran.utils.arg_handling import argparse_to_dict, swap_key, update_message
 
@@ -57,11 +58,14 @@ def determine_format(input_filename: str,
         allowed_formats = [
             'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
             #'plot3d',
-            'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
-            'usm3d', 'bedge', 'su2', 'tetgen', 'obj',
+            'surf', 'lawgs', 'shabp', 'avus', 'fast', 'abaqus',
+            'usm3d', 'bedge', 'su2', 'tetgen',
             'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
-            'avl', 'vrml',
+            'avl',
         ]
+        if DEV:
+            allowed_formats.extend(['degen_geom', 'obj', 'vrml'])
+
 
     ext = os.path.splitext(input_filename)[1].lower()
     extension_to_format = {val : key for key, value in FORMAT_TO_EXTENSION.items()
@@ -76,7 +80,8 @@ def determine_format(input_filename: str,
     return formati
 
 
-def get_inputs(print_inputs=False, argv=None):
+def get_inputs(print_inputs: bool=False,
+               argv: Optional[List[str]]=None) -> Dict[str, Any]:
     """Gets the inputs for pyNastranGUI using docopt."""
     if argv is None:
         argv = sys.argv[1:]  # same as argparse
@@ -120,7 +125,7 @@ def get_inputs(print_inputs=False, argv=None):
     }
     return inputs
 
-def run_argparse(argv):
+def run_argparse(argv: List[str]) -> Dict[str, str]:
     """Gets the inputs for pyNastranGUI using argparse."""
     import argparse
     #msg = "Usage:\n"
@@ -138,73 +143,81 @@ def run_argparse(argv):
     #msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
 
     dev = ''
-    dev_list = []
+    dev_list = []  # List[str]
     if not pyNastran.is_pynastrangui_exe:
         #dev = ' [--noupdate] [--test] [--qt Qt] [--plugin]'
         dev_list = ['--noupdate', '--test', '--qt', '--plugin']
         dev = ''.join([' [%s]' % devi for devi in dev_list])
 
-    # no input/output files
-    # can you ever have an OUTPUT, but no INPUT?
-    usage = 'Usage:\n'
-    usage += '  pyNastranGUI INPUT [-f FORMAT] [-o OUTPUT] [options]\n'
+    usage = (
+        'Usage:\n'
+        # no input/output files
+        # can you ever have an OUTPUT, but no INPUT?
+        '  pyNastranGUI INPUT [-f FORMAT] [-o OUTPUT] [options]\n'
 
-    # You don't need to throw a -o flag
-    usage += '  pyNastranGUI INPUT OUTPUT [-f FORMAT] [-o OUTPUT] [options]\n'
+        # You don't need to throw a -o flag
+        '  pyNastranGUI INPUT OUTPUT [-f FORMAT] [-o OUTPUT] [options]\n'
 
-    # no input/output files
-    # can you ever have an OUTPUT, but no INPUT?
-    usage += '  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...] [options]\n'
-    #usage += '  pyNastranGUI -h | --help\n'
-    usage += '  pyNastranGUI -v | --version\n'
+        # no input/output files
+        # can you ever have an OUTPUT, but no INPUT?
+        '  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...] [options]\n'
 
-    usage += (
+        #usage += '  pyNastranGUI -h | --help\n'
+        '  pyNastranGUI -v | --version\n'
         '  [options] = [-g GSCRIPT] [-p PSCRIPT]\n'
         '              [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
     )
     if GROUPS_DEFAULT:
-        usage += '              [-q] [--groups] [--log LOG]%s\n' % (dev)
+        usage += f'              [-q] [--groups] [--log LOG]{dev}\n'
     else:
-        usage += '              [-q] [--nogroups] [--log LOG]%s\n' % (dev)
+        usage += f'              [-q] [--nogroups] [--log LOG]{dev}\n'
 
-    arg_msg = ''
-    arg_msg += '\n'
-    arg_msg += 'Primary Options:\n'
-     # plot3d,
-    arg_msg += '  -f FORMAT, --format FORMAT  format type (avus, bedge, cart3d, lawgs, nastran,\n'
-    arg_msg += '                                  openfoam_hex, openfoam_shell, openfoam_faces,\n'
-    arg_msg += '                                  panair, stl, surf, tetgen, usm3d, ugrid, ugrid3d)\n'
-    arg_msg += '  -i INPUT, --input INPUT     path to input file\n'
-    arg_msg += '  -o OUTPUT, --output OUTPUT  path to output file\n'
-    #arg_msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
-    arg_msg += '\n'
+    arg_msg = (
+        ''
+        '\n'
+        'Primary Options:\n'
+        # plot3d,
+        '  -f FORMAT, --format FORMAT  format type (avus, bedge, cart3d, lawgs, nastran,\n'
+        '                                  openfoam_hex, openfoam_shell, openfoam_faces,\n'
+        '                                  panair, stl, surf, tetgen, usm3d, ugrid, ugrid3d)\n'
+        '  -i INPUT, --input INPUT     path to input file\n'
+        '  -o OUTPUT, --output OUTPUT  path to output file\n'
+        #"  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
+        '\n'
+    )
 
     arg_msg += 'Secondary Options:\n'
     if GROUPS_DEFAULT:
         arg_msg += '  --groups                        enables groups\n'
     else:
         arg_msg += '  --nogroups                      disables groups\n'
-    arg_msg += '  -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)\n'
-    arg_msg += '  -p PSCRIPT, --postscript        path to post script file (runs after load geometry)\n'
-    arg_msg += '  --user_geom GEOM_FNAME          add user specified geometry (repeatable)\n'
-    arg_msg += '  -u POINTS_FNAME, --user_points  add user specified points (repeatable)\n'
-    arg_msg += '\n'
+    arg_msg += (
+        '  -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)\n'
+        '  -p PSCRIPT, --postscript        path to post script file (runs after load geometry)\n'
+        '  --user_geom GEOM_FNAME          add user specified geometry (repeatable)\n'
+        '  -u POINTS_FNAME, --user_points  add user specified points (repeatable)\n'
+        '\n'
 
-    arg_msg += "Debug:\n"
+        'Debug:\n'
+    )
     if not pyNastran.is_pynastrangui_exe:
-        arg_msg += '  --noupdate     disables the update check\n'
-        arg_msg += '  --test         temporary dev mode (default=False)\n'
-        arg_msg += '  --qt QT        sets the qt version (pyqt5, pyside2; default=QT_API)\n'
-        arg_msg += '  --plugin       disables the format check\n'
-    arg_msg += '  --log LOG      disables HTML logging; prints to the screen\n'
-    arg_msg += '\n'
+        arg_msg += (
+            '  --noupdate     disables the update check\n'
+            '  --test         temporary dev mode (default=False)\n'
+            '  --qt QT        sets the qt version (pyqt5, pyside2; default=QT_API)\n'
+            '  --plugin       disables the format check\n'
+        )
 
-    arg_msg += 'Info:\n'
-    arg_msg += '  -q, --quiet    prints debug messages (default=True)\n'
-    arg_msg += '  -h, --help     show this help message and exits\n'
-    arg_msg += "  -v, --version  show program's version number and exit\n"
-    arg_msg += '\n'
+    arg_msg += (
+        '  --log LOG      disables HTML logging; prints to the screen\n'
+        '\n'
 
+        'Info:\n'
+        '  -q, --quiet    prints debug messages (default=True)\n'
+        '  -h, --help     show this help message and exits\n'
+        "  -v, --version  show program's version number and exit\n"
+        '\n'
+    )
     #msg += "\n"
     #parser = argparse.ArgumentParser(
         #prog=None, usage=None, description=None, epilog=None,
@@ -420,7 +433,7 @@ def _update_argparse_argdict(argdict):
 
     if argdict['qt'] is not None:
         qt = argdict['qt'].lower()
-        assert qt in ['pyqt5', 'pyside2'], 'qt=%r' % qt
+        assert qt in ['pyqt5', 'pyside2', 'pyside6', 'pyqt6'], 'qt=%r' % qt
         os.environ.setdefault('QT_API', qt)
 
     #if argdict['input'] is None:

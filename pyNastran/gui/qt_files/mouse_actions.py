@@ -658,9 +658,9 @@ class MouseActions:
         pick_state = self.pick_state
         if pick_state == 'node/centroid':
             return_flag = False
-            (result_name, result_value, node_id, xyz) = self.gui.get_result_by_xyz_cell_id(
-                world_position, cell_id)
-            assert icase in self.gui.label_actors, result_name
+            out = gui.get_result_by_xyz_cell_id(world_position, cell_id)
+            result_name, result_value, node_id, xyz = out
+            assert icase in gui.label_actors, result_name
             assert not isinstance(xyz, int), xyz
             duplicate_key = node_id
         else:
@@ -679,8 +679,7 @@ class MouseActions:
         if gui.result_name in {'Node_ID', 'Node ID', 'NodeID'}:
             x1, y1, z1 = xyz
             x2, y2, z2 = world_position
-            msg += '; xyz=(%s, %s, %s); pierce_xyz=(%s, %s, %s)' % (x1, y1, z1,
-                                                                    x2, y2, z2)
+            msg += f'; xyz=({x1}, {y1}, {z1}); pierce_xyz=({x2}, {y2}, {z2})'
         gui.log_info(msg)
         return return_flag, duplicate_key, result_value, result_name, xyz
 
@@ -692,7 +691,8 @@ class MouseActions:
         if pick_state == 'node/centroid':
             return_flag = False
             duplicate_key = cell_id
-            result_name, result_value, xyz = self.gui.get_result_by_cell_id(cell_id, world_position)
+            out = gui.get_result_by_cell_id(cell_id, world_position)
+            result_name, result_value, xyz = out
             assert icase in gui.label_actors, icase
         else:
             #cell = self.grid.GetCell(cell_id)
@@ -770,21 +770,24 @@ class MouseActions:
     def zoom(self, zoom_factor):
         return self.gui.zoom(zoom_factor)
 
+    @property
+    def view_actions(self):
+        return self.gui.view_actions
     def on_pan_left(self, event):
         """helper method for trackball camera"""
-        self.gui.view_actions.on_pan_left(event)
+        self.view_actions.on_pan_left(event)
 
     def on_pan_right(self, event):
         """helper method for trackball camera"""
-        self.gui.view_actions.on_pan_right(event)
+        self.view_actions.on_pan_right(event)
 
     def on_pan_up(self, event):
         """helper method for trackball camera"""
-        self.gui.view_actions.on_pan_up(event)
+        self.view_actions.on_pan_up(event)
 
     def on_pan_down(self, event):
         """helper method for trackball camera"""
-        self.gui.view_actions.on_pan_down(event)
+        self.view_actions.on_pan_down(event)
 
     def get_node_ids(self, model_name, ids=None):
         """wrapper around node_ids"""

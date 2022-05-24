@@ -1,4 +1,5 @@
 # coding: utf-8
+from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
 import vtk
 
@@ -11,6 +12,14 @@ class ViewActions:
     def __init__(self, gui):
         self.gui = gui
         self.is_wireframe = False
+
+    def log_command(self, msg: str) -> None:
+        return self.gui.log_command
+
+    def on_reset_camera(self) -> None:
+        self.log_command('on_reset_camera()')
+        self._simulate_key_press('r')
+        self.vtk_interactor.Render()
 
     def on_pan_left(self, event):
         """https://semisortedblog.wordpress.com/2014/09/04/building-vtk-user-interfaces-part-3c-vtk-interaction"""
@@ -135,6 +144,14 @@ class ViewActions:
         """zoom out"""
         self.zoom(1.0 / 1.1)
 
+    def on_rotate_clockwise(self) -> None:
+        """rotate clockwise"""
+        self.rotate(15.)
+
+    def on_rotate_cclockwise(self) -> None:
+        """rotate counter clockwise"""
+        self.rotate(-15.)
+
     def azimuth(self, azimuth_deg: float, render: bool=True) -> None:
         """see the gui"""
         camera = self.GetCamera()
@@ -142,7 +159,7 @@ class ViewActions:
         camera.Modified()
         if render:
             self.vtk_interactor.Render()
-        self.gui.log_command('azimuth(%s)' % azimuth_deg)
+        self.log_command('azimuth(%s)' % azimuth_deg)
 
     def pitch(self, pitch_deg: float, render: bool=True) -> None:
         """see the gui"""
@@ -151,35 +168,35 @@ class ViewActions:
         camera.Modified()
         if render:
             self.vtk_interactor.Render()
-        self.gui.log_command('pitch(%s)' % pitch_deg)
+        self.log_command('pitch(%s)' % pitch_deg)
 
-    def yaw(self, yaw_deg, render=True):
+    def yaw(self, yaw_deg: float, render: bool=True) -> None:
         """see the gui"""
         camera = self.GetCamera()
         camera.Yaw(-yaw_deg)
         camera.Modified()
         if render:
             self.vtk_interactor.Render()
-        self.gui.log_command('yaw(%s)' % yaw_deg)
+        self.log_command('yaw(%s)' % yaw_deg)
 
-    def rotate(self, rotate_deg, render=True):
+    def rotate(self, rotate_deg: float, render: bool=True) -> None:
         """see the gui"""
         camera = self.GetCamera()
         camera.Roll(-rotate_deg)
         camera.Modified()
         if render:
             self.vtk_interactor.Render()
-        self.gui.log_command('rotate(%s)' % rotate_deg)
+        self.log_command('rotate(%s)' % rotate_deg)
 
-    def zoom(self, value, render=True):
+    def zoom(self, value: float, render: bool=True) -> None:
         camera = self.GetCamera()
         camera.Zoom(value)
         camera.Modified()
         if render:
             self.vtk_interactor.Render()
-        self.gui.log_command('zoom(%s)' % value)
+        self.log_command('zoom(%s)' % value)
 
-    def set_focal_point(self, focal_point, render=True):
+    def set_focal_point(self, focal_point: np.ndarray, render: bool=True) -> None:
         """
         Parameters
         ----------
@@ -188,7 +205,7 @@ class ViewActions:
             [ 188.25109863 -7. -32.07858658]
         """
         camera = self.rend.GetActiveCamera()
-        self.gui.log_command("set_focal_point(focal_point=%s)" % str(focal_point))
+        self.log_command("set_focal_point(focal_point=%s)" % str(focal_point))
 
         # now we can actually modify the camera
         camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
@@ -199,7 +216,7 @@ class ViewActions:
     def on_surface(self, render: bool=True) -> None:
         """sets the main/toggle actors to surface"""
         if self.is_wireframe:
-            self.gui.log_command('on_surface()')
+            self.log_command('on_surface()')
             for name, actor in self.gui.geometry_actors.items():
                 #if name != 'main':
                     #print('name: %s\nrep: %s' % (
@@ -216,7 +233,7 @@ class ViewActions:
     def on_wireframe(self, render: bool=True) -> None:
         """sets the main/toggle actors to wirefreme"""
         if not self.is_wireframe:
-            self.gui.log_command('on_wireframe()')
+            self.log_command('on_wireframe()')
             for name, actor in self.gui.geometry_actors.items():
                 #if name != 'main':
                     #print('name: %s\nrep: %s' % (
@@ -286,11 +303,11 @@ class ViewActions:
             camera.SetViewUp(0., -1., 0.)
             camera.SetPosition(0., 0., -1.)
         else:
-            self.gui.log_error('invalid camera code...%r' % code)
+            self.log_error('invalid camera code...%r' % code)
             return
         self._update_camera(camera)
         self.rend.ResetCamera()
-        self.gui.log_command('update_camera(%r)' % code)
+        self.log_command('update_camera(%r)' % code)
 
     def _update_camera(self, camera: Optional[vtk.vtkCamera]=None) -> None:
         if camera is None:

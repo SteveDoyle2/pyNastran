@@ -8,7 +8,7 @@ from typing import Tuple, List, Dict, Optional, Callable, Any
 import numpy as np
 from cpylog import SimpleLogger
 
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int, qt_version
 
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
@@ -24,7 +24,11 @@ import pyNastran
 # vtk makes poor choices regarding the selection of a backend and has no way
 # to work around it
 #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
+if VTK_VERSION[0] >= 9:
+    from .qt_files.QVTKRenderWindowInteractor2 import QVTKRenderWindowInteractor
+else:
+    from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
@@ -213,7 +217,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def _on_execute_python_button(self, clear=False):
         """executes the docked python console"""
-        enter_data = self.python_dock_widget.enter_data
+        try:
+            enter_data = self.python_dock_widget.enter_data
+        except Exception as error:
+            self.log_error(str(error))
+            self.log_error('problem getting enter_data from python console')
+            return
         txt = str(enter_data.toPlainText()).rstrip()
         is_passed = self._execute_python_code(txt)
         if is_passed and clear:
@@ -553,7 +562,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                     try:
                         action = self.actions[item] #if isinstance(item, str) else item()
                     except Exception:
-                        print(self.actions.keys())
+                        keysi = list(self.actions.keys())
+                        self.log.error(str(keysi))
                         raise
                     menu.addAction(action)
         #self._create_plane_from_points(None)
@@ -1757,19 +1767,20 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if not is_valid:
             return is_valid
 
-        try:
-            # apply the deflection
-            self.update_grid_by_icase_scale_phase(icase_disp, scale, phase=phase)
-        except(AttributeError, KeyError):
-            self.log_error('Invalid Displacement Case %i' % icase_disp)
-            return False
+        if icase_disp is not None:
+            try:
+                # apply the deflection
+                self.update_grid_by_icase_scale_phase(icase_disp, scale, phase=phase)
+            except(AttributeError, KeyError) as error:
+                self.log_error(f'Invalid Displacement Case {icase_disp:d}{str(error)}')
+                return False
 
         if icase_vector is not None and icase_vector != icase_vector0:
             try:
                 # apply the nodal forces
                 self.update_forces_by_icase_scale_phase(icase_vector, arrow_scale, phase=phase)
-            except(AttributeError, KeyError):
-                self.log_error('Invalid Vector Case %i' % icase_vector)
+            except(AttributeError, KeyError) as error:
+                self.log_error(f'Invalid Vector Case {icase_vector:d}{str(error)}')
                 return False
         is_valid = True
         return is_valid
