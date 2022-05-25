@@ -1692,7 +1692,6 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
         loadset_id = subcase.get_parameter('LOADSET')[0]
         unused_lseq = fem.Load(loadset_id)
         if run_loads:
-            assert run_loads is False
             fem.get_reduced_loads(loadset_id)
 
     if 'DLOAD' in subcase:

@@ -34,6 +34,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
                    run_convert=True, run_renumber=True, run_mirror=True,
                    run_save_load=True, run_quality=True, write_saves=True,
                    run_save_load_hdf5=True, run_mass_properties=True, run_loads=True,
+                   validate_case_control=True,
                    run_test_bdf=True, run_op2_writer=True, run_op2_reader=True,
                    nastran_format: str='nx',
                    op2_log_level: str='warning') -> BDF:
@@ -74,8 +75,10 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
     if run_test_bdf:
         folder = ''
         log_error = SimpleLogger(level='error', encoding='utf-8')
-        test_bdf(folder, 'model2.bdf', stop_on_failure=True,
-                 punch=punch,
+        test_bdf(folder, 'model2.bdf', punch=punch,
+                 run_loads=run_loads,
+                 validate_case_control=validate_case_control,
+                 stop_on_failure=True,
                  quiet=True, log=log_error)
         os.remove('model2.test_bdf.bdf')
 
@@ -98,7 +101,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
 
     cross_reference(model3, xref)
     if run_renumber:
-        renumber('model2.bdf', model.log)
+        _renumber('model2.bdf', model.log)
         if run_mirror:
             # we put this under renumber to prevent modifying an
             # existing model to prevent breaking tests
@@ -276,7 +279,7 @@ def cross_reference(model, xref):
     model.pop_xref_errors()
 
 
-def renumber(bdf_filename, log):
+def _renumber(bdf_filename, log):
     bdf_filename_out = 'junk.bdf'
     #model3_copy = deepcopy(model3)
     #model3.cross_reference()

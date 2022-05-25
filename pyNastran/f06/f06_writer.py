@@ -16,7 +16,10 @@ import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
 
-def make_stamp(title, today=None, build=None):
+
+def make_stamp(title: Optional[str],
+               today: Optional[date]=None,
+               build: Optional[str]=None) -> str:
     if title is None:
         title = ''
 
@@ -243,15 +246,17 @@ class F06Writer(OP2_F06_Common):
     def remove_results(self, results: Union[str, List[str]]) -> None:
         self._results.remove(results)
 
-    def make_f06_header(self):
+    def make_f06_header(self) -> str:
         """If this class is inherited, the F06 Header may be overwritten"""
         return make_f06_header()
 
-    def make_stamp(self, title, today, build=None):
+    def make_stamp(self, title: str,
+                   today: Optional[date],
+                   build: Optional[str]=None) -> str:
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(title, today, build=None)
 
-    def make_grid_point_singularity_table(self, failed):
+    def make_grid_point_singularity_table(self, failed) -> str:
         """
         creates a grid point singularity table
 
@@ -275,7 +280,7 @@ class F06Writer(OP2_F06_Common):
         self.page_num += 1
         return msg
 
-    def _write_summary(self, f06_file, card_count=None):
+    def _write_summary(self, f06_file, card_count=None) -> str:
         """writes the F06 card summary table"""
         summary_header = '                                        M O D E L   S U M M A R Y\n\n'
         summary = ''
@@ -449,27 +454,33 @@ class F06Writer(OP2_F06_Common):
         if close:
             f06.close()
 
-    def write_matrices(self, f06, matrix_filename, page_stamp, page_num, quiet=True):
+    def write_matrices(self, f06, matrix_filename: str, page_stamp: str,
+                       page_num: int, quiet: bool=True):
         """writes the f06 matrices"""
-        if len(self.matrices):
-            if hasattr(self, 'monitor1'):
-                page_num = self.monitor1.write(f06, page_stamp=page_stamp, page_num=page_num)
-                self.log.debug('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
+        if len(self.matrices) == 0:
+            return
+        log = self.log
+        if hasattr(self, 'monitor1'):
+            page_num = self.monitor1.write(f06, page_stamp=page_stamp, page_num=page_num)
+            log.debug('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
 
-            with open(matrix_filename, 'wb') as mat:
-                for name, matrix in self.matrices.items():
-                    if name == 'MP3F':
-                        page_num = self.monitor3.write(f06, page_stamp=page_stamp, page_num=page_num)
-                        self.log.debug('MONPNT3 from MP3F')
-                    elif name in ['PMRF', 'PERF', 'PFRF', 'AGRF']:
-                        pass
-                    else:
-                        if not quiet:
-                            print(matrix)
-                        matrix.write(mat)
+        with open(matrix_filename, 'wb') as mat:
+            for name, matrix in self.matrices.items():
+                if name == 'MP3F':
+                    page_num = self.monitor3.write(f06, page_stamp=page_stamp, page_num=page_num)
+                    log.debug('MONPNT3 from MP3F')
+                elif name in ['PMRF', 'PERF', 'PFRF', 'AGRF']:
+                    pass
+                else:
+                    if not quiet:
+                        print(matrix)
+                    matrix.write(mat)
 
-    def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
-                                 is_mag_phase=False, is_sort1=True, quiet=False,
+    def _write_f06_subcase_based(self, f06, page_stamp: str,
+                                 delete_objects=True,
+                                 is_mag_phase=False,
+                                 is_sort1=True,
+                                 quiet=False,
                                  repr_check=False):
         """
         Helper function for ``write_f06`` that does the real work
@@ -497,6 +508,7 @@ class F06Writer(OP2_F06_Common):
             calls the object repr as a validation test (prints nothing)
 
         """
+        log = self.log
         is_failed = False
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
@@ -511,7 +523,7 @@ class F06Writer(OP2_F06_Common):
                                              page_num=self.page_num)
             if repr_check:
                 str(result)
-            assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
+            assert isinstance(self.page_num, int), f'page_num={self.page_num!r}'
             if delete_objects:
                 del result
             self.page_num += 1
@@ -523,8 +535,9 @@ class F06Writer(OP2_F06_Common):
         # TODO: superelement version...need the nominal...
         res_keys_subcase = self.subcase_key
         if len(res_keys_subcase) == 0:
-            self.log.warning('no cases to write...self.subcase_key=%r' % self.subcase_key)
+            log.warning('no cases to write...self.subcase_key=%r' % self.subcase_key)
             return
+
         for isubcase, res_keys in sorted(res_keys_subcase.items()):
             for res_key in res_keys:
                 if isinstance(res_key, tuple):
@@ -615,7 +628,7 @@ class F06Writer(OP2_F06_Common):
                             is_ignored = 'StrainEnergy' not in class_name and 'GridPointForces' not in class_name
                             has_nnodes = not hasattr(result, 'nnodes_per_element')
                             if has_nnodes and is_ignored and getpass.getuser() == 'sdoyle':
-                                self.log.error(f'{class_name} is missing nnodes_per_element')
+                                log.error(f'{class_name} is missing nnodes_per_element')
 
                         if hasattr(result, 'data'):
                             if not quiet:
@@ -637,7 +650,7 @@ class F06Writer(OP2_F06_Common):
                             raise
 
                         #assert 'table_name=' in ''.join(result.get_stats())
-                        assert isinstance(self.page_num, int), 'result=%s pageNum=%r' % (result, str(self.page_num))
+                        assert isinstance(self.page_num, int), f'result={result} page_num={self.page_num!r}'
                     except Exception:
                         #print("result name = %r" % result.name())
                         raise

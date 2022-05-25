@@ -82,15 +82,15 @@ def build_obj(obj):
         obj.build()
 
 def apply_mag_phase(floats: Any, is_magnitude_phase: bool,
-                    isave1: List[int], isave2: List[int]) -> Any:
+                    isave_real: List[int], isave_imag: List[int]) -> Any:
     """converts mag/phase data to real/imag"""
     if is_magnitude_phase:
-        mag = floats[:, isave1]
-        phase = floats[:, isave2]
+        mag = floats[:, isave_real]
+        phase = floats[:, isave_imag]
         real_imag = polar_to_real_imag(mag, phase)
     else:
-        real = floats[:, isave1]
-        imag = floats[:, isave2]
+        real = floats[:, isave_real]
+        imag = floats[:, isave_imag]
         real_imag = real + 1.j * imag
     return real_imag
 

@@ -1,4 +1,5 @@
 import warnings
+from typing import List
 import numpy as np
 
 class Responses:
@@ -569,6 +570,21 @@ class DSCMCOL:
                 continue
             msg += '\n\n'
         str(msg)
+
+    @property
+    def external_ids(self) -> List[int]:
+        external_ids = []
+        for resp in self.responses.values():
+            external_ids.append(resp['external_response_id'])
+            print(resp)
+        return external_ids
+
+    @property
+    def names(self) -> List[str]:
+        names = []
+        for resp in self.responses.values():
+            names.append(resp['name'])
+        return names
 
     def _write_static(self, ids, response_name_to_f06_response_type):
         msg = ''

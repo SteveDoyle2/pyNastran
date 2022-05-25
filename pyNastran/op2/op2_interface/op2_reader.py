@@ -82,6 +82,14 @@ IS_TESTING = True
 class SubTableReadError(Exception):
     pass
 
+MSC_LONG_VERSION = [
+    b'XXXXXXXX20140', b'XXXXXXXX20141', b'XXXXXXXX20142',
+    b'XXXXXXXX20150', b'XXXXXXXX20151', b'XXXXXXXX20152',
+    b'XXXXXXXX20160', b'XXXXXXXX20161', b'XXXXXXXX20162',
+    b'XXXXXXXX20170', b'XXXXXXXX20171', b'XXXXXXXX20172',
+    b'XXXXXXXX20180', b'XXXXXXXX20181', b'XXXXXXXX20182',
+]
+
 DENSE_MATRICES = [
     b'KELM', b'MELM', b'BELM',
     b'KELMP', b'MELMP',
@@ -4889,11 +4897,11 @@ class OP2Reader:
         else:
             self.read_results_table8()
 
-    def read_results_table4(self):
+    def read_results_table4(self) -> None:
         """Reads a results table"""
         op2 = self.op2
         if self.is_debug_file:
-            self.binary_debug.write('read_results_table - %s\n' % op2.table_name)
+            self.binary_debug.write(f'read_results_table - {op2.table_name}\n')
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         if self.is_debug_file:
@@ -5179,12 +5187,13 @@ class OP2Reader:
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
         if self.is_debug_file:
-            self.binary_debug.write('record_length = %s\n' % record_len)
+            self.binary_debug.write(f'record_length = {record_len:d}\n')
 
         oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR']
         factor = self.factor
+        table_name = op2.table_name
         if record_len == 584 * factor:  # table3 has a length of 584
-            if op2.table_name in oes_nl and hasattr(op2, 'num_wide') and op2.num_wide == 146:
+            if table_name in oes_nl and hasattr(op2, 'num_wide') and op2.num_wide == 146:
                 data_code_old = deepcopy(op2.data_code)
 
             if self.load_as_h5:
@@ -5203,7 +5212,7 @@ class OP2Reader:
                 except SortCodeError:
                     if self.is_debug_file:
                         self.binary_debug.write('except SortCodeError!\n')
-                    if op2.table_name in oes_nl:
+                    if table_name in oes_nl:
                         update_op2_datacode(op2, data_code_old)
 
                         n = table4_parser(data, ndata)
@@ -5790,8 +5799,8 @@ def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
             mode_num = ints[idata+3]
             subcase = ints[idata+5]
             seid = ints[idata+8]
-            print(ints[idata+4:idata+9])
-            print(floats[idata+4:idata+9])
+            #print(ints[idata+4:idata+9])
+            #print(floats[idata+4:idata+9])
             #print(f'internal_response_id={internal_response_id} '
                   #f'external_response_id={external_response_id} response_type={response_type}')
             #print(f'  mode_num={mode_num} subcase={subcase} seid={seid} (CEIG)')
@@ -5939,14 +5948,10 @@ def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
         idata += 6
     return
 
-def _parse_nastran_version(data, version, encoding, log):
+def _parse_nastran_version(data: bytes, version: bytes, encoding: bytes,
+                           log: SimpleLogger) -> str:
     """parses a Nastran version string"""
     if len(data) == 32:
-        MSC_LONG_VERSION = [
-            b'XXXXXXXX20140',
-            b'XXXXXXXX20141',
-            b'XXXXXXXX20182',
-        ]
         #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
         #self.show_data(data[16:], types='ifsdqlILQ', endian=None)
         if data[:16].strip() in MSC_LONG_VERSION:
@@ -5956,11 +5961,9 @@ def _parse_nastran_version(data, version, encoding, log):
         else:
             raise NotImplementedError(f'check={data[:16].strip()} data={data!r}')
     elif len(data) == 8:
-        mode = _parse_nastran_version_8(
-            data, version, encoding, log)
+        mode = _parse_nastran_version_8(data, version, encoding, log)
     elif len(data) == 16:
-        mode = _parse_nastran_version_16(
-            data, version, encoding, log)
+        mode = _parse_nastran_version_16(data, version, encoding, log)
     else:
         raise NotImplementedError(f'version={version!r}; n={len(data)}')
     return mode
@@ -5972,7 +5975,7 @@ def _parse_nastran_version_16(data: bytes, version: bytes, encoding: str, log) -
                    b'NX20    19.2']:
         mode = 'nx'
     else:
-        raise RuntimeError('unknown version=%r' % version)
+        raise RuntimeError(f'unknown version={version}')
     return mode
 
 def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) -> str:
@@ -5981,7 +5984,7 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) ->
         mode = 'nx'
         version_str = version[2:].strip().decode(encoding)
         if version_str not in NX_VERSIONS:
-            log.warning('nx version=%r is not supported' % version_str)
+            log.warning(f'nx version={version_str!r} is not supported')
     elif version.startswith(b'MODEP'):
         # TODO: why is this separate?
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2

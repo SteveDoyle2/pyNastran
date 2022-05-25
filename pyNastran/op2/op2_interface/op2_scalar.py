@@ -1897,8 +1897,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     "  methods_dict = {\n"
                     "      b'OUGV1' : [method],\n"
                     '  }\n'
-                    '  model.set_additional_generalized_tables_to_read(methods_dict)\n' % (
-                        table_name)
+                    '  model.set_additional_generalized_tables_to_read(methods_dict)\n'
                 )
                 raise NotImplementedError(msg)
 

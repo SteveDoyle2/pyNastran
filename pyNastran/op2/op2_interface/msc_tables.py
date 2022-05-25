@@ -605,7 +605,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'BGPDTVU', # basic grid point definition table for a superelement and related to geometry with view-grids added
 
     b'OUG2T',
-    b'AEMONPT', # Aerodynamic monitor points.
+    b'AEMONPT', # Aerodynamic monitor points
     #b'KDICT',
     #---------------------
     # 2020

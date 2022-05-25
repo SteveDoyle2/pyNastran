@@ -9,8 +9,12 @@ import os
 from typing import Tuple, List, Optional
 
 import numpy as np
+from pyNastran.utils import int_version
 try:
     import imageio
+    IMAGEIO_VERSION = int_version('imageio', imageio.__version__)
+    if IMAGEIO_VERSION >= [2, 16, 2]:
+        import imageio.v2 as imageio
     import PIL
     IS_IMAGEIO = True
 except ImportError:

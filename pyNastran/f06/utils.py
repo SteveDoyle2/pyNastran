@@ -91,7 +91,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
     f06_filename = data['F06_FILENAME']
-    if not f06_filename.lower().endswith('.f06'):
+    if f06_filename.lower().endswith(('.bdf', '.op2')):
         base = os.path.splitext(f06_filename)[0]
         f06_filename = base + '.f06'
 
@@ -156,10 +156,10 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     export_veas_filename = None if export_zona is False else 'nastran.veas'
 
     # TODO: need a new parameter
-    vg_filename = None if export_zona is  None else 'vg_subcase_%i.png'
-    vg_vf_filename = None if export_zona is  None else 'vg_vf_subcase_%i.png'
-    kfreq_damping_filename = None if export_zona is  None else 'kfreq_damping_subcase_%i.png'
-    root_locus_filename = None if export_zona is  None else 'root_locus_subcase_%i.png'
+    vg_filename = None if export_zona is  None else 'vg_subcase_%d.png'
+    vg_vf_filename = None if export_zona is  None else 'vg_vf_subcase_%d.png'
+    kfreq_damping_filename = None if export_zona is  None else 'kfreq_damping_subcase_%d.png'
+    root_locus_filename = None if export_zona is  None else 'root_locus_subcase_%d.png'
     if not plot:
         return
 

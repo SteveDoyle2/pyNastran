@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import vtk
+
+from qtpy.QtWidgets import QMainWindow
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.qt_files.mouse_actions import MouseActions
 
@@ -22,11 +24,20 @@ class TrackballStyleCamera(vtk.vtkInteractorStyleTrackballCamera):
 
         self.AddObserver("KeyPressEvent", self.keyPressEvent)
 
+    @property
+    def gui(self):
+        parent = self.parent
+        if isinstance(parent, QMainWindow):
+            return parent
+        gui = parent.gui
+        assert isinstance(gui, QMainWindow)
+        return gui
+
     def keyPressEvent(self, unused_obj, event):
         key = self.parent.iren.GetKeySym()
         is_control = self.parent.iren.GetControlKey()
         if is_control:
-            view = self.parent.gui.view_actions
+            view = self.gui.view_actions
             if key == 'Left':
                 view.yaw(-5)
             elif key == 'Right':

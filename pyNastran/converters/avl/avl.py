@@ -46,7 +46,7 @@ class AVL:
         self.sym_iz = None
         self.symz = None
 
-    def read_avl(self, avl_filename):
+    def read_avl(self, avl_filename: str) -> None:
         """only the first 4 chancters are read...not in this reader"""
         self.avl_filename = os.path.abspath(avl_filename)
         with open(avl_filename, 'r') as avl_file:
