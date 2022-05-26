@@ -75,33 +75,39 @@ except ImportError:
 from vtkmodules.vtkRenderingCore import vtkRenderWindow
 from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
 
-
 if PyQtImpl == "PyQt5":
     if QVTKRWIBase == "QGLWidget":
         from PyQt5.QtOpenGL import QGLWidget
     from PyQt5.QtWidgets import QWidget, QSizePolicy, QApplication, QMainWindow
     from PyQt5.QtGui import QCursor
-    from PyQt5.QtCore import Qt, QTimer, QObject, QSize, QEvent
+    from PyQt5.QtCore import Qt, QTimer, QObject, QSize, QEvent, Qt as MouseButton
 elif qt_version == "pyside2":
     if QVTKRWIBase == "QGLWidget":
         from PySide2.QtOpenGL import QGLWidget
     from PySide2.QtWidgets import QWidget, QSizePolicy, QApplication, QMainWindow
     from PySide2.QtGui import QCursor
-    from PySide2.QtCore import Qt, QTimer, QObject, QSize, QEvent
+    from PySide2.QtCore import Qt, QTimer, QObject, QSize, QEvent, Qt as MouseButton
 elif qt_version == "pyside6":
     if QVTKRWIBase == "QOpenGLWidget":
         from PySide6.QtOpenGLWidgets import QOpenGLWidget
     from PySide6.QtWidgets import QWidget, QSizePolicy, QApplication, QMainWindow
     from PySide6.QtGui import QCursor
-    from PySide6.QtCore import Qt, QTimer, QObject, QSize, QEvent
+    from PySide6.QtCore import Qt, QTimer, QObject, QSize, QEvent, Qt as MouseButton
 elif qt_version == "pyqt6":
     if QVTKRWIBase == "QOpenGLWidget":
         from PyQt6.QtOpenGLWidgets import QOpenGLWidget
     from PyQt6.QtWidgets import QWidget, QSizePolicy, QApplication, QMainWindow
     from PyQt6.QtGui import QCursor
     from PyQt6.QtCore import Qt, QTimer, QObject, QSize, QEvent
+    MouseButton = Qt.MouseButton
 else:
     raise ImportError("Unknown PyQt implementation " + repr(qt_version))
+
+#if PyQtImpl in ('PyQt4', 'PySide'):
+    #MiddleButton = MouseButton.MidButton
+#else:
+MiddleButton = MouseButton.MiddleButton
+
 
 # Define types for base class, based on string
 if QVTKRWIBase == "QWidget":
