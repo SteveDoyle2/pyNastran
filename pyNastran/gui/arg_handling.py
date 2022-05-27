@@ -387,7 +387,7 @@ def _update_argparse_argdict(argdict):
 
     if argdict['qt'] is not None:
         qt = argdict['qt'].lower()
-        assert qt in ['pyqt5', 'pyside2', 'pyside6'], 'qt=%r' % qt
+        assert qt in ['pyqt5', 'pyside2', 'pyside6', 'pyqt6'], 'qt=%r' % qt
         os.environ.setdefault('QT_API', qt)
 
     #if argdict['input'] is None:

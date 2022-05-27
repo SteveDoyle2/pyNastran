@@ -565,7 +565,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'IBULK',
     #b'FRL',  # frequency response list
     b'TOL',
-    b'DSCM2', # normalized design sensitivity coeff. matrix
+    b'DSCM2', # normalized design sensitivity coeff. matrix (nDESVAR, nDRESPx)
 
     # dont seem to crash
     b'DESCYC',

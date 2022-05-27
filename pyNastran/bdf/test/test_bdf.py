@@ -256,7 +256,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False,
             limit_mesh_opt: bool=False,
-            run_extract_bodies=False, run_skin_solids=True,
+            run_extract_bodies=False,
+            run_skin_solids=True,
+            run_loads=True,
             save_file_structure=False,
             nerrors=0, dev=False, crash_cards=None,
             safe_xref=False, pickle_obj=False,
@@ -924,7 +926,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
 
     out_model_2 = f'{bdf_model}_out2'
 
-    if xref and sum_load:
+    if xref:
         if 'POST' in fem2.params:
             value = fem2.params['POST'].values[0]
             if value >= 0:
@@ -1369,6 +1371,7 @@ def _check_case_sol_200(sol: int,
     1 DESOBJ is required
 
     """
+    fem2.log.info('checking SOL 200...')
     assert 'ANALYSIS' in subcase, 'sol=%s\n%s' % (sol, subcase)
 
     analysis = subcase.get_parameter('ANALYSIS')[0]

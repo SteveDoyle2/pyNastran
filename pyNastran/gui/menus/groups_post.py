@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 from numpy import array, arange
 
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int, qt_version
 from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import (
     QDialog, QPushButton, QApplication,
     QHBoxLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
 )
 
-if qt_version == 5:
+if qt_int == 5:
+    QString =  str
+elif qt_int == 6:
     QString =  str
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)

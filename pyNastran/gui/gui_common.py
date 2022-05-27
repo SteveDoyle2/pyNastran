@@ -71,7 +71,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """
         # this will reset the background color/label color if things break
         #super(QMainWindow, self).__init__(self)
-        if qt_version == 'pyqt5':
+        if qt_version in {'pyqt5', 'pyqt6'}:
             super(GuiCommon, self).__init__(**kwds)
         elif qt_version in {'pyside2', 'pyside6'}:
             QMainWindow.__init__(self)

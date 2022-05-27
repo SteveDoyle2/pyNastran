@@ -29,12 +29,27 @@ from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments
 from pyNastran.gui.menus.python_console import QSCINTILLA_VERSION
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 
-QT = ("""
-  * PyQt5 Python bindings for Qt5, by Riverbank Computing Limited.
+def get_qt_license(qt_name: str) -> str:
+    if qt_name == 'PyQt5':
+        qt = '* Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt += '* PyQt5 Python bindings for Qt5, by Riverbank Computing Limited.\n\n'
+        qt += '* Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.'
+    elif qt_name == 'PyQt6':
+        qt = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt += ' * PyQt6 Python bindings for Qt6, by Riverbank Computing Limited.\n\n'
+        qt += '* Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.'
+    elif qt_name == 'PySide2':
+        qt = ' * Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt += '\n * PySide2 Python bindings for Qt5, by Qt for Python.'
+    elif qt_name == 'PySide6':
+        qt = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt += ' * PySide6 Python bindings for Qt6, by Qt for Python.'
+    else:
+        raise NotImplementedError(qt_name)
+    return qt
 
-  * Scintilla, a source code editor widget, written by Neil Hodgson and many contributors."""
-    if qt_name == 'PyQt5' else """
-  * PySide2 Python bindings for Qt5, by Qt for Python.""")
+QT = get_qt_license(qt_name)
+
 
 PYGMENTS = """
   * Pygments by Georg Brandl, Armin Ronacher, Tim Hatch, and contributors.
@@ -52,7 +67,6 @@ CREDITS = f"""pyNastran has been written by Steve Doyle since 2011.  This produc
 
   * VTK Python bindings for Qt5, by Riverbank Computing Limited.
 
-  * Qt5 cross-platform GUI toolkit, developed by many contributors.
 {QT}
 {PYGMENTS}
   * ImageIO, an animation library for writing videos, developed by many contributors.

@@ -4,8 +4,9 @@ from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QCheckBox, QSpinBox,
     QDoubleSpinBox, QColorDialog, QApplication,
     QHBoxLayout, QGridLayout, QVBoxLayout, QButtonGroup)
-from pyNastran.utils.locale import func_str
-from pyNastran.gui.utils.qt.pydialog import QDialog, QFloatEdit
+#from pyNastran.utils.locale import func_str
+from pyNastran.gui.utils.qt.pydialog import QDialog #, QFloatEdit
+from pyNastran.gui.utils.qt.version import Background
 #from pyNastran.gui.utils.qt.
 #check_float
 
@@ -83,7 +84,7 @@ class EditBoundaryConditions(QDialog):
         palette = QtGui.QPalette(self.color_edit.palette()) # make a copy of the palette
         #palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, \
                          #qcolor)
-        palette.setColor(QtGui.QPalette.Background, QtGui.QColor('blue'))  # ButtonText
+        palette.setColor(Background, QtGui.QColor('blue'))  # ButtonText
         self.color_edit.setPalette(palette)
 
         self.color_edit.setStyleSheet("QPushButton {"

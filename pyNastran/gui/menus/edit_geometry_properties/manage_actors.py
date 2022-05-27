@@ -6,7 +6,7 @@ http://www.saltycrane.com/blog/2007/12/pyqt-43-qtableview-qabstracttablemodel/
 http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-work-in-this-program
 """
 from pyNastran.gui.limits import MAX_POINT_SIZE, MAX_LINE_WIDTH
-from pyNastran.gui.qt_version import qt_int as qt_version
+#from pyNastran.gui.qt_version import qt_version #qt_int
 
 from qtpy.QtCore import Qt#, QVariant
 from qtpy import QtCore, QtGui

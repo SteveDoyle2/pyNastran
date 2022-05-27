@@ -201,7 +201,6 @@ class ToolActions:
             #max_msg = 'Max:  %g, %gj' % (max_value.real, max_value.imag)
             #min_msg = 'Min:  %g, %gj' % (min_value.real, min_value.imag)
         else:
-            #print('else...', max_value, type(max_value))
             max_msg = 'Max:  %g' % max_value
             min_msg = 'Min:  %g' % min_value
 

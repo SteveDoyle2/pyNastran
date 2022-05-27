@@ -120,7 +120,6 @@ class ResultSet:
             resulti = _get_regex(result)
             regex = re.compile(resulti)
             matched_results = list(filter(regex.match, self.allowed))
-            #print('matched_results =', matched_results)
             if len(matched_results) == 0:
                 #allowed = list(self.allowed)
                 #allowed.sort()
@@ -156,7 +155,7 @@ class ResultSet:
         return msg
 
 def _get_regex(result: str) -> str:
-    """
+    r"""
     Tack on a word boundary if we have a * at the beginning of the regex
 
     Case Input           Output              Description

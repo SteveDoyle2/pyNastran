@@ -10,7 +10,9 @@ import getpass
 from datetime import date
 from collections import defaultdict
 from traceback import print_exc
-from typing import Optional, List, Dict, Union
+from typing import Optional, List, Dict, Union, cast, TYPE_CHECKING
+
+import numpy as np
 
 import pyNastran
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
@@ -18,6 +20,8 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointFo
 from pyNastran.op2.tables.onmd import NormalizedMassDensity
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
+#if TYPE_CHECKING:
+from pyNastran.op2.result_objects.matrix import Matrix #, MatrixDict
 
 
 def make_stamp(title: Optional[str],
@@ -458,27 +462,49 @@ class F06Writer(OP2_F06_Common):
         if close:
             f06.close()
 
-    def write_matrices(self, f06, matrix_filename, page_stamp, page_num, quiet=True):
+    def write_matrices(self, f06, matrix_filename: str, page_stamp: str,
+                       page_num: int, quiet: bool=True):
         """writes the f06 matrices"""
-        if len(self.matrices):
-            log = self.log
-            if self.monitor1 is not None:
-                page_num = self.monitor1.write(
-                    f06, page_stamp=page_stamp, page_num=page_num)
-                log.debug('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
+        if len(self.matrices) == 0:
+            return
+        log = self.log
+        if self.monitor1 is not None:
+            page_num = self.monitor1.write(
+                f06, page_stamp=page_stamp, page_num=page_num)
+            log.debug('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
 
-            with open(matrix_filename, 'wb') as mat:
-                for name, matrix in self.matrices.items():
-                    if name == 'MP3F':
-                        page_num = self.monitor3.write(
-                            f06, page_stamp=page_stamp, page_num=page_num)
-                        log.debug('MONPNT3 from MP3F')
-                    elif name in ['PMRF', 'PERF', 'PFRF', 'AGRF']:
-                        pass
-                    else:
-                        if not quiet:
-                            print(matrix)
-                        matrix.write(mat)
+        with open(matrix_filename, 'wb') as mat_file:
+            for name, matrix in self.matrices.items():  #type: Matrix
+                matrix = cast(Matrix, matrix)
+                if name == 'MP3F':
+                    page_num = self.monitor3.write(
+                        f06, page_stamp=page_stamp, page_num=page_num)
+                    log.debug('MONPNT3 from MP3F')
+                elif name in ['PMRF', 'PERF', 'PFRF', 'AGRF']:
+                    pass
+                else:
+                    if not quiet:
+                        print(matrix)
+                    matrix.write(mat_file)
+
+            responses = self.op2_results.responses
+            desvars = responses.desvars
+            dscmcol = responses.dscmcol
+            print(responses)
+            if 'DSCM2' in self.matrices and desvars is not None and dscmcol is not None:
+                data = matrix.data.todense()
+                #print('dscmcol =', responses.dscmcol)
+                row_data1 = ', '.join(str(val) for val in dscmcol.external_ids)
+                row_data2 = ', '.join(str(val) for val in dscmcol.names)
+                col_data = ', '.join(desvars.label)
+                header = (
+                    f'rows (external DRESPx ID): {row_data1}\n'
+                    f'rows (external names): {row_data2}\n'
+                    f'columns: {col_data}\n'
+                )
+                np.savetxt(mat_file, data, header=header, delimiter=',')
+
+
 
     def _write_f06_subcase_based(self, f06, page_stamp: str,
                                  delete_objects=True,

@@ -385,7 +385,6 @@ def _constraint_stats(model: BDF, msg: List[str]) -> None:
         msg.append('')
 
     for (mpc_id, mpcs) in sorted(model.mpcs.items()):
-        msg.append('bdf.mpcs[%s]' % mpc_id)
         groups_dict = {}
         for mpc in mpcs:
             groups_dict[mpc.type] = groups_dict.get(mpc.type, 0) + 1

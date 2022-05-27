@@ -38,7 +38,7 @@ from pyNastran.gui.menus.menus import Group
 class GuiVTKCommon(GuiQtCommon):
     """this class has VTK functionality, but no interactive/menu capability"""
     def __init__(self, **kwds):
-        if qt_version == 'pyqt5':
+        if qt_version in {'pyqt5', 'pyqt6'}:
             super(GuiVTKCommon, self).__init__(**kwds)
         elif qt_version in {'pyside2', 'pyside6'}:
             GuiQtCommon.__init__(self, **kwds)
