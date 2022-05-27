@@ -167,7 +167,7 @@ class SolidElement(Element):
         return self.pid_ref.mid_ref.G()
 
     def Nu(self) -> float:
-       return self.pid_ref.mid_ref.Nu()
+        return self.pid_ref.mid_ref.Nu()
 
     def Volume(self) -> float:
         """

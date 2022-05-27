@@ -230,7 +230,7 @@ class AERO(Aero):
         rho_ref = double(card, 4, 'rho_ref')
         sym_xz = integer_or_blank(card, 5, 'symXZ', 0)
         sym_xy = integer_or_blank(card, 6, 'symXY', 0)
-        assert len(card) <= 7, 'len(AERO card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(AERO card) = {len(card):d}\ncard={card}'
         return AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy,
                     comment=comment)
 

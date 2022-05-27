@@ -24,7 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover
     # MKAERO1, MKAERO2
     # ----------------------------------------------------
 
-    from .cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
+    from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
     from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
     from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPC1,
                                                  MPC, MPCADD) # SUPORT1, SUPORT

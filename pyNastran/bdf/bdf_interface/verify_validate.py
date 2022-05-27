@@ -75,7 +75,7 @@ def _verify_model_dict(dict_obj: Dict[Any, Any], model: BDF, xref: bool) -> None
     for unused_key, card in sorted(dict_obj.items()):
         try:
             card._verify(model, xref)
-        except:
+        except Exception as e:
             print(str(card))
             raise
 

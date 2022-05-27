@@ -347,6 +347,7 @@ class CBARAO(BaseCard):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
 class CBAR(LineElement):
     """
     +-------+-----+-----+-----+-----+-----+-----+-----+------+
@@ -1317,7 +1318,8 @@ class CBEAM3(LineElement):  # was CBAR
         return volume
 
     def Nsm(self):
-        if isinstance(self.pid_ref, integer_types):
+        pid_ref = self.pid_ref
+        if pid_ref is None:
             msg = f'Element eid={self.eid} has not been cross referenced.\n{self}'
             raise RuntimeError(msg)
         nsm = self.pid_ref.Nsm()
@@ -1329,7 +1331,7 @@ class CBEAM3(LineElement):  # was CBAR
             xa, ya, za = xyza
             xb, yb, zb = xyzb
             xc, yc, zc = self.gc_ref.get_position() + self.wc
-            nsma, nsmb, nsmc = self.pid_ref.nsm
+            nsma, nsmb, nsmc = pid_ref.nsm
             L = self.Length()
             nsm = self._integrate(
                 np.array([nsma * xa, nsmb * xb, nsmc * xc]) / L,
