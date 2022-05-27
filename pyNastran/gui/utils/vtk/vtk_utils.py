@@ -3,8 +3,9 @@ defines:
  - create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
 """
+from __future__ import annotations
 from collections import defaultdict
-from typing import Optional
+from typing import Tuple, Optional, TYPE_CHECKING
 
 import numpy as np
 import vtk
@@ -12,6 +13,8 @@ from vtk.util.numpy_support import numpy_to_vtk # vtk_to_numpy
 from pyNastran.gui.utils.vtk.base_utils import (
     vtkConstants, numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk)
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 
 def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
@@ -19,12 +22,15 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     assert isinstance(nodes, np.ndarray), type(nodes)
     if points is None:
         points = vtk.vtkPoints()
-        nnodes, ndim = nodes.shape
+        try:
+            nnodes, ndim = nodes.shape
+        except:
+            raise RuntimeError(nodes)
         assert ndim == 3, nodes.shape
         points.SetNumberOfPoints(nnodes)
 
-        # if we're in big endian, VTK won't work, so we byte swap
-        nodes = np.asarray(nodes, dtype=np.dtype(dtype))
+    # if we're in big endian, VTK won't work, so we byte swap
+    nodes = np.asarray(nodes, dtype=np.dtype(dtype))
 
     points_array = numpy_to_vtk(
         num_array=nodes,
@@ -97,6 +103,9 @@ def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
 
     #nodes = numpy_to_vtk(elements, deep=0, array_type=vtk.VTK_ID_TYPE)
     # (nnodes_per_element + 1)  # TODO: was 4; for a tri...didn't seem to crash???
+    # int8:  [-128 to 127]
+    # int32: [-2_147_483_648 to 2_147_483_647]  # 2.1 billion
+    # int64: [-9223372036854775808 to 9223372036854775807]
     cell_offsets = np.arange(0, nelements, dtype='int32') * (nnodes_per_element + 1)
     assert len(cell_offsets) == nelements
 
@@ -283,7 +292,11 @@ def find_point_id_closest_to_xyz(grid: vtk.vtkUnstructuredGrid,
     point_id = cell.GetPointId(imin)
     return point_id
 
-def map_element_centroid_to_node_fringe_result(ugrid, location, log):
+def map_element_centroid_to_node_fringe_result(
+        ugrid: vtk.vtkUnstructuredGrid,
+        location: str,
+        log: SimpleLogger) -> Tuple[bool,
+                                    Tuple[int, int, float, float]]:
     """
     Maps elemental fringe results to nodal fringe results.
 

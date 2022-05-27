@@ -19,7 +19,7 @@ def get_data_from_website(target_url: str) -> Tuple[Optional[List[str]], bool]:
         is_failed = False
     except (urllib.error.HTTPError, urllib.error.URLError):  #  forbidden, page not found
         pass
-    #except: #  urllib2.URLError  # e.g., timeout
+    #except Exception: #  urllib2.URLError  # e.g., timeout
         #print(help(urllib))
         #raise
 

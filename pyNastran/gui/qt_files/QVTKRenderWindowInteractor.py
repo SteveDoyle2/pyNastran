@@ -50,6 +50,9 @@ if qt_version == "pyqt5":
 elif qt_version == "pyside2":
     from PySide2.QtWidgets import QWidget, QSizePolicy, QApplication
     from PySide2.QtCore import Qt, QTimer, QObject, QSize, QEvent
+elif qt_version == "pyside6":
+    from PySide6.QtWidgets import QWidget, QSizePolicy, QApplication
+    from PySide6.QtCore import Qt, QTimer, QObject, QSize, QEvent
 else:
     raise ImportError("Unknown PyQt implementation " + repr(qt_version))
 
@@ -251,7 +254,7 @@ class QVTKRenderWindowInteractor(QWidget):
         self._RenderWindow.Finalize()
 
     def CreateTimer(self, obj, evt):
-        self._Timer.start(self._TimerDuration) # self._Timer.start(10) in orginal
+        self._Timer.start(self._TimerDuration) # self._Timer.start(10) in original
 
     #def CreateRepeatingTimer(self, duration):
         #print('duration = %s' % duration)

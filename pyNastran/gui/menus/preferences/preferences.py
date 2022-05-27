@@ -9,7 +9,9 @@ The preferences menu handles:
  - Clipping Max
 
 """
+from __future__ import annotations
 from math import log10, ceil
+from typing import TYPE_CHECKING
 
 from qtpy import QtGui
 from qtpy.QtWidgets import (
@@ -24,6 +26,8 @@ from pyNastran.gui.gui_objects.settings import (
     COORD_SCALE, COORD_TEXT_SCALE, ANNOTATION_SIZE, TEXT_SIZE, FONT_SIZE,
     NASTRAN_BOOL_KEYS,
 )
+if TYPE_CHECKING:
+    from pyNastran.gui.gui_objects.settings import Settings
 
 
 class PreferencesWindow(PyDialog):
@@ -579,6 +583,11 @@ class PreferencesWindow(PyDialog):
         if self.win_parent is not None:
             self.win_parent.settings.nastran_is_shell_mcids = is_checked
 
+
+    @property
+    def settings(self) -> Settings:
+        return self.win_parent.settings  # type: Settings
+
     #def on_nastran_is_shell_mcids2(self):
         #"""set the nastran properties preferences"""
         #is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
@@ -601,20 +610,20 @@ class PreferencesWindow(PyDialog):
             value = int(self.annotation_size_edit.text())
         self._annotation_size = value
         #self.on_apply(force=True)
-        #self.min_edit.setText(str(self._default_min))
+        #self.min_edit.setText(func_str(self._default_min))
         #self.min_edit.setStyleSheet("QLineEdit{background: white;}")
         self.update_annotation_size_color()
 
     def update_annotation_size_color(self):
         if self.win_parent is not None:
-            self.win_parent.settings.set_annotation_size_color(size=self._annotation_size)
+            self.settings.set_annotation_size_color(size=self._annotation_size)
 
     def on_gradient_scale(self):
         is_checked = self.gradient_scale_checkbox.isChecked()
         self.background_color2_label.setEnabled(is_checked)
         self.background_color2_edit.setEnabled(is_checked)
         if self.win_parent is not None:
-            self.win_parent.settings.set_gradient_background(use_gradient_background=is_checked)
+            self.settings.set_gradient_background(use_gradient_background=is_checked)
 
     def on_corner_coord(self):
         is_checked = self.corner_coord_checkbox.isChecked()
@@ -672,7 +681,7 @@ class PreferencesWindow(PyDialog):
             value = self.highlight_opacity_edit.value()
         self._highlight_opacity = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_highlight_opacity(value)
+            self.settings.set_highlight_opacity(value)
 
     def _background_color(self, title, color_edit, rgb_color_ints, func_name):
         """helper method for ``on_background_color`` and ``on_background_color2``"""
@@ -680,7 +689,7 @@ class PreferencesWindow(PyDialog):
             color_edit, rgb_color_ints, title)
         if passed:
             if self.win_parent is not None:
-                settings = self.win_parent.settings
+                settings = self.settings
                 func_background_color = getattr(settings, func_name)
                 func_background_color(rgb_color_floats)
         return passed, rgb_color_ints, rgb_color_floats
@@ -695,7 +704,7 @@ class PreferencesWindow(PyDialog):
             self.text_color_int = rgb_color_ints
             self.text_color_float = rgb_color_floats
             if self.win_parent is not None:
-                self.win_parent.settings.set_text_color(rgb_color_floats)
+                self.settings.set_text_color(rgb_color_floats)
 
     def on_default_text_size(self):
         self.text_size_edit.setValue(self._default_text_size)
@@ -706,7 +715,7 @@ class PreferencesWindow(PyDialog):
             value = self.text_size_edit.value()
         self._text_size = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_text_size(value)
+            self.settings.set_text_size(value)
 
     def on_color(self, color_edit, rgb_color_ints, title):
         """pops a color dialog"""
@@ -739,7 +748,7 @@ class PreferencesWindow(PyDialog):
             value = self.magnify_edit.value()
         self._magnify = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_magnify(value)
+            self.settings.set_magnify(value)
 
     #---------------------------------------------------------------------------
     def on_coord_scale(self, value=None):
@@ -747,7 +756,7 @@ class PreferencesWindow(PyDialog):
             value = self.coord_scale_edit.value()
         self._coord_scale = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_coord_scale(value / 100.)
+            self.settings.set_coord_scale(value / 100.)
 
     def on_default_coord_scale(self):
         self.coord_scale_edit.setValue(self._default_coord_scale)
@@ -758,7 +767,7 @@ class PreferencesWindow(PyDialog):
             value = self.coord_text_scale_edit.value()
         self._coord_text_scale = value
         if self.win_parent is not None:
-            self.win_parent.settings.set_coord_text_scale(value / 100.)
+            self.settings.set_coord_text_scale(value / 100.)
 
     def on_default_coord_text_scale(self):
         self.coord_text_scale_edit.setValue(self._default_coord_text_scale)
@@ -806,9 +815,9 @@ class PreferencesWindow(PyDialog):
         passed = self.on_validate()
 
         if (passed or force) and self.win_parent is not None:
-            self.win_parent.settings.on_set_font_size(self.out_data['font_size'])
+            self.settings.on_set_font_size(self.out_data['font_size'])
 
-            #self.win_parent.settings.set_annotation_size_color(self._annotation_size)
+            #self.settings.set_annotation_size_color(self._annotation_size)
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
             self.win_parent.clipping_obj.apply_clipping(self.out_data)

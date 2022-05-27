@@ -34,6 +34,16 @@ from pyNastran.gui.menus.about.about import AboutWindow
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
+#try:
+    #import pyNastran2
+    #ISPY2 = True
+#except ImportError:
+ISPY2 = False
+# tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
+# http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
+# http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
+# http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
+
 try:
     import qdarkstyle
     IS_DARK = True
@@ -100,6 +110,8 @@ class MainWindow(GuiCommon, NastranIO):
             # no results unless specified
             'nastran',  # results
         ]
+        if ISPY2:
+            fmt_order += ['h5nastran', 'nastranv',]
 
         fmt_order += [
             'abaqus',

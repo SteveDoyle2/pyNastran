@@ -386,7 +386,7 @@ class OP2Reader:
         #print('----------------------')
 
         self.read_3_markers([-2, 1, 0])
-        self.read_table_name(['EQEXIN', 'EQEXINS', 'EQEXNOUT'])
+        self.read_table_name(['EQEXIN', 'EQEXINS', 'EQEXNOUT', 'SAEQEXIN'])
         #print('----------------------')
         # ints - sort order
         self.read_3_markers([-3, 1, 0])
@@ -472,14 +472,15 @@ class OP2Reader:
         #self.show(200)
 
     def read_monitor(self):
-        """reads the MONITOR table"""
+        r"""
+        reads the MONITOR table; new version
+        D:\NASA\git\examples\backup\aeroelasticity\loadf.op2"""
         op2 = self.op2
         self.log.debug("table_name = %r" % op2.table_name)
         unused_table_name = self._read_table_name(rewind=False)
 
-        #print('-----------------------')
-        #print('record 1')
         self.read_markers([-1])
+        #(101, 2, 27, 0, 9, 0, 0)
         data = self._read_record()
         #self.show_data(data)
         if self.read_mode == 2:
@@ -491,9 +492,9 @@ class OP2Reader:
             assert e == 6, e
             assert f == 0, f
             assert g == 0, g
-        #print('-----------------------')
-        #print('record 2')
         self.read_3_markers([-2, 1, 0])
+
+        #b'STMON   '
         data = self._read_record()
         if self.read_mode == 2:
             word, = op2.struct_8s.unpack(data)
@@ -1115,17 +1116,17 @@ class OP2Reader:
                 assert len(zaxis) == 3, zaxis
                 assert len(xzplane) == 3, xzplane
                 if coord_type_int == 1:
-                    coord = self.op2.add_cord2r(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2r(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 elif coord_type_int == 2:
-                    coord = self.op2.add_cord2c(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2c(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 elif coord_type_int == 3:
-                    coord = self.op2.add_cord2s(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2s(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 elif coord_type_int == 5:
                     #- 7 = convective coordinate system defined on a FEFACE
                     coord = None
@@ -1169,17 +1170,17 @@ class OP2Reader:
                 assert len(zaxis) == 3, zaxis
                 assert len(xzplane) == 3, xzplane
                 if cid_type == 1:
-                    coord = self.op2.add_cord2r(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2r(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 elif cid_type == 2:
-                    coord = self.op2.add_cord2c(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2c(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 elif cid_type == 3:
-                    coord = self.op2.add_cord2s(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2s(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 else:  # pragma: no cover
                     raise NotImplementedError(f'cid_type={cid_type}')
                 str(coord)
@@ -1312,7 +1313,7 @@ class OP2Reader:
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
-        self.log.debug('table_name = %r' % op2.table_name)
+        #self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
@@ -1435,7 +1436,7 @@ class OP2Reader:
         self.read_markers([-1])
         data = self._read_record()
         fmt = mapfmt(self._endian + b'7i', self.size)
-        ints = Struct(fmt).unpack(data)
+        unused_ints = Struct(fmt).unpack(data)
         self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         if self.size == 4:

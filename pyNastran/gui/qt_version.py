@@ -16,6 +16,10 @@ elif 'PySide2' in sys.modules:
     qt_version = 'pyside2'
 elif 'PyQt5' in sys.modules:
     qt_version = 'pyqt5'
+elif 'PySide6' in sys.modules:
+    qt_version = 'pyside6'
+elif 'PyQt6' in sys.modules:
+    qt_version = 'pyqt6'
 else:
     found_gui = False
     try:
@@ -36,7 +40,25 @@ else:
             pass
 
     if not found_gui:
-        raise ImportError('PyQt5 or PySide2 is required')
+        try:
+            import PySide6  # pylint: disable=unused-import
+            qt_int = 6
+            qt_version = 'pyside6'
+            found_gui = True
+        except ImportError:
+            pass
+
+    if not found_gui:
+        try:
+            import PyQt6  # pylint: disable=unused-import
+            qt_int = 6
+            qt_version = 'pyqt6'
+            found_gui = True
+        except ImportError:
+            pass
+
+    if not found_gui:
+        raise ImportError('PyQt5/6 or PySide2/6 is required')
 
 #if qt_version == 'pyside2':
     #from qtpy import PYSIDE_VERSION as PYQT_VERSION
@@ -55,11 +77,19 @@ elif qt_version == 'pyside2':
     qt_int = 5
     qt_name = 'PySide2'
     from qtpy import PYSIDE_VERSION as PYQT_VERSION  # pylint: disable=unused-import
+elif qt_version == 'pyside6':
+    qt_int = 6
+    qt_name = 'PySide6'
+    from qtpy import PYSIDE_VERSION as PYQT_VERSION  # pylint: disable=unused-import
+elif qt_version == 'pyqt6':
+    qt_int = 6
+    qt_name = 'PyQt6'
+    from qtpy import PYQT_VERSION  # pylint: disable=unused-import
 else:
-    raise ImportError('PyQt5 or PySide2 is required; API=%r' % qt_version)
+    raise ImportError('PyQt5/6 or PySide2/6 is required; API=%r' % qt_version)
 
-if qt_version not in ['pyqt5', 'pyside2']:
-    raise ImportError('PyQt5 or PySide2 is required; API=%r' % qt_version)
+if qt_version not in ['pyqt5', 'pyside2', 'pyqt6', 'pyside6', ]:
+    raise ImportError('PyQt5/6 or PySide2/6 is required; API=%r' % qt_version)
 
 # required to make a pretty console
 try:

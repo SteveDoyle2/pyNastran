@@ -70,6 +70,7 @@ class FakeGUI(FakeGUIMethods, NastranIO):
             the file format (e.g., 'nastran', 'cart3d')
         inputs : None
             pass for the fake gui
+
         """
         self._formati = formati
         FakeGUIMethods.__init__(self, inputs=inputs)
@@ -78,7 +79,7 @@ class FakeGUI(FakeGUIMethods, NastranIO):
 
     def load_geometry(self, input_filename):
         """loads a model"""
-        load_geometry_name = 'load_%s_geometry' % self._formati
+        load_geometry_name = f'load_{self._formati}_geometry'
         if self._formati in self.format_class_map:
             cls = self.format_class_map[self._formati](self)
             getattr(cls, load_geometry_name)(input_filename)
@@ -107,40 +108,41 @@ def run_docopt(argv=None):
     """
     The main function for the command line ``test_pynastran_gui`` script.
     """
-    msg = "Usage:\n"
-    # INPUT format may be explicitly or implicitly defined with or
-    # without an output file
-    msg += "  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  OUTPUT_FILENAME [--log LOG] [--test]\n"
-    msg += "  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  [--log LOG] [--test]\n"
-    msg += "  test_pynastrangui  -f FORMAT  [-r] [-d] INPUT_DIRECTORY [--log LOG] [--test]\n"
-    msg += "  test_pynastrangui  -f FORMAT  [-r] [-d]                 [--log LOG] [--test]\n"
+    msg = (
+        "Usage:\n"
+        # INPUT format may be explicitly or implicitly defined with or
+        # without an output file
+        '  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  OUTPUT_FILENAME [--log LOG] [--test]\n'
+        '  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  [--log LOG] [--test]\n'
+        '  test_pynastrangui  -f FORMAT  [-r] [-d] INPUT_DIRECTORY [--log LOG] [--test]\n'
+        '  test_pynastrangui  -f FORMAT  [-r] [-d]                 [--log LOG] [--test]\n'
 
-    msg += '  test_pynastrangui -h | --help\n'
-    msg += '  test_pynastrangui -v | --version\n'
-    msg += '\n'
+        '  test_pynastrangui -h | --help\n'
+        '  test_pynastrangui -v | --version\n'
+        '\n'
 
-    msg += 'Positional Arguments:\n'
-    msg += '  INPUT_FILENAME   path to input file\n'
-    msg += '  OUTPUT_FILENAME  path to output file\n'
-    msg += '  INPUT_DIRECTORY  path to input directory\n'
-    msg += '\n'
+        'Positional Arguments:\n'
+        '  INPUT_FILENAME   path to input file\n'
+        '  OUTPUT_FILENAME  path to output file\n'
+        '  INPUT_DIRECTORY  path to input directory\n'
+        '\n'
 
-    msg += "Options:\n"
-    msg += '  -f FORMAT, --format  format type (avus, cart3d, lawgs, nastran, panair,\n'
-    msg += '                                    su2, stl, surf, tetgen, usm3d, ugrid)\n'
-    msg += '  -d, --dir            directory to run tests on\n'
-    msg += "  -r, --regenerate     Resets the tests\n"
-    msg += '  --log LOG            debug, info, warning, error; default=debug\n'
-    msg += '\n'
+        'Options:\n'
+        '  -f FORMAT, --format  format type (avus, cart3d, lawgs, nastran, panair,\n'
+        '                                    su2, stl, surf, tetgen, usm3d, ugrid)\n'
+        '  -d, --dir            directory to run tests on\n'
+        "  -r, --regenerate     Resets the tests\n"
+        '  --log LOG            debug, info, warning, error; default=debug\n'
+        '\n'
 
-    msg += "Debug:\n"
-    msg += "  --test    temporary dev mode (default=False)\n"
+        'Debug:\n'
+        '  --test    temporary dev mode (default=False)\n'
 
-    msg += 'Info:\n'
-    #msg += "  -q, --quiet    prints debug messages (default=True)\n"
-    msg += '  -h, --help     show this help message and exit\n'
-    msg += "  -v, --version  show program's version number and exit\n"
-
+        'Info:\n'
+         '  -q, --quiet    prints debug messages (default=True)\n'
+        '  -h, --help     show this help message and exit\n'
+        "  -v, --version  show program's version number and exit\n"
+    )
     if len(sys.argv) == 1:
         sys.exit(msg)
     ver = str(pyNastran.__version__)
@@ -157,12 +159,10 @@ def run_docopt(argv=None):
         if data['--regenerate'] or not os.path.exists(failed_cases_filename):
             dirname = data['INPUT_DIRECTORY']
             if not os.path.exists(dirname):
-                msg = 'dirname=%r does not exist\n%s' % (
-                    dirname, print_bad_path(dirname))
+                msg = f'dirname={dirname!r} does not exist\n{print_bad_path(dirname)}'
                 raise RuntimeError(msg)
             if not os.path.isdir(dirname):
-                msg = 'dirname=%r is not a directory' % dirname
-                raise RuntimeError(msg)
+                raise RuntimeError(f'dirname={dirname!r} is not a directory')
             extensions = FORMAT_TO_EXTENSION[formati]
             input_filenames = [
                 get_files_of_type(
@@ -180,8 +180,7 @@ def run_docopt(argv=None):
         output_filename = data['OUTPUT_FILENAME']
         check_path(input_filename, 'input_filename')
         if not os.path.isfile(input_filename):
-            msg = 'input_filename=%r is not a file' % input_filename
-            raise RuntimeError(msg)
+            raise RuntimeError(f'input_filename={input_filename!r} is not a file')
         input_filenames = [input_filename]
         output_filenames = [output_filename]
 
@@ -194,7 +193,7 @@ def run_docopt(argv=None):
 
     if data['--log']:
         log_method = data['--log'].lower()
-        assert log_method in ['debug', 'info', 'warning', 'error'], 'log_method=%r' % log_method
+        assert log_method in ['debug', 'info', 'warning', 'error'], 'log_method={log_method!r}'
     else:
         log_method = 'debug'
     return formati, input_filenames, output_filenames, failed_cases_filename, log_method, data['--test']
@@ -218,7 +217,7 @@ def main():
     for input_filename, output_filename in zip(input_filenames, output_filenames):
         input_filename = os.path.abspath(input_filename)
         #output_filename =
-        print("filename = %s" % input_filename)
+        print(f'filename = {input_filename}')
         is_passed = True
         try:
             test_gui.load_geometry(input_filename)
@@ -246,7 +245,7 @@ def main():
             traceback.print_exc(file=sys.stdout)
             print('failed test because OverflowError...ignoring')
 
-        except:
+        except Exception:
             is_passed = False
             traceback.print_exc(file=sys.stdout)
             if stop_on_failure:
@@ -277,7 +276,7 @@ def main():
     if ntotal > 1:
         with open(failed_cases_filename, 'w') as failed_cases_file:
             for fname in failed_files:
-                failed_cases_file.write('%s\n' % fname)
+                failed_cases_file.write(f'{fname}\n')
         print(time_msg)
         sys.exit('finished...')
 
