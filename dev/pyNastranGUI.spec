@@ -9,7 +9,7 @@ except ImportError:
     pyInstaller_path = []
 
 pyInstaller_path = [r'C:\NASA\dev\pyinstaller']
-IS_H5PY = True
+IS_H5PY = False
 DEBUG = False
 IS_RELEASE = True
 USE_TODAY = False
@@ -27,6 +27,7 @@ import os
 import sys
 import shutil
 import datetime
+import vtk
 
 # get pyNastran location
 print('sys.version_info.major =', sys.version_info.major)
@@ -476,6 +477,12 @@ hiddenimports = [
     'scipy._lib.messagestream', # 'scipy',
     'pygments',
 ] + qt_imports
+
+_VTK_VERSION = vtk.vtkVersion.GetVTKVersion()
+VTK_VERSION = [int(val) for val in _VTK_VERSION.split('.')]
+if VTK_VERSION[0] >= 9:
+    hiddenimports += ['vtkmodules', 'vtkmodules.all', 'vtkmodules.qt.QVTKRenderWindowInteractor', 
+                      'vtkmodules.util', 'vtkmodules.util.numpy_support']
 
 excludes = []
 if not IS_H5PY:
