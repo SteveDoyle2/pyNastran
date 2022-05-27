@@ -1226,8 +1226,6 @@ class GetCard(GetMethods):
             assert idtype == 'int32', 'idtype=%r while overflowing...' % idtype
             etype_to_nids_map, pid_to_eids_ieids_map = _get_pid_to_node_ids_and_elements_array(
                 model, pids, etypes, msg, idtype='int64')
-            #etype_to_nids_map, pid_to_eids_ieids_map = self.get_pid_to_node_ids_and_elements_array(
-                #pids=pids, etypes=etypes, idtype='int64')
         return pid_to_eids_ieids_map
 
     def get_element_ids_dict_with_pids(self,
