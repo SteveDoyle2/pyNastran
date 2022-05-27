@@ -1,6 +1,6 @@
 # coding: utf-8
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import vtk
 
 #from pyNastran.gui.gui_objects.coord_properties import CoordProperties

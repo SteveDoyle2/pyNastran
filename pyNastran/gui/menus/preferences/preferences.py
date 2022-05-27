@@ -780,6 +780,7 @@ class PreferencesWindow(PyDialog):
     @property
     def nastran_settings(self) -> NastranSettings:
         return self.settings.nastran_settings  # type: NastranSettings
+
     #def on_nastran_is_shell_mcids2(self):
         #"""set the nastran properties preferences"""
         #is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()

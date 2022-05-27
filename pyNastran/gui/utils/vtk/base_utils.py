@@ -11,17 +11,16 @@ from vtk.util.numpy_support import (
 IS_TESTING = 'test' in sys.argv[0]
 _VTK_VERSION = vtk.vtkVersion.GetVTKVersion()
 VTK_VERSION = [int(val) for val in _VTK_VERSION.split('.')]
+_VTK_ERROR_MESSAGE = f'VTK version={vtk.VTK_VERSION!r} is not supported (use vtk 7, 8, or 9)'
 if VTK_VERSION[0] < 7:
-    msg = f'VTK version={vtk.VTK_VERSION!r} is no longer supported (use vtk 7 or 8)'
-    raise NotImplementedError(msg)
+    raise NotImplementedError(_VTK_ERROR_MESSAGE)
 elif VTK_VERSION[0] in [7, 8, 9]:
     # tested in 7.1.1, 8.1.2, 9.0.0
     vtkConstants = vtk
 #elif VTK_VERSION[0] == vtk_9?:
     #vtkConstants = vtk.vtkConstants
 else:  # pragma: no cover
-    msg = f'VTK version={vtk.VTK_VERSION!r} is not supported (use vtk 7, 8, or 9)'
-    raise NotImplementedError(msg)
+    raise NotImplementedError(_VTK_ERROR_MESSAGE)
 
 
 def numpy_to_vtk_idtype(ids):
