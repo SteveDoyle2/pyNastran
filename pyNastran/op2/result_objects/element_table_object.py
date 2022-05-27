@@ -95,12 +95,12 @@ class ElementTableArray(BaseElement):  # displacement style table
     def data_type(self):
         raise NotImplementedError()
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
         #ngrids = len(self.gridTypes)
         msg = []
@@ -141,7 +141,7 @@ class ElementTableArray(BaseElement):  # displacement style table
     def _get_headers(self):
         return self.headers
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -414,14 +414,14 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             #raise RuntimeError()
 
     #@property
-    #def is_real(self):
+    #def is_real(self) -> bool:
         #return False
 
     #@property
-    #def is_complex(self):
+    #def is_complex(self) -> bool:
         #return True
 
-    #def data_type(self):
+    #def data_type(self) -> str:
         #return 'complex64'
 
     ##def _write_f06_block(self, words, header, page_stamp, page_num, f06_file, is_mag_phase):

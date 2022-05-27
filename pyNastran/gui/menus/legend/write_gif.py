@@ -9,8 +9,12 @@ import os
 from typing import Tuple, List, Optional
 
 import numpy as np
+from pyNastran.utils import int_version
 try:
     import imageio
+    IMAGEIO_VERSION = int_version('imageio', imageio.__version__)
+    if IMAGEIO_VERSION >= [2, 16, 2]:
+        import imageio.v2 as imageio
     import PIL
     IS_IMAGEIO = True
 except ImportError:
@@ -77,7 +81,7 @@ def setup_animation(scale, istep=None,
             scale,
             icase_fringe, icase_disp, icase_vector,
             time, fps)
-        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, fps = out
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time = out
     elif animate_time:
         onesided = True
         is_symmetric = False
@@ -104,6 +108,8 @@ def setup_animation(scale, istep=None,
         #if animate_in_gui:
             # double the number of frames
             # drop the duplicate end frame if necessary
+
+    # grab the ith step
     if istep is not None:
         assert isinstance(istep, integer_types), f'istep={istep!r}'
         scales = (scales2[istep],)
@@ -118,13 +124,21 @@ def fix_nframes(nframes: int, profile: str) -> int:
     make sure we break at the "true scale" max
     should this be in terms of fps or nframes? (I think nframes)
     """
+    DIV2_PROFILES = {
+        '0 to scale to 0',
+        '-scale to scale to -scale',
+    }
+    DIV4_PROFILES = {
+        '0 to scale to -scale to 0',
+        'sinusoidal: 0 to scale to -scale to 0',
+        'sinusoidal: scale to -scale to scale',
+    }
+
     fix_nframes_even = nframes == 1 or nframes % 2 == 0
     fix_nframes_sin = nframes == 1 or nframes % 4 != 1
-    is_div_four_profile = (
-        '0 to scale to -scale to 0' in profile or
-        profile == 'sinusoidal: scale to -scale to scale'
-    )
-    if profile in ['0 to scale to 0', '-scale to scale to -scale'] and fix_nframes_even:
+    is_div_two_profile = profile in DIV2_PROFILES
+    is_div_four_profile = profile in DIV4_PROFILES
+    if is_div_two_profile and fix_nframes_even:
         nframes_div_2 = nframes // 2
         nframes = 2 * (nframes_div_2 + 1) + 1
     if is_div_four_profile and fix_nframes_sin:
@@ -132,18 +146,7 @@ def fix_nframes(nframes: int, profile: str) -> int:
         nframes = 4 * (nframes_div_4 + 1) + 1
     return nframes
 
-def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, profile, fps):
-    """
-    Gets the inputs for a displacement scale/real modal animation
-
-    A onesided animation is an animation that:
-     - does not need to loop back on itself because it ends back at the
-       start point
-     - is symmetric
-
-    We want to set it to true because if an animation is onesided, we can skip
-    making half the images.
-    """
+def _get_scale_profile_info(profile: str) -> Tuple[str, bool, bool, bool]:
     if isinstance(profile, str):
         profile = profile.lower()
         if profile == '0 to scale':
@@ -185,19 +188,37 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
             is_symmetric = False
         else:
             msg = (
-                "profile=%r is not supported:\n"
+                f'profile={profile!r} is not supported:\n'
                 "  '0 to scale'\n"
                 "   '0 to scale to 0'\n"
                 "  '-scale to scale'\n"
                 "  '-scale to scale to -scale'\n"
                 "  '0 to scale to -scale to 0'\n"
                 "  'sinusoidal: 0 to scale to -scale to 0'\n"
-                "  'sinusoidal: scale to -scale to scale'\n"
-                % profile)
+                "  'sinusoidal: scale to -scale to scale'\n")
             raise NotImplementedError(msg.rstrip())
     else:
-        msg = 'profile=%r is not supported' % profile
+        msg = f'profile={profile!r} is not supported'
         raise NotImplementedError(msg)
+    return profile, onesided, endpoint, is_symmetric
+
+def setup_animate_scale(scale: float,
+                        icase_fringe: int,
+                        icase_disp: int,
+                        icase_vector: Optional[int],
+                        time: float, profile: str, fps: int):
+    """
+    Gets the inputs for a displacement scale/real modal animation
+
+    A onesided animation is an animation that:
+     - does not need to loop back on itself because it ends back at the
+       start point
+     - is symmetric
+
+    We want to set it to true because if an animation is onesided, we can skip
+    making half the images.
+    """
+    profile, onesided, endpoint, is_symmetric = _get_scale_profile_info(profile)
 
     analysis_time = get_analysis_time(time, onesided)
     #fps = fix_nframes(fps, profile)
@@ -288,7 +309,9 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
     )
     return out
 
-def setup_animate_phase(scale, icase_fringe, icase_disp, icase_vector, time, fps):
+def setup_animate_phase(scale: float,
+                        icase_fringe: int, icase_disp: int, icase_vector: int,
+                        time: float, fps: int):
     """Gets the inputs for a phase animation"""
     nframes = int(time * fps)
     icases_fringe = icase_fringe
@@ -304,7 +327,7 @@ def setup_animate_phase(scale, icase_fringe, icase_disp, icase_vector, time, fps
     icases_fringe = icase_fringe
     icases_disp = icase_disp
     icases_vector = icase_vector
-    return phases, icases_fringe, icases_disp, icases_vector, isteps, scales, time, fps
+    return phases, icases_fringe, icases_disp, icases_vector, isteps, scales, time
 
 def setup_animate_time(scale, time,
                        icase_start, icase_end, icase_delta,
@@ -331,11 +354,11 @@ def setup_animate_time(scale, time,
     # our scale will be constant
     # phases is just None b/c time is real
     scales = [scale] * nfiles
-    if len(icases_disp) != nfiles:
-        msg = 'len(icases)=%s nfiles=%s' % (len(icases_disp), nfiles)
+    if len(icases_fringe) != nfiles:
+        msg = f'len(icases)={len(icases_fringe):d} nfiles={nfiles}'
         raise ValueError(msg)
-    if len(scales) != len(icases_disp):
-        msg = 'nscales=%s len(icases_disp)=%s' % (len(scales), len(icases_disp))
+    if len(scales) != len(icases_fringe):
+        msg = f'nscales={len(scales):d} len(icases_fringe)={len(icases_fringe):d}'
         raise ValueError(msg)
 
     # TODO: this isn't maintained...
@@ -399,15 +422,15 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
     else:
         raise RuntimeError(f'phases={phases!r}')
 
-    # icase_disp must not be None
-    if isinstance(icases_disp, integer_types):
-        icases_disp = [icases_disp] * len(scales)
-
     if icases_fringe is None or isinstance(icases_fringe, integer_types):
         icases_fringe = [icases_fringe] * len(scales)
+    if icases_disp is None or isinstance(icases_disp, integer_types):
+        icases_disp = [icases_disp] * len(scales)
     if icases_vector is None or isinstance(icases_vector, integer_types):
         icases_vector = [icases_vector] * len(scales)
 
+    if not(len(icases_disp) or len(icases_fringe) or len(icases_vector)):
+        raise RuntimeError('No displacement, fringe, or vector cases have been defined')
 
     assert icases_fringe is not None
     if len(icases_fringe) != len(scales):

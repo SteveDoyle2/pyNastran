@@ -238,7 +238,7 @@ class GridPointWeight:
         num_wide = 79 # self.num_wide
         #acoustic_flag = self.acoustic_flag if hasattr(self, 'acoustic_flag') else 0
         reference_point = self.reference_point
-        reference_point = 22
+        #reference_point = 22
         #thermal = self.thermal
         title = b'%-128s' % self.title.encode('ascii')
         subtitle = b'%-128s' % self.subtitle.encode('ascii')  # missing superelement_adaptivity_index
@@ -302,7 +302,7 @@ class GridPointWeight:
 
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         subtable_name = b'OGPWG'
         if itable == -1:
@@ -342,7 +342,7 @@ class GridPointWeight:
         self._write_table_3(op2_file, op2_ascii, new_result, table_name, itable)
 
         # record 4
-        itable -= 1
+        itable -= 1  # -4
         header = [4, itable, 4,
                   4, 1, 4,
                   4, 0, 4,
@@ -350,7 +350,7 @@ class GridPointWeight:
                   4*ntotal]
         op2_file.write(pack(b'%ii' % len(header), *header))
         op2_ascii.write('r4 [4, 0, 4]\n')
-        op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+        op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
         op2_ascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
 
         # -------------------------------------------------------

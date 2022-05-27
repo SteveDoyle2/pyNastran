@@ -1267,7 +1267,7 @@ class TestOP2(Tester):
         model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         model.safe_cross_reference()
 
-        save_load_deck(model, run_renumber=False)
+        save_load_deck(model, run_renumber=False, validate_case_control=False)
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,

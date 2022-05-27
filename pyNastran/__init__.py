@@ -17,7 +17,7 @@ else:
 
     __version__ = '1.3.4'
     __releaseDate__ = '2022/5/18'
-    __releaseDate2__ = 'MAY 18, 2022'
+    __releaseDate2__ = 'MAY 25, 2022'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'
@@ -27,7 +27,8 @@ __copyright__ = f'Copyright {__license__}; 2011-2022'
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
-if 'dev' in  __version__:
+DEV = 'dev' in  __version__
+if DEV:
     __docs_rtd__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
     __docs__ = __docs_rtd__
 else:

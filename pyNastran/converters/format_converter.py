@@ -5,7 +5,7 @@ import sys
 import glob
 from typing import Dict, Optional, Any, TYPE_CHECKING
 
-IS_DEV = False
+from pyNastran import DEV
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 # stl_to_plot3d ???
@@ -279,11 +279,11 @@ def run_format_converter(fmt1: str, fname1: str,
         process_tecplot(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt1 == 'ugrid':
         process_ugrid(fname1, fmt2, fname2, log, data=data, quiet=quiet)
-    elif fmt1 == 'vrml' and IS_DEV:
+    elif fmt1 == 'vrml' and DEV:
         process_vrml(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     else:
         format1s = ['nastran', 'cart3d', 'stl', 'tecplot', 'ugrid']
-        if IS_DEV:
+        if DEV:
             format1s.append('vrml')
 
         #format2s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
@@ -295,7 +295,7 @@ def cmd_line_format_converter(argv=None, quiet: str=False) -> None:
     """Interface for format_converter"""
     if argv is None:
         argv = sys.argv
-    format1_dev = ', vrml' if IS_DEV else ''
+    format1_dev = ', vrml' if DEV else ''
     msg = (
         "Usage:\n"
         #format1s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot', 'vrml']

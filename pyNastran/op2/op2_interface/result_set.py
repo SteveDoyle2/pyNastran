@@ -155,7 +155,7 @@ class ResultSet:
         return msg
 
 def _get_regex(result: str) -> str:
-    """
+    r"""
     Tack on a word boundary if we have a * at the beginning of the regex
 
     Case Input           Output              Description

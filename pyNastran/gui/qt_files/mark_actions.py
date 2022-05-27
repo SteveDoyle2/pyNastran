@@ -16,6 +16,10 @@ class MarkActions:
         """creates MarkActions"""
         self.gui = gui
 
+    @property
+    def log(self):
+        return self.gui.log
+
     def create_annotation(self, text, x, y, z):
         """
         Creates the actual annotation and appends it to slot
@@ -36,13 +40,15 @@ class MarkActions:
         annotation = create_annotation(self.gui, text, x, y, z)
         return annotation
 
-    def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
+    def get_result_by_xyz_cell_id(self, node_xyz, cell_id: int):
         """won't handle multiple cell_ids/node_xyz"""
         case_key = self.gui.case_keys[self.gui.icase_fringe]
         result_name = self.gui.result_name
 
         grid = self.gui.grid_selected
         cell = grid.GetCell(cell_id)
+        if cell is None:
+            return
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
 
@@ -162,17 +168,20 @@ class MarkActions:
                        len(case), res_name, cell_id, case_key))
             raise IndexError(msg)
 
-        cell = self.gui.grid_selected.GetCell(cell_id)
+        grid = self.gui.grid_selected
+        cell = grid.GetCell(cell_id)
+        if cell is None:
+            return
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
         cell_type = cell.GetCellType()
-        if cell_type in [5, 9, 22, 23, 28]:  # CTRIA3, CQUAD4, CTRIA6, CQUAD8, CQUAD
+        if cell_type in {5, 9, 22, 23, 28}:  # CTRIA3, CQUAD4, CTRIA6, CQUAD8, CQUAD
             node_xyz = np.zeros((nnodes, 3), dtype='float32')
             for ipoint in range(nnodes):
                 point = points.GetPoint(ipoint)
                 node_xyz[ipoint, :] = point
             xyz = node_xyz.mean(axis=0)
-        elif cell_type in [10, 12, 13, 14]: # CTETRA4, CHEXA8, CPENTA6, CPYRAM5
+        elif cell_type in {10, 12, 13, 14}: # CTETRA4, CHEXA8, CPENTA6, CPYRAM5
             # TODO: No idea how to get the center of the face
             #       vs. a point on a face that's not exposed
             #faces = cell.GetFaces()
@@ -182,15 +191,15 @@ class MarkActions:
                 #points = face.GetPoints()
             #faces
             xyz = world_position
-        elif cell_type in [24, 25, 26, 27]: # CTETRA10, CHEXA20, CPENTA15, CPYRAM13
+        elif cell_type in {24, 25, 26, 27}: # CTETRA10, CHEXA20, CPENTA15, CPYRAM13
             xyz = world_position
-        elif cell_type in [3]: # CBAR, CBEAM, CELASx, CDAMPx, CBUSHx
+        elif cell_type == 3: # CBAR, CBEAM, CELASx, CDAMPx, CBUSHx
             node_xyz = np.zeros((nnodes, 3), dtype='float32')
             for ipoint in range(nnodes):
                 point = points.GetPoint(ipoint)
                 node_xyz[ipoint, :] = point
             xyz = node_xyz.mean(axis=0)
-        elif cell_type in [21]: # CBEND
+        elif cell_type == 21: # CBEND
             # 21-QuadraticEdge
             node_xyz = np.zeros((nnodes, 3), dtype='float32')
             for ipoint in range(nnodes):

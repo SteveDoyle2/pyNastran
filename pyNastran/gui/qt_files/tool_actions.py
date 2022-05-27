@@ -566,7 +566,8 @@ class ToolActions:
         is_failed = True
         if csv_filename in [None, False]:
             title = 'Load User Points'
-            csv_filename = self.gui._create_load_file_dialog(self.gui.wildcard_delimited, title)[1]
+            csv_filename = self.gui._create_load_file_dialog(
+                self.gui.wildcard_delimited, title)[1]
             if not csv_filename:
                 return is_failed
         if color is None:
