@@ -20,7 +20,7 @@ from qtpy.QtWidgets import (
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
-
+from pyNastran.gui.utils.qt.version import Background
 
 class SingleChoiceQTableView(QTableView):
     def __init__(self, *args, **kwargs):
@@ -272,7 +272,7 @@ class EditGeometryProperties(PyDialog):
             palette = QtGui.QPalette(self.color_edit.palette()) # make a copy of the palette
             #palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, \
                              #qcolor)
-            palette.setColor(QtGui.QPalette.Background, QtGui.QColor('blue'))  # ButtonText
+            palette.setColor(Background, QtGui.QColor('blue'))  # ButtonText
             self.color_edit.setPalette(palette)
 
             self.color_edit.setStyleSheet("QPushButton {"

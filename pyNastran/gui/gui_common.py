@@ -8,7 +8,7 @@ from typing import Tuple, List, Dict, Optional, Callable, Any
 import numpy as np
 from cpylog import SimpleLogger
 
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int, qt_version
 
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
@@ -24,7 +24,11 @@ import pyNastran
 # vtk makes poor choices regarding the selection of a backend and has no way
 # to work around it
 #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
+if VTK_VERSION[0] >= 9:
+    from .qt_files.QVTKRenderWindowInteractor2 import QVTKRenderWindowInteractor
+else:
+    from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types

@@ -1035,7 +1035,7 @@ class OP2Reader:
         n = op2.n
         while marker < 0:
             #marker = self._read_cmodext_helper(marker) # -3
-            marker, is_done= self._read_cmodext_helper(marker)
+            marker, is_done = self._read_cmodext_helper(marker)
             #print(f'--end marker={marker}')
             #print(f'--end marker2={marker2}')
             if is_done:
@@ -1052,7 +1052,7 @@ class OP2Reader:
         #marker = self._read_cmodext_helper(marker); print(marker)
         print(f'table end; {marker2-1}')
         #marker = self._read_cmodext_helper(marker, debug=True)
-        op2.show_ndata(200)
+        #op2.show_ndata(200)
         #sss
 
     def _read_cmodext_helper(self, marker_orig, debug=False) -> Tuple[int, bool]:

@@ -53,9 +53,6 @@ elif qt_version == "pyside2":
 elif qt_version == "pyside6":
     from PySide6.QtWidgets import QWidget, QSizePolicy, QApplication
     from PySide6.QtCore import Qt, QTimer, QObject, QSize, QEvent
-#elif qt_version == "pyqt6":
-    #from PyQt6.QtWidgets import QWidget, QSizePolicy, QApplication
-    #from PyQt6.QtCore import Qt, QTimer, QObject, QSize, QEvent
 else:
     raise ImportError("Unknown PyQt implementation " + repr(qt_version))
 
