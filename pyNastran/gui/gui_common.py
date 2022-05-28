@@ -1601,9 +1601,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         is_failed = True
         try:
-            if not(animate_fringe or animate_vector):
-                msg = 'Either animate_fringe or animate_vector must be True'
-                raise ValueError(msg)
+            #if not(animate_fringe or animate_vector):
+                #msg = 'Either animate_fringe or animate_vector must be True'
+                #raise ValueError(msg)
 
             out = setup_animation(
                 scale, istep=istep,
