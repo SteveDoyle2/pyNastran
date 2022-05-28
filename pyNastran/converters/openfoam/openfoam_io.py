@@ -85,10 +85,11 @@ class OpenFoamIO:
         #case = self.resultCases[key]
 
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
-        skip_reading = self.gui._remove_old_geometry(openfoam_filename)
+        gui = self
+        skip_reading = gui._remove_old_geometry(openfoam_filename)
         if skip_reading:
             return
-        log = self.gui.log
+        log = gui.log
         reset_labels = True
         #self.log.info('self.modelType=%s' % self.modelType)
         log.info('mesh_3d = %s' % mesh_3d)
@@ -99,7 +100,7 @@ class OpenFoamIO:
             boundary = Boundary(log=log, debug=False)
 
 
-        self.gui.modelType = 'openfoam'
+        gui.modelType = 'openfoam'
         #self.modelType = model.modelType
         log.info('openfoam_filename = %s' % openfoam_filename)
 
@@ -124,9 +125,9 @@ class OpenFoamIO:
 
 
         if mesh_3d == 'hex':
-            self.gui.nelements = len(hexas)
+            gui.nelements = len(hexas)
         elif mesh_3d == 'shell':
-            self.gui.nelements = len(quads)
+            gui.nelements = len(quads)
         elif mesh_3d == 'faces':
             dirname = os.path.dirname(openfoam_filename)
             point_filename = os.path.join(dirname, 'points')
@@ -140,19 +141,19 @@ class OpenFoamIO:
             patches = None
             nodes, quads, names = boundary.read_openfoam(
                 point_filename, face_filename, boundary_filename)
-            self.gui.nelements = len(quads) + len(tris)
+            gui.nelements = len(quads) + len(tris)
         else:
             raise RuntimeError(mesh_3d)
 
-        self.gui.nnodes = len(nodes)
-        log = self.gui.log
-        log.debug("nnodes = %s" % self.gui.nnodes)
-        log.debug("nelements = %s" % self.gui.nelements)
+        gui.nnodes = len(nodes)
+        log = gui.log
+        log.debug("nnodes = %s" % gui.nnodes)
+        log.debug("nelements = %s" % gui.nelements)
 
-        grid = self.gui.grid
-        grid.Allocate(self.gui.nelements, 1000)
+        grid = gui.grid
+        grid.Allocate(gui.nelements, 1000)
 
-        self.gui.nid_map = {}
+        gui.nid_map = {}
 
         assert nodes is not None
         nnodes = nodes.shape[0]
@@ -171,7 +172,7 @@ class OpenFoamIO:
 
         # breaks the model without subracting off the delta
         #self.update_axes_length(dim_max)
-        self.gui.create_global_axes(dim_max)
+        gui.create_global_axes(dim_max)
 
         #print('is_face_mesh=%s is_3d_blockmesh=%s is_surface_blockmesh=%s' % (
             #is_face_mesh, is_3d_blockmesh, is_surface_blockmesh))
@@ -186,7 +187,7 @@ class OpenFoamIO:
 
             if is_face_mesh:
                 points = vtk.vtkPoints()
-                points.SetNumberOfPoints(self.gui.nnodes)
+                points.SetNumberOfPoints(gui.nnodes)
 
                 unodes = unique(quads)
                 unodes.sort()
@@ -264,14 +265,14 @@ class OpenFoamIO:
                 raise RuntimeError(msg)
             bdf_file.write('ENDDATA\n')
 
-        self.gui.nelements = nelements
+        gui.nelements = nelements
         grid.SetPoints(points)
         grid.Modified()
 
-        self.gui.scalar_bar_actor.VisibilityOn()
-        self.gui.scalar_bar_actor.Modified()
+        gui.scalar_bar_actor.VisibilityOn()
+        gui.scalar_bar_actor.Modified()
 
-        self.gui.isubcase_name_map = {0: ['OpenFoam BlockMeshDict', '']}
+        gui.isubcase_name_map = {0: ['OpenFoam BlockMeshDict', '']}
         cases = OrderedDict()
         ID = 1
 
@@ -295,12 +296,12 @@ class OpenFoamIO:
         else:
             raise RuntimeError(mesh_3d)
 
-        self.gui.node_ids = node_ids
-        self.gui.element_ids = element_ids
+        gui.node_ids = node_ids
+        gui.element_ids = element_ids
         if plot:
-            self.gui._finish_results_io2(model_name, form, cases, reset_labels=reset_labels)
+            gui._finish_results_io2(model_name, form, cases, reset_labels=reset_labels)
         else:
-            self.gui._set_results(form, cases)
+            gui._set_results(form, cases)
 
 
     def clear_openfoam(self):

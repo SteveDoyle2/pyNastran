@@ -659,6 +659,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate stress objects"""
         icase = icase_old
+        log = model.log
         settings = self.settings  # type:  Settings
         if settings.nastran_stress:
             for itime, unused_dt in enumerate(times):
@@ -692,17 +693,26 @@ class NastranGuiResults(NastranGuiAttributes):
                 self.stress[key].composite_data_dict, self.log, is_stress=True)
 
         if settings.nastran_rod_stress:
-            icase = get_rod_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, is_stress=True)
+            try:
+                icase = get_rod_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, is_stress=True)
+            except Exception as e:
+                log.error(str(e))
         if settings.nastran_bar_stress:
-            icase = get_bar_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, is_stress=True)
+            try:
+                icase = get_bar_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, is_stress=True)
+            except Exception as e:
+                log.error(str(e))
         if settings.nastran_beam_stress:
-            icase = get_beam_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, is_stress=True)
+            try:
+                icase = get_beam_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, is_stress=True)
+            except Exception as e:
+                log.error(str(e))
 
         icase = get_solid_stress_strains(
             eids, cases, model, times, key, icase,
@@ -773,6 +783,7 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_centroidal_strain(self, cases, model: OP2, times, key, icase: int,
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate strain objects"""
+        log = self.log
         settings = self.settings  # type: Settings
         if settings.nastran_strain:
             for itime, unused_dt in enumerate(times):
@@ -802,17 +813,27 @@ class NastranGuiResults(NastranGuiAttributes):
                 self.strain[key].composite_data_dict, self.log, is_stress=False)
 
         if settings.nastran_rod_strain:
-            icase = get_rod_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, is_stress=False)
+            try:
+                icase = get_rod_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, is_stress=False)
+            except Exception as e:
+                log.error(str(e))
+
         if settings.nastran_bar_strain:
-            icase = get_bar_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, is_stress=False)
+            try:
+                icase = get_bar_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, is_stress=False)
+            except Exception as e:
+                log.error(str(e))
         if settings.nastran_beam_strain:
-            icase = get_beam_stress_strains(
-                eids, cases, model, times, key, icase,
-                form_dict, header_dict, keys_map, is_stress=False)
+            try:
+                icase = get_beam_stress_strains(
+                    eids, cases, model, times, key, icase,
+                    form_dict, header_dict, keys_map, is_stress=False)
+            except Exception as e:
+                log.error(str(e))
 
         icase = get_solid_stress_strains(
             eids, cases, model, times, key, icase,
@@ -830,7 +851,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                          keys_map: Dict[Any, Any],
                                          is_stress=True) -> int:
         """Creates the time accurate stress objects"""
-
+        log = model.log
         #new_cases = True
         #assert isinstance(subcase_id, int), type(subcase_id)
         assert isinstance(icase, int), icase
@@ -864,34 +885,49 @@ class NastranGuiResults(NastranGuiAttributes):
             #eids, header_dict, keys_map)
 
         #-------------------------------------------------------------
-        vm_word = get_rod_stress_strain(
-            model, key, is_stress, vm_word, itime,
-            oxx, txy,
-            max_principal, min_principal, ovm, is_element_on,
-            eids, header_dict, keys_map)
+        try:
+            vm_word = get_rod_stress_strain(
+                model, key, is_stress, vm_word, itime,
+                oxx, txy,
+                max_principal, min_principal, ovm, is_element_on,
+                eids, header_dict, keys_map)
+        except Exception as e:
+            log.error(str(e))
 
-        vm_word = get_bar_stress_strain(
-            model, key, is_stress, vm_word, itime,
-            oxx,
-            max_principal, min_principal, ovm, is_element_on,
-            eids, header_dict, keys_map)
+        try:
+            vm_word = get_bar_stress_strain(
+                model, key, is_stress, vm_word, itime,
+                oxx,
+                max_principal, min_principal, ovm, is_element_on,
+                eids, header_dict, keys_map)
+        except Exception as e:
+            log.error(str(e))
 
-        vm_word = get_bar100_stress_strain(
-            model, key, is_stress, vm_word, itime,
-            oxx,
-            max_principal, min_principal, ovm, is_element_on,
-            eids, header_dict, keys_map)
+        try:
+            vm_word = get_bar100_stress_strain(
+                model, key, is_stress, vm_word, itime,
+                oxx,
+                max_principal, min_principal, ovm, is_element_on,
+                eids, header_dict, keys_map)
+        except Exception as e:
+            log.error(str(e))
 
-        vm_word = get_beam_stress_strain(
-            model, key, is_stress, vm_word, itime,
-            oxx,
-            max_principal, min_principal, ovm, is_element_on,
-            header_dict, keys_map, self.eid_map)
+        try:
+            vm_word = get_beam_stress_strain(
+                model, key, is_stress, vm_word, itime,
+                oxx,
+                max_principal, min_principal, ovm, is_element_on,
+                header_dict, keys_map, self.eid_map)
+        except Exception as e:
+            log.error(str(e))
         #-------------------------------------------------------------
-        vm_word = get_plate_stress_strain(
-            model, key, is_stress, vm_word, itime,
-            oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
-            eids, header_dict, keys_map)
+        try:
+            vm_word = get_plate_stress_strain(
+                model, key, is_stress, vm_word, itime,
+                oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
+                eids, header_dict, keys_map)
+        except Exception as e:
+            log.error(str(e))
 
         #vm_word = get_shear_stress_strain(
             #model, key, is_stress, vm_word, itime,
@@ -912,11 +948,14 @@ class NastranGuiResults(NastranGuiAttributes):
                 is_element_on, header_dict,
             )
 
-        vm_word = get_solid_stress_strain(
-            model, key, is_stress, vm_word, itime,
-            oxx, oyy, ozz, txy, tyz, txz,
-            max_principal, mid_principal, min_principal, ovm, is_element_on,
-            eids, header_dict, keys_map)
+        try:
+            vm_word = get_solid_stress_strain(
+                model, key, is_stress, vm_word, itime,
+                oxx, oyy, ozz, txy, tyz, txz,
+                max_principal, mid_principal, min_principal, ovm, is_element_on,
+                eids, header_dict, keys_map)
+        except Exception as e:
+            log.error(str(e))
 
         if is_stress:
             word = 'Stress'

@@ -16,6 +16,19 @@ from pyNastran.gui.utils.vtk.base_utils import (
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
 
+ETYPES_EXPECTED_DICT = {
+    # etype: nnodes
+    1: 1, # vertex
+    3: 2, # line
+    5: 3, # ctri3
+    9: 4, # cquad4
+    10: 4, # ctetra4
+    14: 5, # cpyram5
+    12: 8, # chexa8
+    13: 6, # cpenta6
+    22: 6, # ctria6
+    27: 13, # cpyram13
+}
 
 def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     """common method to account for vtk endian quirks and efficiently adding points"""
@@ -50,23 +63,23 @@ def _check_shape(etype: int, elements: np.ndarray, nnodes_per_element: int) -> N
     1   vtkVertex
     3   vtkLine
     5   vtkTriangle
+    12  vtkHexa
     9   vtkQuad
     10  vtkTetra
-    #vtkPenta().GetCellType()
-    12  vtkHexa
-    #vtkPyram().GetCellType()
+    13  vtkPenta
+    14  vtkPyram
+    13  vtkWedge
+    25  vtkQuadraticHexahedron
+    26  vtkQuadraticWedge
+    27  vtkQuadraticPyramid
 
     """
-    if etype == 1: # vertex
-        assert nnodes_per_element == 1, elements.shape
-    if etype == 3: # line
-        assert nnodes_per_element == 2, elements.shape
-    elif etype == 5:  # tri
-        assert nnodes_per_element == 3, elements.shape
-    elif etype in [9, 10]:  # quad, tet4
-        assert nnodes_per_element == 4, elements.shape
-    elif etype in [12]:  # hex
-        pass
+    if isinstance(etype, int):
+        try:
+            nnodes = ETYPES_EXPECTED_DICT[etype]
+            assert nnodes_per_element == nnodes, elements.shape
+        except KeyError:
+            warnings.warn(f'no recommendation for etype={etype}; nnodes_per_element={nnodes_per_element}')
     else:
         raise RuntimeError(etype)
 
@@ -272,10 +285,17 @@ def find_point_id_closest_to_xyz(grid: vtk.vtkUnstructuredGrid,
                                  cell_id: int,
                                  node_xyz: np.ndarray) -> Optional[int]:
     cell = grid.GetCell(cell_id)
+    if cell is None:
+        return
     nnodes = cell.GetNumberOfPoints()
     points = cell.GetPoints()
 
-    point0 = points.GetPoint(0)
+    try:
+        point0 = points.GetPoint(0)
+    except ValueError:
+        #ValueError: expects 0 <= id && id < GetNumberOfPoints()
+        return None
+
     dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
 
     imin = 0

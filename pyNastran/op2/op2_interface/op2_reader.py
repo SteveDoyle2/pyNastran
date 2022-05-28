@@ -94,6 +94,11 @@ DENSE_MATRICES = [
     b'KELM', b'MELM', b'BELM',
     b'KELMP', b'MELMP',
 ]
+OPTISTRUCT_VERSIONS = [
+    b'OS11XXXX', b'OS12.210', b'OS14.210',
+    b'OS2017.1', b'OS2017.2',
+    b'OS2018.1',
+]
 
 class OP2Reader:
     """Stores methods that aren't useful to an end user"""
@@ -315,6 +320,7 @@ class OP2Reader:
         """
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\extse04c_cnv1_0.op2
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\atv005mat.op2
         if self.read_mode == 2:
             table_name = self._read_table_name(rewind=True)
             self._skip_table(table_name, warn=False)
@@ -1931,7 +1937,7 @@ class OP2Reader:
         #print('--------------------')
 
         self.read_3_markers([-2, 1, 0])
-        self.read_table_name(['GPDT', 'GPDTS'])
+        self.read_table_name(['GPDT', 'GPDTS', 'SAGPDT'])
 
         #print('--------------------')
 
@@ -2033,7 +2039,7 @@ class OP2Reader:
         op2 = self.op2
         table_name = self._read_table_name(rewind=False)
         op2.table_name = table_name
-        self.log.debug('table_name = %r' % table_name)
+        #self.log.debug('table_name = %r' % table_name)
         if self.is_debug_file:
             self.binary_debug.write('read_bgpdt - %s\n' % table_name)
 
@@ -2852,6 +2858,8 @@ class OP2Reader:
 
         #op2._results._found_result(result_name)
         responses = op2.op2_results.responses
+
+        # create the result object
         if self.read_mode == 1:
             assert data is not None, data
             assert len(data) > 12, len(data)
@@ -3560,9 +3568,13 @@ class OP2Reader:
         utable_name = table_name.decode('utf-8')
         #print(utable_name)
         self.read_markers([-1])
+
+        # (104, 32768, 0, 0, 0, 0, 0)
         data = self._read_record()
 
         self.read_3_markers([-2, 1, 0])
+
+        # MATPOOL
         data = self._read_record()
         if self.size == 8:
             data = reshape_bytes_block(data)
@@ -3893,7 +3905,7 @@ class OP2Reader:
 
     #---------------------------------------------------------------------------
 
-    def _get_marker_n(self, nmarkers):
+    def _get_marker_n(self, nmarkers: int) -> List[int]:
         """
         Gets N markers
 
@@ -3920,12 +3932,12 @@ class OP2Reader:
             markers.append(marker)
         return markers
 
-    def get_nmarkers(self, n, rewind=True, macro_rewind=False):
+    def get_nmarkers(self, n: int, rewind=True, macro_rewind=False):
         if self.size == 4:
             return self.get_nmarkers4(n, rewind=rewind, macro_rewind=macro_rewind)
         return self.get_nmarkers8(n, rewind=rewind, macro_rewind=macro_rewind)
 
-    def get_nmarkers4(self, n, rewind=True, macro_rewind=False):
+    def get_nmarkers4(self, n: int, rewind=True, macro_rewind=False):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
@@ -3963,7 +3975,7 @@ class OP2Reader:
                         i, macro_rewind or rewind))
         return markers
 
-    def get_nmarkers8(self, n, rewind=True, macro_rewind=False):
+    def get_nmarkers8(self, n: int, rewind=True, macro_rewind=False):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
@@ -4001,12 +4013,12 @@ class OP2Reader:
                         i, macro_rewind or rewind))
         return markers
 
-    def read_markers(self, markers, macro_rewind=True):
+    def read_markers(self, markers: List[int], macro_rewind: bool=True) -> None:
         if self.size == 4:
             return self.read_markers4(markers, macro_rewind=macro_rewind)
         return self.read_markers8(markers, macro_rewind=macro_rewind)
 
-    def read_markers4(self, markers, macro_rewind=True):
+    def read_markers4(self, markers: List[int], macro_rewind: bool=True) -> None:
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
         The "marker" corresponds to the value, so 3 markers takes up 9 integers.
@@ -4039,7 +4051,7 @@ class OP2Reader:
                     op2.f.tell(), os.path.getsize(op2.op2_filename))
                 raise FortranMarkerError(msg)
             if self.is_debug_file:
-                self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
+                self.binary_debug.write(f'  read_markers -> [4, {marker:d}, 4]\n')
 
     def read_markers8(self, markers: List[int], macro_rewind: int=True) -> None:
         """
@@ -5960,7 +5972,8 @@ def _parse_nastran_version(data: bytes, version: bytes, encoding: bytes,
             # 'XXXXXXXX20141   0   \x00\x00\x00\x00        '
             mode = 'msc'
         else:
-            raise NotImplementedError(f'check={data[:16].strip()} data={data!r}')
+            raise NotImplementedError(f'check={data[:16].strip()} data={data!r}; '
+                                      f'len(data)={len(data)}')
     elif len(data) == 8:
         mode = _parse_nastran_version_8(data, version, encoding, log)
     elif len(data) == 16:
@@ -6008,15 +6021,14 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) ->
     elif version in [b'XXXXXXXX']:
         #log.warning('Assuming MSC Nastran')
         mode = 'msc'
-    elif version in [b'OS11XXXX', b'OS12.210', b'OS14.210',
-                     b'OS2017.1', b'OS2017.2', b'OS2018.1']:
+    elif version in OPTISTRUCT_VERSIONS:
         # should this be called optistruct or radioss?
         mode = 'optistruct'
     #elif data[:20] == b'XXXXXXXX20141   0   ':
         #self.set_as_msc()
         #self.set_table_type()
     else:
-        raise RuntimeError('unknown version=%r' % version)
+        raise RuntimeError(f'unknown version={version!r}')
     return mode
 
 def reshape_bytes_block(block: bytes) -> bytes:

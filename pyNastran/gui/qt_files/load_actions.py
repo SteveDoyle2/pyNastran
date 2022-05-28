@@ -89,7 +89,7 @@ class LoadActions:
                     dy_method = getattr(self, clear_name)  # 'self.clear_nastran()'
                     dy_method()
                 except Exception:
-                    print("method %r does not exist" % clear_name)
+                    self.gui.log_error("method %r does not exist" % clear_name)
             self.gui.log_info("reading %s file %r" % (geometry_format, infile_name))
 
             try:
@@ -299,8 +299,8 @@ class LoadActions:
                 msg = traceback.format_exc()
                 self.gui.log_error(msg)
                 print(msg)
-                #return
-                raise
+                return
+                #raise
 
             self.gui.out_filename = out_filenamei
             msg = '%s - %s - %s' % (self.gui.format, self.gui.infile_name, out_filenamei)

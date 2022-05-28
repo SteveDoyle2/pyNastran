@@ -1,5 +1,6 @@
 """import various codes with backup for failed imports"""
 CLASS_MAP = {}
+from pyNastran import DEV
 
 try:
     from pyNastran.converters.dev.avus.avus_io import AvusIO
@@ -105,35 +106,36 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
-try:
-    from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
-    CLASS_MAP['adb'] = ADB_IO
-except ImportError:  # pragma: no cover
-    pass
+if DEV:
+    try:
+        from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
+        CLASS_MAP['adb'] = ADB_IO
+    except ImportError:  # pragma: no cover
+        pass
 
-try:
-    from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
-    CLASS_MAP['degen_geom'] = DegenGeomIO
-except ImportError:  # pragma: no cover
-    pass
+    try:
+        from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
+        CLASS_MAP['degen_geom'] = DegenGeomIO
+    except ImportError:  # pragma: no cover
+        pass
 
-try:
-    from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
-    CLASS_MAP['openfoam_hex'] = OpenFoamIO
-    CLASS_MAP['openfoam_shell'] = OpenFoamIO
-    CLASS_MAP['openfoam_faces'] = OpenFoamIO
-except ImportError:  # pragma: no cover
-    pass
+    try:
+        from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
+        CLASS_MAP['openfoam_hex'] = OpenFoamIO
+        CLASS_MAP['openfoam_shell'] = OpenFoamIO
+        CLASS_MAP['openfoam_faces'] = OpenFoamIO
+    except ImportError:  # pragma: no cover
+        pass
 
-try:
-    from pyNastran.converters.dev.obj.obj_io import ObjIO
-    CLASS_MAP['obj'] = ObjIO
-except ImportError:  # pragma: no cover
-    pass
+    try:
+        from pyNastran.converters.dev.obj.obj_io import ObjIO
+        CLASS_MAP['obj'] = ObjIO
+    except ImportError:  # pragma: no cover
+        pass
 
-try:
-    from pyNastran.converters.dev.vrml.vrml_io import Vrml_io
-    CLASS_MAP['vrml'] = Vrml_io
-except ImportError:  # pragma: no cover
-    #raise
-    pass
+    try:
+        from pyNastran.converters.dev.vrml.vrml_io import Vrml_io
+        CLASS_MAP['vrml'] = Vrml_io
+    except ImportError:  # pragma: no cover
+        #raise
+        pass

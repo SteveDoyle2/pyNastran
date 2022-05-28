@@ -101,7 +101,7 @@ except ImportError:
 QT_AGG_BACKENDS = {
     'PyQt5': 'Qt5Agg',
     'PySide2': 'Qt5Agg',
-    #'PyQt6': 'QtAgg',
+    'PyQt6': 'QtAgg',
     'PySide6': 'QtAgg',
 }
 QT_AGG_BACKEND = QT_AGG_BACKENDS[qt_name]

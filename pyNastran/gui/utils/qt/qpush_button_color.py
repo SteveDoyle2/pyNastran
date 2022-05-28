@@ -1,6 +1,6 @@
 from qtpy import QtGui
 from qtpy.QtWidgets import QPushButton
-
+from .version import Background
 
 class QPushButtonColor(QPushButton):
     """Creates a QPushButton with a face color"""
@@ -11,7 +11,7 @@ class QPushButtonColor(QPushButton):
         #self.color_edit.setFlat(True)
         qcolor.setRgb(*labelcolor_int)
         palette = QtGui.QPalette(self.palette())
-        palette.setColor(QtGui.QPalette.Background, QtGui.QColor('blue'))
+        palette.setColor(Background, QtGui.QColor('blue'))
         self.setPalette(palette)
         self.setStyleSheet(
             "QPushButton {"

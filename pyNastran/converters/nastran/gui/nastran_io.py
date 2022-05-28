@@ -109,6 +109,7 @@ from .menus.setup_model_sidebar import ModelSidebar
 
 
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings
 
 SIDE_MAP = {}
@@ -174,6 +175,7 @@ DESIRED_RESULTS = [
 ]
 
 IS_TESTING = 'test' in sys.argv[0]
+
 class NastranIO(NastranGuiResults, NastranGeometryHelper):
     """Defines the GUI class for Nastran."""
     def __init__(self):
@@ -416,7 +418,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         origin = coord.origin
         beta = coord.beta().T
-        ## TODO: support FEMAP syntax
+        ## TODO: support FEMAP syntax which is????
         self.gui.create_coordinate_system(
             cid, dim_max, label='%s' % cid, origin=origin,
             matrix_3x3=beta, coord_type=coord_type)
@@ -474,7 +476,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 del name
         return skip_reading
 
-    def get_xyz_in_coord(self, model, cid=0, fdtype: str='float32', check_mirror: bool=True):
+    def get_xyz_in_coord(self, model: BDF, cid: int=0,
+                         fdtype: str='float32', check_mirror: bool=True):
         """
         Creates the grid points efficiently
 
@@ -717,7 +720,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         return dim_max
 
-    def load_nastran_geometry_unvectorized(self, bdf_filename, plot=True):
+    def load_nastran_geometry_unvectorized(self, bdf_filename: str, plot: bool=True):
         """
         The entry point for Nastran geometry loading.
 
@@ -954,8 +957,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                           has_control_surface)
         self.Render()
 
-    def _create_aero(self, model, box_id_to_caero_element_map, cs_box_ids,
-                     caero_points, ncaeros_points, ncaero_sub_points, has_control_surface):
+    def _create_aero(self, model: BDF,
+                     box_id_to_caero_element_map: Dict[int, Any],
+                     cs_box_ids,
+                     caero_points,
+                     ncaeros_points: int,
+                     ncaero_sub_points: int,
+                     has_control_surface: bool):
         # fill grids
         zfighting_offset0 = 0.001
         zfighting_offset = zfighting_offset0
@@ -1128,7 +1136,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 try:
                     aero_box_ids = spline.aero_element_ids
-                except:
+                except Exception:
                     print(spline.object_attributes())
                     print(spline.object_methods())
                     raise
@@ -1201,6 +1209,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cs_box_ids
         cs_box_ids : dict[control_surface_name] : List[panel ids]
             list of panels used by each aero panel
+
         """
         has_caero = False
         ncaeros = 0
@@ -1281,7 +1290,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         )
         return out
 
-    def set_caero_grid(self, ncaeros_points, model):
+    def set_caero_grid(self, ncaeros_points: int, model: BDF) -> None:
         """
         Sets the CAERO panel geometry.
 
@@ -1313,15 +1322,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 min_cpoints.append(np.array(cpoints).min(axis=0))
 
                 elem = vtkQuad()
-                elem.GetPointIds().SetId(0, j)
-                elem.GetPointIds().SetId(1, j + 1)
-                elem.GetPointIds().SetId(2, j + 2)
-                elem.GetPointIds().SetId(3, j + 3)
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, j)
+                point_ids.SetId(1, j + 1)
+                point_ids.SetId(2, j + 2)
+                point_ids.SetId(3, j + 3)
                 points.InsertPoint(j, *cpoints[0])
                 points.InsertPoint(j + 1, *cpoints[1])
                 points.InsertPoint(j + 2, *cpoints[2])
                 points.InsertPoint(j + 3, *cpoints[3])
-                caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                caero_grid.InsertNextCell(elem.GetCellType(), point_ids)
                 j += 4
             elif isinstance(element, (CAERO2, BODY7)):
                 # slender body
@@ -1334,12 +1344,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #min_cpoints.append(np.array(cpoints).min(axis=0))
 
                 #elem = vtk.vtkLine()
-                #elem.GetPointIds().SetId(0, j)
-                #elem.GetPointIds().SetId(1, j + 1)
+                #point_ids = elem.GetPointIds()
+                #point_ids.SetId(0, j)
+                #point_ids.SetId(1, j + 1)
                 #points.InsertPoint(j, *cpoints[0])
                 #points.InsertPoint(j + 1, *cpoints[1])
                 #j += 2
-                #caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                #caero_grid.InsertNextCell(elem.GetCellType(), point_ids)
 
                 #else:
                 # 3D version
@@ -1348,10 +1359,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 xyz[:, 2] += zfighting_offset
                 for elemi in elems:
                     elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, j)
-                    elem.GetPointIds().SetId(1, j + 1)
-                    elem.GetPointIds().SetId(2, j + 2)
-                    elem.GetPointIds().SetId(3, j + 3)
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(0, j)
+                    point_ids.SetId(1, j + 1)
+                    point_ids.SetId(2, j + 2)
+                    point_ids.SetId(3, j + 3)
                     n1, n2, n3, n4 = elemi
 
                     points.InsertPoint(j, *xyz[n1])
@@ -1365,7 +1377,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #max_cpoints.append(np.array(cpoints).max(axis=0))
                     #min_cpoints.append(np.array(cpoints).min(axis=0))
 
-                    caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    caero_grid.InsertNextCell(elem.GetCellType(), point_ids)
                     j += 4
             else:
                 gui.log_info("skipping %s" % element.type)
@@ -1377,7 +1389,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #gui.alt_grids['caero']
         #edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
-    def set_caero_subpanel_grid(self, ncaero_sub_points, model):
+    def set_caero_subpanel_grid(self, ncaero_sub_points: int, model: BDF) -> None:
         """
         Sets the CAERO sub-panel geometry.
 
@@ -1416,10 +1428,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.gui.log_info("skipping %s" % element.type)
         grid.SetPoints(points)
 
-    def set_caero_control_surface_grid(self, name, cs_box_ids,
-                                       box_id_to_caero_element_map,
-                                       caero_points, note=None,
-                                       zfighting_offset=0.001, store_msg=False):
+    def set_caero_control_surface_grid(self, name: str, cs_box_ids: List[int],
+                                       box_id_to_caero_element_map: Dict[int, Any],
+                                       caero_points: np.ndarray,
+                                       note: Optional[str]=None,
+                                       zfighting_offset: float=0.001,
+                                       store_msg: bool=False) -> str:
         """
         Creates a single CAERO control surface?
 
@@ -1516,7 +1530,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         all_points_array[:, [1, 2]] += zfighting_offset
 
         # get the vtk object
-        points = numpy_to_vtk_points(all_points_array, deep=0)
+        vtk_points = numpy_to_vtk_points(all_points_array, deep=0)
+        grid.SetPoints(vtk_points)
 
         #if missing_boxes:
             #msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
@@ -1531,7 +1546,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             annotation = gui.create_annotation(text, x, y, z)
             slot.append(annotation)
 
-        grid.SetPoints(points)
         return stored_msg
 
     def _set_conm_grid(self, nconm2, model):
@@ -1870,7 +1884,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 is_type[ibars] = 0
                 try:
                     is_type[i] = 1
-                except:
+                except Exception:
                     #print('self.element_ids =', self.element_ids)
                     #print('eids =', eids)
                     ii = np.where(i == len(self.element_ids))[0]
@@ -3150,7 +3164,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             try:
                 icase = _build_optimization(model, pids, upids, nelements,
                                             cases, form0, icase)
-            except:
+            except Exception:
                 if IS_TESTING or self.is_testing_flag:
                     raise
                 s = StringIO()
@@ -3214,7 +3228,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             grid.SetPoints(points)
             create_vtk_cells_of_constant_element_type(grid, elements, etype)
         return
-
 
     def _build_plotels(self, model):
         """creates the plotel actor"""
@@ -3419,10 +3432,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #p2 = xyz_cid0[n2, :]
                 #p3 = xyz_cid0[n3, :]
 
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
             elif isinstance(element, (CTRIA6, CPLSTN6, CPLSTS6, CTRIAX)):
                 # the CTRIAX is a standard 6-noded element
                 if isinstance(element, CTRIA6):
@@ -3437,9 +3451,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         nid_to_pid_map[nid].append(pid)
                 if None not in node_ids:
                     elem = vtkQuadraticTriangle()
-                    elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                    elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
-                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(3, nid_map[node_ids[3]])
+                    point_ids.SetId(4, nid_map[node_ids[4]])
+                    point_ids.SetId(5, nid_map[node_ids[5]])
                 else:
                     elem = vtkTriangle()
 
@@ -3447,10 +3462,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #p1 = xyz_cid0[n1, :]
                 #p2 = xyz_cid0[n2, :]
                 #p3 = xyz_cid0[n3, :]
-                elem.GetPointIds().SetId(0, n1)
-                elem.GetPointIds().SetId(1, n2)
-                elem.GetPointIds().SetId(2, n3)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                point_ids.SetId(2, n3)
+                grid.InsertNextCell(elem.GetCellType(), point_ids)
             elif isinstance(element, CTRIAX6):
                 # the CTRIAX6 is not a standard second-order triangle
                 #
@@ -5331,6 +5346,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         pressure act normal to a shell (as opposed to anti-normal to a
         solid face)
         """
+        fdtype = 'float32'
         # quit out if we're going to make pressure plots anyways
         #if self.plot_applied_loads:
             #return icase
@@ -5412,9 +5428,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 if np.abs(forces.max() - forces.min()) > 0.0:
                     fxyz = forces[:, :3]
-                    mxyz = forces[:, 3:]
                     fscalar = np.linalg.norm(fxyz, axis=1)
+
+                    mxyz = forces[:, 3:]
                     mscalar = np.linalg.norm(mxyz, axis=1)
+
                     if fscalar.max() > 0:
                         titles = ['Force XYZ']
                         headers = titles
@@ -5509,52 +5527,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         log = self.gui.log
         if isinstance(results_filename, str):
-            print("trying to read...%s" % results_filename)
-            ext = os.path.splitext(results_filename)[1].lower()
-
-            if ext == '.op2':
-                op2_filename = results_filename
-                try:
-                    mode = self.model.nastran_format
-                except AttributeError:
-                    mode = None
-
-                model = OP2(log=log, debug=True)
-                model.IS_TESTING = False
-
-                if 0:  # pragma: no cover
-                    model._results.saved = set()
-                    all_results = model.get_all_results()
-                    for result in DESIRED_RESULTS:
-                        if result in all_results:
-                            model._results.saved.add(result)
-                model.read_op2(op2_filename, combine=False)
-
-                if not IS_TESTING or self.is_testing_flag:
-                    log.info(model.get_op2_stats())
-                # print(model.get_op2_stats())
-
-            elif ext == '.nod':
-                self.gui.load_patran_nod(results_filename)
-                self.gui.cycle_results_explicit()  # start at icase=0
+            model = self._load_nastran_results_str(results_filename, log)
+            if model is None:
                 return
-            elif ext == '.h5' and IS_H5PY:
-                model = OP2(log=log, debug=True)
-                hdf5_filename = results_filename
-                model.load_hdf5_filename(hdf5_filename, combine=False)
-            #elif ext == '.pch':
-                #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
-            #elif ext == '.f06':
-                #model = F06(log=log, debug=True)
-                #model.set_vectorization(True)
-                #model.read_f06(op2_filename)
-            else:
-                #print("error...")
-                msg = 'extension=%r is not supported; filename=%r' % (ext, op2_filename)
-                raise NotImplementedError(msg)
         else:
-            model = op2_filename
-            op2_filename = op2_filename.filename
+            model = results_filename
+            op2_filename = results_filename.filename
 
         if self.save_data:
             self.model_results = model
@@ -5621,6 +5599,51 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.create_group_with_name(name, eids)
         #self.post_group_by_name(name)
 
+    def _load_nastran_results_str(self, results_filename: str, log) -> None:
+        print("trying to read...%s" % results_filename)
+        ext = os.path.splitext(results_filename)[1].lower()
+
+        if ext == '.op2':
+            op2_filename = results_filename
+            try:
+                mode = self.model.nastran_format
+            except AttributeError:
+                mode = None
+
+            model = OP2(log=log, debug=True)
+            model.IS_TESTING = False
+
+            if 0:  # pragma: no cover
+                model._results.saved = set()
+                all_results = model.get_all_results()
+                for result in DESIRED_RESULTS:
+                    if result in all_results:
+                        model._results.saved.add(result)
+            model.read_op2(op2_filename, combine=False)
+
+            if not IS_TESTING or self.is_testing_flag:
+                log.info(model.get_op2_stats())
+            # print(model.get_op2_stats())
+
+        elif ext == '.nod':
+            self.gui.load_patran_nod(results_filename)
+            self.gui.cycle_results_explicit()  # start at icase=0
+            return None
+        elif ext == '.h5' and IS_H5PY:
+            model = OP2(log=log, debug=True)
+            hdf5_filename = results_filename
+            model.load_hdf5_filename(hdf5_filename, combine=False)
+        #elif ext == '.pch':
+            #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
+        #elif ext == '.f06':
+            #model = F06(log=log, debug=True)
+            #model.set_vectorization(True)
+            #model.read_f06(op2_filename)
+        else:
+            #print("error...")
+            msg = 'extension=%r is not supported; filename=%r' % (ext, results_filename)
+            raise NotImplementedError(msg)
+        return model
 
     def _fill_op2_output(self, op2_filename, cases, model, form, icase, log):
         """
@@ -5815,7 +5838,7 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
         #subtitle = key[4]
         try:
             subtitle, unused_label, superelement_adaptivity_index, unused_pval_step = keys_map[key]
-        except:
+        except Exception:
             subcase_id = subcase_id_old
             subtitle = subtitle_old + '?'
             superelement_adaptivity_index = '?'
@@ -5870,7 +5893,7 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
             #raise KeyError(msg)
         try:
             header = header.strip()
-        except:
+        except Exception:
             print('header = %r' % header)
             raise
 
@@ -6226,7 +6249,7 @@ def _build_normals_quality(settings: Settings,
         icase += 1
     return icase, normals
 
-def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
+def _build_materials(model: BDF, pcomp, pshell, is_pshell_pcomp,
                      cases, form0, icase):
     """
     creates:
@@ -6284,79 +6307,95 @@ def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
                     icase += 1
 
             midsi = mids[:, ilayer]
-            if midsi.max() == 0:
-                pass
-                #if not(i == 1 and ilayer == 0):
-                    #print('cant find anything in ilayer=%s' % ilayer)
-                #continue
-            else:
-                imids_masked = midsi == 0
-                has_mat8, has_mat11, e11, e22, e33 = get_material_arrays(model, midsi)
-                mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
-                                    location='centroid', scalar=midsi, mask_value=0)
-                cases[icase] = (mid_res, (0, 'MaterialID'))
-                form_layer.append(('MaterialID', icase, []))
-                icase += 1
+            icase = _add_material_mid_e11_e22(model, icase, midsi,
+                                              cases, form_layer)
 
-                if has_mat11: # also implicitly has_mat8
-                    is_orthotropic = not (np.array_equal(e11, e22) and np.array_equal(e11, e33))
-                elif has_mat8:
-                    is_orthotropic = not np.array_equal(e11, e22)
-                else:
-                    is_orthotropic = False
-
-                # np.nanmax(e11) > 0. can fail if e11=[nan, nan]
-                e112 = np.fmax.reduce(e11)
-                is_e11 = True
-                if np.isnan(e112):
-                    is_e11 = False
-                    #
-                if is_orthotropic:
-                    e11_res = GuiResult(0, header='E_11', title='E_11',
-                                        location='centroid', scalar=e11, data_format='%.3e')
-                    e22_res = GuiResult(0, header='E_22', title='E_22',
-                                        location='centroid', scalar=e22, data_format='%.3e')
-                    cases[icase] = (e11_res, (0, 'E_11'))
-                    cases[icase + 1] = (e22_res, (0, 'E_22'))
-                    form_layer.append(('E_11', icase, []))
-                    form_layer.append(('E_22', icase + 1, []))
-                    icase += 2
-
-                    is_isotropic = np.zeros(len(e11), dtype='int8')
-                    is_isotropic[imids_masked] = -1
-                    if has_mat11:
-                        is_isotropic[(e11 == e22) | (e11 == e33)] = 1
-                        e33_res = GuiResult(0, header='E_33', title='E_33',
-                                            location='centroid', scalar=e33, data_format='%.3e')
-                        cases[icase] = (e33_res, (0, 'E_33'))
-                        form_layer.append(('E_33', icase, []))
-                        icase += 1
-                    else:
-                        is_isotropic[e11 == e22] = 1
-
-                    iso_res = GuiResult(
-                        0, header='IsIsotropic?', title='IsIsotropic?',
-                        location='centroid', scalar=is_isotropic, data_format='%i',
-                        mask_value=-1)
-                    cases[icase] = (iso_res, (0, 'Is Isotropic?'))
-                    form_layer.append(('Is Isotropic?', icase, []))
-                    icase += 1
-                elif is_e11:
-                    # isotropic
-                    assert np.nanmax(e11) >= 0, np.nanmax(e11)
-                    e11_res = GuiResult(0, header='E', title='E',
-                                        location='centroid', scalar=e11, data_format='%.3e')
-                    cases[icase] = (e11_res, (0, 'E'))
-                    form_layer.append(('E', icase, []))
-                    icase += 1
-
-            #print('form_layer =', form_layer)
             if form_layer:
                 if nlayers == 1:
                     form0 += form_layer
                 else:
                     word = get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp)
                     form0.append((word, None, form_layer))
+    return icase
+
+def _add_material_mid_e11_e22(model: BDF, icase: int,
+                              midsi: np.ndarray,
+                              cases: Dict[int, Any],
+                              form_layer: Any) -> int:
+    """
+    Adds material results:
+     - MaterialID
+     - E11 / E22 / E33 / E
+     - IsOrthtropic -> no
+     - IsIsotropic
+    """
+    if midsi.max() == 0:
+        pass
+        #if not(i == 1 and ilayer == 0):
+            #print('cant find anything in ilayer=%s' % ilayer)
+        #continue
+        return icase
+
+    imids_masked = midsi == 0
+    has_mat8, has_mat11, e11, e22, e33 = get_material_arrays(model, midsi)
+    mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
+                        location='centroid', scalar=midsi, mask_value=0)
+    cases[icase] = (mid_res, (0, 'MaterialID'))
+    form_layer.append(('MaterialID', icase, []))
+    icase += 1
+
+    if has_mat11: # also implicitly has_mat8
+        is_orthotropic = not (np.array_equal(e11, e22) and np.array_equal(e11, e33))
+    elif has_mat8:
+        is_orthotropic = not np.array_equal(e11, e22)
+    else:
+        is_orthotropic = False
+
+    # np.nanmax(e11) > 0. can fail if e11=[nan, nan]
+    e112 = np.fmax.reduce(e11)
+    is_e11 = True
+    if np.isnan(e112):
+        is_e11 = False
+        #
+    if is_orthotropic:
+        e11_res = GuiResult(0, header='E_11', title='E_11',
+                            location='centroid', scalar=e11, data_format='%.3e')
+        e22_res = GuiResult(0, header='E_22', title='E_22',
+                            location='centroid', scalar=e22, data_format='%.3e')
+        cases[icase] = (e11_res, (0, 'E_11'))
+        cases[icase + 1] = (e22_res, (0, 'E_22'))
+        form_layer.append(('E_11', icase, []))
+        form_layer.append(('E_22', icase + 1, []))
+        icase += 2
+
+        is_isotropic = np.zeros(len(e11), dtype='int8')
+        is_isotropic[imids_masked] = -1
+        if has_mat11:
+            is_isotropic[(e11 == e22) | (e11 == e33)] = 1
+            e33_res = GuiResult(0, header='E_33', title='E_33',
+                                location='centroid', scalar=e33, data_format='%.3e')
+            cases[icase] = (e33_res, (0, 'E_33'))
+            form_layer.append(('E_33', icase, []))
+            icase += 1
+        else:
+            is_isotropic[e11 == e22] = 1
+
+        iso_res = GuiResult(
+            0, header='IsIsotropic?', title='IsIsotropic?',
+            location='centroid', scalar=is_isotropic, data_format='%i',
+            mask_value=-1)
+        cases[icase] = (iso_res, (0, 'Is Isotropic?'))
+        form_layer.append(('Is Isotropic?', icase, []))
+        icase += 1
+    elif is_e11:
+        # isotropic
+        assert np.nanmax(e11) >= 0, np.nanmax(e11)
+        e11_res = GuiResult(0, header='E', title='E',
+                            location='centroid', scalar=e11, data_format='%.3e')
+        cases[icase] = (e11_res, (0, 'E'))
+        form_layer.append(('E', icase, []))
+        icase += 1
+
     return icase
 
 def _build_optimization(model: BDF, pids: np.ndarray, upids: np.ndarray, nelements: int,

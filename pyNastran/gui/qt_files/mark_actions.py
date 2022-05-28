@@ -55,7 +55,12 @@ class MarkActions:
         #node_xyz = array(node_xyz, dtype='float32')
         #point0 = array(points.GetPoint(0), dtype='float32')
         #dist_min = norm(point0 - node_xyz)
-        point0 = points.GetPoint(0)
+
+        try:
+            point0 = points.GetPoint(0)
+        except ValueError:
+            #ValueError: expects 0 <= id && id < GetNumberOfPoints()
+            return None
         dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
 
         point_min = point0

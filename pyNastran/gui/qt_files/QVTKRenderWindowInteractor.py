@@ -47,6 +47,9 @@ from pyNastran.gui.qt_version import qt_int, qt_version
 if qt_version == "pyqt5":
     from PyQt5.QtWidgets import QWidget, QSizePolicy, QApplication
     from PyQt5.QtCore import Qt, QTimer, QObject, QSize, QEvent
+elif qt_version == "pyqt6":
+    from PyQt6.QtWidgets import QWidget, QSizePolicy, QApplication
+    from PyQt6.QtCore import Qt, QTimer, QObject, QSize, QEvent
 elif qt_version == "pyside2":
     from PySide2.QtWidgets import QWidget, QSizePolicy, QApplication
     from PySide2.QtCore import Qt, QTimer, QObject, QSize, QEvent
@@ -141,7 +144,7 @@ class QVTKRenderWindowInteractor(QWidget):
         10: Qt.CrossCursor,          # VTK_CURSOR_CROSSHAIR
     }
 
-    def __init__(self, parent=None, wflags=Qt.WindowFlags(), **kw):
+    def __init__(self, parent=None, **kw):
         # default value
         self._TimerDuration = 10
         if 'timer_duration' in kw:
@@ -171,7 +174,14 @@ class QVTKRenderWindowInteractor(QWidget):
             rw = None
 
         # create qt-level widget
-        QWidget.__init__(self, parent, wflags|Qt.MSWindowsOwnDC)
+        if 'wflags' in kw:
+            wflags = kw['wflags']
+            if wflags is None:
+                wflags = Qt.WindowFlags()
+            QWidget.__init__(self, parent, wflags|Qt.MSWindowsOwnDC)
+        else:
+            QWidget.__init__(self, parent)
+
 
         if rw: # user-supplied render window
             self._RenderWindow = rw
@@ -202,6 +212,9 @@ class QVTKRenderWindowInteractor(QWidget):
             pythonapi.PyCapsule_GetPointer.argtypes = [py_object, c_char_p]
 
             WId = pythonapi.PyCapsule_GetPointer(WId, name)
+        #else:
+            # sip.voidptr, int
+            #print(type(WId))
 
         self._RenderWindow.SetWindowInfo(str(int(WId)))
 
