@@ -455,7 +455,7 @@ class ScalarObject(BaseScalarObject):
         elif grid_type_str == 'H':
             grid_type = 0  # SECTOR/HARMONIC/RING POINT
         else:
-            raise RuntimeError('grid_type=%r' % grid_type_str)
+            raise RuntimeError(f'grid_type={grid_type_str!r}')
         return grid_type
 
     def update_dt(self, data_code, unused_dt):
@@ -584,19 +584,25 @@ class ScalarObject(BaseScalarObject):
         assert len(self.get_headers()) == self.data.shape[-1], 'headers=%s; n=%s\ndata.headers=%s' % (self.get_headers(), len(self.get_headers()), self.data.shape[-1])
         return column_names, column_values
 
-    def _write_table_header(self, op2_file, fascii, date):
+    def _write_table_header(self, op2_file, fascii,
+                            date: Tuple[int, int, int],
+                            subtable_name_default: bytes=b'OUG1    ') -> None:
         try:
             subtable_name = self.subtable_name
         except AttributeError:
-            subtable_name = b'OUG1    '
+            subtable_name = subtable_name_default
             #print('attrs =', self.object_attributes())
             #raise
             pass
         _write_table_header(op2_file, fascii, date, self.table_name, subtable_name)
 
-def _write_table_header(op2_file, fascii, date, table_name, subtable_name):
+def _write_table_header(op2_file, fascii,
+                        date: Tuple[int, int, int],
+                        table_name: bytes,
+                        subtable_name: bytes,
+                        include_date: bool=True) -> None:
     table_name = '%-8s' % table_name # 'BOUGV1  '
-    fascii.write('%s._write_table_header\n' % table_name)
+    fascii.write(f'{table_name}._write_table_header\n')
     #get_nmarkers- [4, 0, 4]
     #marker = [4, 2, 4]
     #table_header = [8, 'BOUGV1  ', 8]
@@ -626,7 +632,7 @@ def _write_table_header(op2_file, fascii, date, table_name, subtable_name):
         102, 0, 0, 0, 512, 0, 0,
         28,
     ]
-    fascii.write('%s header1b = %s\n' % (table_name, table1))
+    fascii.write(f'{table_name} header1b = {table1}\n')
     op2_file.write(pack(table1_fmt, *table1))
 
     #recordi = [subtable_name, month, day, year, 0, 1]

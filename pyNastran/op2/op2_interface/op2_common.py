@@ -392,6 +392,10 @@ class OP2Common(Op2Codes, F06Writer):
         #print('aindex   = %r' % adpativity_index)
         #print('superele = %r' % superelement)
 
+        #'SUPERELEMENT 0       ,   1'; n=26
+        #'SUPERELEMENT 0       ,   10'; n=27
+        # 'SUPERELEMENT 0       ,   1   '
+        # SUPERELEMENT 0       ,   10
         subtitle = subtitle[:nsubtitle_break].strip()
         assert len(superelement) <= 29, f'len={len(superelement)} superelement={superelement!r}'
         superelement = superelement.strip()
@@ -874,16 +878,22 @@ class OP2Common(Op2Codes, F06Writer):
                 result_name, nnodes, storage_obj, complex_vector)
             if auto_return:
                 return ndata
+
+            is_magnitude_phase = self.is_magnitude_phase()
             if self.is_sort1:
-                if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                if is_magnitude_phase:
+                    n = self._read_complex_table_sort1_mag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
                 else:
-                    n = self._read_complex_table_sort1_imag(data, is_vectorized, nnodes, result_name, node_elem)
+                    n = self._read_complex_table_sort1_imag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
             else:
-                if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort2_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                if is_magnitude_phase:
+                    n = self._read_complex_table_sort2_mag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
                 else:
-                    n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
+                    n = self._read_complex_table_sort2_imag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
                 #msg = self.code_information()
                 #n = self._not_implemented_or_skip(data, ndata, msg)
         else:
@@ -1285,7 +1295,8 @@ class OP2Common(Op2Codes, F06Writer):
                     print(obj.node_gridtype[itotal:itotal2, 0].shape)
                     print(nids.shape)
                     raise ValueError(msg)
-                obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
+                gridtype = ints[:, 1].copy()
+                obj.node_gridtype[itotal:itotal2, 1] = gridtype
 
             floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 14).copy()
             real = floats[:, 2:8]

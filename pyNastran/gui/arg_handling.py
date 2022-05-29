@@ -90,18 +90,6 @@ def get_inputs(print_inputs: bool=False,
         # drop the pyNastranGUI; same as argparse
         argv = argv[1:]
 
-    input_format = None
-    input_filename = None
-    output_filename = None
-    debug = True
-
-    geom_script = None
-    post_script = None
-    user_points = None
-    user_geom = None
-    is_groups = not GROUPS_DEFAULT
-    log = None
-    test = False
 
     if len(argv) >= 1:
         argdict = run_argparse(argv)
@@ -111,17 +99,17 @@ def get_inputs(print_inputs: bool=False,
         return argdict
 
     inputs = {
-        'format' : input_format,
-        'input' : input_filename,
-        'output' : output_filename,
-        'debug' : debug,
-        'geomscript' : geom_script,
-        'postscript' : post_script,
-        'user_points' : user_points,
-        'user_geom' : user_geom,
-        'is_groups' : is_groups,
-        'log' : log,
-        'test' : test,
+        'format' : None, # input_format
+        'input' : None, # input_filename
+        'output' : None, # output_filename
+        'debug' : True, # debug
+        'geomscript' : None, # geom_script
+        'postscript' : None, # post_script
+        'user_points' : None, # user_points
+        'user_geom' : None, # user_geom
+        'is_groups' : not GROUPS_DEFAULT,
+        'log' : None,
+        'test' : False,
     }
     return inputs
 
@@ -363,11 +351,7 @@ def _update_argparse_argdict(argdict):
     argdict['debug'] = not argdict['quiet']
     del argdict['quiet']
 
-    if not GROUPS_DEFAULT:
-        swap_key(argdict, 'nogroups', 'is_groups')
-    else:
-        argdict['is_groups'] = argdict['groups']
-
+    _set_groups_key(argdict)
     swap_key(argdict, 'points_fname', 'user_points')
 
     input_filenames = _add_inputs_outputs(argdict['INPUT'], argdict['input'], word='input')
@@ -386,30 +370,7 @@ def _update_argparse_argdict(argdict):
     plugin = False
     if 'plugin' in argdict:
         plugin = True
-
-    formats = argdict['format']
-    if input_filenames and formats is None:
-        input_formats = []
-        for input_filenamei in input_filenames:
-            if isinstance(input_filenamei, str):
-                formati = determine_format(input_filenamei)
-            else:  # pragma: no cover
-                raise TypeError('input_filenamei=%s type=%s' % (
-                    input_filenamei, type(input_filenamei)))
-            input_formats.append(formati)
-        #input_formats = [determine_format(input_filenamei) for input_filenamei in input_filenames]
-        argdict['format'] = input_formats
-        del input_formats
-    elif formats:
-        input_formats = []
-        for formati in formats:
-            if isinstance(formati, str):
-                input_formats.append(formati)
-            else:
-                input_formats.extend(formati)
-        argdict['format'] = input_formats
-        del input_formats
-    del formats
+    input_formats = _update_format(argdict, input_filenames)
 
     if not plugin:
         # None is for custom geometry
@@ -470,3 +431,33 @@ def _update_argparse_argdict(argdict):
                     ninput_files, input_filenames))
             raise RuntimeError(msg)
     return argdict
+
+def _set_groups_key(argdict: Dict[str, str]):
+    if not GROUPS_DEFAULT:
+        swap_key(argdict, 'nogroups', 'is_groups')
+    else:
+        argdict['is_groups'] = argdict['groups']
+
+def _update_format(argdict: Dict[str, Any],
+                   input_filenames: List[str]) -> List[str]:
+    formats = argdict['format']  # type: Optional[List[str]]
+
+    input_formats = []  # type: List[str]
+    if input_filenames and formats is None:
+        for input_filenamei in input_filenames:
+            if isinstance(input_filenamei, str):
+                formati = determine_format(input_filenamei)
+            else:  # pragma: no cover
+                raise TypeError('input_filenamei=%s type=%s' % (
+                    input_filenamei, type(input_filenamei)))
+            input_formats.append(formati)
+        #input_formats = [determine_format(input_filenamei) for input_filenamei in input_filenames]
+        argdict['format'] = input_formats
+    elif formats:
+        for formati in formats:
+            if isinstance(formati, str):
+                input_formats.append(formati)
+            else:
+                input_formats.extend(formati)
+        argdict['format'] = input_formats
+    return input_formats

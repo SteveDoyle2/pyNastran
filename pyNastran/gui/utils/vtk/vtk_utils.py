@@ -4,6 +4,7 @@ defines:
 
 """
 from __future__ import annotations
+import warnings
 from collections import defaultdict
 from typing import Tuple, Optional, TYPE_CHECKING
 

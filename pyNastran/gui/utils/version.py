@@ -75,7 +75,6 @@ def check_for_newer_version(version_current: Optional[str]=None,
         is there a newer version
 
     """
-    is_newer = False
     if version_current is None:
         version_current = pyNastran.__version__
 
@@ -89,6 +88,23 @@ def check_for_newer_version(version_current: Optional[str]=None,
             raise RuntimeError("can't parse website")
             #return None, None, is_newer
 
+    is_newer = _check_if_version_is_newer(version_latest, version_current, quiet)
+    return version_latest, version_current, is_newer
+
+def _check_if_version_is_newer(version_latest: str, version_current: str,
+                               quiet: bool) -> bool:
+    """
+    Not 100% on this list, but this is the general idea...
+
+    Current   Release   Dev?   -> is_newer   Result         Description
+    ========= ========= ====      ========   ========       =================
+    (1, 0, 0) (1, 3, 2) True   -> True       download       typical user
+    (1, 4, 0) (1, 3, 2) True   -> False      don't download typical dev
+    (1, 4, 0) (1, 4, 0) False  -> True       download       intermediate gui release
+    (1, 4, 0) (1, 3, 2) False  -> False      dont download  release candidate
+
+    """
+    is_newer = False
     is_dev = 'dev' in version_current
     tuple_current_version = split_version(version_current, 'current')
     tuple_latest_version = split_version(version_latest, 'latest')
@@ -104,12 +120,12 @@ def check_for_newer_version(version_current: Optional[str]=None,
     if is_self_newer:
         pass
     elif is_newer_release_version or is_newer_dev_version:
-        msg = 'pyNastran %s is now availible; current=%s' % (version_latest, version_current)
+        msg = 'pyNastran %s is now available; current=%s' % (version_latest, version_current)
 
         if not quiet:  # pragma: no cover
             print(msg)
         is_newer = True
-    return version_latest, version_current, is_newer
+    return is_newer
 
 if __name__ == '__main__':  # pragma: no cover
     check_for_newer_version()

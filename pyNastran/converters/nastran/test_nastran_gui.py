@@ -92,26 +92,40 @@ class TestNastranGUI(unittest.TestCase):
         #print('test.result_cases', test.result_cases)
         #gpforce = test.model.grid_point_forces[1]
 
-        icase_gpforce = None
-        for icase, (case, dummy) in test.result_cases.items():
-            if hasattr(case, 'gpforce_array'):
-                icase_gpforce = icase
-                break
-        else:
-            raise RuntimeError('missing gpforce')
+        if hasattr(test, 'cutting_plane_obj'):
+            icase_gpforce = None
+            for icase, (case, dummy) in test.result_cases.items():
+                if hasattr(case, 'gpforce_array'):
+                    icase_gpforce = icase
+                    break
+            else:
+                raise RuntimeError('missing gpforce')
 
-        case, (unused_i, unused_name) = test.result_cases[icase_gpforce]
-        str(case)
-        gpforce = case.gpforce_array
-        model_name = 'main'
+            case, (unused_i, unused_name) = test.result_cases[icase_gpforce]
+            str(case)
+            gpforce = case.gpforce_array
+            model_name = 'main'
 
 
-        p1 = [0., 0., 0.]
-        p3 = [1., 0., 0.]
+            p1 = [0., 0., 0.]
+            p3 = [1., 0., 0.]
 
-        p2 = [0., 1., 0.]
-        zaxis = [0., 0., 1.]
-        with self.assertRaises(ValueError):
+            p2 = [0., 1., 0.]
+            zaxis = [0., 0., 1.]
+            with self.assertRaises(ValueError):
+                test.shear_moment_torque_obj.plot_shear_moment_torque(
+                    model_name, gpforce,
+                    p1, p2, p3, zaxis,
+                    method='Z-Axis Projection',
+                    cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
+                    nplanes=5, plane_color=None, plane_opacity=0.5,
+                    csv_filename=None, show=False, stop_on_failure=True)
+
+            p1 = np.array([0., 0., 0.]) # origin
+            p2 = np.array([1., 0., 0.]) # xaxis
+            p3 = np.array([1., 0., 0.]) # end
+            zaxis = np.array([0., 0., 1.])
+            #idir = 0
             test.shear_moment_torque_obj.plot_shear_moment_torque(
                 model_name, gpforce,
                 p1, p2, p3, zaxis,
@@ -120,21 +134,20 @@ class TestNastranGUI(unittest.TestCase):
                 nplanes=5, plane_color=None, plane_opacity=0.5,
                 csv_filename=None, show=False, stop_on_failure=True)
 
-        p1 = np.array([0., 0., 0.]) # origin
-        p2 = np.array([1., 0., 0.]) # xaxis
-        p3 = np.array([1., 0., 0.]) # end
-        zaxis = np.array([0., 0., 1.])
-        #idir = 0
-        test.shear_moment_torque_obj.plot_shear_moment_torque(
-            model_name, gpforce,
-            p1, p2, p3, zaxis,
-            method='Z-Axis Projection',
-            cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
-            nplanes=5, plane_color=None, plane_opacity=0.5,
-            csv_filename=None, show=False, stop_on_failure=True)
+            with self.assertRaises(TypeError):
+                # we need to set the case to a grid point force result
+                test.cutting_plane_obj.make_cutting_plane(
+                    model_name,
+                    p1, p2, zaxis,
+                    method='Z-Axis Projection',
+                    cid_p1=0, cid_p2=0, cid_zaxis=0,
+                    ytol=1., plane_atol=1e-5,
+                    plane_color=None, plane_opacity=0.5,
+                    csv_filename=None, show=False, stop_on_failure=True)
 
-        with self.assertRaises(TypeError):
-            # we need to set the case to a grid point force result
+            # setting the case to a grid point force result
+            test.icase_fringe = icase_gpforce
+            test._cycle_results(icase_gpforce)
             test.cutting_plane_obj.make_cutting_plane(
                 model_name,
                 p1, p2, zaxis,
@@ -144,28 +157,16 @@ class TestNastranGUI(unittest.TestCase):
                 plane_color=None, plane_opacity=0.5,
                 csv_filename=None, show=False, stop_on_failure=True)
 
-        # setting the case to a grid point force result
-        test.icase_fringe = icase_gpforce
-        test._cycle_results(icase_gpforce)
-        test.cutting_plane_obj.make_cutting_plane(
-            model_name,
-            p1, p2, zaxis,
-            method='Z-Axis Projection',
-            cid_p1=0, cid_p2=0, cid_zaxis=0,
-            ytol=1., plane_atol=1e-5,
-            plane_color=None, plane_opacity=0.5,
-            csv_filename=None, show=False, stop_on_failure=True)
-
-        test.icase_fringe = 0
-        #with self.assertRaises(RuntimeError):
-        test.cutting_plane_obj.make_cutting_plane(
-            model_name,
-            p1, p2, zaxis,
-            method='Z-Axis Projection',
-            cid_p1=0, cid_p2=0, cid_zaxis=0,
-            ytol=1., plane_atol=1e-5,
-            plane_color=None, plane_opacity=0.5,
-            csv_filename=None, show=False, stop_on_failure=True)
+            test.icase_fringe = 0
+            #with self.assertRaises(RuntimeError):
+            test.cutting_plane_obj.make_cutting_plane(
+                model_name,
+                p1, p2, zaxis,
+                method='Z-Axis Projection',
+                cid_p1=0, cid_p2=0, cid_zaxis=0,
+                ytol=1., plane_atol=1e-5,
+                plane_color=None, plane_opacity=0.5,
+                csv_filename=None, show=False, stop_on_failure=True)
 
     def test_solid_shell_bar_02(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
