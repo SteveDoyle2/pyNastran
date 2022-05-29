@@ -303,7 +303,7 @@ class VectorTable(GuiResultCommon):
         #self.dim = len(self.dxyz.shape)
 
 
-        self.uname = uname
+        #self.uname = uname
         #self.dxyz_norm = norm(dxyz, axis=1)
 
         #self.deflects = deflects

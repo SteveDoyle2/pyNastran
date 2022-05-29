@@ -20,6 +20,7 @@ except ImportError:
     IS_MATPLOTLIB = False
 
 import pyNastran
+from pyNastran import DEV
 from pyNastran.gui.gui_objects.settings import Settings
 
 from pyNastran.gui.qt_files.tool_actions import ToolActions
@@ -33,7 +34,7 @@ from pyNastran.gui.menus.legend.legend_object import LegendObject
 from pyNastran.gui.menus.highlight.highlight_object import HighlightObject, MarkObject
 from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
 IS_CUTTING_PLANE = False
-if IS_MATPLOTLIB:
+if IS_MATPLOTLIB and DEV:
     from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
     from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
     IS_CUTTING_PLANE = True
@@ -113,7 +114,7 @@ class GuiAttributes:
         self.highlight_obj = HighlightObject(self)
         self.mark_obj = MarkObject(self)
         self.preferences_obj = PreferencesObject(self)
-        if IS_MATPLOTLIB:
+        if IS_CUTTING_PLANE:
             self.cutting_plane_obj = CuttingPlaneObject(self)
             self.shear_moment_torque_obj = ShearMomentTorqueObject(self)
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)

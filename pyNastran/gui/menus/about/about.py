@@ -40,7 +40,7 @@ def get_qt_license(qt_name: str) -> str:
         qt += '* Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.'
     elif qt_name == 'PySide2':
         qt = ' * Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
-        qt += '\n * PySide2 Python bindings for Qt5, by Qt for Python.'
+        qt += ' * PySide2 Python bindings for Qt5, by Qt for Python.'
     elif qt_name == 'PySide6':
         qt = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += ' * PySide6 Python bindings for Qt6, by Qt for Python.'

@@ -15,6 +15,17 @@ if qt_version == 'pyqt5':
         import PyQt5.Qsci as Qsci
         QSCINTILLA_VERSION = Qsci.QSCINTILLA_VERSION_STR
         IS_SCINTILLA = True
+        RightArrow = Qsci.QsciScintilla.RightArrow
+        SloppyBraceMatch = Qsci.QsciScintilla.SloppyBraceMatch
+    except ImportError:
+        IS_SCINTILLA = False
+elif qt_version == 'pyqt6':
+    try:
+        import PyQt6.Qsci as Qsci
+        QSCINTILLA_VERSION = Qsci.QSCINTILLA_VERSION_STR
+        IS_SCINTILLA = True
+        RightArrow = Qsci.QsciScintilla.MarkerSymbol.RightArrow
+        SloppyBraceMatch = Qsci.QsciScintilla.BraceMatch.SloppyBraceMatch
     except ImportError:
         IS_SCINTILLA = False
 elif qt_version in {'pyside2', 'pyside6', 'pyqt6'}:
@@ -68,14 +79,14 @@ if IS_SCINTILLA:
             self.setMarginSensitivity(1, True)
             self.marginClicked.connect(self.on_margin_clicked)
 
-            self.markerDefine(Qsci.QsciScintilla.RightArrow,
+            self.markerDefine(RightArrow,
                               self.ARROW_MARKER_NUM)
             self.setMarkerBackgroundColor(QColor("#ee1111"),
                                           self.ARROW_MARKER_NUM)
 
             # Brace matching: enable for a brace immediately before or after
             # the current position
-            self.setBraceMatching(Qsci.QsciScintilla.SloppyBraceMatch)
+            self.setBraceMatching(SloppyBraceMatch)
 
             # Current line visible with special background color
             self.setCaretLineVisible(True)
