@@ -163,7 +163,7 @@ def main():  # pragma: no cover
             pid += 1
 
     import sys
-    from pyNastran.bdf.bdf_interface.dev_utils import bdf_renumber
+    from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
     bdf_filename = sys.argv[1]
     ugrid_filename_out = sys.argv[2]
     # bdf_model = BDF(debug=False)

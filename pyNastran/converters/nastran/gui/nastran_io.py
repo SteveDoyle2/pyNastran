@@ -5505,7 +5505,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 #all_results = model.get_all_results()
                 #for result in DESIRED_RESULTS:
                     #if result in all_results:
-                    #model._results.saved.add(result)
+                        #model._results.saved.add(result)
 
             nastran_settings = self.gui.settings.nastran_settings  # type: NastranSettings
             exclude_results = get_results_to_exclude(nastran_settings)
@@ -6920,7 +6920,7 @@ def _map_elements3_helper(model: BDF,
             nnodes = 4
             dim = 2
 
-        elif etype in ['CTRIA6']:
+        elif etype == 'CTRIA6':
             nids = elem.nodes
             pid = elem.pid
             if None in nids:
