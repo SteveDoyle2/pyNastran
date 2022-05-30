@@ -39,7 +39,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, PCOMP, PCOMPG, PSHELL
     from pyNastran.nptyping_interface import NDArray3float
 
 __all__ = ['CTRIA3', 'CTRIA6', 'CSHEAR',
@@ -359,7 +359,8 @@ class TriShell(ShellElement):
 
     def material_coordinate_system(self,
                                    normal=None,
-                                   xyz123=None) -> Tuple[np.ndarray, np.ndarray,
+                                   xyz123=None) -> Tuple[float,
+                                                         np.ndarray, np.ndarray,
                                                          np.ndarray, np.ndarray]:
         """
         Determines the material coordinate system
@@ -373,6 +374,8 @@ class TriShell(ShellElement):
 
         Returns
         -------
+        dxyz,  (3, ) float
+            the mean length of the element
         centroid (3, ) float ndarray
             the centroid of the element
         imat (3, ) float ndarray
@@ -385,6 +388,48 @@ class TriShell(ShellElement):
         .. todo:: rotate the coordinate system by the angle theta
 
         """
+        dxyz, centroid, normal, xyz1, xyz2 = self._dxyz_centroid_normal_xyz1_xyz2(
+            normal=normal, xyz123=xyz123)
+        imat, jmat = _material_coordinate_system(self, normal, xyz1, xyz2)
+        return dxyz, centroid, imat, jmat, normal
+
+    def element_coordinate_system(self,
+                                  normal=None,
+                                  xyz123=None) -> Tuple[float,
+                                                        np.ndarray, np.ndarray,
+                                                        np.ndarray, np.ndarray]:
+        """
+        Determines the material coordinate system
+
+        Parameters
+        ----------
+        normal (3, ) float ndarray
+            the unit normal vector
+        xyz123 (3, 3) float ndarray
+            the xyz coordinates
+
+        Returns
+        -------
+        dxyz,  (3, ) float
+            the mean length of the element
+        centroid (3, ) float ndarray
+            the centroid of the element
+        imat (3, ) float ndarray
+            the element unit i vector
+        jmat (3, ) float ndarray
+            the element unit j vector
+        normal (3, ) float ndarray
+            the unit normal vector
+
+        .. todo:: rotate the coordinate system by the angle theta
+
+        """
+        dxyz, centroid, normal, xyz1, xyz2 = self._dxyz_centroid_normal_xyz1_xyz2(
+            normal=normal, xyz123=xyz123)
+        imat, jmat = _element_coordinate_system(self, normal, xyz1, xyz2)
+        return dxyz, centroid, imat, jmat, normal
+
+    def _dxyz_centroid_normal_xyz1_xyz2(self, normal=None, xyz123=None):
         if normal is None:
             normal = self.Normal() # k = kmat
 
@@ -401,9 +446,14 @@ class TriShell(ShellElement):
             xyz2 = xyz123[:, 1]
             xyz3 = xyz123[:, 2]
         centroid = (xyz1 + xyz2 + xyz3) / 3.
-        imat, jmat = _material_coordinate_system(self, normal, xyz1, xyz2)
-        return centroid, imat, jmat, normal
 
+        # take the mean edge length to size the vectors in the GUI
+        dxyz21 = np.linalg.norm(xyz2 - xyz1)
+        dxyz32 = np.linalg.norm(xyz3 - xyz2)
+        dxyz13 = np.linalg.norm(xyz1 - xyz3)
+        dxyz = np.mean([dxyz21, dxyz32, dxyz13]) / 2.
+
+        return dxyz, centroid, normal, xyz1, xyz2
 
 def _material_coordinate_system(element, normal, xyz1, xyz2):
     """helper function for material_coordinate_system"""
@@ -773,12 +823,13 @@ class CTRIA3(TriShell):
 
         #return self.write_card(size, double)
         nodes = self.node_ids
+        row1 = [self.eid, self.Pid()] + nodes
+
         row2_data = [theta_mcid, zoffset,
                      tflag, T1, T2, T3]
         row2 = [print_field_8(field) for field in row2_data]
-        data = [self.eid, self.Pid()] + nodes + row2
-        msg = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
-               '                %8s%8s%8s%8s\n' % tuple(data))
+        msg = ('CTRIA3  %8d%8d%8d%8d%8d%8s%8s\n'
+               '                %8s%8s%8s%8s\n' % tuple(row1 + row2))
         return self.comment + msg.rstrip() + '\n'
 
 
@@ -1187,7 +1238,7 @@ class CTRIA6(TriShell):
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1807,7 +1858,11 @@ class QuadShell(ShellElement):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def material_coordinate_system(self, normal=None, xyz1234=None):
+    def material_coordinate_system(self,
+                                   normal=None,
+                                   xyz1234=None) -> Tuple[float,
+                                                          np.ndarray, np.ndarray,
+                                                          np.ndarray, np.ndarray]:
         """
         Determines the material coordinate system
 
@@ -1820,18 +1875,64 @@ class QuadShell(ShellElement):
 
         Returns
         -------
+        dxyz : float
+            the mean length of the element
         centroid : (3, ) float ndarray
             the centroid of the element
         imat : (3, ) float ndarray
             the element unit i vector
         jmat : (3, ) float ndarray
             the element unit j vector
-        normal (3, ) float ndarray
+        normal : (3, ) float ndarray
             the unit normal vector
 
         .. todo:: rotate the coordinate system by the angle theta
 
         """
+        dxyz, centroid, normal, xyz1, xyz2 = self._dxyz_centroid_normal_xyz1_xyz2(
+            normal=normal, xyz1234=xyz1234)
+        imat, jmat = _material_coordinate_system(self, normal, xyz1, xyz2)
+        return dxyz, centroid, imat, jmat, normal
+
+    def element_coordinate_system(self,
+                                  normal=None,
+                                  xyz1234=None) -> Tuple[float,
+                                                         np.ndarray, np.ndarray,
+                                                         np.ndarray, np.ndarray]:
+        """
+        Determines the element coordinate system
+
+        Parameters
+        ----------
+        normal (3, ) float ndarray
+            the unit normal vector
+        xyz1234 (4, 3) float ndarray
+            the xyz coordinates
+
+        Returns
+        -------
+        dxyz : float
+            the mean length of the element
+        centroid : (3, ) float ndarray
+            the centroid of the element
+        imat : (3, ) float ndarray
+            the element unit i vector
+        jmat : (3, ) float ndarray
+            the element unit j vector
+        normal : (3, ) float ndarray
+            the unit normal vector
+
+        .. todo:: rotate the coordinate system by the angle theta
+
+        """
+        dxyz, centroid, normal, xyz1, xyz2 = self._dxyz_centroid_normal_xyz1_xyz2(
+            normal=normal, xyz1234=xyz1234)
+        ielement, jelement = _element_coordinate_system(self, normal, xyz1, xyz2)
+        return dxyz, centroid, ielement, jelement, normal
+
+    def _dxyz_centroid_normal_xyz1_xyz2(self,
+                                        normal=None,
+                                        xyz1234=None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         if normal is None:
             normal = self.Normal() # k = kmat
 
@@ -1850,9 +1951,13 @@ class QuadShell(ShellElement):
             xyz3 = xyz1234[:, 2]
             xyz4 = xyz1234[:, 3]
         centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
-
-        imat, jmat = _material_coordinate_system(self, normal, xyz1, xyz2)
-        return centroid, imat, jmat, normal
+        # take the mean length to size the vectors in the GUI
+        dxyz21 = np.linalg.norm(xyz2 - xyz1)
+        dxyz32 = np.linalg.norm(xyz3 - xyz2)
+        dxyz43 = np.linalg.norm(xyz4 - xyz3)
+        dxyz14 = np.linalg.norm(xyz1 - xyz4)
+        dxyz = np.mean([dxyz21, dxyz32, dxyz43, dxyz14]) / 2.
+        return dxyz, centroid, normal, xyz1, xyz2
 
 
 class CSHEAR(QuadShell):
@@ -2958,13 +3063,14 @@ class CPLSTS4(CPLSTx4):
     |         |       |       |    | TFLAG | T1 |   T2  |   T3  |  T4  |
     +---------+-------+-------+----+-------+----+-------+-------+------+
 
+    ['CPLSTS4', '1', '5', '17', '18', '19', '20', '0.0']
     """
     type = 'CPLSTS4'
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes + [print_float_8(self.theta)]
-        msg = ('CPLSTS4 %8i%8i%8i%8i%8i%8i%8s\n' % tuple(data))
+        msg = ('CPLSTS4 %8d%8d%8d%8d%8d%8d%8s\n' % tuple(data))
         return self.comment + msg
 
 
@@ -4755,3 +4861,66 @@ def transform_shell_material_coordinate_system(cids: List[int],
     #K2[0, 2] = K2[0, 0]
     return telem
 
+def _material_coordinate_system(element,
+                                normal: np.ndarray,
+                                xyz1: np.ndarray,
+                                xyz2: np.ndarray) -> Tuple[np.ndarray,
+                                                           np.ndarray]:
+    """helper function for material_coordinate_system"""
+    if element.theta_mcid is None:
+        raise NotImplementedError('theta_mcid=%r' % element.theta_mcid)
+    if isinstance(element.theta_mcid, integer_types):
+        assert element.theta_mcid_ref is not None, f'mcid={element.theta_mcid} not found for\n{element}'
+        i = element.theta_mcid_ref.i
+        jmat = np.cross(normal, i) # k x i
+        try:
+            jmat /= np.linalg.norm(jmat)
+        except FloatingPointError:
+            raise ValueError(f'Cannot project i-axis onto element normal i={i} normal={normal}\n{element}')
+        # we do an extra normalization here because
+        # we had to project i onto the elemental plane
+        # unlike in the next block
+        imat = np.cross(jmat, normal)
+    elif isinstance(element.theta_mcid, float):
+        # rotate by the angle theta
+        imat, jmat = _element_coordinate_system(element, normal, xyz1, xyz2)
+        if element.theta_mcid != 0.:
+            imat, jmat = rotate_by_thetad(element.theta_mcid, imat, jmat, normal)
+    else:
+        raise RuntimeError(element.theta_mcid)
+    return imat, jmat
+
+def _element_coordinate_system(element,
+                               normal: np.ndarray,
+                               xyz1: np.ndarray,
+                               xyz2: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """helper function for material_coordinate_system"""
+    imat = xyz2 - xyz1
+    imat /= np.linalg.norm(imat)
+    jmat = np.cross(normal, imat) # k x i
+    try:
+        jmat /= np.linalg.norm(jmat)
+    except FloatingPointError:
+        raise ValueError(f'Cannot project i-axis onto element normal i={imat} normal={normal}\n{element}')
+    return imat, jmat
+
+
+def rotate_by_thetad(thetad: float,
+                     imat: np.ndarray,
+                     jmat: np.ndarray,
+                     normal: np.ndarray):
+    theta = np.radians(thetad)
+    cos = np.cos(theta)
+    sin = np.sin(theta)
+
+    theta_rotation = np.array([
+        [cos, sin, 0.],
+        [-sin, cos, 0.],
+        [0., 0., 1.],
+    ], dtype='float64')
+
+    element_axes = np.vstack([imat, jmat, normal])
+    rotated_axes = theta_rotation @ element_axes
+    imat2 = rotated_axes[0, :]
+    jmat2 = rotated_axes[1, :]
+    return imat2, jmat2

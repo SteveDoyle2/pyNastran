@@ -5,11 +5,11 @@ Defines:
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import Tuple, List, Dict, Union, Optional, Any, TYPE_CHECKING
+from typing import Tuple, List, Dict, Union, Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf, PCOMP, PCOMPG, PSHELL
 from pyNastran.bdf.cards.elements.shell import (
-    CTRIA3, CTRIA6, CQUAD4, CQUAD8, CTRIAR, CQUADR)
+    CTRIA3, CTRIA6, CQUAD4, CQUAD8, CTRIAR, CQUADR, rotate_by_thetad)
 ShellElement = Union[CTRIA3, CTRIA6, CQUAD4, CQUAD8, CTRIAR, CQUADR]
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
@@ -162,6 +162,17 @@ def _get_elements(model, eids):
         elements = {eid : model.elements[eid] for eid in eids}
     return elements
 
+def _load_bdf(bdf_filename: Union[BDF, str],
+              log: Optional[SimpleLogger]=None,
+              debug: bool=True) -> BDF:
+    if isinstance(bdf_filename, BDF):
+        model = bdf_filename
+    else:
+        model = read_bdf(bdf_filename, xref=False, log=log, debug=debug)
+        #print(model.get_bdf_stats())
+        model.safe_cross_reference()
+    return model
+
 def export_mcids_all(bdf_filename: Union[BDF, str],
                      eids: Optional[List[int]]=None,
                      log: Optional[SimpleLogger]=None, debug: bool=False):
@@ -207,12 +218,7 @@ def export_mcids_all(bdf_filename: Union[BDF, str],
         the "bars" that represent the x/y axes of the coordinate systems
 
     """
-    if isinstance(bdf_filename, BDF):
-        model = bdf_filename
-    else:
-        model = read_bdf(bdf_filename, xref=False, log=log, debug=debug)
-        #print(model.get_bdf_stats())
-        model.safe_cross_reference()
+    model = _load_bdf(bdf_filename, log=None, debug=True)
 
     pid_to_nplies, nplies_max = get_pid_to_nplies(model)
     if nplies_max == 0:
@@ -220,9 +226,14 @@ def export_mcids_all(bdf_filename: Union[BDF, str],
 
     elements = _get_elements(model, eids)
 
-    iply_to_nids = {iply : 0 for iply in range(-1, nplies_max)}
-    iply_to_nodes = {iply : [] for iply in range(-1, nplies_max)}
-    iply_to_bars = {iply : [] for iply in range(-1, nplies_max)}
+    # -2: elment coord
+    #  -1: MCID
+    #  0: ply 1
+    #  1: ply 2
+    # ...
+    iply_to_nids = {iply : 0 for iply in range(-2, nplies_max)}
+    iply_to_nodes = {iply : [] for iply in range(-2, nplies_max)}
+    iply_to_bars = {iply : [] for iply in range(-2, nplies_max)}
 
     for unused_eidi, elem in sorted(elements.items()):
         if elem.type in {'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR'}:
@@ -249,6 +260,18 @@ def export_mcids_all(bdf_filename: Union[BDF, str],
             continue
         else:
             raise NotImplementedError(f'element type={elem.type!r} is not supported\n{elem}')
+        dxyz, centroid, ielement, jelement, normal = elem.element_coordinate_system()
+        iaxis = centroid + ielement * dxyz
+        #iaxis = centroid + imati * dxyz
+        #jaxis = centroid + jmati * dxyz
+        ilayer = -2
+        iply_to_nids[ilayer] = _export_xaxis(
+            iply_to_nids[ilayer],
+            iply_to_nodes[ilayer],
+            iply_to_bars[ilayer],
+            centroid, iaxis)
+
+
     #print(iply_to_nids)
     #_export_coord_axes(nodes, bars, csv_filename)
     return iply_to_nodes, iply_to_bars
@@ -355,7 +378,21 @@ def _rotate_coords(elem: ShellElement, pid_ref,
                    dxyz: float,
                    centroid: np.ndarray, imat: np.ndarray, jmat: np.ndarray,
                    normal: np.ndarray) -> None:
-    # element coordinate system
+    """
+    iply   Final Label  Description
+    ====   ===========  ===========
+    -1     0            material coordinate system
+    0      1            ply 1
+    1      2            ply 2
+    2      3            ply 3
+
+    #nplies = 3
+    nids - {-1: 0, 0: 0, 1: 0, 2: 0}
+    nodes = {-1: [], 0: [], 1: [], 2: []}
+    bars = {-1: [], 0: [], 1: [], 2: []}
+
+    """
+    # material coordinate system
     iaxis = centroid + imat * dxyz
     nids[-1] = _export_xaxis(nids[-1], nodes[-1], bars[-1], centroid, iaxis)
 
@@ -412,7 +449,7 @@ def _get_tri_vectors_mcid(elem: CTRIA3):
 
     # adjusted for element coordinate system
     # equivalent to PCOMP thetad=0.0
-    centroid, imat, jmat, normal = elem.material_coordinate_system()
+    dxyz2, centroid, imat, jmat, normal = elem.material_coordinate_system()
     return dxyz, centroid, imat, jmat, normal
 
 def _get_quad_vectors_mcid(elem: CQUAD4):
@@ -436,7 +473,7 @@ def _get_quad_vectors_mcid(elem: CQUAD4):
 
     # adjusted for element coordinate system
     # equivalent to PCOMP thetad=0.0
-    centroid, imat, jmat, normal = elem.material_coordinate_system()
+    dxyz2, centroid, imat, jmat, normal = elem.material_coordinate_system()
     return dxyz, centroid, imat, jmat, normal
 
 def _export_tria_mcid(model: BDF,
@@ -517,36 +554,18 @@ def _rotate_mcid(elem: ShellElement,
         return imat, jmat
 
     if pid_ref.type == 'PSHELL':
-        theta_mcid = elem.theta_mcid
-        if isinstance(theta_mcid, float):
-            thetad = theta_mcid
-        elif isinstance(theta_mcid, int):
-            return imat, jmat
-        else:
-            raise TypeError(f'theta/mcid={theta_mcid} is not an int/float; '
-                            f'type={type(theta_mcid)}\n{elem}')
+        return imat, jmat
     elif pid_ref.type in ['PCOMP', 'PCOMPG']:
         thetad = pid_ref.get_theta(iply)
     else:
         raise NotImplementedError(f'property type={elem.pid_ref.type!r} is not supported\n'
                                   f'{elem}{elem.pid_ref}')
+
+    assert isinstance(thetad, float), thetad
     if isinstance(thetad, float) and thetad == 0.0:
         return imat, jmat
 
-    theta = np.radians(thetad)
-    cos = np.cos(theta)
-    sin = np.sin(theta)
-
-    theta_rotation = np.array([
-        [cos, -sin, 0.],
-        [sin, cos, 0.],
-        [0., 0., 1.],
-    ], dtype='float64')
-
-    element_axes = np.vstack([imat, jmat, normal])
-    rotated_axes = theta_rotation @ element_axes  ## TODO: validate
-    imat2 = rotated_axes[0, :]
-    jmat2 = rotated_axes[1, :]
+    imat2, jmat2 = rotate_by_thetad(thetad, imat, jmat, normal)
     return imat2, jmat2
 
 def _add_elements(nid: int, eid: int,
