@@ -8,7 +8,7 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 
 Release Notes
 ==================
-v1.3.4 (2022/5/xx)
+v1.3.4 (2022/5/30)
 ------------------
 This is a bug fix release with the key reason being API dependency changes:
  - numpy
@@ -19,7 +19,7 @@ added when fixing bugs.
 
 Requirements/Packages:
  - adding support for vtk 9 (GUI)
- - adding support for nptyping 1.1 (not 1.1.0)
+ - support for PyQt5/6 and PySide2/6 (GUI)
  - support for NX 2019.0, 2019.1
 
 Programmatics:
@@ -54,7 +54,12 @@ BDF:
    - BCTSET: fixing bug where defaults were mishandled (poor documentation in QRG)
    - DEQATN: better builtin handling
    - DMIG: better size/is_double handling
+   - large field solid writing (forgot the *)
+   - deepcopying a card now supports comments
    - Subcase: add_op2_data supports OUG1F
+   - test_bdf: fixed bug when subcase=0 was the only subcase
+   - test_bdf: fixed bug that dropped the global subcase
+     - it's not used unless there are no local subcases
  - added:
    - pathlib support
    - GRID: method get_position_wrt_coord_ref
@@ -76,6 +81,7 @@ BDF:
      - bdf_mirror:
         - solid support
         - correcting case where eid_offset isn't calculated
+        - fixed bug where tolerance was ignored
      - bdf_convert now supports:
         - CFAST/PFAST
         - rho, area conversion
