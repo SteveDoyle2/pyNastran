@@ -10,10 +10,10 @@
 .. comments
    #-----------------------------------------------------------------
 
-v1.3.3
+v1.3.4
 ------
 
-`Download GUI <https://sourceforge.net/projects/pynastran/files/?source=navbar>`_ (latest is from 2020/6/28)
+`Download GUI <https://sourceforge.net/projects/pynastran/files/?source=navbar>`_ (latest is from 2022/5/30)
 
 Also, check out the:
 
@@ -51,8 +51,24 @@ Check out this blog post covering `Flutter Analysis in pyNastran <https://www.m4
 Release Notes
 =============
 
-pyNastran v1.3.3 has been released (2020/6/28)
+pyNastran v1.3.4 has been released (2022/5/30)
 ----------------------------------------------
+This is a a bug fix release mainly to address dependency changes:
+
+Programmatics:
+
+* supports Python 3.7-3.10
+
+* support for nptyping 1.1.1-2.0 (removed as a required dependency)
+
+* support for h5py >3.0
+
+* GUI is compatible with PyQt5/6 and PySide2/6 and VTK 7-10
+
+There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser).
+
+See pyNastran `v1.3.4 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
+
 
 v1.3.3 (2020/6/28)
 ------------------
@@ -308,9 +324,9 @@ BDF:
         >>> model.superelement_models[1].nodes
 
 OP2:
- - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
+ - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aid in finding data
  - reorganization of op2 class to reduce number of functions in the object.  This affects any custom table reading.
- - improved optimzation response reading
+ - improved optimization response reading
  - limited SORT2 support
  - fixed CD transformation bug for BOUGV1 and BOPHIG1 tables
  - Improved HDF5 export/import support (e.g., matrices, random results)
