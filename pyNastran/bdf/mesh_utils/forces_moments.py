@@ -117,17 +117,19 @@ def get_forces_moments_array(model: BDF,
         if load_type in loads_to_skip:
             pass
         elif load_type == 'FORCE':
+            is_loads = True
             scale2 = load.mag * scale  # does this need a magnitude?
             nid = load.node
             if nid in dependents_nodes:
                 fail_nids.add(nid)
                 fail_count += 1
                 if fail_count < fail_count_max:
-                    print('    nid=%s is a dependent node and has a FORCE applied\n%s' % (
-                        nid, str(load)))
-            forces[nid_map[nid]] += load.xyz * scale2
+                    log.warning(f'    nid={nid} is a dependent node and has a {load_type} applied\n{load}')
+            inid = nid_map[nid]
+            forces[inid] += load.xyz * scale2
 
         elif load_type == 'PLOAD':
+            is_loads = True
             pressure = load.pressure * scale
             nnodes = len(load.nodes)
             if nnodes == 4:
@@ -144,8 +146,7 @@ def get_forces_moments_array(model: BDF,
                 xyz3 = nodes[n3].get_position()
                 normal_area = np.cross(xyz2 - xyz1, xyz3 - xyz1)  # TODO: not validated
             else:
-                log.debug('    case=%s nnodes=%r loadtype=%r not supported' % (
-                    load_case_id, nnodes, load.type))
+                log.debug(f'    case={load_case_id:d} nnodes={nnodes:d} loadtype={load.type!r} not supported')
                 continue
             forcei = pressure * normal_area / nnodes
             for nid in load.nodes:
@@ -156,6 +157,7 @@ def get_forces_moments_array(model: BDF,
             for eid in load.eids:
                 elem = model.elements[eid]
                 if elem.type in {'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR', 'CSHEAR'}:
+                    is_loads = True
                     node_ids = elem.node_ids
                     nnodes = len(node_ids)
                     ie = eid_map[eid]
@@ -170,8 +172,8 @@ def get_forces_moments_array(model: BDF,
                             fail_nids.add(nid)
                             fail_count += 1
                             if fail_count < fail_count_max:
-                                print(f'    nid={nid} is a dependent node and has a '
-                                      f'PLOAD2 applied\n{load}')
+                                log.warning(f'    nid={nid} is a dependent node and has a '
+                                            f'PLOAD2 applied\n{load}')
                         forces[nid_map[nid]] += forcei
                     forces += forcei
                     # F += f
@@ -192,6 +194,7 @@ def get_forces_moments_array(model: BDF,
                     eids_missing, load.rstrip()))
 
         elif load_type == 'SPCD':
+            is_loads = True
             #self.nodes = [integer(card, 2, 'G1'),]
             #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
             #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
@@ -207,6 +210,7 @@ def get_forces_moments_array(model: BDF,
                 if c1 < 4:
                     spcd[nid_map[nid], c1 - 1] = d1
         elif load_type == 'SLOAD':
+            is_loads = True
             for nid, mag in zip(load.nodes, load.mags):
                 forces[nid_map[nid]] += np.array([mag, 0., 0.])
         else:
@@ -215,10 +219,11 @@ def get_forces_moments_array(model: BDF,
                 log.warning('  get_forces_moments_array - unsupported '
                             f'load.type = {load_type}')
     if fail_count:
-        fail_nids_list = list(fail_nids)
-        fail_nids_list.sort()
-        log.warning('fail_nids = %s' % np.array(fail_nids_list))
+        fail_nids_array = np.array(list(fail_nids))
+        fail_nids_array.sort()
+        log.warning('fail_nids = %s' % fail_nids_array)
     return centroidal_pressures, forces, spcd
+
 
 def _get_forces_moments_pload4(model: BDF,
                                nid_map, eid_map,
@@ -266,8 +271,8 @@ def _get_forces_moments_pload4(model: BDF,
                     fail_nids.add(nid)
                     fail_count += 1
                     if fail_count < fail_count_max:
-                        print('    nid=%s is a dependent node and has a'
-                              ' PLOAD4 applied\n%s' % (nid, str(load)))
+                        log.warning(f'    nid={nid:d} is a dependent node and has a'
+                                    f' PLOAD4 applied\n{load}')
                 #forces[nids.index(nid)] += F
                 i = nid_map[nid]
                 try:
@@ -359,7 +364,7 @@ def _get_forces_moments_pload4(model: BDF,
             else:
                 msg = (f'case={load_case_id} eid={eid} etype={elem.type!r} '
                        f'loadtype={load.type!r} not supported')
-                model.log.debug(msg)
+                log.debug(msg)
                 continue
 
             pressures = load.pressures[:nface]
@@ -607,7 +612,7 @@ def get_load_arrays(model: BDF, subcase_id: int,
         centroidal_pressures : (nelements, 1) float ndarray
             the pressure
         forces : (nnodes, 3) float ndarray
-            the pressure
+            the forces
         spcd : (nnodes, 3) float ndarray
             the SPCD load application
 

@@ -130,7 +130,7 @@ def _not_equal_nodes_build_tree(nodes_xyz: NDArray3float,
 
     Returns
     -------
-    kdt : cKDTree()
+    kdt : KDTree()
         the kdtree object
     ieq : int ndarray
         The indices of nodes_xyz where the nodes in xyz_compare are close???

@@ -20,11 +20,20 @@ import scipy
 import scipy.spatial
 
 from pyNastran.nptyping_interface import NDArrayNint, NDArrayN3float
+from pyNastran.utils import int_version
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
+    from pyNastran.bdf.bdf import GRID
+
+SCIPY_VERSION = int_version('scipy', scipy.__version__)
+import scipy.spatial
+if SCIPY_VERSION > [1, 6, 0]:
+    KDTree = scipy.spatial.KDTree
+else:
+    KDTree = scipy.spatial.cKDTree
 
 
 def bdf_equivalence_nodes(bdf_filename: str,
@@ -121,9 +130,12 @@ def bdf_equivalence_nodes(bdf_filename: str,
     return model
 
 
-def _eq_nodes_setup(bdf_filename, unused_tol,
+def _eq_nodes_setup(bdf_filename,
+                    unused_tol,
                     renumber_nodes=False, xref=True,
-                    node_set=None, log=None, debug=True):
+                    node_set=None,
+                    log: Optional[SimpleLogger]=None,
+                    debug: bool=True):
     """helper function for ``bdf_equivalence_nodes``"""
     if node_set is not None:
         if renumber_nodes:
@@ -177,7 +189,7 @@ def _eq_nodes_setup_node_set(model: BDF,
                              node_set: List[NDArrayNint],
                              renumber_nodes: bool=False,
                              ) -> Tuple[NDArrayNint, NDArrayNint, Dict[int, int]]:
-    """helper function for ``_eq_nodes_setup``"""
+    """helper function for ``_eq_nodes_setup`` that handles node_sets"""
     inode = 0
     nid_map = {}
     idtype = 'int32'
@@ -211,7 +223,7 @@ def _eq_nodes_setup_node_set(model: BDF,
 
 def _eq_nodes_setup_node(model: BDF, renumber_nodes: bool=False,
                          ) -> Tuple[NDArrayNint, NDArrayNint, Dict[int, int]]:
-    """helper function for ``_eq_nodes_setup``"""
+    """helper function for ``_eq_nodes_setup`` that doesn't handle node sets"""
     inode = 0
     nid_map = {}
     if renumber_nodes:
@@ -283,7 +295,9 @@ def _check_for_referenced_nodes(model: BDF,
     #assert np.array_equal(nids[inew], nids_new), 'some nodes are not defined'
     return inew
 
-def _eq_nodes_find_pairs(nids, slots, ieq, node_set=None):
+def _eq_nodes_find_pairs(nids: NDArrayNint,
+                         slots, ieq,
+                         node_set: Optional[List[NDArrayNint]]=None) -> List[Tuple[int, int]]:
     """helper function for `bdf_equivalence_nodes`"""
     irows, icols = slots
     #replacer = unique(ieq[slots])  ## TODO: turn this back on?
@@ -310,8 +324,9 @@ def _eq_nodes_final(nid_pairs, model: BDF, tol: float,
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
 
-        # TODO: doesn't use get position...
-        distance = norm(node1.get_position() - node2.get_position())
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+        distance = norm(xyz1 - xyz2)
 
         #print('  irow=%s->n1=%s icol=%s->n2=%s' % (irow, nid1, icol, nid2))
         if distance > tol:
@@ -347,8 +362,9 @@ def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
                                  tol: float,
                                  log: SimpleLogger,
                                  inew: NDArrayNint,
-                                 node_set=None, neq_max: int=4, method: str='new',
-                                 debug: bool=False) -> None:
+                                 node_set=None,
+                                 neq_max: int=4, method: str='new',
+                                 debug: bool=False) -> List[Tuple[int, int]]:
     """
     Helper for equivalencing
 
@@ -388,9 +404,15 @@ def _nodes_xyz_nids_to_nid_pairs_new(kdt, nids, node_set, tol: float):
             nid_pairs.append((nid1, nid2))
     return nid_pairs
 
-def _eq_nodes_build_tree(nodes_xyz, nids, tol, log,
-                         inew=None, node_set=None, neq_max=4, method='new', msg='',
-                         debug=False) -> Tuple[Any, Any, Any]:
+def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
+                         nids: NDArrayNint,
+                         tol: float,
+                         log: SimpleLogger,
+                         inew=None,
+                         node_set: Optional[NDArrayNint]=None,
+                         neq_max: int=4, method: str='new', msg: str='',
+                         debug: bool=False) -> Tuple[KDTree,
+                                                     List[Tuple[int, int]]]:
     """
     helper function for `bdf_equivalence_nodes`
 
@@ -413,12 +435,10 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol, log,
 
     Returns
     -------
-    kdt : cKDTree()
+    kdt : KDTree()
         the kdtree object
-    ieq : (nnodes, neq) int ndarray
-        ???
-    slots : (nnodes, neq) int ndarray
-        ???
+    nid_pairs : List[Tuple[int, int]]
+        a series of (nid1, nid2) pairs
 
     """
     nnodes = len(nids)
@@ -441,6 +461,11 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol, log,
     else:
         if method == 'new':
             log.warning(f'setting method to "old" because node_set is specified')
+
+        #ieq : (nnodes, neq) int ndarray
+        #    the node indices that are close
+        #slots : (nnodes, neq) int ndarray
+        #    the location of where
         deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
         if node_set is not None:
             assert len(deq) == len(nids)
@@ -451,7 +476,7 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol, log,
     assert isinstance(nid_pairs, list), nid_pairs
     return kdt, nid_pairs
 
-def _eq_nodes_build_tree_new(kdt: scipy.spatial.cKDTree,
+def _eq_nodes_build_tree_new(kdt: KDTree,
                              nodes_xyz: NDArrayN3float,
                              nids: NDArrayNint,
                              nnodes: int,
@@ -481,14 +506,14 @@ def _eq_nodes_build_tree_new(kdt: scipy.spatial.cKDTree,
 
     return kdt, nid_pairs
 
-def _get_tree(nodes_xyz: NDArrayN3float, msg: str='') -> scipy.spatial.cKDTree:
+def _get_tree(nodes_xyz: NDArrayN3float, msg: str='') -> KDTree:
     """gets the kdtree"""
     assert isinstance(nodes_xyz, np.ndarray), type(nodes_xyz)
     assert nodes_xyz.shape[0] > 0, 'nnodes=0%s' % msg
 
     # build the kdtree
     try:
-        kdt = scipy.spatial.cKDTree(nodes_xyz)
+        kdt = KDTree(nodes_xyz)
     except RuntimeError:
         print(nodes_xyz)
         raise RuntimeError(nodes_xyz)
