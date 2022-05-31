@@ -20,12 +20,20 @@ import scipy
 import scipy.spatial
 
 from pyNastran.nptyping_interface import NDArrayNint, NDArrayN3float
+from pyNastran.utils import int_version
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import GRID
+
+SCIPY_VERSION = int_version('scipy', scipy.__version__)
+import scipy.spatial
+if SCIPY_VERSION > [1, 6, 0]:
+    KDTree = scipy.spatial.KDTree
+else:
+    KDTree = scipy.spatial.cKDTree
 
 
 def bdf_equivalence_nodes(bdf_filename: str,
@@ -513,7 +521,7 @@ def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
         neq_max=neq_max, method=method, debug=debug)
     return nid_pairs
 
-def _nodes_xyz_nids_to_nid_pairs_new(kdt: scipy.spatial.cKDTree,
+def _nodes_xyz_nids_to_nid_pairs_new(kdt: KDTree,
                                      nids: NDArrayNint,
                                      all_node_set: NDArrayNint,
                                      node_set: Optional[NDArrayNint], tol: float):
@@ -578,7 +586,7 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
                          inew=None,
                          node_set: Optional[NDArrayNint]=None,
                          neq_max: int=4, method: str='new', msg: str='',
-                         debug: bool=False) -> Tuple[scipy.spatial.cKDTree,
+                         debug: bool=False) -> Tuple[KDTree,
                                                      List[Tuple[int, int]]]:
     """
     helper function for `bdf_equivalence_nodes`
@@ -602,7 +610,7 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
 
     Returns
     -------
-    kdt : cKDTree()
+    kdt : KDTree()
         the kdtree object
     nid_pairs : List[Tuple[int, int]]
         a series of (nid1, nid2) pairs
@@ -648,7 +656,7 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
     assert isinstance(nid_pairs, list), nid_pairs
     return kdt, nid_pairs
 
-def _eq_nodes_build_tree_new(kdt: scipy.spatial.cKDTree,
+def _eq_nodes_build_tree_new(kdt: KDTree,
                              nodes_xyz: NDArrayN3float,
                              nids: NDArrayNint,
                              all_node_set: NDArrayNint,
@@ -680,14 +688,14 @@ def _eq_nodes_build_tree_new(kdt: scipy.spatial.cKDTree,
 
     return kdt, nid_pairs
 
-def _get_tree(nodes_xyz: NDArrayN3float, msg: str='') -> scipy.spatial.cKDTree:
+def _get_tree(nodes_xyz: NDArrayN3float, msg: str='') -> KDTree:
     """gets the kdtree"""
     assert isinstance(nodes_xyz, np.ndarray), type(nodes_xyz)
     assert nodes_xyz.shape[0] > 0, 'nnodes=0%s' % msg
 
     # build the kdtree
     try:
-        kdt = scipy.spatial.cKDTree(nodes_xyz)
+        kdt = KDTree(nodes_xyz)
     except RuntimeError:
         print(nodes_xyz)
         raise RuntimeError(nodes_xyz)

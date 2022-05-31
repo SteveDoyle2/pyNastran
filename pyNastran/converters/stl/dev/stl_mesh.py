@@ -8,28 +8,36 @@ http://math.stackexchange.com/questions/544946/determine-if-projection-of-3d-poi
 import numpy as np
 
 from pyNastran.converters.stl.stl import read_stl
-from scipy.spatial import cKDTree
+from pyNastran.utils import int_version
 import scipy.interpolate
 
-def projected_barycentric_coord(p, q, u, v):
-    r"""
-    points p, q
-    vector u, v
-        3
-       *v
-      /  \    <----p
-    q*----*u
-    1       2
-    u = p2 - p1
-    v = p3 - p1
-    """
-    n = np.cross(u, v)
-    one_over_4_area_squared = 1.0 / (n @ n)
-    w = p - q
-    b[2] = (np.cross(u, w) @ n) * one_over_4_area_squared
-    b[1] = (np.cross(w, v) @ n) * one_over_4_area_squared
-    b[0] = 1.0 - b[1] - b[2]
-    return b
+SCIPY_VERSION = int_version('scipy', scipy.__version__)
+import scipy.spatial
+if SCIPY_VERSION > [1, 6, 0]:
+    KDTree = scipy.spatial.KDTree
+else:
+    KDTree = scipy.spatial.cKDTree
+
+
+#def projected_barycentric_coord(p, q, u, v):
+    #r"""
+    #points p, q
+    #vector u, v
+        #3
+       #*v
+      #/  \    <----p
+    #q*----*u
+    #1       2
+    #u = p2 - p1
+    #v = p3 - p1
+    #"""
+    #n = np.cross(u, v)
+    #one_over_4_area_squared = 1.0 / (n @ n)
+    #w = p - q
+    #b[2] = (np.cross(u, w) @ n) * one_over_4_area_squared
+    #b[1] = (np.cross(w, v) @ n) * one_over_4_area_squared
+    #b[0] = 1.0 - b[1] - b[2]
+    #return b
 
 def project_points_onto_stl(stl, points):
     """
@@ -54,8 +62,8 @@ def project_points_onto_stl(stl, points):
         centroids = (p1 + p2 + p3) / 3.
         stl.centroids = centroids
 
-        tree = cKDTree(centroids, leafsize=16, compact_nodes=True,
-                       copy_data=False, balanced_tree=True)
+        tree = KDTree(centroids, leafsize=16, compact_nodes=True,
+                      copy_data=False, balanced_tree=True)
         stl.tree = tree
     #tree = scipy.spatial.KDTree(data, leafsize=10)
     #tree.query_ball_point(x, r, p=2., eps=0)
@@ -221,7 +229,7 @@ def main():  # pragma: no cover
     out_points2 = project_line_onto_stl(stl, pa, pb, npoints=11)
     #out_points3 = project_curve_onto_stl(stl, points, npoints=11)
 
-def build():
+def build():  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     model = BDF(debug=False)
     xyz1 = [0., 0., 0.]
