@@ -1,7 +1,7 @@
 pyNastran Package
 =================
 
-This is the pyNastran.rst file for Master.
+This is the pyNastran.rst file for Main.
 
 .. toctree::
 

@@ -3,7 +3,7 @@ OP4 Demo
 
 The Jupyter notebook for this demo can be found in: -
 docs/quick_start/demo/op4_demo.ipynb -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op4_demo.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op4_demo.ipynb
 
 The OP4 is a Nastran input/output format that can store matrices.
 

@@ -25,8 +25,8 @@ The software is tested on Windows and Linux against:
 
  * Python 3.7
  * Python 3.8
- * Python 3.9  (availible in pyNastran 1.4)
- * Python 3.10  (availible in pyNastran 1.4)
+ * Python 3.9  (availible in pyNastran 1.3.4)
+ * Python 3.10  (availible in pyNastran 1.3.4)
 
 Packages
 --------
@@ -55,8 +55,10 @@ based on availbility), so it should work.  The recommended set of packages are:
 
      * PyQt5 >= 5.9.2
      * PySide2 >= 5.11.2
-   * QScintilla >= 2.13.0 **(optional for fancy scripting; PyQt5 only)**
-   * pygments >= 2.2.0 **(optional for fancy scripting; PyQt5 only)**
+     * PyQt6
+     * PySide6
+   * QScintilla >= 2.13.0 **(optional for fancy scripting; PyQt5/6 only)**
+   * pygments >= 2.2.0 **(optional for fancy scripting; PyQt5/6 only)**
    * imageio >= 2.4.1,<3  **(optional for animation support)**
 
 *****************************************************
