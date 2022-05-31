@@ -106,7 +106,7 @@ commercial program.
 This should be hidden...
 --->
 
-### v1.3.4 has NOT been released (2022/5/30)
+### v1.3.4 has been released (2022/5/30)
 This is a a bug fix release mainly to address dependency changes:
 
 Programmatics:
@@ -120,7 +120,7 @@ There are also at least 33 bugs fixed and a few features added from the 1.4 rele
 See pyNastran `v1.3.4 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
 
 
-### v1.3.3 has been released (2020/6/28)
+### v1.3.3 (2020/6/28)
 
 This is a bug fix only release outside of:
       ```python
