@@ -1,7 +1,7 @@
 Building Documentation
 ======================
 
-If you don't want to use build the docs, just 
+If you don't want to use build the docs, just
 
 See `docs <https://pynastran-git.readthedocs.io/en/latest/>`_
 
@@ -27,7 +27,7 @@ pyNastran is meant to an easy package to install once you have the required Pyth
 It's a pure Python package so you shouldn't have too many problems.
 
 Installing from source is recommended if:
- - You want the most recent version (see installation.rst-master)
+ - You want the most recent version (see installation.rst-main)
  - You want easier access to the source
  - You're on an air-gapped machine
 
@@ -39,7 +39,7 @@ Overview
  * Install Sphinx, GraphViz, alabaster **(for documentation)**
 
  * Install Git
- * Clone pyNastran-master from Github
+ * Clone pyNastran-main from Github
  * Install pyNastran
 
 
@@ -54,9 +54,9 @@ Install Git
 
 Install pyNastran
 =================
-There are two ways to install the master/dev version of pyNastran
+There are two ways to install the main/dev version of pyNastran
 
- 1. Download the most recent `zip version <https://github.com/SteveDoyle2/pyNastran/archive/master.zip>`_
+ 1. Download the most recent `zip version <https://github.com/SteveDoyle2/pyNastran/archive/main.zip>`_
 
  2. Clone pyNastran (see below).  Using Git allows you to easily update to the
     latest dev version when you want to as well as push any commits of your own.

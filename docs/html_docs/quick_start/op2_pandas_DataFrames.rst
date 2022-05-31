@@ -3,7 +3,7 @@ Transient DataFrames in PyNastran
 
 The Jupyter notebook for this demo can be found in: -
 docs/quick_start/demo/op2_pandas_DataFrames.ipynb -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_DataFrames.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_pandas_DataFrames.ipynb
 
 We’ll use standard pyNastran methods to load a model. We’ll set ``build_dataframe=True`` to make pandas objects
 ---------------------------------------------------------------------------------------------------------------
@@ -13,18 +13,18 @@ We’ll use standard pyNastran methods to load a model. We’ll set ``build_data
     import os
     import pandas as pd
     pd.set_option('precision', 3)
-    
+
     import pyNastran
     pkg_path = pyNastran.__path__[0]
     from pyNastran.op2.op2 import read_op2
     from pyNastran.utils.nastran_utils import run_nastran
-    
+
     bdf_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'iSat_launch_100Hz.dat')
     op2_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'iSat_launch_100Hz.op2')
     if not os.path.exists(op2_filename):
         run_nastran(bdf_filename)
         assert os.path.exists(op2_filename)
-    
+
     isat = read_op2(op2_filename, build_dataframe=True, debug=False, skip_undefined_matrices=True,
                     exclude_results='*strain_energy')
 
@@ -59,8 +59,8 @@ Get a list of all objects:
     ctria3_composite_stress[1]
     cquad4_composite_strain[1]
     ctria3_composite_strain[1]
-    
-    
+
+
 
 Access the DataFrames
 
@@ -106,15 +106,15 @@ Now list each of the objects and be amazed!
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -540,15 +540,15 @@ Now list each of the objects and be amazed!
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -1857,7 +1857,7 @@ Cycles, at the top.
 
     import numpy as np
     import pandas as pd
-    
+
     def build_dataframe_gpf(self):
         headers = self.get_headers()
         #name = self.name
@@ -1870,7 +1870,7 @@ Cycles, at the top.
                 column_names, column_values = self._build_dataframe_transient_header()
                 #column_names = [column_names[0]]
                 #column_values = [column_values[0]]
-    
+
                 column_values2 = []
                 for value in column_values:
                     values2 = []
@@ -1884,13 +1884,13 @@ Cycles, at the top.
                 df1.columns = column_names
                 return df1
                 #df1.columns.names = column_names
-                #self.data_frame.columns.names = column_names            
-                
+                #self.data_frame.columns.names = column_names
+
                 df2 = pd.DataFrame(node_element)
                 df2.columns = ['NodeID', 'ElementID']
                 df3 = pd.DataFrame(self.element_names.ravel())
                 df3.columns = ['ElementType']
-    
+
                 dfs = [df2, df3]
                 for i, header in enumerate(headers):
                     df = pd.DataFrame(self.data[:, :, i].ravel())
@@ -1919,10 +1919,10 @@ Cycles, at the top.
                 data_frame.columns.names = ['Static']
                 data_frame.index.names = ['NodeID', 'ElementID', 'Item']
         return data_frame
-    
+
     # print(isat.grid_point_forces[1])
     grid_point_forces2 = build_dataframe_gpf(isat.grid_point_forces[1])
-    
+
     # print(grid_point_forces2)
 
 .. code:: ipython3
@@ -1939,11 +1939,11 @@ Cycles, at the top.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -2165,15 +2165,15 @@ Cycles, at the top.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -2595,15 +2595,15 @@ Cycles, at the top.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -3025,15 +3025,15 @@ Cycles, at the top.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -3471,15 +3471,15 @@ Cycles, at the top.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -3929,15 +3929,15 @@ Cycles, at the top.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -4375,15 +4375,15 @@ Cycles, at the top.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -4833,15 +4833,15 @@ Cycles, at the top.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -5271,15 +5271,15 @@ Cycles, at the top.
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }

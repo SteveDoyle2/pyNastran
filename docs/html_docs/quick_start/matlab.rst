@@ -27,7 +27,7 @@ Replace the base redirectstdout.m file (that for my installation is located in t
 
 with this file:
 
-    https://github.com/SteveDoyle2/pyNastran/tree/master/docs/pyNastran_in_MATLAB_example/redirectstdout/redirectstdout.m
+    https://github.com/SteveDoyle2/pyNastran/tree/main/docs/pyNastran_in_MATLAB_example/redirectstdout/redirectstdout.m
 
 Also, instead of imports like:
 

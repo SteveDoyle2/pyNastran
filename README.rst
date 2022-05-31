@@ -21,12 +21,12 @@
 .. |Travis13| image:: https://img.shields.io/travis/SteveDoyle2/pyNastran/1.3.svg
 .. _Travis13: https://travis-ci.org/SteveDoyle2/pyNastran
 
-.. |TravisMa| image:: https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg
+.. |TravisMa| image:: https://img.shields.io/travis/SteveDoyle2/pyNastran/main.svg
 .. _TravisMa: https://travis-ci.org/SteveDoyle2/pyNastran
 
 .. comments
    #-----------------------------------------------------------------
-   
+
 .. |Codecov11| image:: https://img.shields.io/coveralls/SteveDoyle2/pyNastran/1.1.svg
 .. _Codecov11: https://coveralls.io/github/SteveDoyle2/pyNastran?branch=1.2
 
@@ -36,8 +36,8 @@
 .. |Codecov13| image:: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3/graph/badge.svg
 .. _Codecov13: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3
 
-.. |CodecovMa| image:: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg
-.. _CodecovMa: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master
+.. |CodecovMa| image:: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg
+.. _CodecovMa: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main
 
 .. comments
    #-----------------------------------------------------------------
@@ -50,9 +50,9 @@ v1.3.3
 Also, check out the:
 
 * `Discussion forum <http://groups.google.com/group/pynastran-discuss>`_ (questions about the latest release)
-  
-* `Developer forum <http://groups.google.com/group/pynastran-dev>`_ (questions about the master branch)
-  
+
+* `Developer forum <http://groups.google.com/group/pynastran-dev>`_ (questions about the main branch)
+
 * `Docs <https://pynastran-git.readthedocs.io/en/1.3/>`_
 
 for more detailed information.
@@ -73,7 +73,7 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a
 commercial program.
 
-.. image:: https://github.com/SteveDoyle2/pynastran/blob/master/pyNastran/gui/images/caero.png
+.. image:: https://github.com/SteveDoyle2/pynastran/blob/main/pyNastran/gui/images/caero.png
 
 News
 ====
@@ -100,9 +100,9 @@ which was overly complicated to do before.
 Programmatics:
 
 * Supports Python 3.7 and 3.8
- 
+
 * GUI is compatible with PyQt5 and PySide2 and VTK 7-9
- 
+
 * improved testing of old versions of packages
 
 * updated nptyping requirements
@@ -125,150 +125,150 @@ In addition, many new OP2 results have been added.  Modern NX Nastran should wor
 Programmatics:
 
 * Supports Python 3.7 and 3.8
- 
+
 * Dropping Python 2.7 and 3.6 support
- 
+
 * GUI is compatible with PyQt5 and PySide2
- 
+
 * improved testing of old versions of packages
- 
+
 BDF:
  * enhancements
- 
+
    * 405 cards supported (up from 373)
-   
+
    * improved mesh utilities
-   
+
      * bdf mirror, bdf convert, bdf export_caero_mesh
-      
+
      * additional `bdf scale`, which takes arbitrary mass, length, time, pressure, or velocity scale factors (3 of 5) to apply a scaling law
-      
+
    - added deck guessing with punch=None
- 
+
 OP2:
  - enhancements:
- 
+
    - OP2 write support
-   
-   - fixed most pandas deprecation warnings/added support for pandas 0.25 
-   
+
+   - fixed most pandas deprecation warnings/added support for pandas 0.25
+
    - much improved NX 2019.2 support
-   
+
  - minor enhancements:
- 
+
    - more hdf5 results
-   
+
    - a few more cards supported in the OP2 geometry reader
-   
+
    - preliminary NX 64-bit support
-   
+
    - more MSC versions supported
-   
+
    - sped up R1TABRG (optimization) reading
-   
+
    - various geometry cards added
-   
+
    - supports more PARAM reading
-   
+
  - new results:
- 
+
    - composite failure indicies (OEFIT)
-    
+
    - sensitivity support (DSCMCOL)
-    
+
    - Cambpell diagrams (CDDATA)
-    
+
    - eigenvectors (BOPHIGF)
-    
+
    - grid point forces SORT2 (OGPFB2)
-    
+
    - stress/strain/force
-    
+
      - random stress/strain (OESVM1/2, OESVM1C, OSTRVM1/2, OSTRVM2, OESXRM1C, OESXNO1, OESXNO1C)
-      
+
      - real/complex stress/strain/force output for centroidal CQUADR/CTRIAR
-      
+
      - complex CBEAR forces
-      
+
      - real CFAST, CWELD forces
-      
+
      - nonlinear cbush stress/strain/force
-      
+
    - other
-    
+
      - PSDs
-      
+
      - optimization
-      
+
        - convergence table
-        
+
        - design variables
-        
+
        - weight, displacement, stress, strain, force, composite stress, composite strain, fractional mass response
-        
+
    - SOL 401/402 results:
-    
+
      - eigenvalue_fluid (LAMAF, LAMAS)
-      
+
      - eigenvectors (BOPHIGF, BOPHIGS)
-      
+
      - temperature (OTEMP1)
-      
+
      - solution set
-      
+
        - results: displacement, velocity, acceleration, eigenvectors:
-        
+
        - tables: OUXY1, OUXY2, OPHSA
 
 GUI:
 
 - enhancements:
- 
+
   - partial custom results many now be loaded
-   
+
   - animation now supports complex fringe
-   
+
   - result case description now shows the mode/time/frequency
-   
+
   - result case description now shows the min/max value as well as the location
-   
+
   - map centroidal to nodal option
-   
+
   - adding node/element highlight menu
-   
+
   - adding node/element mark/label menu
-   
+
   - result case description now shows the min/max value as well as the location
-   
+
   - result case description now shows the mode/time/frequency
-   
+
 - minor enhancements:
- 
+
   - added export result option to right-click menu
-   
+
   - more keyboard shortcuts
-   
+
 - nastran:
- 
+
   - geometry:
-   
+
     - added preferences for geometry/results to speed up model loading
-     
+
     - element & material coordinate systems
-     
+
   - results
-   
+
     - added acoustic displacements (OUG1F)
-     
+
     - real/complex stress/strain/force results
-     
+
       - plate by upper/lower, composite plates by ply, bars, rods, springs, cbush, cdamp
-       
+
     - fractional mass response
 
 F06:
  - KE support for plot_145
- 
+
 Many bug fixes and a few more details on features, can be found in the `Release Notes <https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md>`_.
 
 
@@ -308,11 +308,11 @@ Programmatics:
 
 BDF:
  - 373 cards supported (up from 343)
- 
+
  - added abiltity to write models to separate include files
- 
+
      .. code-block:: python
-     
+
         >>> model = BDF()
         >>> model.read_bdf(bdf_filename, save_file_structure=True)
 
@@ -324,7 +324,7 @@ BDF:
         >>> ifile = model.grids[1].ifile
 
  - HDF5 import/export
- 
+
      .. code-block:: python
 
         >>> model = read_bdf(bdf_filename)
@@ -333,7 +333,7 @@ BDF:
         >>> model_new.load_hdf5_filename(hdf5_filename)
 
  - preliminary superelement support
- 
+
      .. code-block:: python
 
         >>> model.read_bdf(bdf_filename)
@@ -349,7 +349,7 @@ OP2:
 
  - Can optionally save directly to HDF5 instead of numpy (limited).
  - Loading OP2s to an HDF5 file to decrease memory usage
- 
+
     .. code-block:: python
 
        >>> op2_model = OP2()
@@ -382,11 +382,11 @@ Known issues:
 Older Releases
 --------------
  - pyNastran `v1.2.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v.1.2.0>`_ (2019/5/21)
- 
+
  - pyNastran `v1.1.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.1.0>`_ (2018/6/26)
- 
+
  - pyNastran `v1.0.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0>`_ (2017/5/25)
- 
+
  - pyNastran `v0.8.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0>`_ (2016/8/21)
- 
+
  - pyNastran `v0.7.2 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.7.2>`_ (2015/4/25)

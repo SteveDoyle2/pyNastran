@@ -1,11 +1,11 @@
 
-Main/dev: 
-[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) 
+Main/dev:
+[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
 [![Linux Status](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)](https://github.com/SteveDoyle2/pyNastran/actions?query=workflow%3ACI+branch%3Amaster)
-[![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) 
+[![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
 [![Discord](https://img.shields.io/badge/help_forum-discourse-blue.svg)](https://discord.gg/s8RfSkZDHA)
 
-See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.3/installation/installation.html#installation-from-release) 
+See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.3/installation/installation.html#installation-from-release)
 for instructions on installing pyNastran.
 
 
@@ -34,25 +34,25 @@ for more detailed information.
 
 ### Code of Conduct
 
-Everyone interacting in the setuptools project’s codebase, issue trackers, chat room/Discord, and mailing lists is expected to follow the [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md).
+Everyone interacting in the setuptools project’s codebase, issue trackers, chat room/Discord, and mailing lists is expected to follow the [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/main/code_of_conduct.md).
 
 
 <!---
-[![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
-[![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
-[![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
+[![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/main?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
+[![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
+[![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/main.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=main)
 --->
 
 <!---
-[![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/main?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/main)
 [![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
 [![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
-[![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
-[![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
+[![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=main)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=main)
+[![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/main.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=main)	|
 ### v1.4
 
-Last year MSC provided a copy of MSC Nastran free of charge to help support the project.  
-Since then, modern MSC Nastran support has been added.  
+Last year MSC provided a copy of MSC Nastran free of charge to help support the project.
+Since then, modern MSC Nastran support has been added.
 In addition, NX 64-bit and OptiStruct support has been improved.
 
 The biggest new features are:
@@ -116,7 +116,7 @@ Programmatics:
  - support for h5py >3.0
  - GUI is compatible with PyQt5 and PySide2 and VTK 7-10
 
-There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser). 
+There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser).
 
 See pyNastran `v1.3.4 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
 --->

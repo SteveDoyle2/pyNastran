@@ -3,10 +3,10 @@ OP2: Numpy Demo #1 (Displacement, Solid Stress)
 
 The Jupyter notebook for this demo can be found in: -
 docs/quick_start/demo/op2_demo_numpy2.ipynb -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_demo_numpy2.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_demo_numpy2.ipynb
 
 It’s recommended that you first go through: -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_intro.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_intro.ipynb
 
 The previous demo was intentionally clunky to demonstrate how one might
 think of a single element.
@@ -28,11 +28,11 @@ Import the packages
     import copy
     import numpy as np
     np.set_printoptions(precision=2, threshold=20, suppress=True, linewidth=100)
-    
+
     import pyNastran
     pkg_path = pyNastran.__path__[0]
     model_path = os.path.join(pkg_path, '..', 'models')
-    
+
     from pyNastran.utils import print_bad_path
     from pyNastran.op2.op2 import read_op2
     from pyNastran.utils import object_methods, object_attributes
@@ -70,13 +70,13 @@ arrays just to make sure you get the **axis=1** parameter correct.
     disp_headers = disp.get_headers()
     print('disp_headers = %s' % disp_headers)
     nnodes = disp.node_gridtype.shape[0]
-    
+
     txyz = disp.data[0, :, :3]
     txyz_mag = np.linalg.norm(txyz, axis=1)
     assert len(txyz_mag) == nnodes
     txyz_mag_max = txyz_mag.max()
     txyz_mag_min = txyz_mag.min()
-    
+
     inid_max = np.where(txyz_mag == txyz_mag_max)[0]
     inid_min = np.where(txyz_mag == txyz_mag_min)[0]
     all_nodes = disp.node_gridtype[:, 0]
@@ -91,7 +91,7 @@ arrays just to make sure you get the **axis=1** parameter correct.
     disp_headers = ['t1', 't2', 't3', 'r1', 'r2', 'r3']
     max displacement=0.012376265 max_nodes=[23]
     min displacement=0.0 min_nodes=[31 35 39 43 47 48 53 63 64 69 70 71 72]
-    
+
 
 Find the max centroidal stress on the CTETRA elements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,7 +102,7 @@ Find the max centroidal stress on the CTETRA elements
     stress = model.ctetra_stress[subcase_id]
     stress_headers = stress.get_headers()
     print('stress_headers = %s' % stress_headers)
-    
+
     element_node = stress.element_node
     elements = element_node[:, 0]
     nodes = element_node[:, 1]
@@ -112,7 +112,7 @@ Find the max centroidal stress on the CTETRA elements
 .. parsed-literal::
 
     stress_headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', 'von_mises']
-    
+
 
 The 0 location is the centroid
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -128,18 +128,18 @@ CTETRA elements have 4 nodes (even 10 noded CTETRA elements) in the OP2.
     #print(izero2)
     eids_centroid = elements[izero2]
     print('eids_centroid = %s' % eids_centroid)
-    
+
     ivm = stress_headers.index('von_mises')
     vm_stress = stress.data[0, izero2, ivm]
     print(vm_stress)
-    
+
     vm_stress_max = vm_stress.max()
     vm_stress_min = vm_stress.min()
     icentroid_max = np.where(vm_stress == vm_stress_max)[0]
     icentroid_min = np.where(vm_stress == vm_stress_min)[0]
     eids_max = eids_centroid[icentroid_max]
     eids_min = eids_centroid[icentroid_min]
-    
+
     print('max_stress=%s eids=%s' % (vm_stress_max, eids_max))
     print('min_stress=%s eids=%s' % (vm_stress_min, eids_min))
 
@@ -152,7 +152,7 @@ CTETRA elements have 4 nodes (even 10 noded CTETRA elements) in the OP2.
      44450.695 22886.705]
     max_stress=52446.37 eids=[142]
     min_stress=3288.5732 eids=[165]
-    
+
 
 Finding the VM stress associated with a single node ID
 ------------------------------------------------------
@@ -166,12 +166,12 @@ elements share 1 node!
     stress = model.ctetra_stress[subcase_id]
     stress_headers = stress.get_headers()
     print('stress_headers = %s' % stress_headers)
-    
+
     element_node = stress.element_node
     elements = element_node[:, 0]
     nelements = len(elements) // 5
     nodes = element_node[:, 1]#.reshape(nelements, 5)
-    
+
     #------------------------------
     ivm = -1
     print('nodes =', nodes)
@@ -192,7 +192,7 @@ elements share 1 node!
     vm_stress = [14743.482 15626.162  8966.338 30538.127 30699.877 22275.338 10997.474 14971.115  8662.346
       7466.423 ... 21431.023 10285.905 14731.244  9881.857 15744.815  9625.97  11964.446 12875.621
       8207.951 22886.705] 26
-    
+
 
 Finding the centroidal VM stress for a set of elements
 ------------------------------------------------------
@@ -206,25 +206,25 @@ faster if you are familiar with numpy.
     stress = model.ctetra_stress[subcase_id]
     stress_headers = stress.get_headers()
     print('stress_headers = %s' % stress_headers)
-    
+
     element_node = stress.element_node
     elements = element_node[:, 0]
     nodes = element_node[:, 1]
-    
+
     # the slow way to get the unique elements
     izero = np.where(nodes == 0)[0]
     ueids_slow = elements[izero]
-    
+
     # the fast way
     ueids = np.unique(elements)
     assert np.array_equal(ueids, ueids_slow)
-    
+
     eids_to_lookup = [5, 7, 10]
     ilookup = np.searchsorted(ueids, eids_to_lookup)
-    
+
     ivm = stress_headers.index('von_mises')
     vm_stress = stress.data[0, ilookup, ivm]
-    
+
     print('eids_to_lookup =', eids_to_lookup)
     print('vm_stress =', vm_stress)
 
@@ -234,7 +234,7 @@ faster if you are familiar with numpy.
     stress_headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', 'von_mises']
     eids_to_lookup = [5, 7, 10]
     vm_stress = [15900.173 16272.253 16272.253]
-    
+
 
 Finding the centroidal VM stress for a set of elements when you have multiple element types
 -------------------------------------------------------------------------------------------
@@ -248,19 +248,19 @@ CHEXAs as well as CTETRAs. Thus, we need to filter the data.
     stress = model.ctetra_stress[subcase_id]
     stress_headers = stress.get_headers()
     print('stress_headers = %s' % stress_headers)
-    
+
     element_node = stress.element_node
     elements = element_node[:, 0]
     nodes = element_node[:, 1]
-    
+
     ueids = np.unique(elements)
     print('ueids', ueids)
     eids_to_lookup = [5, 7, 10, 186, 1000000]
     ilookup = np.searchsorted(ueids, eids_to_lookup)
-    
+
     ivm = stress_headers.index('von_mises')
     vm_stress = stress.data[0, ilookup, ivm]
-    
+
     print('eids_to_lookup =', eids_to_lookup)
     print('vm_stress =', vm_stress)
 
@@ -271,7 +271,7 @@ CHEXAs as well as CTETRAs. Thus, we need to filter the data.
     ueids [  1   2   3   4   5   6   7   8   9  10 ... 177 178 179 180 181 182 183 184 185 186]
     eids_to_lookup = [5, 7, 10, 186, 1000000]
     vm_stress = [15900.173 16272.253 16272.253 22275.338 22275.338]
-    
+
 
 We have a problem where our element_id (1000000) is out of range
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -288,7 +288,7 @@ Let’s filter the data using sets and then use searchsorted.
     filtered_eids = np.intersect1d(elements, eids_to_lookup)
     ilookup = np.searchsorted(ueids, filtered_eids)
     vm_stress = stress.data[0, ilookup, ivm]
-    
+
     print('filtered_eids =', filtered_eids)
     print('vm_stress =', vm_stress)
 
@@ -297,7 +297,7 @@ Let’s filter the data using sets and then use searchsorted.
 
     filtered_eids = [  5   7  10 186]
     vm_stress = [15900.173 16272.253 16272.253 22275.338]
-    
+
 
 Other Elements that are Similar
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
