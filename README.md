@@ -14,9 +14,9 @@ for instructions on installing pyNastran.
 .. _DiscourseBadge: https://discourse.matplotlib.org
 --->
 
-### v1.3.3
+### v1.3.4
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2020/6/28)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2022/5/30)
 
 Also, check out the:
   * [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
@@ -61,15 +61,14 @@ The biggest new features are:
  - improved op2 support
 
 Programmatics:
- - Supports Python 3.7 - 3.9
- - GUI is compatible with PyQt5 and PySide2 and VTK 7-9
+ - Supports Python 3.7 - 3.10
+ - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 7-10
  - improved testing of old versions of packages
  - updated nptyping requirements
 
 BDF:
  - fixed CAERO1 paneling bug
  - 8 new cards: BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV, PCOMPLS, TABDMP1
- - bdf_mirror supports solid elements
 
 OP2:
  - 20 new results
@@ -77,7 +76,6 @@ OP2:
 
 GUI:
  - transient/complex fringe only animations now supported
- - locale support (e.g., most of Europe and South America) to allow 3,14 instead of 3.14
 
 See pyNastran `v1.4.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.4.0>`_ for details on the other changes.
 
@@ -106,20 +104,20 @@ commercial program.
 <!---
 
 This should be hidden...
+--->
 
-### v1.3.4 has NOT been released (2022/5/xx)
-This is a a substantial bug fix release mainly to address dependency changes:
+### v1.3.4 has NOT been released (2022/5/30)
+This is a a bug fix release mainly to address dependency changes:
 
 Programmatics:
  - supports Python 3.7-3.10
  - support for nptyping 1.1.1-2.0 (removed as a required dependency)
  - support for h5py >3.0
- - GUI is compatible with PyQt5 and PySide2 and VTK 7-10
+ - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 7-10
 
 There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser). 
 
 See pyNastran `v1.3.4 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
---->
 
 
 ### v1.3.3 has been released (2020/6/28)
