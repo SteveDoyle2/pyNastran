@@ -80,7 +80,7 @@ Base functionality:
 For **optional** GUI support:
 
  * On the command line:
- 
+
     * ``pip install imageio`` **(optional for animation support)**
     * ``pip install pyside2``
     * ``pip install vtk``
@@ -103,7 +103,7 @@ pyNastran is an easy package to install once you have the required Python
 modules.  It's a pure Python package so you shouldn't have too many problems.
 
 Installing from source is recommened if:
- - You want the most recent version (see installation.rst-master)
+ - You want the most recent version (see installation.rst-main)
  - You want easier access to the source
  - You're on an air-gapped machine
 
@@ -115,7 +115,7 @@ Overview
  * Install Sphinx, GraphViz, alabaster **(for documentation)**
 
  * Install Git
- * Clone pyNastran-master from Github
+ * Clone pyNastran-main from Github
  * Install pyNastran
 
 Install extra packages (for Doucmentation)
@@ -141,7 +141,7 @@ Install Git
 
 Install pyNastran
 =================
-There are two ways to install the 1.2 (master/dev) version of pyNastran
+There are two ways to install the 1.3 (main/dev) version of pyNastran
 
  1. Download the most recent `zip version <https://github.com/SteveDoyle2/pyNastran/archive/1.3.zip>`_
 

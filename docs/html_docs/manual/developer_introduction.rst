@@ -14,7 +14,7 @@ For example, the element.Area() method uses the element.area variable in the
 case of the CQUAD4, but references element.areas in the case of a
 multi-segmented CBAR.  It's recommended that developers use `Spyder
 <http://pypi.python.org/pypi/spyder/>`_ or `WingIDE <https://wingware.com/>`_
-with `pylint <http://pypi.python.org/pypi/pylint/>`_ integration to help with 
+with `pylint <http://pypi.python.org/pypi/pylint/>`_ integration to help with
 identifying `PEP-8 <http://www.python.org/dev/peps/pep-0008/>`_ deficiencies.
 
 
@@ -47,18 +47,18 @@ Additional Guidelines
    to search for a class across multiple files.
 
 #. When deprecating functions, throw a warning using the Python warnings module.
-   It's easier to make sure the rest of the code isn't using it this way.  This 
+   It's easier to make sure the rest of the code isn't using it this way.  This
    is not nearly as important if it's not a function the user is likely to interact with.
 
 Documentation
 --------------
 
-:mod:`pyNastran` uses `Sphinx <http://www.sphinx-doc.org/en/master/>`_ for docstrings with 
-Numpy's `style guide <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_
+:mod:`pyNastran` uses `Sphinx <http://www.sphinx-doc.org/en/main/>`_ for docstrings with
+Numpy's `style guide <https://github.com/numpy/numpy/blob/main/doc/HOWTO_DOCUMENT.rst.txt>`_
 for documenting variables.  This style is nice because:
 
- 1. Sphinx is standard for documenting Python code.  As such, it works with 
-    `ReadTheDocs <http://pynastran-git.readthedocs.org/en/master/>`_, which
+ 1. Sphinx is standard for documenting Python code.  As such, it works with
+    `ReadTheDocs <http://pynastran-git.readthedocs.org/en/main/>`_, which
     auto-generates documentation.
  2. Numpy's style makes it easy to read in the source code
  3. Data types are clearly defined
@@ -94,14 +94,14 @@ An example is shown below.
        (.. seealso:: import logging)
       debug_file : str; default=None (No debug)
           sets the filename that will be written to
-  
+
       Returns
       -------
       model : OP2()
           an OP2 object
-  
+
       .. todo :: creates the OP2 object without all the read methods
-  
+
       .. note :: this method will change in order to return an object that
                  does not have so many methods
       """

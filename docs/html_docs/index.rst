@@ -1,4 +1,4 @@
-.. pyNastran documentation master file, created by
+.. pyNastran documentation file, created by
    sphinx-quickstart2 on Tue Aug 14 13:26:34 2012.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.

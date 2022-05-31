@@ -4,7 +4,7 @@ Manipulating the Pandas DataFrame
 
 The Jupyter notebook for this demo can be found in: -
 docs/quick_start/demo/op2_pandas_unstack.ipynb -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_unstack.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_pandas_unstack.ipynb
 
 This example will use pandas unstack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -20,7 +20,7 @@ columns. First let’s read in some data:
     from pyNastran.op2.op2 import read_op2
     import pandas as pd
     pd.set_option('precision', 2)
-    
+
     op2_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'iSat_launch_100Hz.op2')
     from pyNastran.op2.op2 import read_op2
     isat = read_op2(op2_filename, build_dataframe=True, debug=False, skip_undefined_matrices=True)
@@ -28,7 +28,7 @@ columns. First let’s read in some data:
 
 .. parsed-literal::
 
-    INFO:      fname=op2_scalar.py             lineNo=1176   op2_filename = 'f:\\work\\pynastran\\pynastran\\master3\\pyNastran\\..\\models\\iSat\\iSat_launch_100Hz.op2'
+    INFO:      fname=op2_scalar.py             lineNo=1176   op2_filename = 'f:\\work\\pynastran\\models\\iSat\\iSat_launch_100Hz.op2'
     INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAPCONS'
     INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAQCONS'
     INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RASCONS'
@@ -43,7 +43,7 @@ columns. First let’s read in some data:
     INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAEEATC'
     INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RANEATC'
     INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAGEATC'
-    
+
 
 .. code:: ipython3
 
@@ -2351,7 +2351,7 @@ We actually need to get rid of the extra rows using dropna():
 
     # mode, eigr, freq, rad, eids, nids # initial
     # nids, eids, eigr, freq, rad, mode # final
-    
+
     cht.swaplevel(0,4).swaplevel(1,5).swaplevel(2,5).swaplevel(4, 5)
 
 

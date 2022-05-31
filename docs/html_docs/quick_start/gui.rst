@@ -106,12 +106,12 @@ Download the entire package from Github or just the `GUI
 If you download the source, make sure you follow the :doc:`installation` and use
 **setup.py develop** and not **setup.py install**.
 
-For the GUI, the master **requires**:
- - Python 3.7-3.8
+For the GUI, the main **requires**:
+ - Python 3.7-3.10
  - any version of numpy
  - any version of scipy
  - ``vtk==7`` or ``vtk==8`` or ``vtk==9`` (best in 7 or 8)
- - ``PyQt5`` or ``PySide2``
+ - ``PyQt5/6`` or ``PySide2/6``
  - other minor packages
 
 
