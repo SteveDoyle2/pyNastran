@@ -21,11 +21,15 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.utils.atmosphere import (
-    make_flfacts_eas_sweep, make_flfacts_alt_sweep, make_flfacts_mach_sweep,
+    make_flfacts_eas_sweep_constant_alt,
+    #make_flfacts_eas_sweep_constant_mach,
+    #make_flfacts_alt_sweep,
+    make_flfacts_alt_sweep_constant_mach,
+    make_flfacts_mach_sweep_constant_alt,
     make_flfacts_tas_sweep_constant_alt,
     atm_density, _velocity_factor)
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, string,
+    integer, integer_or_blank, double, double_or_blank,
     fields, string_or_blank, double_string_or_blank, interpret_value)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 if TYPE_CHECKING:  # pragma: no cover
@@ -689,12 +693,26 @@ class FLUTTER(BaseCard):
                        imethod=imethod, nvalue=nvalue, omax=omax,
                        epsilon=epsilon, comment=comment)
 
-    def make_flfacts_eas_sweep(self, model: BDF,
+    def _make_flfacts_eas_sweep(self, model: BDF,
                                alt: float, eass: List[float],
                                alt_units: str='m',
                                velocity_units: str='m/s',
                                density_units: str='kg/m^3',
-                               eas_units: str='m/s') -> Tuple[Any, Any, Any]:
+                               eas_units: str='m/s') -> None:
+        self.deprecated('make_flfacts_eas_sweep', 'make_flfacts_eas_sweep_constant_alt', '1.4')
+        self.make_flfacts_eas_sweep_constant_alt(
+            model, alt, eass,
+            alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+
+    def make_flfacts_eas_sweep_constant_alt(self, model: BDF,
+                                            alt: float, eass: List[float],
+                                            alt_units: str='m',
+                                            velocity_units: str='m/s',
+                                            density_units: str='kg/m^3',
+                                            eas_units: str='m/s') -> None:
         """
         Makes a sweep across equivalent airspeed for a constant altitude.
 
@@ -717,7 +735,7 @@ class FLUTTER(BaseCard):
 
         """
         eass.sort()
-        rho, mach, velocity = make_flfacts_eas_sweep(
+        rho, mach, velocity = make_flfacts_eas_sweep_constant_alt(
             alt, eass,
             alt_units=alt_units, velocity_units=velocity_units,
             density_units=density_units, eas_units=eas_units)
@@ -744,17 +762,32 @@ class FLUTTER(BaseCard):
             eass.min(), eass.max(), eas_units)
         model.add_flfact(flfact_eas, eass, comment=comment)
 
-    def make_flfacts_alt_sweep(self,
+    def _make_flfacts_alt_sweep(self,
                                model: BDF, mach, alts,
                                eas_limit: float=1000.,
                                alt_units: str='m',
                                velocity_units: str='m/s',
                                density_units: str='kg/m^3',
-                               eas_units: str='m/s') -> Tuple[Any, Any, Any]:
+                               eas_units: str='m/s') -> None:
+        self.deprecated('make_flfacts_alt_sweep', 'make_flfacts_alt_sweep_constant_mach', '1.4')
+        self.make_flfacts_alt_sweep_constant_mach(
+            model, mach, alts,
+            eas_limit=eas_limit, alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+
+    def make_flfacts_alt_sweep_constant_mach(self,
+                                             model: BDF, mach, alts,
+                                             eas_limit: float=1000.,
+                                             alt_units: str='m',
+                                             velocity_units: str='m/s',
+                                             density_units: str='kg/m^3',
+                                             eas_units: str='m/s') -> None:
         """makes an altitude sweep"""
         alts.sort()
         alts = alts[::-1]
-        rho, mach, velocity = make_flfacts_alt_sweep(
+        rho, mach, velocity = make_flfacts_alt_sweep_constant_mach(
             mach, alts, eas_limit=eas_limit,
             alt_units=alt_units,
             velocity_units=velocity_units,
@@ -838,15 +871,28 @@ class FLUTTER(BaseCard):
         #comment = ' Alt: min=%.3f max=%.3f %s' % (alt, al, alt_units)
         #model.add_flfact(flfact_alt, alts2, comment=comment)
 
-
-    def make_flfacts_mach_sweep(self, model, alt, machs, eas_limit=1000., alt_units='m',
+    def _make_flfacts_mach_sweep(self, model, alt, machs, eas_limit=1000., alt_units='m',
                                 velocity_units='m/s',
                                 density_units='kg/m^3',
-                                eas_units='m/s'):
+                                eas_units='m/s') -> None:
+        self.deprecated('make_flfacts_mach_sweep', 'make_flfacts_mach_sweep_constant_alt', '1.4')
+        self.make_flfacts_mach_sweep_constant_alt(
+            model, alt, machs,
+            eas_limit=eas_limit,
+            alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+
+    def make_flfacts_mach_sweep_constant_alt(self, model, alt, machs,
+                                             eas_limit=1000., alt_units='m',
+                                             velocity_units='m/s',
+                                             density_units='kg/m^3',
+                                             eas_units='m/s'):
         """makes a mach sweep"""
         machs.sort()
         #machs = machs[::-1]
-        rho, mach, velocity = make_flfacts_mach_sweep(
+        rho, mach, velocity = make_flfacts_mach_sweep_constant_alt(
             alt, machs, eas_limit=eas_limit,
             alt_units=alt_units,
             velocity_units=velocity_units,

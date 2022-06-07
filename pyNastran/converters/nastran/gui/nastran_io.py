@@ -1335,7 +1335,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                      ncaeros_points: int,
                      ncaero_sub_points: int,
                      has_control_surface: bool):
-
         # fill grids
         zfighting_offset0 = 0.001
         zfighting_offset = zfighting_offset0
@@ -6431,7 +6430,6 @@ def _add_material_mid_e11_e22(model: BDF, icase: int,
         form_layer.append(('E', icase, []))
         icase += 1
 
-    #print('form_layer =', form_layer)
     return icase
 
 def _build_optimization(model: BDF, pids: np.ndarray, upids: np.ndarray, nelements: int,

@@ -5,7 +5,16 @@ from struct import Struct, pack
 from typing import List
 
 import numpy as np
+import scipy
 import scipy.sparse as sp
+from pyNastran.utils.numpy_utils import integer_float_types
+from pyNastran.utils import int_version
+
+SCIPY_VERSION = int_version('scipy', scipy.__version__)[:2]
+
+# address scipy.sparse.coo -> scipy.sparse._coo
+IS_NEW_SCIPY = (SCIPY_VERSION >= [1, 8])
+IS_OLD_SCIPY = not IS_NEW_SCIPY
 
 
 def set_table3_field(str_fields, ifield, value):
@@ -135,7 +144,10 @@ def export_to_hdf5(self, group, log):
         elif isinstance(value, dict):
             log.warning(f'HDF5: skipping name={name!r} value={value:d}')
             continue
-        elif isinstance(value, sp.coo.coo_matrix):
+        #elif isinstance(value, (integer_float_types, str, bytes, np.ndarray, list, h5py._hl.dataset.Dataset)):
+            #pass
+        elif ((IS_NEW_SCIPY and isinstance(value, sp._coo.coo_matrix)) or
+              (IS_OLD_SCIPY and isinstance(value, sp.coo.coo_matrix))):
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_bsh111svd2.op2
             #
             # https://stackoverflow.com/questions/43390038/storing-scipy-sparse-matrix-as-hdf5
@@ -145,6 +157,9 @@ def export_to_hdf5(self, group, log):
             group.create_dataset('col', data=value.col)
             group.attrs['shape'] = value.shape
             continue
+        #else:  #pragma, no cover
+            #msg = f'type={type(value)} value={value}'
+            #raise TypeError(msg)
 
         #if name in ['dt', 'nonlinear_factor', 'element'] and value is None:
             #continue

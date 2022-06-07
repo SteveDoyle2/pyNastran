@@ -577,6 +577,7 @@ class ToolActions:
         if name is None:
             sline = os.path.basename(csv_filename).rsplit('.', 1)
             name = sline[0]
+        name = _get_unique_name(self.gui.geometry_actors, name)
 
         is_failed = self._add_user_points_from_csv(csv_filename, name, color)
         if not is_failed:
@@ -606,10 +607,11 @@ class ToolActions:
         try:
             check_path(csv_points_filename, 'csv_points_filename')
             # read input file
+            delimiter = get_delimiter_from_filename(csv_points_filename)
             try:
-                user_points = np.loadtxt(csv_points_filename, comments='#', delimiter=',')
+                user_points = np.loadtxt(csv_points_filename, comments='#', delimiter=delimiter)
             except ValueError:
-                user_points = loadtxt_nice(csv_points_filename, comments='#', delimiter=',')
+                user_points = loadtxt_nice(csv_points_filename, comments='#', delimiter=delimiter)
                 # can't handle leading spaces?
                 #raise
         except ValueError as error:
@@ -972,3 +974,32 @@ def _remove_invalid_filename_characters(basename: str) -> str:
     for char in invalid_chars:
         basename = basename.replace(char, '')
     return basename
+
+def get_delimiter_from_filename(csv_filename: str) -> Optional[str]:
+    """determines the file delimier from the extension
+
+    File Type   Delimeter
+    =========   ============
+    .csv        comma
+    .dat/.txt   space or tab
+
+    """
+    if csv_filename.lower().endswith('.csv'):
+        delimiter = ','
+    else:
+        delimiter = None
+    return delimiter
+
+def _get_unique_name(geometry_actors: Dict[str, Any], name: str) -> str:
+    """
+    Duplicate names in a dictionary are not allowed,
+    so append a number to the name if it's invalid
+    """
+    if name in geometry_actors:
+        i = 1
+        name2 = f'{name}_{i}'
+        while name2 in geometry_actors:
+            i += 1
+            name2 = f'{name}_{i}'
+        name = name2
+    return name

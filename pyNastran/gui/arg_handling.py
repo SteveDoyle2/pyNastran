@@ -463,11 +463,15 @@ def _validate_format(input_formats: List[str]) -> None:
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
         'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'avl',
-        None,
+        None,  # I think None is for the null case
     ]
 
     if DEV:
         allowed_formats += ['obj', 'h5nastran', 'nastranv']
 
     for input_format in input_formats:
-        assert input_format in allowed_formats, 'format=%r is not supported' % input_format
+        if None in allowed_formats:
+            allowed_formats.remove(None)
+        print('allowed_formats =', allowed_formats)
+        fmts = ", ".join(allowed_formats)
+        assert input_format in allowed_formats, f'format={input_format} is not supported\nallowed_formats=[]{fmts}]'

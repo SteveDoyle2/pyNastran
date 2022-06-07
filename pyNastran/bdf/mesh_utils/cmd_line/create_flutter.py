@@ -17,10 +17,10 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     msg = (
         'Usage:\n'
         # SWEEP_UNIT
-        '  bdf flutter UNITS eas  EAS1  EAS2  N CONST_TYPE CONST_VAL [-o OUT_BDF_FILENAME] [--size SIZE]\n'
-        '  bdf flutter UNITS tas  TAS1  TAS2  N CONST_TYPE CONST_VAL [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE]\n'
-        '  bdf flutter UNITS alt  ALT1  ALT2  N CONST_TYPE CONST_VAL [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE]\n'
-        '  bdf flutter UNITS mach MACH1 MACH2 N CONST_TYPE CONST_VAL [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE]\n'
+        '  bdf flutter UNITS eas  EAS1  EAS2  N CONST_TYPE CONST_VAL [-o OUT_BDF_FILENAME] [--size SIZE] [--clean]\n'
+        '  bdf flutter UNITS tas  TAS1  TAS2  N CONST_TYPE CONST_VAL [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
+        '  bdf flutter UNITS alt  ALT1  ALT2  N CONST_TYPE CONST_VAL [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
+        '  bdf flutter UNITS mach MACH1 MACH2 N CONST_TYPE CONST_VAL [--eas_limit EAS EAS_UNITS] [-o OUT_BDF_FILENAME] [--size SIZE | --clean]\n'
         '  bdf flutter -h | --help\n'
         '  bdf flutter -v | --version\n'
         '\n'
@@ -38,7 +38,8 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
 
         'Options:\n'
         '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file (default=flutter_cards.inc)\n'
-        ' --size SIZE                          size of the BDF (8/16; default=16)'
+        ' --size SIZE                          size of the BDF (8/16; default=16)\n'
+        ' --clean                              writes a BDF with at least 1 whitespace in an FLFACT field (for readability)\n'
         '\n'
 
         'Info:\n'
@@ -69,6 +70,9 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         size = int(data['--size'])
     units = data['UNITS']
     npoints = int(data['N'])
+    clean = data['--clean']
+
+    assert clean in [True, False], clean
 
     const_type = data['CONST_TYPE'].lower()
     assert const_type in {'alt', 'mach', 'eas', 'tas'}, const_type
@@ -85,13 +89,13 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     if data['--eas_limit']:
         eas_limit = float(data['EAS'])
         eas_units = data['EAS_UNITS']
-        assert eas_units is not None, eas_units
+        assert eas_units not in [None, ''], eas_units
         eas_units = eas_units.lower()
         assert eas_units in {'m/s', 'cm/s', 'in/s', 'ft/s', 'knots'}
 
-    method = ''
+    sweep_method = ''
     if data['alt']:
-        method = 'alt'
+        sweep_method = 'alt'
         alt1 = float(data['ALT1'])
         alt2 = float(data['ALT2'])
         alts = np.linspace(alt1, alt2, num=npoints)
@@ -99,13 +103,13 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         #assert sweep_unit in ['m', 'ft'], f'sweep_unit={sweep_unit}'
 
     elif data['mach']:
-        method = 'mach'
+        sweep_method = 'mach'
         mach1 = float(data['MACH1'])
         mach2 = float(data['MACH2'])
         machs = np.linspace(mach1, mach2, num=npoints)
 
     elif data['eas']:
-        method = 'eas'
+        sweep_method = 'eas'
         eas1 = float(data['EAS1'])
         eas2 = float(data['EAS2'])
         eass = np.linspace(eas1, eas2, num=npoints)
@@ -113,7 +117,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         #assert sweep_unit in ['m/s', 'ft/s', 'in/s', 'knots'], f'sweep_unit={sweep_unit}'
 
     elif data['tas']:
-        method = 'tas'
+        sweep_method = 'tas'
         tas1 = float(data['TAS1'])
         tas2 = float(data['TAS2'])
         tass = np.linspace(tas1, tas2, num=npoints)
@@ -157,38 +161,63 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     except KeyError:
         raise NotImplementedError(units)
 
-    if eas_units is None:
+    if eas_units in [None, '']:
         eas_units = eas_units_default
+
+    log.info(f'alt_units={alt_units!r}')
+    log.info(f'velocity_units={velocity_units!r}')
+    log.info(f'density_units={density_units!r}')
+    log.info(f'eas_units={eas_units!r}')
 
     # option 1: overwrite the eas/tas/alt unit...would work for alt
     #           we'll overwrite the
     # option 2: pass another flag in...I don't wanna
-    if method == 'eas' and const_type == 'alt':
+    pairs = [
+        ('eas', 'alt'),
+        ('mach', 'alt'),
+        ('alt', 'mach'),
+        ('tas', 'alt'),
+        #('', ''),
+    ]
+    assert alt_units != '', alt_units
+    assert velocity_units != '', velocity_units
+    assert density_units != '', density_units
+    assert eas_units != '', eas_units
+
+    if sweep_method == 'eas' and const_type == 'alt':
         #eas_units = sweep_unit
-        flutter.make_flfacts_eas_sweep(
+        flutter.make_flfacts_eas_sweep_constant_alt(
             model, alt, eass,
             alt_units=alt_units,
             velocity_units=velocity_units,
             density_units=density_units,
             eas_units=eas_units)
-    elif method == 'mach' and const_type == 'alt':
-        flutter.make_flfacts_mach_sweep(
+    #if method == 'eas' and const_type == 'mach':
+        ##eas_units = sweep_unit
+        #flutter.make_flfacts_eas_sweep(
+            #model, mach, eass,
+            ##alt_units=alt_units,
+            #velocity_units=velocity_units,
+            #density_units=density_units,
+            #eas_units=eas_units)
+    elif sweep_method == 'mach' and const_type == 'alt':
+        flutter.make_flfacts_mach_sweep_constant_alt(
             model, alt, machs,
             eas_limit=eas_limit,
             alt_units=alt_units,
             velocity_units=velocity_units,
             density_units=density_units,
             eas_units=eas_units)
-    elif method == 'alt' and const_type == 'mach':
+    elif sweep_method == 'alt' and const_type == 'mach':
         #alt_units = sweep_unit
-        flutter.make_flfacts_alt_sweep(
+        flutter.make_flfacts_alt_sweep_constant_mach(
             model, mach, alts,
             eas_limit=eas_limit,
             alt_units=alt_units,
             velocity_units=velocity_units,
             density_units=density_units,
             eas_units=eas_units)
-    elif method == 'tas' and const_type == 'alt':
+    elif sweep_method == 'tas' and const_type == 'alt':
         #velocity_units = sweep_unit
         flutter.make_flfacts_tas_sweep_constant_alt(
             model, alt, tass,
@@ -198,11 +227,27 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
             density_units=density_units,
             eas_units=eas_units)
     else:
-        raise NotImplementedError((method, const_type))
+        raise NotImplementedError((sweep_method, const_type))
 
     model.punch = True
     flutter.comment = cmd
-    model.write_bdf(bdf_filename_out, encoding=None, size=size,
-                    nodes_size=None, elements_size=None, loads_size=None,
-                    is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
+    if clean:
+        # makes a "clean" deck by writing the data in small field
+        # we take advantage of truncation to get a more readable deck
+        #
+        # the downsides are we have to write twice and we lose extra precision
+        model.write_bdf(bdf_filename_out, encoding=None, size=8,
+                        nodes_size=None, elements_size=None, loads_size=None,
+                        is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
+
+        model2 = BDF(log=log)
+        model2.read_bdf(bdf_filename_out, validate=True, xref=False, punch=True, read_includes=True,
+                       save_file_structure=False, encoding=None)
+        model2.write_bdf(bdf_filename_out, encoding=None, size=16,
+                        nodes_size=None, elements_size=None, loads_size=None,
+                        is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
+    else:
+        model.write_bdf(bdf_filename_out, encoding=None, size=size,
+                        nodes_size=None, elements_size=None, loads_size=None,
+                        is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
     print(cmd)

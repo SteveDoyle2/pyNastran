@@ -1626,7 +1626,7 @@ class CAERO1(BaseCard):
         a = p3 - p1
         b = p4 - p2
         area = np.linalg.norm(np.cross(a, b))
-        assert area > 0, f'p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
+        assert area > 0, f'eid={self.eid} p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
 
     @classmethod
     def add_card(cls, card, comment=''):
