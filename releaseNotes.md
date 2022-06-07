@@ -13,7 +13,7 @@ v1.4.0 (2022/8/??)
 Programmatics:
  - Supports Python 3.8-3.10
  - much improved MSC 2020/2021 and OptiStruct support
- - GUI is compatible with PyQt5 and PySide2
+ - support for PyQt5/6 and PySide2/6 (GUI)
  - support for latest numpy/h5py
 
 
@@ -46,15 +46,12 @@ BDF:
  - fixing:
    - CAERO1, CAERO5, CAERO7 paneling bug (nodes and sub-elements should be defined chordwise)
    - adding more fields to add_* methods for CPLSTS*, CPLSTN*
-   - better DEQATN python-builtin prevention (allows for executing Nastran equations)
    - better DTABLE handling
    - DRESP1 checks (with validate=True flag)
    - CBEAM.get_field now works
      - now uses nodes/nodes_ref instead of ga/ga_ref and gb/gb_ref
    - RBE3.get_field now works
    - better NLPARM checks
-   - get_oml now clips the normal to [-1., -1.] to avoid out of bounds normal values
-   - DVMREL2 support for MAT8
    - PBUSH1D parsing is more lax
  - changes:
    - more use of warnings.warn instead of print when log doesn't exist
@@ -170,12 +167,12 @@ added when fixing bugs.
 
 Requirements/Packages:
  - adding support for vtk 9 (GUI)
- - adding support for nptyping 1.1 (not 1.1.0)
+ - support for PyQt5/6 and PySide2/6 (GUI)
  - support for NX 2019.0, 2019.1
 
 Programmatics:
  - supports Python 3.7-3.10
- - support for nptyping 1.1.1-2.0
+ - support for nptyping 1.1.1-2.0 (removed as a required dependency)
  - support for h5py 3.0
 
 overall:
@@ -249,14 +246,14 @@ f06 flutter:
 op2:
  - pathlib support
 op2 geom:
- - improved PARAM (PVT/PVT0 table) loading
- - PSOLID/FFLUID support
- - PSOLID isop=2 support
- - PCOMP ft (failure theory) HFAI, HTAP, HFAB support
- - skipping QVECT
- - fixed SPC bug (was double writing header)
- - fixed RBE2 bug (alpha vs. non alpha cases were flipped)
- - fixed BSET1/CSET1 (were flipped)
+ - PARAM: improved (PVT/PVT0 table) loading
+ - PSOLID: FFLUID support
+ - PSOLID: isop=2 support
+ - PCOMP: ft (failure theory) HFAI, HTAP, HFAB support
+ - QVECT: skipping
+ - SPC: fixed bug (was double writing header)
+ - RBE2: fixed bug (alpha vs. non alpha cases were flipped)
+ - BSET1/CSET1: fixed mixup (were flipped)
 gui:
  - fixed CELAS2 bug where nid2 is an SPOINT
 other:

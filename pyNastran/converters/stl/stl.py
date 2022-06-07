@@ -8,7 +8,14 @@ import numpy as np
 import scipy
 
 from cpylog import get_logger2, SimpleLogger
-from pyNastran.utils import is_binary_file
+from pyNastran.utils import int_version, is_binary_file
+
+SCIPY_VERSION = int_version('scipy', scipy.__version__)
+import scipy.spatial
+if SCIPY_VERSION > [1, 6, 0]:
+    KDTree = scipy.spatial.KDTree
+else:
+    KDTree = scipy.spatial.cKDTree
 
 
 def read_stl(stl_filename: str, remove_elements_with_bad_normals: bool=False,
@@ -410,7 +417,7 @@ class STL:
         nnodes = self.nodes.shape[0]
 
         # build the kdtree
-        kdt = scipy.spatial.cKDTree(self.nodes)
+        kdt = KDTree(self.nodes)
 
         # find the node ids of interest
         nids_new = np.unique(self.elements.ravel())

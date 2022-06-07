@@ -3,12 +3,12 @@ OP2: Numpy Demo #2 (Composite Plate Stress)
 
 The Jupyter notebook for this demo can be found in: -
 docs/quick_start/demo/op2_demo_numpy1.ipynb -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_demo_numpy1.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_demo_numpy1.ipynb
 
 It’s recommended that you first go through: -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_demo.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_demo.ipynb
 -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_demo_numpy1.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_demo_numpy1.ipynb
 
 In this tutorial, composite plate stresses will be covered.
 
@@ -28,13 +28,13 @@ If the BWB example OP2 doesn’t exist, we’ll run Nastran to create it.
     import copy
     import numpy as np
     np.set_printoptions(precision=2, threshold=20, linewidth=100, suppress=True)
-    
+
     import pyNastran
     from pyNastran.op2.op2 import read_op2
     from pyNastran.utils.nastran_utils import run_nastran
     pkg_path = pyNastran.__path__[0]
     model_path = os.path.join(pkg_path, '..', 'models')
-    
+
     bdf_filename = os.path.join(model_path, 'bwb', 'bwb_saero.bdf')
     op2_filename = os.path.join(model_path, 'bwb', 'bwb_saero.op2')
     if not os.path.exists(op2_filename):
@@ -43,10 +43,10 @@ If the BWB example OP2 doesn’t exist, we’ll run Nastran to create it.
         import shutil
         op2_filename2 = os.path.join('bwb_saero.op2')
         shutil.move(op2_filename2, op2_filename)
-    
+
     assert os.path.exists(op2_filename), print_bad_path(op2_filename)
     model = read_op2(op2_filename, build_dataframe=False, debug=False)
-    
+
     print(model.get_op2_stats(short=True))
 
 
@@ -71,8 +71,8 @@ If the BWB example OP2 doesn’t exist, we’ll run Nastran to create it.
     ctria3_composite_stress[1]
     cquad4_composite_strain[1]
     ctria3_composite_strain[1]
-    
-    
+
+
 
 Accessing the Composite Stress
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -97,8 +97,8 @@ Let’s get the max principal stress.
       element type: QUAD4LC-composite-95
       sort1
       lsdvmns = [1]
-    
-    
+
+
 
 Composite Stress/Strain data is tricky to access as there is not a good way to index the data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -128,17 +128,17 @@ table. - **table** is (ntimes, nelements, nlayers, ndata) -
      [22050     8]
      [22050     9]
      [22050    10]]
-    
+
 
 .. code:: ipython3
 
     from pyNastran.femutils.utils import pivot_table
-    
+
     ## now pivot the stress
     eids = stress.element_layer[:, 0]
     layers = stress.element_layer[:, 1]
     table, rows_new = pivot_table(stress.data, eids, layers)
-    
+
     # now access the max principal stress for the static result
     # table is (itime, nelements, nlayers, data)
     itime = 0
@@ -157,7 +157,7 @@ table. - **table** is (ntimes, nelements, nlayers, ndata) -
      [ 157.    170.3   112.79 ...   44.56   47.13   38.9 ]
      [ 123.96  143.01   97.41 ...   40.99   44.06   42.47]
      [  90.04  109.97   79.86 ...   33.18   36.12   24.04]]
-    
+
 
 More realistic pivot table
 --------------------------
@@ -173,10 +173,10 @@ By having empty layers, the pivot table now has nan data in it.
     eids2 = stress.element_layer[:-5, 0]
     layers2 = stress.element_layer[:-5, 1]
     data2 = stress.data[:, :-5, :]
-    
+
     # now pivot the stress
     table, rows_new = pivot_table(data2, eids2, layers2)
-    
+
     # access the table data
     # table is (itime, nelements, nlayers, data)
     itime = 0
@@ -194,7 +194,7 @@ By having empty layers, the pivot table now has nan data in it.
      [ 157.    170.3   112.79 ...   44.56   47.13   38.9 ]
      [ 123.96  143.01   97.41 ...   40.99   44.06   42.47]
      [  90.04  109.97   79.86 ...     nan     nan     nan]]
-    
+
 
 
 Grid Point Forces - Interface Loads
@@ -207,7 +207,7 @@ We need some more data from the geometry
     import pyNastran
     from pyNastran.bdf.bdf import read_bdf
     bdf_model = read_bdf(bdf_filename)
-    
+
     out = bdf_model.get_displacement_index_xyz_cp_cd()
     icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
     nids = nid_cp_cd[:, 0]
@@ -265,15 +265,15 @@ We need some more data from the geometry
     grid_point_forces = model.grid_point_forces[isubcase]
     print(''.join(grid_point_forces.get_stats()))
     #print(grid_point_forces.object_methods())
-    
+
     # global xyz
     coords = bdf_model.coords
-    
+
     # some more data
     coord_out = bdf_model.coords[0]
     summation_point = [0., 0., 0.]
     #summation_point = [1197.97, 704.153, 94.9258]  # ~center of interface line
-    
+
     log = bdf_model.log
     forcei, momenti, force_sumi, moment_sumi = grid_point_forces.extract_interface_loads(
         nids, eids,
@@ -286,13 +286,13 @@ We need some more data from the geometry
         itime=0, debug=False, log=log)
     # print(forcei, force_sumi)
     # print(momenti, moment_sumi)
-    
+
     np.set_printoptions(precision=8, threshold=20, linewidth=100, suppress=True)
     print(f'force  = {force_sumi}; total={np.linalg.norm(force_sumi):.2f}')
     print(f'moment = {moment_sumi}; total={np.linalg.norm(moment_sumi):.2f}')
-    
+
     np.set_printoptions(precision=2, threshold=20, linewidth=100, suppress=True)
-    
+
 
 
 .. parsed-literal::
@@ -303,10 +303,10 @@ We need some more data from the geometry
       element type: *TOTALS*, APP-LOAD, BAR, F-OF-MPC, F-OF-SPC, QUAD4, TRIA3
       sort1
       lsdvmns = [0]
-    
+
     force  = [    -0.05078125     -0.08984375 126271.086     ]; total=126271.09
     moment = [ 1.1500996e+08 -1.5267941e+08  2.0000000e+01]; total=191149920.00
-    
+
 
 .. figure:: attachment:image.png
    :alt: image.png

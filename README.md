@@ -1,11 +1,11 @@
 
-Main/dev: 
-[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) 
+Main/dev:
+[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
 [![Linux Status](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)](https://github.com/SteveDoyle2/pyNastran/actions?query=workflow%3ACI+branch%3Amaster)
-[![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) 
+[![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
 [![Discord](https://img.shields.io/badge/help_forum-discourse-blue.svg)](https://discord.gg/s8RfSkZDHA)
 
-See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.3/installation/installation.html#installation-from-release) 
+See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.3/installation/installation.html#installation-from-release)
 for instructions on installing pyNastran.
 
 
@@ -14,9 +14,9 @@ for instructions on installing pyNastran.
 .. _DiscourseBadge: https://discourse.matplotlib.org
 --->
 
-### v1.3.3
+### v1.3.4
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2020/6/28)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2022/5/30)
 
 Also, check out the:
   * [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
@@ -34,25 +34,25 @@ for more detailed information.
 
 ### Code of Conduct
 
-Everyone interacting in the setuptools project’s codebase, issue trackers, chat room/Discord, and mailing lists is expected to follow the [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md).
+Everyone interacting in the setuptools project’s codebase, issue trackers, chat room/Discord, and mailing lists is expected to follow the [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/main/code_of_conduct.md).
 
 
 <!---
-[![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
-[![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
-[![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
+[![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/main?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
+[![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/main/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
+[![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/main.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=main)
 --->
 
 <!---
-[![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/main?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/main)
 [![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
 [![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
-[![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
-[![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
+[![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=main)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=main)
+[![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/main.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=main)	|
 ### v1.4
 
-Last year MSC provided a copy of MSC Nastran free of charge to help support the project.  
-Since then, modern MSC Nastran support has been added.  
+Last year MSC provided a copy of MSC Nastran free of charge to help support the project.
+Since then, modern MSC Nastran support has been added.
 In addition, NX 64-bit and OptiStruct support has been improved.
 
 The biggest new features are:
@@ -61,15 +61,14 @@ The biggest new features are:
  - improved op2 support
 
 Programmatics:
- - Supports Python 3.7 - 3.9
- - GUI is compatible with PyQt5 and PySide2 and VTK 7-9
+ - Supports Python 3.7 - 3.10
+ - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 7-10
  - improved testing of old versions of packages
  - updated nptyping requirements
 
 BDF:
  - fixed CAERO1 paneling bug
  - 8 new cards: BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV, PCOMPLS, TABDMP1
- - bdf_mirror supports solid elements
 
 OP2:
  - 20 new results
@@ -77,7 +76,6 @@ OP2:
 
 GUI:
  - transient/complex fringe only animations now supported
- - locale support (e.g., most of Europe and South America) to allow 3,14 instead of 3.14
 
 See pyNastran `v1.4.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.4.0>`_ for details on the other changes.
 
@@ -106,23 +104,23 @@ commercial program.
 <!---
 
 This should be hidden...
+--->
 
-### v1.3.4 has NOT been released (2022/5/xx)
-This is a a substantial bug fix release mainly to address dependency changes:
+### v1.3.4 has been released (2022/5/30)
+This is a a bug fix release mainly to address dependency changes:
 
 Programmatics:
  - supports Python 3.7-3.10
  - support for nptyping 1.1.1-2.0 (removed as a required dependency)
  - support for h5py >3.0
- - GUI is compatible with PyQt5 and PySide2 and VTK 7-10
+ - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 7-10
 
-There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser). 
+There are also at least 33 bugs fixed and a few features added from the 1.4 release (e.g., pathlib support, subcase limiting in the flutter F06 parser).
 
 See pyNastran `v1.3.4 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.4>`_ for details on the other changes.
---->
 
 
-### v1.3.3 has been released (2020/6/28)
+### v1.3.3 (2020/6/28)
 
 This is a bug fix only release outside of:
       ```python

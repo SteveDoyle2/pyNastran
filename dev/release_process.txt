@@ -9,8 +9,8 @@ build gui
 >>> pyinstaller pyNastran.spec
 test docs
 
-build egg
->>> python setup_no_reqs.py bdist_egg
+build wheel
+>>> python setup_no_reqs.py bdist_wheel
 
 per https://pypi.org/project/twine/
  >>> twine upload *.whl

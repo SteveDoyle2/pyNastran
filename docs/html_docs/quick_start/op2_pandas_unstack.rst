@@ -3,7 +3,7 @@ Manipulating the Pandas DataFrame
 
 The Jupyter notebook for this demo can be found in: -
 docs/quick_start/demo/op2_pandas_unstack.ipynb -
-https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_unstack.ipynb
+https://github.com/SteveDoyle2/pyNastran/tree/main/docs/quick_start/demo/op2_pandas_unstack.ipynb
 
 This example will use pandas unstack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -19,7 +19,7 @@ columns. First let’s read in some data:
     from pyNastran.op2.op2 import read_op2
     import pandas as pd
     pd.set_option('precision', 2)
-    
+
     op2_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'iSat_launch_100Hz.op2')
     from pyNastran.op2.op2 import read_op2
     isat = read_op2(op2_filename, build_dataframe=True, debug=False, skip_undefined_matrices=True)
@@ -39,7 +39,7 @@ columns. First let’s read in some data:
     self.cannot apply column_names=['Mode', 'Freq'] to RealStrainEnergyArray: 'HEXA'
     self.cannot apply column_names=['Mode', 'Freq'] to RealStrainEnergyArray: 'BAR'
     self.cannot apply column_names=['Mode', 'Freq'] to RealStrainEnergyArray: 'BUSH'
-    
+
 
 .. code:: ipython3
 
@@ -59,15 +59,15 @@ columns. First let’s read in some data:
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -346,15 +346,15 @@ First I’m going to pull out a small subset to work with
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -500,11 +500,11 @@ columns using a .unstack(level=0) and the transpose the result:
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -620,15 +620,15 @@ pull out the first two elements and first two modes:
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead tr th {
             text-align: left;
         }
-    
+
         .dataframe thead tr:last-of-type th {
             text-align: right;
         }
@@ -758,11 +758,11 @@ Load ID, and have the items in the columns:
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -992,11 +992,11 @@ We actually need to get rid of the extra rows using dropna():
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -1531,7 +1531,7 @@ We actually need to get rid of the extra rows using dropna():
 
     # mode, eigr, freq, rad, eids, nids # initial
     # nids, eids, eigr, freq, rad, mode # final
-    
+
     cht.swaplevel(0,4).swaplevel(1,5).swaplevel(2,5).swaplevel(4, 5)
 
 
@@ -1544,11 +1544,11 @@ We actually need to get rid of the extra rows using dropna():
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -2233,11 +2233,11 @@ columns I want as my index:
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }

@@ -14,8 +14,8 @@ https://github.com/SteveDoyle2/pyNastran
 Contributor Incubator
 =====================
 
-If you are interested in becoming a regular contributor to pyNastran, but 
-don't know where to start or feel insecure about it, you can join our non-public 
+If you are interested in becoming a regular contributor to pyNastran, but
+don't know where to start or feel insecure about it, you can join our non-public
 communication channel for new contributors. To do so, please go to
 https://discord.gg/s8RfSkZDHA and ask to be added to '#pyNastran'.
 This is a general open source Discord channel for a variety of open source and commercial programs
@@ -57,7 +57,7 @@ If you are reporting a bug, please do your best to include the following:
       >>> import platform
       >>> platform.python_version()
       '3.7.7'
-      
+
 Thank you for your help in keeping bug reports complete, targeted and descriptive.
 
 Requesting a new feature
@@ -103,9 +103,9 @@ A brief overview is:
 
 4. Create a branch to hold your changes::
 
-      $ git checkout -b my-feature origin/master
+      $ git checkout -b my-feature origin/main
 
-   and start making changes. Never work in the ``master`` branch!
+   and start making changes. Never work in the ``main`` branch!
 
 5. Work on this copy, on your computer, using Git to do the version control.
    When you're done editing e.g., ``pyNastran/bdf/bdf.py``, do::
