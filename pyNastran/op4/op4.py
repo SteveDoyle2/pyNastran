@@ -1369,7 +1369,7 @@ class OP4:
         return icol, irow, nwords
 
     def write_op4(self, op4_filename, matrices, name_order=None,
-                  precision='default', is_binary=True):
+                  precision='default', is_binary=True, is_big_mat=False):
         """
         Writes the OP4
 
@@ -1382,9 +1382,10 @@ class OP4:
         matrices : Dict[str] = (form, np.ndarray)
             the matrices to write
 
-        name_order: str / List[str]; default=None -> sorted based on name
+        name_order: str / List[str] / bool; default=None -> sorted based on name
             List of the names of the matrices that should be
             written or string
+            If name_order == False, use matrices dictionary order.
         is_binary : bool; default=True
             Should a binary file be written
         precision : str; default='default'
@@ -1416,12 +1417,12 @@ class OP4:
 
         if isinstance(op4_filename, str):
             with open(op4_filename, 'w') as op4:
-                self._write_op4_file(op4, name_order, is_binary, precision, matrices)
+                self._write_op4_file(op4, name_order, is_binary, is_big_mat, precision, matrices)
         else:
             op4 = op4_filename
-            self._write_op4_file(op4, name_order, is_binary, precision, matrices)
+            self._write_op4_file(op4, name_order, is_binary, is_big_mat, precision, matrices)
 
-    def _write_op4_file(self, op4, name_order, is_binary, precision, matrices):
+    def _write_op4_file(self, op4, name_order, is_binary, is_big_mat, precision, matrices):
         """Helper method for OP4 writing"""
         if name_order is None:
             name_order = sorted(matrices.keys())
@@ -1429,8 +1430,9 @@ class OP4:
             name_order = [name_order]
         elif isinstance(name_order, bytes):
             name_order = [name_order]
+        elif isinstance(name_order, bool) and not name_order:
+            name_order = matrices.keys()
 
-        is_big_mat = False  ## .. todo:: hardcoded
         for name in name_order:
             try:
                 (form, matrix) = matrices[name]
@@ -1441,6 +1443,9 @@ class OP4:
                 raise ValueError('form=%r and must be in [1, 2, 3, 6, 8, 9]' % form)
 
             if isinstance(matrix, coo_matrix):
+                if matrix.shape[0] > 65535:
+                    is_big_mat = True  # NASTRAN's OUTPUT4 switches automatically regardless of specified value
+
                 #write_DMIG(f, name, matrix, form, precision='default')
                 if is_binary:
                     raise NotImplementedError('sparse binary op4 writing not implemented')
