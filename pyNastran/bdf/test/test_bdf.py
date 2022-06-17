@@ -1681,6 +1681,8 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
         if 'IC' in subcase:
             ic_val = subcase.get_parameter('IC')[0]
             if ic_val != 0:
+                log.debug(f'IC={ic_val}')
+                tic = fem.tics[ic_val]
                 # TIC - SOL 109, 129, 601, 701 (structural/physical)
                 #
                 # TEMP/TEMPD - SOL 159
