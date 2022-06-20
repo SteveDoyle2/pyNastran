@@ -28,6 +28,7 @@ import sys
 from math import log, exp
 from typing import List, Tuple, TYPE_CHECKING
 import numpy as np
+from pyNastran.utils import deprecated
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArrayNfloat
 
@@ -904,13 +905,14 @@ def sutherland_viscoscity(T: float) -> float:
         viscosity = 2.27E-8 * (T ** 1.5) / (T + 198.6)
     return viscosity
 
-def _make_flfacts_alt_sweep(mach: float, alts: np.ndarray,
+def make_flfacts_alt_sweep(mach: float, alts: np.ndarray,
                            eas_limit: float=1000.,
                            alt_units: str='m',
                            velocity_units: str='m/s',
                            density_units: str='kg/m^3',
                            eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    deprecated('make_flfacts_alt_sweep', 'make_flfacts_alt_sweep_constant_mach', '1.4')
+    deprecated('make_flfacts_alt_sweep', 'make_flfacts_alt_sweep_constant_mach', '1.4',
+               levels=[0, 1, 2])
     out = make_flfacts_alt_sweep_constant_mach(
         mach, alts,
         eas_limit=eas_limit, alt_units=alt_units,
@@ -988,13 +990,14 @@ def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
                                       eas_units=eas_units)
     return rho, machs, velocity
 
-def _make_flfacts_mach_sweep(alt: float, machs: List[float],
+def make_flfacts_mach_sweep(alt: float, machs: List[float],
                             eas_limit: float=1000.,
                             alt_units: str='m',
                             velocity_units: str='m/s',
                             density_units: str='kg/m^3',
                             eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    deprecated('make_flfacts_mach_sweep', 'make_flfacts_mach_sweep_constant_alt', '1.4')
+    deprecated('make_flfacts_mach_sweep', 'make_flfacts_mach_sweep_constant_alt', '1.4',
+               levels=[0, 1, 2])
     out = make_flfacts_mach_sweep_constant_alt(
         alt, machs,
         eas_limit=eas_limit,
@@ -1093,12 +1096,13 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: List[float],
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
-def _make_flfacts_eas_sweep(alt: float, eass: List[float],
+def make_flfacts_eas_sweep(alt: float, eass: List[float],
                            alt_units: str='m',
                            velocity_units: str='m/s',
                            density_units: str='kg/m^3',
                            eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    deprecated('make_flfacts_eas_sweep', 'make_flfacts_eas_sweep_constant_alt', '1.4')
+    deprecated('make_flfacts_eas_sweep', 'make_flfacts_eas_sweep_constant_alt', '1.4',
+               levels=[0, 1, 2])
     out = make_flfacts_eas_sweep_constant_alt(
         alt, eass,
         alt_units=alt_units, velocity_units=velocity_units,

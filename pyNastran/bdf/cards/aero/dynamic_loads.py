@@ -693,7 +693,7 @@ class FLUTTER(BaseCard):
                        imethod=imethod, nvalue=nvalue, omax=omax,
                        epsilon=epsilon, comment=comment)
 
-    def _make_flfacts_eas_sweep(self, model: BDF,
+    def make_flfacts_eas_sweep(self, model: BDF,
                                alt: float, eass: List[float],
                                alt_units: str='m',
                                velocity_units: str='m/s',
@@ -762,7 +762,7 @@ class FLUTTER(BaseCard):
             eass.min(), eass.max(), eas_units)
         model.add_flfact(flfact_eas, eass, comment=comment)
 
-    def _make_flfacts_alt_sweep(self,
+    def make_flfacts_alt_sweep(self,
                                model: BDF, mach, alts,
                                eas_limit: float=1000.,
                                alt_units: str='m',
@@ -871,7 +871,7 @@ class FLUTTER(BaseCard):
         #comment = ' Alt: min=%.3f max=%.3f %s' % (alt, al, alt_units)
         #model.add_flfact(flfact_alt, alts2, comment=comment)
 
-    def _make_flfacts_mach_sweep(self, model, alt, machs, eas_limit=1000., alt_units='m',
+    def make_flfacts_mach_sweep(self, model, alt, machs, eas_limit=1000., alt_units='m',
                                 velocity_units='m/s',
                                 density_units='kg/m^3',
                                 eas_units='m/s') -> None:

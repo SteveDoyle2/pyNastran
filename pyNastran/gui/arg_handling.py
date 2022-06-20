@@ -76,7 +76,7 @@ def determine_format(input_filename: str,
     try:
         formati = extension_to_format[ext]
     except KeyError:
-        print('allowed_formats =', allowed_formats)
+        #print('allowed_formats =', allowed_formats)
         msg = 'format=%r was not found\nSpecify the format as [%s]' % (
             ext, ', '.join(allowed_formats))
         raise TypeError(msg)
@@ -472,6 +472,6 @@ def _validate_format(input_formats: List[str]) -> None:
     for input_format in input_formats:
         if None in allowed_formats:
             allowed_formats.remove(None)
-        print('allowed_formats =', allowed_formats)
+        #print('allowed_formats =', allowed_formats)
         fmts = ", ".join(allowed_formats)
         assert input_format in allowed_formats, f'format={input_format} is not supported\nallowed_formats=[]{fmts}]'
