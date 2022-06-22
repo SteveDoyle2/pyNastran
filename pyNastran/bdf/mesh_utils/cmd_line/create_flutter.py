@@ -151,15 +151,16 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         comment='', validate=True)
 
     units_map = {
-        # (alt, velocity, density, eas)
-        'english_in': ('ft', 'in/s', 'slinch/in^3', 'knots'),
-        'english_ft': ('ft', 'ft/s', 'slug/ft^3', 'knots'),
-        'SI': ('m', 'm/s', 'kg/m^3', 'knots'),
+        # (alt, velocity, density, eas, pressure)
+        'english_in': ('ft', 'in/s', 'slinch/in^3', 'knots', 'psi'),
+        'english_ft': ('ft', 'ft/s', 'slug/ft^3', 'knots', 'psf'),
+        'si': ('m', 'm/s', 'kg/m^3', 'knots', 'Pa'),
     }
     try:
-        alt_units, velocity_units, density_units, eas_units_default = units_map[units]
+        unitsi = units_map[units.lower()]
     except KeyError:
         raise NotImplementedError(units)
+    alt_units, velocity_units, density_units, eas_units_default, pressure_units = unitsi
 
     if eas_units in [None, '']:
         eas_units = eas_units_default
@@ -177,12 +178,13 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
         ('mach', 'alt'),
         ('alt', 'mach'),
         ('tas', 'alt'),
-        #('', ''),
+        ('eas', 'mach'),
     ]
     assert alt_units != '', alt_units
     assert velocity_units != '', velocity_units
     assert density_units != '', density_units
     assert eas_units != '', eas_units
+    assert pressure_units != '', pressure_units
 
     if sweep_method == 'eas' and const_type == 'alt':
         #eas_units = sweep_unit
@@ -192,14 +194,15 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
             velocity_units=velocity_units,
             density_units=density_units,
             eas_units=eas_units)
-    #if method == 'eas' and const_type == 'mach':
-        ##eas_units = sweep_unit
-        #flutter.make_flfacts_eas_sweep(
-            #model, mach, eass,
-            ##alt_units=alt_units,
-            #velocity_units=velocity_units,
-            #density_units=density_units,
-            #eas_units=eas_units)
+    elif sweep_method == 'eas' and const_type == 'mach':
+        gamma = 1.4
+        flutter.make_flfacts_eas_sweep_constant_mach(
+            machs, eass,
+            gamma=gamma, alt_units=alt_units,
+            density_units=density_units,
+            pressure_units=pressure_units,
+            eas_units=eas_units)
+
     elif sweep_method == 'mach' and const_type == 'alt':
         flutter.make_flfacts_mach_sweep_constant_alt(
             model, alt, machs,

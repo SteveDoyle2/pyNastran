@@ -127,7 +127,7 @@ from pyNastran.bdf.cards.bdf_sets import (
     RADSET,
 )
 from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPRM
-from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS
+from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS, dtype_to_tin_tout
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                TEMPRB, QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -8432,6 +8432,39 @@ class AddCards:
         dmi = DMI(name, form, tin, tout, nrows, ncols, GCj, GCi, Real,
                   Complex, comment=comment)
         self._add_methods._add_dmi_object(dmi)
+        return dmi
+
+    def add_dense_dmi(self, name: str, myarray: np.ndarray,
+                      form: Union[int, str],
+                      tin=None, tout=None,
+                      validate: bool=True):
+        """default for tin/tout = myarray.dtype
+
+        ..warning :: only supports square matrices for the moment
+        """
+        if tin is None:
+            tin = dtype_to_tin_tout(myarray)
+
+        if tout is None:
+            tout = dtype_to_tin_tout(myarray)
+
+        nrows, ncols = myarray.shape
+
+        #GCj = columns
+        #GCi = rows
+        GCi = np.repeat(list(range(1, nrows+1)), nrows, axis=0).reshape(nrows, nrows)
+        GCj = GCi.T.flatten()
+        GCi = GCi.flatten()
+
+        Real = myarray.real.flatten()
+        Complex = None
+        if tin in {'complex64', 'complex128', 3, 4}:
+            Complex = myarray.imag.flatten()
+        dmi = self.add_dmi(
+            name, form, tin, tout, nrows, ncols, GCj, GCi, Real,
+            Complex=Complex, comment='')
+        if validate:
+            dmi.validate()
         return dmi
 
     def add_dmiax(self, name, matrix_form, tin, tout, ncols,

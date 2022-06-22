@@ -1282,6 +1282,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf scale                       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x | --no_y]\n'
         '  bdf free_faces                  BDF_FILENAME SKIN_FILENAME [-d | -l] [-f] [--encoding ENCODE]\n'
+        '  bdf flutter                     UNITS eas  EAS1  EAS2  N CONST_TYPE CONST_VAL [-o OUT_BDF_FILENAME] [--size SIZE] [--clean]'
         '  bdf flip_shell_normals          IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--zero_zoffset]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
         '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
@@ -1308,6 +1309,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf flip_shell_normals -h | --help\n'
         '  bdf transform          -h | --help\n'
         '  bdf filter             -h | --help\n'
+        '  bdf flutter            -h | --help\n'
         '  bdf export_caero_mesh  -h | --help\n'
         '  bdf split_cbars_by_pin_flags  -h | --help\n'
     )

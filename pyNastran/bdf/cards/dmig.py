@@ -2872,3 +2872,18 @@ def _get_real_dtype(type_flag: int) -> str:
     else:  # pragma: no cover
         raise RuntimeError(f'invalid option for matrix format {type_flag}')
     return dtype
+
+def dtype_to_tin_tout(myarray: np.ndarray):
+    tin_real = myarray.real.dtype.itemsize
+    tin_total = myarray.dtype.itemsize
+    if tin_real == 8 and tin_total == 16:
+        tin = 'complex128'
+    elif tin_real == 8 and tin_total == 8:
+        tin = 'float64'
+    elif tin_real == 4 and tin_total == 8:
+        tin = 'complex64'
+    elif tin_real == 4 and tin_total == 4:
+        tin = 'float32'
+    else:
+        raise NotImplementedError('dtype_to_tin_tout')
+    return tin

@@ -192,7 +192,7 @@ def get_alt_for_pressure(pressure: float,
     nmax : int; default=20
         max number of iterations for convergence
     tol : float; default=5.
-        tolerance in alt_units
+        altitude tolerance in alt_units
 
     Returns
     -------
@@ -1192,6 +1192,63 @@ def make_flfacts_eas_sweep_constant_alt(alt: float, eass: List[float],
     #assert len(rhos) == len(machs)
     #assert len(rhos) == len(velocity)
     #return rhos, machs, velocity
+
+def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
+                                         eass: np.ndarray,
+                                         gamma: float=1.4,
+                                         alt_units: str='ft',
+                                         velocity_units: str='ft/s',
+                                         density_units: str='slug/ft^3',
+                                         pressure_units: str='psf',
+                                         eas_units: str='knots') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+    """
+    Veas = Vtrue * sqrt(rho/rho0)
+    V = a * mach
+    a = sqrt(gamma*R*T)
+    p = rho*R*T -> rho = p/(R*T)
+    V = Veas * sqrt(rho0 / rho)
+
+    Veas = mach * sqrt(gamma*R*T) * sqrt(p/(R*T*rho0))
+    Veas = mach * sqrt(gamma*p / rho0)
+    Veas^2 / mach^2 = gamma * p / rho0
+    p = Veas^2 / mach^2 * rho0/gamma
+    """
+    assert len(machs) == len(eass)
+    assert len(machs) > 0, machs
+    machs = np.asarray(machs)
+    eass = np.asarray(eass)
+
+    # get our eas in ft/s and density in slug/ft^3,
+    # so our pressure is in psf
+    #
+    # then we can pressure in a sane unit (e.g., psi/psf/Pa)
+    # without a wacky conversion
+    eas = convert_velocity(eass, eas_units, 'ft/s')
+    rho0 = atm_density(0., R=1716., alt_units=alt_units,
+                       density_units='slug/ft^3')
+    nmach = len(machs)
+    pressure = (eas / machs) ** 2 * rho0 / gamma  # psf
+    pressure_units = 'psf'
+
+    rhos = np.zeros(nmach, machs.dtype)
+    for i, pressurei in enumerate(pressure):
+        alti = get_alt_for_pressure(pressurei, pressure_units=pressure_units,
+                                    alt_units=alt_units, nmax=20, tol=5.)
+        rhos[i] = atm_density(alti, R=1716., alt_units=alt_units, density_units=density_units)
+        #pressure[i] = pressurei
+
+    velocity = eas * np.sqrt(rho0 / rhos)
+
+    #rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
+                                      #alt_units=alt_units,
+                                      #density_units=density_units,
+                                      #velocity_units=velocity_units,
+                                      #eas_units=eas_units,)
+
+    assert len(rhos) == len(machs)
+    assert len(rhos) == len(velocity)
+    return rhos, machs, velocity
+
 
 def _limit_eas(rho: float, machs: NDArrayNfloat, velocity: NDArrayNfloat,
                eas_limit: float=1000.,
