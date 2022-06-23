@@ -1684,6 +1684,7 @@ DMI_MATRIX_MAP = {
     6 : 'symmetric',
     9 : 'identity',
 }
+REVERSE_DMI_MAP = {value: key for key, value in DMI_MATRIX_MAP.items()}
 
 class DMI(NastranMatrix):
     """
@@ -1752,12 +1753,11 @@ class DMI(NastranMatrix):
                 raise SyntaxError(f'tout={tout!r} is not in allowed={keys}')
 
         if isinstance(matrix_form, str):
-            reverse_dmi_map = {value: key for key, value in DMI_MATRIX_MAP.items()}
             matrix_form2 = matrix_form.lower().strip()
             try:
-                matrix_form = reverse_dmi_map[matrix_form2]
+                matrix_form = REVERSE_DMI_MAP[matrix_form2]
             except KeyError:
-                keys = list(DMI_MATRIX_MAP) + list(reverse_dmi_map)
+                keys = list(DMI_MATRIX_MAP) + list(REVERSE_DMI_MAP)
                 raise SyntaxError(f'matrix_form={matrix_form!r} is not in allowed={keys}')
 
         #-------------------------------------------------------------------------------------
@@ -2061,9 +2061,29 @@ class DMI(NastranMatrix):
 
             list_fields = ['DMI', self.name, gcj]
             max_value = reals.max()
+
+            if len(i) == (reals != 0).sum():
+                # dense
+                list_fields.append(1)
+                list_fields.extend(reals)
+                msg += func(list_fields)
+                continue
+
+            if len(reals) == 1:
+                list_fields.extend([1, max_value])
+                msg += func(list_fields)
+                continue
+
             if max_value == reals.min():
                 #DMI     WKK     1       1       1.0     THRU    112
                 list_fields.extend([1, max_value, 'THRU', self.nrows])
+                msg += func(list_fields)
+                continue
+
+            if len(i) == (reals != 0).sum():
+                # dense
+                list_fields.append(1)
+                list_fields.extend(reals)
                 msg += func(list_fields)
                 continue
 

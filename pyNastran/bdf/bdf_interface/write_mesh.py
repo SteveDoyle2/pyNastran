@@ -16,6 +16,12 @@ from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.bdf_interface.write_mesh_utils import (
     find_aero_location, write_dict, get_properties_by_element_type)
 from pyNastran.bdf.cards.nodes import write_xpoints
+
+try:
+    from natsort import natsorted
+except ImportError:
+    natsorted = sorted
+
 if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
     from cpylog import SimpleLogger
@@ -593,17 +599,17 @@ class WriteMesh(BDFAttributes):
             large field (16) or small field (8)
 
         """
-        for (unused_name, dmig) in sorted(self.dmig.items()):
+        for (unused_name, dmig) in natsorted(self.dmig.items()):
             bdf_file.write(dmig.write_card(size, is_double))
-        for (unused_name, dmi) in sorted(self.dmi.items()):
+        for (unused_name, dmi) in natsorted(self.dmi.items()):
             bdf_file.write(dmi.write_card(size, is_double))
-        for (unused_name, dmij) in sorted(self.dmij.items()):
+        for (unused_name, dmij) in natsorted(self.dmij.items()):
             bdf_file.write(dmij.write_card(size, is_double))
-        for (unused_name, dmiji) in sorted(self.dmiji.items()):
+        for (unused_name, dmiji) in natsorted(self.dmiji.items()):
             bdf_file.write(dmiji.write_card(size, is_double))
-        for (unused_name, dmik) in sorted(self.dmik.items()):
+        for (unused_name, dmik) in natsorted(self.dmik.items()):
             bdf_file.write(dmik.write_card(size, is_double))
-        for (unused_name, dmiax) in sorted(self.dmiax.items()):
+        for (unused_name, dmiax) in natsorted(self.dmiax.items()):
             bdf_file.write(dmiax.write_card(size, is_double))
 
     def _write_dynamic(self, bdf_file: Any, size: int=8, is_double: bool=False,

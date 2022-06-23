@@ -1,10 +1,13 @@
-from typing import Optional, TextIO, Tuple, Dict
+from collections import defaultdict
+from typing import Tuple, List, Dict, TextIO, Optional
+
 import numpy as np
 import scipy.sparse
 from cpylog import SimpleLogger, get_logger
 
+
 TABLES_2D = {'MKLIST'}
-MATRICES_DENSE = {'QHHA'}
+MATRICES_DENSE = {'QHHA', 'AJJT'}
 SKIP_FLAGS = [
     'This software and related documentation are',
     'LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED',
@@ -45,7 +48,7 @@ def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> 
     i = 0
     debug = False
     tables = {}
-    matrices = {}
+    matrices = defaultdict(list)
     iblank_count = 0
     while True:
         line = f06_file.readline()
@@ -76,9 +79,9 @@ def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> 
         if 'R E A L   E I G E N V A L U E S' in line:
             Mhh, Bhh, Khh = _read_real_eigenvalues(f06_file, log, line, i)
             isort = np.argsort(Khh)
-            matrices['MHH'] = np.diag(Mhh[isort])
-            matrices['BHH'] = np.diag(Bhh[isort])
-            matrices['KHH'] = np.diag(Khh[isort])
+            matrices['MHH'].append(np.diag(Mhh[isort]))
+            matrices['BHH'].append(np.diag(Bhh[isort]))
+            matrices['KHH'].append(np.diag(Khh[isort]))
             del line_strip, Mhh, Bhh, Khh
 
 
@@ -89,7 +92,7 @@ def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> 
             debug = False
         elif line.startswith('0      MATRIX '):
             matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log, debug)
-            matrices[matrix_name] = matrix
+            matrices[matrix_name].append(matrix)
             del matrix_name, matrix
         else:
             line_strip = line.strip()
@@ -105,7 +108,20 @@ def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> 
                                'this will be removed once the parser is better tested')
         if i % 1000 == 0:
             log.debug(f'i={i}')
-    return tables, matrices
+
+    matrices2 = _compress_matrices(matrices)
+    return tables, matrices2
+
+def _compress_matrices(matrices: Dict[str, List[np.ndarray]]) -> Dict[str, np.ndarray]:
+    matrices2 = {}
+    for key, list_matrices in matrices.items():
+        if len(list_matrices) == 1:
+            matrix = list_matrices[0]
+        else:
+            matrix = np.stack(list_matrices, axis=2)
+            #print(key, matrix.shape)
+        matrices2[key] = matrix
+    return matrices2
 
 def _read_real_eigenvalues(f06_file: TextIO,
                            log: SimpleLogger,
@@ -261,6 +277,7 @@ def _read_matrix(f06_file: TextIO,
     matrix = sparse_matrix
     if table_name in MATRICES_DENSE:
         matrix = sparse_matrix.toarray()
+    #print(matrix)
     return table_name, matrix, line, i
 
 def _parse_complex_row_lines(lines: list[str]) -> Tuple[int, int]:

@@ -7,7 +7,7 @@ from itertools import count
 from typing import Tuple, List, Dict, Optional, Union, Any
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_string_types
+from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.nptyping_interface import NDArray3float, NDArray66float
 from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -127,7 +127,10 @@ from pyNastran.bdf.cards.bdf_sets import (
     RADSET,
 )
 from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPRM
-from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS, dtype_to_tin_tout
+from pyNastran.bdf.cards.dmig import (
+    DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI,
+    DMIG_UACCEL, DTI, DTI_UNITS,
+    dtype_to_tin_tout, REVERSE_DMI_MAP)
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                TEMPRB, QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -8452,9 +8455,27 @@ class AddCards:
 
         #GCj = columns
         #GCi = rows
-        GCi = np.repeat(list(range(1, nrows+1)), nrows, axis=0).reshape(nrows, nrows)
+        str_form = form
+        if isinstance(form, integer_types):
+            str_form = REVERSE_DMI_MAP[form]
+
+        if str_form == 'square':
+            # np.repeat(list(range(1, 3)), 4, axis=0).reshape(2, 4)
+            # -> [1, 2] -> [1, 1, 1, 1, 2, 2, 2, 2]
+            # array([[1, 1, 1, 1],
+            #        [2, 2, 2, 2]])
+            assert nrows == ncols
+            assert nrows >= 1, nrows
+        elif str_form == 'rectangular':
+            assert nrows >= 1
+            assert ncols >= 1
+        else:
+            raise NotImplementedError(str_form)
+
+        GCi = np.repeat(list(range(1, nrows+1)), ncols, axis=0).reshape(nrows, ncols)
         GCj = GCi.T.flatten()
         GCi = GCi.flatten()
+
 
         Real = myarray.real.flatten()
         Complex = None
