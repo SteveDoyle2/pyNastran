@@ -1234,7 +1234,7 @@ class MKAERO1(BaseCard):
             raise ValueError(msg.rstrip())
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an MKAERO1 card from ``BDF.add_card(...)``
 
@@ -1246,18 +1246,22 @@ class MKAERO1(BaseCard):
             a comment for the card
 
         """
-        list_fields = [interpret_value(field, card) for field in card[1:]]
-        nfields = len(list_fields) - 8
         machs = []
         reduced_freqs = []
-        for i in range(1, 1 + nfields):
-            machs.append(double_or_blank(card, i, 'mach'))
-            reduced_freqs.append(double_or_blank(card, i + 8, 'rFreq'))
-        machs = wipe_empty_fields(machs)
-        reduced_freqs = wipe_empty_fields(reduced_freqs)
+        for i in range(1, 9):
+            mach = double_or_blank(card, i, 'mach')
+            if mach is not None:
+                machs.append(mach)
+
+        for i in range(9, 17):
+            reduced_freq = double_or_blank(card, i, 'rFreq')
+            if reduced_freq is not None:
+                reduced_freqs.append(reduced_freq)
+        assert len(machs) > 0, machs
+        assert len(reduced_freqs) > 0, reduced_freqs
         return MKAERO1(machs, reduced_freqs, comment=comment)
 
-    def mklist(self):
+    def mklist(self) -> List[List[float]]:
         mklist = []
         for mach in self.machs:
             for kfreq in self.reduced_freqs:
