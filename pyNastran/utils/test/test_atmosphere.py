@@ -10,8 +10,9 @@ from pyNastran.utils.atmosphere import (
     get_alt_for_q_with_constant_mach,
     get_alt_for_eas_with_constant_mach,
     atm_unit_reynolds_number, atm_unit_reynolds_number2,
-    make_flfacts_alt_sweep, make_flfacts_mach_sweep,
-    make_flfacts_eas_sweep,
+    make_flfacts_alt_sweep_constant_mach,
+    make_flfacts_mach_sweep_constant_alt,
+    make_flfacts_eas_sweep_constant_alt,
 )
 
 
@@ -357,7 +358,7 @@ class TestAtm(unittest.TestCase):
         mach = 0.8
         alts = np.linspace(-10000, 80000.)[::-1]
         #make_flfacts_alt_sweep_constant_mach
-        rho, mach, vel = make_flfacts_alt_sweep(
+        rho, mach, vel = make_flfacts_alt_sweep_constant_mach(
             mach, alts, eas_limit=300., alt_units='m',
             velocity_units='m/s',
             density_units='kg/m^3',
@@ -371,7 +372,7 @@ class TestAtm(unittest.TestCase):
         alt = 10000.
         machs = np.linspace(0., 0.8)
         #make_flfacts_mach_sweep_constant_alt
-        rho, mach, vel = make_flfacts_mach_sweep(
+        rho, mach, vel = make_flfacts_mach_sweep_constant_alt(
             alt, machs, eas_limit=300.,
             alt_units='m',
             velocity_units='m/s',
@@ -382,7 +383,7 @@ class TestAtm(unittest.TestCase):
         alt = 0.
         machs = np.linspace(0.6, 0.8)
         with self.assertRaises(RuntimeError):
-            rho, mach, vel = make_flfacts_mach_sweep(
+            rho, mach, vel = make_flfacts_mach_sweep_constant_alt(
                 alt, machs, eas_limit=100.,
                 alt_units='m',
                 velocity_units='m/s',
@@ -392,7 +393,7 @@ class TestAtm(unittest.TestCase):
 
         alt = 10000.
         eass = np.linspace(0., 300.)
-        rho, mach, vel = make_flfacts_eas_sweep(
+        rho, mach, vel = make_flfacts_eas_sweep_constant_alt(
             alt, eass, alt_units='m',
             velocity_units='m/s', density_units='kg/m^3',
             eas_units='m/s')

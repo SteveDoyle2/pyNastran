@@ -23,7 +23,6 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.utils.atmosphere import (
     make_flfacts_eas_sweep_constant_alt,
     make_flfacts_eas_sweep_constant_mach,
-    #make_flfacts_alt_sweep,
     make_flfacts_alt_sweep_constant_mach,
     make_flfacts_mach_sweep_constant_alt,
     make_flfacts_tas_sweep_constant_alt,
@@ -760,21 +759,6 @@ class FLUTTER(BaseCard):
         comment = ' EAS: min=%.3f max=%.3f %s' % (
             eass.min(), eass.max(), eas_units)
         model.add_flfact(flfact_eas, eass, comment=comment)
-
-    def make_flfacts_alt_sweep(self,
-                               model: BDF, mach, alts,
-                               eas_limit: float=1000.,
-                               alt_units: str='m',
-                               velocity_units: str='m/s',
-                               density_units: str='kg/m^3',
-                               eas_units: str='m/s') -> None:
-        self.deprecated('make_flfacts_alt_sweep', 'make_flfacts_alt_sweep_constant_mach', '1.4')
-        self.make_flfacts_alt_sweep_constant_mach(
-            model, mach, alts,
-            eas_limit=eas_limit, alt_units=alt_units,
-            velocity_units=velocity_units,
-            density_units=density_units,
-            eas_units=eas_units)
 
     def make_flfacts_alt_sweep_constant_mach(self,
                                              model: BDF, mach, alts,

@@ -2343,9 +2343,9 @@ class TestAero(unittest.TestCase):
         mach = 72
         reduced_freq_velocity = 73
         flutter = model.add_flutter(sid, method, density, mach, reduced_freq_velocity)
-        flutter.make_flfacts_alt_sweep(model, 0.7, alts, eas_limit=1000.0, alt_units=u'ft',
-                                       velocity_units=u'in/s', density_units=u'slinch/in^3',
-                                       eas_units=u'ft/s')
+        flutter.make_flfacts_alt_sweep_constant_mach(model, 0.7, alts, eas_limit=1000.0, alt_units=u'ft',
+                                                     velocity_units=u'in/s', density_units=u'slinch/in^3',
+                                                     eas_units=u'ft/s')
 
         sid = 80
         density = 81
