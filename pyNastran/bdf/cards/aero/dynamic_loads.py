@@ -22,7 +22,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.utils.atmosphere import (
     make_flfacts_eas_sweep_constant_alt,
-    #make_flfacts_eas_sweep_constant_mach,
+    make_flfacts_eas_sweep_constant_mach,
     #make_flfacts_alt_sweep,
     make_flfacts_alt_sweep_constant_mach,
     make_flfacts_mach_sweep_constant_alt,
@@ -30,8 +30,7 @@ from pyNastran.utils.atmosphere import (
     atm_density, _velocity_factor)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
-    fields, string_or_blank, double_string_or_blank, interpret_value)
-from pyNastran.bdf.cards.utils import wipe_empty_fields
+    fields, string_or_blank, double_string_or_blank)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -884,7 +883,63 @@ class FLUTTER(BaseCard):
             density_units=density_units,
             eas_units=eas_units)
 
-    def make_flfacts_mach_sweep_constant_alt(self, model, alt, machs,
+    def make_flfacts_eas_sweep_constant_mach(self, model: BDF, mach, eass,
+                                             gamma: float=1.4,
+                                             alt_units='m',
+                                             velocity_units='m/s',
+                                             density_units='kg/m^3',
+                                             eas_units='m/s',
+                                             pressure_units='Pa'):
+        """
+        eas = tas * sqrt(rho/rho0)
+        ainf*Minf = V
+        eas = ainf*Minf * sqrt(rho_inf/rho0)
+        rho = p/RT
+        eas = ainf*Minf * sqrt(p_inf/(R*T_inf*rho0))
+            = sqrt(gamma*R*Tinf) * Minf * sqrt(p_inf/(R*T_inf*rho0))
+            = Minf * sqrt(gamma*p_inf/rho0)
+        """
+        neas = len(eass)
+        machs = mach * np.ones(neas)
+
+        rho, mach, velocity, alts = make_flfacts_eas_sweep_constant_mach(
+            machs, eass,
+            gamma=gamma,
+            alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units,
+            pressure_units=pressure_units)
+        machs2 = machs[:len(rho)]
+        assert len(rho) == len(machs2)
+
+        flfact_rho = self.sid + 1
+        flfact_mach = self.sid + 2
+        flfact_velocity = self.sid + 3
+        flfact_eas = self.sid + 4
+
+        comment = ' density: min=%.3e max=%.3e %s; alts min=%.0f %.0f %s' % (
+            rho.min(), rho.max(), density_units,
+            alts.min(), alts.max(), alt_units,
+        )
+        model.add_flfact(flfact_rho, rho, comment=comment)
+        comment = ' Mach: min=%s max=%s' % (mach.min(), mach.max())
+        model.add_flfact(flfact_mach, mach, comment=comment)
+        comment = ' velocity: min=%.3f max=%.3f %s' % (
+            velocity.min(), velocity.max(), velocity_units)
+        model.add_flfact(flfact_velocity, velocity, comment=comment)
+
+        # eas in velocity units
+        rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
+        eas = velocity * np.sqrt(rho / rho0)
+        kvel = _velocity_factor(velocity_units, eas_units)
+
+        eas_in_eas_units = eas * kvel
+        comment = ' EAS: min=%.3f max=%.3f %s' % (
+            eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units)
+        model.add_flfact(flfact_eas, eas_in_eas_units, comment=comment)
+
+    def make_flfacts_mach_sweep_constant_alt(self, model: BDF, alt, machs,
                                              eas_limit=1000., alt_units='m',
                                              velocity_units='m/s',
                                              density_units='kg/m^3',

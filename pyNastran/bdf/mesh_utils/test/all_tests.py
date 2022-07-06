@@ -7,6 +7,7 @@ from pyNastran.bdf.mesh_utils.test.test_renumber import TestRenumber
 from pyNastran.bdf.mesh_utils.test.test_remove_unused import TestRemoveUnused
 from pyNastran.bdf.mesh_utils.test.test_sum_loads import TestLoadSum
 from pyNastran.bdf.mesh_utils.test.test_refine import TestRefine
+from pyNastran.bdf.mesh_utils.test.test_flutter import TestFlutter
 
 if __name__ == "__main__":  # pragma: no cover
     import os

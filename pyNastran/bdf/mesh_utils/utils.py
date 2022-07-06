@@ -1263,7 +1263,7 @@ def _union(xval, iunion, ix):
             pass
     return iunion
 
-def cmd_line(argv=None, quiet=False):
+def cmd_line(argv=None, quiet: bool=False):
     """command line interface to multiple other command line scripts"""
     if argv is None:
         argv = sys.argv
@@ -1282,7 +1282,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf scale                       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x | --no_y]\n'
         '  bdf free_faces                  BDF_FILENAME SKIN_FILENAME [-d | -l] [-f] [--encoding ENCODE]\n'
-        '  bdf flutter                     UNITS eas  EAS1  EAS2  N CONST_TYPE CONST_VAL [-o OUT_BDF_FILENAME] [--size SIZE] [--clean]'
+        '  bdf flutter                     UNITS eas EAS1 EAS2 SWEEP_UNIT N CONST_TYPE CONST_VAL [-o OUT_BDF_FILENAME] [--size SIZE | --clean]'
         '  bdf flip_shell_normals          IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--zero_zoffset]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
         '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
@@ -1313,7 +1313,6 @@ def cmd_line(argv=None, quiet=False):
         '  bdf export_caero_mesh  -h | --help\n'
         '  bdf split_cbars_by_pin_flags  -h | --help\n'
     )
-
     if dev:
         msg += (
             '  bdf create_vectorized_numbered  -h | --help\n'
@@ -1327,49 +1326,42 @@ def cmd_line(argv=None, quiet=False):
     #assert sys.argv[0] != 'bdf', msg
 
     method = argv[1]
-    if method == 'merge':
-        cmd_line_merge(argv, quiet=quiet)
-    elif method == 'equivalence':
-        cmd_line_equivalence(argv, quiet=quiet)
-    elif method == 'renumber':
-        cmd_line_renumber(argv, quiet=quiet)
-    elif method == 'mirror':
-        cmd_line_mirror(argv, quiet=quiet)
-    elif method == 'convert':
-        cmd_line_convert(argv, quiet=quiet)
-    elif method == 'delete_bad_shells':
-        cmd_line_delete_bad_shells(argv, quiet=quiet)
-    elif method == 'scale':
-        cmd_line_scale(argv, quiet=quiet)
-    elif method == 'export_mcids':
-        cmd_line_export_mcids(argv, quiet=quiet)
-    elif method == 'remove_unused':
-        cmd_line_remove_unused(argv, quiet=quiet)
 
-    elif method == 'split_cbars_by_pin_flags':
-        cmd_line_split_cbars_by_pin_flag(argv, quiet=quiet)
-    elif method == 'export_caero_mesh':
-        cmd_line_export_caero_mesh(argv, quiet=quiet)
-    elif method == 'transform':
-        cmd_line_transform(argv, quiet=quiet)
-    elif method == 'filter':
-        cmd_line_filter(argv, quiet=quiet)
-    elif method == 'free_faces':
-        cmd_line_free_faces(argv, quiet=quiet)
-    elif method == 'flip_shell_normals':
-        cmd_line_flip_shell_normals(argv=argv, quiet=quiet)
-    elif method == 'bin' and dev:
-        cmd_line_bin(argv, quiet=quiet)
-    elif method == 'create_vectorized_numbered' and dev:
-        cmd_line_create_vectorized_numbered(argv, quiet=quiet)
-    elif method == 'flutter' and dev:
-        cmd_line_create_flutter(argv, quiet=quiet)
-    elif method in ['-v', '--version']:
+    maps = {
+        'merge': cmd_line_merge,
+        'equivalence': cmd_line_equivalence,
+        'renumber': cmd_line_renumber,
+        'mirror': cmd_line_mirror,
+        'convert': cmd_line_convert,
+        'delete_bad_shells': cmd_line_delete_bad_shells,
+        'scale': cmd_line_delete_bad_shells,
+        'export_mcids': cmd_line_export_mcids,
+        'remove_unused': cmd_line_remove_unused,
+        'split_cbars_by_pin_flags': cmd_line_split_cbars_by_pin_flag,
+
+        'export_caero_mesh': cmd_line_export_caero_mesh,
+        'transform': cmd_line_transform,
+        'filter': cmd_line_filter,
+        'free_faces': cmd_line_free_faces,
+        'flip_shell_normals': cmd_line_flip_shell_normals,
+    }
+    if dev:
+        maps.update({
+            'bin': cmd_line_bin,
+            'create_vectorized_numbered': cmd_line_create_vectorized_numbered,
+            'flutter': cmd_line_create_flutter,
+        })
+
+    if method in ['-v', '--version']:
         print(pyNastran.__version__)
     else:
-        print(argv)
-        sys.exit(msg)
-        #raise NotImplementedError('arg1=%r' % sys.argv[1])
+        try:
+            func = maps[method]
+        except KeyError:
+            print(argv)
+            sys.exit(msg)
+        func(argv, quiet=quiet)
+
 
 if __name__ == '__main__':  # pragma: no cover
     # for the exe, we pass all the args, but we hack them to have the bdf prefix

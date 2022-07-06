@@ -28,7 +28,7 @@ import sys
 from math import log, exp
 from typing import List, Tuple, TYPE_CHECKING
 import numpy as np
-from pyNastran.utils import deprecated
+#from pyNastran.utils import deprecated
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArrayNfloat
 
@@ -76,8 +76,8 @@ def get_alt_for_density(density: float, density_units: str='slug/ft^3',
         alt_final = m * (density - rho1) + alt1
         n += 1
     if abs(alt_final - alt_old) > tol:
-        raise RuntimeError('Did not converge; Check your units; n=nmax=%s\n'
-                           'target alt=%s alt_current=%s' % (nmax, alt_final, alt1))
+        raise RuntimeError(f'Did not converge; Check your units; n=nmax={nmax}\n'
+                           f'target alt={alt_final} alt_current={alt1}')
     alt_out = convert_altitude(alt_final, 'ft', alt_units)
     return alt_out
 
@@ -139,7 +139,7 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float, mach: float,
         n += 1
 
     if n > nmax - 1:
-        print('n = %s' % n)
+        print(f'n = {n}')
     alt_final = convert_altitude(alt_final, 'ft', alt_units)
     return alt_final
 
@@ -219,7 +219,7 @@ def get_alt_for_pressure(pressure: float,
         n += 1
 
     if n > nmax - 1:
-        print('n = %s' % n)
+        print(f'n = {n}')
     #if abs(alt_final - alt_old) > tol:
         #raise RuntimeError('Did not converge; Check your units; n=nmax=%s\n'
                            #'target alt=%s alt_current=%s' % (nmax, alt_final, alt1))
@@ -234,7 +234,7 @@ def _feet_to_alt_units(alt_units: str) -> float:
     elif alt_units == 'ft':
         factor = 1.
     else:
-        raise RuntimeError('alt_units=%r is not valid; use [ft, m]' % alt_units)
+        raise RuntimeError(f'alt_units={alt_units!r} is not valid; use [m, ft, kft]')
     return factor
 
 def convert_altitude(alt: float, alt_units_in: str, alt_units_out: str) -> float:
@@ -254,7 +254,7 @@ def _altitude_factor(alt_units_in: str, alt_units_out: str) -> float:
     elif alt_units_in == 'kft':
         factor *= 1000.
     else:
-        raise RuntimeError('alt_units_in=%r is not valid; use [ft, m, kft]' % alt_units_in)
+        raise RuntimeError(f'alt_units_in={alt_units_in!r} is not valid; use [m, ft, kft]')
 
     # ft to m
     if alt_units_out == 'm':
@@ -264,7 +264,7 @@ def _altitude_factor(alt_units_in: str, alt_units_out: str) -> float:
     elif alt_units_out == 'kft':
         factor /= 1000.
     else:
-        raise RuntimeError('alt_units_out=%r is not valid; use [ft, m, kft]' % alt_units_out)
+        raise RuntimeError(f'alt_units_out={alt_units_out!r} is not valid; use [1/m, 1/in, 1/ft]')
     return factor
 
 def _reynolds_factor(reynolds_units_in: str, reynolds_units_out: str) -> float:
@@ -278,7 +278,7 @@ def _reynolds_factor(reynolds_units_in: str, reynolds_units_out: str) -> float:
     elif reynolds_units_in == '1/in':
         factor *= 12.
     else:
-        msg = 'reynolds_units_in=%r is not valid; use [1/ft, 1/m, 1/in]' % reynolds_units_in
+        msg = f'reynolds_units_in={reynolds_units_in!r} is not valid; use [1/ft, 1/m, 1/in]'
         raise RuntimeError(msg)
 
     # 1/ft to 1/m
@@ -289,7 +289,7 @@ def _reynolds_factor(reynolds_units_in: str, reynolds_units_out: str) -> float:
     elif reynolds_units_out == '1/in':
         factor /= 12.
     else:
-        msg = 'reynolds_units_out=%r is not valid; use [1/ft, 1/m, 1/in]' % reynolds_units_out
+        msg = f'reynolds_units_out={reynolds_units_out!r} is not valid; use [1/m, 1/in, 1/ft]'
         raise RuntimeError(msg)
     return factor
 
@@ -313,7 +313,7 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     elif velocity_units_in == 'knots':
         factor *= 1.68781
     else:
-        msg = f'velocity_units_in={velocity_units_in!r} is not valid; use [ft/s, m/s, cm/s, in/s, knots]'
+        msg = f'velocity_units_in={velocity_units_in!r} is not valid; use [m/s, cm/s, in/s, ft/s, knots]'
         raise RuntimeError(msg)
 
     if velocity_units_out == 'm/s':
@@ -327,7 +327,7 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     elif velocity_units_out == 'knots':
         factor /= 1.68781
     else:
-        msg = f'velocity_units_out={velocity_units_out!r} is not valid; use [ft/s, m/s, cm/s, in/s, knots]'
+        msg = f'velocity_units_out={velocity_units_out!r} is not valid; use [m/s, cm/s, in/s, ft/s, knots]'
         raise RuntimeError(msg)
     return factor
 
@@ -351,7 +351,7 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
     elif pressure_units_in == 'MPa':
         factor *= 20885.43815038
     else:
-        msg = 'pressure_units_in=%r is not valid; use [psf, psi, Pa, kPa, MPa]' % pressure_units_in
+        msg = f'pressure_units_in={pressure_units_in!r} is not valid; use [Pa, kPa, MPa, psf, psi]'
         raise RuntimeError(msg)
 
     if pressure_units_out == 'psf':
@@ -365,8 +365,7 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
     elif pressure_units_out == 'MPa':
         factor /= 20885.43815038
     else:
-        raise RuntimeError('pressure_units_out=%r is not valid; use [psf, psi, Pa, kPa, MPa]' % (
-            pressure_units_out))
+        raise RuntimeError(f'pressure_units_out={pressure_units_out} is not valid; use [Pa, kPa, MPa, psf, psi]')
     return factor
 
 def convert_density(density: float, density_units_in: str, density_units_out: str) -> float:
@@ -385,7 +384,7 @@ def _density_factor(density_units_in: str, density_units_out: str) -> float:
     elif density_units_in == 'kg/m^3':
         factor /= 515.378818
     else:
-        msg = 'density_units_in=%r is not valid; use [slug/ft^3]' % density_units_in
+        msg = f'density_units_in={density_units_in!r} is not valid; use [kg/m^3, slinch/in^3, slug/ft^3]'
         raise RuntimeError(msg)
 
     # data is now in slug/ft^3
@@ -396,7 +395,7 @@ def _density_factor(density_units_in: str, density_units_out: str) -> float:
     elif density_units_out == 'kg/m^3':
         factor *= 515.378818
     else:
-        msg = 'density_units_out=%r is not valid; use [slug/ft^3, slinch/in^3]' % density_units_out
+        msg = f'density_units_out={density_units_out!r} is not valid; use [kg/m^3, slinch/in^3, slug/ft^3]'
         raise RuntimeError(msg)
     return factor
 
@@ -450,7 +449,7 @@ def atm_temperature(alt: float,
     elif temperature_units == 'K':
         factor = 5. / 9.
     else:
-        raise RuntimeError('temperature_units=%r is not valid; use [R, K]' % temperature_units)
+        raise RuntimeError(f'temperature_units={temperature_units!r} is not valid; use [R, K]')
 
     T2 = T * factor
     return T2
@@ -755,7 +754,7 @@ def atm_kinematic_viscosity_nu(alt: float,
     elif visc_units == 'm^2/s':
         factor = _feet_to_alt_units(alt_units) ** 2
     else:
-        raise NotImplementedError('visc_units=%r' % visc_units)
+        raise NotImplementedError(f'visc_units={visc_units!r}; use [m^2/s, ft^2/s]')
     return nu * factor
 
 def atm_dynamic_viscosity_mu(alt: float,
@@ -791,7 +790,7 @@ def atm_dynamic_viscosity_mu(alt: float,
     elif visc_units in ['(N*s)/m^2', 'Pa*s']:
         factor = 47.88026
     else:
-        raise NotImplementedError('visc_units=%r; not in (lbf*s)/ft^2 or (N*s)/m^2 or Pa*s')
+        raise NotImplementedError(f'visc_units={visc_units!r}; use [(N*s)/m^2, Pa*s, (lbf*s)/ft^2]')
     return mu * factor
 
 def atm_unit_reynolds_number2(alt: float, mach: float,
@@ -900,26 +899,26 @@ def sutherland_viscoscity(T: float) -> float:
         viscosity = 8.0382436E-10 * T
     else:
         if T > 5400.:
-            msg = "WARNING:  viscosity - Temperature is too large (T>5400 R) T=%s\n" % T
+            msg = f'WARNING:  viscosity - Temperature is too large (T>5400 R) T={T}\n'
             sys.stderr.write(msg)
         viscosity = 2.27E-8 * (T ** 1.5) / (T + 198.6)
     return viscosity
 
-def make_flfacts_alt_sweep(mach: float, alts: np.ndarray,
-                           eas_limit: float=1000.,
-                           alt_units: str='m',
-                           velocity_units: str='m/s',
-                           density_units: str='kg/m^3',
-                           eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    deprecated('make_flfacts_alt_sweep', 'make_flfacts_alt_sweep_constant_mach', '1.4',
-               levels=[0, 1, 2])
-    out = make_flfacts_alt_sweep_constant_mach(
-        mach, alts,
-        eas_limit=eas_limit, alt_units=alt_units,
-        velocity_units=velocity_units,
-        density_units=density_units,
-        eas_units=eas_units)
-    return out
+#def make_flfacts_alt_sweep(mach: float, alts: np.ndarray,
+                           #eas_limit: float=1000.,
+                           #alt_units: str='m',
+                           #velocity_units: str='m/s',
+                           #density_units: str='kg/m^3',
+                           #eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+    #deprecated('make_flfacts_alt_sweep', 'make_flfacts_alt_sweep_constant_mach', '1.4',
+               #levels=[0, 1, 2])
+    #out = make_flfacts_alt_sweep_constant_mach(
+        #mach, alts,
+        #eas_limit=eas_limit, alt_units=alt_units,
+        #velocity_units=velocity_units,
+        #density_units=density_units,
+        #eas_units=eas_units)
+    #return out
 
 def make_flfacts_alt_sweep_constant_mach(mach: float, alts: np.ndarray,
                                          eas_limit: float=1000.,
@@ -990,22 +989,22 @@ def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
                                       eas_units=eas_units)
     return rho, machs, velocity
 
-def make_flfacts_mach_sweep(alt: float, machs: List[float],
-                            eas_limit: float=1000.,
-                            alt_units: str='m',
-                            velocity_units: str='m/s',
-                            density_units: str='kg/m^3',
-                            eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    deprecated('make_flfacts_mach_sweep', 'make_flfacts_mach_sweep_constant_alt', '1.4',
-               levels=[0, 1, 2])
-    out = make_flfacts_mach_sweep_constant_alt(
-        alt, machs,
-        eas_limit=eas_limit,
-        alt_units=alt_units,
-        velocity_units=velocity_units,
-        density_units=density_units,
-        eas_units=eas_units)
-    return out
+#def make_flfacts_mach_sweep(alt: float, machs: List[float],
+                            #eas_limit: float=1000.,
+                            #alt_units: str='m',
+                            #velocity_units: str='m/s',
+                            #density_units: str='kg/m^3',
+                            #eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+    #deprecated('make_flfacts_mach_sweep', 'make_flfacts_mach_sweep_constant_alt', '1.4',
+               #levels=[0, 1, 2])
+    #out = make_flfacts_mach_sweep_constant_alt(
+        #alt, machs,
+        #eas_limit=eas_limit,
+        #alt_units=alt_units,
+        #velocity_units=velocity_units,
+        #density_units=density_units,
+        #eas_units=eas_units)
+    #return out
 
 def make_flfacts_mach_sweep_constant_alt(alt: float, machs: List[float],
                                          eas_limit: float=1000.,
@@ -1096,18 +1095,18 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: List[float],
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
-def make_flfacts_eas_sweep(alt: float, eass: List[float],
-                           alt_units: str='m',
-                           velocity_units: str='m/s',
-                           density_units: str='kg/m^3',
-                           eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
-    deprecated('make_flfacts_eas_sweep', 'make_flfacts_eas_sweep_constant_alt', '1.4',
-               levels=[0, 1, 2])
-    out = make_flfacts_eas_sweep_constant_alt(
-        alt, eass,
-        alt_units=alt_units, velocity_units=velocity_units,
-        density_units=density_units, eas_units=eas_units)
-    return out
+#def make_flfacts_eas_sweep(alt: float, eass: List[float],
+                           #alt_units: str='m',
+                           #velocity_units: str='m/s',
+                           #density_units: str='kg/m^3',
+                           #eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+    #deprecated('make_flfacts_eas_sweep', 'make_flfacts_eas_sweep_constant_alt', '1.4',
+               #levels=[0, 1, 2])
+    #out = make_flfacts_eas_sweep_constant_alt(
+        #alt, eass,
+        #alt_units=alt_units, velocity_units=velocity_units,
+        #density_units=density_units, eas_units=eas_units)
+    #return out
 
 def make_flfacts_eas_sweep_constant_alt(alt: float, eass: List[float],
                                         alt_units: str='m',
@@ -1193,6 +1192,24 @@ def make_flfacts_eas_sweep_constant_alt(alt: float, eass: List[float],
     #assert len(rhos) == len(velocity)
     #return rhos, machs, velocity
 
+#def make_flfacts_eas_sweep_constant_mach(
+            #gamma: float=1.4,
+            #alt_units='m',
+            #velocity_units='m/s',
+            #density_units='kg/m^3',
+            #eas_units='m/s',
+            #pressure_units='Pa'):
+    #"""
+    #eas = tas * sqrt(rho/rho0)
+    #ainf*Minf = V
+    #eas = ainf*Minf * sqrt(rho_inf/rho0)
+    #rho = p/RT
+    #eas = ainf*Minf * sqrt(p_inf/(R*T_inf*rho0))
+        #= sqrt(gamma*R*Tinf) * Minf * sqrt(p_inf/(R*T_inf*rho0))
+        #= Minf * sqrt(gamma*p_inf/rho0)
+    #"""
+    #return rho, vel, mach
+
 def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
                                          eass: np.ndarray,
                                          gamma: float=1.4,
@@ -1218,10 +1235,10 @@ def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
     machs = np.asarray(machs)
     eass = np.asarray(eass)
 
-    # get our eas in ft/s and density in slug/ft^3,
-    # so our pressure is in psf
+    # get eas in ft/s and density in slug/ft^3,
+    # so pressure is in psf
     #
-    # then we can pressure in a sane unit (e.g., psi/psf/Pa)
+    # then pressure in a sane unit (e.g., psi/psf/Pa)
     # without a wacky conversion
     eas = convert_velocity(eass, eas_units, 'ft/s')
     rho0 = atm_density(0., R=1716., alt_units=alt_units,
@@ -1230,11 +1247,13 @@ def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
     pressure = (eas / machs) ** 2 * rho0 / gamma  # psf
     pressure_units = 'psf'
 
+    alts = np.zeros(nmach, machs.dtype)
     rhos = np.zeros(nmach, machs.dtype)
     for i, pressurei in enumerate(pressure):
         alti = get_alt_for_pressure(pressurei, pressure_units=pressure_units,
                                     alt_units=alt_units, nmax=20, tol=5.)
         rhos[i] = atm_density(alti, R=1716., alt_units=alt_units, density_units=density_units)
+        alts[i] = alti
         #pressure[i] = pressurei
 
     velocity = eas * np.sqrt(rho0 / rhos)
@@ -1244,10 +1263,9 @@ def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
                                       #density_units=density_units,
                                       #velocity_units=velocity_units,
                                       #eas_units=eas_units,)
-
     assert len(rhos) == len(machs)
     assert len(rhos) == len(velocity)
-    return rhos, machs, velocity
+    return rhos, machs, velocity, alts
 
 
 def _limit_eas(rho: float, machs: NDArrayNfloat, velocity: NDArrayNfloat,

@@ -223,12 +223,12 @@ def _get_title_subtitle_subcase(f06_file: TextIO,
 
 
 def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
-                                                line: str, i: int, nlines_max: int,
-                                                trim_results: TrimResults,
-                                                title: str, subtitle: str, subcase: str,
-                                                dirname: str,
-                                                #ipressure: int, iforce: int,
-                                                log: SimpleLogger):
+                                                    line: str, i: int, nlines_max: int,
+                                                    trim_results: TrimResults,
+                                                    title: str, subtitle: str, subcase: str,
+                                                    dirname: str,
+                                                    #ipressure: int, iforce: int,
+                                                    log: SimpleLogger):
     """
     '                              S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S'
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
@@ -374,7 +374,6 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
 
             while i < iend - 1:
                 line = f06_file.readline().strip()
-                #print(line)
                 i += 1
                 if len(line) == 0: # or 'PAGE' in line or 'NASTRAN' in line:
                     break

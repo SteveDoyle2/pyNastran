@@ -8,13 +8,12 @@ CLASSIFIERS = [
     'Natural Language :: English',
     'Intended Audience :: Science/Research',
     'License :: OSI Approved :: BSD License',
-    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
 ]
 
-PYTHON_REQUIRES = '>=3.7'
+PYTHON_REQUIRES = '>=3.8'
 
 EXCLUDE_WORDS = [
     'pyNastran.f06.dev',
@@ -49,25 +48,20 @@ EXCLUDE_WORDS = [
 
 # the packages that change requirements based on python version
 REQS = {
-    '3.7' : {
-        'numpy' : ('1.14', '>=1.14,!=1.19.4'),
-        'scipy' : ('1.0', '>=1.0'),
-        'matplotlib' : ('2.2', '>=2.2'),  # 2.2.4 adds Python 3.7 support
+    '3.8' : {
+        'numpy' : ('1.17', '>=1.17.3,!=1.19.4'),
+        'scipy' : ('1.3.2', '>=1.3.2'),
+        'matplotlib' : ('3.1.2', '>=3.1.2'),
     },
-    '3.8' : {  # TODO: not updated
-        'numpy' : ('1.14', '>=1.14,!=1.19.4'),
-        'scipy' : ('1.0', '>=1.0'),
-        'matplotlib' : ('2.2', '>=2.2'),
+    '3.9' : {
+        'numpy' : ('1.19.3', '>=1.19.3,!=1.19.4'),
+        'scipy' : ('1.5.4', '>=1.5.4'),
+        'matplotlib' : ('3.4.0', '>=3.4.0'),
     },
-    '3.9' : {  # TODO: not updated
-        'numpy' : ('1.14', '>=1.14,!=1.19.4'),
-        'scipy' : ('1.0', '>=1.0'),
-        'matplotlib' : ('2.2', '>=2.2'),
-    },
-    '3.10' : {  # TODO: not updated
-        'numpy' : ('1.14', '>=1.14,!=1.19.4'),
-        'scipy' : ('1.0', '>=1.0'),
-        'matplotlib' : ('2.2', '>=2.2'),
+    '3.10' : {
+        'numpy' : ('1.21.2', '>=1.21.2'),
+        'scipy' : ('1.7.1', '>=1.7.1'),
+        'matplotlib' : ('3.5.0', '>=3.5.0'),
     },
 }
 MAX_VERSION = '3.10'
@@ -75,8 +69,8 @@ MAX_VERSION = '3.10'
 def check_python_version() -> None:
     """verifies the python version"""
     imajor, minor1, minor2 = sys.version_info[:3]
-    if sys.version_info < (3, 7, 0):  # 3.7.4 used
-        sys.exit('Upgrade your Python to 3.7+; version=(%s.%s.%s)' % (
+    if sys.version_info < (3, 8, 0):  # 3.9.4 used
+        sys.exit('Upgrade your Python to 3.8+; version=(%s.%s.%s)' % (
             imajor, minor1, minor2))
 
 
@@ -175,7 +169,7 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
         version_check, required_version = vreqs['numpy']
         if bdist:
             all_reqs['numpy'] = required_version
-            install_requires.append('numpy %s' % required_version) # 1.18.1 used
+            install_requires.append('numpy %s' % required_version) # 1.22.3 used
         else:
             found_numpy = _add_numpy(version_check, required_version,
                                      all_reqs, install_requires)
@@ -186,7 +180,7 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
         version_check, required_version = vreqs['scipy']
         if bdist:
             all_reqs['scipy'] = required_version
-            install_requires.append('scipy %s' % required_version)  # 1.4.1 used
+            install_requires.append('scipy %s' % required_version)  # 1.8.0 used
         else:
             _add_scipy(version_check, required_version,
                        all_reqs, install_requires)
@@ -203,7 +197,7 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
     required_version_str = '1.4.0'
     if bdist:
         all_reqs['cpylog'] = f'>= {required_version_str}'
-        install_requires.append(f'cpylog >= {required_version_str}')  # 1.3.1 used
+        install_requires.append(f'cpylog >= {required_version_str}')  # 1.4.0 used
     else:
         _add_cpylog(required_version_str, all_reqs, install_requires)
 
@@ -212,8 +206,8 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
         #_add_nptyping(all_reqs, install_requires)
 
     if bdist:
-        all_reqs['docopt-ng'] = '>= 0.7.2'
-        install_requires.append('docopt-ng >= 0.7.2')  # 0.7.2 used
+        all_reqs['docopt-ng'] = '>= 0.8.1'
+        install_requires.append('docopt-ng >= 0.8.1')  # 0.8.1 used
     else:
         _add_docopt(all_reqs, install_requires)
 
@@ -238,17 +232,18 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
     return all_reqs, install_requires
 
 def _add_docopt(all_reqs, install_requires):
+    required_version_str = '0.8.1'
     try:
         import docopt
         iver = int_version('docopt', docopt.__version__)
         all_reqs['docopt-ng'] = str_version(iver)
-        if iver < [0, 7, 2]:
-            print("docopt.__version__ = %r < '0.7.2'" % docopt.__version__)
-            all_reqs['docopt-ng'] = '>= 0.7.2'
-            install_requires.append('docopt-ng >= 0.7.2')
+        if iver < [0, 8, 1]:
+            print(f'docopt.__version__ = {docopt.__version__!r} < {required_version_str!r}')
+            all_reqs['docopt-ng'] = f'>= {required_version_str}'
+            install_requires.append(f'docopt-ng >= {required_version_str}')
     except ImportError:
-        all_reqs['docopt-ng'] = '>= 0.7.2'
-        install_requires.append('docopt-ng >= 0.7.2')  # 0.7.2 used
+        all_reqs['docopt-ng'] = f'>= {required_version_str}'
+        install_requires.append(f'docopt-ng >= {required_version_str}')  # 0.8.1 used
 
 def _add_numpy(version_check, required_version,
                all_reqs, install_requires):
@@ -260,7 +255,7 @@ def _add_numpy(version_check, required_version,
         raise RuntimeError(f'numpy=1.19.4 is buggy; install a different version')
     except ImportError:
         all_reqs['numpy'] = required_version
-        install_requires.append('numpy %s' % required_version) # 1.18.1 used
+        install_requires.append(f'numpy {required_version}') # 1.22.3 used
 
     if found_numpy:
         sver = np.lib.NumpyVersion(np.__version__)
@@ -272,9 +267,9 @@ def _add_numpy(version_check, required_version,
         #print('numpy %r %r' % (sver, iversion_check))
         if iver < iversion_check:
             print("numpy.__version__ = %r < %s" % (np.__version__, version_check))
-            install_requires.append('numpy %s' % required_version)
+            install_requires.append(f'numpy {required_version}')
             all_reqs['numpy'] = version_check
-            install_requires.append('numpy %s' % required_version)
+            install_requires.append(f'numpy {required_version}')
     return found_numpy
 
 def _add_scipy(version_check, required_version,
@@ -293,10 +288,10 @@ def _add_scipy(version_check, required_version,
             print("scipy.version.short_version = %r < %r" % (
                 scipy.version.short_version, version_check))
             all_reqs['scipy'] = required_version
-            install_requires.append('scipy %s' % required_version)
+            install_requires.append(f'scipy {required_version}')
     except ImportError:
         all_reqs['scipy'] = required_version
-        install_requires.append('scipy %s' % required_version)  # 1.4.1 used
+        install_requires.append(f'scipy {required_version}')  # 1.8.0 used
 
 def _add_matplotlib(version_check, required_version,
                     all_reqs, install_requires):
@@ -309,10 +304,10 @@ def _add_matplotlib(version_check, required_version,
             print("matplotlib.__version__ = %r < %r" % (matplotlib.__version__, version_check))
                 #matplotlib.__version__, str_version(iversion_check)))
             all_reqs['matplotlib'] = required_version
-            install_requires.append('matplotlib %s' % required_version)
+            install_requires.append(f'matplotlib {required_version}')
     except ImportError:
         all_reqs['matplotlib'] = required_version
-        install_requires.append('matplotlib %s' % required_version)  # 3.2.0 used
+        install_requires.append(f'matplotlib {required_version}')  # 3.5.1 used
 
 def _add_cpylog(required_version_str, all_reqs, install_requires):
     try:
@@ -325,7 +320,7 @@ def _add_cpylog(required_version_str, all_reqs, install_requires):
             install_requires.append(f'cpylog >= {required_version_str}')
     except ImportError:
         all_reqs['cpylog'] = f'>= {required_version_str}'
-        install_requires.append(f'cpylog >= {required_version_str}')  # 1.3.1 used
+        install_requires.append(f'cpylog >= {required_version_str}')  # 1.4.0 used
 
 def _add_typish(all_reqs, install_requires):
     """
@@ -415,16 +410,16 @@ def _add_imageio(found_numpy, all_reqs, install_requires):
         if imageio_int_ver > [3, ]:
             print("imageio.version = %r > 3.0'" % imageio.__version__)
             all_reqs['imageio'] = imageio_str_ver
-            install_requires.append('imageio %s' % imageio_str_ver)
+            install_requires.append(f'imageio {imageio_str_ver}')
         elif imageio_int_ver < [2, 2, 0]:
             print("imageio.version = %r < '2.2.0'" % imageio.__version__)
             all_reqs['imageio'] = imageio_str_ver
-            install_requires.append('imageio %s' % imageio_str_ver)
+            install_requires.append(f'imageio {imageio_str_ver}')
         else:
             all_reqs['imageio'] = imageio.__version__
     except ImportError:
         all_reqs['imageio'] = imageio_str_ver
-        install_requires.append('imageio %s' % imageio_str_ver)  # 2.6.1 used
+        install_requires.append(f'imageio {imageio_str_ver}')  # 2.6.1 used
 
 def update_version_file():
     """
