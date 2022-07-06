@@ -1334,7 +1334,7 @@ def cmd_line(argv=None, quiet: bool=False):
         'mirror': cmd_line_mirror,
         'convert': cmd_line_convert,
         'delete_bad_shells': cmd_line_delete_bad_shells,
-        'scale': cmd_line_delete_bad_shells,
+        'scale': cmd_line_scale,
         'export_mcids': cmd_line_export_mcids,
         'remove_unused': cmd_line_remove_unused,
         'split_cbars_by_pin_flags': cmd_line_split_cbars_by_pin_flag,

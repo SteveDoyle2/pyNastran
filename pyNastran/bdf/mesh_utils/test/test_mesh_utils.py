@@ -337,15 +337,16 @@ class TestMeshUtils(unittest.TestCase):
             cmd_line(argv=argv[:1])
         with self.assertRaises(SystemExit):
             cmd_line(argv=argv[:2])
-
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_aesurf.bdf', '--subpanels',
                 '--pid', 'aesurf']
         cmd_line(argv=argv, quiet=True)
+
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_caero.bdf', '--subpanels',
                 '--pid', 'caero']
         cmd_line(argv=argv, quiet=True)
+
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_paero.bdf', '--subpanels',
                 '--pid', 'paero']
         cmd_line(argv=argv, quiet=True)
@@ -380,6 +381,7 @@ class TestMeshUtils(unittest.TestCase):
                 #'-o', 'caero6.bdf',
                 '--length', '0.5', '--time', '1.', '--mass', str(0.5**3.)]
         cmd_line(argv=argv, quiet=True)
+
         os.remove('caero.bdf')
         os.remove('caero2.bdf')
         os.remove('caero3.bdf')

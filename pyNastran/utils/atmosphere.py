@@ -10,7 +10,7 @@ Contains the following atmospheric functions:
  - mu = atm_dynamic_viscosity_mu(alt)
  - nu = atm_kinematic_viscosity_nu(alt)
  - eas = atm_equivalent_airspeed(alt, mach)
- - rho, machs, velocity = make_flfacts_alt_sweep(
+ - rho, machs, velocity = make_flfacts_alt_sweep_constant_mach(
        mach, alts, eas_limit=1000.,
        alt_units='m', velocity_units='m/s', density_units='kg/m^3',
        eas_units='m/s')

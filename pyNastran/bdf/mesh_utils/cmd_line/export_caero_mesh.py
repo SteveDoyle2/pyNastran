@@ -37,7 +37,11 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
+    #try:
     data = docopt(msg, version=ver, argv=argv[1:])
+    #except:
+        #raise SystemError(msg)
+
     if not quiet:  # pragma: no cover
         print(data)
     #size = 16
