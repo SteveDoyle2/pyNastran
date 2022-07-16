@@ -473,7 +473,7 @@ class DSCMCOL:
             'equivalent radiated power': '???',
             'frequency response displacement': '???',
             'frequency response stress?': '???',
-            'ceig': '???',
+            'ceig': '???',  #  complex eigenvalues
         }
         response_name_to_f06_response_type = {
             # weight/volume
@@ -491,6 +491,9 @@ class DSCMCOL:
             # buckling
             'buckling': 'BUCK',
 
+            # complex eigenvalues
+            'ceig': '???',
+
             # psd
             'psd displacement': 'DISP',
             'psd acceleration': 'ACCE',
@@ -498,7 +501,6 @@ class DSCMCOL:
             # ???
             'frequency response displacement': '???',
             'frequency response stress?': '???',
-            'ceig': '???',
         }
 
         for i, respi in self.responses.items():

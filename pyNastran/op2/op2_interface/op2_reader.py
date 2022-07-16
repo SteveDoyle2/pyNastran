@@ -7052,7 +7052,7 @@ def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
                         'subcase': subcase, 'ply': ply, 'seid': seid}
             #print(f'  eid={eid} comp={comp} subcase={subcase} ply={ply} seid={seid} (composite strain)')
         elif response_type == 15:
-            # CEIG
+            # CEIG - complex eigenvalues
             mode_num = ints[idata+3]
             subcase = ints[idata+5]
             seid = ints[idata+8]

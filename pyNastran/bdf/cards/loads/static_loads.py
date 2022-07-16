@@ -587,7 +587,7 @@ class ACCEL(BaseCard):
         assert self.direction in ['X', 'Y', 'Z'], 'dir=%r' % self.direction
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
         Adds a ACCEL card from ``BDF.add_card(...)``
 
@@ -600,10 +600,10 @@ class ACCEL(BaseCard):
 
         """
         sid = integer(card, 1, 'sid')
-        cid = integer_or_blank(card, 2, 'cid', 0)
-        N = [double_or_blank(card, 3, 'N1', 0.0),
-             double_or_blank(card, 4, 'N2', 0.0),
-             double_or_blank(card, 5, 'N3', 0.0)]
+        cid = integer_or_blank(card, 2, 'cid', default=0)
+        N = [double_or_blank(card, 3, 'N1', default=0.0),
+             double_or_blank(card, 4, 'N2', default=0.0),
+             double_or_blank(card, 5, 'N3', default=0.0)]
         direction = string(card, 6, 'dir')
 
         i = 9
@@ -613,8 +613,8 @@ class ACCEL(BaseCard):
         nfields = len(card)
         while i < nfields:
             #raise NotImplementedError('ACCEL-line 2')
-            loc = double(card, i, 'loc%i' % j)
-            val = double(card, i, 'loc%i' % j)
+            loc = double(card, i, 'loc%d' % j)
+            val = double(card, i, 'loc%d' % j)
             #print('i=%s j=%s len=%s loc=%s val=%s' % (i, j, len(card), loc, val))
             locs.append(loc)
             vals.append(val)
@@ -749,7 +749,7 @@ class ACCEL1(BaseCard):
         assert isinstance(self.nodes, list), 'nodes=%r' % self.nodes
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
         Adds a ACCEL1 card from ``BDF.add_card(...)``
 

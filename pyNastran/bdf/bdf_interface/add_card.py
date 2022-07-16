@@ -2644,7 +2644,6 @@ class AddCards:
                     t_min_max = [t_min, t_max]
                     dim_min_max = t_min_max
                     xinit = t_init
-                x = 1
             else:
                 xinit = dim
 

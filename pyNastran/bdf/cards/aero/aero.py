@@ -2378,19 +2378,19 @@ class CAERO2(BaseCard):
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
-        cp = integer_or_blank(card, 3, 'cp', 0)
-        nsb = integer_or_blank(card, 4, 'nsb', 0)
-        nint = integer_or_blank(card, 5, 'nint', 0)
+        cp = integer_or_blank(card, 3, 'cp', default=0)
+        nsb = integer_or_blank(card, 4, 'nsb', default=0)
+        nint = integer_or_blank(card, 5, 'nint', default=0)
 
-        lsb = integer_or_blank(card, 6, 'nsb=%s lsb' % nsb, 0)
-        lint = integer_or_blank(card, 7, 'nint=%s lint' % nint, 0)
+        lsb = integer_or_blank(card, 6, 'nsb=%s lsb' % nsb, default=0)
+        lint = integer_or_blank(card, 7, 'nint=%s lint' % nint, default=0)
         igroup = integer(card, 8, 'igroup')
 
         p1 = np.array([
-            double_or_blank(card, 9, 'x1', 0.0),
-            double_or_blank(card, 10, 'y1', 0.0),
-            double_or_blank(card, 11, 'z1', 0.0)])
-        x12 = double_or_blank(card, 12, 'x12', 0.)
+            double_or_blank(card, 9, 'x1', default=0.0),
+            double_or_blank(card, 10, 'y1', default=0.0),
+            double_or_blank(card, 11, 'z1', default=0.0)])
+        x12 = double_or_blank(card, 12, 'x12', default=0.)
         assert len(card) <= 13, f'len(CAERO2 card) = {len(card):d}\ncard={card}'
         return CAERO2(eid, pid, igroup, p1, x12,
                       cp=cp, nsb=nsb, nint=nint, lsb=lsb, lint=lint,

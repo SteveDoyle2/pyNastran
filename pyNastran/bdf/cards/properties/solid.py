@@ -23,6 +23,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class PLSOLID(Property):
@@ -349,14 +350,25 @@ class PCOMPS(Property):
 
 class PCOMPLS(Property):
     """
-    | PCOMPLS | PID | DIRECT | CORDM |   SB   |  ANAL  |
-    |         | C8  |  BEH8  | INT8  | BEH8H  | INT8H  |
-    |         | C20 |  BEH20 | INT20 | BEH20H | INT20H |
-    |         | ID1 |  MID1  |   T1  | THETA1 |        |
-    |         | ID2 |  MID2  |   T2  | THETA2 |        |
-    PCOMPLS 782 1
-            1001 171 .3 12.3
-            100 175 .7 77.7
+    +---------+------+--------+--------+--------+--------+
+    | PCOMPLS |  PID | DIRECT |  CORDM |   SB   |  ANAL  |
+    +---------+------+--------+--------+--------+--------+
+    |         |  C8  |  BEH8  |  INT8  | BEH8H  | INT8H  |
+    +---------+------+--------+--------+--------+--------+
+    |         |  C20 |  BEH20 |  INT20 | BEH20H | INT20H |
+    +---------+------+--------+--------+--------+--------+
+    |         |  ID1 |  MID1  |   T1   | THETA1 |        |
+    +---------+------+--------+--------+--------+--------+
+    |         |  ID2 |  MID2  |   T2   | THETA2 |        |
+    +---------+------+--------+--------+--------+--------+
+
+    +---------+------+--------+--------+--------+--------+
+    | PCOMPLS | 782  | 1      |        |        |        |
+    +---------+------+--------+--------+--------+--------+
+    |         | 1001 |   171  |   .3   |  12.3  |        |
+    +---------+------+--------+--------+--------+--------+
+    |         | 100  |   175  |   .7   |  77.7  |        |
+    +---------+------+--------+--------+--------+--------+
     """
     type = 'PCOMPLS'
     _field_map = {
@@ -407,9 +419,9 @@ class PCOMPLS(Property):
         self.mids_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
-        Adds a PCOMPS card from ``BDF.add_card(...)``
+        Adds a PCOMPLS card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -488,10 +500,10 @@ class PCOMPLS(Property):
                 ]
                 ifield += 8
                 continue
-            global_ply_id = integer(card, ifield, 'global_ply_id_%i' % iply)
-            mid = integer(card, ifield + 1, 'mid_%i' % iply)
-            t = double(card, ifield + 2, 'thickness_%i' % iply)
-            theta = double(card, ifield + 3, 'theta_%i' % iply)
+            global_ply_id = integer(card, ifield, 'global_ply_id_%d' % iply)
+            mid = integer(card, ifield + 1, 'mid_%d' % iply)
+            t = double(card, ifield + 2, 'thickness_%d' % iply)
+            theta = double(card, ifield + 3, 'theta_%d' % iply)
             global_ply_ids.append(global_ply_id)
             mids.append(mid)
             thicknesses.append(t)
