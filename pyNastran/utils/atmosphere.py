@@ -30,7 +30,7 @@ from typing import List, Tuple, TYPE_CHECKING
 import numpy as np
 from pyNastran.utils.convert import (
     convert_altitude, convert_density, convert_pressure, convert_velocity,
-    _altitude_factor, _pressure_factor, _velocity_factor, _reynolds_factor)
+    _altitude_factor, _pressure_factor, _velocity_factor)
 #from pyNastran.utils import deprecated
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArrayNfloat
@@ -711,6 +711,33 @@ def atm_unit_reynolds_number(alt: float, mach: float,
 
     ReL *= _reynolds_factor('1/ft', reynolds_units)
     return ReL
+
+
+def _reynolds_factor(reynolds_units_in: str, reynolds_units_out: str) -> float:
+    """helper method"""
+    factor = 1.0
+    # units to 1/feet
+    if reynolds_units_in == '1/m':
+        factor *= 0.3048
+    elif reynolds_units_in == '1/ft':
+        pass
+    elif reynolds_units_in == '1/in':
+        factor *= 12.
+    else:
+        msg = f'reynolds_units_in={reynolds_units_in!r} is not valid; use [1/ft, 1/m, 1/in]'
+        raise RuntimeError(msg)
+
+    # 1/ft to 1/m
+    if reynolds_units_out == '1/m':
+        factor /= 0.3048
+    elif reynolds_units_out == '1/ft':
+        pass
+    elif reynolds_units_out == '1/in':
+        factor /= 12.
+    else:
+        msg = f'reynolds_units_out={reynolds_units_out!r} is not valid; use [1/m, 1/in, 1/ft]'
+        raise RuntimeError(msg)
+    return factor
 
 def sutherland_viscoscity(T: float) -> float:
     r"""

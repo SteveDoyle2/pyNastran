@@ -96,32 +96,6 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
         raise RuntimeError(f'pressure_units_out={pressure_units_out} is not valid; use [Pa, kPa, MPa, psf, psi]')
     return factor
 
-def _reynolds_factor(reynolds_units_in: str, reynolds_units_out: str) -> float:
-    """helper method"""
-    factor = 1.0
-    # units to 1/feet
-    if reynolds_units_in == '1/m':
-        factor *= 0.3048
-    elif reynolds_units_in == '1/ft':
-        pass
-    elif reynolds_units_in == '1/in':
-        factor *= 12.
-    else:
-        msg = f'reynolds_units_in={reynolds_units_in!r} is not valid; use [1/ft, 1/m, 1/in]'
-        raise RuntimeError(msg)
-
-    # 1/ft to 1/m
-    if reynolds_units_out == '1/m':
-        factor /= 0.3048
-    elif reynolds_units_out == '1/ft':
-        pass
-    elif reynolds_units_out == '1/in':
-        factor /= 12.
-    else:
-        msg = f'reynolds_units_out={reynolds_units_out!r} is not valid; use [1/m, 1/in, 1/ft]'
-        raise RuntimeError(msg)
-    return factor
-
 def convert_velocity(velocity: float, velocity_units_in: str, velocity_units_out: str) -> float:
     """nominal unit is ft/s"""
     if velocity_units_in == velocity_units_out:
@@ -207,7 +181,7 @@ def convert_mass(mass: float, mass_units_in: str, mass_units_out: str) -> float:
 def _mass_factor(mass_units_in: str, mass_units_out: str) -> float:
     """helper method for convert_mass"""
     factor = 1.0
-    if mass_units_in == 'm':
+    if mass_units_in == 'kg':
         factor *= 0.0685218
     elif mass_units_in == 'slug':
         pass
@@ -232,13 +206,13 @@ def convert_force(force: float, force_units_in: str, force_units_out: str) -> fl
     """nominal unit is lbf"""
     if force_units_in == force_units_out:
         return force
-    return velocity * _force_factor(force_units_in, force_units_out)
+    return force * _force_factor(force_units_in, force_units_out)
 
 def _force_factor(force_units_in: str, force_units_out: str) -> float:
     """helper method for convert_force"""
     factor = 1.0
     if force_units_in == 'MN':
-        factor *= 2248094.
+        factor *= 224809.4
     elif force_units_in == 'N':
         factor *= 0.2248094
     elif force_units_in == 'cN':
@@ -252,7 +226,7 @@ def _force_factor(force_units_in: str, force_units_out: str) -> float:
         raise RuntimeError(msg)
 
     if force_units_out == 'MN':
-        factor /= 2248094.
+        factor /= 224809.4
     elif force_units_out == 'N':
         factor /= 0.2248094
     elif force_units_out == 'cN':

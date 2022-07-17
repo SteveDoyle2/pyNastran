@@ -5,7 +5,7 @@ from typing import Dict, Any
 from cpylog import SimpleLogger
 #import pyNastran
 from .utils import filter_no_args
-from pyNastran.utils.atmosphere import convert_altitude, convert_velocity
+from pyNastran.utils.convert import convert_altitude, convert_velocity
 
 
 def cmd_line_create_flutter(argv=None, quiet: bool=False):
