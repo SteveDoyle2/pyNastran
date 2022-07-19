@@ -1,4 +1,5 @@
-from numpy import matrix, cos, sin, zeros, array
+import numpy as np
+from numpy import matrix, cos, sin
 from numpy.linalg import solve, norm  # type: ignore
 
 
@@ -6,23 +7,23 @@ def T(alphaR):
     ca = cos(alphaR)
     sa = sin(alphaR)
 
-    t = matrix([[ca, sa, 0.],
-                [-sa, ca, 0.],
-                [0., 0., 1.]])
+    t = np.array([[ca, sa, 0.],
+                  [-sa, ca, 0.],
+                  [0., 0., 1.]])
     return t
 
 
 def makeT(v1, v2):
-    t = matrix([[ca, sa, 0.],
-                [-sa, ca, 0.],
-                [0., 0., 1.]])
+    t = np.array([[ca, sa, 0.],
+                  [-sa, ca, 0.],
+                  [0., 0., 1.]])
     return t
 
 
 def build_global_stiffness(elements):
     nElements = len(elements)
 
-    Kg = matrix(zeros((nElements, nElements), 'd'))
+    Kg = np.zeros((nElements, nElements), 'd')
 
     for element in elements:
         nodes = element.nodes
@@ -65,22 +66,22 @@ def do_problem(elements):
     F = get_forces()
     x = solve(Kr, F)  # deflections
 
-    (stress, strain) = recover_stress_Strain(elements, x)
+    (stress, strain) = recover_stress_strain(elements, x)
 
 
 def frame3d():
     """
     http://www.ce.ufl.edu/~mih/courses/CES4141/Notes%2049%20-%20Sstan%20Three%20Dimensional%20Example.pdf
     """
-    p1 = array([0., 0., 0.]) * 12.
-    p2 = array([10., 0., 0.]) * 12.
-    p3 = array([10., 10., 0.]) * 12.
-    p4 = array([0., 10., 0.]) * 12.
+    p1 = np.array([0., 0., 0.]) * 12.
+    p2 = np.array([10., 0., 0.]) * 12.
+    p3 = np.array([10., 10., 0.]) * 12.
+    p4 = np.array([0., 10., 0.]) * 12.
 
-    p5 = array([0., 0., 10.]) * 12.
-    p6 = array([10., 0., 10.]) * 12.
-    p7 = array([10., 10., 10.]) * 12.
-    p8 = array([0., 10., 10.]) * 12.
+    p5 = np.array([0., 0., 10.]) * 12.
+    p6 = np.array([10., 0., 10.]) * 12.
+    p7 = np.array([10., 10., 10.]) * 12.
+    p8 = np.array([0., 10., 10.]) * 12.
 
     Ac = 4.  # in^2
     Jc = 60.  # in4
@@ -122,7 +123,8 @@ class Rod:
 
 def Stiffness(self, r, A, E):
     L = norm(r)
-    K = A * E / L * matrix([[1., -1.], [-1., 1.]])  # rod
+    K = A * E / L * np.array([[1., -1.],
+                              [-1., 1.]])  # rod
     return K
 
 
@@ -141,9 +143,9 @@ def truss():
     L2 = 3 ft
     @endcode
     """
-    p1 = array([4., 0., 0.]) * 12.
-    p2 = array([0., 0., 0.]) * 12.
-    p3 = array([0., 3., 0.]) * 12.
+    p1 = np.array([4., 0., 0.]) * 12.
+    p2 = np.array([0., 0., 0.]) * 12.
+    p3 = np.array([0., 3., 0.]) * 12.
     A = 3.  # in^2
     E = 29000  # ksi
 
@@ -158,7 +160,7 @@ def fKx(K, x):
 
 
 def beam_stiffness(r, A, E, I):
-    Ke = matrix(zeros((6, 6), 'd'))
+    Ke = np.zeros((6, 6), dtype='float64')
     AE = A * E
     EI = E * I
 

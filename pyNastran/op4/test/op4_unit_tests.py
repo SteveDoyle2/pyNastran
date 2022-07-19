@@ -5,9 +5,12 @@ import unittest
 import numpy as np
 from numpy import ones, reshape, arange
 from numpy import ndarray, eye, array_equal, zeros
-from pyNastran.op4.op4 import OP4, read_op4
+import scipy
+import scipy.sparse
 
+from pyNastran.op4.op4 import OP4, read_op4, Matrix
 import pyNastran.op4.test
+
 OP4_PATH = pyNastran.op4.test.__path__[0]
 PKG_PATH = pyNastran.__path__[0]
 
@@ -21,7 +24,10 @@ class TestOP4(unittest.TestCase):
             'mat_b_s2.op4',
         ]
         for fname in fnames:
-            matrices = read_op4(os.path.join(OP4_PATH, fname))
+            op4_filename = os.path.join(OP4_PATH, fname)
+            matrices = read_op4(op4_filename)
+            matrices2 = read_op4(op4_filename, use_matrix_class=True)
+
             for unused_name, (unused_form, matrix) in sorted(matrices.items()):
                 #print("name = %s" % (name))
                 if isinstance(matrix, ndarray):
@@ -29,8 +35,12 @@ class TestOP4(unittest.TestCase):
                     #print(matrix)
                 else:
                     #print(matrix.toarray())
-                    pass
+                    assert isinstance(matrix, scipy.sparse._coo.coo_matrix), type(matrix)
                     #print(matrix)
+
+            for unused_name, matrix in sorted(matrices2.items()):
+                #print(matrix)
+                assert isinstance(matrix, Matrix), type(matrix)
 
     def test_op4_ascii(self):
         fnames = [
@@ -39,8 +49,8 @@ class TestOP4(unittest.TestCase):
             'mat_t_s2.op4',
         ]
         for fname in fnames:
-            op4 = OP4()
-            matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
+            op4_filename = os.path.join(OP4_PATH, fname)
+            matrices = read_op4(op4_filename)
             for unused_name, (unused_form, matrix) in sorted(matrices.items()):
                 #print("name = %s" % name)
                 if isinstance(matrix, ndarray):
@@ -59,8 +69,8 @@ class TestOP4(unittest.TestCase):
             'mat_t_s2.op4',
         ]
         for fname in fnames:
-            op4 = OP4(debug=False)
-            matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
+            op4_filename = os.path.join(OP4_PATH, fname)
+            matrices = read_op4(op4_filename, debug=False)
             (form, A) = matrices['EYE10']
             self.assertEqual(form, 6)  # form=6 -> Symmetric
             if 's' in fname:  # sparse
@@ -79,8 +89,8 @@ class TestOP4(unittest.TestCase):
             'mat_t_s2.op4',
         ]
         for fname in fnames:
-            op4 = OP4(debug=False)
-            matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
+            op4_filename = os.path.join(OP4_PATH, fname)
+            matrices = read_op4(op4_filename, debug=False)
             (form, A) = matrices['EYE5CD']
             self.assertEqual(form, 6)  # form=6 -> Symmetric
             if 's' in fname:  # sparse
@@ -100,8 +110,8 @@ class TestOP4(unittest.TestCase):
         ]
         for fname in fnames:
             #print('-------%s-------' % fname)
-            op4 = OP4(debug=False)
-            matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
+            op4_filename = os.path.join(OP4_PATH, fname)
+            matrices = read_op4(op4_filename, debug=False)
             (form, A) = matrices['NULL']
             self.assertEqual(form, 6)  # form=6 -> Symmetric
             #print A.shape

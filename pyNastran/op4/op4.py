@@ -2,6 +2,7 @@
 import sys
 import os
 from struct import pack, unpack, Struct
+from typing import Optional, Any
 
 import numpy as np
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
@@ -10,10 +11,14 @@ from cpylog import get_logger2
 
 from pyNastran.utils import is_binary_file as file_is_binary
 from pyNastran.utils.mathematics import print_matrix #, print_annotated_matrix
+from pyNastran.op2.result_objects.matrix import Matrix
 
 
-def read_op4(op4_filename=None, matrix_names=None, precision='default',
-             debug=False, log=None):
+def read_op4(op4_filename: Optional[str]=None,
+             matrix_names: Optional[list[str]]=None,
+             precision: str='default',
+             use_matrix_class: bool=False,
+             debug: bool=False, log=None):
     """
     Reads a NASTRAN OUTPUT4 file, and stores the
     matrices as the output arguments.  The number of
@@ -92,7 +97,10 @@ def read_op4(op4_filename=None, matrix_names=None, precision='default',
 
     """
     op4 = OP4(log=log, debug=debug)
-    return op4.read_op4(op4_filename, matrix_names, precision)
+    matrices = op4.read_op4(
+        op4_filename, matrix_names, precision,
+        use_matrix_class=use_matrix_class)
+    return matrices
 
 
 class OP4:
@@ -111,7 +119,10 @@ class OP4:
         self._new = False
         self.large = None
 
-    def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):
+    def read_op4(self, op4_filename: Optional[str]=None,
+                 matrix_names: Optional[list[str]]=None,
+                 precision: str='default',
+                 use_matrix_class: bool=False):
         """See ``read_op4``"""
         if precision not in ('default', 'single', 'double'):
             msg = "precision=%r and must be 'single', 'double', or 'default'" % precision
@@ -134,30 +145,38 @@ class OP4:
         #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
 
         if file_is_binary(op4_filename):
-            return self.read_op4_binary(op4_filename, matrix_names, precision)
-        return self.read_op4_ascii(op4_filename, matrix_names, precision)
+            matrices = self.read_op4_binary(
+                op4_filename, matrix_names, precision,
+                use_matrix_class=use_matrix_class)
+        else:
+            matrices = self.read_op4_ascii(
+                op4_filename, matrix_names, precision,
+                use_matrix_class=use_matrix_class)
+        return matrices
 
 #--------------------------------------------------------------------------
-    def read_op4_ascii(self, op4_filename, matrix_names=None, precision='default'):
+    def read_op4_ascii(self, op4_filename, matrix_names=None, precision='default',
+                       use_matrix_class=False):
         """matrix_names must be a list or None, but basically the same"""
         with open(op4_filename, 'r') as op4:
             matrices = {}
             name = 'dummyName'
             while name is not None:
-                (name, form, matrix) = self._read_matrix_ascii(op4, matrix_names, precision)
+                name, amat = self._read_matrix_ascii(op4, matrix_names, precision)
                 if name is not None:
                     if matrix_names is None or name in matrix_names:
-                        _save_matrix(matrices, name, form, matrix)
+                        _save_matrix(matrices, name, amat,
+                                     use_matrix_class=use_matrix_class)
         return matrices
 
-    def _read_matrix_ascii(self, op4, matrix_names=None, precision='default'):
+    def _read_matrix_ascii(self, op4, matrix_names: Optional[list[str]]=None, precision: str='default') -> tuple[str, Matrix]:
         """Reads an ASCII matrix"""
         iline = 0
         line = op4.readline().rstrip()
         iline += 1
         if line == '':
             op4.close()
-            return None, None, None
+            return None, None
         ncols, nrows, form, matrix_type = line[0:32].split()
         nrows = int(nrows)
 
@@ -188,10 +207,10 @@ class OP4:
         if irow == '0':
             is_sparse = True
 
-        if matrix_type in [1, 2]:  # real
+        if matrix_type in {1, 2}:  # real
             A, iline = self._read_real_ascii(op4, iline, nrows, ncols, line_size, line,
                                              dtype, is_sparse, is_big_mat)
-        elif matrix_type in [3, 4]:  # complex
+        elif matrix_type in {3, 4}:  # complex
             A, iline = self._read_complex_ascii(op4, iline, nrows, ncols, line_size, line,
                                                 dtype, is_sparse, is_big_mat)
         else:
@@ -202,7 +221,9 @@ class OP4:
 
         if self.debug:
             self.log.info("form=%s name=%s A=\n%s" % (form, name, str(A)))
-        return (name, form, A)
+        amat = Matrix(name, form, is_matpool=False)
+        amat.data = A
+        return name, amat
 
     def _read_real_sparse_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
         """Reads a sparse real ASCII matrix"""
@@ -664,7 +685,8 @@ class OP4:
         return (irow, idummy - 1)
 
 #--------------------------------------------------------------------------
-    def read_op4_binary(self, op4_filename, matrix_names=None, precision='default'):
+    def read_op4_binary(self, op4_filename, matrix_names=None, precision='default',
+                       use_matrix_class=False):
         """matrix_names must be a list or None, but basically the same"""
         with open(op4_filename, mode='rb') as op4:
             self.n = 0
@@ -683,12 +705,13 @@ class OP4:
                     break
                 #self.show(f, 60)
 
-                (name, form, matrix) = self._read_matrix_binary(op4, precision, matrix_names)
-                #print(print_matrix(matrix))
+                (name, amat) = self._read_matrix_binary(op4, precision, matrix_names)
+                #print(print_matrix(amat.matrix))
                 if name is not None:
                     if matrix_names is None or name in matrix_names:  # save the matrix
-                        name = name.decode('ascii')
-                        _save_matrix(matrices, name, form, matrix)
+                        #name = name.decode('ascii')
+                        _save_matrix(matrices, name, amat,
+                                     use_matrix_class=use_matrix_class)
 
                 #print("not op4.closed = ",not op4.closed,form,name)
                 # if not op4.closed or form is not None:
@@ -733,7 +756,7 @@ class OP4:
             raise NotImplementedError('record_length=%s' % record_length)
         return (a, icol, irow, nwords)
 
-    def _read_matrix_binary(self, op4, precision, matrix_names):
+    def _read_matrix_binary(self, op4, precision, matrix_names) -> tuple[str, Matrix]:
         """Reads a binary matrix"""
         #self.show(f, 60)
         if self.debug:
@@ -770,6 +793,7 @@ class OP4:
             raise NotImplementedError(msg)
 
         name = name.strip()
+        name = name.decode('ascii')
         if self.debug:
             if Type == 1:
                 self.log.info("Type = Real, Single Precision")
@@ -800,23 +824,23 @@ class OP4:
             is_sparse = True
 
         assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
-        if Type in [1, 2]:  # real
+        if Type in {1, 2}:  # real
             A = self._read_real_binary(op4, nrows, ncols, Type, is_sparse, is_big_mat)
-        elif Type in [3, 4]:  # complex
+        elif Type in {3, 4}:  # complex
             A = self._read_complex_binary(op4, nrows, ncols, Type, is_sparse, is_big_mat)
         else:
             self.log.error('is_sparse=%s data_format=%s dtype=%s' % (is_sparse, data_format, dtype))
-            raise TypeError("Type=%s" % Type)
+            raise TypeError(f'Type={Type}')
 
         #try:
             #print_matrix(A.toarray())
         #except Exception:
             #pass
 
-        if data_format in ['d', 'dd']:
+        if data_format in {'d', 'dd'}:
             op4.read(8)
             self.n += 8
-        elif data_format in ['f', 'ff']:
+        elif data_format in {'f', 'ff'}:
             op4.read(4)
             self.n += 4
         else:
@@ -826,7 +850,9 @@ class OP4:
         #f.read(4); self.n+=4
 
         assert self.n == op4.tell(), 'n=%s op4.tell=%s' % (self.n, op4.tell())
-        return (name, form, A)
+        amat = Matrix(name, form, is_matpool=False)
+        amat.data = A
+        return name, amat
 
     def _get_matrix_info(self, matrix_type, debug=True):
         if matrix_type == 1:
@@ -1679,8 +1705,47 @@ class OP4:
         op4.seek(0)
         return endian
 
-def _save_matrix(matrices, name, form, matrix):
+def _save_matrix(matrices, name: str, amat: Matrix, use_matrix_class: bool=False):
     """save the matrix"""
+    assert isinstance(name, str), type(name)
+    if use_matrix_class:
+        _save_matrix_new(matrices, name, amat)
+    else:
+        _save_matrix_old(matrices, name, amat)
+
+def _save_matrix_new(matrices: dict[str, tuple[int, Matrix]],
+                     name: str,
+                     amat: Matrix):
+    if name in matrices:
+        # there are duplicate matrices with the same name (e.g., the QHH)
+        amat0 = matrices[name]  # type: Matrix
+        form0 = amat0.form
+        data0 = amat0.data
+
+        if isinstance(form0, int):
+            assert isinstance(form0, int), form0
+            form2 = [form0, amat.form]
+            data2 = [data0, amat.data]
+            amat.form = form2
+            amat.data = data2
+            #matrices[name] = (form2, data2)
+        elif isinstance(form0, list):
+            form0.append(amat.form)
+            data0.append(amat.data)
+            amat.form = form2
+            amat.data = data2
+        else:  # pragma: no cover
+            raise TypeError('form0=%r' % form0)
+    else:
+        # typical case
+        matrices[name] = amat
+
+def _save_matrix_old(matrices: dict[str, tuple[int, Any]],
+                     name: str,
+                     amat: Matrix):
+    """save the matrix"""
+    form = amat.form
+    matrix = amat.data
     if name in matrices:
         # there are duplicate matrices with the same name (e.g., the QHH)
         form0, matrix0 = matrices[name]

@@ -1366,12 +1366,10 @@ def _cast_matrix_matpool(table_name: str,
         matrix_shape = 'rectangular'
 
     m = Matrix(table_name, is_matpool=True, form=matrix_shape)
-    m.data = matrix
-    m.col_nid = col_nids_array
-    m.col_dof = col_dofs_array
-    m.row_nid = row_nids_array
-    m.row_dof = row_dofs_array
-    m.form = matrix_shape
+    m.set_matpool_data(matrix,
+                       col_nids_array, col_dofs_array,
+                       row_nids_array, row_dofs_array)
+    #m.form = matrix_shape
     #print(m)
     log.debug(str(m))
     return m

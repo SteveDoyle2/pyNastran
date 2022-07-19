@@ -58,7 +58,8 @@ from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError, EmptyRecordError
 from pyNastran.op2.result_objects.gpdt import GPDT, BGPDT
 from pyNastran.op2.result_objects.eqexin import EQEXIN
-from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
+from pyNastran.op2.result_objects.matrix import Matrix
+from pyNastran.op2.result_objects.matrix_dict import MatrixDict
 from pyNastran.op2.result_objects.design_response import DSCMCOL
 from pyNastran.op2.op2_interface.msc_tables import MSC_GEOM_TABLES
 from pyNastran.op2.op2_interface.nx_tables import NX_VERSIONS, NX_GEOM_TABLES
@@ -1182,7 +1183,7 @@ class OP2Reader:
             else:
                 self.show_data(data, types=ifs)
                 raise RuntimeError(f'marker={marker} ndata={ndata}; nvalues={nvalues}')
-                sdf
+                #sdf
                 #ints = [
                     #1387, 0, -1574726656, -1076024976, 12958534, -1079706775, -1204798216, -1076795484, -674762419, -1125074255, -1234714250, 1025640630, 367990681, 1024314941, -1752243687, 1021642278,
                     #-3, 1017741311,
@@ -4451,6 +4452,7 @@ class OP2Reader:
 
         """
         op2 = self.op2
+        log = self.log
         allowed_forms = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 13, 15]
         #self.log.debug('----------------------------------------------------------------')
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
@@ -4502,7 +4504,7 @@ class OP2Reader:
             msg = ('unexpected tout for %s: matrix_num=%s form=%s '
                    'mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
                        table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
-            self.log.warning(msg)
+            log.warning(msg)
             raise RuntimeError(msg)
 
         #self.log.error('name=%r matrix_num=%s form=%s mrows=%s '
@@ -4510,24 +4512,24 @@ class OP2Reader:
         #                   table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
         if form == 1:
             if ncols != mrows:
-                self.log.warning('unexpected size for %s; form=%s mrows=%s ncols=%s' % (
+                log.warning('unexpected size for %s; form=%s mrows=%s ncols=%s' % (
                     table_name, form, mrows, ncols))
         elif form not in allowed_forms:
-            self.log.error('name=%r matrix_num=%s form=%s mrows=%s '
-                           'ncols=%s tout=%s nvalues=%s g=%s' % (
-                               table_name, matrix_num, form, mrows, ncols,
-                               tout, nvalues, g))
+            log.error('name=%r matrix_num=%s form=%s mrows=%s '
+                      'ncols=%s tout=%s nvalues=%s g=%s' % (
+                          table_name, matrix_num, form, mrows, ncols,
+                          tout, nvalues, g))
             raise RuntimeError('form=%s; allowed=%s' % (form, allowed_forms))
         if self.size == 4:
-            self.log.debug('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s '
-                           'nvalues=%s g=%s' % (
-                               table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
+            log.debug('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s '
+                      'nvalues=%s g=%s' % (
+                          table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
         else:
             #if tout == 1:
                 #tout = 2
-            self.log.info('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s '
-                          'nvalues=%s g=%s' % (
-                              table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
+            log.info('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s '
+                     'nvalues=%s g=%s' % (
+                         table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
 
         self.read_3_markers([-2, 1, 0])
         data = self._read_record()
@@ -4611,7 +4613,7 @@ class OP2Reader:
                 nvalues = self.get_marker1(rewind=False)
                 assert nvalues == 0, nvalues
 
-                matrix = self._cast_matrix_mat(GCi, GCj, mrows, ncols, reals, tout, dtype)
+                matrix = _cast_matrix_mat(GCi, GCj, mrows, ncols, reals, tout, dtype, log)
                 if table_name in DENSE_MATRICES:
                     matrix = matrix.toarray()
                 m.data = matrix
@@ -7896,6 +7898,68 @@ def _get_gpdt_nnodes2(ndata, header_ints, size):
         nnodes = nvalues // numwide
     assert ndata == nnodes * numwide * 4
     return nnodes, numwide
+
+def _cast_matrix_mat(GCi: np.ndarray, GCj: np.ndarray,
+                     mrows: int, ncols: int,
+                     reals: np.ndarray,
+                     tout: int,
+                     dtype: str, log: SimpleLogger):
+    """helper method for _read_matrix_mat"""
+    #assert max(GCi) <= mrows, 'GCi=%s GCj=%s mrows=%s' % (GCi, GCj, mrows)
+    #assert max(GCj) <= ncols, 'GCi=%s GCj=%s ncols=%s' % (GCi, GCj, ncols)
+
+    # we subtract 1 to the indicides to account for Fortran
+    GCi = np.array(GCi, dtype='int32') - 1
+    GCj = np.array(GCj, dtype='int32') - 1
+    try:
+        if dtype == '???':
+            matrix = None
+            log.warning('what is the dtype?')
+        elif tout in {1, 2}:
+            # real
+            real_array = np.array(reals, dtype=dtype)
+            matrix = scipy.sparse.coo_matrix(
+                (real_array, (GCi, GCj)),
+                shape=(mrows, ncols), dtype=dtype)
+            #log.info(f'created {self.table_name} (real)')
+        elif tout in {3, 4}:
+            # complex
+            real_array = np.array(reals, dtype=dtype)
+            nvalues_matrix = real_array.shape[0] // 2
+            real_complex = real_array.reshape((nvalues_matrix, 2))
+            real_imag = real_complex[:, 0] + real_complex[:, 1]*1j
+            #if self.binary_debug:
+                #self.binary_debug.write('reals = %s' % real_complex[:, 0])
+                #self.binary_debug.write('imags = %s' % real_complex[:, 1])
+                #self.binary_debug.write('real_imag = %s' % real_imag)
+            matrix = scipy.sparse.coo_matrix(
+                (real_imag, (GCi, GCj)),
+                shape=(mrows, ncols), dtype=dtype)
+            #msg = 'created %s (complex)' % self.table_name
+            #log.debug(msg)
+            #raise RuntimeError(msg)
+        else:
+            raise RuntimeError('this should never happen')
+    except ValueError:
+        log.warning('shape=(%s, %s)' % (mrows, ncols))
+        log.warning('cant make a coo/sparse matrix...trying dense')
+
+        if dtype == '???':
+            matrix = None
+            log.warning('what is the dtype?')
+        else:
+            real_array = np.array(reals, dtype=dtype)
+            log.debug('shape=%s mrows=%s ncols=%s' % (
+                str(real_array.shape), mrows, ncols))
+            if len(reals) == mrows * ncols:
+                real_array = real_array.reshape(mrows, ncols)
+                log.info(f'created {op2.table_name}')
+            else:
+                log.warning(f'cant reshape because invalid sizes : created {op2.table_name}')
+
+            matrix = real_array
+    return matrix
+
 
 def reshape_trmbd(element_name: str, nnodes: int, int_data, float_data):
     ndata_per_element = 1 + nnodes + 3 * nnodes  # 1+4*(nnnodes) = 1+4*2 = 9
