@@ -137,7 +137,7 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32'):
     return points, elements
 
 def create_axisymmetric_body(xstation, ystation, zstation, radii, aspect_ratio,
-                             p1):
+                             p1, thetas=None):
     """creates a CAERO2-type body by defining cone properties at various stations"""
     #Rs = []
     xs = []
@@ -160,7 +160,7 @@ def create_axisymmetric_body(xstation, ystation, zstation, radii, aspect_ratio,
 
     for xi, yi, zi, radius, aspect_ratioi in zip(xstation, ystation, zstation, radii, aspect_ratio):
         #print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))
-        yz = create_ellipse(aspect_ratioi, radius, thetas=None)
+        yz = create_ellipse(aspect_ratioi, radius, thetas=thetas)
         yzs.append(yz)
         try:
             y = yz[:, 0] + yi

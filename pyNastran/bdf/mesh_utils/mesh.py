@@ -121,9 +121,15 @@ def create_structured_chexas(model, pid,
 
     #return points, elements
 
-def create_structured_cquad4s(model, pid,
-                              p1, p2, p3, p4,
-                              nx, ny, nid=1, eid=1, theta_mcid=0.):
+def create_structured_cquad4s(model: BDF,
+                              pid: int,
+                              p1: np.ndarray,
+                              p2: np.ndarray,
+                              p3: np.ndarray,
+                              p4: np.ndarray,
+                              nx: int, ny: int,
+                              nid: int=1, eid: int=1,
+                              theta_mcid: float=0.):
     """
     Parameters
     ----------

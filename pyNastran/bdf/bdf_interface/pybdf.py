@@ -857,7 +857,11 @@ def _clean_comment(comment: str) -> Optional[str]:
         comment = None
     elif 'pynastran' in comment.lower():
         csline = comment.lower().split('pynastran', 1)
-        if csline[1].strip()[0] == ':':
+        end = csline[1].strip()
+        if len(end) == 0:
+            return None
+
+        if end[0] == ':':
             comment = None
 
     #if comment:
