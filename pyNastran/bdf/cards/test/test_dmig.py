@@ -42,248 +42,7 @@ class TestDTI(unittest.TestCase):
         #print(dti.write_card())
         save_load_deck(model)
 
-class TestDMIG(unittest.TestCase):
-
-    def test_dmig_1(self):
-        """Tests DMIG reading"""
-        model = BDF(debug=False)
-        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
-        model.read_bdf(bdf_name, xref=False, punch=True)
-        out = model.dmigs['REALS'].get_matrix(is_sparse=False)
-
-        reals_actual, unused_rows_reversed, unused_cols_reversed = out
-        #print "---reals_actual---\n", reals_actual
-        #print "---out---\n", out
-
-        reals_expected = [
-            [1.0, 0.5, 0.25],
-            [0.5, 2.0, 0.75],
-            [0.25, 0.75, 3.0],
-        ]
-        a_matrix = model.dmigs['REALS']
-        assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
-        assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-        self.assertTrue(np.allclose(reals_expected, reals_actual))
-        a_matrix.get_matrix()
-
-    def test_dmig_2(self):
-        model = BDF(debug=False)
-        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
-        model.read_bdf(bdf_name, xref=False, punch=True)
-
-        out = model.dmigs['REAL'].get_matrix(is_sparse=False)
-        real_actual, unused_rows_reversed, unused_cols_reversed = out
-        #print "---REAL_actual---\n", REAL_actual
-        real_expected = [
-            [1.0, 0.5, 0.25],
-            [0.0, 2.0, 0.75],
-            [0.0, 0.0, 3.0],
-        ]
-        a_matrix = model.dmigs['REAL']
-        assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
-        assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-
-        self.assertTrue(np.allclose(real_expected, real_actual))
-        a_matrix.get_matrix()
-
-        #model2 = BDF(debug=False)
-        #bdf_name = os.path.join(TEST_PATH, 'include_dir', 'include.inc')
-        #model2.read_bdf(bdf_name, xref=False, punch=True)
-        save_load_deck(model)
-
-    def test_dmig_3(self):
-        model = BDF(debug=False)
-        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
-        model.read_bdf(bdf_name, xref=False, punch=True)
-        out = model.dmigs['IMAG'].get_matrix(is_sparse=False)
-
-        imag_actual, unused_rows_reversed, unused_cols_reversed = out
-        #print "---IMAG_actual---\n", IMAG_actual
-        imag_expected_real = [
-            [1.0, 0.5, 0.25],
-            [0.0, 2.0, 0.75],
-            [0.0, 0.0, 3.0],
-        ]
-        imag_expected_imag = [
-            [1.1, 0.51, 0.251],
-            [0.0, 2.1, 0.751],
-            [0.0, 0.0, 3.1],
-        ]
-        a_matrix = model.dmigs['IMAG']
-        assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
-        assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-
-        imag_expected = np.array(imag_expected_real) + np.array(imag_expected_imag)*1j
-        self.assertTrue(np.allclose(imag_expected, imag_actual))
-        a_matrix.get_matrix()
-        save_load_deck(model)
-
-    def test_dmig_4(self):
-        model = BDF(debug=False)
-        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
-        model.read_bdf(bdf_name, xref=False, punch=True)
-
-        out = model.dmigs['IMAGS'].get_matrix(is_sparse=False)
-        imags_actual, unused_rows_reversed, unused_cols_reversed = out
-        #print("---imag_actual---\n", imag_actual)
-        imags_expected_real = [
-            [1.0, 0.5, 0.25],
-            [0.5, 2.0, 0.75],
-            [0.25, 0.75, 3.0],
-        ]
-        imags_expected_imag = [
-            [1.1, 0.51, 0.251],
-            [0.51, 2.1, 0.751],
-            [0.251, 0.751, 3.1],
-        ]
-        a_matrix = model.dmigs['IMAGS']
-        assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
-        assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-
-        imags_expected = np.array(imags_expected_real) + np.array(imags_expected_imag)*1j
-        msg = '\n%s_actual\n%s\n\n----' % ('IMAGS', imags_actual)
-        msg += '\n%s_expected\n%s\n----' % ('IMAGS', imags_expected)
-        msg += '\n%s_delta\n%s\n----' % ('IMAGS', imags_actual-imags_expected)
-        self.assertTrue(np.allclose(imags_expected, imags_actual), msg)
-        a_matrix.get_matrix()
-        save_load_deck(model)
-
-    def test_dmig_5(self):
-        model = BDF(debug=False)
-        bdf_filename = os.path.join(TEST_PATH, 'dmig.bdf')
-        model.read_bdf(bdf_filename, xref=False, punch=True)
-        out = model.dmigs['POLE'].get_matrix(is_sparse=False)
-
-        pole_actual, unused_rows_reversed, unused_cols_reversed = out
-        #print("---pole_actual---\n", pole_actual)
-        mag_expected = np.array([
-            [1.0, 4.0, 5.0],
-            [0.0, 2.0, 6.0],
-            [0.0, 0.0, 3.0],
-        ])
-
-        a_matrix = model.dmigs['POLE']
-        #print('GCi = ', a_matrix.GCi)
-        #print('GCj = ', a_matrix.GCj)
-        #print('Real = ', a_matrix.Real)
-        assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
-        assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-
-        A_expected = mag_expected * np.cos(np.radians(45))
-        B_expected = mag_expected * np.sin(np.radians(45))
-        pole_expected = A_expected + B_expected * 1j
-
-        np.set_printoptions(precision=20)
-        msg = '\n%s_actual\n%s\n\n----' % ('POLE', pole_actual)
-        msg += '\n%s_expected\n%s\n----' % ('POLE', pole_expected)
-        msg += '\n%s_delta\n%s\n----' % ('POLE', pole_actual - pole_expected)
-        #print(msg)
-        self.assertTrue(np.allclose(pole_expected, pole_actual), msg)
-        np.set_printoptions(precision=6)
-        a_matrix.get_matrix()
-        save_load_deck(model)
-
-    def test_dmig_06(self):
-        lines = ['DMIG    ENFORCE 0       1       1       0']
-        model = BDF(debug=False)
-        card = model._process_card(lines)
-        card_obj = BDFCard(card)
-
-        size = 8
-        dmi = DMIG.add_card(card_obj)
-        dmi.write_card(size, 'dummy')
-        #dmi.raw_fields()
-
-    def test_dmig_07(self):
-        cards = [
-            ['DMIG, A, 0, 9, 1, 1,  ,    , 1'],
-            ['DMIG, A, 1, 0,  , 2, 1, 1.0,'],
-            ['DMIG, A, 1, 0,  , 2, 2, 1.0,'],
-            ['DMIG, A, 1, 0,  , 2, 3, 1.0,'],
-        ]
-        model = BDF(debug=False)
-        for card_lines in cards:
-            model.add_card(card_lines, 'DMIG', is_list=False)
-        fill_dmigs(model)
-
-        a_matrix = model.dmigs['A']
-        assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
-        assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-        #a_matrix.get_matrix()
-        save_load_deck(model)
-
-    def test_dmig_08(self):
-        cards = [
-            ['DMIG, A, 1, 0,  , 2, 1, 1.0,'],
-            ['DMIG, A, 0, 9, 1, 1,  ,    , 1'],
-            ['DMIG, A, 1, 0,  , 2, 2, 1.0,'],
-            ['DMIG, A, 1, 0,  , 2, 3, 1.0,'],
-        ]
-        model = BDF(debug=False)
-        for card_lines in cards:
-            model.add_card(card_lines, 'DMIG', is_list=False)
-        fill_dmigs(model)
-
-        a_matrix = model.dmigs['A']
-        assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
-        assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-        #a_matrix.get_matrix()
-        save_load_deck(model)
-
-    def test_dmig_09(self):
-        cards = [
-            ['DMIG, A, 0, 9, 1, 1,  ,    , 1'],
-            ['DMIG, A, 1, ,  , 2, 1, 1.0,'],
-            ['DMIG, A, 1, ,  , 2, 2, 1.0,'],
-            ['DMIG, A, 1, ,  , 2, 3, 1.0,'],
-        ]
-        model = BDF(debug=False)
-        for card_lines in cards:
-            model.add_card(card_lines, 'DMIG', is_list=False)
-        fill_dmigs(model)
-        get_matrices(model)
-
-        a_matrix = model.dmigs['A']
-        assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
-        assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-        #a_matrix.get_matrix()
-        save_load_deck(model)
-
-    def test_dmig_10(self):
-        """symmetric"""
-        cards = [
-            ['DMIG,AMTRXX,0,6,1,0'],
-            ['DMIG,AMTRXX,2,1, ,2,1,201.0, ,+DM1',
-             '+DM1,2,3,203.0'],
-            ['DMIG,AMTRXX,3,1, ,3,1,301.0, ,+DM2',
-             '+DM2,3,3,303.0'],
-        ]
-        model = BDF(debug=False)
-        for card_lines in cards:
-            model.add_card(card_lines, 'DMIG', is_list=False)
-        fill_dmigs(model)
-        a_matrix = model.dmigs['AMTRXX']
-        assert len(a_matrix.GCi) == 4, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
-        assert len(a_matrix.GCj) == 4, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-        assert a_matrix.shape == (4, 4), 'shape=%s' % str(a_matrix.shape)
-        a_matrix.get_matrix()
-        save_load_deck(model)
-
-    def test_dmig_11(self):
-        pch_filename = os.path.join(TEST_PATH, 'dmig.pch')
-        model = read_bdf(pch_filename, debug=False, punch=True)
-        vax = model.dmigs['VAX']
-        vax_array, vax_dict_row, vax_dict_col = vax.get_matrix()
-        assert vax_array.shape == (15, 1), vax_array
-        vax_dict_row_expected = {
-            0: (101, 1), 1: (102, 1), 2: (105, 1), 3: (106, 1), 4: (107, 1), 5: (108, 1),
-            6: (109, 1), 7: (201, 1), 8: (301, 1), 9: (302, 1), 10: (305, 1), 11: (306, 1),
-            12: (307, 1), 13: (308, 1), 14: (309, 1)
-        }
-        vax_dict_col_expected = {0: (1, 0)}
-        assert list(sorted(vax_dict_col)) == list(sorted(vax_dict_col_expected)), 'vax_dict_col=%s vax_dict_col_expected=%s' % (vax_dict_col, vax_dict_col_expected)
-        assert list(sorted(vax_dict_row)) == list(sorted(vax_dict_row_expected)), 'vax_dict_row=%s vax_dict_row_expected=%s' % (vax_dict_row, vax_dict_row_expected)
-        #save_load_deck(model)
+class TestDMI(unittest.TestCase):
 
     def test_dmi_01(self):
         """tests a DMI card"""
@@ -483,8 +242,195 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         #print(matrix1r)
         #print(matrix1s)
 
-    def test_dmig_12(self):
-        """tests the add card methodwith a real DMIG"""
+
+class TestDMIGReal(unittest.TestCase):
+    def test_dmig_1(self):
+        """Tests DMIG reading"""
+        model = BDF(debug=False)
+        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
+        model.read_bdf(bdf_name, xref=False, punch=True)
+        out = model.dmigs['REALS'].get_matrix(is_sparse=False)
+
+        reals_actual, unused_rows_reversed, unused_cols_reversed = out
+        #print "---reals_actual---\n", reals_actual
+        #print "---out---\n", out
+
+        reals_expected = [
+            [1.0, 0.5, 0.25],
+            [0.5, 2.0, 0.75],
+            [0.25, 0.75, 3.0],
+        ]
+        a_matrix = model.dmigs['REALS']
+        assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        self.assertTrue(np.allclose(reals_expected, reals_actual))
+        a_matrix.get_matrix()
+
+    def test_dmig_2(self):
+        model = BDF(debug=False)
+        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
+        model.read_bdf(bdf_name, xref=False, punch=True)
+
+        out = model.dmigs['REAL'].get_matrix(is_sparse=False)
+        real_actual, unused_rows_reversed, unused_cols_reversed = out
+        #print "---REAL_actual---\n", REAL_actual
+        real_expected = [
+            [1.0, 0.5, 0.25],
+            [0.0, 2.0, 0.75],
+            [0.0, 0.0, 3.0],
+        ]
+        a_matrix = model.dmigs['REAL']
+        assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+
+        self.assertTrue(np.allclose(real_expected, real_actual))
+        a_matrix.get_matrix()
+
+        #model2 = BDF(debug=False)
+        #bdf_name = os.path.join(TEST_PATH, 'include_dir', 'include.inc')
+        #model2.read_bdf(bdf_name, xref=False, punch=True)
+        save_load_deck(model)
+
+    def test_dmig_3(self):
+        model = BDF(debug=False)
+        bdf_filename = os.path.join(TEST_PATH, 'dmig.bdf')
+        model.read_bdf(bdf_filename, xref=False, punch=True)
+        out = model.dmigs['POLE'].get_matrix(is_sparse=False)
+
+        pole_actual, unused_rows_reversed, unused_cols_reversed = out
+        #print("---pole_actual---\n", pole_actual)
+        mag_expected = np.array([
+            [1.0, 4.0, 5.0],
+            [0.0, 2.0, 6.0],
+            [0.0, 0.0, 3.0],
+        ])
+
+        a_matrix = model.dmigs['POLE']
+        #print('GCi = ', a_matrix.GCi)
+        #print('GCj = ', a_matrix.GCj)
+        #print('Real = ', a_matrix.Real)
+        assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+
+        A_expected = mag_expected * np.cos(np.radians(45))
+        B_expected = mag_expected * np.sin(np.radians(45))
+        pole_expected = A_expected + B_expected * 1j
+
+        np.set_printoptions(precision=20)
+        msg = '\n%s_actual\n%s\n\n----' % ('POLE', pole_actual)
+        msg += '\n%s_expected\n%s\n----' % ('POLE', pole_expected)
+        msg += '\n%s_delta\n%s\n----' % ('POLE', pole_actual - pole_expected)
+        #print(msg)
+        self.assertTrue(np.allclose(pole_expected, pole_actual), msg)
+        np.set_printoptions(precision=6)
+        a_matrix.get_matrix()
+        save_load_deck(model)
+
+    def test_dmig_4(self):
+        lines = ['DMIG    ENFORCE 0       1       1       0']
+        model = BDF(debug=False)
+        card = model._process_card(lines)
+        card_obj = BDFCard(card)
+
+        size = 8
+        dmi = DMIG.add_card(card_obj)
+        dmi.write_card(size, 'dummy')
+        #dmi.raw_fields()
+
+    def test_dmig_5(self):
+        cards = [
+            ['DMIG, A, 0, 9, 1, 1,  ,    , 1'],
+            ['DMIG, A, 1, 0,  , 2, 1, 1.0,'],
+            ['DMIG, A, 1, 0,  , 2, 2, 1.0,'],
+            ['DMIG, A, 1, 0,  , 2, 3, 1.0,'],
+        ]
+        model = BDF(debug=False)
+        for card_lines in cards:
+            model.add_card(card_lines, 'DMIG', is_list=False)
+        fill_dmigs(model)
+
+        a_matrix = model.dmigs['A']
+        assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        #a_matrix.get_matrix()
+        save_load_deck(model)
+
+    def test_dmig_6(self):
+        cards = [
+            ['DMIG, A, 1, 0,  , 2, 1, 1.0,'],
+            ['DMIG, A, 0, 9, 1, 1,  ,    , 1'],
+            ['DMIG, A, 1, 0,  , 2, 2, 1.0,'],
+            ['DMIG, A, 1, 0,  , 2, 3, 1.0,'],
+        ]
+        model = BDF(debug=False)
+        for card_lines in cards:
+            model.add_card(card_lines, 'DMIG', is_list=False)
+        fill_dmigs(model)
+        get_matrices(model)
+
+        a_matrix = model.dmigs['A']
+        assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        #a_matrix.get_matrix()
+        save_load_deck(model)
+
+    def test_dmig_7(self):
+        cards = [
+            ['DMIG, A, 0, 9, 1, 1,  ,    , 1'],
+            ['DMIG, A, 1, ,  , 2, 1, 1.0,'],
+            ['DMIG, A, 1, ,  , 2, 2, 1.0,'],
+            ['DMIG, A, 1, ,  , 2, 3, 1.0,'],
+        ]
+        model = BDF(debug=False)
+        for card_lines in cards:
+            model.add_card(card_lines, 'DMIG', is_list=False)
+        fill_dmigs(model)
+        get_matrices(model)
+
+        a_matrix = model.dmigs['A']
+        assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        #a_matrix.get_matrix()
+        save_load_deck(model)
+
+    def test_dmig_8(self):
+        """symmetric"""
+        cards = [
+            ['DMIG,AMTRXX,0,6,1,0'],
+            ['DMIG,AMTRXX,2,1, ,2,1,201.0, ,+DM1',
+             '+DM1,2,3,203.0'],
+            ['DMIG,AMTRXX,3,1, ,3,1,301.0, ,+DM2',
+             '+DM2,3,3,303.0'],
+        ]
+        model = BDF(debug=False)
+        for card_lines in cards:
+            model.add_card(card_lines, 'DMIG', is_list=False)
+        fill_dmigs(model)
+        a_matrix = model.dmigs['AMTRXX']
+        assert len(a_matrix.GCi) == 4, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 4, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        assert a_matrix.shape == (4, 4), 'shape=%s' % str(a_matrix.shape)
+        a_matrix.get_matrix()
+        save_load_deck(model)
+
+    def test_dmig_9(self):
+        pch_filename = os.path.join(TEST_PATH, 'dmig.pch')
+        model = read_bdf(pch_filename, debug=False, punch=True)
+        vax = model.dmigs['VAX']
+        vax_array, vax_dict_row, vax_dict_col = vax.get_matrix()
+        assert vax_array.shape == (15, 1), vax_array
+        vax_dict_row_expected = {
+            0: (101, 1), 1: (102, 1), 2: (105, 1), 3: (106, 1), 4: (107, 1), 5: (108, 1),
+            6: (109, 1), 7: (201, 1), 8: (301, 1), 9: (302, 1), 10: (305, 1), 11: (306, 1),
+            12: (307, 1), 13: (308, 1), 14: (309, 1)
+        }
+        vax_dict_col_expected = {0: (1, 0)}
+        assert list(sorted(vax_dict_col)) == list(sorted(vax_dict_col_expected)), 'vax_dict_col=%s vax_dict_col_expected=%s' % (vax_dict_col, vax_dict_col_expected)
+        assert list(sorted(vax_dict_row)) == list(sorted(vax_dict_row_expected)), 'vax_dict_row=%s vax_dict_row_expected=%s' % (vax_dict_row, vax_dict_row_expected)
+        #save_load_deck(model)
+
+    def test_dmig_10(self):
+        """tests the add card method with a real DMIG"""
         model = BDF(debug=False)
         name = 'DMIG_1'
         matrix_form = 6
@@ -522,76 +468,6 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
                             #reals, Complex=None, comment='dmi')
 
         save_load_deck(model, run_test_bdf=False)
-
-    def test_dmig_13(self):
-        """tests the add card method with a complex DMIG"""
-        model = BDF(debug=False)
-        name = 'DMIG_1'
-        ifo = 6
-        tin = 3
-        tout = None
-        polar = None
-        ncols = None
-        reals = np.array([1.0, 2.0, 3.0])
-        #complexs = reals
-        GCj = [[1, 1],  # grid, component
-               [2, 1],
-               [3, 1]]
-        GCi = [[1, 1],  # grid, component
-               [4, 1],
-               [5, 1]]
-        dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                              Real=reals, Complex=10*reals,
-                              comment='dmig')
-        model.pop_parse_errors()
-        assert dmig.is_real is False, dmig.is_real
-        assert dmig.is_complex is True, dmig.is_complex
-        assert dmig.is_polar is False, dmig.is_polar
-        dmig.get_matrix()
-
-        name = 'DMIK_1'
-        unused_nrows = None
-        unused_form = None
-        dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                              Real=reals, Complex=10*reals,
-                              comment='dmik')
-        dmik.get_matrix()
-        save_load_deck(model)
-
-    def test_dmig_14(self):
-        """tests the add card method with a complex polar DMIG"""
-        model = BDF(debug=False)
-        name = 'DMIG_1'
-        ifo = 6
-        tin = 3
-        tout = None
-        polar = True
-        ncols = None
-        reals = [1.0, 2.0, 3.0]
-        #complexs = reals
-        GCj = [[1, 1],  # grid, component
-               [2, 1],
-               [3, 1]]
-        GCi = [[1, 1],  # grid, component
-               [4, 1],
-               [5, 1]]
-        dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                              Real=reals, Complex=reals,
-                              comment='dmig')
-        model.pop_parse_errors()
-        assert dmig.is_real is False, dmig.is_real
-        assert dmig.is_complex is True, dmig.is_complex
-        assert dmig.is_polar is True, dmig.is_polar
-        dmig.get_matrix()
-
-        name = 'DMIK_1'
-        unused_nrows = None
-        unused_form = None
-        dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                              Real=reals, Complex=reals,
-                              comment='dmik')
-        dmik.get_matrix()
-        save_load_deck(model)
 
     def test_dmig_sparse(self):
         """tests dmig_sparse.pch"""
@@ -849,6 +725,137 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         save_load_deck(model)
 
 
+
+class TestDMIGImag(unittest.TestCase):
+    def test_dmig_1(self):
+        model = BDF(debug=False)
+        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
+        model.read_bdf(bdf_name, xref=False, punch=True)
+        out = model.dmigs['IMAG'].get_matrix(is_sparse=False)
+
+        imag_actual, unused_rows_reversed, unused_cols_reversed = out
+        #print "---IMAG_actual---\n", IMAG_actual
+        imag_expected_real = [
+            [1.0, 0.5, 0.25],
+            [0.0, 2.0, 0.75],
+            [0.0, 0.0, 3.0],
+        ]
+        imag_expected_imag = [
+            [1.1, 0.51, 0.251],
+            [0.0, 2.1, 0.751],
+            [0.0, 0.0, 3.1],
+        ]
+        a_matrix = model.dmigs['IMAG']
+        assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+
+        imag_expected = np.array(imag_expected_real) + np.array(imag_expected_imag)*1j
+        self.assertTrue(np.allclose(imag_expected, imag_actual))
+        a_matrix.get_matrix()
+        save_load_deck(model)
+
+    def test_dmig_2(self):
+        model = BDF(debug=False)
+        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
+        model.read_bdf(bdf_name, xref=False, punch=True)
+
+        out = model.dmigs['IMAGS'].get_matrix(is_sparse=False)
+        imags_actual, unused_rows_reversed, unused_cols_reversed = out
+        #print("---imag_actual---\n", imag_actual)
+        imags_expected_real = [
+            [1.0, 0.5, 0.25],
+            [0.5, 2.0, 0.75],
+            [0.25, 0.75, 3.0],
+        ]
+        imags_expected_imag = [
+            [1.1, 0.51, 0.251],
+            [0.51, 2.1, 0.751],
+            [0.251, 0.751, 3.1],
+        ]
+        a_matrix = model.dmigs['IMAGS']
+        assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+
+        imags_expected = np.array(imags_expected_real) + np.array(imags_expected_imag)*1j
+        msg = '\n%s_actual\n%s\n\n----' % ('IMAGS', imags_actual)
+        msg += '\n%s_expected\n%s\n----' % ('IMAGS', imags_expected)
+        msg += '\n%s_delta\n%s\n----' % ('IMAGS', imags_actual-imags_expected)
+        self.assertTrue(np.allclose(imags_expected, imags_actual), msg)
+        a_matrix.get_matrix()
+        save_load_deck(model)
+
+    def test_dmig_3(self):
+        """tests the add card method with a complex DMIG"""
+        model = BDF(debug=False)
+        name = 'DMIG_1'
+        ifo = 6
+        tin = 3
+        tout = None
+        polar = None
+        ncols = None
+        reals = np.array([1.0, 2.0, 3.0])
+        #complexs = reals
+        GCj = [[1, 1],  # grid, component
+               [2, 1],
+               [3, 1]]
+        GCi = [[1, 1],  # grid, component
+               [4, 1],
+               [5, 1]]
+        dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                              Real=reals, Complex=10*reals,
+                              comment='dmig')
+        model.pop_parse_errors()
+        assert dmig.is_real is False, dmig.is_real
+        assert dmig.is_complex is True, dmig.is_complex
+        assert dmig.is_polar is False, dmig.is_polar
+        dmig.get_matrix()
+
+        name = 'DMIK_1'
+        unused_nrows = None
+        unused_form = None
+        dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                              Real=reals, Complex=10*reals,
+                              comment='dmik')
+        dmik.get_matrix()
+        save_load_deck(model)
+
+    def test_dmig_4(self):
+        """tests the add card method with a complex polar DMIG"""
+        model = BDF(debug=False)
+        name = 'DMIG_1'
+        ifo = 6
+        tin = 3
+        tout = None
+        polar = True
+        ncols = None
+        reals = [1.0, 2.0, 3.0]
+        #complexs = reals
+        GCj = [[1, 1],  # grid, component
+               [2, 1],
+               [3, 1]]
+        GCi = [[1, 1],  # grid, component
+               [4, 1],
+               [5, 1]]
+        dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                              Real=reals, Complex=reals,
+                              comment='dmig')
+        model.pop_parse_errors()
+        assert dmig.is_real is False, dmig.is_real
+        assert dmig.is_complex is True, dmig.is_complex
+        assert dmig.is_polar is True, dmig.is_polar
+        dmig.get_matrix()
+
+        name = 'DMIK_1'
+        unused_nrows = None
+        unused_form = None
+        dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                              Real=reals, Complex=reals,
+                              comment='dmik')
+        dmik.get_matrix()
+        save_load_deck(model)
+
+
+class TestDMIAX(unittest.TestCase):
     def test_dmiax(self):
         """tests DMIAX"""
         model = BDF(debug=None)

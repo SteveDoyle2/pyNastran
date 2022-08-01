@@ -5249,11 +5249,11 @@ class SPLINE1(Spline):
         box1 = integer(card, 3, 'box1')
         box2 = integer(card, 4, 'box2')
         setg = integer(card, 5, 'setg')
-        dz = double_or_blank(card, 6, 'dz', 0.0)
-        method = string_or_blank(card, 7, 'method', 'IPS')
-        usage = string_or_blank(card, 8, 'usage', 'BOTH')
-        nelements = integer_or_blank(card, 9, 'nelements', 10)
-        melements = integer_or_blank(card, 10, 'melements', 10)
+        dz = double_or_blank(card, 6, 'dz', default=0.0)
+        method = string_or_blank(card, 7, 'method', default='IPS')
+        usage = string_or_blank(card, 8, 'usage', default='BOTH')
+        nelements = integer_or_blank(card, 9, 'nelements', default=10)
+        melements = integer_or_blank(card, 10, 'melements', default=10)
         assert len(card) <= 11, f'len(SPLINE1 card) = {len(card):d}\ncard={card}'
         return SPLINE1(eid, caero, box1, box2, setg, dz, method, usage,
                        nelements, melements, comment=comment)
@@ -5497,13 +5497,13 @@ class SPLINE2(Spline):
         id1 = integer(card, 3, 'id1')
         id2 = integer(card, 4, 'id2')
         setg = integer(card, 5, 'setg')
-        dz = double_or_blank(card, 6, 'dz', 0.0)
-        dtor = double_or_blank(card, 7, 'dtor', 1.0)
-        cid = integer_or_blank(card, 8, 'cid', 0)
-        dthx = double_or_blank(card, 9, 'dthx', 0.)
-        dthy = double_or_blank(card, 10, 'dthy', 0.)
+        dz = double_or_blank(card, 6, 'dz', default=0.0)
+        dtor = double_or_blank(card, 7, 'dtor', default=1.0)
+        cid = integer_or_blank(card, 8, 'cid', default=0)
+        dthx = double_or_blank(card, 9, 'dthx', default=0.)
+        dthy = double_or_blank(card, 10, 'dthy', default=0.)
 
-        usage = string_or_blank(card, 12, 'usage', 'BOTH')
+        usage = string_or_blank(card, 12, 'usage', default='BOTH')
         assert len(card) <= 13, f'len(SPLINE2 card = {len(card):d}\ncard={card}'
         return SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid,
                        dthx, dthy, usage, comment=comment)
@@ -5995,11 +5995,11 @@ class SPLINE4(Spline):
         aelist = integer(card, 3, 'aelist')
         # None
         setg = integer(card, 5, 'setg')
-        dz = double_or_blank(card, 6, 'dz', 0.0)
-        method = string_or_blank(card, 7, 'method', 'IPS')
-        usage = string_or_blank(card, 8, 'usage', 'BOTH')
-        nelements = integer_or_blank(card, 9, 'nelements', 10)
-        melements = integer_or_blank(card, 10, 'melements', 10)
+        dz = double_or_blank(card, 6, 'dz', default=0.0)
+        method = string_or_blank(card, 7, 'method', default='IPS')
+        usage = string_or_blank(card, 8, 'usage', default='BOTH')
+        nelements = integer_or_blank(card, 9, 'nelements', default=10)
+        melements = integer_or_blank(card, 10, 'melements', default=10)
         ftype = string_or_blank(card, 11, 'ftype', 'WF2')
         rcore = double_or_blank(card, 12, 'rcore')
         assert len(card) <= 13, f'len(SPLINE4 card = {len(card):d}\ncard={card}'

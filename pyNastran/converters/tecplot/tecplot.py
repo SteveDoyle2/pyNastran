@@ -311,8 +311,9 @@ class Tecplot(Base):
                        usecols=use_cols, unpack=False, ndmin=0)
         return A, None
 
-    def _read_zonetype(self, zone, zone_type, lines, iline, iblock, headers_dict, line,
-                       nnodes, nelements,
+    def _read_zonetype(self, zone: Zone, zone_type: str, lines: list[str], iline: int,
+                       iblock: int, headers_dict, line: str,
+                       nnodes: int, nelements: int,
                        xyz_list, hexas_list, tets_list, quads_list, tris_list,
                        results_list,
                        data_packing=None, fe=None):
@@ -370,6 +371,7 @@ class Tecplot(Base):
         is_unstructured = False
         is_structured = False
         if zone_type in ['FETRIANGLE', 'FEQUADRILATERAL', 'FETETRAHEDRON', 'FEBRICK']:
+            #print('headers_dict =', headers_dict)
             nnodesi = headers_dict['N']
             nelementsi = headers_dict['E']
             is_unstructured = True
@@ -508,7 +510,7 @@ class Tecplot(Base):
         self.log.debug('final sline=%s' % sline)
         return iline
 
-    def read_tecplot_binary(self, tecplot_filename, nnodes=None,
+    def read_tecplot_binary(self, tecplot_filename: str, nnodes=None,
                             nelements=None):
         """
         The binary file reader must have ONLY CHEXAs and be Tecplot 360
@@ -715,7 +717,7 @@ class Tecplot(Base):
         self.zones.append(zone)
         #self.log.debug('done...')
 
-    def show(self, n, types='ifs', endian=None):  # pragma: no cover
+    def show(self, n: int, types: str='ifs', endian=None):  # pragma: no cover
         assert self.n == self.f.tell()
         nints = n // 4
         data = self.f.read(4 * nints)
@@ -723,7 +725,7 @@ class Tecplot(Base):
         self.f.seek(self.n)
         return strings, ints, floats
 
-    def show_data(self, data, types='ifs', endian=None):  # pragma: no cover
+    def show_data(self, data: bytes, types: str='ifs', endian=None):  # pragma: no cover
         """
         Shows a data block as various types
 
@@ -750,7 +752,7 @@ class Tecplot(Base):
         """
         return self._write_data(sys.stdout, data, types=types, endian=endian)
 
-    def _write_data(self, f, data, types='ifs', endian=None):  # pragma: no cover
+    def _write_data(self, f, data: bytes, types: str='ifs', endian=None):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
 
@@ -817,10 +819,10 @@ class Tecplot(Base):
         f.write('\n')
         return strings, ints, floats
 
-    def show_ndata(self, n, types='ifs'):  # pragma: no cover
+    def show_ndata(self, n: int, types: str='ifs'):  # pragma: no cover
         return self._write_ndata(sys.stdout, n, types=types)
 
-    def _write_ndata(self, f, n, types='ifs'):  # pragma: no cover
+    def _write_ndata(self, f, n: int, types: str='ifs'):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
         """
@@ -880,7 +882,7 @@ class Tecplot(Base):
         if nodes is not None:
             zone._slice_plane_inodes(nodes)
 
-    def _slice_plane(self, zone, y, slice_value):
+    def _slice_plane(self, zone: Zone, y: np.ndarray, slice_value: float) -> None:
         """
         - Only works for CHEXA
         - Doesn't remove unused nodes/renumber elements
@@ -889,7 +891,7 @@ class Tecplot(Base):
         inodes = np.where(y < slice_value)[0]
         zone._slice_plane_inodes(inodes)
 
-    def _get_write_header(self, res_types):
+    def _get_write_header(self, res_types: list[str]) -> tuple[str, np.ndarray]:
         """gets the tecplot header"""
         is_y = True
         is_z = True
@@ -945,7 +947,8 @@ class Tecplot(Base):
             ivars = []
         return msg, ivars
 
-    def write_tecplot(self, tecplot_filename, res_types=None, adjust_nids=True):
+    def write_tecplot(self, tecplot_filename: str, res_types=None,
+                      adjust_nids: bool=True) -> None:
         """
         Only handles single type writing
 
@@ -975,8 +978,9 @@ class Tecplot(Base):
                 #print(is_tris, is_quads, is_tets, is_hexas)
 
                 if is_unstructured:
-                    zone.write_unstructured_zone(tecplot_file, ivars, is_points, nnodes, nelements, zone_type, self.log,
-                                                 is_tris, is_quads, is_tets, is_hexas, adjust_nids=adjust_nids)
+                    zone.write_unstructured_zone(
+                        tecplot_file, ivars, is_points, nnodes, nelements, zone_type, self.log,
+                        is_tris, is_quads, is_tets, is_hexas, adjust_nids=adjust_nids)
                 elif is_structured:
                     zone.write_structured_zone(tecplot_file, ivars, self.log, zone.headers_dict, adjust_nids=adjust_nids)
                 else:  # pragma: no cover
@@ -1178,6 +1182,11 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str],
             if len(value) == 1:
                 value = value[0].strip()
             #assert not isinstance(value, list), value
+
+            if key == 'NODES':
+                key = 'N'
+            if key == 'ELEMENTS':
+                key = 'E'
             headers_dict[key] = value
             #print('  ', value)
             #value = value.strip()
@@ -1255,6 +1264,7 @@ def _stack(zone, xyz_list, quads_list, tris_list, tets_list, hexas_list, results
     #print(self.elements)
 
     if is_3d(zone.headers_dict):
+        zone.log.info('3d zone')
         zone.xyz = xyz
 
         nresults = len(results_list)
@@ -1264,6 +1274,7 @@ def _stack(zone, xyz_list, quads_list, tris_list, tets_list, hexas_list, results
             results = np.vstack(results_list)
         zone.nodal_results = results
     else:
+        zone.log.info('2d zone')
         zone.xy = xyz[:, :2]
         nresults = len(results_list) + 1
         nnodes_temp = xyz.shape[0]

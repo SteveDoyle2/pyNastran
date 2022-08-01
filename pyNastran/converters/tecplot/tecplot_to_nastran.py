@@ -5,7 +5,7 @@ Defines:
 
 """
 from __future__ import annotations
-from typing import Union, List, Optional, TYPE_CHECKING
+from typing import Union, Optional, TextIO, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
@@ -21,101 +21,166 @@ def tecplot_to_nastran_filename(tecplot_filename: Union[str, Tecplot], bdf_filen
     return tecplot_to_nastran(tecplot_filename, bdf_filename, log=log, debug=debug)
 
 
-def tecplot_to_nastran(tecplot_filename: Union[str, Tecplot], bdf_filename: str,
-                       log: Optional[SimpleLogger]=None, debug: bool=True) -> None:
+def tecplot_to_nastran(tecplot_filename: Union[str, Tecplot],
+                       bdf_filename: str,
+                       log: Optional[SimpleLogger]=None,
+                       debug: bool=True) -> Optional[BDF]:
     """Converts a Tecplot file to Nastran."""
     if isinstance(tecplot_filename, str):
         model = read_tecplot(tecplot_filename, log=log, debug=debug)
     else:
         model = tecplot_filename
+    log = model.log
 
-    zone = model.zones[0]
     removed_nodes = False
-    shell_pid = 1
-    solid_pid = 2
-    mid = 1
-    istart = 1
+    E = 3.0e7
+    G = None
+    nu = 0.3
+    t = 0.1
+
+    inode = 1
+    ielem = 1
+    nzones = len(model.zones)
     with open(bdf_filename, 'w') as bdf_file:
         bdf_file.write('$pyNastran : punch=True\n')
-        for inode, node in enumerate(zone.xyz):
-            card = ['GRID', inode + 1, None,] + list(node)
-            bdf_file.write(print_card_8(card))
+        for izone, zone in enumerate(model.zones):
+            mid = izone + 1
+            shell_pid = izone + 1
+            solid_pid = shell_pid + nzones
 
-        itri = 0
-        if len(zone.tri_elements):
-            # tris only
-            for itri, tri in enumerate(zone.tri_elements):
-                card = ['CTRIA3', itri + 1, shell_pid] + list(tri)
-                bdf_file.write(print_card_8(card))
-            #istart += bdf_model
-
-        if len(zone.quad_elements):
-            if len(zone.tri_elements) != 0:
-                # if there are tris, then we assume the quads are good
-                for iquad, quad in enumerate(zone.quad_elements):
-                    card = ['CQUAD4', iquad + 1, shell_pid] + list(quad)
-                    bdf_file.write(print_card_8(card))
-            else:
-                # need to split out the CQUAD4 elements
-                istart = itri + 1
-                for iquad, quad in enumerate(zone.quad_elements):
-                    if quad[2] == quad[3]:
-                        # if it's a tri
-                        card = ['CTRIA3', istart + iquad, shell_pid] + list(quad[:3])
-                    else:
-                        card = ['CQUAD4', istart + iquad, shell_pid] + list(quad)
-                    bdf_file.write(print_card_8(card))
-            istart += iquad
-
-        if len(zone.tri_elements) + len(zone.quad_elements):
-            card = ['PSHELL', shell_pid, mid, 0.1]
-            bdf_file.write(print_card_8(card))
-
-        if len(zone.tet_elements) + len(zone.hexa_elements):
-            card = ['PSOLID', solid_pid, mid]
-            bdf_file.write(print_card_8(card))
-
-        if len(zone.tet_elements):
-            for itet, tet in enumerate(zone.tet_elements):
-                card = ['CTETRA', istart + itet, solid_pid] + list(tet)
+            if len(zone.tri_elements) + len(zone.quad_elements):
+                card = ['PSHELL', shell_pid, mid, t]
                 bdf_file.write(print_card_8(card))
 
-        if len(zone.hexa_elements):
-            # need to split out the CTETRA and CPENTA elements
-            for ihex, hexa in enumerate(zone.hexa_elements):
-                uhexa = np.unique(hexa)
-                nnodes_unique = len(uhexa)
-                nids = hexa[:nnodes_unique]
-                centroid_y = zone.xyz[nids, 1].max()
-                if centroid_y < 0:
-                    removed_nodes = True
-                    continue
-                if nnodes_unique == 4:
-                    card = ['CTETRA', istart + ihex, solid_pid] + list(nids)
-                    assert len(card) == 7, len(card)
-                elif nnodes_unique == 5:
-                    card = ['CPYRAM', istart + ihex, solid_pid] + list(nids)
-                    assert len(card) == 8, len(card)
-                elif nnodes_unique == 6:
-                    card = ['CPENTA', istart + ihex, solid_pid] + list(nids)
-                    assert len(card) == 9, len(card)
-                elif nnodes_unique == 8:
-                    card = ['CHEXA', istart + ihex, solid_pid] + list(hexa)
+            if len(zone.tet_elements) + len(zone.hexa_elements):
+                card = ['PSOLID', solid_pid, mid]
                 bdf_file.write(print_card_8(card))
 
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        card = ['MAT1', mid, E, G, nu]
-        bdf_file.write(print_card_8(card))
+            card = ['MAT1', mid, E, G, nu]
+            bdf_file.write(print_card_8(card))
+
+        for izone, zone in enumerate(model.zones):
+            inode0 = inode
+            shell_pid = izone + 1
+            solid_pid = shell_pid + nzones
+            _write_loads(bdf_file, zone, inode=inode)
+
+            inode = _write_grids(bdf_file, zone, inode=inode)
+            ielem = _write_shells(
+                bdf_file, zone, shell_pid, log,
+                inode=inode0, ielem=ielem)
+            ielem, removed_nodes = _write_solids(
+                bdf_file, zone, solid_pid, log,
+                inode=inode0, ielem=ielem, removed_nodes=removed_nodes)
+            log.debug(f'izone={izone:d}: inode={inode:d} ielem={ielem}')
+            # inode += 10
+            # ielem += 10
 
     if removed_nodes:
+        log.debug(f'calling remove_unused...')
         bdf_model = BDF(debug=debug)
         bdf_model.read_bdf(bdf_filename)
         remove_unused(bdf_model)
+        bdf_model.write_bdf(bdf_filename)
+        return bdf_model
+    return None
+
+def _write_loads(bdf_file: TextIO, zone: Zone, inode: int=1) -> None:
+    """writes a tecplot Zone in Nastran format"""
+    for ivar, var in enumerate(zone.variables):
+        bdf_file.write(f'$ ivar={ivar+1}: {var!r}\n')
+
+    bdf_file.write(f'$ nodal_results.shape={str(zone.nodal_results.shape)}\n')
+    nvars = zone.nodal_results.shape[1]
+    for ivar in range(nvars):
+        bdf_file.write(f'$ ivar={ivar+1}\n')
+        res = zone.nodal_results[:, ivar]
+        for inodei, resi in enumerate(res):
+            card = ['SLOAD', ivar+1, inode + inodei, resi]
+            bdf_file.write(print_card_8(card))
+
+def _write_grids(bdf_file: TextIO, zone: Zone, inode: int=1):
+    """writes a tecplot Zone in Nastran format"""
+    for inodei, node in enumerate(zone.xyz):
+        card = ['GRID', inode + inodei, None,] + list(node)
+        bdf_file.write(print_card_8(card))
+    inode += inodei + 1
+    return inode
+
+def _write_shells(bdf_file: TextIO, zone: Zone, pid: int, log,
+                  inode: int=0, ielem: int=1) -> int:
+    """writes a tecplot Zone in Nastran format"""
+    ielem0 = ielem
+    itri = 0
+    if len(zone.tri_elements):
+        # tris only
+        log.debug('tri')
+        for itri, tri in enumerate(inode + zone.tri_elements):
+            card = ['CTRIA3', ielem + itri, pid] + list(tri)
+            bdf_file.write(print_card_8(card))
+        ielem += itri + 1
+
+    if len(zone.quad_elements):
+        if len(zone.tri_elements) != 0:
+            #log.debug('quad-1')
+            # if there are tris, then we assume the quads are good
+            for iquad, quad in enumerate(inode + zone.quad_elements):
+                card = ['CQUAD4', ielem + iquad, pid] + list(quad)
+                bdf_file.write(print_card_8(card))
+        else:
+            #log.debug('quad-2')
+            # need to split out the CQUAD4 elements
+            # ielem += itri + 1
+            for iquad, quad in enumerate(inode + zone.quad_elements):
+                if quad[2] == quad[3]:
+                    # if it's a tri
+                    card = ['CTRIA3', ielem + iquad, pid] + list(quad[:3])
+                else:
+                    card = ['CQUAD4', ielem + iquad, pid] + list(quad)
+                bdf_file.write(print_card_8(card))
+        ielem += iquad + 1
+    assert ielem >= ielem0, 'ielem={ielem} ielem0={ielem0}'
+    return ielem
+
+def _write_solids(bdf_file: TextIO, zone: Zone, pid: int, log,
+                  inode: int=0, ielem: int=1,
+                  removed_nodes: bool=True) -> tuple[int, bool]:
+    """writes a tecplot Zone in Nastran format"""
+    if len(zone.tet_elements):
+        #log.debug('tet')
+        for itet, tet in enumerate(inode + zone.tet_elements):
+            card = ['CTETRA', ielem + itet, pid] + list(tet)
+            bdf_file.write(print_card_8(card))
+        ielem += itet + 1
+
+    if len(zone.hexa_elements):
+        #log.debug('hexa')
+        # need to split out the CTETRA and CPENTA elements
+        for ihex, hexa in enumerate(inode + zone.hexa_elements):
+            uhexa = np.unique(hexa)
+            nnodes_unique = len(uhexa)
+            nids = hexa[:nnodes_unique]
+            centroid_y = zone.xyz[nids, 1].max()
+            if centroid_y < 0:
+                removed_nodes = True
+                continue
+            if nnodes_unique == 4:
+                card = ['CTETRA', ielem + ihex, pid] + list(nids)
+                assert len(card) == 7, len(card)
+            elif nnodes_unique == 5:
+                card = ['CPYRAM', ielem + ihex, pid] + list(nids)
+                assert len(card) == 8, len(card)
+            elif nnodes_unique == 6:
+                card = ['CPENTA', ielem + ihex, pid] + list(nids)
+                assert len(card) == 9, len(card)
+            elif nnodes_unique == 8:
+                card = ['CHEXA', ielem + ihex, pid] + list(hexa)
+            bdf_file.write(print_card_8(card))
+        ielem += ihex + 1
+    return ielem, removed_nodes
 
 
-def nastran_table_to_tecplot(bdf_model: BDF, case, variables: List[str]) -> Tecplot:
+def nastran_table_to_tecplot(bdf_model: BDF, case, variables: list[str]) -> Tecplot:
     """assumes only triangles"""
     xyz = []
     tris = []
@@ -139,8 +204,8 @@ def nastran_table_to_tecplot(bdf_model: BDF, case, variables: List[str]) -> Tecp
 
 def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str,
                                         bdf_model: BDF, case,
-                                        variables: Optional[List[str]]=None,
-                                        ivars: Optional[List[int]]=None) -> None:
+                                        variables: Optional[list[str]]=None,
+                                        ivars: Optional[list[int]]=None) -> None:
     if variables is None:
         variables = case.headers
     if ivars is None:

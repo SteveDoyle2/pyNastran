@@ -14,6 +14,27 @@ import numpy as np
 #ver = np.lib.NumpyVersion(np.__version__)
 #if ver < '1.13.0':
 
+def hstack0(list_of_arrays: list[np.ndarray],
+            unique: bool=True,
+            sort: bool=True) -> np.ndarray:
+    myarray = hstack_lists(list_of_arrays)
+
+    if unique and sort:
+        myarray = np.unique(myarray)
+    elif sort:
+        myarray = myarray.copy()
+        myarray.sort()
+    else:
+        raise RuntimeError(f'cannot unique without sorting; unique={unique} sort={sort}')
+    return myarray
+
+def hstack_lists(list_of_arrays: List[np.ndarray]) -> np.ndarray:
+    if len(list_of_arrays) == 1:
+        array = list_of_arrays[0]
+    else:
+        array = np.hstack(list_of_arrays)
+    return array
+
 def vstack_lists(list_of_arrays: List[np.ndarray]) -> np.ndarray:
     if len(list_of_arrays) == 1:
         array = list_of_arrays[0]

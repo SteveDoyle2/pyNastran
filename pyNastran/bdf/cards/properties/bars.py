@@ -1568,7 +1568,13 @@ class PBARL(LineProperty):
                    'valid_types=%s' % (self.Type, ', '.join(sorted(keys))))
             raise ValueError(msg)
 
-        ndim = self.valid_types[self.Type]
+        try:
+            ndim = self.valid_types[self.Type]
+        except KeyError:
+            allowed = list(self.valid_types.keys())
+            msg = f'PBARL pid={self.pid}; Type={self.Type}; allowed={allowed}'
+            raise KeyError(msg)
+
         if not isinstance(self.dim, list):
             msg = 'PBARL pid=%s; dim must be a list; type=%r' % (self.pid, type(self.dim))
             raise TypeError(msg)

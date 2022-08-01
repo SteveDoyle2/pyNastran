@@ -1,9 +1,20 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import numpy as np
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
 
-def create_structured_chexas(model, pid,
-                             x, y, z, nx, ny, nz, eid=1, nid=1):
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
+
+
+def create_structured_chexas(model: BDF, pid: int,
+                             x: np.ndarray,
+                             y: np.ndarray,
+                             z: np.ndarray,
+                             nx: int, ny: int, nz: int,
+                             eid: int=1, nid: int=1) -> tuple[int, int]:
     """
     Parameters
     ----------

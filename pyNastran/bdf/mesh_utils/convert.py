@@ -246,7 +246,7 @@ def _convert_nodes(model: BDF, xyz_scale: bool) -> None:
     for node in model.nodes.values():
         if node.cp == 0:
             node.xyz *= xyz_scale
-        elif node.cp_ref.type in ['CORD1R', 'CORD2R']:
+        elif node.cp_ref.type in {'CORD1R', 'CORD2R'}:
             node.xyz *= xyz_scale
         else:
             # only scale R
@@ -271,12 +271,12 @@ def _convert_coordinates(model: BDF, xyz_scale: float) -> None:
                 coord.e1 *= xyz_scale
                 coord.e2 *= xyz_scale
                 coord.e3 *= xyz_scale
-        elif coord.rid_ref.type in ['CORD1R', 'CORD2R']:
+        elif coord.rid_ref.type in {'CORD1R', 'CORD2R'}:
             coord.origin *= xyz_scale
             coord.e1 *= xyz_scale
             coord.e2 *= xyz_scale
             coord.e3 *= xyz_scale
-        elif coord.rid_ref.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
+        elif coord.rid_ref.type in {'CORD1C', 'CORD1S', 'CORD2C', 'CORD2S'}:
             coord.origin[0] *= xyz_scale
             coord.e1 *= xyz_scale
             #raise NotImplementedError(coord)

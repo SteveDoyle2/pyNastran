@@ -1110,7 +1110,7 @@ def _Fg_vector_from_loads(model: BDF, loads, ndof_per_grid: int, ndof: int,
     if skipped_load_types:
         skipped_load_types = list(skipped_load_types)
         skipped_load_types.sort()
-        model.log.warning(f'skipping {skipped_load_types} in Fg')
+        log.warning(f'skipping {skipped_load_types} in Fg')
     return Fg
 
 def _force_to_local(cd_ref, vector):
