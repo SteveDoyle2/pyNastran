@@ -1,5 +1,5 @@
 """Defines the Matrix class"""
-from scipy.sparse import coo_matrix  # type: ignore
+from scipy.sparse import coo_matrix, csr_matrix  # type: ignore
 import numpy as np
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
 from pyNastran.utils import object_attributes, object_methods
@@ -158,3 +158,51 @@ class Matrix:
         msg = '%-18s %-18s type=%-33s dtype=%-10s desc=%s' % (
             header, shape, class_name, dtype, self.shape_str)
         return msg
+
+    @property
+    def dtype_str(self) -> str:
+        return self.data.dtype.name
+
+    def to_gcj_gci_form(self):
+        """once in matrix form, we need to transform to GCj, GCi, Real/Complex form"""
+        nrows, ncols = self.data.shape
+
+        # fix columns to consider
+        is_real = self.dtype_str in {'float32', 'float64'}
+
+        sparse_csr = csr_matrix(self.data)
+        sparse_coo = sparse_csr.tocoo()  #  this should be the answer....
+
+
+        max_cols = (np.abs(self.data.real) + np.abs(self.data.imag)).max(axis=1)
+        assert ncols == len(maxs)
+        jcols = np.where(max_cols > 0.)[0]
+        GCj = []
+
+        ncol = len(jcols)
+        col_nidj = self.col_nid[jcols]
+        col_dofj = self.col_dof[jcols]
+        GCj = np.vstack([col_nidj, col_dofj]).ravel(ncol, 2).T
+        print(f'GCj = {GCj}')
+
+        GCi_out = []
+        GCj_out = []
+        for j, gcj in zip(jcols, GCj):
+            print(f'gcj = {gcj}')
+            dataj = self.data[:, j]
+            abs_dataj = np.abs(dataj.real) + np.abs(dataj.imag)
+            irows = np.where(abs_dataj > 0)[0]
+            nrow = len(irows)
+
+            row_nidi = self.row_nid[irows]
+            row_dofi = self.row_dof[irows]
+            GCi = np.vstack([row_nidi, row_dofi]).ravel(nrow, 2).T
+            print(f'GCi = {GCi}')
+            GCj_out.append([gcj] * nrow)
+            GCi_out.append(GCi)
+
+
+    def write_to_bdf(self, dmig_type: str):
+        list_fields = [dmig_type, ]
+        pass
+

@@ -1489,14 +1489,17 @@ def _read_h5_matrix(h5_file, model, key,
                 #(real_imag, (GCi, GCj)),
                 #shape=(mrows, ncols), dtype=dtype)
 
-            skip_keys = ['name', 'form', 'is_matpool', 'shape_str']
+            skip_keys = ['name', 'form', 'is_matpool', 'shape_str', 'dtype_str']
             for keyi in h5_matrix.keys():
                 if keyi in skip_keys:
                     continue
                 h5_result_attr = h5_matrix.get(keyi)
                 value = _cast(h5_result_attr)
-                #print('    %s = %r' % (key, value))
-                setattr(matrix_obj, keyi, value)
+                try:
+                    setattr(matrix_obj, keyi, value)
+                except AttributeError:
+                    print(f'    key={key!r} keyi={keyi!r} value={value!r}')
+                    raise
             model.matrices[name] = matrix_obj
             matrix_names.append(matrix_name)
 

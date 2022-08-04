@@ -156,7 +156,7 @@ def _write_solids(bdf_file: TextIO, zone: Zone, pid: int, log,
     if len(zone.hexa_elements):
         #log.debug('hexa')
         # need to split out the CTETRA and CPENTA elements
-        for ihex, hexa in enumerate(inode + zone.hexa_elements):
+        for ihex, hexa in enumerate(zone.hexa_elements):
             uhexa = np.unique(hexa)
             nnodes_unique = len(uhexa)
             nids = hexa[:nnodes_unique]
@@ -165,16 +165,16 @@ def _write_solids(bdf_file: TextIO, zone: Zone, pid: int, log,
                 removed_nodes = True
                 continue
             if nnodes_unique == 4:
-                card = ['CTETRA', ielem + ihex, pid] + list(nids)
+                card = ['CTETRA', ielem + ihex, pid] + list(inode + nids)
                 assert len(card) == 7, len(card)
             elif nnodes_unique == 5:
-                card = ['CPYRAM', ielem + ihex, pid] + list(nids)
+                card = ['CPYRAM', ielem + ihex, pid] + list(inode + nids)
                 assert len(card) == 8, len(card)
             elif nnodes_unique == 6:
-                card = ['CPENTA', ielem + ihex, pid] + list(nids)
+                card = ['CPENTA', ielem + ihex, pid] + list(inode + nids)
                 assert len(card) == 9, len(card)
             elif nnodes_unique == 8:
-                card = ['CHEXA', ielem + ihex, pid] + list(hexa)
+                card = ['CHEXA', ielem + ihex, pid] + list(inode + hexa)
             bdf_file.write(print_card_8(card))
         ielem += ihex + 1
     return ielem, removed_nodes
