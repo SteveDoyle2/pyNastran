@@ -1,10 +1,9 @@
-from typing import Tuple
 from pyNastran.gui.qt_version import qt_version
 
 from qtpy.QtWidgets import QFileDialog
 
-def open_file_dialog(self, title, default_filename,
-                     file_types):
+def open_file_dialog(self, title: str, default_filename: str,
+                     file_types: str) -> tuple[str, str]:
     """
     Common method for opening files
 
@@ -29,7 +28,8 @@ def open_file_dialog(self, title, default_filename,
     #flt = str(filt).strip()
     return fname, flt
 
-def save_file_dialog(self, title: str, default_dirname: str, file_types: str) -> Tuple[str, str]:
+def save_file_dialog(self, title: str, default_dirname: str,
+                     file_types: str) -> tuple[str, str]:
     """
     Common method for saving files
 
@@ -46,13 +46,18 @@ def save_file_dialog(self, title: str, default_dirname: str, file_types: str) ->
         'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch);;All files (*)'
 
     """
-    assert isinstance(title, str), 'title=%s' % title
-    assert isinstance(default_dirname, str), 'default_dirname=%s' % default_dirname
-    assert isinstance(file_types, str), 'file_types=%s' % file_types
-    #if qt_version == 5:
-    # hasn't been tested
-    out = QFileDialog.getSaveFileName(parent=self, caption=title,
-                                      directory=default_dirname, filter=file_types)
+    assert isinstance(title, str), f'title={title!r}'
+    assert isinstance(default_dirname, str), f'default_dirname={default_dirname!r}'
+    assert isinstance(file_types, str), f'file_types={file_types}'
+
+    # tested in pyside2/pyside6
+    if qt_version == 'pyside6':
+        out = QFileDialog.getSaveFileName(parent=self, caption=title,
+                                          dir=default_dirname, filter=file_types)
+    else:
+        # pyside2
+        out = QFileDialog.getSaveFileName(parent=self, caption=title,
+                                          directory=default_dirname, filter=file_types)
     fname, wildcard_level = out
     return str(fname), str(wildcard_level)
     #else:
@@ -61,7 +66,7 @@ def save_file_dialog(self, title: str, default_dirname: str, file_types: str) ->
         #flt = str(filt).strip()
     #return fname, flt
 
-def open_directory_dialog(self, title, directory=''):
+def open_directory_dialog(self, title: str, directory: str='') -> str:
     """
     Common method for selecting a directory
 
@@ -74,5 +79,10 @@ def open_directory_dialog(self, title, directory=''):
     directory : str
         the default directory
     """
-    dirname = str(QFileDialog.getExistingDirectory(self, caption=title, directory=directory))
+    # tested in pyside2/pyside6
+    if qt_version == 'pyside6':
+        dirname = str(QFileDialog.getExistingDirectory(self, caption=title, dir=directory))
+    else:
+        # pyside2
+        dirname = str(QFileDialog.getExistingDirectory(self, caption=title, directory=directory))
     return dirname

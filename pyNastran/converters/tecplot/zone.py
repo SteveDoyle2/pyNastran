@@ -440,7 +440,7 @@ class Zone:
 def is_3d(headers_dict: dict[str, Any]) -> bool:
     #print(headers_dict)
     variables = headers_dict['VARIABLES']
-    is_3d = 'Z' in variables # or 'z' in variables
+    is_3d = 'Z' in variables or 'z' in variables
     return is_3d
 
 def _write_xyz_results_point(tecplot_file: TextIO, nodes, nodal_results,
