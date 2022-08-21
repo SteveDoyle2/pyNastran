@@ -385,6 +385,87 @@ class CaseControlTest(unittest.TestCase):
         assert sc3.params['SET 100'] == [[100, 101], 100, 'SET-type']
         assert sc4.params['SET 100'] == [[100], 100, 'SET-type']
 
+    def test_real_matrices_1(self):
+        """tests real matrices without a Subcase"""
+        lines = [
+            'K2GG = 1.*MAT1,2.*MAT2,3.*MAT3,4.*MAT4,5.*MAT5,6.*MAT6,'
+            ' 7.*MAT7,8.*MAT8,9.*MAT9',
+            'DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'DISPLACEMENT = ALL',
+            'K2GG = 1.0*MAT1,2.0*MAT2,3.0*MAT3,4.0*MAT4,5.0*MAT5,6.0*MAT6,',
+            ' 7.0*MAT7,8.0*MAT8,9.0*MAT9',
+            #'BEGIN BULK',
+            #'',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_real_matrices_2(self):
+        """tests real matrix with a Subcase"""
+        lines = [
+            'SUBCASE 1',
+            '  K2GG = 1.*MAT1,2.*MAT2,3.*MAT3,4.*MAT4,5.*MAT5,6.*MAT6,'
+            '   7.*MAT7,8.*MAT8,9.*MAT9',
+            '  DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+            '    K2GG = 1.0*MAT1,2.0*MAT2,3.0*MAT3,4.0*MAT4,5.0*MAT5,6.0*MAT6,',
+            '     7.0*MAT7,8.0*MAT8,9.0*MAT9',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_imag_matrices_1(self):
+        """tests imaginary matrices without a Subcase"""
+        lines = [
+            'K2PP = (1.,1.)*MAT1,(2.,2.)*MAT2,(3.,3.)*MAT3,(4.,4.)*MAT4,(5.,5.)*MAT5,(6.,6.)*MAT6,'
+            ' (7.,7.)*MAT7,(8.,8.)*MAT8,(9.,9.)*MAT9',
+            'DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'DISPLACEMENT = ALL',
+            'K2PP = (1.0,1.0)*MAT1,(2.0,2.0)*MAT2,(3.0,3.0)*MAT3,(4.0,4.0)*MAT4,',
+            ' (5.0,5.0)*MAT5,(6.0,6.0)*MAT6,(7.0,7.0)*MAT7,(8.0,8.0)*MAT8,',
+            ' (9.0,9.0)*MAT9',
+            #'BEGIN BULK',
+            #'',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_imag_matrices_2(self):
+        """tests imaginary matrix with a Subcase"""
+        lines = [
+            'SUBCASE 1',
+            '  K2PP = (1.,1.)*MAT1,(2.,2.)*MAT2,(3.,3.)*MAT3,(4.,4.)*MAT4,(5.,5.)*MAT5,(6.123456,6.123456)*MAT6,'
+            '   (7.,7.)*MAT7,(8.,8.)*MAT8,(9.,9.)*MAT9',
+            '  DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+            '    K2PP = (1.0,1.0)*MAT1,(2.0,2.0)*MAT2,(3.0,3.0)*MAT3,(4.0,4.0)*MAT4,',
+            '     (5.0,5.0)*MAT5,(6.123456,6.123456)*MAT6,(7.0,7.0)*MAT7,',
+            '     (8.0,8.0)*MAT8,(9.0,9.0)*MAT9',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
     def test_groundcheck_1(self):
         """tests GROUNDCHECk"""
@@ -549,7 +630,7 @@ def compare_lines(self, lines, lines_expected, has_endline):
     for line, line_expected in zip(lines, lines_expected):
         line = line.rstrip()
         line_expected = line_expected.rstrip()
-        msg = 'The lines are not the same...i=%s\n' % i
+        msg = f'The lines are not the same...i=%{i:d}\n'
         msg += 'line     = %r\n' % line
         msg += 'expected = %r\n' % line_expected
         if has_endline:

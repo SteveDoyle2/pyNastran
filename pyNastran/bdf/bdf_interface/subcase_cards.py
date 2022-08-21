@@ -1,6 +1,7 @@
-from typing import List, Dict, Union, Set, Any
+from typing import Union, Set, Any
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
-from pyNastran.utils.numpy_utils import bytes_type
+from pyNastran.utils.numpy_utils import integer_types, bytes_type
+#from pyNastran.bdf.field_writer_8 import print_float_8
 
 def decode_bytes_list(bytes_list, encoding):
     out = [bytes_str.decode(encoding) if isinstance(bytes_str, bytes_type) else bytes_str
@@ -46,7 +47,7 @@ class IntCard(CaseControlCard):
         return iter([value, options, param_type])
 
     @classmethod
-    def add_from_case_control(cls, line, line_upper, lines, i):
+    def add_from_case_control(cls, line: str, line_upper: str, lines: list[str], i: int):
         """
         Creates a card from the Case Control Deck
 
@@ -56,7 +57,7 @@ class IntCard(CaseControlCard):
             the line of the card
         line_upper : str
             unused
-        lines : List[str]
+        lines : list[str]
             unused
         i : int
             unused
@@ -138,6 +139,238 @@ class IntStrCard(IntCard):
     def __repr__(self):
         """writes a card"""
         return '%s = %s\n' % (self.type, self.value)
+
+
+#-------------------------------------------------------------------------------
+class RealMatrixCard():
+    """
+    interface for cards of the form:
+       M2GG=MDMIG
+       M2GG=MDMIG1, MDMIG2, MDMIG3
+       M2GG=1.25*MDMIG1, 1.0*MDMIG2, 0.75*MDMIG3
+       SET 100=M1, M2
+       M2GG=100
+
+    """
+    type = 'RealMatrixCard'
+    def __init__(self, value: Union[int, list[tuple[float, str]]]):
+        """
+        Creates an IntCard
+
+        Parameters
+        ----------
+        value : int
+            the value for the card
+
+        """
+        super().__init__()
+        self.value = value
+
+    def __iter__(self):
+        """temporary method to emulate the old list access style"""
+        value = self
+        options = self.value
+        param_type = 'OBJ-type'
+        return iter([value, options, param_type])
+
+    @classmethod
+    def add_from_case_control(cls, line: str):
+        """
+        Creates a card from the Case Control Deck
+
+        Parameters
+        ----------
+        line : str
+            the line of the card
+
+        """
+        value = line.split('=')[1].strip()
+        if value.isdigit():
+            values2 = int(value) # SET id
+        else:
+            sline = value.split(',')
+            values2 = []
+            for val in sline:
+                assert '*' in val, '{self.type} val={val!r} requires a *'
+                scale, name = val.split('*')
+                scale = float(scale)
+                name = name.strip()
+                values2.append((scale, name))
+            print(values2)
+
+        out = cls(values2)
+        return out
+
+    def export_to_hdf5(self, h5_file, encoding):
+        asdf
+        h5_file.create_dataset('value', data=self.value)
+
+    @classmethod
+    def load_hdf5(cls, h5_file, encoding):
+        from pyNastran.utils.dict_to_h5py import _cast
+        adf
+        value = h5_file['value']
+        value2 = _cast(value)
+        return cls(value2), []
+
+    def _repr_rows(self) -> list[str]:
+        if isinstance(self.value, integer_types):
+            rows = [f'{self.type} = {self.value:d}']
+        else:
+            max_chars = 72 - 4 #  -4 for indentation
+            rows = []
+            msg = f'{self.type} = '
+            for (scale, name) in self.value:
+                msgi = f'{scale}*{name},'
+                if len(msg) + len(msgi) < max_chars:
+                    msg += msgi
+                else:
+                    rows.append(msg)
+                    msg = ' ' + msgi
+            if msg:
+                rows.append(msg)
+            rows[-1] = rows[-1].rstrip(',')
+        return rows
+
+    def __repr__(self) -> str:
+        """writes a card"""
+        rows = self._repr_rows()
+        return '\n'.join(rows)
+
+    def write(self, spaces: str):
+        """writes a card with spaces"""
+        rows = self._repr_rows()
+        out = spaces + ('\n' + spaces).join(rows) + '\n'
+        return out
+
+class ImagMatrixCard():
+    """
+    interface for cards of the form:
+       M2GG=MDMIG
+       M2GG=MDMIG1, MDMIG2, MDMIG3
+       M2GG=1.25*MDMIG1, 1.0*MDMIG2, 0.75*MDMIG3
+       SET 100=M1, M2
+       M2GG=100
+
+    """
+    type = 'RealMatrixCard'
+    def __init__(self, value: Union[int, list[tuple[float, str]]]):
+        """
+        Creates an IntCard
+
+        Parameters
+        ----------
+        value : int
+            the value for the card
+
+        """
+        super().__init__()
+        self.value = value
+
+    def __iter__(self):
+        """temporary method to emulate the old list access style"""
+        value = self
+        options = self.value
+        param_type = 'OBJ-type'
+        return iter([value, options, param_type])
+
+    @classmethod
+    def add_from_case_control(cls, line: str):
+        """
+        Creates a card from the Case Control Deck
+
+        Parameters
+        ----------
+        line : str
+            the line of the card
+
+        """
+        value = line.split('=')[1].strip()
+        if value.isdigit():
+            values2 = int(value) # SET id
+        else:
+            #sline = value.split(',')
+            sline = split_every_other_comma(value)
+
+            values2 = []
+            for val in sline:
+                assert '*' in val, '{self.type} val={val!r} requires a *'
+                scale, name = val.split('*')
+                assert '(' in scale and ')' in scale and ',' in scale, scale
+                scale2 = scale.strip()[1:-1]  #  remove ()
+                real_scale_str, imag_scale_str = scale2.split(',')
+                real_scale = float(real_scale_str)
+                imag_scale = float(imag_scale_str)
+                name = name.strip()
+                values2.append((real_scale, imag_scale, name))
+            #print(values2)
+
+        out = cls(values2)
+        return out
+
+    def export_to_hdf5(self, h5_file, encoding):
+        asdf
+        h5_file.create_dataset('value', data=self.value)
+
+    @classmethod
+    def load_hdf5(cls, h5_file, encoding):
+        from pyNastran.utils.dict_to_h5py import _cast
+        adf
+        value = h5_file['value']
+        value2 = _cast(value)
+        return cls(value2), []
+
+    def _repr_rows(self) -> list[str]:
+        if isinstance(self.value, integer_types):
+            rows = [f'{self.type} = {self.value:d}']
+        else:
+            max_chars = 72 - 4 #  -4 for indentation
+            rows = []
+            msg = f'{self.type} = '
+            for (real_scale, imag_scale, name) in self.value:
+                msgi = f'({real_scale},{imag_scale})*{name},'
+                if len(msg) + len(msgi) < max_chars:
+                    msg += msgi
+                else:
+                    rows.append(msg)
+                    msg = ' ' + msgi
+            if msg:
+                rows.append(msg)
+            rows[-1] = rows[-1].rstrip(',')
+        return rows
+
+    def __repr__(self) -> str:
+        """writes a card"""
+        rows = self._repr_rows()
+        return '\n'.join(rows)
+
+    def write(self, spaces: str):
+        """writes a card with spaces"""
+        rows = self._repr_rows()
+        out = spaces + ('\n' + spaces).join(rows) + '\n'
+        return out
+
+def split_every_other_comma(chars: str) -> list[str]:
+    i0 = 0
+    ncomma = 0
+    sline = []
+    for i, char in enumerate(chars):
+        #print(f'i={i:d} -> {char!r} ncomma={ncomma:d}')
+        if char == ',' and ncomma == 0:
+            ncomma += 1
+        elif char == ',' and ncomma == 1:
+            sline.append(chars[i0:i])
+            i0 = i + 1
+            ncomma = 0
+            #print('adding')
+        #else:
+            #ncomma += 1
+    if i0 < len(chars):
+        #print(f'final add: {chars[i0:]!r}')
+        sline.append(chars[i0:])
+    return sline
+
+#-------------------------------------------------------------------------------
 
 
 class ADACT(IntStrCard):
@@ -232,7 +465,7 @@ INTSTR_CARD_NAMES = tuple([card.type for card in INTSTR_CARDS])
 
 class StringCard(CaseControlCard):
     type = 'StringCard'
-    allowed_values = [] # type: List[str]
+    allowed_values = [] # type: list[str]
     def __init__(self, value, validate=True):
         super(StringCard, self).__init__()
         self.value = value.strip()
@@ -405,7 +638,7 @@ class CheckCard(CaseControlCard):
         ----------
         key : str
             the name of the card
-        value : List[str]
+        value : list[str]
             the options
         value : str
             the response value
@@ -692,7 +925,7 @@ class CheckCard(CaseControlCard):
             msg += ' = %s' % self.value
         return msg + '\n'
 
-def split_by_mixed_commas_parentheses(str_options: str) -> List[str]:
+def split_by_mixed_commas_parentheses(str_options: str) -> list[str]:
     """
     Excessively complicated function to split something excessively
     complicated.  Thankfully, it only has one set of parentheses
@@ -707,7 +940,7 @@ def split_by_mixed_commas_parentheses(str_options: str) -> List[str]:
 
     Returns
     -------
-    options : List[str]
+    options : list[str]
         something that's actually parseable
         ['PRINT', 'SET=(G,N,N+AUTOSPC,F,A)', 'DATAREC=NO']
         ['PRINT', 'SET=(G,N,F,A)',           'CGI=NO',    'WEIGHT']
@@ -715,8 +948,8 @@ def split_by_mixed_commas_parentheses(str_options: str) -> List[str]:
     """
     options_start = []
     options_end = []
-    options_start_new = []  # type: List[str]
-    options_end_new = []  # type: List[str]
+    options_start_new = []  # type: list[str]
+    options_end_new = []  # type: list[str]
 
     # search for ',' until one is '(' closer to the beginning
     # of the string; put it in options_start
@@ -768,6 +1001,42 @@ def split_by_mixed_commas_parentheses(str_options: str) -> List[str]:
 
     options = options_start_new + [str_options] + options_end_new
     return options
+
+class M2GG(RealMatrixCard):
+    """
+    M2GG=MDMIG
+    M2GG=MDMIG1, MDMIG2, MDMIG3
+    M2GG=1.25*MDMIG1, 1.0*MDMIG2, 0.75*MDMIG3
+    SET 100=M1, M2
+    M2GG=100
+
+    """
+    type = 'M2GG'
+
+class A2GG(RealMatrixCard):
+    type = 'A2GG'
+
+class B2GG(RealMatrixCard):
+    type = 'B2GG'
+
+class K2GG(RealMatrixCard):
+    type = 'K2GG'
+
+class P2G(RealMatrixCard):
+    type = 'P2G'
+
+class K42GG(RealMatrixCard):
+    type = 'K42GG'
+
+
+class B2PP(ImagMatrixCard):
+    type = 'B2PP'
+
+class M2PP(ImagMatrixCard):
+    type = 'M2PP'
+
+class K2PP(ImagMatrixCard):
+    type = 'K2PP'
 
 class GROUNDCHECK(CheckCard):
     """
@@ -982,7 +1251,7 @@ class EXTSEOUT(CaseControlCard):
         return EXTSEOUT(data), []
 
     @classmethod
-    def add_from_case_control(cls, line):
+    def add_from_case_control(cls, line: str):
         """add method used by the CaseControl class"""
         data_list = []
         if '(' not in line:
@@ -1319,3 +1588,70 @@ def export_to_hdf5_check(self, hdf5_file, encoding):
 
 #-------------------------------------------------------------------------------
 
+MATRIX_MAP = {
+    #A2GG=ADMIG
+    #A2GG=ADMIG1, ADMIG2, ADMIG3
+    #A2GG=1.25*ADMIG1, 1.0*ADMIG2, 0.75*ADMIG3
+    #SET 100=A1, A2
+    #A2GG=100
+    'A2GG': A2GG,
+
+    #B2GG=BDMIG
+    #B2GG=BDMIG1, BDMIG2, BDMIG3
+    #B2GG=1.25*BDMIG1, 1.0*BDMIG2, 0.75*BDMIG3
+    #SET 100=B1, B2
+    #B2GG=100
+    'B2GG': B2GG,
+
+    #M2GG=MDMIG
+    #M2GG=MDMIG1, MDMIG2, MDMIG3
+    #M2GG=1.25*MDMIG1, 1.0*MDMIG2, 0.75*MDMIG3
+    #SET 100=M1, M2
+    #M2GG=100
+    'M2GG': M2GG,
+
+    #K2GG=KDMIG
+    #K2GG=KDMIG1, KDMIG2, KDMIG3
+    #K2GG=1.25*KDMIG1, 1.0*KDMIG2, 0.75*KDMIG3
+    #SET 100=K1, K2
+    #K2GG=100
+    'K2GG': K2GG,
+
+    #P2G=LDMIG
+    #P2G=L1, L2, L3
+    #SET 100=LDMIG, L1, L8
+    #P2G=100
+    #P2G=1.25*L1, 1.0*L2, 0.75*L3
+    'P2G': P2G,
+    # -----------------------------
+    #B2PP=BDMIG
+    #B2PP=BDMIG1, BDMIG2, BDMIG3
+    #B2PP=1.25*BDMIG1, 1.0*BDMIG2, 0.75*BDMIG3
+    #B2PP=(1.25,0.5)*BDMIG1, (1.0,0.0)*BDMIG2, (0.75,-2.2)*BDMIG3
+    #SET 100=B1, B2
+    #B2PP=100
+    'B2PP': B2PP,
+
+    #M2PP=MDMIG
+    #M2PP=MDMIG1, MDMIG2, MDMIG3
+    #M2PP=1.25*MDMIG1, 1.0*MDMIG2, 0.75*MDMIG3
+    #M2PP=(1.25,0.5)*MDMIG1, (1.0,0.0)*MDMIG2, (0.75,-2.2)*MDMIG3
+    #SET 100=M1, M2
+    #M2PP=100
+    'M2PP': M2PP,
+
+    #K2PP=KDMIG
+    #K2PP=KDMIG1, KDMIG2, KDMIG3
+    #K2PP=1.25*KDMIG1, 1.0*KDMIG2, 0.75*KDMIG3
+    #K2PP=(1.25,0.5)*KDMIG1, (1.0,0.0)*KDMIG2, (0.75,-2.2)*KDMIG3
+    #SET 100=K1
+    'K2PP': K2PP,
+
+    # --------------------------------
+    #K42GG=KDMIG
+    #K42GG=KDMIG1, KDMIG2, KDMIG3
+    #K42GG=1.25*KDMIG1, 1.0*KDMIG2, 0.75*KDMIG3
+    #SET 100=K1, K2
+    #K42GG=100
+    'K42GG': K42GG,
+}

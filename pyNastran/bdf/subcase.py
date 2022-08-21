@@ -1,7 +1,7 @@
 """Subcase creation/extraction class"""
 from __future__ import annotations
 import getpass
-from typing import Tuple, List, Dict, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 from numpy import ndarray
 
@@ -247,7 +247,7 @@ class Subcase:
         """
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
-    def add_op2_data(self, data_code: Dict[str, Any], msg: str, log: SimpleLogger) -> None:
+    def add_op2_data(self, data_code: dict[str, Any], msg: str, log: SimpleLogger) -> None:
         """
         >>> self.subcase.add_op2_data(self.data_code, 'VECTOR')
         """
@@ -582,18 +582,18 @@ class Subcase:
             return True
         return False
 
-    def has_parameter(self, *param_names) -> List[bool]:
+    def has_parameter(self, *param_names) -> list[bool]:
         """
         Checks to see if one or more parameter names are in the subcase.
 
         Parameters
         ----------
-        param_names : str; List[str]
+        param_names : str; list[str]
             the case control parameters to check for
 
         Returns
         -------
-        exists : List[bool]
+        exists : list[bool]
             do the parameters exist
 
         .. code-block:: python
@@ -610,7 +610,7 @@ class Subcase:
                   for param_name in param_names]
         return exists
 
-    def __getitem__(self, param_name: str) -> Tuple[Union[int, str], List[Any]]:
+    def __getitem__(self, param_name: str) -> tuple[Union[int, str], list[Any]]:
         """
         Gets the [value, options] for a subcase.
 
@@ -624,7 +624,7 @@ class Subcase:
         value : varies
             the value of the parameter
             'ALL' in STRESS(PLOT,PRINT) = ALL
-        options : List[varies]
+        options : list[varies]
             the values in parentheses
             ['PLOT', 'PRINT'] in STRESS(PLOT,PRINT) = ALL
 
@@ -665,7 +665,7 @@ class Subcase:
             else:
                 raise NotImplementedError(key)
 
-    def get_parameter(self, param_name: str, msg: str='', obj: bool=False) -> Tuple[Union[int, str], List[Any]]:
+    def get_parameter(self, param_name: str, msg: str='', obj: bool=False) -> tuple[Union[int, str], list[Any]]:
         """
         Gets the [value, options] for a subcase.
 
@@ -681,7 +681,7 @@ class Subcase:
         value : varies
             the value of the parameter
             'ALL' in STRESS(PLOT,PRINT) = ALL
-        options : List[varies]
+        options : list[varies]
             the values in parentheses
             ['PLOT', 'PRINT'] in STRESS(PLOT,PRINT) = ALL
 
@@ -723,11 +723,11 @@ class Subcase:
             )
             raise TypeError(msg)
 
-    def add(self, key: str, value: Any, options: List[Any], param_type: str):
+    def add(self, key: str, value: Any, options: list[Any], param_type: str):
         self._validate_param_type(param_type)
         self._add_data(key, value, options, param_type)
 
-    #def add_string_type(self, key: str, value: Any, options: List[Any], param_type: str):
+    #def add_string_type(self, key: str, value: Any, options: list[Any], param_type: str):
         #"""
         #Simple way to add something of the form:
             #ANALYSIS = HEAT
@@ -751,7 +751,7 @@ class Subcase:
         assert isinstance(value, integer_types), f'value={value!r} and is not an integer'
         self.add(key, value, [], 'STRESS-type')
 
-    def add_result_type(self, key: str, value: Union[int, str], options: List[str]):
+    def add_result_type(self, key: str, value: Union[int, str], options: list[str]):
         """
         Simple way to add something of the form:
             DISP(PLOT) = ALL
@@ -770,7 +770,7 @@ class Subcase:
         assert key in self.params, f'key={key!r} is not in isubcase={self.id}'
         self._add_data(key, value, options, param_type)
 
-    def add_set_from_values(self, set_id: int, values: List[int]):
+    def add_set_from_values(self, set_id: int, values: list[int]):
         """
         Simple way to add SET cards
 
@@ -790,7 +790,7 @@ class Subcase:
         assert isinstance(values, list), values
         self.params[key] = [values, set_id, param_type]
 
-    def _add_data(self, key: str, value: Any, options: List[Any], param_type: str):
+    def _add_data(self, key: str, value: Any, options: list[Any], param_type: str):
         """
         Adds the data to the subcase  in the KEY(OPTIONS)=VALUE style.
 
@@ -819,7 +819,7 @@ class Subcase:
             (key, value, options) = self._simplify_data(key, value, options, param_type)
             self.params[key] = [value, options, param_type]
 
-    def _simplify_data(self, key: str, value: Any, options: List[Any], param_type: str):
+    def _simplify_data(self, key: str, value: Any, options: list[Any], param_type: str):
         if param_type == 'SET-type':
             #print("adding isubcase=%s key=%r value=%r options=%r "
                   #"param_type=%r" % (self.id, key, value, options, param_type))
@@ -957,7 +957,7 @@ class Subcase:
             #if value is not None:
                 #print("   key=%r value=%r" % (key, value))
 
-    def print_param(self, key: str, param: Tuple[Any, Any, str]) -> str:
+    def print_param(self, key: str, param: tuple[Any, Any, str]) -> str:
         """
         Prints a single entry of the a subcase from the global or local
         subcase list.
@@ -1136,12 +1136,12 @@ class Subcase:
 
         Parameters
         ----------
-        lst : List[str]
+        lst : list[str]
             the list of subcase list objects (list_a)
 
         Returns
         -------
-        list_b : List[str]
+        list_b : list[str]
             the sorted version of list_a
         """
         # presort the list to put all the SET cards next to each other
@@ -1209,7 +1209,7 @@ class Subcase:
             assert nparams > 0, f'No subcase parameters are defined for isubcase={self.id:d}...'
         return msg
 
-def _load_hdf5_param(group, key: str, encoding: str) -> Tuple[str, List[str], str]:
+def _load_hdf5_param(group, key: str, encoding: str) -> tuple[str, list[str], str]:
     """('ALL', ['SORT2'], 'STRESS-type')"""
     import h5py
     from pyNastran.utils.dict_to_h5py import _cast, _cast_array
@@ -1725,7 +1725,7 @@ def get_sort_code(options, unused_value):
 
     Parameters
     ----------
-    options : List[int/str]
+    options : list[int/str]
         the options for a parameter
     unused_value : int; str
         the value of the parameter
@@ -1763,7 +1763,7 @@ def get_format_code(options: Any, unused_value: Any) -> int:
     format_code = max(format_code, 1)
     return format_code
 
-def get_stress_code(key: str, options: Dict[str, Any], unused_value: Any) -> int:
+def get_stress_code(key: str, options: dict[str, Any], unused_value: Any) -> int:
     """
     Method get_stress_code:
 

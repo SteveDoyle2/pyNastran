@@ -5,13 +5,12 @@ defines:
  - write_stress_type(key, options, value, spaces='')
 
 """
-from typing import List, Optional, Union, Set, Any
+from typing import Optional, Union, Set, Any
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 
 
-def expand_thru_case_control(data_in):
-    # type: (List[Union[int, float, str]]) -> List[int]
+def expand_thru_case_control(data_in: list[Union[int, float, str]]) -> list[int]:
     """
     Expands a case control SET card
 
@@ -207,7 +206,7 @@ def setup_data(data_in):
         #print(data)
     return data, stype
 
-def isinteger(astring):
+def isinteger(astring: str) -> bool:
     """Is the given string an integer?"""
     try:
         int(astring)
@@ -216,7 +215,7 @@ def isinteger(astring):
     else:
         return True
 
-def get_except(data, i, ndata, end_value):
+def get_except(data, i: int, ndata: int, end_value) -> tuple[int, Any]:
     """helper method for expand that gets the values until the end of an
     EXCEPT chain"""
     removed = []
@@ -252,7 +251,7 @@ def get_except(data, i, ndata, end_value):
     return i, removed_set
 
 
-def expand_float(data):
+def expand_float(data) -> list[float]:
     """helper method for ``expand_thru_case_control``"""
     out = []
     for datai in  data:
@@ -261,7 +260,7 @@ def expand_float(data):
     return out
 
 
-def write_stress_type(key: str, options: List[str], value: Optional[str], spaces: str='') -> str:
+def write_stress_type(key: str, options: list[str], value: Optional[str], spaces: str='') -> str:
     """
     writes:
      - STRESS(SORT1) = ALL
@@ -307,7 +306,7 @@ def write_stress_type(key: str, options: List[str], value: Optional[str], spaces
     return msg
 
 
-def write_set(set_id: int, values: List[int], spaces: str='') -> str:
+def write_set(set_id: int, values: list[int], spaces: str='') -> str:
     """
     writes
     SET 80 = 3926, 3927, 3928, 4141, 4142, 4143, 4356, 4357, 4358, 4571,

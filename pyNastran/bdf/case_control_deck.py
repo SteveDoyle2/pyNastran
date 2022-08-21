@@ -22,7 +22,7 @@ from __future__ import annotations
 import re
 import sys
 import copy
-from typing import List, Tuple, Dict, Any, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 
 from cpylog import get_logger
 
@@ -30,6 +30,10 @@ from cpylog import get_logger
 from pyNastran.bdf.bdf_interface.encoding import decode_lines
 from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.bdf_interface.subcase_cards import (
+    #A2GG, B2GG, K2GG, M2GG, P2G, # real
+    #A2GG, B2PP, K2PP, M2PP,      # complex
+    #K42GG, # real
+    MATRIX_MAP,
     EXTSEOUT, WEIGHTCHECK, GROUNDCHECK,
     MODCON, SET, SETMC, #AXISYMMETRIC,
     #INT_CARD_DICT, INT_CARD_NAMES,
@@ -42,6 +46,7 @@ from pyNastran.utils import object_attributes
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
+MATRIX_TYPES = tuple(MATRIX_MAP.keys())
 
 class CaseControlDeck:
     """CaseControlDeck parsing and extraction class"""
@@ -56,13 +61,13 @@ class CaseControlDeck:
         del state['log']
         return state
 
-    def __init__(self, lines: List[str], log: Optional[Any]=None) -> None:
+    def __init__(self, lines: list[str], log: Optional[Any]=None) -> None:
         """
         Creates the CaseControlDeck from a set of lines
 
         Parameters
         ----------
-        lines : List[str]
+        lines : list[str]
             list of lines that represent the case control deck
             ending with BEGIN BULK
         log : log()
@@ -123,7 +128,7 @@ class CaseControlDeck:
         #self.debug = True
 
         #: stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
-        self.reject_lines = []  # type: List[str]
+        self.reject_lines = []  # type: list[str]
         self.begin_bulk = ['BEGIN', 'BULK']
 
         # allows BEGIN BULK to be turned off
@@ -131,7 +136,7 @@ class CaseControlDeck:
         self._begin_count = 0
 
         self.lines = lines
-        self.subcases = {0: Subcase(id=0)}  # type: Dict[int, Subcase]
+        self.subcases = {0: Subcase(id=0)}  # type: dict[int, Subcase]
         try:
             self._read(self.lines)
         except Exception:
@@ -233,7 +238,7 @@ class CaseControlDeck:
                 # continue
             subcase.suppress_output()
 
-    def has_parameter(self, isubcase: int, *param_names: List[str]) -> bool:
+    def has_parameter(self, isubcase: int, *param_names: list[str]) -> bool:
         """
         Checks to see if a parameter (e.g. STRESS) is defined in a certain
         subcase ID.
@@ -242,7 +247,7 @@ class CaseControlDeck:
         ----------
         isubcase : int
             the subcase ID to check
-        param_names : List[str]
+        param_names : list[str]
             the parameter name to look for
 
         Returns
@@ -386,13 +391,13 @@ class CaseControlDeck:
                 subcase_to[key] = copy.deepcopy(param)
         return subcase_to
 
-    def get_subcase_list(self) -> List[int]:
+    def get_subcase_list(self) -> list[int]:
         """
         Gets the list of subcases including the global subcase ID (0)
         """
         return sorted(self.subcases.keys())
 
-    def get_local_subcase_list(self) -> List[int]:
+    def get_local_subcase_list(self) -> list[int]:
         """
         Gets the list of subcases that aren't the global subcase ID
         """
@@ -453,7 +458,7 @@ class CaseControlDeck:
             self._add_parameter_to_subcase(key, value, options, param_type,
                                            isubcase)
 
-    def add_parameter_to_local_subcase(self, isubcase: int, param: List[str]) -> None:
+    def add_parameter_to_local_subcase(self, isubcase: int, param: list[str]) -> None:
         """
         Takes in a single-lined string and adds it to a single Subcase.
 
@@ -461,7 +466,7 @@ class CaseControlDeck:
         ----------
         isubcase : int
             the subcase ID to add
-        param_name : List[str]
+        param_name : list[str]
             the parameter name to add
 
         Notes
@@ -484,7 +489,7 @@ class CaseControlDeck:
         self._add_parameter_to_subcase(key, value, options, param_type,
                                        isubcase)
 
-    def _parse_data_from_user(self, param):
+    def _parse_data_from_user(self, param: str):
         """
         Parses a case control line
 
@@ -503,7 +508,7 @@ class CaseControlDeck:
         (j, key, value, options, param_type) = self._parse_entry(lines)
         return (j, key, value, options, param_type)
 
-    def _read(self, lines: List[str]) -> None:
+    def _read(self, lines: list[str]) -> None:
         """
         Reads the case control deck
 
@@ -601,18 +606,18 @@ class CaseControlDeck:
 
         Parameters
         ----------
-        lines : List[str, str, ...]
+        lines : list[str, str, ...]
             list of lines
 
         Returns
         -------
         paramName : str
             see brief
-        value : List[...]
+        value : list[...]
             see brief
-        options : List[str/int/float]
+        options : list[str/int/float]
             see brief
-        param_type : str/int/float/List
+        param_type : str/int/float/list
             see brief
 
         """
@@ -687,7 +692,7 @@ class CaseControlDeck:
                 #param_type = 'OBJ-type'
             #else:
             key = value.key  # type: str
-            options = obj.set_id  # type: List[int]
+            options = obj.set_id  # type: list[int]
             value = obj.value  # type: int
             param_type = 'SET-type'
 
@@ -744,6 +749,17 @@ class CaseControlDeck:
             #options = None
             #param_type = 'OBJ-type'
             #key = obj.type
+
+        elif line_upper.startswith(MATRIX_TYPES):
+            matrix_name, other = line_upper.split('=')
+            matrix_name = matrix_name.strip()
+            matrix_cls = MATRIX_MAP[matrix_name]
+            options = None
+            param_type = 'OBJ-type'
+            obj = matrix_cls.add_from_case_control(line_upper.strip())
+            value = obj
+            key = obj.type
+            del matrix_name
 
         elif line_upper.startswith('EXTSEOUT'):
             options = None
@@ -968,7 +984,7 @@ class CaseControlDeck:
         subcase0.add_parameter_to_global_subcase('ANALYSIS', analysis)
         #subcase.add_parameter_to_global_subcase('DESSUB', dessub)
 
-    def _add_parameter_to_subcase(self, key: str, value: Any, options: List[str],
+    def _add_parameter_to_subcase(self, key: str, value: Any, options: list[str],
                                   param_type: str, isubcase: int) -> int:
         """Internal method"""
         if self.debug:
@@ -997,7 +1013,7 @@ class CaseControlDeck:
                 isubcase, str(sorted(self.subcases.keys())))
             raise RuntimeError(msg)
 
-        subcase = self.subcases[isubcase]
+        subcase = self.subcases[isubcase]  # type: Subcase
         subcase._add_data(key, value, options, param_type)
 
         #print("\n%s\n" % (self.subcases[isubcase]))
@@ -1016,7 +1032,7 @@ class CaseControlDeck:
         for unused_isubcase, subcase in sorted(self.subcases.items()):
             subcase.cross_reference(model)
 
-    def get_op2_data(self) -> Dict[int, Any]:
+    def get_op2_data(self) -> dict[int, Any]:
         """
         Gets the relevant op2 parameters required for a given subcase
 
@@ -1061,7 +1077,7 @@ class CaseControlDeck:
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 
-def _split_param(line: str, line_upper: str) -> Tuple[str, str, str]:
+def _split_param(line: str, line_upper: str) -> tuple[str, str, str]:
     """parses a PARAM card"""
     tabbed_line_upper = line_upper.expandtabs().rstrip()
     if ',' in tabbed_line_upper:
@@ -1200,17 +1216,17 @@ def verify_card2(key, value, options, line):
         raise NotImplementedError('key=%r line=%r' % (key, line))
 
 
-def _clean_lines(lines: List[str]) -> List[str]:
+def _clean_lines(lines: list[str]) -> list[str]:
     """
     Removes comment characters defined by a *$*.
 
     Parameters
     ----------
-    lines : List[str, ...]
+    lines : list[str, ...]
         the lines to clean.
 
     """
-    lines2 = []  # type: List[str]
+    lines2 = []  # type: list[str]
     for line in lines:
         # ' \n\r\t'
         line = line.strip().split('$')[0].rstrip()
