@@ -134,6 +134,24 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
         raise RuntimeError(msg)
     return factor
 
+def convert_area(area: float, area_units_in: str, area_units_out: str) -> float:
+    """nominal unit is ft"""
+    if area_units_in == area_units_out:
+        return area
+    return area * _area_factor(area_units_in, area_units_out)
+
+def _area_factor(area_units_in: str, area_units_out: str) -> float:
+    assert '^' in area_units_in, area_units_in
+    assert '^' in area_units_out, area_units_out
+    length_units_in, two_in = area_units_in.split('^')
+    length_units_out, two_out = area_units_out.split('^')
+    assert two_in == '2', two_in
+    assert two_out == '2', two_out
+    length_factor = _length_factor(length_units_in, length_units_out)
+    area_factor = length_factor ** 2
+    return area_factor
+
+
 def convert_length(velocity: float, length_units_in: str, length_units_out: str) -> float:
     """nominal unit is ft"""
     if length_units_in == length_units_out:

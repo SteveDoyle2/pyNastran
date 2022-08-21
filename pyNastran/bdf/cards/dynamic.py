@@ -2265,7 +2265,7 @@ class TSTEPNL(BaseCard):
         assert self.max_div != 0, self.get_stats()
         assert self.max_qn > 0, self.get_stats()
         assert self.max_ls >= 0, self.get_stats()
-        assert self.max_bisect > 0, self.get_stats()
+        assert self.max_bisect >= 0, self.get_stats()  # default in MSC 2020=0
         assert self.adjust >= 0, self.get_stats()  #  is this >0 or >= 0?
     #def __init__(self, sid, ndt, dt, no, method='ADAPT', kstep=None,
                  #max_iter=10, conv='PW', eps_u=1.e-2, eps_p=1.e-3,
