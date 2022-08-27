@@ -859,7 +859,7 @@ class Coord(BaseCard):
         xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
 
-    def __properties__(self) -> List[str]:
+    def __properties__(self) -> list[str]:
         """the list of @property attributes"""
         return ['global_to_local', 'local_to_global']
 
@@ -1001,9 +1001,9 @@ def _fix_xyz_shape(xyz: NDArray3float, name: str='xyz') -> NDArray3float:
 def define_spherical_cutting_plane(model: BDF,
                                    origin: NDArray3float,
                                    rid: int,
-                                   cids: List[int],
-                                   thetas: List[float],
-                                   phis: List[float]):
+                                   cids: list[int],
+                                   thetas: list[float],
+                                   phis: list[float]):
     r"""
     Creates a series of coordinate systems defined as constant origin,
     with a series of theta and phi angles, which are defined about the
@@ -1020,11 +1020,11 @@ def define_spherical_cutting_plane(model: BDF,
         defines the location of the origin in the global coordinate frame
     rid : int
         the new spherical reference coordinate system id
-    cids : List[int, ...]
+    cids : list[int, ...]
         list of new coordinate system ids
-    thetas : List[float, ...]
+    thetas : list[float, ...]
         list of thetas (in radians)
-    phis:  List[float, ...]
+    phis:  list[float, ...]
         list of phis (in radians)
 
     Notes
@@ -2276,7 +2276,7 @@ class CORD3G(Coord):
             E1000 = 'E' + 1000
         form : str
             EQN
-        thetas : List[int]
+        thetas : list[int]
             ???
         rid : int
             the referenced coordinate system that defines the system the
@@ -2564,11 +2564,11 @@ class CORD2R(Cord2x, RectangularCoord):
         ----------
         cid : int
             coordinate system id
-        origin : List[float, float, float]
+        origin : list[float, float, float]
             the origin of the coordinate system
-        zaxis : List[float, float, float]
+        zaxis : list[float, float, float]
             the z-axis of the coordinate system
-        xzplane : List[float, float, float]
+        xzplane : list[float, float, float]
             a point on the xz plane
         rid : int; default=0
             the referenced coordinate system that defines the system the
@@ -2625,11 +2625,11 @@ class CORD2C(Cord2x, CylindricalCoord):
         ----------
         cid : int
             coordinate system id
-        origin : List[float, float, float]
+        origin : list[float, float, float]
             the origin of the coordinate system
-        zaxis : List[float, float, float]
+        zaxis : list[float, float, float]
             the z-axis of the coordinate system
-        xzplane : List[float, float, float]
+        xzplane : list[float, float, float]
             a point on the xz plane
         rid : int; default=0
             the referenced coordinate system that defines the system the
@@ -2671,11 +2671,11 @@ class CORD2S(Cord2x, SphericalCoord):
         ----------
         cid : int
             coordinate system id
-        origin : List[float, float, float]
+        origin : list[float, float, float]
             the origin of the coordinate system
-        zaxis : List[float, float, float]
+        zaxis : list[float, float, float]
             the z-axis of the coordinate system
-        xzplane : List[float, float, float]
+        xzplane : list[float, float, float]
             a point on the xz plane
         rid : int; default=0
             the referenced coordinate system that defines the system the
@@ -2720,9 +2720,9 @@ def create_coords_along_line(model, p1, p2, percents, cid=0, axis=1):
        the node_id, cp coord, cd coord
     icd_transform : ???
        a mapping of the cid to nids???
-    cids : List[int]
+    cids : list[int]
         the created coordinate system ids
-    origins : List[(ox, oy, oz)]
+    origins : list[(ox, oy, oz)]
         the origin of each coordinate system
     cid_to_inids : Dict[cid] -> inids
         maps the coord id to the index of the nodes along the axis
@@ -2787,12 +2787,12 @@ def get_nodes_along_axis_in_coords(model, nids, xyz_cp, icp_transform, cids):
        a mapping of the CP coord to the node indices
     icd_transform : Dict[cd cid] -> inids
        a mapping of the CD coord to the node indices
-    cids : List[int]
+    cids : list[int]
         the created coordinate system ids
 
     Returns
     -------
-    #origins : List[(ox, oy, oz)]
+    #origins : list[(ox, oy, oz)]
         #the origin of each coordinate system
     cid_to_inids : Dict[cid] -> inids
         maps the coord id to the index of the nodes along the axis
@@ -2823,7 +2823,7 @@ def transform_coords_vectorized(cps_to_check0, icp_transform,
 
     Parameters
     ----------
-    cps_to_check0 : List[int]
+    cps_to_check0 : list[int]
         the Cps to check
     icp_transform : dict{int cp : (n,) int ndarray}
         Dictionary from coordinate id to index of the nodes in
@@ -2849,9 +2849,9 @@ def transform_coords_vectorized(cps_to_check0, icp_transform,
     -------
     nids_checked : (nnodes_checked,) int ndarray
        the node ids that were checked
-    cps_checked : List[int]
+    cps_checked : list[int]
         the Cps that were checked
-    cps_to_check : List[int]
+    cps_to_check : list[int]
         the Cps that are unreferenceable given the current information
     """
     cps_to_check = []

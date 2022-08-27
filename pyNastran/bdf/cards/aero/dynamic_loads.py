@@ -272,7 +272,7 @@ class AERO(Aero):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
            the fields that define the card
 
         """
@@ -286,7 +286,7 @@ class AERO(Aero):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
           the fields that define the card
 
         """
@@ -363,9 +363,9 @@ class FLFACT(BaseCard):
             the id of a density, reduced_frequency, mach, or velocity table
             the FLUTTER card defines the meaning
         factors : varies
-            values : List[float, ..., float]
+            values : list[float, ..., float]
                 list of factors
-            List[f1, THRU, fnf, nf, fmid]
+            list[f1, THRU, fnf, nf, fmid]
                 f1 : float
                     first value
                 THRU : str
@@ -692,7 +692,7 @@ class FLUTTER(BaseCard):
                        epsilon=epsilon, comment=comment)
 
     def make_flfacts_eas_sweep(self, model: BDF,
-                               alt: float, eass: List[float],
+                               alt: float, eass: list[float],
                                alt_units: str='m',
                                velocity_units: str='m/s',
                                density_units: str='kg/m^3',
@@ -706,7 +706,7 @@ class FLUTTER(BaseCard):
             eas_units=eas_units)
 
     def make_flfacts_eas_sweep_constant_alt(self, model: BDF,
-                                            alt: float, eass: List[float],
+                                            alt: float, eass: list[float],
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
@@ -720,7 +720,7 @@ class FLUTTER(BaseCard):
             the BDF model object
         alt : float
             Altitude in alt_units
-        eass : List[float]
+        eass : list[float]
             Equivalent airspeed in eas_units
         alt_units : str; default='m'
             the altitude units; ft, kft, m
@@ -1245,9 +1245,9 @@ class MKAERO1(BaseCard):
 
         Parameters
         ----------
-        machs : List[float]
+        machs : list[float]
             series of Mach numbers
-        reduced_freqs : List[float]
+        reduced_freqs : list[float]
             series of reduced frequencies
         comment : str; default=''
             a comment for the card
@@ -1300,7 +1300,7 @@ class MKAERO1(BaseCard):
         assert len(reduced_freqs) > 0, reduced_freqs
         return MKAERO1(machs, reduced_freqs, comment=comment)
 
-    def mklist(self) -> List[List[float]]:
+    def mklist(self) -> list[list[float]]:
         mklist = []
         for mach in self.machs:
             for kfreq in self.reduced_freqs:
@@ -1401,9 +1401,9 @@ class MKAERO2(BaseCard):
 
         Parameters
         ----------
-        machs : List[float]
+        machs : list[float]
             series of Mach numbers
-        reduced_freqs : List[float]
+        reduced_freqs : list[float]
             series of reduced frequencies
         comment : str; default=''
             a comment for the card

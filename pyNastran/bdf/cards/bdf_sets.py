@@ -67,7 +67,7 @@ class Set(BaseCard):
         self.ids = list(set(self.ids))
         self.ids.sort()
 
-    def repr_fields(self)-> List[Optional[Union[int, float, str]]]:
+    def repr_fields(self)-> list[Optional[Union[int, float, str]]]:
         list_fields = self.raw_fields()
         return list_fields
 
@@ -113,7 +113,7 @@ class ABCQSet(Set):
         if isinstance(self.components, np.ndarray):
             self.components = self.components.tolist()
 
-    def __init__(self, ids: List[int], components: List[int], comment: str='') -> None:
+    def __init__(self, ids: list[int], components: list[int], comment: str='') -> None:
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -144,7 +144,7 @@ class ABCQSet(Set):
         return cls(ids, components, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data: List[Any], comment: str='') -> ABCQSet:
+    def add_op2_data(cls, data: list[Any], comment: str='') -> ABCQSet:
         ids = [data[0]]
         components = [data[1]]
         return cls(ids, components, comment=comment)
@@ -308,9 +308,9 @@ class ASET(ABCQSet):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
-        components : List[str]
+        components : list[str]
             the degree of freedoms to be retained (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
@@ -351,9 +351,9 @@ class BSET(ABCQSet):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
-        components : List[str]
+        components : list[str]
             the degree of freedoms to be fixed (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
@@ -395,9 +395,9 @@ class CSET(ABCQSet):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
-        components : List[str]
+        components : list[str]
             the degree of freedoms to be free (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
@@ -438,9 +438,9 @@ class QSET(ABCQSet):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
-        components : List[str]
+        components : list[str]
             the degree of freedoms to be created (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
@@ -694,7 +694,7 @@ class ASET1(ABQSet1):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
         components : str
             the degree of freedoms to be retained (e.g., '1', '123')
@@ -735,9 +735,9 @@ class OMIT(ABCQSet):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
-        components : List[str]
+        components : list[str]
             the degree of freedoms to be fixed (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
@@ -778,7 +778,7 @@ class OMIT1(ABQSet1):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
         components : str
             the degree of freedoms to be omitted (e.g., '1', '123')
@@ -822,7 +822,7 @@ class BSET1(ABQSet1):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
         components : str
             the degree of freedoms to be fixed (e.g., '1', '123')
@@ -868,7 +868,7 @@ class CSET1(Set):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
         components : str
             the degree of freedoms to be free (e.g., '1', '123')
@@ -971,7 +971,7 @@ class QSET1(ABQSet1):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
         components : str
             the degree of freedoms to be created (e.g., '1', '123')
@@ -1020,7 +1020,7 @@ class SET1(Set):
         ----------
         sid : int
             set id
-        ids : List[int, str]
+        ids : list[int, str]
             AECOMP, SPLINEx, PANEL : all grid points must exist
             XYOUTPUT : missing grid points are ignored
             The only valid string is THRU
@@ -1411,7 +1411,7 @@ class SET3(Set):
         ids = [1]
         return SET3(sid, desc, ids, comment='')
 
-    def __init__(self, sid: int, desc: str, ids: List[int], comment: str=''):
+    def __init__(self, sid: int, desc: str, ids: list[int], comment: str=''):
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -1809,7 +1809,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
         ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
         return SEQSEP(ssid, psid, ids, comment=comment)
 
-    def get_ids(self)-> List[int]:
+    def get_ids(self)-> list[int]:
         """gets the ids"""
         return self.ids
 
@@ -1852,7 +1852,7 @@ class RADSET(ABQSet1):
 
         Parameters
         ----------
-        cavities : List[int]
+        cavities : list[int]
             the RADCAV ids
         comment : str; default=''
             a comment for the card
@@ -1945,9 +1945,9 @@ class USET(Set):
         name : str
             SNAME Set name. (One to four characters or the word 'ZERO'
             followed by the set name.)
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
-        components : List[str]
+        components : list[str]
             the degree of freedoms (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
@@ -2081,7 +2081,7 @@ class USET1(ABQSet1):
         name : str
             SNAME Set name. (One to four characters or the word 'ZERO'
             followed by the set name.)
-        ids : List[int]
+        ids : list[int]
             the GRID/SPOINT ids
         components : str
             the degree of freedoms (e.g., '1', '123')

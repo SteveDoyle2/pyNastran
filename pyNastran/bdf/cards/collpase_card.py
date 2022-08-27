@@ -16,11 +16,11 @@ from typing import Tuple, List, Union, Optional
 import numpy as np
 
 
-def collapse_thru_by(fields: List[int], get_packs: bool=False) -> List[List[int]]:
+def collapse_thru_by(fields: list[int], get_packs: bool=False) -> list[list[int]]:
     """
     Parameters
     ----------
-    fields : List[int]
+    fields : list[int]
         the list of fields to collapse
     get_packs : bool; default=False
         get the list of packs so "special" formatting can be done
@@ -39,7 +39,7 @@ def collapse_thru_by(fields: List[int], get_packs: bool=False) -> List[List[int]
     return fields2
 
 
-def collapse_thru_by_float(fields: List) -> List[Union[int, str]]:
+def collapse_thru_by_float(fields: List) -> list[Union[int, str]]:
     _check_sort_fields(fields)
     packs = condense(fields)
     fields2 = build_thru_float(packs)
@@ -47,7 +47,7 @@ def collapse_thru_by_float(fields: List) -> List[Union[int, str]]:
     return fields2
 
 
-def collapse_thru(fields, nthru: Optional[int]=None) -> List[Tuple[int, int, int]]:
+def collapse_thru(fields, nthru: Optional[int]=None) -> list[Tuple[int, int, int]]:
     """
     Collapses fields into a set of packs
 
@@ -102,7 +102,7 @@ def collapse_colon_packs(fields, thru_split=3):
 
     Parameters
     ----------
-    fields : List[int]
+    fields : list[int]
         the values to collapse
     thru_split : int; default=3
         the length to not write THRU
@@ -111,10 +111,10 @@ def collapse_colon_packs(fields, thru_split=3):
 
     Returns
     -------
-    singles : List[int]
+    singles : list[int]
         the list of singles
-    doubles : List[pack]
-        pack : List[varies]
+    doubles : list[pack]
+        pack : list[varies]
             [3, :, 13]
             [3, :, 13, :, 5]
         the double packs
@@ -154,13 +154,13 @@ def condense(value_list):
 
     Parameters
     ----------
-    value_list : List[int]
+    value_list : list[int]
         list of values to pack
 
     Returns
     -------
-    packs : List[pack]
-       pack : List[id_low, id_high, delta_id]
+    packs : list[pack]
+       pack : list[id_low, id_high, delta_id]
            a list representation of the min/max/delta id values
 
     .. seealso:: build_thru
@@ -213,8 +213,8 @@ def build_thru_packs(packs, max_dv=1, thru_split=3):
 
     Parameters
     ----------
-    packs : List[pack]
-       pack : List[id_low, id_high, delta_id]
+    packs : list[pack]
+       pack : list[id_low, id_high, delta_id]
            a list representation of the min/max/delta id values
     max_dv : int; default=1
         maximum allowed delta between two values
@@ -225,10 +225,10 @@ def build_thru_packs(packs, max_dv=1, thru_split=3):
 
     Returns
     -------
-    singles : List[int]
+    singles : list[int]
         the list of singles
-    doubles : List[pack]
-        pack : List[varies]
+    doubles : list[pack]
+        pack : list[varies]
             [3, THRU, 13]
             [3, THRU, 13, BY, 5]
         the double packs
@@ -279,8 +279,8 @@ def build_thru(packs, max_dv: Optional[int]=None, nthru: Optional[int]=None):
 
     Parameters
     ----------
-    packs : List[pack]
-        pack : List[int first, int last, int delta]
+    packs : list[pack]
+        pack : list[int first, int last, int delta]
             the first, last, delta id values
     max_dv : int; default=None -> no limit
         defines the max allowable delta between two values
@@ -336,7 +336,7 @@ def build_thru(packs, max_dv: Optional[int]=None, nthru: Optional[int]=None):
     return fields
 
 
-def build_thru_float(packs: List[List[int]], max_dv: Optional[int]=None) -> List[Union[int, str]]:
+def build_thru_float(packs: list[list[int]], max_dv: Optional[int]=None) -> list[Union[int, str]]:
     """
     Takes a pack [1,7,2] and converts it into fields used by a SET card.
     The values correspond to the first value, last value, and delta in the
@@ -345,8 +345,8 @@ def build_thru_float(packs: List[List[int]], max_dv: Optional[int]=None) -> List
 
     Parameters
     ----------
-    packs : List[pack]
-        pack : List[first, last, delta]
+    packs : list[pack]
+        pack : list[first, last, delta]
         first, last, delta are integers
     max_dv : int; default=None -> no limit
         integer defining the max allowable delta between two values

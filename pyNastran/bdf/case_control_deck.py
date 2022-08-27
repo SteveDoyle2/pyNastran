@@ -40,6 +40,7 @@ from pyNastran.bdf.bdf_interface.subcase_cards import (
     #INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
     #STR_CARD_DICT, STR_CARD_NAMES,
     #CHECK_CARD_DICT, CHECK_CARD_NAMES,
+    ECHO,
     split_by_mixed_commas_parentheses,
 )
 from pyNastran.utils import object_attributes
@@ -748,6 +749,12 @@ class CaseControlDeck:
             #value = obj
             #options = None
             #param_type = 'OBJ-type'
+            #key = obj.type
+
+        #elif line_upper.startswith('ECHO'):
+            #param_type = 'OBJ-type'
+            #obj = ECHO.add_from_case_control(line_upper.strip())
+            #value = obj
             #key = obj.type
 
         elif line_upper.startswith(MATRIX_TYPES):

@@ -32,7 +32,7 @@ SKIP_ETYPES = {
 }
 
 def export_mcids(bdf_filename: Union[BDF, str], csv_filename: Optional[str]=None,
-                 eids: Optional[List[int]]=None,
+                 eids: Optional[list[int]]=None,
                  export_xaxis: bool=True, export_yaxis: bool=True,
                  consider_property_rotation: bool=True,
                  iply: int=0, log=None, debug=False):
@@ -47,7 +47,7 @@ def export_mcids(bdf_filename: Union[BDF, str], csv_filename: Optional[str]=None
     csv_filename : str; default=None
         str : the path to the output csv
         None : don't write a CSV
-    eids : List[int]
+    eids : list[int]
         the element ids to consider
     export_xaxis : bool; default=True
         export the x-axis
@@ -163,7 +163,7 @@ def _get_elements(model, eids):
     return elements
 
 def export_element_cid(bdf_filename: Union[BDF, str],
-                       eids: Optional[List[int]]=None,
+                       eids: Optional[list[int]]=None,
                        log=None, debug=False):
     """
     Exports the element coordinates systems for non-isotropic materials.
@@ -209,7 +209,7 @@ def _load_bdf(bdf_filename: Union[BDF, str],
     return model
 
 def export_mcids_all(bdf_filename: Union[BDF, str],
-                     eids: Optional[List[int]]=None,
+                     eids: Optional[list[int]]=None,
                      log: Optional[SimpleLogger]=None, debug: bool=False):
     """
     Exports the element material coordinates systems for non-isotropic
@@ -225,7 +225,7 @@ def export_mcids_all(bdf_filename: Union[BDF, str],
     csv_filename : str; default=None
         str : the path to the output csv
         None : don't write a CSV
-    eids : List[int]
+    eids : list[int]
         the element ids to consider
 
         **PSHELL**
@@ -342,7 +342,7 @@ def _export_quad_mcid(model: BDF,
                       elem, nodes,
                       iply: int, nid: int, eid: int,
                       #pids_failed: Set[int],
-                      bars: List[List[int]],
+                      bars: list[list[int]],
                       export_both_axes: bool, export_xaxis: bool,
                       consider_property_rotation: bool) -> Tuple[int, int]:
     """helper method for ``export_mcids``"""
@@ -374,8 +374,8 @@ def _export_quad_mcid_all(model: BDF,
                           elem: ShellElement,
                           nplies: int,
                           nids: Dict[int, int],
-                          nodes: Dict[int, List[np.ndarray]],
-                          bars: Dict[int, List[Tuple[int, int]]]) -> None:
+                          nodes: Dict[int, list[np.ndarray]],
+                          bars: Dict[int, list[Tuple[int, int]]]) -> None:
     """helper method for ``export_mcids``"""
     pid_ref, prop_type = get_pid_ref_prop_type(model, elem)
 
@@ -408,8 +408,8 @@ def _make_element_coord_quad(elem: ShellElement, pid_ref, nids, nodes, bars):
 def _rotate_coords(elem: ShellElement, pid_ref,
                    nplies: int,
                    nids: Dict[int, int],
-                   nodes: Dict[int, List[Any]],
-                   bars: Dict[int, List[Any]],
+                   nodes: Dict[int, list[Any]],
+                   bars: Dict[int, list[Any]],
                    dxyz: float,
                    centroid: np.ndarray, imat: np.ndarray, jmat: np.ndarray,
                    normal: np.ndarray) -> None:
@@ -444,8 +444,8 @@ def _export_tri_mcid_all(model: BDF,
                          elem: ShellElement,
                          nplies: int,
                          nids: Dict[int, int],
-                         nodes: Dict[int, List[np.ndarray]],
-                         bars: Dict[int, List[Tuple[int, int]]]) -> None:
+                         nodes: Dict[int, list[np.ndarray]],
+                         bars: Dict[int, list[Tuple[int, int]]]) -> None:
     """helper method for ``export_mcids``"""
     pid_ref, prop_type = get_pid_ref_prop_type(model, elem)
 
@@ -604,8 +604,8 @@ def _rotate_mcid(elem: ShellElement,
     return imat2, jmat2
 
 def _add_elements(nid: int, eid: int,
-                  nodes: List[Tuple[int, float, float, float]],
-                  bars: List[Tuple[int, int, int]],
+                  nodes: list[Tuple[int, float, float, float]],
+                  bars: list[Tuple[int, int, int]],
                   centroid: np.ndarray,
                   iaxis: np.ndarray,
                   jaxis: np.ndarray,
@@ -635,8 +635,8 @@ def _add_elements(nid: int, eid: int,
     return nid, eid
 
 def _export_xaxis(nid: int,
-                  nodes: List[np.ndarray],
-                  bars: List[np.ndarray],
+                  nodes: list[np.ndarray],
+                  bars: list[np.ndarray],
                   centroid: np.ndarray,
                   iaxis: np.ndarray) -> int:
     nodes.append(centroid)

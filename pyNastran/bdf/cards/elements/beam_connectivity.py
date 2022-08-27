@@ -40,7 +40,7 @@ import numpy as np
 from pyNastran.nptyping_interface import NDArray3float, NDArray33float, NDArrayN3float
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, tri_cap
 
-Faces = List[List[int]]
+Faces = list[list[int]]
 
 def _transform_points(n1: NDArray3float, n2: NDArray3float,
                       points1: NDArrayN3float, points2: NDArrayN3float,

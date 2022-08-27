@@ -419,7 +419,7 @@ def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord: Coord, tol
         the node xyzs in the model
     faces : ???
         the faces of the model
-    face_eids : List[int]
+    face_eids : list[int]
         the parent element
     coord : Coord
         the coordinate system to cut the model with
@@ -1168,7 +1168,7 @@ def calculate_area_moi(model: BDF, rods, normal_plane, thetas,
     model : BDF
         the model object
     rods : (eids, nids, xyzs)
-        eids : List[int]
+        eids : list[int]
             the element id that was split
         nids : (nelements, 2) int ndarray
             the n1, n2 in xyzs that define the cut shell element

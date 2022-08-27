@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def convert_bad_quads_to_tris(model: BDF,
-                              eids_to_check: List[int]=None,
+                              eids_to_check: list[int]=None,
                               xyz_cid0: Optional[np.ndarray]=None,
                               min_edge_length: float=0.0) -> None:
     """
@@ -130,7 +130,7 @@ def convert_bad_quads_to_tris(model: BDF,
         model.elements[eid] = elem2
 
 def delete_bad_tris(model: BDF,
-                    eids_to_check: List[int]=None,
+                    eids_to_check: list[int]=None,
                     xyz_cid0: Optional[np.ndarray]=None,
                     min_edge_length: float=0.0) -> None:
     """

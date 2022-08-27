@@ -295,9 +295,9 @@ class CGAP(Element):
             Element ID
         pid : int
             Property ID (PGAP)
-        nids : List[int, int]
+        nids : list[int, int]
             node ids; connected grid points at ends A and B
-        x : List[float, float, float]
+        x : list[float, float, float]
             Components of the orientation vector,
             from GA, in the displacement coordinate system at GA
         g0 : int
@@ -427,7 +427,7 @@ class CGAP(Element):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -690,7 +690,7 @@ class CRAC2D(CrackElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -788,7 +788,7 @@ class CRAC3D(CrackElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -872,7 +872,7 @@ class PLOTEL(BaseCard):
         ----------
         eid : int
             Element ID
-        nodes : List[int, int]
+        nodes : list[int, int]
             Unique GRID point IDs
 
         """
@@ -913,7 +913,7 @@ class PLOTEL(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

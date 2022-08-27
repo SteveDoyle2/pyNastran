@@ -34,7 +34,8 @@ def remove_marc_files(filenames):
         # names.append(os.readlink('/proc/self/fd/%d' % fd))
     # return names
 
-def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True,
+def run(regenerate: bool=True, run_nastran: bool=False, debug: bool=False,
+        sum_load: bool=True, sum_mass: bool=True, xref: bool=True,
         crash_cards=None):
     """Runs the full BDF test suite"""
     if crash_cards is None:
@@ -100,16 +101,18 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
     size = [8]
     is_double = [False]
     post = -1
-    failed_files = run_lots_of_files(files, debug=debug, xref=xref,
-                                     check=check,
-                                     nastran=nastran,
-                                     size=size, is_double=is_double, post=post,
-                                     encoding='latin1', crash_cards=crash_cards,
-                                     dev=True, pickle_obj=True)
+    failed_files = run_lots_of_files(
+        files, debug=debug, xref=xref,
+        check=check,
+        nastran=nastran,
+        size=size, is_double=is_double, post=post,
+        sum_load=sum_load, run_mass=sum_mass,
+        encoding='latin1', crash_cards=crash_cards,
+        dev=True, pickle_obj=True)
     ntotal = len(files)
     nfailed = len(failed_files)
     npassed = ntotal - nfailed
-    sys.stderr.write('%i/%i passed\n' % (npassed, ntotal))
+    sys.stderr.write(f'{npassed:d}/{ntotal:d} passed\n')
 
     with open(failed_cases_filename, 'w') as failed_cases_file:
         for fname in failed_files:
@@ -124,7 +127,7 @@ def main():
 
     #is_release = False
     msg = (
-        'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C] [--safe]\n'
+        'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-x] [-c C] [--safe] [--skip_loads] [--skip_mass]\n'
         '        bdf_test -h | --help\n'
         '        bdf_test -v | --version\n'
         '\n'
@@ -134,7 +137,8 @@ def main():
         '  -r, --regenerate     Resets the tests\n'
         '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN,EGRID)\n'
         '  -n, --run_nastran    Runs Nastran\n'
-        '  -L, --sum_loads      Disables static/dynamic loads sum\n'
+        '  --skip_loads         Disables static/dynamic loads sum\n'
+        '  --skip_mass          Disables mass sum\n'
         '  -s S, --size S       Sets the field size\n'
         '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
         '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
@@ -148,13 +152,15 @@ def main():
     #print(data)
     regenerate = data['--regenerate']
     run_nastran = data['--run_nastran']
-    sum_load = not data['--sum_loads']
+    sum_load = not data['--skip_loads']
+    sum_mass = not data['--skip_mass']
     xref = not data['--xref']
 
     crash_cards = []
     if data['--crash_cards']:
         crash_cards = data['--crash_cards'].split(',')
-    run(regenerate=regenerate, run_nastran=run_nastran, sum_load=sum_load,
+    run(regenerate=regenerate, run_nastran=run_nastran,
+        sum_load=sum_load, sum_mass=sum_mass,
         xref=xref, crash_cards=crash_cards)
 
 if __name__ == '__main__':  # pragma: no cover

@@ -54,7 +54,7 @@ def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol: float,
     xref bool: bool
         does the model need to be cross_referenced
         (default=True; only applies to model option)
-    node_set : List[int] / (n, ) ndarray
+    node_set : list[int] / (n, ) ndarray
         the list/array of nodes to consider (not supported with renumber_nodes=True)
     size : int; {8, 16}; default=8
         the bdf write precision
@@ -206,9 +206,9 @@ def get_joints(model, pid_sets):
     ----------
     model : BDF()
         a BDF object
-    pid_sets : List[pid_set, pid_set]
+    pid_sets : list[pid_set, pid_set]
         set of properties IDs to boolean
-        pid_set : List[int, int, int]
+        pid_set : list[int, int, int]
             set of property ids to boolean
 
     Returns
@@ -256,9 +256,9 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     ----------
     bdf_filename : str
         the bdf_filename
-    starting_eids : List[int]
+    starting_eids : list[int]
         a list of starting element ids
-    theta_tols : List[float]
+    theta_tols : list[float]
         a list of tolerances for each element id
         (e.g. the nose has a different tolerance than the base)
 
@@ -266,7 +266,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     -------
     model : BDF()
         the BDF object
-    groups : List[Set[int]]
+    groups : list[Set[int]]
         the list of element ids in each group
 
     .. warning:: only supports CTRIA3 & CQUAD4

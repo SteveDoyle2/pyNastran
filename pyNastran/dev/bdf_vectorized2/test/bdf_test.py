@@ -122,7 +122,7 @@ def main():
     msg = "Usage:\n"
     is_release = False
     msg += (
-        "Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C]\n"
+        "Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [--skip_load] [-x] [-c C]\n"
         "        bdf_test -h | --help\n"
         "        bdf_test -v | --version\n"
         "\n"
@@ -135,7 +135,7 @@ def main():
         "  -r, --regenerate     Resets the tests\n"
         '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN,EGRID)\n'
         "  -n, --run_nastran    Runs Nastran\n"
-        "  -L, --sum_loads      Disables static/dynamic loads sum\n"
+        "  --skip_load          Disables static/dynamic loads sum\n"
         "  -s S, --size S       Sets the field size\n"
         '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
         '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
@@ -148,7 +148,7 @@ def main():
     #print(data)
     regenerate = data['--regenerate']
     run_nastran = data['--run_nastran']
-    sum_load = not data['--sum_loads']
+    sum_load = not data['--skip_load']
     xref = not data['--xref']
 
     crash_cards = []

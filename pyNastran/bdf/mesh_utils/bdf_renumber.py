@@ -23,7 +23,7 @@ def bdf_renumber(bdf_filename: Union[str, BDF, StringIO],
                  bdf_filename_out: str,
                  size=8, is_double=False,
                  starting_id_dict=None, round_ids: bool=False,
-                 cards_to_skip: Optional[List[str]]=None,
+                 cards_to_skip: Optional[list[str]]=None,
                  log=None, debug=False) -> BDF:
     """
     Renumbers a BDF
@@ -54,7 +54,7 @@ def bdf_renumber(bdf_filename: Union[str, BDF, StringIO],
         This makes it easier to read a deck and verify that it's been
         renumbered properly.
         This only really applies when starting_id_dict is None
-    cards_to_skip : List[str]; (default=None -> don't skip any cards)
+    cards_to_skip : list[str]; (default=None -> don't skip any cards)
         There are edge cases (e.g. FLUTTER analysis) where things can
         break due to uncross-referenced cards.  You need to disable
         entire classes of cards in that case (e.g. all aero cards).
@@ -772,7 +772,7 @@ def superelement_renumber(bdf_filename, bdf_filename_out=None, size=8, is_double
             starting_id : int, None
                 int : the value to start from
                 None : don't renumber this key
-    cards_to_skip : List[str]; (default=None -> don't skip any cards)
+    cards_to_skip : list[str]; (default=None -> don't skip any cards)
         There are edge cases (e.g. FLUTTER analysis) where things can
         break due to uncross-referenced cards.  You need to disable
         entire classes of cards in that case (e.g. all aero cards).
@@ -1068,7 +1068,7 @@ def _update_case_control(model, mapper):
     ----------
     model : BDF()
         the BDF object
-    mapper : dict[str] = List[int]
+    mapper : dict[str] = list[int]
         Defines the possible case control header values for each entry (e.g. `LOAD`)
 
     """

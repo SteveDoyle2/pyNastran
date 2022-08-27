@@ -7,11 +7,11 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 class BDFCard:
     """A BDFCard is a list that has a default value of None for fields out of range."""
-    def __init__(self, card: List[str], has_none: bool=True) -> None:
+    def __init__(self, card: list[str], has_none: bool=True) -> None:
         """
         Parameters
         ----------
-        card : List[str]
+        card : list[str]
            the split values for the card
         has_none : bool; default=True
            helps with a special case to speed up runtime
@@ -31,7 +31,7 @@ class BDFCard:
         if has_none:
             long_fields = [print_field_16(field).strip() for field in card]
             card = wipe_empty_fields(long_fields)
-        self.card = card  # type: List[Optional[str]]
+        self.card = card  # type: list[Optional[str]]
         self.nfields = len(self.card)  # type: int
 
     def pop(self) -> Optional[str]:
@@ -47,7 +47,7 @@ class BDFCard:
         """print card[5]"""
         return self.card.__getitem__(key)
 
-    def __getslice__(self, i: int, j: int) -> List[str]:
+    def __getslice__(self, i: int, j: int) -> list[str]:
         """card[1:10]"""
         return self.card.__getslice__(i, j)
 
@@ -80,7 +80,7 @@ class BDFCard:
         """len(card)"""
         return self.nfields
 
-    def fields(self, i: int=0, j: Optional[int]=None) -> List[Any]:
+    def fields(self, i: int=0, j: Optional[int]=None) -> list[Any]:
         """
         Gets multiple fields on the card
 
@@ -94,7 +94,7 @@ class BDFCard:
 
         Returns
         -------
-        values : List[varies]
+        values : list[varies]
             int/float/str
             the values on the ith-jth fields
 
@@ -108,7 +108,7 @@ class BDFCard:
             out.append(value)
         return out
 
-    def fields_defaults(self, i: int=0, j: Optional[int]=None, defaults: Any=None) -> List[Any]:  # pragma: no cover
+    def fields_defaults(self, i: int=0, j: Optional[int]=None, defaults: Any=None) -> list[Any]:  # pragma: no cover
         """
         Gets multiple fields on the card
 
@@ -119,13 +119,13 @@ class BDFCard:
         j : int / None
             int : the jth field on the card
             None : last field on the card
-        defaults : List[int/float/str]
+        defaults : list[int/float/str]
             the default value for the field (as a list)
             len(defaults)=i-j-1
 
         Returns
         -------
-        values : List[varies]
+        values : list[varies]
             int/float/str
             the values on the ith-jth fields
 

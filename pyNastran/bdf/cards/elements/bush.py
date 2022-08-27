@@ -135,10 +135,10 @@ class CBUSH(BushElement):
             Element id
         pid : int
             Property id (PBUSH)
-        nids : List[int, int]
+        nids : list[int, int]
             node ids; connected grid points at ends A and B
             The nodes may be coincident, but then cid is required.
-        x : List[float, float, float]; None
+        x : list[float, float, float]; None
             List : the directional vector used to define the stiffnesses
                    or damping from the PBUSH card
             None : use g0
@@ -156,7 +156,7 @@ class CBUSH(BushElement):
             Coordinate system identification of spring-damper offset.
             (Integer > -1; Default = -1, which means the offset
             point lies on the line between GA and GB)
-        si : List[float, float, float]; default=None
+        si : list[float, float, float]; default=None
             Components of spring-damper offset in the OCID coordinate system
             if OCID > 0.
             None : [None, None, None]
@@ -319,7 +319,7 @@ class CBUSH(BushElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

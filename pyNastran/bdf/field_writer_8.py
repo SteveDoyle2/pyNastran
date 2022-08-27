@@ -250,13 +250,13 @@ def print_field_8(value: Union[int, float, str, None]) -> str:
     return field
 
 
-def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
+def print_card_8(fields: list[Union[int, float, str, None]]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.
 
     Parameters
     ----------
-    fields : List[int/float/str/None]
+    fields : list[int/float/str/None]
         all the fields in the BDF card (no trailing Nones)
 
     Returns
@@ -303,7 +303,7 @@ def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
     return out
 
 
-def print_int_card(fields: List[Union[int, float, str, None]]) -> str:
+def print_int_card(fields: list[Union[int, float, str, None]]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.
     All fields (other than the first field) must be integers.
@@ -311,7 +311,7 @@ def print_int_card(fields: List[Union[int, float, str, None]]) -> str:
 
     Parameters
     ----------
-    fields : List[int/float/str/None]
+    fields : list[int/float/str/None]
       The list of fields to write to a nastran card.
 
     .. warning::
@@ -363,7 +363,7 @@ def print_int_card(fields: List[Union[int, float, str, None]]) -> str:
     return out
 
 
-def print_int_card_blocks(fields_blocks: List[Any]) -> str:
+def print_int_card_blocks(fields_blocks: list[Any]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.
     All fields other than the card name must be written in "block" format.
@@ -371,7 +371,7 @@ def print_int_card_blocks(fields_blocks: List[Any]) -> str:
 
     Parameters
     ----------
-    fields_blocks : List[int]
+    fields_blocks : list[int]
       The fields written in "block" notation.
 
     Returns

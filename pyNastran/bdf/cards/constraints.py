@@ -85,9 +85,9 @@ class SUPORT1(Constraint):
         ----------
         conid : int
             Case Control SUPORT id
-        nodes : List[int]
+        nodes : list[int]
             the nodes to release
-        Cs : List[str]
+        Cs : list[str]
             components to support at each node
         comment : str; default=''
             a comment for the card
@@ -140,7 +140,7 @@ class SUPORT1(Constraint):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -242,9 +242,9 @@ class SUPORT(Constraint):
 
         Parameters
         ----------
-        nodes : List[int]
+        nodes : list[int]
             the nodes to release
-        Cs : List[str]
+        Cs : list[str]
             components to support at each node
         comment : str; default=''
             a comment for the card
@@ -300,7 +300,7 @@ class SUPORT(Constraint):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -411,8 +411,8 @@ class MPC(Constraint):
         coefficients = [1.]
         return MPC(conid, nodes, components, coefficients)
 
-    def __init__(self, conid: int, nodes: List[int], components: List[str],
-                 coefficients: List[float], comment: str=''):
+    def __init__(self, conid: int, nodes: list[int], components: list[str],
+                 coefficients: list[float], comment: str=''):
         """
         Creates an MPC card
 
@@ -420,11 +420,11 @@ class MPC(Constraint):
         ----------
         conid : int
             Case Control MPC id
-        nodes : List[int]
+        nodes : list[int]
             GRID/SPOINT ids
-        components : List[str]
+        components : list[str]
             the degree of freedoms to constrain (e.g., '1', '123')
-        coefficients : List[float]
+        coefficients : list[float]
             the scaling coefficients
 
         """
@@ -512,7 +512,7 @@ class MPC(Constraint):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -525,7 +525,7 @@ class MPC(Constraint):
         enforced = data[3]
         return MPC(conid, nodes, components, enforced, comment=comment)
     @property
-    def independent_dofs(self) -> Tuple[List[int], List[int]]:
+    def independent_dofs(self) -> Tuple[list[int], list[int]]:
         """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
         dependent degree-of-freedom. A dependent degree-of-freedom assigned by
         one MPC entry cannot be assigned dependent by another MPC entry or by a
@@ -536,7 +536,7 @@ class MPC(Constraint):
             return [nodes], [components]
         return nodes, components
     @property
-    def dependent_dofs(self) -> Tuple[List[int], List[int]]:
+    def dependent_dofs(self) -> Tuple[list[int], list[int]]:
         """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
         dependent degree-of-freedom. A dependent degree-of-freedom assigned by
         one MPC entry cannot be assigned dependent by another MPC entry or by a
@@ -544,7 +544,7 @@ class MPC(Constraint):
         return [self.nodes[0]], [self.components[0]]
 
     @property
-    def independent_nodes(self) -> List[int]:
+    def independent_nodes(self) -> list[int]:
         """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
         dependent degree-of-freedom. A dependent degree-of-freedom assigned by
         one MPC entry cannot be assigned dependent by another MPC entry or by a
@@ -555,7 +555,7 @@ class MPC(Constraint):
         return nodes
 
     @property
-    def dependent_nodes(self) -> List[int]:
+    def dependent_nodes(self) -> list[int]:
         """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
         dependent degree-of-freedom. A dependent degree-of-freedom assigned by
         one MPC entry cannot be assigned dependent by another MPC entry or by a
@@ -679,9 +679,9 @@ class SPC(Constraint):
         return SPC(conid, nodes, components, enforced, comment='')
 
     def __init__(self, conid: int,
-                 nodes: List[int],
-                 components: List[str],
-                 enforced: List[float], comment: str=''):
+                 nodes: list[int],
+                 components: list[str],
+                 enforced: list[float], comment: str=''):
         """
         Creates an SPC card, which defines the degree of freedoms to be
         constrained
@@ -690,11 +690,11 @@ class SPC(Constraint):
         ----------
         conid : int
             constraint id
-        nodes : List[int]
+        nodes : list[int]
             GRID/SPOINT ids
-        components : List[str]
+        components : list[str]
             the degree of freedoms to constrain (e.g., '1', '123')
-        enforced : List[float]
+        enforced : list[float]
             the constrained value for the given node (typically 0.0)
         comment : str; default=''
             a comment for the card
@@ -772,7 +772,7 @@ class SPC(Constraint):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1065,7 +1065,7 @@ class SPC1(Constraint):
         nodes = [1]
         return SPC1(conid, components, nodes, comment='')
 
-    def __init__(self, conid: int, components: str, nodes: List[int], comment: str=''):
+    def __init__(self, conid: int, components: str, nodes: list[int], comment: str=''):
         """
         Creates an SPC1 card, which defines the degree of freedoms to be
         constrained to a value of 0.0
@@ -1076,7 +1076,7 @@ class SPC1(Constraint):
             constraint id
         components : str
             the degree of freedoms to constrain (e.g., '1', '123')
-        nodes : List[int]
+        nodes : list[int]
             GRID/SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -1126,7 +1126,7 @@ class SPC1(Constraint):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1262,7 +1262,7 @@ class SPCOFF(Constraint):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1392,7 +1392,7 @@ class SPCOFF1(Constraint):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1526,7 +1526,7 @@ class SPCADD(ConstraintAdd):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1654,7 +1654,7 @@ class MPCADD(ConstraintAdd):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

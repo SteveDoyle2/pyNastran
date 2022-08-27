@@ -89,7 +89,7 @@ def break_elements(model: BDF, groups, idtype: str='int32') -> BDF:
         model.nodes[mapped_nid] = node2
     return model
 
-def get_nodes_by_group(model: BDF, group: List[int], idtype='int32'):
+def get_nodes_by_group(model: BDF, group: list[int], idtype='int32'):
     nodes_by_group = []
     missing_eids = []
     for eid in group:

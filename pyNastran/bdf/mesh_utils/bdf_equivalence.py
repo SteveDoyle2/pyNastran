@@ -40,7 +40,7 @@ def bdf_equivalence_nodes(bdf_filename: str,
                           bdf_filename_out: Optional[str],
                           tol: float,
                           renumber_nodes: bool=False, neq_max: int=4, xref: bool=True,
-                          node_set: Optional[Union[List[int], NDArrayNint]]=None,
+                          node_set: Optional[Union[list[int], NDArrayNint]]=None,
                           size: int=8, is_double: bool=False,
                           remove_collapsed_elements: bool=False,
                           avoid_collapsed_elements: bool=False,
@@ -67,7 +67,7 @@ def bdf_equivalence_nodes(bdf_filename: str,
     xref : bool
         does the model need to be cross_referenced
         (default=True; only applies to model option)
-    node_set : List[int] / (n, ) ndarray; default=None
+    node_set : list[int] / (n, ) ndarray; default=None
         the list/array of nodes to consider
         (not supported with renumber_nodes=True)
     size : int; {8, 16}; default=8
@@ -135,8 +135,8 @@ def bdf_equivalence_nodes(bdf_filename: str,
         model2.read_bdf(bdf_filename_out)
     return model
 
-#def _simplify_node_set_old(node_set: Optional[Union[List[int], List[NDArrayNint]]],
-                           #idtype: str='int32') -> Optional[List[NDArrayNint]]:
+#def _simplify_node_set_old(node_set: Optional[Union[list[int], list[NDArrayNint]]],
+                           #idtype: str='int32') -> Optional[list[NDArrayNint]]:
     #if node_set is None:
         #return
     #if isinstance(node_set, np.ndarray):
@@ -150,8 +150,8 @@ def bdf_equivalence_nodes(bdf_filename: str,
     # list of ndarrays
     #return node_set
 
-def _simplify_node_set(node_set: Optional[Union[List[int], Set[int], List[NDArrayNint]]],
-                       idtype: str='int32') -> Optional[List[NDArrayNint]]:  # pragma: no cover
+def _simplify_node_set(node_set: Optional[Union[list[int], Set[int], list[NDArrayNint]]],
+                       idtype: str='int32') -> Optional[list[NDArrayNint]]:  # pragma: no cover
     """
     accepts multiple forms of the node_set parameter
      - list[int]
@@ -194,11 +194,11 @@ def _simplify_node_set(node_set: Optional[Union[List[int], Set[int], List[NDArra
 
 def _bdf_equivalence_nodes(bdf_filename: str, tol: float,
                            renumber_nodes: bool=False, neq_max: int=4, xref: bool=True,
-                           node_set: Optional[List[NDArrayNint]]=None,
+                           node_set: Optional[list[NDArrayNint]]=None,
                            log: Optional[SimpleLogger]=None,
                            debug: bool=True, method: str='new',
                            idtype: str='int32', fdtype: str='float64') -> Tuple[BDF,
-                                                                                List[Tuple[int, int]]]:
+                                                                                list[Tuple[int, int]]]:
     """helper for bdf_equivalence_nodes"""
     all_node_set = get_all_node_set(node_set)
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
@@ -218,7 +218,7 @@ def _bdf_equivalence_nodes(bdf_filename: str, tol: float,
 
 def _eq_nodes_setup(bdf_filename,
                     renumber_nodes=False, xref=True,
-                    node_set: Optional[List[NDArrayNint]]=None,
+                    node_set: Optional[list[NDArrayNint]]=None,
                     log: Optional[SimpleLogger]=None,
                     debug: bool=True,
                     idtype: str='int32',
@@ -273,7 +273,7 @@ def _get_xyz_cid0(model: BDF, nids: NDArrayNint, fdtype: str='float32') -> NDArr
     return nodes_xyz
 
 def _eq_nodes_setup_node_set(model: BDF,
-                             node_set: List[NDArrayNint],
+                             node_set: list[NDArrayNint],
                              all_node_set: NDArrayNint,
                              renumber_nodes: bool=False,
                              idtype:str='int32') -> Tuple[NDArrayNint, NDArrayNint]:
@@ -379,7 +379,7 @@ def _check_for_referenced_nodes(model: BDF,
     #assert np.array_equal(nids[inew], nids_new), 'some nodes are not defined'
     return inew
 
-def get_all_node_set(node_set: Optional[List[NDArrayNint]]) -> NDArrayNint:
+def get_all_node_set(node_set: Optional[list[NDArrayNint]]) -> NDArrayNint:
     if node_set is None:
         all_node_set = np.array([])
     else:
@@ -390,7 +390,7 @@ def _eq_nodes_find_pairs(nids: NDArrayNint,
                          slots, ieq,
                          log: SimpleLogger,
                          all_node_set: NDArrayNint,
-                         node_set: Optional[List[NDArrayNint]]=None) -> List[Tuple[int, int]]:
+                         node_set: Optional[list[NDArrayNint]]=None) -> list[Tuple[int, int]]:
     """helper function for `bdf_equivalence_nodes`"""
     irows, icols = slots
     all_node_set = get_all_node_set(node_set)
@@ -502,13 +502,13 @@ def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
                                  inew: NDArrayNint,
                                  node_set: Optional[NDArrayNint]=None,
                                  neq_max: int=4, method: str='new',
-                                 debug: bool=False) -> List[Tuple[int, int]]:
+                                 debug: bool=False) -> list[Tuple[int, int]]:
     """
     Helper for equivalencing
 
     Returns
     -------
-    nid_pairs : List[Tuple[int, int]]
+    nid_pairs : list[Tuple[int, int]]
         a series of (nid1, nid2) pairs
 
     """
@@ -587,7 +587,7 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
                          node_set: Optional[NDArrayNint]=None,
                          neq_max: int=4, method: str='new', msg: str='',
                          debug: bool=False) -> Tuple[KDTree,
-                                                     List[Tuple[int, int]]]:
+                                                     list[Tuple[int, int]]]:
     """
     helper function for `bdf_equivalence_nodes`
 
@@ -601,7 +601,7 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
         the spherical equivalence tolerance
     inew : int ndarray; default=None -> slice(None)
         a slice on nodes_xyz to exclude some nodes from the equivalencing
-    node_set : List[int] / (n, ) ndarray; default=None
+    node_set : list[int] / (n, ) ndarray; default=None
         the list/array of nodes to consider
     neq_max : int; default=4
         the number of nodes to consider for equivalencing
@@ -612,7 +612,7 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
     -------
     kdt : KDTree()
         the kdtree object
-    nid_pairs : List[Tuple[int, int]]
+    nid_pairs : list[Tuple[int, int]]
         a series of (nid1, nid2) pairs
 
     """
@@ -665,7 +665,7 @@ def _eq_nodes_build_tree_new(kdt: KDTree,
                              tol: float,
                              log: SimpleLogger,
                              inew=None, node_set=None, neq_max: int=4, msg: str='',
-                             debug: float=False) -> Tuple[Any, List[Tuple[int, int]]]:
+                             debug: float=False) -> Tuple[Any, list[Tuple[int, int]]]:
     assert isinstance(nnodes, int), nnodes
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
     slots = np.where(ieq[:, :] < nnodes)

@@ -10,16 +10,16 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 
 
-def expand_thru(fields: List[str],
+def expand_thru(fields: list[str],
                 set_fields: bool=True,
-                sort_fields: bool=False) -> List[int]:
+                sort_fields: bool=False) -> list[int]:
     """
     Expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
 
     Parameters
     ----------
-    fields : List[int/str]
+    fields : list[int/str]
         the fields to expand
     set_fields : bool; default=True
         Should the fields be converted to a set and then back to a list?
@@ -60,7 +60,7 @@ def expand_thru(fields: List[str],
         out.sort()
     return out
 
-def _remove_blanks_capitalize(fields: List[Optional[str]]) -> List[Optional[str]]:
+def _remove_blanks_capitalize(fields: list[Optional[str]]) -> list[Optional[str]]:
     """remove any blanks and capitalize any strings"""
     #fields2 = [field.upper()
                #if isinstance(field, str) else field for field in fields]
@@ -76,15 +76,15 @@ def _remove_blanks_capitalize(fields: List[Optional[str]]) -> List[Optional[str]
     return fields2
 
 
-def expand_thru_by(fields: List[str], set_fields: bool=True, sort_fields: bool=True,
-                   require_int: bool=True, allow_blanks: bool=False) -> List[int]:
+def expand_thru_by(fields: list[str], set_fields: bool=True, sort_fields: bool=True,
+                   require_int: bool=True, allow_blanks: bool=False) -> list[int]:
     """
     Expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]
 
     Parameters
     ----------
-    fields : List[int/str]
+    fields : list[int/str]
         the fields to expand
     set_fields : bool; default=True
         Should the fields be converted to a set and then back to a list

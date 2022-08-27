@@ -17,19 +17,19 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     MAPPER = Dict[str, Dict[int, int]]
 
-def bdf_merge(bdf_filenames: List[str],
+def bdf_merge(bdf_filenames: list[str],
               bdf_filename_out: Optional[str]=None,
               renumber: bool=True, encoding: Optional[str]=None,
               size: int=8, is_double: bool=False,
-              cards_to_skip: Optional[List[str]]=None,
+              cards_to_skip: Optional[list[str]]=None,
               skip_case_control_deck: bool=False,
-              log: Optional[SimpleLogger]=None) -> Tuple[BDF, List[MAPPER]]:
+              log: Optional[SimpleLogger]=None) -> Tuple[BDF, list[MAPPER]]:
     """
     Merges multiple BDF into one file
 
     Parameters
     ----------
-    bdf_filenames : List[str]
+    bdf_filenames : list[str]
         list of bdf filenames
     bdf_filename_out : str / None
         the output bdf filename (default=None; None -> no writing)
@@ -41,7 +41,7 @@ def bdf_merge(bdf_filenames: List[str],
         the bdf write precision
     is_double : bool; default=False
         the field precision to write
-    cards_to_skip : List[str]; (default=None -> don't skip any cards)
+    cards_to_skip : list[str]; (default=None -> don't skip any cards)
         There are edge cases (e.g. FLUTTER analysis) where things can break due to
         uncross-referenced cards.  You need to disable entire classes of cards in
         that case (e.g. all aero cards).
@@ -52,7 +52,7 @@ def bdf_merge(bdf_filenames: List[str],
     -------
     model : BDF
         Merged model.
-    mappers_all : List[mapper]
+    mappers_all : list[mapper]
         mapper : Dict[bdf_attribute] : old_id_to_new_id_dict
             List of mapper dictionaries of original ids to merged
 
@@ -221,9 +221,9 @@ def _apply_scalar_cards(model: BDF, model2_renumber: BDF) -> None:
             model.params[key] = param
 
 
-def _assemble_mapper(mappers: List[MAPPER],
+def _assemble_mapper(mappers: list[MAPPER],
                      mapper_0: MAPPER,
-                     data_members: List[str],
+                     data_members: list[str],
                      mapper_renumber: Optional[MAPPER]=None) -> None:
     """
     Assemble final mappings from all original ids to the ids in the merged and possibly
@@ -231,7 +231,7 @@ def _assemble_mapper(mappers: List[MAPPER],
 
     Parameters
     ----------
-    mappers : List[mapper]
+    mappers : list[mapper]
        mapper : dict[key] : value
             key : ???
                 ???
@@ -242,7 +242,7 @@ def _assemble_mapper(mappers: List[MAPPER],
             ???
         value : ???
             ???
-    data_members : List[str]
+    data_members : list[str]
        list of things to include in the mappers?
         data_members = [
             'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
@@ -262,7 +262,7 @@ def _assemble_mapper(mappers: List[MAPPER],
 
     Returns
     -------
-    mappers_all : List[mappers]
+    mappers_all : list[mappers]
         One mapper for each bdf_filename
 
     """
@@ -446,7 +446,7 @@ def _dict_key_to_key(dictionary) -> Dict[int, int]:
     """creates a dummy map from the nominal key to the nominal key"""
     return {key : key for key in dictionary.keys()}
 
-def _dicts_key_to_key(dictionaries: List[Dict[int, Any]]) -> Dict[int, int]:
+def _dicts_key_to_key(dictionaries: list[Dict[int, Any]]) -> Dict[int, int]:
     """
     Creates a dummy map from the nominal key to the nominal key for
     multiple input dictionaries.  This is intended for use with:
@@ -455,7 +455,7 @@ def _dicts_key_to_key(dictionaries: List[Dict[int, Any]]) -> Dict[int, int]:
     Example
     -------
     spcs = {
-        # sid : List[SPCs]
+        # sid : list[SPCs]
         1  : [
                 SPC1(1, '456', [1,2,3,4]),
                 SPC1(1, '23', [1,2,3]),

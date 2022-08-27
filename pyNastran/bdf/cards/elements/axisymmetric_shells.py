@@ -38,7 +38,7 @@ __all__ = ['CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
 class AxisymmetricTri(Element):
     def __init__(self):
         Element.__init__(self)
-        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.nodes_ref = None  # type: Optional[list[Any]]
         self.pid_ref = None  # type: Optional[Any]
 
     def get_edge_ids(self):
@@ -73,7 +73,7 @@ class AxisymmetricTri(Element):
 class AxisymmetricQuad(Element):
     def __init__(self):
         Element.__init__(self)
-        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.nodes_ref = None  # type: Optional[list[Any]]
         self.pid_ref = None  # type: Optional[Any]
 
     def get_edge_ids(self):
@@ -255,7 +255,7 @@ class CTRAX3(AxisymmetricTri):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.nodes_ref = None  # type: Optional[list[Any]]
         self.pid_ref = None  # type: Optional[Any]
 
     @property
@@ -627,7 +627,7 @@ class CTRIAX(AxisymmetricTri):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.nodes_ref = None  # type: Optional[list[Any]]
         self.pid_ref = None  # type: Optional[Any]
 
     @property
@@ -776,7 +776,7 @@ class CTRIAX6(TriShell):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.mid = self.Mid()
-        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.nodes_ref = None  # type: Optional[list[Any]]
         self.mid_ref = None  # type: Optional[Any]
 
     def _verify(self, xref):
@@ -1028,7 +1028,7 @@ class CQUADX(AxisymmetricQuad):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1073,7 +1073,7 @@ class CQUADX(AxisymmetricQuad):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.nodes_ref = None  # type: Optional[list[Any]]
         self.pid_ref = None  # type: Optional[Any]
 
     def Thickness(self):
@@ -1231,7 +1231,7 @@ class CQUADX4(AxisymmetricQuad):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.nodes_ref = None  # type: Optional[list[Any]]
         self.pid_ref = None  # type: Optional[Any]
 
     def flip_normal(self):
@@ -1381,7 +1381,7 @@ class CQUADX8(AxisymmetricQuad):
         """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.nodes_ref = None  # type: Optional[list[Any]]
         self.pid_ref = None  # type: Optional[Any]
 
     def Normal(self):

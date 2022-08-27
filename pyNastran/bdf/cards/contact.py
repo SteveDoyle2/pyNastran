@@ -472,7 +472,7 @@ class BCBODY(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
-def _get_bcbody_section_values(card, i: int, word: str) -> Tuple[int, List[Any]]:
+def _get_bcbody_section_values(card, i: int, word: str) -> Tuple[int, list[Any]]:
     """gets all the values of a multi-line section"""
     i0 = i
     values = []

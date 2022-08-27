@@ -11,7 +11,7 @@ def print_card(fields, size=8, is_double=False):
 
     Parameters
     ----------
-    fields : List[int/float/str/None]
+    fields : list[int/float/str/None]
         all the fields in the BDF card (no trailing Nones)
     size : int; default=8
         the size of the field (8/16)

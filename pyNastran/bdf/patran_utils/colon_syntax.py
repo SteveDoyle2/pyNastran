@@ -24,7 +24,7 @@ def parse_patran_syntax(node_sets: str, pound: Optional[int]=None) -> np.ndarray
 
     Returns
     -------
-    nodes : List[int]
+    nodes : list[int]
         the integer values
 
     Patran has a short syntax of the form:
@@ -69,7 +69,7 @@ def parse_patran_syntax(node_sets: str, pound: Optional[int]=None) -> np.ndarray
         return np.array([], dtype='int32')
 
     snodes = node_sets.split()
-    nodes = []  # type: List[int]
+    nodes = []  # type: list[int]
     for snode in snodes:
         _apply_comma_colon_int_node(nodes, snode)
     return np.unique(nodes)
@@ -86,7 +86,7 @@ def _apply_comma_colon_int_node(nodes, snode):
     else:
         nodes.append(int(snode))
 
-def _apply_colon_set(snode: str) -> List[int]:
+def _apply_colon_set(snode: str) -> list[int]:
     """helper method for parse_patran_syntax"""
     ssnode = snode.split(':')
     if len(ssnode) == 2:
@@ -112,7 +112,7 @@ def write_patran_syntax_dict(dict_sets: Dict[str, np.ndarray]) -> str:
 
     Parameters
     ----------
-    dict_sets : Dict[str] = List[int]
+    dict_sets : Dict[str] = list[int]
         str : the key
         values : the integer values for that key
 
@@ -149,7 +149,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: Dict[str, Optional[int]
     ----------
     node_sets : str
         the node_set to parse
-    pound_dict : List[str] : int
+    pound_dict : list[str] : int
         key : the string
         value : the pound value (e.g. 1:#)
     msg : str
@@ -157,7 +157,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: Dict[str, Optional[int]
 
     Returns
     -------
-    nodes : Dict[str] = List[int]
+    nodes : Dict[str] = list[int]
         str : the key
         values : the integer values for that key
 
@@ -196,7 +196,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: Dict[str, Optional[int]
     .. warning:: case sensitive
 
     """
-    data = {}  # type: Dict[str, List[int]]
+    data = {}  # type: Dict[str, list[int]]
     try:
         snodes = node_sets.split()
     except AttributeError:
@@ -283,7 +283,7 @@ def parse_patran_syntax_dict_map(node_sets: str,
             the name of the input string
         key_out : str
             the name of the out string
-    #pound_dict : List[str] : int
+    #pound_dict : list[str] : int
         #key : the string
         #value : the pound value (e.g. 1:#)
     msg : str
@@ -291,7 +291,7 @@ def parse_patran_syntax_dict_map(node_sets: str,
 
     Returns
     -------
-    nodes : Dict[str] = List[int]
+    nodes : Dict[str] = list[int]
         str : the key
         values : the integer values for that key
 

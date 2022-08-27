@@ -16,8 +16,8 @@ if TYPE_CHECKING:  # pragma: no cover
                                    PBAR, PBEAM, PBEAM3, PBUSH, PBUSH1D)
 
 
-def convert(model: BDF, units_to: List[str],
-            units: Optional[List[str]]=None) -> None:
+def convert(model: BDF, units_to: list[str],
+            units: Optional[list[str]]=None) -> None:
     """
     Converts a model from a set of defined units
 
@@ -25,12 +25,12 @@ def convert(model: BDF, units_to: List[str],
     ----------
     model : BDF
        cross references the model (default=True)
-    units_to : List[str]
+    units_to : list[str]
         [length, mass, time]
         length = {in, ft, m, cm, mm}
         mass = {g, kg, Mg, lbm, slug, slinch}
         time = {s}
-    units : List[str]
+    units : list[str]
         overwrites model.units
 
     Note
@@ -52,7 +52,7 @@ def convert(model: BDF, units_to: List[str],
     scale_model(model, xyz_scale, mass_scale, time_scale, force_scale, gravity_scale)
 
 
-def scale_by_terms(bdf_filename: Union[BDF, str], terms: List[float], scales: List[float],
+def scale_by_terms(bdf_filename: Union[BDF, str], terms: list[float], scales: list[float],
                    bdf_filename_out: Optional[str]=None,
                    encoding: Optional[str]=None, log=None, debug: bool=True) -> BDF:
     """
@@ -62,10 +62,10 @@ def scale_by_terms(bdf_filename: Union[BDF, str], terms: List[float], scales: Li
     ----------
     bdf_filename : str / BDF()
         a BDF filename
-    terms : List[str]; length=3
+    terms : list[str]; length=3
         the names {M, L, T, F, P, V, A, rho}
         mass, length, time, force, pressure, velocity, area, mass_density
-    scales : List[float]; length=3
+    scales : list[float]; length=3
         the scaling factors
     bdf_filename_out : str; default=None
         a BDF filename to write
@@ -99,8 +99,8 @@ def scale_by_terms(bdf_filename: Union[BDF, str], terms: List[float], scales: Li
         model.write_bdf(bdf_filename_out, size=16)
     return model
 
-def _setup_scale_by_terms(scales: List[float],
-                          terms: List[str], quiet: bool=False) -> Tuple[float, float, float]:
+def _setup_scale_by_terms(scales: list[float],
+                          terms: list[str], quiet: bool=False) -> Tuple[float, float, float]:
     """determines the mass, length, time scaling factors"""
     term_to_mlt_map = {
         #      M   L   T
@@ -146,9 +146,9 @@ def _setup_scale_by_terms(scales: List[float],
     return mass_scale, xyz_scale, time_scale
 
 def _scale_term(name: str,
-                coeffs: List[float],
-                terms: List[float],
-                scales: List[float]) -> Tuple[float, str]:
+                coeffs: list[float],
+                terms: list[float],
+                scales: list[float]) -> Tuple[float, str]:
     msg = '%s = ' % name
     value = 1.0
     for coeff, term, scale in zip(coeffs, terms, scales):
@@ -878,7 +878,7 @@ def _convert_pbush(scales: Set[str],
     if prop.mass is not None:
         scales.update(['mass'])
         prop.mass *= mass_scale
-    #rcv : List[float]; default=None -> (None, None, None, None)
+    #rcv : list[float]; default=None -> (None, None, None, None)
         #[sa, st, ea, et] = rcv
         #length(mass_fields) = 4
     #mass : float; default=None

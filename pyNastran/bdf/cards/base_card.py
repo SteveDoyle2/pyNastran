@@ -28,7 +28,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def write_card(comment: str,
-               card: List[Union[int, float, str, None]],
+               card: list[Union[int, float, str, None]],
                size: int, is_double: bool) -> str:
     if size == 8:
         try:
@@ -98,21 +98,21 @@ class BaseCard:
         pass
 
     def object_attributes(self, mode: str='public',
-                          keys_to_skip: Optional[List[str]]=None,
-                          filter_properties: bool=False) -> List[str]:
+                          keys_to_skip: Optional[list[str]]=None,
+                          filter_properties: bool=False) -> list[str]:
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []  # type: List[str]
+        my_keys_to_skip = []  # type: list[str]
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
                                  filter_properties=filter_properties)
 
     def object_methods(self, mode: str='public',
-                       keys_to_skip: Optional[List[str]]=None) -> List[str]:
+                       keys_to_skip: Optional[list[str]]=None) -> list[str]:
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []  # type: List[str]
+        my_keys_to_skip = []  # type: list[str]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
@@ -248,8 +248,8 @@ class BaseCard:
         return self._is_same_fields(fields1, fields2)
 
     def _is_same_fields(self,
-                        fields1: List[Union[int, float, str, None]],
-                        fields2: List[Union[int, float, str, None]]) -> bool:
+                        fields1: list[Union[int, float, str, None]],
+                        fields2: list[Union[int, float, str, None]]) -> bool:
         for (field1, field2) in zip(fields1, fields2):
             if not is_same(field1, field2):
                 return False
@@ -268,13 +268,13 @@ class BaseCard:
         list_fields = self.raw_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
-    def repr_fields(self) -> List[Union[int, float, str, None]]:
+    def repr_fields(self) -> list[Union[int, float, str, None]]:
         """
         Gets the fields in their simplified form
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -480,7 +480,7 @@ class Element(BaseCard):
                 positions[i, :] = node.get_position()
         return positions
 
-    def get_node_positions_no_xref(self, model: BDF, nodes: List[Any]=None) -> np.ndarray:
+    def get_node_positions_no_xref(self, model: BDF, nodes: list[Any]=None) -> np.ndarray:
         """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
@@ -494,18 +494,18 @@ class Element(BaseCard):
                 positions[i, :] = node.get_position_no_xref(model)
         return positions
 
-    def _node_ids(self, nodes: Optional[List[Any]]=None,
-                  allow_empty_nodes: bool=False, msg: str='') -> List[int]:
+    def _node_ids(self, nodes: Optional[list[Any]]=None,
+                  allow_empty_nodes: bool=False, msg: str='') -> list[int]:
         """returns nodeIDs for repr functions"""
         return _node_ids(self, nodes=nodes, allow_empty_nodes=allow_empty_nodes, msg=msg)
 
-    def prepare_node_ids(self, nids: List[int], allow_empty_nodes: bool=False) -> None:
+    def prepare_node_ids(self, nids: list[int], allow_empty_nodes: bool=False) -> None:
         """Verifies all node IDs exist and that they're integers"""
         #self.nodes = nids
         nids = self.validate_node_ids(nids, allow_empty_nodes)
         return nids
 
-    def validate_node_ids(self, nodes: List[int], allow_empty_nodes: bool=False) -> None:
+    def validate_node_ids(self, nodes: list[int], allow_empty_nodes: bool=False) -> None:
         if allow_empty_nodes:
             # verify we have nodes
             if len(nodes) == 0:

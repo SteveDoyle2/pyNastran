@@ -100,7 +100,7 @@ class AXIF(BaseCard):
         F : str; default=None
             Flag specifying harmonics. (Blank if harmonic is specified, or Character:
             'NONE')
-        Ni : List[int]
+        Ni : list[int]
             Harmonic numbers for the solution, represented by an increasing
             sequence of integers. On continuation entries, without the 'THRU'
             option, blank fields are ignored. 'THRU' implies all numbers including
@@ -143,7 +143,7 @@ class AXIF(BaseCard):
         #db : float
         #no_sym : str
         #F : str
-        #Ni : List[int]
+        #Ni : list[int]
 
 
         assert len(card) >= 7, f'len(AXIF card) = {len(card):d}\ncard={card}'
@@ -282,7 +282,7 @@ class RINGFL(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -301,7 +301,7 @@ class RINGFL(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -395,7 +395,7 @@ class RINGAX(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -414,7 +414,7 @@ class RINGAX(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -476,7 +476,7 @@ class CCONEAX(Element):
             element id
         pid : int
             property id (PCONEAX)
-        nids : List[int, int]
+        nids : list[int, int]
             node ids
         comment : str; default=''
             a comment for the card
@@ -615,7 +615,7 @@ class PCONEAX(Property):
             Nonstructural mass per unit area.
         z1, z2 : float
             Fiber distances from the middle surface for stress recovery.
-        phi : List[float]
+        phi : list[float]
             Azimuthal coordinates (in degrees) for stress recovery.
         comment : str; default=''
             a comment for the card

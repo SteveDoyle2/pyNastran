@@ -53,7 +53,7 @@ def get_inertia_rectangular(sections):
 
     Returns
     -------
-    interia_parameters : List[Area, Iyy, Izz, Iyz]
+    interia_parameters : list[Area, Iyy, Izz, Iyz]
         the inertia parameters
 
     .. seealso:: http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
@@ -87,7 +87,7 @@ def get_inertia_rectangular(sections):
 
 
 def _IAreaL(prop, dim):
-    # type: (Any, List[float]) -> Tuple[float, float, float, float]
+    # type: (Any, list[float]) -> Tuple[float, float, float, float]
     beam_type = prop.beam_type
     if beam_type == 'ROD':
         A, I1, I2, I12 = rod_section(prop.type, prop.beam_type, dim, prop)
@@ -209,7 +209,7 @@ class LineProperty(Property):
 
 
 def A_I1_I2_I12(prop, beam_type: str,
-                dim: List[float]) -> Tuple[float, float, float, float]:
+                dim: list[float]) -> Tuple[float, float, float, float]:
     r"""
     ::
 
@@ -247,14 +247,14 @@ def A_I1_I2_I12(prop, beam_type: str,
     assert A == prop.Area(), prop
     return A, I1, I2, I12
 
-def _bar_areaL(class_name: str, beam_type: str, dim: List[float],
+def _bar_areaL(class_name: str, beam_type: str, dim: list[float],
                prop: Any) -> float:
     """
     Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
 
     Parameters
     ----------
-    dim : List[float]
+    dim : list[float]
         a list of the dimensions associated with **beam_type**
 
     Returns
@@ -1519,7 +1519,7 @@ class PBARL(LineProperty):
             type of the bar
             {ROD, TUBE, TUBE2, I, CHAN, T, BOX, BAR, CROSS, H, T1, I1,
             CHAN1, Z, CHAN2, T2, BOX1, HEXA, HAT, HAT1, DBOX}
-        dim : List[float]
+        dim : list[float]
             dimensions for cross-section corresponding to Type;
             the length varies
         group : str; default='MSCBML0'
@@ -2090,7 +2090,7 @@ class PBRSECT(LineProperty):
 
         Parameters
         ----------
-        card : List[str]
+        card : list[str]
             this card is special and is not a ``BDFCard`` like other cards
         comment : str; default=''
             a comment for the card
@@ -2270,7 +2270,7 @@ class PBRSECT(LineProperty):
 
 
 
-def parse_pbrsect_options(pid: int, options: List[Any]):
+def parse_pbrsect_options(pid: int, options: list[Any]):
     # ???
     outp = None
 
@@ -2403,28 +2403,28 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
             property id
         mid : int
             material id
-        A : List[float]
+        A : list[float]
             areas for ABC
-        iz / iy / iyz : List[float]
+        iz / iy / iyz : list[float]
             area moment of inertias for ABC
-        iyz : List[float]; default=None -> [0., 0., 0.]
+        iyz : list[float]; default=None -> [0., 0., 0.]
             area moment of inertias for ABC
-        j : List[float]; default=None
+        j : list[float]; default=None
             polar moment of inertias for ABC
             None -> iy + iz from section A for ABC
-        so : List[str]; default=None
+        so : list[str]; default=None
             None -> ['YES', 'YESA', 'YESA']
-        cy / cz / dy / dz / ey / ez / fy / fz : List[float]; default=[0., 0., 0.]
+        cy / cz / dy / dz / ey / ez / fy / fz : list[float]; default=[0., 0., 0.]
             stress recovery loctions for ABC
-        ny / nz : List[float]
+        ny / nz : list[float]
             Local (y, z) coordinates of neutral axis for ABC
-        my / mz : List[float]
+        my / mz : list[float]
             Local (y, z) coordinates of nonstructural mass center of gravity for ABC
-        nsiy / nsiz / nsiyz : List[float]
+        nsiy / nsiz / nsiyz : list[float]
             Nonstructural mass moments of inertia per unit length about
             local y and z-axes, respectively, with regard to the nonstructural mass
             center of gravity for ABC
-        cw : List[float]
+        cw : list[float]
             warping coefficients for ABC
         stress : str; default='GRID'
             Location selection for stress, strain and force output.
@@ -2708,7 +2708,7 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
             self.comment = comment
         raise NotImplementedError(data)
 
-    def Nsm(self) -> List[float]:
+    def Nsm(self) -> list[float]:
         """
         Gets the non-structural mass :math:`nsm`.
         .. warning:: nsm field not supported fully on PBEAM3 card
@@ -3190,7 +3190,7 @@ class PBEND(LineProperty):
         assert isinstance(self.A, float), self.get_stats()
         return self.A * rho + self.nsm
 
-    def raw_fields(self) -> List[Union[str, float, int, None]]:
+    def raw_fields(self) -> list[Union[str, float, int, None]]:
         return self.repr_fields()
 
     def repr_fields(self):
@@ -3225,7 +3225,7 @@ class PBEND(LineProperty):
 
 
 def split_arbitrary_thickness_section(key: str,
-                                      value: Union[str, float, List[int]]) -> Tuple[int, Union[float, List[int]]]:
+                                      value: Union[str, float, list[int]]) -> Tuple[int, Union[float, list[int]]]:
     """
     Helper method for PBRSECT/PBMSECT
 
@@ -3261,7 +3261,7 @@ def split_arbitrary_thickness_section(key: str,
     return key_id, out
 
 
-def get_beam_sections(line: str) -> List[str]:
+def get_beam_sections(line: str) -> list[str]:
     """
     Splits a PBRSECT/PBMSECT line
 

@@ -167,7 +167,7 @@ class DEQATN(BaseCard):  # needs work...
         ----------
         equation_id : int
             the id of the equation
-        eqs : List[str]
+        eqs : list[str]
             the equations, which may overbound the field
             split them by a semicolon (;)
         comment : str; default=''
@@ -203,13 +203,13 @@ class DEQATN(BaseCard):  # needs work...
         return DEQATN(equation_id, eqs, comment='')
 
     @classmethod
-    def add_card(cls, card: List[str], comment: str=''):
+    def add_card(cls, card: list[str], comment: str=''):
         """
         Adds a DEQATN card from ``BDF.add_card(...)``
 
         Parameters
         ----------
-        card : List[str]
+        card : list[str]
             this card is special and is not a ``BDFCard`` like other cards
         comment : str; default=''
             a comment for the card
@@ -321,10 +321,10 @@ class DEQATN(BaseCard):  # needs work...
         return self.func(*args)
         #self.func(*args)
 
-    def raw_fields(self) -> List[str]:
+    def raw_fields(self) -> list[str]:
         return [self.write_card()]
 
-    def repr_fields(self) -> List[str]:
+    def repr_fields(self) -> list[str]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -340,14 +340,14 @@ class DEQATN(BaseCard):  # needs work...
         #print(msg)
         return msg
 
-def lines_to_eqs(eqs_in: List[str]) -> List[str]:
+def lines_to_eqs(eqs_in: list[str]) -> list[str]:
     """splits the equations"""
     eqs_wrapped = _split_equations_by_semicolon(eqs_in)
     eqs = _join_wrapped_equation_lines(eqs_in, eqs_wrapped)
     assert len(eqs) > 0, eqs
     return eqs
 
-def _split_equations_by_semicolon(eqs_in: List[str]) -> List[str]:
+def _split_equations_by_semicolon(eqs_in: list[str]) -> list[str]:
     """helper for ``lines_to_eqs``"""
     eqs_temp_out = []
     nchars = 72 - 16
@@ -388,7 +388,7 @@ def _split_equations_by_semicolon(eqs_in: List[str]) -> List[str]:
             #'full_line=%r' % (check_line, full_line))
         #raise SyntaxError(msg)
 
-def _join_wrapped_equation_lines(unused_eqs_temp_in, eqs_temp: List[str]) -> List[str]:
+def _join_wrapped_equation_lines(unused_eqs_temp_in, eqs_temp: list[str]) -> list[str]:
     """helper for ``lines_to_eqs``"""
     eqs = []
     neqs = len(eqs_temp)
@@ -433,7 +433,7 @@ def _join_wrapped_equation_lines(unused_eqs_temp_in, eqs_temp: List[str]) -> Lis
         eqs.append(eqi)
     return eqs
 
-def split_equations(lines: List[str]) -> List[str]:
+def split_equations(lines: list[str]) -> list[str]:
     """takes an overbounded DEQATN card and shortens it"""
     # first line must be < 56
     # second line may be < 64
@@ -450,14 +450,14 @@ def split_equations(lines: List[str]) -> List[str]:
     lines2[-1] = lines2[-1][:-1]
     return lines2
 
-def _split_equation(lines_out: List[str], line: str, n: int,
-                    isplit: int=0) -> List[str]:
+def _split_equation(lines_out: list[str], line: str, n: int,
+                    isplit: int=0) -> list[str]:
     """
     Takes an overbounded DEQATN line and shortens it using recursion
 
     Parameters
     ----------
-    lines_out : List[str]
+    lines_out : list[str]
         len(lines) = 0 : first iteration
         len(lines) = 1 : second iteration
     line : str
@@ -471,7 +471,7 @@ def _split_equation(lines_out: List[str], line: str, n: int,
 
     Returns
     -------
-    lines_out : List[str]
+    lines_out : list[str]
         the long line broken into shorter lines
 
     """
@@ -520,7 +520,7 @@ def fortran_to_python_short(line: str, unused_default_values: Any) -> Any:
     exec(func_str, globals(), local_dict)
     return local_dict['func']
 
-def split_to_equations(lines: List[str]) -> List[str]:
+def split_to_equations(lines: list[str]) -> list[str]:
     """
     Splits a line like::
 
@@ -542,7 +542,7 @@ def split_to_equations(lines: List[str]) -> List[str]:
     return equation_lines
 
 def fortran_to_python(deqatn_id: int,
-                      lines: List[str],
+                      lines: list[str],
                       default_values: Dict[str, Union[float, np.ndarray]],
                       comment: str='') -> Tuple[str, int, str]:
     """
@@ -550,7 +550,7 @@ def fortran_to_python(deqatn_id: int,
 
     Parameters
     ----------
-    lines : List[str]
+    lines : list[str]
         the equations to write broken up by statement
     default_values : dict[name] = value
         the default values from the DTABLE card
@@ -637,7 +637,7 @@ def fortran_to_python(deqatn_id: int,
 
 def write_function_header(func_header: str, eq: str,
                           default_values: Dict[str, float],
-                          comment: str='') -> Tuple[str, str, List[str]]:
+                          comment: str='') -> Tuple[str, str, list[str]]:
     """
     initializes the python function
 
@@ -673,7 +673,7 @@ def write_function_header(func_header: str, eq: str,
         the name of the function ``f``
     msg : str
         see above
-    variables : List[str]
+    variables : list[str]
         the variables used by the equation header
         a, b, c
 
@@ -744,7 +744,7 @@ def write_function_header(func_header: str, eq: str,
     msg += '    %s = %s\n' % (func_name, eq)
     return func_name, msg, variables
 
-def _write_function_line(func_name: str, variables: List[str],
+def _write_function_line(func_name: str, variables: list[str],
                          default_values: Dict[str, float]) -> str:
     """writes the ``def f(x, y, z=1.):`` part of the function"""
     vals = []
@@ -774,7 +774,7 @@ def _write_comment(comment: str) -> str:
     msg = '    """\n    %s"""\n' % msgi
     return msg
 
-def _write_variables(variables: List[str]) -> str:
+def _write_variables(variables: list[str]) -> str:
     """type checks the inputs"""
     msg = '    try:\n'
     for var in variables:

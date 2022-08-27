@@ -253,8 +253,8 @@ def _get_forces_moments_pload4(model: BDF,
                                centroidal_pressures: np.ndarray,
                                forces: np.ndarray,
                                scale: float,
-                               fail_nids: List[int],
-                               fail_count: int, fail_count_max: int) -> List[int]:
+                               fail_nids: list[int],
+                               fail_count: int, fail_count_max: int) -> list[int]:
     # multiple elements
     eids_missing = []
 
@@ -614,7 +614,7 @@ def get_load_arrays(model: BDF, subcase_id: int,
         the subcase id
     eid_map : Dict[int eid : int index]
         ???
-    node_ids : List[int] / int ndarray
+    node_ids : list[int] / int ndarray
         the node ids in sorted order
     normals : (nelements, 3) ndarray?
         the normal vectors for the shells

@@ -219,9 +219,9 @@ class TABLED1(Table):
         ----------
         tid : int
             table id
-        x : List[float]
+        x : list[float]
             nvalues
-        y : List[float]
+        y : list[float]
             nvalues
         xaxis : str
             LINEAR, LOG
@@ -370,9 +370,9 @@ class TABLED2(Table):
             table id
         x1 : float
             y = yT(x - x1)
-        x : List[float]
+        x : list[float]
             the x values
-        y : List[float]
+        y : list[float]
             the y values
         extrap : int; default=0
             Extrapolation method:
@@ -499,9 +499,9 @@ class TABLED3(Table):
             y = yT(x - x1)
         x2 : ???
             ???
-        x : List[float]
+        x : list[float]
             the x values
-        y : List[float]
+        y : list[float]
             the y values
         extrap : int; default=0
             Extrapolation method:
@@ -595,7 +595,7 @@ class TABLED4(Table):
 
     def __init__(self, tid: int,
                  x1: float, x2: float, x3: float, x4: float,
-                 a: List[float], comment: str=''):
+                 a: list[float], comment: str=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
@@ -1201,7 +1201,7 @@ class TABLEM4(Table):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1261,7 +1261,7 @@ class TABLES1(Table):
             2 - Cauchy (true) stress vs. plastic true strain (MSC only)
             Type is MSC-specific and was added somewhere between
             2006 and 2016.
-        x, y : List[float]
+        x, y : list[float]
             table values
         comment : str; default=''
             a comment for the card
@@ -1301,7 +1301,7 @@ class TABLES1(Table):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1383,7 +1383,7 @@ class TABLEST(Table):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1441,7 +1441,7 @@ class TABLEH1(Table):
         ----------
         tid : int
             Table ID
-        x, y : List[float]
+        x, y : list[float]
             table values
         comment : str; default=''
             a comment for the card
@@ -1478,7 +1478,7 @@ class TABLEH1(Table):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1541,7 +1541,7 @@ class TABLEHT(Table):
         ----------
         tid : int
             Table ID
-        x, y : List[float]
+        x, y : list[float]
             table values
         comment : str; default=''
             a comment for the card
@@ -1578,7 +1578,7 @@ class TABLEHT(Table):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1660,7 +1660,7 @@ class TABRND1(Table):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

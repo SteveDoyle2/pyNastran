@@ -139,23 +139,23 @@ class PBUSH(BushingProperty):
         ----------
         pid : int
             property id
-        k : List[float]
+        k : list[float]
             Nominal stiffness values in directions 1 through 6.
             len(k) = 6
-        b : List[float]
+        b : list[float]
             Nominal damping coefficients in direction 1 through 6 in units of
             force per unit velocity
             len(b) = 6
-        ge : List[float]
+        ge : list[float]
             Nominal structural damping constant in directions 1 through 6.
             len(ge) = 6
-        rcv : List[float]; default=None -> (None, None, None, None)
+        rcv : list[float]; default=None -> (None, None, None, None)
             [sa, st, ea, et] = rcv_fields
             length(rcv_fields) = 4
         mass : float; default=None
             lumped mass of the CBUSH
             This is an MSC only parameter.
-        t : List[float]; default=None -> (None, None, None)
+        t : list[float]; default=None -> (None, None, None)
             [alpha, tref, coinl] = t_fields
             length(t_fields) = 3
             alpha: thermal expansion coefficient; default=0.0
@@ -317,7 +317,7 @@ class PBUSH(BushingProperty):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -456,7 +456,7 @@ class PBUSH1D(BushingProperty):
         optional_vars : dict[name] : value; default=None
             name : str
                 SHOCKA, SPRING, DAMPER, GENER
-            values : List[varies]
+            values : list[varies]
                 the values
             SHOCKA:
                 Coefficients of the following force versus
@@ -1074,17 +1074,17 @@ class PBUSH_OPTISTRUCT(BushingProperty):
         ----------
         pid : int
             property id
-        k : List[float]
+        k : list[float]
             Nominal stiffness values in directions 1 through 6.
             len(k) = 6
-        b : List[float]
+        b : list[float]
             Nominal damping coefficients in direction 1 through 6 in units of
             force per unit velocity
             len(b) = 6
-        ge : List[float]
+        ge : list[float]
             Nominal structural damping constant in directions 1 through 6.
             len(ge) = 6
-        mass : List[float]
+        mass : list[float]
             Nominal mass in directions 1 through 6.
         comment : str; default=''
             a comment for the card
@@ -1220,7 +1220,7 @@ class PBUSH_OPTISTRUCT(BushingProperty):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

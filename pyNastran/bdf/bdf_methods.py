@@ -45,7 +45,7 @@ class BDFMethods(BDFAttributes):
 
         Parameters
         ----------
-        property_ids : List[int] / int
+        property_ids : list[int] / int
             list of property ID
         stop_if_no_area : bool; default=True
             prevents crashing if there are no elements
@@ -95,7 +95,7 @@ class BDFMethods(BDFAttributes):
 
         Parameters
         ----------
-        property_ids : List[int] / int
+        property_ids : list[int] / int
             list of property ID
         stop_if_no_mass : bool; default=True
             prevents crashing if there are no elements
@@ -129,7 +129,7 @@ class BDFMethods(BDFAttributes):
 
         Parameters
         ----------
-        property_ids : List[int] / int
+        property_ids : list[int] / int
             list of property ID
         stop_if_no_mass : bool; default=True
             prevents crashing if there are no elements
@@ -176,14 +176,14 @@ class BDFMethods(BDFAttributes):
 
 
 
-    def get_element_faces(self, element_ids: Optional[List[int]]=None, allow_blank_nids: bool=True) -> Any:
+    def get_element_faces(self, element_ids: Optional[list[int]]=None, allow_blank_nids: bool=True) -> Any:
         """
         Gets the elements and faces that are skinned from solid elements.
         This includes internal faces, but not existing shells.
 
         Parameters
         ----------
-        element_ids : List[int] / None
+        element_ids : list[int] / None
             skin a subset of element faces
             default=None -> all elements
         allow_blank_nids : bool; default=True
@@ -191,7 +191,7 @@ class BDFMethods(BDFAttributes):
 
         Returns
         -------
-        eid_faces : (int, List[(int, int, ...)])
+        eid_faces : (int, list[(int, int, ...)])
            value1 : element id
            value2 : face
 

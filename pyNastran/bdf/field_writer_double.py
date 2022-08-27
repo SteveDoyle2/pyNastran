@@ -50,13 +50,13 @@ def print_field_double(value: Union[int, float, str, None]) -> str:
     return field
 
 
-def print_card_double(fields: List[Union[int, float, str, None]], wipe_fields: bool=True) -> str:
+def print_card_double(fields: list[Union[int, float, str, None]], wipe_fields: bool=True) -> str:
     """
     Prints a nastran-style card with 16-character width fields.
 
     Parameters
     ----------
-    fields : List[varies]
+    fields : list[varies]
         all the fields in the BDF card (no trailing Nones)
     wipe_fields : bool; default=True
         some cards (e.g. PBEAM) have ending fields

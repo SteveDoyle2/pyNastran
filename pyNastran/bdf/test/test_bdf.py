@@ -80,6 +80,7 @@ def run_lots_of_files(filenames: List[str], folder: str='',
                       post: Union[int, List[int], None]=None,
                       is_double: Union[bool, List[bool], None]=None,
                       sum_load: bool=True,
+                      run_mass: bool=True,
                       dev: bool=True,
                       crash_cards: Optional[List[str]]=None,
                       pickle_obj: bool=True, quiet: bool=False) -> List[str]:
@@ -114,6 +115,8 @@ def run_lots_of_files(filenames: List[str], folder: str='',
         the PARAM,POST,value to run
     sum_load : bool; default=True
         should the loads be summed
+    run_mass : bool; default=True
+        should the mass be summed
     dev : bool; default=True
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
@@ -189,10 +192,13 @@ def run_lots_of_files(filenames: List[str], folder: str='',
                         is_folder=True, dynamic_vars={},
                         nastran=nastran, size=sizei, is_double=is_doublei,
                         nerrors=0,
-                        post=posti, sum_load=sum_load, dev=dev,
+                        post=posti,
+                        sum_load=sum_load, run_mass=run_mass,
+                        run_extract_bodies=False,
+
+                        dev=dev,
                         crash_cards=crash_cards,
                         limit_mesh_opt=True,
-                        run_extract_bodies=False,
                         pickle_obj=pickle_obj,
                         hdf5=write_hdf5, quiet=quiet, log=log)
                     del fem1
@@ -249,18 +255,20 @@ def run_lots_of_files(filenames: List[str], folder: str='',
     return failed_files
 
 
-def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
+def run_bdf(folder: str, bdf_filename: str,
+            debug: bool=False, xref: bool=True, check: bool=True,
+            punch: bool=False,
             mesh_form='separate', is_folder=False, print_stats=False,
-            encoding=None, sum_load=True,
+            encoding=None,
             size=8, is_double=False,
             hdf5=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False,
             limit_mesh_opt: bool=False,
-            run_extract_bodies=False,
-            run_skin_solids=True,
-            run_loads: bool=True,
+            sum_load: bool=True,
             run_mass: bool=True,
+            run_extract_bodies: bool=False,
+            run_skin_solids: bool=True,
             save_file_structure: bool=False,
             nerrors=0, dev: bool=False, crash_cards=None,
             safe_xref: bool=False, pickle_obj: bool=False,
@@ -297,6 +305,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         get a nicely formatted message of all the cards in the model
     sum_load : bool; default=True
         Sum the static loads (doesn't work for frequency-based loads)
+    run_mass : bool; default=True
+        Sum the mass
     size : int, optional, {8, 16}
         The field width of the model
     is_double : bool, optional
@@ -446,12 +456,14 @@ def run_and_compare_fems(
 
         ierror = 0
         fem1.log.info('running fem2')
-        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
-                        safe_xref=safe_xref,
-                        encoding=encoding, debug=debug, quiet=quiet,
-                        ierror=ierror, nerrors=nerrors,
-                        stop_on_failure=stop_on_failure,
-                        validate_case_control=validate_case_control, log=log)
+        fem2 = run_fem2(
+            bdf_model, out_model, xref, punch,
+            sum_load, size, is_double, mesh_form,
+            safe_xref=safe_xref,
+            encoding=encoding, debug=debug, quiet=quiet,
+            ierror=ierror, nerrors=nerrors,
+            stop_on_failure=stop_on_failure,
+            validate_case_control=validate_case_control, log=log)
 
         diff_cards = compare(fem1, fem2, xref=xref, run_mass=run_mass, check=check,
                              print_stats=print_stats, quiet=quiet)
@@ -952,6 +964,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
             assert isinstance(ierror, int), ierror
             ierror = _validate_case_control(
                 fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
+                sum_load=sum_load,
                 ierror=ierror, nerrors=nerrors,
                 stop_on_failure=stop_on_failure)
 
@@ -987,6 +1000,7 @@ def _assert_has_spc(subcase, fem):
 
 def _validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: List[int],
                            subcases: Any, unused_sol_200_map: Any,
+                           sum_load: bool=True,
                            stop_on_failure: bool=True,
                            ierror: int=0, nerrors: int=100) -> None:
     if len(subcase_keys) > 1:
@@ -1011,7 +1025,9 @@ def _validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: List[
             #sol = sol_base
         ierror = check_case(
             sol_base, subcase, fem, p0, isubcase, subcases,
-            ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
+            sum_load=sum_load,
+            ierror=ierror, nerrors=nerrors,
+            stop_on_failure=stop_on_failure)
     return ierror
 
 def check_for_flag_in_subcases(fem2: BDF, subcase: Any, parameters: List[str]) -> None:
@@ -1085,7 +1101,9 @@ def check_case(sol: int,
                p0: np.ndarray,
                isubcase: int,
                subcases: Dict[int, Subcase],
-               ierror: int=0, nerrors: int=100, stop_on_failure: bool=True) -> int:
+               sum_load:bool =True,
+               ierror: int=0, nerrors: int=100,
+               stop_on_failure: bool=True) -> int:
     """
     Checks to see if the case has all the required case control fields
     and that they are valid.
@@ -1263,6 +1281,7 @@ def check_case(sol: int,
     assert isinstance(ierror, int)
     ierror = _check_case_parameters(
         subcase, fem2, p0, isubcase, sol,
+        sum_load=sum_load,
         ierror=ierror, nerrors=nerrors,
         stop_on_failure=stop_on_failure)
     assert isinstance(ierror, int)
@@ -1530,6 +1549,7 @@ def _check_case_parameters(subcase: Subcase,
                            fem: BDF,
                            p0: np.ndarray,
                            isubcase: int, sol: int,
+                           sum_load: bool=True,
                            ierror: int=0, nerrors: int=100,
                            stop_on_failure: bool=True) -> int:
     """helper method for ``check_case``"""
@@ -1625,15 +1645,16 @@ def _check_case_parameters(subcase: Subcase,
         cid_new = 0
         cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
         loadcase_id = subcase.get_parameter('LOAD')[0]
-        force, moment = sum_forces_moments(fem, p0, loadcase_id, cid=cid_new, include_grav=False)
-        unused_fvec = get_static_force_vector_from_subcase_id(fem, isubcase)
-        eids = None
-        nids = None
-        force2, moment2 = sum_forces_moments_elements(
-            fem, p0, loadcase_id, eids, nids, cid=cid_new, include_grav=False)
-        assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
-        assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
-        print('  isubcase=%i F=%s M=%s%s' % (isubcase, force, moment, cid_msg))
+        if sum_load:
+            force, moment = sum_forces_moments(fem, p0, loadcase_id, cid=cid_new, include_grav=False)
+            unused_fvec = get_static_force_vector_from_subcase_id(fem, isubcase)
+            eids = None
+            nids = None
+            force2, moment2 = sum_forces_moments_elements(
+                fem, p0, loadcase_id, eids, nids, cid=cid_new, include_grav=False)
+            assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
+            assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
+            print('  isubcase=%i F=%s M=%s%s' % (isubcase, force, moment, cid_msg))
         allowed_sols = [
             1, 5, 24, 38, 61, 64, 66, 100, 101, 103, 105, 106, 107,
             108, 109, 110, 111, 112, 114, 144, 145, 153, 200, 400, 401, 600, 601,
@@ -2204,8 +2225,8 @@ def test_bdf_argparse(argv=None):
                                help='the encoding method (default=%r)\n' % encoding)
     #parent_parser.add_argument('--skip_nominal', action='store_true',
                                #help='skip the nominal model comparison (default=False)')
-    #parent_parser.add_argument('--skip_loads', action='store_true',
-                               #help='skip loads calcuations (default=False)')
+    parent_parser.add_argument('--skip_loads', action='store_true',
+                               help='skip loads calcuations (default=False)')
     parent_parser.add_argument('--skip_mass', action='store_true',
                                help='skip mass calcuations (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
@@ -2309,15 +2330,15 @@ def get_test_bdf_usage_args_examples(encoding):
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
-        '              [--skip_mass]\n' # [--skip_loads]
+        '              [--skip_loads] [--skip_mass]\n'
     )
     usage = (
         "Usage:\n"
-        '  test_bdf [-x | --safe] [-p] [-c] [-L]      BDF_FILENAME [options]\n'
-        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-d] BDF_FILENAME [options]\n'
-        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-l] BDF_FILENAME [options]\n'
-        '  test_bdf               [-p]                BDF_FILENAME [options]\n'
-        '  test_bdf [-x | --safe] [-p] [--stop]       BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [-c]       BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [-c] [-d]  BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [-c] [-l]  BDF_FILENAME [options]\n'
+        '  test_bdf               [-p]            BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [--stop]   BDF_FILENAME [options]\n'
         '  test_bdf -h | --help\n'
         '  test_bdf -v | --version\n' +
         options
@@ -2341,7 +2362,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '                 card is fully not supported (default=False)\n'
         '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
-        '  -L, --loads    Disables forces/moments summation for the different subcases (default=True)\n'
+        '  --loads        Disables forces/moments summation for the different subcases (default=True)\n'
         #'  --filter       Filters unused cards\n'
 
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
@@ -2364,7 +2385,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --optistruct  Assume OptiStruct\n'
         '  --nasa95      Assume Nastran 95\n'
         '  --mystran     Assume Mystran\n'
-        #'  --skip_loads   skip the loads summation calculations (default=False)\n'
+        '  --skip_loads   skip the loads summation calculations (default=False)\n'
         '  --skip_mass    skip the mass properties calculations (default=False)\n'
         '\n'
         'Info:\n'
@@ -2394,7 +2415,7 @@ def main(argv=None):
     time0 = time.time()
 
     #data['run_nominal'] = not data['skip_nominal']
-    #data['run_loads'] = not data['skip_loads']
+    data['run_loads'] = not data['skip_loads']
     data['run_mass'] = not data['skip_mass']
 
     is_double = False
@@ -2430,10 +2451,12 @@ def main(argv=None):
             punch=data['punch'],
             size=size,
             is_double=is_double,
-            sum_load=data['loads'],
+            sum_load=data['run_loads'],
             #run_nominal=data['run_nominal'],
             #run_loads=data['run_loads'],
             run_mass=data['run_mass'],
+            run_extract_bodies=False,
+
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],
@@ -2441,7 +2464,6 @@ def main(argv=None):
             nerrors=data['nerrors'],
             encoding=data['encoding'],
             crash_cards=crash_cards,
-            run_extract_bodies=False,
             pickle_obj=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
@@ -2480,8 +2502,10 @@ def main(argv=None):
             punch=data['punch'],
             size=size,
             is_double=is_double,
-            sum_load=data['loads'],
+            sum_load=data['run_loads'],
             run_mass=data['run_mass'],
+            run_extract_bodies=False,
+
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],
@@ -2489,7 +2513,6 @@ def main(argv=None):
             nerrors=data['nerrors'],
             encoding=data['encoding'],
             crash_cards=crash_cards,
-            run_extract_bodies=False,
             pickle_obj=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],

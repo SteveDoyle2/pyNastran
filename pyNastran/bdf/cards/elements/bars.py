@@ -284,7 +284,7 @@ class CBARAO(BaseCard):
             defines what x means
             LE : x is in absolute coordinates along the bar
             FR : x is in fractional
-        x : List[float]
+        x : list[float]
             the additional output locations (doesn't include the end points)
             len(x) <= 6
         comment : str; default=''
@@ -503,9 +503,9 @@ class CBAR(LineElement):
             property id
         mid : int
             material id
-        nids : List[int, int]
+        nids : list[int, int]
             node ids; connected grid points at ends A and B
-        x : List[float, float, float]
+        x : list[float, float, float]
             Components of orientation vector, from GA, in the displacement
             coordinate system at GA (default), or in the basic coordinate system
         g0 : int
@@ -516,7 +516,7 @@ class CBAR(LineElement):
             Offset vector interpretation flag
         pa / pb : int; default=0
             Pin Flag at End A/B.  Releases the specified DOFs
-        wa / wb : List[float, float, float]
+        wa / wb : list[float, float, float]
             Components of offset vectors from the grid points to the end
             points of the axis of the shear center
         comment : str; default=''
@@ -825,8 +825,8 @@ class CBAR(LineElement):
         Returns
         -------
         x_g0 : varies
-            g0 : List[int, None, None]
-            x : List[float, float, float]
+            g0 : list[int, None, None]
+            x : list[float, float, float]
 
         Notes
         -----
@@ -1394,8 +1394,8 @@ class CBEAM3(LineElement):  # was CBAR
         Returns
         -------
         x_g0 : varies
-            g0 : List[int, None, None]
-            x : List[float, float, float]
+            g0 : list[int, None, None]
+            x : list[float, float, float]
 
         Notes
         -----
@@ -1511,11 +1511,11 @@ class CBEND(LineElement):
             element id
         pid : int
             property id (PBEND)
-        nids : List[int, int]
+        nids : list[int, int]
             node ids; connected grid points at ends A and B
         g0 : int
             ???
-        x : List[float, float, float]
+        x : list[float, float, float]
             ???
         geom : int
             1 : The center of curvature lies on the line AO (or its extension) or vector v.
@@ -1869,11 +1869,11 @@ def rotate_v_wa_wb(model: BDF, elem, xyz1, xyz2, node1, node2, ihat_offset, i_of
 
     Returns
     -------
-    v : List[float, float, float]
+    v : list[float, float, float]
         the projection vector that defines the y-axis (jhat)
-    wa : List[float, float, float]
+    wa : list[float, float, float]
        the offset vector at A
-    wb : List[float, float, float]
+    wb : list[float, float, float]
        the offset vector at B
     xform : (3, 3) float ndarray
         a vstack of the [ihat, jhat, khat] axes
@@ -1997,7 +1997,7 @@ def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
 
     Parameters
     ----------
-    v : List[float, float, float]
+    v : list[float, float, float]
         the projection vector that defines the y-axis (jhat)
     ihat : (3, ) float ndarray
         the normalized x-axis (not including the CBEAM offset)

@@ -115,13 +115,13 @@ class DELAY(BaseCard):
         ----------
         sid : int
             DELAY id that is referenced by a TLOADx, RLOADx or ACSRCE card
-        nodes : List[int]
+        nodes : list[int]
             list of nodes that see the delay
             len(nodes) = 1 or 2
-        components : List[int]
+        components : list[int]
             the components corresponding to the nodes that see the delay
             len(nodes) = len(components)
-        delays : List[float]
+        delays : list[float]
             Time delay (tau) for designated point Pi and component Ci
             len(nodes) = len(delays)
         comment : str; default=''
@@ -278,13 +278,13 @@ class DPHASE(BaseCard):
         ----------
         sid : int
             DPHASE id that is referenced by a RLOADx or ACSRCE card
-        nodes : List[int]
+        nodes : list[int]
             list of nodes that see the delay
             len(nodes) = 1 or 2
-        components : List[int]
+        components : list[int]
             the components corresponding to the nodes that see the delay
             len(nodes) = len(components)
-        phase_leads : List[float]
+        phase_leads : list[float]
             Phase lead θ in degrees.
             len(nodes) = len(delays)
         comment : str; default=''
@@ -434,7 +434,7 @@ class FREQ(BaseCard):
         ----------
         sid : int
             set id referenced by case control FREQUENCY
-        freqs : List[float]
+        freqs : list[float]
             the frequencies for a FREQx object
         comment : str; default=''
             a comment for the card
@@ -476,7 +476,7 @@ class FREQ(BaseCard):
 
         Parameters
         ----------
-        freqs : List[float] / (nfreq, ) float ndarray
+        freqs : list[float] / (nfreq, ) float ndarray
             the frequencies for a FREQx object
 
         """
@@ -890,7 +890,7 @@ class FREQ5(FREQ):
             Lower bound of frequency range in cycles per unit time.
         f2 : float; default=1e20
             Upper bound of frequency range in cycles per unit time.
-        fractions : List[float]
+        fractions : list[float]
             Fractions of the natural frequencies in the range F1 to F2.
         comment : str; default=''
             a comment for the card
@@ -1143,7 +1143,7 @@ class NLPARM(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1387,25 +1387,25 @@ class ROTORD(BaseCard):
             Step-size of reference rotor speed. See Remark 3. (Real ≠ 0.0)
         numstep : int
             Number of steps for reference rotor speed including RSTART.
-        rids : List[int]
+        rids : list[int]
             Identification number of rotor i.
             (Integer > 0 with RID(i+1) > RIDi; Default = i)
-        rsets : List[int]
+        rsets : list[int]
             Refers to the RSETID value on the ROTORG, ROTORB, and
             ROTSE bulk entries for rotor RIDi. (Integer > 0 or blank if
             only one rotor)
-        rspeeds : List[int/float, ..., int/float]
+        rspeeds : list[int/float, ..., int/float]
             float : rotor speeds
             int : TABLEDi
-        rcords : List[int]
+        rcords : list[int]
             ???
-        w3s : List[float]
+        w3s : list[float]
             ???
-        w4s : List[float]
+        w4s : list[float]
             ???
-        rforces : List[int]
+        rforces : list[int]
             ???
-        brgsets : List[int]
+        brgsets : list[int]
             ???
         refsys : str; default='ROT'
             Reference system
@@ -1898,11 +1898,11 @@ class TSTEP(BaseCard):
         ----------
         sid : int
             the time step id
-        N : List[int/None]
+        N : list[int/None]
             List of number of time steps for each step section.
-        DT : List[float/None]
+        DT : list[float/None]
             List of time steps for each step section.
-        NO : List[int/None]
+        NO : list[int/None]
             List of step frequency for each step section.
             Every N steps, results will be printed.
         comment : str; default=''
@@ -2030,11 +2030,11 @@ class TSTEP1(BaseCard):
         ----------
         sid : int
             the time step id
-        tend : List[float/None]
+        tend : list[float/None]
             ???
-        ninc : List[int/None]
+        ninc : list[int/None]
             ???
-        nout : List[int/str/None]
+        nout : list[int/str/None]
             ???
         comment : str; default=''
             a comment for the card
@@ -2368,7 +2368,7 @@ class TSTEPNL(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2523,13 +2523,13 @@ class TIC(BaseCard):
         ----------
         sid : int
             Case Control IC id
-        nodes : int / List[int]
+        nodes : int / list[int]
             the nodes to which apply the initial conditions
-        components : int / List[int]
+        components : int / list[int]
             the DOFs to which apply the initial conditions
-        u0 : float / List[float]
+        u0 : float / list[float]
             Initial displacement.
-        v0 : float / List[float]
+        v0 : float / list[float]
             Initial velocity.
         comment : str; default=''
             a comment for the card
@@ -2585,7 +2585,7 @@ class TIC(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

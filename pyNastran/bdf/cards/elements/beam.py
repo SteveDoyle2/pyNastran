@@ -215,9 +215,9 @@ class CBEAM(LineElement):
             property id
         mid : int
             material id
-        nids : List[int, int]
+        nids : list[int, int]
             node ids; connected grid points at ends A and B
-        x : List[float, float, float]
+        x : list[float, float, float]
             Components of orientation vector, from GA, in the displacement
             coordinate system at GA (default), or in the basic coordinate system
         g0 : int
@@ -234,7 +234,7 @@ class CBEAM(LineElement):
             None : offt is active
         pa / pb : int; default=0
             Pin Flag at End A/B.  Releases the specified DOFs
-        wa / wb : List[float, float, float]
+        wa / wb : list[float, float, float]
             Components of offset vectors from the grid points to the end
             points of the axis of the shear center
         sa / sb : int; default=0
@@ -400,7 +400,7 @@ class CBEAM(LineElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         f : int
             beam flag
@@ -863,8 +863,8 @@ class CBEAM(LineElement):
         Returns
         -------
         x_g0 : varies
-            g0 : List[int, None, None]
-            x : List[float, float, float]
+            g0 : list[int, None, None]
+            x : list[float, float, float]
 
         Notes
         -----

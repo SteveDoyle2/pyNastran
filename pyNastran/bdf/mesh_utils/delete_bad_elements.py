@@ -76,7 +76,7 @@ def get_node_map(model):
 def get_bad_shells(model: BDF, xyz_cid0, nid_map,
                    min_theta: float=0.1, max_theta: float=175., max_skew: float=70.,
                    max_aspect_ratio: float=100., max_taper_ratio: float=4.0,
-                   max_warping: float=60.0) -> List[int]:
+                   max_warping: float=60.0) -> list[int]:
     """
     Get the bad shell elements
 
@@ -106,7 +106,7 @@ def get_bad_shells(model: BDF, xyz_cid0, nid_map,
 
     Returns
     -------
-    eids_failed : List[int]
+    eids_failed : list[int]
         element ids that fail the criteria
 
     shells with a edge length=0.0 are automatically added

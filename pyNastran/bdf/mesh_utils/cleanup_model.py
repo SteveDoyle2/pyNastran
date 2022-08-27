@@ -27,7 +27,7 @@ def cleanup_model(model: BDF) -> None:
     model.cross_reference()
 
 
-def _cleanup_rigid_elements(model: BDF, nids_to_delete: List[int]) -> None:
+def _cleanup_rigid_elements(model: BDF, nids_to_delete: list[int]) -> None:
     rigid_elements2 = {}
     for eid, elem in model.rigid_elements.items():
         if elem.type == 'RBE3':
@@ -57,8 +57,8 @@ def _cleanup_rigid_elements(model: BDF, nids_to_delete: List[int]) -> None:
     model.rigid_elements = rigid_elements2
 
 def _cleanup_pload4(load: PLOAD4,
-                    all_eids: List[int],
-                    loads2: List[Any]):
+                    all_eids: list[int],
+                    loads2: list[Any]):
     _eids = []
     for eid in load.eids:
         if eid not in all_eids:
@@ -82,7 +82,7 @@ def _cleanup_pload4(load: PLOAD4,
 
 def _cleanup_load(load_combo: LOAD,
                   all_loads2: Dict[int, Any],
-                  load_combos2: List[LOAD]) -> None:
+                  load_combos2: list[LOAD]) -> None:
     assert load_combo.type == 'LOAD', load_combo
     load_ids = []
     scale_factors = []
@@ -98,8 +98,8 @@ def _cleanup_load(load_combo: LOAD,
     load_combos2.append(load_combo)
 
 def _cleanup_loads(model: BDF,
-                   all_eids: List[int],
-                   all_nids: List[int]) -> None:
+                   all_eids: list[int],
+                   all_nids: list[int]) -> None:
     """remove loads that aren't referenced"""
     all_loads2 = {}
     for load_id, loads in model.loads.items():
@@ -193,7 +193,7 @@ def remove_missing_loads(model: BDF) -> None:
     model.loads = loads2_dict
 
 
-def remove_mpc_chain(model: BDF, nodes: List[int]) -> List[int]:
+def remove_mpc_chain(model: BDF, nodes: list[int]) -> list[int]:
     """deletes any MPC connected to a given set of nodes"""
     mpcs_dict = {}
     nodes_all = []
@@ -215,7 +215,7 @@ def remove_mpc_chain(model: BDF, nodes: List[int]) -> List[int]:
     model.mpcs = mpcs_dict
     return nodes_all
 
-def remove_rbe_chain(model: BDF, nodes: List[int]) -> Tuple[Set[int], List[int]]:
+def remove_rbe_chain(model: BDF, nodes: list[int]) -> Tuple[Set[int], list[int]]:
     """deletes any RBE2, RBE3, RBAR, etc. connected to a given set of nodes"""
     nodes_all = set([])
     eids_to_delete = []
@@ -240,7 +240,7 @@ def remove_rbe_chain(model: BDF, nodes: List[int]) -> Tuple[Set[int], List[int]]
     return nodes_all, eids_to_delete
 
 
-def remove_element_chain(model: BDF, nodes_all: Set[int], element_types: Union[str, Set[str]]) -> Tuple[Set[int], List[int]]:
+def remove_element_chain(model: BDF, nodes_all: Set[int], element_types: Union[str, Set[str]]) -> Tuple[Set[int], list[int]]:
     if isinstance(element_types, str):
         element_types = set([element_types])
     eids_to_delete = []

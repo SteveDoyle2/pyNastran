@@ -82,8 +82,8 @@ class AECOMP(BaseCard):
         lists = [1]
         return AECOMP(name, list_type, lists, comment='')
 
-    def __init__(self, name: str, list_type: List[str],
-                 lists: Union[int, List[int]],
+    def __init__(self, name: str, list_type: list[str],
+                 lists: Union[int, list[int]],
                  comment: str='') -> None:
         """
         Creates an AECOMP card
@@ -97,7 +97,7 @@ class AECOMP(BaseCard):
             SET1 for structural components. Aerodynamic components are
             defined on the aerodynamic ks-set mesh while the structural
             components are defined on the g-set mesh.
-        lists : List[int, int, ...]; int
+        lists : list[int, int, ...]; int
             The identification number of either SET1, AELIST or CAEROi
             entries that define the set of grid points that comprise
             the component
@@ -263,7 +263,7 @@ class AECOMPL(BaseCard):
         return AECOMPL(name, labels, comment='')
 
     def __init__(self, name: str,
-                 labels: List[str],
+                 labels: list[str],
                  comment: str='') -> None:
         """
         Creates an AECOMPL card
@@ -272,7 +272,7 @@ class AECOMPL(BaseCard):
         ----------
         name : str
             the name of the component
-        labels : List[str, str, ...]; str
+        labels : list[str, str, ...]; str
             A string of 8 characters referring to the names of other components
             defined by either AECOMP or other AECOMPL entries.
         comment : str; default=''
@@ -377,7 +377,7 @@ class AEFACT(BaseCard):
         ----------
         sid : int
             unique id
-        fractions : List[float, ..., float]
+        fractions : list[float, ..., float]
             list of percentages
         comment : str; default=''
             a comment for the card
@@ -425,7 +425,7 @@ class AEFACT(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
 
         """
@@ -474,8 +474,8 @@ class AELINK(BaseCard):
         return AELINK(aelink_id, label, independent_labels, linking_coefficients, comment='')
 
     def __init__(self, aelink_id: Union[int, str],
-                 label: str, independent_labels: List[str],
-                 linking_coefficients: List[float],
+                 label: str, independent_labels: list[str],
+                 linking_coefficients: list[float],
                  comment: str='') -> None:
         """
         Creates an AELINK card, which defines an equation linking
@@ -487,9 +487,9 @@ class AELINK(BaseCard):
             unique id
         label : str
             name of the dependent AESURF card
-        independent_labels : List[str, ..., str]
+        independent_labels : list[str, ..., str]
             name for the independent variables (AESTATs)
-        linking_coefficients : List[float]
+        linking_coefficients : list[float]
             linking coefficients
         comment : str; default=''
             a comment for the card
@@ -587,7 +587,7 @@ class AELINK(BaseCard):
 
         Returns
         -------
-        list_fields : List[int/float/str]
+        list_fields : list[int/float/str]
             the fields that define the card
 
         """
@@ -641,7 +641,7 @@ class AELIST(BaseCard):
     def _init_from_empty(cls):
         return AELIST(1, [1], comment='')
 
-    def __init__(self, sid: int, elements: List[int], comment: str='') -> None:
+    def __init__(self, sid: int, elements: list[int], comment: str='') -> None:
         """
         Creates an AELIST card, which defines the aero boxes for
         an AESURF/SPLINEx.
@@ -650,7 +650,7 @@ class AELIST(BaseCard):
         ----------
         sid : int
             unique id
-        elements : List[int, ..., int]; int
+        elements : list[int, ..., int]; int
             list of box ids
         comment : str; default=''
             a comment for the card
@@ -713,7 +713,7 @@ class AELIST(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
 
         """
@@ -802,7 +802,7 @@ class AEPARM(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -830,7 +830,7 @@ class AEPARM(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
 
         """
@@ -1149,7 +1149,7 @@ class AESURF(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
 
         """
@@ -1216,7 +1216,7 @@ class AESURFS(BaseCard):
         return AESURFS(aesid, label, list1, list2, comment='')
 
     def __init__(self, aesid: int, label: str,
-                 list1: List[int], list2: List[int],
+                 list1: list[int], list2: list[int],
                  comment: str='') -> None:
         """
         Creates an AESURFS card
@@ -1327,7 +1327,7 @@ class AESURFS(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
 
         """
@@ -1763,7 +1763,7 @@ class CAERO1(BaseCard):
         return self.box_ids
 
     @property
-    def aefact_ids(self) -> List[int]:
+    def aefact_ids(self) -> list[int]:
         aefact_ids = []
         lchord = self.get_LChord()
         lspan = self.get_LSpan()
@@ -2407,7 +2407,7 @@ class CAERO2(BaseCard):
         return self.pid
 
     @property
-    def aefact_ids(self) -> List[int]:
+    def aefact_ids(self) -> list[int]:
         aefact_ids = []
         lsb = self.Lsb()
         lint = self.Lint()
@@ -3842,7 +3842,7 @@ class MONPNT1(BaseCard):
             components {1,2,3,4,5,6}
         aecomp_name : str
             name of the AECOMP/AECOMPL entry
-        xyz : List[float, float, float]; default=None
+        xyz : list[float, float, float]; default=None
             The coordinates in the CP coordinate system about which the
             loads are to be monitored.
             None : [0., 0., 0.]
@@ -4194,7 +4194,7 @@ class MONDSP1(BaseCard):
             components {1,2,3,4,5,6}
         aecomp_name : str
             name of the AECOMP/AECOMPL entry
-        xyz : List[float, float, float]; default=None
+        xyz : list[float, float, float]; default=None
             The coordinates in the CP coordinate system about which the
             loads are to be monitored.
             None : [0., 0., 0.]
@@ -4390,7 +4390,7 @@ class PAERO1(BaseCard):
         ----------
         pid : int
             PAERO1 id
-        caero_body_ids : List[int]; default=None
+        caero_body_ids : list[int]; default=None
             CAERO2 ids that are within the same IGROUP group
         comment : str; default=''
             a comment for the card
@@ -4558,7 +4558,7 @@ class PAERO2(BaseCard):
             width interference tube
         AR : float
             Aspect ratio of the interference tube (height/width)
-        thi / thn : List[int]
+        thi / thn : list[int]
             The first (thi) and last (thn) interference element of a body
             to use the theta1/theta2 array
         lrsb : int; default=None
@@ -4569,7 +4569,7 @@ class PAERO2(BaseCard):
             int : AEFACT id containing a list of interference body
                   half-widths at the end points of the interference elements
             None : use width
-        lth : List[int, int]; default=None
+        lth : list[int, int]; default=None
             AEFACT id for defining theta arrays for interference calculations
             for theta1/theta2
         comment : str; default=''
@@ -4830,7 +4830,7 @@ class PAERO3(BaseCard):
             Number of Mach boxes in the flow direction; 0 < nbox < 50
         ncontrol_surfaces : int
             Number of control surfaces. (0, 1, or 2)
-        x / y : List[float, None]
+        x / y : list[float, None]
             float : locations of points 5 through 12, which are in the
             aerodynamic coordinate system, to define the cranks and
             control surface geometry.
@@ -5023,12 +5023,12 @@ class PAERO4(BaseCard):
             for each Mach number. See Remark 3, 4, and 5 below; variable b’s
             and β’s for each mi on the MKAEROi entry.
             (Integer = 0 if CIRC = 0, > 0 if CIRC ≠ 0)
-        DOCi : List[float]
+        DOCi : list[float]
             d/c = distance of the control surface hinge aft of the quarter-chord
             divided by the strip chord (Real ≥ 0.0)
-        CAOCi : List[float]
+        CAOCi : list[float]
             ca/c = control surface chord divided by the strip chord. (Real ≥ 0.0)
-        GAPOCi : List[float]
+        GAPOCi : list[float]
             g/c = control surface gap divided by the strip chord. (Real ≥ 0.0)
 
         """
@@ -5658,9 +5658,9 @@ class SPLINE3(Spline):
 
     def __init__(self, eid: int, caero: int, box_id: int,
                  components: int,
-                 nodes: List[int],
-                 displacement_components: List[int],
-                 coeffs: List[float],
+                 nodes: list[int],
+                 displacement_components: list[int],
+                 coeffs: list[float],
                  usage: str='BOTH', comment: str=''):
         """
         Creates a SPLINE3 card, which is useful for control surface
@@ -5686,13 +5686,13 @@ class SPLINE3(Spline):
            3-transverse displacement
            5-pitch angle
            6-relative control angle for CAERO4/5; yaw angle for CAERO2
-        nodes : List[int]
+        nodes : list[int]
            Grid point identification number of the independent grid point.
-        displacement_components : List[int]
+        displacement_components : list[int]
            Component numbers in the displacement coordinate system.
            1-6 (GRIDs)
            0 (SPOINTs)
-        coeffs : List[float]
+        coeffs : list[float]
            Coefficient of the constraint relationship.
         usage : str; default=BOTH
             Spline usage flag to determine whether this spline applies
@@ -6038,7 +6038,7 @@ class SPLINE4(Spline):
         return self.setg
 
     @property
-    def aero_element_ids(self) -> List[int]:
+    def aero_element_ids(self) -> list[int]:
         return self.aelist_ref.elements
 
     def cross_reference(self, model: BDF) -> None:
@@ -6447,7 +6447,7 @@ def get_caero_subpanel_grid(model: BDF) -> Tuple[np.ndarray, np.ndarray]:
         elements_array = np.vstack(elements)
     return points_array, elements_array
 
-def build_caero_paneling(model: BDF, create_secondary_actors: bool=True) -> Tuple[str, List[str], Any]:
+def build_caero_paneling(model: BDF, create_secondary_actors: bool=True) -> Tuple[str, list[str], Any]:
     """
     Creates the CAERO panel inputs including:
      - caero
@@ -6481,7 +6481,7 @@ def build_caero_paneling(model: BDF, create_secondary_actors: bool=True) -> Tupl
         used to map the CAEROx box id to index in the ???
         (aero panel elements) array, which will be used with
         cs_box_ids
-    cs_box_ids : dict[control_surface_name] : List[panel ids]
+    cs_box_ids : dict[control_surface_name] : list[panel ids]
         list of panels used by each aero panel
 
     """

@@ -382,7 +382,7 @@ class XrefMesh(BDFAttributes):
 
     def _cross_reference_nodes_with_elements(self) -> None:
         """Links the nodes to all connected elements"""
-        nodes = defaultdict(list)  # type: Dict[int, List[Any]]
+        nodes = defaultdict(list)  # type: Dict[int, list[Any]]
         for element in self.elements.values():
             #if element.type in ['CONM2']:
             #    pass
@@ -746,7 +746,7 @@ class XrefMesh(BDFAttributes):
         for unused_seid, setree in self.setree.items():
             setree.uncross_reference()
 
-    def get_point_grids(self, nodes: List[Any], msg: str='') -> None:
+    def get_point_grids(self, nodes: list[Any], msg: str='') -> None:
         """gets GRID, POINT cards"""
         nodes_ref = []
         missing_nids = []
@@ -763,7 +763,7 @@ class XrefMesh(BDFAttributes):
             raise KeyError('missing GRID/POINT nids=%s%s' % (missing_nids, msg))
         return nodes_ref
 
-    def superelement_nodes(self, seid: int, nodes: List[Any], msg: str='') -> None:
+    def superelement_nodes(self, seid: int, nodes: list[Any], msg: str='') -> None:
         if seid == 0:
             return self.Nodes(nodes, msg=msg)
         try:

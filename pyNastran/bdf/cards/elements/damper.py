@@ -68,7 +68,7 @@ class CDAMP1(LineDamper):
             element id
         pid : int
             property id (PDAMP)
-        nids : List[int, int]
+        nids : list[int, int]
             node ids
         c1 / c2 : int; default=0
             DOF for nid1 / nid2
@@ -136,7 +136,7 @@ class CDAMP1(LineDamper):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -260,7 +260,7 @@ class CDAMP2(LineDamper):
             element id
         b : float
             damping
-        nids : List[int, int]
+        nids : list[int, int]
             SPOINT ids
             node ids
         c1 / c2 : int; default=0
@@ -331,7 +331,7 @@ class CDAMP2(LineDamper):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -441,7 +441,7 @@ class CDAMP3(LineDamper):
             element id
         pid : int
             property id (PDAMP)
-        nids : List[int, int]
+        nids : list[int, int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -499,7 +499,7 @@ class CDAMP3(LineDamper):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -597,7 +597,7 @@ class CDAMP4(LineDamper):
             element id
         b : float
             damping
-        nids : List[int, int]
+        nids : list[int, int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -648,7 +648,7 @@ class CDAMP4(LineDamper):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -745,7 +745,7 @@ class CDAMP5(LineDamper):
             element id
         pid : int
             property id (PDAMP5)
-        nids : List[int, int]
+        nids : list[int, int]
             GRID/SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -805,7 +805,7 @@ class CDAMP5(LineDamper):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -912,7 +912,7 @@ class CVISC(LineDamper):
             element id
         pid : int
             property id (PVISC)
-        nids : List[int, int]
+        nids : list[int, int]
             GRID ids
         comment : str; default=''
             a comment for the card
@@ -970,7 +970,7 @@ class CVISC(LineDamper):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

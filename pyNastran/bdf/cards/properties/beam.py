@@ -209,17 +209,17 @@ class PBEAM(IntegratedLineProperty):
             property id
         mid : int
             material id
-        xxb : List[float]
+        xxb : list[float]
             The percentage locations along the beam [0., ..., 1.]
-        so : List[str]
+        so : list[str]
             YES, YESA, NO
-        area : List[float]
+        area : list[float]
             area
-        i1, i2, i12, j : List[float]
+        i1, i2, i12, j : list[float]
             moments of inertia
-        nsm : List[float]
+        nsm : list[float]
             nonstructural mass per unit length
-        c1/c2, d1/d2, e1/e2, f1/f2 : List[float]; default=None -> [0.]*nxxb
+        c1/c2, d1/d2, e1/e2, f1/f2 : list[float]; default=None -> [0.]*nxxb
            the y/z locations of the stress recovery points
            c1 - point C.y
            c2 - point C.z
@@ -773,7 +773,7 @@ class PBEAM(IntegratedLineProperty):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1281,15 +1281,15 @@ class PBEAML(IntegratedLineProperty):
             material id
         beam_type : str
             the section profile
-        xxb : List[float]
+        xxb : list[float]
             The percentage locations along the beam [0., ..., 1.]
-        dims : List[dim]
-            dim : List[float]
+        dims : list[dim]
+            dim : list[float]
                 The dimensions for each section
-        so : List[str]; default=None
+        so : list[str]; default=None
             YES, YESA, NO
             None : [0.] * len(xxb)
-        nsm : List[float]; default=None
+        nsm : list[float]; default=None
             nonstructural mass per unit length
             None : [0.] * len(xxb)
         group : str; default='MSCBML0'
@@ -1327,8 +1327,8 @@ class PBEAML(IntegratedLineProperty):
 
         for istation, xxbi, nsmi, dim in zip(count(), xxb, nsm, dims):
             if not isinstance(dim, (list, ndarray)):
-                msg = f'Expected List[List[float]] for dims.  Did you forget [] around dims?\n'
-                msg += 'dims = List[dim]; dim=List[floats]; type(dim)={type(dim)}'
+                msg = f'Expected list[list[float]] for dims.  Did you forget [] around dims?\n'
+                msg += 'dims = list[dim]; dim=list[floats]; type(dim)={type(dim)}'
                 raise TypeError(msg)
             assert len(dim) == ndim, f'beam_type={beam_type!r} ndim={ndim} len(dim)={len(dim)} xxb={xxbi} dim={dim}'
 
@@ -1493,7 +1493,7 @@ class PBEAML(IntegratedLineProperty):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1913,7 +1913,7 @@ class PBMSECT(LineProperty):
 
         Parameters
         ----------
-        card : List[str]
+        card : list[str]
             this card is special and is not a ``BDFCard`` like other cards
         comment : str; default=''
             a comment for the card
@@ -2137,12 +2137,12 @@ class PBCOMP(LineProperty):
             Property ID
         mid : int
             Material ID
-        mids : List[int]
+        mids : list[int]
             Material ID for the i-th integration point
-        y / z : List[float]
+        y / z : list[float]
             The (y,z) coordinates of the lumped areas in the element
             coordinate system
-        c : List[float]; default=0.0
+        c : list[float]; default=0.0
             Fraction of the total area for the i-th lumped area
             default not supported...
         area : float

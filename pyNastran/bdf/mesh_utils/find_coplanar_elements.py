@@ -8,7 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def find_coplanar_triangles(bdf_filename: Union[BDF, str],
-                            eids: Optional[List[int]]=None) -> List[int]:
+                            eids: Optional[list[int]]=None) -> list[int]:
     """
     Finds coplanar triangles
 
@@ -22,7 +22,7 @@ def find_coplanar_triangles(bdf_filename: Union[BDF, str],
 
     Returns
     -------
-    coplanar_eids : List[int]
+    coplanar_eids : list[int]
         the elements that are coplanar
 
     """

@@ -99,7 +99,7 @@ class BDFAttributes:
         self.save_file_structure = False
         self.is_superelements = False
         self.set_as_msc()
-        self.units = []  # type: List[str]
+        self.units = []  # type: list[str]
 
     def set_as_msc(self):
         self._nastran_format = 'msc'
@@ -166,8 +166,8 @@ class BDFAttributes:
                 'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map']
 
     def object_attributes(self, mode: str='public',
-                          keys_to_skip: Optional[List[str]]=None,
-                          filter_properties: bool=False) -> List[str]:
+                          keys_to_skip: Optional[list[str]]=None,
+                          filter_properties: bool=False) -> list[str]:
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -180,14 +180,14 @@ class BDFAttributes:
             * 'private' - names that begin with single underscore
             * 'both' - private and public
             * 'all' - all attributes that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
         filter_properties: bool: default=False
             filters the @property objects
 
         Returns
         -------
-        attribute_names : List[str]
+        attribute_names : list[str]
             sorted list of the names of attributes of a given type or None
             if the mode is wrong
         """
@@ -209,7 +209,7 @@ class BDFAttributes:
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
                                  filter_properties=filter_properties)
 
-    def object_methods(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
+    def object_methods(self, mode: str='public', keys_to_skip: Optional[list[str]]=None) -> list[str]:
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -224,18 +224,18 @@ class BDFAttributes:
             * "private" - names that begin with single underscore
             * "both" - private and public
             * "all" - all methods that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
 
         Returns
         -------
-        method : List[str]
+        method : list[str]
             sorted list of the names of methods of a given type
             or None if the mode is wrong
         """
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []  # type: List[str]
+        my_keys_to_skip = []  # type: list[str]
 
         my_keys_to_skip = [
             #'case_control_deck',
@@ -260,8 +260,8 @@ class BDFAttributes:
         self.__init_attributes()
 
         self.nodes = {}
-        self.loads = {}  # type: Dict[int, List[Any]]
-        self.load_combinations = {}  # type: Dict[int, List[Any]]
+        self.loads = {}  # type: Dict[int, list[Any]]
+        self.load_combinations = {}  # type: Dict[int, list[Any]]
 
     def reset_errors(self) -> None:
         """removes the errors from the model"""
@@ -287,13 +287,13 @@ class BDFAttributes:
         self.force_echo_off = True
 
         #: list of Nastran SYSTEM commands
-        self.system_command_lines = []  # type: List[str]
+        self.system_command_lines = []  # type: list[str]
 
         #: list of execive control deck lines
-        self.executive_control_lines = []  # type: List[str]
+        self.executive_control_lines = []  # type: list[str]
 
         #: list of case control deck lines
-        self.case_control_lines = []  # type: List[str]
+        self.case_control_lines = []  # type: list[str]
 
         # dictionary of BDFs
         self.superelement_models = {}
@@ -379,16 +379,16 @@ class BDFAttributes:
         self._nparse_errors = 0
         self._stop_on_parsing_error = True
         self._stop_on_duplicate_error = True
-        self._stored_parse_errors = []  # type: List[str]
+        self._stored_parse_errors = []  # type: list[str]
 
-        self._duplicate_nodes = []  # type: List[str]
-        self._duplicate_elements = []  # type: List[str]
-        self._duplicate_properties = []  # type: List[str]
-        self._duplicate_materials = []  # type: List[str]
-        self._duplicate_masses = []  # type: List[str]
-        self._duplicate_thermal_materials = []  # type: List[str]
-        self._duplicate_coords = []  # type: List[str]
-        self.values_to_skip = {}  # type: Dict[str, List[int]]
+        self._duplicate_nodes = []  # type: list[str]
+        self._duplicate_elements = []  # type: list[str]
+        self._duplicate_properties = []  # type: list[str]
+        self._duplicate_materials = []  # type: list[str]
+        self._duplicate_masses = []  # type: list[str]
+        self._duplicate_thermal_materials = []  # type: list[str]
+        self._duplicate_coords = []  # type: list[str]
+        self.values_to_skip = {}  # type: Dict[str, list[int]]
 
         # ------------------------ structural defaults -----------------------
         #: the analysis type
@@ -447,9 +447,9 @@ class BDFAttributes:
         self.properties_mass = {}  # type: Dict[int, Any]
 
         #: stores NSM, NSM1, NSML, NSML1
-        self.nsms = {}  # type: Dict[int, List[Any]]
+        self.nsms = {}  # type: Dict[int, list[Any]]
         #: stores NSMADD
-        self.nsmadds = {}  # type: Dict[int, List[Any]]
+        self.nsmadds = {}  # type: Dict[int, list[Any]]
 
         #: stores LOTS of properties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}  # type: Dict[int, Any]
@@ -502,18 +502,18 @@ class BDFAttributes:
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
         #self.constraints = {} # suport1, anything else???
-        self.suport = []  # type: List[Any]
+        self.suport = []  # type: list[Any]
         self.suport1 = {}  # type: Dict[int, Any]
-        self.se_suport = []  # type: List[Any]
+        self.se_suport = []  # type: list[Any]
 
         #: stores SPC, SPC1, SPCAX, GMSPC
-        self.spcs = {}  # type: Dict[int, List[Any]]
+        self.spcs = {}  # type: Dict[int, list[Any]]
         #: stores SPCADD
-        self.spcadds = {}  # type: Dict[int, List[Any]]
-        self.spcoffs = {}  # type: Dict[int, List[Any]]
+        self.spcadds = {}  # type: Dict[int, list[Any]]
+        self.spcoffs = {}  # type: Dict[int, list[Any]]
 
-        self.mpcs = {}  # type: Dict[int, List[Any]]
-        self.mpcadds = {}  # type: Dict[int, List[Any]]
+        self.mpcs = {}  # type: Dict[int, list[Any]]
+        self.mpcadds = {}  # type: Dict[int, list[Any]]
 
         # --------------------------- dynamic ----------------------------
         #: stores DAREA
@@ -525,7 +525,7 @@ class BDFAttributes:
         self.pelast = {}  # type: Dict[int, Any]
 
         #: frequencies
-        self.frequencies = {}  # type: Dict[int, List[Any]]
+        self.frequencies = {}  # type: Dict[int, list[Any]]
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
@@ -536,22 +536,22 @@ class BDFAttributes:
         self.dmik = {}  # type: Dict[str, DMIK]
         self.dmiax = {}  # type: Dict[str, DMIAX]
         self.dti = {}  # type: Dict[str, Any]
-        self._dmig_temp = defaultdict(list)  # type: Dict[str, List[str]]
+        self._dmig_temp = defaultdict(list)  # type: Dict[str, list[str]]
 
         # ----------------------------------------------------------------
         #: SETy
         self.sets = {}  # type: Dict[int, Any]
-        self.asets = []  # type: List[Any]
-        self.omits = []  # type: List[Any]
-        self.bsets = []  # type: List[Any]
-        self.csets = []  # type: List[Any]
-        self.qsets = []  # type: List[Any]
+        self.asets = []  # type: list[Any]
+        self.omits = []  # type: list[Any]
+        self.bsets = []  # type: list[Any]
+        self.csets = []  # type: list[Any]
+        self.qsets = []  # type: list[Any]
         self.usets = {}  # type: Dict[str, Any]
 
         #: SExSETy
-        self.se_bsets = []  # type: List[Any]
-        self.se_csets = []  # type: List[Any]
-        self.se_qsets = []  # type: List[Any]
+        self.se_bsets = []  # type: list[Any]
+        self.se_csets = []  # type: list[Any]
+        self.se_qsets = []  # type: list[Any]
         self.se_usets = {}  # type: Dict[str, Any]
         self.se_sets = {}  # type: Dict[str, Any]
 
@@ -636,14 +636,14 @@ class BDFAttributes:
         #: stores PAEROx
         self.paeros = {}  # type: Dict[int, Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]]
         # stores MONPNT1
-        self.monitor_points = []  # type: List[Union[MONPNT1, MONPNT2, MONPNT3]]
+        self.monitor_points = []  # type: list[Union[MONPNT1, MONPNT2, MONPNT3]]
 
         #: stores AECOMP
         self.aecomps = {}  # type: Dict[int, AECOMP]
         #: stores AEFACT
         self.aefacts = {}  # type: Dict[int, AEFACT]
         #: stores AELINK
-        self.aelinks = {}  # type: Dict[int, List[AELINK]]
+        self.aelinks = {}  # type: Dict[int, list[AELINK]]
         #: stores AELIST
         self.aelists = {}  # type: Dict[int, AELIST]
         #: stores AEPARAM
@@ -697,7 +697,7 @@ class BDFAttributes:
         self.flutters = {} # type: Dict[int, FLUTTER]
 
         #: mkaeros
-        self.mkaeros = []  # type: List[Union[MKAERO1,MKAERO2]]
+        self.mkaeros = []  # type: list[Union[MKAERO1,MKAERO2]]
 
         # ------ SOL 146 ------
         #: stores GUST cards
@@ -757,7 +757,7 @@ class BDFAttributes:
         self.csupext = {}  # type: Dict[int, CSUPEXT]
 
         # ---------------------------------------------------------------------
-        self._type_to_id_map = defaultdict(list)  # type: Dict[int, List[Any]]
+        self._type_to_id_map = defaultdict(list)  # type: Dict[int, list[Any]]
         self._slot_to_type_map = {
             'params' : ['PARAM'],
             'mdlprm': ['MDLPRM'],
@@ -1066,7 +1066,7 @@ class BDFAttributes:
             ## other
             #'INCLUDE',  # '='
             #'ENDDATA',
-        }  # type: Dict[str, List[str]]
+        }  # type: Dict[str, list[str]]
         self._type_to_slot_map = self.get_rslot_map()
 
     @property
@@ -1290,7 +1290,7 @@ class BDFAttributes:
             wtmass = param.values[0]
         return wtmass
 
-    def set_param(self, key: str, values: Union[int, float, str, List[float]], comment: str='') -> None:
+    def set_param(self, key: str, values: Union[int, float, str, list[float]], comment: str='') -> None:
         """sets a param card; creates it if necessary"""
         if isinstance(values, (int, float, str)):
             values = [values]
@@ -1301,8 +1301,8 @@ class BDFAttributes:
         else:
             self.add_param(key, values, comment=comment)
 
-    def get_param(self, key: str, default: Union[int, float, str, List[float]]
-                  ) -> Union[int, float, str, List[float]]:
+    def get_param(self, key: str, default: Union[int, float, str, list[float]]
+                  ) -> Union[int, float, str, list[float]]:
         """gets a param card"""
         key = key.upper()
         if key in self.params:

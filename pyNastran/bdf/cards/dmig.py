@@ -94,7 +94,7 @@ class DTI_UNITS(BaseCard):
         ----------
         name : str
             UNITS
-        fields : List[varies]
+        fields : list[varies]
             the fields
         comment : str; default=''
             a comment for the card
@@ -238,7 +238,7 @@ class DTI(BaseCard):
         ----------
         name : str
             UNITS
-        fields : List[varies]
+        fields : list[varies]
             the fields
         comment : str; default=''
             a comment for the card
@@ -348,13 +348,13 @@ class NastranMatrix(BaseCard):
             Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
-        GCj  : List[(node, dof)]
+        GCj  : list[(node, dof)]
             the jnode, jDOFs
-        GCi  : List[(node, dof)]
+        GCi  : list[(node, dof)]
             the inode, iDOFs
-        Real : List[float]
+        Real : list[float]
             The real values
-        Complex : List[float]; default=None
+        Complex : list[float]; default=None
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
@@ -1006,13 +1006,13 @@ class DMIG(NastranMatrix):
             Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
-        GCj  : List[(node, dof)]
+        GCj  : list[(node, dof)]
             the [jnode, jDOFs] columns
-        GCi  : List[(node, dof)]
+        GCi  : list[(node, dof)]
             the [inode, iDOFs] rows
-        Real : List[float]
+        Real : list[float]
             The real values
-        Complex : List[float]; default=None
+        Complex : list[float]; default=None
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
@@ -1085,13 +1085,13 @@ class DMIAX(BaseCard):
             2=Real, Double Precision
             3=Complex, Single Precision
             4=Complex, Double Precision
-        GCNj  : List[(node, dof, harmonic_number)]???
+        GCNj  : list[(node, dof, harmonic_number)]???
             the jnode, jDOFs
-        GCNi  : List[(node, dof, harmonic_number)]???
+        GCNi  : list[(node, dof, harmonic_number)]???
             the inode, iDOFs
-        Real : List[float]???
+        Real : list[float]???
             The real values
-        Complex : List[float]???; default=None
+        Complex : list[float]???; default=None
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
@@ -1475,13 +1475,13 @@ class DMIJ(NastranMatrix):
             Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
-        GCj  : List[(node, dof)]???
+        GCj  : list[(node, dof)]???
             the jnode, jDOFs
-        GCi  : List[(node, dof)]???
+        GCi  : list[(node, dof)]???
             the inode, iDOFs
-        Real : List[float]???
+        Real : list[float]???
             The real values
-        Complex : List[float]???; default=None
+        Complex : list[float]???; default=None
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
@@ -1563,13 +1563,13 @@ class DMIJI(NastranMatrix):
             Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
-        GCj  : List[(node, dof)]???
+        GCj  : list[(node, dof)]???
             the jnode, jDOFs
-        GCi  : List[(node, dof)]???
+        GCi  : list[(node, dof)]???
             the inode, iDOFs
-        Real : List[float]???
+        Real : list[float]???
             The real values
-        Complex : List[float]???; default=None
+        Complex : list[float]???; default=None
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
@@ -1661,13 +1661,13 @@ class DMIK(NastranMatrix):
             Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
-        GCj  : List[(node, dof)]
+        GCj  : list[(node, dof)]
             the jnode, jDOFs
-        GCi  : List[(node, dof)]
+        GCi  : list[(node, dof)]
             the inode, iDOFs
-        Real : List[float]
+        Real : list[float]
             The real values
-        Complex : List[float]; default=None
+        Complex : list[float]; default=None
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
