@@ -1,14 +1,14 @@
 #from .subcase_cards_check import
 from .subcase_cards import (
     GROUNDCHECK, EXTSEOUT, WEIGHTCHECK, DSAPRT, MEFFMASS,
-    MODCON, SET, SETMC, SUPER, SEALL, SEDR, HARMONICS, ADACT, AEROF, APRES,
+    MODCON, SET, SETMC, SUPER, SEALL, SEDR, HARMONICS, AEROF, APRES,
     CSCALE, GPKE, GPRSORT, GPSDCON, GPSTRESS, OFREQUENCY, OMODES, SURFACE, VOLUME,
 )
-from .subcase_cards_str import (
+from .subcase.subcase_cards_str import (
     AECONFIG, ANALYSIS, AUTOSPC, AESYMXY, AESYMXZ, AXISYMMETRIC,
     DSYM, ECHO, SEQDEP, K2PP, THERMAL, RIGID,
 )
-from .subcase_cards_int import (
+from .subcase.subcase_cards_int import (
     ADACT, ADAPT, AUXMODEL,
     BC, BCONTACT, BCSET, BGSET, BOLTLD,
     CLOAD, CMETHOD, CSSCHD,
@@ -22,7 +22,7 @@ from .subcase_cards_int import (
     SEFINAL, SMETHOD, STATSUB, SUPORT1, SYM, SYMCOM, SDAMPING, SPC, SEDV,
     TFL, TSTEP, TSTEPNL, TRIM, TSTRU, RANDOM,
 )
-from .subcase_cards_check import (
+from .subcase.subcase_cards_check import (
     DATAREC, DISPLACEMENT, VELOCITY, ACCELERATION,
     SDISPLACEMENT, SVELOCITY, SACCELERATION, SVECTOR,
     MPCFORCES, SPCFORCES, OLOAD,

@@ -1197,7 +1197,7 @@ def _lines_to_decks_main(lines: List[str],
                     current_ilines = superelement_ilines[super_id]
 
                 elif ('AUXMODEL' in line_upper or 'AFPM' in line_upper) and '=' in line_upper:
-                    out = _read_bulk_for_auxmodel(
+                    out = _read_bulk_for_model(
                         ifile_iline, line, flag, bulk_data_lines,
                         current_lines, current_ilines,
                         old_flags,

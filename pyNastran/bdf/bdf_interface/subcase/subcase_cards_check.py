@@ -1,5 +1,5 @@
-from typing import List, Dict, Tuple, Union, Set, Any
-from pyNastran.bdf.bdf_interface.subcase_cards import CheckCard
+from typing import Union, Set, Any
+from ..subcase_cards import CheckCard
 
 
 class DISPLACEMENT(CheckCard):

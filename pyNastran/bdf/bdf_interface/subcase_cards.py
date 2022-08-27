@@ -1,6 +1,14 @@
-from typing import Union, Set, Any
-from pyNastran.bdf.bdf_interface.subcase_utils import write_set
-from pyNastran.utils.numpy_utils import integer_types, bytes_type
+from pyNastran.utils.numpy_utils import bytes_type
+from .subcase.subcase_base import CaseControlCard
+
+from .subcase.int_str_cards import (
+    AEROF, APRES, GPKE, GPRSORT, GPSDCON, GPSTRESS,
+    HARMONICS, OFREQUENCY, OMODES, SEALL, SEDR, SUPER)
+from .subcase.matrix import (
+    A2GG,
+    B2GG, M2GG, K2GG, P2G, K42GG,
+    B2PP, M2PP, K2PP, )
+from .subcase.sets import SET, SETMC
 #from pyNastran.bdf.field_writer_8 import print_float_8
 
 def decode_bytes_list(bytes_list, encoding):
@@ -8,595 +16,161 @@ def decode_bytes_list(bytes_list, encoding):
            for bytes_str in bytes_list]
     return out
 
-class CaseControlCard:
-    """basic card similar to the BaseCard class for the BDF"""
-    def __iter__(self):
-        """temporary method to emulate the old list access style"""
-        value = self
-        options = None
-        param_type = 'OBJ-type'
-        return iter([value, options, param_type])
-
 #-------------------------------------------------------------------------------
-class IntCard(CaseControlCard):
-    """
-    interface for cards of the form:
-       NAME = 10
 
+class ECHO(CaseControlCard):
     """
-    type = 'IntCard'
-    def __init__(self, value):
+    ECHO = NONE
+    ECHO = NOSORT
+    ECHO = BOTH
+
+    ECHO = SORT(PARAM,EIGC,EIGRL,FREQ,DESVAR,DCONSTR,DRESP1,DRESP2,DEQATN,DVPREL1)
+    ECHO = PUNCH,SORT(MAT1,PARAM)
+    ECHO = SORT(EXCEPT DMI,DMIG)
+    ECHO = PUNCH(BSTBULK)
+    ECHO = PUNCH(NEWBULK)
+    ECHO = SORT,PUNCH(BSTBULK)
+    """
+    type = 'ECHO'
+    def __init__(self, value: str):
+        self.value = value
+
+
+    def __repr__(self) -> str:
+        """writes a card"""
+        rows = self._repr_rows()
+        return '\n'.join(rows)
+
+    def write(self, spaces: str):
+        """writes a card with spaces"""
+        rows = self._repr_rows()
+        out = spaces + ('\n' + spaces).join(rows) + '\n'
+        return out
+
+    def _repr_rows(self) -> list[str]:
+        """writes a card"""
+        #['SORT', ['EXCEPT DMI', 'DMIG'], 'PUNCH', ['BSTBULK']]
+        msg = ''
+        for valuei in self.value:
+            if isinstance(valuei, str):
+                msg += valuei + ','
+            elif isinstance(valuei, list):
+                msg = msg[:-1] + '(%s),' % ','.join(valuei)
+            else:
+                echooo
+        out = '%s = %s' % (self.type, msg.rstrip(','))
+        assert len(out) < 68, 'out={out!r}'
+        return [out]
+
+    @classmethod
+    def add_from_case_control(cls, line: str):
         """
-        Creates an IntCard
+        Creates a card from the Case Control Deck
 
         Parameters
         ----------
-        value : int
-            the value for the card
+        line : str
+            the line of the card
 
         """
-        super(IntCard, self).__init__()
-        self.value = int(value)
+        value = line.split('=')[1].strip() #  NONE
+        if value in {'NONE', 'NOSORT', 'BOTH', 'UNSORT'}:
+            # ECHO = NONE
+            # ECHO = NOSORT
+            # ECHO = BOTH
+            return cls([value])
+        options = cls._get_options_from_line(value)
+        return cls(options)
 
-    def __iter__(self):
-        """temporary method to emulate the old list access style"""
-        value = self
+    @staticmethod
+    def _get_options_from_line(value: str) -> list[str]:
         options = []
-        #param_type = 'STRESS-type'
-        param_type = 'OBJ-type'
-        return iter([value, options, param_type])
+        # ECHO = PUNCH,SORT(MAT1,PARAM)
+        is_comma = ',' in value
+        is_paren = '(' in value
+        if is_comma and is_paren:
+            icomma, iparen = _get_icomma_iparen(value)
+            #if icomma == -1 and iparen == -1:
+                #raise NotImplementedError(f'ECHO is_comma/is_paren; line={line!r}')
 
-    @classmethod
-    def add_from_case_control(cls, line: str, line_upper: str, lines: list[str], i: int):
-        """
-        Creates a card from the Case Control Deck
+            if iparen < icomma:
+                # ECHO = SORT(PARAM,EIGC,EIGRL,FREQ,DESVAR,DCONSTR,DRESP1,DRESP2,DEQATN,DVPREL1)
+                # ECHO = SORT(EXCEPT DMI,DMIG)
+                # ECHO = UNSORT / SORT (EXCEPT DMI, DMIG), PUNCH(BSTBULK/NEWBULK)
+                # ECHO = SORT(EXCEPT DMI,DMIG),PUNCH(BSTBULK)
+                base, paren_open = value.split('(', 1) # [:iparen], value[iparen+1:]
+                options.append(base)
+                paren, end = paren_open.split(')', 1)
+                sparen = paren.split(',')
+                options.append(sparen)
+                end = end.strip(' ,')
+                nend = len(end)
+                if end == '':
+                    return options
 
-        Parameters
-        ----------
-        line : str
-            the line of the card
-        line_upper : str
-            unused
-        lines : list[str]
-            unused
-        i : int
-            unused
+                jcomma, jparen = _get_icomma_iparen(end)
+                if jcomma > 0 and jparen > 0:
+                    ccc
+                elif jcomma > 0:
+                    ddd
+                elif jparen > 0:
+                    assert end[-1] == ')', end
+                    send = end[:-1].split('(')
+                    assert len(send) == 2, send
+                    options.append(send[0])
+                    options.append([send[1]])
+                else:
+                    raise NotImplementedError(f'ECHO is_comma; line={line!r}')
+                x = 1
 
-        """
-        value = line_upper.split('=')[1]
-        try:
-            out = cls(value)
-        except ValueError:
-            print(line)
-            raise
-        return out
-
-    def export_to_hdf5(self, h5_file, encoding):
-        h5_file.create_dataset('value', data=self.value)
-
-    @classmethod
-    def load_hdf5(cls, h5_file, encoding):
-        from pyNastran.utils.dict_to_h5py import _cast
-        value = h5_file['value']
-        value2 = _cast(value)
-        return cls(value2), []
-
-    def __repr__(self):
-        """writes a card"""
-        return '%s = %i\n' % (self.type, self.value)
-
-    def write(self, spaces):
-        """writes a card with spaces"""
-        return spaces + str(self)
-
-class IntStrCard(IntCard):
-    """
-    interface for cards of the form:
-       NAME = 10
-       NAME = ALL
-
-    """
-    type = 'IntStrCard'
-    allowed_strings = set([]) # type: Set[str]
-    def __init__(self, value):
-        """
-        Creates an IntStrCard
-
-        Parameters
-        ----------
-        value : int/str
-            the value for the card
-
-        """
-        #super(IntStrCard, self).__init__()
-        try:
-            self.value = int(value)
-        except ValueError:
+            else:
+                # ECHO = SORT,PUNCH(BSTBULK)
+                #'PUNCH,SORT(MAT1,PARAM)'
+                base, paren = value.split(',', 1)
+                options.append(base)
+                jcomma, jparen = _get_icomma_iparen(paren)
+                if jcomma == -1:
+                    fff
+                elif jparen == -1:
+                    ggg
+                elif jparen < jcomma:
+                    base2, paren2 = paren.split('(', 1)
+                    inner, end = paren2.split(')', 1)
+                    assert end == '', end
+                    sinner = inner.split(',')
+                    options.append(base2)
+                    options.append(sinner)
+                else:
+                    raise NotImplementedError(f'ECHO; jcomma={jcomma} jparen={jparen}; paren={paren!r}')
+            #else:
+                #raise NotImplementedError(f'ECHO is_comma; line={line!r}')
+        elif is_comma:
+            raise NotImplementedError(f'ECHO is_comma; line={line!r}')
+        elif is_paren:
+            # ECHO = PUNCH(BSTBULK)
+            # ECHO = PUNCH(NEWBULK)
+            value, options_ = line.split('(', 1)
             value = value.strip()
-            if value not in self.allowed_strings:
-                msg = 'value=%r not in [%s]' % (
-                    value, ', '.join(self.allowed_strings))
-                raise ValueError(msg)
-            self.value = value
-
-    def export_to_hdf5(self, h5_file, encoding):
-        value_bytes = self.value.encode(encoding) if isinstance(self.value, str) else self.value
-        #sub_group = h5_file.create_group(self.type)
-        h5_file.create_dataset('value', data=value_bytes)
-
-    @classmethod
-    def load_hdf5(cls, h5_file, encoding):
-        from pyNastran.utils.dict_to_h5py import _cast
-        value = h5_file['value']
-
-        casted_value = _cast(value)
-        if isinstance(casted_value, int):
-            value2 = casted_value
+            options_ = options_.strip()
+            assert options_[-1] == ')', options_
+            options = [options_[:-1]]
         else:
-            value2 = casted_value.decode(encoding)# if isinstance(value, bytes) else value
-        return cls(value2), []
+            # single value
+            raise NotImplementedError(f'ECHO; line={line!r}')
+            #options.append(value)
+        return options
 
-    def __repr__(self):
-        """writes a card"""
-        return '%s = %s\n' % (self.type, self.value)
-
+def _get_icomma_iparen(value: str) -> tuple[int, int]:
+    #nvalue = len(value)
+    icomma = value.find(',')
+    iparen = value.find('(')
+    #if icomma == nvalue:
+        #icomma = -1
+    #if iparen == nvalue:
+        #iparen = -1
+    return icomma, iparen
 
 #-------------------------------------------------------------------------------
-class RealMatrixCard():
-    """
-    interface for cards of the form:
-       M2GG=MDMIG
-       M2GG=MDMIG1, MDMIG2, MDMIG3
-       M2GG=1.25*MDMIG1, 1.0*MDMIG2, 0.75*MDMIG3
-       SET 100=M1, M2
-       M2GG=100
-
-    """
-    type = 'RealMatrixCard'
-    def __init__(self, value: Union[int, list[tuple[float, str]]]):
-        """
-        Creates an IntCard
-
-        Parameters
-        ----------
-        value : int
-            the value for the card
-
-        """
-        super().__init__()
-        self.value = value
-
-    def __iter__(self):
-        """temporary method to emulate the old list access style"""
-        value = self
-        options = self.value
-        param_type = 'OBJ-type'
-        return iter([value, options, param_type])
-
-    @classmethod
-    def add_from_case_control(cls, line: str):
-        """
-        Creates a card from the Case Control Deck
-
-        Parameters
-        ----------
-        line : str
-            the line of the card
-
-        """
-        value = line.split('=')[1].strip()
-        if value.isdigit():
-            values2 = int(value) # SET id
-        else:
-            sline = value.split(',')
-            values2 = []
-            for val in sline:
-                assert '*' in val, '{self.type} val={val!r} requires a *'
-                scale, name = val.split('*')
-                scale = float(scale)
-                name = name.strip()
-                values2.append((scale, name))
-            print(values2)
-
-        out = cls(values2)
-        return out
-
-    def export_to_hdf5(self, h5_file, encoding):
-        asdf
-        h5_file.create_dataset('value', data=self.value)
-
-    @classmethod
-    def load_hdf5(cls, h5_file, encoding):
-        from pyNastran.utils.dict_to_h5py import _cast
-        adf
-        value = h5_file['value']
-        value2 = _cast(value)
-        return cls(value2), []
-
-    def _repr_rows(self) -> list[str]:
-        if isinstance(self.value, integer_types):
-            rows = [f'{self.type} = {self.value:d}']
-        else:
-            max_chars = 72 - 4 #  -4 for indentation
-            rows = []
-            msg = f'{self.type} = '
-            for (scale, name) in self.value:
-                msgi = f'{scale}*{name},'
-                if len(msg) + len(msgi) < max_chars:
-                    msg += msgi
-                else:
-                    rows.append(msg)
-                    msg = ' ' + msgi
-            if msg:
-                rows.append(msg)
-            rows[-1] = rows[-1].rstrip(',')
-        return rows
-
-    def __repr__(self) -> str:
-        """writes a card"""
-        rows = self._repr_rows()
-        return '\n'.join(rows)
-
-    def write(self, spaces: str):
-        """writes a card with spaces"""
-        rows = self._repr_rows()
-        out = spaces + ('\n' + spaces).join(rows) + '\n'
-        return out
-
-class ImagMatrixCard():
-    """
-    interface for cards of the form:
-       M2GG=MDMIG
-       M2GG=MDMIG1, MDMIG2, MDMIG3
-       M2GG=1.25*MDMIG1, 1.0*MDMIG2, 0.75*MDMIG3
-       SET 100=M1, M2
-       M2GG=100
-
-    """
-    type = 'RealMatrixCard'
-    def __init__(self, value: Union[int, list[tuple[float, str]]]):
-        """
-        Creates an IntCard
-
-        Parameters
-        ----------
-        value : int
-            the value for the card
-
-        """
-        super().__init__()
-        self.value = value
-
-    def __iter__(self):
-        """temporary method to emulate the old list access style"""
-        value = self
-        options = self.value
-        param_type = 'OBJ-type'
-        return iter([value, options, param_type])
-
-    @classmethod
-    def add_from_case_control(cls, line: str):
-        """
-        Creates a card from the Case Control Deck
-
-        Parameters
-        ----------
-        line : str
-            the line of the card
-
-        """
-        value = line.split('=')[1].strip()
-        if value.isdigit():
-            values2 = int(value) # SET id
-        else:
-            #sline = value.split(',')
-            sline = split_every_other_comma(value)
-
-            values2 = []
-            for val in sline:
-                assert '*' in val, '{self.type} val={val!r} requires a *'
-                scale, name = val.split('*')
-                assert '(' in scale and ')' in scale and ',' in scale, scale
-                scale2 = scale.strip()[1:-1]  #  remove ()
-                real_scale_str, imag_scale_str = scale2.split(',')
-                real_scale = float(real_scale_str)
-                imag_scale = float(imag_scale_str)
-                name = name.strip()
-                values2.append((real_scale, imag_scale, name))
-            #print(values2)
-
-        out = cls(values2)
-        return out
-
-    def export_to_hdf5(self, h5_file, encoding):
-        asdf
-        h5_file.create_dataset('value', data=self.value)
-
-    @classmethod
-    def load_hdf5(cls, h5_file, encoding):
-        from pyNastran.utils.dict_to_h5py import _cast
-        adf
-        value = h5_file['value']
-        value2 = _cast(value)
-        return cls(value2), []
-
-    def _repr_rows(self) -> list[str]:
-        if isinstance(self.value, integer_types):
-            rows = [f'{self.type} = {self.value:d}']
-        else:
-            max_chars = 72 - 4 #  -4 for indentation
-            rows = []
-            msg = f'{self.type} = '
-            for (real_scale, imag_scale, name) in self.value:
-                msgi = f'({real_scale},{imag_scale})*{name},'
-                if len(msg) + len(msgi) < max_chars:
-                    msg += msgi
-                else:
-                    rows.append(msg)
-                    msg = ' ' + msgi
-            if msg:
-                rows.append(msg)
-            rows[-1] = rows[-1].rstrip(',')
-        return rows
-
-    def __repr__(self) -> str:
-        """writes a card"""
-        rows = self._repr_rows()
-        return '\n'.join(rows)
-
-    def write(self, spaces: str):
-        """writes a card with spaces"""
-        rows = self._repr_rows()
-        out = spaces + ('\n' + spaces).join(rows) + '\n'
-        return out
-
-def split_every_other_comma(chars: str) -> list[str]:
-    i0 = 0
-    ncomma = 0
-    sline = []
-    for i, char in enumerate(chars):
-        #print(f'i={i:d} -> {char!r} ncomma={ncomma:d}')
-        if char == ',' and ncomma == 0:
-            ncomma += 1
-        elif char == ',' and ncomma == 1:
-            sline.append(chars[i0:i])
-            i0 = i + 1
-            ncomma = 0
-            #print('adding')
-        #else:
-            #ncomma += 1
-    if i0 < len(chars):
-        #print(f'final add: {chars[i0:]!r}')
-        sline.append(chars[i0:])
-    return sline
-
-#-------------------------------------------------------------------------------
-
-
-class ADACT(IntStrCard):
-    type = 'ADACT'
-    allowed_strings = {'ALL', 'NONE'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class AEROF(IntStrCard):
-    type = 'AEROF'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class APRES(IntStrCard):
-    type = 'APRES'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class GPRSORT(IntStrCard):
-    type = 'GPRSORT'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class GPSDCON(IntStrCard):
-    type = 'GPSDCON'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class HARMONICS(IntStrCard):
-    type = 'HARMONICS'
-    allowed_strings = {'ALL', 'NONE'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class OFREQUENCY(IntStrCard):
-    type = 'OFREQUENCY'
-    alternate_names = {'OFREQ'}
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class OMODES(IntStrCard):
-    type = 'OMODES'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class SUPER(IntStrCard):
-    type = 'SUPER'
-    allowed_strings = {'ALL'}
-    #def __init__(self, value):
-        #super().__init__(value)
-
-#----------------------------
-
-class GPSTRESS(IntStrCard):
-    type = 'GPSTRESS'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class SEALL(IntStrCard):
-    type = 'SEALL'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class SEDR(IntStrCard):
-    type = 'SEDR'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class GPKE(IntStrCard):
-    type = 'GPKE'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-INTSTR_CARDS = [
-    ADACT, AEROF, APRES, GPRSORT, GPSDCON, HARMONICS, OFREQUENCY, OMODES,
-    SUPER, SEALL, SEDR,
-] + [GPSTRESS, GPKE, ]
-INTSTR_CARD_DICT = {card.type : card for card in INTSTR_CARDS}
-INTSTR_CARD_NAMES = tuple([card.type for card in INTSTR_CARDS])
-
-#-------------------------------------------------------------------------------
-
-class StringCard(CaseControlCard):
-    type = 'StringCard'
-    allowed_values = [] # type: list[str]
-    def __init__(self, value, validate=True):
-        super(StringCard, self).__init__()
-        self.value = value.strip()
-        if validate:
-            self.validate()
-
-    @classmethod
-    def add_from_case_control(cls, line, line_upper, lines, i):
-        """add method used by the CaseControl class"""
-        value = line_upper.split('=')[1]
-        return cls(value)
-
-    def validate(self):
-        if self.value not in self.allowed_values:
-            msg = '%s: value=%r not in [%s]' % (
-                self.type, self.value, ', '.join(self.allowed_values))
-            raise ValueError(msg)
-
-    def __repr__(self):
-        """writes a card"""
-        return '%s = %s\n' % (self.type, self.value)
-
-    def write(self, spaces):
-        return spaces + str(self)
-
-    def export_to_hdf5(self, h5_file, encoding):
-        value_bytes = self.value.encode(encoding)
-        #sub_group = h5_file.create_group(self.type)
-        h5_file.create_dataset('value', data=value_bytes)
-
-    @classmethod
-    def load_hdf5(cls, h5_file, encoding):
-        from pyNastran.utils.dict_to_h5py import _cast
-        value = h5_file['value']
-        try:
-            value2 = _cast(value).decode(encoding)
-        except AttributeError:
-            print(cls.type, _cast(value))
-            raise
-        return cls(value2), []
-
-#-------------------------------------------------------------------------------
-
-class SET(CaseControlCard):
-    type = 'SET'
-    def __init__(self, set_id, values):
-        super(SET, self).__init__()
-        self.set_id = int(set_id)
-
-        #values2 = expand_thru_case_control(values)
-        self.value = values
-
-    @property
-    def key(self):
-        """temporary method to emulate the old key attribute"""
-        return '%s %s' % (self.type, self.set_id)
-
-    def __iter__(self):
-        """temporary method to emulate the old list access style"""
-        value = self
-        options = None
-        param_type = 'OBJ-type'
-        return iter([value, options, param_type])
-
-    @classmethod
-    def add_from_case_control(cls, line_upper, lines, i):
-        """add method used by the CaseControl class"""
-        line = lines[i]
-        sline = line_upper.split('=')
-        assert len(sline) == 2, sline
-
-        key, value = sline
-        try:
-            (key, set_id) = key.split()
-        except Exception:
-            raise RuntimeError(key)
-
-        assert key.upper() == key, key
-        unused_options = int(set_id)
-
-        #if self.debug:
-            #self.log.debug('SET-type key=%r set_id=%r' % (key, set_id))
-        fivalues = value.rstrip(' ,').split(',')  # float/int values
-
-        #: .. todo:: should be more efficient multiline reader...
-        # read more lines....
-        if line[-1].strip() == ',':
-            i += 1
-            #print("rawSETLine = %r" % (lines[i]))
-            while 1:
-                if lines[i].strip()[-1] == ',':
-                    fivalues += lines[i][:-1].split(',')
-                else:  # last case
-                    fivalues += lines[i].split(',')
-                    #print("fivalues last = i=%s %r" % (i, lines[i]))
-                    i += 1
-                    break
-                i += 1
-        #print("len(fivalues) = %s" % len(fivalues))
-        return cls(set_id, fivalues)
-
-    def write(self, spaces):
-        """
-        writes
-        SET 80 = 3926, 3927, 3928, 4141, 4142, 4143, 4356, 4357, 4358, 4571,
-             4572, 4573, 3323 THRU 3462, 3464 THRU 3603, 3605 THRU 3683,
-             3910 THRU 3921, 4125 THRU 4136, 4340 THRU 4351
-
-        """
-        return write_set(self.set_id, self.value, spaces=spaces)
-
-    def __repr__(self):
-        """see `write`"""
-        return write_set(self.set_id, self.value)
-
-class SETMC(SET):
-    """
-    SETMC 121 = ACCE/99(T3),1200(T1),1399(R2)
-    SETMC 222 = STRESS/134(22)
-    SETMC 343 = ACCE/99(T3),1200(T1),1399(R2),STRESS/134(22)
-    SETMC 122 = DISP/45(T1) 45(T2) 45(T3),
-                 38(T1) 38(T2) 38(T3),
-            VELO/45(T1) 45(T2) 45(T3),
-                 38(T1) 38(T2) 38(T3),
-            ACCE/45(T1) 45(T2) 45(T3),
-                 38(T1) 38(T2) 38(T3)
-
-    """
-    type = 'SETMC'
-    def __init__(self, set_id, values):
-        super(SETMC, self).__init__(set_id, values)
 
 class CheckCard(CaseControlCard):
     """
@@ -1001,42 +575,6 @@ def split_by_mixed_commas_parentheses(str_options: str) -> list[str]:
 
     options = options_start_new + [str_options] + options_end_new
     return options
-
-class M2GG(RealMatrixCard):
-    """
-    M2GG=MDMIG
-    M2GG=MDMIG1, MDMIG2, MDMIG3
-    M2GG=1.25*MDMIG1, 1.0*MDMIG2, 0.75*MDMIG3
-    SET 100=M1, M2
-    M2GG=100
-
-    """
-    type = 'M2GG'
-
-class A2GG(RealMatrixCard):
-    type = 'A2GG'
-
-class B2GG(RealMatrixCard):
-    type = 'B2GG'
-
-class K2GG(RealMatrixCard):
-    type = 'K2GG'
-
-class P2G(RealMatrixCard):
-    type = 'P2G'
-
-class K42GG(RealMatrixCard):
-    type = 'K42GG'
-
-
-class B2PP(ImagMatrixCard):
-    type = 'B2PP'
-
-class M2PP(ImagMatrixCard):
-    type = 'M2PP'
-
-class K2PP(ImagMatrixCard):
-    type = 'K2PP'
 
 class GROUNDCHECK(CheckCard):
     """
@@ -1655,3 +1193,29 @@ MATRIX_MAP = {
     #K42GG=100
     'K42GG': K42GG,
 }
+
+OBJ_MAP = {
+    'EXTSEOUT': EXTSEOUT,
+    'GROUNDCHECK': GROUNDCHECK,
+    'MEFFMASS': MEFFMASS,
+    'VOLUME': VOLUME,
+    'SURFACE': SURFACE,
+
+    'AEROF': AEROF,
+    'APRES': APRES,
+    'GPKE': GPKE,
+    'GPRSORT': GPRSORT,
+    'GPSDCON': GPSDCON,
+    'GPSTRESS': GPSTRESS,
+    'HARMONICS': HARMONICS,
+    'MODCON': MODCON,
+    'OFREQUENCY': OFREQUENCY,
+    'OMODES': OMODES,
+    'SEALL': SEALL,
+    'SEDR': SEDR,
+    'SET': SET,
+    'SETMC': SETMC,
+    'SUPER': SUPER,
+    #'ECHO': ECHO,
+}
+OBJ_MAP.update(MATRIX_MAP)

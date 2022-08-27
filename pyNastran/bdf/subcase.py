@@ -5,11 +5,11 @@ from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 from numpy import ndarray
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, integer_float_types
 from pyNastran.utils import object_attributes, deprecated
 
 from pyNastran.bdf.bdf_interface.case_control_cards import CLASS_MAP
-from pyNastran.bdf.bdf_interface.subcase_utils import (
+from pyNastran.bdf.bdf_interface.subcase.utils import (
     write_stress_type, write_set, expand_thru_case_control)
 USER_NAME = getpass.getuser()
 
@@ -94,7 +94,11 @@ class Subcase:
                 #print(group.keys())
                 for group_key in group.keys():
                     #self.log.debug('%s %s' % (group_key, key))
-                    value, options, param_type = _load_hdf5_param(group, group_key, encoding)
+                    value, options, param_type = _load_hdf5_param(group, group_key, encoding, self.log)
+                    if param_type == 'OBJ-type':
+                        self.params[group_key] = value
+                        str(self)
+                        continue
 
                     #self.log.debug('%s (%s, %s, %s)' % (key, value, options, param_type))
                     if isinstance(options, list):
@@ -110,7 +114,7 @@ class Subcase:
     def export_to_hdf5(self, hdf5_file, encoding: str) -> None:
         keys_to_skip = ['log', 'solCodeMap', 'allowed_param_types']
         h5attrs = object_attributes(self, mode='both', keys_to_skip=keys_to_skip)
-        #print('Subcase %i' % self.id)
+        #print(f'Subcase {self.id:d}')
         for h5attr in h5attrs:
             value = getattr(self, h5attr)
             if h5attr in ['id']: # scalars
@@ -130,40 +134,7 @@ class Subcase:
                 #params_group.create_dataset('keys', data=keys_bytes)
                 for key, (value, options, param_type) in self.params.items():
                     #print('  %-14s: %-8r %r %r' % (key, value, options, param_type))
-                    if key == '':
-                        sub_group = params_group.create_group('blank')
-                        sub_group.create_dataset('value', data=value)
-
-                    else:
-                        #print('key = %r' % key)
-                        sub_group = params_group.create_group(key)
-                        if value is not None:
-                            if isinstance(value, list):
-                                value_bytes = [
-                                    valuei.encode(encoding) if isinstance(valuei, str) else valuei
-                                    for valuei in value]
-                                sub_group.create_dataset('value', data=value_bytes)
-                            elif isinstance(value, (integer_types, float, str)):
-                                sub_group.create_dataset('value', data=value)
-                            elif hasattr(value, 'export_to_hdf5'):
-                                sub_groupi = sub_group.create_group('object')
-                                sub_groupi.attrs['type'] = key
-                                value.export_to_hdf5(sub_groupi, encoding)
-                            else:
-                                print(f'value = {value!r}')
-                                raise NotImplementedError(value)
-
-                    if param_type is not None:
-                        sub_group.create_dataset('param_type', data=param_type)
-
-                    if options is not None:
-                        if isinstance(options, list):
-                            options_bytes = [
-                                option.encode(encoding) if isinstance(option, str) else option
-                                for option in options]
-                            sub_group.create_dataset('options', data=options_bytes)
-                        else:
-                            sub_group.create_dataset('options', data=options)
+                    self._export_hdf5_param(params_group, key, value, options, param_type, encoding)
 
             #if h5attr in ['_begin_count', 'debug', 'write_begin_bulk']: # scalars
                 ## do nothing on purpose
@@ -186,6 +157,57 @@ class Subcase:
                 print(key, value)
                 raise RuntimeError(f'cant export to hdf5 Subcase/{h5attr}')
 
+    def _export_hdf5_param(self, params_group,
+                           key: str, value, options, param_type: str,
+                           encoding: str):
+        """
+        Export a Subcase param like:
+        K2GG = 1.0*K2GG1
+        SET 10 = 1 THRU 10
+        """
+        if param_type == 'OBJ-type':
+            #print('**********', key, param_type)
+            sub_groupi = params_group.create_group(key)
+            sub_groupi.attrs['type'] = key
+            sub_groupi['param_type'] = param_type
+            value.export_to_hdf5(sub_groupi, encoding)
+            return
+
+        if key == '':
+            sub_group = params_group.create_group('blank')
+            sub_group.create_dataset('value', data=value)
+
+        else:
+            #print('key = %r' % key)
+            sub_group = params_group.create_group(key)
+            if value is not None:
+                if isinstance(value, list):
+                    value_bytes = [
+                        valuei.encode(encoding) if isinstance(valuei, str) else valuei
+                        for valuei in value]
+                    sub_group.create_dataset('value', data=value_bytes)
+                elif isinstance(value, (integer_float_types, str)):
+                    sub_group.create_dataset('value', data=value)
+                elif hasattr(value, 'export_to_hdf5'):
+                    sub_groupi = sub_group.create_group('object')
+                    sub_groupi.attrs['type'] = key
+                    value.export_to_hdf5(sub_groupi, encoding)
+                else:
+                    print(f'value = {value!r}')
+                    raise NotImplementedError(value)
+
+        if param_type is not None:
+            sub_group.create_dataset('param_type', data=param_type)
+
+        if options is not None:
+            if isinstance(options, list):
+                options_bytes = [
+                    option.encode(encoding) if isinstance(option, str) else option
+                    for option in options]
+                #print('options_bytes', options_bytes)
+                sub_group.create_dataset('options', data=options_bytes)
+            else:
+                sub_group.create_dataset('options', data=options)
 
     def __deepcopy__(self, memo):
         """
@@ -803,8 +825,9 @@ class Subcase:
 
         """
         key = update_param_name(key)
-        if key == 'ANALYSIS' and value == 'FLUT':
-            value = 'FLUTTER'
+        if key == 'ANALYSIS':
+            value = _update_analysis_value(value)
+
         elif param_type == 'STRESS-type' and key.startswith('SET'):
             raise RuntimeError('%r' % key, options, param_type)
 
@@ -821,18 +844,7 @@ class Subcase:
 
     def _simplify_data(self, key: str, value: Any, options: list[Any], param_type: str):
         if param_type == 'SET-type':
-            #print("adding isubcase=%s key=%r value=%r options=%r "
-                  #"param_type=%r" % (self.id, key, value, options, param_type))
-
-            #print("adding isubcase=%s key=%r value=%r options=%r "
-                  #"param_type=%r" % (self.id, key, value, options, param_type))
-            values2 = expand_thru_case_control(value)
-
-            assert isinstance(values2, list), type(values2)
-            if isinstance(options, list):
-                msg = f'invalid type for options={options!r} value; expected an integer; got a list'
-                raise TypeError(msg)
-            options = int(options)
+            (key, values2, options, param_type) = _simplify_set(key, value, options, param_type)
             return (key, values2, options)
 
         elif param_type == 'CSV-type':
@@ -855,7 +867,7 @@ class Subcase:
             if isinstance(value, integer_types) or value is None:
                 pass
             elif isinstance(value, (list, ndarray)):  # new???
-                msg = f'invalid type for key={key} value; expected an integer; got a list'
+                msg = f'invalid type for key={key} value; expected an integer; got a list={value}'
                 raise TypeError(msg)
             elif value.isdigit():  # STRESS = ALL
                 value = value
@@ -871,14 +883,15 @@ class Subcase:
             'label': label, 'subtitle': None, 'title': None,
             'format_codes': [], 'stress_codes': [], 'thermal': None}
 
-        results = ['DISPLACEMENT', 'EKE', 'EDE', 'ELSDCON', 'ENTHALPY',
-                   'EQUILIBRIUM', 'ESE', 'FLUX', 'FORCE', 'GPFORCE', 'GPKE',
-                   'GPSDCON', 'GPSTRAIN', 'GPSTRESS', 'HOUTPUT', 'MODALKE',
-                   'MODALSE', 'MPCFORCES', 'NLSTRESS', 'NOUTPUT', 'OLOAD',
-                   'PFGRID', 'PFMODE', 'PFPANEL', 'RCROSS', 'RESVEC',
-                   'SACCELERATION', 'SDISPACEMENT', 'SPCFORCES', 'STRAIN',
-                   'STRESS', 'SVECTOR', 'SVELOCITY', 'THERMAL', 'VECTOR',
-                   'VELOCITY', 'VUGRID', 'WEIGHTCHECK']
+        results = [
+            'DISPLACEMENT', 'EKE', 'EDE', 'ELSDCON', 'ENTHALPY',
+            'EQUILIBRIUM', 'ESE', 'FLUX', 'FORCE', 'GPFORCE', 'GPKE',
+            'GPSDCON', 'GPSTRAIN', 'GPSTRESS', 'HOUTPUT', 'MODALKE',
+            'MODALSE', 'MPCFORCES', 'NLSTRESS', 'NOUTPUT', 'OLOAD',
+            'PFGRID', 'PFMODE', 'PFPANEL', 'RCROSS', 'RESVEC',
+            'SACCELERATION', 'SDISPACEMENT', 'SPCFORCES', 'STRAIN',
+            'STRESS', 'SVECTOR', 'SVELOCITY', 'THERMAL', 'VECTOR',
+            'VELOCITY', 'VUGRID', 'WEIGHTCHECK']
 
         # converts from solution 200 to solution 144
         if self.sol == 200 or 'ANALYSIS' in self.params:
@@ -1209,14 +1222,47 @@ class Subcase:
             assert nparams > 0, f'No subcase parameters are defined for isubcase={self.id:d}...'
         return msg
 
-def _load_hdf5_param(group, key: str, encoding: str) -> tuple[str, list[str], str]:
+def _update_analysis_value(value: str) -> str:
+    """ANALYSIS = FLUT"""
+    if value == 'FLUT':
+        value = 'FLUTTER'
+    return value
+
+def _simplify_set(key: str, value: Any, options: list[Any], param_type: str) -> tuple[int, str, list[str], str]:
+    """
+    Parameters
+    ----------
+    key: str
+        'SET 1'
+    value : list[str]
+        [' 1.*MAT1', '2.*MAT2', '3.*MAT3', '4.*MAT4', '5.*MAT5', '6.*MAT6', ' 7.*MAT7', '8.*MAT8', '9.*MAT9']
+    options : int
+        the SET id
+    """
+    #print("adding isubcase=%s key=%r value=%r options=%r "
+          #"param_type=%r" % (self.id, key, value, options, param_type))
+
+    #print("adding isubcase=%s key=%r value=%r options=%r "
+          #"param_type=%r" % (self.id, key, value, options, param_type))
+    values2 = expand_thru_case_control(value)
+
+    assert isinstance(values2, list), type(values2)
+    if isinstance(options, list):
+        msg = f'invalid type for options={options!r} value; expected an integer; got a list'
+        raise TypeError(msg)
+    options = int(options)
+    return (key, values2, options, param_type)
+
+def _load_hdf5_param(group, key: str, encoding: str, log) -> tuple[str, list[str], str]:
     """('ALL', ['SORT2'], 'STRESS-type')"""
     import h5py
     from pyNastran.utils.dict_to_h5py import _cast, _cast_array
+    from pyNastran.bdf.bdf_interface.subcase_cards import OBJ_MAP
     #print('-----------------------------------------')
     #print(type(key), key)
     sub_group = group[key]
     keys = list(sub_group.keys())
+    #print(group)
     #print('subgroup.keys() =', sub_group.keys())
 
     if key == 'blank':
@@ -1243,8 +1289,20 @@ def _load_hdf5_param(group, key: str, encoding: str) -> tuple[str, list[str], st
             param_type = param_type.decode(encoding)
         keys.remove('param_type')
 
-    #print('param_type ', param_type)
     value = None
+    if param_type == 'OBJ-type':
+        #sub_groupi.attrs['type'] = key
+        Type = sub_group.attrs['type']
+        try:
+            cls = OBJ_MAP[Type]
+        except KeyError:
+            log.error(f'*param_type={param_type}: Type={Type} key={key}')
+            raise
+
+        obj = cls.load_hdf5(sub_group, encoding)
+        str(obj)
+        return obj, None, param_type
+
     if 'value' in sub_group:
         keys.remove('value')
         value = _cast(sub_group['value'])
@@ -1337,7 +1395,7 @@ def _load_hdf5_object(key, keys, sub_group, encoding):
     #class_obj.load_hdf5_file(hdf5_file, encoding)
     return value, options
 
-def update_param_name(param_name):
+def update_param_name(param_name: str) -> str:
     """
     Takes an abbreviated name and expands it so the user can type DISP or
     DISPLACEMENT and get the same answer

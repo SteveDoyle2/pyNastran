@@ -1,4 +1,4 @@
-from pyNastran.bdf.bdf_interface.subcase_cards import IntCard
+from .subcase_base import IntCard
 
 
 class ADACT(IntCard):

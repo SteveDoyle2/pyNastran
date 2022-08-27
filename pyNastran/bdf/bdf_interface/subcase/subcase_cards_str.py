@@ -1,4 +1,4 @@
-from pyNastran.bdf.bdf_interface.subcase_cards import StringCard
+from .subcase_base import StringCard
 
 class AESYMXY(StringCard):
     type = 'AESYMXY'
