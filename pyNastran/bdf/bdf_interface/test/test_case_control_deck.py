@@ -5,7 +5,7 @@ import unittest
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.case_control_deck import CaseControlDeck
-from pyNastran.bdf.bdf_interface.subcase_utils import write_set, collapse_thru_packs
+from pyNastran.bdf.bdf_interface.subcase.utils import write_set, collapse_thru_packs
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
@@ -385,14 +385,70 @@ class CaseControlTest(unittest.TestCase):
         assert sc3.params['SET 100'] == [[100, 101], 100, 'SET-type']
         assert sc4.params['SET 100'] == [[100], 100, 'SET-type']
 
+    def test_echo_1(self):
+        """tests ECHO"""
+        lines = [
+            'ECHO = UNSORT'
+        ]
+        lines_expected = lines
+
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_echo_2(self):
+        """tests ECHO"""
+        lines = [
+            'ECHO = SORT(EXCEPT DMI,DMIG),PUNCH(BSTBULK)'
+        ]
+        lines_expected = lines
+
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_echo_3(self):
+        """tests ECHO"""
+        lines = [
+            'ECHO = PUNCH,SORT(MAT1,PARAM)'
+        ]
+        lines_expected = lines
+
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_echo_4(self):
+        """tests ECHO"""
+        lines = [
+            'ECHO = SORT(EXCEPT DMI,DMIG)'
+        ]
+        lines_expected = lines
+
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
     def test_real_matrices_1(self):
         """tests real matrices without a Subcase"""
         lines = [
+            #'SET 1 = 1.*MAT1,2.*MAT2,3.*MAT3,4.*MAT4,5.*MAT5,6.*MAT6,'
+            #' 7.*MAT7,8.*MAT8,9.*MAT9',
             'K2GG = 1.*MAT1,2.*MAT2,3.*MAT3,4.*MAT4,5.*MAT5,6.*MAT6,'
             ' 7.*MAT7,8.*MAT8,9.*MAT9',
             'DISPLACEMENT = ALL',
         ]
         lines_expected = [
+            #'SET 1 = 1.*MAT1,2.*MAT2,3.*MAT3,4.*MAT4,5.*MAT5,6.*MAT6,'
+            #' 7.*MAT7,8.*MAT8,9.*MAT9',
             'DISPLACEMENT = ALL',
             'K2GG = 1.0*MAT1,2.0*MAT2,3.0*MAT3,4.0*MAT4,5.0*MAT5,6.0*MAT6,',
             ' 7.0*MAT7,8.0*MAT8,9.0*MAT9',

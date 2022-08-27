@@ -1,5 +1,5 @@
 from typing import Union, Set, Any
-from ..subcase_cards import CheckCard
+from .cards import CheckCard
 
 
 class DISPLACEMENT(CheckCard):

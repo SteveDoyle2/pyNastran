@@ -1,14 +1,14 @@
 from pyNastran.utils.numpy_utils import bytes_type
-from .subcase.subcase_base import CaseControlCard
+from .subcase_base import CaseControlCard
 
-from .subcase.int_str_cards import (
+from .int_str_cards import (
     AEROF, APRES, GPKE, GPRSORT, GPSDCON, GPSTRESS,
     HARMONICS, OFREQUENCY, OMODES, SEALL, SEDR, SUPER)
-from .subcase.matrix import (
+from .matrix import (
     A2GG,
     B2GG, M2GG, K2GG, P2G, K42GG,
     B2PP, M2PP, K2PP, )
-from .subcase.sets import SET, SETMC
+from .sets import SET, SETMC
 #from pyNastran.bdf.field_writer_8 import print_float_8
 
 def decode_bytes_list(bytes_list, encoding):

@@ -30,7 +30,7 @@ from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.case_control_deck import (_clean_lines, split_equal_space,
                                              integer, decode_lines)
 from .bdf_interface.case_control_cards import CLASS_MAP
-from pyNastran.bdf.bdf_interface.subcase_cards import (
+from pyNastran.bdf.bdf_interface.subcase.cards import (
     #SURFACE, VOLUME, CSCALE,
     #EXTSEOUT,
     WEIGHTCHECK, GROUNDCHECK, DSAPRT,
@@ -39,9 +39,9 @@ from pyNastran.bdf.bdf_interface.subcase_cards import (
     split_by_mixed_commas_parentheses,
 )
 
-from pyNastran.bdf.bdf_interface.subcase_cards_str import STR_CARD_DICT, STR_CARD_NAMES
-from pyNastran.bdf.bdf_interface.subcase_cards_int import INT_CARD_DICT, INT_CARD_NAMES
-from pyNastran.bdf.bdf_interface.subcase_cards_check import CHECK_CARD_DICT, CHECK_CARD_NAMES
+from pyNastran.bdf.bdf_interface.subcase.cards_str import STR_CARD_DICT, STR_CARD_NAMES
+from pyNastran.bdf.bdf_interface.subcase.cards_int import INT_CARD_DICT, INT_CARD_NAMES
+from pyNastran.bdf.bdf_interface.subcase.cards_check import CHECK_CARD_DICT, CHECK_CARD_NAMES
 
 from pyNastran.utils import object_attributes
 if TYPE_CHECKING:  # pragma: no cover

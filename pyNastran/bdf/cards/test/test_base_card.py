@@ -1,6 +1,6 @@
 import unittest
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
-from pyNastran.bdf.bdf_interface.subcase_utils import expand_thru_case_control
+from pyNastran.bdf.bdf_interface.subcase.utils import expand_thru_case_control
 from pyNastran.bdf.cards.expand_card import expand_thru, expand_thru_by
 
 

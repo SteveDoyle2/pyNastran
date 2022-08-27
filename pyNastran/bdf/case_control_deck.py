@@ -29,7 +29,7 @@ from cpylog import get_logger
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.bdf_interface.encoding import decode_lines
 from pyNastran.bdf.subcase import Subcase, update_param_name
-from pyNastran.bdf.bdf_interface.subcase_cards import (
+from pyNastran.bdf.bdf_interface.subcase.cards import (
     #A2GG, B2GG, K2GG, M2GG, P2G, # real
     #A2GG, B2PP, K2PP, M2PP,      # complex
     #K42GG, # real
