@@ -950,9 +950,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         """
         import h5py
+        self.log.debug('starting export_hdf5_file of %r' % hdf5_filename)
         try:
             with h5py.File(hdf5_filename, 'w') as hdf5_file:
-                #self.log.info('starting export_hdf5_file of %r' % hdf5_filename)
                 self.export_hdf5_file(hdf5_file)
         except OSError:
             self.log.error(f'failed to export {hdf5_filename!r}')
@@ -984,8 +984,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         """
         import h5py
+        self.log.debug('starting load_hdf5_file of %r' % hdf5_filename)
         with h5py.File(hdf5_filename, 'r') as hdf5_file:
-            #self.log.info('starting load_hdf5_file of %r' % hdf5_filename)
             self.load_hdf5_file(hdf5_file)
 
     def load_hdf5_file(self, h5_file) -> None:

@@ -751,11 +751,11 @@ class CaseControlDeck:
             #param_type = 'OBJ-type'
             #key = obj.type
 
-        #elif line_upper.startswith('ECHO'):
-            #param_type = 'OBJ-type'
-            #obj = ECHO.add_from_case_control(line_upper.strip())
-            #value = obj
-            #key = obj.type
+        elif line_upper.startswith('ECHO'):
+            param_type = 'OBJ-type'
+            obj = ECHO.add_from_case_control(line_upper.strip())
+            value = obj
+            key = obj.type
 
         elif line_upper.startswith(MATRIX_TYPES):
             matrix_name, other = line_upper.split('=')

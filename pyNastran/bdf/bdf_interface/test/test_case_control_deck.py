@@ -385,7 +385,7 @@ class CaseControlTest(unittest.TestCase):
         assert sc3.params['SET 100'] == [[100, 101], 100, 'SET-type']
         assert sc4.params['SET 100'] == [[100], 100, 'SET-type']
 
-    def test_echo_1(self):
+    def test_echo_str(self):
         """tests ECHO"""
         lines = [
             'ECHO = UNSORT'
@@ -398,10 +398,10 @@ class CaseControlTest(unittest.TestCase):
         deck_lines = deck_msg.split('\n')
         compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
-    def test_echo_2(self):
+    def test_echo_str_str2(self):
         """tests ECHO"""
         lines = [
-            'ECHO = SORT(EXCEPT DMI,DMIG),PUNCH(BSTBULK)'
+            'ECHO = PUNCH,SORT',
         ]
         lines_expected = lines
 
@@ -411,10 +411,10 @@ class CaseControlTest(unittest.TestCase):
         deck_lines = deck_msg.split('\n')
         compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
-    def test_echo_3(self):
+    def test_echo_list_list(self):
         """tests ECHO"""
         lines = [
-            'ECHO = PUNCH,SORT(MAT1,PARAM)'
+            'ECHO = SORT(EXCEPT DMI,DMIG),PUNCH(BSTBULK)',
         ]
         lines_expected = lines
 
@@ -424,10 +424,10 @@ class CaseControlTest(unittest.TestCase):
         deck_lines = deck_msg.split('\n')
         compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
-    def test_echo_4(self):
+    def test_echo_str_list(self):
         """tests ECHO"""
         lines = [
-            'ECHO = SORT(EXCEPT DMI,DMIG)'
+            'ECHO = PUNCH,SORT(MAT1,PARAM)',
         ]
         lines_expected = lines
 
@@ -436,6 +436,50 @@ class CaseControlTest(unittest.TestCase):
         #print('%s' % deck_msg)
         deck_lines = deck_msg.split('\n')
         compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_echo_list(self):
+        """tests ECHO"""
+        lines = [
+            'ECHO = SORT(EXCEPT DMI,DMIG)',
+        ]
+        lines_expected = lines
+
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_echo_list_long(self):
+        """tests ECHO"""
+        lines = [
+            'ECHO = SORT(PARAM,EIGC,EIGRL,FREQ,DESVAR,DCONSTR,DRESP1,DRESP2,',
+            '       DVPREL1)',
+        ]
+        lines_expected = lines
+
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_echo_list_long_str(self):
+        """tests ECHO"""
+        lines = [
+            'ECHO = SORT(PARAM,EIGC,EIGRL,FREQ,DESVAR,DCONSTR,DRESP1,DRESP2),',
+            '       PUNCH',
+        ]
+        lines_expected = lines
+
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+        #ECHO = SORT(PARAM,EIGC,EIGRL,FREQ,DESVAR,DCONSTR,DRESP1,DRESP2,DEQATN,DVPREL1)
+        #ECHO = PUNCH,SORT(MAT1,PARAM)
 
     def test_real_matrices_1(self):
         """tests real matrices without a Subcase"""

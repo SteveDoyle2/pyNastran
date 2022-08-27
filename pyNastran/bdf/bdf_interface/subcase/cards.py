@@ -35,7 +35,6 @@ class ECHO(CaseControlCard):
     def __init__(self, value: str):
         self.value = value
 
-
     def __repr__(self) -> str:
         """writes a card"""
         rows = self._repr_rows()
@@ -49,18 +48,41 @@ class ECHO(CaseControlCard):
 
     def _repr_rows(self) -> list[str]:
         """writes a card"""
+        target = 68
         #['SORT', ['EXCEPT DMI', 'DMIG'], 'PUNCH', ['BSTBULK']]
-        msg = ''
+        rows = []
+        msg = 'ECHO = '
+        base = '       '
         for valuei in self.value:
             if isinstance(valuei, str):
-                msg += valuei + ','
+                new = valuei + ','
+                if len(msg) + len(new) < target:
+                    msg += new
+                else:
+                    rows.append(msg)
+                    msg = base + new
             elif isinstance(valuei, list):
-                msg = msg[:-1] + '(%s),' % ','.join(valuei)
+                #msg =  + '(%s),' % ','.join(valuei)  #  too long
+                msg = msg[:-1] + '('
+                for valueii in valuei:
+                    new = valueii + ','
+                    if len(msg) + len(new) < target:
+                        msg += new
+                    else:
+                        rows.append(msg)
+                        msg = base + new
+                msg = msg[:-1] + '),'
             else:
-                echooo
-        out = '%s = %s' % (self.type, msg.rstrip(','))
-        assert len(out) < 68, 'out={out!r}'
-        return [out]
+                raise TypeError(self.value)
+
+        if msg:
+            rows.append(msg[:-1])
+        else:
+            raise RuntimeError(msg)
+
+        for row in rows:
+            assert len(row) < target, f'row={row!r}'
+        return rows
 
     @classmethod
     def add_from_case_control(cls, line: str):
@@ -79,86 +101,58 @@ class ECHO(CaseControlCard):
             # ECHO = NOSORT
             # ECHO = BOTH
             return cls([value])
-        options = cls._get_options_from_line(value)
-        return cls(options)
-
-    @staticmethod
-    def _get_options_from_line(value: str) -> list[str]:
         options = []
-        # ECHO = PUNCH,SORT(MAT1,PARAM)
-        is_comma = ',' in value
-        is_paren = '(' in value
-        if is_comma and is_paren:
-            icomma, iparen = _get_icomma_iparen(value)
-            #if icomma == -1 and iparen == -1:
-                #raise NotImplementedError(f'ECHO is_comma/is_paren; line={line!r}')
+        _set_options_from_line(line, value, options)
 
-            if iparen < icomma:
-                # ECHO = SORT(PARAM,EIGC,EIGRL,FREQ,DESVAR,DCONSTR,DRESP1,DRESP2,DEQATN,DVPREL1)
-                # ECHO = SORT(EXCEPT DMI,DMIG)
-                # ECHO = UNSORT / SORT (EXCEPT DMI, DMIG), PUNCH(BSTBULK/NEWBULK)
-                # ECHO = SORT(EXCEPT DMI,DMIG),PUNCH(BSTBULK)
-                base, paren_open = value.split('(', 1) # [:iparen], value[iparen+1:]
-                options.append(base)
-                paren, end = paren_open.split(')', 1)
-                sparen = paren.split(',')
-                options.append(sparen)
-                end = end.strip(' ,')
-                nend = len(end)
-                if end == '':
-                    return options
+        options2 = _strip_echo_options(options)
+        return cls(options2)
 
-                jcomma, jparen = _get_icomma_iparen(end)
-                if jcomma > 0 and jparen > 0:
-                    ccc
-                elif jcomma > 0:
-                    ddd
-                elif jparen > 0:
-                    assert end[-1] == ')', end
-                    send = end[:-1].split('(')
-                    assert len(send) == 2, send
-                    options.append(send[0])
-                    options.append([send[1]])
-                else:
-                    raise NotImplementedError(f'ECHO is_comma; line={line!r}')
-                x = 1
+def _set_options_from_line(line: str, value: str, options: list[str]) -> None:
+    # ECHO = PUNCH,SORT(MAT1,PARAM)
+    is_comma = ',' in value
+    is_paren = '(' in value
+    if is_comma and is_paren:
+        icomma, iparen = _get_icomma_iparen(value)
+        #if icomma == -1 and iparen == -1:
+            #raise NotImplementedError(f'ECHO is_comma/is_paren; line={line!r}')
 
-            else:
-                # ECHO = SORT,PUNCH(BSTBULK)
-                #'PUNCH,SORT(MAT1,PARAM)'
-                base, paren = value.split(',', 1)
-                options.append(base)
-                jcomma, jparen = _get_icomma_iparen(paren)
-                if jcomma == -1:
-                    fff
-                elif jparen == -1:
-                    ggg
-                elif jparen < jcomma:
-                    base2, paren2 = paren.split('(', 1)
-                    inner, end = paren2.split(')', 1)
-                    assert end == '', end
-                    sinner = inner.split(',')
-                    options.append(base2)
-                    options.append(sinner)
-                else:
-                    raise NotImplementedError(f'ECHO; jcomma={jcomma} jparen={jparen}; paren={paren!r}')
-            #else:
-                #raise NotImplementedError(f'ECHO is_comma; line={line!r}')
-        elif is_comma:
-            raise NotImplementedError(f'ECHO is_comma; line={line!r}')
-        elif is_paren:
-            # ECHO = PUNCH(BSTBULK)
-            # ECHO = PUNCH(NEWBULK)
-            value, options_ = line.split('(', 1)
-            value = value.strip()
-            options_ = options_.strip()
-            assert options_[-1] == ')', options_
-            options = [options_[:-1]]
+        if iparen < icomma:
+            # ECHO = SORT(PARAM,EIGC,EIGRL,FREQ,DESVAR,DCONSTR,DRESP1,DRESP2,DEQATN,DVPREL1)
+            # ECHO = SORT(EXCEPT DMI,DMIG)
+            # ECHO = UNSORT / SORT (EXCEPT DMI, DMIG), PUNCH(BSTBULK/NEWBULK)
+            # ECHO = SORT(EXCEPT DMI,DMIG),PUNCH(BSTBULK)
+            base, paren_open = value.split('(', 1) # [:iparen], value[iparen+1:]
+            options.append(base)
+            paren, end = paren_open.split(')', 1)
+            sparen = paren.split(',')
+            options.append(sparen)
+            end = end.strip(' ,')
+            if end == '':
+                return
+
+            _set_options_from_line(line, end, options)
         else:
-            # single value
-            raise NotImplementedError(f'ECHO; line={line!r}')
-            #options.append(value)
-        return options
+            # ECHO = SORT,PUNCH(BSTBULK)
+            #'PUNCH,SORT(MAT1,PARAM)'
+            base, paren = value.split(',', 1)
+            options.append(base)
+            _set_options_from_line(line, paren, options)
+    elif is_comma:
+        sline = value.split(',', 1)
+        options += sline
+    elif is_paren:
+        # ECHO = PUNCH(BSTBULK)
+        # ECHO = PUNCH(NEWBULK)
+        value2, options_ = value.split('(', 1)
+        value2 = value2.strip()
+        options_ = options_.strip()
+        assert options_[-1] == ')', options_
+        inner = options_[:-1]
+        options += [value2, [inner]]
+    else:
+        # single value
+        options.append(value)
+    return options
 
 def _get_icomma_iparen(value: str) -> tuple[int, int]:
     #nvalue = len(value)
@@ -170,6 +164,17 @@ def _get_icomma_iparen(value: str) -> tuple[int, int]:
         #iparen = -1
     return icomma, iparen
 
+def _strip_echo_options(options: list[str]) -> list[str]:
+    options2 = []
+    for option in options:
+        if isinstance(option, str):
+            options2.append(option)
+        elif isinstance(option, list):
+            option2 = [optioni.strip() for optioni in option]
+            options2.append(option2)
+        else:
+            raise NotImplementedError(option)
+    return options2
 #-------------------------------------------------------------------------------
 
 class CheckCard(CaseControlCard):
@@ -1216,6 +1221,6 @@ OBJ_MAP = {
     'SET': SET,
     'SETMC': SETMC,
     'SUPER': SUPER,
-    #'ECHO': ECHO,
+    'ECHO': ECHO,
 }
 OBJ_MAP.update(MATRIX_MAP)
