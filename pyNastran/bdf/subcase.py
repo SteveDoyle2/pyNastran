@@ -854,7 +854,11 @@ class Subcase:
         """
         msg = ''
         #msg += 'id=%s   ' %(self.id)
-        (value, options, param_type) = param
+        try:
+            (value, options, param_type) = param
+        except:
+            print(param)
+            raise
 
         spaces = ''
         if self.id > 0:

@@ -115,7 +115,6 @@ class SolidElement(Element):
         """exports the elements in a vectorized way"""
         nnodes = nnodes_map[cls.type]
         comments = []
-        pids = []
 
         element0 = model.elements[eids[0]]
         nnodes0 = len(element0.nodes)
@@ -134,13 +133,11 @@ class SolidElement(Element):
         neids = len(eids)
         nnodes = nnodes_high_map[nnodes0]
         nnodes_low = nnodes_low_map[nnodes0]
-
-        nodes = np.zeros((neids, nnodes), dtype='int32')
-        for i, eid in enumerate(eids):
-            element = model.elements[eid]
-            #comments.append(element.comment)
-            pids.append(element.pid)
-            nodes[i, :len(element.nodes)] = [nid if nid is not None else 0 for nid in element.nodes]
+        shape = (neids, nnodes)
+        try:
+            pids, nodes = _get_nodes_array(model, shape, eids, dtype='int32')
+        except OverflowError:
+            pids, nodes = _get_nodes_array(model, shape, eids, dtype='int64')
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('eid', data=eids)
         h5_file.create_dataset('pid', data=pids)
@@ -222,6 +219,16 @@ class SolidElement(Element):
     def center_of_mass(self):
         return self.Centroid()
 
+
+def _get_nodes_array(model: BDF, shape, eids, dtype='int32'):
+    pids = []
+    nodes = np.zeros(shape, dtype=dtype)
+    for i, eid in enumerate(eids):
+        element = model.elements[eid]
+        #comments.append(element.comment)
+        pids.append(element.pid)
+        nodes[i, :len(element.nodes)] = [nid if nid is not None else 0 for nid in element.nodes]
+    return pids, nodes
 
 class CHEXA8(SolidElement):
     """

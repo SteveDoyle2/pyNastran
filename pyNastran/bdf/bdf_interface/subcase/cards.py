@@ -12,12 +12,12 @@ from .matrix import (
 from .sets import SET, SETMC
 #from pyNastran.bdf.field_writer_8 import print_float_8
 
-def encode_str_list(keys: list[str], encoding: str) -> list[bytes]:
-    return [key.encode(encoding) for key in keys]
+def encode_str_list(strings: list[str], encoding: str) -> list[bytes]:
+    return [stri.encode(encoding) for stri in strings]
 
-def encode_str_value_list(values: list[int, float, str], encoding: str) -> list[int, float, bytes]:
-    values_bytes = [value.encode(encoding) if isinstance(value, str) else value
-                    for value in values]
+def encode_str_value_list(strings: list[int, float, str], encoding: str) -> list[int, float, bytes]:
+    values_bytes = [stri.encode(encoding) if isinstance(stri, str) else stri
+                    for stri in strings]
     return values_bytes
 
 def decode_bytes_list(bytes_list: list[bytes], encoding: str) -> list[str]:
@@ -796,7 +796,7 @@ class EXTSEOUT(CaseControlCard):
                     values.append(value)
 
             if keys_none:
-                keys_none_bytes = encode_str_list(keys, keys_none)
+                keys_none_bytes = encode_str_value_list(keys_none, encoding)
                 data_group.create_dataset('keys_none', data=keys_none_bytes)
             if keys:
                 keys_bytes = encode_str_list(keys, encoding)
@@ -825,6 +825,8 @@ class EXTSEOUT(CaseControlCard):
                 keys = data_keys + keys_none
                 values = data_values + [None] * len(keys_none)
                 data = [(key, value) for (key, value) in zip(keys, values)]
+            elif key == 'param_type':
+                pass
             else:
                 raise NotImplementedError(key)
         return EXTSEOUT(data), []
