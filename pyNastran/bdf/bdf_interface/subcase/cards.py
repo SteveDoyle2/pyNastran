@@ -1,3 +1,4 @@
+from typing import Any
 from pyNastran.utils.numpy_utils import bytes_type
 from .subcase_base import CaseControlCard
 
@@ -11,7 +12,15 @@ from .matrix import (
 from .sets import SET, SETMC
 #from pyNastran.bdf.field_writer_8 import print_float_8
 
-def decode_bytes_list(bytes_list, encoding):
+def encode_str_list(keys: list[str], encoding: str) -> list[bytes]:
+    return [key.encode(encoding) for key in keys]
+
+def encode_str_value_list(values: list[int, float, str], encoding: str) -> list[int, float, bytes]:
+    values_bytes = [value.encode(encoding) if isinstance(value, str) else value
+                    for value in values]
+    return values_bytes
+
+def decode_bytes_list(bytes_list: list[bytes], encoding: str) -> list[str]:
     out = [bytes_str.decode(encoding) if isinstance(bytes_str, bytes_type) else bytes_str
            for bytes_str in bytes_list]
     return out
@@ -106,6 +115,34 @@ class ECHO(CaseControlCard):
 
         options2 = _strip_echo_options(options)
         return cls(options2)
+
+    def export_to_hdf5(self, h5_file, encoding: str) -> None:
+        values = []
+        for value in self.value:
+            if isinstance(value, str):
+                values.append(value)
+            else:
+                valuei = '(%s)' % ','.join(value)
+                values.append(valuei)
+        values_bytes = encode_str_list(values, encoding)
+        h5_file.create_dataset('value', data=values_bytes)
+
+    @classmethod
+    def load_hdf5(cls, h5_file, encoding: str) -> Any:
+        from pyNastran.utils.dict_to_h5py import _cast
+        values_bytes = _cast(h5_file['value'])
+        values_str = decode_bytes_list(values_bytes, encoding)
+
+        values = []
+        for value in values_str:
+            if value.startswith('('):
+                print(values_str)
+                print(value)
+                asdf
+            else:
+                values.append(value)
+
+        return cls(values)
 
 def _set_options_from_line(line: str, value: str, options: list[str]) -> None:
     # ECHO = PUNCH,SORT(MAT1,PARAM)
@@ -759,12 +796,11 @@ class EXTSEOUT(CaseControlCard):
                     values.append(value)
 
             if keys_none:
-                keys_none_bytes = [key.encode(encoding) for key in keys_none]
+                keys_none_bytes = encode_str_list(keys, keys_none)
                 data_group.create_dataset('keys_none', data=keys_none_bytes)
             if keys:
-                keys_bytes = [key.encode(encoding) for key in keys]
-                values_bytes = [value.encode(encoding) if isinstance(value, str) else value
-                                for value in values]
+                keys_bytes = encode_str_list(keys, encoding)
+                values_bytes = encode_str_value_list(values, encoding)
                 data_group.create_dataset('keys', data=keys_bytes)
                 data_group.create_dataset('values', data=values_bytes)
         else:

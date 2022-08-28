@@ -398,7 +398,7 @@ class CaseControlTest(unittest.TestCase):
         deck_lines = deck_msg.split('\n')
         compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
-    def test_echo_str_str2(self):
+    def test_echo_str_str(self):
         """tests ECHO"""
         lines = [
             'ECHO = PUNCH,SORT',

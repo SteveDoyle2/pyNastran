@@ -3063,8 +3063,8 @@ class AddCards:
 
     def add_pcomp(self, pid: int, mids: list[int], thicknesses: list[float],
                   thetas=None, souts=None,
-                  nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None,
-                  z0=None, comment='') -> PCOMP:
+                  nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None,
+                  validate: bool=True, comment: str='') -> PCOMP:
         """
         Creates a PCOMP card
 
@@ -3105,13 +3105,13 @@ class AddCards:
         """
         prop = PCOMP(pid, mids, thicknesses, thetas, souts,
                      nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam,
-                     z0=z0, comment=comment)
+                     z0=z0, validate=validate, comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
 
     def add_pcompg(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
                    nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None,
-                   comment='') -> PCOMPG:
+                   validate: bool=True, comment: str='') -> PCOMPG:
         """
         Creates a PCOMPG card
 
@@ -3154,7 +3154,7 @@ class AddCards:
         """
         prop = PCOMPG(pid, global_ply_ids, mids, thicknesses, thetas=thetas, souts=souts,
                       nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam, z0=z0,
-                      comment=comment)
+                      validate=validate, comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
 

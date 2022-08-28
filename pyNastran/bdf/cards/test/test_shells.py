@@ -1419,6 +1419,55 @@ class TestShells(unittest.TestCase):
         assert np.allclose(0., B.sum()), B
         assert np.allclose(ABD2, ABD3), ABD2
 
+    def test_abd3(self):
+        """per https://rafaelpsilva07.github.io/composipydocs/notebooks/laminate.html"""
+        mid = 1
+        e11 = 54870.
+        e22 = 18320.
+        g12 = 8900.
+        nu12 = 0.25
+
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_mat8(
+            mid, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8, rho=0.,
+            a1=0., a2=0., tref=0., Xt=0., Xc=None, Yt=0., Yc=None,
+            S=0., ge=0., F12=0., strn=0., comment='')
+        pid = 2
+        mids = [1, 1, 1]
+        thicknesses = [3., 6., 3.]
+        thetas = [45., 0., 45.]
+        pcomp = model.add_pcomp(pid, mids, thicknesses, thetas, souts=None,
+                                nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None, comment='')
+        model.cross_reference()
+        A, B, D = pcomp.get_individual_ABD_matrices()
+        #print(A)
+        #print(B)
+        #print(D)
+        #pcomp.get_Ainv_equivalent_pshell(imat_rotation_angle, thickness, degrees=True)
+
+    def test_qbar(self):
+        mid = 1
+        e11 = 39000.
+        e22 = 8300.
+        g12 = 4000.
+        nu12 = 0.26
+        t = 1.0
+
+        model = BDF(debug=True, log=None, mode='msc')
+        mat = model.add_mat8(
+            mid, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8, rho=0.,
+            a1=0., a2=0., tref=0., Xt=0., Xc=None, Yt=0., Yc=None,
+            S=0., ge=0., F12=0., strn=0., comment='')
+        pid = 2
+        mids = [1]
+        thicknesses = [100.]
+        thetas = [0.]
+        pcomp = model.add_pcomp(pid, mids, thicknesses, thetas, souts=None,
+                                nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None, comment='')
+        model.cross_reference()
+        Q = pcomp.get_Qbar_matrix(mat, theta=0.)
+        #print(Q)
+
     def test_lax(self):
         """tests adding cards in a lax way"""
         card = ['CTRIA3', '301471', '301003', '301466', '301468', '30071', '0', '0']

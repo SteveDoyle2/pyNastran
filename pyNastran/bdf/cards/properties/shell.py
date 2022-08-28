@@ -793,6 +793,7 @@ class PCOMP(CompositeShellProperty):
                  ft: Optional[str]=None,
                  tref: float=0., ge: float=0.,
                  lam: Optional[str]=None, z0: Optional[float]=None,
+                 validate: bool=True,
                  comment: str=''):
         """
         Creates a PCOMP card
@@ -866,6 +867,8 @@ class PCOMP(CompositeShellProperty):
         if z0 is None:
             z0 = -0.5 * self.Thickness()
         self.z0 = z0
+        if validate:
+            self.validate()
 
     def validate(self):
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN',
@@ -899,7 +902,7 @@ class PCOMP(CompositeShellProperty):
             #raise ValueError(msg)
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PCOMP card from ``BDF.add_card(...)``
 
@@ -974,7 +977,7 @@ class PCOMP(CompositeShellProperty):
         #    #print str(self)
         z0 = double_or_blank(card, 2, 'z0')
         card = PCOMP(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, tref, ge,
-                     lam, z0, comment=comment)
+                     lam, z0, validate=False, comment=comment)
         if len(mids) == 0 or len(thicknesses) == 0 or len(thetas) == 0 or len(souts) == 0:
             msg = 'No PCOMP layers defined\n%s' % str(card)
             msg += PCOMP.__doc__
@@ -1039,7 +1042,7 @@ class PCOMP(CompositeShellProperty):
                 raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft_int!r}.'
                                f'\nPCOMP = {data}')
         return PCOMP(pid, mids, thicknesses, thetas, souts,
-                     nsm, sb, ft, tref, ge, lam, z0, comment=comment)
+                     nsm, sb, ft, tref, ge, lam, z0, validate=False, comment=comment)
 
     @property
     def plies(self):
@@ -1248,7 +1251,7 @@ class PCOMP(CompositeShellProperty):
 
     def get_Qbar_matrix(self,
                         mid_ref: Union[MAT1, MAT8],
-                        theta: float) -> np.ndarray:
+                        theta: float=0.) -> np.ndarray:
         """theta must be in radians"""
         assert isinstance(theta, float_types), theta
         S2, unused_S3 = get_mat_props_S(mid_ref)
@@ -1448,6 +1451,7 @@ class PCOMPG(CompositeShellProperty):
                  ge: float=0.0,
                  lam: Optional[str]=None,
                  z0: Optional[float]=None,
+                 validate: bool=True,
                  comment: str=''):
         """
         Creates a PCOMPG card
@@ -1524,6 +1528,8 @@ class PCOMPG(CompositeShellProperty):
         if z0 is None:
             z0 = -0.5 * self.Thickness()
         self.z0 = z0
+        if validate:
+            self.validate()
 
     def validate(self) -> None:
         assert isinstance(self.global_ply_ids, list), self.global_ply_ids
@@ -1616,7 +1622,7 @@ class PCOMPG(CompositeShellProperty):
         z0 = double_or_blank(card, 2, 'z0')
         return PCOMPG(pid,
                       global_ply_ids, mids, thicknesses, thetas, souts,
-                      nsm, sb, ft, tref, ge, lam, z0, comment=comment)
+                      nsm, sb, ft, tref, ge, lam, z0, validate=False, comment=comment)
 
     def _verify(self, xref: bool) -> None:
         pid = self.Pid()

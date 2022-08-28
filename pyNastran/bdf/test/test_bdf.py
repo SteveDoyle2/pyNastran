@@ -172,16 +172,17 @@ def run_lots_of_files(filenames: List[str], folder: str='',
                 'pyNastran_crash' not in filename and
                 'skin_file' not in filename):
             filenames2.append(filename)
+    nfiles = len(filenames2)
 
     failed_files = []
     npass = 1
     nfailed = 1
     log = get_logger2(log=None, debug=debug, encoding='utf-8')
     with WarningRedirector(log) as unused_warn:
-        for filename in filenames2:
+        for ifile, filename in enumerate(filenames2):
             abs_filename = os.path.abspath(os.path.join(folder, filename))
             if folder != '':
-                print("filename = %s" % abs_filename)
+                print(f'filename = {abs_filename}')
             is_passed = False
             try:
                 for sizei, is_doublei, posti in size_doubles_post:
@@ -239,19 +240,21 @@ def run_lots_of_files(filenames: List[str], folder: str='',
             print('-' * 80)
 
             if is_passed:
-                sys.stderr.write('%i  %s' % (npass, abs_filename))
+                sys.stderr.write(f'{npass:d}  {abs_filename}')
                 npass += 1
             else:
-                sys.stderr.write('*%s ' % nfailed + abs_filename)
+                sys.stderr.write(f'*{nfailed:d} {abs_filename}')
                 nfailed += 1
                 failed_files.append(abs_filename)
+            if ifile % 500:
+                sys.stderr.write(f'{npass:d}/{nfiles:d}; nfailed={nfailed:d}')
             sys.stderr.write('\n')
 
     print('*' * 80)
     try:
         print("diff_cards1 = %s" % list(set(diff_cards)))
     except TypeError:
-        print("diff_cards2 = %s" % diff_cards)
+        print(f'diff_cards2 = {diff_cards}')
     return failed_files
 
 
