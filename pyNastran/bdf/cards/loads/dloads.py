@@ -1571,14 +1571,14 @@ class TLOAD2(DynamicLoad):
 
         t1 = self.T1 + tau
         t2 = self.T2 + tau
-        f = self.frequency
+        freq = self.frequency
         p = self.phase
         f = np.zeros(time.shape, dtype=time.dtype)
 
         i = np.where(t1 <= time)[0]
         j = np.where(time[i] <= t2)[0]
         i = i[j]
-        f[i] = scale * time[i] ** self.b * np.exp(self.c * time[i]) * np.cos(2 * np.pi * f * time[i] + p)
+        f[i] = scale * time[i] ** self.b * np.exp(self.c * time[i]) * np.cos(2 * np.pi * freq * time[i] + p)
 
         is_spcd = False
         #resp = f
