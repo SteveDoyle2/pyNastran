@@ -1,30 +1,47 @@
 import os
-import typing
 
-#try:
-    #import wx  # type: ignore
-    #_gui_mode = 'wx'
-
+_gui_mode = ''
 try:
-    from PySide import QtCore, QtGui  # type: ignore
-    from PySide.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
+    from PySide2 import QtCore, QtGui  # type: ignore
+    from PySide2.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
     _gui_mode = 'pyside'
 except ImportError:
+    #print('no pyside2')
+    pass
+
+try:
+    from PySide6 import QtCore, QtGui  # type: ignore
+    from PySide6.QtWidgets import QWidget, QApplication, QFileDialog
+    _gui_mode = 'pyside'
+except ImportError:
+    pass
+    #print('no pyside6')
+
+if _gui_mode == '':
     try:
-        from PyQt4 import QtCore, QtGui  # type: ignore
-        from PyQt4.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
+        from PyQt5 import QtCore, QtGui  # type: ignore
+        from PyQt5.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
         _gui_mode = 'pyqt'
     except ImportError:
-        try:
-            from PyQt5 import QtCore, QtGui  # type: ignore
-            from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog  # type: ignore
-            _gui_mode = 'pyqt'
-        except ImportError:
-            try:
-                import wx  # type: ignore
-                _gui_mode = 'wx'
-            except ImportError:
-                _gui_mode = None
+        #print('no pyqt5')
+        pass
+
+if _gui_mode == '':
+    try:
+        from PyQt6 import QtCore, QtGui  # type: ignore
+        from PyQt6.QtWidgets import QWidget, QApplication, QFileDialog  # type: ignore
+        _gui_mode = 'pyqt'
+    except ImportError:
+        #print('no pyqt6')
+        pass
+
+if _gui_mode == '':
+    try:
+        import wx  # type: ignore
+        _gui_mode = 'wx'
+    except ImportError:
+        #print('no wx')
+        pass
 
 if _gui_mode == 'wx':
     pass
@@ -38,11 +55,13 @@ elif _gui_mode in ['pyqt', 'pyside']:
             # set the position and size of the window
             # make it really small, so we don't see this dummy window
             self.setGeometry(1, 1, 0, 0)
+else:
+    raise RuntimeError('no gui_mode')
 
 #----------------------------------------------------------------------
 #print("f_mode =", f_mode)
 
-def radio_pullown_dialog(Title, button_dict, nwide=3):  # pragma: no cover
+def radio_pullown_dialog(title: str, button_dict, nwide: int=3):  # pragma: no cover
     """
     buttons = [
         [header, 'checkbox', A', 'B', 'C'],
@@ -58,8 +77,8 @@ def radio_pullown_dialog(Title, button_dict, nwide=3):  # pragma: no cover
     """
     pass
 
-def save_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
-    # type: (str, str, str, str) -> str
+def save_file_dialog(title: str, wx_wildcard: str, qt_wildcard: str,
+                     dirname: str='') -> str:
     """
     creates a save file dialog in wx or PyQt4/PySide
     """
@@ -98,8 +117,8 @@ def save_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
     return fname
 
 
-def load_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
-    # type: (str, str, str, str) -> (str, str)
+def load_file_dialog(title: str, wx_wildcard: str, qt_wildcard: str,
+                     dirname: str='') -> tuple[str, str]:
     """
     creates a load file dialog in wx or PyQt4/PySide
     """
@@ -137,7 +156,7 @@ def load_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
             fname = output
         app.exit()
     else:
-        msg = 'Could not import wx, PySide, or PyQt4/5.  '\
+        msg = 'Could not import wx, PySide2/6, or PyQt5/6.  '\
             'Please specify the file explicitly.' + '\ngui_mode=%r' % _gui_mode
         raise ImportError(msg)
     return fname, wildcard_level

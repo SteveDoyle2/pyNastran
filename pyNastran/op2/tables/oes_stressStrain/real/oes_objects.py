@@ -478,8 +478,8 @@ def set_modal_case(cls, is_sort1, isubcase, data_code,
     obj.get_stats()
     return obj
 
-def set_transient_case(cls, is_sort1, isubcase,
-                       data_code, func, args, times):
+def set_transient_case(cls, is_sort1: bool, isubcase: int,
+                       data_code, func, args, times: np.ndarray):
     data_code['lsdvmns'] = [0] # TODO: ???
     data_code['data_names'] = ['dt']
     data_code['load_set'] = 1

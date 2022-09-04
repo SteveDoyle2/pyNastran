@@ -25,6 +25,7 @@ these are used by:
 from __future__ import annotations
 import copy
 from struct import Struct, pack
+from itertools import count
 import warnings
 from typing import List
 
@@ -887,18 +888,27 @@ class TableArray(ScalarObject):  # displacement style table
             0, 0, 0, 0,
             title, subtitle, label,
         ]
+        table3_names = [
+            'approach_code', 'table_code', '0', 'isubcase', 'field5',
+            'field6', 'field7', 'random_code', 'format_code', 'num_wide',
+            'oCode', 'acoustic_flag', 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 'thermal', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0,
+            title, subtitle, label,
+        ]
         assert table3[22] == thermal
 
         n = 0
-        from itertools import count
         for i, val, ftable3i in zip(count(), table3, ftable3.decode('ascii')):
             assert val is not None, 'i=%s val=%s ftable3i=%s\n%s' % (i, val, ftable3i, self.get_stats())
             if isinstance(val, integer_types):
                 n += 4
-                assert ftable3i == 'i', 'analysis_code=%s i=%s val=%s type=%s' % (self.analysis_code, i, val, ftable3i)
+                assert ftable3i == 'i', 'analysis_code=%r i=%r val=%r type=%r -> name=%r' % (self.analysis_code, i, val, ftable3i, table3_names[i])
             elif isinstance(val, float_types):
                 n += 4
-                assert ftable3i == 'f', 'analysis_code=%s i=%s val=%s type=%s' % (self.analysis_code, i, val, ftable3i)
+                assert ftable3i == 'f', 'analysis_code=%r i=%r val=%r type=%r' % (self.analysis_code, i, val, ftable3i)
             else:
                 n += len(val)
         assert n == 584, n
@@ -1404,6 +1414,7 @@ def set_real_table(cls, data_code, is_sort1, isubcase,
     dt = times[0]
     ntimes = data.shape[0]
     nnodes = data.shape[1]
+    data_code['sort_code'] = 0
     obj = cls(data_code, is_sort1, isubcase, dt)
     obj.node_gridtype = node_gridtype
     obj.data = data

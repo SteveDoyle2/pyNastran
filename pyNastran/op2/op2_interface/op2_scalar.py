@@ -1671,6 +1671,15 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_debug_file, self.binary_debug = create_binary_debug(
             self.op2_filename, self.debug_file, self.log)
 
+    def _setup_filenames(self, op2_filename: str | None, force: bool=True):
+        if op2_filename:
+            fname = os.path.splitext(op2_filename)[0]
+            self.op2_filename = op2_filename
+            self.bdf_filename = fname + '.bdf'
+            self.f06_filename = fname + '.f06'
+            self.des_filename = fname + '.des'
+            self.h5_filename = fname + '.h5'
+
     def read_op2(self, op2_filename=None,
                  combine: bool=False,
                  load_as_h5: bool=False,
@@ -1703,13 +1712,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         |    string    | the path is used      |
         +--------------+-----------------------+
         """
-        fname = os.path.splitext(op2_filename)[0]
-        self.op2_filename = op2_filename
-        self.bdf_filename = fname + '.bdf'
-        self.f06_filename = fname + '.f06'
-        self.des_filename = fname + '.des'
-        self.h5_filename = fname + '.h5'
-
+        self._setup_filenames(op2_filename, force=False)
         self.op2_reader.load_as_h5 = load_as_h5
         if load_as_h5:
             h5_file = None
@@ -1728,6 +1731,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if self.read_mode != 2:
             op2_filename = self._validate_op2_filename(op2_filename)
             self.log.info(f'op2_filename = {op2_filename!r}')
+            self._setup_filenames(op2_filename, force=True)
             if not is_binary_file(op2_filename):
                 if os.path.getsize(op2_filename) == 0:
                     raise IOError(f'op2_filename={op2_filename!r} is empty.')

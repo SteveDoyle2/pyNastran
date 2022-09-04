@@ -1,12 +1,20 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from numpy import unique
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d import Cart3D, read_cart3d
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
+    CASE = dict[int, float]
+    LOADS_DICT = dict[int, CASE]
 
-
-def cart3d_to_nastran_model(cart3d_filename, log=None, debug=False):
+def cart3d_to_nastran_model(cart3d_filename: str,
+                            loads_map: Optional[LOADS_DICT]=None,
+                            log: Optional[SimpleLogger]=None,
+                            debug: bool=False) -> BDF:
     """
     Converts a Cart3D file to Nastran format and returns a BDF() object.
 
@@ -14,6 +22,9 @@ def cart3d_to_nastran_model(cart3d_filename, log=None, debug=False):
     ----------
     cart3d_filename : str
         path to the input Cart3D file
+    loads_dict: dict[load_id, case]
+        case : dict[eid, pressure]
+        write the loads
     log : log / None
         log : a logger object
         None : a log will be defined
@@ -41,29 +52,34 @@ def cart3d_to_nastran_model(cart3d_filename, log=None, debug=False):
 
     i = 0
     nid = 1
-    cid = 0
     model = BDF(log=log, debug=debug)
-    for node in nodes:
-        card = ['GRID', nid, cid] + list(node)
-        model.add_card(card, 'GRID', is_list=True)
+    for xyz in nodes:
+        model.add_grid(nid, xyz)
         nid += 1
 
     eid = 1
-    for (n1, n2, n3), pid in zip(elements, regions):
-        card = ['CTRIA3', eid, pid, n1, n2, n3]
-        model.add_card(card, 'CTRIA3', is_list=True)
+    for nids, pid in zip(elements, regions):
+        model.add_ctria3(eid, pid, nids)
         #print(model.elements[eid])
         eid += 1
 
     t = 0.1
     E = 1e7
+    G = None
     nu = 0.3
     for pid in unique(regions):
         mid = pid
-        card = ['PSHELL', pid, mid, t]
-        model.add_card(card, 'PSHELL', is_list=True)
-        card = ['MAT1', mid, E, None, nu]
-        model.add_card(card, 'MAT1', is_list=True)
+        model.add_pshell(pid, mid1=mid, t=t)
+        model.add_mat1(mid, E, G, nu)
+
+    if loads_map:
+        for name, load_id in loads_map.items():
+            loads = cart3d.loads[name]
+            comment = name
+            for inid, Cp in enumerate(loads):
+                loadi = model.add_sload(load_id, [inid+1], [Cp], comment=comment)
+                comment = ''
+
     model.pop_parse_errors()
     return model
 

@@ -2096,6 +2096,25 @@ class OP2Reader:
         fails if a streaming block:
          - nx_spike\extse04c_0.op2
 
+        DB NAME   op2 Name  Description
+        =======   ========  ===========
+        XSOP2DIR  XSOP2DIR  Table of contents of the op2 file.
+        GEOM1X    GEOM1X    GRID point geometry.
+        GEOM2X    GEOM2X    SPOINTs.
+        GEOM4X    GEOM4X    ASET/ASET1 and QSET/QSET1 entries.
+        EXTDB     MATK      Boundary stiffness.
+        EXTDB     MATM      Boundary mass.
+        EXTDB     MATP      Boundary loads.
+        EXTDB     MATV      Boundary fluid-structure partitioning vector.
+        EXTDB     TUG1      Displacement OTM table.
+        EXTDB     MUG1      Displacement OTM matrix.
+        EXTDB     TES1      Stress OTM table.
+        EXTDB     MES1      Stress OTM matrix.
+        EXTDB     TEF1      Force OTM table.
+        EXTDB     MEF1      Force OTM matrix.
+        EXTDB     MUG1B     Displacement OTM matrix in basic coordinates system.
+
+        https://help.hexagonmi.com/bundle/MSC_Nastran_2022.2/page/Nastran_Combined_Book/Superelements_User_s_Guide/superOTM/TOC.OUTPUT2.Files.xhtml
         """
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
         op2 = self.op2
