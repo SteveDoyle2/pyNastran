@@ -1059,8 +1059,12 @@ class GENEL(BaseCard):
         self.ud_nodes_ref = None
 
     def _finalize_hdf5(self, encoding):
-        self.ul = np.array(self.ul, dtype='int32')#.reshape(len(self.ul) // 2, 2)
-        self.ud = np.array(self.ud, dtype='int32')#.reshape(len(self.ud) // 2, 2)
+        try:
+            self.ul = np.array(self.ul, dtype='int32')#.reshape(len(self.ul) // 2, 2)
+            self.ud = np.array(self.ud, dtype='int32')#.reshape(len(self.ud) // 2, 2)
+        except OverflowError:
+            self.ul = np.array(self.ul, dtype='int64')#.reshape(len(self.ul) // 2, 2)
+            self.ud = np.array(self.ud, dtype='int64')#.reshape(len(self.ud) // 2, 2)
 
         if self.k is None or (isinstance(self.k, list) and len(self.k) == 0):
             self.k = None

@@ -4648,31 +4648,14 @@ class CQUAD8(QuadShell):
     @classmethod
     def export_to_hdf5(cls, h5_file: Any, model, eids):
         """exports the elements in a vectorized way"""
-        #comments = []
-        pids = []
-        nodes = []
-        mcids = []
-        thetas = []
-        zoffsets = []
-        #t1234 = []
         neids = len(eids)
-        nodes = np.zeros((neids, 8), dtype='int32')
-        for i, eid in enumerate(eids):
-            element = model.elements[eid]
-            #comments.append(element.comment)
-            pids.append(element.pid)
-            nodes[i, :] = [nid if nid is not None else 0 for nid in element.nodes]
-            if isinstance(element.theta_mcid, int):
-                mcid = element.theta_mcid
-                theta = 0.
-            else:
-                assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
-                mcid = -1
-                theta = element.theta_mcid
-            mcids.append(mcid)
-            thetas.append(theta)
-            zoffsets.append(element.zoffset)
-            #t1234.append([element.T1, element.T2, element.T3, element.T4])
+        shape = (neids, 8)
+
+        try:
+            pids, nodes, mcids, thetas, zoffsets = _get_nodes_array(model, shape, eids, dtype='int32')
+        except OverflowError:
+            pids, nodes, mcids, thetas, zoffsets = _get_nodes_array(model, shape, eids, dtype='int64')
+
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('eid', data=eids)
         h5_file.create_dataset('pid', data=pids)
@@ -4923,6 +4906,34 @@ class CQUAD8(QuadShell):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
+def _get_nodes_array(model: BDF, shape, eids, dtype='int32'):
+    #comments = []
+    pids = []
+    #nodes = []
+    mcids = []
+    thetas = []
+    zoffsets = []
+    #t1234 = []
+
+    nodes = np.zeros(shape, dtype=dtype)
+    for i, eid in enumerate(eids):
+        element = model.elements[eid]
+        #comments.append(element.comment)
+        pids.append(element.pid)
+        nodes[i, :] = [nid if nid is not None else 0 for nid in element.nodes]
+        if isinstance(element.theta_mcid, int):
+            mcid = element.theta_mcid
+            theta = 0.
+        else:
+            assert isinstance(element.theta_mcid, float), type(element.theta_mcid)
+            mcid = -1
+            theta = element.theta_mcid
+        mcids.append(mcid)
+        thetas.append(theta)
+        zoffsets.append(element.zoffset)
+        #t1234.append([element.T1, element.T2, element.T3, element.T4])
+    return pids, nodes, mcids, thetas, zoffsets
 
 class SNORM(BaseCard):
     """

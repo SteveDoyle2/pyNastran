@@ -859,7 +859,11 @@ class SPC(Constraint):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
-        return self.comment + print_card_8(card)
+        try:
+            out = self.comment + print_card_8(card)
+        except RuntimeError:
+            out = self.comment + print_card_16(card)
+        return out
 
 
 class GMSPC(Constraint):
