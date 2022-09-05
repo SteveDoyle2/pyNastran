@@ -18,12 +18,13 @@ Defines:
 """
 import sys
 from struct import pack, unpack
-#from math import ceil
+from math import ceil
 #from collections import defaultdict
 #from typing import Union
 
 import numpy as np
-from cpylog import SimpleLogger, get_logger2
+from cpylog import get_logger2
+from pyNastran.utils import _filename
 
 #from pyNastran.utils import is_binary_file, _filename
 
@@ -38,9 +39,9 @@ class Cart3dReaderWriter:
         self.n = 0
         self.infile = None
         self.infilename = None
-        self.points = None
-        self.elements = None
-        self.regions = None
+        self.points = np.zeros((0, 3), dtype='float64')
+        self.elements = np.zeros((0, 3), dtype='int32')
+        self.regions = np.zeros(0, dtype='int32')
         self.loads = {}
 
     def _write_header(self, outfile, points, elements, is_loads, is_binary=False):
@@ -71,9 +72,9 @@ class Cart3dReaderWriter:
         else:
             # this is ASCII data
             if is_loads:
-                msg = "%i %i 6\n" % (npoints, nelements)
+                msg = '%i %i 6\n' % (npoints, nelements)
             else:
-                msg = "%i %i\n" % (npoints, nelements)
+                msg = '%i %i\n' % (npoints, nelements)
 
             # take the max value, string it, and length it
             # so 123,456 is length 6
@@ -157,7 +158,7 @@ class Cart3dReaderWriter:
             for (cpi, rhoi, rhou, rhov, rhoe, e) in zip(Cp, rho, rhoU, rhoV, rhoW, E):
                 outfile.write(fmt % (cpi, rhoi, rhou, rhov, rhoe, e))
 
-    def _read_header_ascii(self):
+    def _read_header_ascii(self, infile):
         """
         Reads the header::
 
@@ -165,7 +166,7 @@ class Cart3dReaderWriter:
           npoints nelements nresults # results
 
         """
-        line = self.infile.readline()
+        line = infile.readline()
         sline = line.strip().split()
         if len(sline) == 2:
             npoints, nelements = int(sline[0]), int(sline[1])
@@ -179,38 +180,38 @@ class Cart3dReaderWriter:
         return npoints, nelements, nresults
 
     @property
-    def nresults(self):
+    def nresults(self) -> int:
         """get the number of results"""
         if isinstance(self.loads, dict):
             return len(self.loads)
         return 0
 
     @property
-    def nnodes(self):
+    def nnodes(self) -> int:
         """alternate way to access number of points"""
         return self.npoints
 
     @property
-    def npoints(self):
+    def npoints(self) -> int:
         """get the number of points"""
         return self.points.shape[0]
 
     @property
-    def nodes(self):
+    def nodes(self) -> np.ndarray:
         """alternate way to access the points"""
         return self.points
 
     @nodes.setter
-    def nodes(self, points):
+    def nodes(self, points) -> None:
         """alternate way to access the points"""
         self.points = points
 
     @property
-    def nelements(self):
+    def nelements(self) -> int:
         """get the number of elements"""
         return self.elements.shape[0]
 
-    def _read_points_ascii(self, npoints):
+    def _read_points_ascii(self, infile, npoints: int) -> np.ndarray:
         """
         A point is defined by x,y,z and the ID is the location in points.
 
@@ -220,7 +221,7 @@ class Cart3dReaderWriter:
         assert npoints > 0, 'npoints=%s' % npoints
         points = np.zeros((npoints, 3), dtype='float32')
         while p < npoints:
-            data += self.infile.readline().strip().split()
+            data += infile.readline().strip().split()
             while len(data) > 2:
                 x = data.pop(0)
                 y = data.pop(0)
@@ -229,7 +230,7 @@ class Cart3dReaderWriter:
                 p += 1
         return points
 
-    def _read_elements_ascii(self, nelements):
+    def _read_elements_ascii(self, infile, nelements: int) -> np.ndarray:
         """
         An element is defined by n1,n2,n3 and the ID is the location in elements.
 
@@ -240,7 +241,7 @@ class Cart3dReaderWriter:
         ieid = 0
         data = []
         while ieid < nelements:
-            data += self.infile.readline().strip().split()
+            data += infile.readline().strip().split()
             while len(data) > 2:
                 n1 = int(data.pop(0))
                 n2 = int(data.pop(0))
@@ -266,19 +267,120 @@ class Cart3dReaderWriter:
             #assert elements.min() == 1, elements.min()
         return elements - 1
 
-    def _read_regions_ascii(self, nelements):
+    def _read_regions_ascii(self, infile, nelements: int) -> np.ndarray:
         """reads the region section"""
         regions = np.zeros(nelements, dtype='int32')
         iregion = 0
         data = []
         while iregion < nelements:
-            data = self.infile.readline().strip().split()
+            data = infile.readline().strip().split()
             ndata = len(data)
             regions[iregion : iregion + ndata] = data
             iregion += ndata
         return regions
 
-    def _read_header_binary(self):
+    def _read_results_ascii(self, i, infile, nresults, result_names=None):
+        """
+        Reads the Cp results.
+        Results are read on a nodal basis from the following table:
+          Cp
+          rho,rhoU,rhoV,rhoW,rhoE
+
+        With the following definitions:
+          Cp = (p - 1/gamma) / (0.5*M_inf*M_inf)
+          rhoVel^2 = rhoU^2+rhoV^2+rhoW^2
+          M^2 = rhoVel^2/rho^2
+
+        Thus:
+          p = (gamma-1)*(e- (rhoU**2+rhoV**2+rhoW**2)/(2.*rho))
+          p_dimensional = qInf * Cp + pInf
+
+        # ???
+        rho,rhoU,rhoV,rhoW,rhoE
+
+        Parameters
+        ----------
+        result_names : List[str]; default=None (All)
+            result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
+                            'Mach', 'U', 'V', 'W', 'E']
+
+        """
+        if nresults == 0:
+            return None, []
+        if result_names is None:
+            result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
+                            'Mach', 'U', 'V', 'W', 'E', 'a', 'T', 'Pressure', 'q']
+        self.log.debug('---starting read_results---')
+
+        results = np.zeros((self.npoints, 6), dtype='float32')
+
+        nresult_lines = int(ceil(nresults / 5.)) - 1
+        for ipoint in range(self.npoints):
+            # rho rhoU,rhoV,rhoW,pressure/rhoE/E
+            sline = infile.readline().strip().split()
+            i += 1
+            for unused_n in range(nresult_lines):
+                sline += infile.readline().strip().split()  # Cp
+                i += 1
+                #gamma = 1.4
+                #else:
+                #    p=0.
+            sline = _get_list(sline)
+
+            # Cp
+            # rho       rhoU      rhoV      rhoW      E
+            # 0.416594
+            # 1.095611  0.435676  0.003920  0.011579  0.856058
+            results[ipoint, :] = sline
+
+            #p=0
+            #cp = sline[0]
+            #rho = float(sline[1])
+            #if(rho > abs(0.000001)):
+                #rhoU = float(sline[2])
+                #rhoV = float(sline[3])
+                #rhoW = float(sline[4])
+                #rhoE = float(sline[5])
+                #mach2 = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2 / rho ** 2
+                #mach = sqrt(mach2)
+                #if mach > 10:
+                    #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (
+                        #pointNum, cp, mach, rho, rhoU, rhoV, rhoW))
+            #print("pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p))
+        del sline
+        return results, result_names
+
+    def _read_cart3d_ascii(self, cart3d_filename: str, encoding: str, result_names):
+        with open(_filename(cart3d_filename), 'r', encoding=self._encoding) as infile:
+            try:
+                npoints, nelements, nresults = self._read_header_ascii(infile)
+                self.points = self._read_points_ascii(infile, npoints)
+                self.elements = self._read_elements_ascii(infile, nelements)
+                self.regions = self._read_regions_ascii(infile, nelements)
+                results, result_names = self._read_results_ascii(0, infile, nresults,
+                                                                 result_names=result_names)
+                if results is not None:
+                    self.loads = self._calculate_results(result_names, results)
+            except Exception:
+                msg = f'failed reading {cart3d_filename!r}'
+                self.log.error(msg)
+                raise
+
+    def _read_cart3d_binary(self, cart3d_filename: str, endian: bytes):
+        with open(cart3d_filename, 'rb') as infile:
+            self.infile = infile
+            try:
+                npoints, nelements, nresults = self._read_header_binary(infile)
+                self.points = self._read_points_binary(infile, npoints)
+                self.elements = self._read_elements_binary(infile, nelements)
+                self.regions = self._read_regions_binary(infile, nelements)
+                # TODO: loads
+            except Exception:
+                msg = f'failed reading {cart3d_filename!r}'
+                self.log.error(msg)
+                raise
+
+    def _read_header_binary(self, infile):
         """
         Reads the header::
 
@@ -319,42 +421,42 @@ class Cart3dReaderWriter:
         self.infile.read(8)  # end of first block, start of second block
         return (npoints, nelements, nresults)
 
-    def _read_points_binary(self, npoints):
+    def _read_points_binary(self, infile, npoints: int) -> np.ndarray:
         """reads the xyz points"""
         size = npoints * 12  # 12=3*4 all the points
-        data = self.infile.read(size)
+        data = infile.read(size)
 
         dtype = np.dtype(self._endian + b'f4')
         points = np.frombuffer(data, dtype=dtype).reshape((npoints, 3)).copy()
 
-        self.infile.read(8)  # end of second block, start of third block
+        infile.read(8)  # end of second block, start of third block
         return points
 
-    def _read_elements_binary(self, nelements):
+    def _read_elements_binary(self, infile, nelements: int) -> np.ndarray:
         """reads the triangles"""
         size = nelements * 12  # 12=3*4 all the elements
-        data = self.infile.read(size)
+        data = infile.read(size)
 
         dtype = np.dtype(self._endian + b'i4')
         elements = np.frombuffer(data, dtype=dtype).reshape((nelements, 3)).copy()
 
-        self.infile.read(8)  # end of third (element) block, start of regions (fourth) block
+        infile.read(8)  # end of third (element) block, start of regions (fourth) block
         assert elements.min() == 1, elements.min()
         return elements - 1
 
-    def _read_regions_binary(self, nelements):
+    def _read_regions_binary(self, infile, nelements: int) -> np.ndarray:
         """reads the regions"""
         size = nelements * 4  # 12=3*4 all the elements
-        data = self.infile.read(size)
+        data = infile.read(size)
 
         regions = np.zeros(nelements, dtype='int32')
         dtype = self._endian + b'i'
         regions = np.frombuffer(data, dtype=dtype).copy()
 
-        self.infile.read(4)  # end of regions (fourth) block
+        infile.read(4)  # end of regions (fourth) block
         return regions
 
-    def _read_results_binary(self, i, infile, result_names=None):
+    def _read_results_binary(self, i: int, infile, result_names=None):
         """binary results are not supported"""
         pass
 
@@ -421,6 +523,23 @@ class Cart3dReaderWriter:
         self.n = nold
         self.infile.seek(self.n)
         return self._write_data(outfile, data, types=types)
+
+
+def convert_to_float(svalues: list[str]) -> list[float]:
+    """Takes a list of strings and converts them to floats."""
+    values = []
+    for value in svalues:
+        values.append(float(value))
+    return values
+
+def _get_list(sline: list[str]) -> list[float]:
+    """Takes a list of strings and converts them to floats."""
+    try:
+        sline2 = convert_to_float(sline)
+    except ValueError:
+        print("sline = %s" % sline)
+        raise SyntaxError('cannot parse %s' % sline)
+    return sline2
 
 def b(mystr: str) -> bytes:
     """reimplementation of six.b(...) to work in Python 2"""

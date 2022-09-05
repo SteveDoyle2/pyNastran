@@ -87,7 +87,7 @@ def get_inertia_rectangular(sections):
 
 
 def _IAreaL(prop, dim):
-    # type: (Any, list[float]) -> Tuple[float, float, float, float]
+    # type: (Any, list[float]) -> tuple[float, float, float, float]
     beam_type = prop.beam_type
     if beam_type == 'ROD':
         A, I1, I2, I12 = rod_section(prop.type, prop.beam_type, dim, prop)
@@ -209,7 +209,7 @@ class LineProperty(Property):
 
 
 def A_I1_I2_I12(prop, beam_type: str,
-                dim: list[float]) -> Tuple[float, float, float, float]:
+                dim: list[float]) -> tuple[float, float, float, float]:
     r"""
     ::
 
@@ -3225,7 +3225,7 @@ class PBEND(LineProperty):
 
 
 def split_arbitrary_thickness_section(key: str,
-                                      value: Union[str, float, list[int]]) -> Tuple[int, Union[float, list[int]]]:
+                                      value: Union[str, float, list[int]]) -> tuple[int, Union[float, list[int]]]:
     """
     Helper method for PBRSECT/PBMSECT
 

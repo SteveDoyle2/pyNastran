@@ -874,9 +874,9 @@ class AddCards:
         return point
 
     def add_cord2r(self, cid: int,
-                   origin: Optional[Union[List[float], NDArray3float]],
-                   zaxis: Optional[Union[List[float], NDArray3float]],
-                   xzplane: Optional[Union[List[float], NDArray3float]],
+                   origin: Optional[Union[list[float], NDArray3float]],
+                   zaxis: Optional[Union[list[float], NDArray3float]],
+                   xzplane: Optional[Union[list[float], NDArray3float]],
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2R:
         """
         Creates the CORD2R card, which defines a rectangular coordinate
@@ -904,9 +904,9 @@ class AddCards:
         return coord
 
     def add_cord2c(self, cid: int,
-                   origin: Optional[Union[List[float], NDArray3float]],
-                   zaxis: Optional[Union[List[float], NDArray3float]],
-                   xzplane: Optional[Union[List[float], NDArray3float]],
+                   origin: Optional[Union[list[float], NDArray3float]],
+                   zaxis: Optional[Union[list[float], NDArray3float]],
+                   xzplane: Optional[Union[list[float], NDArray3float]],
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2C:
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
@@ -934,9 +934,9 @@ class AddCards:
         return coord
 
     def add_cord2s(self, cid: int,
-                   origin: Optional[Union[List[float], NDArray3float]],
-                   zaxis: Optional[Union[List[float], NDArray3float]],
-                   xzplane: Optional[Union[List[float], NDArray3float]],
+                   origin: Optional[Union[list[float], NDArray3float]],
+                   zaxis: Optional[Union[list[float], NDArray3float]],
+                   xzplane: Optional[Union[list[float], NDArray3float]],
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2S:
         """
         Creates the CORD2C card, which defines a spherical coordinate
@@ -1198,7 +1198,7 @@ class AddCards:
         return mass
 
     def add_conm2(self, eid: int, nid: int, mass: float, cid: int=0,
-                  X: Optional[List[float]]=None, I: Optional[List[float]]=None,
+                  X: Optional[list[float]]=None, I: Optional[list[float]]=None,
                   comment: str='') -> CONM2:
         """
         Creates a CONM2 card
@@ -1764,7 +1764,7 @@ class AddCards:
         return prop
 
     def add_cgap(self, eid: int, pid: int, nids: list[int],
-                 x: Optional[List[int]], g0: Optional[int],
+                 x: Optional[list[int]], g0: Optional[int],
                  cid: Optional[int]=None, comment: str='') -> CGAP:
         """
         Creates a CGAP card
@@ -1885,8 +1885,8 @@ class AddCards:
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_cbush(self, eid: int, pid: int, nids, x: Optional[List[float]], g0: Optional[int], cid=None,
-                  s: float=0.5, ocid: int=-1, si: Optional[List[float]]=None, comment='') -> CBUSH:
+    def add_cbush(self, eid: int, pid: int, nids, x: Optional[list[float]], g0: Optional[int], cid=None,
+                  s: float=0.5, ocid: int=-1, si: Optional[list[float]]=None, comment='') -> CBUSH:
         """
         Creates a CBUSH card
 
@@ -2185,9 +2185,9 @@ class AddCards:
         return elem_flag
 
     def add_cbar(self, eid: int, pid: int, nids: list[int],
-                 x: Optional[List[float]], g0: Optional[int],
+                 x: Optional[list[float]], g0: Optional[int],
                  offt: str='GGG', pa: int=0, pb: int=0,
-                 wa: Optional[List[float]]=None, wb: Optional[List[float]]=None,
+                 wa: Optional[list[float]]=None, wb: Optional[list[float]]=None,
                  comment: str='', validate: bool=False) -> CBAR:
         """
         Adds a CBAR card
@@ -2541,7 +2541,7 @@ class AddCards:
         return prop
 
     def add_pbeaml(self, pid: int, mid: int, beam_type: str,
-                   xxb: list[float], dims: list[List[float]], so=None, nsm=None,
+                   xxb: list[float], dims: list[list[float]], so=None, nsm=None,
                    group: str='MSCBML0', comment: str='') -> PBEAML:
         """
         Creates a PBEAML card

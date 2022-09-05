@@ -1841,7 +1841,7 @@ def get_bar_vector(model, elem, node1, node2, xyz1):
 
 def rotate_v_wa_wb(model: BDF, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset, eid,
                    Li_offset,
-                   log: SimpleLogger) -> Tuple[NDArray3float, NDArray3float, NDArray3float, NDArray33float]:
+                   log: SimpleLogger) -> tuple[NDArray3float, NDArray3float, NDArray3float, NDArray33float]:
     """
     Rotates v, wa, wb
 

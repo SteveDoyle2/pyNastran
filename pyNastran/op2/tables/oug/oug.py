@@ -1081,7 +1081,7 @@ class OUG:
         assert op2.thermal in [0, 2, 3], op2.code_information()
         if op2.table_name in [b'OUGV1', b'OUGV2', b'OUG1',
                                b'BOUGV1',
-                               b'OPHIG', b'BOPHIG', ]:
+                               b'OPHIG', b'BOPHIG', b'OUGV1PAT']:
             op2._setup_op2_subcase('VECTOR')
             result_name = 'eigenvectors'
         elif op2.table_name in [b'OUGF1', b'OUGF2',

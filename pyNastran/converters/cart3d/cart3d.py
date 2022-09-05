@@ -16,15 +16,14 @@ Defines:
              is_binary=False, float_fmt='%6.7f')
 
 """
-import sys
 from math import ceil
 from collections import defaultdict
 from typing import Union
 
 import numpy as np
-from cpylog import SimpleLogger, get_logger2
+from cpylog import SimpleLogger
 
-from pyNastran.utils import is_binary_file, _filename
+from pyNastran.utils import is_binary_file
 from pyNastran.converters.cart3d.cart3d_reader_writer import Cart3dReaderWriter
 
 class Cart3D(Cart3dReaderWriter):
@@ -285,30 +284,9 @@ class Cart3D(Cart3dReaderWriter):
 
         self.infilename = infilename
         if is_binary_file(infilename):
-            with open(infilename, 'rb') as self.infile:
-                try:
-                    npoints, nelements, nresults = self._read_header_binary()
-                    self.points = self._read_points_binary(npoints)
-                    self.elements = self._read_elements_binary(nelements)
-                    self.regions = self._read_regions_binary(nelements)
-                    # TODO: loads
-                except Exception:
-                    msg = 'failed reading %r' % infilename
-                    self.log.error(msg)
-                    raise
-
+            self._read_cart3d_binary(infilename, self._endian)
         else:
-            with open(_filename(infilename), 'r', encoding=self._encoding) as self.infile:
-                try:
-                    npoints, nelements, nresults = self._read_header_ascii()
-                    self.points = self._read_points_ascii(npoints)
-                    self.elements = self._read_elements_ascii(nelements)
-                    self.regions = self._read_regions_ascii(nelements)
-                    self._read_results_ascii(0, self.infile, nresults, result_names=result_names)
-                except Exception:
-                    msg = f'failed reading {infilename!r}'
-                    self.log.error(msg)
-                    raise
+            self._read_cart3d_ascii(infilename, self._encoding, result_names)
 
         self.log.debug(f'npoints={self.npoints:d} nelements={self.nelements:d} nresults={self.nresults:d}')
         assert self.npoints > 0, f'npoints={self.npoints:d}'
@@ -338,78 +316,6 @@ class Cart3D(Cart3dReaderWriter):
             if is_loads:
                 assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
                 self._write_loads(outfile, self.loads, is_binary, float_fmt)
-
-    def _read_results_ascii(self, i, infile, nresults, result_names=None):
-        """
-        Reads the Cp results.
-        Results are read on a nodal basis from the following table:
-          Cp
-          rho,rhoU,rhoV,rhoW,rhoE
-
-        With the following definitions:
-          Cp = (p - 1/gamma) / (0.5*M_inf*M_inf)
-          rhoVel^2 = rhoU^2+rhoV^2+rhoW^2
-          M^2 = rhoVel^2/rho^2
-
-        Thus:
-          p = (gamma-1)*(e- (rhoU**2+rhoV**2+rhoW**2)/(2.*rho))
-          p_dimensional = qInf * Cp + pInf
-
-        # ???
-        rho,rhoU,rhoV,rhoW,rhoE
-
-        Parameters
-        ----------
-        result_names : List[str]; default=None (All)
-            result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
-                            'Mach', 'U', 'V', 'W', 'E']
-
-        """
-        if nresults == 0:
-            return
-        #loads = {}
-        if result_names is None:
-            result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
-                            'Mach', 'U', 'V', 'W', 'E', 'a', 'T', 'Pressure', 'q']
-        self.log.debug('---starting read_results---')
-
-        results = np.zeros((self.npoints, 6), dtype='float32')
-
-        nresult_lines = int(ceil(nresults / 5.)) - 1
-        for ipoint in range(self.npoints):
-            # rho rhoU,rhoV,rhoW,pressure/rhoE/E
-            sline = infile.readline().strip().split()
-            i += 1
-            for unused_n in range(nresult_lines):
-                sline += infile.readline().strip().split()  # Cp
-                i += 1
-                #gamma = 1.4
-                #else:
-                #    p=0.
-            sline = _get_list(sline)
-
-            # Cp
-            # rho       rhoU      rhoV      rhoW      E
-            # 0.416594
-            # 1.095611  0.435676  0.003920  0.011579  0.856058
-            results[ipoint, :] = sline
-
-            #p=0
-            #cp = sline[0]
-            #rho = float(sline[1])
-            #if(rho > abs(0.000001)):
-                #rhoU = float(sline[2])
-                #rhoV = float(sline[3])
-                #rhoW = float(sline[4])
-                #rhoE = float(sline[5])
-                #mach2 = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2 / rho ** 2
-                #mach = sqrt(mach2)
-                #if mach > 10:
-                    #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (
-                        #pointNum, cp, mach, rho, rhoU, rhoV, rhoW))
-            #print("pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p))
-        del sline
-        self.loads = self._calculate_results(result_names, results)
 
     def _calculate_results(self, result_names, results, loads=None):
         """
@@ -691,22 +597,6 @@ def comp2tri(in_filenames, out_filename,
     if out_filename:
         model.write_cart3d(out_filename, is_binary=is_binary, float_fmt=float_fmt)
     return model
-
-def convert_to_float(svalues: list[str]) -> list[float]:
-    """Takes a list of strings and converts them to floats."""
-    values = []
-    for value in svalues:
-        values.append(float(value))
-    return values
-
-def _get_list(sline: list[str]) -> list[float]:
-    """Takes a list of strings and converts them to floats."""
-    try:
-        sline2 = convert_to_float(sline)
-    except ValueError:
-        print("sline = %s" % sline)
-        raise SyntaxError('cannot parse %s' % sline)
-    return sline2
 
 def get_area_centroid_normals(nodes, elements):
     """

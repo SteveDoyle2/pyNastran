@@ -503,7 +503,7 @@ class GetCard(GetMethods):
 
     def get_MPCx_node_ids(self, mpc_id: int,
                           consider_mpcadd: bool=True,
-                          stop_on_failure: bool=True) -> List[List[int]]:
+                          stop_on_failure: bool=True) -> List[list[int]]:
         """see ``pyNastran.bdf.mesh_utils.mpc_dependency.get_mpc_node_ids(...)``"""
         lines = get_mpc_node_ids(
             self, mpc_id,
@@ -523,7 +523,7 @@ class GetCard(GetMethods):
         return independent_node_ids_c1, dependent_node_ids_c1
 
     def get_mpcs(self, mpc_id: int, consider_mpcadd: bool=True,
-                 stop_on_failure: bool=True) -> Tuple[List[int], List[str]]:
+                 stop_on_failure: bool=True) -> Tuple[list[int], List[str]]:
         """see ``pyNastran.bdf.mesh_utils.mpc_dependency.get_mpcs(...)``"""
         nids, comps = get_mpcs(self, mpc_id, consider_mpcadd=consider_mpcadd,
                  stop_on_failure=stop_on_failure)
@@ -756,8 +756,8 @@ class GetCard(GetMethods):
                 dloads_out.append(dload)
         return dloads_out, scale_factors_out
 
-    def _get_maps(self, eids: Optional[List[int]]=None,
-                  map_names: Optional[List[str]]=None,
+    def _get_maps(self, eids: Optional[list[int]]=None,
+                  map_names: Optional[list[str]]=None,
                   consider_0d: bool=True,
                   consider_0d_rigid: bool=True,
                   consider_1d: bool=True,
@@ -916,7 +916,7 @@ class GetCard(GetMethods):
     def get_elements_nodes_by_property_type(
             self,
             dtype: str='int32',
-            save_element_types: bool=False) -> Tuple[Dict[Tuple[str, int], Tuple[List[int], List[int]]]]:
+            save_element_types: bool=False) -> Tuple[Dict[Tuple[str, int], Tuple[list[int], List[int]]]]:
         """
         Gets a dictionary of (etype, pid) to [eids, node_ids]
 
@@ -1137,7 +1137,7 @@ class GetCard(GetMethods):
     #--------------------
     # ELEMENT CARDS
 
-    def get_element_ids_list_with_pids(self, pids: Optional[List[int]]=None) -> List[int]:
+    def get_element_ids_list_with_pids(self, pids: Optional[list[int]]=None) -> List[int]:
         """
         Gets all the element IDs with a specific property ID.
 
@@ -1184,8 +1184,8 @@ class GetCard(GetMethods):
         return eids2
 
     def get_pid_to_node_ids_and_elements_array(self,
-                                               pids: Union[List[int], int, None]=None,
-                                               etypes: Optional[List[str]]=None,
+                                               pids: Union[list[int], int, None]=None,
+                                               etypes: Optional[list[str]]=None,
                                                idtype: str='int32',
                                                msg: str='') -> Tuple[Dict[int, str], np.ndarray]:
         """
@@ -1229,7 +1229,7 @@ class GetCard(GetMethods):
         return pid_to_eids_ieids_map
 
     def get_element_ids_dict_with_pids(self,
-                                       pids: Union[List[int], int, None]=None,
+                                       pids: Union[list[int], int, None]=None,
                                        stop_if_no_eids: bool=True, msg: str='') -> Dict[int, List[int]]:
         """
         Gets all the element IDs with a specific property ID.
@@ -1694,7 +1694,7 @@ class GetCard(GetMethods):
 
     def get_spcs(self, spc_id: int,
                  consider_nodes: bool=False,
-                 stop_on_failure: bool=True) -> Tuple[List[int], List[str]]:
+                 stop_on_failure: bool=True) -> Tuple[list[int], List[str]]:
         """
         Gets the SPCs in a semi-usable form.
 

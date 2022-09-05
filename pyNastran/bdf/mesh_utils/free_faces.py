@@ -14,7 +14,7 @@ from typing import List, Optional, Any
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf import read_bdf, BDF
 
-def get_element_faces(model: BDF, element_ids: Optional[List[int]]=None) -> Any:
+def get_element_faces(model: BDF, element_ids: Optional[list[int]]=None) -> Any:
     """
     Gets the elements and faces that are skinned from solid elements.
     This includes internal faces.

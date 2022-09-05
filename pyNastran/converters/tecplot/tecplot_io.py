@@ -284,10 +284,12 @@ class TecplotIO:
             for zonei in model.zones:
                 results.append(zonei.nodal_results)
             results = np.vstack(results)
-            assert results.shape == (nnodes, nvars), results.shape
+            # if results.shape != (nnodes, nvars):
+            #     msg = f'results.shape={results.shape} (nnodes, nvars)=({nnodes}, {nvars}); variables={variables}'
+            #     raise RuntimeError(msg)
 
         if is_results and nvars:
-            for iresult, result_name in enumerate(variables):
+            for iresult, result_name in enumerate(variables[3:]):  #: 5
                 #if results.shape[1] == 1:
                     #nodal_data = results
                     #assert len(variables) == 1, variables
