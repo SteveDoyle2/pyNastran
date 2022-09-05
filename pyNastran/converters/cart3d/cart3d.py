@@ -16,7 +16,6 @@ Defines:
              is_binary=False, float_fmt='%6.7f')
 
 """
-from math import ceil
 from collections import defaultdict
 from typing import Union
 
@@ -24,7 +23,7 @@ import numpy as np
 from cpylog import SimpleLogger
 
 from pyNastran.utils import is_binary_file
-from pyNastran.converters.cart3d.cart3d_reader_writer import Cart3dReaderWriter
+from pyNastran.converters.cart3d.cart3d_reader_writer import Cart3dReaderWriter, _write_cart3d_binary
 
 class Cart3D(Cart3dReaderWriter):
     """Cart3d interface class"""
@@ -306,147 +305,26 @@ class Cart3D(Cart3dReaderWriter):
             is_loads = True
 
         self.log.info(f'---writing cart3d...{outfilename!r}---')
-        file_fmt = 'wb' if is_binary else 'w'
-        with open(outfilename, file_fmt) as outfile:
-            int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
-            self._write_points(outfile, self.points, is_binary, float_fmt)
-            self._write_elements(outfile, self.elements, is_binary, int_fmt)
-            self._write_regions(outfile, self.regions, is_binary)
+        min_e = self.elements.min()
+        assert min_e >= 0, 'min(elements)=%s' % min_e
 
-            if is_loads:
-                assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
-                self._write_loads(outfile, self.loads, is_binary, float_fmt)
-
-    def _calculate_results(self, result_names, results, loads=None):
-        """
-        Takes the Cart3d variables and calculates additional variables
-
-        Parameters
-        ----------
-        result_names : List[str]
-            the variables to calculate
-        results : (n,6) ndarray
-            the non-dimensional primitive flow variables
-        loads : dict; default=None -> {}
-            key : ???
-            value : ???
-
-        """
-        if loads is None:
-            loads = {}
-        Cp = results[:, 0]
-        rho = results[:, 1]
-        rho_u = results[:, 2]
-        rho_v = results[:, 3]
-        rho_w = results[:, 4]
-        E = results[:, 5]
-
-        ibad = np.where(rho <= 0.000001)[0]
-        if len(ibad) > 0:
-
-            if 'Mach' in result_names:
-                Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2)# / rho
-                Mach[ibad] = 0.0
-            if 'U' in result_names:
-                U = rho_u / rho
-                U[ibad] = 0.0
-            if 'U' in result_names:
-                V = rho_v / rho
-                V[ibad] = 0.0
-            if 'W' in result_names:
-                W = rho_w / rho
-                W[ibad] = 0.0
-            #if 'rhoE' in result_names:
-                #rho_e = rhoE / rho
-                #e[ibad] = 0.0
-
-            is_bad = True
-            #n = 0
-            #for i in ibad:
-                #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (
-                    #i, Cp[i], Mach[i], rho[i], rho_u[i], rho_v[i], rho_w[i]))
-                #Mach[i] = 0.0
-                #n += 1
-                #if n > 10:
-                #    break
+        if is_binary:
+            _write_cart3d_binary(outfilename, self.points, self.elements, self.regions,
+                                 is_loads, self.loads, self._endian)
         else:
-            is_bad = False
+            self._write_cart3d_ascii(outfilename, self.points, self.elements, self.regions,
+                                     is_loads, self.loads, float_fmt)
+        return
+        #file_fmt = 'wb' if is_binary else 'w'
+        #with open(outfilename, file_fmt) as outfile:
+            #int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
+            #self._write_points(outfile, self.points, is_binary, float_fmt)
+            #self._write_elements(outfile, self.elements, is_binary, int_fmt)
+            #self._write_regions(outfile, self.regions, is_binary)
 
-
-        #loc = locals()
-        if 'Cp' in result_names:
-            loads['Cp'] = Cp
-        if 'rhoU' in result_names:
-            loads['rhoU'] = rho_u
-        if 'rhoV' in result_names:
-            loads['rhoV'] = rho_v
-        if 'rhoW' in result_names:
-            loads['rhoW'] = rho_w
-        #if 'rhoE' in result_names:
-            #loads['rhoE'] = rho_e
-
-        if 'rho' in result_names:
-            loads['rho'] = rho
-
-        if 'Mach' in result_names:
-            if not is_bad:
-                #Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2) / rho
-                Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2)
-            loads['Mach'] = Mach
-
-        if 'U' in result_names:
-            if not is_bad:
-                U = rho_u / rho
-            loads['U'] = U
-        if 'V' in result_names:
-            if not is_bad:
-                V = rho_v / rho
-            loads['V'] = V
-        if 'W' in result_names:
-            if not is_bad:
-                W = rho_w / rho
-            loads['W'] = W
-        if 'E' in result_names:
-            #if not is_bad:
-                #E = rhoE / rho
-            loads['E'] = E
-
-        gamma = 1.4
-        qinf = 1.0
-        pinf = 1. / gamma
-        Tinf = 1.0
-        #Cp = (p - pinf) / qinf
-        p = Cp * qinf + pinf
-
-        T = (Tinf * gamma) * p / rho
-        q = 0.5 * rho * Mach ** 2
-
-        if 'a' in result_names:
-            #print('T: min=%s max=%s' % (T.min(), T.max()))
-            loads['a'] = np.sqrt(T)
-        if 'T' in result_names:
-            loads['T'] = T
-
-        if 'Pressure' in result_names:
-            loads['Pressure'] = p
-        if 'q' in result_names:
-            loads['q'] = q
-        # dynamic pressure
-        # speed of sound
-        # total pressure = p0/rhoi*ainf**2
-        # total density
-        # entropy
-        # kinetic energy
-        # enthalpy
-        # energy, E
-        # total energy
-        # total enthalpy
-
-        #i = where(Mach == max(Mach))[0][0]
-        #self.log.info("i=%s Cp=%s rho=%s rho_u=%s rho_v=%s rho_w=%s Mach=%s" % (
-            #i, Cp[i], rho[i], rho_u[i], rho_v[i], rho_w[i], Mach[i]))
-        self.log.debug('---finished read_results---')
-        return loads
+            #if is_loads:
+                #assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
+                #self._write_loads(outfile, self.loads, is_binary, float_fmt)
 
     def get_area(self):
         """
