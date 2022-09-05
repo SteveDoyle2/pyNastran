@@ -36,65 +36,10 @@ class Cart3dReaderWriter:
         self.regions = np.zeros(0, dtype='int32')
         self.loads = {}
 
-    #def _write_header(self, outfile, points, elements, is_loads, is_binary=False):
-        #"""
-        #writes the cart3d header
-
-        #Without results
-        #---------------
-        #npoints nelements
-
-        #With results
-        #------------
-        #npoints nelements nresults
-
-        #"""
-        #npoints = points.shape[0]
-        #nelements = elements.shape[0]
-
-        #if is_binary:
-            #_write_header_binary(outfile, npoints, nelements, is_loads, self._endian)
-            #int_fmt = None
-        #else:
-            #int_fmt = _write_header_ascii(outfile, npoints, nelements, is_loads)
-        #return int_fmt
-
-    #def _write_points(self, outfile, points, is_binary, float_fmt='%6.6f'):
-        #"""writes the points"""
-        #if is_binary:
-            #_write_points_binary(outfile, points, self._endian)
-        #else:
-            #_write_points_ascii(outfile, points, float_fmt)
-
-    #def _write_elements(self, outfile, elements, is_binary, int_fmt='%6i'):
-        #"""writes the triangles"""
-        #min_e = elements.min()
-        #assert min_e >= 0, 'min(elements)=%s' % min_e
-        #if is_binary:
-            #_write_elements_binary(outfile, elements, self._endian)
-        #else:
-            #_write_elements_ascii(outfile, elements, int_fmt)
-
-    #def _write_regions(self, outfile, regions, is_binary):
-        #"""writes the regions"""
-        #if is_binary:
-            #_write_regions_binary(outfile, regions, self._endian)
-        #else:
-            #_write_regions_ascii(outfile, regions)
-
-    #def _write_loads(self, outfile, loads, is_binary, float_fmt='%6.6f'):
-        #"""writes the *.triq loads"""
-        #if is_binary:
-            #raise NotImplementedError('is_binary=%s' % is_binary)
-        #else:
-            #_write_loads_ascii(outfile, loads, float_fmt='%6.6f')
-
     @property
     def nresults(self) -> int:
         """get the number of results"""
-        if isinstance(self.loads, dict):
-            return len(self.loads)
-        return 0
+        return len(self.loads)
 
     @property
     def nnodes(self) -> int:
@@ -158,9 +103,10 @@ class Cart3dReaderWriter:
             #assert elements.min() == 1, elements.min()
         return elements - 1
 
-    def _read_cart3d_ascii(self, cart3d_filename: str, encoding: str, result_names=None):
+    def _read_cart3d_ascii(self, cart3d_filename: str, encoding: str, result_names=None) -> None:
         log = self.log
-        with open(_filename(cart3d_filename), 'r', encoding=self._encoding) as infile:
+        cart3d_filename = _filename(cart3d_filename)
+        with open(cart3d_filename, 'r', encoding=self._encoding) as infile:
             try:
                 npoints, nelements, nresults = _read_header_ascii(infile)
                 self.points = _read_points_ascii(infile, npoints)
@@ -179,10 +125,10 @@ class Cart3dReaderWriter:
         self.n = 0
         with open(cart3d_filename, 'rb') as infile:
             try:
-                npoints, nelements, nresults = self._read_header_binary(infile)
-                self.points = self._read_points_binary(infile, npoints)
-                self.elements = self._read_elements_binary(infile, nelements)
-                self.regions = self._read_regions_binary(infile, nelements)
+                npoints, nelements, nresults, endian = self._read_header_binary(infile)
+                self.points = self._read_points_binary(infile, npoints, endian)
+                self.elements = self._read_elements_binary(infile, nelements, endian)
+                self.regions = self._read_regions_binary(infile, nelements, endian)
                 # TODO: loads
             except Exception:
                 msg = f'failed reading {cart3d_filename!r}'
@@ -190,7 +136,7 @@ class Cart3dReaderWriter:
                 raise
             assert self.n == infile.tell(), 'n=%s tell=%s' % (self.n, infile.tell())
 
-    def _read_header_binary(self, infile) -> tuple[int, int, int]:
+    def _read_header_binary(self, infile) -> tuple[int, int, int, bytes]:
         """
         Reads the header::
 
@@ -222,7 +168,7 @@ class Cart3dReaderWriter:
 
         so4 = size // 4  # size over 4
         if so4 == 3:
-            (npoints, nelements, nresults) = unpack(self._endian + b'iii', data)
+            (npoints, nelements, nresults) = unpack(endian + b'iii', data)
             log.info(f'npoints={npoints:d} nelements={nelements:d} nresults={nresults:d}')
         elif so4 == 2:
             (npoints, nelements) = unpack(self._endian + b'ii', data)
@@ -230,32 +176,32 @@ class Cart3dReaderWriter:
             log.info(f'npoints={npoints:d} nelements={nelements:d}')
         else:
             self._rewind(infile)
-            self.show(infile, 100)
+            self.show(infile, 100, endian=endian)
             raise RuntimeError(f'in the wrong spot...endian...size/4={so4}')
         infile.read(8)  # end of first block, start of second block
         self.n += 8
-        return npoints, nelements, nresults
+        return npoints, nelements, nresults, endian
 
-    def _read_points_binary(self, infile, npoints: int) -> np.ndarray:
+    def _read_points_binary(self, infile, npoints: int, endian: bytes) -> np.ndarray:
         """reads the xyz points"""
         size = npoints * 12  # 12=3*4 all the points
         data = infile.read(size)
         self.n += size
 
-        dtype = np.dtype(self._endian + b'f4')
+        dtype = np.dtype(endian + b'f4')
         points = np.frombuffer(data, dtype=dtype).reshape((npoints, 3)).copy()
 
         infile.read(8)  # end of second block, start of third block
         self.n += 8
         return points
 
-    def _read_elements_binary(self, infile, nelements: int) -> np.ndarray:
+    def _read_elements_binary(self, infile, nelements: int, endian: bytes) -> np.ndarray:
         """reads the triangles"""
         size = nelements * 12  # 12=3*4 all the elements
         data = infile.read(size)
         self.n += size
 
-        dtype = np.dtype(self._endian + b'i4')
+        dtype = np.dtype(endian + b'i4')
         elements = np.frombuffer(data, dtype=dtype).reshape((nelements, 3)).copy()
 
         infile.read(8)  # end of third (element) block, start of regions (fourth) block
@@ -263,14 +209,14 @@ class Cart3dReaderWriter:
         assert elements.min() == 1, elements.min()
         return elements - 1
 
-    def _read_regions_binary(self, infile, nelements: int) -> np.ndarray:
+    def _read_regions_binary(self, infile, nelements: int, endian: bytes) -> np.ndarray:
         """reads the regions"""
         size = nelements * 4  # 12=3*4 all the elements
         data = infile.read(size)
         self.n += size
 
         regions = np.zeros(nelements, dtype='int32')
-        dtype = self._endian + b'i'
+        dtype = endian + b'i'
         regions = np.frombuffer(data, dtype=dtype).copy()
 
         infile.read(4)  # end of regions (fourth) block

@@ -23,7 +23,9 @@ import numpy as np
 from cpylog import SimpleLogger
 
 from pyNastran.utils import is_binary_file
-from pyNastran.converters.cart3d.cart3d_reader_writer import Cart3dReaderWriter, _write_cart3d_ascii, _write_cart3d_binary
+from pyNastran.converters.cart3d.cart3d_reader_writer import (
+    Cart3dReaderWriter, _write_cart3d_ascii, _write_cart3d_binary)
+
 
 class Cart3D(Cart3dReaderWriter):
     """Cart3d interface class"""
@@ -34,7 +36,7 @@ class Cart3D(Cart3dReaderWriter):
     def __init__(self, log=None, debug=False):
         Cart3dReaderWriter.__init__(self, log=log, debug=debug)
 
-    def flip_model(self):
+    def flip_model(self) -> None:
         """flip the model about the y-axis"""
         self.points[:, 1] *= -1.
         self.elements = np.hstack([
@@ -42,9 +44,10 @@ class Cart3D(Cart3dReaderWriter):
             self.elements[:, 2:3],
             self.elements[:, 1:2],
         ])
-        print(self.elements.shape)
+        #print(self.elements.shape)
 
-    def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
+    def make_mirror_model(self, nodes, elements, regions, loads, axis='y',
+                          tol: float=0.000001):
         """
         Makes a full cart3d model about the given axis.
 
@@ -130,7 +133,7 @@ class Cart3D(Cart3dReaderWriter):
         #self.log.info('---finished make_mirror_model---')
         #return (nodes2, elements2, regions2, loads2)
 
-    def make_half_model(self, axis='y', remap_nodes=True):
+    def make_half_model(self, axis: str='y', remap_nodes: bool=True):
         """
         Makes a half model from a full model
 
@@ -143,8 +146,6 @@ class Cart3D(Cart3dReaderWriter):
         elements = self.elements
         regions = self.regions
         loads = self.loads
-        if loads is None:
-            loads = {}
 
         nnodes = nodes.shape[0]
         assert nnodes > 0, 'nnodes=%s'  % nnodes
@@ -415,7 +416,6 @@ def read_cart3d(cart3d_filename, log=None, debug=False, result_names=None) -> Ca
     model.read_cart3d(cart3d_filename, result_names)
     return model
 
-
 def comp2tri(in_filenames, out_filename,
              is_binary=False, float_fmt='%6.7f',
              log=None, debug=False) -> Cart3D:
@@ -435,7 +435,7 @@ def comp2tri(in_filenames, out_filename,
 
     Notes
     -----
-    assumes loads is None
+    assumes loads={}
 
     """
     points = []
@@ -544,4 +544,3 @@ def _get_ax(axis: Union[str, int], log: SimpleLogger) -> tuple[int, int]:
     # shift ax to the actual column index in the nodes array
     ax0 = ax if ax in [0, 1, 2] else ax - 3
     return ax, ax0
-
