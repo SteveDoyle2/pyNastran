@@ -107,7 +107,9 @@ class DELAY(BaseCard):
         delays = [1.]
         return DELAY(sid, nodes, components, delays, comment='')
 
-    def __init__(self, sid, nodes, components, delays, comment=''):
+    def __init__(self, sid: int,
+                 nodes: list[int], components: list[int], delays: list[float],
+                 comment: str=''):
         """
         Creates a DELAY card
 
@@ -138,6 +140,9 @@ class DELAY(BaseCard):
             components = [components]
         if isinstance(delays, float):
             delays = [delays]
+        assert len(nodes) == len(components)
+        assert len(nodes) == len(delays)
+
         #: Identification number of DELAY entry. (Integer > 0)
         self.sid = sid
         #: Grid, extra, or scalar point identification number. (Integer > 0)
@@ -174,7 +179,7 @@ class DELAY(BaseCard):
             assert components[1] in [0, 1, 2, 3, 4, 5, 6], components
         return DELAY(sid, nodes, components, delays, comment=comment)
 
-    def add(self, delay):
+    def add(self, delay: DELAY):
         assert self.sid == delay.sid, 'sid=%s delay.sid=%s' % (self.sid, delay.sid)
         if delay.comment:
             if hasattr('_comment'):
@@ -184,6 +189,8 @@ class DELAY(BaseCard):
         self.nodes += delay.nodes
         self.components += delay.components
         self.delays += delay.delays
+        assert len(self.nodes) == len(self.components)
+        assert len(self.nodes) == len(self.delays)
 
     def get_delay_at_freq(self, freq):
         return self.nodes, self.components, self.delays
@@ -227,7 +234,10 @@ class DELAY(BaseCard):
 
     def raw_fields(self):
         list_fields = ['DELAY', self.sid]
-        for nid, comp, delay in zip(self.node_ids, self.components, self.delays):
+        node_ids = self.node_ids
+        assert len(node_ids) == len(self.components)
+        assert len(node_ids) == len(self.delays)
+        for nid, comp, delay in zip(node_ids, self.components, self.delays):
             if isinstance(nid, integer_types):
                 nidi = nid
             else:
@@ -238,6 +248,8 @@ class DELAY(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
         node_ids = self.node_ids
+        assert len(node_ids) == len(self.components)
+        assert len(node_ids) == len(self.delays)
         if size == 8:
             for nid, comp, delay in zip(node_ids, self.components, self.delays):
                 msg += print_card_8(['DELAY', self.sid, nid, comp, delay])
@@ -332,7 +344,7 @@ class DPHASE(BaseCard):
             assert components[1] in [0, 1, 2, 3, 4, 5, 6], components
         return DPHASE(sid, nodes, components, phase_leads, comment=comment)
 
-    def add(self, dphase):
+    def add(self, dphase: DPHASE):
         assert self.sid == dphase.sid, 'sid=%s dphase.sid=%s' % (self.sid, dphase.sid)
         if dphase.comment:
             if hasattr('_comment'):
@@ -342,6 +354,8 @@ class DPHASE(BaseCard):
         self.nodes += dphase.nodes
         self.components += dphase.components
         self.phase_leads += dphase.phase_leads
+        assert len(self.nodes) == len(self.components)
+        assert len(self.nodes) == len(self.phase_leads)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -390,13 +404,18 @@ class DPHASE(BaseCard):
 
     def raw_fields(self):
         list_fields = ['DPHASE', self.sid]
-        for nid, comp, delay in zip(self.node_ids, self.components, self.phase_leads):
+        node_ids = self.node_ids
+        assert len(node_ids) == len(self.components)
+        assert len(node_ids) == len(self.phase_leads)
+        for nid, comp, delay in zip(node_ids, self.components, self.phase_leads):
             list_fields += [nid, comp, delay]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
         node_ids = self.node_ids
+        assert len(node_ids) == len(self.components)
+        assert len(node_ids) == len(self.phase_leads)
         if size == 8:
             for nid, comp, delay in zip(node_ids, self.components, self.phase_leads):
                 msg += print_card_8(['DPHASE', self.sid, nid, comp, delay])

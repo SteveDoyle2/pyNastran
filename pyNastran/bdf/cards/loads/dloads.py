@@ -11,6 +11,7 @@ All dynamic loads are defined in this file.  This includes:
 
 """
 from __future__ import annotations
+import warnings
 from typing import Union, TYPE_CHECKING
 import numpy as np
 
@@ -558,14 +559,14 @@ class RLOAD1(DynamicLoad):
     def Tc(self):
         if self.tc_ref is not None:
             return self.tc_ref.tid
-        elif self.tc in [0, 0.0]:
+        elif self.tc in [0, 0.0, None]:
             return 0
         return self.tc
 
     def Td(self):
         if self.td_ref is not None:
             return self.td_ref.tid
-        elif self.td in [0, 0.0]:
+        elif self.td in [0, 0.0, None]:
             return 0
         return self.td
 
@@ -573,7 +574,7 @@ class RLOAD1(DynamicLoad):
     def delay_id(self):
         if self.delay_ref is not None:
             return self.delay_ref.sid
-        elif self.delay in [0, 0.]:
+        elif self.delay in [0, 0., None]:
             return 0
         return self.delay
 
@@ -581,40 +582,31 @@ class RLOAD1(DynamicLoad):
     def dphase_id(self):
         if self.dphase_ref is not None:
             return self.dphase_ref.sid
-        elif self.dphase in [0, 0.0]:
+        elif self.dphase in [0, 0.0, None]:
             return 0
         return self.dphase
 
-    def get_load_at_freq(self, freq, scale=1.):
-        # A = 1. # points to DAREA or SPCD
-        if isinstance(freq, float):
-            freq = np.array([freq])
-        else:
-            freq = np.asarray(freq)
-
-        if isinstance(self.tc, float):
-            c = float(self.tc)
-        elif self.tc == 0:
+    def get_table_at_freq(self, freq: np.ndarray, table_id: Union[int, float], tabled_ref: TABLED2):
+        if isinstance(table_id, float):
+            c = table_id
+        elif table_id == 0 or table_id is None:
             c = 0.
         else:
-            c = self.tc_ref.interpolate(freq)
+            c = tabled_ref.interpolate(freq)
+        return c
 
-        if isinstance(self.td, float):
-            d = float(self.td)
-        elif self.td == 0:
-            d = 0.
-        else:
-            d = self.td_ref.interpolate(freq)
-
+    def get_phase_at_freq(self, freq: np.ndarray) -> float:
         if isinstance(self.dphase, float):
-            dphase = self.dphase
+            dphase = np.radians(self.dphase)
         elif self.dphase == 0:
             dphase = 0.0
         else:
             nids, comps, dphases = self.dphase_ref.get_dphase_at_freq(freq)
             assert len(dphases) == 1, 'dphases=%s\n%s' % (dphases, self.dphase_ref)
             dphase = dphases[0]
+        return dphase
 
+    def get_delay_at_freq(self, freq: np.ndarray) -> np.ndarray:
         if isinstance(self.delay, float):
             tau = self.delay
         elif self.delay == 0:
@@ -623,8 +615,19 @@ class RLOAD1(DynamicLoad):
             nids, comps, taus = self.delay_ref.get_delay_at_freq(freq)
             assert len(taus) == 1, 'taus=%s\n%s' % (taus, self.delay_ref)
             tau = taus[0]
+        return tau
 
-        out = (c + 1.j * d) * np.exp(dphase - 2 * np.pi * freq * tau)
+    def get_load_at_freq(self, freq, scale=1., fdtype='float64'):
+        # A = 1. # points to DAREA or SPCD
+        freq = np.asarray(freq, dtype=fdtype)
+        freq = np.atleast_1d(freq)
+
+        c = self.get_table_at_freq(freq, self.tc, self.tc_ref)
+        d = self.get_table_at_freq(freq, self.td, self.td_ref)
+        phase = self.get_phase_at_freq(freq)
+        tau = self.get_delay_at_freq(freq)
+
+        out = (c + 1.j * d) * np.exp(phase - 2 * np.pi * freq * tau)
         return out
 
     def raw_fields(self):
@@ -844,8 +847,8 @@ class RLOAD2(DynamicLoad):
             int : delay id
         dphase : int/float; default=None
             the dphase; if it's 0/blank there is no phase lag
-            float : delay in units of time
-            int : delay id
+            float : dphase in units of degrees
+            int : dphase id
         tb : int/float; default=0
             TABLEDi id that defines B(f) for all degrees of freedom in
             EXCITEID entry
@@ -917,6 +920,7 @@ class RLOAD2(DynamicLoad):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
@@ -929,46 +933,64 @@ class RLOAD2(DynamicLoad):
         assert len(card) <= 8, f'len(RLOAD2 card) = {len(card):d}\ncard={card}'
         return RLOAD2(sid, excite_id, delay, dphase, tb, tp, Type, comment=comment)
 
-    def get_load_at_freq(self, freq, scale=1.):
-        # A = 1. # points to DAREA or SPCD
+    def get_damping_at_freq(self, freq: np.ndarray) -> float:
         if isinstance(self.tb, float):
             b = self.tb
-        elif self.tb == 0:
+        elif self.tb == 0 or self.tb is None:
             b = 0.0
         else:
             b = self.tb_ref.interpolate(freq)
+        return b
 
+    def get_phi_at_freq(self, freq: np.ndarray) -> float:
         if isinstance(self.tp, float):
             p = self.tp
-        elif self.tp == 0:
+        elif self.tp == 0 or self.tp is None:
             p = 0.0
         else:
             p = self.tp_ref.interpolate(freq)
+        return p
 
+    def get_phase_at_freq(self, freq: np.ndarray) -> float:
         if isinstance(self.dphase, float):
-            dphase = self.dphase
+            dphase = np.radians(self.dphase)
         elif self.dphase == 0 or self.dphase is None:
             dphase = 0.0
         else:
+            warnings.warn('RLOAD2 doesnt support DPHASE...')
             nids, comps, dphases = self.dphase_ref.get_dphase_at_freq(freq)
-            assert len(dphases) == 1, dphases
+            assert len(dphases) == 1, 'dphases=%s\n%s' % (dphases, self.dphase_ref)
             dphase = dphases[0]
+        return dphase
 
+    def get_delay_at_freq(self, freq: np.ndarray) -> np.ndarray:
         if isinstance(self.delay, float):
             tau = self.delay
-        elif self.delay == 0:
+        elif self.delay == 0 or self.delay is None:
             tau = 0.0
         else:
+            warnings.warn('RLOAD2 doesnt support DELAY...')
             nids, comps, taus = self.delay_ref.get_delay_at_freq(freq)
-            assert len(taus) == 1, taus
+            assert len(taus) == 1, 'taus=%s\n%s' % (taus, self.delay_ref)
             tau = taus[0]
+        return tau
+
+    def get_load_at_freq(self, freq, scale=1., fdtype='complex128'):
+        # A = 1. # points to DAREA or SPCD
+        freq = np.asarray(freq, dtype=fdtype)
+        freq = np.atleast_1d(freq)
+
+        b = self.get_damping_at_freq(freq)
+        p = self.get_phi_at_freq(freq)
+        phase = self.get_phase_at_freq(freq)
+        tau = self.get_delay_at_freq(freq)
 
         try:
-            out = b * np.exp(1.j * p + dphase - 2 * np.pi * freq * tau)
+            out = b * np.exp(1.j * p + phase - 2 * np.pi * freq * tau)
         except TypeError:
             print('b =', b)
             print('p =', p)
-            print('dphase =', dphase)
+            print('phase =', phase)
             print('freq =', freq)
             print('tau =', tau)
             raise
@@ -1108,8 +1130,8 @@ class TLOAD1(DynamicLoad):
         tid = 1
         return TLOAD1(sid, excite_id, tid, delay=0, Type='LOAD', us0=0.0, vs0=0.0, comment='')
 
-    def __init__(self, sid, excite_id, tid, delay=0, Type='LOAD',
-                 us0=0.0, vs0=0.0, comment=''):
+    def __init__(self, sid: int, excite_id: int, tid: int, delay: Union[int, float]=0,
+                 Type: str='LOAD', us0: float=0.0, vs0: float=0.0, comment: str=''):
         """
         Creates a TLOAD1 card, which defienes a time-dependent load
         based on a DTABLE.
@@ -1247,45 +1269,53 @@ class TLOAD1(DynamicLoad):
         self.tid_ref = None
         self.delay_ref = None
 
-    def Tid(self):
+    def Tid(self) -> int:
         if self.tid_ref is not None:
             return self.tid_ref.tid
-        elif self.tid == 0:
+        elif self.tid == 0 or self.tid is None:
             return 0
         else:
             return self.tid
 
     @property
-    def delay_id(self):
+    def delay_id(self) -> Union[int, float]:
         if self.delay_ref is not None:
             return self.delay_ref.sid
-        elif self.delay == 0:
+        elif self.delay == 0 or self.delay is None:
             return 0
         return self.delay
 
-    def get_load_at_time(self, time, scale=1.):
-        # A = 1. # points to DAREA or SPCD
-        if isinstance(time, float):
-            time = np.array([time])
-        else:
-            time = np.asarray(time)
-
+    def get_delay_at_time(self, time: np.ndarray) -> float:
         if isinstance(self.delay, float):
             tau = self.delay
         elif self.delay == 0 or self.delay is None:
             tau = 0.0
         else:
+            warnings.warn('TLOAD1 doesnt support DELAY...')
             tau = self.delay_ref.get_delay_at_time(time)
+        return tau
 
-        i = np.where(time - tau > 0)
-        time2 = time[i]
-        resp = self.tid_ref.interpolate(time2)
+    def get_load_at_time(self, time: np.ndarray, scale: float=1.,
+                         fdtype: str='float64') -> np.ndarray:
+        # A = 1. # points to DAREA or SPCD
+        time = np.asarray(time, dtype=fdtype)
+        time = np.atleast_1d(time)
+
+        tau = self.get_delay_at_time(time)
+        i = np.where(time - tau < 0)[0]
+        time2 = time - tau
+        time2[i] = 0.
+
+        response = np.zeros(time.shape, dtype=time.dtype)
+        response = self.tid_ref.interpolate(time2)
         is_spcd = False
         if self.Type == 'VELO' and is_spcd:
-            resp[0] = self.us0
+            response[0] = self.us0
         if self.Type == 'ACCE' and is_spcd:
-            resp[0] = self.vs0
-        return resp * scale
+            response[0] = self.vs0
+        assert len(response) == len(time)
+        response[i] = 0.
+        return response * scale
 
     def raw_fields(self):
         list_fields = ['TLOAD1', self.sid, self.excite_id, self.delay_id, self.Type,
@@ -1424,8 +1454,18 @@ class TLOAD2(DynamicLoad):
         return TLOAD2(sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
                       frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment='')
 
-    def __init__(self, sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
-                 frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment=''):
+    def __init__(self, sid: int,
+                 excite_id: int,
+                 delay: Union[int, float]=0,
+                 Type: st='LOAD',
+                 T1: float=0.,
+                 T2: Optional[float]=None,
+                 frequency: float=0.,
+                 phase: Union[int, float]=0.,
+                 c: float=0.,
+                 b: float=0.,
+                 us0: float=0.,
+                 vs0: float=0., comment: str=''):
         """
         Creates a TLOAD2 card, which defines a exponential time dependent
         load based on constants.
@@ -1473,8 +1513,8 @@ class TLOAD2(DynamicLoad):
         DynamicLoad.__init__(self)
         if comment:
             self.comment = comment
-        if T2 is None:
-            T2 = T1
+        #if T2 is None:
+            #T2 = T1
 
         Type = update_loadtype(Type)
 
@@ -1514,6 +1554,7 @@ class TLOAD2(DynamicLoad):
         self.vs0 = vs0
 
         self.delay_ref = None
+        self.dphase_ref = None
 
     def validate(self):
         self.Type = fix_loadtype_tload2(self.Type)
@@ -1549,11 +1590,39 @@ class TLOAD2(DynamicLoad):
         return TLOAD2(sid, excite_id, delay, Type, T1, T2, frequency, phase,
                       c, b, us0, vs0, comment=comment)
 
-    def get_load_at_time(self, time, scale=1.):
-        if isinstance(time, float):
-            time = np.array([time])
+    def get_delay_at_time(self, time: np.ndarray) -> float:
+        if isinstance(self.delay, float):
+            tau = self.delay
+        elif self.delay == 0 or self.delay is None:
+            tau = 0.0
         else:
-            time = np.asarray(time)
+            delay_ref = self.delay_ref
+            assert delay_ref is not None, self.delay_ref
+            nodes = delay_ref.nodes
+            delays = delay_ref.delays
+            components = delay_ref.components
+            warnings.warn('TLOAD2 doesnt support DELAY; setting tau=0.')
+            tau = 0.
+            #tau = self.delay_ref.get_delay_at_time(time)
+        return tau
+
+    def get_phase_at_time(self, time: np.ndarray) -> float:
+        if isinstance(self.phase, integer_types):
+            dphase_ref = self.dphase_ref
+            assert dphase_ref is not None, dphase_ref
+            nodes = dphase_ref.nodes
+            phases = dphase_ref.phase_leads
+            components = dphase_ref.components
+            warnings.warn('TLOAD2 doesnt support DPHASE; setting phase=0.')
+            p = 0.
+            #p = np.radians(dphase_ref.phase)
+        else:
+            p = np.radians(self.phase)
+        return p
+
+    def get_load_at_time(self, time, scale=1., fdtype='float64'):
+        time = np.asarray(time, dtype=fdtype)
+        time = np.atleast_1d(time)
 
         # A = 1. # points to DAREA or SPCD
         #xy = array(self.tid.table.table)
@@ -1562,22 +1631,21 @@ class TLOAD2(DynamicLoad):
         #assert x.shape == y.shape, 'x.shape=%s y.shape=%s' % (str(x.shape), str(y.shape))
         #f = interp1d(x, y)
 
-        if isinstance(self.delay, float):
-            tau = self.delay
-        elif self.delay == 0 or self.delay is None:
-            tau = 0.0
-        else:
-            tau = self.delay_ref.get_delay_at_time(time)
+        tau = self.get_delay_at_time(time)
 
         t1 = self.T1 + tau
-        t2 = self.T2 + tau
+        if self.T2 is not None:
+            t2 = self.T2 + tau
+            i = np.where(t1 <= time)[0]
+            j = np.where(time[i] <= t2)[0]
+            i = i[j]
+        else:
+            i = np.where(t1 <= time)[0]
         freq = self.frequency
-        p = self.phase
+
+        p = self.get_phase_at_time(time)
         f = np.zeros(time.shape, dtype=time.dtype)
 
-        i = np.where(t1 <= time)[0]
-        j = np.where(time[i] <= t2)[0]
-        i = i[j]
         f[i] = scale * time[i] ** self.b * np.exp(self.c * time[i]) * np.cos(2 * np.pi * freq * time[i] + p)
 
         is_spcd = False
@@ -1604,6 +1672,8 @@ class TLOAD2(DynamicLoad):
         _cross_reference_excite_id(self, model, msg)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
+        if isinstance(self.phase, integer_types) and self.phase > 0:
+            self.dphase_ref = model.DPHASE(self.phase, msg=msg)
         # TODO: excite_id
 
     def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
@@ -1619,16 +1689,23 @@ class TLOAD2(DynamicLoad):
         self.delay_ref = None
 
     @property
-    def delay_id(self):
+    def delay_id(self) -> Union[int, float]:
         if self.delay_ref is not None:
             return self.delay_ref.sid
-        elif self.delay == 0:
+        elif self.delay == 0 or self.delay is None:
             return 0
         return self.delay
+    @property
+    def dphase_id(self) -> Union[int, float]:
+        if self.dphase_ref is not None:
+            return self.dphase_ref.sid
+        elif self.phase == 0 or self.phase is None:
+            return 0
+        return self.phase
 
     def raw_fields(self):
         list_fields = ['TLOAD2', self.sid, self.excite_id, self.delay_id, self.Type,
-                       self.T1, self.T2, self.frequency, self.phase, self.c, self.b,
+                       self.T1, self.T2, self.frequency, self.dphase_id, self.c, self.b,
                        self.us0, self.vs0]
         return list_fields
 

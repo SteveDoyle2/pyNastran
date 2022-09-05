@@ -503,7 +503,7 @@ def _convert_elements(model: BDF,
             elem.mass *= mass_scale
         else:
             raise NotImplementedError(elem)
-    _log_scales(model.log, scale_map, scales, {'length', 'mass'})
+    _write_scales(model.log, scale_map, scales, {'length', 'mass'})
 
 def _convert_properties(model: BDF,
                         xyz_scale: float,
@@ -753,7 +753,7 @@ def _convert_properties(model: BDF,
 
     _set_pbush1d_tables(model, scales, spring_tables, damper_tables,
                         xyz_scale, velocity_scale, force_scale)
-    _log_scales(model.log, scale_map, scales, {'length', 'area', 'mass', 'temperature'})
+    _write_scales(model.log, scale_map, scales, {'length', 'area', 'mass', 'temperature'})
 
 def _convert_pbar(scales: Set[str],
                   prop: PBAR,
@@ -1136,9 +1136,9 @@ def _convert_materials(model: BDF,
         'a' : 'alpha_scale (1/L) = %g' % a_scale,
         'temperature' : 'temperature_scale (theta) = %g' % temperature_scale,
     }
-    _log_scales(model.log, scale_map, scales)
+    _write_scales(model.log, scale_map, scales)
 
-def _log_scales(log: SimpleLogger, scale_map: Dict[str, str], scales: Set[str], keys_to_skip=set([])):
+def _write_scales(log: SimpleLogger, scale_map: Dict[str, str], scales: Set[str], keys_to_skip=set([])):
     for scale, msg in scale_map.items():
         if scale in scales:
             log.debug(msg)
@@ -1223,6 +1223,8 @@ def _convert_loads(model: BDF,
     model.log.debug('--Load Scales--')
     scales = set([])
     scale_map = {
+        'time' : 'time_scale (T) = %g' % time_scale,
+        'length' : 'length_scale (L) = %g' % xyz_scale,
         'force' : 'force_scale (F) = %g' % force_scale,
         'moment' : 'moment_scale (F*L) = %g' % moment_scale,
         'pressure' : 'pressure_scale (F/L^2) = %g' % pressure_scale,
@@ -1388,7 +1390,7 @@ def _convert_loads(model: BDF,
                 load.tp2 = [tempi * temperature_scale if tempi is not None else tempi for tempi in load.tp2]
             else:
                 raise NotImplementedError(f'{load.get_stats()}\n{load}')
-    _log_scales(model.log, scale_map, scales, {'length'})
+    _write_scales(model.log, scale_map, scales, {'length'})
 
 def _convert_aero(model: BDF,
                   xyz_scale: float,
@@ -1552,7 +1554,7 @@ def _convert_aero(model: BDF,
         flfact = model.flfacts[flfact_id]
         flfact.factors *= velocity_scale
         scales.add('velocity')
-    _log_scales(model.log, scale_map, scales, {'length', 'area'})
+    _write_scales(model.log, scale_map, scales, {'length', 'area'})
 
 def _scale_caero(caero, xyz_scale: float, xyz_aefacts) -> None:
     try:

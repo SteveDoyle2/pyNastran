@@ -288,12 +288,10 @@ class TestDynamic(unittest.TestCase):
         model2.uncross_reference()
         model2.safe_cross_reference()
         model2.uncross_reference()
-        #print(out)
-        #print(outs)
         save_load_deck(model, run_renumber=False, run_convert=False)
 
-    def test_rload(self):
-        """tests DLOAD, RLOAD1, RLOAD2, TABLED2 cards"""
+    def test_rload1(self):
+        """tests DLOAD, RLOAD1, TABLED2 cards"""
         model = BDF(debug=False)
         #model.case_control_deck = CaseControlDeck(['DLOAD=2', 'BEGIN BULK'])
         sid = 2
@@ -309,26 +307,12 @@ class TestDynamic(unittest.TestCase):
         rload1 = model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=0,
                                   td=0, Type='ACC', comment='rload1')
 
-        sid = 3
-        excite_id = 30
-        rload2 = model.add_rload2(sid, excite_id, delay=0, dphase=0, tb=0,
-                                  tp=0, Type='LOAD', comment='rload2')
-        rload2 = model.add_rload2(sid, excite_id, delay=1., dphase=0, tb=0,
-                                  tp=0, Type='D', comment='rload2')
-        rload2 = model.add_rload2(sid, excite_id, delay=2, dphase=0, tb=0,
-                                  tp=0, Type='V', comment='rload2')
-        rload2 = model.add_rload2(sid, excite_id, delay=0, dphase=0, tb=0,
-                                  tp=0, Type='A', comment='rload2')
-
         excite_id = 20
         nid = 21
         c = 1
         scale = 1.0
         model.add_darea(excite_id, nid, c, scale, comment='darea')
         model.add_grid(nid, [0., 0., 0.])
-
-        excite_id = 30
-        model.add_darea(excite_id, nid, c, scale, comment='darea')
 
         delay_id = 2
         nodes = 100
@@ -359,11 +343,6 @@ class TestDynamic(unittest.TestCase):
         rload1.raw_fields()
         rload1.write_card()
         rload1.write_card(size=16)
-
-        rload2.validate()
-        rload2.raw_fields()
-        rload2.write_card()
-        rload2.write_card(size=16)
 
         dload.validate()
         dload.raw_fields()
@@ -401,6 +380,100 @@ class TestDynamic(unittest.TestCase):
         #print(out1)
         #print(out2)
         assert len(out1) == 2, out1
+        #assert len(out2) == 2, out2
+
+        model2 = read_bdf(bdf_file, punch=True, debug=False)
+        model2.uncross_reference()
+        model2.safe_cross_reference()
+        model2.uncross_reference()
+        #print(out)
+        #print(outs)
+        save_load_deck(model, run_renumber=False, run_convert=False)
+
+    def test_rload2(self):
+        """tests DLOAD, RLOAD2, TABLED2 cards"""
+        model = BDF(debug=False)
+        #model.case_control_deck = CaseControlDeck(['DLOAD=2', 'BEGIN BULK'])
+
+        sid = 3
+        excite_id = 30
+        rload2 = model.add_rload2(sid, excite_id, delay=0, dphase=0, tb=0,
+                                  tp=0, Type='LOAD', comment='rload2')
+        rload2 = model.add_rload2(sid, excite_id, delay=1., dphase=0, tb=0,
+                                  tp=0, Type='D', comment='rload2')
+        rload2 = model.add_rload2(sid, excite_id, delay=2, dphase=0, tb=0,
+                                  tp=0, Type='V', comment='rload2')
+        rload2 = model.add_rload2(sid, excite_id, delay=0, dphase=0, tb=0,
+                                  tp=0, Type='A', comment='rload2')
+
+        #excite_id = 20
+        nid = 21
+        c = 1
+        scale = 1.0
+        #model.add_darea(excite_id, nid, c, scale, comment='darea')
+        model.add_grid(nid, [0., 0., 0.])
+
+        excite_id = 30
+        model.add_darea(excite_id, nid, c, scale, comment='darea')
+
+        delay_id = 2
+        nodes = 100
+        components = 2
+        delays = 1.5
+        delay = model.add_delay(delay_id, nodes, components, delays)
+
+        sid = 1
+        scale = 1.0
+        scale_factors = 1.
+        load_ids = 3
+        dload = model.add_dload(sid, scale, scale_factors, load_ids,
+                                comment='dload')
+
+        model.pop_parse_errors()
+
+        delay.validate()
+        delay.raw_fields()
+        delay.write_card()
+        delay.write_card(size=16)
+
+        rload2.validate()
+        rload2.raw_fields()
+        rload2.write_card()
+        rload2.write_card(size=16)
+
+        dload.validate()
+        dload.raw_fields()
+        dload.write_card()
+        dload.write_card(size=16)
+
+        model.validate()
+        model.cross_reference()
+        model.pop_xref_errors()
+        #print(model.dareas)
+
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file, close=False)
+        unused_out = bdf_file.getvalue()
+        bdf_file.seek(0)
+        unused_outs = model.get_bdf_stats(return_type='list')
+        unused_outs = model.get_bdf_stats(return_type='string')
+
+        freq = 0.5
+        out1 = rload2.get_load_at_freq(freq, scale=1.)
+        #out2 = rload2.get_load_at_time(freq, scale=1.)
+        #print(out1)
+        #print(out2)
+        assert len(out1) == 1, out1
+        #assert len(out2) == 1, out2
+        assert np.allclose(out1, np.zeros(1, dtype='complex128'))
+
+        freq = [0.5, 0.9]
+        out1 = rload2.get_load_at_freq(freq, scale=1.)
+        #out2 = rload2.get_load_at_freq(freq, scale=1.)
+        #print(out1)
+        #print(out2)
+        assert len(out1) == 2, out1
+        assert np.allclose(out1, np.zeros(2, dtype='complex128'))
         #assert len(out2) == 2, out2
 
         model2 = read_bdf(bdf_file, punch=True, debug=False)
@@ -571,6 +644,150 @@ class TestDynamic(unittest.TestCase):
         model.add_conrod(eid3, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment='')
         model.cross_reference()
         save_load_deck(model)
+
+    def test_tload1(self):
+        model = BDF(debug=True, log=None, mode='msc')
+        excite_id = 11
+        node = 1
+        mag = 1.
+        xyz = [1., 0., 0.]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_force(excite_id, node, mag, xyz,
+                        cid=0, comment='')
+
+        tabled2_id = 100
+        x1 = 0.
+        x = t = np.linspace(0., 1., num=11)
+        y = np.sin(t)
+        model.add_tabled2(tabled2_id, x1, x, y, extrap=0, comment='')
+
+        tload_id = 12
+        tload1a = model.add_tload1(tload_id, excite_id, tabled2_id, delay=0,
+                                  Type='LOAD', us0=0.0, vs0=0.0, comment='')
+
+        tload_id = 13
+        tload1b = model.add_tload1(tload_id, excite_id, tabled2_id, delay=.1,
+                                  Type='LOAD', us0=0.0, vs0=0.0, comment='')
+        model.cross_reference()
+
+        time = np.linspace(0., 1., num=11)
+        loads = tload1a.get_load_at_time(time, scale=1.)
+        loads_expected = y
+        assert np.allclose(loads, loads_expected)
+
+        loads = tload1b.get_load_at_time(time, scale=1.)
+        loads_expected = np.hstack([0., y[:-1]])
+        assert np.allclose(loads, loads_expected)
+
+        save_load_deck(model, run_renumber=False)
+
+    def test_tload2(self):
+        model = BDF(debug=True, log=None, mode='msc')
+        excite_id = 11
+        node = 1
+        mag = 1.
+        xyz = [1., 0., 0.]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_force(excite_id, node, mag, xyz,
+                        cid=0, comment='')
+        tload_id = 12
+        tload2 = model.add_tload2(
+            tload_id, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
+            frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment='')
+        num = 11
+        time = np.linspace(0., 1., num=num, dtype='float64')
+        loads = tload2.get_load_at_time(time, scale=1.)
+        loads_expected = np.ones(num)
+        assert np.array_equal(loads, loads_expected)
+        assert np.array_equal(loads, [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.])
+
+        tload_id = 13
+        tload2 = model.add_tload2(
+            tload_id, excite_id, delay=0, Type='LOAD', T1=0., T2=0.5,
+            frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment='')
+        loads = tload2.get_load_at_time(time, scale=1.)
+        assert np.allclose(loads, [1., 1., 1., 1., 1., 1., 0., 0., 0., 0., 0.])
+
+        tload_id = 14
+        tload2 = model.add_tload2(
+            tload_id, excite_id, delay=0, Type='LOAD', T1=0.15, T2=0.5,
+            frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment='')
+        loads = tload2.get_load_at_time(time, scale=1.)
+        assert np.allclose(loads, [0., 0., 1., 1., 1., 1., 0., 0., 0., 0., 0.])
+
+        tload_id = 15
+        tload2 = model.add_tload2(
+            tload_id, excite_id, delay=0, Type='LOAD', T1=0.15, T2=0.5,
+            frequency=2., phase=0., c=0., b=0., us0=0., vs0=0., comment='')
+        loads = tload2.get_load_at_time(time, scale=1.)
+        val = -0.8090169943749472
+        val2 = 0.30901699437494723
+        assert np.allclose(loads, [0., 0., val, val, val2, 1., 0., 0., 0., 0., 0.])
+
+        tload_id = 16
+        tload2 = model.add_tload2(
+            tload_id, excite_id, delay=0, Type='LOAD', T1=0.15, T2=0.5,
+            frequency=10., phase=45., c=0., b=0., us0=0., vs0=0., comment='')
+        loads = tload2.get_load_at_time(time, scale=1.)
+        val = 0.5 ** 0.5 # sqrt(1/2)
+        assert np.allclose(loads, [0., 0., val, val, val, val, 0., 0., 0., 0., 0.])
+
+        tload_id = 17
+        tload2 = model.add_tload2(
+            tload_id, excite_id, delay=0, Type='LOAD', T1=0.15, T2=0.5,
+            frequency=10., phase=45., c=3., b=5., us0=0., vs0=0., comment='')
+        loads = tload2.get_load_at_time(time, scale=1.)
+        #print(loads)
+        loads_expected = np.array([0.0, 0.0, 0.0004122984191627603, 0.004226260954591647, 0.02404021442968808, 0.09903227290017788, 0.0, 0.0, 0.0, 0.0, 0.0], dtype='float64')
+        assert np.allclose(loads, loads_expected)
+
+        #------------------------------------------------
+        # phase int
+        # delay int
+        tload_id = 26
+        delay_id = 15
+        dphase_id = 45
+        tload2 = model.add_tload2(
+            tload_id, excite_id, delay=delay_id, Type='LOAD', T1=0.15, T2=0.5,
+            frequency=10., phase=dphase_id, c=0., b=0., us0=0., vs0=0., comment='')
+
+        delay = 0.15
+        phase = 45.
+        nodes = [1]
+        components = [1]
+        delays = [delay]
+        model.add_delay(delay_id, nodes, components, delays, comment='')
+        nodes = [1]
+        components = [1]
+        phase_leads = [phase]
+        model.add_dphase(dphase_id, nodes, components, phase_leads, comment='')
+
+        nodes = [1]
+        components = [2]
+        delays = [delay]
+        model.add_delay(delay_id, nodes, components, delays, comment='')
+        nodes = [1]
+        components = [2]
+        phase_leads = [phase]
+        model.add_dphase(dphase_id, nodes, components, phase_leads, comment='')
+
+        nodes = [1]
+        components = [3]
+        delays = [delay]
+        model.add_delay(delay_id, nodes, components, delays, comment='')
+        nodes = [1]
+        components = [3]
+        phase_leads = [phase]
+        model.add_dphase(dphase_id, nodes, components, phase_leads, comment='')
+
+        model.cross_reference()
+        loads = tload2.get_load_at_time(time, scale=1.)
+        val = 0.5 ** 0.5 # sqrt(1/2)
+        with self.assertRaises(AssertionError):
+            assert np.allclose(loads, [0., 0., val, val, val, val, 0., 0., 0., 0., 0.])
+
+        model.cross_reference()
+        #save_load_deck(model)
 
     def test_rforce(self):
         """tests RFORCE"""
