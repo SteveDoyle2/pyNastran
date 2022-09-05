@@ -829,7 +829,7 @@ class PBEAM(IntegratedLineProperty):
        ##raise RuntimeError(self.nsm[0])
        #return self.nsm[0]
 
-    def I1_I2_I12(self) -> Tuple[float, float, float]:
+    def I1_I2_I12(self) -> tuple[float, float, float]:
         #assert self.i1  is not None, 'I1=%r' % self.i1
         #assert self.i2  is not None, 'I2=%r' % self.i2
         #assert self.i12 is not None, 'I12=%r' % self.i12
@@ -1674,7 +1674,7 @@ class PBEAML(IntegratedLineProperty):
         return self.comment + print_card_16(card)  #is this allowed???
 
 
-def pbeaml_op2_data_to_init(data, valid_types: Dict[str, int]):
+def pbeaml_op2_data_to_init(data, valid_types: dict[str, int]):
     (pid, mid, group, beam_type, fvalues) = data
     group = group.strip()
     beam_type = beam_type.strip()
@@ -1723,7 +1723,7 @@ def pbeaml_op2_data_to_init(data, valid_types: Dict[str, int]):
 def _sort_pbeam(pid: int,
                 xxb, so, area, i1, i2, i12, j, nsm,
                 c1, c2, d1, d2, e1, e2, f1, f2,
-                ensure_xxb_1_section: bool=True) -> Tuple[
+                ensure_xxb_1_section: bool=True) -> tuple[
                     np.ndarray, np.ndarray, np.ndarray, np.ndarray,
                     np.ndarray, np.ndarray, np.ndarray, np.ndarray,
                     np.ndarray, np.ndarray, np.ndarray, np.ndarray,

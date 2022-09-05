@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import sin, cos, radians, atan2, sqrt, degrees
 from itertools import count
 import warnings
-from typing import Tuple, Dict, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import array, zeros
@@ -775,7 +775,7 @@ class NastranMatrix(BaseCard):
         return msg
 
 def _determine_size_double_from_tin(tin: int,
-                                    size: int, is_double: bool) -> Tuple[int, bool]:
+                                    size: int, is_double: bool) -> tuple[int, bool]:
     """
     we ignore the requested is_double flag because otherwise Nastran
     can't read in the matrix
@@ -1892,7 +1892,7 @@ class DMI(NastranMatrix):
         return is_polar
 
     @property
-    def shape(self) -> Tuple[int, int]:
+    def shape(self) -> tuple[int, int]:
         return (self.nrows, self.ncols)
 
     @property
@@ -2141,7 +2141,7 @@ class DMI(NastranMatrix):
 
     def get_matrix(self,
                    is_sparse: bool=False,
-                   apply_symmetry: bool=True) -> Tuple[np.array, None, None]:
+                   apply_symmetry: bool=True) -> tuple[np.array, None, None]:
         """
         Builds the Matrix
 
@@ -2211,10 +2211,10 @@ class DMI(NastranMatrix):
 
 def get_row_col_map(matrix: DMIG,
                     GCi: np.ndarray, GCj: np.ndarray,
-                    ifo: int) -> Tuple[int, int, int,
+                    ifo: int) -> tuple[int, int, int,
                                        np.ndarray, np.ndarray,
-                                       Dict[int, Any],
-                                       Dict[int, Any]]:
+                                       dict[int, Any],
+                                       dict[int, Any]]:
     ndim = len(GCi.shape)
     #print('ndim=%s' % ndim)
     #print('GCj=%s' % GCj)
@@ -2388,7 +2388,7 @@ def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int,
         shape=(nrows, ncols), dtype=dtype)
     return sparse_matrix
 
-def _build_gc_map(GC: np.ndarray) -> Dict[Tuple[int, int], int]:
+def _build_gc_map(GC: np.ndarray) -> dict[tuple[int, int], int]:
     """helper method for ``gc_to_index``"""
     i = 0
     gc_map = {}
@@ -2400,7 +2400,7 @@ def _build_gc_map(GC: np.ndarray) -> Dict[Tuple[int, int], int]:
         i += 1
     return gc_map
 
-def gc_to_index(GC: np.ndarray) -> Tuple[np.ndarray, int]:
+def gc_to_index(GC: np.ndarray) -> tuple[np.ndarray, int]:
     """helper method for ``_fill_sparse_matrix``"""
     gc_map = _build_gc_map(GC)
     ngrid_map = len(gc_map)
@@ -2414,7 +2414,7 @@ def gc_to_index(GC: np.ndarray) -> Tuple[np.ndarray, int]:
 
 def _fill_dense_rectangular_matrix(matrix: DMIG,
                                    nrows: int, ncols: int, ndim: int,
-                                   rows: Dict[Any, int], cols: Dict[Any, int],
+                                   rows: dict[Any, int], cols: dict[Any, int],
                                    apply_symmetry: bool) -> Any:
     """helper method for ``get_matrix``"""
     if matrix.is_complex:
@@ -2428,7 +2428,7 @@ def _fill_dense_rectangular_matrix(matrix: DMIG,
 
 def _fill_dense_rectangular_matrix_complex(matrix: DMIG,
                                            nrows: int, ncols: int, ndim: int,
-                                           rows: Dict[Any, int], cols: Dict[Any, int],
+                                           rows: dict[Any, int], cols: dict[Any, int],
                                            apply_symmetry: bool) -> np.ndarray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
     dense_mat = zeros((nrows, ncols), dtype=matrix.tin_dtype)
@@ -2452,7 +2452,7 @@ def _fill_dense_rectangular_matrix_complex(matrix: DMIG,
             dense_mat[i, j] += real_imagi
     return dense_mat
 
-def _get_diagonal_symmetric(matrix: DMIG) -> Tuple[np.ndarray, np.ndarray]:
+def _get_diagonal_symmetric(matrix: DMIG) -> tuple[np.ndarray, np.ndarray]:
     """helper for ``apply_symmetry``"""
     assert matrix.GCi.ndim == 2, matrix.GCi.ndim
     assert matrix.GCj.ndim == 2, matrix.GCj.ndim
@@ -2464,7 +2464,7 @@ def _get_diagonal_symmetric(matrix: DMIG) -> Tuple[np.ndarray, np.ndarray]:
 
 def _fill_dense_rectangular_matrix_real(matrix: DMIG,
                                         nrows: int, ncols: int, ndim: int,
-                                        rows: Dict[Any, int], cols: Dict[Any, int],
+                                        rows: dict[Any, int], cols: dict[Any, int],
                                         apply_symmetry: bool) -> np.ndarray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
     dense_mat = zeros((nrows, ncols), dtype=matrix.tin_dtype)
@@ -2542,7 +2542,7 @@ def _fill_dense_rectangular_matrix_real(matrix: DMIG,
 
 def _fill_dense_column_matrix(matrix: DMIG,
                               nrows: int, ncols: int, ndim: int,
-                              rows: Dict[Any, int], cols: Dict[Any, int],
+                              rows: dict[Any, int], cols: dict[Any, int],
                               apply_symmetry: bool) -> np.ndarray:
     """helper method for ``get_matrix``"""
     if matrix.is_complex:
@@ -2555,7 +2555,7 @@ def _fill_dense_column_matrix(matrix: DMIG,
 
 def _fill_dense_column_matrix_real(matrix: DMIG,
                                    nrows: int, ncols: int, ndim: int,
-                                   rows: Dict[Any, int], cols: Dict[Any, int],
+                                   rows: dict[Any, int], cols: dict[Any, int],
                                    apply_symmetry: bool) -> np.ndarray:
     """helper method for ``_fill_dense_column_matrix``
 
@@ -2590,7 +2590,7 @@ def _fill_dense_column_matrix_real(matrix: DMIG,
 
 def _fill_dense_column_matrix_complex(matrix: DMIG,
                                       nrows: int, ncols: int, ndim: int,
-                                      rows: Dict[Any, int], cols: Dict[Any, int],
+                                      rows: dict[Any, int], cols: dict[Any, int],
                                       apply_symmetry: bool) -> np.ndarray:
     """
     helper method for ``_fill_dense_column_matrix``
@@ -2625,7 +2625,7 @@ def _fill_dense_column_matrix_complex(matrix: DMIG,
 
 def get_dmi_matrix(matrix: DMI,
                    is_sparse: bool=False,
-                   apply_symmetry: bool=True) -> Tuple[np.array, None, None]:
+                   apply_symmetry: bool=True) -> tuple[np.array, None, None]:
     """
     Builds the Matrix
 
@@ -2700,9 +2700,9 @@ def get_dmi_matrix(matrix: DMI,
 
 def get_matrix(self: DMIG,
                is_sparse: bool=False,
-               apply_symmetry: bool=False) -> Tuple[Any,
-                                                   Dict[int, Any],
-                                                   Dict[int, Any]]:
+               apply_symmetry: bool=False) -> tuple[Any,
+                                                   dict[int, Any],
+                                                   dict[int, Any]]:
     """
     Builds the Matrix
 
@@ -2719,9 +2719,9 @@ def get_matrix(self: DMIG,
     -------
     M : ndarray
         the matrix
-    rows : Dict[(nid, nid)] = float
+    rows : dict[(nid, nid)] = float
         dictionary of keys=rowID,    values=(Grid,Component) for the matrix
-    cols : Dict[(int, int)] = float
+    cols : dict[(int, int)] = float
         dictionary of keys=columnID, values=(Grid,Component) for the matrix
 
     """

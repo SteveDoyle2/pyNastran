@@ -1,6 +1,5 @@
 import copy
 from itertools import combinations
-from typing import List # , TYPE_CHECKING
 
 import numpy as np
 #if TYPE_CHECKING:

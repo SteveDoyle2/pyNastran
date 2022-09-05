@@ -13,7 +13,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.utils.numpy_utils import integer_types, float_types
-from typing import Dict, Union
+from typing import Union
 
 #float_words_1 = [
     #b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
@@ -1482,13 +1482,13 @@ class MDLPRM(BaseCard):
         values = -1
         return MDLPRM(key, values, comment='')
 
-    def __init__(self, mdlprm_dict: Dict[str, Union[int, float]], comment=''):
+    def __init__(self, mdlprm_dict: dict[str, Union[int, float]], comment=''):
         """
         Creates a MDLPRM card
 
         Parameters
         ----------
-        mdlprm_dict : Dict[name, value]
+        mdlprm_dict : dict[name, value]
             name : str
                 the name of the MDLPRM
             value: int/float

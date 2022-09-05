@@ -5,7 +5,7 @@ import os
 from collections import defaultdict
 import unittest
 from io import StringIO
-from typing import Tuple, Optional, Any
+from typing import Optional, Any
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -3026,7 +3026,7 @@ def build_structure_from_caero(model: BDF,
     os.remove(caero_bdf_filename)
     return model
 
-def _setup_aero_plot(fig_id: Optional[int]=None) -> Tuple[Any, Any]:
+def _setup_aero_plot(fig_id: Optional[int]=None) -> tuple[Any, Any]:
     """helper for plotting aero panels"""
     fig = None
     ax = None

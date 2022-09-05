@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Optional, TYPE_CHECKING
+from typing import Union, Optional, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model

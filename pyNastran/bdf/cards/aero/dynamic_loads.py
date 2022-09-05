@@ -813,7 +813,7 @@ class FLUTTER(BaseCard):
                                             alt_units: str='m',
                                             velocity_units: str='m/s',
                                             density_units: str='kg/m^3',
-                                            eas_units: str='m/s') -> Tuple[Any, Any, Any]:
+                                            eas_units: str='m/s') -> tuple[Any, Any, Any]:
         """makes an altitude sweep (dev...not validated)"""
         tass.sort()
         rho, mach, velocity = make_flfacts_tas_sweep_constant_alt(

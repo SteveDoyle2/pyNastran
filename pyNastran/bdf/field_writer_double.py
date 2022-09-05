@@ -3,7 +3,7 @@ Defines functions for double precision 16 character field writing.
 """
 import sys
 import warnings
-from typing import List, Union
+from typing import Union
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 

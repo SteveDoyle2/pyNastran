@@ -4,7 +4,6 @@ defines some methods for cleaning up a model
                          remove_pids=True, remove_mids=True)
 
 """
-from typing import Set, List
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 #from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
@@ -642,9 +641,9 @@ def remove_unused(bdf_filename: str,
     return model
 
 def _store_splines(model: BDF, card_type: str, ids: np.ndarray,
-                   nids_used: Set[int],
-                   sets_used: Set[int],
-                   spline_set_nodes: Set[int]):
+                   nids_used: set[int],
+                   sets_used: set[int],
+                   spline_set_nodes: set[int]):
     for spline_id in ids:
         spline = model.splines[spline_id]
         if card_type in ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5']:
@@ -657,9 +656,9 @@ def _store_splines(model: BDF, card_type: str, ids: np.ndarray,
             #print(spline.get_stats())
 
 def _store_aero(model: BDF,
-                spline_set_nodes: Set[int],
-                nids_used: Set[int],
-                cids_used: Set[int]) -> None:
+                spline_set_nodes: set[int],
+                nids_used: set[int],
+                cids_used: set[int]) -> None:
     for set_id in spline_set_nodes:
         set_card = model.sets[set_id]
         nids_used.update(set_card.ids)
@@ -950,18 +949,18 @@ def _store_masses(card_type, model, ids, nids_used, pids_mass_used, cids_used) -
         raise NotImplementedError(card_type)
 
 def _remove(model: BDF,
-            nids_used: Set[int],
-            cids_used: Set[int],
-            pids_used: Set[int],
-            pids_mass_used: Set[int],
-            mids_used: Set[int],
-            spcs_used: Set[int],
-            mpcs_used: Set[int],
-            pconv_used: Set[int],
-            tableht_used: Set[int],
-            tableh1_used: Set[int],
-            desvars_used: Set[int],
-            dresps_used: Set[int],
+            nids_used: set[int],
+            cids_used: set[int],
+            pids_used: set[int],
+            pids_mass_used: set[int],
+            mids_used: set[int],
+            spcs_used: set[int],
+            mpcs_used: set[int],
+            pconv_used: set[int],
+            tableht_used: set[int],
+            tableh1_used: set[int],
+            desvars_used: set[int],
+            dresps_used: set[int],
             remove_nids: bool=True, remove_cids: bool=True,
             remove_pids: bool=True, remove_mids: bool=True,
             remove_spcs: bool=True, remove_mpcs: bool=True,
@@ -1052,9 +1051,9 @@ def _remove(model: BDF,
         _remove_optimization(model, pids_to_remove, desvars_to_remove, dresps_to_remove)
 
 def _remove_optimization(model: BDF,
-                         pids_to_remove: List[int],
-                         desvars_to_remove: List[int],
-                         dresps_to_remove: List[int]) -> None:
+                         pids_to_remove: list[int],
+                         desvars_to_remove: list[int],
+                         dresps_to_remove: list[int]) -> None:
     for desvar_id in desvars_to_remove:
         del model.desvars[desvar_id]
     if desvars_to_remove:

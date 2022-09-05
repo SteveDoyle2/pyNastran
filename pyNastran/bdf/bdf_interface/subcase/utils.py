@@ -5,7 +5,7 @@ defines:
  - write_stress_type(key, options, value, spaces='')
 
 """
-from typing import Optional, Union, Set, Any
+from typing import Optional, Union, Any
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 
@@ -21,7 +21,7 @@ def expand_thru_case_control(data_in: list[Union[int, float, str]]) -> list[int]
 
     Returns
     -------
-    values : List[int] / List[float]
+    values : list[int] / list[float]
         the values in the SET
 
     Examples
@@ -317,7 +317,7 @@ def write_set(set_id: int, values: list[int], spaces: str='') -> str:
     ----------
     set_id : int  / str?
         the Set ID
-    values : List[int]
+    values : list[int]
         the Set values
     spaces : str; default=''
         indentation

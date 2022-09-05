@@ -24,7 +24,7 @@ import os
 import shlex
 from collections import defaultdict
 from itertools import count
-from typing import List, Tuple, Optional, Union, Any, cast
+from typing import Optional, Union, Any, cast
 from io import StringIO
 
 import numpy as np
@@ -185,7 +185,7 @@ class BDFInputPy:
 
     def get_lines(self, bdf_filename: Union[str, StringIO],
                   punch: Optional[bool]=False,
-                  make_ilines: bool=True) -> List[str]:
+                  make_ilines: bool=True) -> list[str]:
         """
         Opens the bdf and extracts the lines by group
 
@@ -203,13 +203,13 @@ class BDFInputPy:
 
         Returns
         -------
-        system_lines : List[str]
+        system_lines : list[str]
             the system control lines (typically empty; used for alters)
-        executive_control_lines : List[str]
+        executive_control_lines : list[str]
             the executive control lines (stores SOL 101)
-        case_control_lines : List[str]
+        case_control_lines : list[str]
             the case control lines (stores subcases)
-        bulk_data_lines : List[str]
+        bulk_data_lines : list[str]
             the bulk data lines (stores geometry, boundary conditions, loads, etc.)
         bulk_data_ilines : None / (nlines, 2) int ndarray
             if make_ilines = True:
@@ -241,9 +241,9 @@ class BDFInputPy:
                 bulk_data_lines, bulk_data_ilines,
                 superelement_lines, superelement_ilines)
 
-    def _get_lines_zona(self, system_lines: List[str], bulk_data_lines: List[str],
+    def _get_lines_zona(self, system_lines: list[str], bulk_data_lines: list[str],
                         bulk_data_ilines: NDArrayN2int,
-                        punch: bool) -> Tuple[List[str], NDArrayN2int, List[str]]:
+                        punch: bool) -> tuple[list[str], NDArrayN2int, list[str]]:
         """load and update the lines for ZONA"""
         system_lines2 = []
         for system_line in system_lines:
@@ -288,7 +288,7 @@ class BDFInputPy:
         system_lines = system_lines
         return bulk_data_lines, bulk_data_ilines, system_lines
 
-    def get_main_lines(self, bdf_filename: Union[str, StringIO]) -> List[str]:
+    def get_main_lines(self, bdf_filename: Union[str, StringIO]) -> list[str]:
         """
         Opens the bdf and extracts the lines
 
@@ -299,7 +299,7 @@ class BDFInputPy:
 
         Returns
         -------
-        lines : List[str]
+        lines : list[str]
             all the lines packed into a single line stream
 
         """
@@ -323,20 +323,20 @@ class BDFInputPy:
                 _show_bad_file(self, bdf_filename, encoding=self.encoding)
         return lines
 
-    def lines_to_deck_lines(self, lines: List[str], make_ilines: bool=True) -> Tuple[List[str], int]:
+    def lines_to_deck_lines(self, lines: list[str], make_ilines: bool=True) -> tuple[list[str], int]:
         """
         Merges the includes into the main deck.
 
         Parameters
         ----------
-        lines : List[str]
+        lines : list[str]
             the lines from the main BDF
         make_ilines : bool; default=True
             flag for ilines
 
         Returns
         -------
-        active_lines : List[str]
+        active_lines : list[str]
             all the active lines in the deck
         ilines : (nlines, 2) int ndarray
             if make_ilines = True:
@@ -394,8 +394,8 @@ class BDFInputPy:
             #assert nlines == ilines.shape[0], 'nlines=%s nilines=%s' % (nlines, nilines)
         return lines, ilines
 
-    def _update_include(self, lines: List[str], nlines: int, ilines,
-                        include_lines: List[str], bdf_filename2: str, i: int, j: int, ifile: int,
+    def _update_include(self, lines: list[str], nlines: int, ilines,
+                        include_lines: list[str], bdf_filename2: str, i: int, j: int, ifile: int,
                         make_ilines: bool=False):
         """incorporates an include file into the lines"""
         try:
@@ -520,8 +520,8 @@ class BDFInputPy:
             #print("  *%s" % line.rstrip())
         return lines, nlines, ilines
 
-    def _get_include_lines(self, lines: List[str], line: str,
-                           i: int, nlines: int) -> Tuple[int, List[str]]:
+    def _get_include_lines(self, lines: list[str], line: str,
+                           i: int, nlines: int) -> tuple[int, list[str]]:
         """
         gets the lines for the include file
 
@@ -566,7 +566,7 @@ class BDFInputPy:
         return j, include_lines
 
     def _dump_file(self, bdf_dump_filename: str,
-                   lines: List[str],
+                   lines: list[str],
                    i: int) -> None:
         """
         Writes a BDF up to some failed line index
@@ -575,7 +575,7 @@ class BDFInputPy:
         ----------
         bdf_dump_filename : str
             the bdf filename to dump
-        lines : List[str]
+        lines : list[str]
             the entire list of lines
         i : int
             the last index to write
@@ -869,15 +869,15 @@ def _clean_comment(comment: str) -> Optional[str]:
     return comment
 
 
-def _lines_to_decks(lines: List[str],
+def _lines_to_decks(lines: list[str],
                     ilines: NDArrayN2int,
                     punch: Optional[bool],
                     log: Any,
                     keep_enddata: bool=True,
                     consider_superelements: bool=False,
-                    nastran_format: str='msc') -> Tuple[
-                        List[str], List[str], List[str], List[str], NDArrayN2int,
-                        List[str], List[str], List[str]]:
+                    nastran_format: str='msc') -> tuple[
+                        list[str], list[str], list[str], list[str], NDArrayN2int,
+                        list[str], list[str], list[str]]:
     """
     Splits the BDF lines into:
      - system lines
@@ -887,7 +887,7 @@ def _lines_to_decks(lines: List[str],
 
     Parameters
     ----------
-    lines : List[str]
+    lines : list[str]
         all the active lines in the deck
     ilines : None / (nlines, 2) int ndarray
         None : the old behavior
@@ -902,22 +902,22 @@ def _lines_to_decks(lines: List[str],
 
     Returns
     -------
-    system_lines : List[str]
+    system_lines : list[str]
         the system control lines (typically empty; used for alters)
-    executive_control_lines : List[str]
+    executive_control_lines : list[str]
         the executive control lines (stores SOL 101)
-    case_control_lines : List[str]
+    case_control_lines : list[str]
         the case control lines (stores subcases)
-    bulk_data_lines : List[str]
+    bulk_data_lines : list[str]
         the bulk data lines (stores geometry, boundary conditions, loads, etc.)
     bulk_data_ilines : None / (nlines, 2) int ndarray
         None : the old behavior
         narray : the [ifile, iline] pair for each line in the file
-    superelement_lines : List[str]
+    superelement_lines : list[str]
         ???
-    superelement_ilines : List[str]
+    superelement_ilines : list[str]
         ???
-    auxmodel_lines : List[str]
+    auxmodel_lines : list[str]
         ???
 
     """
@@ -979,14 +979,14 @@ def _lines_to_decks(lines: List[str],
         bulk_data_lines, bulk_data_ilines,
         superelement_lines, superelement_ilines)
 
-def _lines_to_decks_main(lines: List[str],
+def _lines_to_decks_main(lines: list[str],
                          ilines: Any, log: Any,
                          punch: Optional[bool]=False,
                          keep_enddata: bool=True,
                          consider_superelements: bool=False,
-                         nastran_format: str='msc') -> Tuple[
-                        List[str], List[str], List[str], List[str], NDArrayN2int,
-                        List[str], List[str], List[str]]:
+                         nastran_format: str='msc') -> tuple[
+                        list[str], list[str], list[str], list[str], NDArrayN2int,
+                        list[str], list[str], list[str]]:
     """
     Splits the BDF lines into:
      - system lines
@@ -996,7 +996,7 @@ def _lines_to_decks_main(lines: List[str],
 
     Parameters
     ----------
-    lines : List[str]
+    lines : list[str]
         all the active lines in the deck
     ilines : None / (nlines, 2) int ndarray
         None : the old behavior
@@ -1013,21 +1013,21 @@ def _lines_to_decks_main(lines: List[str],
 
     Returns
     -------
-    system_executive_control_lines : List[str]
+    system_executive_control_lines : list[str]
         the system control lines (typically empty; used for alters)
         and the executive control lines (stores SOL 101)
-    case_control_lines : List[str]
+    case_control_lines : list[str]
         the case control lines (stores subcases)
-    bulk_data_lines : List[str]
+    bulk_data_lines : list[str]
         the bulk data lines (stores geometry, boundary conditions, loads, etc.)
     bulk_data_ilines : None / (nlines, 2) int ndarray
         None : the old behavior
         narray : the [ifile, iline] pair for each line in the file
-    superelement_lines : List[str]
+    superelement_lines : list[str]
         ???
-    superelement_ilines : List[str]
+    superelement_ilines : list[str]
         ???
-    auxmodel_lines : List[str]
+    auxmodel_lines : list[str]
         ???
 
     """
@@ -1316,9 +1316,9 @@ def _lines_to_decks_main(lines: List[str],
     )
     return out
 
-def _bulk_data_lines_extract(lines: List[str],
+def _bulk_data_lines_extract(lines: list[str],
                              ilines: Any,
-                             bulk_data_lines: List[str],
+                             bulk_data_lines: list[str],
                              i: int,
                              make_ilines: bool=True,
                              keep_enddata: bool=True) -> NDArrayN2int:
@@ -1361,7 +1361,7 @@ def _is_begin_bulk(line_upper: str) -> bool:
         'SUPER' not in line_upper)
     return is_begin_bulk
 
-def _read_bulk_for_model(ifile_iline, line: str, flag: int, bulk_data_lines: List[str],
+def _read_bulk_for_model(ifile_iline, line: str, flag: int, bulk_data_lines: list[str],
                          current_lines, current_ilines,
                          old_flags,
                          unused_is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
@@ -1462,7 +1462,7 @@ def _read_bulk_for_model(ifile_iline, line: str, flag: int, bulk_data_lines: Lis
         flag, current_lines)
     return out
 
-def _break_system_lines(executive_control_lines: List[str]) -> Tuple[List[str], List[str]]:
+def _break_system_lines(executive_control_lines: list[str]) -> tuple[list[str], list[str]]:
     """
     Extracts the Nastran system lines.
     System lines may be interspersed with executive lines.
@@ -1543,7 +1543,7 @@ def _break_system_lines(executive_control_lines: List[str]) -> Tuple[List[str], 
     return system_lines2, executive_control_lines2
 
 
-def _check_valid_deck(flag: int, old_flags: List[int],
+def _check_valid_deck(flag: int, old_flags: list[int],
                       nastran_format: str) -> None:
     """Crashes if the flag is set wrong"""
     if flag != 3:
@@ -1591,7 +1591,7 @@ def _show_bad_file(self: Any, bdf_filename: Union[str, StringIO],
         the number of lines to show
 
     """
-    lines = []  # type: List[str]
+    lines = []  # type: list[str]
     print('ENCODING - show_bad_file=%r' % encoding)
 
     with open(_filename(bdf_filename), 'r', encoding=encoding) as bdf_file:
@@ -1618,7 +1618,7 @@ def _show_bad_file(self: Any, bdf_filename: Union[str, StringIO],
             iline += 1
             lines.append(line)
 
-def _get_module_id(line: str, line_upper: str) -> Tuple[int, str]:
+def _get_module_id(line: str, line_upper: str) -> tuple[int, str]:
     """
     parses the module header::
 
@@ -1642,7 +1642,7 @@ def _get_module_id(line: str, line_upper: str) -> Tuple[int, str]:
         raise SyntaxError(f'module_id={module_id:d} must be greater than 0; line={line!r}')
     return module_id, label
 
-def split_quoted_string(line: str) -> List[str]:
+def split_quoted_string(line: str) -> list[str]:
     """
     this is "a test"
     ['this','is','a test']

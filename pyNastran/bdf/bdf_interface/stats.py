@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import List, Set, Dict, Any, Union, TYPE_CHECKING
+from typing import Any, Union, TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
 def get_bdf_stats(model: BDF, return_type: str='string',
-                  word: str='') -> Union[str, List[str]]:
+                  word: str='') -> Union[str, list[str]]:
     """
     Print statistics for the BDF
 
@@ -55,7 +55,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'transfer_functions',
         'tics',
 
-        # frequencies - dict[List[FREQ]]
+        # frequencies - dict[list[FREQ]]
         'frequencies',
 
         # optimization - dict
@@ -243,7 +243,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
 
     # dloads
     for (lid, loads) in sorted(model.dloads.items()):
-        groups_dict = {}  # type: Dict[str, Any]
+        groups_dict = {}  # type: dict[str, Any]
         for loadi in loads:
             groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
         added_messge = _get_added_message_from_dict(groups_dict)
@@ -285,7 +285,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
             msgi = 'cant find card_group_name=%r' % card_group_name
             raise AttributeError(msgi)
 
-        groups = set() # type: Set[str]
+        groups = set() # type: set[str]
 
         if not isinstance(card_group, dict):
             msgi = '%s is a %s; not dictionary, which is required by get_bdf_stats()' % (
@@ -325,7 +325,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
             msg.append('\n'.join(group_msg))
             msg.append('')
 
-    if model.reject_lines:  # List[card]; card = List[str]
+    if model.reject_lines:  # list[card]; card = list[str]
         msg.append('Rejected Cards')
         for name, counter in sorted(model.card_count.items()):
             if name not in model.cards_to_read:
@@ -339,18 +339,18 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         return '\n'.join(msg)
     return msg
 
-def _get_added_message_from_dict(groups_dict: Dict[str, int]) -> str:
+def _get_added_message_from_dict(groups_dict: dict[str, int]) -> str:
     ncards_total = sum(groups_dict.values())
     msg = _get_added_message(groups_dict, ncards_total)
     return msg
 
-def _get_added_message(group_msg: List[str], ncards_total) -> str:
+def _get_added_message(group_msg: list[str], ncards_total) -> str:
     #added_msg = ''
     #if len(group_msg) > 1:
     added_msg = f': {ncards_total}'
     return added_msg
 
-def _constraint_stats(model: BDF, msg: List[str]) -> None:
+def _constraint_stats(model: BDF, msg: list[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
     # spcs
     for (spc_id, spcadds) in sorted(model.spcadds.items()):
@@ -394,7 +394,7 @@ def _constraint_stats(model: BDF, msg: List[str]) -> None:
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
 
-def _cyclic_stats(model: BDF, msg: List[str]) -> None:
+def _cyclic_stats(model: BDF, msg: list[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
     if model.cyax:
         msg.append('bdf.cyax')
@@ -403,7 +403,7 @@ def _cyclic_stats(model: BDF, msg: List[str]) -> None:
         msg.append('bdf:cyjoin')
         msg.append('  %-8s %s' % ('CYJOIN:', len(model.cyjoin)))
 
-def _aero_stats(model: BDF, msg: List[str]) -> None:
+def _aero_stats(model: BDF, msg: list[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
     if model.aero:
         msg.append('bdf.aero')
@@ -419,7 +419,7 @@ def _aero_stats(model: BDF, msg: List[str]) -> None:
         msg.append('bdf:mkaeros')
         msg.append('  %-8s %s' % ('MKAERO:', len(model.mkaeros)))
 
-def _nsm_stats(model: BDF, msg: List[str]) -> None:
+def _nsm_stats(model: BDF, msg: list[str]) -> None:
     """helper for ``get_bdf_stats(...)``"""
     # nsms
     for (nsm_id, nsmadds) in sorted(model.nsmadds.items()):
@@ -440,7 +440,7 @@ def _nsm_stats(model: BDF, msg: List[str]) -> None:
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
 
-def _get_bdf_stats_loads(model: BDF) -> List[str]:
+def _get_bdf_stats_loads(model: BDF) -> list[str]:
     """helper for ``get_bdf_stats(...)``"""
     # loads
     msg = []
@@ -454,7 +454,7 @@ def _get_bdf_stats_loads(model: BDF) -> List[str]:
 
     else:
         for (lid, load_combinations) in sorted(model.load_combinations.items()):
-            groups_dict = {}  # type: Dict[str, int]
+            groups_dict = {}  # type: dict[str, int]
             for load_combination in load_combinations:
                 groups_dict[load_combination.type] = groups_dict.get(load_combination.type, 0) + 1
             added_messge = _get_added_message_from_dict(groups_dict)

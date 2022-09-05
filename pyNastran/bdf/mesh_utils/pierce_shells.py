@@ -3,7 +3,7 @@ Defines:
  - pierce_shell_model(bdf_filename, xyz_points, tol=1.0)
 """
 from itertools import count
-from typing import Tuple, List, Optional, Union, Any
+from typing import Optional, Union, Any
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
@@ -79,7 +79,7 @@ def triangle_intersection(orig: np.ndarray, direction: np.ndarray,
 
 
 def pierce_shell_model(bdf_filename: Union[BDF, str], xyz_points: Any,
-                       tol: float=1.0) -> Tuple[List[int], np.ndarray, List[List[int]]]:
+                       tol: float=1.0) -> tuple[list[int], np.ndarray, list[list[int]]]:
     """
     Pierces a shell model with a <0., 0., 1.> vector.  In other words,
     models are pierced in the xy plane.
@@ -96,15 +96,15 @@ def pierce_shell_model(bdf_filename: Union[BDF, str], xyz_points: Any,
 
     Returns
     -------
-    eids_pierce : List[int]
+    eids_pierce : list[int]
         int : The element ids that were pierced.
               If multiple elements are pierced, the one with the largest
               pierced z value will be returned.
         None : invalid pierce
-    xyz_pierces_max : List[float ndarray, None]
+    xyz_pierces_max : list[float ndarray, None]
         ndarray : pierce location
         None : invalid pierce
-    node_ids : List[int ndarray, None]
+    node_ids : list[int ndarray, None]
         ndarray : pierced element's nodes
         None : invalid pierce
 

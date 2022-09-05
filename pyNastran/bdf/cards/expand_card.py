@@ -4,7 +4,7 @@ defines:
  - expand_thru_by
 
 """
-from typing import  List, Optional
+from typing import  Optional
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value

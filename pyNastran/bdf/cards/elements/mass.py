@@ -14,7 +14,7 @@ All mass elements are PointMassElement and Element objects.
 """
 from __future__ import annotations
 import warnings
-from typing import Tuple, List, Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -37,7 +37,7 @@ class PointMassElement(Element):
     def __init__(self):
         Element.__init__(self)
 
-    def repr_fields(self) -> List[Union[int, float, str, None]]:
+    def repr_fields(self) -> list[Union[int, float, str, None]]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -82,7 +82,7 @@ class CMASS1(PointMassElement):
         nids = [1, 2]
         return CMASS1(eid, pid, nids, c1=0, c2=0, comment='')
 
-    def __init__(self, eid: int, pid: int, nids: List[int], c1: int=0, c2: int=0, comment: str=''):
+    def __init__(self, eid: int, pid: int, nids: list[int], c1: int=0, c2: int=0, comment: str=''):
         """
         Creates a CMASS1 card
 
@@ -92,7 +92,7 @@ class CMASS1(PointMassElement):
             element id
         pid : int
             property id (PMASS)
-        nids : List[int, int]
+        nids : list[int, int]
             node ids
         c1 / c2 : int; default=0
             DOF for nid1 / nid2
@@ -140,7 +140,7 @@ class CMASS1(PointMassElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -309,7 +309,7 @@ class CMASS2(PointMassElement):
             element id
         mass : float
             mass
-        nids : List[int, int]
+        nids : list[int, int]
             node ids
         c1 / c2 : int; default=None
             DOF for nid1 / nid2
@@ -377,7 +377,7 @@ class CMASS2(PointMassElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -556,7 +556,7 @@ class CMASS3(PointMassElement):
             element id
         pid : int
             property id (PMASS)
-        nids : List[int, int]
+        nids : list[int, int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -599,7 +599,7 @@ class CMASS3(PointMassElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -709,7 +709,7 @@ class CMASS4(PointMassElement):
             element id
         mass : float
             SPOINT mass
-        nids : List[int, int]
+        nids : list[int, int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -741,7 +741,7 @@ class CMASS4(PointMassElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -992,7 +992,7 @@ class CONM1(PointMassElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1232,9 +1232,9 @@ class CONM2(PointMassElement):
            the mass of the CONM2
         cid : int; default=0
            coordinate frame of the offset (-1=absolute coordinates)
-        X : (3, ) List[float]; default=None -> [0., 0., 0.]
+        X : (3, ) list[float]; default=None -> [0., 0., 0.]
             xyz offset vector relative to nid
-        I : (6, ) List[float]; default=None -> [0., 0., 0., 0., 0., 0.]
+        I : (6, ) list[float]; default=None -> [0., 0., 0., 0., 0., 0.]
             mass moment of inertia matrix about the CG
             I11, I21, I22, I31, I32, I33 = I
         comment : str; default=''
@@ -1342,7 +1342,7 @@ class CONM2(PointMassElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1501,7 +1501,7 @@ class CONM2(PointMassElement):
             X2 = nid_ref.get_position() + dx
         return X2
 
-    def centroid_mass_inertia(self) -> Tuple[np.ndarray, float, np.ndarray]:
+    def centroid_mass_inertia(self) -> tuple[np.ndarray, float, np.ndarray]:
         centroid = self.Centroid()
         mass = self.mass
         inertia = self.Inertia()

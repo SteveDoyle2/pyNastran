@@ -1,7 +1,7 @@
 """Defines functions for single precision 8 character field writing."""
 import sys
 import warnings
-from typing import List, Union, Any
+from typing import Union, Any
 from numpy import float32, float64, isnan
 
 

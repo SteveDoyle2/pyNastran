@@ -7,7 +7,7 @@ The capitalization of the sub-functions is important.
 """
 from __future__ import annotations
 import re
-from typing import Tuple, List, Dict, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 from numpy import (
     cos, sin, tan, log, log10, mean, exp, sqrt, square, mod, abs, sum,
@@ -543,8 +543,8 @@ def split_to_equations(lines: list[str]) -> list[str]:
 
 def fortran_to_python(deqatn_id: int,
                       lines: list[str],
-                      default_values: Dict[str, Union[float, np.ndarray]],
-                      comment: str='') -> Tuple[str, int, str]:
+                      default_values: dict[str, Union[float, np.ndarray]],
+                      comment: str='') -> tuple[str, int, str]:
     """
     Creates the python function
 
@@ -636,8 +636,8 @@ def fortran_to_python(deqatn_id: int,
 
 
 def write_function_header(func_header: str, eq: str,
-                          default_values: Dict[str, float],
-                          comment: str='') -> Tuple[str, str, list[str]]:
+                          default_values: dict[str, float],
+                          comment: str='') -> tuple[str, str, list[str]]:
     """
     initializes the python function
 
@@ -745,7 +745,7 @@ def write_function_header(func_header: str, eq: str,
     return func_name, msg, variables
 
 def _write_function_line(func_name: str, variables: list[str],
-                         default_values: Dict[str, float]) -> str:
+                         default_values: dict[str, float]) -> str:
     """writes the ``def f(x, y, z=1.):`` part of the function"""
     vals = []
     is_default = False

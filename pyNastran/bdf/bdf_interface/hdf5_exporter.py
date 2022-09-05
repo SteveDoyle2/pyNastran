@@ -1,7 +1,7 @@
 """Defines various helper functions for exporting a HDF5 BDF file"""
 from __future__ import annotations
 from collections import defaultdict
-from typing import List, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from io import StringIO
 import numpy as np
 
@@ -578,7 +578,7 @@ def _export_list_obj_keys(model: BDF, hdf5_file, list_obj_keys, encoding):
 
 
 def _h5_export_class(sub_group: Any, model: BDF, key: str, value: Any,
-                     skip_attrs: List[str], encoding: str, debug: bool=True) -> None:
+                     skip_attrs: list[str], encoding: str, debug: bool=True) -> None:
     #model.log.debug('exporting %s to hdf5' % key)
     #sub_groupi = sub_group.create_group('values')
     class_group = sub_group.create_group(str(key))

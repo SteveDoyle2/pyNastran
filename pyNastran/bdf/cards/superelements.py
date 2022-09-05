@@ -606,9 +606,9 @@ class SELOC(BaseCard):
         ----------
         seid : int
             the superelement to transform
-        nodes_seid : List[int, int, int]
+        nodes_seid : list[int, int, int]
             the nodes in the superelement than define the resulting coordinate system
-        nodes0 : List[int, int, int]
+        nodes0 : list[int, int, int]
             the nodes in the superelement than define the starting coordinate system
         comment : str; default=''
             a comment for the card

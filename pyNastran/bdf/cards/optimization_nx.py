@@ -18,7 +18,7 @@ some missing optimization flags
 http://mscnastrannovice.blogspot.com/2014/06/msc-nastran-design-optimization-quick.html"""
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 #from itertools import cycle, count
 import numpy as np
 
@@ -394,7 +394,7 @@ class GROUP(OptConstraint):
         ----------
         group_id : int
             Group identification number
-        meta : List[str]
+        meta : list[str]
             Optional character data to store with the group definition.
             META can be continued on multiple continuation lines.
             The META keyword in the 2nd field must appear on every line
@@ -479,7 +479,7 @@ class GROUP(OptConstraint):
         return list_fields
 
 
-    def _write_groupi(self, name: str, elem: List[int], list_fields):
+    def _write_groupi(self, name: str, elem: list[int], list_fields):
         elem0 = elem[:7]
         list_fields.extend([name] + elem0)
         i = len(elem0)

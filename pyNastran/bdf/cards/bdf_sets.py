@@ -36,7 +36,7 @@ The superelement sets start with SE:
 
 """
 from __future__ import annotations
-from typing import List, Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types

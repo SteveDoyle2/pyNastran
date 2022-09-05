@@ -198,7 +198,7 @@ def cmd_line_delete_bad_shells(argv=None, quiet: bool=False) -> None:
     model.write_bdf(bdf_out_filename, size=size,
                     nodes_size=16, elements_size=16, loads_size=8)
 
-def _apply_float_values_to_dict(data: Dict[str, Any], defaults: Dict[str, float]) -> None:
+def _apply_float_values_to_dict(data: dict[str, Any], defaults: dict[str, float]) -> None:
     for name, default_value in defaults.items():
         if data[name] is None:
             #print(f'applying {name}')

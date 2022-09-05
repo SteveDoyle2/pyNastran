@@ -1,7 +1,7 @@
 """defines cutting plane tests"""
 import os
 from itertools import count
-from typing import Tuple, List, Any
+from typing import Any
 import unittest
 import numpy as np
 #import PySide
@@ -511,7 +511,7 @@ class TestCuttingPlane(unittest.TestCase):
         assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
 
 
-def get_coords_bwb(ncuts: int=2000) -> Tuple[List[float], List[CORD2R]]:  # pragma: no cover
+def get_coords_bwb(ncuts: int=2000) -> tuple[list[float], list[CORD2R]]:  # pragma: no cover
     dys = []
     coords = []
     for i in range(ncuts):
@@ -521,7 +521,7 @@ def get_coords_bwb(ncuts: int=2000) -> Tuple[List[float], List[CORD2R]]:  # prag
         coords.append(coord)
     return dys, coords
 
-def get_coords_crm(ncuts: int=2000) -> Tuple[List[float], List[CORD2R]]:  # pragma: no cover
+def get_coords_crm(ncuts: int=2000) -> tuple[list[float], list[CORD2R]]:  # pragma: no cover
     dys = []
     coords = []
     for i in range(ncuts):
@@ -531,7 +531,7 @@ def get_coords_crm(ncuts: int=2000) -> Tuple[List[float], List[CORD2R]]:  # prag
         coords.append(coord)
     return dys, coords
 
-def get_coords_box(ncuts: int) -> Tuple[List[float], List[CORD2R]]:  # pragma: no cover
+def get_coords_box(ncuts: int) -> tuple[list[float], list[CORD2R]]:  # pragma: no cover
     dys = []
     coords = []
     for i in range(ncuts):
@@ -554,11 +554,11 @@ def get_coords_box(ncuts: int) -> Tuple[List[float], List[CORD2R]]:  # pragma: n
     return dys, coords
 
 def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLogger,
-                     dys: List[float],
-                     coords: List[CORD2R],
+                     dys: list[float],
+                     coords: list[CORD2R],
                      ytol: float=2.0,
                      dirname: str='',
-                     plot: bool=True, show: bool=False) -> Tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
+                     plot: bool=True, show: bool=False) -> tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
     model = read_bdf(bdf_filename, log=log)
     model2 = read_bdf(bdf_filename, log=log)
     # initialize theta

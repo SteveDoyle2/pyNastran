@@ -110,12 +110,12 @@ def get_solid_skin_faces(model):
 
     Returns
     -------
-    eid_set : Dict[sorted_face] = eids
+    eid_set : dict[sorted_face] = eids
        sorted_face : tuple(int, int, ...)
            the face nids in sorted order
-       eids : List[int]
+       eids : list[int]
            list of element ids with that face
-    face_map : Dict[sorted_face] = face
+    face_map : dict[sorted_face] = face
        sorted_face : tuple(int, int, ...)
            the face nids in sorted order
        face : List(int, int, ...)
@@ -178,13 +178,13 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
     skin_filename : str
         the file to write
     face_map : dict[sorted_face] : face
-        sorted_face : List[int, int, int] / List[int, int, int, int]
-        face : List[int, int, int] / List[int, int, int, int]
-    nids_to_write : List[int, int, ...]
+        sorted_face : list[int, int, int] / list[int, int, int, int]
+        face : list[int, int, int] / list[int, int, int, int]
+    nids_to_write : list[int, int, ...]
         list of node ids to write
-    eids_to_write : List[int, int, ...]
+    eids_to_write : list[int, int, ...]
         list of element ids to write
-    mids_to_write : List[int, int, ...]
+    mids_to_write : list[int, int, ...]
         list of material ids to write
     eid_set : dict[face] : eids
         ???

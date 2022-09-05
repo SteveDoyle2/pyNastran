@@ -147,7 +147,7 @@ def load_patran_nod(nod_filename, node_ids):
             the name
         fmt : str
             '%i', '%f'
-    headers : List[str]???
+    headers : list[str]???
         the titles???
 
     """

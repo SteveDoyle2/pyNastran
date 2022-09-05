@@ -12,7 +12,7 @@ defines:
 from __future__ import annotations
 import os
 from itertools import count
-from typing import Tuple, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -26,8 +26,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.nptyping_interface import NDArrayNint, NDArray3float, NDArrayNfloat
 
-def get_nid_cd_xyz_cid0(model: BDF) -> Tuple[NDArrayNint, NDArrayNint,
-                                             Dict[int, NDArrayNint], NDArray3float]:
+def get_nid_cd_xyz_cid0(model: BDF) -> tuple[NDArrayNint, NDArrayNint,
+                                             dict[int, NDArrayNint], NDArray3float]:
     out = model.get_displacement_index_xyz_cp_cd()
     icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
     nids = nid_cp_cd[:, 0]
@@ -39,7 +39,7 @@ def get_nid_cd_xyz_cid0(model: BDF) -> Tuple[NDArrayNint, NDArrayNint,
 
 def get_element_centroids(model: BDF,
                           idtype: str='int32',
-                          fdtype: str='float32') -> Tuple[NDArrayNint, NDArray3float]:
+                          fdtype: str='float32') -> tuple[NDArrayNint, NDArray3float]:
     """gets the element ids and their centroids"""
     eids = []
     element_centroids_cid0 = []
@@ -67,7 +67,7 @@ def get_stations(model: BDF,
                  zaxis: NDArray3float,
                  method: str='Z-Axis Projection',
                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
-                 nplanes: int=20) -> Tuple[NDArray3float, NDArray3float, NDArray3float,
+                 nplanes: int=20) -> tuple[NDArray3float, NDArray3float, NDArray3float,
                                                         NDArray3float, NDArray3float,
                                                         CORD2R,
                                                         NDArray3float, NDArrayNfloat]:
@@ -184,7 +184,7 @@ def get_stations(model: BDF,
 
     return xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, x_stations_march
 
-def _setup_faces(bdf_filename: Union[str, BDF]) -> Tuple[Any, Any, Any, Any]:
+def _setup_faces(bdf_filename: Union[str, BDF]) -> tuple[Any, Any, Any, Any]:
     """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
     out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
@@ -310,7 +310,7 @@ def _determine_cord2r(origin, zaxis, xzplane):
 
 def _project_z_axis(p1: NDArray3float,
                     p2: NDArray3float,
-                    z_global: NDArray3float) -> Tuple[NDArray3float, NDArray3float, NDArray3float,
+                    z_global: NDArray3float) -> tuple[NDArray3float, NDArray3float, NDArray3float,
                                                       NDArray3float, NDArray3float]:
     """
     p1-p2 defines the x-axis
@@ -342,7 +342,7 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
                            p1: NDArray3float, p2: NDArray3float, zaxis: NDArray3float,
                            method: str='Z-Axis Projection',
                            cid_p1: int=0, cid_p2: int=0,
-                           cid_zaxis: int=0) -> Tuple[NDArray3float, NDArray3float, NDArray3float,
+                           cid_zaxis: int=0) -> tuple[NDArray3float, NDArray3float, NDArray3float,
                                                       NDArray3float, NDArray3float,
                                                       NDArray3float, NDArray3float, NDArray3float]:
     """
@@ -407,7 +407,7 @@ def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord: Coord, tol
                              nodal_result, plane_atol: float=1e-5, skip_cleanup: bool=True,
                              plane_bdf_filename: str='plane_face.bdf',
                              plane_bdf_filename2: str='plane_face2.bdf',
-                             plane_bdf_offset: float=0.) -> Tuple[Any, Any, Any]:
+                             plane_bdf_offset: float=0.) -> tuple[Any, Any, Any]:
     """
     Cuts a Nastran model with a cutting plane
 
@@ -1161,7 +1161,7 @@ def _is_dot(ivalues, percent_values, plane_atol):
     return is_dot
 
 def calculate_area_moi(model: BDF, rods, normal_plane, thetas,
-                       moi_filename=None) -> Tuple[Any, Any, Any, Any]:
+                       moi_filename=None) -> tuple[Any, Any, Any, Any]:
     """
     Parameters
     ----------
@@ -1348,7 +1348,7 @@ def get_element_inertias(model: BDF, normal_plane,
 def _get_shell_inertia(element: Union[CTRIA3, CQUAD4],
                        normal_plane: np.ndarray,
                        normal_plane_vector: np.ndarray,
-                       lengthi: float,) -> Tuple[float, float, float,
+                       lengthi: float,) -> tuple[float, float, float,
                                                  float, float, float, float]:
     """
     Parameters

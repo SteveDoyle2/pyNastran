@@ -1,6 +1,5 @@
 from itertools import count
-#from copy import deepcopy
-from typing import Tuple, Dict, Union
+from typing import Union
 
 import numpy as np
 from pyNastran.utils.numpy_utils import zip_strict
@@ -597,7 +596,7 @@ def _refine_penta(model: BDF,
     return nid0, eid0, nelements
 
 def _extract_edges(edges_to_center,
-                   nodes: Dict[int, GRID],
+                   nodes: dict[int, GRID],
                    all_nodes, xyz_cid0,
                    nnodes_to_add: int,
                    nnodes_to_add_with_ends: int,
@@ -870,7 +869,7 @@ def _sort_face(face):
     assert len(face2) == len(face)
     return tuple(face2)
 
-def _insert_tri_nodes(nodes: Dict[int, GRID],
+def _insert_tri_nodes(nodes: dict[int, GRID],
                        nids_array, nid0: int,
                        edges, forward_edges,
                        edges_to_center, faces_to_center,
@@ -936,7 +935,7 @@ def _insert_tri_nodes(nodes: Dict[int, GRID],
 
     return nid0
 
-def _insert_quad_nodes(nodes: Dict[int, GRID],
+def _insert_quad_nodes(nodes: dict[int, GRID],
                        nids_array, nid0: int,
                        edges, forward_edges,
                        edges_to_center,
@@ -1015,7 +1014,7 @@ def _insert_quad_nodes(nodes: Dict[int, GRID],
     assert len(np.unique(nids_array)) == nids_array.size
     return nid0
 
-def _insert_hexa_nodes(nodes: Dict[int, GRID],
+def _insert_hexa_nodes(nodes: dict[int, GRID],
                        nids_array, nid0: int,
                        edges, forward_edges,
                        edges_to_center,
@@ -1158,7 +1157,7 @@ def _insert_hexa_nodes(nodes: Dict[int, GRID],
     assert len(np.unique(nids_array)) == nids_array.size
     return nid0
 
-def _insert_penta_nodes(nodes: Dict[int, GRID],
+def _insert_penta_nodes(nodes: dict[int, GRID],
                         nids_array, nid0: int,
                         edges, forward_edges,
                         edges_to_center,

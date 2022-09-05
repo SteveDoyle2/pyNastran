@@ -3,7 +3,7 @@ Defines functions for single precision 16 character field writing.
 """
 import sys
 import warnings
-from typing import List, Union, Optional, Any
+from typing import Union, Optional, Any
 from numpy import float32, isnan  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types

@@ -18,7 +18,7 @@ some missing optimization flags
 http://mscnastrannovice.blogspot.com/2014/06/msc-nastran-design-optimization-quick.html"""
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import annotations
-from typing import List, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from itertools import cycle, count
 import numpy as np
 
@@ -637,7 +637,7 @@ class DCONSTR(OptConstraint):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -893,7 +893,7 @@ class DESVAR(OptConstraint):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -988,7 +988,7 @@ class TOPVAR(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -1335,9 +1335,9 @@ class DLINK(OptConstraint):
             optimization id
         dependent_desvar : int
             the DESVAR to link
-        independent_desvars : List[int]
+        independent_desvars : list[int]
             the DESVARs to combine
-        coeffs : List[int]
+        coeffs : list[int]
             the linear combination coefficients
         c0 : float; default=0.0
             an offset
@@ -1815,12 +1815,12 @@ class DRESP1(OptConstraint):
             Response attribute
         attb : int / float / str / blank
             Response attribute
-        atti : List[int / float / str]
+        atti : list[int / float / str]
             the response values to pull from
-            List[int]:
+            list[int]:
                 list of grid ids
                 list of property ids
-            List[str]
+            list[str]
                 'ALL'
         comment : str; default=''
             a comment for the card
@@ -2336,7 +2336,7 @@ class DRESP1(OptConstraint):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -2554,7 +2554,7 @@ class DRESP2(OptConstraint):
             card_type : str
                 the type of card to pull from
                 DESVAR, DVPREL1, DRESP2, etc.
-            values : List[int]
+            values : list[int]
                 the values for this response
         method : str; default=MIN
             flag used for FUNC=BETA/MATCH
@@ -2842,7 +2842,7 @@ class DRESP2(OptConstraint):
         # cross-referenced
         return self._pack(self.params_ref)
 
-    def _pack(self, params: List[Any]):
+    def _pack(self, params: list[Any]):
         """packs the params/params_ref into a form for output"""
         # # the amount of padding at the [beginning,end] of the 2nd line
         list_fields = []
@@ -2991,7 +2991,7 @@ class DRESP3(OptConstraint):
             card_type : str
                 the type of card to pull from
                 DESVAR, DVPREL1, DRESP2, etc.
-            values : List[int]
+            values : list[int]
                 the values for this response
         comment : str; default=''
             a comment for the card
@@ -3288,7 +3288,7 @@ class DCONADD(OptConstraint):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -4032,9 +4032,9 @@ class DVMREL1(DVXREL1):
             material id
         mp_name : str
             optimization parameter as a pname (material name; E)
-        dvids : List[int]
+        dvids : list[int]
             DESVAR ids
-        coeffs : List[float]
+        coeffs : list[float]
             scale factors for DESVAR ids
         mp_min : float; default=None
             minimum material property value
@@ -4266,9 +4266,9 @@ class DVMREL2(DVXREL2):
             optimization parameter as a pname (material name; E)
         deqation : int
             DEQATN id
-        dvids : List[int]; default=None
+        dvids : list[int]; default=None
             DESVAR ids
-        labels : List[str]; default=None
+        labels : list[str]; default=None
             DTABLE names
         mp_min : float; default=None
             minimum material property value
@@ -4602,9 +4602,9 @@ class DVPREL1(DVXREL1):
         pname_fid : str/int
             optimization parameter as a pname (property name; T) or
             field number (fid)
-        dvids : List[int]
+        dvids : list[int]
             DESVAR ids
-        coeffs : List[float]
+        coeffs : list[float]
             scale factors for DESVAR ids
         p_min : float; default=None
             minimum property value
@@ -4964,9 +4964,9 @@ class DVPREL2(DVXREL2):
             optimization parameter as a pname (property name; T) or field number (fid)
         deqation : int
             DEQATN id
-        dvids : List[int]; default=None
+        dvids : list[int]; default=None
             DESVAR ids
-        labels : List[str]; default=None
+        labels : list[str]; default=None
             DTABLE names
         #params : dict[(index, card_type)] = values
             #the storage table for the response function
@@ -4975,7 +4975,7 @@ class DVPREL2(DVXREL2):
             #card_type : str
                 #the type of card to pull from
                 #DESVAR, DVPREL1, DRESP2, etc.
-            #values : List[int]
+            #values : list[int]
                 #the values for this response
 
         p_min : float; default=None
@@ -5487,8 +5487,8 @@ def _get_dresp23_table_values(name, values_list, inline=False):
     name : str
         the name of the response (e.g., DRESP1, DVPREL1)
     values_list : varies
-        typical : List[int]
-        DNODE : List[List[int], List[int]]
+        typical : list[int]
+        DNODE : list[list[int], list[int]]
     inline : bool; default=False
         used for DNODE
 

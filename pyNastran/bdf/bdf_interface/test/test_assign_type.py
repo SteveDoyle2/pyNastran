@@ -21,11 +21,11 @@ class TestAssignType(unittest.TestCase):
         ----------
         func : function
            integer_or_blank
-        card : List[varies]
+        card : list[varies]
             a series of values to add
-        exacts : List[float]
+        exacts : list[float]
             list of results
-        default : List[float]
+        default : list[float]
             list of default values
         """
         fieldname = 'f'
@@ -53,9 +53,9 @@ class TestAssignType(unittest.TestCase):
         ----------
         func : function
            integer_or_blank
-        card : List[varies]
+        card : list[varies]
             a series of values to add
-        exacts : List[float]
+        exacts : list[float]
             list of results
         """
         assert len(card) == len(exact), 'len(card)=%s len(exact)=%s' % (len(card), len(exact))

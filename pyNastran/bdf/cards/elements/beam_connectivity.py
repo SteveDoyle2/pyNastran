@@ -35,7 +35,6 @@ The following shapes aren't supported:
  - DBOX  (will be a shear center issue)
 
 """
-from typing import Tuple, List
 import numpy as np
 from pyNastran.nptyping_interface import NDArray3float, NDArray33float, NDArrayN3float
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, tri_cap
@@ -51,8 +50,8 @@ def _transform_points(n1: NDArray3float, n2: NDArray3float,
         points_list.append(pointsi)
     return np.vstack(points_list)
 
-def rod_setup(dim1: Tuple[float],
-              dim2: Tuple[float]) -> Faces: # validated
+def rod_setup(dim1: tuple[float],
+              dim2: tuple[float]) -> Faces: # validated
     """defines points in a circle with triangle based end caps"""
     # 4,8,12,16,... becomes 5,9,13,17,...
     ntheta = 17
@@ -86,15 +85,15 @@ def rod_setup(dim1: Tuple[float],
     return all_faces, points_list[0], points_list[1]
 
 def rod_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-              dim1: Tuple[float],
-              dim2: Tuple[float]): # validated
+              dim1: tuple[float],
+              dim2: tuple[float]): # validated
     """defines points in a circle with triangle based end caps"""
     faces, points1, points2 = rod_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array, points_array.shape[0]
 
-def tube_setup(dim1: Tuple[float, float],
-               dim2: Tuple[float, float]) -> Tuple[Faces, NDArrayN3float, NDArrayN3float]:  # validated
+def tube_setup(dim1: tuple[float, float],
+               dim2: tuple[float, float]) -> tuple[Faces, NDArrayN3float, NDArrayN3float]:  # validated
     """defines a rod with a hole"""
     # 4,8,12,16,... becomes 5,9,13,17,...
     ntheta = 17
@@ -158,15 +157,15 @@ def tube_setup(dim1: Tuple[float, float],
     return all_faces, points[0], points[1]
 
 def tube_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-               dim1: Tuple[float, float],
-               dim2: Tuple[float, float]):  # validated
+               dim1: tuple[float, float],
+               dim2: tuple[float, float]):  # validated
     """defines a rod with a hole"""
     faces, points1, points2 = tube_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array, points_array.shape[0]
 
-def bar_setup(dim1: Tuple[float, float],
-              dim2: Tuple[float, float]) -> Tuple[Faces, NDArrayN3float, NDArrayN3float]:  # validated
+def bar_setup(dim1: tuple[float, float],
+              dim2: tuple[float, float]) -> tuple[Faces, NDArrayN3float, NDArrayN3float]:  # validated
     """
        ^y
        |
@@ -201,15 +200,15 @@ def bar_setup(dim1: Tuple[float, float],
     return faces, points[0], points[1]
 
 def bar_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-              dim1: Tuple[float, float],
-              dim2: Tuple[float, float]):  # validated
+              dim1: tuple[float, float],
+              dim2: tuple[float, float]):  # validated
     """builds the BAR faces"""
     unused_faces, points1, points2 = bar_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return points_array
 
-def box_setup(dim1: Tuple[float, float, float, float],
-              dim2: Tuple[float, float, float, float]) -> Tuple[Faces,
+def box_setup(dim1: tuple[float, float, float, float],
+              dim2: tuple[float, float, float, float]) -> tuple[Faces,
                                                                 NDArrayN3float, NDArrayN3float]:
     """
          ^ y
@@ -270,15 +269,15 @@ def box_setup(dim1: Tuple[float, float, float, float],
     return faces, points[0], points[1]
 
 def box_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-              dim1: Tuple[float, float, float, float],
-              dim2: Tuple[float, float, float, float]):  # validated
+              dim1: tuple[float, float, float, float],
+              dim2: tuple[float, float, float, float]):  # validated
     """builds the BOX faces"""
     faces, points1, points2 = box_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def i_setup(dim1: Tuple[float, float, float, float, float, float],
-            dim2: Tuple[float, float, float, float, float, float]):   # validated
+def i_setup(dim1: tuple[float, float, float, float, float, float],
+            dim2: tuple[float, float, float, float, float, float]):   # validated
     """
          ^y
          |
@@ -346,15 +345,15 @@ def i_setup(dim1: Tuple[float, float, float, float, float, float],
     return faces, points[0], points[1]
 
 def i_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-            dim1: Tuple[float, float, float, float, float, float],
-            dim2: Tuple[float, float, float, float, float, float]):  # validated
+            dim1: tuple[float, float, float, float, float, float],
+            dim2: tuple[float, float, float, float, float, float]):  # validated
     """builds the I faces"""
     faces, points1, points2 = i_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def i1_setup(dim1: Tuple[float, float, float, float],
-             dim2: Tuple[float, float, float, float]) -> Tuple[Faces,
+def i1_setup(dim1: tuple[float, float, float, float],
+             dim2: tuple[float, float, float, float]) -> tuple[Faces,
                                                                NDArrayN3float, NDArrayN3float]:
     """builds the I1 faces"""
     """
@@ -431,8 +430,8 @@ def i1_setup(dim1: Tuple[float, float, float, float],
     return faces, points[0], points[1]
 
 def i1_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-             dim1: Tuple[float, float, float, float],
-             dim2: Tuple[float, float, float, float]):
+             dim1: tuple[float, float, float, float],
+             dim2: tuple[float, float, float, float]):
     """builds the I1 faces"""
     """
          ^y
@@ -451,8 +450,8 @@ def i1_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def h_setup(dim1: Tuple[float, float, float, float],
-            dim2: Tuple[float, float, float, float]):
+def h_setup(dim1: tuple[float, float, float, float],
+            dim2: tuple[float, float, float, float]):
     """
             ^y
             |
@@ -520,15 +519,15 @@ def h_setup(dim1: Tuple[float, float, float, float],
     return faces, points[0], points[1]
 
 def h_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-               dim1: Tuple[float, float, float, float],
-               dim2: Tuple[float, float, float, float]):  # validated
+               dim1: tuple[float, float, float, float],
+               dim2: tuple[float, float, float, float]):  # validated
     """builds the H faces"""
     faces, points1, points2 = h_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def chan_setup(dim1: Tuple[float, float, float, float],
-               dim2: Tuple[float, float, float, float]):
+def chan_setup(dim1: tuple[float, float, float, float],
+               dim2: tuple[float, float, float, float]):
     """
     ^y
     |  0--------7
@@ -602,15 +601,15 @@ def chan_setup(dim1: Tuple[float, float, float, float],
     return faces, points[0], points[1]
 
 def chan_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-               dim1: Tuple[float, float, float, float],
-               dim2: Tuple[float, float, float, float]):  # validated
+               dim1: tuple[float, float, float, float],
+               dim2: tuple[float, float, float, float]):  # validated
     """builds the CHAN faces"""
     faces, points1, points2 = chan_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def chan1_setup(dim1: Tuple[float, float, float, float],
-                dim2: Tuple[float, float, float, float]) -> Tuple[Faces,
+def chan1_setup(dim1: tuple[float, float, float, float],
+                dim2: tuple[float, float, float, float]) -> tuple[Faces,
                                                                   NDArrayN3float, NDArrayN3float]:
     """
     ^y
@@ -673,15 +672,15 @@ def chan1_setup(dim1: Tuple[float, float, float, float],
     return faces, points[0], points[1]
 
 def chan1_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-                dim1: Tuple[float, float, float, float],
-                dim2: Tuple[float, float, float, float]):
+                dim1: tuple[float, float, float, float],
+                dim2: tuple[float, float, float, float]):
     """builds the CHAN1 faces"""
     faces, points1, points2 = chan1_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def z_setup(dim1: Tuple[float, float, float, float],
-            dim2: Tuple[float, float, float, float]) -> Tuple[Faces,
+def z_setup(dim1: tuple[float, float, float, float],
+            dim2: tuple[float, float, float, float]) -> tuple[Faces,
                                                               NDArrayN3float, NDArrayN3float]:
     """
            ^ y
@@ -740,15 +739,15 @@ def z_setup(dim1: Tuple[float, float, float, float],
     return faces, points[0], points[1]
 
 def z_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-            dim1: Tuple[float, float, float, float],
-            dim2: Tuple[float, float, float, float]):
+            dim1: tuple[float, float, float, float],
+            dim2: tuple[float, float, float, float]):
     """builds the Z faces"""
     faces, points1, points2 = z_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def hexa_setup(dim1: Tuple[float, float, float],
-               dim2: Tuple[float, float, float]) -> Tuple[Faces,
+def hexa_setup(dim1: tuple[float, float, float],
+               dim2: tuple[float, float, float]) -> tuple[Faces,
                                                           NDArrayN3float, NDArrayN3float]:
     """
           ^ y
@@ -796,15 +795,15 @@ def hexa_setup(dim1: Tuple[float, float, float],
     return faces, points[0], points[1]
 
 def hexa_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-               dim1: Tuple[float, float, float],
-               dim2: Tuple[float, float, float]):
+               dim1: tuple[float, float, float],
+               dim2: tuple[float, float, float]):
     """builds the HEXA faces"""
     faces, points1, points2 = hexa_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def l_setup(dim1: Tuple[float, float, float],
-            dim2: Tuple[float, float, float]) -> Tuple[Faces,
+def l_setup(dim1: tuple[float, float, float],
+            dim2: tuple[float, float, float]) -> tuple[Faces,
                                                        NDArrayN3float, NDArrayN3float]:
     """
        ^y
@@ -852,14 +851,14 @@ def l_setup(dim1: Tuple[float, float, float],
     return faces, points[0], points[1]
 
 def l_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-            dim1: Tuple[float, float, float, float],
-            dim2: Tuple[float, float, float, float]):
+            dim1: tuple[float, float, float, float],
+            dim2: tuple[float, float, float, float]):
     faces, points1, points2 = l_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def t_setup(dim1: Tuple[float, float, float, float],
-            dim2: Tuple[float, float, float, float]) -> Tuple[Faces,
+def t_setup(dim1: tuple[float, float, float, float],
+            dim2: tuple[float, float, float, float]) -> tuple[Faces,
                                                               NDArrayN3float, NDArrayN3float]:
     """
          ^ y
@@ -922,15 +921,15 @@ def t_setup(dim1: Tuple[float, float, float, float],
     return faces, points[0], points[1]
 
 def t_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-            dim1: Tuple[float, float, float, float],
-            dim2: Tuple[float, float, float, float]):
+            dim1: tuple[float, float, float, float],
+            dim2: tuple[float, float, float, float]):
     """builds the T faces"""
     faces, points1, points2 = t_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def t1_setup(dim1: Tuple[float, float, float, float],
-             dim2: Tuple[float, float, float, float]) -> Tuple[Faces,
+def t1_setup(dim1: tuple[float, float, float, float],
+             dim2: tuple[float, float, float, float]) -> tuple[Faces,
                                                                NDArrayN3float, NDArrayN3float]:
     """
                  ^ y
@@ -988,8 +987,8 @@ def t1_setup(dim1: Tuple[float, float, float, float],
     return faces, points[0], points[1]
 
 def t1_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-             dim1: Tuple[float, float, float, float],
-             dim2: Tuple[float, float, float, float]):  # validated
+             dim1: tuple[float, float, float, float],
+             dim2: tuple[float, float, float, float]):  # validated
     """builds the T1 faces"""
     faces, points1, points2 = t1_setup(dim1, dim2)
     points_list = []
@@ -998,8 +997,8 @@ def t1_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def t2_setup(dim1: Tuple[float, float, float, float],
-             dim2: Tuple[float, float, float, float]) -> Tuple[Faces,
+def t2_setup(dim1: tuple[float, float, float, float],
+             dim2: tuple[float, float, float, float]) -> tuple[Faces,
                                                                NDArrayN3float, NDArrayN3float]:
     """
        <-->  tweb
@@ -1055,15 +1054,15 @@ def t2_setup(dim1: Tuple[float, float, float, float],
     return faces, points[0], points[1]
 
 def t2_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-             dim1: Tuple[float, float, float, float],
-             dim2: Tuple[float, float, float, float]):  # validated
+             dim1: tuple[float, float, float, float],
+             dim2: tuple[float, float, float, float]):  # validated
     """builds the T2 faces"""
     faces, points1, points2 = t2_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-def hat_setup(dim1: Tuple[float, float, float, float],
-              dim2: Tuple[float, float, float, float]) -> Tuple[Faces,
+def hat_setup(dim1: tuple[float, float, float, float],
+              dim2: tuple[float, float, float, float]) -> tuple[Faces,
                                                                 NDArrayN3float, NDArrayN3float]:
     """
             <--------d3------->
@@ -1139,8 +1138,8 @@ def hat_setup(dim1: Tuple[float, float, float, float],
     return faces, points[0], points[1]
 
 def hat_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
-              dim1: Tuple[float, float, float, float],
-              dim2: Tuple[float, float, float, float]):
+              dim1: tuple[float, float, float, float],
+              dim2: tuple[float, float, float, float]):
     """builds the HAT faces"""
     faces, points1, points2 = hat_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)

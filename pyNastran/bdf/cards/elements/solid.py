@@ -20,7 +20,7 @@ All solid elements are SolidElement and Element objects.
 
 """
 from __future__ import annotations
-from typing import Tuple, List, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 from numpy import dot, cross
 from numpy.linalg import norm  # type: ignore
@@ -81,7 +81,7 @@ def volume4(n1: Any, n2: Any, n3: Any, n4: Any) -> float:
     volume = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
     return volume
 
-def area_centroid(n1: Any, n2: Any, n3: Any, n4: Any) -> Tuple[float, float]:
+def area_centroid(n1: Any, n2: Any, n3: Any, n4: Any) -> tuple[float, float]:
     """
     Gets the area, :math:`A`, and centroid of a quad.::
 
@@ -264,7 +264,7 @@ class CHEXA8(SolidElement):
             element id
         pid : int
             property id (PSOLID, PLSOLID)
-        nids : List[int]
+        nids : list[int]
             node ids; n=8
 
         """
@@ -313,7 +313,7 @@ class CHEXA8(SolidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -359,7 +359,7 @@ class CHEXA8(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
@@ -570,7 +570,7 @@ class CHEXA20(SolidElement):
             element id
         pid : int
             property id (PSOLID, PLSOLID)
-        nids : List[int]
+        nids : list[int]
             node ids; n=20
         """
         SolidElement.__init__(self)
@@ -631,7 +631,7 @@ class CHEXA20(SolidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -674,7 +674,7 @@ class CHEXA20(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
@@ -878,7 +878,7 @@ class CHEXA1(SolidElement):
                '*       %16d%16d\n' % tuple(data))
         return self.comment + msg
 
-    def __init__(self, eid: int, mid: int, nids: List[int], comment=''):
+    def __init__(self, eid: int, mid: int, nids: list[int], comment=''):
         """
         Creates a CHEXA1
 
@@ -888,7 +888,7 @@ class CHEXA1(SolidElement):
             element id
         mid : int
             property id (MAT1)
-        nids : List[int]
+        nids : list[int]
             node ids; n=8
 
         """
@@ -937,7 +937,7 @@ class CHEXA1(SolidElement):
 
         #Parameters
         #----------
-        #data : List[varies]
+        #data : list[varies]
             #a list of fields defined in OP2 format
         #comment : str; default=''
             #a comment for the card
@@ -997,7 +997,7 @@ class CHEXA1(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
@@ -1223,7 +1223,7 @@ class CHEXA2(SolidElement):
             element id
         mid : int
             material id (MAT1)
-        nids : List[int]
+        nids : list[int]
             node ids; n=20
         """
         SolidElement.__init__(self)
@@ -1284,7 +1284,7 @@ class CHEXA2(SolidElement):
 
         #Parameters
         #----------
-        #data : List[varies]
+        #data : list[varies]
             #a list of fields defined in OP2 format
         #comment : str; default=''
             #a comment for the card
@@ -1327,7 +1327,7 @@ class CHEXA2(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
@@ -1478,7 +1478,7 @@ class CPENTA6(SolidElement):
             element id
         pid : int
             property id (PSOLID, PLSOLID)
-        nids : List[int]
+        nids : list[int]
             node ids; n=6
         """
         SolidElement.__init__(self)
@@ -1524,7 +1524,7 @@ class CPENTA6(SolidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1601,7 +1601,7 @@ class CPENTA6(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
@@ -1835,7 +1835,7 @@ def chexa_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
         G1 - a grid point on the corner of a face
     nid_opposite : int
         G3 - the grid point diagonally opposite of G1
-    nodes_ref : List[GRID]
+    nodes_ref : list[GRID]
         the GRID objects
 
     # top   (7-6-5-4)
@@ -1883,7 +1883,7 @@ class CPENTA15(SolidElement):
             element id
         pid : int
             property id (PSOLID, PLSOLID)
-        nids : List[int]
+        nids : list[int]
             node ids; n=15
         """
         SolidElement.__init__(self)
@@ -1941,7 +1941,7 @@ class CPENTA15(SolidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1985,7 +1985,7 @@ class CPENTA15(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
@@ -2173,7 +2173,7 @@ class CPYRAM5(SolidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2216,7 +2216,7 @@ class CPYRAM5(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
@@ -2366,7 +2366,7 @@ class CPYRAM13(SolidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2409,7 +2409,7 @@ class CPYRAM13(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
@@ -2521,7 +2521,7 @@ class CTETRA4(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
@@ -2548,7 +2548,7 @@ class CTETRA4(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
@@ -2591,7 +2591,7 @@ class CTETRA4(SolidElement):
             element id
         pid : int
             property id (PSOLID, PLSOLID)
-        nids : List[int]
+        nids : list[int]
             node ids; n=4
         comment : str; default=''
             a comment for the card
@@ -2634,7 +2634,7 @@ class CTETRA4(SolidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2829,7 +2829,7 @@ class CTETRA10(SolidElement):
             element id
         pid : int
             property id (PSOLID, PLSOLID)
-        nids : List[int]
+        nids : list[int]
             node ids; n=10
         """
         SolidElement.__init__(self)
@@ -2879,7 +2879,7 @@ class CTETRA10(SolidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2936,7 +2936,7 @@ class CTETRA10(SolidElement):
 
         Returns
         -------
-        faces : Dict[int] = [face1, face2, ...]
+        faces : dict[int] = [face1, face2, ...]
             key = face number
             value = a list of nodes (integer pointers) as the values.
 

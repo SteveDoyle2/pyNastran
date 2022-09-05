@@ -5,7 +5,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import Tuple, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
@@ -100,7 +100,7 @@ def scale_by_terms(bdf_filename: Union[BDF, str], terms: list[float], scales: li
     return model
 
 def _setup_scale_by_terms(scales: list[float],
-                          terms: list[str], quiet: bool=False) -> Tuple[float, float, float]:
+                          terms: list[str], quiet: bool=False) -> tuple[float, float, float]:
     """determines the mass, length, time scaling factors"""
     term_to_mlt_map = {
         #      M   L   T
@@ -148,7 +148,7 @@ def _setup_scale_by_terms(scales: list[float],
 def _scale_term(name: str,
                 coeffs: list[float],
                 terms: list[float],
-                scales: list[float]) -> Tuple[float, str]:
+                scales: list[float]) -> tuple[float, str]:
     msg = '%s = ' % name
     value = 1.0
     for coeff, term, scale in zip(coeffs, terms, scales):
@@ -755,7 +755,7 @@ def _convert_properties(model: BDF,
                         xyz_scale, velocity_scale, force_scale)
     _write_scales(model.log, scale_map, scales, {'length', 'area', 'mass', 'temperature'})
 
-def _convert_pbar(scales: Set[str],
+def _convert_pbar(scales: set[str],
                   prop: PBAR,
                   xyz_scale: float,
                   area_scale: float,
@@ -778,7 +778,7 @@ def _convert_pbar(scales: Set[str],
     prop.f1 *= xyz_scale
     prop.f2 *= xyz_scale
 
-def _convert_pbeam(scales: Set[str],
+def _convert_pbeam(scales: set[str],
                    prop: PBEAM,
                    xyz_scale: float,
                    area_scale: float,
@@ -810,7 +810,7 @@ def _convert_pbeam(scales: Set[str],
     prop.n1b *= xyz_scale
     prop.n2b *= xyz_scale
 
-def _convert_pbeam3(scales: Set[str],
+def _convert_pbeam3(scales: set[str],
                     prop: PBEAM3,
                     xyz_scale: float,
                     area_scale: float,
@@ -848,7 +848,7 @@ def _convert_pbeam3(scales: Set[str],
     #nz
     # w
 
-def _convert_pbush(scales: Set[str],
+def _convert_pbush(scales: set[str],
                    prop: PBUSH,
                    velocity_scale: float,
                    mass_scale: float,
@@ -886,14 +886,14 @@ def _convert_pbush(scales: Set[str],
         #This is an MSC only parameter.
 
 def _convert_pbush1d(model: BDF,
-                     scales: Set[str],
+                     scales: set[str],
                      prop: PBUSH1D,
                      xyz_scale: float,
                      area_scale: float,
                      mass_scale: float,
                      damping_scale: float,
                      stiffness_scale: float,
-                     spring_tables: Set[int], damper_tables: Set[int]) -> None:
+                     spring_tables: set[int], damper_tables: set[int]) -> None:
     """converts the PBUSH1D"""
     scales.update(['stiffness', 'mass', 'area', 'length'])
     prop.c *= damping_scale # Viscous damping (force/velocity)
@@ -937,7 +937,7 @@ def _convert_pbush1d(model: BDF,
     return spring_tables, damper_tables
 
 
-def _get_pbush1d_tables(prop: PBUSH1D, table_names: Tuple[str], tables_set: Set[int]):
+def _get_pbush1d_tables(prop: PBUSH1D, table_names: tuple[str], tables_set: set[int]):
     for key in table_names:
         value = getattr(prop, key)
         if value is None:
@@ -947,8 +947,8 @@ def _get_pbush1d_tables(prop: PBUSH1D, table_names: Tuple[str], tables_set: Set[
         else:
             raise TypeError('key=%r value=%r' % (key, value))
 
-def _set_pbush1d_tables(model: BDF, scales: Set[str],
-                        spring_tables: Set[int], damper_tables: Set[int],
+def _set_pbush1d_tables(model: BDF, scales: set[str],
+                        spring_tables: set[int], damper_tables: set[int],
                         xyz_scale: float, velocity_scale: float, force_scale: float) -> None:
     """
     Sets all the TABLEDx required by the PBUSH1D.
@@ -1138,7 +1138,7 @@ def _convert_materials(model: BDF,
     }
     _write_scales(model.log, scale_map, scales)
 
-def _write_scales(log: SimpleLogger, scale_map: Dict[str, str], scales: Set[str], keys_to_skip=set([])):
+def _write_scales(log: SimpleLogger, scale_map: dict[str, str], scales: set[str], keys_to_skip=set([])):
     for scale, msg in scale_map.items():
         if scale in scales:
             log.debug(msg)
@@ -1170,7 +1170,7 @@ def _convert_constraints(model: BDF, xyz_scale: float) -> None:
                 raise NotImplementedError(spc)
 
 def _get_dload_scale(dload,
-                     scales: Set[str],
+                     scales: set[str],
                      xyz_scale: float,
                      velocity_scale: float,
                      accel_scale: float,
@@ -1957,7 +1957,7 @@ def convert_length(length_from, length_to):
 
 
 def convert_mass(mass_from: str, mass_to: str,
-                 log: SimpleLogger) -> Tuple[float, float, float]:
+                 log: SimpleLogger) -> tuple[float, float, float]:
     """
     determines the mass, weight, gravity scale factor
 

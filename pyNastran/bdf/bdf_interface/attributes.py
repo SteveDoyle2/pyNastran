@@ -1,7 +1,7 @@
 """defines the BDF attributes"""
 from __future__ import annotations
 from collections import defaultdict
-from typing import List, Dict, Optional, Any, Union, TYPE_CHECKING
+from typing import Optional, Any, Union, TYPE_CHECKING
 from numpy import array
 from pyNastran.bdf.cards.superelements import SEEXCLD  # type: ignore
 

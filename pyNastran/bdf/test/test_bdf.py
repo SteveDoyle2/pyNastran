@@ -12,7 +12,7 @@ import sys
 import traceback
 import warnings
 from itertools import chain
-from typing import List, Optional, Union, Dict, Any
+from typing import List, Optional, Union, Any
 from io import StringIO
 
 import numpy as np
@@ -68,7 +68,7 @@ MESH_OPT_CARDS = [
 class MeshOptimizationError(RuntimeError):
     pass
 
-def run_lots_of_files(filenames: List[str], folder: str='',
+def run_lots_of_files(filenames: list[str], folder: str='',
                       debug: bool=False,
                       xref: bool=True,
                       check: bool=True,
@@ -76,14 +76,14 @@ def run_lots_of_files(filenames: List[str], folder: str='',
                       punch: bool=False,
                       nastran: str='',
                       encoding: Optional[str]=None,
-                      size: Union[int, List[int], None]=None,
-                      post: Union[int, List[int], None]=None,
-                      is_double: Union[bool, List[bool], None]=None,
+                      size: Union[int, list[int], None]=None,
+                      post: Union[int, list[int], None]=None,
+                      is_double: Union[bool, list[bool], None]=None,
                       sum_load: bool=True,
                       run_mass: bool=True,
                       dev: bool=True,
-                      crash_cards: Optional[List[str]]=None,
-                      pickle_obj: bool=True, quiet: bool=False) -> List[str]:
+                      crash_cards: Optional[list[str]]=None,
+                      pickle_obj: bool=True, quiet: bool=False) -> list[str]:
     """
     Runs multiple BDFs
 
@@ -91,27 +91,27 @@ def run_lots_of_files(filenames: List[str], folder: str='',
     ----------
     folder : str
         the folder where the bdf_filename is
-    filenames : List[str]
+    filenames : list[str]
         the bdf files to analyze
     debug : bool, optional
         run with debug logging (default=False)
-    xref : bool / str / List[bool/str], optional
+    xref : bool / str / list[bool/str], optional
         True : cross reference the model
         False  : don't cross reference the model
         'safe' : do safe cross referencing
-    check : bool / List[bool], optional
+    check : bool / list[bool], optional
         validate cards for things like mass, area, etc. (default=True)
-    punch : bool / List[bool], optional
+    punch : bool / list[bool], optional
         this is a PUNCH file (no executive/case control decks; default=False)
-    size : int / List[int], optional
+    size : int / list[int], optional
         The field width of the model (8/16)
-    is_double : bool / List[bool], optional
+    is_double : bool / list[bool], optional
         Is this a double precision model?
             True : size = 16
             False : size = {8, 16}
     nastran : str, optional
         the path to nastran (default=''; no analysis)
-    post : int / List[int], optional
+    post : int / list[int], optional
         the PARAM,POST,value to run
     sum_load : bool; default=True
         should the loads be summed
@@ -120,7 +120,7 @@ def run_lots_of_files(filenames: List[str], folder: str='',
     dev : bool; default=True
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
-    crash_cards : List[str, str, ...]
+    crash_cards : list[str, str, ...]
         list of cards that are invalid and automatically crash the run
     pickle_obj : bool; default=True
         tests pickling
@@ -617,7 +617,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
              size: int, is_double: bool,
              run_extract_bodies: bool=False, run_skin_solids: bool=True,
              save_file_structure: bool=False, hdf5: bool=False,
-             encoding: Optional[str]=None, crash_cards: Optional[List[str]]=None,
+             encoding: Optional[str]=None, crash_cards: Optional[list[str]]=None,
              limit_mesh_opt: bool=False,
              safe_xref: bool=True, pickle_obj: bool=False, stop: bool=False,
              name: str='') -> BDF:
@@ -1001,7 +1001,7 @@ def _assert_has_spc(subcase, fem):
                 break
         assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
 
-def _validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: List[int],
+def _validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: list[int],
                            subcases: Any, unused_sol_200_map: Any,
                            sum_load: bool=True,
                            stop_on_failure: bool=True,
@@ -1033,7 +1033,7 @@ def _validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: List[
             stop_on_failure=stop_on_failure)
     return ierror
 
-def check_for_flag_in_subcases(fem2: BDF, subcase: Any, parameters: List[str]) -> None:
+def check_for_flag_in_subcases(fem2: BDF, subcase: Any, parameters: list[str]) -> None:
     """
     For a multi-subcase deck, you can define specific required cards
     (e.g., TSTEP) in secondary cases, but not primary cases.  This
@@ -1066,7 +1066,7 @@ def stop_if_max_error(msg: str, error: Any, ierror: int, nerrors: int) -> int:
     ierror += 1
     return ierror
 
-def check_for_optional_param(keys: List[str], subcase: Any,
+def check_for_optional_param(keys: list[str], subcase: Any,
                              msg: str, error: Any, log: Any,
                              ierror: int, nerrors: int) -> int:
     """one or more must be True"""
@@ -1080,7 +1080,7 @@ def check_for_optional_param(keys: List[str], subcase: Any,
 
 def check_sol(sol: int,
               subcase: Any,
-              allowed_sols: List[int],
+              allowed_sols: list[int],
               case_control_key: str,
               log: Any, ierror: int, nerrors: int) -> int:
     """Checks that the solution is valid"""
@@ -1103,7 +1103,7 @@ def check_case(sol: int,
                fem2: BDF,
                p0: np.ndarray,
                isubcase: int,
-               subcases: Dict[int, Subcase],
+               subcases: dict[int, Subcase],
                sum_load:bool =True,
                ierror: int=0, nerrors: int=100,
                stop_on_failure: bool=True) -> int:
@@ -1498,7 +1498,7 @@ def _check_case_sol_200(sol: int,
         msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
         raise NotImplementedError(msg)
 
-def require_cards(card_names: List[str], log: SimpleLogger,
+def require_cards(card_names: list[str], log: SimpleLogger,
                   soltype: str, sol: int, subcase: Subcase,
                   error, ierror, nerrors):
     """all must be True"""
@@ -1511,7 +1511,7 @@ def require_cards(card_names: List[str], log: SimpleLogger,
             ierror += 1
     return ierror
 
-def require_either_cards(card_names: List[str], log: SimpleLogger,
+def require_either_cards(card_names: list[str], log: SimpleLogger,
                          soltype: str, sol: int, subcase: Subcase,
                          error, ierror: int, nerrors):
     """one or more must be True"""
@@ -1906,7 +1906,7 @@ def test_get_cards_by_card_types(model: BDF) -> None:
 
 
 def compare_card_count(fem1: BDF, fem2: BDF,
-                       print_stats: bool=False, quiet: bool=False) -> List[str]:
+                       print_stats: bool=False, quiet: bool=False) -> list[str]:
     """Checks that no cards from fem1 are lost when we write fem2"""
     cards1 = fem1.card_count
     cards2 = fem2.card_count

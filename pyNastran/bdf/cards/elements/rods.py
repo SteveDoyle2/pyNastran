@@ -88,7 +88,7 @@ class CROD(RodElement):
             element id
         pid : int
             property id (PROD)
-        nids : List[int, int]
+        nids : list[int, int]
             node ids
         comment : str; default=''
             a comment for the card
@@ -129,7 +129,7 @@ class CROD(RodElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -325,7 +325,7 @@ class CTUBE(RodElement):
             element id
         pid : int
             property id
-        nids : List[int, int]
+        nids : list[int, int]
             node ids
         comment : str; default=''
             a comment for the card
@@ -366,7 +366,7 @@ class CTUBE(RodElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -568,7 +568,7 @@ class CONROD(RodElement):
             element id
         mid : int
             material id
-        nids : List[int, int]
+        nids : list[int, int]
             node ids
         A : float
             area
@@ -625,7 +625,7 @@ class CONROD(RodElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

@@ -5,7 +5,7 @@ defines:
 
 """
 from itertools import count
-from typing import Tuple, Optional, Any
+from typing import Optional, Any
 import numpy as np
 
 from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
@@ -111,7 +111,7 @@ def find_closest_nodes_index(nodes_xyz: NDArray3float,
 def _not_equal_nodes_build_tree(nodes_xyz: NDArray3float,
                                 xyz_compare: NDArray3float,
                                 tol: float, neq_max: int=4,
-                                msg: str='') -> Tuple[Any, np.ndarray, np.ndarray]:
+                                msg: str='') -> tuple[Any, np.ndarray, np.ndarray]:
     """
     helper function for `bdf_equivalence_nodes`
 

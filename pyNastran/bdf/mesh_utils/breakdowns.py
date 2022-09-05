@@ -18,15 +18,15 @@ defines:
 
 """
 from __future__ import annotations
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from collections import defaultdict
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
 
-def get_material_mass_breakdown_table(model: BDF) -> Tuple[Dict[int, float],
-                                                           Dict[int, Dict[int, float]],
-                                                           Dict[int, Dict[int, float]],
-                                                           Dict[int, Dict[int, float]],
+def get_material_mass_breakdown_table(model: BDF) -> tuple[dict[int, float],
+                                                           dict[int, dict[int, float]],
+                                                           dict[int, dict[int, float]],
+                                                           dict[int, dict[int, float]],
                                                            ]:
     mid_to_mass = defaultdict(float)
     pid_to_mid_to_mass = defaultdict(lambda: defaultdict(float))
@@ -93,8 +93,6 @@ def get_material_mass_breakdown_table(model: BDF) -> Tuple[Dict[int, float],
                 nlayers = len(prop.mids)
                 pid_to_mid_to_nsm_mass[pid][0] += area * nsm
                 nsm_n = nsm / nlayers
-                if pid == 42:
-                    x = 1
                 for mid, t in zip(prop.mids, prop.thicknesses):
                     mid_ref = model.materials[mid]
                     rho = mid_ref.rho
@@ -138,7 +136,7 @@ def get_length_breakdown(model: BDF, property_ids=None,
 
     Returns
     -------
-    pids_to_length : Dict[int pid] : float length
+    pids_to_length : dict[int pid] : float length
         the pid to length dictionary
 
     TODO: What about CONRODs?
@@ -215,7 +213,7 @@ def get_length_breakdown(model: BDF, property_ids=None,
 def get_area_breakdown(model: BDF,
                        property_ids=None,
                        stop_if_no_area: bool=True,
-                       sum_bar_area: bool=True) -> Dict[int, float]:
+                       sum_bar_area: bool=True) -> dict[int, float]:
     """
     Gets a breakdown of the area by property region.
 
@@ -232,7 +230,7 @@ def get_area_breakdown(model: BDF,
 
     Returns
     -------
-    pids_to_area : Dict[int pid] : float area
+    pids_to_area : dict[int pid] : float area
         the pid to area dictionary
 
     TODO: What about CONRODs?

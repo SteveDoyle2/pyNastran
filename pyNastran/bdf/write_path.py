@@ -4,7 +4,6 @@ Defines following useful methods:
 
 """
 import sys
-from typing import Tuple
 from pathlib import PurePosixPath, PureWindowsPath
 
 
@@ -74,7 +73,7 @@ def write_include(filename: str, is_windows: bool=None) -> str:
     return out
 
 
-def _split_path(abspath: str, is_windows: bool) -> Tuple[str, ...]:
+def _split_path(abspath: str, is_windows: bool) -> tuple[str, ...]:
     """
     Takes a path and splits it into the various components.
 

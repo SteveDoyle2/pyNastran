@@ -266,7 +266,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     -------
     model : BDF()
         the BDF object
-    groups : list[Set[int]]
+    groups : list[set[int]]
         the list of element ids in each group
 
     .. warning:: only supports CTRIA3 & CQUAD4

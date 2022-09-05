@@ -18,7 +18,7 @@ The ConstraintObject contain multiple constraints.
 """
 from __future__ import annotations
 from itertools import count
-from typing import Tuple, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf import MAX_INT
@@ -525,7 +525,7 @@ class MPC(Constraint):
         enforced = data[3]
         return MPC(conid, nodes, components, enforced, comment=comment)
     @property
-    def independent_dofs(self) -> Tuple[list[int], list[int]]:
+    def independent_dofs(self) -> tuple[list[int], list[int]]:
         """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
         dependent degree-of-freedom. A dependent degree-of-freedom assigned by
         one MPC entry cannot be assigned dependent by another MPC entry or by a
@@ -536,7 +536,7 @@ class MPC(Constraint):
             return [nodes], [components]
         return nodes, components
     @property
-    def dependent_dofs(self) -> Tuple[list[int], list[int]]:
+    def dependent_dofs(self) -> tuple[list[int], list[int]]:
         """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
         dependent degree-of-freedom. A dependent degree-of-freedom assigned by
         one MPC entry cannot be assigned dependent by another MPC entry or by a

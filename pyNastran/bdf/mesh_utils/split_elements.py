@@ -15,7 +15,7 @@ def split_line_elements(bdf_model, eids, neids=2,
 
     Parameters
     ----------
-    eids : List[int]
+    eids : list[int]
         element ids to split
     neids : int; default=5
         how many elements should a single bar be split into
@@ -27,7 +27,7 @@ def split_line_elements(bdf_model, eids, neids=2,
 
     Returns
     -------
-    eids_out : List[int]
+    eids_out : list[int]
         the list of elements that have been added
     eid_end : int; default=1
         the final element id

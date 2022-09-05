@@ -103,7 +103,7 @@ class NSMx(Property):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -171,7 +171,7 @@ class NSM1x(Property):
             NSM1:  the non-structural pass per unit length/area
             NSML1: the total non-structural pass per unit length/area;
                    the nsm will be broken down based on a weighted area/length
-        ids : List[int]
+        ids : list[int]
             property ids or element ids depending on nsm_type
         comment : str; default=''
             a comment for the card
@@ -428,7 +428,7 @@ class NSML1(NSM1x):
             }
         value : float
             the non-structural pass per unit length/area
-        ids : List[int]
+        ids : list[int]
             property ids or element ids depending on nsm_type
         comment : str; default=''
             a comment for the card
@@ -464,7 +464,7 @@ class NSMADD(BaseCard):
         ----------
         sid : int
             the NSM Case Control value
-        sets : List[int]
+        sets : list[int]
             the NSM, NSM1, NSML, NSML1 values
         comment : str; default=''
             a comment for the card
@@ -500,7 +500,7 @@ class NSMADD(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -648,7 +648,7 @@ class PMASS(Property):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

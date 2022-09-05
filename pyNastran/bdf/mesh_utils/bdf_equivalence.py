@@ -11,7 +11,7 @@ defines:
 """
 from __future__ import annotations
 from itertools import combinations
-from typing import Tuple, List, Set, Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
@@ -150,7 +150,7 @@ def bdf_equivalence_nodes(bdf_filename: str,
     # list of ndarrays
     #return node_set
 
-def _simplify_node_set(node_set: Optional[Union[list[int], Set[int], list[NDArrayNint]]],
+def _simplify_node_set(node_set: Optional[Union[list[int], set[int], list[NDArrayNint]]],
                        idtype: str='int32') -> Optional[list[NDArrayNint]]:  # pragma: no cover
     """
     accepts multiple forms of the node_set parameter
@@ -197,8 +197,8 @@ def _bdf_equivalence_nodes(bdf_filename: str, tol: float,
                            node_set: Optional[list[NDArrayNint]]=None,
                            log: Optional[SimpleLogger]=None,
                            debug: bool=True, method: str='new',
-                           idtype: str='int32', fdtype: str='float64') -> Tuple[BDF,
-                                                                                list[Tuple[int, int]]]:
+                           idtype: str='int32', fdtype: str='float64') -> tuple[BDF,
+                                                                                list[tuple[int, int]]]:
     """helper for bdf_equivalence_nodes"""
     all_node_set = get_all_node_set(node_set)
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
@@ -222,7 +222,7 @@ def _eq_nodes_setup(bdf_filename,
                     log: Optional[SimpleLogger]=None,
                     debug: bool=True,
                     idtype: str='int32',
-                    fdtype: str='float64') -> Tuple[NDArrayN3float, BDF,
+                    fdtype: str='float64') -> tuple[NDArrayN3float, BDF,
                                                     NDArrayNint, NDArrayNint]:
     """helper function for ``bdf_equivalence_nodes``"""
     if node_set is not None:
@@ -276,7 +276,7 @@ def _eq_nodes_setup_node_set(model: BDF,
                              node_set: list[NDArrayNint],
                              all_node_set: NDArrayNint,
                              renumber_nodes: bool=False,
-                             idtype:str='int32') -> Tuple[NDArrayNint, NDArrayNint]:
+                             idtype:str='int32') -> tuple[NDArrayNint, NDArrayNint]:
     """helper function for ``_eq_nodes_setup`` that handles node_sets"""
     if len(node_set) > 1:
         model.log.warning(f'multi node_sets; n={len(node_set)}')
@@ -308,7 +308,7 @@ def _eq_nodes_setup_node_set(model: BDF,
     return nids, all_nids
 
 def _eq_nodes_setup_node(model: BDF, renumber_nodes: bool=False,
-                         idtype: str='int32') -> Tuple[NDArrayNint, NDArrayNint]:
+                         idtype: str='int32') -> tuple[NDArrayNint, NDArrayNint]:
     """helper function for ``_eq_nodes_setup`` that doesn't handle node sets"""
     inode = 0
     if renumber_nodes:
@@ -390,7 +390,7 @@ def _eq_nodes_find_pairs(nids: NDArrayNint,
                          slots, ieq,
                          log: SimpleLogger,
                          all_node_set: NDArrayNint,
-                         node_set: Optional[list[NDArrayNint]]=None) -> list[Tuple[int, int]]:
+                         node_set: Optional[list[NDArrayNint]]=None) -> list[tuple[int, int]]:
     """helper function for `bdf_equivalence_nodes`"""
     irows, icols = slots
     all_node_set = get_all_node_set(node_set)
@@ -502,13 +502,13 @@ def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
                                  inew: NDArrayNint,
                                  node_set: Optional[NDArrayNint]=None,
                                  neq_max: int=4, method: str='new',
-                                 debug: bool=False) -> list[Tuple[int, int]]:
+                                 debug: bool=False) -> list[tuple[int, int]]:
     """
     Helper for equivalencing
 
     Returns
     -------
-    nid_pairs : list[Tuple[int, int]]
+    nid_pairs : list[tuple[int, int]]
         a series of (nid1, nid2) pairs
 
     """
@@ -586,8 +586,8 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
                          inew=None,
                          node_set: Optional[NDArrayNint]=None,
                          neq_max: int=4, method: str='new', msg: str='',
-                         debug: bool=False) -> Tuple[KDTree,
-                                                     list[Tuple[int, int]]]:
+                         debug: bool=False) -> tuple[KDTree,
+                                                     list[tuple[int, int]]]:
     """
     helper function for `bdf_equivalence_nodes`
 
@@ -612,7 +612,7 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
     -------
     kdt : KDTree()
         the kdtree object
-    nid_pairs : list[Tuple[int, int]]
+    nid_pairs : list[tuple[int, int]]
         a series of (nid1, nid2) pairs
 
     """
@@ -665,7 +665,7 @@ def _eq_nodes_build_tree_new(kdt: KDTree,
                              tol: float,
                              log: SimpleLogger,
                              inew=None, node_set=None, neq_max: int=4, msg: str='',
-                             debug: float=False) -> Tuple[Any, list[Tuple[int, int]]]:
+                             debug: float=False) -> tuple[Any, list[tuple[int, int]]]:
     assert isinstance(nnodes, int), nnodes
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
     slots = np.where(ieq[:, :] < nnodes)

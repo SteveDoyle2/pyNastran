@@ -97,7 +97,7 @@ class QVOL(ThermalLoad):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -206,7 +206,7 @@ class QVECT(ThermalLoad):
             Temperature of the radiant source
         ce : int; default=0
             Coordinate system identification number for thermal vector flux
-        vector_tableds : List[int/float, int/float, int/float]
+        vector_tableds : list[int/float, int/float, int/float]
             vector : float; default=None
                 directional cosines in coordinate system CE) of
                 the thermal vector flux
@@ -216,7 +216,7 @@ class QVECT(ThermalLoad):
                 components as a function of time
         control_id : int; default=0
             Control point
-        eids : List[int] or THRU
+        eids : list[int] or THRU
             Element identification number of a CHBDYE, CHBDYG, or
             CHBDYP entry
         comment : str; default=''
@@ -286,7 +286,7 @@ class QVECT(ThermalLoad):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -431,7 +431,7 @@ class QBDY1(ThermalLoad):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -566,7 +566,7 @@ class QBDY2(ThermalLoad):  # not tested
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -656,7 +656,7 @@ class QBDY3(ThermalLoad):
             Magnitude of thermal flux vector into face
         control_id : int; default=0
             Control point
-        eids : List[int] or THRU
+        eids : list[int] or THRU
             Element identification number of a CHBDYE, CHBDYG, or
             CHBDYP entry
         comment : str; default=''
@@ -708,7 +708,7 @@ class QBDY3(ThermalLoad):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -825,7 +825,7 @@ class QHBDY(ThermalLoad):
             into the surface
         af : float; default=None
             Area factor depends on type
-        grids : List[int]
+        grids : list[int]
             Grid point identification of connected grid points
         comment : str; default=''
             a comment for the card
@@ -896,7 +896,7 @@ class QHBDY(ThermalLoad):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1258,7 +1258,7 @@ class TEMP(ThermalLoad):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1360,7 +1360,7 @@ class TEMPP1(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1584,7 +1584,7 @@ class TEMPD(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

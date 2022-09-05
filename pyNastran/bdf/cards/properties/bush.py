@@ -11,7 +11,7 @@ All bush properties are BushingProperty and Property objects.
 """
 from __future__ import annotations
 import warnings
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import Property
@@ -683,7 +683,7 @@ class PBUSH1D(BushingProperty):
         assert isinstance(pid, int), 'pid=%r' % pid
 
     @staticmethod
-    def _read_shock(card: BDFCard, istart: int) -> Tuple[str, float, float, float, float]:
+    def _read_shock(card: BDFCard, istart: int) -> tuple[str, float, float, float, float]:
         """
         F(u, v) = Cv * S(u) * sign(v) * |v|^ev
         """
@@ -729,7 +729,7 @@ class PBUSH1D(BushingProperty):
         return istart, out
 
     @staticmethod
-    def _read_spring(card, istart: int) -> Tuple[str, int, int, int, int]:
+    def _read_spring(card, istart: int) -> tuple[str, int, int, int, int]:
         """
         F(u) = Ft(u)
         """
@@ -751,7 +751,7 @@ class PBUSH1D(BushingProperty):
         return spring_type, spring_idt, spring_idc, spring_idtdu, spring_idcdu
 
     @staticmethod
-    def _read_damper(card, istart: int) -> Tuple[str, int, int, int, int]:
+    def _read_damper(card, istart: int) -> tuple[str, int, int, int, int]:
         """
         F(v) = Ft(u)
         """

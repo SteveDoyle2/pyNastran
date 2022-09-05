@@ -7,7 +7,7 @@ defines:
 from __future__ import annotations
 from io import StringIO
 from pathlib import PurePath
-from typing import Tuple, List, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
@@ -15,7 +15,7 @@ from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_renumber_sta
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
-    MAPPER = Dict[str, Dict[int, int]]
+    MAPPER = dict[str, dict[int, int]]
 
 def bdf_merge(bdf_filenames: list[str],
               bdf_filename_out: Optional[str]=None,
@@ -23,7 +23,7 @@ def bdf_merge(bdf_filenames: list[str],
               size: int=8, is_double: bool=False,
               cards_to_skip: Optional[list[str]]=None,
               skip_case_control_deck: bool=False,
-              log: Optional[SimpleLogger]=None) -> Tuple[BDF, list[MAPPER]]:
+              log: Optional[SimpleLogger]=None) -> tuple[BDF, list[MAPPER]]:
     """
     Merges multiple BDF into one file
 
@@ -53,7 +53,7 @@ def bdf_merge(bdf_filenames: list[str],
     model : BDF
         Merged model.
     mappers_all : list[mapper]
-        mapper : Dict[bdf_attribute] : old_id_to_new_id_dict
+        mapper : dict[bdf_attribute] : old_id_to_new_id_dict
             List of mapper dictionaries of original ids to merged
 
             bdf_attribute : str
@@ -442,11 +442,11 @@ def _renumber_mapper(mapper_0: MAPPER, mapper_renumber: MAPPER):
             sub_mapper[id_] = mapper_renumber[map_type][id_]
     return mapper
 
-def _dict_key_to_key(dictionary) -> Dict[int, int]:
+def _dict_key_to_key(dictionary) -> dict[int, int]:
     """creates a dummy map from the nominal key to the nominal key"""
     return {key : key for key in dictionary.keys()}
 
-def _dicts_key_to_key(dictionaries: list[Dict[int, Any]]) -> Dict[int, int]:
+def _dicts_key_to_key(dictionaries: list[dict[int, Any]]) -> dict[int, int]:
     """
     Creates a dummy map from the nominal key to the nominal key for
     multiple input dictionaries.  This is intended for use with:

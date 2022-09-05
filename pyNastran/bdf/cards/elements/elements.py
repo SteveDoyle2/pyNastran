@@ -13,7 +13,7 @@ All ungrouped elements are Element objects.
 
 """
 from __future__ import annotations
-from typing import Tuple, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -183,7 +183,7 @@ class CFAST(Element):
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
-    def _gs_xyz(self) -> Tuple[Optional[int], Optional[float], Optional[float], Optional[float]]:
+    def _gs_xyz(self) -> tuple[Optional[int], Optional[float], Optional[float], Optional[float]]:
         if self.gs is None:
             out = (self.gs, self.xs, self.ys, self.zs)
         else:

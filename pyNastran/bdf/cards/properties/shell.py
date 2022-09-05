@@ -15,7 +15,7 @@ from __future__ import annotations
 import copy
 from itertools import count, zip_longest
 import warnings
-from typing import Tuple, List, Dict, Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types, zip_strict
@@ -139,7 +139,7 @@ class CompositeShellProperty(Property):
                 self.type, self.pid, z1, z2, t)
             model.log.warning(msg)
 
-    def safe_cross_reference(self, model: BDF, xref_errors: Dict[str, Any]) -> None:
+    def safe_cross_reference(self, model: BDF, xref_errors: dict[str, Any]) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -317,11 +317,11 @@ class CompositeShellProperty(Property):
         """Gets the non-structural mass :math:`i^{th}` ply"""
         return self.nsm
 
-    def Mids(self) -> List[int]:
+    def Mids(self) -> list[int]:
         return self.material_ids
 
     @property
-    def material_ids(self) -> List[int]:
+    def material_ids(self) -> list[int]:
         """
         Gets the material IDs of all the plies
 
@@ -534,7 +534,7 @@ class CompositeShellProperty(Property):
         rhos = [mat_ref.get_density() for mat_ref in self.mids_ref]
         return self.get_mass_per_area_rho(rhos, iply, method)
 
-    def get_mass_per_area_rho(self, rhos: List[float],
+    def get_mass_per_area_rho(self, rhos: list[float],
                               iply='all', method: str='nplies') -> float:
         r"""
         Gets the Mass/Area for the property.
@@ -554,7 +554,7 @@ class CompositeShellProperty(Property):
 
         Parameters
         ----------
-        rhos : List[float]
+        rhos : list[float]
             the densities of each ply
         iply : str/int; default='all'
             the mass per area of the :math:`i^{th}` ply
@@ -639,7 +639,7 @@ class CompositeShellProperty(Property):
                 raise NotImplementedError(f'method={method!r} is not supported')
             return mass_per_area
 
-    def get_mass_per_area_structure(self, rhos: List[float]) -> float:
+    def get_mass_per_area_structure(self, rhos: list[float]) -> float:
         r"""
         Gets the Mass/Area for the property structure only
         (doesn't consider nsm).
@@ -648,7 +648,7 @@ class CompositeShellProperty(Property):
 
         Parameters
         ----------
-        rhos : List[float]
+        rhos : list[float]
             the densities of each ply
 
         """
@@ -786,9 +786,9 @@ class PCOMP(CompositeShellProperty):
                      tref=0., ge=0., lam=None, z0=None, comment='')
 
     def __init__(self, pid: int,
-                 mids: List[int], thicknesses: List[float],
-                 thetas: Optional[List[float]]=None,
-                 souts: Optional[List[str]]=None,
+                 mids: list[int], thicknesses: list[float],
+                 thetas: Optional[list[float]]=None,
+                 souts: Optional[list[str]]=None,
                  nsm: float=0., sb: float=0.,
                  ft: Optional[str]=None,
                  tref: float=0., ge: float=0.,
@@ -800,14 +800,14 @@ class PCOMP(CompositeShellProperty):
 
         pid : int
             property id
-        mids : List[int, ..., int]
+        mids : list[int, ..., int]
             material ids for each ply
-        thicknesses : List[float, ..., float]
+        thicknesses : list[float, ..., float]
             thicknesses for each ply
-        thetas : List[float, ..., float]; default=None
+        thetas : list[float, ..., float]; default=None
             ply angle
             None : [0.] * nplies
-        souts : List[str, ..., str]; default=None
+        souts : list[str, ..., str]; default=None
             should the stress? be printed; {YES, NO}
             None : [NO] * nplies
         nsm : float; default=0.
@@ -991,7 +991,7 @@ class PCOMP(CompositeShellProperty):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1138,7 +1138,7 @@ class PCOMP(CompositeShellProperty):
 
     def get_individual_ABD_matrices(
             self, theta_offset: float=0.,
-            degrees: bool=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+            degrees: bool=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Gets the ABD matrix
 
@@ -1222,7 +1222,7 @@ class PCOMP(CompositeShellProperty):
     def get_Ainv_equivalent_pshell(self,
                                    imat_rotation_angle: float,
                                    thickness: float,
-                                   degrees: bool=True) -> Tuple[float, float, float, float]:
+                                   degrees: bool=True) -> tuple[float, float, float, float]:
         """imat_rotation_angle is in degrees
 
         Parameters
@@ -1420,7 +1420,7 @@ class PCOMPG(CompositeShellProperty):
                                                       #self.global_ply_ids):
 
     @property
-    def plies(self) -> List[Tuple[int, float, float, str, int]]:
+    def plies(self) -> list[tuple[int, float, float, str, int]]:
         plies = []
         for mid, t, theta, sout, global_ply_id in zip_longest(self.mids, self.thicknesses,
                                                               self.thetas, self.souts,
@@ -1439,11 +1439,11 @@ class PCOMPG(CompositeShellProperty):
                       tref=0.0, ge=0.0, lam=None, z0=None, comment='')
 
     def __init__(self, pid: int,
-                 global_ply_ids: List[int],
-                 mids: List[int],
-                 thicknesses: List[float],
-                 thetas: Optional[List[float]]=None,
-                 souts: Optional[List[str]]=None,
+                 global_ply_ids: list[int],
+                 mids: list[int],
+                 thicknesses: list[float],
+                 thetas: Optional[list[float]]=None,
+                 souts: Optional[list[str]]=None,
                  nsm: float=0.0,
                  sb: float=0.0,
                  ft: Optional[str]=None,
@@ -1460,16 +1460,16 @@ class PCOMPG(CompositeShellProperty):
         ----------
         pid : int
             property id
-        global_ply_ids : List[int]
+        global_ply_ids : list[int]
             the ply id
-        mids : List[int, ..., int]
+        mids : list[int, ..., int]
             material ids for each ply
-        thicknesses : List[float, ..., float]
+        thicknesses : list[float, ..., float]
             thicknesses for each ply
-        thetas : List[float, ..., float]; default=None
+        thetas : list[float, ..., float]; default=None
             ply angle
             None : [0.] * nplies
-        souts : List[str, ..., str]; default=None
+        souts : list[str, ..., str]; default=None
             should the stress? be printed; {YES, NO}
             None : [NO] * nplies
         nsm : float; default=0.
@@ -2076,7 +2076,7 @@ class PSHEAR(Property):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2401,7 +2401,7 @@ class PSHELL(Property):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2486,7 +2486,7 @@ class PSHELL(Property):
             assert isinstance(nsm, float), 'nsm=%r' % nsm
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
 
-    def get_z_locations(self) -> List[float]:
+    def get_z_locations(self) -> list[float]:
         """returns the locations of the bottom and top surface of the shell"""
         z = np.array([self.z1, self.z2])
         return z
@@ -2497,7 +2497,7 @@ class PSHELL(Property):
         return materials
 
     @property
-    def material_ids(self) -> List[Optional[int]]:
+    def material_ids(self) -> list[Optional[int]]:
         """returns the material ids"""
         return [self.Mid1(), self.Mid2(), self.Mid3(), self.Mid4()]
 
@@ -2630,7 +2630,7 @@ class PSHELL(Property):
         return Sbar
 
     def get_individual_ABD_matrices(
-            self, theta_offset: float=0.) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+            self, theta_offset: float=0.) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Gets the ABD matrix
 
@@ -2708,7 +2708,7 @@ class PSHELL(Property):
 
     def get_Ainv_equivalent_pshell(self,
                                    imat_rotation_angle: float,
-                                   thickness: float) -> Tuple[float, float, float, float]:
+                                   thickness: float) -> tuple[float, float, float, float]:
         """imat_rotation_angle is in degrees...but is specified in radians and unused"""
         ABD = self.get_ABD_matrices(imat_rotation_angle)
         A = ABD[:3, :3]
@@ -2899,10 +2899,10 @@ class PTRSHL(Property):
     type = 'PTRSHL'
 
     def __init__(self, pid: int,
-                 mid1: int, t: List[float],
-                 mid2: int, I: List[float],
-                 mid3: int, ts: List[float],
-                 nsm: float, z: List[float],
+                 mid1: int, t: list[float],
+                 mid2: int, I: list[float],
+                 mid3: int, ts: list[float],
+                 nsm: float, z: list[float],
                  comment: str=''):
         """
         Creates a PTRSHL card

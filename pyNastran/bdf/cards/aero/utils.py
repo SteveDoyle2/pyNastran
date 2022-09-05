@@ -259,12 +259,12 @@ def make_monpnt1s_from_cids(model: BDF, nids, cids, cid_to_inids,
         the model object
     nids : (nnodes, ) int ndarray
         all the nodes in the model
-    cid_to_inids : Dict[cid]=inids
+    cid_to_inids : dict[cid]=inids
         cid : int
             coord id
         inids : (nnodes_in_cid, ) int ndarray
             the indicies in nids in sorted order
-    cids : List[int]
+    cids : list[int]
         cids to create
     delete_unused_coords : bool; default=True
         delete coordinate systems from the model that aren't used
@@ -312,7 +312,7 @@ def make_monpnt1s_from_cids(model: BDF, nids, cids, cid_to_inids,
         origin_old = origin
 
 
-def build_trim_load_cases(model: BDF, trim_load_cases: List[Tuple[str, int, float, float, Any]], aeqr: float=1.):
+def build_trim_load_cases(model: BDF, trim_load_cases: list[tuple[str, int, float, float, Any]], aeqr: float=1.):
     """
     trim_load_cases = [
         # subcase, name, trim_id, mach, q, label: value

@@ -1,9 +1,6 @@
-#import os
 import sys
-#from io import StringIO
-from typing import Dict, Any
+from typing import Any
 from cpylog import SimpleLogger
-#import pyNastran
 from .utils import filter_no_args
 from pyNastran.utils.convert import convert_altitude, convert_velocity
 
@@ -281,7 +278,7 @@ def cmd_line_create_flutter(argv=None, quiet: bool=False):
     if not quiet:
         print(cmd)
 
-def _float(data: Dict[str, Any], name: str):
+def _float(data: dict[str, Any], name: str):
     svalue = data[name]
     try:
         value = float(svalue)
@@ -289,7 +286,7 @@ def _float(data: Dict[str, Any], name: str):
         raise SyntaxError(f'name={name} value={svalue!r} is not a float')
     return value
 
-def _int(data: Dict[str, Any], name: str):
+def _int(data: dict[str, Any], name: str):
     svalue = data[name]
     try:
         value = int(svalue)

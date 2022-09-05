@@ -22,7 +22,7 @@ from collections import defaultdict
 import traceback
 
 from typing import (
-    List, Dict, Set, Tuple, Sequence, Optional, Union, Any, cast, TYPE_CHECKING)
+    Sequence, Optional, Union, Any, cast, TYPE_CHECKING)
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -1112,7 +1112,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         Parameters
         ----------
-        cards : list[str]; Set[str]
+        cards : list[str]; set[str]
             a list/set of cards that should not be read
 
         .. python ::
@@ -1128,13 +1128,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             disable_set = set(cards)
         self.cards_to_read = self.cards_to_read.difference(disable_set)
 
-    def set_cards(self, cards: Union[list[str],Set[str]]) -> None:
+    def set_cards(self, cards: Union[list[str],set[str]]) -> None:
         """
         Method for setting the cards that will be processed
 
         Parameters
         ----------
-        cards : list[str]; Set[str]
+        cards : list[str]; set[str]
             a list/set of cards that should not be read
 
         .. python ::
@@ -1191,7 +1191,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def include_zip(self, bdf_filename: Optional[str]=None,
                     encoding: Optional[str]=None,
-                    make_ilines: bool=True) -> Tuple[list[str], Any]:
+                    make_ilines: bool=True) -> tuple[list[str], Any]:
         """
         Read a bdf without perform any other operation, except (optionally)
         insert the INCLUDE files in the bdf
@@ -1569,7 +1569,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     raise CrossReferenceError(msg.rstrip())
 
     def get_bdf_cards(self, bulk_data_lines: list[str],
-                      bulk_data_ilines: Optional[Any]=None) -> Tuple[Any, Any, Any]:
+                      bulk_data_ilines: Optional[Any]=None) -> tuple[Any, Any, Any]:
         """Parses the BDF lines into a list of card_lines"""
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
@@ -3588,7 +3588,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def get_xyz_in_coord_array(self, cid: int=0,
                                fdtype: str='float64',
-                               idtype: str='int32') -> Tuple[np.ndarray, np.ndarray, np.ndarray,
+                               idtype: str='int32') -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                                              dict[int, np.ndarray], dict[int, np.ndarray]]:
         """
         Gets the xyzs as an array in an arbitrary coordinate system
@@ -3884,7 +3884,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """Returns False for the ``BDF`` class"""
         return hasattr(self, 'grid')
 
-    def get_displacement_index(self) -> Tuple[Any, Any, dict[int, Any]]:
+    def get_displacement_index(self) -> tuple[Any, Any, dict[int, Any]]:
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.
@@ -4999,7 +4999,7 @@ def _get_coords_to_update(coords: dict[int, Union[CORD1R, CORD1C, CORD1S,
                                                   CORD2R, CORD2C, CORD2S]],
                           cps_to_check: list[int],
                           cps_checked: list[int],
-                          nids_checked: list[int]) -> Tuple[int, list[int], list[int], list[int]]:
+                          nids_checked: list[int]) -> tuple[int, list[int], list[int], list[int]]:
     """helper method for ``transform_xyzcp_to_xyz_cid``"""
     cord1s_to_update_temp = []
     cord2s_to_update_list = []

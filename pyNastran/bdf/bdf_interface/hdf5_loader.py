@@ -1,7 +1,7 @@
 """Defines various helper functions for loading a HDF5 BDF file"""
 from __future__ import annotations
 from itertools import count
-from typing import List, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 import h5py
 
@@ -1531,7 +1531,7 @@ def _put_keys_values_into_list(model, name, keys, values):
 
 def _put_keys_values_into_dict_list(model: Any, name: str, idi: int,
                                     keys: np.ndarray,
-                                    values: List[Any]):
+                                    values: list[Any]):
     """add something like an SPC into a dictionary that has a list"""
     for value in values:
         #print(value)

@@ -9,7 +9,7 @@ defines:
 """
 from __future__ import annotations
 from abc import abstractmethod, abstractproperty, abstractclassmethod
-from typing import List, Tuple, Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 #from numpy import nan, empty, unique
@@ -621,7 +621,7 @@ def _node_ids(card, nodes=None, allow_empty_nodes: bool=False, msg: str='') -> A
     raise RuntimeError('huh...')
 
 
-def break_word_by_trailing_integer(pname_fid: str) -> Tuple[str, str]:
+def break_word_by_trailing_integer(pname_fid: str) -> tuple[str, str]:
     """
     Splits a word that has a value that is an integer
 
@@ -662,7 +662,7 @@ def break_word_by_trailing_integer(pname_fid: str) -> Tuple[str, str]:
     assert len(word)+len(num) == len(pname_fid), 'word=%r num=%r pname_fid=%r' % (word, num, pname_fid)
     return word, num
 
-def break_word_by_trailing_parentheses_integer_ab(pname_fid: str) -> Tuple[str, str]:
+def break_word_by_trailing_parentheses_integer_ab(pname_fid: str) -> tuple[str, str]:
     """
     Splits a word that has a value that can be A/B as well as an integer
 

@@ -190,7 +190,7 @@ class CHBDYE(ThermalElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -412,7 +412,7 @@ class CHBDYG(ThermalElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -703,7 +703,7 @@ class CHBDYP(ThermalElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -930,7 +930,7 @@ class PCONV(ThermalProperty):
             Grid ID of the referenced inlet point
         ce : int; default=0
             Coordinate system for defining orientation vector.
-        e1 / e2 / e3 : List[float]; default=None
+        e1 / e2 / e3 : list[float]; default=None
             Components of the orientation vector in coordinate system CE.
             The origin of the orientation vector is grid point G1
         comment : str; default=''
@@ -1021,7 +1021,7 @@ class PCONV(ThermalProperty):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1329,7 +1329,7 @@ class PHBDY(ThermalProperty):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1406,7 +1406,7 @@ class CONV(ThermalBC):
             Convection property ID
         mid : int
             Material ID
-        ta : List[int]
+        ta : list[int]
             Ambient points used for convection 0's are allowed for TA2
             and higher
         film_node : int; default=0
@@ -1483,7 +1483,7 @@ class CONV(ThermalBC):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1743,7 +1743,7 @@ class CONVM(ThermalBC):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

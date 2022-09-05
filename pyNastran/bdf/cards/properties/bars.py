@@ -15,7 +15,7 @@ second moment of area on wikipedia
 """
 from __future__ import annotations
 from itertools import count
-from typing import List, Tuple, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 from numpy import pi, array
 import numpy as np
 

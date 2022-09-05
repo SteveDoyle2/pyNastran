@@ -6,7 +6,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import Tuple, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -616,7 +616,7 @@ class CBEAM(LineElement):
         assert self.offt == 'GGG', self.offt
         return v
 
-    def get_axes(self, model: BDF) -> Tuple[Any, Any, Any, Any, Any]:
+    def get_axes(self, model: BDF) -> tuple[Any, Any, Any, Any, Any]:
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 

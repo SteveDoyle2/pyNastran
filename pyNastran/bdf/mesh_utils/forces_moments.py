@@ -10,7 +10,7 @@ defines methods to access force/moment/pressure/temperature data:
 
 """
 from __future__ import annotations
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -30,8 +30,8 @@ def get_forces_moments_array(model: BDF,
                              dependents_nodes,
                              nid_map=None,
                              include_grav: bool=False,
-                             fdtype: str='float32') -> Tuple[bool,
-                                                             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
+                             fdtype: str='float32') -> tuple[bool,
+                                                             tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
     """
     Gets the forces/moments on the nodes.
 
@@ -43,7 +43,7 @@ def get_forces_moments_array(model: BDF,
         the load id
     nid_map : ???
         ???
-    eid_map : Dict[int eid : int index]
+    eid_map : dict[int eid : int index]
         ???
     nnodes : int
         the number of nodes in nid_map
@@ -420,7 +420,7 @@ def _get_forces_moments_pload4(model: BDF,
     return eids_missing
 
 def get_pressure_array(model: BDF, load_case_id: int, eids, stop_on_failure: bool=True,
-                       fdtype: str='float32') -> Tuple[bool, np.ndarray]:
+                       fdtype: str='float32') -> tuple[bool, np.ndarray]:
     """
     Gets the shell pressures for a load case.
 
@@ -532,8 +532,8 @@ def get_pressure_array(model: BDF, load_case_id: int, eids, stop_on_failure: boo
 
 def get_temperatures_array(model: BDF,
                            load_case_id: int,
-                           nid_map: Optional[Dict[int, int]]=None,
-                           fdtype: str='float32') -> Tuple[bool, np.ndarray]:
+                           nid_map: Optional[dict[int, int]]=None,
+                           fdtype: str='float32') -> tuple[bool, np.ndarray]:
     """
     Builds the temperature array based on thermal cards.
 
@@ -541,7 +541,7 @@ def get_temperatures_array(model: BDF,
     ----------
     load_case_id : int
         the load id
-    nid_map : Dict[node_id, value] default=None -> auto
+    nid_map : dict[node_id, value] default=None -> auto
         node_id : int
             node id
         value : int
@@ -612,7 +612,7 @@ def get_load_arrays(model: BDF, subcase_id: int,
         the BDF object
     subcase_id : int
         the subcase id
-    eid_map : Dict[int eid : int index]
+    eid_map : dict[int eid : int index]
         ???
     node_ids : list[int] / int ndarray
         the node ids in sorted order

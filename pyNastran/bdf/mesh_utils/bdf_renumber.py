@@ -10,7 +10,7 @@ defines:
 """
 from itertools import chain
 from io import StringIO, IOBase
-from typing import List, Dict, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -63,7 +63,7 @@ def bdf_renumber(bdf_filename: Union[str, BDF, StringIO],
     -------
     model : BDF()
         a renumbered BDF object corresponding to bdf_filename_out
-    mapper : Dict[bdf_attribute] : old_id_to_new_id_dict
+    mapper : dict[bdf_attribute] : old_id_to_new_id_dict
         List of mapper dictionaries of original ids to merged
         bdf_attribute : str
             a BDF attribute (e.g., 'nodes', 'elements')
@@ -647,7 +647,7 @@ def _write_bdf(model, bdf_filename_out, size=8, is_double=False):
                         interspersed=False, close=close)
 
 
-def get_renumber_starting_ids_from_model(model: BDF) -> Dict[str, int]:
+def get_renumber_starting_ids_from_model(model: BDF) -> dict[str, int]:
     """
     Get the starting ids dictionary used for renumbering with ids greater
     than those in model.

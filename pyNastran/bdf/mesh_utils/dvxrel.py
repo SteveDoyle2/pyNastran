@@ -8,7 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def get_dvprel_ndarrays(model: BDF, nelements: int, pids: np.ndarray,
-                        fdtype: str='float32', idtype: str='int32') -> Dict[str, Any]:
+                        fdtype: str='float32', idtype: str='int32') -> dict[str, Any]:
     """
     Creates arrays for dvprel results
 

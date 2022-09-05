@@ -1044,16 +1044,16 @@ def get_nodes(grids, grids_expected, coords):
 
     Parameters
     ----------
-    grids : List[grid]
+    grids : list[grid]
         the grids
-        grid : List[nid, cp, x, y, z]
+        grid : list[nid, cp, x, y, z]
             the GRID fields
-    coords : List[coord]
-        coord : List[int cid, rid, origin, zaxis, xaxis]
+    coords : list[coord]
+        coord : list[int cid, rid, origin, zaxis, xaxis]
             the coordinate system to add to the model
-    grids_expected : List[grid]
+    grids_expected : list[grid]
         the expected grids
-        grid : List[nid, cp, x, y, z]
+        grid : list[nid, cp, x, y, z]
             the GRID fields
 
     """

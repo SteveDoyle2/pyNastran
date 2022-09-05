@@ -241,7 +241,7 @@ class CGEN(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
         """
         list_fields = [
@@ -255,7 +255,7 @@ class CGEN(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
         """
         list_fields = [

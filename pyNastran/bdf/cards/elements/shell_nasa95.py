@@ -9,7 +9,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 
 """
 from __future__ import annotations
-from typing import Tuple, List, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -97,7 +97,7 @@ class CQUAD1(QuadShell):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int]
+        nids : list[int, int, int, int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -162,7 +162,7 @@ class CQUAD1(QuadShell):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -295,12 +295,12 @@ class CQUAD1(QuadShell):
             #self.theta_mcid, zoffset]
         #return self.print_card(fields1) + self.print_card(fields2)
 
-    def raw_fields(self) -> List[Any]:
+    def raw_fields(self) -> list[Any]:
         list_fields = (['CQUAD1', self.eid, self.Pid()] + self.node_ids +
                        [self.theta])
         return list_fields
 
-    def repr_fields(self) -> List[Any]:
+    def repr_fields(self) -> list[Any]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -324,7 +324,7 @@ class CTRSHL(TriShell):
 
     """
     type = 'CTRSHL'
-    def __init__(self, eid: int, pid: int, nids: List[int],
+    def __init__(self, eid: int, pid: int, nids: list[int],
                  theta: float,
                  comment: str='') -> None:
         """
@@ -336,7 +336,7 @@ class CTRSHL(TriShell):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int]
+        nids : list[int, int, int]
             node ids
         comment : str; default=''
             a comment for the card
@@ -834,7 +834,7 @@ class PQUAD1(Property):
         return Sbar
 
     def get_individual_ABD_matrices(
-            self, theta_offset: float=0.) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+            self, theta_offset: float=0.) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Gets the ABD matrix
 

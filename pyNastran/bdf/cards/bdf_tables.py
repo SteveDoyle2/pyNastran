@@ -21,7 +21,7 @@ All table cards are defined in this file.  This includes:
  * TABRNDG
 
 """
-from typing import List, Any
+from typing import Any
 import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8

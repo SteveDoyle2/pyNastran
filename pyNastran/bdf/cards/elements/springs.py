@@ -67,7 +67,7 @@ class CELAS1(SpringElement):
             element id
         pid : int
             property id (PELAS)
-        nids : List[int, int]
+        nids : list[int, int]
             node ids
         c1 / c2 : int; default=0
             DOF for nid1 / nid2
@@ -135,7 +135,7 @@ class CELAS1(SpringElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -260,7 +260,7 @@ class CELAS2(SpringElement):
             element id
         k : float
             spring stiffness
-        nids : List[int, int]
+        nids : list[int, int]
             SPOINT ids
             node ids
         c1 / c2 : int; default=0
@@ -344,7 +344,7 @@ class CELAS2(SpringElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -470,7 +470,7 @@ class CELAS3(SpringElement):
             element id
         pid : int
             property id (PELAS)
-        nids : List[int, int]
+        nids : list[int, int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -529,7 +529,7 @@ class CELAS3(SpringElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -645,7 +645,7 @@ class CELAS4(SpringElement):
             element id
         k : float
             spring stiffness
-        nids : List[int, int]
+        nids : list[int, int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -707,7 +707,7 @@ class CELAS4(SpringElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

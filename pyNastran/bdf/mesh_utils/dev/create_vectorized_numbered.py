@@ -68,8 +68,8 @@ class FakeBDFVectorized(BDF):
             self.log.warning(msg)
 
         # loads are not currently supported
-        self.loads = {}  # type: Dict[int, list[Any]]
-        self.load_combinations = {}  # type: Dict[int, list[Any]]
+        self.loads = {}  # type: dict[int, list[Any]]
+        self.load_combinations = {}  # type: dict[int, list[Any]]
 
 def create_vectorized_numbered(bdf_filename_in, bdf_filename_out, debug=True):
     model = FakeBDFVectorized()

@@ -15,7 +15,7 @@ All rigid elements are RigidElement and Element objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import Tuple, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -64,7 +64,7 @@ class RROD(RigidElement):
         ----------
         eid : int
             element id
-        nids : List[int, int]
+        nids : list[int, int]
             node ids; connected grid points at ends A and B
         cma / cmb : str; default=None
             dependent DOF
@@ -136,7 +136,7 @@ class RROD(RigidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -246,7 +246,7 @@ class RBAR(RigidElement):
         cmb = None
         return RBAR(eid, nids, cna, cnb, cma, cmb, alpha=0., tref=0., comment='')
 
-    def __init__(self, eid: int, nids: List[int],
+    def __init__(self, eid: int, nids: list[int],
                  cna: str, cnb: str,
                  cma: str, cmb: str,
                  alpha: float=0., tref: float=0., comment=''):
@@ -257,7 +257,7 @@ class RBAR(RigidElement):
         ----------
         eid : int
             element id
-        nids : List[int, int]
+        nids : list[int, int]
             node ids; connected grid points at ends A and B
         cna / cnb : str
             independent DOFs in '123456'
@@ -396,7 +396,7 @@ class RBAR(RigidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -571,7 +571,7 @@ class RBAR1(RigidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -690,13 +690,13 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         ----------
         eid : int
             element id
-        Gni : List[int]
+        Gni : list[int]
             independent node ids
-        Cni : List[str]
+        Cni : list[str]
             the independent components (e.g., '123456')
-        Gmi : List[int]
+        Gmi : list[int]
             dependent node ids
-        Cmi : List[str]
+        Cmi : list[str]
             the dependent components (e.g., '123456')
         alpha : float; default=0.
             thermal expansion coefficient
@@ -925,7 +925,7 @@ class RBE2(RigidElement):
 
     def __init__(self, eid: int,
                  gn: int,  # independent
-                 cm: str, Gmi: List[int], # dependent
+                 cm: str, Gmi: list[int], # dependent
                  alpha: float=0.0, tref: float=0.0,
                  comment: str=''):
         """
@@ -941,7 +941,7 @@ class RBE2(RigidElement):
         cm : str
             Component numbers of the dependent degrees-of-freedom in the
             global coordinate system at grid points GMi.
-        Gmi : List[int]
+        Gmi : list[int]
             dependent nodes
         alpha : float; default=0.0
             thermal expansion coefficient
@@ -1028,7 +1028,7 @@ class RBE2(RigidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1224,7 +1224,7 @@ class RBE3(RigidElement):
                     Gmi=None, Cmi=None, alpha=0.0, tref=0.0, comment='')
 
     def __init__(self, eid: int, refgrid: int, refc: str,
-                 weights: List[float], comps: List[str], Gijs: List[int],
+                 weights: list[float], comps: list[str], Gijs: list[int],
                  Gmi=None, Cmi=None,
                  alpha: float=0.0, tref: float=0.0, comment: str=''):
         """
@@ -1238,15 +1238,15 @@ class RBE3(RigidElement):
             dependent node
         refc : str
             dependent components for refgrid???
-        GiJs : List[int, ..., int]
+        GiJs : list[int, ..., int]
             independent nodes
-        comps : List[str, ..., str]
+        comps : list[str, ..., str]
             independent components
-        weights : List[float, ..., float]
+        weights : list[float, ..., float]
             weights for the importance of the DOF
-        Gmi : List[int, ..., int]; default=None -> []
+        Gmi : list[int, ..., int]; default=None -> []
             dependent nodes / UM Set
-        Cmi : List[str, ..., str]; default=None -> []
+        Cmi : list[str, ..., str]; default=None -> []
             dependent components / UM Set
         alpha : float; default=0.0
             thermal expansion coefficient
@@ -1409,7 +1409,7 @@ class RBE3(RigidElement):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1423,7 +1423,7 @@ class RBE3(RigidElement):
                     Gmi=gmi, Cmi=cmi, alpha=alpha, tref=tref, comment=comment)
 
     @property
-    def wt_cg_groups(self) -> List[Tuple[float, str, int]]:
+    def wt_cg_groups(self) -> list[tuple[float, str, int]]:
         wt_cg_groups = []
         for weight, comp, gijs in zip(self.weights, self.comps, self.Gijs):
             wt_cg_groups.append((weight, comp, gijs))
@@ -1488,7 +1488,7 @@ class RBE3(RigidElement):
         return self.refgrid
 
     @property
-    def Gmi_node_ids(self) -> List[int]:
+    def Gmi_node_ids(self) -> list[int]:
         if self.Gmi_ref is None:
             return self.Gmi
         if len(self.Gmi_ref) == 0:
@@ -1496,7 +1496,7 @@ class RBE3(RigidElement):
         return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
 
     @property
-    def Gijs_node_ids(self) -> List[int]:
+    def Gijs_node_ids(self) -> list[int]:
         if self.Gijs_ref is None:
             return self.Gijs
         Gijs = []
@@ -1556,7 +1556,7 @@ class RBE3(RigidElement):
         self.Gijs = Gij
 
     @property
-    def independent_nodes(self) -> List[int]:
+    def independent_nodes(self) -> list[int]:
         """
         gets the independent node ids
         """
@@ -1567,7 +1567,7 @@ class RBE3(RigidElement):
         return nodes
 
     @property
-    def dependent_nodes(self) -> List[int]:
+    def dependent_nodes(self) -> list[int]:
         """
         gets the dependent node ids
         """
@@ -1645,9 +1645,9 @@ class RSPLINE(RigidElement):
             element id
         independent_nid : int
             the independent node id
-        dependent_nids : List[int]
+        dependent_nids : list[int]
             the dependent node ids
-        dependent_components : List[str]
+        dependent_components : list[str]
             Components to be constrained
         diameter_ratio : float; default=0.1
             Ratio of the diameter of the elastic tube to the sum of the
@@ -1817,7 +1817,7 @@ class RSSCON(RigidElement):
             GRID/ELEM
         shell/solid_eid : int; default=None
             the shell/solid element id (if rigid_type=ELEM)
-        shell/solid_grids : List[int, int]; default=None
+        shell/solid_grids : list[int, int]; default=None
             the shell/solid node ids (if rigid_type=GRID)
         comment : str; default=''
             a comment for the card

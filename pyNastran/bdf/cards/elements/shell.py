@@ -23,7 +23,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 
 """
 from __future__ import annotations
-from typing import List, Tuple, Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import cross, allclose
@@ -59,7 +59,7 @@ def _triangle_area_centroid_normal(nodes, card):
 
     Parameters
     ----------
-    nodes : List[np.ndarray]
+    nodes : list[np.ndarray]
         List of three triangle vertices.
 
     Returns
@@ -167,7 +167,7 @@ class ShellElement(Element):
         #return self.Thickness() * self.Area()
 
     @property
-    def material_ids(self) -> List[int]:
+    def material_ids(self) -> list[int]:
         """
         Returns the material
 
@@ -261,7 +261,7 @@ class ShellElement(Element):
 class TriShell(ShellElement):
     def __init__(self):
         ShellElement.__init__(self)
-        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.nodes_ref = None  # type: Optional[list[Any]]
         self.pid_ref = None  # type: Optional[Any]
 
     def get_edge_ids(self):
@@ -369,7 +369,7 @@ class TriShell(ShellElement):
 
     def material_coordinate_system(self,
                                    normal=None,
-                                   xyz123=None) -> Tuple[float,
+                                   xyz123=None) -> tuple[float,
                                                          np.ndarray, np.ndarray,
                                                          np.ndarray, np.ndarray]:
         """
@@ -405,7 +405,7 @@ class TriShell(ShellElement):
 
     def element_coordinate_system(self,
                                   normal=None,
-                                  xyz123=None) -> Tuple[float,
+                                  xyz123=None) -> tuple[float,
                                                         np.ndarray, np.ndarray,
                                                         np.ndarray, np.ndarray]:
         """
@@ -534,7 +534,7 @@ class CTRIA3(TriShell):
         h5_file.create_dataset('zoffset', data=zoffsets)
         #self.tflag = tflag
 
-    def __init__(self, eid: int, pid: int, nids: List[int],
+    def __init__(self, eid: int, pid: int, nids: list[int],
                  zoffset: float=0., theta_mcid: Union[int, float]=0.0,
                  tflag: int=0,
                  T1: Optional[float]=None,
@@ -550,7 +550,7 @@ class CTRIA3(TriShell):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int]
+        nids : list[int, int, int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -596,7 +596,7 @@ class CTRIA3(TriShell):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -825,7 +825,7 @@ class CTRIA3(TriShell):
         return theta_mcid, zoffset, tflag, T1, T2, T3
 
     @property
-    def node_ids(self) -> List[int]:
+    def node_ids(self) -> list[int]:
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
 
     def raw_fields(self):
@@ -1094,7 +1094,7 @@ class CTRIA6(TriShell):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int/None, int/None, int/None]
+        nids : list[int, int, int, int/None, int/None, int/None]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -1222,7 +1222,7 @@ class CTRIA6(TriShell):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1455,7 +1455,7 @@ class CTRIAR(TriShell):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int]
+        nids : list[int, int, int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -1573,7 +1573,7 @@ class CTRIAR(TriShell):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1727,7 +1727,7 @@ class CTRIAR(TriShell):
 class QuadShell(ShellElement):
     def __init__(self):
         ShellElement.__init__(self)
-        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.nodes_ref = None  # type: Optional[list[Any]]
         self.pid_ref = None  # type: Optional[Any]
 
     def get_edge_ids(self):
@@ -1896,7 +1896,7 @@ class QuadShell(ShellElement):
 
     def material_coordinate_system(self,
                                    normal=None,
-                                   xyz1234=None) -> Tuple[float,
+                                   xyz1234=None) -> tuple[float,
                                                           np.ndarray, np.ndarray,
                                                           np.ndarray, np.ndarray]:
         """
@@ -1932,7 +1932,7 @@ class QuadShell(ShellElement):
 
     def element_coordinate_system(self,
                                   normal=None,
-                                  xyz1234=None) -> Tuple[float,
+                                  xyz1234=None) -> tuple[float,
                                                          np.ndarray, np.ndarray,
                                                          np.ndarray, np.ndarray]:
         """
@@ -1968,7 +1968,7 @@ class QuadShell(ShellElement):
 
     def _dxyz_centroid_normal_xyz1_xyz2(self,
                                         normal=None,
-                                        xyz1234=None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                                        xyz1234=None) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         if normal is None:
             normal = self.Normal() # k = kmat
 
@@ -2016,7 +2016,7 @@ class CSHEAR(QuadShell):
             element id
         pid : int
             property id (PSHEAR)
-        nids : List[int, int, int, int]
+        nids : list[int, int, int, int]
             node ids
         comment : str; default=''
             a comment for the card
@@ -2080,7 +2080,7 @@ class CSHEAR(QuadShell):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2132,12 +2132,12 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.get_node_positions()
         return _normal(n1 - n3, n2 - n4)
 
-    def AreaCentroidNormal(self) -> Tuple[NDArray3float, NDArray3float, NDArray3float]:
+    def AreaCentroidNormal(self) -> tuple[NDArray3float, NDArray3float, NDArray3float]:
         (area, centroid) = self.AreaCentroid()
         normal = self.Normal()
         return (area, centroid, normal)
 
-    def AreaCentroid(self) -> Tuple[NDArray3float, NDArray3float]:
+    def AreaCentroid(self) -> tuple[NDArray3float, NDArray3float]:
         r"""
         ::
           1-----2
@@ -2228,18 +2228,18 @@ class CSHEAR(QuadShell):
             self.nodes_ref = [n1, n4, n3, n2]
 
     @property
-    def node_ids(self) -> List[int]:
+    def node_ids(self) -> list[int]:
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
 
     @node_ids.setter
     def node_ids(self, value):
         raise ValueError("You cannot set node IDs like this...modify the node objects")
 
-    def raw_fields(self) -> List[Union[str, int]]:
+    def raw_fields(self) -> list[Union[str, int]]:
         list_fields = ['CSHEAR', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
-    def repr_fields(self) -> List[Union[str, int]]:
+    def repr_fields(self) -> list[Union[str, int]]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -2348,7 +2348,7 @@ class CQUAD4(QuadShell):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int]
+        nids : list[int, int, int, int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -2437,7 +2437,7 @@ class CQUAD4(QuadShell):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -3425,7 +3425,7 @@ class CPLSTx6(TriShell):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -3630,7 +3630,7 @@ class CPLSTx8(QuadShell):
 
         #Parameters
         #----------
-        #data : List[varies]
+        #data : list[varies]
             #a list of fields defined in OP2 format
         #comment : str; default=''
             #a comment for the card
@@ -3850,7 +3850,7 @@ class CQUADR(QuadShell):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int]
+        nids : list[int, int, int, int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -3962,7 +3962,7 @@ class CQUADR(QuadShell):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -4365,7 +4365,7 @@ class CQUAD(QuadShell):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int, int/None, int/None,
+        nids : list[int, int, int, int, int/None, int/None,
                     int/None, int/None, int/None]
             node ids
         theta_mcid : float; default=0.0
@@ -4455,7 +4455,7 @@ class CQUAD(QuadShell):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -4607,7 +4607,7 @@ class CQUAD8(QuadShell):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int, int/None, int/None, int/None, int/None]
+        nids : list[int, int, int, int, int/None, int/None, int/None, int/None]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -4716,7 +4716,7 @@ class CQUAD8(QuadShell):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -4841,7 +4841,7 @@ class CQUAD8(QuadShell):
         n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
         return _normal4(n1, n2, n3, n4, self)
 
-    def AreaCentroid(self) -> Tuple[float, np.ndarray]:
+    def AreaCentroid(self) -> tuple[float, np.ndarray]:
         """
         ::
 
@@ -4885,7 +4885,7 @@ class CQUAD8(QuadShell):
         return area
 
     @property
-    def node_ids(self) -> List[Union[int, None]]:
+    def node_ids(self) -> list[Union[int, None]]:
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
@@ -4964,7 +4964,7 @@ class SNORM(BaseCard):
             node id
         cid : int
             coordinate system
-        normal : List[float, float, float]
+        normal : list[float, float, float]
             normal vector
         comment : str; default=''
             a comment for the card
@@ -5056,7 +5056,7 @@ class SNORM(BaseCard):
             msg = self.comment + print_card_16(card)
         return msg
 
-def transform_shell_material_coordinate_system(cids: List[int],
+def transform_shell_material_coordinate_system(cids: list[int],
                                                iaxes, theta_mcid, normal, p1, p2,
                                                idtype='int32', fdtype='float64'):
     """calculate the material transformation matrix"""
@@ -5137,7 +5137,7 @@ def transform_shell_material_coordinate_system(cids: List[int],
 def _material_coordinate_system(element,
                                 normal: np.ndarray,
                                 xyz1: np.ndarray,
-                                xyz2: np.ndarray) -> Tuple[np.ndarray,
+                                xyz2: np.ndarray) -> tuple[np.ndarray,
                                                            np.ndarray]:
     """helper function for material_coordinate_system"""
     if element.theta_mcid is None:
@@ -5167,7 +5167,7 @@ def _material_coordinate_system(element,
 def _element_coordinate_system(element,
                                normal: np.ndarray,
                                xyz1: np.ndarray,
-                               xyz2: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+                               xyz2: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """helper function for material_coordinate_system"""
     imat = xyz2 - xyz1
     imat /= np.linalg.norm(imat)

@@ -16,7 +16,7 @@ All static loads are defined in this file.  This includes:
 
 """
 from __future__ import annotations
-from typing import List, Dict, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import array, cross, allclose, unique
@@ -74,9 +74,9 @@ class LOAD(LoadCombination):
             load id
         scale : float
             overall scale factor
-        scale_factors : List[float]
+        scale_factors : list[float]
             individual scale factors (corresponds to load_ids)
-        load_ids : List[int]
+        load_ids : list[int]
             individual load_ids (corresponds to scale_factors)
         comment : str; default=''
             a comment for the card
@@ -433,7 +433,7 @@ class GRAV(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -553,10 +553,10 @@ class ACCEL(BaseCard):
         direction : str
             Component direction of acceleration variation
             {X, Y, Z}
-        locs : List[float]
+        locs : list[float]
             Location along direction DIR in coordinate system CID for
             specification of a load scale factor.
-        vals : List[float]
+        vals : list[float]
             The load scale factor associated with location LOCi
         cid : int; default=0
             the coordinate system for the load
@@ -711,7 +711,7 @@ class ACCEL1(BaseCard):
         direction : str
             Component direction of acceleration variation
             {X, Y, Z}
-        nodes : List[int]
+        nodes : list[int]
             the nodes to apply acceleration to
         cid : int; default=0
             the coordinate system for the load
@@ -987,7 +987,7 @@ class Load0(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1198,7 +1198,7 @@ class Load1(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1422,7 +1422,7 @@ class Load2(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1846,7 +1846,7 @@ class PLOAD(Load):
             load id
         pressure : float
             the pressure to apply
-        nodes : List[int]
+        nodes : list[int]
             The nodes that are used to define the normal are defined
             using the same method as the CTRIA3/CQUAD4 normal.
             n = 3 or 4
@@ -1892,7 +1892,7 @@ class PLOAD(Load):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2075,7 +2075,7 @@ class PLOAD1(Load):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2191,7 +2191,7 @@ class PLOAD2(Load):
         return PLOAD2(sid, pressure, eids, comment='')
 
     def __init__(self, sid: int, pressure: float,
-                 eids: List[int], comment: str=''):
+                 eids: list[int], comment: str=''):
         """
         Creates a PLOAD2 card, which defines an applied load normal to the quad/tri face
 
@@ -2201,7 +2201,7 @@ class PLOAD2(Load):
             load id
         pressure : float
             the pressure to apply to the elements
-        eids : List[int]
+        eids : list[int]
             the elements to apply pressure to
             n < 6 or a continouus monotonic list of elements (e.g., [1, 2, ..., 1000])
         comment : str; default=''
@@ -2250,7 +2250,7 @@ class PLOAD2(Load):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2274,7 +2274,7 @@ class PLOAD2(Load):
         msg = ', which is required by PLOAD2 sid=%s' % self.sid
         self.eids_ref = model.Elements(self.eids, msg=msg)
 
-    def safe_cross_reference(self, model: BDF, xref_errors: Dict[Any, Any]) -> None:
+    def safe_cross_reference(self, model: BDF, xref_errors: dict[Any, Any]) -> None:
         msg = ', which is required by PLOAD2 sid=%s' % self.sid
         self.eids_ref = model.safe_elements(self.eids, self.sid, xref_errors, msg=msg)
 
@@ -2294,7 +2294,7 @@ class PLOAD2(Load):
     def get_loads(self):
         return [self]
 
-    def raw_fields_separate(self, model: BDF) -> List[List[Any]]:
+    def raw_fields_separate(self, model: BDF) -> list[list[Any]]:
         cards = []
         for eid in self.element_ids:
             if eid not in model.elements:
@@ -2303,7 +2303,7 @@ class PLOAD2(Load):
             cards.append(list_fields)
         return cards
 
-    def raw_fields(self) -> List[Any]:
+    def raw_fields(self) -> list[Any]:
         list_fields = ['PLOAD2', self.sid, self.pressure]
         eids = self.element_ids
         if len(eids) <= 6:
@@ -2319,7 +2319,7 @@ class PLOAD2(Load):
             list_fields += [eids[0], 'THRU', eids[-1]]
         return list_fields
 
-    def repr_fields(self) -> List[Any]:
+    def repr_fields(self) -> list[Any]:
         return self.raw_fields()
 
     def write_card_separate(self, model: BDF, size: int=8, is_double: bool=False) -> str:
@@ -2467,12 +2467,12 @@ class PLOAD4(Load):
         ----------
         sid : int
             the load id
-        eids : List[int, ...]
+        eids : list[int, ...]
             shells : the range of element ids; must be sequential
             solids : must be length 1
-        pressures : List[float, float, float, float] / float
+        pressures : list[float, float, float, float] / float
             float : turned into a list of length 4
-            List[float] :
+            list[float] :
               tri : must be length 4 (the last value should be the same as the 0th value)
               quad : must be length 4
         g1 : int/None
@@ -2617,7 +2617,7 @@ class PLOAD4(Load):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

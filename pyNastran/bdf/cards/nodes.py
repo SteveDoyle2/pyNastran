@@ -25,7 +25,7 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 """
 from __future__ import annotations
 from itertools import count
-from typing import List, Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -125,7 +125,7 @@ class SEQGP(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -140,7 +140,7 @@ class SEQGP(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -196,7 +196,7 @@ class XPoint(BaseCard):
         assert isinstance(nid, integer_types), nid
 
     @classmethod
-    def _export_to_hdf5(cls, h5_file, model: BDF, nids: List[int]) -> None:
+    def _export_to_hdf5(cls, h5_file, model: BDF, nids: list[int]) -> None:
         """exports the nodes in a vectorized way"""
         #comments = []
         #for nid in nids:
@@ -216,7 +216,7 @@ class XPoint(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -330,7 +330,7 @@ def write_xpoints(cardtype: str, points, comment: str='') -> str:
     return msg
 
 
-def compress_xpoints(point_type: str, xpoints: List[int]) -> List[List[int]]:
+def compress_xpoints(point_type: str, xpoints: list[int]) -> list[list[int]]:
     """
     Gets the SPOINTs/EPOINTs in sorted, short form.
 
@@ -413,7 +413,7 @@ class XPoints(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -459,7 +459,7 @@ class XPoints(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -509,7 +509,7 @@ class SPOINTs(XPoints):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             SPOINT ids
         comment : str; default=''
             a comment for the card
@@ -550,7 +550,7 @@ class EPOINTs(XPoints):
 
         Parameters
         ----------
-        ids : List[int]
+        ids : list[int]
             EPOINT ids
         comment : str; default=''
             a comment for the card
@@ -759,7 +759,7 @@ class GRDSET(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -773,7 +773,7 @@ class GRDSET(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -856,7 +856,7 @@ class GRIDB(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -901,7 +901,7 @@ class GRIDB(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -919,7 +919,7 @@ class GRIDB(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -1097,7 +1097,7 @@ class GRID(BaseCard):
         h5_file.create_dataset('ps', data=ps)
         h5_file.create_dataset('seid', data=seid)
 
-    def __init__(self, nid: int, xyz: Union[None, List[float], np.ndarray],
+    def __init__(self, nid: int, xyz: Union[None, list[float], np.ndarray],
                  cp: int=0, cd: int=0, ps: str='', seid: int=0,
                  comment: str='') -> None:
         """
@@ -1137,7 +1137,7 @@ class GRID(BaseCard):
         self.seid = seid
         self.cp_ref = None # type: Coord
         self.cd_ref = None # type: Coord
-        self.elements_ref = None # type: List[Element]
+        self.elements_ref = None # type: list[Element]
 
     @classmethod
     def add_op2_data(cls, data, comment: str='') -> Any:
@@ -1147,7 +1147,7 @@ class GRID(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1479,13 +1479,13 @@ class GRID(BaseCard):
         self.cp_ref = None
         self.elements_ref = None
 
-    def raw_fields(self) -> List[Any]:
+    def raw_fields(self) -> list[Any]:
         """
         Gets the fields in their unmodified form
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
 
         """
@@ -1493,13 +1493,13 @@ class GRID(BaseCard):
                       [self.Cd(), self.ps, self.SEid()]
         return list_fields
 
-    def repr_fields(self) -> List[Any]:
+    def repr_fields(self) -> list[Any]:
         """
         Gets the fields in their simplified form
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
 
         """
@@ -1672,7 +1672,7 @@ class POINT(BaseCard):
         return POINT(nid, xyz, cp=0, comment='')
 
     def __init__(self, nid: int,
-                 xyz: Union[List[float], np.ndarray],
+                 xyz: Union[list[float], np.ndarray],
                  cp: int=0, comment: str='') -> None:
         """
         Creates the POINT card
@@ -1743,7 +1743,7 @@ class POINT(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1845,7 +1845,7 @@ class POINT(BaseCard):
         """Removes cross-reference links"""
         self.cp_ref = self.Cp()
 
-    def raw_fields(self) -> List[Union[str, int, float, None]]:
+    def raw_fields(self) -> list[Union[str, int, float, None]]:
         """
         Gets the fields in their unmodified form
 
@@ -1858,7 +1858,7 @@ class POINT(BaseCard):
         list_fields = ['POINT', self.nid, self.Cp()] + list(self.xyz)
         return list_fields
 
-    def repr_fields(self) -> List[Union[str, int, float]]:
+    def repr_fields(self) -> list[Union[str, int, float]]:
         """
         Gets the fields in their simplified form
 

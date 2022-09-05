@@ -13,7 +13,7 @@ defines:
 
 """
 from io import StringIO
-from typing import Optional, Tuple, Any
+from typing import Optional, Any
 import numpy as np
 from pyNastran.nptyping_interface import NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
@@ -27,7 +27,7 @@ def cut_edge_model_by_coord(bdf_filename: str,
                             nodal_result,
                             plane_atol: float=1e-5,
                             csv_filename: Optional[str]=None,
-                            header: str='x, y, z, Cp') -> Tuple[Any, Any, Any]:
+                            header: str='x, y, z, Cp') -> tuple[Any, Any, Any]:
     """
     Cuts a Nastran model with a cutting plane
 
@@ -75,7 +75,7 @@ def cut_edge_model_by_coord(bdf_filename: str,
         #nodal_result, plane_atol=plane_atol)
     #return local_points_array, global_points_array, result_array
 
-def _setup_edges(bdf_filename: str) -> Tuple[NDArrayNint, NDArrayN3float, NDArrayN2int]:
+def _setup_edges(bdf_filename: str) -> tuple[NDArrayNint, NDArrayN3float, NDArrayN2int]:
     """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
     out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
@@ -222,7 +222,7 @@ def _cut_edge_model_by_coord(nids, xyz_cid0, edges, coord, tol,
     return local_points_array, global_points_array, result_array
 
 def slice_edges(xyz_cid0: NDArrayN3float, xyz_cid: NDArrayN3float, edges, nodal_result, plane_atol=1e-5,
-                plane_bdf_filename: Optional[str]=None) -> Tuple[Any, Any, Any]:
+                plane_bdf_filename: Optional[str]=None) -> tuple[Any, Any, Any]:
     """
     Slices the shell elements
 

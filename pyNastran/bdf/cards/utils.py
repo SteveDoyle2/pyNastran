@@ -4,7 +4,7 @@ defines:
  - fields_out = wipe_empty_fields(card)
 
 """
-from typing import List, Union
+from typing import Union
 
 
 def build_table_lines(fields, nstart=1, nend=0):
@@ -24,7 +24,7 @@ def build_table_lines(fields, nstart=1, nend=0):
 
     Parameters
     ----------
-    fields: List[int/float/str]
+    fields: list[int/float/str]
         the fields to enter, including DESVAR
     nstart: int; default=1
         the number of blank fields at the start of the line
@@ -33,7 +33,7 @@ def build_table_lines(fields, nstart=1, nend=0):
 
     Returns
     -------
-    fields_out : List[str/None]
+    fields_out : list[str/None]
         the values ready for card printing
 
     .. note:: will be used for DVCREL2, DVMREL2, DVPREL2, RBE1, RBE3, DRESP2, DRESP3
@@ -60,7 +60,7 @@ def build_table_lines(fields, nstart=1, nend=0):
     return fields_out
 
 
-def wipe_empty_fields(card: List[Union[str, int, float, None]]) -> List[Union[str, int, float, None]]:
+def wipe_empty_fields(card: list[Union[str, int, float, None]]) -> list[Union[str, int, float, None]]:
     """
     Removes any trailing Nones from the card.
     Also converts empty strings to None.
@@ -69,16 +69,16 @@ def wipe_empty_fields(card: List[Union[str, int, float, None]]) -> List[Union[st
 
     Parameters
     ----------
-    card : List[str]
+    card : list[str]
         the fields on the card as a list
 
     Returns
     -------
-    short_card : List[str]
+    short_card : list[str]
         the card with no trailing blank fields
 
     """
-    short_card = []  # type: List[Union[str, int, float, None]]
+    short_card = []  # type: list[Union[str, int, float, None]]
     for field in card:
         if isinstance(field, str):
             field = field.strip()

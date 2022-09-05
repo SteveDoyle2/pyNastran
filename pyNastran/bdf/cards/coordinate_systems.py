@@ -17,7 +17,7 @@ from __future__ import annotations
 import copy
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from abc import abstractproperty, abstractmethod
-from typing import List, Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
@@ -2724,7 +2724,7 @@ def create_coords_along_line(model, p1, p2, percents, cid=0, axis=1):
         the created coordinate system ids
     origins : list[(ox, oy, oz)]
         the origin of each coordinate system
-    cid_to_inids : Dict[cid] -> inids
+    cid_to_inids : dict[cid] -> inids
         maps the coord id to the index of the nodes along the axis
         cid : int
            the coord id
@@ -2783,9 +2783,9 @@ def get_nodes_along_axis_in_coords(model, nids, xyz_cp, icp_transform, cids):
     xyz_cp : (nnodes, 3) float ndarray
         the xyz locations in a representative local coordinate system
         for example, for cid=0, use xyz_cid0
-    icp_transform : Dict[cp cid] -> inids
+    icp_transform : dict[cp cid] -> inids
        a mapping of the CP coord to the node indices
-    icd_transform : Dict[cd cid] -> inids
+    icd_transform : dict[cd cid] -> inids
        a mapping of the CD coord to the node indices
     cids : list[int]
         the created coordinate system ids
@@ -2794,7 +2794,7 @@ def get_nodes_along_axis_in_coords(model, nids, xyz_cp, icp_transform, cids):
     -------
     #origins : list[(ox, oy, oz)]
         #the origin of each coordinate system
-    cid_to_inids : Dict[cid] -> inids
+    cid_to_inids : dict[cid] -> inids
         maps the coord id to the index of the nodes along the axis
         cid : int
            the coord id

@@ -7,7 +7,7 @@ from __future__ import annotations
 import os
 from io import StringIO
 from collections import defaultdict
-from typing import List, Dict, Tuple, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 #import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
@@ -37,7 +37,7 @@ EXPECTED_HEADER_KEYS_CHECK = [
 EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units', 'code-block']
 
 
-def _to_fields_mntpnt1(card_lines: List[str]) -> List[str]:
+def _to_fields_mntpnt1(card_lines: list[str]) -> list[str]:
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines
 
@@ -66,21 +66,21 @@ def _to_fields_mntpnt1(card_lines: List[str]) -> List[str]:
     return fields
 
 
-def to_fields(card_lines: List[str], card_name: str) -> List[str]:
+def to_fields(card_lines: list[str], card_name: str) -> list[str]:
     """
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
 
     Parameters
     ----------
-    lines : List[str]
+    lines : list[str]
         the lines of the BDF card object
     card_name : str
         the card_name -> 'GRID'
 
     Returns
     -------
-    fields : List[str]
+    fields : list[str]
         the string formatted fields of the card
 
     .. warning:: this function is used by the reader and isn't intended
@@ -95,7 +95,7 @@ def to_fields(card_lines: List[str], card_name: str) -> List[str]:
        ['GRID', '1', '', '1.0', '2.0', '3.0']
 
     """
-    fields = []  # type: List[str]
+    fields = []  # type: list[str]
 
     if card_name in ['MONPNT1']:
         return _to_fields_mntpnt1(card_lines)
@@ -173,7 +173,7 @@ def expand_tabs(line: str) -> str:
     return line
 
 def parse_executive_control_deck(
-        executive_control_lines: List[str]) -> Tuple[Optional[int], Optional[str], Optional[int], str]:
+        executive_control_lines: list[str]) -> tuple[Optional[int], Optional[str], Optional[int], str]:
     """Extracts the solution from the executive control deck"""
     sol = None
     method = None
@@ -213,7 +213,7 @@ def parse_executive_control_deck(
     return sol, method, sol_iline, app
 
 
-def _parse_pynastran_header(line: str) -> Tuple[Optional[str], Optional[str]]:
+def _parse_pynastran_header(line: str) -> tuple[Optional[str], Optional[str]]:
     """
     Parameters
     ----------
@@ -300,7 +300,7 @@ def _parse_pynastran_header(line: str) -> Tuple[Optional[str], Optional[str]]:
 
 
 #def clean_empty_lines(lines):
-    ## type: (List[str]) -> List[str]
+    ## type: (List[str]) -> list[str]
     #"""
     #Removes leading and trailing empty lines
     #don't remove internally blank lines
@@ -345,8 +345,8 @@ def print_filename(filename: str, relpath: bool=True) -> str:
 
 
 def _parse_dynamic_syntax(key: str,
-                          dict_of_vars: Dict[str, Any],
-                          log: Any) -> Dict[str, Any]:
+                          dict_of_vars: dict[str, Any],
+                          log: Any) -> dict[str, Any]:
     """
     Applies the dynamic syntax for %varName
 
@@ -372,7 +372,7 @@ def _parse_dynamic_syntax(key: str,
         raise KeyError(msg)
     return dict_of_vars[key]
 
-def _get_card_name(lines: List[str], active_filename: str) -> Optional[str]:
+def _get_card_name(lines: list[str], active_filename: str) -> Optional[str]:
     """
     Returns the name of the card defined by the provided lines
 

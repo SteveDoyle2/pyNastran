@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.optimization import DRESP1
 
-def constrain_solid_stress_from_properties(model: BDF, pids: List[int],
+def constrain_solid_stress_from_properties(model: BDF, pids: list[int],
                                           constraint_id: int, dresp_id: int, uallow: float):
     """adds VM stress constraints for solids"""
     skip_properties = [
@@ -31,7 +31,7 @@ def constrain_solid_stress_from_properties(model: BDF, pids: List[int],
             raise NotImplementedError(prop)
 
 
-def constrain_shell_stress_from_properties(model: BDF, pids: List[int],
+def constrain_shell_stress_from_properties(model: BDF, pids: list[int],
                                            constraint_id: int, uallow: float,
                                            dresp_id: int=1):
     """adds VM stress constraints for shells"""
@@ -78,7 +78,7 @@ def constrain_shell_stress_from_properties(model: BDF, pids: List[int],
     DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti,
            comment='')
 
-def solid_topology_optimization(model: BDF, pids_to_optimize: List[int], xinit=0.5, uallow=1.e20):
+def solid_topology_optimization(model: BDF, pids_to_optimize: list[int], xinit=0.5, uallow=1.e20):
     model.sol = 200
     eids_dict = model.get_element_ids_dict_with_pids(pids_to_optimize)
     pid = max(model.properties) + 1

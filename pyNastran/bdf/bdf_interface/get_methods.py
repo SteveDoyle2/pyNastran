@@ -139,7 +139,7 @@ class GetMethods(BDFAttributes):
                 msg += 'epoints=%s\n' % _unique_keys(self.epoints)
             raise KeyError(msg)
 
-    def EmptyNodes(self, nids: list[int], msg: str='') -> List[Optional[Union[GRID, SPOINT, EPOINT]]]:
+    def EmptyNodes(self, nids: list[int], msg: str='') -> list[Optional[Union[GRID, SPOINT, EPOINT]]]:
         """
         Returns a series of node objects given a list of IDs
 
@@ -163,7 +163,7 @@ class GetMethods(BDFAttributes):
             raise KeyError(msg)
         return nodes
 
-    def Nodes(self, nids: List[int], msg: str='') -> List[Union[GRID, SPOINT, EPOINT]]:
+    def Nodes(self, nids: list[int], msg: str='') -> list[Union[GRID, SPOINT, EPOINT]]:
         """
         Returns a series of node objects given a list of IDs
 
@@ -199,7 +199,7 @@ class GetMethods(BDFAttributes):
             nid_list = _unique_keys(self.points)
             raise KeyError('nid=%s is not a POINT%s\n%s' % (nid, msg, nid_list))
 
-    def Points(self, nids: List[int], msg: str='') -> List[POINT]:
+    def Points(self, nids: list[int], msg: str='') -> list[POINT]:
         """
         Returns a series of POINT objects given a list of IDs
         """
@@ -221,7 +221,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('eid=%s not found%s.  Allowed elements=%s'
                            % (eid, msg, _unique_keys(self.elements)))
 
-    def Elements(self, eids: List[int], msg: str='') -> List[Any]:
+    def Elements(self, eids: list[int], msg: str='') -> list[Any]:
         """
         Gets an series of elements
 
@@ -272,7 +272,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('pid=%s not found%s.  Allowed Pids=%s'
                            % (pid, msg, self.property_ids))
 
-    def Properties(self, pids: List[int], msg: str='') -> List[Any]:
+    def Properties(self, pids: list[int], msg: str='') -> list[Any]:
         """
         gets one or more elemental property (e.g. PSOLID, PLSOLID,
         PCOMP, PSHELL, PSHEAR); not mass property (PMASS)
@@ -362,7 +362,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('Invalid Hyperelastic Material ID:  mid=%s%s' % (mid, msg))
         return mat
 
-    def Materials(self, mids, msg='') -> List[Union[MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11, MAT3D, EQUIV, MATG]]:
+    def Materials(self, mids, msg='') -> list[Union[MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11, MAT3D, EQUIV, MATG]]:
         """gets one or more Materials"""
         if isinstance(mids, integer_types):
             mids = [mids]
@@ -375,7 +375,7 @@ class GetMethods(BDFAttributes):
     # LOADS
 
     def Load(self, sid: int, consider_load_combinations: bool=True,
-             msg: str='') -> List[Union[LOAD, GRAV, ACCEL, ACCEL1, SLOAD,
+             msg: str='') -> list[Union[LOAD, GRAV, ACCEL, ACCEL1, SLOAD,
                                         FORCE, FORCE1, FORCE2,
                                         MOMENT, MOMENT1, MOMENT2,
                                         PLOAD, PLOAD1, PLOAD2, PLOAD4]]:
@@ -763,7 +763,7 @@ class GetMethods(BDFAttributes):
     #--------------------
     # OPTIMIZATION CARDS
 
-    def DConstr(self, oid: int, msg: str='') -> List[Union[DCONSTR, DCONADD]]:
+    def DConstr(self, oid: int, msg: str='') -> list[Union[DCONSTR, DCONADD]]:
         """gets a DCONSTR"""
         try:
             return self.dconstrs[oid]
@@ -918,14 +918,14 @@ class GetMethods(BDFAttributes):
             raise KeyError('equation_id=%s not found%s.  Allowed DEQATNs=%s'
                            % (equation_id, msg, _unique_keys(self.dequations)))
 
-def get_pid_to_eid_map(model: BDF) -> Dict[int, List[int]]:
+def get_pid_to_eid_map(model: BDF) -> dict[int, list[int]]:
     pid_to_eid_map = defaultdict(set)
     for eid, elem in model.elements.items():
         pid = elem.pid
         pid_to_eid_map[pid].add(eid)
     return pid_to_eid_map
 
-def get_pid_to_nid_map(model: BDF) -> Dict[int, List[int]]:
+def get_pid_to_nid_map(model: BDF) -> dict[int, list[int]]:
     """TODO: doesn't support CONROD"""
     from collections import defaultdict
     get_pid_to_eid_map(model)
@@ -941,6 +941,6 @@ def get_pid_to_nid_map(model: BDF) -> Dict[int, List[int]]:
         property_to_nodes_map2[pid] = nodes_list
     return property_to_nodes_map2
 
-def _unique_keys(mydict: Dict[int, Any]) -> str:
+def _unique_keys(mydict: dict[int, Any]) -> str:
     """helper method"""
     return np.unique(list(mydict.keys()))

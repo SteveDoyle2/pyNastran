@@ -9,7 +9,7 @@ This file defines:
 
 """
 from copy import deepcopy
-from typing import Set, Tuple, Union, Optional
+from typing import Union, Optional
 import numpy as np
 
 from pyNastran.nptyping_interface import NDArray33float
@@ -141,7 +141,7 @@ def write_bdf_symmetric(bdf_filename: Union[str, BDF],
 
 def _mirror_nodes(model: BDF,
                   mirror_model: BDF,
-                  plane: str='xz') -> Tuple[int, str]:
+                  plane: str='xz') -> tuple[int, str]:
     """
     Mirrors the GRIDs
 
@@ -178,7 +178,7 @@ def _mirror_nodes(model: BDF,
     return nid_offset, plane
 
 def _mirror_nodes_plane(model: BDF, mirror_model: BDF, plane: NDArray33float,
-                        use_nid_offset: bool=True) -> Tuple[int, str]:
+                        use_nid_offset: bool=True) -> tuple[int, str]:
     """
     Mirrors the GRIDs about an arbitrary plane
 
@@ -262,7 +262,7 @@ def _mirror_nodes_plane(model: BDF, mirror_model: BDF, plane: NDArray33float,
             mirror_model.add_grid(nid2, xyz2, cp=0, cd=node.cd, ps=node.ps, seid=node.seid)
     return nid_offset, plane
 
-def _plane_to_iy(plane: str) -> Tuple[int, str]:
+def _plane_to_iy(plane: str) -> tuple[int, str]:
     """gets the index fo the mirror plane"""
     plane = plane.strip().lower()
     plane_sorted =  ''.join(sorted(set(plane)))
@@ -1056,7 +1056,7 @@ def _mirror_aero(model: BDF,
 
 def _asymmetrically_mirror_coords2(model: BDF,
                                    mirror_model: BDF,
-                                   cids_nominal_set: Set[int],
+                                   cids_nominal_set: set[int],
                                    cid_offset: int, plane: str='xz') -> None:
     """
     We'll invert i, but not j, which will invert k.
@@ -1069,7 +1069,7 @@ def _asymmetrically_mirror_coords2(model: BDF,
 
 def _asymmetrically_mirror_coords(model: BDF,
                                   mirror_model: BDF,
-                                  cids_nominal_set: Set[int],
+                                  cids_nominal_set: set[int],
                                   cid_offset: int, plane: str='xz') -> None:
     """we'll leave i the same, flip j, and invert k"""
     # doesn't handle CORD1x

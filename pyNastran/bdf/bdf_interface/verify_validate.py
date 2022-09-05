@@ -7,7 +7,7 @@ defines:
 from __future__ import annotations
 import sys
 import traceback
-from typing import List, Dict, Tuple, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
@@ -61,7 +61,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     for unused_super_id, superelement in model.superelement_models.items():
         verify_bdf(superelement, xref)
 
-def _verify_dict(dict_obj: Dict[Any, Any], xref: bool) -> None:
+def _verify_dict(dict_obj: dict[Any, Any], xref: bool) -> None:
     """helper for ``verify_bdf``"""
     for unused_key, card in sorted(dict_obj.items()):
         try:
@@ -70,7 +70,7 @@ def _verify_dict(dict_obj: Dict[Any, Any], xref: bool) -> None:
             print(str(card))
             raise
 
-def _verify_model_dict(dict_obj: Dict[Any, Any], model: BDF, xref: bool) -> None:
+def _verify_model_dict(dict_obj: dict[Any, Any], model: BDF, xref: bool) -> None:
     """helper for ``verify_bdf``"""
     log = model.log
     for unused_key, card in sorted(dict_obj.items()):
@@ -81,7 +81,7 @@ def _verify_model_dict(dict_obj: Dict[Any, Any], model: BDF, xref: bool) -> None
             log.error(e)
             #raise
 
-def _verify_dict_list(dict_list: Dict[Any, List[Any]], xref: bool) -> None:
+def _verify_dict_list(dict_list: dict[Any, list[Any]], xref: bool) -> None:
     """helper for ``verify_bdf``"""
     for unused_key, cards in sorted(dict_list.items()):
         for card in cards:
@@ -108,7 +108,7 @@ def _validate_msg(card_obj: Any) -> str:
     return msg
 
 def _validate_traceback(model: BDF, obj, unused_error,
-                        ifailed: int, nmax_failed: int) -> Tuple[int, Any, Any, Any]:
+                        ifailed: int, nmax_failed: int) -> tuple[int, Any, Any, Any]:
     """helper method for ``validate_bdf`` to write a traceback"""
     exc_type, exc_value, exc_traceback = sys.exc_info()
     #exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -313,7 +313,7 @@ def validate_bdf(model: BDF) -> None:
     for unused_super_id, superelement in model.superelement_models.items():
         validate_bdf(superelement)
 
-def _validate_dict_list(model: BDF, objects_dict: Dict[Any, Any]) -> None:
+def _validate_dict_list(model: BDF, objects_dict: dict[Any, Any]) -> None:
     """helper method for validate_bdf"""
     ifailed = 0
     nmax_failed = 0
@@ -332,7 +332,7 @@ def _validate_dict_list(model: BDF, objects_dict: Dict[Any, Any]) -> None:
         if ifailed:
             raise
 
-def _validate_dict(model: BDF, objects: Dict[Any, Any]) -> None:
+def _validate_dict(model: BDF, objects: dict[Any, Any]) -> None:
     """helper method for validate_bdf"""
     assert isinstance(objects, dict), type(objects)
     ifailed = 0
@@ -346,7 +346,7 @@ def _validate_dict(model: BDF, objects: Dict[Any, Any]) -> None:
     if ifailed:
         raise
 
-def _validate_list(model: BDF, objects: List[Any]) -> None:
+def _validate_list(model: BDF, objects: list[Any]) -> None:
     """helper method for validate_bdf"""
     ifailed = 0
     nmax_failed = 0

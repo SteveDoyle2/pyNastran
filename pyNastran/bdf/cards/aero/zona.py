@@ -9,7 +9,7 @@ All cards are BaseCard objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import List, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods
@@ -63,7 +63,7 @@ class ZONA:
         self.pafoil = {}
         #self.aeroz = {}
 
-    def object_attributes(self, mode:str='public', keys_to_skip: Optional[List[str]]=None,
+    def object_attributes(self, mode:str='public', keys_to_skip: Optional[list[str]]=None,
                           filter_properties: bool=False):
         """
         List the names of attributes of a class as strings. Returns public
@@ -77,12 +77,12 @@ class ZONA:
             * 'private' - names that begin with single underscore
             * 'both' - private and public
             * 'all' - all attributes that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
 
         Returns
         -------
-        attribute_names : List[str]
+        attribute_names : list[str]
             sorted list of the names of attributes of a given type or None
             if the mode is wrong
         """
@@ -96,7 +96,7 @@ class ZONA:
                                  filter_properties=filter_properties)
 
     def object_methods(self, mode: str='public',
-                       keys_to_skip: Optional[List[str]]=None) -> List[str]:
+                       keys_to_skip: Optional[list[str]]=None) -> list[str]:
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -111,18 +111,18 @@ class ZONA:
             * "private" - names that begin with single underscore
             * "both" - private and public
             * "all" - all methods that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
 
         Returns
         -------
-        method : List[str]
+        method : list[str]
             sorted list of the names of methods of a given type
             or None if the mode is wrong
         """
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []  # type: List[str]
+        my_keys_to_skip = []  # type: list[str]
 
         my_keys_to_skip = ['log',]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
@@ -436,7 +436,7 @@ class ACOORD(Coord):  # not done
         ----------
         cid : int
             coordinate system id
-        origin : List[float]
+        origin : list[float]
             the xyz origin
         delta : float
             pitch angle
@@ -776,7 +776,7 @@ class AESURFZ(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
 
         """
@@ -1058,7 +1058,7 @@ class AEROZ(Aero):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
           the fields that define the card
 
         """
@@ -1100,7 +1100,7 @@ class MKAEROZ(BaseCard):
             the length of the file must be at most 56 characters
         print_flag : int
             ???
-        freqs : List[float]
+        freqs : list[float]
             ???
         method : int
             ???
@@ -1152,7 +1152,7 @@ class MKAEROZ(BaseCard):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
           the fields that define the card
 
         """
@@ -1624,7 +1624,7 @@ class BODY7(BaseCard):
             (specifying body center line location and orientation)
         nseg : int
             Number of body segments
-        idmeshes : List[int]
+        idmeshes : list[int]
             Identification number of SEGMESH bulk data card (specifying body segments).
         comment : str; default=''
             a comment for the card
@@ -1894,7 +1894,7 @@ class BODY7(BaseCard):
     def _get_body7_width_height_radius(self, thetas: np.ndarray,
                                        itype: int, camber: float,
                                        yrad: float, zrad: float,
-                                       idy_ref, idz_ref) -> Tuple[float, float, float, float, float]:
+                                       idy_ref, idz_ref) -> tuple[float, float, float, float, float]:
         if itype == 1:
             # Body of Revolution
             # Xi, CAMi, YRi
@@ -1951,7 +1951,7 @@ class BODY7(BaseCard):
         thetas = np.radians(np.linspace(0., 360., nthetas))
         return thetas
 
-    def get_points(self) -> List[np.ndarray, np.ndarray]:
+    def get_points(self) -> list[np.ndarray, np.ndarray]:
         """creates a 1D representation of the BODY7"""
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
@@ -1995,7 +1995,7 @@ class BODY7(BaseCard):
 
         return xyzs, elements
 
-    def _get_points_elements_3di(self, segmesh: SEGMESH) -> Tuple[np.ndarray, np.ndarray]:
+    def _get_points_elements_3di(self, segmesh: SEGMESH) -> tuple[np.ndarray, np.ndarray]:
         """
         points (nchord, nspan) float ndarray; might be backwards???
             the points
@@ -2039,7 +2039,7 @@ class BODY7(BaseCard):
 
     def _get_xyzs_offset(self, origin_x, origin_y, origin_z, thetas,
                          itype: int, x: float, yrad: float, zrad: float, camber: float,
-                         idy_ref, idz_ref) -> Tuple[List[float], np.ndarray, np.ndarray]:
+                         idy_ref, idz_ref) -> tuple[list[float], np.ndarray, np.ndarray]:
         y = 0.
         z = 0.
         if itype == 1:
@@ -2095,7 +2095,7 @@ class BODY7(BaseCard):
         #"""shifts the aero panel"""
         #self.p1 += dxyz
 
-    def raw_fields(self) -> List[Any]:
+    def raw_fields(self) -> list[Any]:
         """
         Gets the fields in their unmodified form
 
@@ -2109,7 +2109,7 @@ class BODY7(BaseCard):
                        self.nseg] + self.idmeshes
         return list_fields
 
-    def repr_fields(self) -> List[Any]:
+    def repr_fields(self) -> list[Any]:
         """
         Gets the fields in their simplified form
 
@@ -2187,15 +2187,15 @@ class SEGMESH(BaseCard):
             - 1 body of revolution
             - 2 elliptical body
             - 3 arbitrary body
-        Xi : List[float]
+        Xi : list[float]
             X-location of the axial station; Xi must be in ascending
             order. (i.e., Xi+1 > Xi)
-        cambers : List[float]
+        cambers : list[float]
             Body camber at the Xi axial station. (Real)
-        YRi : List[float]
+        YRi : list[float]
             Body cross-sectional radius if ITYPEi = 1 or the semi-axis length
             of the elliptical body parallel to the Y-axis if ITYPEi=2.
-        ZRi : List[float]
+        ZRi : list[float]
             The semi-axis length of the elliptical body parallel to the Z-axis.
             Used only if ITYPEi=2. (Real)
         IDYi : int
@@ -3058,9 +3058,9 @@ class TRIM_ZONA(BaseCard):
             dynamic pressure
         true_g : float
             ???
-        nxyz : List[float]
+        nxyz : list[float]
             ???
-        pqr : List[float]
+        pqr : list[float]
             [roll_rate, pitch_rate, yaw_rate]
         loadset : int
             Identification number of a SET1 or SETADD bulk data card that
@@ -3068,9 +3068,9 @@ class TRIM_ZONA(BaseCard):
             TRIMADD bulk data card.  All values of the trim functions
             defined by the TRIMFNC or TRIMADD bulk data card are computed
             and printed out.
-        labels : List[str]
+        labels : list[str]
             names of the fixed variables
-        uxs : List[float]
+        uxs : list[float]
             values corresponding to labels
         comment : str; default=''
             a comment for the card

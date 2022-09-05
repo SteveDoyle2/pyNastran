@@ -9,7 +9,7 @@ defines:
 """
 from copy import deepcopy
 from collections import defaultdict
-from typing import List, Optional, Any
+from typing import Optional, Any
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf import read_bdf, BDF
@@ -23,13 +23,13 @@ def get_element_faces(model: BDF, element_ids: Optional[list[int]]=None) -> Any:
     ----------
     model : BDF()
         the BDF object
-    element_ids : List[int] / None
+    element_ids : list[int] / None
         skin a subset of element faces
         default=None -> all elements
 
     Returns
     -------
-    eid_faces : (int, List[(int, int, ...)])
+    eid_faces : (int, list[(int, int, ...)])
        value1 : element id
        value2 : face
 
@@ -64,10 +64,10 @@ def get_solid_skin_faces(model: BDF) -> Any:
 
     Returns
     -------
-    eid_set : Dict[tuple(int, int, ...)] = List[int]
+    eid_set : dict[tuple(int, int, ...)] = list[int]
        key : sorted face
        value : list of element ids with that face
-    face_map : Dict[tuple(int, int, ...)] = List[int]
+    face_map : dict[tuple(int, int, ...)] = list[int]
        key : sorted face
        value : unsorted face
 
@@ -224,15 +224,15 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
     skin_filename : str
         the file to write
     face_map : dict[sorted_face] : face
-        sorted_face : List[int, int, int] / List[int, int, int, int]
-        face : List[int, int, int] / List[int, int, int, int]
-    nids_to_write : List[int, int, ...]
+        sorted_face : list[int, int, int] / list[int, int, int, int]
+        face : list[int, int, int] / list[int, int, int, int]
+    nids_to_write : list[int, int, ...]
         list of node ids to write
-    eids_to_write : List[int, int, ...]
+    eids_to_write : list[int, int, ...]
         list of element ids to write
-    mids_to_write : List[int, int, ...]
+    mids_to_write : list[int, int, ...]
         list of material ids to write
-    eid_set : Set[int]
+    eid_set : set[int]
         is the type right???
     eid_shell : int
         the next id to use for the shell id

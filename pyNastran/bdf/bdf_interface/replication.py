@@ -10,7 +10,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.errors import ReplicationError
 
 
-def to_fields_replication(card_lines: List[str]) -> List[Optional[str]]:
+def to_fields_replication(card_lines: list[str]) -> list[Optional[str]]:
     """
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.  Same as to_fields, but
@@ -18,12 +18,12 @@ def to_fields_replication(card_lines: List[str]) -> List[Optional[str]]:
 
     Parameters
     ----------
-    lines : List[str]
+    lines : list[str]
         the lines of the BDF card object
 
     Returns
     -------
-    fields : List[str]
+    fields : list[str]
         the string formatted fields of the card
 
     .. warning:: this function is used by the reader and isn't intended
@@ -92,7 +92,7 @@ def to_fields_replication(card_lines: List[str]) -> List[Optional[str]]:
                                f'(mixed comma/space separated fields)\nfields={fields}')
     return wiped_fields
 
-def get_nrepeats(field: str, old_card: List[str], new_card: List[str]) -> int:
+def get_nrepeats(field: str, old_card: list[str], new_card: list[str]) -> int:
     """=4, =(11)"""
     msg = f'field={field!r}; expected =(1), =2, ...\nold_card={old_card}\nnew_card={new_card}'
     assert field[0] == '=', msg
@@ -155,7 +155,7 @@ def int_replication(field: str, old_field: str) -> int:
     field2 = nint + int(old_field)
     return field2
 
-def _field(old_card: List[str], ifield: int) -> str:
+def _field(old_card: list[str], ifield: int) -> str:
     """helper for replication"""
     #if isinstance(old_card, list):
     #print(old_card, ifield)
@@ -164,7 +164,7 @@ def _field(old_card: List[str], ifield: int) -> str:
         #field2 = old_card.field(ifield)
     return field2
 
-def repeat_cards(old_card: List[str], new_card: List[str]) -> List[List[str]]:
+def repeat_cards(old_card: list[str], new_card: list[str]) -> list[list[str]]:
     """helper for replication"""
     card = []
     cards = []

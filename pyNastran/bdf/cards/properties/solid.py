@@ -117,7 +117,7 @@ class PLSOLID(Property):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -169,7 +169,7 @@ class PCOMPS(Property):
     _field_map = {
         #1: 'pid', 2:'mid', 3:'cordm', 4:'integ', 5:'stress',
         #6:'isop', 7:'fctn',
-    }  # type: Dict[int,str]
+    }  # type: dict[int,str]
 
     @classmethod
     def _init_from_empty(cls):
@@ -374,7 +374,7 @@ class PCOMPLS(Property):
     _field_map = {
         #1: 'pid', 2:'mid', 3:'cordm', 4:'integ', 5:'stress',
         #6:'isop', 7:'fctn',
-    }  # type: Dict[int,str]
+    }  # type: dict[int,str]
 
     @classmethod
     def _init_from_empty(cls):
@@ -564,7 +564,7 @@ class PCOMPLS(Property):
         return len(self.mids)
 
     @property
-    def material_ids(self) -> List[int]:
+    def material_ids(self) -> list[int]:
         if self.mids_ref is None:
             return self.mids
         mids = []
@@ -819,7 +819,7 @@ class PSOLID(Property):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

@@ -7,7 +7,6 @@ defines:
                                    max_aspect_ratio=100., max_taper_ratio=4.0)
 
 """
-from typing import List
 import numpy as np
 from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import BDF
@@ -414,12 +413,12 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
         includes GRID, SPOINT, & EPOINTs
     xyz_cid0 : (nnodes, 3) float ndarray; default=None
         the associated global xyz locations
-    nid_map : Dict[nid]->index; default=None
+    nid_map : dict[nid]->index; default=None
         a mapper dictionary
 
     Returns
     -------
-    quality : Dict[name] : (nelements, ) float ndarray
+    quality : dict[name] : (nelements, ) float ndarray
         Various quality metrics
         names : min_interior_angle, max_interior_angle, dideal_theta,
                 max_skew_angle, max_aspect_ratio,

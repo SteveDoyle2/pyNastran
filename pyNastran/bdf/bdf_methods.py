@@ -8,7 +8,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 
 """
 from collections import defaultdict
-from typing import Tuple, List, Dict, Any, Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -39,7 +39,7 @@ class BDFMethods(BDFAttributes):
 
     def get_area_breakdown(self, property_ids=None,
                            stop_if_no_area: bool=True,
-                           sum_bar_area: bool=True) -> Dict[int, float]:
+                           sum_bar_area: bool=True) -> dict[int, float]:
         """
         Gets a breakdown of the area by property region
 
@@ -56,7 +56,7 @@ class BDFMethods(BDFAttributes):
 
         Returns
         -------
-        pids_to_area : Dict[int pid] : float area
+        pids_to_area : dict[int pid] : float area
             the pid to area dictionary
 
         TODO: What about CONRODs?
@@ -69,7 +69,7 @@ class BDFMethods(BDFAttributes):
         return pids_to_area
 
     def get_volume_breakdown(self, property_ids: Optional[int]=None,
-                             stop_if_no_volume: bool=True) -> Dict[int, float]:
+                             stop_if_no_volume: bool=True) -> dict[int, float]:
         """
         gets a breakdown of the volume by property region
 
@@ -87,9 +87,9 @@ class BDFMethods(BDFAttributes):
 
     def get_mass_breakdown(self,
                            property_ids: Optional[int]=None,
-                           stop_if_no_mass: bool=True) -> Tuple[
-                               Dict[int, float],
-                               Dict[str, float]]:
+                           stop_if_no_mass: bool=True) -> tuple[
+                               dict[int, float],
+                               dict[str, float]]:
         """
         Gets a breakdown of the mass by property region.
 
@@ -120,10 +120,10 @@ class BDFMethods(BDFAttributes):
 
     def get_mass_breakdown_detailed(self,
                                     property_ids: Optional[int]=None,
-                                    stop_if_no_mass: bool=True) -> Tuple[
-                                        Dict[int, float],
-                                        Dict[int, float],
-                                        Dict[str, float]]:
+                                    stop_if_no_mass: bool=True) -> tuple[
+                                        dict[int, float],
+                                        dict[int, float],
+                                        dict[str, float]]:
         """
         Gets a breakdown of the mass by property region.
 

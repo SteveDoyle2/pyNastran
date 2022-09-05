@@ -3,7 +3,6 @@ import os
 from io import StringIO
 from collections import ChainMap
 import inspect
-from typing import Tuple, List, Dict
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -251,9 +250,9 @@ def _run_loads(model, nelements: int, run_loads=True):
         del model.case_control_deck
 
 def _normals_eid_map(model: BDF, nelements: int,
-                     fdtype='float64') -> Tuple[np.ndarray,
-                                                List[int],
-                                                Dict[int, int]]:
+                     fdtype='float64') -> tuple[np.ndarray,
+                                                list[int],
+                                                dict[int, int]]:
     ieid = 0
     eids = []
     eid_map = {}

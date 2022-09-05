@@ -6,7 +6,7 @@ Defines utilities for parsing include files:
 import os
 import ntpath
 import posixpath
-from typing import List, Tuple, Optional, Any
+from typing import Optional, Any
 from pathlib import PurePosixPath, PureWindowsPath
 from pyNastran.bdf.errors import EnvironmentVariableError
 
@@ -15,14 +15,14 @@ IS_WINDOWS = 'nt' in os.name
 #is_mac = 'darwin' in os.name
 
 
-def get_include_filename(card_lines: List[str], include_dir: str='',
+def get_include_filename(card_lines: list[str], include_dir: str='',
                          is_windows: Optional[bool]=None) -> str:
     """
     Parses an INCLUDE file split into multiple lines (as a list).
 
     Parameters
     ----------
-    card_lines : List[str]
+    card_lines : list[str]
         the list of lines in the include card (all the lines!)
     include_dir : str; default=''
         the include directory
@@ -130,9 +130,9 @@ def split_filename_into_tokens(include_dir: str, filename: str,
     return pth_out
 
 def split_tokens(tokens, is_windows):
-    # type: (Tuple[str], bool) -> List[str]
+    # type: (Tuple[str], bool) -> list[str]
     """converts a series of path tokens into a joinable path"""
-    tokens2 = [] # type: List[str]
+    tokens2 = [] # type: list[str]
     is_mac_linux = not is_windows
     for itoken, token in enumerate(tokens):
         # this is technically legal...

@@ -9,7 +9,7 @@ Defines:
 from __future__ import annotations
 from itertools import count
 from collections import defaultdict
-from typing import Tuple, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore
@@ -131,8 +131,8 @@ def transform_inertia(mass: float, xyz_cg: np.ndarray,
     return I_new
 
 def _mass_properties_elements_init(model: BDF,
-                                   element_ids: Union[int, List[int]],
-                                   mass_ids: Union[int, List[int]]):
+                                   element_ids: Union[int, list[int]],
+                                   mass_ids: Union[int, list[int]]):
     """helper method"""
     # if neither element_id nor mass_ids are specified, use everything
     if isinstance(element_ids, integer_types):
@@ -181,9 +181,9 @@ def mass_properties(model: BDF,
     ----------
     model : BDF()
         a BDF object
-    elements : List[int]; ndarray
+    elements : list[int]; ndarray
         the element ids to consider
-    masses : List[int]; ndarray
+    masses : list[int]; ndarray
         the mass ids to consider
     reference_point : (3, ) ndarray; default = <0,0,0>.
         an array that defines the origin of the frame.
@@ -214,7 +214,7 @@ def mass_properties(model: BDF,
     return mass, cg, I
 
 def _update_reference_point(model: BDF, reference_point: np.ndarray,
-                            inertia_reference: str='cg') -> Tuple[np.ndarray, bool]:
+                            inertia_reference: str='cg') -> tuple[np.ndarray, bool]:
     """helper method for handling reference point"""
     inertia_reference = inertia_reference.lower()
     if inertia_reference == 'cg':
@@ -325,9 +325,9 @@ def _mass_properties_no_xref(model, elements, masses, reference_point, is_cg):  
     ----------
     model : BDF()
         a BDF object
-    elements : List[int]; ndarray
+    elements : list[int]; ndarray
         the element ids to consider
-    masses : List[int]; ndarray
+    masses : list[int]; ndarray
         the mass ids to consider
     reference_point : (3, ) ndarray; default = <0,0,0>.
         an array that defines the origin of the frame.
@@ -395,7 +395,7 @@ def _mass_properties_no_xref(model, elements, masses, reference_point, is_cg):  
 def _increment_inertia(centroid: np.ndarray, reference_point: np.ndarray,
                        m: float, mass: float,
                        cg: np.ndarray,
-                       inertia: List[float]) -> float:
+                       inertia: list[float]) -> float:
     """helper method"""
     if m == 0.:
         return mass
@@ -1467,26 +1467,26 @@ def _apply_nsm(model, nsm_id,
             default = <0,0,0>.
         type : int
             the node id
-    area_eids_pids : Dict[etype_ptype] = eids_pids
+    area_eids_pids : dict[etype_ptype] = eids_pids
         etype_ptype : str
             the element or property type (e.g., CQUAD4, PSHELL)
         eids_pids : (neids, 2) ndarray
             (element_id, property_id) for area elements
-    areas : Dict[etype_ptype] = area
+    areas : dict[etype_ptype] = area
         area : (nelements, ) float ndarray
             area for area elements
-    nsm_centroids_area : Dict[etype_ptype] = centroids
+    nsm_centroids_area : dict[etype_ptype] = centroids
         centroids : (nelements, 3) float ndarray
             centroids for area elements
-    length_eids_pids : Dict[etype_ptype] = eids_pids
+    length_eids_pids : dict[etype_ptype] = eids_pids
         etype_ptype : str
             the element or property type (e.g., CQUAD4, PSHELL)
         eids_pids : (neids, 2) ndarray
             (element_id, property_id) for area elements
-    lengths :  Dict[etype_ptype] = length
+    lengths :  dict[etype_ptype] = length
         length : (nelements, ) float ndarray
             lengths for length elements (e.g., CBAR, PBEAM, CONROD)
-    nsm_centroids_length : Dict[etype_ptype] = centroids
+    nsm_centroids_length : dict[etype_ptype] = centroids
         centroids : (nelements, 3) float ndarray
             centroids for length elements
     mass : float

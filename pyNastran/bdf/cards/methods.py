@@ -12,7 +12,7 @@ All cards are Method objects.
 
 """
 from __future__ import annotations
-from typing import List, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -236,35 +236,35 @@ class EIGC(Method):
         epsilon : float
         neigenvalues : int
             Number of Eigenvalues
-        mblkszs : List[float]; default=None
+        mblkszs : list[float]; default=None
             used by CLAN
-        iblkszs : List[int]; default=None
+        iblkszs : list[int]; default=None
             used by CLAN
-        ksteps : List[int]; default=None
+        ksteps : list[int]; default=None
             used by CLAN
-        NJIs : List[int]; default=None
+        NJIs : list[int]; default=None
             used by CLAN
-        alphaAjs : List[float]; default=None
+        alphaAjs : list[float]; default=None
             used by HESS/INV
-        omegaAjs : List[float]; default=None
+        omegaAjs : list[float]; default=None
             used by HESS/INV
-        alphaBjs : List[float]; default=None
+        alphaBjs : list[float]; default=None
             used by HESS/INV
-        omegaBjs : List[float]; default=None
+        omegaBjs : list[float]; default=None
             used by HESS/INV
-        LJs : List[float]; default=None
+        LJs : list[float]; default=None
             used by HESS/INV
-        NEJs : List[int]; default=None
+        NEJs : list[int]; default=None
             used by HESS/INV
-        NDJs : List[int]; default=None
+        NDJs : list[int]; default=None
             used by HESS/INV
-        shift_r1 : List[float]; default=None
+        shift_r1 : list[float]; default=None
             used by ISSR
-        shift_i1 : List[float]; default=None
+        shift_i1 : list[float]; default=None
             used by ISSR
-        isrr_flag : List[int]; default=None
+        isrr_flag : list[int]; default=None
             used by ISSR
-        nd1 : List[int]; default=None
+        nd1 : list[int]; default=None
             used by ISSR
         comment : str; default=''
             a comment for the card
@@ -1162,7 +1162,7 @@ class MODTRAK(BaseCard):
         mt_filter = double_or_blank(card, 4, 'mt_filter', 0.9)
         return MODTRAK(sid, low_range, high_range, mt_filter, comment=comment)
 
-    def raw_fields(self) -> List[Any]:
+    def raw_fields(self) -> list[Any]:
         list_fields = ['MODTRAK', self.sid, self.low_range, self.high_range, self.mt_filter]
         return list_fields
 

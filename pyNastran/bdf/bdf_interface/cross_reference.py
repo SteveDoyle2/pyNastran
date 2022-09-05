@@ -70,7 +70,7 @@ around the idea of cross-referencing, so it's recommended that you use it.
 # pylint: disable=R0902,R0904,R0914
 from collections import defaultdict
 import traceback
-from typing import List, Dict, Any
+from typing import Any
 
 from numpy import zeros, argsort, arange, array_equal, array
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -382,7 +382,7 @@ class XrefMesh(BDFAttributes):
 
     def _cross_reference_nodes_with_elements(self) -> None:
         """Links the nodes to all connected elements"""
-        nodes = defaultdict(list)  # type: Dict[int, list[Any]]
+        nodes = defaultdict(list)  # type: dict[int, list[Any]]
         for element in self.elements.values():
             #if element.type in ['CONM2']:
             #    pass

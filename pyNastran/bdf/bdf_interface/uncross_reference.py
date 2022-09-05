@@ -1,5 +1,5 @@
 """Unlinks up the various cards in the BDF."""
-from typing import List, Dict, Any
+from typing import Any
 from pyNastran.bdf.bdf_interface.safe_cross_reference import SafeXrefMesh
 
 class UnXrefMesh(SafeXrefMesh):

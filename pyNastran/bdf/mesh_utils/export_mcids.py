@@ -5,7 +5,7 @@ Defines:
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import Tuple, List, Dict, Union, Optional, TYPE_CHECKING
+from typing import Union, Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf, PCOMP, PCOMPG, PSHELL
 from pyNastran.bdf.cards.elements.shell import (
@@ -58,7 +58,7 @@ def export_mcids(bdf_filename: Union[BDF, str], csv_filename: Optional[str]=None
     iply : int; default=0
         TODO: not validated
         the ply to consider
-    pid_to_nplies : Dict[int pid, int nplies]; default=None -> auto
+    pid_to_nplies : dict[int pid, int nplies]; default=None -> auto
         optional dictionary to speed up analysis
 
         **PSHELL**
@@ -311,7 +311,7 @@ def export_mcids_all(bdf_filename: Union[BDF, str],
     #_export_coord_axes(nodes, bars, csv_filename)
     return iply_to_nodes, iply_to_bars
 
-def get_pid_to_nplies(model: BDF) -> Tuple[Dict[int, int], int]:
+def get_pid_to_nplies(model: BDF) -> tuple[dict[int, int], int]:
     pid_to_nplies = defaultdict(int)
     for pid, prop in model.properties.items():
         if prop.type in ['PCOMP', 'PCOMPG']:
@@ -326,7 +326,7 @@ def get_pid_to_nplies(model: BDF) -> Tuple[Dict[int, int], int]:
     assert isinstance(nplies_max, int), nplies_max
     return pid_to_nplies, nplies_max
 
-def get_pid_ref_prop_type(model: BDF, elem) -> Tuple[Union[PCOMP, PCOMPG, PSHELL], str]:
+def get_pid_ref_prop_type(model: BDF, elem) -> tuple[Union[PCOMP, PCOMPG, PSHELL], str]:
     """helper method for ``export_mcids``"""
     pid_ref = elem.pid_ref
     try:
@@ -341,10 +341,10 @@ def get_pid_ref_prop_type(model: BDF, elem) -> Tuple[Union[PCOMP, PCOMPG, PSHELL
 def _export_quad_mcid(model: BDF,
                       elem, nodes,
                       iply: int, nid: int, eid: int,
-                      #pids_failed: Set[int],
+                      #pids_failed: set[int],
                       bars: list[list[int]],
                       export_both_axes: bool, export_xaxis: bool,
-                      consider_property_rotation: bool) -> Tuple[int, int]:
+                      consider_property_rotation: bool) -> tuple[int, int]:
     """helper method for ``export_mcids``"""
     pid_ref, prop_type = get_pid_ref_prop_type(model, elem)
 
@@ -373,9 +373,9 @@ def _export_quad_mcid(model: BDF,
 def _export_quad_mcid_all(model: BDF,
                           elem: ShellElement,
                           nplies: int,
-                          nids: Dict[int, int],
-                          nodes: Dict[int, list[np.ndarray]],
-                          bars: Dict[int, list[Tuple[int, int]]]) -> None:
+                          nids: dict[int, int],
+                          nodes: dict[int, list[np.ndarray]],
+                          bars: dict[int, list[tuple[int, int]]]) -> None:
     """helper method for ``export_mcids``"""
     pid_ref, prop_type = get_pid_ref_prop_type(model, elem)
 
@@ -407,9 +407,9 @@ def _make_element_coord_quad(elem: ShellElement, pid_ref, nids, nodes, bars):
 
 def _rotate_coords(elem: ShellElement, pid_ref,
                    nplies: int,
-                   nids: Dict[int, int],
-                   nodes: Dict[int, list[Any]],
-                   bars: Dict[int, list[Any]],
+                   nids: dict[int, int],
+                   nodes: dict[int, list[Any]],
+                   bars: dict[int, list[Any]],
                    dxyz: float,
                    centroid: np.ndarray, imat: np.ndarray, jmat: np.ndarray,
                    normal: np.ndarray) -> None:
@@ -443,9 +443,9 @@ def _rotate_coords(elem: ShellElement, pid_ref,
 def _export_tri_mcid_all(model: BDF,
                          elem: ShellElement,
                          nplies: int,
-                         nids: Dict[int, int],
-                         nodes: Dict[int, list[np.ndarray]],
-                         bars: Dict[int, list[Tuple[int, int]]]) -> None:
+                         nids: dict[int, int],
+                         nodes: dict[int, list[np.ndarray]],
+                         bars: dict[int, list[tuple[int, int]]]) -> None:
     """helper method for ``export_mcids``"""
     pid_ref, prop_type = get_pid_ref_prop_type(model, elem)
 
@@ -515,10 +515,10 @@ def _export_tria_mcid(model: BDF,
                       elem: ShellElement,
                       nodes,
                       iply: int, nid: int, eid: int,
-                      #pids_failed: Set[int],
+                      #pids_failed: set[int],
                       bars,
                       export_both_axes: bool, export_xaxis: bool,
-                      consider_property_rotation: bool) -> Tuple[int, int]:
+                      consider_property_rotation: bool) -> tuple[int, int]:
     """helper method for ``export_mcids``"""
     pid_ref, prop_type = get_pid_ref_prop_type(model, elem)
     if prop_type == 'PSHELL':
@@ -554,7 +554,7 @@ def _rotate_single_coord(elem: ShellElement,
                          jmat: np.ndarray,
                          normal: np.ndarray,
                          export_both_axes: bool, export_xaxis: bool,
-                         consider_property_rotation: bool) -> Tuple[int, int]:
+                         consider_property_rotation: bool) -> tuple[int, int]:
     # rotate the coord
     imat, jmat = _rotate_mcid(
         elem, pid_ref, iply, imat, jmat, normal,
@@ -580,7 +580,7 @@ def _export_coord_axes(nodes, bars, csv_filename: str):
 def _rotate_mcid(elem: ShellElement,
                  pid_ref: Union[PCOMP, PCOMPG, PSHELL], iply: int,
                  imat: np.ndarray, jmat: np.ndarray, normal: np.ndarray,
-                 consider_property_rotation: bool=True) -> Tuple[np.ndarray, np.ndarray]:
+                 consider_property_rotation: bool=True) -> tuple[np.ndarray, np.ndarray]:
     """
     Rotates a material coordinate system.  Assumes the element theta/mcid
     has already been acounted for.
@@ -604,12 +604,12 @@ def _rotate_mcid(elem: ShellElement,
     return imat2, jmat2
 
 def _add_elements(nid: int, eid: int,
-                  nodes: list[Tuple[int, float, float, float]],
-                  bars: list[Tuple[int, int, int]],
+                  nodes: list[tuple[int, float, float, float]],
+                  bars: list[tuple[int, int, int]],
                   centroid: np.ndarray,
                   iaxis: np.ndarray,
                   jaxis: np.ndarray,
-                  export_both_axes: bool, export_xaxis: bool) -> Tuple[int, int]:
+                  export_both_axes: bool, export_xaxis: bool) -> tuple[int, int]:
     """adds the element data"""
     if export_both_axes:
         nodes.append((nid, centroid[0], centroid[1], centroid[2]))

@@ -173,7 +173,7 @@ class CREEP(Material):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -566,7 +566,7 @@ class MAT1(IsotropicMaterial):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -994,7 +994,7 @@ class MAT2(AnisotropicMaterial):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1297,7 +1297,7 @@ class MAT3(OrthotropicMaterial):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1479,7 +1479,7 @@ class MAT4(ThermalMaterial):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1532,7 +1532,7 @@ class MAT4(ThermalMaterial):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
             the fields that define the card
 
         """
@@ -1659,7 +1659,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1949,7 +1949,7 @@ class MAT8(OrthotropicMaterial):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2294,7 +2294,7 @@ class MAT9(AnisotropicMaterial):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2557,7 +2557,7 @@ class MAT10(Material):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -2958,7 +2958,7 @@ class MAT11(Material):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -3732,7 +3732,7 @@ class MATHP(HyperelasticMaterial):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -4008,7 +4008,7 @@ class MATEV(ViscoelasticMaterial):
 
         #Parameters
         #----------
-        #data : List[varies]
+        #data : list[varies]
             #a list of fields defined in OP2 format
         #comment : str; default=''
             #a comment for the card

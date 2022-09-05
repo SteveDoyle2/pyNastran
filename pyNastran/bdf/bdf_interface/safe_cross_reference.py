@@ -5,7 +5,7 @@ Safe cross-referencing skips failed xref's
 
 """
 from collections import defaultdict
-from typing import Tuple, List, Dict, Any
+from typing import Any
 
 import numpy as np
 from numpy import zeros, argsort, arange, array_equal
@@ -389,7 +389,7 @@ class SafeXrefMesh(XrefMesh):
             self.log.warning('Nodes %s are missing%s' % (str(missing_nodes), msg))
         return nodes, missing_nodes
 
-    def safe_get_nodes(self, nids: List[int], msg: str='') -> Tuple[List[Any], str]:
+    def safe_get_nodes(self, nids: list[int], msg: str='') -> tuple[list[Any], str]:
         """safe xref version of self.Nodes(nid, msg='')"""
         nodes = []
         error_nodes = []
@@ -458,7 +458,7 @@ class SafeXrefMesh(XrefMesh):
         return eid_ref
 
     def safe_elements(self, eids, ref_id: int,
-                      xref_errors: Dict[str, Tuple[int, int]], msg=''):
+                      xref_errors: dict[str, tuple[int, int]], msg=''):
         """
         Gets an series of elements
 
@@ -544,7 +544,7 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['mid'].append((ref_id, mid))
         return mid_ref
 
-    def safe_coord(self, cid: int, ref_id: int, xref_errors: Dict[str, Tuple[int, int]], msg=''):
+    def safe_coord(self, cid: int, ref_id: int, xref_errors: dict[str, tuple[int, int]], msg=''):
         """
         Gets a CORDx card
 

@@ -6,11 +6,11 @@ defines:
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import Tuple, List, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
-def free_edges(model: BDF, eids: Optional[list[int]]=None, maps=None) -> List[Tuple[int, int]]:
+def free_edges(model: BDF, eids: Optional[list[int]]=None, maps=None) -> list[tuple[int, int]]:
     """
     Gets the free edges for shell elements.
     A free edge is an edge that is only connected to 1 shell element.
@@ -19,16 +19,16 @@ def free_edges(model: BDF, eids: Optional[list[int]]=None, maps=None) -> List[Tu
     ----------
     model : BDF()
         the BDF model
-    eids : List[int]; default=None
+    eids : list[int]; default=None
         a subset of elements to consider
-    maps : List[...] (default=None -> calculate)
+    maps : list[...] (default=None -> calculate)
         the output from _get_maps(eids, map_names=None,
                                   consider_0d=False, consider_0d_rigid=False,
                                   consider_1d=False, consider_2d=True, consider_3d=False)
 
     Returns
     -------
-    edges: List[Tuple[int,int]]
+    edges: list[tuple[int,int]]
         list of node ids of each edges
 
     """
@@ -43,7 +43,7 @@ def free_edges(model: BDF, eids: Optional[list[int]]=None, maps=None) -> List[Tu
             edges.append(edge)
     return edges
 
-def non_paired_edges(model: BDF, eids: List[int]=None, maps=None) -> List[Tuple[int, int]]:
+def non_paired_edges(model: BDF, eids: list[int]=None, maps=None) -> list[tuple[int, int]]:
     """
     Gets the edges not shared by exactly 2 elements.
     This is useful for identifying rib/spar intersections.
@@ -52,16 +52,16 @@ def non_paired_edges(model: BDF, eids: List[int]=None, maps=None) -> List[Tuple[
     ----------
     model : BDF()
         the BDF model
-    eids : List[int]; default=None
+    eids : list[int]; default=None
         a subset of elements to consider
-    maps : List[...] (default=None -> calculate)
+    maps : list[...] (default=None -> calculate)
         the output from _get_maps(eids, map_names=None,
                                   consider_0d=False, consider_0d_rigid=False,
                                   consider_1d=False, consider_2d=True, consider_3d=False)
 
     Returns
     -------
-    non_paired_edges : List[(int nid1, int nid2), ...]
+    non_paired_edges : list[(int nid1, int nid2), ...]
         the non-paired edges
 
     """

@@ -675,17 +675,17 @@ class TestBeams(unittest.TestCase):
             #property id
         #mid : int
             #material id
-        #xxb : List[float]
+        #xxb : list[float]
             #The percentage locations along the beam [0., ..., 1.]
-        #so : List[str]
+        #so : list[str]
             #YES, YESA, NO
-        #area : List[float]
+        #area : list[float]
             #area
-        #i1, i2, i12, j : List[float]
+        #i1, i2, i12, j : list[float]
             #moments of inertia
-        #nsm : List[float]
+        #nsm : list[float]
             #nonstructural mass per unit length
-        #c1/c2, d1/d2, e1/e2, f1/f2 : List[float]
+        #c1/c2, d1/d2, e1/e2, f1/f2 : list[float]
            #the y/z locations of the stress recovery points
            #c1 - point C.y
            #c2 - point C.z

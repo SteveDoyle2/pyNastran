@@ -1,6 +1,5 @@
 from copy import deepcopy
-from typing import Tuple, List, Set, Union
-#import numpy as np
+from typing import Union
 from pyNastran.bdf.bdf import BDF, LOAD, PLOAD2, PLOAD4
 
 
@@ -81,7 +80,7 @@ def _cleanup_pload4(load: PLOAD4,
     return None
 
 def _cleanup_load(load_combo: LOAD,
-                  all_loads2: Dict[int, Any],
+                  all_loads2: dict[int, Any],
                   load_combos2: list[LOAD]) -> None:
     assert load_combo.type == 'LOAD', load_combo
     load_ids = []
@@ -215,7 +214,7 @@ def remove_mpc_chain(model: BDF, nodes: list[int]) -> list[int]:
     model.mpcs = mpcs_dict
     return nodes_all
 
-def remove_rbe_chain(model: BDF, nodes: list[int]) -> Tuple[Set[int], list[int]]:
+def remove_rbe_chain(model: BDF, nodes: list[int]) -> tuple[set[int], list[int]]:
     """deletes any RBE2, RBE3, RBAR, etc. connected to a given set of nodes"""
     nodes_all = set([])
     eids_to_delete = []
@@ -240,7 +239,9 @@ def remove_rbe_chain(model: BDF, nodes: list[int]) -> Tuple[Set[int], list[int]]
     return nodes_all, eids_to_delete
 
 
-def remove_element_chain(model: BDF, nodes_all: Set[int], element_types: Union[str, Set[str]]) -> Tuple[Set[int], list[int]]:
+def remove_element_chain(model: BDF,
+                         nodes_all: set[int],
+                         element_types: Union[str, set[str]]) -> tuple[set[int], list[int]]:
     if isinstance(element_types, str):
         element_types = set([element_types])
     eids_to_delete = []

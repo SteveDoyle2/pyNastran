@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from io import IOBase
 from pathlib import PurePath
-from typing import List, Dict, Union, Optional, Tuple, Any, cast, TYPE_CHECKING
+from typing import Union, Optional, Any, cast, TYPE_CHECKING
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -60,7 +60,7 @@ class WriteMesh(BDFAttributes):
         assert isinstance(encoding, str), encoding
         return encoding
 
-    def _get_long_ids(self, size) -> Tuple[bool, int]:
+    def _get_long_ids(self, size) -> tuple[bool, int]:
         """calculate is_long_ids"""
         # required for MasterModelTaxi
         is_long_ids = (
@@ -319,7 +319,7 @@ class WriteMesh(BDFAttributes):
         if self.properties:
             bdf_file.write('$ELEMENTS_WITH_PROPERTIES\n')
 
-        eids_written = []  # type: List[int]
+        eids_written = []  # type: list[int]
         pids = sorted(self.properties.keys())
         pid_eids = self.get_element_ids_dict_with_pids(pids, stop_if_no_eids=False)
 
@@ -651,7 +651,7 @@ class WriteMesh(BDFAttributes):
                 for transfer_function in tfs:
                     bdf_file.write(transfer_function.write_card(size, is_double))
 
-    def _write_mesh_long_ids_size(self, size: bool, is_long_ids: bool) -> Tuple[int, bool]:
+    def _write_mesh_long_ids_size(self, size: bool, is_long_ids: bool) -> tuple[int, bool]:
         """helper method"""
         if is_long_ids and size == 16 or is_long_ids is False:
             return size, is_long_ids
@@ -966,7 +966,7 @@ class WriteMesh(BDFAttributes):
         """Writes the PARAM cards"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.params or self.dti or self.mdlprm:
-            bdf_file.write('$PARAMS\n')  # type: List[str]
+            bdf_file.write('$PARAMS\n')  # type: list[str]
             for unused_name, dti in sorted(self.dti.items()):
                 bdf_file.write(dti.write_card(size=size, is_double=is_double))
 
@@ -1109,7 +1109,7 @@ class WriteMesh(BDFAttributes):
         is_sets = (self.sets or self.asets or self.omits or self.bsets or self.csets or self.qsets
                    or self.usets)
         if is_sets:
-            bdf_file.write('$SETS\n')  # type: List[str]
+            bdf_file.write('$SETS\n')  # type: list[str]
             for (unused_id, set_obj) in sorted(self.sets.items()):  # dict
                 bdf_file.write(set_obj.write_card(size, is_double))
             for set_obj in self.asets:  # list
@@ -1140,7 +1140,7 @@ class WriteMesh(BDFAttributes):
         is_sets = (self.se_sets or self.se_bsets or self.se_csets or self.se_qsets
                    or self.se_usets)
         if is_sets:
-            bdf_file.write('$SUPERELEMENTS\n')  # type: List[str]
+            bdf_file.write('$SUPERELEMENTS\n')  # type: list[str]
             for set_obj in self.se_bsets:  # list
                 bdf_file.write(set_obj.write_card(size, is_double))
             for set_obj in self.se_csets:  # list
@@ -1192,7 +1192,7 @@ class WriteMesh(BDFAttributes):
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the TABLEx cards sorted by ID"""
         if self.tables or self.tables_d or self.tables_m or self.tables_sdamping:
-            bdf_file.write('$TABLES\n')  # type: List[str]
+            bdf_file.write('$TABLES\n')  # type: list[str]
             for (unused_id, table) in sorted(self.tables.items()):
                 bdf_file.write(table.write_card(size, is_double))
             for (unused_id, table) in sorted(self.tables_d.items()):
@@ -1250,7 +1250,7 @@ class WriteMesh(BDFAttributes):
 def _fix_sizes(size: int,
                nodes_size: Optional[int],
                elements_size: Optional[int],
-               loads_size: Optional[int]) -> Tuple[int, int]:
+               loads_size: Optional[int]) -> tuple[int, int]:
     if nodes_size is None:
         nodes_size = size
     if elements_size is None:
@@ -1260,7 +1260,7 @@ def _fix_sizes(size: int,
     return size, nodes_size, elements_size, loads_size
 
 def _output_helper(out_filename: Optional[str], interspersed: bool,
-                   size: int, is_double: bool, log: SimpleLogger) -> Tuple[str, int]:
+                   size: int, is_double: bool, log: SimpleLogger) -> tuple[str, int]:
     """Performs type checking on the write_bdf inputs"""
     if out_filename is None:
         from pyNastran.utils.gui_io import save_file_dialog
@@ -1293,7 +1293,7 @@ def _output_helper(out_filename: Optional[str], interspersed: bool,
     #self.log.debug("***writing %s" % fname)
     return out_filename, size
 
-def get_optimization_include(model: BDF) -> Tuple[List[int], List[int]]:
+def get_optimization_include(model: BDF) -> tuple[list[int], list[int]]:
     """gets the properties and materials refereced by DVPRELx/DVMRELx"""
     property_types = {'PELAS', 'PDAMP', 'PGAP', 'PBUSH', 'PBUSH1D', 'PVISC', 'PWELD',
                   'PROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBMSECT',
@@ -1314,7 +1314,7 @@ def get_optimization_include(model: BDF) -> Tuple[List[int], List[int]]:
     return list(pids_to_remove), list(mids_to_remove)
 
 
-def delete_optimization_data(model: BDF) -> Tuple[List[int], List[int]]:
+def delete_optimization_data(model: BDF) -> tuple[list[int], list[int]]:
     """removes optimization referenced data (that will be in the PCH file)"""
     pids_to_remove, mids_to_remove = get_optimization_include(model)
     properties_to_write, materials_to_write, desvars = _delete_optimization_data(
@@ -1322,8 +1322,8 @@ def delete_optimization_data(model: BDF) -> Tuple[List[int], List[int]]:
     return properties_to_write, materials_to_write, desvars
 
 def _delete_optimization_data(model: BDF,
-                              pids_to_remove: List[int],
-                              mids_to_remove: List[int]) -> Tuple[List[Any], List[Any], List[DESVAR]]:
+                              pids_to_remove: list[int],
+                              mids_to_remove: list[int]) -> tuple[list[Any], list[Any], list[DESVAR]]:
     """heper method"""
     properties_to_write = []
     materials_to_write = []

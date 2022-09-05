@@ -7,7 +7,7 @@ Defines:
 
 """
 from __future__ import annotations
-from typing import Tuple, List, Dict, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from math import radians, sin, cos
 import numpy as np
 from numpy import array, cross, allclose, mean
@@ -26,8 +26,8 @@ def isnan(value):
 def sum_forces_moments(model: BDF, p0: np.ndarray, loadcase_id: int,
                        cid: int=0,
                        include_grav: bool=False,
-                       xyz_cid0: Optional[Dict[int, NDArray3float]]=None,
-                       ) -> Tuple[NDArray3float, NDArray3float]:
+                       xyz_cid0: Optional[dict[int, NDArray3float]]=None,
+                       ) -> tuple[NDArray3float, NDArray3float]:
     """
     Sums applied forces & moments about a reference point p0 for all
     load cases.
@@ -50,7 +50,7 @@ def sum_forces_moments(model: BDF, p0: np.ndarray, loadcase_id: int,
         the coordinate system for the summation
     include_grav : bool; default=False
         includes gravity in the summation (not supported)
-    xyz_cid0 : None / Dict[int] = (3, ) ndarray
+    xyz_cid0 : None / dict[int] = (3, ) ndarray
         the nodes in the global coordinate system
 
     Returns
@@ -328,11 +328,11 @@ def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p)
     return
 
 def sum_forces_moments_elements(model: BDF, p0: int, loadcase_id: int,
-                                eids: List[int], nids: List[int],
+                                eids: list[int], nids: list[int],
                                 cid: int=0,
                                 include_grav: bool=False,
-                                xyz_cid0: Optional[Dict[int, NDArray3float]]=None,
-                                ) -> Tuple[NDArray3float, NDArray3float]:
+                                xyz_cid0: Optional[dict[int, NDArray3float]]=None,
+                                ) -> tuple[NDArray3float, NDArray3float]:
     """
     Sum the forces/moments based on a list of nodes and elements.
 
@@ -340,9 +340,9 @@ def sum_forces_moments_elements(model: BDF, p0: int, loadcase_id: int,
     ----------
     model : BDF()
         a BDF object
-    eids : List[int]
+    eids : list[int]
         the list of elements to include (e.g. the loads due to a PLOAD4)
-    nids : List[int]
+    nids : list[int]
         the list of nodes to include (e.g. the loads due to a FORCE card)
     p0 : int; (3,) ndarray
        the point to sum moments about
@@ -354,7 +354,7 @@ def sum_forces_moments_elements(model: BDF, p0: int, loadcase_id: int,
         the LOAD=ID to analyze
     include_grav : bool; default=False
         includes gravity in the summation (not supported)
-    xyz_cid0 : None / Dict[int] = (3, ) ndarray
+    xyz_cid0 : None / dict[int] = (3, ) ndarray
         the nodes in the global coordinate system
 
     Returns
@@ -1014,7 +1014,7 @@ def get_static_force_vector_from_subcase_id(model: BDF, subcase_id: int):
         F = _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof)
     return F
 
-def get_ndof(model: BDF, subcase: Subcase) -> Tuple[int, int, int]:
+def get_ndof(model: BDF, subcase: Subcase) -> tuple[int, int, int]:
     """gets the size of the DOFs"""
     ndof_per_grid = 6
     if 'HEAT' in subcase:
@@ -1027,7 +1027,7 @@ def get_ndof(model: BDF, subcase: Subcase) -> Tuple[int, int, int]:
     assert ndof > 0, model.card_count
     return ngrid, ndof_per_grid, ndof
 
-def _get_loadid_ndof(model: BDF, subcase_id) -> Tuple[int, int, int]:
+def _get_loadid_ndof(model: BDF, subcase_id) -> tuple[int, int, int]:
     """helper method for ``get_static_force_vector_from_subcase_id``"""
     subcase = model.subcases[subcase_id]
     load_id = None
@@ -1036,7 +1036,7 @@ def _get_loadid_ndof(model: BDF, subcase_id) -> Tuple[int, int, int]:
     unused_ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
     return load_id, ndof_per_grid, ndof
 
-def _get_dof_map(model: BDF) -> Dict[Tuple[int, int], int]:
+def _get_dof_map(model: BDF) -> dict[tuple[int, int], int]:
     """helper method for ``get_static_force_vector_from_subcase_id``"""
     i = 0
     dof_map = {}
@@ -1121,7 +1121,7 @@ def _force_to_local(cd_ref, vector):
         #asdf
 
 
-def _add_force(Fg: np.ndarray, dof_map: Dict[Tuple[int, int], int], model: BDF,
+def _add_force(Fg: np.ndarray, dof_map: dict[tuple[int, int], int], model: BDF,
                load, offset: int, ndof_per_grid: int, cid: int=0, show_warning: bool=True):
     """adds the FORCE/MOMENT loads to Fg"""
     #cid = load.cid
@@ -1189,7 +1189,7 @@ def _add_force(Fg: np.ndarray, dof_map: Dict[Tuple[int, int], int], model: BDF,
         Fg[irow] += fglobal[dof]
     return show_warning
 
-def _add_pload2(Fg: np.ndarray, dof_map: Dict[int, int],
+def _add_pload2(Fg: np.ndarray, dof_map: dict[int, int],
                 model: BDF, load: PLOAD2) -> None:
     """adds the PLOAD2 loads to Fg"""
     #PLOAD2       150     1.5       1    THRU       7
@@ -1211,7 +1211,7 @@ def _add_pload2(Fg: np.ndarray, dof_map: Dict[int, int],
                 Fg[irow] += fglobal[dof]
             #model.log.warning('PLOAD2 havent been verified')
 
-def _add_pload(Fg: np.ndarray, dof_map: Dict[int, int],
+def _add_pload(Fg: np.ndarray, dof_map: dict[int, int],
                model: BDF, load: PLOAD) -> None:
     """adds the PLOAD loads to Fg"""
     scale = 1.0

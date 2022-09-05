@@ -89,7 +89,7 @@ class IntStrCard(IntCard):
 
     """
     type = 'IntStrCard'
-    allowed_strings = set([]) # type: Set[str]
+    allowed_strings = set([]) # type: set[str]
     def __init__(self, value):
         """
         Creates an IntStrCard

@@ -6,8 +6,8 @@ defines:
 """
 from io import StringIO
 from copy import deepcopy
+from typing import Union
 from pathlib import PurePath
-from typing import Set, Tuple, Union
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
@@ -19,7 +19,7 @@ def get_oml_eids(bdf_filename: Union[str, BDF, PurePath, StringIO],
                  eid_start: int,
                  theta_tol: float=30.,
                  is_symmetric: bool=True,
-                 consider_flippped_normals: bool=True) -> Tuple[BDF, Set[int]]:
+                 consider_flippped_normals: bool=True) -> tuple[BDF, set[int]]:
     """
     Extracts the OML faces (outer mold line) of a shell model.  In other words,
     find all the shell elements touching the current element without crossing

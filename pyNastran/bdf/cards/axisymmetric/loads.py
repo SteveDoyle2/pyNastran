@@ -207,7 +207,7 @@ class PLOADX1(BaseCard):
             load id
         eid : int
             element id (CQUADX, CTRIAX, or CTRIAX6)
-        nids : List[int, int]
+        nids : list[int, int]
             Corner grid points.
             GA and GB are any two adjacent corner grid points of the element
         pa / pb : float / None
@@ -273,7 +273,7 @@ class PLOADX1(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

@@ -52,7 +52,7 @@ glue:
 
 """
 from __future__ import annotations
-from typing import Tuple, List, Dict, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, _node_ids
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -472,7 +472,7 @@ class BCBODY(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
-def _get_bcbody_section_values(card, i: int, word: str) -> Tuple[int, list[Any]]:
+def _get_bcbody_section_values(card, i: int, word: str) -> tuple[int, list[Any]]:
     """gets all the values of a multi-line section"""
     i0 = i
     values = []

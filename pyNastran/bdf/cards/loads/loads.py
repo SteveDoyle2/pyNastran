@@ -67,9 +67,9 @@ class LoadCombination(BaseCard):
             load id
         scale : float
             overall scale factor
-        scale_factors : List[float]
+        scale_factors : list[float]
             individual scale factors (corresponds to load_ids)
-        load_ids : List[int]
+        load_ids : list[int]
             individual load_ids (corresponds to scale_factors)
         comment : str; default=''
             a comment for the card
@@ -326,7 +326,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -580,7 +580,7 @@ class LOADCYH(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -663,11 +663,11 @@ class DAREA(BaseCard):
         ----------
         sid : int
             darea id
-        nodes : List[int]
+        nodes : list[int]
             GRID, EPOINT, SPOINT id
-        components : List[int]
+        components : list[int]
             Component number. (0-6; 0-EPOINT/SPOINT; 1-6 GRID)
-        scales : List[float]
+        scales : list[float]
             Scale (area) factor
         comment : str; default=''
             a comment for the card
@@ -708,7 +708,7 @@ class DAREA(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -828,11 +828,11 @@ class SPCD(Load):
         ----------
         conid : int
             constraint id
-        nodes : List[int]
+        nodes : list[int]
             GRID/SPOINT ids
-        components : List[str]
+        components : list[str]
             the degree of freedoms to constrain (e.g., '1', '123')
-        enforced : List[float]
+        enforced : list[float]
             the constrained value for the given node (typically 0.0)
         comment : str; default=''
             a comment for the card
@@ -900,7 +900,7 @@ class SPCD(Load):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1028,7 +1028,7 @@ class DEFORM(Load):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1114,9 +1114,9 @@ class SLOAD(Load):
         ----------
         sid : int
             load id
-        nodes : int; List[int]
+        nodes : int; list[int]
             the GRID/SPOINT ids
-        mags : float; List[float]
+        mags : float; list[float]
             the load magnitude
         comment : str; default=''
             a comment for the card
@@ -1174,7 +1174,7 @@ class SLOAD(Load):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1272,7 +1272,7 @@ class RFORCE(Load):
             grid point through which the rotation vector acts
         scale : float
             scale factor of the angular velocity in revolutions/time
-        r123 : List[float, float, float] / (3, ) float ndarray
+        r123 : list[float, float, float] / (3, ) float ndarray
             rectangular components of the rotation vector R that passes
             through point G (R1**2+R2**2+R3**2 > 0 unless A and RACC are
             both zero).
@@ -1359,7 +1359,7 @@ class RFORCE(Load):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -1471,7 +1471,7 @@ class RFORCE1(Load):
             grid point through which the rotation vector acts
         scale : float
             scale factor of the angular velocity in revolutions/time
-        r123 : List[float, float, float] / (3, ) float ndarray
+        r123 : list[float, float, float] / (3, ) float ndarray
             rectangular components of the rotation vector R that passes
             through point G (R1**2+R2**2+R3**2 > 0 unless A and RACC are
             both zero).

@@ -9,7 +9,7 @@ Defines various utilities including:
 """
 from __future__ import annotations
 from copy import deepcopy
-from typing import Tuple, List, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np  # type: ignore
 from numpy import cross, dot  # type: ignore
 
@@ -24,7 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.coordinate_systems import Coord
 
 
-def parse_femap_syntax(lines: List[str]) -> np.ndarray:
+def parse_femap_syntax(lines: list[str]) -> np.ndarray:
     """Parses the following syntax from FEMAP:
 
     Add            1646           0           1
@@ -106,7 +106,7 @@ def Position(xyz: NDArray3float, cid: int, model: BDF) -> np.ndarray:
 
 
 
-def transform_load(F, M, cid: int, cid_new: int, model: BDF) -> Tuple[np.ndarray, np.ndarray]:
+def transform_load(F, M, cid: int, cid_new: int, model: BDF) -> tuple[np.ndarray, np.ndarray]:
     """
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.
@@ -225,7 +225,7 @@ def PositionWRT(xyz: NDArray3float, cid: int, cid_new: int, model: BDF) -> NDArr
 
 
 def get_xyz_cid0_dict(model: BDF,
-                      xyz_cid0: Dict[int, NDArray3float]=None) -> Dict[int, NDArray3float]:
+                      xyz_cid0: dict[int, NDArray3float]=None) -> dict[int, NDArray3float]:
     """
     helper method
 
@@ -233,7 +233,7 @@ def get_xyz_cid0_dict(model: BDF,
     ----------
     model : BDF()
         a BDF object
-    xyz_cid0 : None / Dict[int] = (3, ) ndarray
+    xyz_cid0 : None / dict[int] = (3, ) ndarray
         the nodes in the global coordinate system
 
     Returns
@@ -248,7 +248,7 @@ def get_xyz_cid0_dict(model: BDF,
         xyz = xyz_cid0
     return xyz
 
-def split_eids_along_nids(model: BDF, eids: List[int], nids: List[int]) -> None:
+def split_eids_along_nids(model: BDF, eids: list[int], nids: list[int]) -> None:
     """
     Disassociate a list of elements along a list of nodes.
 

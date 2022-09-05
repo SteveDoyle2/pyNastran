@@ -256,7 +256,7 @@ class AEROS(Aero):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
           the fields that define the card
 
         """
@@ -350,7 +350,7 @@ class AESTAT(BaseCard):
 
         Returns
         -------
-        fields : List[int/str]
+        fields : list[int/str]
             the fields that define the card
 
         """
@@ -572,7 +572,7 @@ class DIVERG(BaseCard):
         The name.
     nroots : int
         the number of roots
-    machs : List[float, ..., float]
+    machs : list[float, ..., float]
         list of Mach numbers
 
     """
@@ -585,7 +585,7 @@ class DIVERG(BaseCard):
         machs = [0.5, 0.75]
         return DIVERG(sid, nroots, machs, comment='')
 
-    def __init__(self, sid: int, nroots: int, machs: List[float], comment: str=''):
+    def __init__(self, sid: int, nroots: int, machs: list[float], comment: str=''):
         """
         Creates an DIVERG card, which is used in divergence
         analysis (SOL 144).
@@ -596,7 +596,7 @@ class DIVERG(BaseCard):
             The name
         nroots : int
             the number of roots
-        machs : List[float, ..., float]
+        machs : list[float, ..., float]
             list of Mach numbers
         comment : str; default=''
             a comment for the card
@@ -742,9 +742,9 @@ class TRIM(BaseCard):
             the mach number
         q : float
             dynamic pressure
-        labels : List[str]
+        labels : list[str]
             names of the fixed variables
-        uxs : List[float]
+        uxs : list[float]
             values corresponding to labels
         aeqr : float
             0.0 : rigid trim analysis

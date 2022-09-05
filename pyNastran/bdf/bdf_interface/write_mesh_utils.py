@@ -9,13 +9,13 @@ This file defines:
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import List, Dict, Tuple, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
-def write_dict(bdf_file, my_dict: Dict[int, Any], size: int,
+def write_dict(bdf_file, my_dict: dict[int, Any], size: int,
                is_double: bool, is_long_ids: bool) -> None:
     """writes a dictionary that may require long format"""
     if is_long_ids:
@@ -26,7 +26,7 @@ def write_dict(bdf_file, my_dict: Dict[int, Any], size: int,
             bdf_file.write(node.write_card(size, is_double))
 
 
-def find_aero_location(model: BDF) -> Tuple[bool, bool]:
+def find_aero_location(model: BDF) -> tuple[bool, bool]:
     """Determines where the AERO card should be written"""
     write_aero_in_flutter = False
     write_aero_in_gust = False
@@ -40,9 +40,9 @@ def find_aero_location(model: BDF) -> Tuple[bool, bool]:
             write_aero_in_flutter = True
     return write_aero_in_flutter, write_aero_in_gust
 
-def get_properties_by_element_type(model: BDF) -> Tuple[Dict[str, List[str]],
-                                                        Dict[str, Any],
-                                                        Dict[str, Any]]:
+def get_properties_by_element_type(model: BDF) -> tuple[dict[str, list[str]],
+                                                        dict[str, Any],
+                                                        dict[str, Any]]:
     """helper for ``_write_properties_by_element_type``"""
     propertys_class_to_property_types = {
         # prop_class -> property types

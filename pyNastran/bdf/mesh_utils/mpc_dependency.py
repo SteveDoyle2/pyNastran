@@ -11,7 +11,7 @@ defines methods to access MPC/rigid element data:
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import Tuple, List, Dict, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
@@ -21,7 +21,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def get_mpc_node_ids(model: BDF, mpc_id: int,
                      consider_mpcadd: bool=True,
-                     stop_on_failure: bool=True) -> List[List[int]]:
+                     stop_on_failure: bool=True) -> list[list[int]]:
     r"""
     Get the MPC/MPCADD IDs.
 
@@ -37,7 +37,7 @@ def get_mpc_node_ids(model: BDF, mpc_id: int,
 
     Returns
     -------
-    lines : List[[independent, dependent]]
+    lines : list[[independent, dependent]]
         independent : int
            the independent node id
         dependent : int
@@ -73,8 +73,8 @@ def get_mpc_node_ids(model: BDF, mpc_id: int,
 
 def get_mpc_node_ids_c1(model: BDF, mpc_id: int,
                         consider_mpcadd: bool=True,
-                        stop_on_failure: bool=True) -> Tuple[Dict[str, List[int]],
-                                                             Dict[str, List[int]]]:
+                        stop_on_failure: bool=True) -> tuple[dict[str, list[int]],
+                                                             dict[str, list[int]]]:
     r"""
     Get the MPC/MPCADD IDs.
 
@@ -90,15 +90,15 @@ def get_mpc_node_ids_c1(model: BDF, mpc_id: int,
 
     Returns
     -------
-    independent_node_ids_c1 : Dict[component] = node_ids
+    independent_node_ids_c1 : dict[component] = node_ids
         component : str
             the DOF to constrain
-        node_ids : List[int]
+        node_ids : list[int]
             the constrained node ids
-    dependent_node_ids_c1 : Dict[component] = node_ids
+    dependent_node_ids_c1 : dict[component] = node_ids
         component : str
             the DOF to constrain
-        node_ids : List[int]
+        node_ids : list[int]
             the constrained node ids
 
     I      I
@@ -144,12 +144,12 @@ def get_rigid_elements_with_node_ids(model: BDF, node_ids):
 
     Parameters
     ----------
-    node_ids : List[int]
+    node_ids : list[int]
         the node ids to check
 
     Returns
     -------
-    rbes : List[int]
+    rbes : list[int]
         the set of self.rigid_elements
 
     """
@@ -352,7 +352,7 @@ def get_lines_rigid(model: BDF) -> Any:
     return lines_rigid
 
 def get_mpcs(model, mpc_id: int, consider_mpcadd: bool=True,
-             stop_on_failure: bool=True) -> Tuple[List[int], List[str]]:
+             stop_on_failure: bool=True) -> tuple[list[int], list[str]]:
     """
     Gets the MPCs in a semi-usable form.
 
@@ -365,9 +365,9 @@ def get_mpcs(model, mpc_id: int, consider_mpcadd: bool=True,
 
     Returns
     -------
-    nids : List[int]
+    nids : list[int]
         the constrained nodes
-    comps : List[str]
+    comps : list[str]
         the components that are constrained on each node
 
     Considers:

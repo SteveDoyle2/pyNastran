@@ -4,7 +4,7 @@ Defines various utilities including:
  - parse_patran_syntax_dict
 
 """
-from typing import List, Dict, Optional
+from typing import Optional
 import numpy as np  # type: ignore
 
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
@@ -106,13 +106,13 @@ def _apply_colon_set(snode: str) -> list[int]:
         raise NotImplementedError(snode)
     return new_set
 
-def write_patran_syntax_dict(dict_sets: Dict[str, np.ndarray]) -> str:
+def write_patran_syntax_dict(dict_sets: dict[str, np.ndarray]) -> str:
     """
     writes partran syntax
 
     Parameters
     ----------
-    dict_sets : Dict[str] = list[int]
+    dict_sets : dict[str] = list[int]
         str : the key
         values : the integer values for that key
 
@@ -140,8 +140,8 @@ def write_patran_syntax_dict(dict_sets: Dict[str, np.ndarray]) -> str:
     return msg.strip().replace('  ', ' ')
 
 
-def parse_patran_syntax_dict(node_sets: str, pound_dict: Dict[str, Optional[int]]=None,
-                             msg: str='') -> Dict[str, np.ndarray]:
+def parse_patran_syntax_dict(node_sets: str, pound_dict: dict[str, Optional[int]]=None,
+                             msg: str='') -> dict[str, np.ndarray]:
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -157,7 +157,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: Dict[str, Optional[int]
 
     Returns
     -------
-    nodes : Dict[str] = list[int]
+    nodes : dict[str] = list[int]
         str : the key
         values : the integer values for that key
 
@@ -196,7 +196,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: Dict[str, Optional[int]
     .. warning:: case sensitive
 
     """
-    data = {}  # type: Dict[str, list[int]]
+    data = {}  # type: dict[str, list[int]]
     try:
         snodes = node_sets.split()
     except AttributeError:
@@ -269,8 +269,8 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: Dict[str, Optional[int]
 
 
 def parse_patran_syntax_dict_map(node_sets: str,
-                                 type_map: Dict[str, str],
-                                 msg: str='') -> Dict[str, np.ndarray]:
+                                 type_map: dict[str, str],
+                                 msg: str='') -> dict[str, np.ndarray]:
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -291,7 +291,7 @@ def parse_patran_syntax_dict_map(node_sets: str,
 
     Returns
     -------
-    nodes : Dict[str] = list[int]
+    nodes : dict[str] = list[int]
         str : the key
         values : the integer values for that key
 
@@ -323,14 +323,14 @@ def parse_patran_syntax_dict_map(node_sets: str,
 
     """
     # makes it so we can pass in 'N' and 'n' and still get 'Node' out
-    update_type_map = {}  # type: Dict[str, str]
+    update_type_map = {}  # type: dict[str, str]
     for key, value in type_map.items():
         if key in update_type_map:
             assert update_type_map[key] == value
         update_type_map[key.upper()] = value
 
     dict_in = parse_patran_syntax_dict(node_sets.upper(), pound_dict=None)
-    dict_temp = {}  # type: Dict[str, np.ndarray]
+    dict_temp = {}  # type: dict[str, np.ndarray]
     for key_in, value in sorted(dict_in.items()):
         key_in2 = key_in.upper()
         if key_in2 in update_type_map:
@@ -343,7 +343,7 @@ def parse_patran_syntax_dict_map(node_sets: str,
         else:
             print('skipping key=%r while parsing %s' % (key_in, msg))
 
-    dict_out = {}  # type: Dict[str, np.ndarray]
+    dict_out = {}  # type: dict[str, np.ndarray]
     for key, value_list in dict_temp.items():
         if len(value_list) == 1:
             value = value_list[0]

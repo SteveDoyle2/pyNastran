@@ -228,16 +228,16 @@ class CheckCard(CaseControlCard):
 
     """
     type = 'CheckCard'
-    allowed_keys = set([])  # type: Set[str]
+    allowed_keys = set([])  # type: set[str]
 
     # key:(type, allowed_values)
-    allowed_values = {}  # type: Dict[str, Union[float, str]]
+    allowed_values = {}  # type: dict[str, Union[float, str]]
 
     # the allowed value for the key, options, value approach
-    allowed_strings = set([]) # type: Set[str]
+    allowed_strings = set([]) # type: set[str]
 
     # maps something like INIT to INITIAL
-    duplicate_names = {} # type: Dict[Any, Any]
+    duplicate_names = {} # type: dict[Any, Any]
 
     # enables values as integers instead of just strings
     allow_ints = False
@@ -665,9 +665,12 @@ class MEFFMASS(CheckCard):
         'MINT3' : (int, None),
         'MAXIT' : (int, None),
         'THRESH' : (float, None),
-    }  # type: Dict[str, Union[str, int]]
+    }  # type: dict[str, Union[str, int]]
     #alternate_names = {'PRES'}
     #allow_ints = True
+
+    def __init__(self):
+        super(CheckCard, self).__init__()
 
     #def __init__(self, key, value, options):
         #CheckCard.__init__(self, key, value, options)
