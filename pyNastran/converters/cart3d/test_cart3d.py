@@ -107,13 +107,22 @@ class TestCart3d(unittest.TestCase):
         assert len(cart3d.loads) == 14, 'nloads=%s' % len(cart3d.loads)  # was 10
         assert len(cart3d.loads['Cp']) == 5, 'nCp=%s' % len(cart3d.loads['Cp'])
 
-        outfile_name = os.path.join(MODEL_PATH, 'flat.bin.tri')
-        cart3d.loads = None
-        cart3d.write_cart3d(outfile_name, is_binary=True)
+        outfile_name1 = os.path.join(MODEL_PATH, 'flat.bin.tri')
+        outfile_name2 = os.path.join(MODEL_PATH, 'flat2.tri')
+        cart3d.write_cart3d(outfile_name2, is_binary=False)
+        with self.assertRaises(NotImplementedError):
+            cart3d.write_cart3d(outfile_name1, is_binary=True)
+
+        # no results
+        cart3d.loads = {}
+        cart3d.write_cart3d(outfile_name1, is_binary=True)
+        cart3d.write_cart3d(outfile_name2, is_binary=False)
         cnormals = cart3d.get_normals()
         nnormals = cart3d.get_normals_at_nodes(cnormals)
+        area, centroid, cnormals = cart3d.get_area_centroid_normals()
         os.remove(cart3d_filename)
-        os.remove(outfile_name)
+        os.remove(outfile_name1)
+        os.remove(outfile_name2)
 
     def test_cart3d_io_03(self):
         """read/write geometry in ascii/binary"""

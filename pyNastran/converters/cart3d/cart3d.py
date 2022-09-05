@@ -23,7 +23,7 @@ import numpy as np
 from cpylog import SimpleLogger
 
 from pyNastran.utils import is_binary_file
-from pyNastran.converters.cart3d.cart3d_reader_writer import Cart3dReaderWriter, _write_cart3d_binary
+from pyNastran.converters.cart3d.cart3d_reader_writer import Cart3dReaderWriter, _write_cart3d_ascii, _write_cart3d_binary
 
 class Cart3D(Cart3dReaderWriter):
     """Cart3d interface class"""
@@ -33,9 +33,6 @@ class Cart3D(Cart3dReaderWriter):
 
     def __init__(self, log=None, debug=False):
         Cart3dReaderWriter.__init__(self, log=log, debug=debug)
-        self.loads = {}
-        self.points = None
-        self.elements = None
 
     def flip_model(self):
         """flip the model about the y-axis"""
@@ -298,22 +295,16 @@ class Cart3D(Cart3dReaderWriter):
         """
         assert len(self.points) > 0, 'len(self.points)=%s' % len(self.points)
 
-        if self.loads is None or self.loads == {}:
-            #loads = {}
-            is_loads = False
-        else:
-            is_loads = True
-
         self.log.info(f'---writing cart3d...{outfilename!r}---')
         min_e = self.elements.min()
         assert min_e >= 0, 'min(elements)=%s' % min_e
 
         if is_binary:
             _write_cart3d_binary(outfilename, self.points, self.elements, self.regions,
-                                 is_loads, self.loads, self._endian)
+                                 self.loads, self._endian)
         else:
-            self._write_cart3d_ascii(outfilename, self.points, self.elements, self.regions,
-                                     is_loads, self.loads, float_fmt)
+            _write_cart3d_ascii(outfilename, self.points, self.elements, self.regions,
+                                self.loads, float_fmt)
         return
         #file_fmt = 'wb' if is_binary else 'w'
         #with open(outfilename, file_fmt) as outfile:
