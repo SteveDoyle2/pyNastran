@@ -21,7 +21,7 @@ from __future__ import annotations
 import math
 from itertools import count
 from collections import defaultdict, namedtuple
-from typing import List, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -1918,7 +1918,7 @@ class CAERO1(BaseCard):
             p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
         return [p1, p2, p3, p4]
 
-    def get_box_index(self, box_id: int) -> Tuple[int, int]:
+    def get_box_index(self, box_id: int) -> tuple[int, int]:
         """
         Get the index of ``self.box_ids`` that corresponds to the given box id.
 
@@ -2022,7 +2022,7 @@ class CAERO1(BaseCard):
             raise RuntimeError(msg)
         return nchord, nspan
 
-    def get_npanel_points_elements(self) -> Tuple[int, int]:
+    def get_npanel_points_elements(self) -> tuple[int, int]:
         """
         Gets the number of sub-points and sub-elements for the CAERO card
 
@@ -2070,7 +2070,7 @@ class CAERO1(BaseCard):
             raise RuntimeError(msg)
         return x, y
 
-    def panel_points_elements(self) -> Tuple[np.ndarray, np.ndarray]:
+    def panel_points_elements(self) -> tuple[np.ndarray, np.ndarray]:
         """
         Gets the sub-points and sub-elements for the CAERO1 card
 
@@ -2837,7 +2837,7 @@ class CAERO3(BaseCard):
         return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
         #return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
-    def get_npanel_points_elements(self) -> Tuple[int, int]:
+    def get_npanel_points_elements(self) -> tuple[int, int]:
         """
         Gets the number of sub-points and sub-elements for the CAERO card
 
@@ -2855,14 +2855,14 @@ class CAERO3(BaseCard):
         return npoints, nelements
 
     @property
-    def shape(self) -> Tuple[int, int]:
+    def shape(self) -> tuple[int, int]:
         """returns (nelements_nchord, nelements_span)"""
         nchord = 2
         nspan = self.pid_ref.nbox
         return nchord, nspan
 
     @property
-    def xy(self) -> Tuple[np.ndarray, np.ndarray]:
+    def xy(self) -> tuple[np.ndarray, np.ndarray]:
         """
         Returns
         -------
@@ -6351,7 +6351,7 @@ class SPLINE5(Spline):
         return self.comment + print_card_8(card)
 
 
-def get_caero_count(model: BDF) -> Tuple[int, int, int, int]:
+def get_caero_count(model: BDF) -> tuple[int, int, int, int]:
     ncaeros = 0
     ncaeros_sub = 0
     #ncaeros_cs = 0
@@ -6386,7 +6386,7 @@ def get_caero_count(model: BDF) -> Tuple[int, int, int, int]:
     return ncaeros, ncaeros_sub, ncaeros_points, ncaero_sub_points
 
 def get_caero_points(model: BDF,
-                     box_id_to_caero_element_map: Dict[int, np.ndarray]) -> Tuple[np.ndarray, bool]:
+                     box_id_to_caero_element_map: dict[int, np.ndarray]) -> tuple[np.ndarray, bool]:
     has_caero = False
     num_prev = 0
     ncaeros_sub = 0
@@ -6420,7 +6420,7 @@ def get_caero_points(model: BDF,
         caero_points = np.empty((0, 3))
     return caero_points, has_caero
 
-def get_caero_subpanel_grid(model: BDF) -> Tuple[np.ndarray, np.ndarray]:
+def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
     """builds the CAERO subpanel grid in 3d space"""
     j = 0
     points = []
@@ -6447,7 +6447,7 @@ def get_caero_subpanel_grid(model: BDF) -> Tuple[np.ndarray, np.ndarray]:
         elements_array = np.vstack(elements)
     return points_array, elements_array
 
-def build_caero_paneling(model: BDF, create_secondary_actors: bool=True) -> Tuple[str, list[str], Any]:
+def build_caero_paneling(model: BDF, create_secondary_actors: bool=True) -> tuple[str, list[str], Any]:
     """
     Creates the CAERO panel inputs including:
      - caero

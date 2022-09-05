@@ -1556,7 +1556,7 @@ def _convert_aero(model: BDF,
         scales.add('velocity')
     _write_scales(model.log, scale_map, scales, {'length', 'area'})
 
-def _scale_caero(caero, xyz_scale: float, xyz_aefacts) -> None:
+def _scale_caero(caero, xyz_scale: float, xyz_aefacts: set[int]) -> None:
     try:
         if caero.type == 'CAERO1':
             caero.p1 *= xyz_scale

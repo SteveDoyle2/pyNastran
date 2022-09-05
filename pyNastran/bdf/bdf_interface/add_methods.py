@@ -149,7 +149,7 @@ class AddMethods:
         #return self.model.log
 
     #@property
-    #def _type_to_id_map(self) -> Dict[str, Any]:
+    #def _type_to_id_map(self) -> dict[str, Any]:
         #return self.model._type_to_id_map
 
     def _add_dmi_object(self, dmi: DMI, allow_overwrites: bool=False) -> None:

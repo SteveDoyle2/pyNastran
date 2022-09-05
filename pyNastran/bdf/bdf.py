@@ -546,10 +546,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         # list of all read in cards - useful in determining if entire BDF
         # was read & really useful in debugging
-        self.card_count = {}  # type: Dict[str, int]
+        self.card_count = {}  # type: dict[str, int]
 
         # stores the card_count of cards that have been rejected
-        self.reject_count = {}  # type: Dict[str, int]
+        self.reject_count = {}  # type: dict[str, int]
 
         # allows the BDF variables to be scoped properly (i think...)
         GetCard.__init__(self)
@@ -1575,10 +1575,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
         cards_list = []  # type: list[Any]
-        cards_dict = defaultdict(list)  # type: Dict[str, list[Any]]
+        cards_dict = defaultdict(list)  # type: dict[str, list[Any]]
         dict_cards = ['BAROR', 'BEAMOR']
         #cards = defaultdict(list)
-        card_count = defaultdict(int)  # Dict[str, int]
+        card_count = defaultdict(int)  # dict[str, int]
         full_comment = ''
         card_lines = []
         old_ifile_iline = None
@@ -1864,7 +1864,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         obj.update_field(ifield, value)
         return obj
 
-    def set_dynamic_syntax(self, dict_of_vars: Dict[str, Union[int, float, str]]) -> None:
+    def set_dynamic_syntax(self, dict_of_vars: dict[str, Union[int, float, str]]) -> None:
         """
         Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
@@ -2021,7 +2021,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             card_obj = BDFCard(card, has_none=False)
         return card_obj, card
 
-    def _parse_dynamic_syntax(self, key: str) -> Dict[str, Any]:
+    def _parse_dynamic_syntax(self, key: str) -> dict[str, Any]:
         return _parse_dynamic_syntax(key, self.dict_of_vars, self.log)
 
     def _make_card_parser(self) -> None:
@@ -3589,7 +3589,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def get_xyz_in_coord_array(self, cid: int=0,
                                fdtype: str='float64',
                                idtype: str='int32') -> Tuple[np.ndarray, np.ndarray, np.ndarray,
-                                                             Dict[int, np.ndarray], Dict[int, np.ndarray]]:
+                                                             dict[int, np.ndarray], dict[int, np.ndarray]]:
         """
         Gets the xyzs as an array in an arbitrary coordinate system
 
@@ -3635,7 +3635,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp: np.ndarray,
                                    nids: np.ndarray,
-                                   icp_transform: Dict[int, np.ndarray],
+                                   icp_transform: dict[int, np.ndarray],
                                    cid: int=0,
                                    in_place: bool=False,
                                    atol: float=1e-6) -> np.ndarray:
@@ -3884,7 +3884,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """Returns False for the ``BDF`` class"""
         return hasattr(self, 'grid')
 
-    def get_displacement_index(self) -> Tuple[Any, Any, Dict[int, Any]]:
+    def get_displacement_index(self) -> Tuple[Any, Any, dict[int, Any]]:
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.
@@ -4142,8 +4142,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return cards
 
     def _parse_cards(self, cards_list: list[list[str]],
-                     cards_dict: Dict[str, list[str]],
-                     card_count: Dict[str, int],
+                     cards_dict: dict[str, list[str]],
+                     card_count: dict[str, int],
                      strict: bool=True) -> None:
         """creates card objects and adds the parsed cards to the deck"""
         # we don't want replication markers in the card_count
@@ -4160,7 +4160,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # this is the block that actually runs
             self._parse_cards_list(cards_list, strict=strict)
 
-    def _parse_cards_dict(self, cards_dict: Dict[str, list[str]]) -> None:
+    def _parse_cards_dict(self, cards_dict: dict[str, list[str]]) -> None:
         """parses the cards that are in dictionary format"""
         if self.save_file_structure:
             raise NotImplementedError('save_file_structure=True is not supported\n%s' % (
@@ -4412,7 +4412,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     # HDF5
     def _read_bdf_cards(self, bdf_filename: Optional[str]=None,
                         punch: bool=False,
-                        read_includes: bool=True, encoding: Optional[str]=None) -> Dict[str, list[Any]]:
+                        read_includes: bool=True, encoding: Optional[str]=None) -> dict[str, list[Any]]:
         """
         Read method for the bdf files
 
@@ -4479,7 +4479,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         return cards_out
 
-    def create_subcases(self, subcase_ids: Union[int, list[int], None]=None) -> Dict[int, Subcase]:
+    def create_subcases(self, subcase_ids: Union[int, list[int], None]=None) -> dict[int, Subcase]:
         """creates a series of subcases"""
         if subcase_ids is None:
             subcase_ids = []
@@ -4496,7 +4496,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             subcases[subcase_id] = subcase
         return subcases
 
-    def _parse_cards_hdf5(self, cards: Dict[str, Any], unused_card_count) -> Dict[str, list[Any]]:
+    def _parse_cards_hdf5(self, cards: dict[str, Any], unused_card_count) -> dict[str, list[Any]]:
         """creates card objects and adds the parsed cards to the deck"""
         self.echo = False
         cards_out = {}
@@ -4683,17 +4683,17 @@ class BDF(BDF_):
         """
         BDF_.__init__(self, debug=debug, log=log, mode=mode)
         #: stores SPOINT, GRID cards
-        self.nodes = {}  # type: Dict[int, Any]
+        self.nodes = {}  # type: dict[int, Any]
 
         # loads
         #: stores LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
         #: PLOAD, PLOAD2, PLOAD4, SLOAD
         #: GMLOAD, SPCD, DEFORM,
         #: QVOL
-        self.loads = {}  # type: Dict[int, list[Any]]
-        self.load_combinations = {}  # type: Dict[int, list[Any]]
+        self.loads = {}  # type: dict[int, list[Any]]
+        self.load_combinations = {}  # type: dict[int, list[Any]]
 
-    def __deepcopy__(self, memo: Dict[str, Any]):
+    def __deepcopy__(self, memo: dict[str, Any]):
         """performs a deepcopy"""
         #newone = type(self)()
         #newone.__dict__.update(self.__dict__)
@@ -4953,8 +4953,8 @@ def _set_nodes(model: BDF,
                idtype, fdtype):
     """helper method for ``get_displacement_index_xyz_cp_cd``"""
     i = 0
-    nids_cd_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
-    nids_cp_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
+    nids_cd_transform = defaultdict(list)  # type: dict[int, np.ndarray]
+    nids_cp_transform = defaultdict(list)  # type: dict[int, np.ndarray]
     nxyz = nnodes + nspoints + nepoints + ngridb
     xyz_cp = np.zeros((nxyz, 3), dtype=fdtype)
     nid_cp_cd = np.zeros((nxyz, 3), dtype=idtype)
@@ -4995,7 +4995,7 @@ def _bool(value):
     return True if value == 'true' else False
 
 
-def _get_coords_to_update(coords: Dict[int, Union[CORD1R, CORD1C, CORD1S,
+def _get_coords_to_update(coords: dict[int, Union[CORD1R, CORD1C, CORD1S,
                                                   CORD2R, CORD2C, CORD2S]],
                           cps_to_check: list[int],
                           cps_checked: list[int],

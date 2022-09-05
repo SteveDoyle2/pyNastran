@@ -1,6 +1,6 @@
 """Parses Nastran fields"""
 import re
-from typing import Tuple, List, Union, Optional, Any
+from typing import Union, Optional, Any
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (
     integer_types, integer_float_types, float_types)
@@ -241,7 +241,7 @@ def integer_double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, d
 
 #def assert_int_bounded_range(card, ifield, fieldname, lower=None, upper=None):
 
-def fields(func, card, fieldname, i, j=None) -> List[Any]:
+def fields(func, card, fieldname, i, j=None) -> list[Any]:
     """
     .. todo:: improve fieldname
     """
@@ -977,7 +977,7 @@ def string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
         return str(svalue.upper())
     return default
 
-def string_choice_or_blank(card: BDFCard, ifield: int, fieldname: str, choices: Tuple[str], default=None):
+def string_choice_or_blank(card: BDFCard, ifield: int, fieldname: str, choices: tuple[str], default=None):
     """
     Parameters
     ----------
