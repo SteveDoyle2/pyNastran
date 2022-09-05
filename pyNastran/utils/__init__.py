@@ -33,9 +33,9 @@ def is_file_obj(filename: str) -> bool:
         or isinstance(filename, (io.IOBase, io.StringIO))
     )
 
-def b(string: str) -> bytes:
-    """reimplementation of six.b(...) to work in Python 2"""
-    return string.encode('latin-1')
+#def b(string: str) -> bytes:
+    #"""reimplementation of six.b(...) to work in Python 2"""
+    #return string.encode('latin-1')
 
 #def merge_dicts(dict_list, strict: bool=True):
     #"""merges two or more dictionaries"""

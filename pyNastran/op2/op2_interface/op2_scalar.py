@@ -1671,7 +1671,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_debug_file, self.binary_debug = create_binary_debug(
             self.op2_filename, self.debug_file, self.log)
 
-    def _setup_filenames(self, op2_filename: str | None, force: bool=True):
+    def _setup_filenames(self, op2_filename: Optional[str], force: bool=True):
         if op2_filename:
             fname = os.path.splitext(op2_filename)[0]
             self.op2_filename = op2_filename
