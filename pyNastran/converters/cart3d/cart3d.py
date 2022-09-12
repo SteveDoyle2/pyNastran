@@ -16,16 +16,17 @@ Defines:
              is_binary=False, float_fmt='%6.7f')
 
 """
+import sys
+from math import ceil
 from collections import defaultdict
 from typing import Union
 
 import numpy as np
-from cpylog import SimpleLogger
+from cpylog import SimpleLogger, get_logger2
 
-from pyNastran.utils import is_binary_file
+from pyNastran.utils import is_binary_file, _filename
 from pyNastran.converters.cart3d.cart3d_reader_writer import (
-    Cart3dReaderWriter, _write_cart3d_ascii, _write_cart3d_binary)
-
+    Cart3dReaderWriter, _write_cart3d_binary, _write_cart3d_ascii)
 
 class Cart3D(Cart3dReaderWriter):
     """Cart3d interface class"""
@@ -35,8 +36,11 @@ class Cart3D(Cart3dReaderWriter):
 
     def __init__(self, log=None, debug=False):
         Cart3dReaderWriter.__init__(self, log=log, debug=debug)
+        self.loads = {}
+        self.points = None
+        self.elements = None
 
-    def flip_model(self) -> None:
+    def flip_model(self):
         """flip the model about the y-axis"""
         self.points[:, 1] *= -1.
         self.elements = np.hstack([
@@ -44,10 +48,9 @@ class Cart3D(Cart3dReaderWriter):
             self.elements[:, 2:3],
             self.elements[:, 1:2],
         ])
-        #print(self.elements.shape)
+        print(self.elements.shape)
 
-    def make_mirror_model(self, nodes, elements, regions, loads, axis='y',
-                          tol: float=0.000001):
+    def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
         """
         Makes a full cart3d model about the given axis.
 
@@ -146,6 +149,8 @@ class Cart3D(Cart3dReaderWriter):
         elements = self.elements
         regions = self.regions
         loads = self.loads
+        if loads is None:
+            loads = {}
 
         nnodes = nodes.shape[0]
         assert nnodes > 0, 'nnodes=%s'  % nnodes
@@ -227,7 +232,8 @@ class Cart3D(Cart3dReaderWriter):
         self.loads = loads2
         return (nodes2, elements2, regions2, loads2)
 
-    def remove_elements(self, ielements_to_remove=None, ielements_to_keep=None) -> np.ndarray:
+    def remove_elements(self, ielements_to_remove=None, ielements_to_keep=None,
+                        remove_associated_nodes: bool=True) -> np.ndarray:
         if ielements_to_remove is not None and ielements_to_keep is not None:
             raise RuntimeError('Either ielements_to_remove or ielements_to_keep must not be None')
         remove = False
@@ -246,6 +252,19 @@ class Cart3D(Cart3dReaderWriter):
         assert len(ielements_to_keep) > 0, ielements_to_keep
         self.elements = self.elements[ielements_to_keep, :]
         self.regions = self.regions[ielements_to_keep]
+
+        if remove_associated_nodes:
+            used_nodes = np.unique(self.elements.ravel())
+            self.nodes = self.nodes[used_nodes, :]
+            self.elements = np.searchsorted(used_nodes, self.elements)
+            loads2 = {}
+            for key, load in self.loads.items():
+                load2 = load[used_nodes]
+                loads2[key] = load2
+
+            # in-place operation on loads
+            for key, load in loads2.items():
+                self.loads[key] = load
         return self.elements
 
     def get_free_edges(self, elements):
@@ -279,11 +298,13 @@ class Cart3D(Cart3dReaderWriter):
         self.infilename = infilename
         self.log.info("---reading cart3d...%r---" % self.infilename)
 
-        self.infilename = infilename
         if is_binary_file(infilename):
-            self._read_cart3d_binary(infilename, self._endian)
+            endian = self._endian
+            self._read_cart3d_binary(infilename, endian)
+
         else:
-            self._read_cart3d_ascii(infilename, self._encoding, result_names)
+            self._read_cart3d_ascii(infilename, self._encoding,
+                                    result_names=result_names)
 
         self.log.debug(f'npoints={self.npoints:d} nelements={self.nelements:d} nresults={self.nresults:d}')
         assert self.npoints > 0, f'npoints={self.npoints:d}'
@@ -296,35 +317,233 @@ class Cart3D(Cart3dReaderWriter):
         """
         assert len(self.points) > 0, 'len(self.points)=%s' % len(self.points)
 
-        self.log.info(f'---writing cart3d...{outfilename!r}---')
-        min_e = self.elements.min()
-        assert min_e >= 0, 'min(elements)=%s' % min_e
-
-        if is_binary:
-            _write_cart3d_binary(outfilename, self.points, self.elements, self.regions,
-                                 self.loads, self._endian)
+        if self.loads is None or self.loads == {}:
+            #loads = {}
+            is_loads = False
         else:
-            _write_cart3d_ascii(outfilename, self.points, self.elements, self.regions,
-                                self.loads, float_fmt)
-        return
-        #file_fmt = 'wb' if is_binary else 'w'
-        #with open(outfilename, file_fmt) as outfile:
-            #int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
-            #self._write_points(outfile, self.points, is_binary, float_fmt)
-            #self._write_elements(outfile, self.elements, is_binary, int_fmt)
-            #self._write_regions(outfile, self.regions, is_binary)
+            is_loads = True
 
-            #if is_loads:
-                #assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
-                #self._write_loads(outfile, self.loads, is_binary, float_fmt)
+        self.log.info(f'---writing cart3d...{outfilename!r}---')
+        if is_binary:
+            _write_cart3d_binary(outfilename, self.points, self.elements,
+                                 self.regions, self.loads, self._endian)
+        else:
+            _write_cart3d_ascii(outfilename, self.points, self.elements,
+                                self.regions, self.loads, float_fmt)
 
-    def get_area(self):
+    def _read_results_ascii(self, i, infile, nresults, result_names=None):
+        """
+        Reads the Cp results.
+        Results are read on a nodal basis from the following table:
+          Cp
+          rho,rhoU,rhoV,rhoW,rhoE
+
+        With the following definitions:
+          Cp = (p - 1/gamma) / (0.5*M_inf*M_inf)
+          rhoVel^2 = rhoU^2+rhoV^2+rhoW^2
+          M^2 = rhoVel^2/rho^2
+
+        Thus:
+          p = (gamma-1)*(e- (rhoU**2+rhoV**2+rhoW**2)/(2.*rho))
+          p_dimensional = qInf * Cp + pInf
+
+        # ???
+        rho,rhoU,rhoV,rhoW,rhoE
+
+        Parameters
+        ----------
+        result_names : List[str]; default=None (All)
+            result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
+                            'Mach', 'U', 'V', 'W', 'E']
+
+        """
+        if nresults == 0:
+            return
+        #loads = {}
+        if result_names is None:
+            result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
+                            'Mach', 'U', 'V', 'W', 'E', 'a', 'T', 'Pressure', 'q']
+        self.log.debug('---starting read_results---')
+
+        results = np.zeros((self.npoints, 6), dtype='float32')
+
+        nresult_lines = int(ceil(nresults / 5.)) - 1
+        for ipoint in range(self.npoints):
+            # rho rhoU,rhoV,rhoW,pressure/rhoE/E
+            sline = infile.readline().strip().split()
+            i += 1
+            for unused_n in range(nresult_lines):
+                sline += infile.readline().strip().split()  # Cp
+                i += 1
+                #gamma = 1.4
+                #else:
+                #    p=0.
+            sline = _get_list(sline)
+
+            # Cp
+            # rho       rhoU      rhoV      rhoW      E
+            # 0.416594
+            # 1.095611  0.435676  0.003920  0.011579  0.856058
+            results[ipoint, :] = sline
+
+            #p=0
+            #cp = sline[0]
+            #rho = float(sline[1])
+            #if(rho > abs(0.000001)):
+                #rhoU = float(sline[2])
+                #rhoV = float(sline[3])
+                #rhoW = float(sline[4])
+                #rhoE = float(sline[5])
+                #mach2 = (rhoU) ** 2 + (rhoV) ** 2 + (rhoW) ** 2 / rho ** 2
+                #mach = sqrt(mach2)
+                #if mach > 10:
+                    #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (
+                        #pointNum, cp, mach, rho, rhoU, rhoV, rhoW))
+            #print("pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p))
+        del sline
+        self.loads = self._calculate_results(result_names, results)
+
+    def _calculate_results(self, result_names: list[str],
+                           results: np.ndarray, loads=None) -> dict[str, np.ndarray]:
+        """
+        Takes the Cart3d variables and calculates additional variables
+
+        Parameters
+        ----------
+        result_names : List[str]
+            the variables to calculate
+        results : (n,6) float ndarray
+            the non-dimensional primitive flow variables
+        loads : dict; default=None -> {}
+            key : str
+               Cp, rho rhoU, rhoV, rhoW, rhoE
+            value : (nnode,6) float np.ndarray
+               the load array
+
+        """
+        if loads is None:
+            loads = {}
+        Cp = results[:, 0]
+        rho = results[:, 1]
+        rho_u = results[:, 2]
+        rho_v = results[:, 3]
+        rho_w = results[:, 4]
+        E = results[:, 5]
+
+        ibad = np.where(rho <= 0.000001)[0]
+        if len(ibad) > 0:
+
+            if 'Mach' in result_names:
+                Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2)# / rho
+                Mach[ibad] = 0.0
+            if 'U' in result_names:
+                U = rho_u / rho
+                U[ibad] = 0.0
+            if 'U' in result_names:
+                V = rho_v / rho
+                V[ibad] = 0.0
+            if 'W' in result_names:
+                W = rho_w / rho
+                W[ibad] = 0.0
+            #if 'rhoE' in result_names:
+                #rho_e = rhoE / rho
+                #e[ibad] = 0.0
+
+            is_bad = True
+            #n = 0
+            #for i in ibad:
+                #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (
+                    #i, Cp[i], Mach[i], rho[i], rho_u[i], rho_v[i], rho_w[i]))
+                #Mach[i] = 0.0
+                #n += 1
+                #if n > 10:
+                #    break
+        else:
+            is_bad = False
+
+
+        #loc = locals()
+        if 'Cp' in result_names:
+            loads['Cp'] = Cp
+        if 'rhoU' in result_names:
+            loads['rhoU'] = rho_u
+        if 'rhoV' in result_names:
+            loads['rhoV'] = rho_v
+        if 'rhoW' in result_names:
+            loads['rhoW'] = rho_w
+        #if 'rhoE' in result_names:
+            #loads['rhoE'] = rho_e
+
+        if 'rho' in result_names:
+            loads['rho'] = rho
+
+        if 'Mach' in result_names:
+            if not is_bad:
+                #Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2) / rho
+                Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2)
+            loads['Mach'] = Mach
+
+        if 'U' in result_names:
+            if not is_bad:
+                U = rho_u / rho
+            loads['U'] = U
+        if 'V' in result_names:
+            if not is_bad:
+                V = rho_v / rho
+            loads['V'] = V
+        if 'W' in result_names:
+            if not is_bad:
+                W = rho_w / rho
+            loads['W'] = W
+        if 'E' in result_names:
+            #if not is_bad:
+                #E = rhoE / rho
+            loads['E'] = E
+
+        gamma = 1.4
+        qinf = 1.0
+        pinf = 1. / gamma
+        Tinf = 1.0
+        #Cp = (p - pinf) / qinf
+        p = Cp * qinf + pinf
+
+        T = (Tinf * gamma) * p / rho
+        q = 0.5 * rho * Mach ** 2
+
+        if 'a' in result_names:
+            #print('T: min=%s max=%s' % (T.min(), T.max()))
+            loads['a'] = np.sqrt(T)
+        if 'T' in result_names:
+            loads['T'] = T
+
+        if 'Pressure' in result_names:
+            loads['Pressure'] = p
+        if 'q' in result_names:
+            loads['q'] = q
+        # dynamic pressure
+        # speed of sound
+        # total pressure = p0/rhoi*ainf**2
+        # total density
+        # entropy
+        # kinetic energy
+        # enthalpy
+        # energy, E
+        # total energy
+        # total enthalpy
+
+        #i = where(Mach == max(Mach))[0][0]
+        #self.log.info("i=%s Cp=%s rho=%s rho_u=%s rho_v=%s rho_w=%s Mach=%s" % (
+            #i, Cp[i], rho[i], rho_u[i], rho_v[i], rho_w[i], Mach[i]))
+        self.log.debug('---finished read_results---')
+        return loads
+
+    def get_area(self) -> np.ndarray:
         """
         Gets the element area
 
         Returns
         -------
-        area : (n,) ndarray
+        area : (nelement,) float ndarray
             the element areas
         """
 
@@ -334,7 +553,7 @@ class Cart3D(Cart3dReaderWriter):
         assert len(ni) == ne, 'len(ni)=%s ne=%s' % (len(ni), ne)
         return 0.5 * ni
 
-    def get_normals(self):
+    def get_normals(self) -> np.ndarray:
         """
         Gets the centroidal normals
 
@@ -359,29 +578,29 @@ class Cart3D(Cart3dReaderWriter):
 
         Returns
         -------
-        area : (n,) ndarray
+        area : (nelement,) float ndarray
             the element areas
-        centroid : (n, 3) ndarray
+        centroid : (nelement, 3) float ndarray
             centroid of the element
-        cnormals : (n, 3) ndarray
+        cnormals : (nelement, 3) float ndarray
             normalized centroidal normal vectors
 
         """
         area, centroid, normals = get_area_centroid_normals(self.nodes, self.elements)
         return area, centroid, normals
 
-    def get_normals_at_nodes(self, cnormals):
+    def get_normals_at_nodes(self, cnormals: np.ndarray) -> np.ndarray:
         """
         Gets the nodal normals
 
         Parameters
         ----------
-        cnormals : (n, 3) ndarray
+        cnormals : (nelement, 3) float ndarray
             normalized centroidal normal vectors
 
         Returns
         -------
-        nnormals : (n, 3) ndarray
+        nnormals : (nnode, 3) float ndarray
             normalized nodal normal vectors
 
         """
@@ -416,6 +635,7 @@ def read_cart3d(cart3d_filename, log=None, debug=False, result_names=None) -> Ca
     model.read_cart3d(cart3d_filename, result_names)
     return model
 
+
 def comp2tri(in_filenames, out_filename,
              is_binary=False, float_fmt='%6.7f',
              log=None, debug=False) -> Cart3D:
@@ -435,7 +655,7 @@ def comp2tri(in_filenames, out_filename,
 
     Notes
     -----
-    assumes loads={}
+    assumes loads is None
 
     """
     points = []
@@ -467,17 +687,58 @@ def comp2tri(in_filenames, out_filename,
         model.write_cart3d(out_filename, is_binary=is_binary, float_fmt=float_fmt)
     return model
 
-def get_area_centroid_normals(nodes, elements):
+def convert_to_float(svalues: list[str]) -> list[float]:
+    """Takes a list of strings and converts them to floats."""
+    values = []
+    for value in svalues:
+        values.append(float(value))
+    return values
+
+def _get_list(sline: list[str]) -> list[float]:
+    """Takes a list of strings and converts them to floats."""
+    try:
+        sline2 = convert_to_float(sline)
+    except ValueError:
+        print("sline = %s" % sline)
+        raise SyntaxError('cannot parse %s' % sline)
+    return sline2
+
+def get_average_load(load: dict[str, np.ndarray],
+                     elements: np.ndarray) -> np.ndarray:
     """
     Gets the area, centroid, and centroidal normals
 
     Returns
     -------
-    area : (n,) ndarray
+    load : (nnode,) float ndarray
+        the nodal load
+
+    """
+    xyz1 = load[elements[:, 0]]
+    xyz2 = load[elements[:, 1]]
+    xyz3 = load[elements[:, 2]]
+    avg = (xyz1 + xyz2 + xyz3) / 3.
+    return avg
+
+def get_area_centroid_normals(nodes: np.ndarray,
+                              elements: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Gets the area, centroid, and centroidal normals
+
+    Parameters
+    ----------
+    nodes : (nnode,3) float ndarray
+        the nodal load
+    elements : (nelement,3) int ndarray
+        the nodal load
+
+    Returns
+    -------
+    area : (nelement,) float ndarray
         the element areas
-    centroid : (n, 3) ndarray
+    centroid : (nelement, 3) float ndarray
         centroid of the element
-    cnormals : (n, 3) ndarray
+    cnormals : (nelement, 3) float ndarray
         normalized centroidal normal vectors
 
     """
@@ -498,12 +759,21 @@ def get_area_centroid_normals(nodes, elements):
     centroid = (xyz1 + xyz2 + xyz3) / 3.
     return area, centroid, normal
 
-def _get_area_vector(nodes: np.ndarray, elements: np.ndarray) -> np.ndarray:
+def _get_area_vector(nodes: np.ndarray,
+                     elements: np.ndarray) -> np.ndarray:
     """
     Gets the area vector (unnormalized normal vector)
+
+    Parameters
+    ----------
+    nodes : (nnode,3) float ndarray
+        the nodal load
+    elements : (nelement,3) int ndarray
+        the nodal load
+
     Returns
     -------
-    normals : (n, 3) ndarray
+    normals : (nelement, 3) float ndarray
         unnormalized centroidal normal vectors
 
     """

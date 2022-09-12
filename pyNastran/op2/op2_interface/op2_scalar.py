@@ -44,7 +44,7 @@ Defines the sub-OP2 class.  This should never be called outside of the OP2 class
 import os
 from struct import Struct, unpack
 from collections import defaultdict
-from typing import List, Tuple, Dict, Set, Union, Optional, Any
+from typing import List, Tuple, Dict, Union, Optional, Any
 
 from numpy import array
 import numpy as np
@@ -417,7 +417,7 @@ STR_PARAMS_1 = {
     b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', b'DEBUG',
     b'AEDBX', b'AERO', b'AUTOSUP0', b'AXIOPT',
 }
-def _check_unique_sets(*sets: List[Set[str]]):
+def _check_unique_sets(*sets: List[set[str]]):
     """verifies that the sets are unique"""
     for i, seti in enumerate(sets):
         for unused_j, setj in enumerate(sets[i+1:]):

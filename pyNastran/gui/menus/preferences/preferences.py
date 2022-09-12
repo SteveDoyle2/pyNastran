@@ -775,11 +775,11 @@ class PreferencesWindow(PyDialog):
 
     @property
     def settings(self) -> Settings:
-        return self.win_parent.settings  # type: Settings
+        return self.win_parent.settings
 
     @property
     def nastran_settings(self) -> NastranSettings:
-        return self.settings.nastran_settings  # type: NastranSettings
+        return self.settings.nastran_settings
 
     #def on_nastran_is_shell_mcids2(self):
         #"""set the nastran properties preferences"""

@@ -4,16 +4,6 @@ from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 from cpylog import get_logger2
 
 
-def read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True):
-    """
-    reads the input.c3d file
-
-    >>> input_c3d_filename = 'bJet/input.c3d'
-    >>> nodes, elements = read_input_c3d(input_c3d_filename)
-    """
-    model = InputC3dReader(log=log, debug=debug)
-    return model.read_input_c3d(input_c3d_filename, stack=stack)
-
 class InputC3dReader:
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log, debug=debug)
@@ -112,3 +102,14 @@ class InputC3dReader:
             points = vstack(points)
             elements = vstack(elements)
         return points, elements
+
+def read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True) -> InputC3dReader:
+    """
+    reads the input.c3d file
+
+    >>> input_c3d_filename = 'bJet/input.c3d'
+    >>> nodes, elements = read_input_c3d(input_c3d_filename)
+    """
+    model = InputC3dReader(log=log, debug=debug)
+    return model.read_input_c3d(input_c3d_filename, stack=stack)
+

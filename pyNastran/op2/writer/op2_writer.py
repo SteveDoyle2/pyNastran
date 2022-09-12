@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from collections import defaultdict
 from struct import pack, Struct
-from typing import Set, List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 from cpylog import get_logger2
 
 #import pyNastran
@@ -154,7 +154,7 @@ def _set_skips(model: OP2Writer, includes: Optional[List[str]], skips: Optional[
 
 
 def _write_op2(op2_file, fop2_ascii, obj: OP2,
-               skips: Set[str],
+               skips: set[str],
                post: int=-1, endian: bytes=b'<',
                nastran_format: str='nx') -> Tuple[int, List[str]]:
     """actually writes the op2"""
@@ -201,7 +201,7 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
 
 def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                          struct_3i,
-                         endian, skips: Set[str]) -> Tuple[int, List[str]]:
+                         endian, skips: set[str]) -> Tuple[int, List[str]]:
     """writes the op2 result tables"""
     table_names_found = []
     date = obj.date

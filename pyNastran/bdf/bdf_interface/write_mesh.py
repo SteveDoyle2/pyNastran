@@ -64,14 +64,13 @@ class WriteMesh(BDFAttributes):
         """calculate is_long_ids"""
         # required for MasterModelTaxi
         is_long_ids = (
-            self.nodes and max(self.nodes) > 100000000 or
-            self.coords and max(self.coords) > 100000000 or
-            self.elements and max(self.elements) > 100000000 or
-            self.properties and max(self.properties) > 100000000 or
-            self.materials and max(self.materials) > 100000000 or
-            self.thermal_materials and max(self.thermal_materials) > 100000000 or
-            self.nsms and max(self.nsms) > 100000000 or
-            self.nsmadds and max(self.nsmadds) > 100000000)
+            any((len(dicti) and max(dicti) > 100000000 for dicti in (
+                self.nodes, self.coords, self.elements, self.properties,
+                self.materials, self.thermal_materials,
+                #self.loads,
+                self.load_combinations, self.masses,
+                self.nsms, self.nsmadds,
+            ))))
         if not is_long_ids:
             for loads in self.loads.values():
                 for load in loads:
@@ -966,7 +965,7 @@ class WriteMesh(BDFAttributes):
         """Writes the PARAM cards"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.params or self.dti or self.mdlprm:
-            bdf_file.write('$PARAMS\n')  # type: list[str]
+            bdf_file.write('$PARAMS\n')
             for unused_name, dti in sorted(self.dti.items()):
                 bdf_file.write(dti.write_card(size=size, is_double=is_double))
 
@@ -1109,7 +1108,7 @@ class WriteMesh(BDFAttributes):
         is_sets = (self.sets or self.asets or self.omits or self.bsets or self.csets or self.qsets
                    or self.usets)
         if is_sets:
-            bdf_file.write('$SETS\n')  # type: list[str]
+            bdf_file.write('$SETS\n')
             for (unused_id, set_obj) in sorted(self.sets.items()):  # dict
                 bdf_file.write(set_obj.write_card(size, is_double))
             for set_obj in self.asets:  # list
@@ -1140,7 +1139,7 @@ class WriteMesh(BDFAttributes):
         is_sets = (self.se_sets or self.se_bsets or self.se_csets or self.se_qsets
                    or self.se_usets)
         if is_sets:
-            bdf_file.write('$SUPERELEMENTS\n')  # type: list[str]
+            bdf_file.write('$SUPERELEMENTS\n')
             for set_obj in self.se_bsets:  # list
                 bdf_file.write(set_obj.write_card(size, is_double))
             for set_obj in self.se_csets:  # list
@@ -1192,7 +1191,7 @@ class WriteMesh(BDFAttributes):
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the TABLEx cards sorted by ID"""
         if self.tables or self.tables_d or self.tables_m or self.tables_sdamping:
-            bdf_file.write('$TABLES\n')  # type: list[str]
+            bdf_file.write('$TABLES\n')
             for (unused_id, table) in sorted(self.tables.items()):
                 bdf_file.write(table.write_card(size, is_double))
             for (unused_id, table) in sorted(self.tables_d.items()):

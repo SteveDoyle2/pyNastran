@@ -103,7 +103,8 @@ class Cart3dReaderWriter:
             #assert elements.min() == 1, elements.min()
         return elements - 1
 
-    def _read_cart3d_ascii(self, cart3d_filename: str, encoding: str, result_names=None) -> None:
+    def _read_cart3d_ascii(self, cart3d_filename: str, encoding: str,
+                           result_names=None) -> None:
         log = self.log
         cart3d_filename = _filename(cart3d_filename)
         with open(cart3d_filename, 'r', encoding=self._encoding) as infile:

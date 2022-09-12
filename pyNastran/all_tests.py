@@ -7,7 +7,7 @@ except ModuleNotFoundError:
     IS_MATPLOTLIB = False
 
 try:
-    import h5py
+    import h5py  #missing-imports
     IS_H5PY = True
 except ModuleNotFoundError:
     IS_H5PY = False

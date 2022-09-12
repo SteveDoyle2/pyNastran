@@ -1,7 +1,7 @@
 """tests non-gui related Cart3d class/interface"""
 import os
 import unittest
-from numpy import array_equal, allclose
+import numpy as np
 from cpylog import get_logger
 
 import pyNastran
@@ -10,7 +10,7 @@ from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_file
 from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 from pyNastran.converters.cart3d.cart3d_to_tecplot import cart3d_to_tecplot
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
-import pyNastran.converters.cart3d.input_cntl_reader
+from pyNastran.converters.cart3d.input_cntl_reader import read_input_cntl
 from pyNastran.converters.format_converter import cmd_line_format_converter
 
 
@@ -19,7 +19,7 @@ MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
 
 class TestCart3d(unittest.TestCase):
 
-    def test_cart3d_io_01(self):
+    def test_cart3d_flat_geometry(self):
         """geometry"""
         lines = (
             "7 6\n"
@@ -66,7 +66,7 @@ class TestCart3d(unittest.TestCase):
         os.remove(infile_name)
         os.remove(out_name)
 
-    def test_cart3d_io_02(self):
+    def test_cart3d_flat_results(self):
         """geometry + results"""
         lines = (
             "5 3 6\n"
@@ -97,34 +97,36 @@ class TestCart3d(unittest.TestCase):
             f.write(lines)
 
         log = get_logger(level='warning', encoding='utf-8')
-        cart3d = read_cart3d(cart3d_filename, log=log, debug=False,
+        model = read_cart3d(cart3d_filename, log=log, debug=False,
                             result_names=None)
 
-        assert len(cart3d.points) == 5, 'npoints=%s' % len(cart3d.points)
-        assert len(cart3d.elements) == 3, 'nelements=%s' % len(cart3d.elements)
-        assert len(cart3d.regions) == 3, 'nregions=%s' % len(cart3d.regions)
+        assert len(model.points) == 5, 'npoints=%s' % len(model.points)
+        assert len(model.elements) == 3, 'nelements=%s' % len(model.elements)
+        assert len(model.regions) == 3, 'nregions=%s' % len(model.regions)
 
-        assert len(cart3d.loads) == 14, 'nloads=%s' % len(cart3d.loads)  # was 10
-        assert len(cart3d.loads['Cp']) == 5, 'nCp=%s' % len(cart3d.loads['Cp'])
+        assert len(model.loads) == 14, 'nloads=%s' % len(model.loads)  # was 10
+        assert len(model.loads['Cp']) == 5, 'nCp=%s' % len(model.loads['Cp'])
 
         outfile_name1 = os.path.join(MODEL_PATH, 'flat.bin.tri')
         outfile_name2 = os.path.join(MODEL_PATH, 'flat2.tri')
-        cart3d.write_cart3d(outfile_name2, is_binary=False)
+        model.write_cart3d(outfile_name2, is_binary=False)
         with self.assertRaises(NotImplementedError):
-            cart3d.write_cart3d(outfile_name1, is_binary=True)
+            model.write_cart3d(outfile_name1, is_binary=True)
 
         # no results
-        cart3d.loads = {}
-        cart3d.write_cart3d(outfile_name1, is_binary=True)
-        cart3d.write_cart3d(outfile_name2, is_binary=False)
-        cnormals = cart3d.get_normals()
-        nnormals = cart3d.get_normals_at_nodes(cnormals)
-        area, centroid, cnormals = cart3d.get_area_centroid_normals()
+        model.loads = {}
+        model.write_cart3d(outfile_name1, is_binary=True)
+        model.write_cart3d(outfile_name2, is_binary=False)
+
+        area, centroid, normals = model.get_area_centroid_normals()
+        cnormals = model.get_normals()
+        nnormals = model.get_normals_at_nodes(cnormals)
+        area, centroid, cnormals = model.get_area_centroid_normals()
         os.remove(cart3d_filename)
         os.remove(outfile_name1)
         os.remove(outfile_name2)
 
-    def test_cart3d_io_03(self):
+    def test_cart3d_io_plugs(self):
         """read/write geometry in ascii/binary"""
         log = get_logger(level='warning', encoding='utf-8')
         infile_name = os.path.join(MODEL_PATH, 'threePlugs.bin.tri')
@@ -215,7 +217,24 @@ class TestCart3d(unittest.TestCase):
         """tests the input.c3d reading"""
         log = get_logger(level='warning', encoding='utf-8')
         input_c3d_filename = os.path.join(MODEL_PATH, 'input.c3d')
-        read_input_c3d(input_c3d_filename, log=log, debug=False, stack=True)
+        nodes, elements = read_input_c3d(input_c3d_filename, log=log, debug=False, stack=True)
+        assert isinstance(nodes, np.ndarray), nodes
+        assert isinstance(elements, np.ndarray), elements
+
+    def test_cart3d_cntl(self):
+        input_cntl_filename = os.path.join(MODEL_PATH, 'business_jet', 'input.cntl')
+        cntl = read_input_cntl(input_cntl_filename, log=None, debug=None)
+        bcs = cntl.get_boundary_conditions()
+        mach, alpha, beta, gamma = cntl.get_flow_conditions()
+        post = cntl.get_post_processing()
+        assert np.allclose(mach, 0.84), mach
+        assert np.allclose(alpha, 2.81), alpha
+        assert np.allclose(beta, 0.), beta
+        assert gamma is None, gamma
+        #assert np.allclose(gamma, 1.4), gamma
+        assert post is None, post
+        assert bcs == (0, 0, 0, 0, 0, 0, {}), bcs
+
 
     def test_bjet(self):
         log = get_logger(level='warning', encoding='utf-8')
@@ -235,12 +254,12 @@ def check_array(points, points2):
     nnodes = points.shape[0]
     msg = ''
     nfailed = 0
-    if not array_equal(points, points2):
+    if not np.array_equal(points, points2):
         for nid in range(nnodes):
             p1 = points[nid]
             p2 = points2[nid]
             abs_sum_delta = sum(abs(p1-p2))
-            if not allclose(abs_sum_delta, 0.0, atol=1e-6):
+            if not np.allclose(abs_sum_delta, 0.0, atol=1e-6):
                 msg += 'n=%s p1=%s p2=%s diff=%s\nsum(abs(p1-p2))=%s\n' % (
                     nid, str(p1), str(p2), str(p1-p2), abs_sum_delta)
                 nfailed += 1

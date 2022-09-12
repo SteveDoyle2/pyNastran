@@ -2,12 +2,6 @@ from collections import OrderedDict
 from cpylog import get_logger2
 
 
-def read_input_cntl(input_cntl_filename, log=None, debug=False):
-    cntl = InputCntlReader(log=log, debug=debug)
-    cntl.read_input_cntl(input_cntl_filename)
-    return cntl
-
-
 class InputCntlReader:
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log, debug=debug)
@@ -95,7 +89,8 @@ class InputCntlReader:
             else:
                 raise NotImplementedError(post_processing_type)
 
-    def get_boundary_conditions(self):
+    def get_boundary_conditions(self) -> tuple[int, int, int,
+                                               int, int, int, dict[int, list[float]]]:
         section = self.sections['Boundary_Conditions']
         name, comment, table = section
         self.log.debug(str(table))
@@ -150,7 +145,7 @@ class InputCntlReader:
                surf_bcs)
         return bcs
 
-    def _read_sections(self, lines):
+    def _read_sections(self, lines: list[str]) -> dict[str, str, list[str]]:
         name = 'Header'
         sections = OrderedDict()
         comment = ''
@@ -199,6 +194,11 @@ class InputCntlReader:
                 self.log.debug(datai)
             self.log.debug('#' * 80)
         return sections
+
+def read_input_cntl(input_cntl_filename, log=None, debug=False) -> InputCntlReader:
+    cntl = InputCntlReader(log=log, debug=debug)
+    cntl.read_input_cntl(input_cntl_filename)
+    return cntl
 
 def main():  # pragma: no cover
     input_cntl_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\converters\cart3d\models\bJet\input.cntl'

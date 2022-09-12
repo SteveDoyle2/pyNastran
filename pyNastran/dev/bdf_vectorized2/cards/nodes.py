@@ -409,8 +409,7 @@ class GRIDv:
         """does this do anything?"""
         self.make_current()
 
-    def write_card(self, size=8, is_double=False, bdf_file=None):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False, bdf_file=None):
         """
         The writer method used by BDF.write_card
 
@@ -466,8 +465,7 @@ class GRIDv:
         bdf_file.write(msg)
         return msg
 
-    def write_card_16(self, is_double=False, bdf_file=None):
-        # type: (bool) -> str
+    def write_card_16(self, is_double: bool=False, bdf_file=None) -> str:
         """
         Writes a GRID card in 16-field format
         """
