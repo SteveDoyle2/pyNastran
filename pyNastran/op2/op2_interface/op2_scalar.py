@@ -361,7 +361,10 @@ INT_PARAMS_2 = {
     b'ZUZRC1', b'ZUZRC2', b'ZUZRC3', b'ZUZRC4', b'ZUZRC5', b'ZUZRC6', b'ZUZRC7', b'ZUZRC8', b'ZUZRC9', b'ZUZRC10',
 }
 #DOUBLE_PARAMS_1 = [] # b'Q'
-STR_PARAMS_1 = {
+SATK_STR_PARAMS1 = {
+    b'RDRBE',
+}
+STR_PARAMS_1 = SATK_STR_PARAMS1 | {
     b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
     b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
     b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
@@ -645,6 +648,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_onr = self.reader_onr
         reader_oef = self.reader_oef
         reader_oes = self.reader_oes
+        reader_otemp1 = self.reader_otemp1
         reader_opg = self.reader_opg
         reader_opr = self.reader_opr
         reader_oqg = self.reader_oqg
@@ -724,7 +728,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OSTR2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4], # TODO: disable
             b'OSTR2C' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],
 
-            b'OTEMP1' : [reader_oug._read_otemp1_3, reader_oug._read_otemp1_4],
+            b'OTEMP1' : [reader_otemp1._read_otemp1_3, reader_otemp1._read_otemp1_4],
             # --------------------------------------------------------------------------
             # MSC TABLES
             # common tables
@@ -1434,7 +1438,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             ndata2 = self._read_pvto_4_helper(data, ndata)
         except (NotImplementedError, AssertionError) as error:
             #raise  # only for testing
-            if 'dev' in __version__ and self.IS_TESTING:
+            if 'dev' in __version__ and self.IS_TESTING or 1:
                 raise  # only for testing
             self.log.error(str(error))
             log_exc(self.log)
@@ -1599,8 +1603,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             param = PARAM(key, values, comment='')
             self.params[key] = param
+            print(f'{key} ({flag}) =?W {value!r}')
             del key, values
-            #print(f'{key} ({flag}) = {value!r}')
             #print(param.rstrip())
         return nvalues
 

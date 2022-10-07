@@ -19,7 +19,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
-from pyNastran.op2.tables.oug.oug import OUG
+from pyNastran.op2.tables.oug.oug import OUG, OTEMP1
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.onmd import ONMD
@@ -55,10 +55,13 @@ class FortranFormat:
         self.reader_oef = OEF(self)
         self.reader_oqg = OQG(self)
         self.reader_opr = OPR(self)
-        self.reader_oug = OUG(self)
         self.reader_ogs = OGS(self)
         self.reader_onr = ONR(self)
         self.reader_ogpf = OGPF(self)
+
+        # OUG - displacement, velocity, acceleration, eigenvector, temperature
+        self.reader_oug = OUG(self)
+        self.reader_otemp1 = OTEMP1(self)
 
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""

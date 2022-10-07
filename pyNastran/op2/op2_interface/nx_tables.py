@@ -764,6 +764,13 @@ NX_RESULT_TABLES = [
     b'OAPPSD2', # Acoustic power for the PSD function - SORT2
 
     b'OGK1', # gasket
+
+    # random vibe reference
+    #https://community.sw.siemens.com/s/question/0D54O000061xng3SAA/method-used-in-nx-to-calculate-vm-stress-in-dynamic
+
+    # SATK
+    b'OEFPK1',
+    b'OUGPK1',
 ]
 
 if len(NX_RESULT_TABLES) != len(np.unique(NX_RESULT_TABLES)):  # pragma: no cover
