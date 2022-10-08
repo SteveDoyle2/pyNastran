@@ -648,12 +648,16 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_onr = self.reader_onr
         reader_oef = self.reader_oef
         reader_oes = self.reader_oes
-        reader_otemp1 = self.reader_otemp1
         reader_opg = self.reader_opg
         reader_opr = self.reader_opr
         reader_oqg = self.reader_oqg
-        reader_oug = self.reader_oug
         reader_ogs = self.reader_ogs
+
+        # oug
+        reader_oug = self.reader_oug
+        reader_ougpk1 = self.reader_ougpk1
+        reader_otemp1 = self.reader_otemp1
+
         table_mapper_geometry = {
             # -----------------------------------------------------------
             # geometry
@@ -744,6 +748,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'RAQEATC': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4], # Attachment mode MPC force table (OQG)
             #b'RAQCONS': [self._table_passer, self._table_passer], # temporary
             #b'RAQEATC': [self._table_passer, self._table_passer], # temporary
+
+            b'RAREATC': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4], # spc forces?
+            b'RARCONS': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4], # spc forces?
 
             # element forces
             b'RAFCONS': [reader_oef._read_oef1_3, reader_oef._read_oef1_4], # Element Force Constraint Mode (OEF)
@@ -1055,6 +1062,10 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # Normalized Mass Density
             b'ONMD' : [self.reader_onmd._read_onmd_3, self.reader_onmd._read_onmd_4],
             #====================================================================
+            # SATK
+            #b'OUGPK1'  : [self.reader_ougpk1._read_ougpk1_3, self.reader_ougpk1._read_ougpk1_4],
+
+            #====================================================================
             # NASA95
             b'OESC1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
 
@@ -1155,6 +1166,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OQMNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
             #b'OQMRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_rms],  # buggy on isat random
             #b'OQMNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_no],  # buggy on isat random
+
+            b'ROQGM1'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_forces],  # relative OQM
 
             # acoustic pressure
             b'OPRATO1' : [reader_opr._read_opr1_3, reader_opr._read_opr_ato],
@@ -1603,7 +1616,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             param = PARAM(key, values, comment='')
             self.params[key] = param
-            print(f'{key} ({flag}) =?W {value!r}')
+            #print(f'{key} ({flag}) = {value!r}')
             del key, values
             #print(param.rstrip())
         return nvalues

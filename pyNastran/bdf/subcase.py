@@ -243,12 +243,23 @@ class Subcase:
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
+
         elif table_name in ['ROUGV1', 'ROUGV2']:
             thermal = data_code['thermal']
             if thermal == 0:
                 self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['ROQGM1']:
+            thermal = data_code['thermal']
+            if thermal == 0:
+                self.add('MPCFORCES', 'ALL', options, 'STRESS-type')
+            else:
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['RAREATC', 'RARCONS']:
+            self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
+
+
         elif table_name in ['OPHIG', 'BOPHIG', 'BOPHIGF']:
             if table_code == 7:
                 self.add('ANALYSIS', 'HEAT', [], 'KEY-type')

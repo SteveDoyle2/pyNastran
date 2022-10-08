@@ -880,6 +880,8 @@ NX_TABLE_CONTENT = {
     91 : 'TRMBU - Transfomration matrices from undeformed to basic',
     92 : 'ONMD - Normalized material density for topology optimization output',
     93 : 'OBCKL - SORT2 output for Load Factor versus Cumulative Arc-length from a SOL 401 arc-length solution',
+
+    401 : 'OUGPK1 - Peak to Peak Random',  # SATK
     #
     # nx 2019.2
     #

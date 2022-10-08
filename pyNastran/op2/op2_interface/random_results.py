@@ -422,6 +422,8 @@ class RAECONS:
 class RASCONS:
     """storage class for the RASCONS objects"""
     def __init__(self):
+        self.cbar_stress = {}
+
         self.ctetra_stress = {}
         self.cpenta_stress = {}
         self.chexa_stress = {}
@@ -447,6 +449,7 @@ class RASCONS:
     def get_table_types(self):
         tables = [
             # OES - isotropic CTRIA3/CQUAD4 stress
+            'cbar_stress',
             'ctria3_stress', 'ctriar_stress', 'ctria6_stress',
             'cquadr_stress', 'cquad4_stress', 'cquad8_stress',
 
@@ -458,6 +461,18 @@ class RASCONS:
             'ctetra_strain', 'chexa_strain', 'cpenta_strain',
         ]
         return ['RASCONS.' + table for table in tables]
+
+class RARCONS:
+    """
+    storage class for the RARCONS objects
+    Reaction Force Constraint Mode
+    """
+    def __init__(self):
+        self.spc_forces = {}
+
+    def get_table_types(self):
+        tables = ['spc_forces', ]
+        return ['RARCONS.' + table for table in tables]
 
 class RAPCONS:
     """storage class for the RAPCONS objects"""
@@ -634,6 +649,25 @@ class ROUGV1:
         ]
         return ['ROUGV1.' + table for table in tables]
 
+class ROQGM1:
+    """storage class for the ROQGM1 objects"""
+    def __init__(self):
+        self.mpc_forces = {}
+
+    def get_table_types(self):
+        tables = ['mpc_forces']
+        return ['ROQGM1.' + table for table in tables]
+
+class RAREATC:
+    """storage class for the RAREATC objects"""
+    def __init__(self):
+        self.spc_forces = {}
+    def get_table_types(self):
+        tables = [
+            'spc_forces',
+        ]
+        return ['RAREATC.' + table for table in tables]
+
 class RAFEATC:
     """storage class for the RAFEATC objects"""
     def __init__(self):
@@ -653,13 +687,15 @@ class RAFEATC:
 class RASEATC:
     """storage class for the RASEATC objects"""
     def __init__(self):
+        self.cbar_stress = {}
         self.chexa_stress = {}
         self.cquad4_stress = {}
 
     def get_table_types(self):
         tables = [
-            'chexa_stress',
+            'cbar_stress',
             'cquad4_stress',
+            'chexa_stress',
         ]
         return ['RASEATC.' + table for table in tables]
 

@@ -19,7 +19,9 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
-from pyNastran.op2.tables.oug.oug import OUG, OTEMP1
+from pyNastran.op2.tables.oug.oug import OUG
+from pyNastran.op2.tables.oug.otemp1 import OTEMP1
+from pyNastran.op2.tables.oug.ougpk1 import OUGPK1
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.onmd import ONMD
@@ -61,7 +63,8 @@ class FortranFormat:
 
         # OUG - displacement, velocity, acceleration, eigenvector, temperature
         self.reader_oug = OUG(self)
-        self.reader_otemp1 = OTEMP1(self)
+        self.reader_otemp1 = OTEMP1(self)  # Siemens
+        self.reader_ougpk1 = OUGPK1(self)  # STK
 
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""

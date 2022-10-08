@@ -367,6 +367,9 @@ class OQG:
         elif table_code == 39:
             table = "OQG - MPC Forces"
 
+        ROQGM1 - relative
+        - table_code = 3
+
         """
         op2 = self.op2
         result_name = 'constraint_forces'
@@ -400,7 +403,8 @@ class OQG:
             n = self._read_oqg_spc_no(data, ndata)
 
         elif op2.table_code == 3:   # SPC Forces
-            assert op2.table_name in [b'OQG1', b'OQGV1', b'OQP1', b'OQG2'], op2.code_information()
+            assert op2.table_name in [b'OQG1', b'OQGV1', b'OQP1', b'OQG2',
+                                      b'RAREATC', b'RARCONS'], op2.code_information()
             n = self._read_spc_forces(data, ndata)
         elif op2.table_code == 39:  # MPC Forces
             assert op2.table_name in [b'OQMG1', b'OQMG2'], op2.code_information() # , b'OQMPSD1', b'OQMPSD2'
@@ -424,7 +428,8 @@ class OQG:
         table_code = 3
         """
         op2 = self.op2
-        if op2.table_name in [b'OQG1', b'OQG2', b'OQGV1', b'OQP1']:
+        table_name = op2.table_name
+        if table_name in [b'OQG1', b'OQG2', b'OQGV1', b'OQP1', b'RAREATC', b'RARCONS']:
             pass
         else:  # pragma: no cover
             msg = 'spc_forces; table_name=%s' % op2.table_name
@@ -432,18 +437,23 @@ class OQG:
 
         if op2.thermal == 0:
             op2._setup_op2_subcase('SPCFORCES')
-            if op2.table_name in [b'OQG1', b'OQG2']:
+            if table_name in [b'OQG1', b'OQG2']:
                 result_name = 'spc_forces'
             #elif op2.table_name in [b'OQGV1']:
                 #result_name = 'spc_forces_v'
-            elif op2.table_name in [b'OQGV1', b'OQP1']:
+            elif table_name in [b'OQGV1', b'OQP1']:
                 result_name = 'spc_forces'
+            elif table_name == b'RAREATC':
+                result_name = 'RAREATC.spc_forces'
+            elif table_name == b'RARCONS':
+                result_name = 'RARCONS.spc_forces'
             else:
                 raise NotImplementedError(op2.table_name_str)
             if op2._results.is_not_saved(result_name):
                 return ndata
             op2._results._found_result(result_name)
-            storage_obj = getattr(op2, result_name)
+            #storage_obj = getattr(op2, result_name)
+            storage_obj = op2.get_result(result_name)
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                            RealSPCForcesArray, ComplexSPCForcesArray,
                                            'node', random_code=op2.random_code)
@@ -485,12 +495,12 @@ class OQG:
 
         if op2.table_name in [b'OQMG1', b'OQMG2']:
             result_name = 'mpc_forces'
-        elif op2.table_name == b'RAQEATC':
-            result_name = 'mpc_forces_RAQEATC'
-        elif op2.table_name == b'RAQCONS':
-            result_name = 'mpc_forces_RAQCONS'
-        elif op2.table_name == b'RAQEATC':
-            result_name = 'mpc_forces_RAQEATC'
+        #elif op2.table_name == b'RAQEATC':
+            #result_name = 'mpc_forces_RAQEATC'
+        #elif op2.table_name == b'RAQCONS':
+            #result_name = 'mpc_forces_RAQCONS'
+        elif op2.table_name == b'ROQGM1':
+            result_name = 'ROQGM1.mpc_forces'
         else:  # pragma: no cover
             msg = 'mpc_forces; table_name=%s' % op2.table_name
             raise NotImplementedError(msg)

@@ -383,6 +383,8 @@ MSC_MATRIX_TABLES = [
 
     # not sure - per BAH_Plane_cont_gust.f06 (MONITOR point deck)
     b'PMRF', b'PERF', b'PFRF', b'PGRF', b'AFRF', b'AGRF', b'MP3F',
+
+    b'FEFFMOD',  #  think this is right
 ] # type: List[bytes]
 
 MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
@@ -394,9 +396,13 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
 
     # new
     b'TOLD',
-    b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS',
-    b'RANCONS', b'RAGCONS', b'RADEFFM', b'RAPEATC', b'RAQEATC', b'RADEATC',
-    b'RASEATC', b'RAFEATC', b'RAEEATC', b'RANEATC', b'RAGEATC',
+    #   ?         ?         displacement, stress  force/shellstress strain  spcforce    strainenergy  gridpointforces
+    b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS', b'RARCONS', b'RANCONS', b'RAGCONS',
+    b'RAPEATC', b'RAQEATC', b'RADEATC', b'RASEATC', b'RAFEATC', b'RAEEATC', b'RAREATC', b'RANEATC', b'RAGEATC',
+
+    # mpc force
+    b'ROQGM1',
+    b'RADEFFM', # eigenvectors
 
     # other
     b'MKLIST',

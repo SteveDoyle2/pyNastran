@@ -217,6 +217,8 @@ TABLE_OBJ_MAP = {
     'rms.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'abs.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'nrl.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'RAREATC.spc_forces' : (RealSPCForcesArray, ),
+    'RARCONS.spc_forces' : (RealSPCForcesArray, ),
 
     'mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
     'no.mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
@@ -224,6 +226,7 @@ TABLE_OBJ_MAP = {
     'crm.mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
     'psd.mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
     'rms.mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'ROQGM1.mpc_forces': (RealMPCForcesArray, ),
 
     'eigenvectors' : (RealEigenvectorArray, ComplexEigenvectorArray),
     'RADCONS.eigenvectors' : (RealEigenvectorArray, ),
@@ -457,6 +460,8 @@ TABLE_OBJ_MAP = {
     'rms.cbar_stress' : (RandomBarStressArray, ),
     'no.cbar_stress' : (RandomBarStressArray, ),
     'modal_contribution.cbar_stress' : (RealBarStressArray, ComplexBarStressArray, ),
+    'RASCONS.cbar_stress': (RealBarStressArray, ),
+    'RASEATC.cbar_stress': (RealBarStressArray, ),
 
     'cbar_strain' : (RealBarStrainArray, ComplexBarStrainArray),
     'ato.cbar_strain' : (RandomBarStrainArray, ),

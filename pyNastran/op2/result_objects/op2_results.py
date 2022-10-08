@@ -1,9 +1,10 @@
 from typing import Dict, Any
 
 from pyNastran.op2.op2_interface.random_results import (
-    RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS,
-    RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC,
-    ROUGV1, RADEFFM, SRSS, ABS, NRL,
+    RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS, RARCONS,
+    RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC, RAREATC,
+    ROUGV1, ROQGM1,
+    RADEFFM, SRSS, ABS, NRL,
     AutoCorrelationObjects, PowerSpectralDensityObjects, RootMeansSquareObjects,
     CumulativeRootMeansSquareObjects, NumberOfCrossingsObjects,
     PSDObjects,
@@ -43,6 +44,7 @@ class Results:
         self.strain = Strain()
         self.strain_energy = StrainEnergy()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
+        self.ROQGM1 = ROQGM1()   # relative mpc forces???
 
         self.RADEFFM = RADEFFM() # eigenvectors
 
@@ -53,6 +55,7 @@ class Results:
         self.RAGCONS = RAGCONS() # grid point forces
         self.RAPCONS = RAPCONS() # composite stress
         self.RANCONS = RANCONS() # strain energy
+        self.RARCONS = RARCONS() # spc force
 
         self.RADEATC = RADEATC() # eigenvectors
         self.RAFEATC = RAFEATC() # force
@@ -61,6 +64,7 @@ class Results:
         self.RAGEATC = RAGEATC() # grid point forces
         self.RAPEATC = RAPEATC() # composite stress
         self.RANEATC = RANEATC() # strain energy
+        self.RAREATC = RAREATC() # spc force
         self.srss = SRSS()
         self.abs = ABS()
         self.nrl = NRL()
@@ -103,10 +107,11 @@ class Results:
             self.ato, self.psd, self.rms, self.no, self.crm,
             self.modal_contribution, self.strength_ratio, self.failure_indices,
             self.solution_set,
-            self.ROUGV1,
+            self.ROUGV1, self.ROQGM1,
             self.RADEFFM,
-            self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS,
-            self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC,
+            self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS, self.RARCONS,
+            self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC, self.RAREATC,
+
             self.srss, self.abs, self.nrl,
         ]
         return sum_objs
