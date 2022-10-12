@@ -271,13 +271,19 @@ def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
         log.info('shell2')
         mid += 1
 
-def abaqus_to_nastran_filename(abaqus_inp_filename: str, nastran_filename_out: str):
-    model = read_abaqus(abaqus_inp_filename, log=None, debug=True)
-    nnodes, nids, nodes, nelements = get_nodes_nnodes_nelements(model, stop_for_no_elements=True)
+def abaqus_to_nastran_filename(abaqus_inp_filename: str,
+                               nastran_filename_out: str,
+                               log=None) -> BDF:
+    if isinstance(abaqus_inp_filename, Abaqus):
+        model = abaqus_inp_filename
+    else:
+        model = read_abaqus(abaqus_inp_filename, log=log, debug=True)
+    nnodes, nids, nodes, nelements = get_nodes_nnodes_nelements(
+        model, stop_for_no_elements=True)
     assert nnodes > 0, nnodes
     assert nelements > 0, nelements
 
-    nastran_model = BDF(debug=True, log=None, mode='msc')
+    nastran_model = BDF(debug=True, log=log, mode='msc')
     for nid, xyz in zip(nids, nodes):
         nastran_model.add_grid(nid, xyz)
     _create_nastran_nodes_elements(model, nastran_model)
@@ -287,6 +293,7 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str, nastran_filename_out: s
     _create_nastran_loads(model, nastran_model)
     nastran_model.write_bdf(nastran_filename_out)
     x = 1
+    return nastran_model
 
 def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
     def xyz():
