@@ -5,7 +5,7 @@ import numpy as np
 #from numpy import arange, mean, amax, amin, array
 from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
-from pyNastran.converters.tecplot.tecplot import read_tecplot
+from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot
 #from pyNastran.converters.tecplot.utils import merge_tecplot_files
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
@@ -49,7 +49,7 @@ class TecplotIO:
             break
 
         #self._make_tecplot_geometry(model, self.nnodes, quads_only=True) # cart3d
-        is_surface = self._make_tecplot_geometry(model, quads_only=False)
+        is_surface, zone_ids = self._make_tecplot_geometry(model, quads_only=False)
 
         #self._create_cart3d_free_edegs(model, nodes, elements)
 
@@ -69,7 +69,8 @@ class TecplotIO:
         cases = OrderedDict()
         ID = 1
 
-        form, cases, node_ids, element_ids = self._fill_tecplot_case(cases, ID, model, variables, is_surface)
+        form, cases, node_ids, element_ids = self._fill_tecplot_case(
+            cases, ID, model, variables, zone_ids, is_surface)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
         self.gui._finish_results_io2(model_name, form, cases)
@@ -85,7 +86,7 @@ class TecplotIO:
             #appendFilter.AddInputData()
             #appendFilter.Update()
 
-    def _make_tecplot_geometry(self, model, quads_only=False):
+    def _make_tecplot_geometry(self, model: Tecplot, quads_only=False):
         """
         Returns
         -------
@@ -93,97 +94,12 @@ class TecplotIO:
             the model is made up of only shells (not 100%)
         """
         grid = self.gui.grid
-        nnodes = self.gui.nnodes
-        nodes = np.zeros((nnodes, 3), dtype='float32')
+        #nnodes = self.gui.nnodes
         #print('nnodes=', nnodes)
 
-        inode = 0
+        model.log.info(f'names = {names}')
 
-        quads = []
-        tris = []
-        tets = []
-        hexas = []
-        for zone in model.zones:
-            nodes2d = zone.xy
-            nodes3d = zone.xyz
-            nnodes2d = nodes2d.shape[0]
-            nnodes3d = nodes3d.shape[0]
-
-            # elements
-            if 'I' in zone.headers_dict:
-                i = zone.headers_dict['I']
-                if 'J' in zone.headers_dict:
-                    j = zone.headers_dict['J']
-                    if 'K' in zone.headers_dict:
-                        k = zone.headers_dict['K']
-                        nnodes = i * j * k
-                        elements = np.arange(0, nnodes).reshape(k, j, i)
-                        #print(elements[0, :, :])
-                        #print(elements[1:, :, :])
-                        n1 = elements[:-1, :-1, :-1].ravel()
-                        n2 = elements[:-1, :-1, 1:].ravel()
-                        n3 = elements[:-1, 1:, 1:].ravel()
-                        n4 = elements[:-1, 1:, :-1].ravel()
-
-                        n5 = elements[1:, :-1, :-1].ravel()
-                        n6 = elements[1:, :-1, 1:].ravel()
-                        n7 = elements[1:, 1:, 1:].ravel()
-                        n8 = elements[1:, 1:, :-1].ravel()
-                        #nhexas = (i - 1) * (j - 1) * (k - 1)
-                        quadsi = []
-                        hexasi = np.vstack([n1, n2, n3, n4, n5, n6, n7, n8]).T
-                    else:
-                        nnodes = i * j
-                        elements = np.arange(0, nnodes).reshape(j, i)
-                        #print('elements:')
-                        #print(elements)
-                        n1 = elements[:-1, :-1].ravel()
-                        n2 = elements[:-1, 1:].ravel()
-                        n3 = elements[1:, 1:].ravel()
-                        n4 = elements[1:, :-1].ravel()
-                        #nquads = (i - 1) * (j - 1)
-                        quadsi = np.vstack([n1, n2, n3, n4]).T
-                        hexasi = []
-                    #trisi = None
-                    #tetsi = None
-                    #hexasi = None
-                    trisi = []
-                    tetsi = []
-            else:
-                quadsi = zone.quad_elements
-                hexasi = zone.hexa_elements
-                tetsi = zone.tet_elements
-                trisi = zone.tri_elements
-
-            if len(quadsi):
-                quads.append(inode + quadsi)
-            if len(trisi):
-                tris.append(inode + trisi)
-            if len(tetsi):
-                tets.append(inode + tetsi)
-            if len(hexasi):
-                hexas.append(inode + hexasi)
-
-            # nodes
-            if nnodes2d and nnodes3d:
-                raise RuntimeError('2d and 3d nodes is not supported')
-            elif nnodes2d:
-                nodes[inode:inode+nnodes2d, :2] = nodes2d
-                inode += nnodes2d
-            elif nnodes3d:
-                nodes[inode:inode+nnodes3d] = nodes3d
-                inode += nnodes3d
-            else:  # pragma: no cover
-                raise RuntimeError('failed to find 2d/3d nodes')
-            #print('inode', inode)
-            #print(nodes)
-            #print('-------------')
-        #print('stack', len(quads))
-        quads = stack(quads)
-        tris = stack(tris)
-        tets = stack(tets)
-        hexas = stack(hexas)
-
+        nodes, tris, quads, tets, hexas, zone_ids, names = model.stack_geometry()
         nquads = len(quads)
         ntris = len(tris)
         nhexas = len(hexas)
@@ -206,17 +122,23 @@ class TecplotIO:
             #else:
             is_surface = False
             grid = self.gui.grid
-            nelements = _create_tecplot_solids(grid, zone, nsolids, ntets, tets, nhexas, hexas,
-                                               is_surface=is_surface)
+            nelements = _create_tecplot_solids(
+                grid, model, nsolids, ntets, tets, nhexas, hexas,
+                is_surface=is_surface)
             self.gui.nelements = nelements
         else:
             raise NotImplementedError()
 
         #----------------------------------------------
         #print('nnodes', nnodes, inode)
-        mmax = np.amax(nodes, axis=0)
-        mmin = np.amin(nodes, axis=0)
+        mmax = nodes.max(axis=0)
+        mmin = nodes.min(axis=0)
         dim_max = (mmax - mmin).max()
+        xmax, ymax, zmax = mmax
+        xmin, ymin, zmin = mmin
+        self.gui.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        self.gui.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        self.gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         self.gui.create_global_axes(dim_max)
 
         #print('nodes', nodes)
@@ -225,7 +147,7 @@ class TecplotIO:
 
         grid.SetPoints(points)
         grid.Modified()
-        return is_surface
+        return is_surface, zone_ids
 
     def clear_tecplot(self):
         pass
@@ -234,7 +156,7 @@ class TecplotIO:
         #model = Cart3D(log=self.log, debug=False)
         #self.load_cart3d_geometry(cart3d_filename)
 
-    def _fill_tecplot_case(self, cases, ID, model, variables, is_surface):
+    def _fill_tecplot_case(self, cases, ID, model, variables, zone_ids, is_surface: bool):
         #'x', 'y', 'z',
         #result_names = ['rho', 'U', 'V', 'W', 'p']
         #result_names = zone.variables[3:]
@@ -256,6 +178,7 @@ class TecplotIO:
         geometry_form = [
             ('NodeID', 0, []),
             (element_id, 1, []),
+            ('ZoneID', 2, []),
         ]
         assert isinstance(nnodes, int), 'nnodes=%s type=%s' % (nnodes, type(nnodes))
         assert isinstance(nelements, int), 'nelements=%s type=%s' % (nelements, type(nelements))
@@ -269,27 +192,26 @@ class TecplotIO:
                             location='node', scalar=nids)
         eid_res = GuiResult(ID, header=element_id, title=element_id,
                             location='centroid', scalar=eids)
+        zone_res = GuiResult(ID, header='ZoneID', title='ZoneID',
+                            location='centroid', scalar=zone_ids)
+
 
         icase = 0
         cases[icase] = (nid_res, (0, 'NodeID'))
         cases[icase + 1] = (eid_res, (0, element_id))
-        icase += 2
+        cases[icase + 2] = (zone_res, (0, 'ZoneID'))
+        icase += 3
 
         nvars = len(variables)
         if model.nzones == 1:
             zone0 = model.zones[0]
             results = zone0.nodal_results
         else:
-            results = []
-            for zonei in model.zones:
-                results.append(zonei.nodal_results)
-            results = np.vstack(results)
-            # if results.shape != (nnodes, nvars):
-            #     msg = f'results.shape={results.shape} (nnodes, nvars)=({nnodes}, {nvars}); variables={variables}'
-            #     raise RuntimeError(msg)
+            results = model.stack_results()
+            #assert results.shape == (nnodes, nvars), results.shape
 
         if is_results and nvars:
-            for iresult, result_name in enumerate(variables[3:]):  #: 5
+            for iresult, result_name in enumerate(variables[3:]):
                 #if results.shape[1] == 1:
                     #nodal_data = results
                     #assert len(variables) == 1, variables
@@ -331,7 +253,11 @@ def _create_tecplot_shells(grid, is_quads, quads, is_tris, tris):
             epoints.SetId(2, face[2])
             grid.InsertNextCell(5, epoints)
 
-def _create_tecplot_solids(grid, model, nsolids, ntets, tets, nhexas, hexas, is_surface=True):
+def _create_tecplot_solids(grid, model: Tecplot,
+                           nsolids: int,
+                           ntets: int, tets: np.ndarray,
+                           nhexas: int, hexas: np.ndarray,
+                           is_surface: bool=True):
     """
     add a model with solid elements
 
@@ -390,19 +316,3 @@ def _create_tecplot_solids(grid, model, nsolids, ntets, tets, nhexas, hexas, is_
                 grid.InsertNextCell(elem.GetCellType(), epoints)
     assert nelements > 0, nelements
     return nelements
-
-
-def stack(elements):
-    if len(elements) == 0:
-        pass
-    elif len(elements) == 1:
-        elements = elements[0]
-        #print(elements)
-    else:
-        #print('----stack------')
-        #for elementsi in elements:
-            #print(elementsi)
-        #print('----stack------')
-
-        elements = np.vstack(elements)
-    return elements

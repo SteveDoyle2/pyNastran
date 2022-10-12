@@ -91,15 +91,6 @@ class Zone:
         except KeyError:
             return None
 
-    @property
-    def results(self) -> np.ndarray:
-        self.log.warning('depecrecated tecplot.results for tecplot.nodal_results')
-        return self.nodal_results
-    @results.setter
-    def results(self, nodal_results: np.ndarray) -> None:
-        self.log.warning('depecrecated tecplot.results for tecplot.nodal_results')
-        self.nodal_results = nodal_results
-
     def get_xyz(self) -> np.ndarray:
         """turns 2d points into 3d points"""
         nnodes3d = self.xyz.shape[0]
@@ -316,7 +307,7 @@ class Zone:
 
         #print('nnodes', nodes.shape)
         #print('results', self.nodal_results.shape)
-        assert self.nnodes > 0, f'nnodes={self.nnodes:d}' 
+        assert self.nnodes > 0, f'nnodes={self.nnodes:d}'
         nresults = len(ivars)
         if is_points:
             _write_xyz_results_point(tecplot_file, nodes, self.nodal_results, nresults, ivars,

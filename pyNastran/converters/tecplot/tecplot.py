@@ -6,7 +6,9 @@ import sys
 import os
 from struct import unpack
 import itertools
-from typing import List, Optional, Any
+from io import StringIO
+from pathlib import PurePath
+from typing import Optional, Any, Union
 
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
@@ -17,8 +19,8 @@ from pyNastran.converters.tecplot.zone import Zone, CaseInsensitiveDict, is_3d
 
 class Base:
     def object_attributes(obj: Any, mode: str='public',
-                          keys_to_skip: Optional[List[str]]=None,
-                          filter_properties: bool=False) -> List[str]:
+                          keys_to_skip: Optional[list[str]]=None,
+                          filter_properties: bool=False) -> list[str]:
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -33,14 +35,14 @@ class Base:
             * 'private' - names that begin with single underscore
             * 'both' - private and public
             * 'all' - all attributes that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
         filter_properties: bool: default=False
             filters the @property objects
 
         Returns
         -------
-        attribute_names : List[str]
+        attribute_names : list[str]
             sorted list of the names of attributes of a given type or None
             if the mode is wrong
 
@@ -51,7 +53,7 @@ class Base:
                                  filter_properties=filter_properties)
 
     def object_methods(obj: Any, mode: str='public',
-                       keys_to_skip: Optional[List[str]]=None) -> List[str]:
+                       keys_to_skip: Optional[list[str]]=None) -> list[str]:
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -66,12 +68,12 @@ class Base:
             * "private" - names that begin with single underscore
             * "both" - private and public
             * "all" - all methods that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
 
         Returns
         -------
-        method : List[str]
+        method : list[str]
             sorted list of the names of methods of a given type
             or None if the mode is wrong
 
@@ -81,7 +83,7 @@ class Base:
                               keys_to_skip=keys_to_skip)
 
     def object_stats(obj: Any, mode: str='public',
-                 keys_to_skip: Optional[List[str]]=None,
+                 keys_to_skip: Optional[list[str]]=None,
                  filter_properties: bool=False) -> str:
         """Prints out an easy to read summary of the object"""
         return object_stats(obj,
@@ -184,7 +186,7 @@ class Tecplot(Base):
             return self.read_tecplot_binary(tecplot_filename)
         return self.read_tecplot_ascii(tecplot_filename)
 
-    def read_tecplot_ascii(self, tecplot_filename, nnodes=None, nelements=None):
+    def read_tecplot_ascii(self, tecplot_filename: Union[str, PurePath, StringIO], nnodes=None, nelements=None):
         """
         Reads a Tecplot ASCII file.
 
@@ -198,14 +200,15 @@ class Tecplot(Base):
         .. warning:: BLOCK option doesn't work if line length isn't the same...
         """
         self.tecplot_filename = tecplot_filename
-        assert os.path.exists(tecplot_filename), tecplot_filename
-
         iline = 0
         nnodes = -1
         nelements = -1
-        with open(tecplot_filename, 'r') as tecplot_file:
-            lines = tecplot_file.readlines()
-        del tecplot_file
+        if isinstance(tecplot_filename, StringIO):
+            lines = tecplot_filename.readlines()
+        else:
+            assert os.path.exists(tecplot_filename), tecplot_filename
+            with open(tecplot_filename, 'r') as tecplot_file:
+                lines = tecplot_file.readlines()
 
         quads_list = []
         hexas_list = []
@@ -230,6 +233,9 @@ class Tecplot(Base):
             zone = Zone(self.log)
             zone.headers_dict = headers_dict
             self.variables = headers_dict['VARIABLES']
+            zone.name = '???'
+            if 'NAME' in headers_dict:
+                zone.name = headers_dict['NAME']
             #print('self.variables', self.variables)
 
             #print(headers_dict.keys())
@@ -242,6 +248,7 @@ class Tecplot(Base):
                     xyz_list, hexas_list, tets_list, quads_list, tris_list,
                     results_list,
                     data_packing=data_packing)
+                iline -= 1
             elif 'F' in headers_dict:
                 fe = headers_dict['F'] # FEPoint
                 assert isinstance(fe, str), headers_dict
@@ -258,7 +265,7 @@ class Tecplot(Base):
                   (headers_dict['ZONE'] is None) and
                   ('T' in headers_dict)):
                 lines2 = itertools.chain((line, ), iter(lines[iline:]))
-                A, line = self._read_table_from_lines(lines2, headers_dict)
+                A = self._read_table_from_lines(lines2, headers_dict)
                 self.A = A
                 self.log.debug(f'read_table; A.shape={A.shape}...')
                 return
@@ -287,6 +294,122 @@ class Tecplot(Base):
             xyz_list = []
             results_list = []
 
+    def stack_geometry(self) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                      np.ndarray, np.ndarray, np.ndarray,
+                                      list[str]]:
+        nnodes = sum([zone.nnodes for zone in self.zones])
+        nodes = np.zeros((nnodes, 3), dtype='float32')
+        inode = 0
+        tris = []
+        quads = []
+        tets = []
+        hexas = []
+        zone_ids = []
+        names = []
+        for izone, zone in enumerate(self.zones):
+            names.append(zone.name)
+            nodes2d = zone.xy
+            nodes3d = zone.xyz
+            nnodes2d = nodes2d.shape[0]
+            nnodes3d = nodes3d.shape[0]
+
+            # elements
+            if 'I' in zone.headers_dict:
+                i = zone.headers_dict['I']
+                if 'J' in zone.headers_dict:
+                    j = zone.headers_dict['J']
+                    if 'K' in zone.headers_dict:
+                        k = zone.headers_dict['K']
+                        nnodes = i * j * k
+                        elements = np.arange(0, nnodes).reshape(k, j, i)
+                        #print(elements[0, :, :])
+                        #print(elements[1:, :, :])
+                        n1 = elements[:-1, :-1, :-1].ravel()
+                        n2 = elements[:-1, :-1, 1:].ravel()
+                        n3 = elements[:-1, 1:, 1:].ravel()
+                        n4 = elements[:-1, 1:, :-1].ravel()
+
+                        n5 = elements[1:, :-1, :-1].ravel()
+                        n6 = elements[1:, :-1, 1:].ravel()
+                        n7 = elements[1:, 1:, 1:].ravel()
+                        n8 = elements[1:, 1:, :-1].ravel()
+                        #nhexas = (i - 1) * (j - 1) * (k - 1)
+                        quadsi = []
+                        hexasi = np.vstack([n1, n2, n3, n4, n5, n6, n7, n8]).T
+                    else:
+                        nnodes = i * j
+                        elements = np.arange(0, nnodes).reshape(j, i)
+                        #print('elements:')
+                        #print(elements)
+                        n1 = elements[:-1, :-1].ravel()
+                        n2 = elements[:-1, 1:].ravel()
+                        n3 = elements[1:, 1:].ravel()
+                        n4 = elements[1:, :-1].ravel()
+                        #nquads = (i - 1) * (j - 1)
+                        quadsi = np.vstack([n1, n2, n3, n4]).T
+                        hexasi = []
+                    #trisi = None
+                    #tetsi = None
+                    #hexasi = None
+                    trisi = []
+                    tetsi = []
+            else:
+                quadsi = zone.quad_elements
+                hexasi = zone.hexa_elements
+                tetsi = zone.tet_elements
+                trisi = zone.tri_elements
+
+            nquadsi = len(quadsi)
+            ntrisi = len(trisi)
+            ntetsi = len(tetsi)
+            nhexasi = len(hexasi)
+            nelementsi = nquadsi + ntrisi + ntetsi + nhexasi
+            if nquadsi:
+                quads.append(inode + quadsi)
+            if ntrisi:
+                tris.append(inode + trisi)
+            if ntetsi:
+                tets.append(inode + tetsi)
+            if nhexasi:
+                hexas.append(inode + hexasi)
+
+            # nodes
+            if nnodes2d and nnodes3d:
+                raise RuntimeError('2d and 3d nodes is not supported')
+            elif nnodes2d:
+                nodes[inode:inode+nnodes2d, :2] = nodes2d
+                inode += nnodes2d
+            elif nnodes3d:
+                nodes[inode:inode+nnodes3d] = nodes3d
+                inode += nnodes3d
+            else:  # pragma: no cover
+                raise RuntimeError('failed to find 2d/3d nodes')
+            #print('inode', inode)
+            #print(nodes)
+            #print('-------------')
+            zone_idsi = np.ones(nelementsi) * izone
+            zone_ids.append(zone_idsi)
+        #print('stack', len(quads))
+        quads = stack(quads)
+        tris = stack(tris)
+        if len(quads) and not len(tris):
+            # convert quads written as tris into tris
+            itri = (quads[:, 2] == quads[:, 3])
+            tris = quads[itri, :3]
+            quads = quads[~itri, :]
+
+        tets = stack(tets)
+        hexas = stack(hexas)
+        zone_ids = np.hstack(zone_ids)
+        return nodes, tris, quads, tets, hexas, zone_ids, names
+
+    def stack_results(self) -> np.ndarray:
+        results = []
+        for zonei in self.zones:
+            results.append(zonei.nodal_results)
+        results = np.vstack(results)
+        return results
+
     def read_table(self, tecplot_file, unused_iblock, headers_dict, line):
         """
         reads a space-separated tabular data block
@@ -297,7 +420,7 @@ class Tecplot(Base):
         A, blank = self._read_table_from_lines(lines, headers_dict)
         return A, None
 
-    def _read_table_from_lines(self, lines, headers_dict):
+    def _read_table_from_lines(self, lines, headers_dict) -> np.ndarray:
         variables = [var.strip('" ') for var in headers_dict['VARIABLES']]
         #print('variables = %s' % variables)
         #self.dtype[]
@@ -309,7 +432,7 @@ class Tecplot(Base):
         A = np.loadtxt(lines, dtype=self.dtype, comments='#', delimiter=None,
                        converters=None, skiprows=0,
                        usecols=use_cols, unpack=False, ndmin=0)
-        return A, None
+        return A
 
     def _read_zonetype(self, zone: Zone, zone_type: str, lines: list[str], iline: int,
                        iblock: int, headers_dict, line: str,
@@ -956,7 +1079,7 @@ class Tecplot(Base):
         ----------
         tecplot_filename : str
             the path to the output file
-        res_types : str; List[str, str, ...]; default=None -> all
+        res_types : str; list[str, str, ...]; default=None -> all
             the results that will be written (must be consistent with
             self.variables)
         adjust_nids : bool; default=True
@@ -1065,7 +1188,7 @@ class Tecplot(Base):
         return model
 
 
-def split_headers(headers_in: str, log: SimpleLogger) -> List[str]:
+def split_headers(headers_in: str, log: SimpleLogger) -> list[str]:
     log.debug(f'headers_in = {headers_in}')
     #allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
                     #'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
@@ -1102,13 +1225,13 @@ def split_headers(headers_in: str, log: SimpleLogger) -> List[str]:
     #headers = header.replace('""', '","').split(',')
     return cheaders
 
-def _join_headers(header_lines: List[str]) -> str:
+def _join_headers(header_lines: list[str]) -> str:
     """smart join by commas"""
     header = ','.join([headeri.strip(', ') for headeri in header_lines])
     return header
 
-def _header_lines_to_header_dict(title_line: str, header_lines: List[str],
-                                 variables: List[str], log: SimpleLogger):
+def _header_lines_to_header_dict(title_line: str, header_lines: list[str],
+                                 variables: list[str], log: SimpleLogger):
     """parses the parsed header lines"""
     #print('header_lines', header_lines)
     #headers_dict = {}
@@ -1172,40 +1295,61 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str],
             # ZONE T="FUSELAGE" I=21 J=49 K=1 F=BLOCK
             #print('  parsing')
             log.debug(f'sline = {sline}')
-            key = sline[0].strip().upper()
-            if key.startswith('ZONE '):
+            key = sline[0].strip()
+            ukey = key.upper()
+            if ukey.startswith('ZONE '):
                 # the key is not "ZONE T" or "ZONE E"
                 # ZONE is a flag, T is title, E is number of elements
-                key = key[5:].strip()
+                ukey = ukey[5:].strip()
+                headers_dict['NAME'] = ''.join(sline[1:]).strip('\"\\')
 
             value = [val.strip() for val in sline[1:]]
             if len(value) == 1:
                 value = value[0].strip()
             #assert not isinstance(value, list), value
 
-            if key == 'NODES':
-                key = 'N'
-            if key == 'ELEMENTS':
-                key = 'E'
-            headers_dict[key] = value
-            #print('  ', value)
-            #value = value.strip()
+            if ukey == 'NODES':
+                ukey = 'N'
+            if ukey == 'ELEMENTS':
+                ukey = 'E'
+            if 'DATASETAUXDATA' in ukey:
+                #DATASETAUXDATA Common.AngleOfAttack="0.000000"
+                #DATASETAUXDATA Common.DensityVar="5"
+                #DATASETAUXDATA Common.GasConstant="0.7142857143"
+                #DATASETAUXDATA Common.PressureVar="9"
+                #DATASETAUXDATA Common.ReferenceMachNumber="1.400000"
+                #DATASETAUXDATA Common.UVar="6"
+                #DATASETAUXDATA Common.VectorVarsAreVelocity="TRUE"
+                #DATASETAUXDATA Common.VVar="7"
+                #DATASETAUXDATA Common.WVar="8"
+                base, new_key = key.split('.', 1)
+                assert base == 'DATASETAUXDATA Common', f'base={base!r}'
+                allowed_keys = ['AngleOfAttack', 'GasConstant', 'ReferenceMachNumber', 'VectorVarsAreVelocity',
+                                'DensityVar', 'PressureVar', 'UVar', 'VVar', 'WVar', ]
+                param = headers_dict.get('COMMON_PARAMS', {})
+                param[new_key] = value
+                headers_dict['COMMON_PARAMS'] = param
+                assert new_key in allowed_keys, 'new_key=%r; allowed=[%s]' % (new_key, ', '.join(allowed_keys))
+            else:
+                headers_dict[ukey] = value
+                #print('  ', value)
+                #value = value.strip()
 
-            # 'T', 'ZONE T',  ???
-            #   'DT', 'SOLUTIONTIME', 'STRANDID', # tecplot 360 specific things not supported
-            allowed_keys = ['VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING', # 'TITLE',
-                            'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
-                            'I', 'J', 'K']
-            assert key in allowed_keys, 'key=%r; allowed=[%s]' % (key, ', '.join(allowed_keys))
+                # 'T', 'ZONE T',  ???
+                #   'DT', 'SOLUTIONTIME', 'STRANDID', # tecplot 360 specific things not supported
+                allowed_keys = ['VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING', # 'TITLE',
+                                'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
+                                'I', 'J', 'K',]
+                assert ukey in allowed_keys, 'ukey=%r; allowed=[%s]' % (ukey, ', '.join(allowed_keys))
             parse = False
-    #print('headers_dict', headers_dict)
+    print('headers_dict', headers_dict)
     #print(headers_dict.keys())
 
     _simplify_header(headers_dict, variables)
     assert len(headers_dict) > 0, headers_dict
     return headers_dict
 
-def _simplify_header(headers_dict, variables: List[str]) -> None:
+def _simplify_header(headers_dict, variables: list[str]) -> None:
     """cast the integer headers and sets the variables"""
     # unstructured
     if 'N' in headers_dict: # nnodes
@@ -1239,7 +1383,24 @@ def _simplify_variables(headers_dict) -> None:
     variables = headers_dict['VARIABLES']
     headers_dict['VARIABLES'] = [var.strip('"') for var in variables]
 
-def _stack(zone, xyz_list, quads_list, tris_list, tets_list, hexas_list, results_list, log):
+
+def stack(elements: list[np.ndarray]) -> np.ndarray:
+    if len(elements) == 0:
+        pass
+    elif len(elements) == 1:
+        elements = elements[0]
+        #print(elements)
+    else:
+        #print('----stack------')
+        #for elementsi in elements:
+            #print(elementsi)
+        #print('----stack------')
+        elements = np.vstack(elements)
+    return elements
+
+def _stack(zone: Zone, xyz_list,
+           quads_list, tris_list,
+           tets_list, hexas_list, results_list, log):
     """
     elements are read as a list of lines, so we need to stack them
     and cast them while we're at it.
@@ -1469,7 +1630,7 @@ def get_next_nsline(lines, iline, sline, nvars):
     assert len(sline) == nvars, 'iline=%i sline=%s nvars=%s' % (iline, sline, nvars)
     return iline, sline
 
-def _read_header_lines(lines, iline, line, log):
+def _read_header_lines(lines: list[str], iline: int, line: str, log: SimpleLogger):
     """
     reads a tecplot header
 
@@ -1744,7 +1905,7 @@ def main2():  # pragma: no cover
 
     for iprocessor, tecplot_filename in enumerate(fnames):
         plt.read_tecplot(tecplot_filename)
-        plt.write_tecplot('processor_%i.plt' % iprocessor)
+        plt.write_tecplot(f'processor_{iprocessor:d}.plt')
 
 if __name__ == '__main__':   # pragma: no cover
     main()

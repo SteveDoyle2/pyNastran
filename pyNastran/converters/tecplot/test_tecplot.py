@@ -1,4 +1,5 @@
 import os
+from io import StringIO
 import unittest
 from cpylog import SimpleLogger
 
@@ -67,7 +68,7 @@ class TestTecplot(unittest.TestCase):
             model.write_tecplot(junk_plt, res_types=None, adjust_nids=True)
         os.remove(junk_plt)
 
-    def test_tecplot_01(self):
+    def test_tecplot_ctria3(self):
         """CTRIA3 elements"""
         log = SimpleLogger(level='warning')
         tecplot_filename1 = os.path.join(MODEL_PATH, 'ascii', 'point_fetri_2d_02.dat')
@@ -87,7 +88,7 @@ class TestTecplot(unittest.TestCase):
         cmd_line_format_converter(argv=argv, quiet=True)
         os.remove('cart3d.stl')
 
-    def test_tecplot_02(self):
+    def test_tecplot_ctetra(self):
         """CTETRA10 elements"""
         log = SimpleLogger(level='warning')
         nastran_filename1 = os.path.join(NASTRAN_MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
@@ -117,6 +118,78 @@ class TestTecplot(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             unused_tecplot = nastran_to_tecplot(bdf_model)
 
+    def test_tecplot_360_point_viscous(self):
+        lines = [
+            'TITLE     = "tecplot geometry and solution file"',
+            'VARIABLES = "x"',
+            '"y"',
+            '"z"',
+            '"cp"',
+            '"cf_x"',
+            '"cf_y"',
+            '"cf_z"',
+            'ZONE T="\"boundary 1 nose-fuselage\""',
+            ' STRANDID=1001, SOLUTIONTIME=5000',
+            ' Nodes=4, Elements=1, ZONETYPE=FEQuadrilateral',
+            ' DATAPACKING=POINT',
+            ' DT=(SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE )',
+            '0. 0. 0. 1. 2. 3. 4.',
+            '0. 1. 0. 11. 12. 13. 14.',
+            '0. 0. 1. 21. 22. 23. 24.',
+            '0. 1. 1. 31. 32. 33. 34.',
+            '1 2 4 3',
+
+            'ZONE T="\"boundary 3 wing-tail\""',
+            ' STRANDID=1003, SOLUTIONTIME=5000',
+            ' Nodes=4, Elements=1, ZONETYPE=FEQuadrilateral',
+            ' DATAPACKING=POINT',
+            ' DT=(SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE )',
+            '1. 0. 0. 1. 2. 3. 4.',
+            '1. 1. 0. 11. 12. 13. 14.',
+            '1. 0. 1. 21. 22. 23. 24.',
+            '1. 1. 1. 31. 32. 33. 34.',
+            '1 2 4 3',
+        ]
+        file = StringIO()
+        file.write('\n'.join(lines))
+        file.seek(0)
+        log = SimpleLogger(level='warning')
+        model = read_tecplot(file, use_cols=None, dtype=None,
+                             filetype='ascii', log=None, debug=False)
+
+    def test_tecplot_360_point_euler(self):
+        lines = [
+            'TITLE     = "Solution mapped to surface triangulation"',
+            'VARIABLES = "x"',
+            '"y"',
+            '"z"',
+            '"Cp"',
+            'DATASETAUXDATA Common.AngleOfAttack="5.000000"',
+            'DATASETAUXDATA Common.DensityVar="5"',
+            'DATASETAUXDATA Common.GasConstant="0.7142857143"',
+            'DATASETAUXDATA Common.PressureVar="9"',
+            'DATASETAUXDATA Common.ReferenceMachNumber="0.800000"',
+            'DATASETAUXDATA Common.UVar="6"',
+            'DATASETAUXDATA Common.VectorVarsAreVelocity="TRUE"',
+            'DATASETAUXDATA Common.VVar="7"',
+            'DATASETAUXDATA Common.WVar="8"',
+            'ZONE T="Surface"',
+            'STRANDID=0, SOLUTIONTIME=0',
+            'Nodes=4, Elements=1, ZONETYPE=FETriangle',
+            'DATAPACKING=POINT',
+            'DT=(DOUBLE DOUBLE DOUBLE DOUBLE )',
+            '0. 0. 0. 1.',
+            '0. 1. 0. 2.',
+            '0. 0. 1. 3.',
+            '0. 1. 1. 4.',
+            '1 2 3',
+        ]
+        file = StringIO()
+        file.write('\n'.join(lines))
+        file.seek(0)
+        log = SimpleLogger(level='warning')
+        model = read_tecplot(file, use_cols=None, dtype=None,
+                             filetype='ascii', log=log, debug=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

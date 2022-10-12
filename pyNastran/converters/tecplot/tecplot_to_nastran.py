@@ -41,6 +41,7 @@ def tecplot_to_nastran(tecplot_filename: Union[str, Tecplot],
     inode = 1
     ielem = 1
     nzones = len(model.zones)
+    assert nzones > 0, f'nzones={nzones}; tecplot_filename={tecplot_filename!r}'
     with open(bdf_filename, 'w') as bdf_file:
         bdf_file.write('$pyNastran : punch=True\n')
         for izone, zone in enumerate(model.zones):

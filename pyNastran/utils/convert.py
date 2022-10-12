@@ -135,12 +135,13 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     return factor
 
 def convert_area(area: float, area_units_in: str, area_units_out: str) -> float:
-    """nominal unit is ft"""
+    """nominal unit is ft^2"""
     if area_units_in == area_units_out:
         return area
     return area * _area_factor(area_units_in, area_units_out)
 
 def _area_factor(area_units_in: str, area_units_out: str) -> float:
+    """helper method for convert_area"""
     assert '^' in area_units_in, area_units_in
     assert '^' in area_units_out, area_units_out
     length_units_in, two_in = area_units_in.split('^')
@@ -151,12 +152,11 @@ def _area_factor(area_units_in: str, area_units_out: str) -> float:
     area_factor = length_factor ** 2
     return area_factor
 
-
-def convert_length(velocity: float, length_units_in: str, length_units_out: str) -> float:
+def convert_length(length: float, length_units_in: str, length_units_out: str) -> float:
     """nominal unit is ft"""
     if length_units_in == length_units_out:
-        return velocity
-    return velocity * _length_factor(length_units_in, length_units_out)
+        return length
+    return length * _length_factor(length_units_in, length_units_out)
 
 def _length_factor(length_units_in: str, length_units_out: str) -> float:
     """helper method for convert_length"""
