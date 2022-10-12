@@ -400,10 +400,10 @@ def cmd_line_format_converter(argv=None, quiet: str=False) -> None:
         format1 = 'cart3d'
         data['<format1>'] = format1
 
-    is_abaqus = data['abaqus']
-    if is_abaqus:
-        format1 = 'abaqus'
-        data['<format1>'] = format1
+    #is_abaqus = data['<format1>']
+    #if is_abaqus:
+        #format1 = 'abaqus'
+        #data['<format1>'] = format1
 
     # common options
     if data['--scale']:
