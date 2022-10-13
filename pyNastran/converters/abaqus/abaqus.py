@@ -10,10 +10,11 @@ from pyNastran.converters.abaqus.abaqus_cards import (
     cast_nodes, allowed_element_types)
 
 
-def read_abaqus(abaqus_inp_filename, log=None, debug=False):
+def read_abaqus(abaqus_inp_filename, encoding=None,
+                log=None, debug=False):
     """reads an abaqus model"""
     model = Abaqus(log=log, debug=debug)
-    model.read_abaqus_inp(abaqus_inp_filename)
+    model.read_abaqus_inp(abaqus_inp_filename, encoding=encoding)
     return model
 
 def _clean_lines(lines):
@@ -62,10 +63,10 @@ class Abaqus:
         self.solid_sections = []  # List[SolidSection]
         self.log = get_logger2(log, debug)
 
-    def read_abaqus_inp(self, abaqus_inp_filename):
+    def read_abaqus_inp(self, abaqus_inp_filename: str, encoding: str=None):
         """reads an abaqus model"""
         if isinstance(abaqus_inp_filename, str):
-            with open(abaqus_inp_filename, 'r') as abaqus_inp:
+            with open(abaqus_inp_filename, 'r', encoding=encoding) as abaqus_inp:
                 lines = abaqus_inp.readlines()
         elif isinstance(abaqus_inp_filename, list):
             lines = abaqus_inp_filename
@@ -97,7 +98,7 @@ class Abaqus:
         while iline < nlines:
             # not handling comments right now
             line0 = lines[iline].strip().lower()
-            #self.log.debug('%s, %s' % (iline, line0))
+            #self.log.debug('%s: %s' % (iline, line0))
             #sline = line.split('**', 1)
             #if len(sline) == 1:
                 #line0 = sline[0]

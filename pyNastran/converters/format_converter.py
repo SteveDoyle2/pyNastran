@@ -68,11 +68,14 @@ def process_abaqus(abaqus_filename: str, fmt2: str, fname2: str,
                    quiet: bool=False) -> None:
     """Converts Abaqus to Nastran"""
     assert fmt2 in ['nastran'], f'format2={fmt2!r}'
+    encoding = None
+    if 'ENCODE' in data:
+        encoding = data['ENCODE']
     #if data is None:
         #data = {'--scale': 1.0,}
 
     from pyNastran.converters.abaqus.abaqus import read_abaqus
-    model = read_abaqus(abaqus_filename, log=log)
+    model = read_abaqus(abaqus_filename, encoding=encoding, log=log)
     #if data['--scale'] != 1.0:
         #model.points *= data['--scale']
         #data['--scale'] = 1.0
@@ -314,11 +317,13 @@ def run_format_converter(fmt1: str, fname1: str,
                                   f'use {", ".join(format1s)}')
 
 
-def cmd_line_format_converter(argv=None, quiet: str=False) -> None:
+def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet: str=False) -> None:
     """Interface for format_converter"""
     if argv is None:
         argv = sys.argv
     format1_dev = ', abaqus, vrml' if DEV else ''
+
+    default_encoding = sys.getdefaultencoding()
     msg = (
         "Usage:\n"
         #format1s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot', 'vrml']
@@ -326,50 +331,55 @@ def cmd_line_format_converter(argv=None, quiet: str=False) -> None:
         "  format_converter nastran   <INPUT> <format2> <OUTPUT> [-o <OP2>] --no_xref\n"
         "  format_converter <format1> <INPUT> tecplot   <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>] [--scale SCALE]\n"
         "  format_converter <format1> <INPUT> stl       <OUTPUT> [-b]  [--scale SCALE]\n"
-        "  format_converter cart3d    <INPUT> <format2> <OUTPUT> [-b]  [--scale SCALE]\n"
-        "  format_converter <format1> <INPUT> <format2> <OUTPUT> [--scale SCALE]\n"
+        '  format_converter cart3d    <INPUT> <format2> <OUTPUT> [-b]  [--scale SCALE]\n'
+        '  format_converter <format1> <INPUT> <format2> <OUTPUT> [--scale SCALE] [--encoding ENCODE]\n'
         #"  format_converter nastran  <INPUT> <format2> <OUTPUT>\n"
         #"  format_converter cart3d   <INPUT> <format2> <OUTPUT>\n"
         '  format_converter -h | --help\n'
         '  format_converter -v | --version\n'
-        "\n"
-        "Required Arguments:\n"
-        f"  format1        format type (nastran, cart3d, stl, ugrid, tecplot{format1_dev})\n"
-        "  format2        format type (nastran, cart3d, stl, ugrid, tecplot, abaqus)\n"
-        "  INPUT          path to input file\n"
-        "  OUTPUT         path to output file\n"
+        '\n'
+        'Required Arguments:\n'
+        f'  format1        format type (nastran, cart3d, stl, ugrid, tecplot{format1_dev})\n'
+        '  format2        format type (nastran, cart3d, stl, ugrid, tecplot, abaqus)\n'
+        '  INPUT          path to input file\n'
+        '  OUTPUT         path to output file\n'
+        '\n'
 
-        "\n"
-        "Nastran Options:\n"
-        "  -o OP2, --op2 OP2  path to results file (nastran-specific)\n"
-        "                 only used for Tecplot (not supported)\n"
+        'Nastran Options:\n'
+        '  -o OP2, --op2 OP2  path to results file (nastran-specific)\n'
+        '                 only used for Tecplot (not supported)\n'
         "  --no_xref      Don't cross-reference (nastran-specific)\n"
+        '\n'
 
-        "\n"
-        "Tecplot Options:\n"
-        "  -x X, --xx X   Creates a constant x slice; keeps points < X\n"
-        "  -y Y, --yy Y   Creates a constant y slice; keeps points < Y\n"
-        "  -z Z, --zz Z   Creates a constant z slice; keeps points < Z\n"
-        "  --block        Writes the data in BLOCK (vs. POINT) format\n"
-        "  -r, --results  Specifies the results to write to limit output\n"
+        'Abaqus Options:\n' # 'utf8bom' = 'utf-8-sig'
+        f'  -encoding ENCODE  Specify the encoding (e.g., latin1, cp1252, utf8, utf-8-sig); default={default_encoding!s}\n'
+        '\n'
 
-        "\n"
-        "Tecplot/Cart3d/STL Options:\n"
-        "  --scale SCALE  Apply a scale factor to the XYZ locations (default=1.0)\n"
-        "  -b, --binary   writes the STL in binary (not supported for Tecplot)\n"
+        'Tecplot Options:\n'
+        '  -x X, --xx X   Creates a constant x slice; keeps points < X\n'
+        '  -y Y, --yy Y   Creates a constant y slice; keeps points < Y\n'
+        '  -z Z, --zz Z   Creates a constant z slice; keeps points < Z\n'
+        '  --block        Writes the data in BLOCK (vs. POINT) format\n'
+        '  -r, --results  Specifies the results to write to limit output\n'
 
-        "\n"
-        "Info:\n"
-        "  -h, --help     show this help message and exit\n"
+        '\n'
+        'Tecplot/Cart3d/STL Options:\n'
+        '  --scale SCALE  Apply a scale factor to the XYZ locations (default=1.0)\n'
+        '  -b, --binary   writes the STL in binary (not supported for Tecplot)\n'
+        '\n'
+
+        'Info:\n'
+        '  -h, --help     show this help message and exit\n'
         "  -v, --version  show program's version number and exit\n"
         '\n'
+
         'Notes:\n'
-        "  Nastran->Tecplot assumes sequential nodes and consistent types (shell/solid)\n"
-        "  STL/Tecplot supports globbing as the input filename\n"
+        '  Nastran->Tecplot assumes sequential nodes and consistent types (shell/solid)\n'
+        '  STL/Tecplot supports globbing as the input filename\n'
         "  Tecplot slicing doesn't support multiple slice values and will give bad results (not crash)\n"
-        "  UGRID outfiles must be of the form model.b8.ugrid, where\n"
-        "    b8, b4, lb8, lb4 are valid choices and periods are important\n"
-        "  Scale has only been tested on STL -> STL\n"
+        '  UGRID outfiles must be of the form model.b8.ugrid, where\n'
+        '    b8, b4, lb8, lb4 are valid choices and periods are important\n'
+        '  Scale has only been tested on STL -> STL\n'
     )
 
     from docopt import docopt
@@ -411,13 +421,16 @@ def cmd_line_format_converter(argv=None, quiet: str=False) -> None:
     else:
         data['--scale'] = 1.0
 
+    if not data['ENCODE']:
+        data['ENCODE'] = default_encoding
     if not quiet:  # pragma: no cover
         print(data)
     input_filename = data['<INPUT>']
     output_filename = data['<OUTPUT>']
-    level = 'warning' if  quiet else 'debug'
-    from cpylog import SimpleLogger
-    log = SimpleLogger(level=level)
+    if log is None:
+        level = 'warning' if  quiet else 'debug'
+        from cpylog import SimpleLogger
+        log = SimpleLogger(level=level)
 
     run_format_converter(
         format1, input_filename,

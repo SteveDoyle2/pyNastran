@@ -291,6 +291,12 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
         #print(step)
 
     _create_nastran_loads(model, nastran_model)
+    try:
+        str(nastran_model.case_control_deck)
+    except AssertionError:
+        log.error('No case control deck found...skipping')
+        #print(f'{nastran_model.case_control_deck}')
+        nastran_model.case_control_deck = None
     nastran_model.write_bdf(nastran_filename_out)
     x = 1
     return nastran_model

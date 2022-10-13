@@ -47,17 +47,17 @@ def main():
     msg += '  test_abaqus -v | --version\n'
     msg += '\n'
 
-    msg += "Positional Arguments:\n"
-    msg += "  ABAQUS_FILENAME   path to Abaqus INP file\n"
+    msg += 'Positional Arguments:\n'
+    msg += '  ABAQUS_FILENAME   path to Abaqus INP file\n'
     msg += '\n'
-    msg += "Options:\n"
-    msg += "  -d, --debug  debug mode\n"
-    msg += "  -w, --write  write test.test_abaqus.inp\n"
+    msg += 'Options:\n'
+    msg += '  -d, --debug  debug mode\n'
+    msg += '  -w, --write  write test.test_abaqus.inp\n'
     msg += '\n'
 
     #msg += 'Options:\n'
     #msg += "\n"
-    msg += "Info:\n"
+    msg += 'Info:\n'
     msg += '  -h, --help     show this help message and exit\n'
     msg += "  -v, --version  show program's version number and exit\n"
 
