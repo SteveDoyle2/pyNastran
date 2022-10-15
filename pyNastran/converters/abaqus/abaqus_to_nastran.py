@@ -106,8 +106,10 @@ def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str):
 
     name = 'static_step'
     boundaries = []
-    outputs = []
-    static_step = Step(name, boundaries, outputs, cloads=cloads, is_nlgeom=False)
+    node_output = []
+    element_output = []
+    static_step = Step(name, boundaries, node_output, element_output,
+                       cloads=cloads, is_nlgeom=False)
     model.steps = [static_step]
     model.write(abaqus_inp_filename, is_2d=False)
 
@@ -301,6 +303,28 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
     x = 1
     return nastran_model
 
+def _write_boundary_as_nastran(model: Abaqus,
+                               nastran_model: BDF,
+                               case_control_deck: CaseControlDeck) -> None:
+    if not model.boundaries:
+        return
+    for iboundary, boundary in enumerate(model.boundaries):
+        fixed_spcs = defaultdict(list)
+        for (nid, dof), value in boundary.nid_dof_to_value.items():
+            assert isinstance(nid, int), nid
+            if value == 0.0:
+                fixed_spcs[dof].append(nid)
+            else:
+                raise RuntimeError((nid, dof, value))
+
+        subcase_id = iboundary + 1
+        spc_id = iboundary + 1
+        subcase = case_control_deck.create_new_subcase(subcase_id)
+        subcase.add('SPC', spc_id, [], 'STRESS-type')
+        for dof, nids in fixed_spcs.items():
+            #  spc_id: int, components: str, nodes
+            nastran_model.add_spc1(spc_id, str(dof), nids)
+
 def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
     def xyz():
         return np.zeros(3, dtype='float32')
@@ -308,14 +332,35 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
     if nastran_model.case_control_deck is None:
         nastran_model.case_control_deck = CaseControlDeck([], log=nastran_model.log)
 
+    case_control_deck = nastran_model.case_control_deck
+    _write_boundary_as_nastran(model, nastran_model, case_control_deck)
+
+    output_map = {
+        'U': 'DISP',
+        'RF': 'SPCFORCE',
+        'S': 'STRESS',
+        'E': 'STRAIN',
+        'ENER': 'ESE',
+    }
     for istep, step in enumerate(model.steps):
         subcase_id = istep + 1
         load_id = subcase_id
         if subcase_id in nastran_model.subcases:
             subcase = nastran_model.subcases[subcase_id]
         else:
-            subcase = nastran_model.case_control_deck.create_new_subcase(subcase_id)
+            subcase = case_control_deck.create_new_subcase(subcase_id)
+
+        for output in step.node_output + step.element_output:
+
+            try:
+                base_output = output_map[output.upper()]
+            except KeyError:
+                raise KeyError(f'output={output!r} is not in [u, rf, s, e, ener]')
+            subcase.add(base_output, 'ALL', ['PRINT', 'PLOT'], 'STRESS-type')
+
         for cload in step.cloads:
+            assert nastran_model.sol is None or nastran_model.sol == 101, nastran_model.sol
+            nastran_model.sol = 101
             subcase.add('LOAD', load_id, [], 'STRESS-type')
             #subcase['LOAD'] = load_id
             forces = defaultdict(xyz)

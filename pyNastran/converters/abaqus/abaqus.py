@@ -1,5 +1,5 @@
 """Defines the Abaqus class"""
-from typing import Tuple, List, Dict, Union, Optional, Any
+from typing import Union, Optional, Any
 from io import StringIO
 
 import numpy as np
@@ -7,6 +7,7 @@ from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Material, Part, Elements,
     Step, SolidSection, ShellSection,
+    Boundary,
     cast_nodes, allowed_element_types)
 
 
@@ -55,12 +56,12 @@ class Abaqus:
         self.amplitudes = {}
         self.assembly = None
         self.initial_conditions = {}
-        self.steps = []
+        self.steps = []  #  type: list[Step]
         self.heading = None
         self.preprint = None
 
-        self.shell_sections = []  # List[ShellSection]
-        self.solid_sections = []  # List[SolidSection]
+        self.shell_sections = []  # list[ShellSection]
+        self.solid_sections = []  # list[SolidSection]
         self.log = get_logger2(log, debug)
 
     def read_abaqus_inp(self, abaqus_inp_filename: str, encoding: str=None):
@@ -92,6 +93,7 @@ class Abaqus:
         element_sets = {}
         solid_sections = []
         shell_sections = []
+        boundaries = []
         steps = []
 
         log = self.log
@@ -119,6 +121,7 @@ class Abaqus:
                 elif word == 'boundary':
                     iline += 1
                     boundary, iline, line0 = read_boundary(lines, line0, iline)
+                    boundaries.append(boundary)
                     iline -= 1
                     line0 = lines[iline].strip().lower()
 
@@ -340,6 +343,7 @@ class Abaqus:
         self.element_sets = element_sets
         self.shell_sections = shell_sections
         self.solid_sections = solid_sections
+        self.boundaries = boundaries
         self.steps = steps
         self.log.debug('nassembly = %s' % nassembly)
         for part_name, part in sorted(self.parts.items()):
@@ -348,7 +352,7 @@ class Abaqus:
         for unused_mat_name, mat in sorted(self.materials.items()):
             self.log.debug(str(mat))
 
-    def read_spring(self, lines: List[str], iline: int, word: str) -> Material:
+    def read_spring(self, lines: list[str], iline: int, word: str) -> Material:
         """
         *SPRING,ELSET=Eall
         blank line
@@ -380,7 +384,7 @@ class Abaqus:
         iline += 1
         line0 = lines[iline].strip('\n\r\t, ').lower()
 
-    def read_material(self, lines: List[str], iline: int, word: str) -> Material:
+    def read_material(self, lines: list[str], iline: int, word: str) -> Material:
         """reads a Material card"""
         param_map = get_param_map(iline, word, required_keys=['name'])
         #print(param_map)
@@ -876,7 +880,8 @@ class Abaqus:
         log.debug('  start of step %i...' % istep)
 
         boundaries = []
-        outputs = []
+        node_output = []
+        element_output = []
         cloads = []
         # case 1
         # ------
@@ -978,21 +983,21 @@ class Abaqus:
                 node_output = []
                 while '*' not in line0:
                     sline = line0.split(',')
-                    node_output += sline
+                    node_output += [val.strip() for val in sline]
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('element output'):
                 element_output = []
                 while '*' not in line0:
                     sline = line0.split(',')
-                    element_output += sline
+                    element_output += [val.strip() for val in sline]
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('contact output'):
                 unused_contact_output = []
                 while '*' not in line0:
                     sline = line0.split(',')
-                    element_output += sline
+                    element_output += [val.strip() for val in sline]
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('boundary'):
@@ -1018,14 +1023,14 @@ class Abaqus:
                 node_output = []
                 while '*' not in line0:
                     sline = line0.split(',')
-                    node_output += sline
+                    node_output += [val.strip() for val in sline]
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('el file'):
-                node_output = []
+                element_output = []
                 while '*' not in line0:
-                    sline = line0.split(',')
-                    node_output += sline
+                    sline = line0.strip().split(',')
+                    element_output += [val.strip() for val in sline]
                     iline += 1
                     line0 = lines[iline].strip().lower()
             else:
@@ -1037,7 +1042,9 @@ class Abaqus:
             #print('  word2 =', word)
         #iline += 1
         #iline -= 1
-        step = Step(step_name, boundaries, outputs, cloads, is_nlgeom=False)
+        step = Step(step_name, boundaries,
+                    node_output, element_output,
+                    cloads, is_nlgeom=False)
         self.log.debug('  end of step %i...' % istep)
         return iline, line0, step
 
@@ -1070,6 +1077,21 @@ class Abaqus:
                 #print(step)
                 #print(abq_file)
                 step.write(abq_file)
+
+    def __repr__(self) -> str:
+        msg = (
+            'Abaqus:\n'
+            f'  parts={self.parts}\n'
+            f'  boundaries={self.boundaries}\n'
+            f'  materials={self.materials}\n'
+            f'  amplitudes={self.amplitudes}\n'
+            f'  assembly={self.assembly}\n'
+            f'  initial_conditions={self.initial_conditions}\n'
+            f'  steps={self.steps}\n'
+            f'  shell_sections={self.shell_sections}\n'
+            f'  solid_sections={self.solid_sections}\n'
+        )
+        return msg
 
 def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
     """helper method"""
@@ -1110,7 +1132,7 @@ def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
         nodes = np.vstack(all_nodes)
     return nnodes, nids, nodes, nelements
 
-def read_cload(line0, lines, iline, log: SimpleLogger) -> Tuple[int, str, Any]:
+def read_cload(line0, lines, iline, log: SimpleLogger) -> tuple[int, str, Any]:
     """
     First line
     ----------
@@ -1199,7 +1221,7 @@ def read_node(lines, iline, log, skip_star=False):
         raise RuntimeError(msg)
     return iline, line0, nids, nodes
 
-def read_elset(lines: List[str], iline: int, word: str, log: SimpleLogger,
+def read_elset(lines: list[str], iline: int, word: str, log: SimpleLogger,
                is_instance: bool=True):
     """reads *elset"""
     log.debug('word=%r' % word)
@@ -1228,15 +1250,18 @@ def read_nset(lines, iline, word, log, is_instance=True):
     set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
     return iline, line0, set_name, set_ids
 
-def read_boundary(lines: List[str], line0: str, iline: int) -> Tuple[Any, int, str]:
-    boundary = []
+def read_boundary(lines: list[str], line0: str, iline: int) -> tuple[Boundary, int, str]:
+    boundary_lines = []
     line0 = lines[iline]
     assert '*' not in line0, line0
     while '*' not in line0:
-        sline = line0.split(',')
-        boundary += sline
+        # nid, dof1, dof2, disp
+        #1,1,,0
+        sline = line0.strip().split(',')
+        boundary_lines.append(sline)
         iline += 1
         line0 = lines[iline].strip().lower()
+    boundary = Boundary.from_lines(boundary_lines)
     return boundary, iline, line0
 
 def read_solid_section(line0, lines, iline, log):
@@ -1258,7 +1283,7 @@ def read_solid_section(line0, lines, iline, log):
     solid_section = SolidSection.add_from_data_lines(params_map, data_lines, log)
     return iline, solid_section
 
-def read_shell_section(line0: str, lines: List[str], iline: int,
+def read_shell_section(line0: str, lines: list[str], iline: int,
                        log: SimpleLogger) -> ShellSection:
     """reads *shell section"""
     assert '*shell' in line0, line0
@@ -1280,7 +1305,7 @@ def read_shell_section(line0: str, lines: List[str], iline: int,
     #print(lines[iline])
     return iline, shell_section
 
-def read_hourglass_stiffness(line0: str, lines: List[str], iline: int,
+def read_hourglass_stiffness(line0: str, lines: list[str], iline: int,
                              log: SimpleLogger) -> None:
     """reads *hourglass stiffness"""
     # TODO: skips header parsing
@@ -1358,7 +1383,7 @@ def read_set(lines, iline, line0, params_map):
             raise
     return set_ids, iline, line0
 
-def get_param_map(iline: int, word: str, required_keys: Optional[List[str]]=None) -> Dict[str, 'str']:
+def get_param_map(iline: int, word: str, required_keys: Optional[list[str]]=None) -> dict[str, str]:
     """
     get the optional arguments on a line
 

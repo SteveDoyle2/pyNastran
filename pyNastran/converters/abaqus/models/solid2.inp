@@ -760,6 +760,28 @@
 557,70,107,108,5
 558,99,104,102,186
 559,100,184,182,183
+*NSET,NSET=Unnamed
+1
+20
+26
+33
+*NSET,NSET=displacement_nodes
+1
+20
+26
+33
+*NSET,NSET=displacement_nodes(2)
+1
+20
+26
+33
+*NSET,NSET=displacement_nodes(3)
+1
+20
+26
+33
+*NSET,NSET=force_nodes
+173
 *ELSET,ELSET=Default
 1
 2
@@ -1324,8 +1346,23 @@
 *ELASTIC,TYPE=ISOTROPIC
 10000000,0.3
 *SOLID SECTION,ELSET=Default,MATERIAL=Material
+*BOUNDARY
+1,1,,0
+1,2,,0
+1,3,,0
+20,1,,0
+20,2,,0
+20,3,,0
+26,1,,0
+26,2,,0
+26,3,,0
+33,1,,0
+33,2,,0
+33,3,,0
 *STEP
 *STATIC
+*CLOAD
+173,2,33.3
 *NODE FILE,GLOBAL=YES
 U,RF
 *EL FILE

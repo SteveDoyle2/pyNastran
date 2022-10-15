@@ -8,7 +8,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import Dict, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.converters.abaqus.elements import Elements
 if TYPE_CHECKING:  # pragma: no cover
@@ -29,6 +29,57 @@ allowed_element_types = [
     'c3d4', 'c3d10',
 ]
 
+class Boundary:
+    def __init__(self, nid_dof_to_value: dict[tuple[int, int], float]):
+        """
+        *BOUNDARY
+        nid, dof1, dof2, displacement
+        1,1,,0
+        1,2,,0
+        1,3,,0
+        20,1,,0
+        """
+        self.type = 'displacement'
+        self.nid_dof_to_value = nid_dof_to_value
+
+    @classmethod
+    def from_lines(cls, slines: list[list[str]]):
+        """
+        1) node or node set, first degree of freedom, last degree of freedom
+        2) node or node set, first degree of freedom, last degree of freedom, value
+        """
+        nid_dof_to_value = {}
+        for sline in slines:
+            sline = [val.strip() for val in sline]
+            nsline = len(sline)
+            nid_name = sline[0]
+            try:
+                nid = int(nid_name)
+            except ValueError:
+                if nid_name.isnumeric():
+                    raise RuntimeError(f'Boundary field 1 must be an integer or string without a space; nid_name={nid_name!r}')
+                if ' ' in nid_name:
+                    raise RuntimeError(f'Boundary field 1 must be an integer or string without a space; nid_name={nid_name!r}')
+                nid = nid_name
+
+            dof1 = int(sline[1])
+            if nsline == 2:
+                nid_dof_to_value[(nid, dof1)] = 0.
+                continue
+            dofs = [dof1]
+            if sline[2]:
+                dof2 = int(sline[2])
+                if dof1 != dof2:
+                    assert dof1 <= dof2, (dof1, dof2)
+                    dofs = range(dof1, dof2+1)
+            value = 0.0
+            if nsline > 3 and sline[3]:
+                value = float(sline[3])
+            for dof in dofs:
+                nid_dof_to_value[(nid, dof)] = value
+
+        return Boundary(nid_dof_to_value)
+
 class ShellSection:
     """
     A ShellSection defines thickness and a material
@@ -44,8 +95,8 @@ class ShellSection:
         self.log = log
 
     @classmethod
-    def add_from_data_lines(cls, param_map: Dict[str, str],
-                            data_lines: List[str],
+    def add_from_data_lines(cls, param_map: dict[str, str],
+                            data_lines: list[str],
                             log: SimpleLogger):
         material_name = param_map['material']
         log.debug(f'material_name = {material_name}')
@@ -87,8 +138,8 @@ class SolidSection:
         self.log = log
 
     @classmethod
-    def add_from_data_lines(cls, param_map: Dict[str, str],
-                            data_lines: List[str],
+    def add_from_data_lines(cls, param_map: dict[str, str],
+                            data_lines: list[str],
                             log: SimpleLogger):
         material_name = param_map['material']
         #print('param_map =', param_map)
@@ -129,7 +180,7 @@ class SolidSection:
 class Material:
     """a Material object is a series of nodes & elements (of various types)"""
     def __init__(self, name: str,
-                 sections: Dict[str, float],
+                 sections: dict[str, float],
                  is_elastic: bool=True,
                  density: Optional[float]=None,
                  ndepvars: Optional[int]=None,
@@ -189,11 +240,11 @@ class Material:
         if self.density is not None:
             abq_file.write(f'*Density\n  {self.density},\n')
         if self.ndepvars:
-            ndelete = '' if self.ndelete is None else ', delete=%s' % self.ndelete
+            ndelete = '' if self.ndelete is None else f', delete={self.ndelete}'
             abq_file.write(f'*Depvar{ndelete}\n  {self.ndepvars},\n')
         if self.user_material:
             nconstants = ''
-            abq_file.write('*User Material%s\n  %s,\n' % (nconstants, self.user_material))
+            abq_file.write(f'*User Material{nconstants}\n  {self.user_material},\n')
         #abq_file.write('** skipping Material %s\n' % self.name)
 
 class Assembly:
@@ -212,9 +263,9 @@ class Assembly:
         esets = list(self.element_sets.keys())
         msg = (
             'Assembly:\n'
-            '  element_types = %s\n'
-            '  node_sets = %s\n'
-            '  element_sets = %s\n' % (etypes, nsets, esets)
+            f'  element_types = {etypes}\n'
+            f'  node_sets = {nsets}\n'
+            f'  element_sets = {esets}\n'
         )
         return msg
 
@@ -223,11 +274,11 @@ class Part:
     def __init__(self, name: str,
                  nids: np.ndarray,
                  nodes: np.ndarray,
-                 element_types: Dict[str, np.ndarray],
-                 node_sets: Dict[str, np.ndarray],
-                 element_sets: Dict[str, np.ndarray],
-                 solid_sections: List[SolidSection],
-                 shell_sections: List[ShellSection],
+                 element_types: dict[str, np.ndarray],
+                 node_sets: dict[str, np.ndarray],
+                 element_sets: dict[str, np.ndarray],
+                 solid_sections: list[SolidSection],
+                 shell_sections: list[ShellSection],
                  log: SimpleLogger):
         """
         creates a Part object
@@ -236,7 +287,7 @@ class Part:
         ----------
         name : str
             the name
-        element_types : Dict[element_type] : node_ids
+        element_types : dict[element_type] : node_ids
             element_type : str
                 the element type
             bars:
@@ -296,8 +347,8 @@ class Part:
         )
         nsets = list(self.node_sets.keys())
         esets = list(self.element_sets.keys())
-        msg += '  Node Sets: %s\n' % nsets
-        msg += '  Element Sets: %s\n' % esets
+        msg += f'  Node Sets: {nsets}\n'
+        msg += f'  Element Sets: {esets}\n'
         for section in self.solid_sections:
             msg += str(section) + '\n'
         return msg
@@ -335,9 +386,10 @@ class Part:
 
 class Step:
     def __init__(self, name: str,
-                 boundaries: List[Any],
-                 outputs: List[Any],
-                 cloads: Dict[str, Any],
+                 boundaries: list[Any],
+                 node_output: list[str],
+                 element_output: list[str],
+                 cloads: dict[str, Any],
                  is_nlgeom: bool=False):
         """
         *Step, name=Stretch, nlgeom=YES
@@ -357,9 +409,22 @@ class Step:
         self.name = name
         self.is_nlgeom = is_nlgeom
         self.boundaries = boundaries
-        self.outputs = outputs
+        self.node_output = node_output
+        self.element_output = element_output
         self.cloads = cloads
         assert isinstance(cloads, list), cloads
+
+    def __repr__(self) -> str:
+        msg = (
+            'Step:\n'
+            f'  name={self.name!r}\n'
+            f'  is_nlgeom={self.is_nlgeom}\n'
+            f'  boundaries={self.boundaries}\n'
+            f'  node_output={self.node_output}\n'
+            f'  element_output={self.element_output}\n'
+            f'  cloads={self.cloads}\n'
+        )
+        return msg
 
     def write(self, abq_file) -> None:
         """writes a Step"""
@@ -383,12 +448,12 @@ class Step:
                 ##[36, 1, 100.0]
                 #abq_file.write(f'{nid}, {dof}, {mag}\n')
 
-        for output in self.outputs:
+        for output in self.node_output + self.element_output:
             abq_file.write(output + '\n')
         abq_file.write(f'*End Step\n')
 
 
-def cast_nodes(nids: List[Any], nodes: List[Any],
+def cast_nodes(nids: list[Any], nodes: list[Any],
                log: SimpleLogger, require: bool=True) -> Tuple[np.ndarray, np.ndarray]:
     if len(nids) == 0 and require == False:
         assert len(nodes) == 0, len(nodes)
@@ -397,7 +462,7 @@ def cast_nodes(nids: List[Any], nodes: List[Any],
     try:
         nids = np.array(nids, dtype='int32')
     except ValueError:
-        msg = 'nids=%s is not integers' % nids
+        msg = f'nids={nids} are not integers'
         raise ValueError(msg)
     nnodes = len(nids)
 

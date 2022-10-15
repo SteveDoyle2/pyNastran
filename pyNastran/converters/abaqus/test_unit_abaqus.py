@@ -60,6 +60,7 @@ class TestAbaqus(unittest.TestCase):
         lines = make_model()
         log = get_logger(level='warning', encoding='utf-8')
         model = read_abaqus(lines, log=log, debug=False)
+        str(model)
         model.write('spike.inp')
         os.remove('spike.inp')
 
@@ -73,6 +74,7 @@ class TestAbaqus(unittest.TestCase):
         log = get_logger(level='error', encoding='utf-8')
 
         model = read_abaqus(abaqus_filename, log=log, debug=False)
+        str(model)
         model.write('spike.inp')
         os.remove('spike.inp')
 
@@ -118,13 +120,14 @@ class TestAbaqus(unittest.TestCase):
         abaqus_file.writelines(lines)
         abaqus_file.seek(0)
         model = read_abaqus(abaqus_file, log=log, debug=True)
+        str(model)
         del model
 
     def test_abaqus_to_nastran(self):
         """convert to nastran small field"""
         abaqus_filename = os.path.join(MODEL_PATH, 'solid2.inp')
         log = get_logger(level='warning', encoding='utf-8')
-        bdf_filename = os.path.join(MODEL_PATH, 'threePlugs.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'solid2.bdf')
 
         argv = ['format_converter', 'abaqus', abaqus_filename,
                 'nastran', bdf_filename, '--encoding', 'utf-8-sig']

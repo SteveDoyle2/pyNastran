@@ -4765,7 +4765,8 @@ class AddCards:
         self._add_methods._add_constraint_spc_object(spc)
         return spc
 
-    def add_spc1(self, conid, components, nodes, comment='') -> SPC1:
+    def add_spc1(self, conid: int, components: str, nodes: list[int],
+                 comment: str='') -> SPC1:
         """
         Creates an SPC1 card, which defines the degree of freedoms to be
         constrained to a value of 0.0

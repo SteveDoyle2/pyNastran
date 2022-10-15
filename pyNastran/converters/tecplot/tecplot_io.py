@@ -97,9 +97,8 @@ class TecplotIO:
         #nnodes = self.gui.nnodes
         #print('nnodes=', nnodes)
 
-        model.log.info(f'names = {names}')
-
         nodes, tris, quads, tets, hexas, zone_ids, names = model.stack_geometry()
+        model.log.info(f'names = {names}')
         nquads = len(quads)
         ntris = len(tris)
         nhexas = len(hexas)
