@@ -15,7 +15,7 @@ NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class TestAbaqus(unittest.TestCase):
-    def test_abaqus_convert_1(self):
+    def test_abaqus_to_nastran_1(self):
         """plate conversion"""
         nastran_filename = os.path.join(NASTRAN_MODEL_PATH, 'plate', 'plate.bdf')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'plate_out.inp')
@@ -25,7 +25,7 @@ class TestAbaqus(unittest.TestCase):
         nastran_filename_out = os.path.join(MODEL_PATH, 'plate2_out.bdf')
         abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
 
-    def test_abaqus_convert_2(self):
+    def test_abaqus_to_nastran_2(self):
         """plate conversion"""
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'in.inp')
@@ -35,7 +35,7 @@ class TestAbaqus(unittest.TestCase):
         nastran_filename_out = os.path.join(MODEL_PATH, 'out.bdf')
         abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
 
-    def test_abaqus_convert_3(self):
+    def test_abaqus_to_nastran_3(self):
         """ctetra4 conversion"""
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'test_bracket.inp')
@@ -45,7 +45,7 @@ class TestAbaqus(unittest.TestCase):
         nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket_out.bdf')
         abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
 
-    def test_abaqus_convert_4(self):
+    def test_abaqus_to_nastran_4(self):
         """ctetra4 conversion"""
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'test_bracket_separate.inp')
@@ -123,11 +123,22 @@ class TestAbaqus(unittest.TestCase):
         str(model)
         del model
 
-    def test_abaqus_to_nastran(self):
+    def test_abaqus_to_nastran_5(self):
         """convert to nastran small field"""
         abaqus_filename = os.path.join(MODEL_PATH, 'solid2.inp')
         log = get_logger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'solid2.bdf')
+
+        argv = ['format_converter', 'abaqus', abaqus_filename,
+                'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        cmd_line_format_converter(argv=argv, quiet=True, log=log)
+        os.remove(bdf_filename)
+
+    def _test_abaqus_to_nastran_6(self):
+        """convert to nastran small field"""
+        abaqus_filename = os.path.join(MODEL_PATH, 'test_xform.inp')
+        log = get_logger(level='warning', encoding='utf-8')
+        bdf_filename = os.path.join(MODEL_PATH, 'test_xform.bdf')
 
         argv = ['format_converter', 'abaqus', abaqus_filename,
                 'nastran', bdf_filename, '--encoding', 'utf-8-sig']

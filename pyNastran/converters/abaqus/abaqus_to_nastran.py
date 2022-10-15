@@ -3,10 +3,10 @@ from typing import List, Dict, Any
 
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf, BDF, CaseControlDeck
+from pyNastran.converters.abaqus.abaqus_cards import Part, Material, Step, ShellSection, SolidSection
+
 from pyNastran.converters.abaqus.abaqus import (
-    Abaqus, Part, Material, Step,
-    ShellSection, SolidSection,
-    read_abaqus, get_nodes_nnodes_nelements)
+    Abaqus, read_abaqus, get_nodes_nnodes_nelements)
 
 def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str):
     nastran_model = read_bdf(bdf_filename)

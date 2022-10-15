@@ -1,15 +1,14 @@
 """Defines the Abaqus class"""
-from typing import Union, Optional, Any
+from typing import Union
 from io import StringIO
 
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Material, Part, Elements,
-    Step, SolidSection, ShellSection,
-    Boundary,
+    Step,
     cast_nodes, allowed_element_types)
-
+import pyNastran.converters.abaqus.reader as reader
 
 def read_abaqus(abaqus_inp_filename, encoding=None,
                 log=None, debug=False):
@@ -120,7 +119,7 @@ class Abaqus:
                     pass
                 elif word == 'boundary':
                     iline += 1
-                    boundary, iline, line0 = read_boundary(lines, line0, iline)
+                    boundary, iline, line0 = reader.read_boundary(lines, line0, iline)
                     boundaries.append(boundary)
                     iline -= 1
                     line0 = lines[iline].strip().lower()
@@ -140,10 +139,10 @@ class Abaqus:
                         self.log.debug('-------------------------------------')
                 elif 'section controls' in word:
                     # TODO: skips header parsing
-                    data_lines, iline, line0 = _read_star_block(lines, iline, line0, self.log, )
+                    data_lines, iline, line0 = reader.read_star_block(lines, iline, line0, self.log)
 
                 elif word.startswith('amplitude'):
-                    param_map = get_param_map(iline, word)
+                    param_map = reader.get_param_map(iline, word)
                     name = param_map['name']
                     if name in self.amplitudes:
                         raise RuntimeError('name=%r is already defined...' % name)
@@ -196,7 +195,7 @@ class Abaqus:
                     steps.append(step)
                     istep += 1
                 elif word.startswith('initial conditions'):
-                    data_lines, iline, line0 = _read_star_block(lines, iline, line0, self.log, )
+                    data_lines, iline, line0 = reader.read_star_block(lines, iline, line0, self.log, )
                     for line in data_lines:
                         self.log.debug(line)
                     self.log.debug('line_end_of_IC = %s' % line0)
@@ -251,7 +250,8 @@ class Abaqus:
 
                 #  part...
                 elif word.startswith('node'):
-                    iline, line0, nidsi, nodesi = read_node(lines, iline, self.log, skip_star=True)
+                    iline, line0, nidsi, nodesi = reader.read_node(
+                        lines, iline, self.log, skip_star=True)
                     nids.append(nidsi)
                     nodes.append(nodesi)
                     #print(f'end of node; iline={iline}')
@@ -278,8 +278,8 @@ class Abaqus:
                     self.log.debug('reading nset')
                     iline0 = iline
                     self.log.debug(line0)
-                    iline, line0, set_name, set_ids = read_nset(lines, iline, line0, self.log,
-                                                                is_instance=False)
+                    iline, line0, set_name, set_ids = reader.read_nset(
+                        lines, iline, line0, self.log, is_instance=False)
                     node_sets[set_name] = set_ids
                     iline -= 1
                     line0 = lines[iline].strip().lower()
@@ -289,39 +289,33 @@ class Abaqus:
                     self.log.debug('reading elset')
                     iline0 = iline
                     self.log.debug(line0)
-                    iline, line0, set_name, set_ids = read_elset(lines, iline, line0, self.log,
-                                                                is_instance=False)
+                    iline, line0, set_name, set_ids = reader.read_elset(
+                        lines, iline, line0, self.log, is_instance=False)
                     node_sets[set_name] = set_ids
                     iline -= 1
                     line0 = lines[iline].strip().lower()
                     self.log.info(f'end of elset; line={line0} iline={iline}')
                     assert iline > iline0
                 elif '*solid section' in line0:
-                    iline, solid_section = read_solid_section(line0, lines, iline, self.log)
+                    iline, solid_section = reader.read_solid_section(line0, lines, iline, self.log)
                     self.log.debug(f'solid_section = {solid_section}')
                     solid_sections.append(solid_section)
                     #iline -= 1
                     #line0 = lines[iline].strip().lower()
                 elif '*shell section' in line0:
-                    iline, shell_section = read_shell_section(line0, lines, iline, self.log)
+                    iline, shell_section = reader.read_shell_section(line0, lines, iline, self.log)
                     #print(shell_section)
                     shell_sections.append(shell_section)
                     iline -= 1
                     line0 = lines[iline].strip().lower()
                 elif '*hourglass stiffness' in line0:
-                    iline, hourglass_stiffness = read_hourglass_stiffness(line0, lines, iline, self.log)
+                    iline, hourglass_stiffness = reader.read_hourglass_stiffness(line0, lines, iline, self.log)
                 elif '*orientation' in line0:
-                    unused_key = 'orientation'
-                    unused_data = []
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                    while '*' not in line0:
-                        sline = line0.split(',')
-                        iline += 1
-                        line0 = lines[iline].strip().lower()
-                    self.log.debug(line0)
-                    iline -= 1
-                    line0 = lines[iline].strip().lower()
+                    iline, line0, orientation = reader.read_orientation(line0, lines, iline, self.log)
+                elif '*system' in line0:
+                    iline, line0, system = reader.read_system(line0, lines, iline, self.log)
+                elif '*system' in line0:
+                    iline, line0, transform = reader.read_transform(line0, lines, iline, self.log)
 
                 else:
                     raise NotImplementedError(f'word={word!r} line0={line0!r}')
@@ -369,7 +363,7 @@ class Abaqus:
         5.,1.,393.
         25.,2.,393.
         """
-        param_map = get_param_map(iline, word, required_keys=['elset'])
+        param_map = reader.get_param_map(iline, word, required_keys=['elset'])
         print(param_map)
         #name = param_map['name']
 
@@ -386,7 +380,7 @@ class Abaqus:
 
     def read_material(self, lines: list[str], iline: int, word: str) -> Material:
         """reads a Material card"""
-        param_map = get_param_map(iline, word, required_keys=['name'])
+        param_map = reader.get_param_map(iline, word, required_keys=['name'])
         #print(param_map)
         name = param_map['name']
 
@@ -449,7 +443,7 @@ class Abaqus:
                     assert len(sline) in [1, 2], sline
                 else:
                     raise NotImplementedError(sline)
-                data_lines, iline, line0 = _read_star_block2(lines, iline, line0, self.log, debug=False)
+                data_lines, iline, line0 = reader.read_star_block2(lines, iline, line0, self.log, debug=False)
                 #print(data_lines)
             elif word == 'density':
                 key = 'density'
@@ -676,19 +670,19 @@ class Abaqus:
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('nset'):
-                iline, line0, set_name, set_ids = read_nset(lines, iline, word, self.log,
-                                                            is_instance=True)
+                iline, line0, set_name, set_ids = reader.read_nset(
+                    lines, iline, word, self.log, is_instance=True)
                 node_sets[set_name] = set_ids
             elif word.startswith('elset'):
                 # TODO: skips header parsing
-                params_map = get_param_map(iline, word, required_keys=['instance'])
+                params_map = reader.get_param_map(iline, word, required_keys=['instance'])
                 set_name = params_map['elset']
                 iline += 1
                 line0 = lines[iline].strip().lower()
-                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                set_ids, iline, line0 = reader.read_set(lines, iline, line0, params_map)
                 element_sets[set_name] = set_ids
             elif word == 'node':
-                iline, line0, nids, nodes = read_node(lines, iline, self.log, skip_star=True)
+                iline, line0, nids, nodes = reader.read_node(lines, iline, self.log, skip_star=True)
             elif '*element' in line0:
                 # doesn't actually start on *element line
                 # 1,263,288,298,265
@@ -734,15 +728,16 @@ class Abaqus:
         unused_is_start = True
         solid_sections = []
         shell_sections = []
+        log = self.log
         while not line0.startswith('*end part'):
             #if is_start:
             iline += 1 # skips over the header line
-            self.log.debug('  ' + line0)
+            log.debug('  ' + line0)
             iword = line0.strip('*').lower()
-            self.log.info('part: %s' % iword)
+            log.info('part: %s' % iword)
             if '*node' in line0:
                 assert len(nids) == 0, nids
-                iline, line0, nids, nodes = read_node(lines, iline, self.log)
+                iline, line0, nids, nodes = reader.read_node(lines, iline, log)
 
             elif '*element' in line0:
                 #print(line0)
@@ -751,17 +746,18 @@ class Abaqus:
 
             elif '*nset' in line0:
                 #print(line0)
-                iline, line0, set_name, set_ids = read_nset(lines, iline, line0, self.log, is_instance=False)
+                iline, line0, set_name, set_ids = reader.read_nset(
+                    lines, iline, line0, log, is_instance=False)
                 node_sets[set_name] = set_ids
 
             elif '*elset' in line0:
                 # TODO: skips header parsing
                 #iline += 1
                 #print('elset: ', line0)
-                params_map = get_param_map(iline, line0, required_keys=['elset'])
+                params_map = reader.get_param_map(iline, line0, required_keys=['elset'])
                 set_name = params_map['elset']
                 line0 = lines[iline].strip().lower()
-                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                set_ids, iline, line0 = reader.read_set(lines, iline, line0, params_map)
                 element_sets[set_name] = set_ids
 
             elif '*surface' in line0:
@@ -775,10 +771,10 @@ class Abaqus:
                     line0 = lines[iline].strip().lower()
 
             elif '*solid section' in line0:
-                iline, solid_section = read_solid_section(line0, lines, iline, self.log)
+                iline, solid_section = reader.read_solid_section(line0, lines, iline, log)
                 solid_sections.append(solid_section)
             elif '*shell section' in line0:
-                iline, shell_section = read_shell_section(line0, lines, iline, self.log)
+                iline, shell_section = reader.read_shell_section(line0, lines, iline, log)
                 shell_sections.append(shell_section)
 
             elif '*cohesive section' in line0:
@@ -809,13 +805,7 @@ class Abaqus:
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif '*orientation' in line0:
-                unused_key = 'orientation'
-                unused_data = []
-                while '*' not in line0:
-                    sline = line0.split(',')
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                self.log.debug(line0)
+                iline, line0, orientation_fields = reader.read_orientation(line0, lines, iline, log)
             else:
                 msg = 'line=%r\n' % line0
                 allowed = ['*node', '*element', '*nset', '*elset', '*surface',
@@ -964,12 +954,12 @@ class Abaqus:
             elif word.startswith('temperature'):
                 iline -= 1
                 line0 = lines[iline].strip().lower()
-                unused_data_lines, iline, line0 = _read_star_block(
+                unused_data_lines, iline, line0 = reader.read_star_block(
                     lines, iline, line0, self.log, debug=True)
                 iline += 1
             elif word.startswith('controls'):
                 #self.log.debug('      controls')
-                unused_data_lines, iline, line0 = _read_star_block(lines, iline, line0, self.log, )
+                unused_data_lines, iline, line0 = reader.read_star_block(lines, iline, line0, self.log, )
                 iline += 1
                 line0 = lines[iline].strip().lower()
                 #for line in data_lines:
@@ -1001,7 +991,7 @@ class Abaqus:
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('boundary'):
-                boundary, iline, line0 = read_boundary(lines, line0, iline)
+                boundary, iline, line0 = reader.read_boundary(lines, line0, iline)
             elif word.startswith('buckle'):
                 node_output = []
                 while '*' not in line0:
@@ -1010,7 +1000,7 @@ class Abaqus:
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('cload'):
-                iline, line0, cload = read_cload(line0, lines, iline, log)
+                iline, line0, cload = reader.read_cload(line0, lines, iline, log)
                 cloads.append(cload)
             elif word.startswith('node print'):
                 node_output = []
@@ -1132,294 +1122,6 @@ def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
         nodes = np.vstack(all_nodes)
     return nnodes, nids, nodes, nelements
 
-def read_cload(line0, lines, iline, log: SimpleLogger) -> tuple[int, str, Any]:
-    """
-    First line
-    ----------
-     1. Node number or node set label.
-     2. Concentrated load type label, TSB.
-     3. Magnitude factor, M. The default value is 1.0. This factor will
-        be scaled by any *AMPLITUDE specification associated with this *CLOAD option.
-     4. Exposed area.
-
-    Give the following direction cosines in the local coordinate system
-    if the *TRANSFORM option was used at this node:
-     5. X-direction cosine of the outward normal to the exposed area,
-        pointing into the fluid, in the initial configuration.
-     6. Y-direction cosine of the outward normal to the exposed area,
-        pointing into the fluid, in the initial configuration.
-     7. Z-direction cosine of the outward normal to the exposed area,
-        pointing into the fluid, in the initial configuration.
-
-    The following data should be provided only if it is necessary to change
-    the fluid properties specified under the *AQUA option:
-     8. Density of the fluid outside the element. This value will override
-        the fluid density given on the data line of the *AQUA option.
-     9. Free surface elevation of the fluid outside the element. This value
-        will override the fluid surface elevation given on the data line
-        of the *AQUA option.
-     10. Constant pressure, added to the hydrostatic pressure outside the element.
-    Repeat this data line as often as necessary to define concentrated
-    buoyancy at various nodes or node sets.
-    """
-    log.debug(f'read_cload {line0!r}')
-    cload = []
-    while '*' not in line0:
-        sline = line0.split(',')
-        assert len(sline) == 3, sline
-        #cload += sline
-        iline += 1
-        line0 = lines[iline].strip().lower()
-        #print(line0)
-        try:
-            nid = int(sline[0])
-        except ValueError:
-            nid = sline[0]
-        dof = int(sline[1])
-        mag = float(sline[2])
-        cloadi = (nid, dof, mag)
-        cload.append(cloadi)
-
-    return iline, line0, cload
-
-def read_node(lines, iline, log, skip_star=False):
-    """reads *node"""
-    if skip_star:
-        iline += 1
-
-    nids = []
-    nodes = []
-    #print('  Node iline=%s' % iline)
-    line0 = lines[iline].strip().lower()
-    assert '*' not in line0, line0
-    #print('  node line0 =', line0)
-    is_failed = False
-    #if len(nids) > 0:
-        #nids0 = copy.deepcopy(nids)
-        #nids = []
-        #is_failed = False
-
-    while not line0.startswith('*'):
-        sline = line0.split(',')
-        nids.append(sline[0])
-        nsline = len(sline)
-        if nsline == 3:
-            sline.append(0.)
-            nodes.append(sline[1:])
-        elif nsline == 4:
-            nodes.append(sline[1:])
-        else:
-            raise NotImplementedError(sline)
-        iline += 1
-        line0 = lines[iline].strip().lower()
-    unused_nnodes = len(nids)
-
-    if is_failed:
-        msg = 'nids will overwrite nids0!\n'
-        #msg += 'nids0 = %s\n' % nids0
-        msg += 'nids = %s\n' % nids
-        raise RuntimeError(msg)
-    return iline, line0, nids, nodes
-
-def read_elset(lines: list[str], iline: int, word: str, log: SimpleLogger,
-               is_instance: bool=True):
-    """reads *elset"""
-    log.debug('word=%r' % word)
-    assert '*' in word, f'word={word!r} param_map={param_map}'
-    params_map = get_param_map(iline, word, required_keys=['elset'])
-    # TODO: skips header parsing
-    iline += 1
-    #print('elset: ', line0)
-    params_map = get_param_map(iline, word, required_keys=['elset'])
-    set_name = params_map['elset']
-    line0 = lines[iline].strip().lower()
-    set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
-    return iline, line0, set_name, set_ids
-
-def read_nset(lines, iline, word, log, is_instance=True):
-    """reads *nset"""
-    log.debug('word=%r' % word)
-    assert 'nset' in word, word
-    # TODO: skips header parsing
-    required_keys = ['instance'] if is_instance else []
-    params_map = get_param_map(iline, word, required_keys=required_keys)
-    #print('params_map =', params_map)
-    set_name = params_map['nset']
-    iline += 1
-    line0 = lines[iline].strip().lower()
-    set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
-    return iline, line0, set_name, set_ids
-
-def read_boundary(lines: list[str], line0: str, iline: int) -> tuple[Boundary, int, str]:
-    boundary_lines = []
-    line0 = lines[iline]
-    assert '*' not in line0, line0
-    while '*' not in line0:
-        # nid, dof1, dof2, disp
-        #1,1,,0
-        sline = line0.strip().split(',')
-        boundary_lines.append(sline)
-        iline += 1
-        line0 = lines[iline].strip().lower()
-    boundary = Boundary.from_lines(boundary_lines)
-    return boundary, iline, line0
-
-def read_solid_section(line0, lines, iline, log):
-    """reads *solid section"""
-    # TODO: skips header parsing
-    #iline += 1
-    assert '*solid' in line0, line0
-    word2 = line0.strip('*').lower()
-    params_map = get_param_map(iline, word2, required_keys=['material'])
-    log.debug('    param_map = %s' % params_map)
-    #line0 = lines[iline].strip().lower()
-    data_lines, iline, line0 = _read_star_block2(lines, iline, line0, log)
-    #print('line0 =', iline, line0)
-    #print(f'lines[{iline}] = {lines[iline]!r}')
-    #print('lines[iline+1] =', lines[iline+1])
-    #print('data_lines =', data_lines)
-    #for line in data_lines:
-        #print(line)
-    solid_section = SolidSection.add_from_data_lines(params_map, data_lines, log)
-    return iline, solid_section
-
-def read_shell_section(line0: str, lines: list[str], iline: int,
-                       log: SimpleLogger) -> ShellSection:
-    """reads *shell section"""
-    assert '*shell' in line0, line0
-    # TODO: skips header parsing
-    #iline += 1
-    word2 = line0.strip('*').lower()
-    params_map = get_param_map(iline, word2, required_keys=['material'])
-    log.debug('    param_map = %s' % params_map)
-
-    iline += 1
-    line0 = lines[iline].strip().lower()
-    data_lines, iline, line0 = _read_star_block2(lines, iline, line0, log)
-    log.info(f'params_map = {params_map}')
-    log.info(f'data_lines = {data_lines}')
-    #for line in data_lines:
-        #print(line)
-    assert len(data_lines) > 0, data_lines
-    shell_section = ShellSection.add_from_data_lines(params_map, data_lines, log)
-    #print(lines[iline])
-    return iline, shell_section
-
-def read_hourglass_stiffness(line0: str, lines: list[str], iline: int,
-                             log: SimpleLogger) -> None:
-    """reads *hourglass stiffness"""
-    # TODO: skips header parsing
-    #iline += 1
-    word2 = line0.strip('*').lower()
-    iline += 1
-    #params_map = get_param_map(iline, word2, required_keys=['material'])
-    #log.debug('    param_map = %s' % params_map)
-    #line0 = lines[iline].strip().lower()
-    data_lines, iline, line0 = _read_star_block2(lines, iline, line0, log)
-    assert len(data_lines) == 1, data_lines
-    #for line in data_lines:
-        #print(line)
-    #solid_section = SolidSection(params_map, data_lines, log)
-    hourglass_stiffness = None
-    return iline, hourglass_stiffness
-
-
-def _read_star_block(lines, iline, line0, log, debug=False):
-    """
-    because this uses file streaming, there are 30,000 places where a try except
-    block is needed, so this should probably be used all over.
-    """
-    data_lines = []
-    try:
-        iline += 1
-        line0 = lines[iline].strip().lower()
-        while not line0.startswith('*'):
-            data_lines.append(line0.split(','))
-            iline += 1
-            line0 = lines[iline].strip().lower()
-            #log.debug('line = %r' % line0)
-        iline -= 1
-        line0 = lines[iline].strip().lower()
-    except IndexError:
-        pass
-    if debug:
-        for line in data_lines:
-            log.debug(line)
-    return data_lines, iline, line0
-
-
-def _read_star_block2(lines, iline, line0, log, debug=False):
-    """
-    because this uses file streaming, there are 30,000 places where a try except
-    block is needed, so this should probably be used all over.
-    """
-    line0 = lines[iline].strip().lower()
-    data_lines = []
-    while not line0.startswith('*'):
-        sline = line0.strip(', ').split(',')
-        data_lines.append(sline)
-        iline += 1
-        line0 = lines[iline].strip().lower()
-    if debug:
-        for line in data_lines:
-            log.debug(line)
-    return data_lines, iline, line0
-
-def read_set(lines, iline, line0, params_map):
-    """reads a set"""
-    set_ids = []
-    while not line0.startswith('*'):
-        set_ids += line0.strip(', ').split(',')
-        iline += 1
-        line0 = lines[iline].strip().lower()
-    if 'generate' in params_map:
-        assert len(set_ids) == 3, set_ids
-        set_ids = np.arange(int(set_ids[0]), int(set_ids[1]), int(set_ids[2]))
-    else:
-        try:
-            set_ids = np.unique(np.array(set_ids, dtype='int32'))
-        except ValueError:
-            print(set_ids)
-            raise
-    return set_ids, iline, line0
-
-def get_param_map(iline: int, word: str, required_keys: Optional[list[str]]=None) -> dict[str, str]:
-    """
-    get the optional arguments on a line
-
-    Examples
-    --------
-    >>> iline = 0
-    >>> word = 'elset,instance=dummy2,generate'
-    >>> params = get_param_map(iline, word, required_keys=['instance'])
-    params = {
-        'elset' : None,
-        'instance' : 'dummy2,
-        'generate' : None,
-    }
-    """
-    if required_keys is None:
-        required_keys = []
-    words = word.split(',')
-    param_map = {}
-    for wordi in words:
-        if '=' not in wordi:
-            key = wordi.strip()
-            value = None
-        else:
-            sword = wordi.split('=', 1)
-            assert len(sword) == 2, sword
-            key = sword[0].strip()
-            value = sword[1].strip()
-        param_map[key] = value
-
-    msg = ''
-    for key in required_keys:
-        if key not in param_map:
-            msg += f'line {iline:d}: {key!r} not found in {word!r}\n'
-    if msg:
-        raise RuntimeError(msg)
-    return param_map
 
 def split_by_equals(word, unused_lines, iline):
     """

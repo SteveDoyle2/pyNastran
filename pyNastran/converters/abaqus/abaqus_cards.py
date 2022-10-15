@@ -27,7 +27,11 @@ allowed_element_types = [
 
     # solid
     'c3d4', 'c3d10',
+
+    # lines
+    'b31h', #2-node linear beam
 ]
+
 
 class Boundary:
     def __init__(self, nid_dof_to_value: dict[tuple[int, int], float]):
