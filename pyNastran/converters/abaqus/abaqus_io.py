@@ -41,7 +41,6 @@ class AbaqusIO:
         self.gui.nid_maps[name] = {}
         model = Abaqus(log=self.gui.log, debug=False)
         self.gui.model_type = 'abaqus'
-        #self.model_type = model.model_type
         model.read_abaqus_inp(abaqus_filename)
 
         self.gui.nid_map = {}
@@ -78,36 +77,13 @@ class AbaqusIO:
 
         nid_offset = -1
         nids = []
-        for unused_part_name, part in model.parts.items():
-            self.gui.log.info('part_name = %r' % unused_part_name)
-            nnodesi = part.nodes.shape[0]
-            nidsi = part.nids
-            nids.append(nidsi)
+        if model.nodes is not None:
+            nid_offset = add_part(grid, model, nids, nid_offset)
 
-            elements = part.elements
-            add_lines(grid, nidsi, elements.r2d2, nid_offset)
-
-            add_tris(grid, nidsi, elements.cps3, nid_offset)
-            add_tris(grid, nidsi, elements.cpe3, nid_offset)
-
-            add_quads(grid, nidsi, elements.cpe4, nid_offset)
-            add_quads(grid, nidsi, elements.cpe4r, nid_offset)
-
-            add_quads(grid, nidsi, elements.cps4, nid_offset)
-            add_quads(grid, nidsi, elements.cps4r, nid_offset)
-
-            add_quads(grid, nidsi, elements.coh2d4, nid_offset)
-            add_quads(grid, nidsi, elements.cohax4, nid_offset)
-
-            add_tris(grid, nidsi, elements.cax3, nid_offset)
-            #add_quads(grid, nidsi, elements.cax4, nid_offset)
-            add_quads(grid, nidsi, elements.cax4r, nid_offset)
-
-            # solids
-            add_tetras(grid, nidsi, elements.c3d10h, nid_offset)
-            add_hexas(grid, nidsi, elements.c3d8r, nid_offset)
-
-            nid_offset += nnodesi
+        for part_name, part in model.parts.items():
+            self.gui.log.info(f'part_name = {part_name!r}')
+            nid_offset = add_part(grid, part, nids, nid_offset)
+        assert len(nids) > 0, nids
         nids = np.hstack(nids)
         grid.SetPoints(points)
         grid.Modified()
@@ -183,17 +159,48 @@ class AbaqusIO:
         icase = 2
         return form, cases, icase, node_ids, element_ids
 
+def add_part(grid: vtk.vtkUnstructuredGrid, part, nids: list[np.ndarray], nid_offset: int) -> int:
+    nnodesi = part.nodes.shape[0]
+    nidsi = part.nids
+    nids.append(nidsi)
+    elements = part.elements
+    add_lines(grid, nidsi, elements.r2d2_eids, elements.r2d2, nid_offset)
+    add_lines(grid, nidsi, elements.b31h_eids, elements.b31h, nid_offset)
+
+    add_tris(grid, nidsi, elements.cps3_eids, elements.cps3, nid_offset)
+    add_tris(grid, nidsi, elements.cpe3_eids, elements.cpe3, nid_offset)
+
+    add_quads(grid, nidsi, elements.cpe4_eids, elements.cpe4, nid_offset)
+    add_quads(grid, nidsi, elements.cpe4r_eids, elements.cpe4r, nid_offset)
+
+    add_quads(grid, nidsi, elements.cps4_eids, elements.cps4, nid_offset)
+    add_quads(grid, nidsi, elements.cps4r_eids, elements.cps4r, nid_offset)
+
+    add_quads(grid, nidsi, elements.coh2d4_eids, elements.coh2d4, nid_offset)
+    add_quads(grid, nidsi, elements.cohax4_eids, elements.cohax4, nid_offset)
+
+    add_tris(grid, nidsi, elements.cax3_eids, elements.cax3, nid_offset)
+    #add_quads(grid, nidsi, elements.cax4_eids, elements.cax4, nid_offset)
+    add_quads(grid, nidsi, elements.cax4r_eids, elements.cax4r, nid_offset)
+
+    # solids
+    add_tetras(grid, nidsi, elements.c3d10h_eids, elements.c3d10h, nid_offset)
+    add_hexas(grid, nidsi, elements.c3d8r_eids, elements.c3d8r, nid_offset)
+
+    nid_offset += nnodesi
+    return nid_offset
+
 def add_lines(grid: vtk.vtkUnstructuredGrid,
-              nids, eids_lines: np.ndarray, nid_offset: int) -> int:
+              nids, eids, elem_nids: np.ndarray, nid_offset: int) -> int:
     """adds line elements to the vtkUnstructuredGrid"""
     nelements = 0
-    if eids_lines is not None:
-        nelements = eids_lines.shape[0]
-        eids = eids_lines[:, 0]
-        elem_nids = eids_lines[:, 1:]
+    if elem_nids is not None:
+        nelements = len(eids)
+        #eids = eids_lines[:, 0]
+        #elem_nids = eids_lines[:, 1:]
         #inids = np.searchsorted(nids, elem_nids)
         node_ids = elem_nids + nid_offset
-        for unused_eid, node_idsi in zip(eids, node_ids):
+        for node_idsi in node_ids:
             elem = vtkLine()
             point_ids = elem.GetPointIds()
             point_ids.SetId(0, node_idsi[0])
@@ -203,16 +210,14 @@ def add_lines(grid: vtk.vtkUnstructuredGrid,
 
 
 def add_tris(grid: vtk.vtkUnstructuredGrid,
-             nids, eids_tris: np.ndarray, nid_offset: int) -> int:
+             nids, eids, elem_nids: np.ndarray, nid_offset: int) -> int:
     """adds tri elements to the vtkUnstructuredGrid"""
     nelements = 0
-    if eids_tris is not None:
-        nelements = eids_tris.shape[0]
-        eids = eids_tris[:, 0]
-        elem_nids = eids_tris[:, 1:]
+    if eids is not None:
+        nelements = len(elem_nids)
         #inids = np.searchsorted(nids, elem_nids)
         node_ids = elem_nids + nid_offset
-        for unused_eid, node_idsi in zip(eids, node_ids):
+        for node_idsi in node_ids:
             elem = vtkTriangle()
             point_ids = elem.GetPointIds()
             point_ids.SetId(0, node_idsi[0])
@@ -223,13 +228,11 @@ def add_tris(grid: vtk.vtkUnstructuredGrid,
 
 
 def add_quads(grid: vtk.vtkUnstructuredGrid,
-              nids, eids_quads: np.ndarray, nid_offset: int) -> int:
+              nids, eids: np.ndarray, elem_nids: np.ndarray, nid_offset: int) -> int:
     """adds quad elements to the vtkUnstructuredGrid"""
     nelements = 0
-    if eids_quads is not None:
-        nelements = eids_quads.shape[0]
-        eids = eids_quads[:, 0]
-        elem_nids = eids_quads[:, 1:]
+    if elem_nids is not None:
+        nelements = len(eids)
         #inids = np.searchsorted(nids, elem_nids)
         #print(inids)
         node_ids = elem_nids + nid_offset
@@ -246,16 +249,14 @@ def add_quads(grid: vtk.vtkUnstructuredGrid,
 
 
 def add_tetras(grid: vtk.vtkUnstructuredGrid,
-               nids, eids_tetras: np.ndarray, nid_offset: int) -> int:
+               nids, eids: np.ndarray, elem_nids: np.ndarray, nid_offset: int) -> int:
     """adds tet elements to the vtkUnstructuredGrid"""
     nelements = 0
-    if eids_tetras is not None:
-        nelements = eids_tetras.shape[0]
-        eids = eids_tetras[:, 0]
-        elem_nids = eids_tetras[:, 1:]
+    if elem_nids is not None:
+        nelements = len(elem_nids)
         #inids = np.searchsorted(nids, elem_nids)
         node_ids = elem_nids + nid_offset
-        for unused_eid, node_idsi in zip(eids, node_ids):
+        for node_idsi in node_ids:
             elem = vtkTetra()
             point_ids = elem.GetPointIds()
             point_ids.SetId(0, node_idsi[0])
@@ -267,16 +268,14 @@ def add_tetras(grid: vtk.vtkUnstructuredGrid,
 
 
 def add_hexas(grid: vtk.vtkUnstructuredGrid,
-              nids, eids_hexas: np.ndarray, nid_offset: int) -> int:
+              nids, eids: np.ndarray, elem_nids: np.ndarray, nid_offset: int) -> int:
     """adds hex elements to the vtkUnstructuredGrid"""
     nelements = 0
-    if eids_hexas is not None:
-        nelements = eids_hexas.shape[0]
-        eids = eids_hexas[:, 0]
-        elem_nids = eids_hexas[:, 1:]
+    if elem_nids is not None:
+        nelements = len(elem_nids)
         #inids = np.searchsorted(nids, elem_nids)
         node_ids = elem_nids + nid_offset
-        for unused_eid, node_idsi in zip(eids, node_ids):
+        for node_idsi in node_ids:
             elem = vtkHexahedron()
             point_ids = elem.GetPointIds()
             point_ids.SetId(0, node_idsi[0])

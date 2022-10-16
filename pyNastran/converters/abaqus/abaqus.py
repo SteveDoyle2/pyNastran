@@ -5,9 +5,7 @@ from io import StringIO
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
-    Assembly, Material, Part, Elements,
-    Step,
-    cast_nodes, allowed_element_types)
+    Assembly, Part, Elements, Step, cast_nodes)
 import pyNastran.converters.abaqus.reader as reader
 
 def read_abaqus(abaqus_inp_filename, encoding=None,
@@ -168,18 +166,18 @@ class Abaqus:
                 #elif 'include' in word:
                     #pass
                 elif word.startswith('material'):
-                    self.log.debug('start of material...')
-                    iline, line0, material = self.read_material(lines, iline, word)
+                    log.debug('start of material...')
+                    iline, line0, material = reader.read_material(lines, iline, word, log)
                     if material.name in self.materials:
                         msg = 'material.name=%r is already defined...\n' % material.name
                         msg += 'old %s' % self.materials[material.name]
                         msg += 'new %s' % material
                         raise RuntimeError(msg)
                     self.materials[material.name] = material
-                    self.log.debug('end of material')
+                    log.debug('end of material')
                 #elif word.startswith('spring'):
-                    #self.log.debug('start of spring...')
-                    #iline, line0, material = self.read_spring(lines, iline, word)
+                    #log.debug('start of spring...')
+                    #iline, line0, material = read_spring(lines, iline, word, log)
                     #asdf
                     #if material.name in self.materials:
                         #msg = 'material.name=%r is already defined...\n' % material.name
@@ -187,7 +185,7 @@ class Abaqus:
                         #msg += 'new %s' % material
                         #raise RuntimeError(msg)
                     #self.materials[material.name] = material
-                    #self.log.debug('end of spring')
+                    #log.debug('end of spring')
 
                 elif word.startswith('step'):
                     #print('step!!!!!!!')
@@ -265,7 +263,8 @@ class Abaqus:
                     #print(f'start of element; iline={iline}')
                     iline0 = iline
                     line0 = lines[iline].strip().lower()
-                    line0, iline, etype, elements = self._read_elements(lines, line0, iline+1)
+                    line0, iline, etype, elements = reader.read_element(
+                        lines, line0, iline+1, self.log, self.debug)
                     element_types[etype] = elements
                     iline -= 1
                     line0 = lines[iline].strip().lower()
@@ -314,9 +313,8 @@ class Abaqus:
                     iline, line0, orientation = reader.read_orientation(line0, lines, iline, self.log)
                 elif '*system' in line0:
                     iline, line0, system = reader.read_system(line0, lines, iline, self.log)
-                elif '*system' in line0:
+                elif '*transform' in line0:
                     iline, line0, transform = reader.read_transform(line0, lines, iline, self.log)
-
                 else:
                     raise NotImplementedError(f'word={word!r} line0={line0!r}')
                 wordi = word.split(',')[0]
@@ -345,291 +343,6 @@ class Abaqus:
             part.check_materials(self.materials)
         for unused_mat_name, mat in sorted(self.materials.items()):
             self.log.debug(str(mat))
-
-    def read_spring(self, lines: list[str], iline: int, word: str) -> Material:
-        """
-        *SPRING,ELSET=Eall
-        blank line
-        10.
-
-        Defines a linear spring constant with value 10. for all elements in
-        element set Eall and all temperatures.
-        Example:
-        *SPRING,ELSET=Eall,NONLINEAR
-        0.,0.,293.
-        10.,1.,293.
-        100.,2.,293.
-        0.,0.,393.
-        5.,1.,393.
-        25.,2.,393.
-        """
-        param_map = reader.get_param_map(iline, word, required_keys=['elset'])
-        print(param_map)
-        #name = param_map['name']
-
-        iline += 1
-        word_line = lines[iline].strip().lower()
-        word = word_line.strip('*').lower()
-        unused_allowed_words = ['elastic']
-        unallowed_words = [
-            'shell section', 'solid section',
-            'material', 'step', 'boundary', 'amplitude', 'surface interaction',
-            'assembly', 'spring']
-        iline += 1
-        line0 = lines[iline].strip('\n\r\t, ').lower()
-
-    def read_material(self, lines: list[str], iline: int, word: str) -> Material:
-        """reads a Material card"""
-        param_map = reader.get_param_map(iline, word, required_keys=['name'])
-        #print(param_map)
-        name = param_map['name']
-
-        iline += 1
-        word_line = lines[iline].strip().lower()
-        word = word_line.strip('*').lower()
-        unused_allowed_words = ['elastic']
-        unallowed_words = [
-            'shell section', 'solid section',
-            'material', 'step', 'boundary', 'amplitude', 'surface interaction',
-            'assembly', 'spring']
-        iline += 1
-        line0 = lines[iline].strip('\n\r\t, ').lower()
-        #print('  wordA =', word)
-        #while word in allowed_words:
-        sections = {}
-        density = None
-        ndelete = None
-        ndepvars = None
-        while word not in unallowed_words:
-            data_lines = []
-            #self.log.info('  mat_word = %r' % word)
-            #print(sections)
-            if word.startswith('elastic'):
-                key = 'elastic'
-                sword = word.split(',')
-                #print(key, sword)
-
-                #self.log.debug('  matword = %s' % sword)
-                if len(sword) == 1:
-                    # elastic
-                    assert len(sword) in [1, 2], sword
-                else:
-                    mat_type = sword[1]
-                    assert 'type' in mat_type, sword
-                    mat_type = mat_type.split('=')[1]
-
-                    sline = line0.split(',')
-                    if mat_type == 'traction':
-                        assert len(sline) == 3, sline
-                        self.log.debug('  traction material')
-                    elif mat_type in ['iso', 'isotropic']:
-                        #, TYPE=ISO
-                        #1.00000E+07, 3.00000E-01
-                        assert len(sline) == 2, sline
-                        e, nu = sline
-                        e = float(e)
-                        nu = float(nu)
-                        sections['elastic'] = [e, nu]
-                        #print(sections)
-                    else:
-                        raise NotImplementedError(f'mat_type={mat_type!r}')
-                iline += 1
-            elif word.startswith('plastic'):
-                key = 'plastic'
-                sword = word.split(',')
-                self.log.debug('  matword = %s' % sword)
-                if len(sword) == 1:
-                    # elastic
-                    assert len(sline) in [1, 2], sline
-                else:
-                    raise NotImplementedError(sline)
-                data_lines, iline, line0 = reader.read_star_block2(lines, iline, line0, self.log, debug=False)
-                #print(data_lines)
-            elif word == 'density':
-                key = 'density'
-                sline = line0.split(',')
-                assert len(sline) == 1, 'sline=%s line0=%r' % (sline, line0)
-                density = float(sline[0])
-                iline += 1
-            elif word.startswith('damage initiation'):
-                key = 'damage initiation'
-                #self.log.debug('  damage0 %s' % line0)
-                sline = line0.split(',')
-                self.log.debug(sline)
-                assert len(sline) == 3, sline
-                iline += 1
-            elif word.startswith('damage evolution'):
-                key = 'damage evolution'
-                #self.log.debug('  damage_e %s' % line0)
-                unused_data = []
-                while '*' not in line0:
-                    sline = line0.split(',')
-                    assert len(sline) == 3, sline
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                self.log.debug(line0)
-            elif word == 'damage stabilization':
-                key = 'damage stabilization'
-                sline = line0.split(',')
-                assert len(sline) == 1, sline
-                iline += 1
-
-            #elif word.startswith('surface interaction'):
-                #key = 'surface interaction'
-                #data = []
-                #while '*' not in line0:
-                    #sline = line0.split(',')
-                    #iline += 1
-                    #line0 = lines[iline].strip().lower()
-                #self.log.debug(line0)
-            #elif word.startswith('friction'):
-                #key = 'friction'
-                #data = []
-                #while '*' not in line0:
-                    #sline = line0.split(',')
-                    #iline += 1
-                    #line0 = lines[iline].strip().lower()
-                #self.log.debug(line0)
-            #elif word.startswith('surface behavior'):
-                #key = 'surface behavior'
-                #data = []
-                #while '*' not in line0:
-                    #sline = line0.split(',')
-                    #iline += 1
-                    #line0 = lines[iline].strip().lower()
-                #self.log.debug(line0)
-            #elif word.startswith('contact damping'):
-                #key = 'contact damping'
-                #data = []
-                #while '*' not in line0:
-                    #sline = line0.split(',')
-                    #iline += 1
-                    #line0 = lines[iline].strip().lower()
-                #self.log.debug(line0)
-
-            elif word.startswith('depvar'):
-                key = 'depvar'
-                sline = word_line.split()
-                if len(sline) > 1:
-                    assert len(sline) == 2, sline
-                    sline2 = sline[1].split('=')
-                    assert  len(sline2) == 2, sline
-                    assert sline2[0].lower() == 'delete', sline
-                    ndelete = int(sline2[1])
-
-                sline = line0.split(',')
-                assert len(sline) == 1, sline
-                ndepvars = int(sline[0])
-                iline += 1
-            elif word.startswith('user material'):
-                key = 'user material'
-                words = word.split(',')[1:]
-
-                is_constants = False
-                for wordi in words:
-                    mat_word, value = split_by_equals(wordi, lines, iline-1)
-                    mat_word = mat_word.strip()
-                    if mat_word == 'constants':
-                        nconstants = int(value)
-                        is_constants = True
-                    elif mat_word == 'type':
-                        mat_type = value.strip()
-                        allowed_types = ['mechanical']
-                        if not mat_type in allowed_types:
-                            msg = 'mat_type=%r; allowed_types=[%s]'  % (
-                                mat_type, ', '.join(allowed_types))
-                            raise NotImplementedError(msg)
-                    else:
-                        raise NotImplementedError('mat_word=%r' % mat_word)
-
-                if not is_constants:
-                    msg = "line %i: 'constants' was not defined on %r" % (
-                        iline, lines[iline-1].rstrip())
-                    raise RuntimeError(msg)
-
-                #nconstants = 111
-                nlines_full = nconstants // 8
-                nleftover = nconstants % 8
-                mat_data = []
-                for unused_iiline in range(nlines_full):
-                    sline = line0.split(',')
-                    assert len(sline) == 8, 'len(sline)=%s; sline=%s' % (len(sline), sline)
-                    mat_data += sline
-                    iline += 1
-                    line0 = lines[iline].strip('\n\r\t, ').lower()
-                if nleftover:
-                    sline = line0.split(',')
-                    iline += 1
-                    line0 = lines[iline].strip('\n\r\t, ').lower()
-            elif word.startswith('initial conditions'):
-                # TODO: skips header parsing
-                #iline += 1
-                #line0 = lines[iline].strip().lower()
-                unused_data = []
-                while '*' not in line0:
-                    sline = line0.split(',')
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                self.log.debug(line0)
-            elif word.lower().startswith('hyperelastic, mooney-rivlin'):
-                key = 'hyperelastic, mooney-rivlin'
-                while '*' not in line0:
-                    sline = line0.split(',')
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                self.log.debug(line0)
-            elif word.lower().startswith('expansion'):
-                #*Expansion, zero=20.
-                #80.,
-                key = 'expansion'
-                while '*' not in line0:
-                    sline = line0.split(',')
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                #iline += 1
-                self.log.debug(line0)
-            else:
-                msg = print_data(lines, iline, word, 'is this an unallowed word for *Material?\n')
-                raise NotImplementedError(msg)
-
-            if key in sections:
-                msg = f'key={key!r} already defined for Material name={name!r}'
-                self.log.warning(msg)
-            else:
-                #raise RuntimeError(msg)
-                sections[key] = data_lines
-
-            try:
-                line = lines[iline]
-            except IndexError:
-                is_broken = True
-                self.log.debug('  breaking on end of file')
-                break
-            word_line = line.strip('\n\r\t, ').lower()
-            del line
-            word = word_line.strip('*').lower()
-
-            iline += 1
-            line0 = lines[iline].strip('\n\r\t, ').lower()
-            #self.log.debug('  lineB = %r' % line0)
-            #self.log.debug('  wordB = %r' % word)
-
-            is_broken = False
-            for unallowed_word in unallowed_words:
-                if word.startswith(unallowed_word):
-                    self.log.debug('  breaking on %r' % unallowed_word)
-                    is_broken = True
-                    break
-            if is_broken:
-                iline -= 1
-                break
-        #print(name, sections)
-        material = Material(name, sections=sections,
-                            is_elastic=True, density=density,
-                            ndepvars=ndepvars, ndelete=ndelete)
-        iline -= 1
-        return iline, line0, material
-
 
     def read_assembly(self, lines, iline, line0, word):
         """reads an Assembly object"""
@@ -741,7 +454,8 @@ class Abaqus:
 
             elif '*element' in line0:
                 #print(line0)
-                line0, iline, etype, elements = self._read_elements(lines, line0, iline)
+                line0, iline, etype, elements = reader.read_element(
+                    lines, line0, iline, self.log, self.debug)
                 element_types[etype] = elements
 
             elif '*nset' in line0:
@@ -826,43 +540,6 @@ class Abaqus:
         part = Part(part_name, nids, nodes, element_types, node_sets, element_sets,
                     solid_sections, shell_sections, self.log)
         return iline, line0, part_name, part
-
-    def _read_elements(self, lines, line0, iline):
-        """
-        '*element, type=mass, elset=topc_inertia-2_mass_'
-        """
-        #print('------------------')
-        assert '*' in line0, line0
-        sline = line0.split(',')[1:]
-        if len(sline) < 1:
-            raise RuntimeError("looking for element_type (e.g., '*Element, type=R2D2')\n"
-                               "line0=%r\nsline=%s; allowed:\n[%s]" % (
-                                   line0, sline, ', '.join(allowed_element_types)))
-
-        etype_sline = sline[0]
-        assert 'type' in etype_sline, etype_sline
-        etype = etype_sline.split('=')[1].strip()
-        if etype not in allowed_element_types:
-            msg = 'etype=%r allowed=[%s]' % (etype, ','.join(allowed_element_types))
-            raise RuntimeError(msg)
-
-        if self.debug:
-            self.log.debug('    etype = %r' % etype)
-
-        #iline += 1
-        line1 = lines[iline].strip().lower()
-        self.log.debug('    line1 = %r' % line1)
-
-        elements = []
-        #print(line1)
-        assert '*' not in line1, line1
-        while not line1.startswith('*'):
-            #print(line1)
-            elements.append(line1.split(','))
-            iline += 1
-            line1 = lines[iline].strip().lower()
-        #self.log.debug('elements = %s' % elements)
-        return line1, iline, etype, elements
 
     def read_step(self, lines, iline, line0, istep):
         """reads a step object"""
@@ -1101,7 +778,6 @@ def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
         all_nodes.append(nodes)
 
     for unused_part_name, part in model.parts.items():
-        #unused_nids = part.nids - 1
         nidsi = part.nids
         nodes = part.nodes
         elements = part.elements
@@ -1121,18 +797,6 @@ def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
         nids = np.vstack(nids)
         nodes = np.vstack(all_nodes)
     return nnodes, nids, nodes, nelements
-
-
-def split_by_equals(word, unused_lines, iline):
-    """
-    splits 'x = 42'
-    into 'x' and '42'
-    """
-    if '=' not in word:
-        msg = 'line %i: %r cannot be split by an equals sign (=)' % (iline, word)
-        raise RuntimeError(msg)
-    word_out, value = word.split('=')
-    return word_out, value
 
 def print_data(lines, iline, word, msg, nlines=20):
     """prints the last N lines"""

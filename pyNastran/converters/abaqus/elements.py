@@ -45,6 +45,24 @@ from typing import Dict
 import numpy as np
 from cpylog import SimpleLogger
 
+allowed_element_types = [
+    'r2d2', 'conn2d2', 'springa',
+    'cpe3', 'cpe4', 'cpe4r', 'cpe8r',
+    'cps3', 'cps4', 'cps4r', 'cps8r',
+
+    'coh2d4', 'c3d10h', 'cohax4',
+    'cax3', 'cax4r', 'mass', 'rotaryi', 't2d2', 'c3d8r',
+
+    # 6/8 plates
+    's8r',
+
+    # solid
+    'c3d4', 'c3d10',
+
+    # lines
+    'b31h', #2-node linear beam
+]
+
 class Elements:
     """a Part object is a series of nodes & elements (of various types)"""
     def __init__(self, element_types: Dict[str, np.ndarray], log: SimpleLogger):
@@ -58,6 +76,7 @@ class Elements:
                 the element type
             bars:
                 r2d2 : (nelements, 2) int ndarray
+                b31h : (nelements, 2) int ndarray
             shells:
                 cpe3 : (nelements, 3) int ndarray
                 cpe4 : (nelements, 4) int ndarray
@@ -77,6 +96,7 @@ class Elements:
         self.log = log
         # bars
         self.r2d2 = None
+        self.b31h = None
 
         # ---shells---
         # plane strain
@@ -108,6 +128,7 @@ class Elements:
         #-----------------------------------
         # eids
         self.r2d2_eids = None
+        self.b31h_eids = None
 
         self.cpe3_eids = None
         self.cpe4_eids = None
@@ -138,6 +159,7 @@ class Elements:
         """internal helper method"""
         etypes_nnodes = [
             ('r2d2', 2),  #  similar to a CBAR
+            ('b31h', 3),  #  similar to a CBEAM?  TODO: why is this 3 nodes?
 
             #  shells
             ('cpe3', 3),
@@ -172,10 +194,9 @@ class Elements:
                 if len(elements) == 0:
                     continue
                 eids_elements = np.array(elements, dtype='int32')
-                setattr(self, etype, eids_elements)  # r2d2
-                setattr(self, etype_eids, eids_elements[:,  0]) #  r2d2_eids
+                setattr(self, etype, eids_elements[:, 1:])  # r2d2
+                setattr(self, etype_eids, eids_elements[:, 0]) #  r2d2_eids
                 assert eids_elements.shape[1] == nnodes + 1, eids_elements.shape
-
 
     def element(self, eid):
         """gets a specific element of the part"""
@@ -197,6 +218,7 @@ class Elements:
     def nelements(self):
         """Gets the total number of elements"""
         n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
+        n_b31h = self.b31h.shape[0] if self.b31h is not None else 0
 
         # plane strain
         n_cpe3 = self.cpe3.shape[0] if self.cpe3 is not None else 0
@@ -221,7 +243,7 @@ class Elements:
         n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0
         n_c3d4 = self.c3d4.shape[0] if self.c3d4 is not None else 0
 
-        neids = (n_r2d2 +
+        neids = (n_r2d2 + n_b31h +
                  n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
                  n_cps3 + n_cps4 + n_cps4r +  # plane stress
                  n_coh2d4 +
@@ -237,6 +259,7 @@ class Elements:
     def __repr__(self):
         """prints a summary for the part"""
         n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
+        n_b31h = self.b31h.shape[0] if self.b31h is not None else 0
 
         # plane strain
         n_cpe3 = self.cpe3.shape[0] if self.cpe3 is not None else 0
@@ -262,7 +285,7 @@ class Elements:
         n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0
         n_c3d4 = self.c3d4.shape[0] if self.c3d4 is not None else 0
 
-        neids = (n_r2d2 +
+        neids = (n_r2d2 + n_b31h +
                  n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
                  n_cps3 + n_cps4 + n_cps4r +  # plane stress
                  n_coh2d4 +
@@ -271,7 +294,9 @@ class Elements:
                  n_c3d8r + n_c3d4)
         assert neids == self.nelements, 'something is out of date...'
         msg = (
-            f'Element(neids={neids:d}, n_r2d2={n_r2d2}, n_cps3={n_cps3}, n_cpe3={n_cpe3}, \n'
+            f'Element(neids={neids:d},\n'
+            f'        n_r2d2={n_r2d2}, n_b31h={n_b31h},\n'
+            f'        n_cps3={n_cps3}, n_cpe3={n_cpe3},\n'
             f'        n_cpe4={n_cpe4}, n_cpe4r={n_cpe4r}, n_coh2d4={n_coh2d4},\n'
             f'        n_cohax4={n_cohax4}, n_cax3={n_cax3}, n_cax4r={n_cax4r},\n'
             f'        n_cps4r={n_cps4r}, n_c3d10h={n_c3d10h}, n_c3d8r=n_c3d8r)\n'
@@ -283,6 +308,7 @@ class Elements:
         """simplified way to access all the elements as a dictionary"""
         element_types = {}
         element_types['r2d2'] = (self.r2d2_eids, self.r2d2)
+        element_types['b31h'] = (self.b31h_eids, self.b31h)
 
         # plane strain        element_types['cpe3'] = (self.cpe3_eids, self.cpe3)
         element_types['cpe4'] = (self.cpe4_eids, self.cpe4)
@@ -313,8 +339,11 @@ class Elements:
         for elem_type, (eids, elems) in self.element_types.items():
             if eids is None:
                 continue
+            neids, nnodes = elems.shape
+            eids2 = eids.reshape(neids, 1)
+            eids_elems = np.hstack([eids2, elems])
+
             abq_file.write('*Element,type=%s\n' % elem_type)
-            nnodes = elems.shape[1]
-            fmt = '%s,\t' * (nnodes - 1) + '%s\n'
-            for eid, elem in zip(eids, elems):
-                abq_file.write(fmt % tuple(elem))
+            fmt = '%d,\t' * (nnodes) + '%d\n'
+            for eid_elem in eids_elems:
+                abq_file.write(fmt % tuple(eid_elem))

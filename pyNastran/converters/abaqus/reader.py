@@ -1,7 +1,12 @@
 from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
-from .abaqus_cards import ShellSection, SolidSection, Boundary
+
+from .abaqus_cards import (
+    ShellSection, SolidSection, Boundary, Material, Transform)
+from .elements import allowed_element_types
+from .reader_utils import split_by_equals
+
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
 
@@ -92,7 +97,6 @@ def read_cload(line0, lines, iline, log: SimpleLogger) -> tuple[int, str, Any]:
         mag = float(sline[2])
         cloadi = (nid, dof, mag)
         cload.append(cloadi)
-
     return iline, line0, cload
 
 def read_node(lines, iline, log, skip_star=False):
@@ -134,6 +138,76 @@ def read_node(lines, iline, log, skip_star=False):
         raise RuntimeError(msg)
     return iline, line0, nids, nodes
 
+def read_element(lines: list[str], line0: str, iline: int, log: SimpleLogger, debug: bool):
+    """
+    '*element, type=mass, elset=topc_inertia-2_mass_'
+    """
+    #print('------------------')
+    assert '*' in line0, line0
+    sline = line0.split(',')[1:]
+    if len(sline) < 1:
+        raise RuntimeError("looking for element_type (e.g., '*Element, type=R2D2')\n"
+                           "line0=%r\nsline=%s; allowed:\n[%s]" % (
+                               line0, sline, ', '.join(allowed_element_types)))
+
+    etype_sline = sline[0]
+    assert 'type' in etype_sline, etype_sline
+    etype = etype_sline.split('=')[1].strip()
+    if etype not in allowed_element_types:
+        msg = 'etype=%r allowed=[%s]' % (etype, ','.join(allowed_element_types))
+        raise RuntimeError(msg)
+
+    if debug:
+        log.debug('    etype = %r' % etype)
+
+    #iline += 1
+    line1 = lines[iline].strip().lower()
+    log.debug('    line1 = %r' % line1)
+
+    elements = []
+    #print(line1)
+    assert '*' not in line1, line1
+    while not line1.startswith('*'):
+        #print(line1)
+        elements.append(line1.split(','))
+        iline += 1
+        line1 = lines[iline].strip().lower()
+    #log.debug('elements = %s' % elements)
+    return line1, iline, etype, elements
+
+def read_spring(lines: list[str], iline: int, word: str, log: SimpleLogger) -> None:
+    """
+    *SPRING,ELSET=Eall
+    blank line
+    10.
+
+    Defines a linear spring constant with value 10. for all elements in
+    element set Eall and all temperatures.
+    Example:
+    *SPRING,ELSET=Eall,NONLINEAR
+    0.,0.,293.
+    10.,1.,293.
+    100.,2.,293.
+    0.,0.,393.
+    5.,1.,393.
+    25.,2.,393.
+    """
+    log.warning('spring is unsupported')
+    param_map = get_param_map(iline, word, required_keys=['elset'])
+    print(param_map)
+    #name = param_map['name']
+
+    iline += 1
+    word_line = lines[iline].strip().lower()
+    word = word_line.strip('*').lower()
+    unused_allowed_words = ['elastic']
+    unallowed_words = [
+        'shell section', 'solid section',
+        'material', 'step', 'boundary', 'amplitude', 'surface interaction',
+        'assembly', 'spring']
+    iline += 1
+    line0 = lines[iline].strip('\n\r\t, ').lower()
+
 def read_elset(lines: list[str], iline: int, word: str, log: SimpleLogger,
                is_instance: bool=True):
     """reads *elset"""
@@ -148,6 +222,258 @@ def read_elset(lines: list[str], iline: int, word: str, log: SimpleLogger,
     line0 = lines[iline].strip().lower()
     set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
     return iline, line0, set_name, set_ids
+
+def read_material(lines: list[str], iline: int, word: str, log: SimpleLogger) -> Material:
+    """reads a Material card"""
+    param_map = get_param_map(iline, word, required_keys=['name'])
+    #print(param_map)
+    name = param_map['name']
+
+    iline += 1
+    word_line = lines[iline].strip().lower()
+    word = word_line.strip('*').lower()
+    unused_allowed_words = ['elastic']
+    unallowed_words = [
+        'shell section', 'solid section',
+        'material', 'step', 'boundary', 'amplitude', 'surface interaction',
+        'assembly', 'spring']
+    iline += 1
+    line0 = lines[iline].strip('\n\r\t, ').lower()
+    #print('  wordA =', word)
+    #while word in allowed_words:
+    sections = {}
+    density = None
+    ndelete = None
+    ndepvars = None
+    while word not in unallowed_words:
+        data_lines = []
+        #log.info('  mat_word = %r' % word)
+        #print(sections)
+        if word.startswith('elastic'):
+            key = 'elastic'
+            sword = word.split(',')
+            #print(key, sword)
+
+            #log.debug('  matword = %s' % sword)
+            if len(sword) == 1:
+                # elastic
+                assert len(sword) in [1, 2], sword
+            else:
+                mat_type = sword[1]
+                assert 'type' in mat_type, sword
+                mat_type = mat_type.split('=')[1]
+
+                sline = line0.split(',')
+                if mat_type == 'traction':
+                    assert len(sline) == 3, sline
+                    log.debug('  traction material')
+                elif mat_type in ['iso', 'isotropic']:
+                    #, TYPE=ISO
+                    #1.00000E+07, 3.00000E-01
+                    assert len(sline) == 2, sline
+                    e, nu = sline
+                    e = float(e)
+                    nu = float(nu)
+                    sections['elastic'] = [e, nu]
+                    #print(sections)
+                else:
+                    raise NotImplementedError(f'mat_type={mat_type!r}')
+            iline += 1
+        elif word.startswith('plastic'):
+            key = 'plastic'
+            sword = word.split(',')
+            log.debug('  matword = %s' % sword)
+            if len(sword) == 1:
+                # elastic
+                assert len(sline) in [1, 2], sline
+            else:
+                raise NotImplementedError(sline)
+            data_lines, iline, line0 = read_star_block2(lines, iline, line0, log, debug=False)
+            #print(data_lines)
+        elif word == 'density':
+            key = 'density'
+            sline = line0.split(',')
+            assert len(sline) == 1, 'sline=%s line0=%r' % (sline, line0)
+            density = float(sline[0])
+            iline += 1
+        elif word.startswith('damage initiation'):
+            key = 'damage initiation'
+            #log.debug('  damage0 %s' % line0)
+            sline = line0.split(',')
+            log.debug(sline)
+            assert len(sline) == 3, sline
+            iline += 1
+        elif word.startswith('damage evolution'):
+            key = 'damage evolution'
+            #self.log.debug('  damage_e %s' % line0)
+            unused_data = []
+            while '*' not in line0:
+                sline = line0.split(',')
+                assert len(sline) == 3, sline
+                iline += 1
+                line0 = lines[iline].strip().lower()
+            log.debug(line0)
+        elif word == 'damage stabilization':
+            key = 'damage stabilization'
+            sline = line0.split(',')
+            assert len(sline) == 1, sline
+            iline += 1
+
+        #elif word.startswith('surface interaction'):
+            #key = 'surface interaction'
+            #data = []
+            #while '*' not in line0:
+                #sline = line0.split(',')
+                #iline += 1
+                #line0 = lines[iline].strip().lower()
+            #log.debug(line0)
+        #elif word.startswith('friction'):
+            #key = 'friction'
+            #data = []
+            #while '*' not in line0:
+                #sline = line0.split(',')
+                #iline += 1
+                #line0 = lines[iline].strip().lower()
+            #log.debug(line0)
+        #elif word.startswith('surface behavior'):
+            #key = 'surface behavior'
+            #data = []
+            #while '*' not in line0:
+                #sline = line0.split(',')
+                #iline += 1
+                #line0 = lines[iline].strip().lower()
+            #log.debug(line0)
+        #elif word.startswith('contact damping'):
+            #key = 'contact damping'
+            #data = []
+            #while '*' not in line0:
+                #sline = line0.split(',')
+                #iline += 1
+                #line0 = lines[iline].strip().lower()
+            #log.debug(line0)
+
+        elif word.startswith('depvar'):
+            key = 'depvar'
+            sline = word_line.split()
+            if len(sline) > 1:
+                assert len(sline) == 2, sline
+                sline2 = sline[1].split('=')
+                assert  len(sline2) == 2, sline
+                assert sline2[0].lower() == 'delete', sline
+                ndelete = int(sline2[1])
+
+            sline = line0.split(',')
+            assert len(sline) == 1, sline
+            ndepvars = int(sline[0])
+            iline += 1
+        elif word.startswith('user material'):
+            key = 'user material'
+            words = word.split(',')[1:]
+
+            is_constants = False
+            for wordi in words:
+                mat_word, value = split_by_equals(wordi, lines, iline-1)
+                mat_word = mat_word.strip()
+                if mat_word == 'constants':
+                    nconstants = int(value)
+                    is_constants = True
+                elif mat_word == 'type':
+                    mat_type = value.strip()
+                    allowed_types = ['mechanical']
+                    if not mat_type in allowed_types:
+                        msg = 'mat_type=%r; allowed_types=[%s]'  % (
+                            mat_type, ', '.join(allowed_types))
+                        raise NotImplementedError(msg)
+                else:
+                    raise NotImplementedError('mat_word=%r' % mat_word)
+
+            if not is_constants:
+                msg = "line %i: 'constants' was not defined on %r" % (
+                    iline, lines[iline-1].rstrip())
+                raise RuntimeError(msg)
+
+            #nconstants = 111
+            nlines_full = nconstants // 8
+            nleftover = nconstants % 8
+            mat_data = []
+            for unused_iiline in range(nlines_full):
+                sline = line0.split(',')
+                assert len(sline) == 8, 'len(sline)=%s; sline=%s' % (len(sline), sline)
+                mat_data += sline
+                iline += 1
+                line0 = lines[iline].strip('\n\r\t, ').lower()
+            if nleftover:
+                sline = line0.split(',')
+                iline += 1
+                line0 = lines[iline].strip('\n\r\t, ').lower()
+        elif word.startswith('initial conditions'):
+            # TODO: skips header parsing
+            #iline += 1
+            #line0 = lines[iline].strip().lower()
+            unused_data = []
+            while '*' not in line0:
+                sline = line0.split(',')
+                iline += 1
+                line0 = lines[iline].strip().lower()
+            log.debug(line0)
+        elif word.lower().startswith('hyperelastic, mooney-rivlin'):
+            key = 'hyperelastic, mooney-rivlin'
+            while '*' not in line0:
+                sline = line0.split(',')
+                iline += 1
+                line0 = lines[iline].strip().lower()
+            log.debug(line0)
+        elif word.lower().startswith('expansion'):
+            #*Expansion, zero=20.
+            #80.,
+            key = 'expansion'
+            while '*' not in line0:
+                sline = line0.split(',')
+                iline += 1
+                line0 = lines[iline].strip().lower()
+            #iline += 1
+            log.debug(line0)
+        else:
+            msg = print_data(lines, iline, word, 'is this an unallowed word for *Material?\n')
+            raise NotImplementedError(msg)
+
+        if key in sections:
+            msg = f'key={key!r} already defined for Material name={name!r}'
+            log.warning(msg)
+        else:
+            #raise RuntimeError(msg)
+            sections[key] = data_lines
+
+        try:
+            line = lines[iline]
+        except IndexError:
+            is_broken = True
+            log.debug('  breaking on end of file')
+            break
+        word_line = line.strip('\n\r\t, ').lower()
+        del line
+        word = word_line.strip('*').lower()
+
+        iline += 1
+        line0 = lines[iline].strip('\n\r\t, ').lower()
+        #log.debug('  lineB = %r' % line0)
+        #log.debug('  wordB = %r' % word)
+
+        is_broken = False
+        for unallowed_word in unallowed_words:
+            if word.startswith(unallowed_word):
+                log.debug('  breaking on %r' % unallowed_word)
+                is_broken = True
+                break
+        if is_broken:
+            iline -= 1
+            break
+    #print(name, sections)
+    material = Material(name, sections=sections,
+                        is_elastic=True, density=density,
+                        ndepvars=ndepvars, ndelete=ndelete)
+    iline -= 1
+    return iline, line0, material
 
 def read_nset(lines, iline, word, log, is_instance=True):
     """reads *nset"""
@@ -174,7 +500,7 @@ def read_boundary(lines: list[str], line0: str, iline: int) -> tuple[Boundary, i
         boundary_lines.append(sline)
         iline += 1
         line0 = lines[iline].strip().lower()
-    boundary = Boundary.from_lines(boundary_lines)
+    boundary = Boundary.from_data(boundary_lines)
     return boundary, iline, line0
 
 def read_solid_section(line0, lines, iline, log):
@@ -311,6 +637,13 @@ def read_orientation(line0: str, lines: list[str], iline: int, log: SimpleLogger
     return iline, line0, orientation_fields
 
 def read_system(line0: str, lines: list[str], iline: int, log: SimpleLogger):
+    """
+    *SYSTEM
+    6414.0    , 0.0       , -678.0    , 6414.03642, 0.81906834, -677.42746
+    6414.05199, -0.573696 , -677.18258
+    *NODE, SYSTEM=C
+        241,  1724.0602494441,  54.991639723866,  -0.280338873236
+    """
     coordinate_system_fields = []
     iline += 1
     line0 = lines[iline].strip().lower()
@@ -324,3 +657,38 @@ def read_system(line0: str, lines: list[str], iline: int, log: SimpleLogger):
     line0 = lines[iline].strip().lower()
     assert len(coordinate_system_fields) == 9, coordinate_system_fields
     return iline, line0, coordinate_system_fields
+
+def read_transform(line0: str, lines: list[str], iline: int, log: SimpleLogger):
+    """
+    *TRANSFORM, TYPE=C, NSET=HM_auto_transform_3
+    6414.0    , 0.0       , -678.0    ,  6513.79832,  -4.661E-06,  -684.34787
+    *NSET, NSET=HM_auto_transform_3
+             3,       241
+
+    First (and only) line:
+      Global X-coordinate of point a
+      Global Y-coordinate of point a
+      Global Z-coordinate of point a
+      Global X-coordinate of point b
+      Global Y-coordinate of point b
+      Global Z-coordinate of point b
+    """
+    params = get_param_map(iline, line0, required_keys=['type', 'nset'])
+    transform_type = params['type'].upper()
+    nset = params['nset']
+    assert transform_type in ['R', 'C', 'S'], f'transform_type={transform_type!r}'
+
+    transform_fields = []
+    iline += 1
+    line0 = lines[iline].strip().lower()
+    while '*' not in line0:
+        sline = line0.split(',')
+        iline += 1
+        line0 = lines[iline].strip().lower()
+        transform_fields.extend(sline)
+    log.debug(line0)
+    iline -= 1
+    line0 = lines[iline].strip().lower()
+    assert len(transform_fields) == 6, transform_fields
+    transform = Transform.from_data(transform_type, nset, transform_fields)
+    return iline, line0, transform

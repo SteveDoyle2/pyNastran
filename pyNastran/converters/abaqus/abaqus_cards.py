@@ -14,24 +14,6 @@ from pyNastran.converters.abaqus.elements import Elements
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
-allowed_element_types = [
-    'r2d2', 'conn2d2', 'springa',
-    'cpe3', 'cpe4', 'cpe4r', 'cpe8r',
-    'cps3', 'cps4', 'cps4r', 'cps8r',
-
-    'coh2d4', 'c3d10h', 'cohax4',
-    'cax3', 'cax4r', 'mass', 'rotaryi', 't2d2', 'c3d8r',
-
-    # 6/8 plates
-    's8r',
-
-    # solid
-    'c3d4', 'c3d10',
-
-    # lines
-    'b31h', #2-node linear beam
-]
-
 
 class Boundary:
     def __init__(self, nid_dof_to_value: dict[tuple[int, int], float]):
@@ -47,7 +29,7 @@ class Boundary:
         self.nid_dof_to_value = nid_dof_to_value
 
     @classmethod
-    def from_lines(cls, slines: list[list[str]]):
+    def from_data(cls, slines: list[list[str]]):
         """
         1) node or node set, first degree of freedom, last degree of freedom
         2) node or node set, first degree of freedom, last degree of freedom, value
@@ -520,3 +502,17 @@ def write_set_to_file(abq_file, values_array):
         fmt = '%i,\t' * (nleftover - 1) +  '%i\n'
         leftover = values_array[nrows*16:]
         abq_file.write(fmt % tuple(leftover))
+
+
+class Transform:
+    def __init__(self, Type: str, nset: str, pa: np.ndarray, pb: np.ndarray):
+        self.Type = Type
+        self.nset = nset
+        self.pa = pa
+        self.pb = pb
+
+    @classmethod
+    def from_data(cls, transform_type: str, nset: str, tranform_fields: list[str]):
+        pa = np.array(tranform_fields[:3], dtype='float64')
+        pb = np.array(tranform_fields[3:], dtype='float64')
+        return Transform(transform_type, nset, pa, pb)

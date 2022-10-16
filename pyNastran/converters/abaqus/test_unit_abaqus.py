@@ -134,7 +134,7 @@ class TestAbaqus(unittest.TestCase):
         cmd_line_format_converter(argv=argv, quiet=True, log=log)
         os.remove(bdf_filename)
 
-    def _test_abaqus_to_nastran_6(self):
+    def test_abaqus_to_nastran_6(self):
         """convert to nastran small field"""
         abaqus_filename = os.path.join(MODEL_PATH, 'test_xform.inp')
         log = get_logger(level='warning', encoding='utf-8')
@@ -142,6 +142,7 @@ class TestAbaqus(unittest.TestCase):
 
         argv = ['format_converter', 'abaqus', abaqus_filename,
                 'nastran', bdf_filename, '--encoding', 'utf-8-sig']
+        #with self.assertRaises(AssertionError):
         cmd_line_format_converter(argv=argv, quiet=True, log=log)
         os.remove(bdf_filename)
 

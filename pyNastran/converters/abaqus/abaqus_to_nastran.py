@@ -173,17 +173,26 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int, nid_offset: int
             # don't use += or it's an inplace operation
             part_nids = part_nids + nid_offset
 
-        if etype == 'cpe4':
+        if etype == 'b31h':
             for eid, nids in zip(eids, part_nids):
-                nastran_model.add_cquad4(eid, pid, nids[1:], theta_mcid=0.0, zoffset=0., tflag=0,
+                x = None
+                g0 = nids[2]
+                nids = [nids[0], nids[1]]
+                nastran_model.add_cbeam(
+                    eid, pid, nids, x, g0, offt='GGG', bit=None,
+                    pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+                pass
+        elif etype == 'cpe4':
+            for eid, nids in zip(eids, part_nids):
+                nastran_model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, T4=None, comment='')
         elif etype == 's8r':
             for eid, nids in zip(eids, part_nids):
-                nastran_model.add_cquad8(eid, pid, nids[1:], theta_mcid=0.0, zoffset=0., tflag=0,
+                nastran_model.add_cquad8(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, T4=None, comment='')
         elif etype == 'c3d4':
             for eid, nids in zip(eids, part_nids):
-                nastran_model.add_ctetra(eid, pid, nids[1:], comment='')
+                nastran_model.add_ctetra(eid, pid, nids, comment='')
         else:
             raise NotImplementedError(etype)
 

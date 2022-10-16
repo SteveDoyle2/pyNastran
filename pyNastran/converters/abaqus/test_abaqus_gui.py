@@ -18,7 +18,7 @@ class AbaqusGui(AbaqusIO, FakeGUIMethods):
         self.build_fmts(['abaqus'], stop_on_failure=True)
 
 class TestAbaqusGui(unittest.TestCase):
-    def test_abaqus_1(self):
+    def test_abaqus_gui_1(self):
         """simple test"""
         lines = make_model()
         abaqus_filename = os.path.join(MODEL_PATH, 'abaqus.inp')
@@ -32,7 +32,7 @@ class TestAbaqusGui(unittest.TestCase):
         test.on_load_geometry(abaqus_filename, geometry_format='abaqus', raise_error=True)
         os.remove(abaqus_filename)
 
-    def test_abaqus_2(self):
+    def test_abaqus_gui_2(self):
         """two hex blocks with duplicate node ids"""
         abaqus_filename = os.path.join(MODEL_PATH, 'single_block.inp')
         log = get_logger(level='error', encoding='utf-8')
@@ -40,6 +40,15 @@ class TestAbaqusGui(unittest.TestCase):
         test = AbaqusGui()
         test.log = log
         #test.load_abaqus_geometry(abaqus_filename)
+        test.on_load_geometry(abaqus_filename, geometry_format='abaqus', raise_error=True)
+
+    def test_abaqus_gui_xform(self):
+        """test_xform.inp"""
+        abaqus_filename = os.path.join(MODEL_PATH, 'test_xform.inp')
+        log = get_logger(level='error', encoding='utf-8')
+
+        test = AbaqusGui()
+        test.log = log
         test.on_load_geometry(abaqus_filename, geometry_format='abaqus', raise_error=True)
 
 if __name__ == '__main__':  #  pragma: no cover
