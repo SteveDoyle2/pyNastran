@@ -106,12 +106,11 @@ jobs:
     #--------------------------------------------------------------------------------------------------
     # oldest versions of package
     #--------------------------------------------------------------------------------------------------
-    using: 'node16'
     # Steps represent a sequence of tasks that will be executed as part of the job
     #env: ${{ matrix.env }}
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Print environment variables exposed by GitHub
         run: |
