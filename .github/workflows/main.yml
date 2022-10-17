@@ -144,33 +144,40 @@ jobs:
         if: ${{ matrix.mode == 'latest_basic'       || matrix.mode == 'latest' || 
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
-        run: pip install numpy scipy
+        run: |
+          pip install numpy scipy
 
       - name: Install latest packages - ${{ matrix.mode }}
         if: ${{ matrix.mode == 'latest' || 
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
-        run: pip install pandas>=0.25 h5py matplotlib #--no-binary  :all:
+        run: |
+          pip install pandas>=0.25 h5py matplotlib #--no-binary  :all:
 
       - name: Install latest gui packages
         if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') && matrix.python-version != '3.11' }}
-        run: pip install vtk imageio<3 pillow>5.2,!=7.1.0
+        run: |
+          pip install vtk imageio<3 pillow>5.2,!=7.1.0
 
       - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.11' }}
         name: Install PySide2
-        run: pip install PySide2
+        run: |
+          pip install PySide2
 
       - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.11' }}
         name: Install PySide6
-        run: pip install PySide6
+        run: |
+          pip install PySide6
 
       - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.11' }}
       - name: Install PyQt5
-        run: pip install PyQt5
+        run: |
+          pip install PyQt5
       - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.11' }}
         name: Install PyQt6
-        run: pip install PyQt6
+        run: |
+          pip install PyQt6
 
 #-----------------------------------------------------------------------------------
 # old
@@ -197,7 +204,8 @@ jobs:
         # for python 3.7, we'll just use the stock method
       #- name: Install dependencies (setup.py develop)
         #if: ${{ matrix.python-version == '3.7' }}
-        #run: python setup.py develop
+        #run: |
+        # python setup.py develop
 
         # I'd like to make this step build a wheel and install it, but you need the wheel name
         # or know how to use bash to pipe an ls into a pip command, so I can do:
@@ -210,10 +218,12 @@ jobs:
          #pip install dist/pyNastran*.whl
          #python setup.py bdist_wheel
         #if: ${{  (matrix.python-version == '3.9') || (matrix.python-version == '3.10') }}
-        run: python setup.py develop
+        run: |
+          python setup.py develop
 
       - name: List dependencies
-        run:  pip list
+        run: |
+          pip list
 
       - name: Run No GUI
         if: ${{ matrix.python-version == '3.11' || (
