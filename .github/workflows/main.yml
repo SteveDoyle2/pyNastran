@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-         python-version: ['3.9', '3.10', '3.11']   # TODO: should be enabled...disabled for testing...
+         python-version: ['3.9', '3.10']   # TODO: should be enabled...disabled for testing..., '3.11'
          os: [ubuntu-latest]
          # , macos-latest, windows-latest
          mode: ['latest', 'latest_basic', 'old', 'latest_pyqt5_gui', 'latest_pyqt6_gui', 'latest_pyside5_gui', 'latest_pyside6_gui']
@@ -68,12 +68,12 @@ jobs:
          #- node: 13
          #  os: ubuntu-18.04
          #  experimental: true
-         exclude:
+         #exclude:
           # Exclude all DB images except "mariadb_10.4" for all PHP versions except "7.3".
-          - {python-version: '3.11', mode: 'latest_pyqt5_gui'}
-          - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.11', mode: 'latest_pyside2_gui'}
-          - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyqt5_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyqt6_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyqt6_gui'}
       fail-fast: false
 #strategy:
     #  matrix:
