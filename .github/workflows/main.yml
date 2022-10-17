@@ -106,7 +106,7 @@ jobs:
     #--------------------------------------------------------------------------------------------------
     # oldest versions of package
     #--------------------------------------------------------------------------------------------------
-
+    using: 'node16'
     # Steps represent a sequence of tasks that will be executed as part of the job
     #env: ${{ matrix.env }}
     steps:
