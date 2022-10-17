@@ -881,7 +881,12 @@ NX_TABLE_CONTENT = {
     92 : 'ONMD - Normalized material density for topology optimization output',
     93 : 'OBCKL - SORT2 output for Load Factor versus Cumulative Arc-length from a SOL 401 arc-length solution',
 
-    401 : 'OUGPK1 - Peak to Peak Random',  # SATK
+    401 : 'OUGPK1 - Peak to Peak Random Displacement',  # SATK
+    410 : 'OUGPK1 - Peak to Peak Random Velocity',  # SATK
+    411 : 'OUGPK1 - Peak to Peak Random Acceleration',  # SATK
+
+    404 : 'OEFPK1 - Peak to Peak Random Element Force',  # SATK
+
     #
     # nx 2019.2
     #

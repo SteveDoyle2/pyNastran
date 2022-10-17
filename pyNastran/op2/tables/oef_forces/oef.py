@@ -137,8 +137,8 @@ class OEF:
             assert op2.table_code in [4, 604], op2.code_information()
             op2.reader_oes._set_as_random()
             prefix = 'psd.'
-        elif table_name_bytes in [b'OEFRMS1', b'OEFRMS2']:
-            assert op2.table_code in [4, 804], op2.code_information()
+        elif table_name_bytes in [b'OEFRMS1', b'OEFRMS2', b'OEFPK1']:
+            assert op2.table_code in [4, 404, 804], op2.code_information()
             op2.reader_oes._set_as_random()
             is_sort1 = True
             op2._analysis_code_fmt = b'i'

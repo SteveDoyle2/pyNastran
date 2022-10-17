@@ -1,24 +1,16 @@
 #pylint: disable=C0301,C0103
 """
-This file defines the OUG Table, which contains:
- * Real/Complex Displacement
+This file defines the OUGPK1 Table, which contains:
+ * RMS Displacement
    - DISPLACEMENT = ALL
- * Real/Complex Acceleration
+ * RMS Acceleration
    - ACCELERATION = ALL
- * Real/Complex Velocity
+ * RMS Velocity
    - VELOCITY = ALL
- * Real/Complex Eigenvectors
-   - DISPLACEMENT = ALL
- * Real Temperature
-   - DISPLACEMENT = ALL
 """
 from __future__ import annotations
-#from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
-#from pyNastran import DEV
-#from pyNastran.utils.numpy_utils import integer_types
-#from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray

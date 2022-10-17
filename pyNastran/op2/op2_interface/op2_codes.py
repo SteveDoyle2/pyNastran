@@ -30,6 +30,9 @@ SORT1_TABLES_BYTES = [
 
     b'RAFCONS', b'RAFEATC',
     b'OUG1F',
+
+    # SATK
+    b'OUGPK1', b'OEFPK1',
 ]
 SORT2_TABLES_BYTES = [
     b'OUGPSD2', b'OUGATO2', b'OESCP',

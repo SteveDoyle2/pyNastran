@@ -658,10 +658,19 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         # oef
         reader_oef = self.reader_oef
-        #reader_oefpk = self.reader_oefpk
+        reader_oefpk = self.reader_oefpk
 
         # oes
         reader_oes = self.reader_oes
+
+        satk_tables = {
+            b'OUGPK1'  : [self.reader_ougpk._read_ougpk1_3, self.reader_ougpk._read_ougpk1_4],
+            b'OEFPK1'  : [self.reader_oefpk._read_oefpk1_3, self.reader_oefpk._read_oefpk1_4],
+        }
+
+        nasa95_tables = {
+        b'OESC1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
+        }
 
         table_mapper_geometry = {
             # -----------------------------------------------------------
@@ -1066,14 +1075,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             # Normalized Mass Density
             b'ONMD' : [self.reader_onmd._read_onmd_3, self.reader_onmd._read_onmd_4],
-            #====================================================================
-            # SATK
-            b'OUGPK1'  : [self.reader_ougpk._read_ougpk1_3, self.reader_ougpk._read_ougpk1_4],
-
-            #====================================================================
-            # NASA95
-            b'OESC1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
-
         }
         table_mapper_random = {
             # random OUG (displacement, velocity, acceleration)
@@ -1247,6 +1248,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         table_mapper.update(table_mapper_geometry)
         table_mapper.update(table_mapper_random)
+        table_mapper.update(nasa95_tables)
+        table_mapper.update(satk_tables)
         if self.is_nx and 0:  # pragma: no cover
             _table_mapper = {
                 #b'OUGRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random

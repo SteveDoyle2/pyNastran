@@ -10,6 +10,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.errors import EmptyRecordError
 
 from pyNastran.op2.tables.oef_forces.oef import OEF
+from pyNastran.op2.tables.oef_forces.oefpk import OEFPK
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs import OGS
 
@@ -54,7 +55,6 @@ class FortranFormat:
 
         self.reader_oes = OES(self)
         self.reader_opg = OPG(self)
-        self.reader_oef = OEF(self)
         self.reader_oqg = OQG(self)
         self.reader_opr = OPR(self)
         self.reader_ogs = OGS(self)
@@ -65,6 +65,10 @@ class FortranFormat:
         self.reader_oug = OUG(self)
         self.reader_otemp = OTEMP(self)  # Siemens
         self.reader_ougpk = OUGPK(self)  # STK
+
+        #  OEF - element force, heat flux
+        self.reader_oef = OEF(self)
+        self.reader_oefpk = OEFPK(self) # STK
 
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""
