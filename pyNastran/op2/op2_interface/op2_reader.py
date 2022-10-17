@@ -6460,27 +6460,40 @@ class OP2Reader:
             op2.isubtable -= 1
 
             iloc = op2.f.tell()
-            try:
-                self.read_3_markers([op2.isubtable, 1, 0])
-                #self.log.debug('markers=%s' % [op2.isubtable, 1, 0])
-            except FortranMarkerError:
-                self.log.error(f'isubtable={op2.isubtable:d}')
-                op2.f.seek(iloc)
-                op2.n = iloc
+            if op2._nastran_format == 'optistruct' and 0:
+                #  (4, -4, 4, 4, 1, 4, 4, 0, 4)
+                nbytes = self.size * 9
+                datai = op2.f.read(nbytes)  # 48=9*4 bytes
+                structi = Struct(self._endian + mapfmt(b'9i', self.size))
+                outi = structi.unpack(datai)
+                op2.n += nbytes
+                if not outi[1] == op2.isubtable:
+                    self.log.warning(f'outi={outi} isubtable={op2.isubtable:d}')
+            else:
+                #self.show_ndata(36, types='i', force=False, endian=None)
+                try:
+                    self.read_3_markers([op2.isubtable, 1, 0])
+                    self.log.debug('markers=%s' % [op2.isubtable, 1, 0])
+                except FortranMarkerError:
+                    self.log.error(f'isubtable={op2.isubtable:d}')
+                    op2.f.seek(iloc)
+                    op2.n = iloc
 
-                self.show(4*3*3, types='i')
-                self.show(500)
+                    self.show(4*3*3, types='i')
+                    self.show(500)
 
-                marker0 = self.get_nmarkers(1, rewind=True)[0]
-                self.log.debug(f'marker0 = {marker0}')
-                if marker0 < op2.isubtable:
-                    raise RuntimeError('marker0 < isubtable; marker0=%s isubtable=%s' % (
-                        marker0, op2.isubtable))
-                    #self.read_3_markers([marker0, 1, 0])
-                    ##self.log.debug('markers=%s' % [marker0, 1, 0])
-                    #self.show(200)
-                    #break
-                raise
+                    marker0 = self.get_nmarkers(1, rewind=True)[0]
+                    self.log.debug(f'marker0 = {marker0}')
+                    if marker0 < op2.isubtable:
+                        raise RuntimeError('marker0 < isubtable; marker0=%s isubtable=%s' % (
+                            marker0, op2.isubtable))
+                        #self.read_3_markers([marker0, 1, 0])
+                        ##self.log.debug('markers=%s' % [marker0, 1, 0])
+                        #self.show(200)
+                        #break
+                    raise
+            df = op2.f.tell() - iloc
+            assert df == 36, df
             markers = self.get_nmarkers(1, rewind=True)
 
         if self.is_debug_file:

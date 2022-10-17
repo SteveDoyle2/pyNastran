@@ -126,7 +126,9 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             write_f06: bool=True, write_op2: bool=False,
             write_hdf5: bool=True,
             is_mag_phase: bool=False, is_sort2: bool=False,
-            is_nx: Optional[bool]=None, is_autodesk: Optional[bool]=None,
+            is_nx: Optional[bool]=None,
+            is_optistruct: Optional[bool]=None,
+            is_autodesk: Optional[bool]=None,
             is_nasa95: Optional[bool]=None,
             delete_f06: bool=False, delete_op2: bool=False, delete_hdf5: bool=False,
             delete_debug_out: bool=False,
@@ -169,6 +171,10 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     is_nx : bool; default=None
         True : use NX Nastran
         False : use MSC Nastran
+        None : guess
+    is_optistruct : bool, default=None
+        True : use Autodesk Nastran
+        False : use Altair Optistruct
         None : guess
     is_autodesk : bool; default=None
         True : use Autodesk Nastran
@@ -258,7 +264,9 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         op2 = OP2Geom(debug=debug, log=log)
         op2_nv = OP2Geom(debug=debug, log=log, debug_file=debug_file)
         op2_bdf = OP2Geom(debug=debug, log=log)
-        set_versions([op2, op2_nv, op2_bdf], is_nx, is_autodesk, is_nasa95, post, is_testing)
+        set_versions([op2, op2_nv, op2_bdf],
+                     is_nx, is_optistruct, is_autodesk, is_nasa95,
+                     post, is_testing)
 
         if load_as_h5 and IS_HDF5:
             # you can't open the same h5 file twice
@@ -639,7 +647,7 @@ def get_test_op2_data(argv) -> Dict[str, str]:
 
     msg = "Usage:  "
     nasa95 = '|--nasa95' if is_dev else ''
-    version = f'[--nx|--autodesk{nasa95}]'
+    version = f'[--nx|--optistruct|--autodesk{nasa95}]'
     options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
     if is_dev:
         line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
@@ -680,24 +688,25 @@ def get_test_op2_data(argv) -> Dict[str, str]:
     msg += "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
     msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
-    msg += "  --nx                   Assume NX Nastran\n"
-    msg += "  --autodesk             Assume Autodesk Nastran\n"
-    if is_dev:
-        msg += "  --nasa95               Assume Nastran 95\n"
     msg += "  --post POST            Set the PARAM,POST flag\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
 
+    msg += "\nVersions (default is MSC Nastran):\n"
+    msg += '  --nx                   Assume NX Nastran (Simcenter)\n'
+    msg += '  --optistruct           Assume Altair Optistruct\n'
+    msg += '  --autodesk             Assume Autodesk Nastran\n'
+    if is_dev:
+        msg += "  --nasa95               Assume Nastran 95\n"
+
     if is_dev:
         msg += (
-            "\n"
-            "Developer:\n"
+            '\nDeveloper:\n'
             '  --profile         Profiles the code (default=False)\n'
             '  --test            Adds additional table checks (default=False)\n'
         )
 
     msg += (
-        "\n"
-        "Info:\n"
+        '\nInfo:\n'
         "  -h, --help     Show this help message and exit\n"
         "  -v, --version  Show program's version number and exit\n"
     )
@@ -753,7 +762,8 @@ def remove_file(filename):
 
 
 def set_versions(op2s: List[OP2],
-                 is_nx: bool, is_autodesk: bool, is_nasa95: bool,
+                 is_nx: bool, is_optistruct: bool,
+                 is_autodesk: bool, is_nasa95: bool,
                  post: int, is_testing: bool=False) -> None:
     for op2 in op2s:
         op2.IS_TESTING = is_testing
@@ -763,6 +773,9 @@ def set_versions(op2s: List[OP2],
     elif is_nx:
         for op2 in op2s:
             op2.set_as_nx()
+    elif is_optistruct:
+        for op2 in op2s:
+            op2.set_as_optistruct()
     elif is_autodesk:
         for op2 in op2s:
             op2.set_as_autodesk()
@@ -816,6 +829,7 @@ def main(argv=None, show_args: bool=True) -> None:
             compare=not data['disablecompare'],
             quiet=data['quiet'],
             is_nx=data['nx'],
+            is_optistruct=data['optistruct'],
             is_autodesk=data['autodesk'],
             is_nasa95=data['nasa95'],
             safe=data['safe'],
@@ -850,6 +864,7 @@ def main(argv=None, show_args: bool=True) -> None:
             compare=not data['disablecompare'],
             quiet=data['quiet'],
             is_nx=data['nx'],
+            is_optistruct=data['optistruct'],
             is_autodesk=data['autodesk'],
             is_nasa95=data['nasa95'],
             xref_safe=data['safe'],
