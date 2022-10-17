@@ -721,7 +721,9 @@ class BaseElement(ScalarObject):
         _check_element(self, table, log)
         _check_element_node(self, table, log)
 
-    def _build_pandas_transient_elements(self, column_values, column_names, headers, element, data):
+    def _build_pandas_transient_elements(self, column_values: np.ndarray, column_names: list[str],
+                                         headers: list[str],
+                                         element: np.ndarray, data: np.ndarray):
         """common method to build a transient dataframe"""
         import pandas as pd
         columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
@@ -731,7 +733,19 @@ class BaseElement(ScalarObject):
             for header in headers:
                 eid_item.append([eid, header])
         ntimes, nelements = data.shape[:2]
-        A = data.reshape(ntimes, nelements*len(headers)).T
+
+        nheaders = len(headers)
+        if self.table_name in ['OEFPSD1']:
+            ifilter = ~np.isnan(np.max(data[-1, :, :], axis=1))
+            if ifilter.sum():
+                warnings.warn(f'filtering NaNs from {self.class_name}')
+                data2 = data[:, ifilter, :]
+                nelements = data2.shape[1]
+                A = data2.reshape(ntimes, nelements*nheaders).T
+            else:
+                A = data.reshape(ntimes, nelements*nheaders).T
+        else:
+            A = data.reshape(ntimes, nelements*nheaders).T
 
         names = ['ElementID', 'Item']
         index = pd.MultiIndex.from_tuples(eid_item, names=names)

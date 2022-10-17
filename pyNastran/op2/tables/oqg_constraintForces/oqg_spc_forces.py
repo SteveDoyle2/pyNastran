@@ -24,6 +24,8 @@ class RealSPCForcesArray(RealTableArray):
             words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']
         elif self.table_name in ['OQGNO1', 'OQGNO2']:
             words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']
+        elif self.table_name in ['RARCONS', 'RAREATC']:
+            words += [f'                                                          ( {self.table_name} )']
         else:
             raise NotImplementedError(self.table_name)
 

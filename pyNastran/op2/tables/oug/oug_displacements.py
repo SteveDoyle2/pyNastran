@@ -24,7 +24,7 @@ class RealDisplacementArray(RealTableArray):
             words += ['                                                 ( AUTO-CORRELATION FUNCTION )']
         elif self.table_name in ['OUGPSD1', 'OUGPSD2']:
             words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
-        elif self.table_name in ['OUGRMS1', 'OUGRMS2']:
+        elif self.table_name in ['OUGRMS1', 'OUGRMS2', 'OUGPK1']:
             words += ['                                                     ( ROOT MEAN SQUARE )']
         elif self.table_name in ['OUGCRM1', 'OUGCRM2']:
             words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']

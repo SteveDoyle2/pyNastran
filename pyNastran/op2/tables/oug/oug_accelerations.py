@@ -22,7 +22,7 @@ class RealAccelerationArray(RealTableArray):
             words += ['                                                 ( AUTO-CORRELATION FUNCTION )']
         elif self.table_name in ['OUGPSD1', 'OUGPSD2', 'OAGPSD1', 'OAGPSD2']:
             words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
-        elif self.table_name in ['OUGRMS1', 'OUGRMS2', 'OAGRMS1', 'OAGRMS2']:
+        elif self.table_name in ['OUGRMS1', 'OUGRMS2', 'OAGRMS1', 'OAGRMS2', 'OUGPK1']:
             words += ['                                                     ( ROOT MEAN SQUARE )']
         elif self.table_name in ['OUGCRM1', 'OUGCRM2', 'OAGCRM1', 'OAGCRM2']:
             words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']

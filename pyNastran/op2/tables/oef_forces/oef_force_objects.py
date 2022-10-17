@@ -3438,8 +3438,9 @@ class RealCBarFastForceArray(RealForceObject):
         self._times = zeros(ntimes, dtype=dtype)
         self.element = zeros(nelements, dtype=idtype)
 
-        #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
-        self.data = zeros((ntimes, ntotal, 8), dtype=fdtype)
+        #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
+        # shear1, shear2, axial, torque]
+        self.data = np.full((ntimes, ntotal, 8), np.nan, dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
