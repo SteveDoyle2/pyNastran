@@ -233,7 +233,7 @@ jobs:
       - name: Run GUI
         if: ${{ matrix.python-version != '3.11' && (
                  matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyside6_gui' || 
-                 matrix.mode == 'latest_pyqt5_gui' || .mode == 'latest_pyqt6_gui') }}
+                 matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests.py
