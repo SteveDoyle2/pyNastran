@@ -14,7 +14,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 
-class OTEMP1:
+class OTEMP:
     """
     OTEMP1: New version of NX tempererature output for SOL 401?
     """

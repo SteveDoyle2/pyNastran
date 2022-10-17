@@ -646,8 +646,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_ogpwg = self.reader_ogpwg
         reader_ogpf = self.reader_ogpf
         reader_onr = self.reader_onr
-        reader_oef = self.reader_oef
-        reader_oes = self.reader_oes
         reader_opg = self.reader_opg
         reader_opr = self.reader_opr
         reader_oqg = self.reader_oqg
@@ -655,8 +653,15 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         # oug
         reader_oug = self.reader_oug
-        reader_ougpk1 = self.reader_ougpk1
-        reader_otemp1 = self.reader_otemp1
+        reader_ougpk = self.reader_ougpk
+        reader_otemp = self.reader_otemp
+
+        # oef
+        reader_oef = self.reader_oef
+        #reader_oefpk = self.reader_oefpk
+
+        # oes
+        reader_oes = self.reader_oes
 
         table_mapper_geometry = {
             # -----------------------------------------------------------
@@ -732,7 +737,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OSTR2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4], # TODO: disable
             b'OSTR2C' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],
 
-            b'OTEMP1' : [reader_otemp1._read_otemp1_3, reader_otemp1._read_otemp1_4],
+            b'OTEMP1' : [reader_otemp._read_otemp1_3, reader_otemp._read_otemp1_4],
             # --------------------------------------------------------------------------
             # MSC TABLES
             # common tables
@@ -1063,7 +1068,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'ONMD' : [self.reader_onmd._read_onmd_3, self.reader_onmd._read_onmd_4],
             #====================================================================
             # SATK
-            #b'OUGPK1'  : [self.reader_ougpk1._read_ougpk1_3, self.reader_ougpk1._read_ougpk1_4],
+            b'OUGPK1'  : [self.reader_ougpk._read_ougpk1_3, self.reader_ougpk._read_ougpk1_4],
 
             #====================================================================
             # NASA95

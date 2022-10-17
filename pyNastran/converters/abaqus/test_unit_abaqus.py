@@ -142,7 +142,6 @@ class TestAbaqus(unittest.TestCase):
 
         argv = ['format_converter', 'abaqus', abaqus_filename,
                 'nastran', bdf_filename, '--encoding', 'utf-8-sig']
-        #with self.assertRaises(AssertionError):
         cmd_line_format_converter(argv=argv, quiet=True, log=log)
         os.remove(bdf_filename)
 
