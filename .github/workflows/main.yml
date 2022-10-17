@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-         python-version: ['3.9', '3.10']   # TODO: should be enabled...disabled for testing..., '3.11'
+         python-version: ['3.9', '3.10', '3.11']   # TODO: should be enabled...disabled for testing..., '3.11'
          os: [ubuntu-latest]
          # , macos-latest, windows-latest
          mode: ['latest', 'latest_basic', 'old', 'latest_pyqt5_gui', 'latest_pyqt6_gui', 'latest_pyside5_gui', 'latest_pyside6_gui']
@@ -68,12 +68,18 @@ jobs:
          #- node: 13
          #  os: ubuntu-18.04
          #  experimental: true
-         #exclude:
+         exclude:
           # Exclude all DB images except "mariadb_10.4" for all PHP versions except "7.3".
-          #- {python-version: '3.11', mode: 'latest_pyqt5_gui'}
-          #- {python-version: '3.11', mode: 'latest_pyqt6_gui'}
-          #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
-          #- {python-version: '3.11', mode: 'latest_pyqt6_gui'}
+          - {python-version: '3.9', mode: 'latest_pyqt5_gui'}
+          - {python-version: '3.9', mode: 'latest_pyqt6_gui'}
+
+          - {python-version: '3.10', mode: 'latest_pyqt5_gui'}
+          - {python-version: '3.10', mode: 'latest_pyqt6_gui'}
+
+          - {python-version: '3.11', mode: 'latest_pyqt5_gui'}
+          - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
+          - {python-version: '3.11', mode: 'latest_pyside2_gui'}
+          - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
       fail-fast: false
 #strategy:
     #  matrix:
@@ -137,8 +143,8 @@ jobs:
         #mode: ['latest', 'latest_basic', 
         #       'latest_pyside2_gui', 'latest_pyside6_gui',
         #       'latest_pyqt5_gui', 'latest_pyqt6_gui',
-        #       'old', 'old_basic']
-        #       'old_basic', 'old_pyside_gui', 'old_pyqt_gui'.
+        #       'old', 'old_basic',
+        #       'old_pyside_gui', 'old_pyqt_gui']
         #
       - name: Install latest basic packages
         if: ${{ matrix.mode == 'latest_basic'       || matrix.mode == 'latest' || 
@@ -154,11 +160,17 @@ jobs:
         run: |
           pip install pandas>=0.25 h5py matplotlib #--no-binary  :all:
 
-      - name: Install latest gui packages
+      - name: Install latest packages (imageio, pillow)
         if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') && matrix.python-version != '3.11' }}
         run: |
-          pip install vtk imageio<3 pillow>5.2,!=7.1.0
+          pip install imageio<3 pillow>5.2,!=7.1.0
+
+      - name: Install latest packages (vtk)
+        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') && matrix.python-version != '3.11' }}
+        run: |
+          pip install vtk
 
       - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.11' }}
         name: Install PySide2
@@ -182,20 +194,6 @@ jobs:
 
 #-----------------------------------------------------------------------------------
 # old
-      # was matplotlib 2.2.2
-      # pandas 0.23.2
-      # pandas<0.25
-      #- name: Install old packages (3.7)
-      #  if: ${{ matrix.mode == 'old' && matrix.python-version == '3.7' }}
-      #  run: |
-      #    pip install numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py==2.8.0 pandas==0.23.2 #--no-binary :all:
-
-      #  pandas==0.25.2
-      - name: Install old packages (3.8)
-        if: ${{ matrix.mode == 'old' && matrix.python-version == '3.8' }}
-        run: |
-          pip install numpy==1.17.3 scipy==1.3.2 matplotlib==3.2.0 h5py==2.10.0 pandas==0.25.2 #--no-binary :all:
-
       # pandas==1.1.3
       - name: Install old packages (3.9)
         if: ${{ matrix.mode == 'old' && matrix.python-version == '3.9' }}
