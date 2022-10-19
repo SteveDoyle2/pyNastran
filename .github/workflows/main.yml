@@ -179,7 +179,7 @@ jobs:
           pip install h5py
 
       - name: Install latest packages (imageio, pillow)
-        if: ${{ matrix.python-version != '3.11-dev'  (
+        if: ${{ matrix.python-version != '3.11-dev' && (
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
