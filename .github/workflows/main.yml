@@ -143,7 +143,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: Install dependencies - ${{ matrix.mode }}
         run: |
          python -m pip install --upgrade pip
          pip install flake8
@@ -162,30 +162,33 @@ jobs:
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
         run: |
           pip install numpy scipy
+        #--no-binary  :all:
 
-      - name: Install latest packages - ${{ matrix.mode }}
+      - name: Install latest packages (pandas, matplotlib)
         if: ${{ matrix.mode == 'latest' || 
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
         run: |
-          pip install pandas>=0.25 h5py matplotlib #--no-binary  :all:
+          pip install pandas>=0.25 matplotlib
 
-      - name: Install latest h5py packages - ${{ matrix.mode }}
+      - name: Install latest packages (h5py)
         if: ${{  matrix.python-version != '3.11-dev' && (matrix.mode == 'latest' || 
                  matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
-          pip install pandas>=0.25 h5py matplotlib #--no-binary  :all:
+          pip install h5py
 
       - name: Install latest packages (imageio, pillow)
-        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
-                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') && matrix.python-version != '3.11-dev' }}
+        if: ${{ matrix.python-version != '3.11-dev'  (
+                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+                matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install imageio<3 pillow>5.2,!=7.1.0
 
       - name: Install latest packages (vtk)
-        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
-                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') && matrix.python-version != '3.11-dev' }}
+        if: ${{ matrix.python-version != '3.11-dev' && (
+                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+                matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install vtk
 
