@@ -169,7 +169,7 @@ def read_element(lines: list[str], line0: str, iline: int, log: SimpleLogger, de
     assert '*' not in line1, line1
     while not line1.startswith('*'):
         #print(line1)
-        elements.append(line1.split(','))
+        elements.append(line1.strip('\n\t ,').split(','))
         iline += 1
         line1 = lines[iline].strip().lower()
     #log.debug('elements = %s' % elements)

@@ -76,7 +76,8 @@ class Elements:
                 the element type
             bars:
                 r2d2 : (nelements, 2) int ndarray
-                b31h : (nelements, 2) int ndarray
+            beams:
+                b31h : (nelements, 3) int ndarray - 2 nodes and g0
             shells:
                 cpe3 : (nelements, 3) int ndarray
                 cpe4 : (nelements, 4) int ndarray
@@ -89,6 +90,7 @@ class Elements:
                 cax3 : (nelements, 3) int ndarray
                 cax4r : (nelements, 4) int ndarray
             solids:
+                c3d8r : (nelements, 8) int ndarray
                 c3d10 : (nelements, 10) int ndarray
                 c3d10h : (nelements, 10) int ndarray
 
@@ -217,8 +219,8 @@ class Elements:
     @property
     def nelements(self):
         """Gets the total number of elements"""
-        n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
-        n_b31h = self.b31h.shape[0] if self.b31h is not None else 0
+        n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0  #  bar
+        n_b31h = self.b31h.shape[0] if self.b31h is not None else 0  #  beam
 
         # plane strain
         n_cpe3 = self.cpe3.shape[0] if self.cpe3 is not None else 0
@@ -231,7 +233,6 @@ class Elements:
         n_cps4r = self.cps4r.shape[0] if self.cps4r is not None else 0
 
         n_coh2d4 = self.coh2d4.shape[0] if self.coh2d4 is not None else 0
-        n_c3d10h = self.c3d10h.shape[0] if self.c3d10h is not None else 0
 
         n_cohax4 = self.cohax4.shape[0] if self.cohax4 is not None else 0
         n_cax3 = self.cax3.shape[0] if self.cax3 is not None else 0
@@ -242,16 +243,17 @@ class Elements:
         # solids
         n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0
         n_c3d4 = self.c3d4.shape[0] if self.c3d4 is not None else 0
+        n_c3d10h = self.c3d10h.shape[0] if self.c3d10h is not None else 0
 
         neids = (n_r2d2 + n_b31h +
                  n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
                  n_cps3 + n_cps4 + n_cps4r +  # plane stress
                  n_coh2d4 +
-                 n_c3d10h + n_cohax4 + n_cax3 + n_cax4r +
+                 n_cohax4 + n_cax3 + n_cax4r +
                  #6 / 8 shells
                  n_s8r +
                  # solids
-                 n_c3d8r + n_c3d4)
+                 n_c3d8r + n_c3d4 + n_c3d10h)
         self.log.info(f'neids = {neids}')
         assert neids > 0, neids
         return neids
