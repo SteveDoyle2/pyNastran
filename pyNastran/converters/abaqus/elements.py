@@ -1,25 +1,25 @@
 """
 General 3D solids
-C3D4 (4-node linear tetrahedral element)
-C3D6 (6-node linear triangular prism element)
-C3D8 (3D 8-node linear isoparametric element)
-C3D8R (the C3D8 element with reduced integration)
-C3D10 (10-node quadratic tetrahedral element)
-C3D15 (15-node quadratic triangular prism element)
-C3D20 (3D 20-node quadratic isoparametric element)
-C3D20R (the C3D20 element with reduced integration)
-C3D20RI (incompressible C3D20 element with reduced integration)
-``ABAQUS'' 3D solids for heat transfer (names are provided for compatibility)
-DC3D4: identical to C3D4
-DC3D6: identical to C3D6
-DC3D8: identical to C3D8
-DC3D10: identical to C3D10
-DC3D15: identical to C3D15
-DC3D20: identical to C3D20
+  C3D4 (4-node linear tetrahedral element)
+  C3D6 (6-node linear triangular prism element)
+  C3D8 (3D 8-node linear isoparametric element)
+  C3D8R (the C3D8 element with reduced integration)
+  C3D10 (10-node quadratic tetrahedral element)
+  C3D15 (15-node quadratic triangular prism element)
+  C3D20 (3D 20-node quadratic isoparametric element)
+  C3D20R (the C3D20 element with reduced integration)
+  C3D20RI (incompressible C3D20 element with reduced integration)
+3D solids for heat transfer (names are provided for compatibility)
+  DC3D4: identical to C3D4
+  DC3D6: identical to C3D6
+  DC3D8: identical to C3D8
+  DC3D10: identical to C3D10
+  DC3D15: identical to C3D15
+  DC3D20: identical to C3D20
 Shell elements
-S6 (6-node triangular shell element)
-S8 (8-node quadratic shell element)
-S8R (the S8 element with reduced integration)
+  S6 (6-node triangular shell element)
+  S8 (8-node quadratic shell element)
+  S8R (the S8 element with reduced integration)
 Plane stress elements
   CPS6 (6-node triangular plane stress element)
   CPS8 (8-node quadratic plane stress element)
@@ -46,21 +46,30 @@ import numpy as np
 from cpylog import SimpleLogger
 
 allowed_element_types = [
-    'r2d2', 'conn2d2', 'springa',
-    'cpe3', 'cpe4', 'cpe4r', 'cpe8r',
-    'cps3', 'cps4', 'cps4r', 'cps8r',
+    # rigid
+    'r2d2',
 
-    'coh2d4', 'c3d10h', 'cohax4',
-    'cax3', 'cax4r', 'mass', 'rotaryi', 't2d2', 'c3d8r',
+    # lines
+    'b31h', #2-node linear beam
+
+    # springs?
+    'conn2d2', 'springa',
+
+    #
+    'cpe3', 'cpe4', 'cpe4r', 'cpe8r', # plane strain
+    'cps3', 'cps4', 'cps4r', 'cps8r', # plane stress
+
+    'coh2d4', 'cohax4', # other
+    'cax3', 'cax4r', 'mass', 'rotaryi', 't2d2',
 
     # 6/8 plates
     's8r',
 
     # solid
-    'c3d4', 'c3d10',
-
-    # lines
-    'b31h', #2-node linear beam
+    'c3d4', 'c3d4r', # tet4s
+    'c3d10', 'c3d10r', 'c3d10h', # tet10s
+    'c3d8r',  # hexa8
+    'c3d20r', # hexa20
 ]
 
 class Elements:
@@ -74,8 +83,9 @@ class Elements:
         element_types : Dict[element_type] : node_ids
             element_type : str
                 the element type
-            bars:
+            rigid:
                 r2d2 : (nelements, 2) int ndarray
+            bars:
             beams:
                 b31h : (nelements, 3) int ndarray - 2 nodes and g0
             shells:
@@ -90,83 +100,92 @@ class Elements:
                 cax3 : (nelements, 3) int ndarray
                 cax4r : (nelements, 4) int ndarray
             solids:
-                c3d8r : (nelements, 8) int ndarray
+                c3d4  : (nelements, 4) int ndarray
+                c3d4r : (nelements, 4) int ndarray
                 c3d10 : (nelements, 10) int ndarray
+                c3d10r : (nelements, 10) int ndarray
                 c3d10h : (nelements, 10) int ndarray
+                c3d8r : (nelements, 8) int ndarray
+                c3d20r : (nelements, 20) int ndarray
 
         """
         self.log = log
-        # bars
-        self.r2d2 = None
-        self.b31h = None
+        #-----------------------------------
+        # elements
 
-        # ---shells---
+        # rigid elements
+        self.r2d2 = None
+        self.r2d2_eids = None
+
+        # bars/beams
+        self.b31h = None
+        self.b31h_eids = None
+
+        # -----shells-----
         # plane strain
         self.cpe3 = None
         self.cpe4 = None
         self.cpe4r = None
+        self.cpe3_eids = None
+        self.cpe4_eids = None
+        self.cpe4r_eids = None
 
         # plane stress
         self.cps3 = None
         self.cps4 = None
         self.cps4r = None
+        self.cps3_eids = None
+        self.cps4_eids = None
+        self.cps4r_eids = None
 
         # other
         self.coh2d4 = None
         self.cohax4 = None
         self.cax3 = None
         self.cax4r = None
-
-        # 6/8 shells
-        self.s8r = None
-
-        # solids
-        self.c3d4 = None
-
-        # solids
-        self.c3d10 = None
-        self.c3d10h = None
-        self.c3d8r = None
-        #-----------------------------------
-        # eids
-        self.r2d2_eids = None
-        self.b31h_eids = None
-
-        self.cpe3_eids = None
-        self.cpe4_eids = None
-        self.cpe4r_eids = None
-
-        self.cps3_eids = None
-        self.cps4_eids = None
-        self.cps4r_eids = None
-
         self.coh2d4_eids = None
         self.cohax4_eids = None
         self.cax3_eids = None
         self.cax4r_eids = None
 
         # 6/8 shells
+        self.s8r = None
         self.s8r_eids = None
 
         # solids
-        self.c3d4_eids = None
-        self.c3d10_eids = None
+        self.c3d4 = None   # tet4
+        self.c3d10 = None  # tet4
+        self.c3d4_eids = None   # tet4
+        self.c3d10_eids = None  # tet10
 
-        # rigid elements
-        self.c3d10h_eids = None
-        self.c3d8r_eids = None
+        # solids: reduced integration elements
+        self.c3d4r = None   # tet4 reduced
+        self.c3d8r = None   # hexa8 reduced
+        self.c3d10r = None  # tet4 reduced
+        self.c3d20r = None  # hexa20 reduced
+        self.c3d4r_eids = None   # tet4    reduced integration
+        self.c3d8r_eids = None   # hexa8,  reduced integration
+        self.c3d10r_eids = None  # tet10   reduced integration
+        self.c3d20r_eids = None  # hexa20, reduced integration
+
+        # solids: hybrid hydrostatic
+        self.c3d10h = None # tet10 hybrid hydrostatic
+        self.c3d10h_eids = None  # tet10 hybrid hydrostatic
         self._store_elements(element_types)
 
     def _etypes_nnodes(self):
         """internal helper method"""
         etypes_nnodes = [
-            ('r2d2', 2),  #  similar to a CBAR
+            # rigid
+            ('r2d2', 2),  #  similar to a RBAR
+
+            # bar/beam
             ('b31h', 3),  #  similar to a CBEAM?  TODO: why is this 3 nodes?
 
             #  shells
             ('cpe3', 3),
             ('cpe4', 4),
-            ('cpe4r', 4),
+            ('cpe4r', 4),  # quad plane strain, reduced
 
             ('cps3', 3),
             ('cps4', 4),
@@ -175,25 +194,34 @@ class Elements:
             ('coh2d4', 4), #  cohesive zone
             ('cohax4', 4), #  cohesive zone
             ('cax3', 3),
-            ('cax4r', 4),
+            ('cax4r', 4), # reduced
 
-            ('s8r', 8), # CQUAD8
+            ('s8r', 8), # CQUAD8 reduced
 
             #  solids
-            ('c3d4', 4),  #  tet4
-            ('c3d10h', 10),  #  tet10
-            ('c3d8r', 8),  #  hexa8
+            ('c3d4', 4),     # tet4
+            ('c3d4r', 4),    # tet4 reduced
+            ('c3d10', 10),   # tet10
+            ('c3d10r', 10),  # tet10 reduced
+            ('c3d10h', 10),  # tet10 hybrid hydrostatic
+            ('c3d8r', 8),    # hexa8 reduced
+            ('c3d20r', 20),  # hexa20 reduced
         ]
         return etypes_nnodes
 
-    def _store_elements(self, element_types):
+    def _store_elements(self, element_types: dict[str, list[int]]):
         """helper method for the init"""
+        if len(element_types) == 0:
+            return
         etypes_nnodes = self._etypes_nnodes()
         is_elements = False
+        etypes_used = set()
+        element_types_all = set(list(element_types.keys()))
         for etype, nnodes in etypes_nnodes:
             if etype in element_types:
                 etype_eids = '%s_eids' % etype
                 elements = element_types[etype]
+                etypes_used.add(etype)
                 if len(elements) == 0:
                     continue
                 is_elements = True
@@ -201,10 +229,13 @@ class Elements:
                 setattr(self, etype, eids_elements[:, 1:])  # r2d2
                 setattr(self, etype_eids, eids_elements[:, 0]) #  r2d2_eids
                 assert eids_elements.shape[1] == nnodes + 1, eids_elements.shape
-            else:
-                self.log.warning(f'skipping etype={etype!r}')
+            #else:
+                #self.log.warning(f'skipping etype={etype!r}')
                 #raise RuntimeError(etype)
-        #assert is_elements, element_types
+        unhandled_etypes = list(element_types_all - etypes_used)
+        assert len(unhandled_etypes) == 0, unhandled_etypes
+        assert etypes_used, etypes_used
+        assert is_elements, element_types
 
     def element(self, eid):
         """gets a specific element of the part"""
@@ -225,7 +256,10 @@ class Elements:
     @property
     def nelements(self):
         """Gets the total number of elements"""
-        n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0  #  bar
+        # rigid elements
+        n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
+
+        # bar/beam
         n_b31h = self.b31h.shape[0] if self.b31h is not None else 0  #  beam
 
         # plane strain
@@ -246,12 +280,19 @@ class Elements:
 
         # 6/8
         n_s8r = self.s8r.shape[0] if self.s8r is not None else 0
-        # solids
-        n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0
-        n_c3d4 = self.c3d4.shape[0] if self.c3d4 is not None else 0
-        n_c3d10h = self.c3d10h.shape[0] if self.c3d10h is not None else 0
 
-        neids = (n_r2d2 + n_b31h +
+        # solids
+        n_c3d4 = self.c3d4.shape[0] if self.c3d4 is not None else 0        # tet4
+        n_c3d4r = self.c3d4r.shape[0] if self.c3d4r is not None else 0     # tet4 reduced
+        n_c3d10 = self.c3d10.shape[0] if self.c3d10 is not None else 0  # tet10
+        n_c3d10r = self.c3d10r.shape[0] if self.c3d10r is not None else 0  # tet10 reduced
+        n_c3d10h = self.c3d10h.shape[0] if self.c3d10h is not None else 0  # tet10 hybrid hydrostatic
+
+        n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0     # hexa8 reduced
+        n_c3d20r = self.c3d20r.shape[0] if self.c3d20r is not None else 0  # hexa20 reduced
+
+        neids = (n_r2d2 +  # rigid elements
+                 n_b31h +  # bar/beam
                  n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
                  n_cps3 + n_cps4 + n_cps4r +  # plane stress
                  n_coh2d4 +
@@ -259,14 +300,20 @@ class Elements:
                  #6 / 8 shells
                  n_s8r +
                  # solids
-                 n_c3d8r + n_c3d4 + n_c3d10h)
+                 n_c3d4 + n_c3d4r +
+                 n_c3d8r +
+                 n_c3d10 + n_c3d10r + n_c3d10h +
+                 n_c3d20r)
         self.log.info(f'neids = {neids}')
         #assert neids > 0, str(self)
         return neids
 
     def __repr__(self):
         """prints a summary for the part"""
+        # rigid elements
         n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
+
+        # bar/beam
         n_b31h = self.b31h.shape[0] if self.b31h is not None else 0
 
         # plane strain
@@ -280,7 +327,6 @@ class Elements:
         n_cps4r = self.cps4r.shape[0] if self.cps4r is not None else 0
 
         n_coh2d4 = self.coh2d4.shape[0] if self.coh2d4 is not None else 0
-        n_c3d10h = self.c3d10h.shape[0] if self.c3d10h is not None else 0
 
         n_cohax4 = self.cohax4.shape[0] if self.cohax4 is not None else 0
         n_cax3 = self.cax3.shape[0] if self.cax3 is not None else 0
@@ -290,35 +336,55 @@ class Elements:
         n_s8r = self.s8r.shape[0] if self.s8r is not None else 0
 
         # solids
-        n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0
         n_c3d4 = self.c3d4.shape[0] if self.c3d4 is not None else 0
+        n_c3d4r = self.c3d4r.shape[0] if self.c3d4r is not None else 0
+        n_c3d10 = self.c3d10.shape[0] if self.c3d10 is not None else 0
+        n_c3d10r = self.c3d10r.shape[0] if self.c3d10r is not None else 0
+        n_c3d10h = self.c3d10h.shape[0] if self.c3d10h is not None else 0
 
-        neids = (n_r2d2 + n_b31h +
+        n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0
+        n_c3d20r = self.c3d20r.shape[0] if self.c3d20r is not None else 0
+
+        neids = (n_r2d2 +  # rigid
+                 n_b31h +  # bar/beam
                  n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
                  n_cps3 + n_cps4 + n_cps4r +  # plane stress
                  n_coh2d4 +
-                 n_c3d10h + n_cohax4 + n_cax3 + n_cax4r +
+                 n_cohax4 + n_cax3 + n_cax4r +
+                 # 6/8 shells
                  n_s8r +
-                 n_c3d8r + n_c3d4)
+                 # solids
+                 n_c3d4 + n_c3d4r +
+                 n_c3d8r +
+                 n_c3d10 + n_c3d10h + n_c3d10r +
+                 n_c3d20r)
         assert neids == self.nelements, 'something is out of date...'
         msg = (
             f'Element(neids={neids:d},\n'
-            f'        n_r2d2={n_r2d2}, n_b31h={n_b31h},\n'
-            f'        n_cps3={n_cps3}, n_cpe3={n_cpe3},\n'
-            f'        n_cpe4={n_cpe4}, n_cpe4r={n_cpe4r}, n_coh2d4={n_coh2d4},\n'
+            f'        n_r2d2={n_r2d2}, n_b31h={n_b31h},\n' # bar/beam
+            f'        n_cpe3={n_cpe3}, n_cpe4={n_cpe4}, n_cpe4r={n_cpe4r},\n' # plane strain
+            f'        n_cps3={n_cps3}, n_cps4={n_cps4}, n_cps4r={n_cps4r},\n' # plane stress
+            f'        n_coh2d4={n_coh2d4},\n'
             f'        n_cohax4={n_cohax4}, n_cax3={n_cax3}, n_cax4r={n_cax4r},\n'
-            f'        n_cps4r={n_cps4r}, n_c3d10h={n_c3d10h}, n_c3d8r=n_c3d8r)\n'
+            # solids
+            f'        n_c3d4={n_c3d4}, n_c3d4r={n_c3d4r},\n'
+            f'        n_c3d10={n_c3d10}, n_c3d10r={n_c3d10r}, n_c3d10h={n_c3d10h}, \n'
+            f'        n_c3d8r={n_c3d8r}, n_c3d20r={n_c3d20r})'
         )
         return msg
 
     @property
-    def element_types(self):
+    def element_types(self) -> dict[str, tuple[np.ndarray, np.ndarray]]:
         """simplified way to access all the elements as a dictionary"""
         element_types = {}
+        # rigid
         element_types['r2d2'] = (self.r2d2_eids, self.r2d2)
+
+        # bar/beam
         element_types['b31h'] = (self.b31h_eids, self.b31h)
 
-        # plane strain        element_types['cpe3'] = (self.cpe3_eids, self.cpe3)
+        # plane strain
+        element_types['cpe3'] = (self.cpe3_eids, self.cpe3)
         element_types['cpe4'] = (self.cpe4_eids, self.cpe4)
         element_types['cpe4r'] = (self.cpe4r_eids, self.cpe4r)
 
@@ -331,15 +397,18 @@ class Elements:
         element_types['coh2d4'] = (self.coh2d4_eids, self.coh2d4)
         element_types['cax3'] = (self.cax3_eids, self.cax3)
         element_types['cax4r'] = (self.cax4r_eids, self.cax4r)
-        #element_types['cps4r'] = (self.cps4r_eids, self.cps4r)
+        element_types['cps4r'] = (self.cps4r_eids, self.cps4r)
 
         # 6/8 shells
         element_types['s8r'] = (self.s8r_eids, self.s8r)
 
         # solids
-        element_types['c3d10'] = (self.c3d10_eids, self.c3d10)
-        element_types['c3d10h'] = (self.c3d10h_eids, self.c3d10h)
         element_types['c3d4'] = (self.c3d4_eids, self.c3d4)
+        element_types['c3d4r'] = (self.c3d4r_eids, self.c3d4r)
+        element_types['c3d10'] = (self.c3d10_eids, self.c3d10)
+        element_types['c3d10r'] = (self.c3d10r_eids, self.c3d10r)
+        element_types['c3d10h'] = (self.c3d10h_eids, self.c3d10h)
+        element_types['c3d20r'] = (self.c3d20r_eids, self.c3d20r)
         return element_types
 
     def write(self, abq_file):

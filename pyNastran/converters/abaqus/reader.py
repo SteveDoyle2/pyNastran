@@ -5,7 +5,7 @@ import numpy as np
 from .abaqus_cards import (
     ShellSection, SolidSection, Boundary, Material, Transform)
 from .elements import allowed_element_types
-from .reader_utils import split_by_equals
+from .reader_utils import split_by_equals, print_data
 
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
@@ -138,7 +138,8 @@ def read_node(lines, iline, log, skip_star=False):
         raise RuntimeError(msg)
     return iline, line0, nids, nodes
 
-def read_element(lines: list[str], line0: str, iline: int, log: SimpleLogger, debug: bool):
+def read_element(lines: list[str], line0: str, iline: int,
+                 log: SimpleLogger, debug: bool) -> tuple[str, int, str, list[list[str]]]:
     """
     '*element, type=mass, elset=topc_inertia-2_mass_'
     """
@@ -151,6 +152,7 @@ def read_element(lines: list[str], line0: str, iline: int, log: SimpleLogger, de
                                line0, sline, ', '.join(allowed_element_types)))
 
     etype_sline = sline[0]
+    print(etype_sline)
     assert 'type' in etype_sline, etype_sline
     etype = etype_sline.split('=')[1].strip()
     if etype not in allowed_element_types:

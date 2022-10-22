@@ -1,5 +1,5 @@
 """Defines the Abaqus class"""
-from typing import Union
+from typing import Union, Optional
 from io import StringIO
 
 import numpy as np
@@ -7,6 +7,7 @@ from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Part, Elements, Step, cast_nodes)
 import pyNastran.converters.abaqus.reader as reader
+from pyNastran.converters.abaqus.reader_utils import print_data, clean_lines
 
 def read_abaqus(abaqus_inp_filename, encoding=None,
                 log=None, debug=False):
@@ -15,37 +16,10 @@ def read_abaqus(abaqus_inp_filename, encoding=None,
     model.read_abaqus_inp(abaqus_inp_filename, encoding=encoding)
     return model
 
-def _clean_lines(lines):
-    """removes comment lines and concatenates include files"""
-    lines2 = []
-    for line in lines:
-        line2 = line.strip().split('**', 1)[0]
-        #print(line2)
-        if line2:
-            if 'include' in line2.lower():
-                sline = line2.split(',')
-                assert len(sline) == 2, sline
-                assert '=' in sline[1], sline
-                sline2 = sline[1].split('=')
-                assert len(sline2) == 2, sline2
-                base, inc_filename = sline2
-                base = base.strip()
-                inc_filename = inc_filename.strip()
-                assert base.lower() == 'input', 'base=%r' % base.lower()
-
-                with open(inc_filename, 'r') as inc_file:
-                    inc_lines = inc_file.readlines()
-                inc_lines = _clean_lines(inc_lines)
-                lines2 += inc_lines
-                continue
-
-            lines2.append(line)
-    return lines2
-
-
 class Abaqus:
     """defines the abaqus reader"""
-    def __init__(self, log=None, debug: Union[str, bool, None]=True):
+    def __init__(self, log: Optional[SimpleLogger]=None,
+                 debug: Union[str, bool, None]=True):
         self.debug = debug
         self.parts = {}
         self.boundaries = {}
@@ -75,7 +49,7 @@ class Abaqus:
                 abaqus_inp_filename, type(abaqus_inp_filename))
             raise NotImplementedError(msg)
 
-        lines = _clean_lines(lines)
+        lines = clean_lines(lines)
 
         unused_ilines = []
         iline = 0
@@ -143,7 +117,7 @@ class Abaqus:
                     param_map = reader.get_param_map(iline, word)
                     name = param_map['name']
                     if name in self.amplitudes:
-                        raise RuntimeError('name=%r is already defined...' % name)
+                        raise RuntimeError(f'name={name!r} is already defined...')
                     # TODO: skips header parsing
                     iline += 1
                     line0 = lines[iline].strip().lower()
@@ -196,7 +170,7 @@ class Abaqus:
                     data_lines, iline, line0 = reader.read_star_block(lines, iline, line0, self.log, )
                     for line in data_lines:
                         self.log.debug(line)
-                    self.log.debug('line_end_of_IC = %s' % line0)
+                    self.log.debug(f'line_end_of_IC = {line0!r}')
                 elif word.startswith('surface interaction'):
                     unused_key = 'surface interaction'
                     unused_data = []
@@ -395,11 +369,12 @@ class Abaqus:
                 set_ids, iline, line0 = reader.read_set(lines, iline, line0, params_map)
                 element_sets[set_name] = set_ids
             elif word == 'node':
-                iline, line0, nids, nodes = reader.read_node(lines, iline, self.log, skip_star=True)
+                iline, line0, nids, nodes = reader.read_node(
+                    lines, iline, self.log, skip_star=True)
             elif '*element' in line0:
                 # doesn't actually start on *element line
                 # 1,263,288,298,265
-                line0, iline, etype, elements = self._read_elements(lines, line0, iline)
+                line0, iline, etype, elements = reader.read_element(lines, line0, iline)
                 element_types[etype] = elements
                 iline += 1
                 line0 = lines[iline].strip().lower()
@@ -414,11 +389,11 @@ class Abaqus:
         """reads a Part object"""
         sline2 = word.split(',', 1)[1:]
 
-        assert len(sline2) == 1, 'looking for part_name; word=%r sline2=%s' % (word, sline2)
+        assert len(sline2) == 1, f'looking for part_name; word={word!r} sline2={sline2}'
         name_slot = sline2[0]
         assert 'name' in name_slot, name_slot
         part_name = name_slot.split('=', 1)[1]
-        self.log.debug('part_name = %r' % part_name)
+        self.log.debug(f'part_name = {part_name!r}')
         #self.part_name = part_name
 
         iline += 1
@@ -447,7 +422,7 @@ class Abaqus:
             iline += 1 # skips over the header line
             log.debug('  ' + line0)
             iword = line0.strip('*').lower()
-            log.info('part: %s' % iword)
+            log.info(f'part: {iword:s}')
             if '*node' in line0:
                 assert len(nids) == 0, nids
                 iline, line0, nids, nodes = reader.read_node(lines, iline, log)
@@ -521,7 +496,7 @@ class Abaqus:
             elif '*orientation' in line0:
                 iline, line0, orientation_fields = reader.read_orientation(line0, lines, iline, log)
             else:
-                msg = 'line=%r\n' % line0
+                msg = f'line={line0!r}\n'
                 allowed = ['*node', '*element', '*nset', '*elset', '*surface',
                            '*solid section', '*cohesive section']
                 msg += 'expected=[%r]' % ', '.join(allowed)
@@ -544,7 +519,7 @@ class Abaqus:
     def read_step(self, lines, iline, line0, istep):
         """reads a step object"""
         log = self.log
-        log.debug('  start of step %i...' % istep)
+        log.debug(f'  start of step {istep:d}...')
 
         boundaries = []
         node_output = []
@@ -620,7 +595,7 @@ class Abaqus:
                 assert len(sline) == 3, sline
                 iline += 1
             elif word.startswith('dynamic'):
-                self.log.debug('    line_sline = %r' % line0)
+                self.log.debug(f'    line_sline = {line0!r}')
                 #iline += 1
                 #line0 = lines[iline].strip().lower()
                 sline = line0.split(',')
@@ -728,8 +703,8 @@ class Abaqus:
         #self.heading = None
         #self.preprint = None
         with open(abaqus_filename_out, 'w') as abq_file:
-            self.log.debug("  nparts = %s" % len(self.parts))
-            self.log.debug("  nmaterials = %s" % len(self.materials))
+            self.log.debug(f'  nparts = {len(self.parts):d}')
+            self.log.debug(f'  nmaterials = {len(self.materials):d}')
             if self.assembly is not None:
                 self.assembly.write(abq_file)
             for unused_part_name, part in self.parts.items():
@@ -778,7 +753,7 @@ def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
         all_nodes.append(nodes)
 
     for unused_part_name, part in model.parts.items():
-        nidsi = part.nids
+        nidsi = nnodes + part.nids
         nodes = part.nodes
         elements = part.elements
 
@@ -794,18 +769,10 @@ def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
         nids = nids[0]
         nodes = all_nodes[0]
     else:
-        nids = np.vstack(nids)
+        nids = np.hstack(nids)
         nodes = np.vstack(all_nodes)
+        assert len(nodes) == len(nids)
     return nnodes, nids, nodes, nelements
-
-def print_data(lines, iline, word, msg, nlines=20):
-    """prints the last N lines"""
-    msg = 'word=%r\n%s\n' % (word, msg)
-    iline_start = iline - nlines
-    iline_start = max(iline_start, 0)
-    for iiline in range(iline_start, iline):
-        msg += lines[iiline]
-    return msg
 
 def main(): # pragma: no cover
     """tests a simple abaqus model"""
@@ -817,7 +784,7 @@ def main(): # pragma: no cover
     part = model.parts[part_name]
     print(part)
     etype, ieid, elem = part.element(eid)
-    print('etype=%s ieid=%s elem=%s' % (etype, ieid, elem))
+    print(f'etype={etype} ieid={ieid:d} elem={elem}')
     #return
 
     unused_nids = part.nids - 1

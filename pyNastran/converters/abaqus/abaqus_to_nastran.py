@@ -1,23 +1,33 @@
+#from __future__ import annotations
 from collections import defaultdict
+#from typing import TYPE_CHECKING
 
 import numpy as np
-from pyNastran.bdf.bdf import read_bdf, BDF, CaseControlDeck
-from pyNastran.converters.abaqus.abaqus_cards import Part, Material, Step, ShellSection, SolidSection
+from pyNastran.bdf.bdf import BDF, CaseControlDeck
 
 from pyNastran.converters.abaqus.abaqus import (
     Abaqus, read_abaqus, get_nodes_nnodes_nelements)
 
-def _add_part_to_nastran(nastran_model: BDF, elements, pid: int, nid_offset: int) -> None:
+def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
+                         nid_offset: int, eid_offset: int) -> int:
+    log = nastran_model.log
+
+    print('starting part...')
     for etype, eids_nids in elements.element_types.items():
-        eids, part_nids = eids_nids
-        if eids is None and part_nids is None:
+        eids_, part_nids = eids_nids
+        if eids_ is None and part_nids is None:
             continue
 
+        eids = eid_offset + eids_
+        log.warning(f'writing etype={etype} eids={eids}')
         if nid_offset > 0:
             # don't use += or it's an inplace operation
             part_nids = part_nids + nid_offset
 
-        if etype == 'b31h':
+        if etype == 'r2d2':
+            log.warning('skipping r2d2; should this be a RBE1/RBAR?')
+
+        elif etype == 'b31h':
             for eid, nids in zip(eids, part_nids):
                 x = None
                 g0 = nids[2]
@@ -25,8 +35,11 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int, nid_offset: int
                 nastran_model.add_cbeam(
                     eid, pid, nids, x, g0, offt='GGG', bit=None,
                     pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
-                pass
-        elif etype == 'cpe4':
+        elif etype == 'cpe3':
+            for eid, nids in zip(eids, part_nids):
+                nastran_model.add_ctria3(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                                         T1=None, T2=None, T3=None, comment='')
+        elif etype in {'cpe4', 'cpe4r'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, T4=None, comment='')
@@ -37,8 +50,11 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int, nid_offset: int
         elif etype == 'c3d4':
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctetra(eid, pid, nids, comment='')
+        elif etype in {'cohax4', 'coh2d4', 'cax3', 'cax4r'}:
+            log.warning(f'skipping etype={etype!r}')
         else:
             raise NotImplementedError(etype)
+        eid_offset += len(eids)
 
     #add_lines(grid, nidsi, part.r2d2, nid_offset)
 
@@ -61,28 +77,32 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int, nid_offset: int
     ## solids
     #add_tetras(grid, nidsi, part.c3d10h, nid_offset)
     #add_hexas(grid, nidsi, part.c3d8r, nid_offset)
+    assert eid_offset > 0, eid_offset
+    return eid_offset
 
 
 def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
     log = model.log
     nid_offset = 0
+    eid_offset = 0
 
     pid = 1
     if model.nids is not None and len(model.nids):
         nnodesi = model.nodes.shape[0]
         elements = model.elements
-        _add_part_to_nastran(nastran_model, elements, pid, nid_offset)
+        eid_offset = _add_part_to_nastran(nastran_model, elements, pid, nid_offset, eid_offset)
         nid_offset += nnodesi
 
+    eid_offset = 0
     for unused_part_name, part in model.parts.items():
-        #log.info('part_name = %r' % unused_part_name)
+        log.warning(f'part_name = {unused_part_name!r} eid_offset={eid_offset:d}')
         nnodesi = part.nodes.shape[0]
         #nidsi = part.nids
 
         elements = part.elements
-        _add_part_to_nastran(nastran_model, elements, pid, nid_offset)
+        eid_offset = _add_part_to_nastran(nastran_model, elements, pid, nid_offset, eid_offset)
         #nids.append(nidsi)
-
+        assert eid_offset > 0, eid_offset
         nid_offset += nnodesi
         for shell_section in part.shell_sections:
             log.info('shell')
@@ -133,6 +153,8 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
         model = abaqus_inp_filename
     else:
         model = read_abaqus(abaqus_inp_filename, log=log, debug=True)
+    log = model.log
+
     nnodes, nids, nodes, nelements = get_nodes_nnodes_nelements(
         model, stop_for_no_elements=True)
     assert nnodes > 0, nnodes
@@ -236,21 +258,5 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
                 for nid, xyz in moments.items():
                     nastran_model.add_moment(load_id, nid, mag, xyz, cid=0, comment='')
 
-
             #print(step.cloads)
         #step.cloads
-
-
-if __name__ == '__main__':   # pragma: no cover
-    nastran_filename = r'C:\NASA\m4\formats\git\pyNastran\models\plate\plate.bdf'
-    abaqus_inp_filename = r'C:\NASA\m4\formats\git\pyNastran\pyNastran\converters\abaqus\plate.inp'
-    nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
-
-    #model = read_abaqus(abaqus_filename, debug=True)
-    nastran_filename_out = r'C:\NASA\m4\formats\git\pyNastran\pyNastran\converters\abaqus\plate2.bdf'
-    abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
-    x = 1
-    #nastran_filename = 'junk.bdf'
-
-    #abaqus_to_nastran_filename(abaqus_filename, nastran_filename)
-    #nastran_filename = 'junk.bdf'

@@ -5,8 +5,8 @@ from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.abaqus.abaqus import read_abaqus
-from pyNastran.converters.abaqus.abaqus_to_nastran import (
-    nastran_to_abaqus_filename, abaqus_to_nastran_filename)
+from pyNastran.converters.abaqus.abaqus_to_nastran import abaqus_to_nastran_filename
+from pyNastran.converters.abaqus.nastran_to_abaqus import nastran_to_abaqus_filename
 from pyNastran.converters.format_converter import cmd_line_format_converter
 
 PKG_PATH = pyNastran.__path__[0]
@@ -61,12 +61,17 @@ class TestAbaqus(unittest.TestCase):
         log = get_logger(level='warning', encoding='utf-8')
         model = read_abaqus(lines, log=log, debug=False)
         str(model)
-        model.write('spike.inp')
-        os.remove('spike.inp')
+        abaqus_inp_filename = os.path.join(MODEL_PATH, 'spike.inp')
+        model.write(abaqus_inp_filename)
+        os.remove(abaqus_inp_filename)
 
-        abaqus_filename = os.path.join(MODEL_PATH, 'abaqus_out.inp')
-        with open(abaqus_filename, 'w') as abaqus_file:
+        abaqus_inp_filename = os.path.join(MODEL_PATH, 'abaqus_out.inp')
+        with open(abaqus_inp_filename, 'w') as abaqus_file:
             abaqus_file.writelines('\n'.join(lines))
+
+        bdf_filename = os.path.join(MODEL_PATH, 'spike.bdf')
+        abaqus_to_nastran_filename(model, bdf_filename)
+        os.remove(bdf_filename)
 
     def test_abaqus_2(self):
         """two hex blocks with duplicate node ids"""
@@ -191,6 +196,11 @@ def _make_part(part_name):
         '2,1.,0.,0.',
         '3,1.,1.,0.',
         '4,0.,1.,0.',
+
+        '5,0.,0.,1.',
+        '6,1.,0.,1.',
+        '7,1.,1.,1.',
+        '8,0.,1.,1.',
         '*element, type=cpe3',
         '1,1,2,3',
         '*element, type=cpe4',
@@ -209,6 +219,14 @@ def _make_part(part_name):
         '8,1,2,3,4',
         '*element, type=coh2d4',
         '9,1,2,3,4',
+
+        '*ELEMENT, TYPE=C3D8R, ELSET=Part-1-1-C3D8R-ALL',
+        '    1,      1,      2,      3,      4,       5,       6,       7,       8,',
+        #'*element, type=C3D20',
+        #1,      19,      20,      29,      28,       1,       2,      11,      10,     166,
+        #165,     164,     163,     167,     168,     169,     170,     172,     171,
+        #173,     174,
+        #C3D20
         '*mass',
         'mass_str',
         '*rotary inertia',
