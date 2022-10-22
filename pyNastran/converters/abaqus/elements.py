@@ -189,16 +189,22 @@ class Elements:
     def _store_elements(self, element_types):
         """helper method for the init"""
         etypes_nnodes = self._etypes_nnodes()
+        is_elements = False
         for etype, nnodes in etypes_nnodes:
             if etype in element_types:
                 etype_eids = '%s_eids' % etype
                 elements = element_types[etype]
                 if len(elements) == 0:
                     continue
+                is_elements = True
                 eids_elements = np.array(elements, dtype='int32')
                 setattr(self, etype, eids_elements[:, 1:])  # r2d2
                 setattr(self, etype_eids, eids_elements[:, 0]) #  r2d2_eids
                 assert eids_elements.shape[1] == nnodes + 1, eids_elements.shape
+            else:
+                self.log.warning(f'skipping etype={etype!r}')
+                #raise RuntimeError(etype)
+        #assert is_elements, element_types
 
     def element(self, eid):
         """gets a specific element of the part"""
@@ -255,7 +261,7 @@ class Elements:
                  # solids
                  n_c3d8r + n_c3d4 + n_c3d10h)
         self.log.info(f'neids = {neids}')
-        assert neids > 0, neids
+        #assert neids > 0, str(self)
         return neids
 
     def __repr__(self):

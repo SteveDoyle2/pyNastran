@@ -157,12 +157,12 @@ def read_element(lines: list[str], line0: str, iline: int, log: SimpleLogger, de
         msg = 'etype=%r allowed=[%s]' % (etype, ','.join(allowed_element_types))
         raise RuntimeError(msg)
 
-    if debug:
-        log.debug('    etype = %r' % etype)
+    #if debug:
+        #log.debug('    etype = %r' % etype)
 
     #iline += 1
     line1 = lines[iline].strip().lower()
-    log.debug('    line1 = %r' % line1)
+    #log.debug('    line1 = %r' % line1)
 
     elements = []
     #print(line1)
