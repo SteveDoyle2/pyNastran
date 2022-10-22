@@ -71,7 +71,7 @@ class Abaqus:
         while iline < nlines:
             # not handling comments right now
             line0 = lines[iline].strip().lower()
-            #self.log.debug('%s: %s' % (iline, line0))
+            self.log.debug('%s: %s' % (iline, line0))
             #sline = line.split('**', 1)
             #if len(sline) == 1:
                 #line0 = sline[0]

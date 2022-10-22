@@ -152,7 +152,7 @@ def read_element(lines: list[str], line0: str, iline: int,
                                line0, sline, ', '.join(allowed_element_types)))
 
     etype_sline = sline[0]
-    print(etype_sline)
+    #print(etype_sline)
     assert 'type' in etype_sline, etype_sline
     etype = etype_sline.split('=')[1].strip()
     if etype not in allowed_element_types:

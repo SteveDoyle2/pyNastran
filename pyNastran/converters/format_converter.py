@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import sys
 import glob
-from typing import Dict, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran import DEV
 if TYPE_CHECKING:  # pragma: no cover
@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def process_nastran(bdf_filename: str, fmt2: str, fname2: str,
                     log: Optional[SimpleLogger]=None,
-                    data: Optional[Dict[str, Any]]=None,
+                    data: Optional[dict[str, Any]]=None,
                     debug: bool=True,
                     quiet: bool=False) -> None:
     """
@@ -64,13 +64,13 @@ def process_nastran(bdf_filename: str, fmt2: str, fname2: str,
 
 def process_abaqus(abaqus_filename: str, fmt2: str, fname2: str,
                    log: SimpleLogger,
-                   data: Dict[str, Any],
+                   data: dict[str, Any],
                    quiet: bool=False) -> None:
     """Converts Abaqus to Nastran"""
     assert fmt2 in ['nastran'], f'format2={fmt2!r}'
     encoding = None
-    if 'ENCODE' in data:
-        encoding = data['ENCODE']
+    if 'ENCODING' in data:
+        encoding = data['ENCODING']
     #if data is None:
         #data = {'--scale': 1.0,}
 
@@ -84,13 +84,13 @@ def process_abaqus(abaqus_filename: str, fmt2: str, fname2: str,
         from pyNastran.converters.abaqus.abaqus_to_nastran import abaqus_to_nastran_filename
         nastran_model = abaqus_to_nastran_filename(model, fname2, log=log)
     else:
-        raise NotImplementedError(f'fmt2={fmt2!r} is not supported by process_abaqus')
+        raise NotImplementedError(f'fmt2={fmt2!r} is not supported by process_abaqus; use nastran')
     return nastran_model
 
 
 def process_cart3d(cart3d_filename: str, fmt2: str, fname2: str,
                    log: SimpleLogger,
-                   data: Dict[str, Any],
+                   data: dict[str, Any],
                    quiet: bool=False) -> None:
     """
     Converts Cart3d to STL/Nastran/Tecplot/Cart3d
@@ -125,7 +125,7 @@ def process_cart3d(cart3d_filename: str, fmt2: str, fname2: str,
 
 def process_stl(stl_filename: str, fmt2: str, fname2: str,
                 log: SimpleLogger,
-                data: Optional[Dict[str, Any]]=None,
+                data: Optional[dict[str, Any]]=None,
                 quiet: bool=False) -> None:
     """
     Converts STL to Nastran/Cart3d
@@ -166,7 +166,7 @@ def process_stl(stl_filename: str, fmt2: str, fname2: str,
         raise NotImplementedError(f'fmt2={fmt2!r} is not supported by process_stl')
 
 
-def element_slice(tecplot, data: Dict[str, Any]) -> None:
+def element_slice(tecplot, data: dict[str, Any]) -> None:
     """removes solid elements from a tecplot model"""
     xslice = data['--xx']
     yslice = data['--yy']
@@ -186,7 +186,7 @@ def element_slice(tecplot, data: Dict[str, Any]) -> None:
 
 def process_tecplot(tecplot_filename: str, fmt2: str, fname2: str,
                     log: SimpleLogger,
-                    data: Optional[Dict[str, Any]]=None,
+                    data: Optional[dict[str, Any]]=None,
                     quiet: bool=False) -> None:
     """
     Converts Tecplot to Tecplot
@@ -289,7 +289,7 @@ def process_ugrid(ugrid_filename: str, fmt2: str, fname2: str,
 
 def run_format_converter(fmt1: str, fname1: str,
                          fmt2: str, fname2: str,
-                         data: Dict[str, Any],
+                         data: dict[str, Any],
                          log: SimpleLogger,
                          quiet: bool=False) -> None:
     """Runs the format converter"""
@@ -332,7 +332,7 @@ def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet
         "  format_converter <format1> <INPUT> tecplot   <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>] [--scale SCALE]\n"
         "  format_converter <format1> <INPUT> stl       <OUTPUT> [-b]  [--scale SCALE]\n"
         '  format_converter cart3d    <INPUT> <format2> <OUTPUT> [-b]  [--scale SCALE]\n'
-        '  format_converter <format1> <INPUT> <format2> <OUTPUT> [--scale SCALE] [--encoding ENCODE]\n'
+        '  format_converter <format1> <INPUT> <format2> <OUTPUT> [--scale SCALE] [--encoding ENCODING]\n'
         #"  format_converter nastran  <INPUT> <format2> <OUTPUT>\n"
         #"  format_converter cart3d   <INPUT> <format2> <OUTPUT>\n"
         '  format_converter -h | --help\n'
@@ -352,7 +352,7 @@ def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet
         '\n'
 
         'Abaqus Options:\n' # 'utf8bom' = 'utf-8-sig'
-        f'  -encoding ENCODE  Specify the encoding (e.g., latin1, cp1252, utf8, utf-8-sig); default={default_encoding!s}\n'
+        f'  -encoding ENCODING  Specify the encoding (e.g., latin1, cp1252, utf8, utf-8-sig); default={default_encoding!s}\n'
         '\n'
 
         'Tecplot Options:\n'
@@ -421,14 +421,14 @@ def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet
     else:
         data['--scale'] = 1.0
 
-    if not data['ENCODE']:
-        data['ENCODE'] = default_encoding
+    if not data['ENCODING']:
+        data['ENCODING'] = default_encoding
     if not quiet:  # pragma: no cover
         print(data)
     input_filename = data['<INPUT>']
     output_filename = data['<OUTPUT>']
     if log is None:
-        level = 'warning' if  quiet else 'debug'
+        level = 'warning' if quiet else 'debug'
         from cpylog import SimpleLogger
         log = SimpleLogger(level=level)
 
@@ -440,7 +440,7 @@ def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet
 
 def process_vrml(vrml_filename: str, fmt2: str, fname2: str,
                  log: SimpleLogger,
-                 data: Dict[str, Any],
+                 data: dict[str, Any],
                  quiet: bool=False) -> None:
     """
     Converts VRML to Nastran

@@ -1,5 +1,5 @@
 # this variable is automatically set by the .spec file; should be False
-is_pynastrangui_exe = False
+is_pynastrangui_exe = True
 is_installed = False
 if is_pynastrangui_exe or is_installed:
     # pyInstaller
@@ -9,9 +9,9 @@ else:
     import sys
     import subprocess
     # this is still a requirement, but disabling it so readthedocs works
-    if sys.version_info < (3, 7):  # pragma: no cover
+    if sys.version_info < (3, 9):  # pragma: no cover
         IMAJOR, MINOR1, MINOR2 = sys.version_info[:3]
-        raise ImportError('Upgrade your Python to >= 3.7.0; version=(%s.%s.%s)' % (
+        raise ImportError('Upgrade your Python to >= 3.9.0; version=(%s.%s.%s)' % (
             IMAJOR, MINOR1, MINOR2))
 
     def get_git_revision_short_hash() -> str:
@@ -36,8 +36,8 @@ else:
     revision = get_git_revision_short_hash()
     __version_release__ = '1.4.0'
     __version__ = f'{__version_release__}+{revision}'
-    __releaseDate__ = '2020/8/xx'
-    __releaseDate2__ = 'AUGUST xx, 2021'
+    __releaseDate__ = '2022/8/xx'
+    __releaseDate2__ = 'AUGUST xx, 2022'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'

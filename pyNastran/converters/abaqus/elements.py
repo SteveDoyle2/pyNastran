@@ -41,7 +41,6 @@ Special elements
 
 http://web.mit.edu/calculix_v2.7/CalculiX/ccx_2.7/doc/ccx/node194.html
 """
-from typing import Dict
 import numpy as np
 from cpylog import SimpleLogger
 
@@ -74,13 +73,13 @@ allowed_element_types = [
 
 class Elements:
     """a Part object is a series of nodes & elements (of various types)"""
-    def __init__(self, element_types: Dict[str, np.ndarray], log: SimpleLogger):
+    def __init__(self, element_types: dict[str, np.ndarray], log: SimpleLogger):
         """
         creates a Part object
 
         Parameters
         ----------
-        element_types : Dict[element_type] : node_ids
+        element_types : dict[element_type] : node_ids
             element_type : str
                 the element type
             rigid:

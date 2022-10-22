@@ -1,25 +1,29 @@
-#from __future__ import annotations
+from __future__ import annotations
+import os
+import sys
 from collections import defaultdict
-#from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.bdf import BDF, CaseControlDeck
 
 from pyNastran.converters.abaqus.abaqus import (
     Abaqus, read_abaqus, get_nodes_nnodes_nelements)
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
                          nid_offset: int, eid_offset: int) -> int:
     log = nastran_model.log
 
-    print('starting part...')
+    log.debug('starting part...')
     for etype, eids_nids in elements.element_types.items():
         eids_, part_nids = eids_nids
         if eids_ is None and part_nids is None:
             continue
 
         eids = eid_offset + eids_
-        log.warning(f'writing etype={etype} eids={eids}')
+        log.info(f'writing etype={etype} eids={eids}')
         if nid_offset > 0:
             # don't use += or it's an inplace operation
             part_nids = part_nids + nid_offset
@@ -148,11 +152,13 @@ def _create_nastran_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
 
 def abaqus_to_nastran_filename(abaqus_inp_filename: str,
                                nastran_filename_out: str,
-                               log=None) -> BDF:
+                               size: int=8,
+                               encoding: Optional[str]=None,
+                               log: Optional[SimpleLogger]=None) -> BDF:
     if isinstance(abaqus_inp_filename, Abaqus):
         model = abaqus_inp_filename
     else:
-        model = read_abaqus(abaqus_inp_filename, log=log, debug=True)
+        model = read_abaqus(abaqus_inp_filename, encoding=encoding, log=log, debug=True)
     log = model.log
 
     nnodes, nids, nodes, nelements = get_nodes_nnodes_nelements(
@@ -174,7 +180,7 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str,
         log.error('No case control deck found...skipping')
         #print(f'{nastran_model.case_control_deck}')
         nastran_model.case_control_deck = None
-    nastran_model.write_bdf(nastran_filename_out)
+    nastran_model.write_bdf(nastran_filename_out, size=size)
     x = 1
     return nastran_model
 
@@ -260,3 +266,67 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
 
             #print(step.cloads)
         #step.cloads
+
+def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None, quiet: str=False) -> None:
+    """Interface for abaqus_to_nastran"""
+    if argv is None:
+        argv = sys.argv
+
+    default_encoding = sys.getdefaultencoding()
+    msg = (
+        'Usage:\n'
+        '  abaqus_to_nastran ABAQUS_INP_IN [--large] [--encoding ENCODING]\n'
+        '  abaqus_to_nastran ABAQUS_INP_IN NASTRAN_BDF_OUT [--large] [--encoding ENCODING]\n'
+        '  abaqus_to_nastran -h | --help\n'
+        '  abaqus_to_nastran -v | --version\n'
+        '\n'
+        'Required Arguments:\n'
+        '  ABAQUS_INP_IN       path to abaqus.inp file\n'
+        '  NASTRAN_BDF_OUT     path to nastran.bdf file (default=abaqus.bdf)\n'
+        '\n'
+
+        'Nastran Options:\n'
+        '  --large  writes the data in large field format\n'
+        '\n'
+
+        'Abaqus Options:\n' # 'utf8bom' = 'utf-8-sig'
+        f'  -encoding ENCODING  Specify the encoding (e.g., latin1, cp1252, utf8, utf-8-sig); default={default_encoding!s}\n'
+        '\n'
+
+        'Info:\n'
+        '  -h, --help     show this help message and exit\n'
+        "  -v, --version  show program's version number and exit\n"
+        '\n'
+    )
+    from docopt import docopt
+    import pyNastran
+    ver = str(pyNastran.__version__)
+    data = docopt(msg, version=ver, argv=argv[1:])
+
+    encoding = default_encoding
+    if data['ENCODING']:
+        encoding = data['ENCODING']
+    if not quiet:  # pragma: no cover
+        print(data)
+    abaqus_inp_filename = data['ABAQUS_INP_IN']
+    nastran_filename_out = os.path.splitext(abaqus_inp_filename)[0] + '.bdf'
+
+    if log is None:
+        level = 'warning' if quiet else 'debug'
+        from cpylog import SimpleLogger
+        log = SimpleLogger(level=level)
+
+    if data['NASTRAN_BDF_OUT']:
+        nastran_filename_out = data['NASTRAN_BDF_OUT']
+    else:
+        log.info(f"NASTRAN_BDF_OUT wasn't specified; using {nastran_filename_out!r}")
+
+    size = 8
+    if data['--large']:
+        size = 16
+
+    abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out,
+                               encoding=encoding, size=size, log=log)
+
+if __name__ == '__main__':
+    cmd_abaqus_to_nastran()
