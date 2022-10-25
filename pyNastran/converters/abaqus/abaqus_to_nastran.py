@@ -22,14 +22,16 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
         if eids_ is None and part_nids is None:
             continue
 
-        eids = eid_offset + eids_
-        log.info(f'writing etype={etype} eids={eids}')
+        eids = (eid_offset + 1 - eids_.min()) + eids_
+
+        log.warning(f'writing etype={etype} eids={eids_}->{eids}')
         if nid_offset > 0:
             # don't use += or it's an inplace operation
             part_nids = part_nids + nid_offset
 
         if etype == 'r2d2':
             log.warning('skipping r2d2; should this be a RBE1/RBAR?')
+            continue
 
         elif etype == 'b31h':
             for eid, nids in zip(eids, part_nids):
@@ -51,14 +53,22 @@ def _add_part_to_nastran(nastran_model: BDF, elements, pid: int,
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_cquad8(eid, pid, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                                          T1=None, T2=None, T3=None, T4=None, comment='')
-        elif etype == 'c3d4':
+        elif etype in {'c3d4', 'c3d4r', 'c3d10', 'c3d10r', 'c3d10h'}:
             for eid, nids in zip(eids, part_nids):
                 nastran_model.add_ctetra(eid, pid, nids, comment='')
+        elif etype in {'c3d6', 'c3d15', 'c3d6r', 'c3d15r'}:
+            for eid, nids in zip(eids, part_nids):
+                nastran_model.add_penta(eid, pid, nids, comment='')
+        elif etype in {'c3d8', 'c3d20', 'c3d8r', 'c3d20r'}:
+            for eid, nids in zip(eids, part_nids):
+                nastran_model.add_chexa(eid, pid, nids, comment='')
         elif etype in {'cohax4', 'coh2d4', 'cax3', 'cax4r'}:
             log.warning(f'skipping etype={etype!r}')
+            continue
         else:
             raise NotImplementedError(etype)
         eid_offset += len(eids)
+        #print(etype, eid_offset)
 
     #add_lines(grid, nidsi, part.r2d2, nid_offset)
 
@@ -286,7 +296,7 @@ def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None, quiet: st
         '\n'
 
         'Nastran Options:\n'
-        '  --large  writes the data in large field format\n'
+        '  --large             writes the data in large field format\n'
         '\n'
 
         'Abaqus Options:\n' # 'utf8bom' = 'utf-8-sig'
@@ -296,6 +306,16 @@ def cmd_abaqus_to_nastran(argv=None, log: Optional[SimpleLogger]=None, quiet: st
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
         "  -v, --version  show program's version number and exit\n"
+        '\n'
+        'Examples:\n'
+        '  # creates model.bdf\n'
+        '  abaqus_to_nastran model.inp\n\n'
+        '  # creates fem.bdf\n'
+        '  abaqus_to_nastran model.inp fem.bdf\n\n'
+        '  # creates model.bdf with large field format\n'
+        '  abaqus_to_nastran model.inp --large\n\n'
+        '  # creates model.bdf an alternate encoding\n'
+        '  abaqus_to_nastran model.inp --encoding utf-8-sig\n\n'
         '\n'
     )
     from docopt import docopt

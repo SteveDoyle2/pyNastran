@@ -67,8 +67,10 @@ allowed_element_types = [
     # solid
     'c3d4', 'c3d4r', # tet4s
     'c3d10', 'c3d10r', 'c3d10h', # tet10s
-    'c3d8r',  # hexa8
-    'c3d20r', # hexa20
+    'c3d6', 'c3d6r',  # penta6
+    'c3d8', 'c3d8r',  # hexa8
+    'c3d15', 'c3d15r',  # penta15
+    'c3d20', 'c3d20r', # hexa20
 ]
 
 class Elements:
@@ -96,16 +98,24 @@ class Elements:
                 cps4r : (nelements, 4) int ndarray
                 coh2d4 : (nelements, 4) int ndarray
                 cohax4 : (nelements, 4) int ndarray
-                cax3 : (nelements, 3) int ndarray
+                cax3  : (nelements, 3) int ndarray
                 cax4r : (nelements, 4) int ndarray
             solids:
                 c3d4  : (nelements, 4) int ndarray
-                c3d4r : (nelements, 4) int ndarray
+                c3d6  : (nelements, 6) int ndarray
+                c3d8  : (nelements, 8) int ndarray
                 c3d10 : (nelements, 10) int ndarray
+                c3d15 : (nelements, 15) int ndarray
+                c3d20 : (nelements, 20) int ndarray
+
+                c3d4r  : (nelements, 4) int ndarray
+                c3d6r  : (nelements, 6) int ndarray
+                c3d8r  : (nelements, 8) int ndarray
                 c3d10r : (nelements, 10) int ndarray
-                c3d10h : (nelements, 10) int ndarray
-                c3d8r : (nelements, 8) int ndarray
+                c3d15r : (nelements, 15) int ndarray
                 c3d20r : (nelements, 20) int ndarray
+
+                c3d10h : (nelements, 10) int ndarray
 
         """
         self.log = log
@@ -152,20 +162,34 @@ class Elements:
         self.s8r_eids = None
 
         # solids
-        self.c3d4 = None   # tet4
+        self.c3d4 = None  # tet4
+        self.c3d6 = None  # penta6
+        self.c3d8 = None  # hexa8
+        self.c3d4_eids = None  # tet4
+        self.c3d6_eids = None  # penta6
+        self.c3d8_eids = None  # hexa8
+
         self.c3d10 = None  # tet4
-        self.c3d4_eids = None   # tet4
+        self.c3d15 = None  # penta15
+        self.c3d20 = None  # hexa20
         self.c3d10_eids = None  # tet10
+        self.c3d15_eids = None  # penta15
+        self.c3d20_eids = None  # hexa20
 
         # solids: reduced integration elements
-        self.c3d4r = None   # tet4 reduced
-        self.c3d8r = None   # hexa8 reduced
-        self.c3d10r = None  # tet4 reduced
-        self.c3d20r = None  # hexa20 reduced
-        self.c3d4r_eids = None   # tet4    reduced integration
-        self.c3d8r_eids = None   # hexa8,  reduced integration
-        self.c3d10r_eids = None  # tet10   reduced integration
-        self.c3d20r_eids = None  # hexa20, reduced integration
+        self.c3d4r = None   # tet4    reduced
+        self.c3d6r = None   # penta6  reduced
+        self.c3d8r = None   # hexa8   reduced
+        self.c3d4r_eids = None   # tet4     reduced integration
+        self.c3d6r_eids = None   # penta15, reduced integration
+        self.c3d8r_eids = None   # hexa8,   reduced integration
+
+        self.c3d10r = None  # tet10   reduced
+        self.c3d15r = None  # penta15 reduced
+        self.c3d20r = None  # hexa20  reduced
+        self.c3d10r_eids = None  # tet10    reduced integration
+        self.c3d15r_eids = None  # penta15, reduced integration
+        self.c3d20r_eids = None  # hexa20,  reduced integration
 
         # solids: hybrid hydrostatic
         self.c3d10h = None # tet10 hybrid hydrostatic
@@ -198,13 +222,21 @@ class Elements:
             ('s8r', 8), # CQUAD8 reduced
 
             #  solids
-            ('c3d4', 4),     # tet4
+            ('c3d4', 4),    # tet4
+            ('c3d6', 6),    # penta6
+            ('c3d8', 8),    # hexa8
+            ('c3d10', 10),  # tet10
+            ('c3d15', 15),  # penta15
+            ('c3d20', 20),  # hexa20
+
             ('c3d4r', 4),    # tet4 reduced
-            ('c3d10', 10),   # tet10
-            ('c3d10r', 10),  # tet10 reduced
-            ('c3d10h', 10),  # tet10 hybrid hydrostatic
+            ('c3d6r', 6),    # penta6 reduced
             ('c3d8r', 8),    # hexa8 reduced
+            ('c3d10r', 10),  # tet10 reduced
+            ('c3d15r', 15),  # penta15 reduced
             ('c3d20r', 20),  # hexa20 reduced
+
+            ('c3d10h', 10),  # tet10 hybrid hydrostatic
         ]
         return etypes_nnodes
 
@@ -287,6 +319,13 @@ class Elements:
         n_c3d10r = self.c3d10r.shape[0] if self.c3d10r is not None else 0  # tet10 reduced
         n_c3d10h = self.c3d10h.shape[0] if self.c3d10h is not None else 0  # tet10 hybrid hydrostatic
 
+        n_c3d6 = self.c3d6.shape[0] if self.c3d6 is not None else 0     # penta6
+        n_c3d15 = self.c3d15.shape[0] if self.c3d15 is not None else 0  # penta15
+        n_c3d6r = self.c3d6r.shape[0] if self.c3d6r is not None else 0     # penta6 reduced
+        n_c3d15r = self.c3d15r.shape[0] if self.c3d15r is not None else 0  # penta15 reduced
+
+        n_c3d8 = self.c3d8.shape[0] if self.c3d8 is not None else 0     # hexa8
+        n_c3d20 = self.c3d20.shape[0] if self.c3d20 is not None else 0  # hexa20
         n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0     # hexa8 reduced
         n_c3d20r = self.c3d20r.shape[0] if self.c3d20r is not None else 0  # hexa20 reduced
 
@@ -300,9 +339,11 @@ class Elements:
                  n_s8r +
                  # solids
                  n_c3d4 + n_c3d4r +
-                 n_c3d8r +
+                 n_c3d6 + n_c3d6r +
+                 n_c3d8 + n_c3d8r +
                  n_c3d10 + n_c3d10r + n_c3d10h +
-                 n_c3d20r)
+                 n_c3d15 + n_c3d15r +
+                 n_c3d20 + n_c3d20r)
         self.log.info(f'neids = {neids}')
         #assert neids > 0, str(self)
         return neids
@@ -341,8 +382,15 @@ class Elements:
         n_c3d10r = self.c3d10r.shape[0] if self.c3d10r is not None else 0
         n_c3d10h = self.c3d10h.shape[0] if self.c3d10h is not None else 0
 
-        n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0
-        n_c3d20r = self.c3d20r.shape[0] if self.c3d20r is not None else 0
+        n_c3d6 = self.c3d6.shape[0] if self.c3d6 is not None else 0     # penta6
+        n_c3d15 = self.c3d15.shape[0] if self.c3d15 is not None else 0  # penta15
+        n_c3d6r = self.c3d6r.shape[0] if self.c3d6r is not None else 0     # penta6 reduced
+        n_c3d15r = self.c3d15r.shape[0] if self.c3d15r is not None else 0  # penta15 reduced
+
+        n_c3d8 = self.c3d8.shape[0] if self.c3d8 is not None else 0     # hexa8
+        n_c3d20 = self.c3d20.shape[0] if self.c3d20 is not None else 0  # hexa20
+        n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0     # hexa8 reduced
+        n_c3d20r = self.c3d20r.shape[0] if self.c3d20r is not None else 0  # hexa20 reduced
 
         neids = (n_r2d2 +  # rigid
                  n_b31h +  # bar/beam
@@ -354,9 +402,11 @@ class Elements:
                  n_s8r +
                  # solids
                  n_c3d4 + n_c3d4r +
-                 n_c3d8r +
-                 n_c3d10 + n_c3d10h + n_c3d10r +
-                 n_c3d20r)
+                 n_c3d6 + n_c3d6r +
+                 n_c3d8 + n_c3d8r +
+                 n_c3d10 + n_c3d10r + n_c3d10h +
+                 n_c3d15 + n_c3d15r +
+                 n_c3d20 + n_c3d20r)
         assert neids == self.nelements, 'something is out of date...'
         msg = (
             f'Element(neids={neids:d},\n'
@@ -368,6 +418,9 @@ class Elements:
             # solids
             f'        n_c3d4={n_c3d4}, n_c3d4r={n_c3d4r},\n'
             f'        n_c3d10={n_c3d10}, n_c3d10r={n_c3d10r}, n_c3d10h={n_c3d10h}, \n'
+            f'        n_c3d6={n_c3d6}, n_c3d6r={n_c3d6r},\n'
+            f'        n_c3d15={n_c3d15}, n_c3d15r={n_c3d15r},\n'
+            f'        n_c3d8={n_c3d8}, n_c3d20={n_c3d20},\n'
             f'        n_c3d8r={n_c3d8r}, n_c3d20r={n_c3d20r})'
         )
         return msg
@@ -403,11 +456,20 @@ class Elements:
 
         # solids
         element_types['c3d4'] = (self.c3d4_eids, self.c3d4)
-        element_types['c3d4r'] = (self.c3d4r_eids, self.c3d4r)
+        element_types['c3d6'] = (self.c3d6_eids, self.c3d6)
+        element_types['c3d8'] = (self.c3d8_eids, self.c3d8)
         element_types['c3d10'] = (self.c3d10_eids, self.c3d10)
+        element_types['c3d15'] = (self.c3d15_eids, self.c3d15)
+        element_types['c3d20'] = (self.c3d20_eids, self.c3d20)
+
+        element_types['c3d4r'] = (self.c3d4r_eids, self.c3d4r)
+        element_types['c3d6r'] = (self.c3d6r_eids, self.c3d6r)
+        element_types['c3d8r'] = (self.c3d8r_eids, self.c3d8r)
         element_types['c3d10r'] = (self.c3d10r_eids, self.c3d10r)
-        element_types['c3d10h'] = (self.c3d10h_eids, self.c3d10h)
+        element_types['c3d15r'] = (self.c3d15r_eids, self.c3d15r)
         element_types['c3d20r'] = (self.c3d20r_eids, self.c3d20r)
+
+        element_types['c3d10h'] = (self.c3d10h_eids, self.c3d10h)
         return element_types
 
     def write(self, abq_file):
