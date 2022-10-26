@@ -225,7 +225,7 @@ class OP2Reader:
             b'MKLIST': self._read_mklist,
         }
 
-    def read_nastran_version(self, mode: str):
+    def read_nastran_version(self, mode: str) -> None:
         """
         reads the version header
           ints = (3, 4, 12, 1, 28, 12, 12, 4, 7, 4,
@@ -321,6 +321,7 @@ class OP2Reader:
         else:
             raise NotImplementedError(markers)
 
+        #print(f'mode = {mode!r} fmt={op2._nastran_format!r}')
         if mode == 'autodesk' or op2._nastran_format == 'autodesk':
             op2.post = -4
             mode = 'autodesk'

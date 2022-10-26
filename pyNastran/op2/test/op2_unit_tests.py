@@ -68,6 +68,238 @@ class TestOP2Unit(Tester):
             superelement_adaptivity_index='')
         str(weight)
 
+class TestAutodeskOP2(Tester):
+    """various OP2 tests"""
+    def _test_op2_autodesk_1(self):
+        """tests an Autodesk Nastran example"""
+        op2_filename = os.path.join(PKG_PATH, 'op2', 'test', 'examples',
+                                    'autodesk', 'aa8lzviq9.op2')
+        log = get_logger(level='warning')
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, write_f06=False,
+            is_autodesk=True, log=log, stop_on_failure=True, binary_debug=True, quiet=True,
+            post=-4)
+
+        assert len(op2.displacements) == 1
+        assert len(op2.spc_forces) == 1
+        assert len(op2.ctetra_stress) == 1
+
+        isubcase = 1
+        ctetra_stress = op2.ctetra_stress[isubcase]
+        if IS_PANDAS:
+            ctetra_stress.build_dataframe()
+        assert ctetra_stress.nelements == 810, ctetra_stress.nelements
+        assert ctetra_stress.data.shape == (1, 810*5, 10), ctetra_stress.data.shape
+
+        assert len(op2.cpenta_stress) == 0
+        assert len(op2.chexa_stress) == 0
+        assert len(op2.grid_point_forces) == 0
+
+    def test_op2_autodesk_2(self):
+        """tests an Autodesk Nastran example"""
+        op2_filename = os.path.join(MODEL_PATH, 'autodesk', '9zk6b5uuo.op2')
+        log = get_logger(level='warning')
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, write_f06=False,
+            log=log, stop_on_failure=True, binary_debug=True, quiet=True,
+            is_autodesk=True, post=-4)
+
+        assert len(op2.displacements) == 4, len(op2.displacements)
+        assert len(op2.spc_forces) == 4, len(op2.spc_forces)
+        assert len(op2.ctetra_stress) == 4, len(op2.ctetra_stress)
+        assert len(op2.ctetra_strain_energy) == 4, len(op2.ctetra_strain_energy)
+
+        isubcase = 1
+        ctetra_stress = op2.ctetra_stress[isubcase]
+        if IS_PANDAS:
+            ctetra_stress.build_dataframe()
+        nelements = 36
+        assert ctetra_stress.nelements == nelements, ctetra_stress.nelements
+        assert ctetra_stress.data.shape == (1, nelements*5, 10), ctetra_stress.data.shape
+
+        assert len(op2.cpenta_stress) == 0
+        assert len(op2.chexa_stress) == 0
+        assert len(op2.grid_point_forces) == 0
+
+    def test_op2_autodesk_3(self):
+        """tests an Autodesk Nastran example"""
+        op2_filename = os.path.join(MODEL_PATH, 'autodesk', 'nonlinear_beam.op2')
+        log = get_logger(level='warning')
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, write_f06=True,
+            log=log, stop_on_failure=True, binary_debug=True, quiet=True,
+            is_autodesk=True, post=-4)
+
+        assert len(op2.displacements) == 4, len(op2.displacements)
+        assert len(op2.spc_forces) == 4, len(op2.spc_forces)
+        assert len(op2.ctetra_stress) == 4, len(op2.ctetra_stress)
+        assert len(op2.nonlinear_ctetra_stress_strain) == 4, len(op2.nonlinear_ctetra_stress_strain)
+
+        #isubcase = 1
+        #ctetra_stress = op2.ctetra_stress[isubcase]
+        #if IS_PANDAS:
+            #ctetra_stress.build_dataframe()
+        #nelements = 36
+        #assert ctetra_stress.nelements == nelements, ctetra_stress.nelements
+        #assert ctetra_stress.data.shape == (1, nelements*5, 10), ctetra_stress.data.shape
+
+        assert len(op2.ctetra_strain_energy) == 0, len(op2.ctetra_strain_energy)
+        assert len(op2.cpenta_stress) == 0, len(op2.cpenta_stress)
+        assert len(op2.chexa_stress) == 0, len(op2.chexa_stress)
+        assert len(op2.grid_point_forces) == 4, len(op2.grid_point_forces)
+
+class TestOptistructOP2(Tester):
+    """various OP2 tests"""
+    def test_op2_optistruct_1(self):
+        """
+        Optistruct 2012 Tables : CASECC, GEOM1S, GEOM2S, GEOM3S, GEOM4S, EPTS, MPTS,
+                                OUGV1, OES1X
+        """
+        op2_filename = os.path.join(MODEL_PATH, 'optistruct', 'hm14.op2')
+        make_geom = True
+        write_bdf = False
+        write_f06 = True
+        log = get_logger(level='warning')
+        #debug_file = 'solid_bending.debug.out'
+        model = os.path.splitext(op2_filename)[0]
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        read_op2_geom(op2_filename, log=log)
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=make_geom, write_bdf=write_bdf,
+            write_f06=write_f06,
+            log=log, stop_on_failure=True, binary_debug=True, quiet=True)
+        isubcase = 1
+        # rod_force = op2.crod_force[isubcase]
+        # assert rod_force.nelements == 2, rod_force.nelements
+        # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
+
+
+        # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
+        # isubcase = isubcases[1]
+
+        #assert len(op2.rod_force) == 0
+        assert len(op2.crod_stress) == 0
+
+        assert len(op2.cbar_force) == 0
+        assert len(op2.cbar_stress) == 0
+        assert len(op2.cbeam_stress) == 0
+
+        assert len(op2.cquad4_stress) == 0
+        assert len(op2.ctria3_stress) == 0
+
+        ctetra_stress = op2.ctetra_stress[isubcase]
+        if IS_PANDAS:
+            ctetra_stress.build_dataframe()
+        assert ctetra_stress.nelements == 3951, ctetra_stress.nelements
+        assert ctetra_stress.data.shape == (1, 19755, 10), ctetra_stress.data.shape
+
+        assert len(op2.cpenta_stress) == 0
+        assert len(op2.chexa_stress) == 0
+
+        assert len(op2.grid_point_forces) == 0
+        os.remove(debug_file)
+
+
+class TestNASA95OP2(Tester):
+    """various OP2 tests"""
+    def test_op2_nasa_nastran_01(self):
+        """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(MODEL_PATH, 'nasa_nastran', 'balsa_wingbox.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'nasa_nastran', 'balsa_wingbox.op2')
+
+        #  can't parse replication
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            #'', bdf_filename, log=log)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model.safe_cross_reference()
+
+        #save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, is_nasa95=True, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
+
+
+class TestSATKOP2(Tester):
+    """various OP2 tests"""
+    def test_bdf_op2_satk_1(self):
+        """checks pn_mwe_s-solution_1.dat, which tests dynamics matrices"""
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(MODEL_PATH, 'satk', 'pn_mwe_s-solution_1.dat')
+        op2_filename = os.path.join(MODEL_PATH, 'satk', 'pn_mwe_s-solution_1.op2')
+
+        #  can't parse replication
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            #'', bdf_filename, log=log)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+
+        #save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+    def test_bdf_op2_satk_2(self):
+        """
+        checks pn_mwe_s-response_dynamics_1-random_base_excitation_1.op2,
+        which tests OUGPK1, OEFPK1 RMS results
+        """
+        log = get_logger(level='info')
+        #bdf_filename = os.path.join(MODEL_PATH, 'satk', 'pn_mwe_s-solution_1.dat')
+        op2_filename = os.path.join(MODEL_PATH, 'satk',
+                                    'pn_mwe_s-response_dynamics_1-random_base_excitation_1.op2')
+
+        #  can't parse replication
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            #'', bdf_filename, log=log)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        #unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+
+        #save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+
 class TestOP2(Tester):
     """various OP2 tests"""
     #def _spike(self):
@@ -1479,68 +1711,6 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-    def test_bdf_op2_satk_1(self):
-        """checks pn_mwe_s-solution_1.dat, which tests dynamics matrices"""
-        log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'satk', 'pn_mwe_s-solution_1.dat')
-        op2_filename = os.path.join(MODEL_PATH, 'satk', 'pn_mwe_s-solution_1.op2')
-
-        #  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
-
-        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
-        #model.safe_cross_reference()
-
-        #save_load_deck(model, run_save_load=False)
-
-        log = get_logger(level='warning')
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
-                compare=False, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
-
-    def test_bdf_op2_satk_2(self):
-        """
-        checks pn_mwe_s-response_dynamics_1-random_base_excitation_1.op2,
-        which tests OUGPK1, OEFPK1 RMS results
-        """
-        log = get_logger(level='info')
-        #bdf_filename = os.path.join(MODEL_PATH, 'satk', 'pn_mwe_s-solution_1.dat')
-        op2_filename = os.path.join(MODEL_PATH, 'satk',
-                                    'pn_mwe_s-response_dynamics_1-random_base_excitation_1.op2')
-
-        #  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
-
-        #unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
-        #model.safe_cross_reference()
-
-        #save_load_deck(model, run_save_load=False)
-
-        log = get_logger(level='warning')
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
-                compare=False, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
-
     def test_nx_initial_final_separation(self):
         """
         checks nx/contact_model.bdf, which tests
@@ -1795,35 +1965,6 @@ class TestOP2(Tester):
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
-
-    def test_op2_nasa_nastran_01(self):
-        """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""
-        log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nasa_nastran', 'balsa_wingbox.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nasa_nastran', 'balsa_wingbox.op2')
-
-        #  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
-
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
-        model.safe_cross_reference()
-
-        #save_load_deck(model, run_save_load=False)
-
-        log = get_logger(level='warning')
-        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, is_nasa95=True, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
-                compare=False, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False,
-                build_pandas=False, log=log)
 
     def test_set_results(self):
         """tests setting only a subset of results"""
@@ -2772,136 +2913,6 @@ class TestOP2(Tester):
             grid_point_forces.build_dataframe()
 
         assert os.path.exists(debug_file), os.listdir(folder)
-        os.remove(debug_file)
-
-    def _test_op2_autodesk_1(self):
-        """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(PKG_PATH, 'op2', 'test', 'examples',
-                                    'autodesk', 'aa8lzviq9.op2')
-        log = get_logger(level='warning')
-        op2, unused_is_passed = run_op2(
-            op2_filename, make_geom=False, write_bdf=False, write_f06=False,
-            is_autodesk=True, log=log, stop_on_failure=True, binary_debug=True, quiet=True,
-            post=-4)
-
-        assert len(op2.displacements) == 1
-        assert len(op2.spc_forces) == 1
-        assert len(op2.ctetra_stress) == 1
-
-        isubcase = 1
-        ctetra_stress = op2.ctetra_stress[isubcase]
-        if IS_PANDAS:
-            ctetra_stress.build_dataframe()
-        assert ctetra_stress.nelements == 810, ctetra_stress.nelements
-        assert ctetra_stress.data.shape == (1, 810*5, 10), ctetra_stress.data.shape
-
-        assert len(op2.cpenta_stress) == 0
-        assert len(op2.chexa_stress) == 0
-        assert len(op2.grid_point_forces) == 0
-
-    def test_op2_autodesk_2(self):
-        """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(MODEL_PATH, 'autodesk', '9zk6b5uuo.op2')
-        log = get_logger(level='warning')
-        op2, unused_is_passed = run_op2(
-            op2_filename, make_geom=False, write_bdf=False, write_f06=False,
-            log=log, stop_on_failure=True, binary_debug=True, quiet=True,
-            is_autodesk=True, post=-4)
-
-        assert len(op2.displacements) == 4, len(op2.displacements)
-        assert len(op2.spc_forces) == 4, len(op2.spc_forces)
-        assert len(op2.ctetra_stress) == 4, len(op2.ctetra_stress)
-        assert len(op2.ctetra_strain_energy) == 4, len(op2.ctetra_strain_energy)
-
-        isubcase = 1
-        ctetra_stress = op2.ctetra_stress[isubcase]
-        if IS_PANDAS:
-            ctetra_stress.build_dataframe()
-        nelements = 36
-        assert ctetra_stress.nelements == nelements, ctetra_stress.nelements
-        assert ctetra_stress.data.shape == (1, nelements*5, 10), ctetra_stress.data.shape
-
-        assert len(op2.cpenta_stress) == 0
-        assert len(op2.chexa_stress) == 0
-        assert len(op2.grid_point_forces) == 0
-
-    def test_op2_autodesk_3(self):
-        """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(MODEL_PATH, 'autodesk', 'nonlinear_beam.op2')
-        log = get_logger(level='warning')
-        op2, unused_is_passed = run_op2(
-            op2_filename, make_geom=False, write_bdf=False, write_f06=True,
-            log=log, stop_on_failure=True, binary_debug=True, quiet=True,
-            is_autodesk=True, post=-4)
-
-        assert len(op2.displacements) == 4, len(op2.displacements)
-        assert len(op2.spc_forces) == 4, len(op2.spc_forces)
-        assert len(op2.ctetra_stress) == 4, len(op2.ctetra_stress)
-        assert len(op2.nonlinear_ctetra_stress_strain) == 4, len(op2.nonlinear_ctetra_stress_strain)
-
-        #isubcase = 1
-        #ctetra_stress = op2.ctetra_stress[isubcase]
-        #if IS_PANDAS:
-            #ctetra_stress.build_dataframe()
-        #nelements = 36
-        #assert ctetra_stress.nelements == nelements, ctetra_stress.nelements
-        #assert ctetra_stress.data.shape == (1, nelements*5, 10), ctetra_stress.data.shape
-
-        assert len(op2.ctetra_strain_energy) == 0, len(op2.ctetra_strain_energy)
-        assert len(op2.cpenta_stress) == 0, len(op2.cpenta_stress)
-        assert len(op2.chexa_stress) == 0, len(op2.chexa_stress)
-        assert len(op2.grid_point_forces) == 4, len(op2.grid_point_forces)
-
-    def test_op2_optistruct_1(self):
-        """
-        Optistruct 2012 Tables : CASECC, GEOM1S, GEOM2S, GEOM3S, GEOM4S, EPTS, MPTS,
-                                OUGV1, OES1X
-        """
-        op2_filename = os.path.join(MODEL_PATH, 'optistruct', 'hm14.op2')
-        make_geom = True
-        write_bdf = False
-        write_f06 = True
-        log = get_logger(level='warning')
-        #debug_file = 'solid_bending.debug.out'
-        model = os.path.splitext(op2_filename)[0]
-        debug_file = model + '.debug.out'
-
-        if os.path.exists(debug_file):
-            os.remove(debug_file)
-        read_op2_geom(op2_filename, log=log)
-        op2, unused_is_passed = run_op2(
-            op2_filename, make_geom=make_geom, write_bdf=write_bdf,
-            write_f06=write_f06,
-            log=log, stop_on_failure=True, binary_debug=True, quiet=True)
-        isubcase = 1
-        # rod_force = op2.crod_force[isubcase]
-        # assert rod_force.nelements == 2, rod_force.nelements
-        # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
-
-
-        # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
-        # isubcase = isubcases[1]
-
-        #assert len(op2.rod_force) == 0
-        assert len(op2.crod_stress) == 0
-
-        assert len(op2.cbar_force) == 0
-        assert len(op2.cbar_stress) == 0
-        assert len(op2.cbeam_stress) == 0
-
-        assert len(op2.cquad4_stress) == 0
-        assert len(op2.ctria3_stress) == 0
-
-        ctetra_stress = op2.ctetra_stress[isubcase]
-        if IS_PANDAS:
-            ctetra_stress.build_dataframe()
-        assert ctetra_stress.nelements == 3951, ctetra_stress.nelements
-        assert ctetra_stress.data.shape == (1, 19755, 10), ctetra_stress.data.shape
-
-        assert len(op2.cpenta_stress) == 0
-        assert len(op2.chexa_stress) == 0
-
-        assert len(op2.grid_point_forces) == 0
         os.remove(debug_file)
 
     def test_op2_plate_py_01(self):

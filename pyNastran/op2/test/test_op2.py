@@ -266,7 +266,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         op2_bdf = OP2Geom(debug=debug, log=log)
         set_versions([op2, op2_nv, op2_bdf],
                      is_nx, is_optistruct, is_autodesk, is_nasa95,
-                     post, is_testing)
+                     post=post, is_testing=is_testing)
 
         if load_as_h5 and IS_HDF5:
             # you can't open the same h5 file twice
@@ -281,7 +281,9 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         # have to double write this until ???
         op2_nv = OP2(debug=debug, log=log, debug_file=debug_file)
 
-        set_versions([op2, op2_nv], is_nx, is_autodesk, is_nasa95, post, is_testing)
+        set_versions([op2, op2_nv],
+                     is_nx, is_optistruct, is_autodesk, is_nasa95,
+                     post=post, is_testing=is_testing)
         if load_as_h5 and IS_HDF5:
             # you can't open the same h5 file twice
             op2.load_as_h5 = load_as_h5
@@ -764,7 +766,7 @@ def remove_file(filename):
 def set_versions(op2s: List[OP2],
                  is_nx: bool, is_optistruct: bool,
                  is_autodesk: bool, is_nasa95: bool,
-                 post: int, is_testing: bool=False) -> None:
+                 post: int=0, is_testing: bool=False) -> None:
     for op2 in op2s:
         op2.IS_TESTING = is_testing
 
