@@ -62,6 +62,11 @@ nosetests.xml
 *.wpr
 *.wpu
 
+# AVL
+*avl3.36/*
+*src/*
+*v1.0/*
+
 # Nastran
 *test_bdf.dat
 *test_bdf.bdf
@@ -70,6 +75,10 @@ nosetests.xml
 *test_op2.op2
 *test_f06.f06
 *test_f06.op2
+plane_face_*.bdf
+plane_face2_*.bdf
+*.solver.f06
+*.solver.op2
 *.bdf_out
 *.dat_out
 *.f04
