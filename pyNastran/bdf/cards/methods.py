@@ -1157,9 +1157,9 @@ class MODTRAK(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
-        low_range = integer_or_blank(card, 2, 'low_range', 0)
+        low_range = integer_or_blank(card, 2, 'low_range', default=0)
         high_range = integer(card, 3, 'high_range')
-        mt_filter = double_or_blank(card, 4, 'mt_filter', 0.9)
+        mt_filter = double_or_blank(card, 4, 'mt_filter', default=0.9)
         return MODTRAK(sid, low_range, high_range, mt_filter, comment=comment)
 
     def raw_fields(self) -> list[Any]:

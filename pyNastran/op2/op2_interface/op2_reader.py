@@ -6474,7 +6474,12 @@ class OP2Reader:
                 #self.show_ndata(36, types='i', force=False, endian=None)
                 try:
                     self.read_3_markers([op2.isubtable, 1, 0])
-                    self.log.debug('markers=%s' % [op2.isubtable, 1, 0])
+                    #self.log.debug('markers=%s' % [op2.isubtable, 1, 0])
+                    df = op2.f.tell() - iloc
+                    if op2.size == 8:
+                        assert df == 48, df
+                    else:
+                        assert df == 36, df
                 except FortranMarkerError:
                     self.log.error(f'isubtable={op2.isubtable:d}')
                     op2.f.seek(iloc)
@@ -6493,8 +6498,6 @@ class OP2Reader:
                         #self.show(200)
                         #break
                     raise
-            df = op2.f.tell() - iloc
-            assert df == 36, df
             markers = self.get_nmarkers(1, rewind=True)
 
         if self.is_debug_file:
