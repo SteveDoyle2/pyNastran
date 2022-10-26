@@ -63,8 +63,12 @@ jobs:
          python-version: ['3.9', '3.10', '3.11-dev']
          os: [ubuntu-latest]
          # , macos-latest, windows-latest
-         mode: ['latest', 'latest_basic', 'old', 'latest_pyqt5_gui', 'latest_pyqt6_gui', 'latest_pyside5_gui', 'latest_pyside6_gui']
+         mode: ['latest', 'latest_basic', 'old', 'latest_pyqt5_gui', 'latest_pyqt6_gui', 'latest_pyside2_gui', 'latest_pyside6_gui']
                 # 'old_basic', 'old_pyside2_gui', 'old_pyqt5_gui'.
+         experimental: [false]
+         #include:
+         # - python: '3.11-dev'
+         #   experimental: true         
          #include:
          #- node: 13
          #  os: ubuntu-18.04
@@ -86,6 +90,7 @@ jobs:
           - {python-version: '3.11-dev', mode: 'latest_pyside2_gui'}
           - {python-version: '3.11-dev', mode: 'latest_pyqt6_gui'}
       fail-fast: false
+     #- continue-on-error: ${{ matrix.experimental }}
 #strategy:
     #  matrix:
           #https://github.com/zopyx/xmldirector.connector/blob/master/.travis.yml#L15-L54
@@ -138,7 +143,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: Install dependencies - ${{ matrix.mode }}
         run: |
          python -m pip install --upgrade pip
          pip install flake8
@@ -157,42 +162,52 @@ jobs:
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
         run: |
           pip install numpy scipy
+        #--no-binary  :all:
 
-      - name: Install latest packages - ${{ matrix.mode }}
+      - name: Install latest packages (pandas, matplotlib)
         if: ${{ matrix.mode == 'latest' || 
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
         run: |
-          pip install pandas>=0.25 h5py matplotlib #--no-binary  :all:
+          pip install pandas>=0.25 matplotlib
+
+      - name: Install latest packages (h5py)
+        if: ${{  matrix.python-version != '3.11-dev' && (matrix.mode == 'latest' || 
+                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        run: |
+          pip install h5py
 
       - name: Install latest packages (imageio, pillow)
-        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
-                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') && matrix.python-version != '3.11' }}
+        if: ${{ matrix.python-version != '3.11-dev' && (
+                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+                matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install imageio<3 pillow>5.2,!=7.1.0
 
       - name: Install latest packages (vtk)
-        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
-                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') && matrix.python-version != '3.11' }}
+        if: ${{ matrix.python-version != '3.11-dev' && (
+                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+                matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install vtk
 
-      - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.11' }}
+      - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.11-dev' }}
         name: Install PySide2
         run: |
           pip install PySide2
 
-      - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.11' }}
+      - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.11-dev' }}
         name: Install PySide6
         run: |
           pip install PySide6
 
-      - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.11' }}
+      - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.11-dev' }}
         name: Install PyQt5
         run: |
           pip install PyQt5
 
-      - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.11' }}
+      - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.11-dev' }}
         name: Install PyQt6
         run: |
           pip install PyQt6
@@ -225,7 +240,7 @@ jobs:
           pip list
 
       - name: Run No GUI
-        if: ${{ matrix.python-version == '3.11' || (
+        if: ${{ matrix.python-version == '3.11-dev' || (
                   matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
@@ -234,7 +249,7 @@ jobs:
 
         # 3.11 - No matching distribution found for vtk
       - name: Run GUI
-        if: ${{ matrix.python-version != '3.11' && (
+        if: ${{ matrix.python-version != '3.11-dev' && (
                  matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyside6_gui' || 
                  matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
