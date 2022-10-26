@@ -468,8 +468,9 @@ class F06Writer(OP2_F06_Common):
         if len(self.matrices) == 0:
             return
         log = self.log
-        if self.monitor1 is not None:
-            page_num = self.monitor1.write(
+        results = self.op2_results
+        if results.monitor1 is not None:
+            page_num = results.monitor1.write(
                 f06, page_stamp=page_stamp, page_num=page_num)
             log.debug('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
 
@@ -477,7 +478,7 @@ class F06Writer(OP2_F06_Common):
             for name, matrix in self.matrices.items():  #type: Matrix
                 matrix = cast(Matrix, matrix)
                 if name == 'MP3F':
-                    page_num = self.monitor3.write(
+                    page_num = results.monitor3.write(
                         f06, page_stamp=page_stamp, page_num=page_num)
                     log.debug('MONPNT3 from MP3F')
                 elif name in ['PMRF', 'PERF', 'PFRF', 'AGRF']:
@@ -487,7 +488,7 @@ class F06Writer(OP2_F06_Common):
                         print(matrix)
                     matrix.write(mat_file)
 
-            responses = self.op2_results.responses
+            responses = results.responses
             desvars = responses.desvars
             dscmcol = responses.dscmcol
             print(responses)

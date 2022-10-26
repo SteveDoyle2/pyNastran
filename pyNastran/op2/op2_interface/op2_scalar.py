@@ -468,23 +468,23 @@ class OP2_Scalar(OP2Common, FortranFormat):
         return self.matrices['MEFWTS']#.dataframe
 
 
-    @property
-    def monitor1(self):
-        self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
-        return self.op2_results.monitor1
-    @monitor1.setter
-    def monitor1(self, monitor1):
-        self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
-        self.op2_results.monitor1 = monitor1
+    #@property
+    #def monitor1(self):
+        #self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
+        #return self.op2_results.monitor1
+    #@monitor1.setter
+    #def monitor1(self, monitor1):
+        #self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
+        #self.op2_results.monitor1 = monitor1
 
-    @property
-    def monitor3(self):
-        self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
-        return self.op2_results.monitor3
-    @monitor3.setter
-    def monitor3(self, monitor3):
-        self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
-        self.op2_results.monitor3 = monitor3
+    #@property
+    #def monitor3(self):
+        #self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
+        #return self.op2_results.monitor3
+    #@monitor3.setter
+    #def monitor3(self, monitor3):
+        #self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
+        #self.op2_results.monitor3 = monitor3
 
     @property
     def matrix_tables(self):

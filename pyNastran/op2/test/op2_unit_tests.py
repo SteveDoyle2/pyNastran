@@ -2263,7 +2263,7 @@ class TestOP2(Tester):
         f06_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06')
         op2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
         op2.read_op2(op2_filename)
-        monitor3 = op2.monitor3
+        monitor3 = op2.op2_results.monitor3
         assert len(monitor3.frequencies) == 11, monitor3
         str(monitor3)
         op2.write_f06(f06_filename)
