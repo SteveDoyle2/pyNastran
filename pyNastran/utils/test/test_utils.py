@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-#import sys
+import sys
 import unittest
 
 import numpy as np
@@ -211,11 +211,11 @@ class TestUtils(unittest.TestCase):
         attributes = object_attributes(b, "both")
         self.assertEqual(attributes, ['_a', '_b', 'a', 'b', 'c'])
 
-    def test_object_attributes_introspection_3(self):
+    def test_object_attributes_introspection_2(self):
         """object methods determines the public/private attributes of a class"""
         b = B1(7)
         attributes = object_attributes(b, "all")
-        #version_info = sys.version_info
+        version_info = sys.version_info
         expected = [
             '__class__', '__delattr__', '__dict__',
             '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__',
@@ -225,9 +225,16 @@ class TestUtils(unittest.TestCase):
             '__weakref__', '__dir__', '__init_subclass__',
             '_a', '_b', 'a', 'b', 'c',
         ]
+        if version_info[1] == 11:
+            expected.append('__getstate__')
+
         #print('\nactual   = %s' % ','.join(list(sorted(attributes))))
         #print('expected = %s' % ','.join(list(sorted(expected))))
-        self.assertEqual(list(sorted(attributes)), list(sorted(expected)))
+        extra = set(attributes) - set(expected)
+        missing = set(expected) - set(attributes)
+        sorted_attributes = list(sorted(expected))
+        msg = f'attributes={sorted_attributes} extra={extra} missing={missing}'
+        self.assertEqual(list(sorted(attributes)), list(sorted(expected)), msg)
 
 
 if __name__ == '__main__':  # pragma: no cover
