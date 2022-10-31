@@ -1079,7 +1079,7 @@ class AddCards:
         ----------
         key : str
             the name of the PARAM
-        values : int/float/str/List
+        values : int/float/str/list
             varies depending on the type of PARAM
         comment : str; default=''
             a comment for the card
@@ -1119,7 +1119,7 @@ class AddCards:
         ----------
         key : str
             the name of the PARAM
-        values : int/float/str/List
+        values : int/float/str/list
             varies depending on the type of PARAM
         comment : str; default=''
             a comment for the card
@@ -1138,7 +1138,7 @@ class AddCards:
         ----------
         key : str
             the name of the PARAM
-        values : int/float/str/List
+        values : int/float/str/list
             varies depending on the type of PARAM
         comment : str; default=''
             a comment for the card
@@ -1900,7 +1900,7 @@ class AddCards:
             node ids; connected grid points at ends A and B
             The nodes may be coincident, but then cid is required.
         x : list[float, float, float]; None
-            List : the directional vector used to define the stiffnesses
+            list : the directional vector used to define the stiffnesses
                    or damping from the PBUSH card
             None : use g0
         g0 : int/None
@@ -4006,8 +4006,10 @@ class AddCards:
         darea = DAREA(sid, nid, component, scale, comment=comment)
         self._add_methods._add_darea_object(darea)
 
-    def add_tload1(self, sid, excite_id, tid, delay=0, Type='LOAD', us0=0.0, vs0=0.0,
-                   comment='') -> TLOAD1:
+    def add_tload1(self, sid: int, excite_id: int, tid: Union[int, float],
+                   delay: Union[int, float]=0, Type: str='LOAD',
+                   us0: float=0.0, vs0: float=0.0,
+                   comment: str='') -> TLOAD1:
         """
         Creates a TLOAD1 card, which defienes a load based on a table
 
@@ -4017,10 +4019,9 @@ class AddCards:
             load id
         excite_id : int
             node id where the load is applied
-        tid : int
+        tid : int / float
             TABLEDi id that defines F(t) for all degrees of freedom in
             EXCITEID entry
-            float : MSC not supported
         delay : int/float; default=0
             the delay; if it's 0/blank there is no delay
             float : delay in units of time

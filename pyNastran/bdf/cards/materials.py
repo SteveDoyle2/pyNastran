@@ -2785,8 +2785,8 @@ class MATG(Material):
         tabld = integer(card, 4, 'tabld')
 
         tablu = [
-            integer(card, 5, 'tablu1'),
-            integer(card, 6, 'tablu2'),
+            integer_or_blank(card, 5, 'tablu1'),
+            integer_or_blank(card, 6, 'tablu2'),
             integer_or_blank(card, 7, 'tablu3'),
             integer_or_blank(card, 8, 'tablu4'),
         ]

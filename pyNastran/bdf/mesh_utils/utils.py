@@ -12,7 +12,7 @@ defines:
 import os
 import sys
 from io import StringIO
-from typing import Dict, Any
+from typing import Any
 from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber

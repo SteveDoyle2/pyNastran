@@ -139,7 +139,7 @@ class CBUSH(BushElement):
             node ids; connected grid points at ends A and B
             The nodes may be coincident, but then cid is required.
         x : list[float, float, float]; None
-            List : the directional vector used to define the stiffnesses
+            list : the directional vector used to define the stiffnesses
                    or damping from the PBUSH card
             None : use g0
         g0 : int/None

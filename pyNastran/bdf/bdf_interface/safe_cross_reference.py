@@ -127,7 +127,7 @@ class SafeXrefMesh(XrefMesh):
     def _safe_cross_reference_aero(self) -> None:
         """
         Links up all the aero cards
-          - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
+          - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARM, AESTAT, AESURF, AESURFS
         """
         self.zona.safe_cross_reference()
         xref_errors = defaultdict(list)
@@ -221,7 +221,7 @@ class SafeXrefMesh(XrefMesh):
             #'AEFACT',   ## aefacts
             #'AELINK',   ## aelinks
             #'AELIST',   ## aelists
-            #'AEPARAM',  ## aeparams
+            #'AEPARM',  ## aeparams
             #'AESTAT',   ## aestats
             #'AESURF',  ## aesurfs
 

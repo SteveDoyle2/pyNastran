@@ -1398,12 +1398,12 @@ def _convert_aero(model: BDF,
                   force_scale: float) -> None:
     """
     Converts the aero cards
-      - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESURF
+      - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARM, AESURF
 
     Supports: AERO, AEROS, CAERO1, CAERO2, TRIM*, MONPNT1, FLUTTER FLFACT-rho/vel
               GUST, AESURF, PAERO2
     Skips: PAERO1, AESTAT, AESURFS, AECOMP, AELIST
-    Doesn't support:CAERO3-5, PAERO3-5, SPLINEx, AEPARAM,  AELINK, AEPRESS, AEFORCE,
+    Doesn't support:CAERO3-5, PAERO3-5, SPLINEx, AEPARM,  AELINK, AEPRESS, AEFORCE,
     *probably not done
 
     """

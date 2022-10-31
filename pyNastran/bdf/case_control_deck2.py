@@ -612,7 +612,7 @@ class CaseControlDeck:
             see brief
         options : list[str/int/float]
             see brief
-        param_type : str/int/float/List
+        param_type : str/int/float/list
             see brief
 
         """

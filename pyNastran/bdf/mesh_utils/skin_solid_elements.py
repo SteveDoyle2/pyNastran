@@ -118,7 +118,7 @@ def get_solid_skin_faces(model):
     face_map : dict[sorted_face] = face
        sorted_face : tuple(int, int, ...)
            the face nids in sorted order
-       face : List(int, int, ...)
+       face : list(int, int, ...)
            the face nids
 
     """

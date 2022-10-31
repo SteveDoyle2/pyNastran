@@ -299,8 +299,7 @@ def _parse_pynastran_header(line: str) -> tuple[Optional[str], Optional[str]]:
     return key, value
 
 
-#def clean_empty_lines(lines):
-    ## type: (List[str]) -> list[str]
+#def clean_empty_lines(lines: list[str]) -> list[str]:
     #"""
     #Removes leading and trailing empty lines
     #don't remove internally blank lines

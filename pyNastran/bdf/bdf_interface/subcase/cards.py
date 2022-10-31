@@ -136,9 +136,12 @@ class ECHO(CaseControlCard):
         values = []
         for value in values_str:
             if value.startswith('('):
-                print(values_str)
-                print(value)
-                asdf
+                #print(values_str)
+                #print(value)
+                #['SORT', '(PARAM)']
+                pass
+                values.append(value)
+                #asdf
             else:
                 values.append(value)
 
@@ -642,6 +645,23 @@ class GROUNDCHECK(CheckCard):
     def export_to_hdf5(self, hdf5_file, encoding):
         export_to_hdf5_check(self, hdf5_file, encoding)
 
+    @classmethod
+    def load_hdf5(cls, h5_file, encoding: str) -> Any:
+        from pyNastran.utils.dict_to_h5py import _cast
+        #'data', 'key', 'options', 'param_type', 'value'
+        #print(h5_file, h5_file.keys())
+        values = _cast(h5_file['value'])
+        options_bytes = _cast(h5_file['options'])
+        #data = _cast(h5_file['data'])
+        key = _cast(h5_file['key'])
+        #b'GROUNDCHECK' b'YES' [b'SET=(G,F)', b'DATAREC=NO', b'RTHRESH=.8']
+        #'options'
+        value = values.decode(encoding)
+        options = [option.decode(encoding) for option in options_bytes]
+        print(key, values, options, ) # data
+        #'data'
+        return GROUNDCHECK('GROUNDCHECK', value, options)
+
 
 class MEFFMASS(CheckCard):
     """
@@ -816,23 +836,29 @@ class EXTSEOUT(CaseControlCard):
         for key in subgroup.keys():
             subgroupi = subgroup[key]
             if key == 'data':
-                data_keys = _cast(subgroupi['keys'])
-                data_keys = decode_bytes_list(data_keys, encoding)
+                subgroupi_keys = list(subgroupi)
+                if len(subgroupi_keys) > 0:
+                    print(subgroupi, subgroupi_keys)
+                    data_keys_group = subgroupi['keys']
+                    data_keys = _cast(data_keys_group)
+                    data_keys = decode_bytes_list(data_keys, encoding)
 
-                keys_none = subgroupi['keys_none']
-                keys_none = decode_bytes_list(keys_none, encoding)
+                    keys_none = subgroupi['keys_none']
+                    keys_none = decode_bytes_list(keys_none, encoding)
 
-                data_values = _cast(subgroupi['values'])
-                data_values = decode_bytes_list(data_values, encoding)
+                    data_values = _cast(subgroupi['values'])
+                    data_values = decode_bytes_list(data_values, encoding)
 
-                keys = data_keys + keys_none
-                values = data_values + [None] * len(keys_none)
-                data = [(key, value) for (key, value) in zip(keys, values)]
+                    keys = data_keys + keys_none
+                    values = data_values + [None] * len(keys_none)
+                    data = [(key, value) for (key, value) in zip(keys, values)]
+                else:
+                    data = []
             elif key == 'param_type':
                 pass
             else:
                 raise NotImplementedError(key)
-        return EXTSEOUT(data), []
+        return EXTSEOUT(data)
 
     @classmethod
     def add_from_case_control(cls, line: str):
