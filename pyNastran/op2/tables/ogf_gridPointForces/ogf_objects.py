@@ -4,7 +4,7 @@ import inspect
 import warnings
 from copy import deepcopy
 from struct import Struct, pack
-from typing import List, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
@@ -342,7 +342,7 @@ class RealGridPointForcesArray(GridPointForces):
             #print(self.data_frame)
         self.data_frame = data_frame
 
-    def _build_unique_dataframe(self, headers: List[str]):
+    def _build_unique_dataframe(self, headers: list[str]):
         import pandas as pd
         ntimes = self.data.shape[0]
         nnodes = self.data.shape[1]
@@ -501,9 +501,9 @@ class RealGridPointForcesArray(GridPointForces):
 
     def extract_freebody_loads(self, eids: NDArrayNint,
                                coord_out: CORD,
-                               coords: Dict[int, CORD],
+                               coords: dict[int, CORD],
                                nid_cd: NDArrayN2int,
-                               icd_transform: Dict[int, NDArrayNint],
+                               icd_transform: dict[int, NDArrayNint],
                                itime: int=0, debug: bool=False,
                                log: Optional[SimpleLogger]=None):
         """
@@ -597,9 +597,9 @@ class RealGridPointForcesArray(GridPointForces):
                                 nids: NDArrayNint,
                                 eids: NDArrayNint,
                                 coord_out: CORD,
-                                coords: Dict[int, CORD],
+                                coords: dict[int, CORD],
                                 nid_cd: NDArrayN2int,
-                                icd_transform: Dict[int, CORD],
+                                icd_transform: dict[int, CORD],
                                 xyz_cid0: NDArrayN3float,
                                 summation_point: Optional[NDArray3float]=None,
                                 consider_rxf: bool=True,
@@ -608,7 +608,7 @@ class RealGridPointForcesArray(GridPointForces):
                                 stop_on_nan: bool=False,
                                 debug: bool=False,
                                 log: Optional[SimpleLogger]=None,
-                                idtype: str='int32') -> Tuple[NDArray3float, NDArray3float]:
+                                idtype: str='int32') -> tuple[NDArray3float, NDArray3float]:
         """
         Extracts Patran-style interface loads.  Interface loads are the
         internal loads at a cut.
@@ -687,9 +687,9 @@ class RealGridPointForcesArray(GridPointForces):
                                 nids: NDArrayNint,
                                 eids: NDArrayNint,
                                 coord_out: CORD,
-                                coords: Dict[int, CORD],
+                                coords: dict[int, CORD],
                                 nid_cd: NDArrayN2int,
-                                icd_transform: Dict[int, CORD],
+                                icd_transform: dict[int, CORD],
                                 xyz_cid0: NDArrayN3float,
                                 summation_point: Optional[NDArray3float]=None,
                                 consider_rxf: bool=True,
@@ -698,7 +698,7 @@ class RealGridPointForcesArray(GridPointForces):
                                 debug: bool=False,
                                 stop_on_nan: bool=False,
                                 log: Optional[SimpleLogger]=None,
-                                idtype: str='int32') -> Tuple[NDArrayN3float, NDArrayN3float, NDArray3float, NDArray3float]:
+                                idtype: str='int32') -> tuple[NDArrayN3float, NDArrayN3float, NDArray3float, NDArray3float]:
         """see ``extract_interface_loads``"""
         fdtype = self.data.dtype
         nid_cd = _get_nid_cd_from_nid_cp_cd(nid_cd)
@@ -775,7 +775,7 @@ class RealGridPointForcesArray(GridPointForces):
                                         idtype: str,
                                         fdtype: str,
                                         itime:int=0,
-                                        debug: bool=False) -> Tuple[NDArrayNint, NDArrayN3float, NDArrayN3float]:
+                                        debug: bool=False) -> tuple[NDArrayNint, NDArrayN3float, NDArrayN3float]:
         force_out = np.full((0, 3), np.nan, dtype=fdtype)
         moment_out = np.full((0, 3), np.nan, dtype=fdtype)
         #force_out_sum = np.full(3, np.nan, dtype=fdtype)
@@ -868,12 +868,12 @@ class RealGridPointForcesArray(GridPointForces):
                              nids: np.ndarray,
                              xyz_cid0: np.ndarray,
                              nid_cd: NDArrayN2int,
-                             icd_transform: Dict[int, NDArrayNint],
+                             icd_transform: dict[int, NDArrayNint],
 
                              eids: np.ndarray,
                              element_centroids_cid0: NDArrayN3float,
                              stations: NDArrayNfloat,
-                             coords: Dict[int, CORD],
+                             coords: dict[int, CORD],
                              coord_out: CORD,
                              iaxis_march: Optional[NDArray3float]=None,
                              itime: int=0,
@@ -881,9 +881,9 @@ class RealGridPointForcesArray(GridPointForces):
                              nodes_tol: Optional[float]=None,
                              stop_on_nan: bool=False,
                              debug: bool=False,
-                             log: Optional[SimpleLogger]=None) -> Tuple[NDArray3float,
+                             log: Optional[SimpleLogger]=None) -> tuple[NDArray3float,
                                                                         NDArray3float,
-                                                                        Dict[int, CORD],
+                                                                        dict[int, CORD],
                                                                         NDArrayNint, NDArrayNint]:
         """
         Computes a series of forces/moments at various stations along a
@@ -931,7 +931,7 @@ class RealGridPointForcesArray(GridPointForces):
         -------
         force_sum / moment_sum : (nstations, 3) float ndarray
             the forces/moments at the station
-        new_coords: Dict[int, CORD2R]
+        new_coords: dict[int, CORD2R]
             the station march coords starting from icoord
         nelems, nnodes: (nstations,) int ndarray
             the number of elements/nodes included in the summation
@@ -1127,7 +1127,7 @@ class RealGridPointForcesArray(GridPointForces):
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1369,7 +1369,7 @@ class RealGridPointForcesArray(GridPointForces):
         ]
         return msg
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
 
@@ -1736,7 +1736,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1948,7 +1948,7 @@ class ComplexGridPointForcesArray(GridPointForces):
 
         return msg
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
 

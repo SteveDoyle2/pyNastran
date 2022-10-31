@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros
 
@@ -190,7 +189,7 @@ class RealBushArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return ['<%s>\n' % self.__class__.__name__,
                     f'  ntimes: {self.ntimes:d}\n',
@@ -387,11 +386,11 @@ class RealBushStressArray(RealBushArray, StressObject):
         RealBushArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         return headers
 
-    def _get_msgs(self) -> List[str]:
+    def _get_msgs(self) -> list[str]:
         if self.element_type == 102:
             pass
         else:
@@ -409,11 +408,11 @@ class RealBushStrainArray(RealBushArray, StrainObject):
         RealBushArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         return headers
 
-    def _get_msgs(self) -> List[str]:
+    def _get_msgs(self) -> list[str]:
         if self.element_type == 102:
             pass
         else:

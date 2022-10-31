@@ -47,7 +47,7 @@ import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct # , error as struct_error
-from typing import Tuple, Optional, Callable, TYPE_CHECKING
+from typing import Optional, Callable, TYPE_CHECKING
 
 import numpy as np
 import scipy  # type: ignore
@@ -1057,7 +1057,7 @@ class OP2Reader:
         #op2.show_ndata(200)
         #sss
 
-    def _read_cmodext_helper(self, marker_orig, debug=False) -> Tuple[int, bool]:
+    def _read_cmodext_helper(self, marker_orig, debug=False) -> tuple[int, bool]:
         r"""
 
         64-bit:
@@ -2008,7 +2008,7 @@ class OP2Reader:
         #self.show(2000)
         #aaa
 
-    def _read_subtable_name(self, table_names: List[str]):
+    def _read_subtable_name(self, table_names: list[str]):
         data, ndata = self._read_record_ndata()
         if ndata == 8:
             table_name2, = self.op2.struct_8s.unpack(data)
@@ -2755,12 +2755,12 @@ class OP2Reader:
         #data = self._read_record()
         #self.show_data(data, types='ifs', endian=None)
 
-    def read_table_name(self, table_names: List[bytes]) -> str:
+    def read_table_name(self, table_names: list[bytes]) -> str:
         if self.size == 4:
             return self.read_table_name4(table_names)
         return self.read_table_name8(table_names)
 
-    def read_table_name4(self, table_names: List[bytes]) -> str:
+    def read_table_name4(self, table_names: list[bytes]) -> str:
         assert isinstance(table_names, list), table_names
         data, ndata = self._read_record_ndata4() # GPL
         if ndata == 8:
@@ -2776,7 +2776,7 @@ class OP2Reader:
         assert table_name_str in table_names, f'actual={table_name_str} allowed={table_names}'
         return table_name_str
 
-    def read_table_name8(self, table_names: List[bytes]) -> str:
+    def read_table_name8(self, table_names: list[bytes]) -> str:
         assert isinstance(table_names, list), table_names
         data, ndata = self._read_record_ndata8() # GPL
         if ndata == 16:
@@ -3444,7 +3444,7 @@ class OP2Reader:
 
 
     def _read_deck_section(self, deck_filename: str, save_lines: bool,
-                           write_deck: bool, mode='w', read_mode: int=1) -> List[str]:
+                           write_deck: bool, mode='w', read_mode: int=1) -> list[str]:
         """helper for ``read_ibulk`` and ``read_icase``"""
         marker = -2
         if save_lines and write_deck:
@@ -3706,7 +3706,7 @@ class OP2Reader:
                 #   DATTYP=6 for list of whirl direction codes (2.0=backwards, 3.0=forward, 4.0=linear)
                 #   DATTYP=7 for list of converted frequencies in analysis system
                 #   DATTYP=8 for list of whirl directions codes for converted solution (2.0=backwards, 3.0=forward, 4.0=linear)
-                # 4 VALS(NVAL) RS List of values
+                # 4 VALS(NVAL) RS list of values
                 # Words 1–4 repeat for NCRV curves. For DATTYP≠1, NVAL and NCRV=0
 
                 dict_map = {
@@ -5179,7 +5179,7 @@ class OP2Reader:
         self.read_markers([0])
     #---------------------------------------------------------------------------
 
-    def _get_marker_n(self, nmarkers: int) -> List[int]:
+    def _get_marker_n(self, nmarkers: int) -> list[int]:
         """
         Gets N markers
 
@@ -5193,7 +5193,7 @@ class OP2Reader:
 
         Returns
         -------
-        markers : List[int, int, int]
+        markers : list[int, int, int]
             a list of nmarker integers
 
         """
@@ -5224,7 +5224,7 @@ class OP2Reader:
 
         Returns
         -------
-        markers : List[int]
+        markers : list[int]
             list of [1, 2, 3, ...] markers
 
         """
@@ -5262,7 +5262,7 @@ class OP2Reader:
 
         Returns
         -------
-        markers : List[int]
+        markers : list[int]
             list of [1, 2, 3, ...] markers
 
         """
@@ -5287,12 +5287,12 @@ class OP2Reader:
                         i, macro_rewind or rewind))
         return markers
 
-    def read_markers(self, markers: List[int], macro_rewind: bool=True) -> None:
+    def read_markers(self, markers: list[int], macro_rewind: bool=True) -> None:
         if self.size == 4:
             return self.read_markers4(markers, macro_rewind=macro_rewind)
         return self.read_markers8(markers, macro_rewind=macro_rewind)
 
-    def read_markers4(self, markers: List[int], macro_rewind: bool=True) -> None:
+    def read_markers4(self, markers: list[int], macro_rewind: bool=True) -> None:
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
         The "marker" corresponds to the value, so 3 markers takes up 9 integers.
@@ -5304,7 +5304,7 @@ class OP2Reader:
 
         Parameters
         ----------
-        markers : List[int]
+        markers : list[int]
             markers to get; markers = [-10, 1]
 
         Raises
@@ -5327,7 +5327,7 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write(f'  read_markers -> [4, {marker:d}, 4]\n')
 
-    def read_markers8(self, markers: List[int], macro_rewind: int=True) -> None:
+    def read_markers8(self, markers: list[int], macro_rewind: int=True) -> None:
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
         The "marker" corresponds to the value, so 3 markers takes up 9 integers.
@@ -5339,7 +5339,7 @@ class OP2Reader:
 
         Parameters
         ----------
-        markers : List[int]
+        markers : list[int]
             markers to get; markers = [-10, 1]
 
         Raises
@@ -5404,7 +5404,7 @@ class OP2Reader:
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one in [0, 1], one  # 0, 50
 
-    def _set_op2_date(self, month: int, day: int, year: int) -> Tuple[int, int, int]:
+    def _set_op2_date(self, month: int, day: int, year: int) -> tuple[int, int, int]:
         """sets the date the job was run"""
         date = (month, day, year)
         self.op2.date = date
@@ -5428,13 +5428,13 @@ class OP2Reader:
             return self._read_record_ndata4(debug=debug, macro_rewind=macro_rewind)[0]
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)[0]
 
-    def _read_record_ndata(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
+    def _read_record_ndata(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
         """reads a record and the length of the record"""
         if self.size == 4:
             return self._read_record_ndata4(debug=debug, macro_rewind=macro_rewind)
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)
 
-    def _read_record_ndata4(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
+    def _read_record_ndata4(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
         """reads a record and the length of the record for size=4"""
         op2 = self.op2
         marker0 = self.get_marker1_4(rewind=False, macro_rewind=macro_rewind)
@@ -5485,7 +5485,7 @@ class OP2Reader:
             record = b''.join(records)
         return record, nrecord
 
-    def _read_record_ndata8(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
+    def _read_record_ndata8(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
         """reads a record and the length of the record for size=8"""
         op2 = self.op2
         markers0 = self.get_nmarkers8(1, rewind=False, macro_rewind=macro_rewind)
@@ -5806,7 +5806,7 @@ class OP2Reader:
 
         Parameters
         ----------
-        markers : List[int, int, int]
+        markers : list[int, int, int]
             markers to get; markers = [-10, 1, 0]
 
         Raises
@@ -6157,7 +6157,7 @@ class OP2Reader:
         """
         return self._skip_block_ndata()[0]
 
-    def _skip_block_ndata(self) -> Tuple[None, int]:
+    def _skip_block_ndata(self) -> tuple[None, int]:
         """
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
@@ -6296,7 +6296,7 @@ class OP2Reader:
                 self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 12:
-            subtable_name, unused_ten = unpack(self._endian + b'8si', data)  # type: Tuple[bytes, int]
+            subtable_name, unused_ten = unpack(self._endian + b'8si', data)  # type: tuple[bytes, int]
             subtable_name = subtable_name.strip().decode(self._encoding)
             #assert ten == 10, self.show_data(data, types='ifs', endian=None)
             assert subtable_name in ['GPL', 'GPLS'], subtable_name
@@ -6769,7 +6769,7 @@ class OP2Reader:
         op2.f.seek(op2.n)
         return self._write_data(f, data, types=types, force=force, endian=endian)
 
-def eqexin_to_nid_dof_doftype(eqexin1, eqexin2) -> Tuple[Any, Any, Any]:
+def eqexin_to_nid_dof_doftype(eqexin1, eqexin2) -> tuple[Any, Any, Any]:
     """assemble dof table"""
     dof = eqexin2[1::2] // 10
     doftype = eqexin2[1::2] - 10 * dof
@@ -6790,7 +6790,7 @@ def get_table_size_from_ncolumns(table_name: str, nvalues: int, ncolumns: int) -
         raise RuntimeError(msg)
     return nrows
 
-def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
+def dscmcol_dresp1(responses: dict[int, dict[str, Any]],
                    nresponses_dresp1: int,
                    ints, floats) -> None:
     """helper for DSCMCOL"""
@@ -7205,7 +7205,7 @@ def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
         idata += 9
     return
 
-def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
+def dscmcol_dresp2(responses: dict[int, dict[str, Any]],
                    nresponses_dresp2: int,
                    ints, floats) -> None:
     """helper for DSCMCOL"""
@@ -7735,7 +7735,7 @@ def _read_extdb_phip(self, marker: int,
 
 def _get_gpdt_nnodes_numwide(size: int, ndata: int,
                              header_ints,
-                             log: SimpleLogger) -> Tuple[int, int]:  # pragma: no cover
+                             log: SimpleLogger) -> tuple[int, int]:  # pragma: no cover
     """
     size=4; ndata=1120 [102  40   0   0   0   0   0] -> nnodes=40
       1120=(7*4)*4*10 -> 7 words; nnodes=40
@@ -7790,7 +7790,7 @@ def _get_gpdt_nnodes_numwide(size: int, ndata: int,
     return nnodes, numwide
 
 def _get_gpdt_numwide_from_nodes_null_nwords(size: bool, nbytes: int,  # pragma: no cover
-                                             ndata: int) -> Tuple[bool, int]:
+                                             ndata: int) -> tuple[bool, int]:
     """
     size=4 ndata=392 nnodes_nbytes=28
       392 = 4 * 2. * 7^2

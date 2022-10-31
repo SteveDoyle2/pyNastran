@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from struct import Struct, unpack
 from collections import namedtuple
-from typing import Tuple, Dict, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -105,7 +105,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.binary_debug = None
 
         #: the list of "words" on a subtable 3
-        self.words = []  # List[Optional[str]]
+        self.words = []  # list[Optional[str]]
 
         #: The current table_name (e.g. OES1)
         #: None indicates no table_name has been read
@@ -621,7 +621,7 @@ class OP2Common(Op2Codes, F06Writer):
         max_geom_id = max([self.table_count[key] for key in keys])
         return max_geom_id
 
-    def _read_geom_4(self, mapper: Dict[Tuple[int, int, int], Any],
+    def _read_geom_4(self, mapper: dict[tuple[int, int, int], Any],
                      data: bytes, ndata: int) -> int:
         """
         Reads a geometry table
@@ -1406,7 +1406,7 @@ class OP2Common(Op2Codes, F06Writer):
             # raise DeviceCodeError(msg)
         # return eid2
 
-    def get_oug2_flag(self) -> Tuple[str, str]:
+    def get_oug2_flag(self) -> tuple[str, str]:
         if self.analysis_code == 5:
             flag = 'freq'
             flag_type = '%.2f'
@@ -2148,7 +2148,7 @@ class OP2Common(Op2Codes, F06Writer):
         return auto_return, is_vectorized
 
     def _create_oes_object4(self, nelements: int, result_name: str,
-                            slot: Dict[Any, Any], obj_vector) -> Tuple[bool, bool]:
+                            slot: dict[Any, Any], obj_vector) -> tuple[bool, bool]:
         """
         Creates the self.obj parameter based on if this is vectorized or not.
 
@@ -2383,7 +2383,7 @@ def _function7(value: int) -> int:
 
 def read_title_helper(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: bytes,
                       isubcase: int,
-                      encoding: str, log: SimpleLogger) -> Tuple[str, str, str, str, str]:
+                      encoding: str, log: SimpleLogger) -> tuple[str, str, str, str, str]:
     """
     title_bytes    = b''  # 128 bytes
     subtitle_bytes = '                                                                                                   SUPERELEMENT 0       ,   10  '
@@ -2440,7 +2440,7 @@ def read_title_helper(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: by
     return title, subtitle, subtitle_original, label, label2
 
 def parse_fba_subcase(title: str, subtitle: str, label: str,
-                      log: SimpleLogger) -> Tuple[str, str]:
+                      log: SimpleLogger) -> tuple[str, str]:
 
     #log.error(f'title={title!r}')
     #log.error(f'subtitle={subtitle!r}')
@@ -2541,7 +2541,7 @@ def parse_fba_subcase(title: str, subtitle: str, label: str,
     return subtitle, label, label_base
 
 def parse_frf_subcase(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: bytes,
-                      title: str, subtitle: str, label: str, log: SimpleLogger) -> Tuple[str, str, str]:
+                      title: str, subtitle: str, label: str, log: SimpleLogger) -> tuple[str, str, str]:
     subtitle_mod = subtitle[:28]
     label_base = label[:100]
     #title    = b' FRFRET4- FREQUENCY RESPONSE WITH POINT LOAD                                                                                    '

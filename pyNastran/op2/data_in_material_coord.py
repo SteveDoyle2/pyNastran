@@ -5,7 +5,7 @@ Defines:
 """
 from __future__ import annotations
 import copy
-from typing import Tuple, Dict, Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 
 import numpy as np
 from numpy import cos, sin, cross
@@ -31,7 +31,7 @@ strain_vectors = ['cquad4_strain', 'cquad8_strain', 'cquadr_strain',
 def transf_Mohr(Sxx: np.ndarray,
                 Syy: np.ndarray,
                 Sxy: np.ndarray,
-                theta_rad: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                theta_rad: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Mohr's Circle-based Plane Stress Transformation
 
     Parameters
@@ -260,7 +260,7 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
                 new_vector.build_dataframe()
     return op2_new
 
-def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> Dict[int, float]:
+def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> dict[int, float]:
     eids = np.array(list(bdf.elements.keys()))
     elems = np.array(list(bdf.elements.values()))
     mcid = np.array([is_mcid(e) for e in elems])
@@ -365,7 +365,7 @@ def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> Dict[int, float]:
 
 def _get_tri_nodes(nids: np.ndarray,
                    xyz_cid0: np.ndarray,
-                   element_nodes: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                   element_nodes: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     inode = np.searchsorted(nids, element_nodes)
     g1 = xyz_cid0[inode[:, 0], :]
     g2 = xyz_cid0[inode[:, 1], :]
@@ -374,7 +374,7 @@ def _get_tri_nodes(nids: np.ndarray,
 
 def _get_quad_nodes(nids: np.ndarray,
                     xyz_cid0: np.ndarray,
-                    element_nodes: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                    element_nodes: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     inode = np.searchsorted(nids, element_nodes)
     g1 = xyz_cid0[inode[:, 0], :]
     g2 = xyz_cid0[inode[:, 1], :]
@@ -382,7 +382,7 @@ def _get_quad_nodes(nids: np.ndarray,
     g4 = xyz_cid0[inode[:, 3], :]
     return g1, g2, g3, g4
 
-def get_eid_to_theta_rad2(model: BDF, debug: bool) -> Dict[int, float]:
+def get_eid_to_theta_rad2(model: BDF, debug: bool) -> dict[int, float]:
     coords = model.coords
     nid_cp_cd, xyz_cid0, *unused = model.get_xyz_in_coord_array(
         cid=0, fdtype='float64', idtype='int32')
@@ -533,7 +533,7 @@ def _get_normal(v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
 def _transform_shell_force(vec_name: str,
                            vector: Union[RealPlateForceArray, RealPlateBilinearForceArray],
                            new_vector: Union[RealPlateForceArray, RealPlateBilinearForceArray],
-                           eid_to_theta_rad: Dict[int, float],
+                           eid_to_theta_rad: dict[int, float],
                            log: SimpleLogger):
     vec_eids = get_eids_from_op2_vector(vector)
     #NOTE assuming thetarad=0 for elements that exist in the op2 but
@@ -623,7 +623,7 @@ def _transform_shell_stress(
         vec_name: str,
         vector: RealPlateStressArray,
         new_vector: RealPlateStressArray,
-        eid_to_theta_rad: Dict[int, float],
+        eid_to_theta_rad: dict[int, float],
         log: SimpleLogger):
     vec_eids = get_eids_from_op2_vector(vector)
     check = (vec_eids != 0)
@@ -674,7 +674,7 @@ def _transform_shell_strain(
         vec_name: str,
         vector: RealPlateStrainArray,
         new_vector: RealPlateStrainArray,
-        eid_to_theta_rad: Dict[int, float],
+        eid_to_theta_rad: dict[int, float],
         log: SimpleLogger):
     vec_eids = get_eids_from_op2_vector(vector)
     check = (vec_eids != 0)

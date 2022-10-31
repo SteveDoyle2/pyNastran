@@ -1,6 +1,4 @@
 import warnings
-#from struct import Struct, pack
-from typing import Tuple, List
 
 import numpy as np
 from numpy import zeros
@@ -158,7 +156,7 @@ class ComplexLayeredCompositesArray(OES_Object):
         self.itotal += 1
         #self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -295,7 +293,7 @@ class ComplexLayeredCompositeStrainArray(ComplexLayeredCompositesArray, StrainOb
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
-def _get_composite_plate_msg(self, is_mag_phase=True, is_sort1=True) -> Tuple[List[str], int]:
+def _get_composite_plate_msg(self, is_mag_phase=True, is_sort1=True) -> tuple[list[str], int]:
     if self.is_von_mises:
         von = 'VON'
         mises = 'MISES'

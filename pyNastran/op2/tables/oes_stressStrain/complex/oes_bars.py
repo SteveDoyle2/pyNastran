@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from numpy import zeros
 
@@ -151,7 +149,7 @@ class ComplexBarArray(OES_Object):
         self.element[self.itotal] = eid
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -382,7 +380,7 @@ class ComplexBarStressArray(ComplexBarArray, StressObject):
         ComplexBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['s1a', 's1b', 's1c', 's1d', 'axial',
                    's2a', 's2b', 's2c', 's2d', ]
         #headers = ['s1a', 's1b', 's1c', 's1d', 's1e', 'axial',
@@ -394,7 +392,7 @@ class ComplexBarStrainArray(ComplexBarArray, StrainObject):
         ComplexBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['e1a', 'e1b', 'e1c', 'e1d', 'axial',
                    'e2a', 'e2b', 'e2c', 'e2d', ]
         #headers = ['e1a', 'e1b', 'e1c', 'e1d', 'e1e', 'axial',

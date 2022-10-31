@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, unique, ravel
 
@@ -218,7 +217,7 @@ class RandomCompositePlateArray(OES_Object):
         self.data[self.itime, self.itotal, :] = [o11, o22, t12]
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             msg = [
                 '<%s>\n' % self.__class__.__name__,
@@ -375,7 +374,7 @@ class RandomCompositePlateStressArray(RandomCompositePlateArray, StressObject):
     def is_strain(self):
         return False
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['o11', 'o22', 'txy']
         return headers
 
@@ -393,6 +392,6 @@ class RandomCompositePlateStrainArray(RandomCompositePlateArray, StrainObject):
     def is_strain(self):
         return True
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['e11', 'e22', 'exy']
         return headers

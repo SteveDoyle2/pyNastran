@@ -14,7 +14,7 @@ This file defines the OUG Table, which contains:
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran import DEV
 from pyNastran.utils.numpy_utils import integer_types
@@ -76,6 +76,7 @@ class OUG:
         """reads table 3 (the header table)"""
         op2 = self.op2
         assert ndata == 146 * op2.size
+        #op2.show_data(data)
         #self._set_times_dtype()
         op2.nonlinear_factor = np.nan
         op2.is_table_1 = True
@@ -1446,7 +1447,7 @@ class OUG:
         return n
 
 
-def get_shock_prefix_postfix(thermal: int) -> Tuple[str, str]:
+def get_shock_prefix_postfix(thermal: int) -> tuple[str, str]:
     prefix = ''
     postfix = ''
     if thermal == 2:

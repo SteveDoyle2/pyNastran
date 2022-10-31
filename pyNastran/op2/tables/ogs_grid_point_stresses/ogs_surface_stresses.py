@@ -1,5 +1,4 @@
 import warnings
-from typing import List
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject, get_times_dtype
@@ -241,7 +240,7 @@ class GridPointSurfaceArray(ScalarObject):
         self.data[self.itime, self.itotal, :] = [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -503,16 +502,16 @@ class GridPointSurfaceArray(ScalarObject):
                 raise ValueError(msg)
         return True
 
-    def _get_f06_message(self, ogs_id: int, cid: int, axis: str) -> List[str]:
+    def _get_f06_message(self, ogs_id: int, cid: int, axis: str) -> list[str]:
         raise NotImplementedError()
 
 class GridPointSurfaceStressesArray(GridPointSurfaceArray):
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['nx', 'ny', 'txy', 'angle', 'majorP', 'minorP', 'tmax', 'ovm']
         return headers
 
-    def _get_f06_message(self, ogs_id: int, cid: int, axis: str) -> List[str]:
+    def _get_f06_message(self, ogs_id: int, cid: int, axis: str) -> list[str]:
         msg = [
             f'                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E    {ogs_id:d}\n',
             f'0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  {axis}         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        {cid}\n',
@@ -527,11 +526,11 @@ class GridPointSurfaceStressesArray(GridPointSurfaceArray):
 
 class GridPointSurfaceStrainsArray(GridPointSurfaceArray):
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['nx', 'ny', 'exy', 'angle', 'majorP', 'minorP', 'emax', 'evm']
         return headers
 
-    def _get_f06_message(self, ogs_id: int, cid: int, axis: str) -> List[str]:
+    def _get_f06_message(self, ogs_id: int, cid: int, axis: str) -> list[str]:
         msg = [
             f'                                    S T R A I N S   A T   G R I D   P O I N T S   - -     S U R F A C E    {ogs_id:d}\n',
            #f'                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E    {ogs_id:d}\n',
@@ -559,7 +558,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         self.itime = None
         self._times = None
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'lxa', 'lxb', 'lxc',
             'lya', 'lyb', 'lyc',
@@ -632,7 +631,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -686,7 +685,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self.itime = None
         self._times = None
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['ox', 'oy', 'oz', 'txy', 'tyz', 'txz', 'pressure', 'ovm']
         return headers
 
@@ -721,7 +720,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self.location = np.empty(self.ntotal, dtype='U8')
         self._times = np.zeros(self.ntimes, dtype=dtype)
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -874,7 +873,7 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         #self.node_element = None
         self._times = None
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'pressure']
         return headers
 
@@ -911,7 +910,7 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

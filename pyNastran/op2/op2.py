@@ -25,7 +25,7 @@ from __future__ import annotations
 import sys
 from collections import defaultdict
 from pickle import load, dump, dumps
-from typing import List, Dict, Tuple, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -93,8 +93,8 @@ class OP2(OP2_Scalar, OP2Writer):
         if hasattr(self, 'h5_file') and self.h5_file is not None:
             self.h5_file.close()
 
-    def object_attributes(self, mode: str='public', keys_to_skip: Optional[List[str]]=None,
-                          filter_properties: bool=False) -> List[str]:
+    def object_attributes(self, mode: str='public', keys_to_skip: Optional[list[str]]=None,
+                          filter_properties: bool=False) -> list[str]:
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -107,12 +107,12 @@ class OP2(OP2_Scalar, OP2Writer):
             * 'private' - names that begin with single underscore
             * 'both' - private and public
             * 'all' - all attributes that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
 
         Returns
         -------
-        attribute_names : List[str]
+        attribute_names : list[str]
             sorted list of the names of attributes of a given type or None
             if the mode is wrong
 
@@ -127,7 +127,7 @@ class OP2(OP2_Scalar, OP2Writer):
                                  filter_properties=filter_properties)
 
     def object_methods(self, mode: str='public',
-                       keys_to_skip: Optional[List[str]]=None) -> List[str]:
+                       keys_to_skip: Optional[list[str]]=None) -> list[str]:
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -142,12 +142,12 @@ class OP2(OP2_Scalar, OP2Writer):
             * "private" - names that begin with single underscore
             * "both" - private and public
             * "all" - all methods that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
 
         Returns
         -------
-        method : List[str]
+        method : list[str]
             sorted list of the names of methods of a given type
             or None if the mode is wrong
 
@@ -174,7 +174,7 @@ class OP2(OP2_Scalar, OP2Writer):
             raise
         return is_equal
 
-    def assert_op2_equal(self, op2_model, skip_results: Optional[List[str]]=None,
+    def assert_op2_equal(self, op2_model, skip_results: Optional[list[str]]=None,
                          stop_on_failure: bool=True, debug: bool=False) -> None:
         """
         Diffs the current op2 model vs. another op2 model.
@@ -183,7 +183,7 @@ class OP2(OP2_Scalar, OP2Writer):
         ----------
         op2_model : OP2()
             the model to compare to
-        skip_results : List[str]; default=None -> []
+        skip_results : list[str]; default=None -> []
             results that shouldn't be compred
         stop_on_failure : bool; default=True
             True : Crashes if they're not equal
@@ -261,7 +261,7 @@ class OP2(OP2_Scalar, OP2Writer):
         key : subcase_id / tuple_obj
             subcase_id : int
                 the subcase_id
-            tuple_obj : Tuple(???, ???, ...)
+            tuple_obj : tuple(???, ???, ...)
                 the fancy tuple thingy that you see in single subcase buckling...
 
                 subcase_id : int
@@ -376,14 +376,14 @@ class OP2(OP2_Scalar, OP2Writer):
             self.set_as_msc()
 
     def include_exclude_results(self,
-                                exclude_results: Optional[List[str]]=None,
-                                include_results: Optional[List[str]]=None) -> None:
+                                exclude_results: Optional[list[str]]=None,
+                                include_results: Optional[list[str]]=None) -> None:
         """
         Sets results to include/exclude
 
         Parameters
         ----------
-        exclude_results / include_results : List[str] / str; default=None
+        exclude_results / include_results : list[str] / str; default=None
             a list of result types to exclude/include
             one of these must be None
 
@@ -816,7 +816,7 @@ class OP2(OP2_Scalar, OP2Writer):
             except AttributeError:
                 self.log.error(f'result_type = {result_type}')
                 raise
-            # unique_isubcases = []  # List[int]
+            # unique_isubcases = []  # list[int]
             for case_key in case_keys:
                 #print('case_key =', case_key)
                 if isinstance(case_key, tuple):
@@ -976,11 +976,11 @@ class OP2(OP2_Scalar, OP2Writer):
         self.subcase_key = subcase_key2
         #print('subcase_key = %s' % self.subcase_key)
 
-    def get_key_order(self) -> List[Tuple[int, int, int, int, int, str]]:
+    def get_key_order(self) -> list[tuple[int, int, int, int, int, str]]:
         """
         Returns
         -------
-        keys3 : List[int, int, int, int, int, str]
+        keys3 : list[int, int, int, int, int, str]
             the keys in order
         """
         keys = []
@@ -1060,7 +1060,7 @@ class OP2(OP2_Scalar, OP2Writer):
         superelement_adaptivity_index_list.sort()
         pval_step_list.sort()
 
-        keys3 = []  # type: List[Tuple[int, int, int, int, int, int, str]]
+        keys3 = []  # type: list[tuple[int, int, int, int, int, int, str]]
         for isubcase in isubcase_list:
             for count in count_list:
                 for analysis_code in analysis_code_list:
@@ -1232,9 +1232,9 @@ class OP2(OP2_Scalar, OP2Writer):
 def read_op2(op2_filename: Optional[str]=None,
              load_geometry: bool=False,
              combine: bool=True,
-             subcases: Optional[List[int]]=None,
-             exclude_results: Optional[List[str]]=None,
-             include_results: Optional[List[str]]=None,
+             subcases: Optional[list[int]]=None,
+             exclude_results: Optional[list[str]]=None,
+             include_results: Optional[list[str]]=None,
              log: Any=None,
              debug: Optional[bool]=True,
              build_dataframe: Optional[bool]=False,
@@ -1255,9 +1255,9 @@ def read_op2(op2_filename: Optional[str]=None,
         True : objects are isubcase based
         False : objects are (isubcase, subtitle) based;
                 will be used for superelements regardless of the option
-    subcases : List[int, ...] / int; default=None->all subcases
+    subcases : list[int, ...] / int; default=None->all subcases
         list of [subcase1_ID,subcase2_ID]
-    exclude_results / include_results : List[str] / str; default=None
+    exclude_results / include_results : list[str] / str; default=None
         a list of result types to exclude/include
         one of these must be None
         build_dataframe : bool; default=False

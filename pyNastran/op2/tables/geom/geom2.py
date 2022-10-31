@@ -5,7 +5,7 @@ defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 from __future__ import annotations
 from struct import Struct
 from functools import partial
-from typing import Tuple, List, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
@@ -158,7 +158,7 @@ class GEOM2:
     #def is_debug_file(self) -> bool:
         #return self.op2.is_debug_file
     #@property
-    #def card_count(self) -> Dict[str, int]:
+    #def card_count(self) -> dict[str, int]:
         #return self.op2.card_count
     #@property
     #def binary_debug(self) -> Any:
@@ -2160,7 +2160,7 @@ class GEOM2:
         return n
 
     def _read_dual_card_load(self, data, n,
-                             nx_read, msc_read) -> Tuple[int, List[Any]]:
+                             nx_read, msc_read) -> tuple[int, list[Any]]:
         n0 = n
         op2 = self.op2
         if op2.is_nx:
@@ -3097,7 +3097,7 @@ class GEOM2:
         op2.card_count[element.type] = nelements
         return n
 
-    def _run_cquad4_msc_60(self, element: CQUAD4, data: bytes, n: int) -> Tuple[int, Any]:
+    def _run_cquad4_msc_60(self, element: CQUAD4, data: bytes, n: int) -> tuple[int, Any]:
         r"""
         buggy MSC 2018.2 version
 
@@ -3190,7 +3190,7 @@ class GEOM2:
         return n, elements
 
     def _run_cquad4_nx_56(self, element: Union[CQUAD4, CQUADR],
-                          data: bytes, n: int) -> Tuple[int, Any]:
+                          data: bytes, n: int) -> tuple[int, Any]:
         """
         common method for CQUAD4, CQUADR
 
@@ -4111,7 +4111,7 @@ class GEOM2:
             n += ntotal
         return n, elements
 
-    def _read_ctria6fd_32(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIA6]]:
+    def _read_ctria6fd_32(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIA6]]:
         """
         Word Name Type Description
         1 EID  I Element identification number
@@ -4139,7 +4139,7 @@ class GEOM2:
             n += ntotal
         return n, elements
 
-    def _read_ctria6_60(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIA6]]:
+    def _read_ctria6_60(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIA6]]:
         """
         CTRIA6(4801,48,327) - the marker for Record 96
 
@@ -4181,7 +4181,7 @@ class GEOM2:
             n += ntotal
         return n, elements
 
-    def _read_ctria6_current_56(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIA6]]:
+    def _read_ctria6_current_56(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIA6]]:
         """
         CTRIA6(4801,48,327) - the marker for Record 96
 
@@ -4283,7 +4283,7 @@ class GEOM2:
                                  #'CTRIAX', op2.add_op2_element)
         return n
 
-    def _read_ctriar_13(self, element: CTRIAR, data: bytes, n: int) -> Tuple[int, List[CTRIAR]]:
+    def _read_ctriar_13(self, element: CTRIAR, data: bytes, n: int) -> tuple[int, list[CTRIAR]]:
         op2 = self.op2
         ntotal = 52 * self.factor  # 13*4
         s = Struct(mapfmt(op2._endian + b'5iff3i3f', self.size))
@@ -4308,7 +4308,7 @@ class GEOM2:
             n += ntotal
         return n, elements
 
-    def _read_ctriar_14(self, element: CTRIAR, data: bytes, n: int) -> Tuple[int, List[CTRIAR]]:
+    def _read_ctriar_14(self, element: CTRIAR, data: bytes, n: int) -> tuple[int, list[CTRIAR]]:
         """same as ``read_ctriar_13`` but with a -1 to change the format"""
         op2 = self.op2
         ntotal = 56 * self.factor  # 14*4
@@ -4383,7 +4383,7 @@ class GEOM2:
                                  #'CTRIAX', op2.add_op2_element)
         return n
 
-    def _read_ctriax_8(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
+    def _read_ctriax_8(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIAX]]:
         """(10108, 101, 512)"""
         op2 = self.op2
         ntotal = 32  # 9*4
@@ -4406,7 +4406,7 @@ class GEOM2:
             n += ntotal
         return n, elems
 
-    def _read_ctriax_9(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
+    def _read_ctriax_9(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIAX]]:
         """(10108, 101, 512)"""
         op2 = self.op2
         ntotal = 36  # 9*4
@@ -4429,7 +4429,7 @@ class GEOM2:
             n += ntotal
         return n, elems
 
-    def _read_ctriax_10(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
+    def _read_ctriax_10(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIAX]]:
         r"""(10108, 101, 512)
 
         C:\MSC.Software\msc_nastran_runs\el705ce.op2

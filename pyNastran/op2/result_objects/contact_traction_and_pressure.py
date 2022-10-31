@@ -25,7 +25,6 @@ these are used by:
 import copy
 from struct import Struct, pack
 import warnings
-from typing import List
 
 import numpy as np
 #from numpy import float32
@@ -293,7 +292,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
     def data_type(self):
         raise NotImplementedError()
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>; table_name=%r\n' % (self.__class__.__name__, self.table_name),
@@ -340,13 +339,13 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         return msg
 
     @property
-    def headers(self) -> List[str]:
+    def headers(self) -> list[str]:
         return ['pressure', 's1', 's2', 's3']
 
-    def _get_headers(self) -> List[str]:
+    def _get_headers(self) -> list[str]:
         return self.headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()
 
     def _reset_indices(self) -> None:

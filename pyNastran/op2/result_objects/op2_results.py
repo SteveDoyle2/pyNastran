@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 
 from pyNastran.op2.op2_interface.random_results import (
     RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS, RARCONS,
@@ -116,7 +116,7 @@ class Results:
         ]
         return sum_objs
 
-    def _get_base_objects_map(self) -> Dict[str, Any]:
+    def _get_base_objects_map(self) -> dict[str, Any]:
         """gets only the objects that are do not contain sub-objects"""
         base_names = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',

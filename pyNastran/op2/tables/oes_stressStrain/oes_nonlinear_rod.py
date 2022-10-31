@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros
 
@@ -44,7 +43,7 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial_stress', 'equiv_stress', 'total_strain',
                    'effective_plastic_creep_strain', 'effective_creep_strain',
                    'linear_torsional_stress']
@@ -143,7 +142,7 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
         ]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

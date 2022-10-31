@@ -12,7 +12,7 @@ import sys
 import traceback
 import warnings
 from itertools import chain
-from typing import List, Optional, Union, Any
+from typing import Optional, Union, Any
 from io import StringIO
 
 import numpy as np

@@ -1,6 +1,5 @@
 from struct import Struct, pack
 import inspect
-from typing import List
 
 import numpy as np
 from numpy import zeros, allclose
@@ -149,7 +148,7 @@ class RealWeldArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [axial, maxa, mina, maxb, minb, max_shear, bearing]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -180,7 +179,7 @@ class RealWeldArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def get_f06_header(self) -> List[str]:
+    def get_f06_header(self) -> list[str]:
         raise NotImplementedError('CWELD...')
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
@@ -319,7 +318,7 @@ class RealWeldStressArray(RealWeldArray, StressObject):
         RealWeldArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'maxa', 'mina', 'maxb', 'minb', 'max_shear', 'bearing']
         return headers
 
@@ -338,7 +337,7 @@ class RealWeldStrainArray(RealWeldArray, StrainObject):
         RealWeldArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'maxa', 'mina', 'maxb', 'minb', 'max_shear', 'bearing']
         return headers
 

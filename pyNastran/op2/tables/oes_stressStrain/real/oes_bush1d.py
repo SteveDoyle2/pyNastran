@@ -1,5 +1,4 @@
 from itertools import count
-from typing import List
 
 import numpy as np
 from numpy import zeros, searchsorted, ravel
@@ -55,7 +54,7 @@ class RealBush1DStressArray(OES_Object):
         return words
         # raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['element_force', 'axial_displacement', 'axial_velocity',
                    'axial_stress', 'axial_strain', 'plastic_strain']
         return headers
@@ -168,7 +167,7 @@ class RealBush1DStressArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return ['<%s>\n' % self.__class__.__name__,
                     f'  ntimes: {self.ntimes:d}\n',

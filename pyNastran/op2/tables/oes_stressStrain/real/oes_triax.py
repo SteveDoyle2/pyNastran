@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, ravel
 
@@ -186,7 +185,7 @@ class RealTriaxArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -272,11 +271,11 @@ class RealTriaxStressArray(RealTriaxArray, StressObject):
         RealTriaxArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['radial', 'azimuthal', 'axial', 'shear', 'omax', 'oms', 'ovm']
         return headers
 
-    def _get_msgs(self) -> List[str]:
+    def _get_msgs(self) -> list[str]:
         if self.element_type == 53:
             pass
         else:
@@ -296,11 +295,11 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
         RealTriaxArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['radial', 'azimuthal', 'axial', 'shear', 'omax', 'oms', 'ovm']
         return headers
 
-    def _get_msgs(self) -> List[str]:
+    def _get_msgs(self) -> list[str]:
         if self.element_type == 53:
             pass
         else:

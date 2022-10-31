@@ -5,7 +5,6 @@ defines:
 """
 from math import isnan
 from itertools import count, cycle
-from typing import List
 
 import numpy as np
 
@@ -63,7 +62,7 @@ class RealNonlinearPlateArray(OES_Object):
     def is_stress(self):
         return True
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
             'fiber_distance', 'oxx', 'oyy', 'ozz', 'txy',
@@ -270,7 +269,7 @@ class RealNonlinearPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -460,7 +459,7 @@ class RealNonlinearSolidArray(OES_Object):
     def is_stress(self):
         return True
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz',
             'eff_plastic_strain', 'eff_plastic_strain', 'eff_creep_strain',
@@ -600,7 +599,7 @@ class RealNonlinearSolidArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

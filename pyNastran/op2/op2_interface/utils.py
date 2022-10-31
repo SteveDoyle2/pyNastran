@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import Any
 import numpy as np
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
@@ -82,7 +82,7 @@ def build_obj(obj):
         obj.is_built = True
 
 def apply_mag_phase(floats: Any, is_magnitude_phase: bool,
-                    isave_real: List[int], isave_imag: List[int]) -> Any:
+                    isave_real: list[int], isave_imag: list[int]) -> Any:
     """converts mag/phase data to real/imag"""
     if is_magnitude_phase:
         mag = floats[:, isave_real]

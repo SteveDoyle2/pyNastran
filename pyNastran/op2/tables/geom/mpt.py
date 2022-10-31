@@ -2,7 +2,7 @@
 #pylint: disable=C0111,C0103,C0301,W0612,R0914,R0201
 from __future__ import annotations
 from struct import Struct
-from typing import Tuple, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MATHP)
@@ -228,7 +228,7 @@ class MPT:
         #    op2.card_count['MAT2'] = ncards
         #return n
 
-    def _read_mat2_68(self, material: MAT2, data: bytes, n: int) -> Tuple[int, MAT2]:
+    def _read_mat2_68(self, material: MAT2, data: bytes, n: int) -> tuple[int, MAT2]:
         op2 = self.op2
         ntotal = 68 * self.factor  # 17*4
         s = Struct(op2._endian + mapfmt(b'i15fi', self.size))
@@ -254,7 +254,7 @@ class MPT:
         return n, mats
 
 
-    def _read_mat2_92(self, material: MAT2, data: bytes, n: int) -> Tuple[int, MAT2]:
+    def _read_mat2_92(self, material: MAT2, data: bytes, n: int) -> tuple[int, MAT2]:
         """
         MAT2 MID   G11  G12  G13  G22  G23  G33  RHO
              A1    A2   A3   TREF GE   ST   SC   SS
@@ -428,7 +428,7 @@ class MPT:
             #raise
         return n
 
-    def _read_mat9_140(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MAT9]]:
+    def _read_mat9_140(self, card_obj, data: bytes, n: int) -> tuple[int, list[MAT9]]:
         op2 = self.op2
         #op2.log.info('geom skipping MAT9')
         #return len(data)
@@ -468,7 +468,7 @@ class MPT:
             n += ntotal
         return n, materials
 
-    def _read_mat9_224(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MAT9]]:
+    def _read_mat9_224(self, card_obj, data: bytes, n: int) -> tuple[int, list[MAT9]]:
         op2 = self.op2
         #op2.log.info('geom skipping MAT9')
         #return len(data)
@@ -555,7 +555,7 @@ class MPT:
                                   #'CTRIA6', CTRIA6, self.add_op2_element)
         return n
 
-    def _read_mat10_20(self, material: MAT10, data: bytes, n: int) -> Tuple[int, MAT10]:
+    def _read_mat10_20(self, material: MAT10, data: bytes, n: int) -> tuple[int, MAT10]:
         op2 = self.op2
         ntotal = 20 * self.factor # 5*4
         s = Struct(mapfmt(op2._endian + b'i4f', self.size))
@@ -580,7 +580,7 @@ class MPT:
             materials.append(mat)
         return n, materials
 
-    def _read_mat10_24(self, material: MAT10, data: bytes, n: int) -> Tuple[int, MAT10]:
+    def _read_mat10_24(self, material: MAT10, data: bytes, n: int) -> tuple[int, MAT10]:
         """
         1 MID   I  Material identification number
         2 BULK  RS Bulk modulus
@@ -820,7 +820,7 @@ class MPT:
             #raise
         return n
 
-    def _read_matt2_68(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MATT2]]:
+    def _read_matt2_68(self, card_obj, data: bytes, n: int) -> tuple[int, list[MATT2]]:
         """
         1 MID         I Material identification number
         2 TID(15)     I TABLEMi entry identification numbers
@@ -853,7 +853,7 @@ class MPT:
             n += ntotal
         return n, cards
 
-    def _read_matt2_92(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MATT2]]:
+    def _read_matt2_92(self, card_obj, data: bytes, n: int) -> tuple[int, list[MATT2]]:
         """
         1 MID         I Material identification number
         2 TID(15)     I TABLEMi entry identification numbers
@@ -1485,7 +1485,7 @@ class MPT:
             op2.card_count['NLPARM'] = nentries
         return n
 
-    def _read_nlparm_76(self, data: bytes, n: int) -> Tuple[int, List[NLPARM]]:
+    def _read_nlparm_76(self, data: bytes, n: int) -> tuple[int, list[NLPARM]]:
         """
         Word Name Type Description
         1 SID       I Set identification number
@@ -1536,7 +1536,7 @@ class MPT:
             nlparms.append(nlparm)
         return n, nlparms
 
-    def _read_nlparm_80(self, data: bytes, n: int) -> Tuple[int, List[NLPARM]]:
+    def _read_nlparm_80(self, data: bytes, n: int) -> tuple[int, list[NLPARM]]:
         """
         Word Name Type Description
         1 SID       I Set identification number
@@ -1612,7 +1612,7 @@ class MPT:
                                  #'TSTEPNL', self._add_methods._add_tstepnl_object)
         return n
 
-    def _read_tstepnl_nx(self, data: bytes, n: int) -> Tuple[int, List[TSTEPNL]]:
+    def _read_tstepnl_nx(self, data: bytes, n: int) -> tuple[int, list[TSTEPNL]]:
         """
         TSTEPNL(3103,31,337) - record 29
 
@@ -1645,7 +1645,7 @@ class MPT:
             n += ntotal
         return n, tstepnls
 
-    def _read_tstepnl_msc(self, data: bytes, n: int) -> Tuple[int, List[TSTEPNL]]:
+    def _read_tstepnl_msc(self, data: bytes, n: int) -> tuple[int, list[TSTEPNL]]:
         """
         TSTEPNL(3103,31,337) - record 29
 
@@ -1695,7 +1695,7 @@ class MPT:
             n += ntotal
         return n, tstepnls
 
-    def _read_tstepnl_msc_92(self, data: bytes, n: int) -> Tuple[int, List[TSTEPNL]]:
+    def _read_tstepnl_msc_92(self, data: bytes, n: int) -> tuple[int, list[TSTEPNL]]:
         r"""
         TSTEPNL(3103,31,337) - record 29
 

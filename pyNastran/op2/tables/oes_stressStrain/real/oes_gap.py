@@ -1,5 +1,4 @@
 from itertools import count
-from typing import List
 
 import numpy as np
 from numpy import zeros, searchsorted, ravel
@@ -49,7 +48,7 @@ class NonlinearGapStressArray(OES_Object):
         ]
         return msgs
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['compX', 'shearY', 'shearZ', 'axialU', 'shearV', 'shearW', 'slipV', 'slipW']
         return headers
 
@@ -178,7 +177,7 @@ class NonlinearGapStressArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

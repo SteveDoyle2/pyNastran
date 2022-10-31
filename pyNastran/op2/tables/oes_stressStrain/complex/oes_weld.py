@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -145,7 +144,7 @@ class ComplexWeldArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -245,10 +244,10 @@ class ComplexWeldArray(OES_Object):
         return page_num - 1
 
     @property
-    def headers(self) -> List[str]:
+    def headers(self) -> list[str]:
         return self._get_headers()
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self.headers
 
 class ComplexWeldStressArray(ComplexWeldArray, StressObject):
@@ -256,7 +255,7 @@ class ComplexWeldStressArray(ComplexWeldArray, StressObject):
         ComplexWeldArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self) -> List[str]:
+    def _get_headers(self) -> list[str]:
         """
         '                        C O M P L E X   S T R E S S E S   I N   W E L D   E L E M E N T S   ( C W E L D P ) '
         '                                                          (REAL/IMAGINARY)'
@@ -277,7 +276,7 @@ class ComplexWeldStrainArray(ComplexWeldArray, StrainObject):
     def _get_headers(self):
         return ['disp_x', 'disp_y', 'disp_z', 'rotation_x', 'rotation_y', 'rotation_z']
 
-def _get_weld_msg(is_stress: bool, is_mag_phase: bool, is_sort1: bool) -> List[str]:
+def _get_weld_msg(is_stress: bool, is_mag_phase: bool, is_sort1: bool) -> list[str]:
     """
     '                        C O M P L E X   S T R E S S E S   I N   W E L D   E L E M E N T S   ( C W E L D P ) '
     '                                                          (REAL/IMAGINARY)'

@@ -10,7 +10,7 @@ defines:
  export_op2_to_hdf5_file(hdf5_file, op2_model)
 
 """
-from typing import Tuple, List, Union, Optional, Any
+from typing import Union, Optional, Any
 import numpy as np
 import h5py
 
@@ -148,7 +148,7 @@ def _cast(h5_result_attr):
     #assert not isinstance(out, str), out
     return out
 
-def _cast_str(h5_result_attr, encoding: str) -> List[str]:
+def _cast_str(h5_result_attr, encoding: str) -> list[str]:
     """converts the h5py type back into the OP2 type"""
     if h5_result_attr is None:
         return None
@@ -1120,7 +1120,7 @@ def _load_eigenvalue(h5_result, encoding: str,
             setattr(obj, key, datai)
     return obj
 
-def _load_table(result_name, h5_result, objs: Tuple[Any], encoding: str,
+def _load_table(result_name, h5_result, objs: tuple[Any], encoding: str,
                 log: SimpleLogger, debug: bool=False):# real_obj, complex_obj
     """loads a RealEigenvectorArray/ComplexEigenvectorArray"""
     is_real = _cast(h5_result.get('is_real'))
@@ -1231,14 +1231,14 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
             assert not isinstance(datai, bytes), f'key={key!r} data={datai}'
     return obj
 
-def _get_obj_class(objs: Tuple[Any],
+def _get_obj_class(objs: tuple[Any],
                    class_name: str,
                    result_name: str,
                    log: SimpleLogger) -> Any:
     """
     Parameters
     ----------
-    objs: Tuple[Any]
+    objs: tuple[Any]
         the tuple of allowable classes -> (RealDisplacementArray, ComplexDisplacementArray)
     class_name: str
         the name of the class (e.g., 'RealDisplacementArray')

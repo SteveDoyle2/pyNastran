@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -44,7 +43,7 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['fx', 'fy', 'fz', 'otx', 'oty', 'otz', 'etx', 'ety', 'etz',
                    'mx', 'my', 'mz', 'orx', 'ory', 'orz', 'erx', 'ery', 'erz']
         return headers
@@ -146,7 +145,7 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
         ]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

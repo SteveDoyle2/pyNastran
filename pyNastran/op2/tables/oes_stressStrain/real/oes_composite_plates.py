@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, unique, ravel
 
@@ -368,7 +367,7 @@ class RealCompositePlateArray(OES_Object):
         self.data[self.itime, itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         class_name = self.__class__.__name__
         if not self.is_built:
             msg = [
@@ -634,7 +633,7 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
     def is_strain(self):
         return False
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         if self.is_von_mises:
             ovm = 'von_mises'
         else:
@@ -656,7 +655,7 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
     def is_strain(self) -> bool:
         return True
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         if self.is_von_mises:
             ovm = 'von_mises'
         else:

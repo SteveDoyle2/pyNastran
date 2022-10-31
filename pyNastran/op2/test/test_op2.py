@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from traceback import print_exc
-from typing import Tuple, List, Dict, Optional, Any
+from typing import Optional, Any
 
 import numpy as np
 
@@ -33,7 +33,7 @@ except ImportError:
 #warnings.filterwarnings('error')
 #warnings.filterwarnings('error', category=UnicodeWarning)
 
-def parse_table_names_from_f06(f06_filename: str) -> List[str]:
+def parse_table_names_from_f06(f06_filename: str) -> list[str]:
     """gets the op2 names from the f06"""
 
     marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
@@ -50,7 +50,7 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
                       write_bdf: bool=False, write_f06: bool=True,
                       delete_f06: bool=True, delete_op2: bool=True, delete_hdf5: bool=True,
                       delete_debug_out: bool=True, build_pandas: bool=True, write_op2: bool=False,
-                      write_hdf5: bool=True, debug: bool=True, skip_files: Optional[List[str]]=None,
+                      write_hdf5: bool=True, debug: bool=True, skip_files: Optional[list[str]]=None,
                       exclude: Optional[str]=None,
                       stop_on_failure: bool=False, nstart: int=0, nstop: int=1000000000,
                       short_stats: bool=False, binary_debug: bool=False,
@@ -141,7 +141,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             dev: bool=False, xref_safe: bool=False,
             post: Any=None, load_as_h5: bool=False,
             is_testing: bool=False,
-            name: str='') -> Tuple[OP2, bool]:
+            name: str='') -> tuple[OP2, bool]:
     """
     Runs an OP2
 
@@ -190,9 +190,9 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         deletes the OP2 (assumes write_op2 is True)
     delete_hdf5 : bool; default=False
         deletes the HDF5 (assumes write_hdf5 is True)
-    subcases : List[int, ...]; default=None
+    subcases : list[int, ...]; default=None
         limits subcases to specified values; default=None -> no limiting
-    exclude : List[str, ...]; default=None
+    exclude : list[str, ...]; default=None
         limits result types; (remove what's listed)
     short_stats : bool; default=False
         print a short version of the op2 stats
@@ -497,7 +497,7 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename: str,
                 raise
     #os.remove(bdf_filename)
 
-def get_test_op2_data(argv=None) -> Dict[str, str]:
+def get_test_op2_data(argv=None) -> dict[str, str]:
     if argv is None:
         argv = sys.argv[1:]  # same as argparse
         #print('get_inputs; argv was None -> %s' % argv)
@@ -641,7 +641,7 @@ def get_test_op2_data(argv=None) -> Dict[str, str]:
     x = 1
     return data
 
-def get_test_op2_data(argv) -> Dict[str, str]:
+def get_test_op2_data(argv) -> dict[str, str]:
     """defines the docopt interface"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
@@ -763,7 +763,7 @@ def remove_file(filename):
         pass
 
 
-def set_versions(op2s: List[OP2],
+def set_versions(op2s: list[OP2],
                  is_nx: bool, is_optistruct: bool,
                  is_autodesk: bool, is_nasa95: bool,
                  post: int=0, is_testing: bool=False) -> None:

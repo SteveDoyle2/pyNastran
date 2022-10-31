@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -109,7 +108,7 @@ class ComplexCBush1DArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [tx, ty, tz, rx, ry, rz]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -196,7 +195,7 @@ class ComplexCBush1DStressArray(ComplexCBush1DArray, StressObject):
         ComplexCBush1DArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         return headers
 

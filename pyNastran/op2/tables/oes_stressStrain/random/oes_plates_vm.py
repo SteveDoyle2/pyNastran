@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from numpy import zeros
 
@@ -325,7 +323,7 @@ class RandomPlateVMArray(OES_Object):
 
     #---------------------------------------------------------------------------
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -588,7 +586,7 @@ class RandomPlateVMStressArray(RandomPlateVMArray, StressObject):
         headers = ['oxx', 'oyy', 'txy', 'ovm']
         return headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()
 
 
@@ -602,5 +600,5 @@ class RandomPlateVMStrainArray(RandomPlateVMArray, StrainObject):
         headers = ['exx', 'eyy', 'exy', 'evm']
         return headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()

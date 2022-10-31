@@ -1,6 +1,6 @@
 from __future__ import annotations
 from struct import Struct
-from typing import Tuple, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
@@ -2144,7 +2144,7 @@ def _oes_csolid2_real(op2: OP2, data: bytes,
                       nnodes_expected: int,
                       nelements: int,
                       element_name: str,
-                      stress_strain='stress') -> Tuple[int, int, int]:
+                      stress_strain='stress') -> tuple[int, int, int]:
 
     obj = op2.obj
     preline1 = '%s-%s' % (op2.element_name, op2.element_type)

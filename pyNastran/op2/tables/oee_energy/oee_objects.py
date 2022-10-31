@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -59,7 +57,7 @@ class RealStrainEnergyArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'strain_energy', 'percent', 'strain_energy_density'
         ]
@@ -392,7 +390,7 @@ class RealStrainEnergyArray(BaseElement):
             setattr(self, self.analysis_method + 's', self._times)
         del self.analysis_method
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -777,7 +775,7 @@ class ComplexStrainEnergyArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'strain_energy', 'percent', 'strain_energy_density'
         ]
@@ -967,7 +965,7 @@ class ComplexStrainEnergyArray(BaseElement):
         self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

@@ -21,7 +21,7 @@ Defines:
 """
 import re
 from copy import deepcopy
-from typing import List, Union
+from typing import Union
 
 
 class ResultSet:
@@ -31,7 +31,7 @@ class ResultSet:
     It's an interface tool between the code and the results the user requests.
 
     """
-    def __init__(self, allowed_results: List[int],
+    def __init__(self, allowed_results: list[int],
                  results_map, unused_log):
         #self.log = log
         #allowed_results.sort()
@@ -81,7 +81,7 @@ class ResultSet:
         """clears all the results"""
         self.saved.clear()
 
-    def add(self, results: Union[str, List[str]])  -> List[str]:
+    def add(self, results: Union[str, list[str]])  -> list[str]:
         """adds a list/str of results"""
         added = []
         if len(results) == 0:
@@ -93,7 +93,7 @@ class ResultSet:
                 added.append(result)
         return added
 
-    def remove(self, results: Union[str, List[str]]) -> List[str]:
+    def remove(self, results: Union[str, list[str]]) -> list[str]:
         """removes a list/str of results"""
         removed = []
         if len(results) == 0:
@@ -107,7 +107,7 @@ class ResultSet:
         #self.saved.difference(disable_set)
         return removed
 
-    def _get_matched_results(self, results: Union[str, List[str]]) -> List[str]:
+    def _get_matched_results(self, results: Union[str, list[str]]) -> list[str]:
         """handles expansion of regexs"""
         if isinstance(results, str):
             results = [results]
@@ -136,7 +136,7 @@ class ResultSet:
             raise RuntimeError(msg) # check line ~640 in op2_f06_common.py if this is a new result
         self.found.add(result)
 
-    def update(self, results: List[str]) -> None:
+    def update(self, results: list[str]) -> None:
         for result in results:
             self.add(result)
 

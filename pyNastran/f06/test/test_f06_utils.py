@@ -73,6 +73,7 @@ class TestF06Utils(unittest.TestCase):
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         plot_flutter_f06(f06_filename, show=False, close=True,
                          plot_vg=True, plot_vg_vf=True, plot_root_locus=True, plot_kfreq_damping=True,
+                         plot=IS_MATPLOTLIB,
                          log=log)
         #plot_flutter_f06(f06_filename, show=True, close=False,
         #                 plot_vg=False, plot_vg_vf=True, plot_root_locus=True, plot_kfreq_damping=False,

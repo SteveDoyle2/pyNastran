@@ -1,5 +1,4 @@
 import warnings
-from typing import List
 import numpy as np
 
 class Responses:
@@ -578,7 +577,7 @@ class DSCMCOL:
         str(msg)
 
     @property
-    def external_ids(self) -> List[int]:
+    def external_ids(self) -> list[int]:
         external_ids = []
         for resp in self.responses.values():
             external_ids.append(resp['external_response_id'])
@@ -586,7 +585,7 @@ class DSCMCOL:
         return external_ids
 
     @property
-    def names(self) -> List[str]:
+    def names(self) -> list[str]:
         names = []
         for resp in self.responses.values():
             names.append(resp['name'])

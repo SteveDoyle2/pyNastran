@@ -3,7 +3,7 @@ import copy
 import warnings
 from itertools import count
 from struct import pack
-from typing import Tuple, List, Union
+from typing import Union
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -213,7 +213,7 @@ class ScalarObject(BaseScalarObject):
             self._set_data_members()
         #print(self.code_information())
 
-    def _get_stats_short(self) -> List[str]:
+    def _get_stats_short(self) -> list[str]:
         msg = []
         class_name = self.__class__.__name__
         if hasattr(self, 'data'):
@@ -288,7 +288,7 @@ class ScalarObject(BaseScalarObject):
         group = subcase_group.create_group(self.result_name)
         return group
 
-    def _get_code(self) -> Tuple[int, int, int, int, int, str, str]:
+    def _get_code(self) -> tuple[int, int, int, int, int, str, str]:
         code = self.isubcase
         ogs = 0
         if hasattr(self, 'ogs'):
@@ -334,7 +334,7 @@ class ScalarObject(BaseScalarObject):
             self.__setattr__(key, value)
             #print("  key=%s value=%s" % (key, value))
 
-    def get_data_code(self, prefix: str='  ') -> List[str]:
+    def get_data_code(self, prefix: str='  ') -> list[str]:
         msg = ''
         if 'data_names' not in self.data_code:
             return ['']
@@ -596,7 +596,7 @@ class ScalarObject(BaseScalarObject):
         return column_names, column_values
 
     def _write_table_header(self, op2_file, fascii,
-                            date: Tuple[int, int, int],
+                            date: tuple[int, int, int],
                             include_date: bool=True,
                             subtable_name_default: bytes=b'OUG1    ') -> None:
         try:
@@ -610,7 +610,7 @@ class ScalarObject(BaseScalarObject):
                             include_date=include_date)
 
 def _write_table_header(op2_file, fascii,
-                        date: Tuple[int, int, int],
+                        date: tuple[int, int, int],
                         table_name: bytes,
                         subtable_name: bytes,
                         include_date: bool=True) -> None:
@@ -824,7 +824,7 @@ class BaseElement(ScalarObject):
         return data_frame
 
 def get_times_dtype(nonlinear_factor: Union[int, float], size: int,
-                    analysis_code_fmt=None) -> Tuple[str, str, str]:
+                    analysis_code_fmt=None) -> tuple[str, str, str]:
     dtype = 'float'
     if isinstance(nonlinear_factor, integer_types):
         dtype = 'int'
@@ -843,7 +843,7 @@ def get_times_dtype(nonlinear_factor: Union[int, float], size: int,
         return dtype, idtype, fdtype
     return dtype, idtype, fdtype
 
-def get_complex_times_dtype(nonlinear_factor: Union[int, float], size: int) -> Tuple[str, str, str]:
+def get_complex_times_dtype(nonlinear_factor: Union[int, float], size: int) -> tuple[str, str, str]:
     dtype = 'float'
     if isinstance(nonlinear_factor, integer_types):
         dtype = 'int'

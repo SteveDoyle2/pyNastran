@@ -1,6 +1,5 @@
 from itertools import cycle
 from abc import abstractmethod
-from typing import List
 
 import numpy as np
 from numpy import zeros, searchsorted, allclose
@@ -65,7 +64,7 @@ class ComplexRodForceArray(ComplexForceObject):
         else:
             raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial_force', 'torque']
         return headers
 
@@ -188,7 +187,7 @@ class ComplexRodForceArray(ComplexForceObject):
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -400,7 +399,7 @@ class ComplexCShearForceArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'force41', 'force14', 'force21', 'force12', 'force32', 'force23',
             'force43', 'force34', 'kickForce1', 'kickForce2', 'kickForce3',
@@ -543,7 +542,7 @@ class ComplexCShearForceArray(BaseElement):
             shear12, shear23, shear34, shear41]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -694,7 +693,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['spring_force']
         return headers
 
@@ -819,7 +818,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         self.data[self.itime, self.ielement, 0] = force
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1046,7 +1045,7 @@ class ComplexViscForceArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial_force', 'torque']
         return headers
 
@@ -1135,7 +1134,7 @@ class ComplexViscForceArray(BaseElement):
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1264,7 +1263,7 @@ class ComplexPlateForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
         return headers
 
@@ -1369,7 +1368,7 @@ class ComplexPlateForceArray(ComplexForceObject):
     #def nnodes_per_element(self):
         #return 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1597,7 +1596,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
         return headers
 
@@ -1737,7 +1736,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
             raise NotImplementedError('element_type=%s element_name=%s' % (self.element_type, self.element_name))
         return nnodes_element
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2003,7 +2002,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['bending_moment_1a', 'bending_moment_2a',
                    'bending_moment_1b', 'bending_moment_2b',
                    'shear1', 'shear2', 'axial', 'torque', ]
@@ -2097,7 +2096,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         self.element[self.itotal] = eid
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2361,7 +2360,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
             'axial_force', 'total_torque', 'warping_torque', ]
@@ -2528,7 +2527,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
         self.element_node[self.itotal, :] = [eid, nid]
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2798,7 +2797,7 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'bending_moment_1a', 'bending_moment_2a', 'shear_1a', 'shear_2a', 'axial_a', 'torque_a',
             'bending_moment_1b', 'bending_moment_2b', 'shear_1b', 'shear_2b', 'axial_b', 'torque_b',
@@ -2929,7 +2928,7 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -3068,7 +3067,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['ax', 'ay', 'az', 'vx', 'vy', 'vz', 'pressure']
         return headers
 
@@ -3159,7 +3158,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -3408,7 +3407,7 @@ class ComplexForceMomentArray(ComplexForceObject):
         self.itime = 0
         self.nelements = 0  # result specific
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
 
@@ -3534,7 +3533,7 @@ class ComplexForceMomentArray(ComplexForceObject):
         self.element[itotal] = eid
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

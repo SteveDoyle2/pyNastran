@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack
@@ -95,7 +94,7 @@ class ElementTableArray(BaseElement):  # displacement style table
     def data_type(self):
         raise NotImplementedError()
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

@@ -1,4 +1,4 @@
-from typing import Tuple, List, Dict, Any
+from typing import Any
 import numpy as np
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
@@ -58,7 +58,7 @@ class OES_Object(BaseElement):
         """it's required that the object be in SORT1"""
         self.set_as_sort1()
 
-    def _get_sort2_itime_ielement_from_itotal(self) -> Tuple[int, int]:
+    def _get_sort2_itime_ielement_from_itotal(self) -> tuple[int, int]:
         #print(f'itime={self.itime} ielement={self.ielement} nelements={self.nelements}') # self.itotal
         #itime = self.itotal % self.nelements
         #ielement = self.itime
@@ -332,7 +332,7 @@ class StrainObject(OES_Object):
         assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         return False
 
-def get_scode(stress_bits: List[int]) -> int:
+def get_scode(stress_bits: list[int]) -> int:
     scode = 0
     for i, bit in enumerate(stress_bits):
         scode += 2 ** i * bit
@@ -432,7 +432,7 @@ def set_approach_code(analysis_code: int, device_code: int):
     approach_code = analysis_code * 10 + device_code
     return approach_code
 
-def _check_num_wide(data_code: Dict[str, Any]):
+def _check_num_wide(data_code: dict[str, Any]):
     if 'num_wide' not in data_code:
         if 'element_name' in data_code:
             element_name = data_code['element_name']

@@ -2,7 +2,6 @@
 Defines methods for the op2 & hdf5 writer
 """
 from struct import Struct, pack
-from typing import List
 
 import numpy as np
 import scipy
@@ -31,7 +30,7 @@ def _write_markers(op2_file, fascii, markers):
     ----------
     op2_file : file
         the op2 file object
-    markers : List[int]
+    markers : list[int]
         a set of 3 markers such as [-3, 1, 0] will write as
         [4, -3, 4, 4, 1, 4, 4, 0, 4]
     """
@@ -67,7 +66,7 @@ def write_table_header(op2_file, fascii, table_name):
     fascii.write('%s header0 = %s\n' % (table_name, table0))
 
 
-def to_column_bytes(data_list: List[np.ndarray], dtype_out: str,
+def to_column_bytes(data_list: list[np.ndarray], dtype_out: str,
                     debug: bool=False) -> np.ndarray:
     """
     Takes an stackable numpy array of mixed types (e.g., ints/strings)

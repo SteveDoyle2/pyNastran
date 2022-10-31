@@ -4,7 +4,7 @@ defines readers for BDF objects in the OP2 GEOM4/GEOM4S table
 #pylint: disable=C0111,C0103,C1801
 from __future__ import annotations
 from struct import unpack, Struct
-from typing import Tuple, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBE2, RBE3, RROD
@@ -1430,7 +1430,7 @@ class GEOM4(GeomCommon):
         self.op2.log.info('geom skipping BLTMPC in GEOM4')
         return len(data)
 
-def read_rbe2s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE2]:
+def read_rbe2s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> list[RBE2]:
     """
     Word Name Type Description
     1 EID I Element identification number
@@ -1545,7 +1545,7 @@ def read_rbe2s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE2]:
     op2.card_count['RBE2'] = nelements
     return rbe2s
 
-def read_rbe3s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE3]:
+def read_rbe3s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> list[RBE3]:
     """
     1 EID   I Element identification number
     2 REFG  I Reference grid point identification number
@@ -1700,7 +1700,7 @@ def get_minus_2_index(idata) -> int:
     return i[0]
 
 def fill_rbe3_wt_comp_gijs(i: int, j: int,
-                           idata, fdata) -> Tuple[int, List[float], List[int], List[int]]:
+                           idata, fdata) -> tuple[int, list[float], list[int], list[int]]:
     """helper for ``read_rbe3s_from_idata_fdata``"""
     weights = []
     comps = []
@@ -1788,7 +1788,7 @@ def _read_spcadd_mpcadd(model, card_name: str, datai: bytes):
     card_name : str
         SPCADD or MPCADD
     datai : (n, ) int ndarray
-        the data array; cannot be a List[int]
+        the data array; cannot be a list[int]
         [2  1 10 -1]
         [3  1 -1]
 

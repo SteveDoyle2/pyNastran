@@ -3,7 +3,7 @@ defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Tuple, List, Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
@@ -430,7 +430,7 @@ class EDOM(GeomCommon):
                                       #card_name, op2.add_op2_element)
         return n
 
-    def _read_dconstr_28(self, card_obj: DCONSTR, data: bytes, n: int) ->  Tuple[int, List[DCONSTR]]:
+    def _read_dconstr_28(self, card_obj: DCONSTR, data: bytes, n: int) ->  tuple[int, list[DCONSTR]]:
         r"""
         Record – DCONSTR(4106,41,362) - MSC
 
@@ -479,7 +479,7 @@ class EDOM(GeomCommon):
         op2.to_msc('; DCONSTR-28 found')
         return n, dconstrs
 
-    def _read_dconstr_32(self, card_obj: DCONSTR, data: bytes, n: int) -> Tuple[int, List[DCONSTR]]:
+    def _read_dconstr_32(self, card_obj: DCONSTR, data: bytes, n: int) -> tuple[int, list[DCONSTR]]:
         """
         Record – DCONSTR(4106,41,362) - NX
         Design constraints.
@@ -2113,7 +2113,7 @@ class EDOM(GeomCommon):
 def _read_dvxrel2_flag(data: bytes, n0: int,
                        i0: int, i1: int,
                        size: int,
-                       ints: np.ndarray) -> Tuple[List[int], List[str]]:
+                       ints: np.ndarray) -> tuple[list[int], list[str]]:
     """reads the DVxREL2 flag table"""
     flag = ints[i0+10]
     #print(ints[i0+11:])

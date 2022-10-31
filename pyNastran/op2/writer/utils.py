@@ -1,7 +1,7 @@
-from typing import List, Any
+from typing import Any
 import numpy as np
 
-def fix_table3_types(table3, size: int=4) -> List[Any]:
+def fix_table3_types(table3, size: int=4) -> list[Any]:
     assert size == 4, size
     table3_new = []
     n = 0

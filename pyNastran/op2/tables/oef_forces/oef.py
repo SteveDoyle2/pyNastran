@@ -1749,7 +1749,7 @@ class OEF:
 
     def _oef_cbar_34(self, data: bytes, ndata: int, dt: Any,
                      is_magnitude_phase: bool,
-                     result_type: str, prefix: str, postfix: str) -> Tuple[int, int, int]:
+                     result_type: str, prefix: str, postfix: str) -> tuple[int, int, int]:
         """
         34-CBAR
         117-CWELDC

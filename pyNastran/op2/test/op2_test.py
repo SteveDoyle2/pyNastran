@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List, Optional
+from typing import Optional
 
 import pyNastran
 from pyNastran.utils.dev import get_files_of_type
@@ -51,7 +51,7 @@ def parse_skipped_cards(fname):
     return files_to_analyze
 
 
-def get_directories(folders_file: str) -> List[str]:
+def get_directories(folders_file: str) -> list[str]:
     with open(folders_file, 'r') as file_obj:
         lines = file_obj.readlines()
 
@@ -78,7 +78,7 @@ def get_directories(folders_file: str) -> List[str]:
             dirnames.append(move_dir)
     return dirnames
 
-def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> List[str]:
+def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> list[str]:
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
 
@@ -93,7 +93,7 @@ def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> Lis
 
     Returns
     -------
-    filenames : List[str]
+    filenames : list[str]
         a series of filenames that were found
     """
     files2 = []
@@ -101,14 +101,14 @@ def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> Lis
     files2 = get_files_from_directories(dirnames, file_type, max_size=max_size)
     return files2
 
-def get_files_from_directories(dirnames: List[str], file_type: str,
-                               max_size: float=4.2) -> List[str]:
+def get_files_from_directories(dirnames: list[str], file_type: str,
+                               max_size: float=4.2) -> list[str]:
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
 
     Parameters
     ----------
-    dirnames : List[str]
+    dirnames : list[str]
         paths to the file with a list of folders
     file_type : str
         a file extension
@@ -117,7 +117,7 @@ def get_files_from_directories(dirnames: List[str], file_type: str,
 
     Returns
     -------
-    filenames : List[str]
+    filenames : list[str]
         a series of filenames that were found
 
     """
@@ -131,8 +131,8 @@ def get_files_from_directories(dirnames: List[str], file_type: str,
     #print('nfiles = %s' % len(files2))
     return files2
 
-def get_op2_model_directories(folders_filennames: List[str],
-                              filter_simcenter: bool) -> List[str]:
+def get_op2_model_directories(folders_filennames: list[str],
+                              filter_simcenter: bool) -> list[str]:
     dirnames = []
     for filename in folders_filennames:
         dirnames.extend(get_directories(filename))

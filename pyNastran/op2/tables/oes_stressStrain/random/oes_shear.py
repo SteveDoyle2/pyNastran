@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros, allclose
 
@@ -141,7 +140,7 @@ class RandomShearArray(OES_Object):
         self.data[itime, ielement, :] = [max_shear, avg_shear]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -220,7 +219,7 @@ class RandomShearStressArray(RandomShearArray, StressObject):
         RandomShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['max_shear', 'avg_shear']
         return headers
 
@@ -239,7 +238,7 @@ class RandomShearStrainArray(RandomShearArray, StrainObject):
         RandomShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['max_shear', 'avg_shear']
         return headers
 

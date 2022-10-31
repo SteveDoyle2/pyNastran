@@ -44,7 +44,7 @@ Defines the sub-OP2 class.  This should never be called outside of the OP2 class
 import os
 from struct import Struct, unpack
 from collections import defaultdict
-from typing import List, Tuple, Dict, Union, Optional, Any
+from typing import Union, Optional, Any
 
 from numpy import array
 import numpy as np
@@ -187,7 +187,7 @@ AUTODESK_MATRIX_TABLES = [
     #b'BELM',
     b'KELM',
     #b'MELM',
-] # type: List[bytes]
+] # type: list[bytes]
 # this will be split later
 TEST_MATRIX_TABLES = [b'ATB', b'BTA', b'MYDOF']
 
@@ -420,7 +420,7 @@ STR_PARAMS_1 = SATK_STR_PARAMS1 | {
     b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', b'DEBUG',
     b'AEDBX', b'AERO', b'AUTOSUP0', b'AXIOPT',
 }
-def _check_unique_sets(*sets: List[set[str]]):
+def _check_unique_sets(*sets: list[set[str]]):
     """verifies that the sets are unique"""
     for i, seti in enumerate(sets):
         for unused_j, setj in enumerate(sets[i+1:]):
@@ -597,7 +597,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         Parameters
         ----------
-        subcases : List[int, ...] / int; default=None->all subcases
+        subcases : list[int, ...] / int; default=None->all subcases
             list of [subcase1_ID,subcase2_ID]
 
         """
@@ -1919,7 +1919,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         #table_mapper = self._get_table_mapper()
         #RESULT_TABLES = table_mapper.keys()
 
-    def _read_tables(self, table_name: bytes, table_names: List[bytes]) -> None:
+    def _read_tables(self, table_name: bytes, table_names: list[bytes]) -> None:
         """
         Reads all the geometry/result tables.
         The OP2 header is not read by this function.
@@ -1928,7 +1928,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         ----------
         table_name : bytes str
             the first table's name
-        table_names : List[bytes str]
+        table_names : list[bytes str]
             the table names that were read
 
         """
@@ -2032,7 +2032,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         Parameters
         ----------
-        tables : Dict[bytes] = varies
+        tables : dict[bytes] = varies
             a dictionary of key=name, value=list[method3, method4]/False,
             False : skips a table
                 applies self._table_passer to method3 and method4
@@ -2086,16 +2086,16 @@ class OP2_Scalar(OP2Common, FortranFormat):
         #RESULT_TABLES.sort()
         #assert 'OESXRMS1' in RESULT_TABLES, RESULT_TABLES
 
-    def set_additional_matrices_to_read(self, matrices: Union[List[str], Dict[str, bool]]):
+    def set_additional_matrices_to_read(self, matrices: Union[list[str], dict[str, bool]]):
         """
         Matrices (e.g., KHH) can be sparse or dense.
 
         Parameters
         ----------
-        matrices : List[str]; Dict[str] = bool
-            List[str]:
+        matrices : list[str]; dict[str] = bool
+            list[str]:
                 simplified method to add matrices; value will be True
-            Dict[str] = bool:
+            dict[str] = bool:
                 a dictionary of key=name, value=True/False,
                 where True/False indicates the matrix should be read
 
@@ -2291,7 +2291,7 @@ def main():  # pragma: no cover
     #f06_outname = model + '.test_op2.f06'
     #o.write_f06(f06_outname)
 
-def create_binary_debug(op2_filename: str, debug_file: str, log) -> Tuple[bool, Any]:
+def create_binary_debug(op2_filename: str, debug_file: str, log) -> tuple[bool, Any]:
     """helper method"""
     binary_debug = None
 

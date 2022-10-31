@@ -20,7 +20,7 @@ MODCON           OSTRMC        Modal contributions
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Tuple, Dict, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
@@ -1178,7 +1178,7 @@ class OES(OP2Common2):
             raise
             #return None, None
 
-    def get_oes_prefix_postfix(self) -> Tuple[str, str]:
+    def get_oes_prefix_postfix(self) -> tuple[str, str]:
         """
         Creates the prefix/postfix that splits off ATO, CRM, PSD, nonlinear,
         etc. results.  We also fix some of the sort bits as typing:
@@ -1448,7 +1448,7 @@ class OES(OP2Common2):
             raise NotImplementedError(op2.code_information())
         return n
 
-    def _read_oes1_loads_nasa95(self, data, ndata: int) -> Tuple[int, Any, Any]:
+    def _read_oes1_loads_nasa95(self, data, ndata: int) -> tuple[int, Any, Any]:
         """Reads OES1 subtable 4 for NASA 95"""
         op2 = self.op2
         prefix, postfix = self.get_oes_prefix_postfix()
@@ -2660,7 +2660,7 @@ class OES(OP2Common2):
 
     def _oes_cbar_34(self, data: bytes, ndata: int, dt: Any,
                      is_magnitude_phase: bool,
-                     result_type: str, prefix: str, postfix: str) -> Tuple[int, int, int]:
+                     result_type: str, prefix: str, postfix: str) -> tuple[int, int, int]:
         """
         reads stress/strain for element type:
          - 34 : CBAR
@@ -4581,7 +4581,7 @@ class OES(OP2Common2):
         return n, nelements, ntotal
 
     def _oes_cquad4_33(self, data, ndata: int, dt, is_magnitude_phase: bool,
-                       result_type: int, prefix: str, postfix: str) -> Tuple[int, Any, Any]:
+                       result_type: int, prefix: str, postfix: str) -> tuple[int, Any, Any]:
         """
         reads stress/strain for element type:
          - 33 : CQUAD4-centroidal
@@ -4976,7 +4976,7 @@ class OES(OP2Common2):
         return n, nelements, ntotal
 
     def _oes_ctria3(self, data, ndata: int, dt, is_magnitude_phase: bool,
-                    result_type: int, prefix: str, postfix: str) -> Tuple[int, Any, Any]:
+                    result_type: int, prefix: str, postfix: str) -> tuple[int, Any, Any]:
         """
         reads stress/strain for element type:
          - 74 : CTRIA3-centroidal
@@ -5341,7 +5341,7 @@ class OES(OP2Common2):
         return n, nelements, ntotal
 
     def _oes_cquad4_144(self, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
-                        result_type: int, prefix: str, postfix: str) -> Tuple[int, Any, Any]:
+                        result_type: int, prefix: str, postfix: str) -> tuple[int, Any, Any]:
         """
         reads stress/strain for element type:
          - 64 : CQUAD8
@@ -5965,7 +5965,7 @@ class OES(OP2Common2):
         return n, nelements, ntotal
 
     def _oes_shells_composite(self, data, ndata, dt, is_magnitude_phase,
-                              result_type: int, prefix: str, postfix: str) -> Tuple[int, Any, Any]:
+                              result_type: int, prefix: str, postfix: str) -> tuple[int, Any, Any]:
         """
         reads stress/strain for element type:
          - 95 : CQUAD4
@@ -6284,7 +6284,7 @@ class OES(OP2Common2):
         return n, nelements, ntotal
 
 
-    def _oes_shells_composite_oesrt(self, result_name: str, slot: Dict[Any, Any],
+    def _oes_shells_composite_oesrt(self, result_name: str, slot: dict[Any, Any],
                                     result_type: int, sort_method: int,
                                     obj_vector_strength,
                                     data: bytes, ndata: int, dt: Any):

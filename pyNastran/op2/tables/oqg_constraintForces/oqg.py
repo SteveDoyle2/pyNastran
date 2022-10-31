@@ -10,7 +10,7 @@ This file defines the OUG Table, which contains:
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
@@ -69,7 +69,7 @@ class OQG:
 
     def _read_opsds1_intial_final_4(self, data: bytes, ndata: int,
                                     result_name: str,
-                                    slot: Dict[Any, Any],
+                                    slot: dict[Any, Any],
                                     obj_vector_real: SeparationDistanceArray) -> int:
         """
         $                    D E F O R M E D  C O N T A C T  S E P A R A T I O N  D I S T A N C E

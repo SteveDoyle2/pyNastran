@@ -2,7 +2,6 @@
 import warnings
 from itertools import count
 from struct import pack
-from typing import List
 
 import numpy as np
 from numpy import zeros
@@ -355,7 +354,7 @@ class RealSolidCompositeArray(OES_Object):
             raise NotImplementedError(f'element_name={self.element_name} self.element_type={self.element_type}')
         return nnodes
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -647,7 +646,7 @@ class RealSolidCompositeStressArray(RealSolidCompositeArray, StressObject):
         RealSolidCompositeArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         if self.is_von_mises:
             von_mises = 'von_mises'
         else:
@@ -661,7 +660,7 @@ class RealSolidCompositeStrainArray(RealSolidCompositeArray, StrainObject):
         RealSolidCompositeArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         if self.is_von_mises:
             von_mises = 'von_mises'
         else:

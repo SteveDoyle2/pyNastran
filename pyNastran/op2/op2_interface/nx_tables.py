@@ -1,5 +1,4 @@
 from collections import Counter
-from typing import List, Dict
 import numpy as np
 
 NX_VERSIONS = [
@@ -416,7 +415,7 @@ NX_GEOM_TABLES = [
 
     # ???
     b'GEOM1ATV', b'GEOM2ATV', b'EPTATV', b'PTMIC', b'ATVMAP',
-]  # type: List[bytes]
+]  # type: list[bytes]
 
 NX_MATRIX_TABLES = [
     b'ATV',
@@ -459,7 +458,7 @@ NX_MATRIX_TABLES = [
 
     b'BHH', b'KHH',
     b'DSCM2',
-]  # type: List[bytes]
+]  # type: list[bytes]
 
 NX_EXTRA_TABLES = [
     # geometry, but buggy in the geometry block...
@@ -510,7 +509,7 @@ NX_EXTRA_TABLES = [
     b'OPMPF2M',
     b'OLMPF2M',
     b'OEKE1',
-]  # type: List[bytes]
+]  # type: list[bytes]
 
 NX_RESULT_TABLES = [
     # ???
@@ -898,7 +897,7 @@ NX_TABLE_CONTENT = {
     805 : 'OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.',
     904 : 'OEFNO1 - Cumulative Root Mean Square output',
     905 : 'OESXNO1C - Cumulative Root Mean Square output',
-}  # type: Dict[int, str]
+}  # type: dict[int, str]
 
 NX_OEF_REAL_MAPPER = {
     1: 3,    # CROD

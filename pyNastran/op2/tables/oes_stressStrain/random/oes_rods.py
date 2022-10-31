@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -158,7 +157,7 @@ class RandomRodArray(OES_Object):
         self.ielement += 1
         #print(self._times, type(self._times[0]), self.element)
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -262,7 +261,7 @@ class RandomBushStressArray(RandomRodArray, StressObject):
         RandomRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 
@@ -286,7 +285,7 @@ class RandomRodStressArray(RandomRodArray, StressObject):
         RandomRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -306,7 +305,7 @@ class RandomRodStrainArray(RandomRodArray, StrainObject):
         RandomRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 

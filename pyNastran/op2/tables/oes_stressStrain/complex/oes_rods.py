@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros, allclose
 
@@ -209,7 +208,7 @@ class ComplexRodArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [axial, torsion]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -356,7 +355,7 @@ class ComplexRodStressArray(ComplexRodArray, StressObject):
         ComplexRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -390,7 +389,7 @@ class ComplexRodStrainArray(ComplexRodArray, StrainObject):
         ComplexRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 

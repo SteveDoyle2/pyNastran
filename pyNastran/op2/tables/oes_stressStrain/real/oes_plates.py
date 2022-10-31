@@ -2,7 +2,6 @@
 #pylint disable=C0103
 from itertools import count
 import warnings
-from typing import Tuple, List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -413,7 +412,7 @@ class RealPlateArray(OES_Object):
         #self.ielement += 2
 
     def _get_sort2_itime_ilower_iupper_from_itotal(self, dt, eid: int, nid: int,
-                                                   debug=False) -> Tuple[int, int, int]:
+                                                   debug=False) -> tuple[int, int, int]:
         ntimes = self.data.shape[0]
 
         # the monotonic element index (no duplicates)
@@ -522,7 +521,7 @@ class RealPlateArray(OES_Object):
         self.itotal += 2
         #self.ielement += 2
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -820,7 +819,7 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         fiber_dist = 'fiber_distance' if self.is_fiber_distance else 'fiber_curvature'
         ovm = 'von_mises' if self.is_von_mises else 'max_shear'
         headers = [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
@@ -837,7 +836,7 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         fiber_dist = 'fiber_distance' if self.is_fiber_distance else 'fiber_curvature'
         ovm = 'von_mises' if self.is_von_mises else 'max_shear'
         headers = [fiber_dist, 'exx', 'eyy', 'exy', 'angle', 'emax', 'emin', ovm]

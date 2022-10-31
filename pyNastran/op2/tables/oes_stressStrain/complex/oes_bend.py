@@ -1,5 +1,4 @@
 from itertools import cycle
-from typing import List
 
 import numpy as np
 
@@ -147,7 +146,7 @@ class ComplexBendArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -177,7 +176,7 @@ class ComplexBendArray(OES_Object):
     def headers(self):
         return self._get_headers()
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self.headers
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',

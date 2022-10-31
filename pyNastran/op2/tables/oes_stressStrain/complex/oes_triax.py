@@ -1,7 +1,3 @@
-#import warnings
-#from struct import Struct, pack
-from typing import List
-
 import numpy as np
 from numpy import zeros
 
@@ -85,10 +81,10 @@ class ComplexTriaxArray(OES_Object):
         # [e_radial, e_azimuthal, e_axial, e_shear]
         self.data = zeros((self.ntimes, self.ntotal, 4), 'complex64')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -197,11 +193,11 @@ class ComplexTriaxArray(OES_Object):
         self.itotal += 1
 
 class ComplexTriaxStressArray(ComplexTriaxArray):
-    def _get_headers(self) -> List[str]:
+    def _get_headers(self) -> list[str]:
         return ['o_radial', 'o_azimuthal', 'o_axial', 'o_shear']
 
 class ComplexTriaxStrainArray(ComplexTriaxArray):
-    def _get_headers(self) -> List[str]:
+    def _get_headers(self) -> list[str]:
         return ['e_radial', 'e_azimuthal', 'e_axial', 'e_shear']
 
 

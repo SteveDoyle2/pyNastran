@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from numpy import zeros, searchsorted, ravel
 
@@ -178,7 +176,7 @@ class RandomBarArray(OES_Object):
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
         #self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -278,7 +276,7 @@ class RandomBarStressArray(RandomBarArray, StressObject):
         RandomBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['s1a', 's2a', 's3a', 's4a', 'axial',
                    's1b', 's2b', 's3b', 's4b']
         return headers
@@ -316,7 +314,7 @@ class RandomBarStrainArray(RandomBarArray, StrainObject):
         RandomBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['e1a', 'e2a', 'e3a', 'e4a', 'axial',
                    'e1b', 'e2b', 'e3b', 'e4b',]
         return headers

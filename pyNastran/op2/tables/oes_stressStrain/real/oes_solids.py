@@ -2,7 +2,7 @@
 import warnings
 from itertools import count
 from struct import pack
-from typing import Tuple, List, Any
+from typing import Any
 
 import numpy as np
 from numpy import zeros, where, searchsorted
@@ -488,7 +488,7 @@ class RealSolidArray(OES_Object):
             raise NotImplementedError(f'element_name={self.element_name} self.element_type={self.element_type}')
         return nnodes
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -799,7 +799,7 @@ class RealSolidStressArray(RealSolidArray, StressObject):
         RealSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         if self.is_von_mises:
             von_mises = 'von_mises'
         else:
@@ -813,7 +813,7 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
         RealSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         if self.is_von_mises:
             von_mises = 'von_mises'
         else:
@@ -871,7 +871,7 @@ def _get_f06_header_nnodes(self: RealSolidArray, is_mag_phase=True):
 def calculate_principal_components(ntimes: int, nelements_nnodes: int,
                                    oxx, oyy, ozz,
                                    txy, tyz, txz,
-                                   is_stress: bool) -> Tuple[Any, Any, Any]:
+                                   is_stress: bool) -> tuple[Any, Any, Any]:
     """
     TODO: scale by 2 for strain
     """

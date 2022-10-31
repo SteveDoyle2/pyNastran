@@ -1,7 +1,7 @@
 """defines readers for BDF objects in the OP2 DYNAMIC/DYNAMICS table"""
 from __future__ import annotations
 from struct import unpack, Struct
-from typing import Tuple, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.nodes import EPOINTs
@@ -1015,7 +1015,7 @@ class DYNAMICS(GeomCommon):
             #raise
         return n
 
-    def _read_nlrsfd_80(self, card_obj, data: bytes, n: int) -> Tuple[int, List[Any]]:
+    def _read_nlrsfd_80(self, card_obj, data: bytes, n: int) -> tuple[int, list[Any]]:
         """
         NLRSFD(3807,38,505)
 
@@ -1076,7 +1076,7 @@ class DYNAMICS(GeomCommon):
         op2.increase_card_count('NLRSFD', nentries)
         return n, []
 
-    def _read_nlrsfd_128(self, card_obj, data: bytes, n: int) -> Tuple[int, List[Any]]:
+    def _read_nlrsfd_128(self, card_obj, data: bytes, n: int) -> tuple[int, list[Any]]:
         """
         NLRSFD(3807,38,505)
 
@@ -1806,7 +1806,7 @@ class DYNAMICS(GeomCommon):
             'RSPINT', self._add_rspint_obj)
         return n
 
-    def _add_rspint_obj(self, rspints: List[int]):
+    def _add_rspint_obj(self, rspints: list[int]):
         """TODO: remove this..."""
         pass
 
@@ -2064,7 +2064,7 @@ class DYNAMICS(GeomCommon):
         # op2.card_count['TLOAD1'] = len(dloads)
         return n
 
-    def _read_tload1_nx_24(self, card_obj, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
+    def _read_tload1_nx_24(self, card_obj, data: bytes, n: int) -> tuple[int, list[TLOAD1]]:
         """
         Record – TLOAD1(7107,71,138)
 
@@ -2101,7 +2101,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_tload1_msc_32(self, card_obj, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
+    def _read_tload1_msc_32(self, card_obj, data: bytes, n: int) -> tuple[int, list[TLOAD1]]:
         r"""
         TLOAD1(7107,71,138) - Record 37
 
@@ -2148,7 +2148,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_tload1_36(self, card_obj, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
+    def _read_tload1_36(self, card_obj, data: bytes, n: int) -> tuple[int, list[TLOAD1]]:
         r"""
         TLOAD1(7107,71,138) - Record 37
 
@@ -2214,7 +2214,7 @@ class DYNAMICS(GeomCommon):
             'TLOAD2', op2._add_methods._add_dload_entry)
         return n
 
-    def _read_tload2_nx(self, data: bytes, n: int) -> Tuple[int, List[TLOAD2]]:
+    def _read_tload2_nx(self, data: bytes, n: int) -> tuple[int, list[TLOAD2]]:
         """
         TLOAD2(7207,72,139) - Record 37
 
@@ -2270,7 +2270,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_tload2_msc(self, data: bytes, n: int) -> Tuple[int, List[TLOAD2]]:
+    def _read_tload2_msc(self, data: bytes, n: int) -> tuple[int, list[TLOAD2]]:
         """
         TLOAD2(7207,72,139) - Record 37
 

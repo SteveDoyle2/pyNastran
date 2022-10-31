@@ -1,6 +1,5 @@
 import warnings
 from struct import Struct, pack
-from typing import List, Tuple
 
 import numpy as np
 
@@ -255,7 +254,7 @@ class ComplexPlateArray(OES_Object):
         #if debug:
             #print(self.element_node)
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -764,7 +763,7 @@ class ComplexPlateArray(OES_Object):
                                      modes, eigrs, eigis)
         return obj
 
-def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> Tuple[List[str], int, bool]:
+def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> tuple[list[str], int, bool]:
     #if self.is_von_mises:
         #von_mises = 'VON MISES'
     #else:
@@ -873,7 +872,7 @@ class ComplexPlateStressArray(ComplexPlateArray, StressObject):
         headers = ['oxx', 'oyy', 'txy']
         return headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()
 
 
@@ -887,5 +886,5 @@ class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
         headers = ['exx', 'eyy', 'exy']
         return headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()

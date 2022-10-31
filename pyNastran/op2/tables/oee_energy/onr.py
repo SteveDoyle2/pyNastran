@@ -1,6 +1,6 @@
 #pylint: disable=C0326,C0301
 from __future__ import annotations
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from struct import Struct
 import numpy as np
 
@@ -85,7 +85,7 @@ class ONR:
     def factor(self) -> int:
         return self.op2.factor
 
-    def get_onr_prefix_postfix(self) -> Tuple[str, str]:
+    def get_onr_prefix_postfix(self) -> tuple[str, str]:
         """
         Creates the prefix/postfix that splits off ATO, CRM, PSD, nonlinear,
         etc. results.  We also fix some of the sort bits as typing:

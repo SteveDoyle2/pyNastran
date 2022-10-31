@@ -27,10 +27,8 @@ import copy
 from struct import Struct, pack
 from itertools import count
 import warnings
-from typing import List
 
 import numpy as np
-#from numpy import float32
 
 from pyNastran.bdf import MAX_32_BIT_INT
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
@@ -323,7 +321,7 @@ class TableArray(ScalarObject):  # displacement style table
     def data_type(self):
         raise NotImplementedError()
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>; table_name=%r\n' % (self.__class__.__name__, self.table_name),
@@ -370,13 +368,13 @@ class TableArray(ScalarObject):  # displacement style table
         return msg
 
     @property
-    def headers(self) -> List[str]:
+    def headers(self) -> list[str]:
         return ['t1', 't2', 't3', 'r1', 'r2', 'r3']
 
-    def _get_headers(self) -> List[str]:
+    def _get_headers(self) -> list[str]:
         return self.headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()
 
     def _reset_indices(self) -> None:

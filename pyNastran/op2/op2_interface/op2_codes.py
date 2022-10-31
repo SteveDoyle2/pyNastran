@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union, Optional
+from typing import Union, Optional
 from pyNastran.op2.op2_interface.function_codes import func7
 from pyNastran.op2.op2_interface.nx_tables import NX_ELEMENTS, NX_TABLE_CONTENT
 from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTENT
@@ -522,7 +522,7 @@ class Op2Codes:
         return disp_temp
 
     def get_table_code_name(self, disp_temp: str='', force_flux: str='',
-                            stress_word: str='') -> Tuple[int, str]:
+                            stress_word: str='') -> tuple[int, str]:
         """gets the name of the active table"""
         table = '???'
         table_code = self.table_code
@@ -665,7 +665,7 @@ class Op2Codes:
         }
         unused_t_code = map_sort_bits[(is_complex, is_sort2, is_random)]
 
-    def _table_specs(self) -> Tuple[int, bool, bool]:
+    def _table_specs(self) -> tuple[int, bool, bool]:
         """
         +-------+-----------+-------------+----------+
         | Value | Sort Type | Data Format | Random ? |
@@ -753,7 +753,7 @@ SCODE_MAP = {
     31: ('Coordinate Material - Strain Fiber von Mises', (1, 1, 1, 1, 1)),
 }
 
-def get_scode_word_assert(s_code: int, stress_bits: List[int]) -> str:
+def get_scode_word_assert(s_code: int, stress_bits: list[int]) -> str:
     try:
         s_word, stress_bits_expected = SCODE_MAP[s_code]
         assert stress_bits == stress_bits_expected, f's_code={s_code} stress_bits={stress_bits} != {stress_bits_expected}'
@@ -762,7 +762,7 @@ def get_scode_word_assert(s_code: int, stress_bits: List[int]) -> str:
         s_word = '???'
     return s_word
 
-def get_scode_word(s_code: int, stress_bits: List[int]) -> str:
+def get_scode_word(s_code: int, stress_bits: list[int]) -> str:
     try:
         s_word, stress_bits_expected = SCODE_MAP[s_code]
     except KeyError:
@@ -771,7 +771,7 @@ def get_scode_word(s_code: int, stress_bits: List[int]) -> str:
     return s_word
 
 def determine_sort_bits_meaning(table_code: int, sort_code: int,
-                                sort_bits: Tuple[int, int, int]) -> Tuple[int, bool, bool]:
+                                sort_bits: tuple[int, int, int]) -> tuple[int, bool, bool]:
     """
     Value Sort type Data format Random
     ===== ========= =========== ======

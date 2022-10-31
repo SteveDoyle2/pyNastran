@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Any
 import numpy as np
 
 class RandomObjects:
@@ -207,7 +207,7 @@ class PSDObjects():
                 msg += '\n'
         return msg
 
-    def get_psds_by_subtitles(self) -> Dict[Any, Any]:
+    def get_psds_by_subtitles(self) -> dict[Any, Any]:
         psd_results = self.get_results()
         if not psd_results:
             return {}
@@ -380,7 +380,7 @@ class ScaledResponseSpectra:
         self.cquad8_strain = {}
         self.cquad8_force = {}
 
-    def get_table_types(self) -> List[str]:
+    def get_table_types(self) -> list[str]:
         tables = [
             'displacements', 'velocities', 'accelerations', 'spc_forces', 'mpc_forces',
             'cbar_force',
