@@ -77,6 +77,7 @@ class OP2(OP2_Scalar, OP2Writer):
             {msc, nx}
 
         """
+        self.use_table_name_in_code = False
         self.encoding = None
         self.mode = mode
         if mode is not None:
@@ -820,14 +821,23 @@ class OP2(OP2_Scalar, OP2Writer):
             for case_key in case_keys:
                 #print('case_key =', case_key)
                 if isinstance(case_key, tuple):
-                    isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, pval_step, ogs = case_key
-                    #isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, table_name = case_key
-                    if ogs == 0:
-                        value = (analysis_codei, sort_methodi, counti,
-                                 isuperelmemnt_adaptivity_index, pval_step)
+                    if self.use_table_name_in_code:
+                        isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, pval_step, ogs, table_name = case_key
+                        if ogs == 0:
+                            value = (analysis_codei, sort_methodi, counti,
+                                     isuperelmemnt_adaptivity_index, pval_step, table_name)
+                        else:
+                            value = (analysis_codei, sort_methodi, counti,
+                                     isuperelmemnt_adaptivity_index, pval_step, ogs, table_name)
                     else:
-                        value = (analysis_codei, sort_methodi, counti,
-                                 isuperelmemnt_adaptivity_index, pval_step, ogs)
+                        isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, pval_step, ogs = case_key
+                        #isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, table_name = case_key
+                        if ogs == 0:
+                            value = (analysis_codei, sort_methodi, counti,
+                                     isuperelmemnt_adaptivity_index, pval_step)
+                        else:
+                            value = (analysis_codei, sort_methodi, counti,
+                                     isuperelmemnt_adaptivity_index, pval_step, ogs)
 
                     if value not in self.subcase_key[isubcasei]:
                         #print('isubcase=%s value=%s' % (isubcasei, value))
@@ -874,9 +884,14 @@ class OP2(OP2_Scalar, OP2Writer):
                     key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, pval_step)
                     key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, pval_step)
                 else:
-                    isubcase, analysis_code, unused_sort_code, count, isuperelmemnt_adaptivity_index, pval_step, ogs = key0
-                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, pval_step, ogs)
-                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, pval_step, ogs)
+                    if self.use_table_name_in_code:
+                        isubcase, analysis_code, unused_sort_code, count, isuperelmemnt_adaptivity_index, pval_step, ogs, table_name = key0
+                        key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, pval_step, ogs, table_name)
+                        key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, pval_step, ogs, table_name)
+                    else:
+                        isubcase, analysis_code, unused_sort_code, count, isuperelmemnt_adaptivity_index, pval_step, ogs = key0
+                        key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, pval_step, ogs)
+                        key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, pval_step, ogs)
 
                 #isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, table_name = key0
                 #key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, table_name)

@@ -1612,8 +1612,12 @@ class OP2Common(Op2Codes, F06Writer):
             ogs = self.ogs
         #if self.binary_debug:
             #self.binary_debug.write(self.code_information(include_time=True))
-        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
-                self.superelement_adaptivity_index, self.pval_step)
+        if self.use_table_name_in_code:
+            code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
+                    self.superelement_adaptivity_index, self.pval_step, self.table_name_str)
+        else:
+            code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
+                    self.superelement_adaptivity_index, self.pval_step)
         #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
                 #self.superelement_adaptivity_index, self.table_name_str)
         #print('%r' % self.subtitle)
