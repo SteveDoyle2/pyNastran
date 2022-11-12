@@ -421,7 +421,7 @@ def _read_results_ascii(i: int, infile,
 
     Parameters
     ----------
-    result_names : List[str]; default=None (All)
+    result_names : list[str]; default=None (All)
         result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
                         'Mach', 'U', 'V', 'W', 'E']
 
@@ -471,7 +471,7 @@ def _calculate_results(result_names: list[str], results: np.ndarray,
 
     Parameters
     ----------
-    result_names : List[str]
+    result_names : list[str]
         the variables to calculate
     results : (n,6) ndarray
         the non-dimensional primitive flow variables

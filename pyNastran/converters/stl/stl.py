@@ -379,7 +379,7 @@ class STL:
         ----------
         normals : (n, 3) ndarray floats
             The elemental normals
-        nid_to_eid : Dict[int] = [int, int, ... ]
+        nid_to_eid : dict[int] = [int, int, ... ]
             key = node_id
             value = list of element_ids
 

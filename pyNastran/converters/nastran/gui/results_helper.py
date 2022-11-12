@@ -3,7 +3,7 @@
 from __future__ import annotations
 import os
 from collections import defaultdict
-from typing import Tuple, Dict, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -122,7 +122,7 @@ class NastranGuiResults(NastranGuiAttributes):
             form_dict, header_dict, keys_map)
         return icase
 
-    def _fill_op2_centroidal_strain_energy(self, cases: Dict[int, GuiResults], model: OP2,
+    def _fill_op2_centroidal_strain_energy(self, cases: dict[int, GuiResults], model: OP2,
                                                 times, key, icase: int,
                                                 form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate strain energy objects"""
@@ -445,11 +445,11 @@ class NastranGuiResults(NastranGuiAttributes):
         return found_force, fx, fy, fz, rx, ry, rz, is_element_on
 
     def _fill_op2_time_centroidal_force(self, cases, model: OP2,
-                                        key: Tuple[Any, int], icase: int, itime: int,
-                                        form_dict: Dict[Any, Any],
-                                        #form_dict: Dict[Tuple[Any, int], Any],
-                                        header_dict: Dict[Any, Any],
-                                        keys_map: Dict[Any, Any]) -> int:
+                                        key: tuple[Any, int], icase: int, itime: int,
+                                        form_dict: dict[Any, Any],
+                                        #form_dict: dict[tuple[Any, int], Any],
+                                        header_dict: dict[Any, Any],
+                                        keys_map: dict[Any, Any]) -> int:
         """
         Creates the time accurate force objects
         """
@@ -607,9 +607,9 @@ class NastranGuiResults(NastranGuiAttributes):
 
 
     def _fill_op2_time_centroidal_composite_stress(self, cases, model, key, icase: int, itime: int,
-                                                   form_dict: Dict[Any, Any],
-                                                   header_dict: Dict[Any, Any],
-                                                   keys_map: Dict[Any, Any],
+                                                   form_dict: dict[Any, Any],
+                                                   header_dict: dict[Any, Any],
+                                                   keys_map: dict[Any, Any],
                                                    is_stress: int=True) -> int:
         nelements = self.nelements
         #oxx = np.full(nelements, np.nan, dtype='float32')
@@ -847,9 +847,9 @@ class NastranGuiResults(NastranGuiAttributes):
 
     def _fill_op2_time_centroidal_stress(self, cases, model: OP2,
                                          key, icase: int, itime: int,
-                                         form_dict: Dict[Any, Any],
-                                         header_dict: Dict[Any, Any],
-                                         keys_map: Dict[Any, Any],
+                                         form_dict: dict[Any, Any],
+                                         header_dict: dict[Any, Any],
+                                         keys_map: dict[Any, Any],
                                          is_stress=True) -> int:
         """Creates the time accurate stress objects"""
         log = model.log
@@ -1178,9 +1178,9 @@ def _fill_nastran_displacements(cases, model: OP2, key, icase: int,
 
 def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offset,
                                    cases, model: OP2, key, icase: int,
-                                   form_dict: Dict[Tuple[Any, Any], str],
-                                   header_dict: Dict[Tuple[Any, Any], str],
-                                   keys_map: Dict[str, Any],
+                                   form_dict: dict[tuple[Any, Any], str],
+                                   header_dict: dict[tuple[Any, Any], str],
+                                   keys_map: dict[str, Any],
                                    xyz_cid0,
                                    nnodes: int, node_ids, log, dim_max: float=1.0) -> int:
     """helper for ``_fill_nastran_displacements`` to unindent the code a bit"""
@@ -1536,7 +1536,7 @@ def read_des_filename(des_filename):
     return desvars
 
 
-def _get_stress_table_types() -> List[str]:  # pragma: no cover
+def _get_stress_table_types() -> list[str]:  # pragma: no cover
     """
     Gets the list of Nastran stress objects that the GUI supports
     """
@@ -1639,7 +1639,7 @@ def _get_stress_table_types() -> List[str]:  # pragma: no cover
     ]
     return table_types
 
-def _get_stress_times(model: OP2, isubcase: int) -> Tuple[bool, bool, bool, Any]: # pragma: no cover
+def _get_stress_times(model: OP2, isubcase: int) -> tuple[bool, bool, bool, Any]: # pragma: no cover
     """Are there any stress/strain results?"""
     table_types = _get_stress_table_types()
     is_real = True

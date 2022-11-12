@@ -440,7 +440,7 @@ class Step:
 
 
 def cast_nodes(nids: list[Any], nodes: list[Any],
-               log: SimpleLogger, require: bool=True) -> Tuple[np.ndarray, np.ndarray]:
+               log: SimpleLogger, require: bool=True) -> tuple[np.ndarray, np.ndarray]:
     if len(nids) == 0 and require == False:
         assert len(nodes) == 0, len(nodes)
         return None, None

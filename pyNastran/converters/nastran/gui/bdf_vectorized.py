@@ -1,8 +1,6 @@
 from io import StringIO
-from typing import List, Tuple
 import numpy as np
 import vtk
-#from typing import List
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -47,7 +45,7 @@ def add_vectorized_elements(model, nelements: int, idtype: str, log):
     #if len(model.cquad):
         #model.cquad.quality()
 
-    nids_list = []  # type: List[int]
+    nids_list = []  # type: list[int]
     unused_ieid = 0
     unused_cell_offset = 0
 
@@ -374,11 +372,11 @@ def add_vectorized_elements(model, nelements: int, idtype: str, log):
 
 def map_elements_vectorized_fill(log,
                                  ieid0: int, cell_offset0: int,
-                                 nodes, nids_list: List[int],
+                                 nodes, nids_list: list[int],
                                  eids_array, pids_array, nnodes_array, dim_array,
                                  cell_types_array, cell_offsets_array,
                                  model_obj, cell_type: int, nnodesi=None, dimi=None,
-                                 allow0=False, cell_type_allow=None) -> Tuple[int, int]:
+                                 allow0=False, cell_type_allow=None) -> tuple[int, int]:
     """helper method for ``map_elements_vectorized``"""
     assert nnodesi is not None
     assert dimi is not None
@@ -469,7 +467,7 @@ def map_elements_vectorized_fill_spring(log,
                                         nodes, nids_list,
                                         eids_array, pids_array, nnodes_array, dim_array,
                                         cell_types_array, cell_offsets_array,
-                                        model_obj, cell_type_line: int, cell_type_point: int) -> Tuple[int, int]:
+                                        model_obj, cell_type_line: int, cell_type_point: int) -> tuple[int, int]:
     """helper method for ``map_elements_vectorized``"""
     nelems = len(model_obj)
     if nelems:

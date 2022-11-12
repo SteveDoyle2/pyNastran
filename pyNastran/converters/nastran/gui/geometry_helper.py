@@ -6,7 +6,7 @@ this is no longer true...but should be
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import Tuple, List, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -101,8 +101,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
         super(NastranGeometryHelper, self).__init__()
 
     def _get_bar_yz_arrays(self, model: BDF,
-                           bar_beam_eids: List[int],
-                           bar_pid_to_eids: Dict[int, List[int]],
+                           bar_beam_eids: list[int],
+                           bar_pid_to_eids: dict[int, list[int]],
                            scale: float, debug: bool) -> None:
         lines_bar_y = []
         lines_bar_z = []
@@ -186,8 +186,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
                               node0: int,
                               ugrid,
                               points_list,
-                              bar_beam_eids: List[int],
-                              bar_pid_to_eids: Dict[int, List[int]]) -> None:
+                              bar_beam_eids: list[int],
+                              bar_pid_to_eids: dict[int, list[int]]) -> None:
         if not node0:
             return
 
@@ -337,7 +337,7 @@ def _get_material(materials, thermal_materials, mid):
     return mat
 
 def get_material_arrays(model: BDF,
-                        mids: np.ndarray) -> Tuple[bool, bool,
+                        mids: np.ndarray) -> tuple[bool, bool,
                                                    np.ndarray, np.ndarray, np.ndarray]:
     """gets e11, e22, e33"""
     #e11 = np.zeros(mids.shape, dtype='float32')
@@ -529,8 +529,8 @@ def add_3d_bar_element(bar_type: str, ptype: str, pid_ref,
     return node0
 
 def _create_bar_types_dict(model: BDF,
-                           bar_types: Dict[str, List[List[int], List[Any], List[Any]]],
-                           bar_beam_eids: List[int],
+                           bar_types: dict[str, list[list[int], list[Any], list[Any]]],
+                           bar_beam_eids: list[int],
                            eid_map, log: SimpleLogger, scale: float, debug: bool=False):
     node0 = 0
     found_bar_types = set()

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from typing import List, Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.cards.aero.utils import (
@@ -26,7 +26,7 @@ class Body:
     """
     def __init__(self,
                  name: str,
-                 sections: List[Any],
+                 sections: list[Any],
                  nchord: int, chord_spacing: float):
 
         self.name = name
@@ -91,12 +91,12 @@ class Body:
         return not np.array_equal(self.translate, np.zeros(3))
 
     def get_nodes_elements(self,
-                           isurface: int, surfaces: List[Union[Surface, Body]],
+                           isurface: int, surfaces: list[Union[Surface, Body]],
                            dirname: str,
-                           nodes: List[np.ndarray], ipoint: int,
-                           line_elements: List[np.ndarray],
-                           quad_elements: List[np.ndarray],
-                           is_cs_list: List[np.ndarray],
+                           nodes: list[np.ndarray], ipoint: int,
+                           line_elements: list[np.ndarray],
+                           quad_elements: list[np.ndarray],
+                           is_cs_list: list[np.ndarray],
                            log: SimpleLogger) -> int:
         log.debug('fuselage surface: %s\n' % str(self))
         if nodes:
@@ -126,11 +126,11 @@ class Body:
 def get_fuselage(dirname: str, isurface: int,
                  surface: Body,
                  yduplicate: bool,
-                 nodes: List[np.ndarray],
-                 unused_line_elements: List[np.ndarray],
-                 quad_elements: List[np.ndarray],
-                 surfaces: List[Union[Surface, Body]],
-                 is_cs_list: List[np.ndarray],
+                 nodes: list[np.ndarray],
+                 unused_line_elements: list[np.ndarray],
+                 quad_elements: list[np.ndarray],
+                 surfaces: list[Union[Surface, Body]],
+                 is_cs_list: list[np.ndarray],
                  ipoint: int):
     """
     gets the fuselage
@@ -225,12 +225,12 @@ def get_fuselage(dirname: str, isurface: int,
 def get_fuselage_from_file(dirname: str,
                            isurface: int,
                            surface: Body,
-                           nodes: List[np.ndarray],
-                           quad_elements: List[np.ndarray],
-                           surfaces: List[Union[Surface, Body]],
-                           is_cs_list: List[np.ndarray],
+                           nodes: list[np.ndarray],
+                           quad_elements: list[np.ndarray],
+                           surfaces: list[Union[Surface, Body]],
+                           is_cs_list: list[np.ndarray],
                            ipoint: int,
-                           nchord: int) -> Tuple[int, int]:
+                           nchord: int) -> tuple[int, int]:
     xyz_scale = surface.scale
     dxyz = surface.translate
 

@@ -218,7 +218,7 @@ class OP2Common(Op2Codes, F06Writer):
         #print(self.code_information())
         #print('tCode =', self.tCode)
         result_type = func7(self.tCode)
-        #print(f'format_code={self.format_code}; result_type (func7)={result_type}')
+        #self.log.debug(f'format_code={self.format_code}; result_type (func7)={result_type}')
 
         if self.table_name in [b'OESRT']:
             self.format_code = 1 # real

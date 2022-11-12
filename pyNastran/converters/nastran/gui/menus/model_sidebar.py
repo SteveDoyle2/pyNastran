@@ -116,17 +116,17 @@ class Sidebar(QWidget):
             the gui
         debug : bool; default=False
             flag for debug info
-        data : List[tree]
+        data : list[tree]
             the tree
         results_window_title : str
             the title for "Case/Results"
-        actions : Dict[int] = QWidget, List[QWidget]
+        actions : dict[int] = QWidget, list[QWidget]
             additional actions
         clear_data : bool; default=True
             ???
         name : str; default='main'
             the active name
-        setup_dict : Dict[irow] = List[QWidgets]
+        setup_dict : dict[irow] = list[QWidgets]
             a way to add additional widgets to the sidebar
         """
         QWidget.__init__(self)
@@ -325,7 +325,7 @@ class Sidebar(QWidget):
 
         Parameters
         ----------
-        data : List[tuple]
+        data : list[tuple]
             the form data
         name : str
             the name that goes at the side

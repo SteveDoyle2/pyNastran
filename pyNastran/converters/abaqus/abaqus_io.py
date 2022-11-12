@@ -1,6 +1,6 @@
 """Defines how the GUI reads Abaqus files"""
 from collections import OrderedDict
-from typing import Tuple, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -113,7 +113,7 @@ class AbaqusIO:
         raise NotImplementedError()
 
     def _fill_abaqus_case(self, cases, ID: int, node_ids, nodes, nelements: int,
-                          unused_model: Abaqus) -> Tuple[Any, Any, int, np.ndarray, np.ndarray]:
+                          unused_model: Abaqus) -> tuple[Any, Any, int, np.ndarray, np.ndarray]:
         """creates the result objects for abaqus"""
         #return [], {}, 0
         #nelements = elements.shape[0]

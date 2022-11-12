@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List, Union
+from typing import Union
 
 import numpy as np
 from cpylog import get_logger2
@@ -427,7 +427,7 @@ def is_header(line: str, name: str) -> bool:
     return line.startswith(name[:4]) and line == name[:len(line)]
 
 
-def _read_section(surface, lines: List[str], i: int):
+def _read_section(surface, lines: list[str], i: int):
     section_data = {
         #'naca' : [],
         #'afile' : [],
