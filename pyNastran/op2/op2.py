@@ -1105,7 +1105,7 @@ class OP2(OP2_Scalar, OP2Writer):
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
     def transform_displacements_to_global(self, icd_transform: Any,
-                                          coords: Dict[int, Any],
+                                          coords: dict[int, Any],
                                           xyz_cid0: Any=None,
                                           debug: bool=False) -> None:
         """

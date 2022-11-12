@@ -9,7 +9,7 @@ import importlib
 #import traceback
 import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
-from typing import Tuple, List, Optional
+from typing import Optional
 
 from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore
@@ -156,7 +156,7 @@ class MainWindow(GuiCommon, NastranIO):
         self.setup_post(inputs)
         self._check_for_latest_version()
 
-    def _load_plugins(self, plugin_name_to_path: Optional[List[Tuple[str, str, str]]]=None):
+    def _load_plugins(self, plugin_name_to_path: Optional[list[tuple[str, str, str]]]=None):
         """loads the plugins from pyNastran/gui/plugins.py
 
         plugin_name_to_path = [

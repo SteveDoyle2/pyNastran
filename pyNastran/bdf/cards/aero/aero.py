@@ -6265,7 +6265,7 @@ class SPLINE5(Spline):
         # per nast/tpl/fmondsp.dat, METH can be a double(0.0) ???
         method = string_or_blank(card, 13, 'meth', default='BEAM')
         ftype = string_or_blank(card, 15, 'ftype', default='WF2')
-        rcore = double_or_blank(card, 16, default='rcore')
+        rcore = double_or_blank(card, 16, 'rcore')
 
         usage = string_or_blank(card, 12, 'usage', default='BOTH')
         assert len(card) <= 16, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)

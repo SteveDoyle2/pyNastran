@@ -282,7 +282,7 @@ class DCONSTR(OptConstraint):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -452,7 +452,7 @@ class DESVAR(OptConstraint):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
           the fields that define the card
         """
         xlb = set_blank_if_default(self.xlb, -1e20)
@@ -1114,12 +1114,12 @@ class DRESP1(OptConstraint):
             Response attribute
         attb : int / float / str / blank
             Response attribute
-        atti : List[int / float / str]
+        atti : list[int / float / str]
             the response values to pull from
-            List[int]:
+            list[int]:
                 list of grid ids
                 list of property ids
-            List[str]
+            list[str]
                 'ALL'
         comment : str; default=''
             a comment for the card
@@ -1406,7 +1406,7 @@ class DRESP1(OptConstraint):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
           the fields that define the card
         """
         label = self.label.strip()
@@ -1462,7 +1462,7 @@ class DRESP2(OptConstraint):
             card_type : str
                 the type of card to pull from
                 DESVAR, DVPREL1, DRESP2, etc.
-            values : List[int]
+            values : list[int]
                 the values for this response
         method : str; default=MIN
             ???
@@ -2920,9 +2920,9 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         pname_fid : str/int
             optimization parameter as a pname (property name; T) or
             field number (fid)
-        dvids : List[int]
+        dvids : list[int]
             DESVAR ids
-        coeffs : List[float]
+        coeffs : list[float]
             scale factors for DESVAR ids
         p_min : float; default=None
             minimum property value
@@ -3174,9 +3174,9 @@ class DVPREL2(OptConstraint):
             optimization parameter as a pname (property name; T) or field number (fid)
         deqation : int
             DEQATN id
-        dvids : List[int]; default=None
+        dvids : list[int]; default=None
             DESVAR ids
-        labels : List[str]; default=None
+        labels : list[str]; default=None
             DTABLE names
         p_min : float; default=None
             minimum property value

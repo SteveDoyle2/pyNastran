@@ -117,7 +117,7 @@ def sorted_bulk_data_header() -> str:
 
 
 def make_end(end_flag: bool=False,
-             options: Optional[Dict[str, str]]=None) -> str:
+             options: Optional[dict[str, str]]=None) -> str:
     """creates the F06 footer"""
     lines = []
     lines2 = []
@@ -206,14 +206,14 @@ class F06Writer(OP2_F06_Common):
             self.op2_results._get_sum_objects_map(),
             self.log)
 
-    def get_all_results(self) -> List[str]:
+    def get_all_results(self) -> list[str]:
         all_results = ['stress', 'strain', 'element_forces', 'constraint_forces', 'thermal_load'] + self.get_table_types()
         return all_results
 
     def clear_results(self) -> None:
         self._results.clear()
 
-    def add_results(self, results: Union[str, List[str]]) -> None:
+    def add_results(self, results: Union[str, list[str]]) -> None:
         if isinstance(results, str):
             results = [results]
         all_results = self.get_all_results()
@@ -246,11 +246,11 @@ class F06Writer(OP2_F06_Common):
             # thermalLoad_VU_3D, thermalLoad_1D, conv_thermal_load, thermalLoad_2D_3D
             self._results.add(result)
 
-    def set_results(self, results: Union[str, List[str]]) -> None:
+    def set_results(self, results: Union[str, list[str]]) -> None:
         self.clear_results()
         self.add_results(results)
 
-    def remove_results(self, results: Union[str, List[str]]) -> None:
+    def remove_results(self, results: Union[str, list[str]]) -> None:
         self._results.remove(results)
 
     def make_f06_header(self) -> str:
@@ -269,7 +269,7 @@ class F06Writer(OP2_F06_Common):
 
         Parameters
         ----------
-        failed : List[(nid, component), ...]
+        failed : list[(nid, component), ...]
             defines failed degrees of freedom
         """
         msg = ''

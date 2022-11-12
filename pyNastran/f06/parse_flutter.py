@@ -35,9 +35,9 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
     ----------
     f06_filename : str
         the filename to plot
-    f06_units : Dict[name]=unit; default=None
+    f06_units : dict[name]=unit; default=None
         f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3'}
-    out_units : Dict[name]=unit; default=None
+    out_units : dict[name]=unit; default=None
         out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
                      'altitude' : 'ft', 'dynamic_pressure' : 'psf'}
     Returns
@@ -253,7 +253,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
         flutters[subcase] = flutter
     return flutters
 
-def _get_units(units: Optional[Union[str, Dict[str, str]]]) -> Optional[Union[str, Dict[str, str]]]:
+def _get_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[Union[str, dict[str, str]]]:
     """gets the units"""
     if units is None:
         units = 'english_in'
@@ -283,19 +283,19 @@ def _get_units(units: Optional[Union[str, Dict[str, str]]]) -> Optional[Union[st
 
 
 def plot_flutter_f06(f06_filename: str,
-                     f06_units: Dict[str, str]=None,
-                     out_units: Dict[str, str]=None,
+                     f06_units: dict[str, str]=None,
+                     out_units: dict[str, str]=None,
                      make_alt: bool=False,
                      plot_type: str='tas',
-                     modes: Optional[List[int]]=None,
+                     modes: Optional[list[int]]=None,
                      plot_vg: bool=False,
                      plot_vg_vf: bool=False,
                      plot_root_locus: bool=False,
                      plot_kfreq_damping: bool=False,
-                     xlim: Optional[List[float]]=None,
-                     ylim_damping: Optional[List[float]]=None,
-                     ylim_freq: Optional[List[float]]=None,
-                     ylim_kfreq: Optional[List[float]]=None,
+                     xlim: Optional[list[float]]=None,
+                     ylim_damping: Optional[list[float]]=None,
+                     ylim_freq: Optional[list[float]]=None,
+                     ylim_kfreq: Optional[list[float]]=None,
                      vd_limit: Optional[float]=None,
                      damping_limit: Optional[float]=None,
                      nopoints: bool=False,
@@ -308,9 +308,9 @@ def plot_flutter_f06(f06_filename: str,
                      vg_vf_filename: Optional[str]=None,
                      root_locus_filename: Optional[str]=None,
                      kfreq_damping_filename: Optional[str]=None,
-                     subcases: Optional[List[int]]=None,
+                     subcases: Optional[list[int]]=None,
                      plot: bool=True, show: bool=True, clear: bool=False, close: bool=False,
-                     log: Optional[SimpleLogger]=None) -> Dict[int, FlutterResponse]:
+                     log: Optional[SimpleLogger]=None) -> dict[int, FlutterResponse]:
     """
     Plots a flutter (SOL 145) deck
 
@@ -318,9 +318,9 @@ def plot_flutter_f06(f06_filename: str,
     ----------
     f06_filename : str
         the filename to plot
-    f06_units : Dict[name]=unit; default=None
+    f06_units : dict[name]=unit; default=None
         f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3'}
-    out_units : Dict[name]=unit; default=None
+    out_units : dict[name]=unit; default=None
         out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
                      'altitude' : 'ft', 'dynamic_pressure' : 'psf'}
     modes : bool; default=None
@@ -404,11 +404,11 @@ def plot_flutter_f06(f06_filename: str,
                            show=show, clear=clear, close=close)
     return flutters
 
-def make_flutter_plots(modes: List[int], flutters: Dict[int, FlutterResponse],
-                       xlim: Optional[List[float]],
-                       ylim_damping: Optional[List[float]],
-                       ylim_freq: Optional[List[float]],
-                       ylim_kfreq: Optional[List[float]],
+def make_flutter_plots(modes: list[int], flutters: dict[int, FlutterResponse],
+                       xlim: Optional[list[float]],
+                       ylim_damping: Optional[list[float]],
+                       ylim_freq: Optional[list[float]],
+                       ylim_kfreq: Optional[list[float]],
                        plot_type: str,
                        plot_vg: bool,
                        plot_vg_vf: bool,
@@ -427,7 +427,7 @@ def make_flutter_plots(modes: List[int], flutters: Dict[int, FlutterResponse],
                        vg_vf_filename: Optional[str]=None,
                        root_locus_filename: Optional[str]=None,
                        kfreq_damping_filename: Optional[str]=None,
-                       subcases: Optional[List[int]]=None,
+                       subcases: Optional[list[int]]=None,
                        show: bool=True, clear: bool=False, close: bool=False,
                        log: SimpleLogger=None) -> None:
     """actually makes the flutter plots"""

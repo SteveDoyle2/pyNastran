@@ -13,7 +13,7 @@ import numpy as np
 
 def get_files_of_type(dirname: str, extension: str='.txt',
                       max_size: float=100., limit_file: str='no_dig.txt',
-                      skip_folder_file: str='skip_folder.txt') -> List[str]:
+                      skip_folder_file: str='skip_folder.txt') -> list[str]:
     """
     Gets the list of all the files with a given extension in the specified directory
 
@@ -34,11 +34,11 @@ def get_files_of_type(dirname: str, extension: str='.txt',
 
     Returns
     -------
-    files : List[str]
+    files : list[str]
         list of all the files with a given extension in the specified directory
 
     """
-    filenames2 = []  # type: List[str]
+    filenames2 = []  # type: list[str]
     if not os.path.exists(dirname):
         return filenames2
 
@@ -66,7 +66,7 @@ def get_files_of_type(dirname: str, extension: str='.txt',
     return filenames2
 
 
-def list_print(lst: List[Any], float_fmt: str='%-4.2f') -> str:
+def list_print(lst: list[Any], float_fmt: str='%-4.2f') -> str:
     """
     Prints a list or numpy array in an abbreviated format.
     Supported element types: None, string, numbers. Useful for debugging.

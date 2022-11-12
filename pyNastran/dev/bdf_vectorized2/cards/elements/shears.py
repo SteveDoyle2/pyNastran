@@ -118,7 +118,7 @@ class CSHEARv(ShearElement):
             element id
         pid : int
             property id (PSHEAR)
-        nids : List[int, int, int, int]
+        nids : list[int, int, int, int]
             node ids
         comment : str; default=''
             a comment for the card

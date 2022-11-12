@@ -1,4 +1,4 @@
-from typing import Tuple, List, Dict, Any
+from typing import Any
 import numpy as np
 from cpylog import get_logger, SimpleLogger
 
@@ -36,10 +36,10 @@ class OptimizationResult():
         print(obj)
         return f'OptimizatioResult(obj={obj}, ndesvars={len(internal_id)})'
 
-def _read_line_block(i: int, lines: List[str],
+def _read_line_block(i: int, lines: list[str],
                      stop_marker: str='',
                      rstrip: bool=False, strip: bool=False, debug: bool=False,
-                     imax=None) -> Tuple[int, List[str]]:
+                     imax=None) -> tuple[int, list[str]]:
     i0 = i
     lines2 = []
     line = lines[i].rstrip()
@@ -99,7 +99,7 @@ def _read_line_block(i: int, lines: List[str],
 
     return i, lines2
 
-def _read_startswith_line_block(i: int, lines: List[str], stop_marker='',
+def _read_startswith_line_block(i: int, lines: list[str], stop_marker='',
                                 rstrip=False, strip=False, debug=False, imax=None):
     assert strip or rstrip
     lines2 = []
@@ -130,7 +130,7 @@ def _read_startswith_line_block(i: int, lines: List[str], stop_marker='',
     print(f'!!! {line}')
     return i, lines2
 
-def _goto_page(i: int, lines: List[str], debug: bool=False):
+def _goto_page(i: int, lines: list[str], debug: bool=False):
     line = lines[i]
     i0 = i
     if debug:
@@ -149,7 +149,7 @@ def _goto_page(i: int, lines: List[str], debug: bool=False):
         raise
     return i
 
-def _read_int_gradient(i: int, line: str, lines: List[str], nlines: int, log: SimpleLogger, debug: bool=True):
+def _read_int_gradient(i: int, line: str, lines: list[str], nlines: int, log: SimpleLogger, debug: bool=True):
     line = lines[i].strip()
     #if debug:
     log.debug(f'{i} read_int_gradient: {line}')
@@ -162,7 +162,7 @@ def _read_int_gradient(i: int, line: str, lines: List[str], nlines: int, log: Si
     #print('end read_int_gradient', i, ids)
     return i, ids
 
-def _read_gradient(i: int, line: str, lines: List[str], nlines, log: SimpleLogger, debug: bool=True):
+def _read_gradient(i: int, line: str, lines: list[str], nlines, log: SimpleLogger, debug: bool=True):
     i += 1
     #if debug:
     if 'GRADIENT OF CONSTRAINT NUMBER' not in line:
@@ -194,7 +194,7 @@ def _read_gradient_block(i, line, lines, nlines, log, debug=True):
 
 def _read_design_optimization(i, line, lines, nlines,
                               idesign: int,
-                              all_results: List[OptimizationResult],
+                              all_results: list[OptimizationResult],
                               log: SimpleLogger):
     optimization_result = all_results[-1]
     assert isinstance(optimization_result, OptimizationResult), optimization_result
@@ -1111,8 +1111,8 @@ def _read_objective_and_maximum_constraint_history(i, lines):
     line = lines[i].strip()
     return i, line, lines2
 
-def _read_design_objective(i: int, lines: List[str],
-                           optimization_result: OptimizationResult, log: SimpleLogger) -> Tuple[int, str]:
+def _read_design_objective(i: int, lines: list[str],
+                           optimization_result: OptimizationResult, log: SimpleLogger) -> tuple[int, str]:
     #                                                  -----   DESIGN OBJECTIVE   -----
     #
     #     ----------------------------------------------------------------------------------------------------
@@ -1163,9 +1163,9 @@ def _read_design_objective(i: int, lines: List[str],
     objective['out'].append(output_value)
     return i, line
 
-def _read_design_variables(i: int, lines: List[str],
+def _read_design_variables(i: int, lines: list[str],
                            design_cycle: int, idesign: int, optimization_result: OptimizationResult,
-                           log: SimpleLogger) -> Tuple[int, str]:
+                           log: SimpleLogger) -> tuple[int, str]:
     """reads the design variables"""
     #log.info(f'_read_design_variables; idesign={idesign:d}')
     #design_vars = optimization_result.design_vars
@@ -1278,7 +1278,7 @@ def _read_design_variables(i: int, lines: List[str],
     #print('desvars', i)
     return i, line
 
-def _read_iteration_number(i: int, line: str, lines: List[str],
+def _read_iteration_number(i: int, line: str, lines: list[str],
                            design_vars, constraint_ids_failing, gvector,
                            nlines: int, log: SimpleLogger):
     #i += 1

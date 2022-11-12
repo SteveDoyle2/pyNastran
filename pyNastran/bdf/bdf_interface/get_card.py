@@ -74,7 +74,7 @@ class GetCard(GetMethods):
 
         Returns
         -------
-        out_dict: dict[str]=List[ids]
+        out_dict: dict[str]=list[ids]
             the key=card_type, value=the ID of the card object
         out_list: list[ids]
             value=the ID of the card object
@@ -1365,7 +1365,7 @@ class GetCard(GetMethods):
 
         Returns
         -------
-        nid_to_elements_map : dict[nid]=List[eid]
+        nid_to_elements_map : dict[nid]=list[eid]
             node id to a list of elements
 
         .. todo:: support 0d or 1d elements
@@ -1407,7 +1407,7 @@ class GetCard(GetMethods):
 
         Returns
         -------
-        pid_to_eids_map : dict[pid]=List[eid]
+        pid_to_eids_map : dict[pid]=list[eid]
             property id to a list of elements
         msg : str; default=''
             a message added to the error message

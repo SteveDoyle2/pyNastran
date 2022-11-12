@@ -79,7 +79,7 @@ class CameraObject:
 
         Parameters
         ----------
-        camera_data : Dict[key] : value
+        camera_data : dict[key] : value
             defines the camera
             position : (float, float, float)
                 where am I is xyz space

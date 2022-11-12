@@ -118,7 +118,7 @@ def _fill_gui_geometry_arrays(geom_model: BDF,
                               eids: np.ndarray,
                               pids: np.ndarray,
                               iresult: int,
-                              cases: Dict[int, GuiResult],
+                              cases: dict[int, GuiResult],
                               add_property: bool=True,
                               add_material: bool=True):
     """
@@ -254,7 +254,7 @@ def _fill_gui_geometry_arrays(geom_model: BDF,
 
 def _get_material_arrays(geom_model: BDF,
                          nelements: int,
-                         pids: np.ndarray) -> Tuple[Any, Any, Any, bool, bool]:
+                         pids: np.ndarray) -> tuple[Any, Any, Any, bool, bool]:
     psolid_mids = np.full(nelements, -1, dtype='int64')
     pshell_mids = np.full((nelements, 4), -1, dtype='int64')
     thickness_pshell = np.full(nelements, np.nan, dtype='float32')
@@ -342,8 +342,8 @@ def _fill_paraview_geometry_arrays(geom_model: BDF,
                 cell_data.AddArray(shell_mid_array)
     return
 
-def _load_nodes(geom_model: BDF) -> Tuple[np.ndarray,
-                                          Dict[int, int],
+def _load_nodes(geom_model: BDF) -> tuple[np.ndarray,
+                                          dict[int, int],
                                           str]:
     idtype = 'int64'
     nid_map = {}

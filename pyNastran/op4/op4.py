@@ -57,7 +57,7 @@ def read_op4(op4_filename: Optional[str]=None,
     ----------
     op4_filename : str / None
         an OP4 filename.  Type=STRING.
-    matrix_names : List[str], str / None
+    matrix_names : list[str], str / None
         matrix name(s) (None -> all)
     precision : str; {'default', 'single', 'double'}
         specifies if the matrices are in single or double precsion
@@ -1394,10 +1394,10 @@ class OP4:
             The filename to write
             String -> opens a file (closed at the end)
             file   -> no file is opened and it's not closed
-        matrices : Dict[str] = (form, np.ndarray)
+        matrices : dict[str] = (form, np.ndarray)
             the matrices to write
 
-        name_order: str / List[str]; default=None -> sorted based on name
+        name_order: str / list[str]; default=None -> sorted based on name
             List of the names of the matrices that should be
             written or string
         is_binary : bool; default=True

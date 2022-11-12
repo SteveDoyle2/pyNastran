@@ -596,7 +596,7 @@ class GuiQtCommon(GuiAttributes):
             text_prop.SetColor(settings.annotation_color)
             text_actor.Modified()
 
-    def _update_vtk_fringe(self, icase: int, scale=None) -> Tuple[bool, Any]:
+    def _update_vtk_fringe(self, icase: int, scale=None) -> tuple[bool, Any]:
         """helper method for ``on_fringe``"""
         is_valid, (grid_result, name, name_str, data) = self._get_fringe_data(icase, scale)
         #print("is_valid=%s scale=%s" % (is_valid, scale))
@@ -788,7 +788,7 @@ class GuiQtCommon(GuiAttributes):
             icase = None
         return icase
 
-    def get_name_result_data(self, icase: int) -> Tuple[str, Any]:
+    def get_name_result_data(self, icase: int) -> tuple[str, Any]:
         key = self.case_keys[icase]
         assert isinstance(key, integer_types), key
         (obj, (i, name)) = self.result_cases[key]
@@ -796,13 +796,13 @@ class GuiQtCommon(GuiAttributes):
         case = obj.get_result(i, name)
         return name, case
 
-    def delete_cases(self, icases_to_delete: List[int], ask: bool=True) -> None:
+    def delete_cases(self, icases_to_delete: list[int], ask: bool=True) -> None:
         """
         Used by the Sidebar to delete results
 
         Parameters
         ----------
-        icases_to_delete : List[int]
+        icases_to_delete : list[int]
             the result cases to delete
         ask : bool; default=True
             TODO: does nothing...
@@ -819,7 +819,7 @@ class GuiQtCommon(GuiAttributes):
         self.res_widget.set_case_keys(self.case_keys)
         self.log_command(f'delete_cases(icases_to_delete={icases_to_delete}, ask={ask})')
 
-    def _get_sidebar_data(self, unused_name: str) -> List[Any]:
+    def _get_sidebar_data(self, unused_name: str) -> list[Any]:
         """
         gets the form for the selected name
 
@@ -830,7 +830,7 @@ class GuiQtCommon(GuiAttributes):
 
         Returns
         -------
-        form : List[tuple]
+        form : list[tuple]
             the form data
 
         """
@@ -1610,7 +1610,7 @@ class GuiQtCommon(GuiAttributes):
             is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
-        follower_nodes : List[int]
+        follower_nodes : list[int]
             the nodes that are brought along with a deflection
         follower_function : function
             a custom follower_node update function
@@ -1658,7 +1658,7 @@ class GuiQtCommon(GuiAttributes):
             is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
-        follower_nodes : List[int]
+        follower_nodes : list[int]
             the nodes that are brought along with a deflection
 
         """

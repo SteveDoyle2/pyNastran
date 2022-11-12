@@ -533,7 +533,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         Parameters
         ----------
-        cards : List[str]; Set[str]
+        cards : list[str]; Set[str]
             a list/set of cards that should not be read
 
         .. python ::
@@ -1396,7 +1396,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         Parameters
         ----------
-        card_lines : List[str]
+        card_lines : list[str]
             list of strings that represent the card's lines
 
         Returns
@@ -1984,7 +1984,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """rejects a card object"""
         self.reject_cards.append(card_obj)
 
-    def reject_card_lines(self, card_name: str, card_lines: List[str],
+    def reject_card_lines(self, card_name: str, card_lines: list[str],
                           show_log: bool=True, comment: str='') -> None:
         """rejects a card"""
         if card_name.isdigit():
@@ -2376,7 +2376,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         ----------
         card_object : BDFCard()
             the card object representation of card
-        card : List[str]
+        card : list[str]
             the fields of the card object; used for rejection and special cards
         card_name : str
             the card_name -> 'GRID'
@@ -3128,7 +3128,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """adds pmass"""
         self._parse_multi(card_name, cards, self.pmass, [3, 5, 7])
 
-    def _parse_multi(self, card_name: str, cards, card_cls, icard: List[int]):
+    def _parse_multi(self, card_name: str, cards, card_cls, icard: list[int]):
         """parses a DAREA, DPHASE, CDAMP4, CMASS4, CVISC, PMASS, PDAMP, ???"""
         datas = []
         for comment, card_lines in cards:
@@ -3176,7 +3176,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         ----------
         card_name : str
             the card name
-        cards : List[(comment, card_obj), ...]
+        cards : list[(comment, card_obj), ...]
             an series of comments and cards
         nsplit : int >= 0
             the location to identify for a card split (7 for CTETRA4/CTETRA10)

@@ -147,9 +147,9 @@ def integrate_unit_line(x, y):
 
     Parameters
     ----------
-    x : List[float]
+    x : list[float]
         the independent variable
-    y : List[float]
+    y : list[float]
         the dependent variable
 
     Returns
@@ -179,9 +179,9 @@ def integrate_positive_unit_line(x, y, min_value=0.):
 
     Parameters
     ----------
-    x : List[float]
+    x : list[float]
         the independent variable
-    y : List[float]
+    y : list[float]
         the dependent variable
     min_value : float; default=0.0
         ???
@@ -218,7 +218,7 @@ def is_list_ranged(a, List, b):
     ----------
     a : float
         the lower bound value (inclusive)
-    x : List[float, ...]
+    x : list[float, ...]
         the search values
     b: float
         the upper bound value (inclusive)
@@ -242,7 +242,7 @@ def is_float_ranged(a, x, b):
     ----------
     a : float
         the lower bound value (inclusive)
-    x : List[float, ...]
+    x : list[float, ...]
         the search values
     b: float
         the upper bound value (inclusive)

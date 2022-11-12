@@ -1,6 +1,6 @@
 from __future__ import annotations
 import copy
-from typing import Tuple, Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 import scipy.sparse as sci_sparse
@@ -22,7 +22,7 @@ def build_Kgg(model: BDF, dof_map: DOF_MAP,
               ndof: int,
               ngrid: int,
               ndof_per_grid: int,
-              idtype: str='int32', fdtype: str='float32') -> Tuple[NDArrayNNfloat, Any]:
+              idtype: str='int32', fdtype: str='float32') -> tuple[NDArrayNNfloat, Any]:
     """[K] = d{P}/dx"""
     model.log.debug(f'starting build_Kgg')
     Kbb = sci_sparse.dok_matrix((ndof, ndof), dtype=fdtype)

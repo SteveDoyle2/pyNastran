@@ -73,8 +73,8 @@ class AECOMP(BaseCard):
     type = 'AECOMP'
     allowed_list_types = ['SET1', 'AELIST', 'CAERO']
 
-    def __init__(self, name: str, list_type: List[str],
-                 lists: Union[int, List[int]], comment: str='') -> None:
+    def __init__(self, name: str, list_type: list[str],
+                 lists: Union[int, list[int]], comment: str='') -> None:
         """
         Creates an AECOMP card
 
@@ -87,7 +87,7 @@ class AECOMP(BaseCard):
             SET1 for structural components. Aerodynamic components are
             defined on the aerodynamic ks-set mesh while the structural
             components are defined on the g-set mesh.
-        lists : List[int, int, ...]
+        lists : list[int, int, ...]
             The identification number of either SET1, AELIST or CAEROi
             entries that define the set of grid points that comprise
             the component
@@ -186,7 +186,7 @@ class AEFACT(BaseCard):
         ----------
         sid : int
             unique id
-        factors : List[float, ..., float]
+        factors : list[float, ..., float]
             list of:
              - machs
              - dynamic_pressures
@@ -228,7 +228,7 @@ class AEFACT(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
         """
         list_fields = ['AEFACT', self.sid] + list(self.factors)
@@ -279,7 +279,7 @@ class AELINK(BaseCard):
             unique id
         label : str
             name of the AESURF(???) card
-        independent_labels : List[str, ..., str]
+        independent_labels : list[str, ..., str]
             name for the AESTAT(???) cards
         comment : str; default=''
             a comment for the card
@@ -341,7 +341,7 @@ class AELINK(BaseCard):
 
         Returns
         -------
-        list_fields : List[int/float/str]
+        list_fields : list[int/float/str]
             the fields that define the card
         """
         list_fields = ['AELINK', self.id, self.label]
@@ -397,7 +397,7 @@ class AELIST(BaseCard):
         ----------
         sid : int
             unique id
-        elements : List[int, ..., int]
+        elements : list[int, ..., int]
             list of box ids
         comment : str; default=''
             a comment for the card
@@ -437,7 +437,7 @@ class AELIST(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
         """
         list_fields = ['AELIST', self.sid] + self.elements
@@ -515,7 +515,7 @@ class AEPARM(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -532,7 +532,7 @@ class AEPARM(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
         """
         list_fields = ['AEPARM', self.aeparm_id, self.label, self.units]
@@ -609,7 +609,7 @@ class AESTAT(BaseCard):
 
         Returns
         -------
-        fields : List[int/str]
+        fields : list[int/str]
             the fields that define the card
         """
         list_fields = ['AESTAT', self.aestat_id, self.label]
@@ -817,7 +817,7 @@ class AESURF(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
         """
         eff = set_blank_if_default(self.eff, 1.0)
@@ -930,7 +930,7 @@ class AESURFS(BaseCard):  # not integrated
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
             the fields that define the card
         """
         list_fields = ['AESURFS', self.aesid, self.label, None, self.list1, None,
@@ -1128,7 +1128,7 @@ class AERO(Aero):
 
         Returns
         -------
-        fields : List[int/float/str]
+        fields : list[int/float/str]
            the fields that define the card
         """
         list_fields = ['AERO', self.acsid, self.velocity, self.cref,
@@ -1141,7 +1141,7 @@ class AERO(Aero):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
           the fields that define the card
         """
         sym_xz = set_blank_if_default(self.sym_xz, 0)
@@ -1327,7 +1327,7 @@ class AEROS(Aero):
 
         Returns
         -------
-        fields : List[varies]
+        fields : list[varies]
           the fields that define the card
         """
         sym_xz = set_blank_if_default(self.sym_xz, 0)
@@ -3154,7 +3154,7 @@ class DIVERG(BaseCard):
         The name.
     nroots : int
         the number of roots
-    machs : List[float, ..., float]
+    machs : list[float, ..., float]
         list of Mach numbers
     """
     type = 'DIVERG'
@@ -3169,7 +3169,7 @@ class DIVERG(BaseCard):
             The name
         nroots : int
             the number of roots
-        machs : List[float, ..., float]
+        machs : list[float, ..., float]
             list of Mach numbers
         comment : str; default=''
             a comment for the card
@@ -3257,9 +3257,9 @@ class FLFACT(BaseCard):
             the id of a density, reduced_frequency, mach, or velocity table
             the FLUTTER card defines the meaning
         factors : varies
-            values : List[float, ..., float]
+            values : list[float, ..., float]
                 list of factors
-            List[f1, THRU, fnf, nf, fmid]
+            list[f1, THRU, fnf, nf, fmid]
                 f1 : float
                     first value
                 THRU : str
@@ -3766,9 +3766,9 @@ class MKAERO1(BaseCard):
 
         Parameters
         ----------
-        machs : List[float]
+        machs : list[float]
             series of Mach numbers
-        reduced_freqs : List[float]
+        reduced_freqs : list[float]
             series of reduced frequencies
         comment : str; default=''
             a comment for the card
@@ -3903,9 +3903,9 @@ class MKAERO2(BaseCard):
 
         Parameters
         ----------
-        machs : List[float]
+        machs : list[float]
             series of Mach numbers
-        reduced_freqs : List[float]
+        reduced_freqs : list[float]
             series of reduced frequencies
         comment : str; default=''
             a comment for the card
@@ -4024,7 +4024,7 @@ class MONPNT1(BaseCard):
             components {1,2,3,4,5,6}
         comp : str
             name of the AECOMP/AECOMPL entry
-        xyz : List[float, float, float]; default=None
+        xyz : list[float, float, float]; default=None
             The coordinates in the CP coordinate system about which the
             loads are to be monitored.
             None : [0., 0., 0.]
@@ -4277,7 +4277,7 @@ class PAERO1(BaseCard):
         ----------
         pid : int
             PAERO1 id
-        Bi : List[int]; default=None
+        Bi : list[int]; default=None
             CAERO2 ids that are within the same IGID group
         comment : str; default=''
             a comment for the card
@@ -4423,7 +4423,7 @@ class PAERO2(BaseCard):
             width interference tube
         AR : float
             Aspect ratio of the interference tube (height/width)
-        thi / thn : List[int]
+        thi / thn : list[int]
             The first (thi) and last (thn) interference element of a body
             to use the theta1/theta2 array
         lrsb : int; default=None
@@ -4637,7 +4637,7 @@ class PAERO3(BaseCard):
             Number of Mach boxes in the flow direction; 0 < nbox < 50
         ncontrol_surfaces : int
             Number of control surfaces. (0, 1, or 2)
-        x / y : List[float, None]
+        x / y : list[float, None]
             float : locations of points 5 through 12, which are in the
             aerodynamic coordinate system, to define the cranks and
             control surface geometry.
@@ -5277,13 +5277,13 @@ class SPLINE3(Spline):
            5-pitch angle
            6-relative control angle for CAERO4/5; yaw angle for CAERO2
 
-        nodes : List[int]
+        nodes : list[int]
            Grid point identification number of the independent grid point.
-        displacement_components :  : List[int]
+        displacement_components :  : list[int]
            Component numbers in the displacement coordinate system.
            1-6 (GRIDs)
            0 (SPOINTs)
-        coeffs :  : List[float]
+        coeffs :  : list[float]
            Coefficient of the constraint relationship.
         usage : str; default=BOTH
             Spline usage flag to determine whether this spline applies
@@ -5903,9 +5903,9 @@ class TRIM(BaseCard):
             the mach number
         q : float
             dynamic pressure
-        labels : List[str]
+        labels : list[str]
             names of the fixed variables
-        uxs : List[float]
+        uxs : list[float]
             values corresponding to labels
         aeqr : float
             0.0 : rigid trim analysis

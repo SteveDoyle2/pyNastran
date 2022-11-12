@@ -97,7 +97,7 @@ class MarkActions:
 
         Parameters
         ----------
-        eids : int, List[int]
+        eids : int, list[int]
             the elements to apply a message to
         icase_result : int
             the case to draw the result from
@@ -273,12 +273,12 @@ class MarkActions:
 
         Parameters
         ----------
-        nids / eids : int, List[int]
+        nids / eids : int, list[int]
             the nodes/elements to highlight
         representation : str; default='wire'
             representation for elements
             allowed = {'wire', 'surface'}
-        model_name : str, List[str]
+        model_name : str, list[str]
             the name of the actor to highlight the nodes for
 
         """
@@ -297,9 +297,9 @@ class MarkActions:
 
         Parameters
         ----------
-        nids : int, List[int]
+        nids : int, list[int]
             the nodes to apply a message to
-        model_name : str, List[str]
+        model_name : str, list[str]
             the name of the actor to highlight the nodes for
 
         """
@@ -323,9 +323,9 @@ class MarkActions:
 
         Parameters
         ----------
-        eids : int, List[int]
+        eids : int, list[int]
             the elements to apply a message to
-        model_name : str, List[str]
+        model_name : str, list[str]
             the name of the actor to highlight the elements for
 
         """
@@ -375,11 +375,11 @@ class MarkActions:
 
         Parameters
         ----------
-        nids : int, List[int]
+        nids : int, list[int]
             the nodes to apply a message to
         icase : int
             the key in label_actors to slot the result into
-        text : str, List[str]
+        text : str, list[str]
             the text to display
 
         0 corresponds to the NodeID result
@@ -442,9 +442,9 @@ def create_marked_node_actors(gui, node_ids, nids, text, xyz_cid0):
         ???
     node_ids : (nnodes, ) int ndarray
         all the nodes
-    nids : int, List[int]
+    nids : int, list[int]
         the nodes to apply a message to
-    text : str, List[str]
+    text : str, list[str]
         the text to display
     xyz_cid0 : (nnodes, 3) float ndarray
         the xyz locations of node_ids

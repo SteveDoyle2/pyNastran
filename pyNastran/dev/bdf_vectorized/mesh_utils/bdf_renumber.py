@@ -32,7 +32,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         Should a rounding up be applied for each variable?
         This makes it easier to read a deck and verify that it's been renumbered properly.
         This only really applies when starting_id_dict is None
-    cards_to_skip : List[str]; (default=None -> don't skip any cards)
+    cards_to_skip : list[str]; (default=None -> don't skip any cards)
         There are edge cases (e.g. FLUTTER analysis) where things can break due to
         uncross-referenced cards.  You need to disable entire classes of cards in
         that case (e.g. all aero cards).

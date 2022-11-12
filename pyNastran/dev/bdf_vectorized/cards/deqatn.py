@@ -133,7 +133,7 @@ class DEQATN(BaseCard):  # needs work...
         ----------
         equation_id : int
             the id of the equation
-        eqs : List[str]
+        eqs : list[str]
             the equations, which may overbound the field
             split them by a semicolon (;)
         comment : str; default=''
@@ -171,7 +171,7 @@ class DEQATN(BaseCard):  # needs work...
 
         Parameters
         ----------
-        card : List[str]
+        card : list[str]
             this card is special and is not a ``BDFCard`` like other cards
         comment : str; default=''
             a comment for the card
@@ -310,7 +310,7 @@ def _split_equation(lines_out, line, n, isplit=0):
 
     Parameters
     ----------
-    lines_out : List[str]
+    lines_out : list[str]
         len(lines) = 0 : first iteration
         len(lines) = 1 : second iteration
     line : str
@@ -324,7 +324,7 @@ def _split_equation(lines_out, line, n, isplit=0):
 
     Returns
     -------
-    lines_out : List[str]
+    lines_out : list[str]
         the long line broken into shorter lines
     """
     #print('n=%s -> line=%r len=%s' % (n, line, len(line)))
@@ -378,7 +378,7 @@ def fortran_to_python(lines, default_values, comment=''):
 
     Parameters
     ----------
-    lines : List[str]
+    lines : list[str]
         the equations to write broken up by statement
     default_values : dict[name] = value
         the default values from the DTABLE card
@@ -472,7 +472,7 @@ def write_function_header(f, eq, default_values, comment=''):
         the name of the function ``f``
     msg : str
         see above
-    variables : List[str]
+    variables : list[str]
         the variables used by the equation header
         a, b, c
     """

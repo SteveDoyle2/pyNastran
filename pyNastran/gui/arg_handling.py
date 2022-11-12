@@ -1,7 +1,7 @@
 """pyNastranGUI argument parsing"""
 import os
 import sys
-from typing import List, Dict, Optional, Any
+from typing import Optional, Any
 
 import pyNastran
 from pyNastran import DEV
@@ -50,7 +50,7 @@ FORMAT_TO_EXTENSION = {
 
 
 def determine_format(input_filename: str,
-                     allowed_formats: Optional[List[str]]=None) -> str:
+                     allowed_formats: Optional[list[str]]=None) -> str:
     """
     Tries to map the input filename to an extension.
 
@@ -84,7 +84,7 @@ def determine_format(input_filename: str,
 
 
 def get_inputs(print_inputs: bool=False,
-               argv: Optional[List[str]]=None) -> Dict[str, Any]:
+               argv: Optional[list[str]]=None) -> dict[str, Any]:
     """Gets the inputs for pyNastranGUI using docopt."""
     if argv is None:
         argv = sys.argv[1:]  # same as argparse
@@ -116,7 +116,7 @@ def get_inputs(print_inputs: bool=False,
     }
     return inputs
 
-def run_argparse(argv: List[str]) -> Dict[str, str]:
+def run_argparse(argv: list[str]) -> dict[str, str]:
     """Gets the inputs for pyNastranGUI using argparse."""
     import argparse
     #msg = "Usage:\n"
@@ -134,7 +134,7 @@ def run_argparse(argv: List[str]) -> Dict[str, str]:
     #msg += '               [-q] [--groups] [--noupdate] [--log LOG]%s%s\n' % (test, qt)
 
     dev = ''
-    dev_list = []  # List[str]
+    dev_list = []  # list[str]
     if not pyNastran.is_pynastrangui_exe:
         #dev = ' [--noupdate] [--test] [--qt Qt] [--plugin]'
         dev_list = ['--noupdate', '--test', '--qt', '--plugin']
@@ -425,17 +425,17 @@ def _update_argparse_argdict(argdict):
             raise RuntimeError(msg)
     return argdict
 
-def _set_groups_key(argdict: Dict[str, str]):
+def _set_groups_key(argdict: dict[str, str]):
     if not GROUPS_DEFAULT:
         swap_key(argdict, 'nogroups', 'is_groups')
     else:
         argdict['is_groups'] = argdict['groups']
 
-def _update_format(argdict: Dict[str, Any],
-                   input_filenames: List[str]) -> List[str]:
-    formats = argdict['format']  # type: Optional[List[str]]
+def _update_format(argdict: dict[str, Any],
+                   input_filenames: list[str]) -> list[str]:
+    formats = argdict['format']  # type: Optional[list[str]]
 
-    input_formats = []  # type: List[str]
+    input_formats = []  # type: list[str]
     if input_filenames and formats is None:
         for input_filenamei in input_filenames:
             if isinstance(input_filenamei, str):
@@ -455,7 +455,7 @@ def _update_format(argdict: Dict[str, Any],
         argdict['format'] = input_formats
     return input_formats
 
-def _validate_format(input_formats: List[str]) -> None:
+def _validate_format(input_formats: list[str]) -> None:
     # None is for custom geometry
     allowed_formats = [
         'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',

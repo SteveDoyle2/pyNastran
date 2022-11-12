@@ -13,7 +13,7 @@ Multi-segment beams are IntegratedLineProperty objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy import unique, allclose, ndarray
 

@@ -156,9 +156,9 @@ class CDAMP1(DamperElement):
             element id
         pid : int
             property id (PELAS)
-        nids : List[int]
+        nids : list[int]
             GRID/SPOINT ids; n=2
-        dofs : List[int]
+        dofs : list[int]
             node ids; n=2
         comment : str; default=''
             a comment for the card
@@ -263,9 +263,9 @@ class CDAMP2(DamperElement):
             element id
         b : float
             spring damping
-        nids : List[int]
+        nids : list[int]
             GRID/SPOINT ids; n=2
-        dofs : List[int]
+        dofs : list[int]
             node ids; n=2
         ge : float
             ???
@@ -371,7 +371,7 @@ class CDAMP3(DamperElement):
             element id
         pid : int
             property id (PELAS)
-        nids : List[int]
+        nids : list[int]
             SPOINT ids; n=2
         comment : str; default=''
             a comment for the card
@@ -474,7 +474,7 @@ class CDAMP4(DamperElement):
             element id
         b : float
             spring damping
-        nids : List[int]
+        nids : list[int]
             SPOINT ids; n=2
         comment : str; default=''
             a comment for the card
@@ -574,7 +574,7 @@ class CVISCv(DamperElement):
             element id
         pid : int
             property id (PVISC)
-        nids : List[int, int]
+        nids : list[int, int]
             GRID ids
         comment : str; default=''
             a comment for the card

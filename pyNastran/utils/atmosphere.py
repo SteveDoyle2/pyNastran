@@ -26,7 +26,7 @@ are in English units.
 from __future__ import annotations
 import sys
 from math import log, exp
-from typing import List, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.utils.convert import (
     convert_altitude, convert_density, convert_pressure, convert_velocity,
@@ -777,7 +777,7 @@ def sutherland_viscoscity(T: float) -> float:
                            #alt_units: str='m',
                            #velocity_units: str='m/s',
                            #density_units: str='kg/m^3',
-                           #eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                           #eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     #deprecated('make_flfacts_alt_sweep', 'make_flfacts_alt_sweep_constant_mach', '1.4',
                #levels=[0, 1, 2])
     #out = make_flfacts_alt_sweep_constant_mach(
@@ -793,13 +793,13 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: np.ndarray,
                                          alt_units: str='m',
                                          velocity_units: str='m/s',
                                          density_units: str='kg/m^3',
-                                         eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                                         eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
     Makes a sweep across altitude for a constant Mach number.
 
     Parameters
     ----------
-    alt : List[float]
+    alt : list[float]
         Altitude in alt_units
     Mach : float
         Mach Number \f$ M \f$
@@ -836,7 +836,7 @@ def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
                                         alt_units: str='m',
                                         velocity_units: str='m/s',
                                         density_units: str='kg/m^3',
-                                        eas_units: str='m/s') -> Tuple[Any, Any, Any]:
+                                        eas_units: str='m/s') -> tuple[Any, Any, Any]:
     """TODO: not validated"""
     assert tass[0] <= tass[-1], tass
 
@@ -857,12 +857,12 @@ def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
                                       eas_units=eas_units)
     return rho, machs, velocity
 
-#def make_flfacts_mach_sweep(alt: float, machs: List[float],
+#def make_flfacts_mach_sweep(alt: float, machs: list[float],
                             #eas_limit: float=1000.,
                             #alt_units: str='m',
                             #velocity_units: str='m/s',
                             #density_units: str='kg/m^3',
-                            #eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                            #eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     #deprecated('make_flfacts_mach_sweep', 'make_flfacts_mach_sweep_constant_alt', '1.4',
                #levels=[0, 1, 2])
     #out = make_flfacts_mach_sweep_constant_alt(
@@ -874,12 +874,12 @@ def make_flfacts_tas_sweep_constant_alt(alt: float, tass: np.ndarray,
         #eas_units=eas_units)
     #return out
 
-def make_flfacts_mach_sweep_constant_alt(alt: float, machs: List[float],
+def make_flfacts_mach_sweep_constant_alt(alt: float, machs: list[float],
                                          eas_limit: float=1000.,
                                          alt_units: str='m',
                                          velocity_units: str='m/s',
                                          density_units: str='kg/m^3',
-                                         eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                                         eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
     Makes a sweep across Mach number for a constant altitude.
 
@@ -887,7 +887,7 @@ def make_flfacts_mach_sweep_constant_alt(alt: float, machs: List[float],
     ----------
     alt : float
         Altitude in alt_units
-    machs : List[float]
+    machs : list[float]
         Mach Number \f$ M \f$
     eas_limit : float
         Equivalent airspeed limiter in eas_units
@@ -916,12 +916,12 @@ def make_flfacts_mach_sweep_constant_alt(alt: float, machs: List[float],
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
-def make_flfacts_alt_sweep_constant_mach(mach: float, alts: List[float],
+def make_flfacts_alt_sweep_constant_mach(mach: float, alts: list[float],
                                          eas_limit: float=1000.,
                                          alt_units: str='m',
                                          velocity_units: str='m/s',
                                          density_units: str='kg/m^3',
-                                         eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                                         eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
     Makes a sweep across Mach number for a constant altitude.
 
@@ -929,7 +929,7 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: List[float],
     ----------
     mach : float
         Mach Number \f$ M \f$
-    alts : List[float]
+    alts : list[float]
         Altitude in alt_units
     eas_limit : float
         Equivalent airspeed limiter in eas_units
@@ -963,11 +963,11 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: List[float],
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
-#def make_flfacts_eas_sweep(alt: float, eass: List[float],
+#def make_flfacts_eas_sweep(alt: float, eass: list[float],
                            #alt_units: str='m',
                            #velocity_units: str='m/s',
                            #density_units: str='kg/m^3',
-                           #eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                           #eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     #deprecated('make_flfacts_eas_sweep', 'make_flfacts_eas_sweep_constant_alt', '1.4',
                #levels=[0, 1, 2])
     #out = make_flfacts_eas_sweep_constant_alt(
@@ -976,11 +976,11 @@ def make_flfacts_alt_sweep_constant_mach(mach: float, alts: List[float],
         #density_units=density_units, eas_units=eas_units)
     #return out
 
-def make_flfacts_eas_sweep_constant_alt(alt: float, eass: List[float],
+def make_flfacts_eas_sweep_constant_alt(alt: float, eass: list[float],
                                         alt_units: str='m',
                                         velocity_units: str='m/s',
                                         density_units: str='kg/m^3',
-                                        eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                                        eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
     Makes a sweep across equivalent airspeed for a constant altitude.
 
@@ -988,7 +988,7 @@ def make_flfacts_eas_sweep_constant_alt(alt: float, eass: List[float],
     ----------
     alt : float
         Altitude in alt_units
-    eass : List[float]
+    eass : list[float]
         Equivalent airspeed in eas_units
     alt_units : str; default='m'
         the altitude units; ft, kft, m
@@ -1018,11 +1018,11 @@ def make_flfacts_eas_sweep_constant_alt(alt: float, eass: List[float],
     assert len(rhos) == len(velocity)
     return rhos, machs, velocity
 
-#def make_flfacts_eas_sweep_constant_mach(mach: float, eass: List[float],
+#def make_flfacts_eas_sweep_constant_mach(mach: float, eass: list[float],
                                          #alt_units: str='m',
                                          #velocity_units: str='m/s',
                                          #density_units: str='kg/m^3',
-                                         #eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                                         #eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     #"""
     #Makes a sweep across equivalent airspeed for a constant altitude.
 
@@ -1030,7 +1030,7 @@ def make_flfacts_eas_sweep_constant_alt(alt: float, eass: List[float],
     #----------
     #mach : float
         #Constant mach number
-    #eass : List[float]
+    #eass : list[float]
         #Equivalent airspeed in eas_units
     #alt_units : str; default='m'
         #the altitude units; ft, kft, m
@@ -1085,7 +1085,7 @@ def make_flfacts_eas_sweep_constant_mach(machs: np.ndarray,
                                          velocity_units: str='ft/s',
                                          density_units: str='slug/ft^3',
                                          pressure_units: str='psf',
-                                         eas_units: str='knots') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                                         eas_units: str='knots') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
     Veas = Vtrue * sqrt(rho/rho0)
     V = a * mach
@@ -1141,7 +1141,7 @@ def _limit_eas(rho: float, machs: NDArrayNfloat, velocity: NDArrayNfloat,
                alt_units: str='m',
                velocity_units: str='m/s',
                density_units: str='kg/m^3',
-               eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+               eas_units: str='m/s') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """limits the equivalent airspeed"""
     assert alt_units != '', alt_units
     assert velocity_units != '', velocity_units

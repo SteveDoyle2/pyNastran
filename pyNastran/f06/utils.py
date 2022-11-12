@@ -200,7 +200,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
                      root_locus_filename=root_locus_filename,
                      kfreq_damping_filename=kfreq_damping_filename, show=show, log=log)
 
-def get_cmd_line_float(data: Dict[str, str], key: str) -> float:
+def get_cmd_line_float(data: dict[str, str], key: str) -> float:
     try:
         svalue = data[key]
     except KeyError:
@@ -209,7 +209,7 @@ def get_cmd_line_float(data: Dict[str, str], key: str) -> float:
     value = float(svalue)
     return value
 
-def split_float_colons(string_values: str) -> List[float]:
+def split_float_colons(string_values: str) -> list[float]:
     """
     Uses numpy-ish syntax to parse a set of two floats.  Blanks are interpreted as None.
 
@@ -237,7 +237,7 @@ def split_float_colons(string_values: str) -> List[float]:
         values = None # all values
     return values
 
-def split_int_colon(modes: str, nmax: int=1000, start_value: int=0) -> List[int]:
+def split_int_colon(modes: str, nmax: int=1000, start_value: int=0) -> list[int]:
     """
     Uses numpy-ish syntax to parse a set of integers.  Values are inclusive.
     Blanks are interpreted as 0 unless start_value is specified.

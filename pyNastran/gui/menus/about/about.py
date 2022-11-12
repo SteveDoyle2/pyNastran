@@ -196,7 +196,7 @@ class AboutWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
-def get_packages() -> Dict[str, str]:
+def get_packages() -> dict[str, str]:
     """makes the packages data"""
     #python = str(sys.version_info)
     #'python_branch', 'python_revision', 'python_build', 'python_compiler', 'python_implementation',
@@ -233,7 +233,7 @@ def get_packages() -> Dict[str, str]:
         packages[name] = module.__version__
     return packages
 
-def get_version() -> Dict[str, str]:
+def get_version() -> dict[str, str]:
     """makes the version data"""
     sys_platform = sys.platform
     localei, unused_encoding = locale.getdefaultlocale()
@@ -378,7 +378,7 @@ def _shortcuts_tab():
     shortcuts_tab.setLayout(vbox)
     return shortcuts_tab
 
-def get_shortcuts() -> Tuple[Dict[str, str], Dict[str, str]]:
+def get_shortcuts() -> tuple[dict[str, str], dict[str, str]]:
     """makes the shortcuts data"""
 
     mouse_shortcuts = {
