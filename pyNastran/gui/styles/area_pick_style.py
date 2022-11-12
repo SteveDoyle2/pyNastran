@@ -12,7 +12,7 @@ http://www.vtk.org/Wiki/VTK/Examples/Cxx/Picking/HighlightSelection
 http://public.kitware.com/pipermail/vtkusers/2012-January/072046.html
 http://vtk.1045678.n5.nabble.com/Getting-the-original-cell-id-s-from-vtkExtractUnstructuredGrid-td1239667.html
 """
-from typing import Tuple, List, Union
+from typing import Union
 import numpy as np
 import vtk
 #from vtk.util import numpy_support

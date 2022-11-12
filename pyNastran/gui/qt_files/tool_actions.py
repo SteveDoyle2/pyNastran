@@ -2,7 +2,7 @@
 from __future__ import annotations
 import os
 import traceback
-from typing import Tuple, List, Dict, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 import vtk

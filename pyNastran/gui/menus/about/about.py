@@ -5,7 +5,6 @@ import locale
 import platform
 import importlib
 import warnings
-from typing import Tuple, Dict
 with warnings.catch_warnings():  # avoid an imp module deprecation warning
     warnings.simplefilter("ignore")
     import setuptools

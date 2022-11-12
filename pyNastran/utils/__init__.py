@@ -226,8 +226,9 @@ def object_methods(obj: Any, mode: str='public',
     """
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
-def object_stats(obj: Any, mode: str='public',
-                 keys_to_skip: Optional[List[str]]=None,
+def object_stats(obj: Any,
+                 mode: str='public',
+                 keys_to_skip: Optional[list[str]]=None,
                  filter_properties: bool=False) -> str:
     """Prints out an easy to read summary of the object"""
     msg = '%s:\n' % obj.__class__.__name__
