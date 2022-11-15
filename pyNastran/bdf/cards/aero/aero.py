@@ -1701,8 +1701,9 @@ class CAERO1(BaseCard):
                       comment=comment)
 
     @classmethod
-    def add_quad(cls, eid, pid, span, chord, igroup,
-                 p1, p2, p3, p4, cp=0, spanwise='y', comment=''):
+    def add_quad(cls, eid: int, pid: int, span: int, chord: int, igroup: int,
+                 p1: np.ndarray, p2: np.ndarray, p3: np.ndarray, p4: np.ndarray,
+                 cp: int=0, spanwise: str='y', comment: str='') -> CAERO1:
         r"""
         ::
 

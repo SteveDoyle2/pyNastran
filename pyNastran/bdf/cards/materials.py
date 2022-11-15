@@ -577,14 +577,14 @@ class MAT1(IsotropicMaterial):
         g = data[2]
         nu = data[3]
         rho = data[4]
-        a = data[5]
+        alpha = data[5]
         tref = data[6]
         ge = data[7]
         St = data[8]
         Sc = data[9]
         Ss = data[10]
         mcsid = data[11]
-        return MAT1(mid, e, g, nu, rho, a, tref, ge,
+        return MAT1(mid, e, g, nu, rho, alpha, tref, ge,
                     St, Sc, Ss, mcsid, comment=comment)
 
     def _verify(self, xref):
