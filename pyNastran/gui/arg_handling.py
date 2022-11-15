@@ -385,7 +385,7 @@ def _update_argparse_argdict(argdict):
         post_script = argdict['postscript']
         check_path(post_script, name='postscript')
 
-    if argdict['qt'] is not None:
+    if argdict.get('qt') is not None:
         qt = argdict['qt'].lower()
         assert qt in ['pyqt5', 'pyside2', 'pyside6', 'pyqt6'], 'qt=%r' % qt
         os.environ.setdefault('QT_API', qt)
