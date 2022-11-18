@@ -601,6 +601,8 @@ class OP2(OP2_Scalar, OP2Writer):
         self.combine_results(combine=combine)
         self.log.debug('finished reading op2')
         str(self.op2_results)
+        if len(self.op2_results.thermal_load):
+            self.app = 'HEAT'
 
     def _finalize(self) -> None:
         """internal method"""

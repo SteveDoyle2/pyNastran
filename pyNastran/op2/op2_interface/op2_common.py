@@ -2329,8 +2329,9 @@ class OP2Common(Op2Codes, F06Writer):
 
         elif hasattr(self, 'struct_2i'):
             del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s, self.struct_8s_i
-        out = [outi for outi in self.object_attributes() if 'struct_' in outi]
-        assert len(out) == 0, out
+        #out = [outi for outi in self.object_attributes() if 'struct_' in outi]
+        #assert len(out) == 0, out
+        x = 1
 
 def _cast_nonlinear_factor(value):
     """h5py is picky about it's data types"""
