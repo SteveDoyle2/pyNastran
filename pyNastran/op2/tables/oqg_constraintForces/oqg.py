@@ -160,7 +160,7 @@ class OQG:
             op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
             op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
-            op2.reader_oug.update_mode_cycle('mode_cycle')
+            op2._op2_readers.reader_oug.update_mode_cycle('mode_cycle')
             op2.data_names = op2.apply_data_code_value('data_names',
                                                          ['mode', 'eign', 'mode_cycle'])
         #elif op2.analysis_code == 3: # differential stiffness

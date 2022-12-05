@@ -2560,7 +2560,7 @@ class CAERO7(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a CAERO1 card from ``BDF.add_card(...)``
+        Adds a CAERO7 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -2579,10 +2579,10 @@ class CAERO7(BaseCard):
         """
         eid = integer(card, 1, 'eid')
         name = string(card, 2, 'name')
-        cp = integer_or_blank(card, 3, 'cp', 0)
-        nspan = integer_or_blank(card, 4, 'nspan', 0)
-        nchord = integer_or_blank(card, 5, 'nchord', 0)
-        lspan = integer_or_blank(card, 6, 'aefact_lchord', 0)
+        cp = integer_or_blank(card, 3, 'cp', default=0)
+        nspan = integer_or_blank(card, 4, 'nspan', default=0)
+        nchord = integer_or_blank(card, 5, 'nchord', default=0)
+        lspan = integer_or_blank(card, 6, 'aefact_lchord', default=0)
         if lspan:
             lspan = 0
         ztaic = integer_or_blank(card, 7, 'ztaic')
@@ -2590,20 +2590,20 @@ class CAERO7(BaseCard):
         #assert cp == 0
         #igroup = integer(card, 8, 'igid')
 
-        x1 = double_or_blank(card, 9, 'x1', 0.0)
-        y1 = double_or_blank(card, 10, 'y1', 0.0)
-        z1 = double_or_blank(card, 11, 'z1', 0.0)
+        x1 = double_or_blank(card, 9, 'x1', default=0.0)
+        y1 = double_or_blank(card, 10, 'y1', default=0.0)
+        z1 = double_or_blank(card, 11, 'z1', default=0.0)
         p1 = np.array([x1, y1, z1])
-        x12 = double_or_blank(card, 12, 'x12', 0.)
+        x12 = double_or_blank(card, 12, 'x12', default=0.)
         unused_lchord_root = integer_or_blank(card, 13, 'lchord_root')
         unused_attach_root = integer_or_blank(card, 14, 'attach_root')
         unused_achord_root = integer_or_blank(card, 15, 'achord_root')
 
-        x4 = double_or_blank(card, 17, 'x4', 0.0)
-        y4 = double_or_blank(card, 18, 'y4', 0.0)
-        z4 = double_or_blank(card, 19, 'z4', 0.0)
+        x4 = double_or_blank(card, 17, 'x4', default=0.0)
+        y4 = double_or_blank(card, 18, 'y4', default=0.0)
+        z4 = double_or_blank(card, 19, 'z4', default=0.0)
         p4 = np.array([x4, y4, z4])
-        x43 = double_or_blank(card, 20, 'x43', 0.)
+        x43 = double_or_blank(card, 20, 'x43', default=0.)
         unused_lchord_tip = integer_or_blank(card, 21, 'lchord_tip')
         unused_attach_tip = integer_or_blank(card, 22, 'attach_tip')
         unused_achord_tip = integer_or_blank(card, 23, 'achord_tip')

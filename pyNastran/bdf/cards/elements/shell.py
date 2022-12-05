@@ -1076,7 +1076,7 @@ class CTRIA6(TriShell):
     +--------+------------+---------+----+----+----+----+----+-----+
     |   1    |      2     |    3    |  4 |  5 |  6 | 7  | 8  |  9  |
     +========+============+=========+=====+===+====+====+====+=====+
-    | CTRIA3 |    EID     |   PID   | N1 | N2 | N3 | N4 | N5 | N6  |
+    | CTRIA6 |    EID     |   PID   | N1 | N2 | N3 | N4 | N5 | N6  |
     +--------+------------+---------+----+----+----+----+----+-----+
     |        | THETA/MCID | ZOFFSET | T1 | T2 | T3 |    |    |     |
     +--------+------------+---------+----+----+----+----+----+-----+
@@ -1171,7 +1171,7 @@ class CTRIA6(TriShell):
         #self.tflag = tflag
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CTRIA6 card from ``BDF.add_card(...)``
 
@@ -1192,18 +1192,18 @@ class CTRIA6(TriShell):
             integer(card, 3, 'n1'),
             integer(card, 4, 'n2'),
             integer(card, 5, 'n3'),
-            integer_or_blank(card, 6, 'n4', 0),
-            integer_or_blank(card, 7, 'n5', 0),
-            integer_or_blank(card, 8, 'n6', 0),
+            integer_or_blank(card, 6, 'n4', default=0),
+            integer_or_blank(card, 7, 'n5', default=0),
+            integer_or_blank(card, 8, 'n6', default=0),
         ]
         if len(card) > 9:
-            theta_mcid = integer_double_or_blank(card, 9, 'theta_mcid', 0.0)
-            zoffset = double_or_blank(card, 10, 'zoffset', 0.0)
+            theta_mcid = integer_double_or_blank(card, 9, 'theta_mcid', default=0.0)
+            zoffset = double_or_blank(card, 10, 'zoffset', default=0.0)
 
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
-            tflag = integer_or_blank(card, 14, 'tflag', 0)
+            tflag = integer_or_blank(card, 14, 'tflag', default=0)
             assert len(card) <= 15, f'len(CTRIA6 card) = {len(card):d}\ncard={card}'
         else:
             theta_mcid = 0.0
@@ -4666,7 +4666,7 @@ class CQUAD8(QuadShell):
         #self.tflag = tflag
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CQUAD8 card from ``BDF.add_card(...)``
 
@@ -4684,18 +4684,18 @@ class CQUAD8(QuadShell):
                 integer(card, 4, 'n2'),
                 integer(card, 5, 'n3'),
                 integer(card, 6, 'n4'),
-                integer_or_blank(card, 7, 'n5', 0),
-                integer_or_blank(card, 8, 'n6', 0),
-                integer_or_blank(card, 9, 'n7', 0),
-                integer_or_blank(card, 10, 'n8', 0),]
+                integer_or_blank(card, 7, 'n5', default=0),
+                integer_or_blank(card, 8, 'n6', default=0),
+                integer_or_blank(card, 9, 'n7', default=0),
+                integer_or_blank(card, 10, 'n8', default=0),]
         if len(card) > 11:
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
             T4 = double_or_blank(card, 14, 'T4')
-            theta_mcid = integer_double_or_blank(card, 15, 'theta_mcid', 0.0)
-            zoffset = double_or_blank(card, 16, 'zoffset', 0.0)
-            tflag = integer_or_blank(card, 17, 'tflag', 0)
+            theta_mcid = integer_double_or_blank(card, 15, 'theta_mcid', default=0.0)
+            zoffset = double_or_blank(card, 16, 'zoffset', default=0.0)
+            tflag = integer_or_blank(card, 17, 'tflag', default=0)
             assert len(card) <= 18, f'len(CQUAD8 card) = {len(card):d}\ncard={card}'
         else:
             theta_mcid = 0.0

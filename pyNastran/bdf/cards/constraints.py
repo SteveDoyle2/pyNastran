@@ -266,7 +266,7 @@ class SUPORT(Constraint):
         assert len(self.nodes) == len(self.Cs)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SUPORT card from ``BDF.add_card(...)``
 

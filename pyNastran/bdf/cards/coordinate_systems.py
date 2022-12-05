@@ -1657,10 +1657,10 @@ class Cord2x(Coord):
         #self._finish_setup()
 
     @classmethod
-    def add_axes(cls, cid, rid=0, origin=None,
+    def add_axes(cls, cid: int, rid: int=0, origin=None,
                  xaxis=None, yaxis=None, zaxis=None,
                  xyplane=None, yzplane=None, xzplane=None,
-                 comment=''):
+                 comment: str=''):
         """
         Create a coordinate system based on a defined axis and point on the
         plane.  This is the generalized version of the CORD2x card.
@@ -1763,7 +1763,8 @@ class Cord2x(Coord):
         return cls.add_ijk(cid, origin, i, j, k, rid=rid, comment=comment)
 
     @classmethod
-    def add_ijk(cls, cid, origin=None, i=None, j=None, k=None, rid=0, comment=''):
+    def add_ijk(cls, cid: int, origin=None, i=None, j=None, k=None,
+                rid: int=0, comment: str=''):
         """
         Create a coordinate system based on 2 or 3 perpendicular unit vectors
 

@@ -193,7 +193,7 @@ class OES(OP2Common2):
             #: mode or cycle TODO confused on the type - F1 means float/int???
             op2.mode2 = op2.add_data_parameter(data, 'mode2', b'i', 7, False)
             op2.cycle = op2.add_data_parameter(data, 'cycle', b'f', 7, False)
-            op2.reader_oug.update_mode_cycle('cycle')
+            op2._op2_readers.reader_oug.update_mode_cycle('cycle')
             op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode2', 'cycle'])
         #elif analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
@@ -250,7 +250,7 @@ class OES(OP2Common2):
         op2.fix_format_code()
         self.get_oes_prefix_postfix()
         op2._parse_thermal_code()
-        op2.reader_oef._set_force_stress_element_name()
+        op2._op2_readers.reader_oef._set_force_stress_element_name()
         if op2.is_debug_file:
             op2.binary_debug.write('  element_name   = %r\n' % op2.element_name)
             op2.binary_debug.write('  approach_code  = %r\n' % op2.approach_code)
@@ -490,7 +490,7 @@ class OES(OP2Common2):
         op2.fix_format_code()
         self._parse_stress_code_to_stress_bits()
         self._fix_oes_sort2(data)
-        op2.reader_oef._set_force_stress_element_name()
+        op2._op2_readers.reader_oef._set_force_stress_element_name()
         #assert isinstance(op2.nonlinear_factor, int), op2.nonlinear_factor
 
         #def get_format_code(is_sort2, is_complex, is_random):

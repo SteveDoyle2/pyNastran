@@ -68,7 +68,6 @@ class RealStrainEnergyArray(BaseElement):
         del self.dt_temp
 
         #print(self._ntotals)
-
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal

@@ -132,20 +132,20 @@ class OEF:
         elif table_name_bytes in [b'OEFCRM1', b'OEFCRM2']:
             assert op2.table_code in [4, 504], op2.code_information()
             prefix = 'crm.'
-            op2.reader_oes._set_as_random()
+            op2._op2_readers.reader_oes._set_as_random()
         elif table_name_bytes in [b'OEFPSD1', b'OEFPSD2']:
             assert op2.table_code in [4, 604], op2.code_information()
-            op2.reader_oes._set_as_random()
+            op2._op2_readers.reader_oes._set_as_random()
             prefix = 'psd.'
         elif table_name_bytes in [b'OEFRMS1', b'OEFRMS2', b'OEFPK1']:
             assert op2.table_code in [4, 404, 804], op2.code_information()
-            op2.reader_oes._set_as_random()
+            op2._op2_readers.reader_oes._set_as_random()
             is_sort1 = True
             op2._analysis_code_fmt = b'i'
             prefix = 'rms.'
         elif table_name_bytes in [b'OEFNO1', b'OEFNO2']:
             assert op2.table_code in [4, 904], op2.code_information()
-            op2.reader_oes._set_as_random()
+            op2._op2_readers.reader_oes._set_as_random()
             op2.sort_method = 1
             op2.data_code['nonlinear_factor'] = None
             op2._analysis_code_fmt = b'i'
@@ -248,7 +248,7 @@ class OEF:
             #: eigenvalue
             op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
             op2.cycle = 0.
-            op2.reader_oug.update_mode_cycle('cycle')
+            op2._op2_readers.reader_oug.update_mode_cycle('cycle')
             op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'cycle'])
             # TODO: mode_cycle is not defined?
             #op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
@@ -424,7 +424,7 @@ class OEF:
             raise RuntimeError(msg)
 
         op2.fix_format_code()
-        op2.reader_oes._fix_oes_sort2(data)
+        op2._op2_readers.reader_oes._fix_oes_sort2(data)
         self._set_force_stress_element_name()
         #assert isinstance(op2.nonlinear_factor, int), op2.nonlinear_factor
         #self._check_result_type()
@@ -1222,7 +1222,7 @@ class OEF:
             return n
         if element_type != 2:
             # CBEAM-2: has a finalize step
-            op2.reader_oes.check_element_ids()
+            op2._op2_readers.reader_oes.check_element_ids()
 
         #assert op2.thermal == 0, op2.thermal
         assert ndata > 0, ndata

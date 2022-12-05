@@ -538,7 +538,7 @@ class AELINK(BaseCard):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
         Adds an AELINK card from ``BDF.add_card(...)``
 
@@ -2879,7 +2879,7 @@ class CAERO3(BaseCard):
         -------
         npoints : int
             The number of nodes for the CAERO
-        nelmements : int
+        nelements : int
             The number of elements for the CAERO
 
         """
@@ -3229,7 +3229,7 @@ class CAERO4(BaseCard):
         -------
         npoints : int
             The number of nodes for the CAERO
-        nelmements : int
+        nelements : int
             The number of elements for the CAERO
 
         """
@@ -5798,7 +5798,7 @@ class SPLINE3(Spline):
             assert isinstance(coeff, float), self.coeffs
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPLINE3 card from ``BDF.add_card(...)``
 

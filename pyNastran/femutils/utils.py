@@ -28,11 +28,13 @@ def hstack0(list_of_arrays: list[np.ndarray],
         raise RuntimeError(f'cannot unique without sorting; unique={unique} sort={sort}')
     return myarray
 
-def hstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:
+def hstack_lists(list_of_arrays: list[np.ndarray], sort: bool=True) -> np.ndarray:
     if len(list_of_arrays) == 1:
         array = list_of_arrays[0]
     else:
         array = np.hstack(list_of_arrays)
+    if sort:
+        array = np.unique(array)
     return array
 
 def vstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:

@@ -314,7 +314,7 @@ class AESTAT(BaseCard):
         self.label = label
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
         Adds an AESTAT card from ``BDF.add_card(...)``
 
@@ -1009,7 +1009,7 @@ class TRIM(BaseCard):
         pass
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
         Adds a TRIM card from ``BDF.add_card(...)``
 

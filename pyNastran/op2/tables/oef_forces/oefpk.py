@@ -180,7 +180,7 @@ class OEFPK:
             #: eigenvalue
             op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
             op2.cycle = 0.
-            op2.reader_oug.update_mode_cycle('cycle')
+            op2._op2_readers.reader_oug.update_mode_cycle('cycle')
             op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'cycle'])
             # TODO: mode_cycle is not defined?
             #op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
@@ -231,7 +231,7 @@ class OEFPK:
 
         op2.fix_format_code()
         op2._parse_thermal_code()
-        op2.reader_oef._set_force_stress_element_name()
+        op2._op2_readers.reader_oef._set_force_stress_element_name()
 
         if op2.is_debug_file:
             op2.binary_debug.write('  %-14s = %r\n' % ('element_name', op2.element_name))
@@ -256,5 +256,5 @@ class OEFPK:
         else:
             raise RuntimeError(self.op2.code_information())
 
-        n = self.op2.reader_oef._read_oef1_loads(data, ndata)
+        n = self.op2._op2_readers.reader_oef._read_oef1_loads(data, ndata)
         return n

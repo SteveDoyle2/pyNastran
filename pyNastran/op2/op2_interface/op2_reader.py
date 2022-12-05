@@ -112,6 +112,7 @@ OPTISTRUCT_VERSIONS = [
     b'OS2018.1',
     b'OS2019.1', b'OS2019.2',
     b'OS2020', b'OS2020.1',
+    b'OS2021.1',
 ]
 AUTODESK_VERSIONS = [
     b'NE  0824',  # this means NEi Nastran...
@@ -1964,7 +1965,7 @@ class OP2Reader:
                 data = self._read_record() # 584
                 ndata = len(data)
                 #print('ndata A =', ndata)
-                op2.reader_oqg._read_obc1_3(data, ndata)
+                op2._op2_readers.reader_oqg._read_obc1_3(data, ndata)
                 #print('---------------')
 
                 self.read_3_markers([itable, 1, 0])  # -4

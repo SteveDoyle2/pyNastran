@@ -26,7 +26,7 @@ class OGPF:
         return self.op2.factor
 
     def _read_ogpf1_3(self, data: bytes, ndata: int):
-        self.op2.reader_opg._read_opg1_3(data, ndata)  # TODO: this is wrong...
+        self.op2._op2_readers.reader_opg._read_opg1_3(data, ndata)  # TODO: this is wrong...
 
     def _read_ogpf1_4(self, data: bytes, ndata: int) -> int:
         op2 = self.op2
@@ -67,7 +67,7 @@ class OGPF:
                 ntotal = 40 * self.factor # 4*10
                 nnodes = ndata // ntotal
                 obj_vector_real = RealGridPointForcesArray
-                auto_return, is_vectorized = op2.reader_oes._create_ntotal_object(
+                auto_return, is_vectorized = op2._op2_readers.reader_oes._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nnodes * ntotal
@@ -152,7 +152,7 @@ class OGPF:
                 nnodes = ndata // ntotal
                 assert self.size == 4, self.size
                 obj_vector_real = ComplexGridPointForcesArray
-                auto_return, is_vectorized = op2.reader_oes._create_ntotal_object(
+                auto_return, is_vectorized = op2._op2_readers.reader_oes._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nnodes * op2.num_wide * 4

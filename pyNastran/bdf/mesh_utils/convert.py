@@ -1336,7 +1336,7 @@ def _convert_loads(model: BDF,
                         load.p2 *= moment_scale
                     else:
                         raise RuntimeError(load)
-                elif load.scale in ['FR', 'RFPR']:  # fractional
+                elif load.scale in ['FR', 'FRPR']:  # fractional
                     pass
                 else:
                     raise RuntimeError(load)

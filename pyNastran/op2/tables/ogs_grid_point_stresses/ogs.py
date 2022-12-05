@@ -87,7 +87,7 @@ class OGS:
             ## real eigenvalue
             op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
             op2.mode_cycle = 0.0
-            op2.reader_oug.update_mode_cycle('mode_cycle')
+            op2._op2_readers.reader_oug.update_mode_cycle('mode_cycle')
             op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
         #elif op2.analysis_code == 3: # differential stiffness
         #elif op2.analysis_code == 4: # differential stiffness

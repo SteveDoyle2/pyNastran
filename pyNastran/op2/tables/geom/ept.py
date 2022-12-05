@@ -850,24 +850,24 @@ class EPT:
             n += ntotal
 
             out = struct1.unpack(edata)
-            (pid, mid, group, beam_type, value) = out
+            (pid, mid, group, bar_type_bytes, value) = out
             if pid > 100000000 or pid < 1:
-                op2.log.debug("  pid=%s mid=%s group=%r beam_type=%r value=%s" % (
-                    pid, mid, group, beam_type, value))
+                op2.log.debug("  pid=%s mid=%s group=%r bar_type=%r value=%s" % (
+                    pid, mid, group, bar_type_bytes, value))
                 raise RuntimeError('bad parsing...')
 
-            beam_type = reshape_bytes_block_size(beam_type, size=size)
+            bar_type = reshape_bytes_block_size(bar_type_bytes, size=size)
             group = reshape_bytes_block_size(group, size=size)
-            data_in = [pid, mid, group, beam_type, value]
+            data_in = [pid, mid, group, bar_type, value]
 
-            expected_length = valid_types[beam_type]
+            expected_length = valid_types[bar_type]
             iformat = op2._endian + b'%if' % expected_length
 
             ndelta = expected_length * 4
             dims_nsm = list(unpack(iformat, data[n:n+ndelta]))
             data_in += dims_nsm
-            #print("  pid=%s mid=%s group=%r beam_type=%r value=%s dims_nsm=%s" % (
-                #pid, mid, group, beam_type, value, dims_nsm))
+            #print("  pid=%s mid=%s group=%r bar_type=%r value=%s dims_nsm=%s" % (
+                #pid, mid, group, bar_type, value, dims_nsm))
 
             # TODO why do i need the +4???
             #      is that for the nsm?

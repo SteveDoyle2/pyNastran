@@ -521,8 +521,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_optistruct = False
         self.is_nasa95 = True
         self._nastran_format = 'nasa95'
-        self.reader_oes._read_oes1_loads = self.reader_oes._read_oes1_loads_nasa95
-        self.reader_oef._read_oef1_loads = self.reader_oef._read_oef1_loads_nasa95
+        self._op2_readers.reader_oes._read_oes1_loads = self._op2_readers.reader_oes._read_oes1_loads_nasa95
+        self._op2_readers.reader_oef._read_oef1_loads = self._op2_readers.reader_oef._read_oef1_loads_nasa95
 
         if hasattr(self, 'reader_geom2') and hasattr(self.reader_geom2, '_read_cquad4_nasa95'):
             self.reader_geom2.geom2_map[(5408, 54, 261)] = ['CQUAD4', self.reader_geom2._read_cquad4_nasa95]
@@ -642,30 +642,32 @@ class OP2_Scalar(OP2Common, FortranFormat):
         """gets the dictionary of function3 / function4"""
 
         # MSC table mapper
-        reader_lama = self.reader_lama
-        reader_ogpwg = self.reader_ogpwg
-        reader_ogpf = self.reader_ogpf
-        reader_onr = self.reader_onr
-        reader_opg = self.reader_opg
-        reader_opr = self.reader_opr
-        reader_oqg = self.reader_oqg
-        reader_ogs = self.reader_ogs
+        reader_lama = self._op2_readers.reader_lama
+        reader_ogpwg = self._op2_readers.reader_ogpwg
+        reader_ogpf = self._op2_readers.reader_ogpf
+        reader_onr = self._op2_readers.reader_onr
+        reader_opg = self._op2_readers.reader_opg
+        reader_opr = self._op2_readers.reader_opr
+        reader_oqg = self._op2_readers.reader_oqg
+        reader_ogs = self._op2_readers.reader_ogs
 
         # oug
-        reader_oug = self.reader_oug
-        reader_ougpk = self.reader_ougpk
-        reader_otemp = self.reader_otemp
+        reader_oug = self._op2_readers.reader_oug
+        reader_ougpk = self._op2_readers.reader_ougpk
+        reader_otemp = self._op2_readers.reader_otemp
 
         # oef
-        reader_oef = self.reader_oef
-        reader_oefpk = self.reader_oefpk
+        reader_oef = self._op2_readers.reader_oef
+        reader_oefpk = self._op2_readers.reader_oefpk
 
         # oes
-        reader_oes = self.reader_oes
+        reader_oes = self._op2_readers.reader_oes
+
+        reader_onmd = self._op2_readers.reader_onmd
 
         satk_tables = {
-            b'OUGPK1'  : [self.reader_ougpk._read_ougpk1_3, self.reader_ougpk._read_ougpk1_4],
-            b'OEFPK1'  : [self.reader_oefpk._read_oefpk1_3, self.reader_oefpk._read_oefpk1_4],
+            b'OUGPK1'  : [reader_ougpk._read_ougpk1_3, reader_ougpk._read_ougpk1_4],
+            b'OEFPK1'  : [reader_oefpk._read_oefpk1_3, reader_oefpk._read_oefpk1_4],
         }
 
         nasa95_tables = {
@@ -1074,7 +1076,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'ODAMGCZD' : [self._nx_table_passer, self._table_passer], # nx - Table of damage values for cohesive elements
 
             # Normalized Mass Density
-            b'ONMD' : [self.reader_onmd._read_onmd_3, self.reader_onmd._read_onmd_4],
+            b'ONMD' : [reader_onmd._read_onmd_3, reader_onmd._read_onmd_4],
         }
         table_mapper_random = {
             # random OUG (displacement, velocity, acceleration)
