@@ -304,11 +304,11 @@ class EditGeometryProperties(PyDialog):
         self.opacity_edit.setRange(0.1, 1.0)
         self.opacity_edit.setDecimals(1)
         self.opacity_edit.setSingleStep(0.1)
-        self.opacity_edit.setValue(opacity)
+        self.opacity_edit.setValue(rounded_int(opacity))
         if self.use_slider:
             self.opacity_slider_edit = QSlider(QtCore.Qt.Horizontal)
             self.opacity_slider_edit.setRange(1, 10)
-            self.opacity_slider_edit.setValue(opacity * 10)
+            self.opacity_slider_edit.setValue(rounded_int(opacity * 10))
             self.opacity_slider_edit.setTickInterval(1)
             self.opacity_slider_edit.setTickPosition(QSlider.TicksBelow)
 
@@ -896,6 +896,10 @@ class EditGeometryProperties(PyDialog):
         if passed:
             self.close()
             #self.destroy()
+
+def rounded_int(value: int | float) -> int:
+    """rounds a value that *should* be an integer"""
+    return int(round(value, 0))
 
 
 def main():  # pragma: no cover
