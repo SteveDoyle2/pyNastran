@@ -3612,12 +3612,12 @@ class CPLSTx8(QuadShell):
                 integer(card, 4, 'n2'),
                 integer(card, 5, 'n3'),
                 integer(card, 6, 'n4'),
-                integer_or_blank(card, 7, 'n5', 0),
-                integer_or_blank(card, 8, 'n6', 0),
-                integer_or_blank(card, 9, 'n7', 0),
-                integer_or_blank(card, 10, 'n8', 0),]
+                integer_or_blank(card, 7, 'n5', default=0),
+                integer_or_blank(card, 8, 'n6', default=0),
+                integer_or_blank(card, 9, 'n7', default=0),
+                integer_or_blank(card, 10, 'n8', default=0),]
         if len(card) > 11:
-            theta = double_or_blank(card, 15, 'theta', 0.0)
+            theta = double_or_blank(card, 15, 'theta', default=0.0)
             assert len(card) <= 18, 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
         else:
             theta = 0.0

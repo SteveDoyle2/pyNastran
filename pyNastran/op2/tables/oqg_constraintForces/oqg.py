@@ -501,6 +501,10 @@ class OQG:
             #result_name = 'mpc_forces_RAQCONS'
         elif op2.table_name == b'ROQGM1':
             result_name = 'ROQGM1.mpc_forces'
+        elif op2.table_name == b'RAQCONS':
+            result_name = 'RAQCONS.mpc_forces'
+        elif op2.table_name == b'RAQEATC':
+            result_name = 'RAQEATC.mpc_forces'
         else:  # pragma: no cover
             msg = 'mpc_forces; table_name=%s' % op2.table_name
             raise NotImplementedError(msg)

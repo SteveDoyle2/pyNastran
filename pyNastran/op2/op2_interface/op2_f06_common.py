@@ -974,8 +974,6 @@ class OP2_F06_Common:
         self.spc_forces_v = {} # OQGV1
 
         self.mpc_forces = {}  # tCode=39
-        self.mpc_forces_RAQCONS = {}
-        self.mpc_forces_RAQEATC = {}
 
         self.contact_forces = {} # OQGCF1
         self.contact_tractions_and_pressure = {}  # OBC1
@@ -1093,7 +1091,7 @@ class OP2_F06_Common:
 
             # OQG - spc/mpc forces
             'spc_forces', 'spc_forces_v',
-            'mpc_forces', 'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
+            'mpc_forces',
             'contact_forces', 'contact_tractions_and_pressure',
             'glue_forces',
             'thermal_gradient_and_flux',

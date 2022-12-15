@@ -1,8 +1,8 @@
 from typing import Any
 
 from pyNastran.op2.op2_interface.random_results import (
-    RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS, RARCONS,
-    RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC, RAREATC,
+    RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS, RARCONS, RAQCONS,
+    RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC, RAREATC, RAQEATC,
     ROUGV1, ROQGM1,
     RADEFFM, SRSS, ABS, NRL,
     AutoCorrelationObjects, PowerSpectralDensityObjects, RootMeansSquareObjects,
@@ -56,6 +56,7 @@ class Results:
         self.RAPCONS = RAPCONS() # composite stress
         self.RANCONS = RANCONS() # strain energy
         self.RARCONS = RARCONS() # spc force
+        self.RAQCONS = RAQCONS() # mpc force
 
         self.RADEATC = RADEATC() # eigenvectors
         self.RAFEATC = RAFEATC() # force
@@ -65,6 +66,7 @@ class Results:
         self.RAPEATC = RAPEATC() # composite stress
         self.RANEATC = RANEATC() # strain energy
         self.RAREATC = RAREATC() # spc force
+        self.RAQEATC = RAQEATC() # mpcforce
         self.srss = SRSS()
         self.abs = ABS()
         self.nrl = NRL()
@@ -109,8 +111,8 @@ class Results:
             self.solution_set,
             self.ROUGV1, self.ROQGM1,
             self.RADEFFM,
-            self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS, self.RARCONS,
-            self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC, self.RAREATC,
+            self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS, self.RARCONS, self.RAQCONS,
+            self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC, self.RAREATC, self.RAQEATC,
 
             self.srss, self.abs, self.nrl,
         ]
