@@ -233,6 +233,7 @@ class GridPointSurfaceArray(ScalarObject):
 
     def add_sort1(self, dt, nid, eid, fiber, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         #assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.node_element[self.itotal, :] = [nid, eid]
@@ -243,7 +244,7 @@ class GridPointSurfaceArray(ScalarObject):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -634,7 +635,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -662,6 +663,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         return msg
 
     def add_sort1(self, dt, nid, lxa, lxb, lxc, lya, lyb, lyc, lza, lzb, lzc, sa, sb, sc, epr, ovm):
+        assert self.sort_method == 1, self
         assert isinstance(nid, int) and nid > 0, 'dt=%s nid=%s' % (dt, nid)
         self._times[self.itime] = dt
         self.node[self.itotal] = nid
@@ -723,7 +725,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -751,6 +753,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         return msg
 
     def add_sort1(self, dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm):
+        assert self.sort_method == 1, self
         assert isinstance(nid, int) and nid > 0, 'dt=%s nid=%s' % (dt, nid)
         self._times[self.itime] = dt
         self.node[self.itotal] = nid
@@ -913,7 +916,7 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -941,6 +944,7 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         return msg
 
     def add_sort1(self, dt, nid, oxx, oyy, ozz, txy, pressure):
+        assert self.sort_method == 1, self
         assert isinstance(nid, int) and nid > 0, 'dt=%s nid=%s' % (dt, nid)
         self._times[self.itime] = dt
         self.node[self.itotal] = nid

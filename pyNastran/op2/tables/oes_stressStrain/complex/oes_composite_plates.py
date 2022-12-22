@@ -134,6 +134,7 @@ class ComplexLayeredCompositesArray(OES_Object):
     def add_sort1(self, dt, eid, ply_id,
                   o1a, o2a, t12a, o1za, o2za,
                   o1b, o2b, t12b, o1zb, e2zb, ovm):
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
@@ -145,6 +146,7 @@ class ComplexLayeredCompositesArray(OES_Object):
         self.itotal += 1
 
     def add_sort1_real(self, dt, eid, ply_id, oxx, oyy, txy, txz, tyz, angle, omax, omin, max_shear) -> None:
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -159,7 +161,7 @@ class ComplexLayeredCompositesArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

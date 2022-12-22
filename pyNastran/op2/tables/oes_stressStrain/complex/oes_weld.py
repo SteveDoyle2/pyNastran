@@ -136,7 +136,7 @@ class ComplexWeldArray(OES_Object):
 
     def add_sort1(self, dt, eid, axial, max_a, min_a, max_b, min_b, max_shear, bearing):
         """unvectorized method for adding SORT1 transient data"""
-        #print(force_x, force_y)
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [axial, max_a, min_a, max_b, min_b, max_shear, bearing]
@@ -147,7 +147,7 @@ class ComplexWeldArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

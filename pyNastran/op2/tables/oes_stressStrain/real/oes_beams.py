@@ -296,6 +296,7 @@ class RealBeamArray(OES_Object):
 
     def add_sort1(self, unused_dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
 
         self.element_node[self.itotal, :] = [eid, grid]
@@ -307,7 +308,7 @@ class RealBeamArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -616,7 +617,7 @@ class RealNonlinearBeamArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

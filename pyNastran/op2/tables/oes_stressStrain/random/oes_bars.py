@@ -143,7 +143,7 @@ class RandomBarArray(OES_Object):
     def add_sort1(self, dt, eid,
                   s1a, s2a, s3a, s4a, axial,
                   s1b, s2b, s3b, s4b):
-
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types)
         assert eid > 0, eid
         self._times[self.itime] = dt
@@ -156,6 +156,7 @@ class RandomBarArray(OES_Object):
     def add_sort2(self, dt, eid,
                   s1a, s2a, s3a, s4a, axial,
                   s1b, s2b, s3b, s4b):
+        assert self.sort_method == 2, self
         itime, ielement = self._get_sort2_itime_ielement_from_itotal()
         self._times[itime] = dt
         self.element[ielement] = eid
@@ -179,7 +180,7 @@ class RandomBarArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

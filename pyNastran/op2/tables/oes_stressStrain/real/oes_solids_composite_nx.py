@@ -180,6 +180,7 @@ class RealSolidCompositeArray(OES_Object):
         self.data_frame = data_frame
 
     def add_sort1(self, dt, eid, layer, location, grid, o11, o22, o33, t12, t2z, t1z, ovm):
+        assert self.sort_method == 1, self
         # See the CHEXA, CPENTA, or CTETRA entry for the definition of the element coordinate systems.
         # The material coordinate system (CORDM) may be the basic system (0 or blank), any defined system
         # (Integer > 0), or the standard internal coordinate system of the element designated as:
@@ -357,7 +358,7 @@ class RealSolidCompositeArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

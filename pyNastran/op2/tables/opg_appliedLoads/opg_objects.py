@@ -30,7 +30,7 @@ class AppliedLoadsVectorArray(ScalarObject):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -56,7 +56,7 @@ class AppliedLoadsVectorArray(ScalarObject):
 
     def add_sort1(self, node_id, eid, source, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
-        #raise NotImplementedError('AppliedLoadsVector')
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         msg = "node_id=%s v1=%s v2=%s v3=%s" % (node_id, v1, v2, v3)
         assert 0 < node_id < 1000000000, msg

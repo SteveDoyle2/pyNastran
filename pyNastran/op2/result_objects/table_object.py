@@ -746,6 +746,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(node_id, int) and node_id > 0, 'dt=%s node_id=%s' % (dt, node_id)
         # itotal - the node number
         # itime - the time/frequency step
@@ -757,6 +758,7 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal += 1
 
     def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        assert self.sort_method == 2, self
         #if node_id < 1:
             #msg = self.code_information()
             #msg += "(%s, %s) dt=%g node_id=%s v1=%g v2=%g v3=%g" % (

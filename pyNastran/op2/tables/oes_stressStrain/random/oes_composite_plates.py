@@ -195,6 +195,7 @@ class RandomCompositePlateArray(OES_Object):
         return True
 
     def add_new_eid_sort1(self, etype, dt, eid, layer, o11, o22, t12):
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12]
@@ -203,6 +204,7 @@ class RandomCompositePlateArray(OES_Object):
 
     def add_sort1_7words(self, dt, eid, layer, o11, o22, t12, t1z, t2z):
         """nx - von mises is not included"""
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z]
@@ -211,6 +213,7 @@ class RandomCompositePlateArray(OES_Object):
 
     def add_sort1(self, dt, eid, layer, o11, o22, t12):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert eid is not None
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_layer[self.itotal, :] = [eid, layer]
@@ -220,7 +223,7 @@ class RandomCompositePlateArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             msg = [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

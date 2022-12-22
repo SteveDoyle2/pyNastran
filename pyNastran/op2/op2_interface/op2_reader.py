@@ -121,50 +121,50 @@ class OP2Reader:
         self.op2 = op2  # type: OP2
 
         self.mapped_tables = {
-            b'GPL' : self.read_gpl,
-            b'GPLS' : self.read_gpls,
+            b'GPL' : (self.read_gpl, 'grid point list'),
+            b'GPLS' : (self.read_gpls, 'grid point list (superelement)'),
 
             # GPDT  - Grid point definition table
-            b'GPDT' : self.read_gpdt,
-            b'GPDTS' : self.read_gpdt,
+            b'GPDT' : (self.read_gpdt, 'grid point locations'),
+            b'GPDTS' : (self.read_gpdt, 'grid point locations (superelement)'),
 
             # BGPDT - Basic grid point definition table.
-            b'BGPDT' : self.read_bgpdt,
-            b'BGPDTS' : self.read_bgpdt,
-            b'BGPDTOLD' : self.read_bgpdt,
-            b'BGPDTVU' : self.read_bgpdt,
+            b'BGPDT' : (self.read_bgpdt, 'grid points in cid=0 frame'),
+            b'BGPDTS' : (self.read_bgpdt, 'grid points in cid=0 (superelement)'),
+            b'BGPDTOLD' : (self.read_bgpdt, 'grid points in cid=0 frame'),
+            b'BGPDTVU' : (self.read_bgpdt, 'VU grid points in cid=0 frame'),
 
             # optimization
-            b'DESCYC' : self.read_descyc,
-            b'DBCOPT' : self.read_dbcopt,
-            b'DSCMCOL' : self.read_dscmcol,
-            b'DESTAB' :  self._read_destab,
+            b'DESCYC' : (self.read_descyc, '???'),
+            b'DBCOPT' : (self.read_dbcopt, 'design variable history table'),
+            b'DSCMCOL' : (self.read_dscmcol, 'creates op2_results.responses.dscmcol'),
+            b'DESTAB' :  (self._read_destab, 'creates op2_results.responses.desvars'),
 
             #b'MEFF' : self.read_meff,
-            b'INTMOD' : self.read_intmod,
-            b'HISADD' : self.read_hisadd,
-            b'EXTDB' : self.read_extdb,
-            b'OMM2' : self.read_omm2,
-            b'STDISP' : self.read_stdisp,
-            b'TOL' : self.read_tol,
-            b'PCOMPT' : self._read_pcompts,
-            b'PCOMPTS' : self._read_pcompts,
-            b'MONITOR' : self.read_monitor,
-            b'AEMONPT' : self.read_aemonpt,
-            b'FOL' : self.read_fol,  # frequency response list
-            b'FRL' : self.read_frl,  # frequency response list
-            b'SDF' : self.read_sdf,
-            b'IBULK' : self.read_ibulk,
-            b'ICASE' : self.read_icase,
-            b'CASECC': self.read_casecc,
-            b'XCASECC': self.read_xcasecc,
+            b'INTMOD' : (self.read_intmod, '???'),
+            b'HISADD' : (self.read_hisadd, 'optimization history; op2_results.responses.convergence_data'),
+            b'EXTDB' : (self.read_extdb, 'external superlelements'),
+            b'OMM2' : (self.read_omm2, 'max/min table'),
+            b'STDISP' : (self.read_stdisp, '???'),
+            b'TOL' : (self.read_tol, 'time output list?'),
+            b'PCOMPT' : (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry'),
+            b'PCOMPTS' : (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry (superelement)'),
+            b'MONITOR' : (self.read_monitor, 'MONITOR point output'),
+            b'AEMONPT' : (self.read_aemonpt, '???'),
+            b'FOL' : (self.read_fol, 'frequency output list'),
+            b'FRL' : (self.read_frl, 'frequency response list'),
+            b'SDF' : (self.read_sdf, '???'),
+            b'IBULK' : (self.read_ibulk, 'explicit bulk data'),
+            b'ICASE' : (self.read_icase, 'explicit case control'),
+            b'CASECC': (self.read_casecc, 'case control'),
+            b'XCASECC': (self.read_xcasecc, 'case control'),
 
-            b'CDDATA' : self.read_cddata,
-            b'CMODEXT' : self._read_cmodext,
+            b'CDDATA' : (self.read_cddata, 'Cambell diagram'),
+            b'CMODEXT' : (self._read_cmodext, '???'),
 
             #MSC
             #msc / units_mass_spring_damper
-            b'UNITS' : self._read_units,
+            b'UNITS' : (self._read_units, 'units'),
             #b'CPHSF': self._read_cphsf,
 
             # element matrices
@@ -175,41 +175,42 @@ class OP2Reader:
             #b'MELMP' : self._read_element_matrix,
 
             # element dictionaries
-            b'KDICT' : self._read_dict,
-            b'MDICT' : self._read_dict,
-            b'BDICT' : self._read_dict,
-            b'KDICTP' : self._read_dict,
-            b'MDICTP' : self._read_dict,
-            b'KDICTDS' : self._read_dict,
-            b'KDICTX' : self._read_dict,
-            b'XDICT' : self._read_dict,
-            b'XDICTB' : self._read_dict,
-            b'XDICTDS' : self._read_dict,
-            b'XDICTX' : self._read_dict,
+            b'KDICT' : (self._read_dict, 'matrix'),
+            b'MDICT' : (self._read_dict, 'matrix'),
+            b'BDICT' : (self._read_dict, 'matrix'),
+            b'KDICTP' : (self._read_dict, 'matrix'),
+            b'MDICTP' : (self._read_dict, 'matrix'),
+            b'KDICTDS' : (self._read_dict, 'matrix'),
+            b'KDICTX' : (self._read_dict, 'matrix'),
+            b'XDICT' : (self._read_dict, 'matrix'),
+            b'XDICTB' : (self._read_dict, 'matrix'),
+            b'XDICTDS' : (self._read_dict, 'matrix'),
+            b'XDICTX' : (self._read_dict, 'matrix'),
 
             # coordinate system transformation matrices
-            b'CSTM' : self.read_cstm,
-            b'CSTMS' : self.read_cstm,
+            b'CSTM' : (self.read_cstm, 'coordinate transforms'),
+            b'CSTMS' : (self.read_cstm, 'coordinate transforms (superelement)'),
             #b'TRMBD': self.read_trmbd,
             #b'TRMBU': self.read_trmbu,
 
-            b'R1TABRG': self.read_r1tabrg,
+            b'R1TABRG': (self.read_r1tabrg, 'DRESP1 optimization table'),
             # Qualifier info table???
-            b'QUALINFO' : self.read_qualinfo,
+            b'QUALINFO' : (self.read_qualinfo, 'Qualifier info table'),
 
             # Equivalence between external and internal grid/scalar numbers
-            b'EQEXIN' : self.read_eqexin,
-            b'EQEXINS' : self.read_eqexin,
+            b'EQEXIN' : (self.read_eqexin, 'internal/external ids'),
+            b'EQEXINS' : (self.read_eqexin, 'internal/external ids (superelement)'),
 
-            b'XSOP2DIR' : self.read_xsop2dir,
+            b'XSOP2DIR' : (self.read_xsop2dir, 'list of external superelement matrices?'),
 
-            b'OBC1': self.read_obc1,
-            b'OBG1': self.read_obc1,
-            b'PTMIC' : self._read_ptmic,
-            b'MATPOOL' : self._read_matrix_matpool,
+            b'OBC1': (self.read_obc1, 'Contact pressures and tractions at grid points'),
+            b'OBG1': (self.read_obc1, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
+            b'PTMIC' : (self._read_ptmic, 'property of VATV microphone points'),
+            b'MATPOOL' : (self._read_matrix_matpool, 'matrices'),
             # OVG: Table of aeroelastic x-y plot data for V-g or V-f curves
-            b'MKLIST': self._read_mklist,
+            b'MKLIST': (self._read_mklist, 'M/K aero pairs'),
         }
+        self.desc_map = {key: values[1] for key, values in self.mapped_tables.items()}
 
     def read_nastran_version(self, mode: str) -> None:
         """
@@ -5979,7 +5980,9 @@ class OP2Reader:
         while markers[0] != 0:
             unused_data = self._skip_record()
             if self.is_debug_file:
-                self.log.debug("skipping table_name = %r" % op2.table_name)
+                desc = self.desc_map.get(op2.table_name, '???')
+                self.log.debug("skipping table_name = %r" % (
+                    op2.table_name + ' (' + desc + ')').rstrip('( )'))
             #if len(data) == 584:
                 #self._parse_results_table3(data)
             #else:
@@ -6218,7 +6221,7 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
             #self.binary_debug.write('marker = [4, -1, 4]\n')
-        data = self._read_record()
+        data = self._read_record_ndata4()[0]
         # (101, 0, 1, 0, 0, 0, 3)
         #self.show_data(data)  # TODO: what is this???
 
@@ -6241,7 +6244,7 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
             #self.binary_debug.write('marker = [4, -1, 4]\n')
-        data = self._read_record()
+        data = self._read_record_ndata8()[0]
 
         self.read_markers8([-2, 1, 0])
         if self.is_debug_file:
@@ -6397,16 +6400,21 @@ class OP2Reader:
         # down (yes down) to 4 to indicate table4.  If we count down again, we end up
         # back at table 3 (with isubtable=-5), which will occur in the case of multiple
         # times/element types/results in a single macro table (e.g. OUG, OES).
-        table_mapper = op2._get_table_mapper()
+        #table_mapper = op2._get_table_mapper()
+        table_mapper = op2.table_mapper
         table_name = op2.table_name
+        desc = '???'
         if table_name in table_mapper:
             #if self.read_mode == 2:
                 #self.log.debug("table_name = %r" % table_name)
-            table3_parser, table4_parser = table_mapper[table_name]
+            #try:
+                #table3_parser, table4_parser = table_mapper[table_name]
+            #except:
+            table3_parser, table4_parser, desc = table_mapper[table_name]
             passer = False
         else:
             if self.read_mode == 2:
-                self.log.info(f'skipping table_name = {table_name!r}')
+                self.log.info(f'skipping table_name = {table_name!r} ({desc})')
                     #raise NotImplementedError(table_name)
             table3_parser = None
             table4_parser = None

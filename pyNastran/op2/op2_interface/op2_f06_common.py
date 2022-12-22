@@ -1227,7 +1227,7 @@ class OP2_F06_Common:
             'card_count', 'data_code', 'element_mapper', 'isubcase_name_map',
             'labels', 'subtitles', 'additional_matrices', 'matrices', 'matdicts',
             'subcase_key', 'end_options', 'expected_times', 'generalized_tables',
-            'op2_reader', 'table_count']
+            'op2_reader', 'table_count', 'table_mapper']
 
         table_types = self.get_table_types()
         tables = object_attributes(self, 'public', filter_properties=True)

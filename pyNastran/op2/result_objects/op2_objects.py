@@ -696,6 +696,26 @@ def _write_table_header(op2_file, fascii,
     fascii.write('%s header2b = %s\n' % (table_name, table2))
     op2_file.write(pack(table2_format, *table2))
 
+def get_sort_element_sizes(self) -> tuple[int, int, int]:
+    if self.is_sort1:
+        ntimes = self.ntimes
+        nelements = self.nelements
+        ntotal = self.ntotal
+        #nx = ntimes
+        #ny = nnodes
+        #print("SORT1 ntimes=%s nelements=%s" % (ntimes, nelements))
+    elif self.is_sort2:
+        # flip this to sort1
+        ntimes = self.ntotal
+        nelements = self.ntimes
+        ntotal = self.nelements
+        #nx = ntimes
+        #ny = nnodes
+        #print("***SORT2 ntotal=%s nelements=%s ntimes=%s" % (ntotal, nelements, ntimes))
+    else:
+        raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
+    assert nelements == ntotal or ntimes == ntotal, (ntimes, nelements, ntotal)
+    return ntimes, nelements, ntotal
 
 class BaseElement(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):

@@ -318,6 +318,7 @@ class RandomPlateArray(OES_Object):
     def add_sort2(self, dt, eid, nid,
                   fd1, oxx1, oyy1, txy1,
                   fd2, oxx2, oyy2, txy2):
+        assert self.sort_method == 2, self
         #if self.element_name == 'CTRIA3':
         #assert self.element_node.max() == 0, self.element_node
         #print(self.element_node, nid)
@@ -387,7 +388,7 @@ class RandomPlateArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

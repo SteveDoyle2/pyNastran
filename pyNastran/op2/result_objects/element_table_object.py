@@ -97,7 +97,7 @@ class ElementTableArray(BaseElement):  # displacement style table
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -179,6 +179,7 @@ class ElementTableArray(BaseElement):  # displacement style table
 
     def add_sort1(self, dt, eid, etype, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         # itotal - the node number
         # itime - the time/frequency step
@@ -191,6 +192,7 @@ class ElementTableArray(BaseElement):  # displacement style table
         self.itotal += 1
 
     def add_sort2(self, dt, eid, etype, v1, v2, v3, v4, v5, v6):
+        assert self.sort_method == 2, self
         msg = "dt=%s eid=%s etype=%s v1=%s v2=%s v3=%s\n" % (dt, eid, etype, v1, v2, v3)
         msg += "                     v4=%s v5=%s v6=%s" % (v4, v5, v6)
         self._times[self.itotal] = dt

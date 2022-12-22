@@ -136,6 +136,7 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
     def add_sort1(self, dt, eid, fx, fy, fz, otx, oty, otz, etx, ety, etz,
                   mx, my, mz, orx, ory, orz, erx, ery, erz):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
@@ -148,7 +149,7 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
