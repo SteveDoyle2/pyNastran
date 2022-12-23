@@ -696,14 +696,15 @@ def _write_table_header(op2_file, fascii,
     fascii.write('%s header2b = %s\n' % (table_name, table2))
     op2_file.write(pack(table2_format, *table2))
 
-def get_sort_element_sizes(self) -> tuple[int, int, int]:
+def get_sort_element_sizes(self, debug: bool=False) -> tuple[int, int, int]:
     if self.is_sort1:
         ntimes = self.ntimes
         nelements = self.nelements
         ntotal = self.ntotal
         #nx = ntimes
         #ny = nnodes
-        #print("SORT1 ntimes=%s nelements=%s" % (ntimes, nelements))
+        if debug:
+            print(f'SORT1 {self.__class__.__name__} ntimes={ntimes} nelements={nelements}')
     elif self.is_sort2:
         # flip this to sort1
         ntimes = self.ntotal
@@ -711,11 +712,40 @@ def get_sort_element_sizes(self) -> tuple[int, int, int]:
         ntotal = self.nelements
         #nx = ntimes
         #ny = nnodes
-        #print("***SORT2 ntotal=%s nelements=%s ntimes=%s" % (ntotal, nelements, ntimes))
+        if debug:
+            print(f'***SORT2 {self.__class__.__name__} ntimes={ntimes} nelements={nelements} ntotal={ntotal}')
     else:
         raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
-    assert nelements == ntotal or ntimes == ntotal, (ntimes, nelements, ntotal)
+    #assert nelements == ntotal or ntimes == ntotal, (ntimes, nelements, ntotal)
     return ntimes, nelements, ntotal
+
+def get_sort_node_sizes(self, debug: bool=False) -> tuple[int, int, int]:
+    if self.is_sort1:
+        #self._nnodes //= self.ntimes
+        ntimes = self.ntimes
+        nnodes = self._nnodes // self.ntimes
+        ntotal = self.ntotal
+        #nx = ntimes
+        #ny = nnodes
+        #print("SORT1 ntimes=%s nelements=%s" % (ntimes, nelements))
+    elif self.is_sort2:
+        #dt=0.0 nid=3306 itime=0/5=5 inode=0/5=20
+        # flip this to sort1
+        if debug:
+            print("***SORT2 ntotal=%s _nnodes=%s ntimes=%s" % (self.ntotal, self._nnodes, self.ntimes))
+        ntimes = self.ntotal
+        nnodes = self._nnodes // self.ntotal
+        ntotal = nnodes
+        if debug:
+            print(f'***SORT2 {self.__class__.__name__} ntimes={ntimes} nnodes={nnodes} ntotal={ntotal}')
+        nx = ntimes
+        #ny = nnodes
+        #print("***SORT2 ntotal=%s nnodes=%s ntimes=%s" % (ntotal, nnodes, ntimes))
+    else:
+        raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
+    assert nnodes == ntotal or ntimes == ntotal, (ntimes, nnodes, ntotal)
+    return ntimes, nnodes, ntotal
+
 
 class BaseElement(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):

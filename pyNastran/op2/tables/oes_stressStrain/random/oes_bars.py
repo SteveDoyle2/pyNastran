@@ -156,7 +156,7 @@ class RandomBarArray(OES_Object):
     def add_sort2(self, dt, eid,
                   s1a, s2a, s3a, s4a, axial,
                   s1b, s2b, s3b, s4b):
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         itime, ielement = self._get_sort2_itime_ielement_from_itotal()
         self._times[itime] = dt
         self.element[ielement] = eid
@@ -192,12 +192,10 @@ class RandomBarArray(OES_Object):
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append(f'  type={self.__class__.__name__} ntimes={ntimes:d} nelements={nelements}; table_name={self.table_name!r}\n')
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append(f'  type={self.__class__.__name__} nelements={nelements}; table_name={self.table_name!r}\n')
             ntimes_word = '1'
         headers = self.get_headers()
 

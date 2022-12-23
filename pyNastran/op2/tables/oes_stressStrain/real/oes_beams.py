@@ -2,7 +2,6 @@ from __future__ import annotations
 import copy
 
 import numpy as np
-from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
@@ -17,6 +16,10 @@ from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CBEAM': 2,
 }
+SORT2_TABLE_NAME_MAP = {
+    'OES2': 'OES1',
+}
+
 class RealBeamArray(OES_Object):
     """
     common class used by:
@@ -76,9 +79,25 @@ class RealBeamArray(OES_Object):
             raise NotImplementedError(self.element_type)
 
         self.nnodes = nnodes_per_element
-        self.nelements //= self.ntimes
-        self.ntotal = self.nelements  #* 2  # for A/B
-        #self.nelements //= nnodes_per_element
+        if self.is_sort1:
+            self.nelements //= self.ntimes
+            self.ntotal = self.nelements  #* 2  # for A/B
+            ntimes = self.ntimes
+            ntotal = self.ntotal
+            #self.nelements //= nnodes_per_element
+        else:
+            #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+            #other / tr1091x.bdf
+            # CBEAM=2
+            # self.ntimes = 2 # should be 4
+            # self.ntotal = 44
+            # self.nelements = 88  # should be 2
+            ntimes = self.ntotal // 11  # 44/11 = 4
+            nelements = self.nelements // self.ntotal  # 88/44=2
+            ntotal = self.ntotal
+            self.ntimes = ntimes
+            self.nelements = nelements
+            #print('CBEAM-2: ntimes=%s nelements=%s ntotal=%s' % (ntimes, nelements, ntotal))
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -88,14 +107,15 @@ class RealBeamArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        _times = zeros(self.ntimes, dtype=dtype)
-        element_node = zeros((self.ntotal, 2), dtype=idtype)
+        dtype, idtype, fdtype = get_times_dtype(
+            self.nonlinear_factor, self.size, self.analysis_fmt)
+        _times = np.zeros(ntimes, dtype=dtype)
+        element_node = np.zeros((ntotal, 2), dtype=idtype)
 
         # sxc, sxd, sxe, sxf
         # smax, smin, MSt, MSc
-        xxb = zeros(self.ntotal, dtype=fdtype)
-        data = zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
+        xxb = np.full(ntotal, np.nan, dtype=fdtype)
+        data = np.full((ntimes, ntotal, 8), np.nan, dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -112,6 +132,7 @@ class RealBeamArray(OES_Object):
             self.data = data
 
     def finalize(self):
+        """Calls any OP2 objects that need to do any post matrix calcs"""
         sd = self.data[0, :, 0].real
         i_sd_zero = np.where(sd != 0.0)[0]
         i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
@@ -121,6 +142,40 @@ class RealBeamArray(OES_Object):
         self.element_node = self.element_node[i, :]
         self.data = self.data[:, i, :]
         self.xxb = self.xxb[i]
+        self.set_as_sort1()
+
+    def set_as_sort1(self):
+        """changes the table into SORT1"""
+        #if not self.table_name != 'OQMRMS1':
+            #return
+        if self.is_sort1:
+            return
+        #print('set_as_sort1: table_name=%r' % self.table_name)
+        try:
+            analysis_method = self.analysis_method
+        except AttributeError:
+            print(self.code_information())
+            raise
+        #print(self.get_stats())
+        #print(self.node_gridtype)
+        #print(self.data.shape)
+        self.sort_method = 1
+        self.sort_bits[1] = 0
+        bit0, bit1, bit2 = self.sort_bits
+        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
+        self.sort_code = bit0 + 2*bit1 + 4*bit2
+        #print(self.code_information())
+        assert self.is_sort1
+        if analysis_method != 'N/A':
+            self.data_names[0] = analysis_method
+            #print(self.table_name_str, analysis_method, self._times)
+            setattr(self, self.analysis_method + 's', self._times)
+
+         # dt
+        self.data_code['name'] = self.analysis_method
+        self.name = self.analysis_method
+        del self.analysis_method
+
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -305,6 +360,37 @@ class RealBeamArray(OES_Object):
                                                  smax, smin, mst, msc]
         self.itotal += 1
 
+    def add_new_eid_sort2(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc):
+        #itime = self.itotal
+        itime = self.itotal // 11
+        itotal = self.itotal
+        #print(f'CBEAM SORT2 new; dt={dt:g} eid={eid} -> itime={itime} itotal={itotal}')
+        assert self.sort_method == 2, self
+        assert isinstance(eid, integer_types), eid
+        assert eid >= 0, eid
+        self._times[itime] = dt
+        self.element_node[itotal] = [eid, grid]
+        self.xxb[itotal] = sd
+        self.data[itime, itotal, :] = [sxc, sxd, sxe, sxf,
+                                       smax, smin, mst, msc]
+        self.itotal += 1
+        self.ielement += 1
+
+    def add_sort2(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc):
+        """unvectorized method for adding SORT1 transient data"""
+        #itime = self.itotal
+        itime = self.itotal // 11
+        itotal = self.itotal
+        #print(f'CBEAM SORT2; dt={dt:g} eid={eid} -> itime={itime} itotal={itotal}')
+        assert self.sort_method == 2, self
+        #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+
+        self.element_node[itotal, :] = [eid, grid]
+        self.xxb[itotal] = sd
+        self.data[itime, itotal, :] = [sxc, sxd, sxe, sxf,
+                                       smax, smin, mst, msc]
+        self.itotal += 1
+
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
@@ -322,12 +408,12 @@ class RealBeamArray(OES_Object):
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements, nnodes, ntotal))
+            msg.append(f'  type={self.__class__.__name__} ntimes={ntimes:d} nelements={nelements:d} '
+                       f'nnodes_per_element={nnodes:d} ntotal={ntotal:d}; table_name={self.table_name!r}\n')
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i nnodes_per_element=%i ntotal=%i\n'
-                       % (self.__class__.__name__, nelements, nnodes, ntotal))
+            msg.append(f'  type={self.__class__.__name__} nelements={nelements:d} '
+                       f'nnodes_per_element={nnodes:d} ntotal={ntotal:d}; table_name={self.table_name!r}\n')
             ntimes_word = '1'
         headers = self.get_headers()
 
@@ -600,8 +686,8 @@ class RealNonlinearBeamArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.ntotal, 3), dtype=idtype)
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element_node = np.zeros((self.ntotal, 3), dtype=idtype)
 
         #gridA, CA, long_CA, eqS_CA, tE_CA, eps_CA, ecs_CA,
         #       DA, long_DA, eqS_DA, tE_DA, eps_DA, ecs_DA,
@@ -612,7 +698,7 @@ class RealNonlinearBeamArray(OES_Object):
         #       EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
         #       FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,
         #self.xxb = zeros(self.ntotal, dtype='float32')
-        self.data = zeros((self.ntimes, self.ntotal, 5), dtype=fdtype)
+        self.data = np.full((self.ntimes, self.ntotal, 5), np.nan, dtype=fdtype)
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

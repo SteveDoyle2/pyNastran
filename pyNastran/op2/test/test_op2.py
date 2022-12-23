@@ -51,6 +51,7 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
                       delete_f06: bool=True, delete_op2: bool=True, delete_hdf5: bool=True,
                       delete_debug_out: bool=True, build_pandas: bool=True, write_op2: bool=False,
                       write_hdf5: bool=True, debug: bool=True, skip_files: Optional[list[str]]=None,
+                      include: Optional[str]=None,
                       exclude: Optional[str]=None,
                       stop_on_failure: bool=False, nstart: int=0, nstop: int=1000000000,
                       short_stats: bool=False, binary_debug: bool=False,
@@ -100,6 +101,7 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
                                      delete_debug_out=delete_debug_out,
                                      build_pandas=build_pandas,
                                      write_hdf5=write_hdf5,
+                                     include=include,
                                      exclude=exclude,
                                      short_stats=short_stats,
                                      subcases=subcases, debug=debug,
@@ -133,7 +135,9 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             delete_f06: bool=False, delete_op2: bool=False, delete_hdf5: bool=False,
             delete_debug_out: bool=False,
             build_pandas: bool=True,
-            subcases: Optional[str]=None, exclude: Optional[str]=None,
+            subcases: Optional[str]=None,
+            include_results: Optional[str]=None,
+            exclude_results: Optional[str]=None,
             short_stats: bool=False, compare: bool=True,
             debug: bool=False, log: Any=None,
             binary_debug: bool=False, quiet: bool=False,
@@ -192,8 +196,12 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         deletes the HDF5 (assumes write_hdf5 is True)
     subcases : list[int, ...]; default=None
         limits subcases to specified values; default=None -> no limiting
-    exclude : list[str, ...]; default=None
+    include_results : list[str, ...]; default=None
         limits result types; (remove what's listed)
+        include_results/exclude_results are exclusive
+    exclude_results : list[str, ...]; default=None
+        limits result types; (remove what's listed)
+        include_results/exclude_results are exclusive
     short_stats : bool; default=False
         print a short version of the op2 stats
     compare : bool
@@ -234,8 +242,6 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     op2_nv = None
     if subcases is None:
         subcases = []
-    if exclude is None:
-        exclude = []
     if isinstance(is_sort2, bool):
         sort_methods = [is_sort2]
     else:
@@ -296,8 +302,17 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     if subcases:
         op2.set_subcases(subcases)
         op2_nv.set_subcases(subcases)
-    op2.remove_results(exclude)
-    op2_nv.remove_results(exclude)
+
+
+    op2.include_exclude_results(
+        exclude_results=exclude_results,
+        include_results=include_results)
+    op2_nv.include_exclude_results(
+        exclude_results=exclude_results,
+        include_results=include_results)
+
+    #op2.remove_results(exclude)
+    #op2_nv.remove_results(exclude)
 
     try:
         #op2.read_bdf(op2.bdf_filename, includeDir=None, xref=False)
@@ -824,7 +839,8 @@ def main(argv=None, show_args: bool=True) -> None:
             is_mag_phase=data['is_mag_phase'],
             build_pandas=data['pandas'],
             subcases=data['subcase'],
-            exclude=data['exclude'],
+            #include_results=data['include'],
+            exclude_results=data['exclude'],
             debug=not data['quiet'],
             binary_debug=data['binarydebug'],
             is_sort2=data['is_sort2'],
@@ -858,7 +874,8 @@ def main(argv=None, show_args: bool=True) -> None:
             is_mag_phase=data['is_mag_phase'],
             build_pandas=data['pandas'],
             subcases=data['subcase'],
-            exclude=data['exclude'],
+            #include_results=data['include'],
+            exclude_results=data['exclude'],
             short_stats=data['short_stats'],
             debug=not data['quiet'],
             binary_debug=data['binarydebug'],

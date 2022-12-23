@@ -185,6 +185,7 @@ def oes_cbeam_real_111(op2: OP2, data: bytes,
     s1 = Struct(fmt1)
     s2 = Struct(fmt2)
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
+    add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+n1]
         n += n1
@@ -197,14 +198,14 @@ def oes_cbeam_real_111(op2: OP2, data: bytes,
             op2.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
         #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        obj.add_new_eid_sort1(dt, eid, *out[1:])
+        add_new_eid_sort_x(dt, eid, *out[1:])
 
         for unused_inode in range(nnodes):
             edata = data[n:n+n2]
             n += n2
             out = s2.unpack(edata)
             # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-            obj.add_sort1(dt, eid, *out)
+            add_sort_x(dt, eid, *out)
     return n
 
 def oes_crod_real_5(op2: OP2, data: bytes, obj: Union[RealRodStressArray, RealRodStrainArray],

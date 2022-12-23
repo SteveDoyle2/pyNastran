@@ -5981,8 +5981,8 @@ class OP2Reader:
             unused_data = self._skip_record()
             if self.is_debug_file:
                 desc = self.desc_map.get(op2.table_name, '???')
-                self.log.debug("skipping table_name = %r" % (
-                    op2.table_name + ' (' + desc + ')').rstrip('( )'))
+                msgi = "skipping table_name = %r ({desc})".rstrip('(?)')
+                self.log.debug(msgi)
             #if len(data) == 584:
                 #self._parse_results_table3(data)
             #else:
@@ -6407,10 +6407,10 @@ class OP2Reader:
         if table_name in table_mapper:
             #if self.read_mode == 2:
                 #self.log.debug("table_name = %r" % table_name)
-            #try:
-                #table3_parser, table4_parser = table_mapper[table_name]
-            #except:
-            table3_parser, table4_parser, desc = table_mapper[table_name]
+            try:
+                table3_parser, table4_parser = table_mapper[table_name]
+            except:
+                table3_parser, table4_parser, desc = table_mapper[table_name]
             passer = False
         else:
             if self.read_mode == 2:

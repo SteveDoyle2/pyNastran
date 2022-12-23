@@ -149,7 +149,7 @@ class RandomRodArray(OES_Object):
         self.ielement += 1
 
     def add_sort2(self, dt, eid, axial, torsion):
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         itime, ielement = self._get_sort2_itime_ielement_from_itotal()
         #print(f'dt={dt} eid={eid}')
         #print(self._times.shape)

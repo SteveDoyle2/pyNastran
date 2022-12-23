@@ -134,13 +134,14 @@ class RandomShearArray(OES_Object):
           ID.             SHEAR          SHEAR        ID.             SHEAR          SHEAR
             328        1.721350E+03   1.570314E+03
         """
-        assert self.sort_method == 2, self
-        itime = self.ielement
-        ielement = self.itotal
+        assert self.is_sort2, self
+        itime = self.itotal
+        ielement = self.itime
+        #print(f'dt={dt:g} eid={eid} itime={itime} ielement={ielement}')
         self._times[itime] = dt
         self.element[ielement] = eid
         self.data[itime, ielement, :] = [max_shear, avg_shear]
-        self.ielement += 1
+        self.itotal += 1
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

@@ -619,7 +619,10 @@ class OP2(OP2_Scalar, OP2Writer):
             except AttributeError:
                 self.log.error(f'result_type = {result_type}')
                 raise
+            if len(values) == 0:
+                continue
 
+            #print(result_type)
             for obj in values:
                 if hasattr(obj, 'finalize'):
                     obj.finalize()

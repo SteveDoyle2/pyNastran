@@ -192,7 +192,7 @@ class ElementTableArray(BaseElement):  # displacement style table
         self.itotal += 1
 
     def add_sort2(self, dt, eid, etype, v1, v2, v3, v4, v5, v6):
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         msg = "dt=%s eid=%s etype=%s v1=%s v2=%s v3=%s\n" % (dt, eid, etype, v1, v2, v3)
         msg += "                     v4=%s v5=%s v6=%s" % (v4, v5, v6)
         self._times[self.itotal] = dt

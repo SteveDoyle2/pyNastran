@@ -322,7 +322,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
 
     def add_sort2(self, dt, node_id, v1):
         """unvectorized method for adding SORT2 transient data"""
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         # itotal - the time/frequency step
         # itime - the node number
         self._times[self.itotal] = dt

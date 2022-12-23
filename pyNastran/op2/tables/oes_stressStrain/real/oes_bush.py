@@ -180,7 +180,7 @@ class RealBushArray(OES_Object):
 
     def add_sort2(self, dt, eid, tx, ty, tz, rx, ry, rz):
         """unvectorized method for adding SORT1 transient data"""
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itime = self.ielement
         itotal = self.itime

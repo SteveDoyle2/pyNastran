@@ -31,7 +31,7 @@ import warnings
 import numpy as np
 
 from pyNastran.bdf import MAX_32_BIT_INT
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import ScalarObject, get_sort_node_sizes
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
 from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
@@ -213,6 +213,7 @@ def oug_data_code(table_name,
         'num_wide': num_wide,
     }
     return data_code
+
 
 class TableArray(ScalarObject):  # displacement style table
     """
@@ -397,7 +398,6 @@ class TableArray(ScalarObject):  # displacement style table
         #  - SORT1 - ntimes
         #  - SORT2 - nnodes
         #print('ntotal=%s ntimes=%s _nnodes=%s' % (self.ntotal, self.ntimes, self._nnodes))
-        self._nnodes //= self.ntimes
         #print('ntotal=%s ntimes=%s _nnodes=%s\n' % (self.ntotal, self.ntimes, self._nnodes))
         #if self.ntimes > 1000:
         #    raise RuntimeError(self.ntimes)
@@ -405,26 +405,27 @@ class TableArray(ScalarObject):  # displacement style table
         self.itime = 0
         self.itotal = 0
 
-        if self.is_sort1:
-            ntimes = self.ntimes
-            nnodes = self.ntotal
-            ntotal = self.ntotal
-            nx = ntimes
-            ny = nnodes
+        ntimes, nnodes, ntotal = get_sort_node_sizes(self, debug=False)
+        #if self.is_sort1:
+            #ntimes = self.ntimes
+            #nnodes = self.ntotal
+            #ntotal = self.ntotal
+            #nx = ntimes
+            #ny = nnodes
             #print("SORT1 ntimes=%s nnodes=%s" % (ntimes, nnodes))
-        elif self.is_sort2:
-            # flip this to sort1
-            ntimes = self.ntotal
-            nnodes = self.ntimes
-            ntotal = nnodes
-            nx = ntimes
-            ny = nnodes
+        #elif self.is_sort2:
+            ## flip this to sort1
+            #ntimes = self.ntotal
+            #nnodes = self.ntimes
+            #ntotal = nnodes
+            #nx = ntimes
+            #ny = nnodes
             #print("***SORT2 ntotal=%s nnodes=%s ntimes=%s" % (ntotal, nnodes, ntimes))
-        else:
-            raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
-        self.build_data(ntimes, nnodes, ntotal, nx, ny, self._times_dtype)
+        #else:
+            #raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
+        self.build_data(ntimes, nnodes, ntotal, self._times_dtype)
 
-    def build_data(self, ntimes, nnodes, ntotal, nx, ny, float_fmt: str):
+    def build_data(self, ntimes, nnodes, ntotal, float_fmt: str):
         """actually performs the build step"""
         self.ntimes = ntimes
         self._nnodes = nnodes
@@ -435,7 +436,7 @@ class TableArray(ScalarObject):  # displacement style table
         node_gridtype = np.zeros((nnodes, 2), dtype=int_fmt)
 
         #[t1, t2, t3, r1, r2, r3]
-        data = np.zeros((nx, ny, 6), self.data_type())
+        data = np.zeros((ntimes, nnodes, 6), self.data_type())
         if self.load_as_h5:
             group = self._get_result_group()
             self._times = group.create_dataset('_times', data=_times)
@@ -746,7 +747,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
-        assert self.sort_method == 1, self
+        assert self.is_sort1, self
         assert isinstance(node_id, int) and node_id > 0, 'dt=%s node_id=%s' % (dt, node_id)
         # itotal - the node number
         # itime - the time/frequency step
@@ -758,7 +759,8 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal += 1
 
     def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self.sort_method
+        #self
         #if node_id < 1:
             #msg = self.code_information()
             #msg += "(%s, %s) dt=%g node_id=%s v1=%g v2=%g v3=%g" % (
@@ -771,9 +773,14 @@ class TableArray(ScalarObject):  # displacement style table
         # itotal - the time/frequency step
         # itime - the node number
         #print('itime=%s' % self.itime)
-        self.node_gridtype[self.itime, :] = [node_id, grid_type]
-        self.data[self.itotal, self.itime, :] = [v1, v2, v3, v4, v5, v6]
-
+        itime = self.itotal
+        inode = self.itime
+        #print(f'dt={dt} nid={node_id} '
+              #f'itime={itime}/{self.ntotal}={self.data.shape[0]} '
+              #f'inode={self.itime}/{self.ntimes}={self.data.shape[1]}')
+        self.node_gridtype[inode, :] = [node_id, grid_type]
+        self.data[itime, inode, :] = [v1, v2, v3, v4, v5, v6]
+        #self.ntimes /=
         self.itotal += 1
         #self.itime += 1
 
@@ -1025,6 +1032,7 @@ class RealTableArray(TableArray):
     def __pos__(self) -> RealTableArray:
         """positive; +a"""
         return self
+
     def __neg__(self) -> RealTableArray:
         """negative; -a"""
         new_table = copy.deepcopy(self)
@@ -1142,7 +1150,7 @@ class RealTableArray(TableArray):
             'OUGF1',
             'OQGCF1', 'OQGGF1',
             'RADCONS', 'RADEATC', 'RADEFFM',
-            ]
+        ]
 
         assert self.table_name in allowed_tables, self.table_name
 
@@ -1255,7 +1263,7 @@ class RealTableArray(TableArray):
         return
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f06_file, write_words,
-                         is_mag_phase=False, is_sort1=True):
+                         is_mag_phase: bool=False, is_sort1: bool=True):
         if write_words:
             words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.getTableMarker()
@@ -1490,17 +1498,7 @@ class ComplexTableArray(TableArray):
         return obj
 
     def extract_xyplot(self, node_ids, index, index_str):
-        index_str = index_str.lower().strip()
-        if index_str in ['real', 'r']:
-            j = 1
-        elif index_str in ['imag', 'i']:
-            j = 2
-        elif index_str in ['mag', 'magnitude', 'm']:
-            j = 3
-        elif index_str in ['phase', 'p']:
-            j = 4
-        else:
-            raise ValueError('index_str=%r' % index_str)
+        j = index_str_to_axis(index_str)
 
         node_ids = np.asarray(node_ids, dtype='int32')
         i = index - 1
@@ -1867,6 +1865,20 @@ class ComplexTableArray(TableArray):
             #f06_file.write(page_stamp % page_num)
             #page_num += 1
         #return page_num
+
+def index_str_to_axis(index_str: str) -> int:
+    index_str = index_str.lower().strip()
+    if index_str in ['real', 'r']:
+        j = 1
+    elif index_str in ['imag', 'i']:
+        j = 2
+    elif index_str in ['mag', 'magnitude', 'm']:
+        j = 3
+    elif index_str in ['phase', 'p']:
+        j = 4
+    else:
+        raise ValueError('index_str=%r' % index_str)
+    return j
 
 def set_complex_table(cls, data_code, is_sort1, isubcase,
                       node_gridtype, data, times):

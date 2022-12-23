@@ -341,7 +341,7 @@ class RealSpringArray(OES_Object):
         self.ielement += 1
 
     def add_sort2(self, dt, eid, stress):
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         itime = self.itotal
         self._times[itime] = dt
         #if self.itime == 0:

@@ -826,7 +826,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
 
     def add_sort2(self, dt, eid, force):
         """unvectorized method for adding SORT1 transient data"""
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #self._times[self.itime] = dt
         #self.element[self.ielement] = eid
@@ -3556,7 +3556,7 @@ class ComplexForceMomentArray(ComplexForceObject):
 
     def add_sort2(self, dt, eid, fx, fy, fz, mx, my, mz):
         """unvectorized method for adding SORT2 transient data"""
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #[fx, fy, fz, mx, my, mz]
         itime = self.itotal

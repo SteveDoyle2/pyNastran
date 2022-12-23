@@ -169,7 +169,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.fix_format_code()
         if self.num_wide == 8:
             self.format_code = 1
-            self.data_code['format_code'] = 1
+            self.data_code['format_code'] = 1  # real
         else:
             #self.fix_format_code()
             if self.format_code == 1:

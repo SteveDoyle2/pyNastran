@@ -1296,6 +1296,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OEFATO2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'auto-correlation for element force'],
             b'OEFCRM2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'cumulative RMS for element force'],
             b'OEFPSD2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'PSD for composite element force'],
+            b'OEFRMS2' : [self._table_passer, self._table_passer, 'number of crossings for element force'], # buggy on isat random
             #b'OEFRMS2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'number of crossings for element force'], # buggy on isat random
         }
 
@@ -1714,7 +1715,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             self.binary_debug.write(f'  skipping table = {self.table_name}\n')
         if self.table_name not in GEOM_TABLES and self.isubtable > -4:
             desc = self.op2_reader.desc_map[self.table_name]
-            self.log.warning(f'    skipping table: {self.table_name_str} ({desc})')
+            self.log.warning(f'    skipping {self.table_name_str:<8} ({desc})')
         if not is_release and self.isubtable > -4:
             if self.table_name in GEOM_TABLES and not self.make_geom:
                 pass
@@ -2019,7 +2020,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
                     if table_name in MATRIX_TABLES:
                         desc = 'matrix'
                     else:
-                        raise
+                        desc = '???'
+                        #self.log.debug('unknown table')
+                        #raise
                 #desc = desc_map.get(table_name, '???')
                 assert isinstance(desc, str), table_name
                 table_name2 = f'{table_name!r}'

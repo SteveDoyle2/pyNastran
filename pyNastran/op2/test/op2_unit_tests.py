@@ -228,7 +228,7 @@ class TestNASA95OP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, is_nasa95=True, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -260,7 +260,7 @@ class TestSATKOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -293,7 +293,7 @@ class TestSATKOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -528,7 +528,11 @@ class TestOP2(Tester):
         os.remove('temp.debug')
 
     def test_beam_modes(self):
-        """tests the eigenvalue table reading"""
+        """tests the eigenvalue table reading
+        nfreq = 10
+        CBAR; n=9
+        CBEAM; n=1
+        """
         log = get_logger(level='warning')
         dirname = os.path.abspath(os.path.join(
             MODEL_PATH, 'beam_modes'))
@@ -570,7 +574,7 @@ class TestOP2(Tester):
             write_f06=True, write_op2=False,
             is_mag_phase=False,
             is_sort2=False, is_nx=None, delete_f06=True,
-            subcases=None, exclude=None, short_stats=False,
+            subcases=None, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, log=log)
@@ -582,7 +586,7 @@ class TestOP2(Tester):
             write_f06=True, write_op2=False,
             is_mag_phase=False,
             is_sort2=False, is_nx=None, delete_f06=True,
-            subcases=None, exclude=None, short_stats=False,
+            subcases=None, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False, log=log)
@@ -606,7 +610,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False, log=log)
@@ -627,7 +631,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False, log=log)
@@ -650,7 +654,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False, build_pandas=True, log=log)
@@ -673,7 +677,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False, build_pandas=True, log=log)
@@ -696,7 +700,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False, log=log)
@@ -719,7 +723,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=True,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False, log=log)
@@ -748,7 +752,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False, post=-4, log=log)
@@ -771,7 +775,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False, log=log)
@@ -797,7 +801,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -820,7 +824,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -843,7 +847,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -867,7 +871,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -891,7 +895,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -911,12 +915,19 @@ class TestOP2(Tester):
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
 
+        include_results = None
+        #include_results = 'ato.displacements'
+        #include_results = 'psd.cquad8_force'
+        #include_results = 'ato.cbend_force'
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True, read_bdf=False, xref_safe=True,
             write_f06=True, write_op2=False,
             is_mag_phase=False,
             is_sort2=False, is_nx=None, delete_f06=True,
-            subcases=None, exclude=None, short_stats=False,
+            subcases=None,
+            exclude_results=None,
+            include_results=include_results,
+            short_stats=False,
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False,
@@ -945,7 +956,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -969,7 +980,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -993,7 +1004,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1017,14 +1028,16 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=IS_PANDAS, log=log)
 
     def test_bdf_op2_other_06(self):
-        """checks randvar2.bdf, which is an CTRIAX problem"""
+        """checks randvar2.bdf, which is an CTRIAX problem
+        CBEND - 2
+        """
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'randvar2.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'randvar2.op2')
@@ -1041,7 +1054,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1065,7 +1078,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1089,7 +1102,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1113,7 +1126,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1137,7 +1150,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1161,7 +1174,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=True,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1185,7 +1198,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1209,7 +1222,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False, write_hdf5=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1233,7 +1246,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1257,7 +1270,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1292,7 +1305,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1321,7 +1334,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1345,7 +1358,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1369,7 +1382,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1401,7 +1414,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1429,7 +1442,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1457,7 +1470,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1488,7 +1501,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1518,7 +1531,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1548,7 +1561,7 @@ class TestOP2(Tester):
                 write_f06=False, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1574,16 +1587,19 @@ class TestOP2(Tester):
         model.read_bdf(bdf_filename=bdf_filename, validate=True, xref=False,
                        punch=False, read_includes=True, save_file_structure=False,
                        encoding=None)
+        assert model.card_count['CBEAM'] == 2, model.card_count
+        assert model.card_count['CBEND'] == 2, model.card_count
         #model.safe_cross_reference()
 
         #save_load_deck(model, run_renumber=False)
 
         log = get_logger(level='warning')
+        exclude_results = 'cbend_stress'
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=exclude_results, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1592,8 +1608,8 @@ class TestOP2(Tester):
     def test_bdf_op2_other_27(self):
         """checks ac10804.bdf, which tests ComplexPlateStressArray"""
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'ac10804.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'ac10804.op2')
 
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1609,6 +1625,7 @@ class TestOP2(Tester):
         model.read_bdf(bdf_filename=bdf_filename, validate=True, xref=False,
                        punch=False, read_includes=True, save_file_structure=False,
                        encoding=None)
+        #assert model.card_count['CBEND'] == 2, model.card_count
         #model.safe_cross_reference()
 
         #save_load_deck(model, run_renumber=False)
@@ -1618,7 +1635,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1647,7 +1664,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1676,7 +1693,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=True,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1705,7 +1722,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1737,7 +1754,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=True,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1769,7 +1786,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1801,7 +1818,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1834,7 +1851,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False, write_hdf5=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1867,7 +1884,7 @@ class TestOP2(Tester):
                     write_f06=True, write_op2=False,
                     is_mag_phase=False,
                     is_sort2=False, is_nx=None, delete_f06=True,
-                    subcases=None, exclude=None, short_stats=False,
+                    subcases=None, exclude_results=None, short_stats=False,
                     compare=False, debug=False, binary_debug=True,
                     quiet=True,
                     stop_on_failure=True, dev=False,
@@ -1898,7 +1915,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1929,7 +1946,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -1960,7 +1977,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -2055,7 +2072,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False, write_hdf5=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
-            subcases=None, exclude=None, short_stats=False,
+            subcases=None, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
             dev=False, build_pandas=True, log=log,
@@ -2081,7 +2098,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=True,
             write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
-            subcases=None, exclude=None, short_stats=False,
+            subcases=None, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
             dev=False, build_pandas=True, log=log,
@@ -2099,7 +2116,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
-            subcases=subcases, exclude=None, short_stats=False,
+            subcases=subcases, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
             dev=False, log=log)
@@ -2118,7 +2135,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
-            subcases=subcases, exclude=None, short_stats=False,
+            subcases=subcases, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
             dev=False, log=log)
@@ -2151,7 +2168,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
-            subcases=subcases, exclude=None, short_stats=False,
+            subcases=subcases, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
             dev=True, log=log)
@@ -2163,7 +2180,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
-            subcases=subcases, exclude=None, short_stats=False,
+            subcases=subcases, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
             dev=False, log=log)
@@ -2175,7 +2192,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
-            subcases=subcases, exclude=None, short_stats=False,
+            subcases=subcases, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
             dev=False, log=log)
@@ -2192,7 +2209,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=False, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
-            subcases=None, exclude=None, short_stats=False,
+            subcases=None, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
             dev=False, build_pandas=True, log=log)
@@ -2210,7 +2227,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=True,
             write_f06=False, write_op2=True,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
-            subcases=None, exclude=None, short_stats=False,
+            subcases=None, exclude_results=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
             dev=False, log=log)
@@ -3067,7 +3084,7 @@ class TestOP2(Tester):
             write_bdf=write_bdf, read_bdf=True,
             write_f06=write_f06, write_op2=True, write_hdf5=True,
             is_mag_phase=False, is_sort2=False, is_nx=None, delete_f06=False,
-            build_pandas=False, subcases=None, exclude=None, short_stats=False,
+            build_pandas=False, subcases=None, exclude_results=None, short_stats=False,
             compare=True, debug=False, log=log, binary_debug=True,
             quiet=True, stop_on_failure=True, dev=False, xref_safe=False,
             post=None, load_as_h5=True)
@@ -3096,7 +3113,7 @@ class TestOP2(Tester):
             write_bdf=write_bdf, read_bdf=None,
             write_f06=write_f06, write_op2=True, write_hdf5=True,
             is_mag_phase=False, is_sort2=False, is_nx=None, delete_f06=True,
-            build_pandas=True, subcases=None, exclude=None, short_stats=False,
+            build_pandas=True, subcases=None, exclude_results=None, short_stats=False,
             compare=True, debug=False, log=log, binary_debug=True,
             quiet=True, stop_on_failure=True, dev=False, xref_safe=False,
             post=None, load_as_h5=True)
@@ -3133,7 +3150,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -3164,7 +3181,7 @@ class TestOP2(Tester):
                 write_f06=True, write_op2=True,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
+                subcases=None, exclude_results=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
@@ -3266,7 +3283,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
             write_op2=False, write_hdf5=False, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=False, build_pandas=False, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
@@ -3283,7 +3300,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
             write_op2=True, write_hdf5=False, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=False, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
@@ -3298,7 +3315,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=False, write_hdf5=True, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=False, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
@@ -3313,7 +3330,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=False, write_hdf5=True, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=False, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
@@ -3332,7 +3349,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
             write_op2=False, write_hdf5=True, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
@@ -3348,7 +3365,7 @@ class TestOP2(Tester):
             op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
@@ -3356,7 +3373,7 @@ class TestOP2(Tester):
             op2_filename2, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
@@ -3371,7 +3388,7 @@ class TestOP2(Tester):
             op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
@@ -3389,7 +3406,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=False,
             write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=True)
 
@@ -3407,7 +3424,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=True, read_bdf=True, write_f06=True,
             write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=True)
 
@@ -3425,7 +3442,7 @@ class TestOP2(Tester):
             op2_filename, make_geom=True, write_bdf=False, read_bdf=False, write_f06=True,
             write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=True)
 
@@ -3441,7 +3458,7 @@ class TestOP2(Tester):
             op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
-            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 

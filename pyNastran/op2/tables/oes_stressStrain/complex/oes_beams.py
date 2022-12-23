@@ -178,7 +178,7 @@ class ComplexBeamArray(OES_Object):
     def add_sort2(self, dt, eid, grid, sd,
                   exc, exd, exe, exf):
         """adds the non-vectorized data"""
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, f'dt={dt} eid={eid} grid={grid}'
         assert isinstance(eid, integer_types) and grid >= 0, f'dt={dt} eid={eid} grid={grid}'
         itotal = self.itime

@@ -316,7 +316,7 @@ class RandomPlateVMArray(OES_Object):
                   fd1, oxx1, oyy1, txy1, ovm1,
                   fd2, oxx2, oyy2, txy2, ovm2):
         """unvectorized method for adding SORT2 transient data"""
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         #self.add_sort2(dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2)
         self.add_sort1(dt, eid, nid,
                        fd1, oxx1, oyy1, txy1, ovm1,

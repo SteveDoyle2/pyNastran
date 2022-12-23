@@ -3,6 +3,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 
 import numpy as np
+from pyNastran.op2.op2_interface.utils import mapfmt
 
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger

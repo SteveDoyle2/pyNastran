@@ -72,6 +72,7 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
+
 class OEF:
     """Defines OEFx table reading for element forces/heat flux"""
     def __init__(self, op2: OP2):
@@ -582,13 +583,14 @@ class OEF:
                 obj.ielement = ielement2
             else:
                 s = Struct(op2._endian + op2._analysis_code_fmt + b'8s6f')
+                add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, op2.nonlinear_factor, op2.sort_method)
-                    obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
+                    add_sort_x(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
                     n += ntotal
         else:  # pragma: no cover
             msg = op2.code_information()
@@ -683,6 +685,7 @@ class OEF:
                 else:
                     fmt = op2._endian + mapfmt(op2._analysis_code_fmt, self.size) + b'16s 6d'
                 s = Struct(fmt)
+                add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
                     n += ntotal
@@ -690,7 +693,7 @@ class OEF:
                     (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, op2.nonlinear_factor, op2.sort_method)
-                    obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
+                    add_sort_x(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
 
         elif op2.format_code == 1 and op2.num_wide == 10:  # real - 3D
             # [39, 67, 68]:  # HEXA,PENTA
@@ -724,6 +727,7 @@ class OEF:
                 obj.ielement = ielement2
             else:
                 s = Struct(op2._endian + op2._analysis_code_fmt + b'8s6fi')
+                add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
                     n += ntotal
@@ -731,7 +735,7 @@ class OEF:
                     (eid_device, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, unused_zed) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, op2.nonlinear_factor, op2.sort_method)
-                    obj.add_sort1(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
+                    add_sort_x(dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux)
         else:
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal
@@ -815,6 +819,7 @@ class OEF:
                     obj.ielement = ielement2
                 else:
                     s1 = Struct(op2._endian + op2._analysis_code_fmt + b'8s5f')
+                    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
                     for unused_i in range(nelements):
                         edata = data[n:n+32]
                         n += ntotal
@@ -826,7 +831,7 @@ class OEF:
                         if op2.is_debug_file:
                             op2.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]\n'
                                                     % (eid, eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal))
-                        obj.add_sort1(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
+                        add_sort_x(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
         else:  # pragma: no cover
             msg = op2.code_information()
             return op2._not_implemented_or_skip(data, ndata, msg), None, None
@@ -879,6 +884,7 @@ class OEF:
                 obj.ielement = ielement2
             else:
                 s1 = Struct(op2._endian + op2._analysis_code_fmt + b'fif')
+                add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
                 for unused_i in range(nelements):
                     edata = data[n:n+16]
                     n += 16
@@ -887,7 +893,7 @@ class OEF:
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, op2.nonlinear_factor, op2.sort_method)
                     assert cntl_node >= 0, cntl_node
-                    obj.add_sort1(dt, eid, cntl_node, free_conv, free_conv_k)
+                    add_sort_x(dt, eid, cntl_node, free_conv, free_conv_k)
         else:  # pragma: no cover
             msg = op2.code_information()
             return op2._not_implemented_or_skip(data, ndata, msg), None, None
@@ -1346,8 +1352,8 @@ class OEF:
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
-    def _oef_cbeam(self, data, ndata, dt, is_magnitude_phase,
-                   result_type, prefix, postfix):
+    def _oef_cbeam(self, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
+                   result_type: str, prefix: str, postfix: str) -> int:
         """2-CBEAM"""
         op2 = self.op2
         n = 0
@@ -2531,6 +2537,7 @@ class OEF:
                 obj.ielement = ielement2
             else:
                 s = Struct(op2._endian + op2._analysis_code_fmt + b' i6fi6f')
+                add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
 
@@ -2543,7 +2550,7 @@ class OEF:
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, op2.nonlinear_factor, op2.sort_method)
 
-                    obj.add_sort1(
+                    add_sort_x(
                         dt, eid,
                         nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
                         nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b)
@@ -2604,6 +2611,7 @@ class OEF:
                 obj.ielement = ielement2
             else:
                 s = Struct(op2._endian + op2._analysis_code_fmt + b' i12f i12f')
+                add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
                 for unused_i in range(nelements):
                     edata = data[n:n+108]
                     n += ntotal
@@ -2646,9 +2654,9 @@ class OEF:
                         trq_a = complex(trq_ar, trq_ai)
                         trq_b = complex(trq_br, trq_bi)
 
-                    obj.add_sort1(dt, eid,
-                                  nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
-                                  nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b)
+                    add_sort_x(dt, eid,
+                               nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
+                               nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b)
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
             #msg = op2.code_information()
@@ -2945,8 +2953,8 @@ def oef_celas_cdamp_imag_3(self, data: bytes,
                            is_magnitude_phase: bool) -> int:
     op2 = self
     n = 0
-    structi = Struct(fmt)
     fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'2f', self.size)
+    structi = Struct(fmt)
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
@@ -3282,6 +3290,7 @@ def oef_shells_composite_real_9(self, data: bytes,
                    interlaminar_stress, max_value, failure_flag)
         n += ntotal
 
+    #add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     #s = Struct(op2._endian + b'i8si4f4s')
     #for i in range(nelements):
         #if i % 10000 == 0:
@@ -3301,7 +3310,7 @@ def oef_shells_composite_real_9(self, data: bytes,
         #if eid > 0:
             #obj.add_new_eid_sort1(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
         #else:
-            #obj.add_sort1(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+            #add_sort_x(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
         #n += ntotal
     return n
 
@@ -3534,6 +3543,7 @@ def oef_cquad4_33_real_9(self, data: bytes,
     op2 = self
     n = 0
     s = Struct(mapfmt(op2._endian + op2._analysis_code_fmt + b'8f', op2.size))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
         out = s.unpack(edata)
@@ -3542,7 +3552,7 @@ def oef_cquad4_33_real_9(self, data: bytes,
         (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
-        obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+        add_sort_x(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
         n += ntotal
     return n
 
@@ -3587,22 +3597,22 @@ def oef_cquad4_33_imag_17(self, data: bytes, ndata: int,
         n += ntotal
     return n
 
-def oef_cquad4_144_real_9(self, data: bytes,
+def oef_cquad4_144_real_9(op2: OP2, data: bytes,
                           obj: RealPlateBilinearForceArray,
                           nelements: int, nnodes: int) -> int:
-    op2 = self
     n = 0
-    n44 = 44 * self.factor
-    n36 = 36 * self.factor
-    if self.size == 4:
-        fmt1 = op2._endian + b'i4si8f'  # 8+36
+    n44 = 44 * op2.factor
+    n36 = 36 * op2.factor
+    if op2.size == 4:
+        fmt1 = op2._endian + op2._analysis_code_fmt + b'4si8f'  # 8+36
         fmt2 = op2._endian + b'i8f' # 36
     else:
-        fmt1 = op2._endian + b'q8sq8d'
+        fmt1 = op2._endian + mapfmt(op2._analysis_code_fmt) + b'8sq8d'
         fmt2 = op2._endian + b'q8d'
     s1 = Struct(fmt1)
     s2 = Struct(fmt2)
 
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n + n44]
 
@@ -3614,18 +3624,21 @@ def oef_cquad4_144_real_9(self, data: bytes,
         #_nid = 4
         # -> CEN/4
         nid = 0
+        inode = 0
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
-        obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+        add_sort_x(dt, eid, term,
+                   inode, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
         n += n44
-        for unused_j in range(nnodes):
+        for jnode in range(nnodes):
             edata = data[n : n + n36]
             out = s2.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('    %s\n' % (str(out)))
             (nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
             assert nid > 0, 'nid=%s' % nid
-            obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+            add_sort_x(dt, eid, term,
+                       jnode+1, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
             n += n36
     return n
 
@@ -3647,6 +3660,7 @@ def oef_cquad4_imag_17(self, data: bytes, ndata: int,
 
     nelements = ndata // ntotal
     obj = op2.obj
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n + ntotal1]
         n += ntotal1
@@ -3710,7 +3724,7 @@ def oef_cquad4_imag_17(self, data: bytes, ndata: int,
             if op2.is_debug_file:
                 op2.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (
                     eid, nid, str(out)))
-            obj.add_sort1(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+            add_sort_x(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
     return n
 
 def oef_cconeax_real_7(self, data: bytes,

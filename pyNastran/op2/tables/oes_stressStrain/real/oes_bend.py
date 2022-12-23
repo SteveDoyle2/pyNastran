@@ -51,27 +51,32 @@ class RealBendArray(OES_Object):
             self.subtitle = self.data_code['subtitle']
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
-        nnodes = 1
+        #nnodes = 1
 
         #self.names = []
         #self.nelements //= nnodes
-        self.nelements //= self.ntimes
-        #self.ntotal
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
+        print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
-        self.ntotal = self.nelements * nnodes * 2
         if self.is_sort1:
+            self.nelements //= self.ntimes
+            ntotal = self.nelements * 2
             ntimes = self.ntimes
-            ntotal = self.ntotal
+            self.ntotal = ntotal
         else:
-            #print("ntimes=%s nelements=%s ntotal=%s nnodes=%s" % (self.ntimes, self.nelements, self.ntotal, nnodes))
+            # other / tr1091x.bdf
+            # CBEAM n=2
+            #ntimes = [0., 0.0001, 0.0002, 0.0003, 0.0004]; n=4
+            #nnodes /element = 1
+            print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
             ntimes = self.ntotal
             ntotal = self.nelements // 2
             #self.ntotal = ntotal
             #print("**BEND: ntimes=%s ntotal=%s" % (ntimes, ntotal))
+            self.ntimes = ntimes
+            self.ntotal = ntotal
         #self.ntotal = nelements * nnodes * 2
 
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
@@ -81,9 +86,9 @@ class RealBendArray(OES_Object):
         self.element_node = np.zeros((ntotal, 2), dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
-        if not self.nelements * nnodes * 2 == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
-                self.ntimes, self.nelements, nnodes, self.nelements * nnodes,
+        if not self.nelements * 2 == self.ntotal:
+            msg = 'ntimes=%s nelements=%s ne=%s ntotal=%s' % (
+                self.ntimes, self.nelements, self.nelements,
                 self.ntotal)
             raise RuntimeError(msg)
 
@@ -149,10 +154,11 @@ class RealBendArray(OES_Object):
 
     def add_sort2(self, dt, eid, grid, angle, sc, sd, se, sf, omax, omin, mst, msc):
         """unvectorized method for adding SORT2 transient data"""
-        assert self.sort_method == 2, self
+        assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itime = self.itotal
         itotal = self.itime
+        print(f'RealBendArray SORT2: itime={itime}/{len(self._times)} itotal={itotal}/{len(self.element_node)}')
         self._times[itime] = dt
         #print(f'itime={itime} itotal={itotal}; data.shape={self.data.shape}')
         self.data[itime, itotal, :] = [angle, sc, sd, se, sf, omax, omin, mst, msc]
