@@ -11,9 +11,9 @@ SORT1_TABLES_BYTES = [
 
     b'OESNLXR', b'OESTRCP',
     # ----------
-    b'OEF1X', b'OEF1', b'OEFIT',
+    b'OEF1X', b'OEF1',
     b'HOEF1', b'DOEF1',
-    b'OEFITSTN',
+    b'OEFIT', b'OEFITSTN', b'OESRT',
     # --------
     # random
 

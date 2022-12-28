@@ -3607,7 +3607,7 @@ def oef_cquad4_144_real_9(op2: OP2, data: bytes,
         fmt1 = op2._endian + op2._analysis_code_fmt + b'4si8f'  # 8+36
         fmt2 = op2._endian + b'i8f' # 36
     else:
-        fmt1 = op2._endian + mapfmt(op2._analysis_code_fmt) + b'8sq8d'
+        fmt1 = op2._endian + mapfmt(op2._analysis_code_fmt, 8) + b'8sq8d'
         fmt2 = op2._endian + b'q8d'
     s1 = Struct(fmt1)
     s2 = Struct(fmt2)

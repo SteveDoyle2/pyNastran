@@ -31,7 +31,8 @@ import warnings
 import numpy as np
 
 from pyNastran.bdf import MAX_32_BIT_INT
-from pyNastran.op2.result_objects.op2_objects import ScalarObject, get_sort_node_sizes
+from pyNastran.op2.result_objects.op2_objects import ScalarObject, get_sort_node_sizes, NULL_GRIDTYPE
+
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
 from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
@@ -749,6 +750,8 @@ class TableArray(ScalarObject):  # displacement style table
         """unvectorized method for adding SORT1 transient data"""
         assert self.is_sort1, self
         assert isinstance(node_id, int) and node_id > 0, 'dt=%s node_id=%s' % (dt, node_id)
+        if grid_type in NULL_GRIDTYPE:
+            grid_type = -1
         # itotal - the node number
         # itime - the time/frequency step
 
@@ -760,6 +763,8 @@ class TableArray(ScalarObject):  # displacement style table
 
     def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         assert self.is_sort2, self.sort_method
+        if grid_type in NULL_GRIDTYPE:
+            grid_type = -1
         #self
         #if node_id < 1:
             #msg = self.code_information()

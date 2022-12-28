@@ -58,9 +58,9 @@ class RealBendArray(OES_Object):
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         if self.is_sort1:
+            #print('CBEND SORT1 ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
             self.nelements //= self.ntimes
             ntotal = self.nelements * 2
             ntimes = self.ntimes
@@ -70,7 +70,7 @@ class RealBendArray(OES_Object):
             # CBEAM n=2
             #ntimes = [0., 0.0001, 0.0002, 0.0003, 0.0004]; n=4
             #nnodes /element = 1
-            print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+            #print("CBEND ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
             ntimes = self.ntotal
             ntotal = self.nelements // 2
             #self.ntotal = ntotal

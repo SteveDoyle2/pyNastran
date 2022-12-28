@@ -16,6 +16,7 @@ from pyNastran.op2.errors import OverwriteTableError
 from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_sort_method_from_table_name
 from pyNastran.op2.op2_interface.write_utils import write_table_header, export_to_hdf5
 
+NULL_GRIDTYPE = {538976288, 1065353216}
 GRID_TYPE_INT_TO_STR = {
     1 : 'G', # GRID
     2 : 'S', # SPOINT
@@ -456,7 +457,7 @@ class ScalarObject(BaseScalarObject):
         try:
             grid_type_str = GRID_TYPE_INT_TO_STR[grid_type]
         except KeyError:
-            if grid_type in [538976288, 1065353216]: # 32/64 bit error...
+            if grid_type in NULL_GRIDTYPE: # 32/64 bit error...
                 warnings.warn(''.join(self.get_stats()))
             raise RuntimeError(f'grid_type={grid_type!r}')
         return grid_type_str
