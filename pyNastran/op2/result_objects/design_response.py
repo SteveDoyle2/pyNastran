@@ -56,6 +56,11 @@ class Responses:
                 #if getattr(self, table) is not None
                 ]
 
+    def __repr__(self) -> str:
+        msg = 'Responses:\n - ' + '\n - '.join(self.get_table_types()).rstrip('\n -')
+        return msg
+
+
 class WeightResponse:
     def __init__(self):
         self.n = 1

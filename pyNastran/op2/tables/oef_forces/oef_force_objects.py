@@ -1428,7 +1428,7 @@ class RealCBeamForceArray(RealForceObject):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(
             self.nonlinear_factor, self.size, self.analysis_fmt)
-        ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=True)
+        ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
         self._times = zeros(ntimes, dtype)
         self.element = zeros(ntotal, idtype)
         self.element_node = zeros((ntotal, 2), idtype)
@@ -1444,11 +1444,11 @@ class RealCBeamForceArray(RealForceObject):
             else:
                 warnings.warn(msg)
         #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-        self.data = zeros((ntimes, ntotal, 8), fdtype)
+        self.data = np.full((ntimes, ntotal, 8), np.nan, fdtype)
 
     def finalize(self):
         sd = self.data[0, :, 0]
-        i_sd_zero = np.where(sd != 0.0)[0]
+        i_sd_zero = np.where(np.isfinite(sd) & (sd != 0.0))[0]
         i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
         assert i_node_zero.max() > 0, "CBEAM element_node hasn't been filled"
         i = np.union1d(i_sd_zero, i_node_zero)

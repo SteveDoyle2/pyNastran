@@ -78,7 +78,12 @@ def build_obj(obj):
     so this exists to combine those
     """
     if not obj.is_built:
-        obj.build()
+        try:
+            obj.build()
+        except (KeyboardInterrupt, SystemError, NameError, SyntaxError, AttributeError, MemoryError):  # pragma: no cover
+            raise
+        except Exception as e:
+            raise RuntimeError(str(obj)) from e
         obj.is_built = True
 
 def apply_mag_phase(floats: Any, is_magnitude_phase: bool,
