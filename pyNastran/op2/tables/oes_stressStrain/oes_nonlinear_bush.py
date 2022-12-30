@@ -64,7 +64,7 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = np.zeros(self.nelements, dtype='int32')
 
         #[fx, fy, fz, otx, oty, otz, etx, ety, etz,

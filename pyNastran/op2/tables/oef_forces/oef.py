@@ -381,6 +381,7 @@ class OEF:
         if op2.analysis_code == 1:  # static...because reasons.
             op2._analysis_code_fmt = b'f'
             op2.data_names = op2.apply_data_code_value('data_names', ['element_id'])
+            #op2.apply_data_code_value('analysis_method', 'static')
         elif op2.analysis_code == 2:  # real eigenvalues
             op2._analysis_code_fmt = b'i'
             op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
@@ -3649,10 +3650,10 @@ def oef_cquad4_imag_17(self, data: bytes, ndata: int,
     op2 = self
     n = 0
     if self.size == 4:
-        s1 = Struct(op2._endian + b'i4s17f')  # 2+17=19 * 4 = 76
+        s1 = Struct(op2._endian + op2._analysis_code_fmt + b'4si16f')  # 2+17=19 * 4 = 76
         s2 = Struct(op2._endian + b'i16f')  # 17 * 4 = 68
     else:
-        s1 = Struct(op2._endian + b'q8s17d')  # 2+17=19 * 4 = 768
+        s1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt, 8) + b'8sq16d')  # 2+17=19 * 4 = 768
         s2 = Struct(op2._endian + b'q16d')  # 17 * 4 = 68
     ntotal = (8 + (nnodes + 1) * 68) * self.factor
     ntotal1 = 76 * self.factor
@@ -3660,9 +3661,11 @@ def oef_cquad4_imag_17(self, data: bytes, ndata: int,
 
     nelements = ndata // ntotal
     obj = op2.obj
+    add_new_element_sort_x = getattr(obj, 'add_new_element_sort' + str(op2.sort_method))
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
-    for unused_i in range(nelements):
+    for ielem in range(nelements):
         edata = data[n:n + ntotal1]
+        #op2.show_data(edata)
         n += ntotal1
 
         out = s1.unpack(edata)
@@ -3671,6 +3674,8 @@ def oef_cquad4_imag_17(self, data: bytes, ndata: int,
         (eid_device, term, nid,
          mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
          mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
+        #print('term =', term)
+        #print('nid =', nid)
         #term = 'CEN\'
 
         eid, dt = get_eid_dt_from_eid_device(
@@ -3693,10 +3698,12 @@ def oef_cquad4_imag_17(self, data: bytes, ndata: int,
             bmxy = complex(bmxyr, bmxyi)
             tx = complex(txr, txi)
             ty = complex(tyr, tyi)
-        obj.add_new_element_sort1(dt, eid, term, nid, mx, my, mxy,
-                                  bmx, bmy, bmxy, tx, ty)
+        # this nid is just from CEN/4 <---- 4
+        nid = 0
+        add_new_element_sort_x(dt, eid, term, nid, mx, my, mxy,
+                               bmx, bmy, bmxy, tx, ty)
 
-        for unused_j in range(nnodes):  # .. todo:: fix crash...
+        for inid in range(nnodes):  # .. todo:: fix crash...
             edata = data[n:n+ntotal2]
             n += ntotal2
             out = s2.unpack(edata)
@@ -3724,7 +3731,8 @@ def oef_cquad4_imag_17(self, data: bytes, ndata: int,
             if op2.is_debug_file:
                 op2.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (
                     eid, nid, str(out)))
-            add_sort_x(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+            add_sort_x(dt, eid, inid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+    #aaa
     return n
 
 def oef_cconeax_real_7(self, data: bytes,

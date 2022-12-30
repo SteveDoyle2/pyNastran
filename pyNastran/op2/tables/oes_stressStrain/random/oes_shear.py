@@ -62,7 +62,7 @@ class RandomShearArray(OES_Object):
             nelements = self.ntimes
 
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(nelements, dtype='int32')
 
         # [max_shear, avg_shear]

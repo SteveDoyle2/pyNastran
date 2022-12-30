@@ -65,7 +65,7 @@ class ComplexTriaxArray(OES_Object):
         #self.ntotal = self.nelements * nnodes
 
         # TODO: could be more efficient by using nelements for cid
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
         self.eids = zeros(self.ntotal, dtype=idtype)
         self.element_node = zeros((self.ntotal, 2), idtype)
         #self.element_cid = zeros((self.nelements, 2), 'int32')

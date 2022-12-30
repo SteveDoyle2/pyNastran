@@ -80,7 +80,7 @@ def build_obj(obj):
     if not obj.is_built:
         try:
             obj.build()
-        except (KeyboardInterrupt, SystemError, NameError, SyntaxError, AttributeError, MemoryError):  # pragma: no cover
+        except (KeyboardInterrupt, SystemError, NameError, SyntaxError, AttributeError, MemoryError, TypeError):  # pragma: no cover
             raise
         except Exception as e:
             raise RuntimeError(str(obj)) from e

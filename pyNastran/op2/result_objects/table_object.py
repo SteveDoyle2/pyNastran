@@ -31,7 +31,9 @@ import warnings
 import numpy as np
 
 from pyNastran.bdf import MAX_32_BIT_INT
-from pyNastran.op2.result_objects.op2_objects import ScalarObject, get_sort_node_sizes, NULL_GRIDTYPE
+from pyNastran.op2.result_objects.op2_objects import (
+    ScalarObject, get_sort_node_sizes, set_as_sort1,
+    NULL_GRIDTYPE, SORT1_TABLES, SORT2_TABLES)
 
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
 from pyNastran.op2.errors import SixtyFourBitError
@@ -41,79 +43,6 @@ from pyNastran.op2.writer.utils import fix_table3_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     set_static_case, set_modal_case, set_transient_case,
     set_freq_case, set_complex_modes_case)
-
-SORT2_TABLE_NAME_MAP = {
-    # sort2_name : sort1_name
-    # displacement
-    'OUGATO2' : 'OUGATO1',
-    'OUGCRM2' : 'OUGCRM1',
-    'OUGNO2' : 'OUGNO1',
-    'OUGPSD2' : 'OUGPSD1',
-    'OUGRMS2' : 'OUGRMS1',
-
-    # velocity
-    'OVGATO2' : 'OVGATO1',
-    'OVGCRM2' : 'OVGCRM1',
-    'OVGNO2' : 'OVGNO1',
-    'OVGPSD2' : 'OVGPSD1',
-    'OVGRMS2' : 'OVGRMS1',
-
-    # acceleration
-    'OAGATO2' : 'OAGATO1',
-    'OAGCRM2' : 'OAGCRM1',
-    'OAGNO2' : 'OAGNO1',
-    'OAGPSD2' : 'OAGPSD1',
-    'OAGRMS2' : 'OAGRMS1',
-
-    # spc forces
-    'OQGATO2' : 'OQGATO1',
-    'OQGCRM2' : 'OQGCRM1',
-    'OQGNO2' : 'OQGNO1',
-    'OQGPSD2' : 'OQGPSD1',
-    'OQGRMS2' : 'OQGRMS1',
-
-    # mpc forces
-    'OQMATO2' : 'OQMATO1',
-    'OQMCRM2' : 'OQMCRM1',
-    'OQMNO2' : 'OQMNO1',
-    'OQMPSD2' : 'OQMPSD1',
-    'OQMRMS2' : 'OQMRMS1',
-
-    # load vectors
-    'OPGATO2' : 'OPGATO1',
-    'OPGCRM2' : 'OPGCRM1',
-    'OPGNO2' : 'OPGNO1',
-    'OPGPSD2' : 'OPGPSD1',
-    'OPGRMS2' : 'OPGRMS1',
-
-    # pressure
-    'OPRATO2' : 'OPRATO1',
-    'OPRCRM2' : 'OPRCRM1',
-    'OPRNO2'  : 'OPRNO1',
-    'OPRPSD2' : 'OPRPSD1',
-    'OPRRMS2' : 'OPRRMS1',
-
-    #'OUG2' : 'OUG1',
-    'OUGV2' : 'OUGV1',
-    'OQG2' : 'OQG1',
-    'OQMG2' : 'OQMG1',
-    'OPG2' : 'OPG1',
-    'OPNL2' : 'OPNL1',
-    'OUXY2' : 'OUXY1',
-    'OQGGF2' : 'OQGGF1',
-    'OQGCF2' : 'OQGCF1',
-    'OUGF2' : 'OUGF1',
-}
-SORT1_TABLES = list(SORT2_TABLE_NAME_MAP.values())
-SORT1_TABLES.extend([
-    'BOUGV1',
-    'OUG1F',
-    'BOUGF1',
-    'OUG1',
-    'OVG1',
-    'OAG1',
-])
-SORT2_TABLES = list(SORT2_TABLE_NAME_MAP.keys())
 
 table_name_to_table_code = {
     # displacement (msc/nx)
@@ -720,31 +649,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def set_as_sort1(self):
         """changes the table into SORT1"""
-        #if not self.table_name != 'OQMRMS1':
-            #return
-        if self.is_sort1:
-            return
-        #print('set_as_sort1: table_name=%r' % self.table_name)
-        try:
-            analysis_method = self.analysis_method
-        except AttributeError:
-            print(self.code_information())
-            raise
-        #print(self.get_stats())
-        #print(self.node_gridtype)
-        #print(self.data.shape)
-        self.sort_method = 1
-        self.sort_bits[1] = 0
-        bit0, bit1, bit2 = self.sort_bits
-        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
-        self.sort_code = bit0 + 2*bit1 + 4*bit2
-        #print(self.code_information())
-        assert self.is_sort1
-        if analysis_method != 'N/A':
-            self.data_names[0] = analysis_method
-            #print(self.table_name_str, analysis_method, self._times)
-            setattr(self, self.analysis_method + 's', self._times)
-        del self.analysis_method
+        set_as_sort1(self)
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""

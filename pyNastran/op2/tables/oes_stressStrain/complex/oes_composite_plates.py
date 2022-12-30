@@ -78,7 +78,7 @@ class ComplexLayeredCompositesArray(OES_Object):
         self.itotal = 0
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
 
         if self.is_sort1:
             ntimes = self.ntimes
@@ -93,7 +93,7 @@ class ComplexLayeredCompositesArray(OES_Object):
             #print(f'  SORT2: ntimes={ntimes} nlayers={nlayers} {self.element_name}-{self.element_type}')
         #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         # the number is messed up because of the offset for the element's properties

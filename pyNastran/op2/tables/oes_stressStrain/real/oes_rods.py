@@ -161,7 +161,7 @@ class RealRodArray(OES_Object):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
         element = zeros(nelements, dtype=idtype)
 
         #[axial, torsion, SMa, SMt]

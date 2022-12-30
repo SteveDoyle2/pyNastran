@@ -682,6 +682,23 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'GEOM3' : [self._table_passer, self._table_passer, 'constraint cards'], # GEOM3-Static and thermal loads
             b'GEOM4' : [self._table_passer, self._table_passer, 'load cards'], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
 
+            b'GEOM1X' : [self._table_passer, self._table_passer, 'grid/coord cards'], # GEOM1-Geometry-related bulk data
+            b'GEOM2X' : [self._table_passer, self._table_passer, 'element cards'], # GEOM2-element connectivity and SPOINT-related data
+            #b'GEOM3X' : [self._table_passer, self._table_passer, 'constraint cards'], # GEOM3-Static and thermal loads
+            b'GEOM4X' : [self._table_passer, self._table_passer, 'load cards'], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
+
+            b'GEOM1EXA' : [self._table_passer, self._table_passer, 'grid/coord cards'], # GEOM1-Geometry-related bulk data
+            b'GEOM2EXA' : [self._table_passer, self._table_passer, 'element cards'], # GEOM2-element connectivity and SPOINT-related data
+            #b'GEOM3X' : [self._table_passer, self._table_passer, 'constraint cards'], # GEOM3-Static and thermal loads
+            b'GEOM4EXA' : [self._table_passer, self._table_passer, 'load cards'], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
+
+            b'GEOM1ATV' : [self._table_passer, self._table_passer, 'grid/coord cards'], # GEOM1-Geometry-related bulk data
+            b'GEOM2ATV' : [self._table_passer, self._table_passer, 'element cards'], # GEOM2-element connectivity and SPOINT-related data
+            #b'GEOM3ATV' : [self._table_passer, self._table_passer, 'constraint cards'], # GEOM3-Static and thermal loads
+            #b'GEOM4ATV' : [self._table_passer, self._table_passer, 'load cards'], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
+            b'EPTATV' : [self._table_passer, self._table_passer, 'property cards'],  # elements - superelements
+            b'ATVMAP' : [self._table_passer, self._table_passer, 'ATV cards'],  # elements - superelements
+
             # superelements
             b'GEOM1S' : [self._table_passer, self._table_passer, 'grid/coord cards (superelement)'],  # GEOMx + superelement
             b'GEOM2S' : [self._table_passer, self._table_passer, 'element cards (superelement)'],
@@ -859,8 +876,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #=======================
             # OGPFB1
             # grid point forces
-            b'OGPFB1' : [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4, 'grid point forces'],  # grid point forces
-            #b'OGPFB2' : [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4, 'grid point forces'],  # grid point forces
+            b'OGPFB1' : [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4, 'grid point forces; SORT1'],  # grid point forces
+            b'OGPFB2' : [reader_ogpf._read_ogpf2_3, reader_ogpf._read_ogpf2_4, 'grid point forces; SORT2'],  # grid point forces
 
             #=======================
             # ONR/OEE
@@ -880,6 +897,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OES1C'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'composite stress'], # stress - composite
             b'OESCP'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'nonlinear? stress'], # stress - nonlinear???
             b'OESRT'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'ply strength ratio'], # ply strength ratio
+            b'OESRTN' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'ply strength ratio; nonlinear?'], # ply strength ratio
 
             # strain
             b'OSTR1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'linear strain'],  # strain - autodesk/9zk6b5uuo.op2
@@ -887,16 +905,19 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OSTR1C'  : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'composite strain'],  # strain - composite
             b'OESTRCP' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'composite ply strain'],  # strain - composite ply
 
-            b'OSTR1PL'  : [self._table_passer, self._table_passer, 'NX 2019.2 ply strains-plastic'],  # Table of ply strains-plastic in SORT1 format
-            b'OSTR1THC' : [self._table_passer, self._table_passer, 'NX 2019.2 ply strains-thermal'],
-            b'OSTR1CR'  : [self._table_passer, self._table_passer, 'NX 2019.2 creep strain at Gauss points'],
-            b'OSTR1EL'  : [self._table_passer, self._table_passer, 'NX 2019.2 elastic strain in SORT1 format'],
+            b'OSTR1PL'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 ply strains-plastic'],  # Table of ply strains-plastic in SORT1 format
+            b'OSTR1THC' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 ply strains-thermal'],
+            b'OSTR1CR'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 creep strain at Gauss points'],
+            b'OSTR1EL'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 elastic strain in SORT1 format'],
+            b'OSTR1TH'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of thermal strain; SORT1'],
+            b'OSTR1ING' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 OES output table of initial strains at corner Gauss points in the basic coordinate system; SORT1'],
 
-            #b'OSTR1EL'  : [self._table_passer, self._table_passer, '???'],
-            #b'OSTR1EL'  : [self._table_passer, self._table_passer, '???'],
-            #b'OSTR1EL'  : [self._table_passer, self._table_passer, '???'],
-            #b'OSTR1EL'  : [self._table_passer, self._table_passer, '???'],
-            #b'OSTR1EL'  : [self._table_passer, self._table_passer, '???'],
+            b'OSTR1CRC' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of composite creep strain; SORT1'],
+            b'OSTR1PLC' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of ply strains-plastic; SORT1'],
+            b'OSTR1ELG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of elastic strain at Gauss points; SORT1'],
+            b'OSTR1THG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of thermal strain at Gauss points; SORT1'],
+            b'OSTR1PLG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of plastic strain at Gauss points; SORT1'],
+            b'OSTR1CRG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of creep strain at Gauss points; SORT1'],
 
             # special nonlinear tables
             # OESNLBR - Slideline stresses
@@ -944,6 +965,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OUGV2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set displacements in nodal frame'],  # displacements in nodal frame
             b'ROUGV2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set relative U in CD frame'],  # relative OUG
             b'OUXY2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'h/d-set displacements'],  # Displacements in SORT2 format for h-set or d-set.
+            b'OUG1S'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'structural eigenvectors'],  # Displacements in SORT2 format for h-set or d-set.
 
             #  scaled response spectra - ABS / NRL / SRSS
             b'OUPV1' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'ABS/NRL/SRSS displacement/velocity/acceleration'],    # displacement, velocity, acceleration
@@ -954,10 +976,17 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'DOSTR1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'ABS/NRL/SRSS strain'], # strain
 
             # modal contribution
-            b'OUGMC1'  : [reader_oug._read_oug1_3, reader_oug._read_ougmc_4, 'modal contribution displacement'],  # displacement
-            b'OQGMC1'  : [reader_oqg._read_oqg1_3, reader_oug._read_ougmc_4, 'modal contribution spc/mpc? force'],  # spc/mpc? force
-            b'OESMC1'  : [reader_oes._read_oes1_3, reader_oes._read_oesmc_4, 'modal contribution stress'],  # stress
-            b'OSTRMC1'  : [reader_oes._read_oes1_3, reader_oes._read_oesmc_4, 'modal contribution strain'], # strain
+            b'OUGMC1'  : [reader_oug._read_oug1_3, reader_oug._read_ougmc_4, 'NX 2019.2 modal contribution displacement'],  # displacement
+            b'OQGMC1'  : [reader_oqg._read_oqg1_3, reader_oug._read_ougmc_4, 'NX 2019.2 modal contribution spc/mpc? force'],  # spc/mpc? force
+            b'OESMC1'  : [reader_oes._read_oes1_3, reader_oes._read_oesmc_4, 'NX 2019.2 modal contribution stress'],  # stress
+            b'OEFMC1'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution force'],  # force
+            b'OSTRMC1' : [reader_oes._read_oes1_3, reader_oes._read_oesmc_4, 'NX 2019.2 modal contribution strain'], # strain
+
+            b'OUGMC2'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution displacement; SORT2'],  # displacement
+            b'OQGMC2'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution spc/mpc? force'],  # spc/mpc? force
+            b'OESMC2'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution stress'],  # stress
+            b'OEFMC2'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution force'],  # force
+            b'OSTRMC2' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution strain'], # strain
 
             #F:\work\pyNastran\examples\Dropbox\move_tpl\sbuckl2a.op2
             # post-buckling / nonlinear buckling
@@ -993,7 +1022,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OBC1' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'],
             b'OBC2' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'], # Contact pressures and tractions at grid points.
 
-            #b'OSLIDE1'
+            b'OCPSDF':   [self._table_passer, self._table_passer, 'Output table of cross-PSD functions'],
             b'OCPSDFC' : [self._nx_table_passer, self._table_passer, 'NX cross-PSD functions for composites'],
             b'OCCORFC' : [self._nx_table_passer, self._table_passer, 'NX cross-correlation functions for composites'],
 
@@ -1013,10 +1042,14 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # grid point weight
             b'OGPWG'  : [reader_ogpwg._read_ogpwg_3, reader_ogpwg._read_ogpwg_4, 'grid point weight'],  # grid point weight
             b'OGPWGM' : [reader_ogpwg._read_ogpwg_3, reader_ogpwg._read_ogpwg_4, 'modal? grid point weight'],  # modal? grid point weight
-
+            b'OGPSTRN': [self._table_passer, self._table_passer, 'grid point forces? / composite strength ratio?'],
+            b'OGPFIN': [self._table_passer, self._table_passer, 'Grid point force balance data block for which grid point force balance totals are to be recalculated; SORT1'],
+            b'OGPSRN': [self._table_passer, self._table_passer, 'grid point forces? / composite strength ratio?'],
             #=======================
             # OGS
             # grid point stresses
+            b'OSTR1G': [self._table_passer, self._table_passer, 'OEE Table of grid point strains; SORT1'],
+            b'OGS1X': [reader_ogs._read_ogs1_3, reader_ogs._read_ogs1_4, 'grid point stress???'],
             b'OGS1' : [reader_ogs._read_ogs1_3, reader_ogs._read_ogs1_4, 'grid point stress'],  # grid point stresses
             #b'OGS2' : [self._read_ogs1_3, self._read_ogs1_4, 'grid point stress'],  # grid point stresses
 
@@ -1056,7 +1089,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # in op2_reader
             #b'FOL' : [self._table_passer, self._table_passer],
 
-            b'PERF' : [self._table_passer, self._table_passer, '???'],
+            #b'PERF' : [self._table_passer, self._table_passer, '???'],
 
             # DSCMCOL - Correlation table for normalized design sensitivity coefficient matrix.
             #           Output by DSTAP2.
@@ -1087,8 +1120,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #b'GPL': [self._table_passer, self._table_passer],
             b'ERRORN' : [self._table_passer, self._table_passer, ' p-element error summary table'],  # p-element error summary table
 
-            # in op2_reader
-            #b'OMM2' : [self._table_passer, self._table_passer, 'max/min table'],  # max/min table - kinda useless
+            # in op2_reader, but we need the max/min flag?
+            b'OMM2' : [self._table_passer, self._table_passer, 'max/min table'],  # max/min table - kinda useless
             #==================================
             b'OUG2T' : [self._table_passer, self._table_passer, '???'],
 
@@ -1101,29 +1134,40 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'ONMD' : [reader_onmd._read_onmd_3, reader_onmd._read_onmd_4, 'Normalized Mass Density'],
 
             ## Equivalent Radiated Power
-            b'OERP': [self._table_passer, self._table_passer, 'Equivalent Radiated Power Output'],
-            b'OERPM': [self._table_passer, self._table_passer, 'Modal Participation Factors of Equivalent Radiated Power Output'], # 'MODAL PARTICIPATION FACTORS OF EQUIVALENT RADIATED POWER',
+            b'OERP':    [self._table_passer, self._table_passer, 'Equivalent Radiated Power Output'],
+            b'OERPDSN': [self._table_passer, self._table_passer, 'Equivalent Radiated Power Output; design response'],
+            b'OERPM':   [self._table_passer, self._table_passer, 'Modal Participation Factors of Equivalent Radiated Power Output'], # 'MODAL PARTICIPATION FACTORS OF EQUIVALENT RADIATED POWER',
+            b'OERPEL1': [self._table_passer, self._table_passer, 'NX 2019.2 ERP design responses at element level; SORT1'],
+            b'OERPEL2': [self._table_passer, self._table_passer, 'NX 2019.2 ERP design responses at element level; SORT2'],
+
+            ## NX optimization
+            b'ODELBGPD' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Shape optimization geometry changes'],
+            b'OSHT1': [self._nx_table_passer, self._table_passer, 'NX 2019.2 optimization thicknesses for DVEREL1 elements'],
 
             ## MSC unsorted
             b'OUTSFLOW': [self._table_passer, self._table_passer, 'MSC 2020.0 Shear Flow Approximation'],
             b'OEXTFIB': [self._table_passer, self._table_passer, 'MSC 2020.0 Table of extreme fibre output for composite elements'],
             b'OVINT': [self._table_passer, self._table_passer, 'MSC 2020.0 Vibration Intensity table'],
+            b'OGTEMP': [self._table_passer, self._table_passer, 'MSC 2020.0 Vibration Intensity table'],
+            b'OETEMP': [self._table_passer, self._table_passer, 'MSC 2020.0 Average Element Temperatures'],
 
             ## NX unsorted
-            b'OES1G' : [self._table_passer, self._table_passer, 'NX2019.2 Grid point stress or strain table in SORT1 format and interpolated from the centroidal stress table, OES1M'],
-            b'OSHT1': [self._table_passer, self._table_passer, 'NX optimization thicknesses for DVEREL1 elements'],
-            b'OBOLT1': [self._table_passer, self._table_passer, 'NX Bolt output'],
-            b'OSTR1PLG': [self._table_passer, self._table_passer, 'NX 2019.2 Table of plastic strain at Gauss points in SORT1 format'],
+            b'OES1G' : [self._table_passer, self._table_passer, 'NX 2019.2 Grid point stress or strain table and interpolated from the centroidal stress table/OES1M; SORT1'],
+            b'OBOLT1': [self._table_passer, self._table_passer, 'NX 2019.2 Bolt output'],
+            b'OSTR1IN': [self._table_passer, self._table_passer, 'NX 2019.2 OES output table of initial strains at corner grids in the cid=0 frame'],
             b'OELAR': [self._table_passer, self._table_passer, 'NX 2019.2 Inactive element status and addition/removal time'],
+            b'OJINT': [self._table_passer, self._table_passer, 'NX 2019.2 Table for J integral output'],
 
             ## unsorted
+            b'OCOMPQT': [self._table_passer, self._table_passer, 'composite (???)'],
             b'OSMPF1': [self._table_passer, self._table_passer, 'Table of structural modal participation factors in SORT1 format'],
-            b'OGPSTRS': [self._table_passer, self._table_passer, '???'],
+            b'OGPSR': [self._table_passer, self._table_passer, 'Table of global ply strength ratios'],
+            b'OGPSTRS': [self._table_passer, self._table_passer, 'Table of global ply strength ratios (OGPSR)'],
             b'OELAFG' : [self._table_passer, self._table_passer, 'OFP table of Elastic Forces'],
             b'OGK1': [self._table_passer, self._table_passer, 'gasket element results'],
             b'OEDE1': [self._table_passer, self._table_passer, 'Elemental energy loss'],
-            #b'OEDE1': [self._table_passer, self._table_passer, ''],
-            #b'OEDE1': [self._table_passer, self._table_passer, ''],
+
+            b'OGPFI': [self._table_passer, self._table_passer, 'initial? grid point forces'],
             #b'OEDE1': [self._table_passer, self._table_passer, ''],
             #b'OEDE1': [self._table_passer, self._table_passer, ''],
 
@@ -1156,24 +1200,30 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'ODAMGPFD': [self._table_passer, self._table_passer, 'NX 2019.2 Table of damage values for ply failure for SOL 401'],
             b'ODAMGPFE': [self._table_passer, self._table_passer, 'NX 2019.2 Table of damage energy for ply failure for SOL 401'],
             b'ODAMGPFS': [self._table_passer, self._table_passer, 'NX 2019.2 Table of damage status for SOL 401'],
+            b'ODAMGPFR': [self._table_passer, self._table_passer, 'NX 2019.2 Table of crack density for ply failure EUD model from SOL 401. Crack density at corner grids on the middle of plies. The values are unitless'],
 
             ## NX acoustics
-            b'OACCQ'  : [self._table_passer, self._table_passer, 'NX 2019.2 Acoustic coupling information in SORT1 format'],
-            b'OCCORF'  : [self._table_passer, self._table_passer, 'NX 2019.2 Output table of acoustic cross-correlation functions'],
-            b'OEFMXORD'  : [self._table_passer, self._table_passer, 'NX 2019.2 Maximum frequency per element and element order contribution in SOL 108 FEMAO analysis'],
+            b'OACCQ'    : [self._table_passer, self._table_passer, 'NX 2019.2 Acoustic coupling information; SORT1'],
+            b'OCCORF'   : [self._table_passer, self._table_passer, 'NX 2019.2 Output table of acoustic cross-correlation functions'],
+            b'OEFMXORD' : [self._table_passer, self._table_passer, 'NX 2019.2 Maximum frequency per element and element order contribution in SOL 108 FEMAO analysis'],
             b'OACPERF'  : [self._table_passer, self._table_passer, 'NX 2019.2 Performance data indicating computation time per frequency in seconds and memory consumed in GB per frequency in FEMAO analysis'],
-            b'OACVELO1': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic velocities at microphone points in SORT1 format'],
-            b'OACPWR2': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic power for AML regions and GROUPs of 2D elements in SORT2 format'],
-            b'OAPPSD2': [self._table_passer, self._table_passer, 'NX 2019.2 Table of acoustic power in SORT2 format for the PSD function'],
+            b'OACPWR2'  : [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic power for AML regions and GROUPs of 2D elements; SORT2'],
+            b'OAPPSD2'  : [self._table_passer, self._table_passer, 'NX 2019.2 Table of acoustic power for the PSD function; SORT2'],
+            b'OACPWRI2' : [self._table_passer, self._table_passer, 'NX 2019.2 Data block of incident acoustic power for FACES or GROUPs of 2D elements; SORT2'],
+            b'OACPWRT2' : [self._table_passer, self._table_passer, 'NX 2019.2 Data block of transmitted acoustic power for AML regions and GROUPs of 2D elements; SORT2'],
+            b'OACTRLS2': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic transmission loss; SORT2'],
 
-            b'OACINT1': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic intensities at microphone points in SORT1 format'],
-            b'OACINT2': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic intensities at microphone points in SORT2 format'],
+            b'OACVELO1': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic velocities at microphone points; SORT1'],
+            b'OACVELO2': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic velocities at microphone points; SORT2'],
 
-            b'OUGRC1': [self._table_passer, self._table_passer, 'NX 2019.2 Table of reciprocal panel contributions in SORT1'],
-            b'OUGRC2': [self._table_passer, self._table_passer, 'NX 2019.2 Table of reciprocal panel contributions in SORT2'],
+            b'OACINT1': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic intensities at microphone points; SORT1'],
+            b'OACINT2': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic intensities at microphone points; SORT2'],
 
-            b'OUGGC1': [self._table_passer, self._table_passer, 'NX 2019.2 acoustic grid contribution in SORT1'],
-            b'OUGGC2': [self._table_passer, self._table_passer, 'NX 2019.2 acoustic grid contribution in SORT2'],
+            b'OUGRC1': [self._table_passer, self._table_passer, 'NX 2019.2 Table of reciprocal panel contributions; SORT1'],
+            b'OUGRC2': [self._table_passer, self._table_passer, 'NX 2019.2 Table of reciprocal panel contributions; SORT2'],
+
+            b'OUGGC1': [self._table_passer, self._table_passer, 'NX 2019.2 acoustic grid contribution; SORT1'],
+            b'OUGGC2': [self._table_passer, self._table_passer, 'NX 2019.2 acoustic grid contribution; SORT2'],
 
             # glue
             b'OTEMPP': [self._table_passer, self._table_passer, 'TOP/BOT/MID temperature'],
@@ -1203,8 +1253,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             b'OCNTCHK0' : [self._table_passer, self._table_passer, 'MSC 2020.0 OUG-type table of contact check of active nodes status and distance; initial'],
             b'OCNTCHKD' : [self._table_passer, self._table_passer, 'MSC 2020.0 OUG-type table of contact check of active nodes status and distance; deformed'],
-            #b'OFGCOND' : [self._table_passer, self._table_passer, 'MSC 2020.0 ???'],
-            #b'OFCRFMD'
+            b'OFGCOND' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of Global Contact Output'],
+            b'OFCRFMD' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of resultant force/moment for each CONTACT Pair; deformed'],
 
             b'OUGSTRS0': [self._table_passer, self._table_passer, 'OUG-type table of geometry adjustment by initial stress-free contact'],
             #b'OFCON3D' : 'Table of initial contact status information'],
@@ -2103,12 +2153,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
                     else:
                         desc = '???'
                         #self.log.debug('unknown table')
-                        #raise
+                        raise
+                #print(table_name, desc)
                 #desc = desc_map.get(table_name, '???')
                 assert isinstance(desc, str), table_name
                 table_name2 = f'{table_name!r}'
                 self.log.debug(f'  table_name={table_name2:<11} ({desc})')
-                assert desc != '???', self.table_name
+                assert desc != '???', table_name2
 
             self.table_name = table_name
             #if 0:

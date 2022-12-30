@@ -58,7 +58,7 @@ class RealFastArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        _times = zeros(self.ntimes, dtype=dtype)
+        _times = zeros(self.ntimes, dtype=self.analysis_fmt)
         element = zeros(self.nelements, dtype='int32')
 
         # [force_x, force_y, force_z, moment_x, moment_y, moment_z]

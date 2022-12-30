@@ -63,7 +63,7 @@ class ComplexSpringDamperArray(OES_Object):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype=idtype)
 

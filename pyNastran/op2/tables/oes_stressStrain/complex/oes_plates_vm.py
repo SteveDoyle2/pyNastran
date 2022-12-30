@@ -93,7 +93,7 @@ class ComplexPlateVMArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
 
         # nelements is the actual number of elements
         if self.is_sort1:
@@ -109,7 +109,7 @@ class ComplexPlateVMArray(OES_Object):
             #print(f'  SORT2: ntimes={ntimes} nelements={nelements} nnodes={nnodes} nlayers={nlayers} {self.element_name}-{self.element_type}')
         #print(f'{self.element_name}-{self.element_type} nelements={nelements} nlayers={nlayers} ntimes={ntimes}')
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         # the number is messed up because of the offset for the element's properties

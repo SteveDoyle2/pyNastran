@@ -51,6 +51,7 @@ class ResultSet:
 
     def is_saved(self, result: str) -> bool:
         """checks to see if a result is saved"""
+        #assert result in self.results_map, f'result={result}'
         if result not in self.allowed:
             #allowed2 = list(self.allowed)
             #allowed2.sort()

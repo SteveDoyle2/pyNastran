@@ -132,7 +132,7 @@ class OGS:
             n = self._read_ogs1_table26(data, ndata, restype)
         elif op2.table_code == 27:
             #OGS1 - grid point stresses - volume direct
-            assert op2.table_name in [b'OGS1', b'OGSTR1'], f'table_name={op2.table_name} table_code={op2.table_code}'
+            assert op2.table_name in [b'OGS1', b'OGSTR1', b'OGS1X'], f'table_name={op2.table_name} table_code={op2.table_code}'
             n = self._read_ogs1_table27(data, ndata, restype)
         elif op2.table_code == 28:
             #OGS1- grid point stresses - principal

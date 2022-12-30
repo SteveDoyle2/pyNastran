@@ -88,7 +88,7 @@ class RealCompositePlateArray(OES_Object):
             ntimes = self.ntotal
             ntotal = self.ntimes
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
         element_layer = zeros((ntotal, 2), dtype=idtype)
 
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]

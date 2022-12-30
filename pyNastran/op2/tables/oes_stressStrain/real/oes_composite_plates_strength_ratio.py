@@ -86,7 +86,7 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
             ntimes = self.ntotal
             ntotal = self.ntimes
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
         element_layer = zeros((ntotal, 2), dtype=idtype)
 
         #[strength_ratio_ply, failure_index_bonding, strength_ratio_bonding]

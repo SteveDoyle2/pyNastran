@@ -78,7 +78,7 @@ class RealBushArray(OES_Object):
             print('flipping the order...')
             ntimes, ntotal = ntotal, ntimes
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
         element = zeros(ntotal, dtype=idtype)
         data = zeros((ntimes, ntotal, 6), dtype=fdtype)
 

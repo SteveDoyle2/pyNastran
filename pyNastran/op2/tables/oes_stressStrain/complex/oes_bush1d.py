@@ -43,7 +43,7 @@ class ComplexCBush1DArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = np.zeros(self.nelements, dtype='int32')
 
         #[tx, ty, tz, rx, ry, rz]

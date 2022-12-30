@@ -149,7 +149,7 @@ class RealSolidArray(OES_Object):
         #self.ntotal = ntotal
         #self.nelements = nelements
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
 
         # TODO: could be more efficient by using nelements for cid
         element_node = zeros((ntotal, 2), dtype=idtype)
@@ -909,7 +909,7 @@ def calculate_principal_eigenvectors5(ntimes: int, nelements: int, nnodes: int,
 
     TODO: scale by 2 for strain
     """
-    a_matrix = np.empty((ntimes, nelements, nnodes, 3, 3), dtype=dtype)
+    a_matrix = np.empty((ntimes, nelements, nnodes, 3, 3), dtype=self.analysis_fmt)
 
     # we're only filling the lower part of the A matrix
     a_matrix[:, :, :, 0, 0] = oxx

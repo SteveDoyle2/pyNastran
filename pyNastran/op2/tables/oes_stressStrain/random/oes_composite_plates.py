@@ -88,7 +88,7 @@ class RandomCompositePlateArray(OES_Object):
         self.itotal = 0
 
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
 
         self.element_layer = zeros((self.ntotal, 2), dtype='int32')
 

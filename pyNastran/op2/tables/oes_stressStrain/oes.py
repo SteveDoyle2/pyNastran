@@ -1233,6 +1233,10 @@ class OES(OP2Common2):
         elif table_name_bytes == b'OESRT':
             #OESRT: Table of composite element strength ratios
             prefix = 'strength_ratio.'
+        elif table_name_bytes == b'OESRTN':
+            op2.stress_bits[1] = 0
+            #OESRTN: Table of composite element strength ratios nonlinear???
+            prefix = 'strength_ratio.'
         elif table_name_bytes in [b'OESCP', b'OESTRCP']:
             # guessing
             pass

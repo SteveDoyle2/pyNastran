@@ -5,6 +5,8 @@ from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTE
 
 # strings
 SORT1_TABLES_BYTES = [
+    b'OUG1S',
+
     b'OES1', b'OES1C', b'OES1X', b'OES1X1', b'OESVM1', b'OESVM1C',
     b'OSTR1C', b'OSTR1X', b'OSTRVM1', b'OSTRVM1C',
     b'OSTRMS1C',
@@ -13,7 +15,7 @@ SORT1_TABLES_BYTES = [
     # ----------
     b'OEF1X', b'OEF1',
     b'HOEF1', b'DOEF1',
-    b'OEFIT', b'OEFITSTN', b'OESRT',
+    b'OEFIT', b'OEFITSTN', b'OESRT', b'OESRTN',
     # --------
     # random
 
@@ -490,6 +492,10 @@ class Op2Codes:
 
         if self.is_msc:
             msg += '  MSC Nastran\n'
+        #elif self.is_optistruct:
+            #msg += '  Optistruct\n'
+        #elif self.is_autodesk:
+            #msg += '  Autodesk/NEi Nastran\n'
         elif self.is_nasa95:
             msg += '  NASA 95 Nastran\n'
         else:

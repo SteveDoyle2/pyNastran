@@ -78,7 +78,7 @@ class RealBush1DStressArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements,
             #self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.ntotal, dtype='int32')
         self.is_failed = zeros((self.ntimes, self.ntotal, 1), dtype='int32')
 

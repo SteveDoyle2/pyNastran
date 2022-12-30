@@ -86,7 +86,7 @@ class RandomBarArray(OES_Object):
             ntimes = self.ntotal
             #dtype = self._get_analysis_code_dtype()
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(nelements, dtype='int32')
 
         #[s1a, s2a, s3a, s4a, axial,

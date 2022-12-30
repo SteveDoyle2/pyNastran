@@ -5,10 +5,9 @@ from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtyp
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
+from pyNastran.op2.result_objects.op2_objects import set_as_sort1
 
-SORT2_TABLE_NAME_MAP = {
-    'ONRGY2' : 'ONRGY1',
-}
+
 TABLE_NAME_TO_TABLE_CODE = {
     'ONRGY1' : 18,
 }
@@ -367,28 +366,7 @@ class RealStrainEnergyArray(BaseElement):
 
     def set_as_sort1(self):
         """changes the table into SORT1"""
-        if self.is_sort1:
-            return
-        try:
-            analysis_method = self.analysis_method
-        except AttributeError:
-            print(self.code_information())
-            raise
-        #print(self.get_stats())
-        #print(self.node_gridtype)
-        #print(self.data.shape)
-        self.sort_method = 1
-        self.sort_bits[1] = 0
-        bit0, bit1, bit2 = self.sort_bits
-        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
-        self.sort_code = bit0 + 2*bit1 + 4*bit2
-        #print(self.code_information())
-        assert self.is_sort1
-        if analysis_method != 'N/A':
-            self.data_names[0] = analysis_method
-            #print(self.table_name_str, analysis_method, self._times)
-            setattr(self, self.analysis_method + 's', self._times)
-        del self.analysis_method
+        set_as_sort1(self)
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

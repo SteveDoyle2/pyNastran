@@ -193,7 +193,6 @@ class EPT:
 
             datai = data[n:n+8]
             desc_id, nwords = struct_2i.unpack(datai)
-            #print(desc_id, nwords)
             ndatai = 8 + nwords * 4
             word_bytes = data[n+8:n+ndatai]
             word = word_bytes.decode('ascii').rstrip()

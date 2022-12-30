@@ -144,7 +144,7 @@ class RandomPlateArray(OES_Object):
         self.nelements = nelements
         #ntotal = nelements * 2
         self.ntotal = nlayers
-        #_times = zeros(ntimes, dtype=dtype)
+        #_times = zeros(ntimes, dtype=self.analysis_fmt)
         #element = zeros(nelements, dtype='int32')
 
         self._times = zeros(ntimes, dtype)

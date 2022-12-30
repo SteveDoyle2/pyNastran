@@ -60,7 +60,7 @@ class RandomSolidArray(OES_Object):
             ntotal = self.ntotal
             dtype = self._get_analysis_code_dtype()
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
 
         # TODO: could be more efficient by using nelements for cid
         self.element_node = zeros((ntotal, 2), dtype='int32')

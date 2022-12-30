@@ -68,7 +68,7 @@ class RandomRodArray(OES_Object):
         """actually performs the build step"""
         #self.ntimes = ntimes
         #self.nelements = nelements
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(nelements, dtype=idtype)
 
         #[axial, torsion]

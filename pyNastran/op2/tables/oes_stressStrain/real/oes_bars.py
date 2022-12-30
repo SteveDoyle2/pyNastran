@@ -181,7 +181,7 @@ class RealBarArray(OES_Object):
             ntimes = self.ntotal
             #ss
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
         element = zeros(ntotal, dtype=idtype)
 
         #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,

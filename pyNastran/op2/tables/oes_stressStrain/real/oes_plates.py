@@ -178,7 +178,7 @@ class RealPlateArray(OES_Object):
                               f'sort_method={self.sort_method} nlayers_per_element={nlayers_per_element} nlayers={nlayers}')
 
         assert nlayers >= 2, self.code_information()
-        _times = np.zeros(ntimes, dtype=dtype)
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
         element_node = np.zeros((nlayers, 2), dtype=idtype)
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]

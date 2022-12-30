@@ -11,13 +11,11 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     set_static_case, set_modal_case, set_transient_case, set_post_buckling_case,
 )
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+from pyNastran.op2.result_objects.op2_objects import set_as_sort1
 
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CBEAM': 2,
-}
-SORT2_TABLE_NAME_MAP = {
-    'OES2': 'OES1',
 }
 
 class RealBeamArray(OES_Object):
@@ -109,7 +107,7 @@ class RealBeamArray(OES_Object):
             #self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(
             self.nonlinear_factor, self.size, self.analysis_fmt)
-        _times = np.zeros(ntimes, dtype=dtype)
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
         element_node = np.zeros((ntotal, 2), dtype=idtype)
 
         # sxc, sxd, sxe, sxf
@@ -146,36 +144,7 @@ class RealBeamArray(OES_Object):
 
     def set_as_sort1(self):
         """changes the table into SORT1"""
-        #if not self.table_name != 'OQMRMS1':
-            #return
-        if self.is_sort1:
-            return
-        #print('set_as_sort1: table_name=%r' % self.table_name)
-        try:
-            analysis_method = self.analysis_method
-        except AttributeError:
-            print(self.code_information())
-            raise
-        #print(self.get_stats())
-        #print(self.node_gridtype)
-        #print(self.data.shape)
-        self.sort_method = 1
-        self.sort_bits[1] = 0
-        bit0, bit1, bit2 = self.sort_bits
-        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
-        self.sort_code = bit0 + 2*bit1 + 4*bit2
-        #print(self.code_information())
-        assert self.is_sort1
-        if analysis_method != 'N/A':
-            self.data_names[0] = analysis_method
-            #print(self.table_name_str, analysis_method, self._times)
-            setattr(self, self.analysis_method + 's', self._times)
-
-         # dt
-        self.data_code['name'] = self.analysis_method
-        self.name = self.analysis_method
-        del self.analysis_method
-
+        set_as_sort1(self)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -686,7 +655,7 @@ class RealNonlinearBeamArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element_node = np.zeros((self.ntotal, 3), dtype=idtype)
 
         #gridA, CA, long_CA, eqS_CA, tE_CA, eps_CA, ecs_CA,

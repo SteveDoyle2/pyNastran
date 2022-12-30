@@ -3,12 +3,12 @@ import copy
 import warnings
 from itertools import count
 from struct import pack
-from typing import Union
+from typing import Union, Optional
 import numpy as np
 
 from cpylog import SimpleLogger
 from pyNastran import is_release
-from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils import object_attributes, object_methods, object_stats
 from pyNastran.utils.numpy_utils import integer_types
 
 #from pyNastran.utils import list_print
@@ -32,6 +32,120 @@ GRID_TYPE_TO_STR_MAP = {
     'L' : 7, # RIGID POINT (e.g. RBE3)
     'H' : 0, # SECTOR/HARMONIC/RING POINT
 }
+
+SORT2_TABLE_NAME_MAP = {
+    # sort2_name : sort1_name
+    # displacement
+    'OUGATO2' : 'OUGATO1',
+    'OUGCRM2' : 'OUGCRM1',
+    'OUGNO2' : 'OUGNO1',
+    'OUGPSD2' : 'OUGPSD1',
+    'OUGRMS2' : 'OUGRMS1',
+
+    # velocity
+    'OVGATO2' : 'OVGATO1',
+    'OVGCRM2' : 'OVGCRM1',
+    'OVGNO2' : 'OVGNO1',
+    'OVGPSD2' : 'OVGPSD1',
+    'OVGRMS2' : 'OVGRMS1',
+
+    # acceleration
+    'OAGATO2' : 'OAGATO1',
+    'OAGCRM2' : 'OAGCRM1',
+    'OAGNO2' : 'OAGNO1',
+    'OAGPSD2' : 'OAGPSD1',
+    'OAGRMS2' : 'OAGRMS1',
+
+    # spc forces
+    'OQGATO2' : 'OQGATO1',
+    'OQGCRM2' : 'OQGCRM1',
+    'OQGNO2' : 'OQGNO1',
+    'OQGPSD2' : 'OQGPSD1',
+    'OQGRMS2' : 'OQGRMS1',
+
+    # mpc forces
+    'OQMATO2' : 'OQMATO1',
+    'OQMCRM2' : 'OQMCRM1',
+    'OQMNO2' : 'OQMNO1',
+    'OQMPSD2' : 'OQMPSD1',
+    'OQMRMS2' : 'OQMRMS1',
+
+    # load vectors
+    'OPGATO2' : 'OPGATO1',
+    'OPGCRM2' : 'OPGCRM1',
+    'OPGNO2' : 'OPGNO1',
+    'OPGPSD2' : 'OPGPSD1',
+    'OPGRMS2' : 'OPGRMS1',
+
+    # pressure
+    'OPRATO2' : 'OPRATO1',
+    'OPRCRM2' : 'OPRCRM1',
+    'OPRNO2'  : 'OPRNO1',
+    'OPRPSD2' : 'OPRPSD1',
+    'OPRRMS2' : 'OPRRMS1',
+
+    #'OUG2' : 'OUG1',
+    'OUGV2' : 'OUGV1',
+    'OQG2' : 'OQG1',
+    'OQMG2' : 'OQMG1',
+    'OPG2' : 'OPG1',
+    'OPNL2' : 'OPNL1',
+    'OUXY2' : 'OUXY1',
+    'OQGGF2' : 'OQGGF1',
+    'OQGCF2' : 'OQGCF1',
+    'OUGF2' : 'OUGF1',
+    # --------------------
+    # OES
+    'OES2' : 'OES1',
+    'OES2C' : 'OES1C',
+    'OESATO2' : 'OESATO1',
+    'OESCRM2' : 'OESCRM1',
+    'OESNO2' : 'OESNO1',
+    'OESPSD2' : 'OESPSD1',
+    'OESRMS2' : 'OESRMS1',
+    'OESNLXR2' : 'OESNLXR',
+    'OESVM2' : 'OESVM1',
+    'OESNL2' : 'OESNL1',
+    'OESPSD2C' : 'OESPSD1C',
+
+    # OSTR
+    'OSTR2' : 'OSTR1',
+    'OSTR2C' : 'OSTR1C',
+    'OSTRATO2' : 'OSTRATO1',
+    'OSTRCRM2' : 'OSTRCRM1',
+    'OSTRNO2' : 'OSTRNO1',
+    'OSTRPSD2' : 'OSTRPSD1',
+    'OSTRRMS2' : 'OSTRRMS1',
+    'OSTRVM2' : 'OSTRVM1',
+    'OSTPSD2C' : 'OSTPSD1C',
+
+    # OEF
+    'OEF2' : 'OEF1',
+    'OEFATO2' : 'OEFATO1',
+    'OEFCRM2' : 'OEFCRM1',
+    'OEFPSD2' : 'OEFPSD1',
+    'OEFRMS2' : 'OEFRMS1',
+    'OEFNO2' : 'OEFNO1',
+
+    # ONR / OEE
+    'ONRGY2' : 'ONRGY1',
+
+    'OUGV2' : 'OUGV1',
+    'OPG2' : 'OPG1',
+
+}
+
+SORT1_TABLES = list(SORT2_TABLE_NAME_MAP.values())
+SORT1_TABLES.extend([
+    'BOUGV1',
+    'OUG1F',
+    'BOUGF1',
+    'OUG1',
+    'OVG1',
+    'OAG1',
+])
+SORT2_TABLES = list(SORT2_TABLE_NAME_MAP.keys())
+
 
 class BaseScalarObject(Op2Codes):
     """
@@ -63,28 +177,32 @@ class BaseScalarObject(Op2Codes):
         #self.ntotal = 0
         #assert isinstance(self.name, (str, bytes)), 'name=%s type=%s' % (self.name, type(self.name))
 
-    def object_attributes(self, mode='public', keys_to_skip=None,
-                          filter_properties=False):
-        if keys_to_skip is None:
-            keys_to_skip = []
-        elif isinstance(keys_to_skip, str):
-            keys_to_skip = [keys_to_skip]
+    def object_attributes(self, mode: str='public', keys_to_skip=None,
+                          filter_properties: bool=False):
+        keys_to_skip = _simplify_keys(keys_to_skip)
 
         my_keys_to_skip = [
-            'object_methods', 'object_attributes',
+            'object_methods', 'object_attributes', ', object_stats',
         ]
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
                                  filter_properties=filter_properties)
 
-    def object_methods(self, mode='public', keys_to_skip=None):
-        if keys_to_skip is None:
-            keys_to_skip = []
-        my_keys_to_skip = []
+    def object_methods(self, mode: str='public', keys_to_skip=None):
+        keys_to_skip = _simplify_keys(keys_to_skip)
 
         my_keys_to_skip = [
-            'object_methods', 'object_attributes',
+            'object_methods', 'object_attributes', ', object_stats',
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_stats(self, mode: str='public', keys_to_skip=None):
+        keys_to_skip = _simplify_keys(keys_to_skip)
+
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes', ', object_stats',
+        ]
+        return object_stats(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                            filter_properties=False)
 
     def __eq__(self, table) -> bool:  # pragma: no cover
         #raise NotImplementedError(str(self.get_stats()))
@@ -140,6 +258,13 @@ class BaseScalarObject(Op2Codes):
         if not is_release:
             raise NotImplementedError(msg)
         return msg
+
+def _simplify_keys(keys_to_skip: Optional[list[str]]) -> list[str]:
+    if keys_to_skip is None:
+        keys_to_skip = []
+    elif isinstance(keys_to_skip, str):
+        keys_to_skip = [keys_to_skip]
+    return keys_to_skip
 
 
 class ScalarObject(BaseScalarObject):
@@ -352,7 +477,14 @@ class ScalarObject(BaseScalarObject):
             else:
                 vals_array = '???'
             #msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])))
-            msg += '%s%s = %s\n' % (prefix, name, vals_array)
+            if isinstance(vals_array, np.ndarray):
+                dtypei = vals_array.dtype.name
+            else:
+                if isinstance(vals_array, str):
+                    dtypei = 'str'
+                else:
+                    dtypei = type(vals_array)
+            msg += '%s%s = %s; dtype=%s\n' % (prefix, name, vals_array, dtypei)
         #print("***data_names =", self.data_names)
         return [msg]
 
@@ -744,7 +876,7 @@ def get_sort_node_sizes(self, debug: bool=False) -> tuple[int, int, int]:
         #print("***SORT2 ntotal=%s nnodes=%s ntimes=%s" % (ntotal, nnodes, ntimes))
     else:
         raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
-    assert nnodes == ntotal or ntimes == ntotal, (ntimes, nnodes, ntotal)
+    #assert nnodes == ntotal or ntimes == ntotal, (ntimes, nnodes, ntotal)
     return ntimes, nnodes, ntotal
 
 
@@ -894,20 +1026,21 @@ def get_times_dtype(nonlinear_factor: Union[int, float], size: int,
         return dtype, idtype, fdtype
     return dtype, idtype, fdtype
 
-def get_complex_times_dtype(nonlinear_factor: Union[int, float], size: int) -> tuple[str, str, str]:
-    dtype = 'float'
-    if isinstance(nonlinear_factor, integer_types):
-        dtype = 'int'
+def get_complex_times_dtype(size: int) -> tuple[str, str, str]:
+    #assert isinstance()
+    #dtype = 'float'
+    #if isinstance(nonlinear_factor, integer_types):
+        #dtype = 'int'
 
     if size == 4:
-        dtype += '32'
+        #dtype += '32'
         cfdtype = 'complex64'
         idtype = 'int32'
     else:
-        dtype += '64'
+        #dtype += '64'
         cfdtype = 'complex128'
         idtype = 'int64'
-    return dtype, idtype, cfdtype
+    return idtype, cfdtype
 
 def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger) -> None:
     """checks the ``element_node`` variable"""
@@ -983,3 +1116,41 @@ def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLog
         print(table2.element_node)
         log.error(f'{table1}\neids={eids}.min={eids.min()}; n={len(eids)}')
         raise ValueError(f'{table1}\neids={eids}.min={eids.min()}; n={len(eids)}')
+
+def set_as_sort1(obj):
+    if obj.is_sort1:
+        return
+    #print('set_as_sort1: table_name=%r' % obj.table_name)
+    if obj.analysis_code == 1:
+        # static...because reasons
+        analysis_method = 'N/A'
+    else:
+        try:
+            analysis_method = obj.analysis_method
+        except AttributeError:
+            print(obj.code_information())
+            print(obj.object_stats())
+            raise
+
+
+    #print(obj.get_stats())
+    #print(obj.data.shape)
+    obj.sort_method = 1
+    obj.sort_bits[1] = 0
+    bit0, bit1, bit2 = obj.sort_bits
+    obj.table_name = SORT2_TABLE_NAME_MAP[obj.table_name]
+    obj.sort_code = bit0 + 2*bit1 + 4*bit2
+    #print(obj.code_information())
+    assert obj.is_sort1
+
+    if analysis_method != 'N/A':
+        obj.data_names[0] = analysis_method
+        #print(obj.table_name_str, analysis_method, obj._times)
+        setattr(obj, obj.analysis_method + 's', obj._times)
+
+        #print('set_as_sort1: table_name=%r' % self.table_name)
+        # dt
+        obj.data_code['name'] = obj.analysis_method
+        #print(self.get_stats())
+        obj.name = obj.analysis_method
+        del obj.analysis_method

@@ -121,6 +121,7 @@ class OP2Reader:
         self.op2 = op2  # type: OP2
 
         self.mapped_tables = {
+            b'RST': (self.read_rst, 'restart file?'),
             b'GPL' : (self.read_gpl, 'grid point list'),
             b'GPLS' : (self.read_gpls, 'grid point list (superelement)'),
 
@@ -135,7 +136,7 @@ class OP2Reader:
             b'BGPDTVU' : (self.read_bgpdt, 'VU grid points in cid=0 frame'),
 
             # optimization
-            b'DESCYC' : (self.read_descyc, '???'),
+            b'DESCYC' : (self.read_descyc, 'design iteration'),
             b'DBCOPT' : (self.read_dbcopt, 'design variable history table'),
             b'DSCMCOL' : (self.read_dscmcol, 'creates op2_results.responses.dscmcol'),
             b'DESTAB' :  (self._read_destab, 'creates op2_results.responses.desvars'),
@@ -145,22 +146,22 @@ class OP2Reader:
             b'HISADD' : (self.read_hisadd, 'optimization history; op2_results.responses.convergence_data'),
             b'EXTDB' : (self.read_extdb, 'external superlelements'),
             b'OMM2' : (self.read_omm2, 'max/min table'),
-            b'STDISP' : (self.read_stdisp, '???'),
+            b'STDISP' : (self.read_stdisp, 'aero-structural displacement?'),
             b'TOL' : (self.read_tol, 'time output list?'),
             b'PCOMPT' : (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry'),
             b'PCOMPTS' : (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry (superelement)'),
             b'MONITOR' : (self.read_monitor, 'MONITOR point output'),
-            b'AEMONPT' : (self.read_aemonpt, '???'),
+            b'AEMONPT' : (self.read_aemonpt, 'aero matrix'),
             b'FOL' : (self.read_fol, 'frequency output list'),
             b'FRL' : (self.read_frl, 'frequency response list'),
-            b'SDF' : (self.read_sdf, '???'),
+            b'SDF' : (self.read_sdf, 'aero-structural displacement?'),
             b'IBULK' : (self.read_ibulk, 'explicit bulk data'),
             b'ICASE' : (self.read_icase, 'explicit case control'),
             b'CASECC': (self.read_casecc, 'case control'),
             b'XCASECC': (self.read_xcasecc, 'case control'),
 
             b'CDDATA' : (self.read_cddata, 'Cambell diagram'),
-            b'CMODEXT' : (self._read_cmodext, '???'),
+            b'CMODEXT' : (self._read_cmodext, 'Component mode synthesis - external'),
 
             #MSC
             #msc / units_mass_spring_damper
@@ -210,7 +211,13 @@ class OP2Reader:
             # OVG: Table of aeroelastic x-y plot data for V-g or V-f curves
             b'MKLIST': (self._read_mklist, 'M/K aero pairs'),
         }
-        self.desc_map = {key: values[1] for key, values in self.mapped_tables.items()}
+        desc_map = {
+            b'PERF': 'aero matrix',
+            b'META': 'string matrix',
+        }
+        desc_map.update({key: values[1] for key, values in self.mapped_tables.items()})
+        #desc_map = {key: values[1] for key, values in self.mapped_tables.items()}
+        self.desc_map = desc_map
 
     def read_nastran_version(self, mode: str) -> None:
         """
@@ -2647,6 +2654,47 @@ class OP2Reader:
             markers = self.get_nmarkers(1, rewind=True)
         del isubtable
         self.read_markers([0])
+
+    def read_rst(self):
+        """
+        reads the RST table (restart file?)
+        """
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        header_data = self._read_record()  # (101, 1, 0, 0, 0, 0, 0) - longs
+        self.show_data(header_data, types='qds', endian=None, force=False)
+
+        self.read_3_markers([-2, 1, 0])
+        data = self._read_record()
+        #print(data[:16])
+
+        table_name, = Struct('<16s').unpack(data[:16])
+        #date
+        #self.show_data(data[16:], types='qds', endian=None, force=False)
+
+        self.read_3_markers([-3, 1, 0])
+        data = self._read_record()
+        self.show_data(data, types='qd', endian=None, force=False)
+
+
+        self.read_3_markers([-4, 1, 0])
+        data = self._read_record()
+
+        #(1, 10, 4617315517961601024, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536,
+        # -1, -1)
+        ndata = len(data) - 5 * 8
+        print(len(data))
+        out = unpack('<2qd ' + str(ndata) +'s' + ' 2q', data)
+        print(out)
+        #ints = np.frombuffer(data, op2.idtype8).tolist()
+        #floats = np.frombuffer(data, op2.fdtype8).tolist()
+
+        #self.show_data(data, types='qds', endian=None, force=False)
+        self.read_3_markers([-5, 1, 0, 0])
+
+        #self.show(32, types='ifqds', endian=None, force=False)
+        asdf
 
     def read_gpl(self):
         """
@@ -5981,6 +6029,7 @@ class OP2Reader:
             unused_data = self._skip_record()
             if self.is_debug_file:
                 desc = self.desc_map.get(op2.table_name, '???')
+                assert desc != '???', self.table_name
                 msgi = "skipping table_name = %r ({desc})".rstrip('(?)')
                 self.log.debug(msgi)
             #if len(data) == 584:
@@ -6413,8 +6462,12 @@ class OP2Reader:
                 table3_parser, table4_parser, desc = table_mapper[table_name]
             passer = False
         else:
+            if table_name in op2.op2_reader.desc_map:
+                desc = op2.op2_reader.desc_map[table_name]
+
             if self.read_mode == 2:
                 self.log.info(f'skipping table_name = {table_name!r} ({desc})')
+                assert desc != '???', table_name
                     #raise NotImplementedError(table_name)
             table3_parser = None
             table4_parser = None

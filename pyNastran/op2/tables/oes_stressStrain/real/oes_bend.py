@@ -80,7 +80,7 @@ class RealBendArray(OES_Object):
         #self.ntotal = nelements * nnodes * 2
 
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = np.zeros(ntimes, dtype=dtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         self.element_node = np.zeros((ntotal, 2), dtype=idtype)

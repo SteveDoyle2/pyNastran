@@ -60,7 +60,7 @@ def make_f06_header() -> str:
         spaces + '/*                                                                      */\n',
         spaces + '/*              A Python reader/editor/writer for the various           */\n',
         spaces + '/*                        NASTRAN file formats.                         */\n',
-        spaces + '/*                       Copyright (C) 2011-2020                        */\n',
+        spaces + '/*                       Copyright (C) 2011-2023                        */\n',
         spaces + '/*                             Steven Doyle                             */\n',
         spaces + '/*                                                                      */\n',
         spaces + '/*    This program is free software; you can redistribute it and/or     */\n',

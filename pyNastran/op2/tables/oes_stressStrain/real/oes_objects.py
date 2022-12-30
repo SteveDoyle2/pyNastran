@@ -1,32 +1,8 @@
 from typing import Any
 import numpy as np
-from pyNastran.op2.result_objects.op2_objects import BaseElement
+from pyNastran.op2.result_objects.op2_objects import BaseElement, set_as_sort1
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
-
-SORT2_TABLE_NAME_MAP = {
-    'OES2' : 'OES1',
-    'OES2C' : 'OES1C',
-    'OESATO2' : 'OESATO1',
-    'OESCRM2' : 'OESCRM1',
-    'OESNO2' : 'OESNO1',
-    'OESPSD2' : 'OESPSD1',
-    'OESRMS2' : 'OESRMS1',
-    'OESNLXR2' : 'OESNLXR',
-
-    'OSTR2' : 'OSTR1',
-    'OSTR2C' : 'OSTR1C',
-    'OSTRATO2' : 'OSTRATO1',
-    'OSTRCRM2' : 'OSTRCRM1',
-    'OSTRNO2' : 'OSTRNO1',
-    'OSTRPSD2' : 'OSTRPSD1',
-    'OSTRRMS2' : 'OSTRRMS1',
-    'OESVM2' : 'OESVM1',
-    'OSTRVM2' : 'OSTRVM1',
-    'OESNL2' : 'OESNL1',
-    'OSTPSD2C' : 'OSTPSD1C',
-    'OESPSD2C' : 'OESPSD1C',
-}
 
 TABLE_NAME_TO_TABLE_CODE = {
     # stress
@@ -74,19 +50,8 @@ class OES_Object(BaseElement):
 
     def set_as_sort1(self):
         """the data is in SORT1, but the flags are wrong"""
-        if self.is_sort1:
-            #if self.analysis_code == 1:
-                #self.nonlinear_factor = np.nan
-                #print(self.data_code)
-                #print(self._times, type(self._times))
-                #aaa
-            return
-        #print(f'{self.class_name}-{self.table_name}')
-        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
-        self.sort_bits[1] = 0 # sort1
-        self.sort_method = 1
-        assert self.is_sort1 is True, self.is_sort1
-        self._update_time_word()
+        set_as_sort1(self)
+        #update_stress_force_time_word(self)
 
     def _get_analysis_code_dtype(self) -> str:
         if self.analysis_code in [5, 6]:
@@ -97,9 +62,6 @@ class OES_Object(BaseElement):
         else:
             raise NotImplementedError(self.data_code)
         return dtype
-
-    def _update_time_word(self) -> None:
-        update_stress_force_time_word(self)
 
     @property
     def is_curvature(self) -> bool:
@@ -610,7 +572,13 @@ def update_stress_force_time_word(obj) -> None:
         obj._times = np.full(1, np.nan, dtype=obj.data.dtype)
         obj.nonlinear_factor = obj._times[0]
     else:
-        name = obj.analysis_method
+        try:
+            name = obj.analysis_method
+        except AttributeError:
+            msg = str(obj.get_stats())
+            msg += obj.object_stats()
+            raise RuntimeError(msg) from e
+
         #print(f'\n{self.class_name}: name = {name}')
         #_analysis_code_fmt
     #if self.analysis_code == 5:

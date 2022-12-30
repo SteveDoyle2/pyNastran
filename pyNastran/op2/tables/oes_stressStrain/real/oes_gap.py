@@ -76,7 +76,7 @@ class NonlinearGapStressArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element,
             #self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        _times = zeros(self.ntimes, dtype=dtype)
+        _times = zeros(self.ntimes, dtype=self.analysis_fmt)
         element = zeros(self.ntotal, dtype=idtype)
 
         # [comp_x, shear_y, shear_z, axial_u, shear_v, shear_w, slip_v, slip_w]

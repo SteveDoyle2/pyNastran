@@ -84,7 +84,7 @@ class RandomBeamArray(OES_Object):
             ntimes = self.ntotal
             ntotal = self.ntimes
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element_node = zeros((ntotal, 2), dtype='int32')
 
         # sxc, sxd, sxe, sxf
