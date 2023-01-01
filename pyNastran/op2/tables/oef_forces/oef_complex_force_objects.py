@@ -4,7 +4,7 @@ from abc import abstractmethod
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, empty_array
 from pyNastran.op2.result_objects.op2_objects import (
     BaseElement, get_complex_times_dtype, get_sort_element_sizes)
 from pyNastran.op2.tables.oef_forces.oef_force_objects import ForceObject, oef_complex_data_code
@@ -1707,7 +1707,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         self.nelements = nelements
         #self.ntotal = ntotal
 
-        self._times = np.full(ntimes, np.nan, dtype=self.analysis_fmt)
+        self._times = empty_array(ntimes, dtype=self.analysis_fmt)
         self.element = np.full(nelements, -1, dtype=idtype)
         self.element_node = zeros((ntotal, 2), dtype=idtype)
 
@@ -2191,7 +2191,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = np.full(ntimes, np.nan, dtype=self.analysis_fmt)
+        self._times = empty_array(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(ntotal, dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties

@@ -13,6 +13,14 @@ def zip_strict(*arrays):
    assert len(lengths) > 0, lengths
    return zip(*arrays)
 
+def empty_array(shape, dtype: str, default_int: int=-1) -> np.ndarray:
+   """creates a null int/float array"""
+   if dtype in {'int32', 'int64'}:
+      out = np.full(shape, default_int, dtype=dtype)
+   else:
+      out = np.full(shape, np.nan, dtype=dtype)
+   return out
+
 def cast_ints(ints: list[int], dtype='int32') -> np.ndarray:
    if dtype == 'int32':
       try:

@@ -72,7 +72,8 @@ def pivot_table(data, rows, cols):
     #print(pivot_table)
 
     ipivot_row, ipivot_col = np.where(pivot_table != -1)
-    data2 = np.full(shape2, np.nan, dtype=data.dtype)
+    default_val = np.nan if data.dtype.name not in {'int32', 'int64'} else -1
+    data2 = np.full(shape2, default_val, dtype=data.dtype)
 
     if nshape == 3:
         data2[:, ipivot_row, ipivot_col, :] = data[:, icount, :]

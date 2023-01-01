@@ -1733,7 +1733,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         else:
             self.node_element[self.itotal, :] = [node_id, eid]
             self.element_names[self.itotal] = ename
-        self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
+        set_3d_data(self.data, self.itime, self.itotal, [t1, t2, t3, r1, r2, r3], self.size)
         self.itotal += 1
 
     def get_stats(self, short: bool=False) -> list[str]:
@@ -2084,3 +2084,32 @@ def _check_array(x, dtype, dim: int, msg=''):
         else:
             raise NotImplementedError(dtype)
     return
+
+def set_3d_data(data: np.ndarray, itime: int, itotal: int, values: list[float], size: int):
+    """annoying way to handle underflow"""
+    if size == 4:
+        #MIN_FLOAT32 = np.finfo(np.float32).min
+        datai = np.array(values)
+        try:
+            datai = datai.astype(data.dtype)
+            data[itime, itotal, :] = datai
+        except FloatingPointError:
+            if data.dtype.name in {'float32', 'float64'}:
+                for i, dataii in enumerate(datai):
+                    try:
+                        data[itime, itotal, i] = dataii
+                    except FloatingPointError:
+                        data[itime, itotal, i] = 0.
+            else:
+                for i, dataii in enumerate(datai):
+                    try:
+                        data.real[itime, itotal, i] = dataii.real
+                    except FloatingPointError:
+                        data.real[itime, itotal, i] = 0.
+
+                    try:
+                        data.imag[itime, itotal, i] = dataii.imag
+                    except FloatingPointError:
+                        data.imag[itime, itotal, i] = 0.
+    else:
+        data[itime, itotal, :] = values

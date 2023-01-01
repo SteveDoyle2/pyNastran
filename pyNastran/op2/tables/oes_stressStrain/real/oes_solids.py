@@ -945,8 +945,9 @@ def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
         the eigenvalues
     eigenvectors : (ntimes, nnodes, 3, 3)
         the eigenvectors
+
     """
-    a_matrix = np.empty((ntimes, nnodes, 3, 3), dtype=dtype)
+    a_matrix = np.zeros((ntimes, nnodes, 3, 3), dtype=dtype)
 
     # we're only filling the lower part of the A matrix
     try:
@@ -959,10 +960,15 @@ def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
     except Exception:
         raise RuntimeError(f'a_matrix.shape={a_matrix.shape} oxx.shape={oxx.shape}')
 
-    # _lambda: ntimes, nnodes, (3)
-    # v:       ntimes, nnodes, (3, 3)
-    (_lambda, v) = eigh(a_matrix)  # a hermitian matrix is a symmetric-real matrix
-    return _lambda, v
+    # eigenvalues:  ntimes, nnodes, (3)
+    # eigenvectors: ntimes, nnodes, (3, 3)
+    #try:
+    eigenvalues, eigenvectors = eigh(a_matrix)  # a hermitian matrix is a symmetric-real matrix
+    #except FloatingPointError:
+        #eigenvalues, eigenvectors = eigh(a_matrix.astype('float64'))
+        #eigenvalues = eigenvalues.astype('float32')
+        #eigenvectors = eigenvectors.astype('float32')
+    return eigenvalues, eigenvectors
 
 
 def calculate_ovm_shear(oxx, oyy, ozz,
