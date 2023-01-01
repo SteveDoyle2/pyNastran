@@ -94,7 +94,7 @@ class RandomPlateVMArray(OES_Object):
             #nelements_nnodes = nelements * nnodes
             #ntotal = nelements * 2
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
-            print(f"***SORT1 ntimes={ntimes} nelements={nelements} nnodes={nnodes} ntotal={ntotal} nlayers={nlayers}")
+            #print(f"***SORT1 ntimes={ntimes} nelements={nelements} nnodes={nnodes} ntotal={ntotal} nlayers={nlayers}")
             assert nlayers == ntotal, f'SORT1 nlayers={nlayers} ntotal={ntotal}'
             #ddd
         elif self.is_sort2:
@@ -108,8 +108,8 @@ class RandomPlateVMArray(OES_Object):
             nlayers = nelements * 2 * nnodes
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
             #if self.element_name in ['CQUAD4']:
-            print(f'SORT2 element_type={self.element_name}-{self.element_type} '
-                  f'ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}')
+            #print(f'SORT2 element_type={self.element_name}-{self.element_type} '
+                  #f'ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}')
         else:  # pragma: no cover
             raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
 

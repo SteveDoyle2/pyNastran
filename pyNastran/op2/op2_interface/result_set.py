@@ -32,7 +32,7 @@ class ResultSet:
 
     """
     def __init__(self, allowed_results: list[int],
-                 results_map, unused_log):
+                 results_map, log):
         #self.log = log
         #allowed_results.sort()
         #for a in allowed_results:
@@ -87,11 +87,15 @@ class ResultSet:
         added = []
         if len(results) == 0:
             return added
+        #print(f'saved = {self.saved}')
+        #print(f'results = {results}')
         all_matched_results = self._get_matched_results(results)
         for result in all_matched_results:
+            #print(f'  result = {result}')
             if result not in self.saved:
                 self.saved.add(result)
                 added.append(result)
+        #print(f'saved = {self.saved}')
         return added
 
     def remove(self, results: Union[str, list[str]]) -> list[str]:
@@ -114,11 +118,14 @@ class ResultSet:
             results = [results]
         all_matched_results = []
         for result in results:
+            #print(result)
             if result in self.allowed:
+                #print('allowed')
                 all_matched_results.append(result)
                 continue
 
             resulti = _get_regex(result)
+            #print('resulti =', resulti)
             regex = re.compile(resulti)
             matched_results = list(filter(regex.match, self.allowed))
             if len(matched_results) == 0:

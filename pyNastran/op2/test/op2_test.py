@@ -276,6 +276,7 @@ def main():
     msg += "  --nocombine            Disables case combination\n"
     msg += "  -s, --save_cases       Disables saving of the cases (default=False)\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
+    msg += "  -i <arg>, --include    Include specific results\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"

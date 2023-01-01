@@ -66,7 +66,7 @@ class ComplexBeamArray(OES_Object):
             #print(f'complex beam: ntimes={ntimes} ntotal={ntotal}')
 
         # ntotal is nelements
-        self._times = zeros(ntimes, dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element_node = zeros((ntotal, 2), idtype)
         self.sd = zeros(ntotal, 'float32')
 

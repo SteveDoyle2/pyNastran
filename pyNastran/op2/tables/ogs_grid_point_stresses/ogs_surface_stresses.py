@@ -64,7 +64,7 @@ class GridPointSurfaceArray(ScalarObject):
         self.data = np.zeros((self.ntimes, self.nelements, 8), dtype=fdtype)
         self.location = np.empty(self.ntotal, dtype='U8')
 
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
 
     def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
         import inspect
@@ -630,7 +630,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         self.data = np.zeros((self.ntimes, self.ntotal, 14), dtype=fdtype)
         self.location = np.empty(self.ntotal, dtype='U8')
 
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
@@ -720,7 +720,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         #oxx, oyy, txy, angle, major, minor, ovm
         self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
         self.location = np.empty(self.ntotal, dtype='U8')
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
@@ -911,7 +911,7 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         self.location = np.empty(self.ntotal, dtype='U8')
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

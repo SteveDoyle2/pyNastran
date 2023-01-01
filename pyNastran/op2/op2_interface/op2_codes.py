@@ -42,7 +42,7 @@ SORT2_TABLES_BYTES = [
 
     b'OES2', b'OES2C', b'OESVM2',
     b'OSTR2', b'OSTR2C', b'OSTRVM2',
-    b'OEF2',
+    b'OEF2', b'OEFNO2',
 
     # random
     b'OEFATO2', b'OEFCRM2', b'OEFPSD2',
@@ -326,7 +326,36 @@ class Op2Codes:
             # 8 - post-buckling
             # 9 - complex eigenvalues
             # 10 - nonlinear statics
-            fmts = ('float32', 'float64')
+            if hasattr(self, 'analysis_method'):
+                name = self.analysis_method
+            else:
+                name = self.name
+            #try:
+                #name = self.analysis_method
+            #except AttributeError:
+                #print(self.object_stats())
+                #raise
+            if name == 'N/A' and self.result_name.startswith(('rms.', 'no.')):
+                self.name = 'freq'
+                name = self.name
+                #fmts = ('float32', 'float64')
+            elif name is None:
+                name = 'lsdvmn'
+                self.name = 'lsdvmn'
+                #print(self.object_stats())
+                #asdf
+
+            #print(name)
+            if name in {'N/A', 'element_id'}:
+                fmts = ('float32', 'float64')
+            else:
+                if name in 'mode':
+                    fmts = ('int32', 'int64')
+                else:
+                    assert name in {'freq', 'dt', 'time',
+                                    'lsdvmn', 'lftsfq', 'loadFactor', 'load_step', 'loadID', 'thresh'}, name + self.object_stats() # 'eigr', 'eign'
+                    fmts = ('float32', 'float64')
+
         elif self.analysis_code in [1, 7, 11]:
             # 1 - static
             # 7 - pre-buckling
@@ -334,7 +363,8 @@ class Op2Codes:
             fmts = ('int32', 'int64')
         else:
             raise NotImplementedError(self.code_information())
-        index = self.size // 4 - 1  # factor is size/4 -> subtract 1
+        index = int(self.size == 8)
+        #index = self.size // 4 - 1  # factor is size/4 -> subtract 1
         return fmts[index]
 
     def code_information(self, include_time: bool=True) -> str:
@@ -598,6 +628,9 @@ class Op2Codes:
                 except ValueError:
                     raise ValueError(f'is this SORT1/2?  table_name={table_name!r}')
         return is_sort1_table
+
+    def sort_method2(self) -> int:
+        return 1 if self.is_sort1 else 2
 
     @property
     def is_sort1(self) -> bool:

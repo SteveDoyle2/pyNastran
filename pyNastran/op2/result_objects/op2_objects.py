@@ -531,6 +531,7 @@ class ScalarObject(BaseScalarObject):
             raise NotImplementedError(msg + self.code_information())
 
         for name in self.data_code['data_names']:
+            #print(name)
             self._append_data_member(name + 's', name)
 
     def update_data_code(self, data_code):
@@ -704,7 +705,7 @@ class ScalarObject(BaseScalarObject):
                 #column_names.append('Freq (Cycles/s)')
                 #column_values.append(times)
 
-            elif name in ['freq', 'freq2']:
+            elif name in ['freq']:
                 column_names.append('Freq')
                 column_values.append(times)
             elif name in ['dt', 'time']:
@@ -967,6 +968,7 @@ class BaseElement(ScalarObject):
         import pandas as pd
         columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
 
+        #print(data.shape)
         ntimes, nelements = data.shape[:2]
         nheaders = len(headers)
         try:
@@ -978,6 +980,8 @@ class BaseElement(ScalarObject):
 
         if names is None:
             names = ['ElementID', 'NodeID', 'Item']
+
+        assert not(from_tuples and from_array)
         if from_tuples:
             nvars = element_node.shape[1]
             assert len(names) == nvars + 1, f'names={names} element_node={element_node} {element_node.shape}'
@@ -1118,9 +1122,18 @@ def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLog
         raise ValueError(f'{table1}\neids={eids}.min={eids.min()}; n={len(eids)}')
 
 def set_as_sort1(obj):
-    if obj.is_sort1:
-        return
     #print('set_as_sort1: table_name=%r' % obj.table_name)
+    if obj.is_sort1:
+        if obj.analysis_code == 1:
+            pass
+        else:
+            name = obj.name
+            setattr(obj, name + 's', obj._times)
+            #if name == 'mode':
+                #print('obj._times', 'modes', obj._times)
+        return
+
+    # sort2
     if obj.analysis_code == 1:
         # static...because reasons
         analysis_method = 'N/A'
@@ -1131,7 +1144,6 @@ def set_as_sort1(obj):
             print(obj.code_information())
             print(obj.object_stats())
             raise
-
 
     #print(obj.get_stats())
     #print(obj.data.shape)

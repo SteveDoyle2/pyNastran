@@ -706,7 +706,10 @@ class OUG:
             else:
                 raise NotImplementedError(op2.code_information())
         elif op2.table_code == 7:
-            assert table_name_bytes in {b'OUG1', b'OUGV1', b'OUGV2', b'OUG1S', b'OUGF1', b'BOUGV1', b'BOPHIG'}, op2.code_information()
+            assert table_name_bytes in {b'OUG1', b'OUGV1', b'OUGV2', b'OUG1S', b'OUGF1', b'OPHIG',
+                                        b'BOUGV1', b'BOPHIG', b'BOPHIGF', b'BOUGF1',
+                                        b'ROUGV1',
+                                        b'RADCONS', b'RADEFFM', b'RADEATC'}, op2.code_information()
             n = self._read_oug_eigenvector(data, ndata)
         elif op2.table_code == 10:
             n = self._read_oug_velocity(data, ndata)

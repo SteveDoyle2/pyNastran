@@ -4876,20 +4876,32 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        self.nelements //= self.ntimes
+        if self.is_sort1:
+            self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
 
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
-        self.element = zeros(self.nelements, dtype=idtype)
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntotal = self.ntotal
+        else:
+            #print("RealSolidPressureForceArray: ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+            ntimes = self.ntotal
+            ntotal = self.ntimes
+            nelements = ntotal
+            #print("-> ntimes=%s nelements=%s ntotal=%s" % (ntimes, nelements, ntotal))
+            assert nelements == 1
+
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = zeros(nelements, dtype=idtype)
 
         #[ax, ay, az, vx, vy, vz, pressure]
-        self.data = zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
+        self.data = zeros((ntimes, ntotal, 7), dtype=fdtype)
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
@@ -4930,6 +4942,20 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
         self.ielement += 1
+
+    def add_sort2(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
+        """unvectorized method for adding SORT2 transient data"""
+        assert self.sort_method == 2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itime = self.itotal
+        itotal = self.itime
+        ntimes = len(self._times)
+        ntotal = self.data.shape[1]
+        print(f'RealSolidPressureForceArray: itime={itime}/{ntimes} itotal={itotal}/{ntotal} -> dt={dt:g} eid={eid}')
+        self._times[itime] = dt
+        self.element[itotal] = eid
+        self.data[itime, itotal, :] = [ax, ay, az, vx, vy, vz, pressure]
+        self.itotal += 1
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

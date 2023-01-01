@@ -1359,6 +1359,7 @@ class OEF:
         op2 = self.op2
         n = 0
         result_name = prefix + 'cbeam_force' + postfix
+
         if op2._results.is_not_saved(result_name):
             return ndata, None, None
         op2._results._found_result(result_name)

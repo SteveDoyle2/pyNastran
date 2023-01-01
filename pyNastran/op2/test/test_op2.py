@@ -567,6 +567,7 @@ def get_test_op2_data(argv=None) -> dict[str, str]:
     nasa95 = '|--nasa95' if is_dev else ''
     version = f'[--nx|--autodesk{nasa95}]'
     options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
+    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5]'
     if is_dev:
         line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
     else:
@@ -666,6 +667,7 @@ def get_test_op2_data(argv) -> dict[str, str]:
     nasa95 = '|--nasa95' if is_dev else ''
     version = f'[--nx|--optistruct|--autodesk{nasa95}]'
     options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
+    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5]'
     if is_dev:
         line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
     else:
@@ -705,6 +707,7 @@ def get_test_op2_data(argv) -> dict[str, str]:
     msg += "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
     msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
+    msg += "  -i <arg>, --include    Include specific results\n"
     msg += "  --post POST            Set the PARAM,POST flag\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
 
@@ -839,7 +842,7 @@ def main(argv=None, show_args: bool=True) -> None:
             is_mag_phase=data['is_mag_phase'],
             build_pandas=data['pandas'],
             subcases=data['subcase'],
-            #include_results=data['include'],
+            include_results=data['include'],
             exclude_results=data['exclude'],
             debug=not data['quiet'],
             binary_debug=data['binarydebug'],
@@ -874,7 +877,7 @@ def main(argv=None, show_args: bool=True) -> None:
             is_mag_phase=data['is_mag_phase'],
             build_pandas=data['pandas'],
             subcases=data['subcase'],
-            #include_results=data['include'],
+            include_results=data['include'],
             exclude_results=data['exclude'],
             short_stats=data['short_stats'],
             debug=not data['quiet'],

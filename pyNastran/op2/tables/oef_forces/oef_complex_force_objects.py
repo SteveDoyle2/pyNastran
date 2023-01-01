@@ -1306,12 +1306,14 @@ class ComplexPlateForceArray(ComplexForceObject):
             nelements = self.nelements
             ntotal = self.ntotal
         else:
-            #print(f'ComplexPlateForceArray: ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
             self.ntimes, self.nelements = self.nelements, self.ntimes
-            #print(f'-> ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
+            #print(f'ComplexPlateForceArray {self.element_name}-{self.element_type}: ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
             ntimes = self.ntimes
             nelements = self.nelements
-            ntotal = nelements
+            ntimes = self.ntotal
+            ntotal = ntimes
+            #print(f'-> ntimes={ntimes} nelements={nelements} ntotal={ntotal}')
+            self.ntimes = ntimes
         #self.ntimes = 0
         #self.nelements = 0
 
@@ -1321,7 +1323,7 @@ class ComplexPlateForceArray(ComplexForceObject):
         self.element = zeros(nelements, dtype=idtype)
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((ntimes, ntotal, 8), dtype=cfdtype)
+        self.data = np.full((ntimes, ntotal, 8), np.nan, dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1413,7 +1415,7 @@ class ComplexPlateForceArray(ComplexForceObject):
         ielement = self.itime
         ntimes = len(self._times)
         nelement = len(self.element)
-        print(f'ComplexPlateForceArray: itime={itime}/{ntimes} -> dt={dt}; ielement={ielement}/{nelement}-> eid={eid}')
+        #print(f'ComplexPlateForceArray: itime={itime}/{ntimes} -> dt={dt}; ielement={ielement}/{nelement}-> eid={eid}')
         self._times[itime] = dt
         self.element[ielement] = eid
         self.data[itime, ielement, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1689,15 +1691,17 @@ class ComplexPlate2ForceArray(ComplexForceObject):
              #(20, 52), (20, 32), (2, 22), (2, 44), (20, 31)}
             #self.all_times = set()
             #self.all_elements = set()
-            print('ComplexPlate2ForceArray %s-%s: ntimes=%s nelements=%s ntotal=%s nnodes/element=%s' % (
-                self.element_name, self.element_type,
-                self.ntimes, self.nelements, self.ntotal, self.nnodes_per_element))
+            #print(f'ComplexPlateForceArray: {self.element_name}-{self.element_type}: '
+                  #f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}'
+                  #f' nnodes/element={self.nnodes_per_element}')
 
-            ntimes = self.nelements
+            #ntimes = self.nelements
             nelements = self.ntimes # ntotal // ntimes
             ntotal = nelements * self.nnodes_per_element
+            #self.itotal // self.nnodes_per_element
+            ntimes = self.ntotal // self.nnodes_per_element
             #ntotal = self.ntotal
-            print('-> ntimes=%s nelements=%s ntotal=%s' % (ntimes, nelements, ntotal))
+            #print('-> ntimes=%s nelements=%s ntotal=%s' % (ntimes, nelements, ntotal))
             #asdf
         self.ntimes = ntimes
         self.nelements = nelements
@@ -2173,7 +2177,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
             nelements = self.nelements
             ntotal = nelements
         else:
-            #print(f'ComplexPlateForceArray: ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
+            #print(f'{self.class_name}: ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
             self.ntimes, self.nelements = self.ntotal, self.ntimes
             #print(f'-> ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
             ntimes = self.ntimes
@@ -3709,6 +3713,7 @@ class ComplexForceMomentArray(ComplexForceObject):
         #[fx, fy, fz, mx, my, mz]
         itime = self.itotal
         itotal = self.itime
+        #print(itime, itotal, dt, eid)
         self._times[itime] = dt
         self.data[itime, itotal, :] = [fx, fy, fz, mx, my, mz]
         self.element[itotal] = eid

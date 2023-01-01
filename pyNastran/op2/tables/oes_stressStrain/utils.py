@@ -1482,7 +1482,7 @@ def oes_cbar_random_10(op2: OP2, data: bytes,
 
 def oes_cbush_real_7(op2: OP2, data: bytes,
                      obj: Union[RealBushStressArray, RealBushStrainArray],
-                     nelements: int, ntotal: int, dt) -> int:
+                     nelements: int, ntotal: int, dt, debug: bool=False) -> int:
     n = 0
     struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'6f', op2.size))
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
@@ -1500,7 +1500,8 @@ def oes_cbush_real_7(op2: OP2, data: bytes,
         (eid_device, tx, ty, tz, rx, ry, rz) = out
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, nonlinear_factor, op2.sort_method)
-        #print(f'CBUSH: eid_device={eid_device} eid={eid} dt={nonlinear_factor} nf={nonlinear_factor} -> {obj.data.shape}')
+        if debug:  # pragma: no cover
+            print(f'CBUSH: eid_device={eid_device} eid={eid} dt={nonlinear_factor} nf={nonlinear_factor} -> {obj.data.shape}')
 
         add_sort_x(dt, eid, tx, ty, tz, rx, ry, rz)
     return n
@@ -2100,7 +2101,7 @@ def oes_csolid_composite_real(op2: OP2, data: bytes,
 
 def oes_shell_composite_complex_11(op2: OP2,
                                    data: bytes,
-                                   obj: ComplexLayeredCompositesArray,
+                                   obj: Union[ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray],
                                    ntotal: int, nelements: int, sort_method: int,
                                    dt: Any, is_magnitude_phase: bool) -> int:
     """OESCP, OESTRCP"""

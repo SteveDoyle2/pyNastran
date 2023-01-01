@@ -287,7 +287,7 @@ class RealGridPointForcesArray(GridPointForces):
         #print("***name=%s ntimes=%s ntotal=%s" % (
             #self.element_names, self.ntimes, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
 
         assert self.ntotal < 2147483647, self.ntotal # max int
         if self.is_unique:
@@ -1539,7 +1539,7 @@ class ComplexGridPointForcesArray(GridPointForces):
             #self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
 
         if self.is_unique:
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype=idtype)

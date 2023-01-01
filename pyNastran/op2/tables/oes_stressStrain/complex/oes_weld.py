@@ -67,7 +67,7 @@ class ComplexWeldArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         idtype, cfdtype = get_complex_times_dtype(self.size)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         self.element = np.zeros(self.nelements, dtype=idtype)

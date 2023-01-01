@@ -1425,7 +1425,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OEFATO2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'auto-correlation for element force'],
             b'OEFCRM2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'cumulative RMS for element force'],
             b'OEFPSD2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'PSD for composite element force'],
-            b'OEFRMS2' : [self._table_passer, self._table_passer, 'number of crossings for element force'], # buggy on isat random
+            b'OEFRMS2' : [self._table_passer, self._table_passer, 'RMS for element force'], # buggy on isat random
             b'OEFNO2'  : [self._table_passer, self._table_passer, 'number of crossings for element force'],
             #b'OEFRMS2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'number of crossings for element force'], # buggy on isat random
         }
@@ -1438,25 +1438,25 @@ class OP2_Scalar(OP2Common, FortranFormat):
             _table_mapper = {
                 #b'OUGRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OUGNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
-                b'OUGRMS2' : [reader_oug._read_oug2_3, reader_oug._read_oug_rms],  # buggy on isat random
-                b'OUGNO2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_no],  # buggy on isat random
+                b'OUGRMS2' : [reader_oug._read_oug2_3, reader_oug._read_oug_rms, 'RMS for U'],  # buggy on isat random
+                b'OUGNO2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_no, 'number of crossings for U'],  # buggy on isat random
 
                 #b'OQMRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OQMNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
-                b'OQMRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_rms],  # buggy on isat random
-                b'OQMNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_no],  # buggy on isat random
+                b'OQMRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_rms, 'RMS for spc_forces'],  # buggy on isat random
+                b'OQMNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_no, 'number of crossings for spc_forces'],  # buggy on isat random
 
                 #b'OSTRRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OSTRNO2' : [self._table_passer, self._table_passer],  # buggy on isat random
-                b'OSTRRMS2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],  # buggy on isat random
-                b'OSTRNO2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],  # buggy on isat random
+                b'OSTRRMS2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'RMS for strain'],  # buggy on isat random
+                b'OSTRNO2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'number of crossings for strain'],  # buggy on isat random
 
-                b'OESRMS2' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],  # buggy on isat random
-                b'OESNO2'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],  # buggy on isat random
+                b'OESRMS2' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'RMS for stress'],  # buggy on isat random
+                b'OESNO2'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'number of crossings for stress'],  # buggy on isat random
                 #b'OESRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OESNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
 
-                b'OEFNO2'  : [reader_oef._read_oef2_3, reader_oef._read_oef2_4],
+                b'OEFNO2'  : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'number of crossings for force'],
                 #b'OEFNO2' : [self._table_passer, self._table_passer], # buggy on isat_random_steve2.op2
             }
             for key, value in _table_mapper.items():
@@ -1836,7 +1836,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
     def _nx_table_passer(self, data, ndata: int):
         """auto-table skipper"""
         desc = self.op2_reader.desc_map.get(self.table_name, '???')
-        assert desc != '???', self.table_name
+        #assert desc != '???', self.table_name
         self.to_nx(f' because table_name={self.table_name} ({desc}) was found')
         self._table_passer(data, ndata)
 
@@ -2153,13 +2153,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
                     else:
                         desc = '???'
                         #self.log.debug('unknown table')
-                        raise
+                        #raise
                 #print(table_name, desc)
                 #desc = desc_map.get(table_name, '???')
                 assert isinstance(desc, str), table_name
                 table_name2 = f'{table_name!r}'
                 self.log.debug(f'  table_name={table_name2:<11} ({desc})')
-                assert desc != '???', table_name2
+                #assert desc != '???', table_name2
 
             self.table_name = table_name
             #if 0:

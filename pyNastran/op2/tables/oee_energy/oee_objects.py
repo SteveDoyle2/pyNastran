@@ -90,7 +90,7 @@ class RealStrainEnergyArray(BaseElement):
 
     def build_data(self, dtype, idtype, fdtype):
         """actually performs the build step"""
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         #self.element = zeros(self.nelements, dtype='int32')
         #if dtype in 'DMIG':
         #print(self.element_name, self.element_type)
@@ -634,7 +634,7 @@ class RealStrainEnergyArray(BaseElement):
         elif self.analysis_code == 5:
             #try:
             #print(self)
-            field5 = self.freq2s[itime]
+            field5 = self.freqs[itime]
             #except AttributeError:  # pragma: no cover
                 #print(self)
                 #raise
@@ -788,7 +788,7 @@ class ComplexStrainEnergyArray(BaseElement):
 
     def build_data(self, dtype):
         """actually performs the build step"""
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         #self.element = np.zeros(self.nelements, dtype='int32')
         self.element = np.zeros((self.ntimes, self.nelements), dtype='int32')
         #self.element_data_type = empty(self.nelements, dtype='|U8')

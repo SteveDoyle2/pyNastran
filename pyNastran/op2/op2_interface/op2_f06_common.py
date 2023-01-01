@@ -933,6 +933,8 @@ class OP2_F06_Common:
 
         #: OUG - eigenvectors
         self.eigenvectors = {}            # tCode=7 thermal=0
+        self.eigenvectors_structure = {}  #  OUG1S
+        self.eigenvectors_fluid = {}  #  OUG1F???
 
         # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
 
@@ -1085,7 +1087,7 @@ class OP2_F06_Common:
             # OUG - displacement, temperatures, eigenvectors, velocity, acceleration
             'displacements', # 'displacements_scaled',
             'temperatures',
-            'eigenvectors',
+            'eigenvectors', 'eigenvectors_structure', 'eigenvectors_fluid',
             'velocities',
             'accelerations',
 
@@ -1163,6 +1165,9 @@ class OP2_F06_Common:
             # LAMA
             'eigenvalues', # LAMA, CLAMA, BLAMA, LAMAS
             'eigenvalues_fluid', # LAMAF
+
+            # OUG1S
+            #'eigenvectors_structure',
 
             # HISADD
             #'convergence_history',

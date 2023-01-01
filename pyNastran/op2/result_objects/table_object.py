@@ -353,7 +353,9 @@ class TableArray(ScalarObject):  # displacement style table
             #print("***SORT2 ntotal=%s nnodes=%s ntimes=%s" % (ntotal, nnodes, ntimes))
         #else:
             #raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
-        self.build_data(ntimes, nnodes, ntotal, self._times_dtype)
+        #self.build_data(ntimes, nnodes, ntotal, self._times_dtype)
+        #print(self.class_name, self.analysis_fmt)
+        self.build_data(ntimes, nnodes, ntotal, self.analysis_fmt)
 
     def build_data(self, ntimes, nnodes, ntotal, float_fmt: str):
         """actually performs the build step"""
@@ -649,6 +651,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def set_as_sort1(self):
         """changes the table into SORT1"""
+        #print(self.class_name, self._times.dtype)
         set_as_sort1(self)
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):

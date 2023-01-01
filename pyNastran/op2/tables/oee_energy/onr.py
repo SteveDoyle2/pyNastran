@@ -171,10 +171,10 @@ class ONR:
         op2.set_id = op2.add_data_parameter(data, 'set_id', b'i', 13, False)
 
         #: Natural eigenvalue - real part
-        op2.eigen_real = op2.add_data_parameter(data, 'eigen_real', b'i', 14, False)
+        op2.eigen_real = op2.add_data_parameter(data, 'eigen_real', b'f', 14, False)
 
         #: Natural eigenvalue - imaginary part
-        op2.eigen_imag = op2.add_data_parameter(data, 'eigen_imag', b'i', 15, False)
+        op2.eigen_imag = op2.add_data_parameter(data, 'eigen_imag', b'f', 15, False)
 
         #: Natural frequency
         op2.freq = op2.add_data_parameter(data, 'freq', b'f', 16, False)
@@ -218,8 +218,8 @@ class ONR:
         #elif op2.analysis_code == 4: # differential stiffness
             #op2.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif op2.analysis_code == 5:   # frequency
-            op2.freq2 = op2.add_data_parameter(data, 'freq2', b'f', 5)  ## frequency
-            op2.data_names = op2.apply_data_code_value('data_names', ['freq2'])
+            op2.freq = op2.add_data_parameter(data, 'freq', b'f', 5)  ## frequency
+            op2.data_names = op2.apply_data_code_value('data_names', ['freq'])
         elif op2.analysis_code == 6:  # transient
             op2.time = op2.add_data_parameter(data, 'time', b'f', 5)  ## time step
             op2.data_names = op2.apply_data_code_value('data_names', ['time'])
@@ -232,7 +232,9 @@ class ONR:
             op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)  ## mode number
             op2.eigr = op2.eigen_real
             op2.eigi = op2.eigen_imag
-            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eigr', 'eign'])
+            op2.data_code['eigr'] = op2.eigr
+            op2.data_code['eigi'] = op2.eigi
+            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif op2.analysis_code == 10:  # nonlinear statics
             self.loadFactor = op2.add_data_parameter(data, 'loadFactor', b'f', 5)  ## load factor
             op2.data_names = op2.apply_data_code_value('data_names', ['loadFactor'])
@@ -317,10 +319,10 @@ class ONR:
         op2.set_id = op2.add_data_parameter(data, 'set_id', b'i', 13, False)
 
         #: Natural eigenvalue - real part
-        op2.eigen_real = op2.add_data_parameter(data, 'eigen_real', b'i', 14, False)
+        #op2.eigen_real = op2.add_data_parameter(data, 'eigen_real', b'f', 14, False)
 
         #: Natural eigenvalue - imaginary part
-        op2.eigen_imag = op2.add_data_parameter(data, 'eigen_imag', b'i', 15, False)
+        #op2.eigen_imag = op2.add_data_parameter(data, 'eigen_imag', b'f', 15, False)
 
         #: Natural frequency
         op2.freq = op2.add_data_parameter(data, 'freq', b'f', 16, False)

@@ -108,7 +108,7 @@ class RealSolidCompositeArray(OES_Object):
         #self.ntotal = ntotal
         #self.nelements = nelements
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
 
         # TODO: could be more efficient by using nelements for cid
         #element_cid = zeros((nelements, 2), dtype=idtype)

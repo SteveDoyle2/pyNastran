@@ -282,7 +282,6 @@ class ComplexLayeredCompositesArray(OES_Object):
         return page_num - 1
 
 
-
 class ComplexLayeredCompositeStressArray(ComplexLayeredCompositesArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexLayeredCompositesArray.__init__(self, data_code, is_sort1, isubcase, dt)

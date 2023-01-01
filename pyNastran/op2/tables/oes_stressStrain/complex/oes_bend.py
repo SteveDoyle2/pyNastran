@@ -56,7 +56,8 @@ class ComplexBendArray(OES_Object):
 
         #self.names = []
         #self.nelements //= nnodes
-        self.nelements //= self.ntimes
+        if self.is_sort1:
+            self.nelements //= self.ntimes
         self.ntotal = self.nelements * nnodes * 2
         #self.ntotal
         self.itime = 0
@@ -64,21 +65,32 @@ class ComplexBendArray(OES_Object):
         self.itotal = 0
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = np.zeros(self.ntimes, 'float32')
+        if self.is_sort1:
+            ntimes = self.ntimes
+            ntotal = self.ntotal
+        else:
+            #print("ComplexBendArray: ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+            nelements = self.ntimes
+            ntotal = nelements * 2
+            ntimes = self.ntotal // ntotal
+            #print("-> ntimes=%s nelements=%s ntotal=%s" % (ntimes, nelements, ntotal))
+            #aaa
+            self.ntimes = ntimes
+            self.nelements = nelements
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
-        self.element_node = np.zeros((self.ntotal, 2), 'int32')
+        self.element_node = np.zeros((ntotal, 2), dtype='int32')
 
         # the number is messed up because of the offset for the element's properties
-        if not self.nelements * nnodes * 2 == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
-                self.ntimes, self.nelements, nnodes, self.nelements * nnodes,
-                self.ntotal)
-            raise RuntimeError(msg)
+        #if not self.nelements * nnodes * 2 == self.ntotal:
+            #msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                #self.ntimes, self.nelements, nnodes, self.nelements * nnodes,
+                #self.ntotal)
+            #raise RuntimeError(msg)
 
         # [angle, sc, sd, se, sf]
-        self.data = np.zeros((self.ntimes, self.ntotal, 5), 'complex64')
+        self.data = np.full((ntimes, ntotal, 5), np.nan, 'complex64')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -144,6 +156,21 @@ class ComplexBendArray(OES_Object):
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [angle, sc, sd, se, sf]
         self.element_node[self.itotal] = [eid, grid]
+        #self.ielement += 1
+        self.itotal += 1
+
+    def add_sort2(self, dt, eid, grid, angle, sc, sd, se, sf):
+        """unvectorized method for adding SORT2 transient data"""
+        assert self.sort_method == 2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        inode = self.itotal % 2
+        itime = self.itotal // 2
+        itotal = self.itime * 2 + inode
+        print(self.class_name, dt, eid, itime, itotal, inode)
+
+        self._times[itime] = dt
+        self.data[itime, itotal] = [angle, sc, sd, se, sf]
+        self.element_node[itotal] = [eid, grid]
         #self.ielement += 1
         self.itotal += 1
 

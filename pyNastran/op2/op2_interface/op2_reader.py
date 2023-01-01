@@ -214,6 +214,11 @@ class OP2Reader:
         desc_map = {
             b'PERF': 'aero matrix',
             b'META': 'string matrix',
+            b'TUG1' : 'external superelement',
+            b'TQG1' : 'external superelement',
+            b'MKQG1' : 'external superelement',
+            b'MATRV': 'external superelement',
+            b'MUG1B': 'external superelement',
         }
         desc_map.update({key: values[1] for key, values in self.mapped_tables.items()})
         #desc_map = {key: values[1] for key, values in self.mapped_tables.items()}
@@ -248,7 +253,7 @@ class OP2Reader:
             if op2.post is None:
                 op2.post = -1
             self.read_markers([3])
-            data = self.read_block()   # TODO: is this the date...pretty sure at least for MSC
+            data = self._read_block()   # TODO: is this the date...pretty sure at least for MSC
             ndata = len(data)
             if ndata == 4:
                 one = Struct(self._endian + b'i').unpack(data)[0]
@@ -622,8 +627,13 @@ class OP2Reader:
         eqexin2 = np.frombuffer(data, dtype=op2.idtype)
 
         self.read_markers([-5, 1, 0, 0])
-        nid, dof, doftype = eqexin_to_nid_dof_doftype(eqexin1, eqexin2)
-        op2.op2_results.eqexin = EQEXIN(nid, dof, doftype)
+
+        result_name = 'eqexin'
+        if op2._results.is_saved(result_name):
+            op2._results._found_result(result_name)
+
+            nid, dof, doftype = eqexin_to_nid_dof_doftype(eqexin1, eqexin2)
+            op2.op2_results.eqexin = EQEXIN(nid, dof, doftype)
         #print('nid = %s' % nid.tolist()) [1,2,3,...]
         #print('dof = %s' % dof.tolist()) [1,7,13,...]
         #print('doftype = %s' % doftype.tolist())
@@ -1125,7 +1135,7 @@ class OP2Reader:
                 #if marker == -4:
                     #self.show(200, types='isq', endian=None, force=False)
                 assert marker in [1, 2, 3, 10, 13, 16], marker
-            data = self.read_block()
+            data = self._read_block()
             ndata = len(data)
             nvalues = ndata // size
             if nvalues == 2:
@@ -1233,7 +1243,7 @@ class OP2Reader:
         print('****marker  = %s' % marker)
         #print('****marker2 = %s' % marker2)
         #assert marker == 696, marker
-        #data = self.read_block()
+        #data = self._read_block()
         #self.show_data(data)
 
         #marker = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
@@ -2219,7 +2229,7 @@ class OP2Reader:
                 nfields_test = self.get_marker1(rewind=True)
                 while nfields_test > 0:
                     nfields = self.get_marker1(rewind=False)
-                    block = self.read_block()
+                    block = self._read_block()
                     nblock = len(block)
                     ndouble = (nblock - 4) // 8
                     fmt = mapfmt(self._endian + b'i%dd' % (ndouble), self.size)
@@ -2658,12 +2668,14 @@ class OP2Reader:
     def read_rst(self):
         """
         reads the RST table (restart file?)
+
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\k402rerun3d2ss.op2
         """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         header_data = self._read_record()  # (101, 1, 0, 0, 0, 0, 0) - longs
-        self.show_data(header_data, types='qds', endian=None, force=False)
+        #self.show_data(header_data, types='qds', endian=None, force=False)
 
         self.read_3_markers([-2, 1, 0])
         data = self._read_record()
@@ -2675,18 +2687,57 @@ class OP2Reader:
 
         self.read_3_markers([-3, 1, 0])
         data = self._read_record()
-        self.show_data(data, types='qd', endian=None, force=False)
+        #self.show_data(data, types='qd', endian=None, force=False)
 
 
         self.read_3_markers([-4, 1, 0])
         data = self._read_record()
+        #self.show_data(data, types='ifqds', endian=None, force=False)
 
-        #(1, 10, 4617315517961601024, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536,
-        # -1, -1)
-        ndata = len(data) - 5 * 8
-        print(len(data))
-        out = unpack('<2qd ' + str(ndata) +'s' + ' 2q', data)
-        print(out)
+        if 0:  # pragma: no cover
+            #(1, 10, 4617315517961601024, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536,
+            # -1, -1)
+            ndata = len(data) - 5 * 8
+            #print(len(data))
+            aint, bint, cfloat, spaces, m1a, m1b = unpack('<2qd ' + str(ndata) +'s' + ' 2q', data)
+            #print((aint, bint, cfloat, spaces, m1a, m1b))
+            spaces = spaces.decode('latin1').strip()
+            print((aint, bint, cfloat, spaces, m1a, m1b))
+
+
+        ints = np.frombuffer(data, op2.idtype8)
+        #print('ints', ints)
+        i1 = np.where(ints == -1)[0]
+        print('i1', i1)
+        i0 = i1[:-1] + 1
+        i0 = np.hstack([[0], i0])
+
+        print(f'i0={i0}')
+        print(f'i1={i1}')
+
+        # header = (101, 1, 0, 0, 0, 0, 0)
+        # num = 402
+        # data = [
+        #    (1, 16, 0.8000000000000002, '', -1); nspaces=1024
+        #    (2, 24, 1.2, '', -1); nspaces=1024
+        # ]
+        for i0i, i1i in zip(i0, i1):
+            if i0i == i1i:
+                continue
+            datai = data[i0i*8:i1i*8+8]
+            ndatai = len(datai) - 4 * 8
+            fmt = '<2qd ' + str(ndatai) +'s' + ' q'
+            #print(fmt)
+            aint, bint, cfloat, spaces, m1a = unpack(fmt, datai)
+            nspaces = len(spaces)
+            spaces = spaces.decode('latin1').strip()
+            print((aint, bint, cfloat, spaces, m1a), nspaces)
+            #self.show_data(datai, types='qds', endian=None, force=False)
+        #aaa
+        #ints2 = [val if val != 2314885530818453536 else ' '
+                 #for val in ints]
+        #ints2[2] = cfloat
+        #print(ints2)
         #ints = np.frombuffer(data, op2.idtype8).tolist()
         #floats = np.frombuffer(data, op2.fdtype8).tolist()
 
@@ -2694,7 +2745,7 @@ class OP2Reader:
         self.read_3_markers([-5, 1, 0, 0])
 
         #self.show(32, types='ifqds', endian=None, force=False)
-        asdf
+        #asdf
 
     def read_gpl(self):
         """
@@ -2881,12 +2932,13 @@ class OP2Reader:
         ## TODO: no idea how this works...
         read_mode = self.read_mode
         result_name = 'gpdt'
-        if op2._results.is_not_saved(result_name):
-            read_mode = 2 #  fake the read mode to skip the table
-        else:
-            op2._results._found_result(result_name)
+        #if op2._results.is_not_saved(result_name):
+            #read_mode = 2 #  fake the read mode to skip the table
+        #else:
+            #op2._results._found_result(result_name)
 
-        if read_mode == 1:
+        if read_mode == 1 and op2._results.is_saved(result_name):
+            op2._results._found_result(result_name)
             i = 0
             data = read_record() # nid,cp,x,y,z,cd,ps
             ndata = len(data)
@@ -3086,238 +3138,242 @@ class OP2Reader:
             # assert len(data) % xword == 0
 
             numwide = nvalues4 // nnodes
-            if self.size == 4:
-                #C:\NASA\m4\formats\git\examples\x33_blog\blog_materials\pressure_vessel_fem1_sim1-my_limit_load.bdf
-                #GRID*                  1               0-1.792343211E+003.4539249252E+00+
-                #*       3.6302008282E-01               0
-                #GRID*                  2               0-1.792313297E+003.3970433059E+00+
-                #*       7.2220293673E-01               0
-                #GRID*                  3               0-1.792337984E+003.3029109367E+00+
-                #*       1.0733895770E+00               0
-                #GRID*                  4               0-1.792341147E+003.1725968908E+00+
-                #*       1.4128346960E+00               0
-                #GRID*                  5               0-1.792333634E+003.0076863630E+00+
-                #*       1.7364594482E+00               0
+            result_name = 'bgpdt'
+            if op2._results.is_saved(result_name):
+                op2._results._found_result(result_name)
 
-                assert nvalues4 % nnodes == 0, nvalues4 % nnodes
-                #print(self.size, numwide, nvalues4, len(data))
+                if self.size == 4:
+                    #C:\NASA\m4\formats\git\examples\x33_blog\blog_materials\pressure_vessel_fem1_sim1-my_limit_load.bdf
+                    #GRID*                  1               0-1.792343211E+003.4539249252E+00+
+                    #*       3.6302008282E-01               0
+                    #GRID*                  2               0-1.792313297E+003.3970433059E+00+
+                    #*       7.2220293673E-01               0
+                    #GRID*                  3               0-1.792337984E+003.3029109367E+00+
+                    #*       1.0733895770E+00               0
+                    #GRID*                  4               0-1.792341147E+003.1725968908E+00+
+                    #*       1.4128346960E+00               0
+                    #GRID*                  5               0-1.792333634E+003.0076863630E+00+
+                    #*       1.7364594482E+00               0
 
-                if numwide == 4:
-                    assert numwide == 4, numwide
-                    ntotal = 16 # 4*4
-                    assert len(data) % ntotal == 0, len(data) % ntotal
-                    structi = Struct(self._endian + b'i3f')  # 16
-                    for j in range(nnodes):
-                        out = structi.unpack(data[i:i+ntotal])
-                        cd, x, y, z = out
-                        outs = f'nid={j+1} cd={cd} xyz=({x:g},{y:g},{z:g})'
-                        #print(outs)
-                        i += ntotal
-                    # [cd, x, y, z]
-                    cd = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 4)[:, :-3]
-                    xyz = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 4)[:, -3:]
+                    assert nvalues4 % nnodes == 0, nvalues4 % nnodes
+                    #print(self.size, numwide, nvalues4, len(data))
 
-                elif numwide == 12:
-                    ntotal = 48 # (9+3)*4
-                    structi = Struct(self._endian + b'6i3d')
-                    # len(data) // 4 / ngrids = 4
-                    # 30768 // 4 / 1923
-                    nrows = get_table_size_from_ncolumns('BGPDT', nvalues4, 12)
-                    for j in range(nnodes):
-                        edata = data[i:i+ntotal]
-                        #self.show_data(edata, 'ifqd')
-                        out = structi.unpack(edata)
+                    if numwide == 4:
+                        assert numwide == 4, numwide
+                        ntotal = 16 # 4*4
+                        assert len(data) % ntotal == 0, len(data) % ntotal
+                        structi = Struct(self._endian + b'i3f')  # 16
+                        for j in range(nnodes):
+                            out = structi.unpack(data[i:i+ntotal])
+                            cd, x, y, z = out
+                            outs = f'nid={j+1} cd={cd} xyz=({x:g},{y:g},{z:g})'
+                            #print(outs)
+                            i += ntotal
+                        # [cd, x, y, z]
+                        cd = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 4)[:, :-3]
+                        xyz = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 4)[:, -3:]
 
-                        #self.show_data(data[i:i+ntotal], types='qd')
-                        #print(out)
-                        cd, sil, nid, sixtyone, ps, zero_c, x, y, z = out
-                        outs = f'cd={cd} sil={sil} nid={nid} sixtyone={sixtyone} ps={ps} zero_c={zero_c} xyz=({x:g},{y:g},{z:g})'
-                        assert nid > 0, outs
-                        #print(outs)
-                        #assert zero_a in [0, 225, 362, 499], out
-                        #assert zero_c == 0, outs
-                        #11: C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\gluedg01f.op2
-                        assert sixtyone in [11, 12, 61], f'sixtyone={sixtyone} outs={outs}'
-                        i += ntotal
+                    elif numwide == 12:
+                        ntotal = 48 # (9+3)*4
+                        structi = Struct(self._endian + b'6i3d')
+                        # len(data) // 4 / ngrids = 4
+                        # 30768 // 4 / 1923
+                        nrows = get_table_size_from_ncolumns('BGPDT', nvalues4, 12)
+                        for j in range(nnodes):
+                            edata = data[i:i+ntotal]
+                            #self.show_data(edata, 'ifqd')
+                            out = structi.unpack(edata)
 
-                    # [cd, x, y, z]
-                    #self.show_data(data, types='if', endian=None, force=False)
-                    #[0, num, nid, 61, 0, 0, x, _, y, _, z, _]
-                    ints = np.frombuffer(data, op2.idtype).reshape(nrows, 12).copy()
-                    floats = np.frombuffer(data, 'float64').reshape(nrows, 6).copy()
-                    cd = ints[:, 0]
-                    xyz = floats[:, 1:]
-                    #print(ints[:-6])
-                    #print(xyz)
-                else:  # pragma: no cover
-                    raise NotImplementedError((self.size, numwide))
-                op2.op2_results.bgpdt = BGPDT(cd, xyz)
-            else:
-                #bad = []
-                #nvalues = len(data) // 4
-                #for i in [2, 3, 6]: # 2-16 checked
-                    #if nvalues % i != 0:
-                        #bad.append(i)
-                #if bad:
-                    #print(nvalues, bad)
-                #self.show_data(data, types='ifqd')
-                #print(nvalues4)
-                # 112 / 28.
-                #nrows9 = nvalues4 // 18
-                #nrows4 = nvalues4 // 8
-                #nvalues_9 = nvalues4 % 18
-                #nvalues_4 = nvalues4 % 8
-                #print('nvalues_9', nvalues_9, nvalues_9)
-                #print('nvalues_4', nvalues_4, nvalues_4)
-                if numwide == 18: # nvalues_9 == 0 and nvalues_4 != 0:
-                    #assert nvalues4 % 18 == 0, nvalues4 % 18
-                    #print(nrows)
-                    #i = np.arange(0, nrows)
-                    #i1 = i * 4
-                    #i2 = (i + 1) * 4
-                    #zero_a, sil, nid, sixtyone, ps, zero_c, x, y, z
-                    ints = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 9)[:, :-3]
-                    floats = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 9)[:, -3:]
-                    nid = ints[:, 2]
-                    cd = ints[:, [4, 5]]
-                    xyz = floats
+                            #self.show_data(data[i:i+ntotal], types='qd')
+                            #print(out)
+                            cd, sil, nid, sixtyone, ps, zero_c, x, y, z = out
+                            outs = f'cd={cd} sil={sil} nid={nid} sixtyone={sixtyone} ps={ps} zero_c={zero_c} xyz=({x:g},{y:g},{z:g})'
+                            assert nid > 0, outs
+                            #print(outs)
+                            #assert zero_a in [0, 225, 362, 499], out
+                            #assert zero_c == 0, outs
+                            #11: C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\gluedg01f.op2
+                            assert sixtyone in [11, 12, 61], f'sixtyone={sixtyone} outs={outs}'
+                            i += ntotal
 
-                    #GRID           1       0    27.5    20.0     0.0       0
-                    #GRID           2       0 25.30329 25.30329     0.0       0
-                    #GRID           3       0    20.0    27.5     0.0       0
-                    #GRID           4       0 14.69671 25.30329     0.0       0
-
-                    #GRID           1       0    27.5    20.0     0.0       0
-                    #GRID           2       025.3032925.30329     0.0       0
-                    #GRID           3       0    20.0    27.5     0.0       0
-                    #GRID           4       014.6967125.30329     0.0       0
-                    #GRID           5       0    12.5    20.0     0.0       0
-                    #GRID           6       014.6967114.69671     0.0       0
-                    #GRID           7       0    20.0    12.5     0.0       0
-                    #GRID           8       025.3032914.69671     0.0       0
-                    #GRID           9       0 22.3122 7.30685     0.0       0
-                    #GRID          10       017.8372532.93714     0.0       0
-                    #GRID          11       07.22962217.75039     0.0       0
-                    #GRID          12       032.86626 17.7885     0.0       0
-                    #GRID          13       0 30.56189.511215     0.0       0
-                    #GRID          14       024.9442132.70425     0.0       0
-                    #GRID          15       032.4224632.42249     0.0       0
-                    #GRID          16       032.6858324.92913     0.0       0
-                    #GRID          17       09.68575330.94779     0.0       0
-                    #GRID          18       07.90302224.50037     0.0       0
-                    #GRID          19       09.0897749.672205     0.0       0
-                    #GRID          20       015.524677.918942     0.0       0
-                    #GRID          21       0     0.0    32.0     0.0       0
-                    #GRID          22       0     0.0    24.0     0.0       0
-                    #GRID          23       0     0.0    16.0     0.0       0
-                    #GRID          24       0     0.0     8.0     0.0       0
-                    #GRID          25       0     8.0     0.0     0.0       0
-                    #GRID          26       0    16.0     0.0     0.0       0
-                    #GRID          27       0    24.0     0.0     0.0       0
-                    #GRID          28       0    32.0     0.0     0.0       0
-                    #GRID          29       0    32.0    40.0     0.0       0
-                    #GRID          30       0    24.0    40.0     0.0       0
-                    #GRID          31       0    16.0    40.0     0.0       0
-                    #GRID          32       0     8.0    40.0     0.0       0
-                    #GRID          33       0    40.0     8.0     0.0       0
-                    #GRID          34       0    40.0    16.0     0.0       0
-                    #GRID          35       0    40.0    24.0     0.0       0
-                    #GRID          36       0    40.0    32.0     0.0       0
-                    #GRID          37       0     0.0     0.0     0.0       0
-                    #GRID          38       0     0.0    40.0     0.0       0
-                    #GRID          39       0    40.0     0.0     0.0       0
-                    #GRID          40       0    40.0    40.0     0.0       0
-                    #GRID          41       0    12.5    20.0    20.1       0
-                    #(0, 1, 1, 61, 0, 0, 27.5, 20.0, 0.0)
-                    #(0, 7, 2, 61, 0, 0, 25.30329, 25.30329, 0.0)
-                    #(0, 13, 3, 61, 0, 0, 20.0, 27.5, 0.0)
-                    #(0, 19, 4, 61, 0, 0, 14.69671, 25.30329, 0.0)
-                    #(0, 25, 5, 61, 0, 0, 12.5, 20.0, 0.0)
-                    #(0, 31, 6, 61, 0, 0, 14.69671, 14.69671, 0.0)
-                    #(0, 37, 7, 61, 0, 0, 20.0, 12.5, 0.0)
-                    #(0, 43, 8, 61, 0, 0, 25.30329, 14.69671, 0.0)
-                    #(0, 49, 9, 61, 0, 0, 22.3122, 7.30685, 0.0)
-                    #(0, 55, 10, 61, 0, 0, 17.83725, 32.93714, 0.0)
-                    #(0, 61, 11, 61, 0, 0, 7.229622, 17.75039, 0.0)
-                    #(0, 67, 12, 61, 0, 0, 32.86626, 17.7885, 0.0)
-                    #(0, 73, 13, 61, 0, 0, 30.5618, 9.511215, 0.0)
-                    #(0, 79, 14, 61, 0, 0, 24.94421, 32.70425, 0.0)
-                    #(0, 85, 15, 61, 0, 0, 32.42246, 32.42249, 0.0)
-                    #(0, 91, 16, 61, 0, 0, 32.68583, 24.92913, 0.0)
-                    #(0, 97, 17, 61, 0, 0, 9.685753, 30.94779, 0.0)
-                    #(0, 103, 18, 61, 0, 0, 7.903022, 24.50037, 0.0)
-                    #(0, 109, 19, 61, 0, 0, 9.089774, 9.672205, 0.0)
-                    #(0, 115, 20, 61, 0, 0, 15.52467, 7.918942, 0.0)
-                    #(0, 121, 21, 61, 0, 0, 0.0, 32.0, 0.0)
-                    #(0, 127, 22, 61, 0, 0, 0.0, 24.0, 0.0)
-                    #(0, 133, 23, 61, 0, 0, 0.0, 16.0, 0.0)
-                    #(0, 139, 24, 61, 0, 0, 0.0, 8.0, 0.0)
-                    #(0, 145, 25, 61, 0, 0, 8.0, 0.0, 0.0)
-                    #(0, 151, 26, 61, 0, 0, 16.0, 0.0, 0.0)
-                    #(0, 157, 27, 61, 0, 0, 24.0, 0.0, 0.0)
-                    #(0, 163, 28, 61, 0, 0, 32.0, 0.0, 0.0)
-                    #(0, 169, 29, 61, 0, 0, 32.0, 40.0, 0.0)
-                    #(0, 175, 30, 61, 0, 0, 24.0, 40.0, 0.0)
-                    #(0, 181, 31, 61, 0, 0, 16.0, 40.0, 0.0)
-                    #(0, 187, 32, 61, 0, 0, 8.0, 40.0, 0.0)
-                    #(0, 193, 33, 61, 0, 0, 40.0, 8.0, 0.0)
-                    #(0, 199, 34, 61, 0, 0, 40.0, 16.0, 0.0)
-                    #(0, 205, 35, 61, 0, 0, 40.0, 24.0, 0.0)
-                    #(0, 211, 36, 61, 0, 0, 40.0, 32.0, 0.0)
-                    #(0, 217, 37, 61, 0, 0, 0.0, 0.0, 0.0)
-                    #(0, 223, 38, 61, 0, 0, 0.0, 40.0, 0.0)
-                    #(0, 229, 39, 61, 0, 0, 40.0, 0.0, 0.0)
-                    #(0, 235, 40, 61, 0, 0, 40.0, 40.0, 0.0)
-                    #(0, 241, 41, 61, 0, 0, 12.5, 20.0, 20.1)
-                    #doubles (float64) = (0, 7, 2, 61, 0.0, 0.0, 25.30329, 25.30329, 0.0)
-                    #long long (int64) = (0, 7, 2, 61, 0, 0, 25.30329, 25.30329, 0)
-                    #self.show_data(data[:80], types='qd')
-                    ntotal = 72 # 9*8
-                    structi = Struct(self._endian + b'6q3d')
-                    for j in range(nnodes):
-                        out = structi.unpack(data[i:i+ntotal])
-                        #self.show_data(data[i:i+ntotal], types='qd')
-                        #print(out)
-                        cd, sil, nid, sixtyone, ps, zero_c, x, y, z = out
-                        outs = f'cd={cd} sil={sil} nid={nid} sixtyone={sixtyone} ps={ps} zero_c={zero_c} xyz=({x:g},{y:g},{z:g})'
-                        assert nid > 0, outs
-
-                        assert zero_c == 0, outs
-                        assert sixtyone == 61, outs
-                        i += ntotal
-
-
-                # elif nvalues_9 != 0 and nvalues_4 == 0:
-                elif numwide == 8:
-                    #assert numwide == 8, numwide
-                    ntotal = 32 # 24+4 = 28
-                    assert len(data) % ntotal == 0, len(data) % ntotal
-                    structi = Struct(self._endian + b'q3d')  # 28
-                    for j in range(nnodes):
-                        out = structi.unpack(data[i:i+ntotal])
-                        #self.show_data(data[i:i+ntotal], types='ifqd')
-                        #print(out)
-                        cd, x, y, z = out
-                        i += ntotal
-                    # [cd, x, y, z]
-                    cd = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 4)[:, :-3]
-                    xyz = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 4)[:, -3:]
+                        # [cd, x, y, z]
+                        #self.show_data(data, types='if', endian=None, force=False)
+                        #[0, num, nid, 61, 0, 0, x, _, y, _, z, _]
+                        ints = np.frombuffer(data, op2.idtype).reshape(nrows, 12).copy()
+                        floats = np.frombuffer(data, 'float64').reshape(nrows, 6).copy()
+                        cd = ints[:, 0]
+                        xyz = floats[:, 1:]
+                        #print(ints[:-6])
+                        #print(xyz)
+                    else:  # pragma: no cover
+                        raise NotImplementedError((self.size, numwide))
+                    op2.op2_results.bgpdt = BGPDT(cd, xyz)
                 else:
-                    raise RuntimeError((self.size, numwide))
-                #cd = ints[::7]
-                # [cd, x, _, y, _, z, _]
+                    #bad = []
+                    #nvalues = len(data) // 4
+                    #for i in [2, 3, 6]: # 2-16 checked
+                        #if nvalues % i != 0:
+                            #bad.append(i)
+                    #if bad:
+                        #print(nvalues, bad)
+                    #self.show_data(data, types='ifqd')
+                    #print(nvalues4)
+                    # 112 / 28.
+                    #nrows9 = nvalues4 // 18
+                    #nrows4 = nvalues4 // 8
+                    #nvalues_9 = nvalues4 % 18
+                    #nvalues_4 = nvalues4 % 8
+                    #print('nvalues_9', nvalues_9, nvalues_9)
+                    #print('nvalues_4', nvalues_4, nvalues_4)
+                    if numwide == 18: # nvalues_9 == 0 and nvalues_4 != 0:
+                        #assert nvalues4 % 18 == 0, nvalues4 % 18
+                        #print(nrows)
+                        #i = np.arange(0, nrows)
+                        #i1 = i * 4
+                        #i2 = (i + 1) * 4
+                        #zero_a, sil, nid, sixtyone, ps, zero_c, x, y, z
+                        ints = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 9)[:, :-3]
+                        floats = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 9)[:, -3:]
+                        nid = ints[:, 2]
+                        cd = ints[:, [4, 5]]
+                        xyz = floats
 
-                #print(ints)
-                #print(floats)
-                #print(nrows*7, len(floats))
-                #ints = ints[2:].reshape(nrows, 7)
-                #floats = floats[2:].reshape(nrows, 7)
-                #for inti, floati in zip(ints, floats):
-                    #print(inti[:-3], floats[-3:])
-                #print(xyz, xyz.shape)
-                op2.op2_results.bgpdt = BGPDT(cd, xyz)
-            #print('cd = %s' % cd.tolist())
-            #print('xyz:\n%s' % xyz)
+                        #GRID           1       0    27.5    20.0     0.0       0
+                        #GRID           2       0 25.30329 25.30329     0.0       0
+                        #GRID           3       0    20.0    27.5     0.0       0
+                        #GRID           4       0 14.69671 25.30329     0.0       0
+
+                        #GRID           1       0    27.5    20.0     0.0       0
+                        #GRID           2       025.3032925.30329     0.0       0
+                        #GRID           3       0    20.0    27.5     0.0       0
+                        #GRID           4       014.6967125.30329     0.0       0
+                        #GRID           5       0    12.5    20.0     0.0       0
+                        #GRID           6       014.6967114.69671     0.0       0
+                        #GRID           7       0    20.0    12.5     0.0       0
+                        #GRID           8       025.3032914.69671     0.0       0
+                        #GRID           9       0 22.3122 7.30685     0.0       0
+                        #GRID          10       017.8372532.93714     0.0       0
+                        #GRID          11       07.22962217.75039     0.0       0
+                        #GRID          12       032.86626 17.7885     0.0       0
+                        #GRID          13       0 30.56189.511215     0.0       0
+                        #GRID          14       024.9442132.70425     0.0       0
+                        #GRID          15       032.4224632.42249     0.0       0
+                        #GRID          16       032.6858324.92913     0.0       0
+                        #GRID          17       09.68575330.94779     0.0       0
+                        #GRID          18       07.90302224.50037     0.0       0
+                        #GRID          19       09.0897749.672205     0.0       0
+                        #GRID          20       015.524677.918942     0.0       0
+                        #GRID          21       0     0.0    32.0     0.0       0
+                        #GRID          22       0     0.0    24.0     0.0       0
+                        #GRID          23       0     0.0    16.0     0.0       0
+                        #GRID          24       0     0.0     8.0     0.0       0
+                        #GRID          25       0     8.0     0.0     0.0       0
+                        #GRID          26       0    16.0     0.0     0.0       0
+                        #GRID          27       0    24.0     0.0     0.0       0
+                        #GRID          28       0    32.0     0.0     0.0       0
+                        #GRID          29       0    32.0    40.0     0.0       0
+                        #GRID          30       0    24.0    40.0     0.0       0
+                        #GRID          31       0    16.0    40.0     0.0       0
+                        #GRID          32       0     8.0    40.0     0.0       0
+                        #GRID          33       0    40.0     8.0     0.0       0
+                        #GRID          34       0    40.0    16.0     0.0       0
+                        #GRID          35       0    40.0    24.0     0.0       0
+                        #GRID          36       0    40.0    32.0     0.0       0
+                        #GRID          37       0     0.0     0.0     0.0       0
+                        #GRID          38       0     0.0    40.0     0.0       0
+                        #GRID          39       0    40.0     0.0     0.0       0
+                        #GRID          40       0    40.0    40.0     0.0       0
+                        #GRID          41       0    12.5    20.0    20.1       0
+                        #(0, 1, 1, 61, 0, 0, 27.5, 20.0, 0.0)
+                        #(0, 7, 2, 61, 0, 0, 25.30329, 25.30329, 0.0)
+                        #(0, 13, 3, 61, 0, 0, 20.0, 27.5, 0.0)
+                        #(0, 19, 4, 61, 0, 0, 14.69671, 25.30329, 0.0)
+                        #(0, 25, 5, 61, 0, 0, 12.5, 20.0, 0.0)
+                        #(0, 31, 6, 61, 0, 0, 14.69671, 14.69671, 0.0)
+                        #(0, 37, 7, 61, 0, 0, 20.0, 12.5, 0.0)
+                        #(0, 43, 8, 61, 0, 0, 25.30329, 14.69671, 0.0)
+                        #(0, 49, 9, 61, 0, 0, 22.3122, 7.30685, 0.0)
+                        #(0, 55, 10, 61, 0, 0, 17.83725, 32.93714, 0.0)
+                        #(0, 61, 11, 61, 0, 0, 7.229622, 17.75039, 0.0)
+                        #(0, 67, 12, 61, 0, 0, 32.86626, 17.7885, 0.0)
+                        #(0, 73, 13, 61, 0, 0, 30.5618, 9.511215, 0.0)
+                        #(0, 79, 14, 61, 0, 0, 24.94421, 32.70425, 0.0)
+                        #(0, 85, 15, 61, 0, 0, 32.42246, 32.42249, 0.0)
+                        #(0, 91, 16, 61, 0, 0, 32.68583, 24.92913, 0.0)
+                        #(0, 97, 17, 61, 0, 0, 9.685753, 30.94779, 0.0)
+                        #(0, 103, 18, 61, 0, 0, 7.903022, 24.50037, 0.0)
+                        #(0, 109, 19, 61, 0, 0, 9.089774, 9.672205, 0.0)
+                        #(0, 115, 20, 61, 0, 0, 15.52467, 7.918942, 0.0)
+                        #(0, 121, 21, 61, 0, 0, 0.0, 32.0, 0.0)
+                        #(0, 127, 22, 61, 0, 0, 0.0, 24.0, 0.0)
+                        #(0, 133, 23, 61, 0, 0, 0.0, 16.0, 0.0)
+                        #(0, 139, 24, 61, 0, 0, 0.0, 8.0, 0.0)
+                        #(0, 145, 25, 61, 0, 0, 8.0, 0.0, 0.0)
+                        #(0, 151, 26, 61, 0, 0, 16.0, 0.0, 0.0)
+                        #(0, 157, 27, 61, 0, 0, 24.0, 0.0, 0.0)
+                        #(0, 163, 28, 61, 0, 0, 32.0, 0.0, 0.0)
+                        #(0, 169, 29, 61, 0, 0, 32.0, 40.0, 0.0)
+                        #(0, 175, 30, 61, 0, 0, 24.0, 40.0, 0.0)
+                        #(0, 181, 31, 61, 0, 0, 16.0, 40.0, 0.0)
+                        #(0, 187, 32, 61, 0, 0, 8.0, 40.0, 0.0)
+                        #(0, 193, 33, 61, 0, 0, 40.0, 8.0, 0.0)
+                        #(0, 199, 34, 61, 0, 0, 40.0, 16.0, 0.0)
+                        #(0, 205, 35, 61, 0, 0, 40.0, 24.0, 0.0)
+                        #(0, 211, 36, 61, 0, 0, 40.0, 32.0, 0.0)
+                        #(0, 217, 37, 61, 0, 0, 0.0, 0.0, 0.0)
+                        #(0, 223, 38, 61, 0, 0, 0.0, 40.0, 0.0)
+                        #(0, 229, 39, 61, 0, 0, 40.0, 0.0, 0.0)
+                        #(0, 235, 40, 61, 0, 0, 40.0, 40.0, 0.0)
+                        #(0, 241, 41, 61, 0, 0, 12.5, 20.0, 20.1)
+                        #doubles (float64) = (0, 7, 2, 61, 0.0, 0.0, 25.30329, 25.30329, 0.0)
+                        #long long (int64) = (0, 7, 2, 61, 0, 0, 25.30329, 25.30329, 0)
+                        #self.show_data(data[:80], types='qd')
+                        ntotal = 72 # 9*8
+                        structi = Struct(self._endian + b'6q3d')
+                        for j in range(nnodes):
+                            out = structi.unpack(data[i:i+ntotal])
+                            #self.show_data(data[i:i+ntotal], types='qd')
+                            #print(out)
+                            cd, sil, nid, sixtyone, ps, zero_c, x, y, z = out
+                            outs = f'cd={cd} sil={sil} nid={nid} sixtyone={sixtyone} ps={ps} zero_c={zero_c} xyz=({x:g},{y:g},{z:g})'
+                            assert nid > 0, outs
+
+                            assert zero_c == 0, outs
+                            assert sixtyone == 61, outs
+                            i += ntotal
+
+
+                    # elif nvalues_9 != 0 and nvalues_4 == 0:
+                    elif numwide == 8:
+                        #assert numwide == 8, numwide
+                        ntotal = 32 # 24+4 = 28
+                        assert len(data) % ntotal == 0, len(data) % ntotal
+                        structi = Struct(self._endian + b'q3d')  # 28
+                        for j in range(nnodes):
+                            out = structi.unpack(data[i:i+ntotal])
+                            #self.show_data(data[i:i+ntotal], types='ifqd')
+                            #print(out)
+                            cd, x, y, z = out
+                            i += ntotal
+                        # [cd, x, y, z]
+                        cd = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 4)[:, :-3]
+                        xyz = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 4)[:, -3:]
+                    else:
+                        raise RuntimeError((self.size, numwide))
+                    #cd = ints[::7]
+                    # [cd, x, _, y, _, z, _]
+
+                    #print(ints)
+                    #print(floats)
+                    #print(nrows*7, len(floats))
+                    #ints = ints[2:].reshape(nrows, 7)
+                    #floats = floats[2:].reshape(nrows, 7)
+                    #for inti, floati in zip(ints, floats):
+                        #print(inti[:-3], floats[-3:])
+                    #print(xyz, xyz.shape)
+                    op2.op2_results.bgpdt = BGPDT(cd, xyz)
+                #print('cd = %s' % cd.tolist())
+                #print('xyz:\n%s' % xyz)
 
         self.read_3_markers([-4, 1, 0])
         marker = self.get_nmarkers(1, rewind=True)[0]
@@ -4384,10 +4440,27 @@ class OP2Reader:
         self.read_3_markers([-3, 1, 1])
 
         unused_markers0 = self.get_nmarkers(1, rewind=False)
-        unused_record = self.read_block()
+        record = self._read_block()
+        self.show_data(record, types='ifs', endian=None, force=False)
 
         #data = self._read_record()
-        self.read_markers([-4, 1, 0, 0])
+        self.read_markers([-4, 1, 0])
+        return
+        self.read_markers([-4, 1, 1])
+        record, ndata = self._read_block_ndata()
+        #ndata, = op2.struct_i.unpack(record)
+        nbytes = ndata * self.size
+
+        print(f'*sdf ndata={ndata} nbytes={nbytes}')
+        self.show_data(record, types='ifs', endian=None, force=False)
+
+        self.show_ndata(100, types='ifs', force=False, endian=None)
+
+        #markers1 = self.get_nmarkers4(1, rewind=True)
+        #print('markers1', markers1)
+        #self.show_ndata(100, types='ifs', force=False, endian=None)
+        sys.stdout.flush()
+        self.read_markers([0])
         #self._read_subtables()
 
     def read_tol(self):
@@ -4640,7 +4713,7 @@ class OP2Reader:
                     GCj += GCjj
 
                     #-----------
-                    data = self.read_block()
+                    data = self._read_block()
                     if self.size == 8:
                         #self.log.warning('skipping matrix')
                         #self.show_data(data, types='ifqd')
@@ -5576,7 +5649,7 @@ class OP2Reader:
 
         return record, nrecord
 
-    def _read_block_ndata4(self):
+    def _read_block_ndata4(self) -> tuple[bytes, int]:
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
@@ -5598,7 +5671,7 @@ class OP2Reader:
         op2.n += 8 + ndata
         return data_out, ndata
 
-    def _read_block_ndata(self):
+    def _read_block_ndata(self) -> tuple[bytes, int]:
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
@@ -5615,7 +5688,7 @@ class OP2Reader:
             return self._read_block_ndata4()
         return self._read_block_ndata8()
 
-    def _read_block_ndata8(self):
+    def _read_block_ndata8(self) -> tuple[bytes, int]:
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
@@ -5750,13 +5823,13 @@ class OP2Reader:
             #print(table_name)
         return table_name
 
-    def read_block(self):
+    def _read_block(self):
         if self.size == 4:
             return self.read_block4()
         return self.read_block8()
 
     def read_string_block(self) -> bytes:
-        block = self.read_block()
+        block = self._read_block()
         if self.size == 4:
             return block
         return reshape_bytes_block(block)
@@ -6029,7 +6102,7 @@ class OP2Reader:
             unused_data = self._skip_record()
             if self.is_debug_file:
                 desc = self.desc_map.get(op2.table_name, '???')
-                assert desc != '???', self.table_name
+                #assert desc != '???', self.table_name
                 msgi = "skipping table_name = %r ({desc})".rstrip('(?)')
                 self.log.debug(msgi)
             #if len(data) == 584:
@@ -6467,7 +6540,7 @@ class OP2Reader:
 
             if self.read_mode == 2:
                 self.log.info(f'skipping table_name = {table_name!r} ({desc})')
-                assert desc != '???', table_name
+                #assert desc != '???', table_name
                     #raise NotImplementedError(table_name)
             table3_parser = None
             table4_parser = None
