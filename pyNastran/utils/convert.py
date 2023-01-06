@@ -29,7 +29,10 @@ def _altitude_factor(alt_units_in: str, alt_units_out: str) -> float:
     return factor
 
 def convert_density(density: float, density_units_in: str, density_units_out: str) -> float:
-    """nominal unit is slug/ft^3"""
+    """
+    nominal unit is slug/ft^3
+    TODO: change this to SI
+    """
     if density_units_in == density_units_out:
         return density
     return density * _density_factor(density_units_in, density_units_out)
@@ -43,8 +46,10 @@ def _density_factor(density_units_in: str, density_units_out: str) -> float:
         factor *= 12**4
     elif density_units_in == 'kg/m^3':
         factor /= 515.378818
+    elif density_units_in == 'g/cm^3':
+        factor *= (1000. / 515.378818)
     else:
-        msg = f'density_units_in={density_units_in!r} is not valid; use [kg/m^3, slinch/in^3, slug/ft^3]'
+        msg = f'density_units_in={density_units_in!r} is not valid; use [kg/m^3, g/cm^3, slinch/in^3, slug/ft^3]'
         raise RuntimeError(msg)
 
     # data is now in slug/ft^3
@@ -54,10 +59,49 @@ def _density_factor(density_units_in: str, density_units_out: str) -> float:
         factor /= 12**4
     elif density_units_out == 'kg/m^3':
         factor *= 515.378818
+    elif density_units_out == 'g/cm^3':
+        factor /= (1000. / 515.378818)
     else:
-        msg = f'density_units_out={density_units_out!r} is not valid; use [kg/m^3, slinch/in^3, slug/ft^3]'
+        msg = f'density_units_out={density_units_out!r} is not valid; use [kg/m^3, g/cm^3, slinch/in^3, slug/ft^3]'
         raise RuntimeError(msg)
     return factor
+
+def convert_temperature(temperature: float, temperature_units_in: str, temperature_units_out: str) -> float:
+    """nominal unit is C"""
+    if temperature_units_in == temperature_units_out:
+        return temperature
+    return _temperature_factor(temperature, temperature_units_in, temperature_units_out)
+
+def _temperature_factor(temperature: float, temperature_units_in: str, temperature_units_out: str) -> float:
+    """helper method for convert_temperature"""
+    temperature2 = temperature
+    # 9/5 = 1.8
+    if temperature_units_in == 'C':
+        pass
+    elif temperature_units_in == 'F':
+        temperature2 = (temperature2 - 32) / 1.8
+    elif temperature_units_in == 'K':
+        temperature2 -= 273.15
+    elif temperature_units_in == 'R':
+        temperature2 = (temperature2 - 491.67) / 1.8
+    else:
+        msg = f'temperature_units_in={temperature_units_in!r} is not valid; use [C, R, F, K]'
+        raise RuntimeError(msg)
+
+    # data is now in C
+    if temperature_units_out == 'C':
+        pass
+    elif temperature_units_out == 'F':
+        temperature2 = temperature2 * 1.8 + 32
+    elif temperature_units_out == 'K':
+        temperature2 += 273.15
+    elif temperature_units_out == 'R':
+        temperature2 = temperature2 * 1.8 + 491.67
+    else:
+        msg = f'temperature_units_out={temperature_units_out!r} is not valid; use [C, R, F, K]'
+        raise RuntimeError(msg)
+
+    return temperature2
 
 def convert_pressure(pressure: float, pressure_units_in: str, pressure_units_out: str) -> float:
     """nominal unit is psf"""

@@ -593,6 +593,10 @@ def remove_unused(bdf_filename: str,
                     log.warning('skipping CAERO in MONPNT1/AECOMP')
                 else:
                     raise NotImplementedError(aecomp)
+        elif card_type in {'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5'}:
+            # freq_id exists, but we shouldn't be getting rid of it
+            pass
+        #    for freq_id,
         elif card_type in not_implemented_types:
             model.log.warning(f'skipping {card_type}')
         else:

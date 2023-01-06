@@ -68,6 +68,210 @@ class TestOP2Unit(Tester):
             superelement_adaptivity_index='')
         str(weight)
 
+
+    def test_cd_displacement(self):
+        log = get_logger(level='debug')
+        data_code = {
+            'device_code' : 1,
+            'analysis_code' : 1,
+            'table_code' : 1,
+            'nonlinear_factor' : None,
+            'sort_bits' : [0, 0, 0],
+            'sort_method' : 1,
+            'is_msc' : True,
+            'format_code' : 1,
+            'data_names' : [],
+            'tCode' : 1,
+            'table_name' : 'OUGV1',
+            '_encoding' : 'utf-8',
+        }
+
+        bdf_model = BDF(log=log)
+        bdf_model.add_grid(1, [0., 0., 0.], cd=0)
+        bdf_model.add_grid(2, [0., 0., 0.], cd=1)
+        bdf_model.add_grid(3, [0., 0., 0.], cp=2, cd=2)
+
+        bdf_model.add_grid(11, [1., 0., 0.], cd=0)
+        bdf_model.add_grid(12, [1., 0., 0.], cd=1)
+        bdf_model.add_grid(13, [1., 0., 0.], cp=2, cd=2)
+
+        #bdf_model.add_grid(21, [1., 0., 0.], cd=0)
+        #bdf_model.add_grid(22, [1., 0., 0.], cd=1)
+        bdf_model.add_grid(23, [1., 90., 0.], cp=2, cd=2)
+        bdf_model.add_grid(24, [0., 1., 0.], cp=0, cd=2)
+        bdf_model.add_grid(25, [-1., 0., 0.], cp=0, cd=2)
+
+        #bdf_model.add_grid(31, [1., 0., 0.], cp=3, cd=3)  # [0,1,0]
+        #bdf_model.add_grid(32, [1., 90., 0.], cp=3, cd=3) # [0,-1,0]
+
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        bdf_model.add_cord2r(1, origin, zaxis, xzplane, rid=0, comment='')
+        unused_coord = bdf_model.add_cord2c(2, origin, zaxis, xzplane, rid=0, comment='')
+
+        origin = [0., 0., 0.]
+        zaxis = [1., 0., 0.]
+        xzplane = [0., 1., 0.]
+        bdf_model.add_cord2c(3, origin, zaxis, xzplane, rid=0, comment='')
+
+        dxyz = np.array([[
+            [1., 0., 0., 0., 0., 0.], # 1
+            [1., 0., 0., 0., 0., 0.], # 2
+            [1., 0., 0., 0., 0., 0.], # 3
+
+            [1., 0., 0., 0., 0., 0.], # 11
+            [1., 0., 0., 0., 0., 0.], # 12
+            [1., 0., 0., 0., 0., 0.], # 13
+
+            [1., 0., 0., 0., 0., 0.], # 23 - [0., 1., 0.]
+            [1., 0., 0., 0., 0., 0.], # 24 - answer=same as 23
+            [1., 0., 0., 0., 0., 0.], # 25 - [-1, 0., 0.]
+
+            #[1., 0., 0., 0., 0., 0.], # 31 - [0,1,0]
+            #[1., 0., 0., 0., 0., 0.], # 32 - [0,-1,0]
+        ]])
+        #--------------------------------------------
+        #out = bdf_model.get_displacement_index_xyz_cp_cd(
+            #fdtype='float64', idtype='int32', sort_ids=True)
+        #out = icd_transform, icp_transform, xyz_cp, nid_cp_cd
+        out = bdf_model.get_xyz_in_coord_array(
+            cid=0, fdtype='float64', idtype='int32')
+        unused_nid_cp_cd, xyz_cid0, unused_xyz_cp, icd_transform, unused_icp_transform = out
+
+        op2_model = OP2(log=log)
+
+        is_sort1 = True
+        isubcase = 1
+        dt = None
+        disp = RealDisplacementArray(data_code, is_sort1, isubcase, dt)
+        disp.data = dxyz
+        op2_model.displacements[1] = disp
+
+        op2_model.transform_displacements_to_global(
+            icd_transform, bdf_model.coords, xyz_cid0=xyz_cid0, debug=True)
+
+
+        # we're working in a 2D plane
+        icd2 = icd_transform[2]
+        unused_dispi_cd2 = op2_model.displacements[1].data[0, icd2, :2]
+        #op2_model.log.info("dispi2:\n%s" % dispi_cd2)
+
+        dispi = op2_model.displacements[1].data[0, :, :2]
+        expected_disp = np.array([
+            [1., 0.,], # 1
+            [1., 0.,], # 2
+            [1., 0.,], # 3
+
+            [1., 0.,], # 11
+            [1., 0.,], # 12
+            [1., 0.,], # 13
+
+            [0., 1.,], # 23
+            [0., 1.,], # 24
+            [-1., 0.,], # 25
+
+            #[0., 1.,], # 31
+            #[0., -1.,], # 32
+        ])
+        assert is_array_close(dispi, expected_disp)
+        #print(is_array_close(dispi, expected_disp))
+        #print(dispi)
+
+        ## TODO: fix the thetad in the cid=3 coordinates (nid=33,34)
+
+    def test_spcadd(self):
+        """tests loading SPCADD/MPCADDs"""
+        model = BDF()
+        model.is_debug_file = False
+        datai = np.array([2, 1, 10, -1], dtype='int32')
+        _read_spcadd_mpcadd(model, 'SPCADD', datai)
+
+        datai = np.array([3, 1, -1], dtype='int32')
+        _read_spcadd_mpcadd(model, 'SPCADD', datai)
+
+
+        datai = np.array([4, 1, 10, -1], dtype='int32')
+        _read_spcadd_mpcadd(model, 'MPCADD', datai)
+
+        datai = np.array([5, 1, -1], dtype='int32')
+        _read_spcadd_mpcadd(model, 'MPCADD', datai)
+        assert len(model.spcadds) == 2, model.spcadds
+        assert len(model.mpcadds) == 2, model.mpcadds
+
+
+class TestOP2Functions(unittest.TestCase):
+    def test_filter1d(self):
+        """tests filtering small values out of arrays"""
+        a = np.array([1., 2., 0.1])
+        i = filter1d(a, zero_tol=0.5)
+        res = np.array([0, 1])
+        self.assertTrue(np.array_equal(i, res), 'A i=%s res=%s' % (i, res))
+
+        a = np.array([1., 2., 0.1])
+        b = np.array([1., -0.1, 0.1])
+        res = np.array([0, 1])
+        i = filter1d(a, b, zero_tol=0.5)
+        self.assertTrue(np.array_equal(i, res), 'B i=%s res=%s' % (i, res))
+
+        a = np.array([1., 2., 0.1])
+        b = np.array([1., -0.1, 0.1])
+        i = filter1d(a, b, zero_tol=1.1)
+        res = np.array([1])
+        self.assertTrue(np.array_equal(i, res), 'C i=%s res=%s' % (i, res))
+
+    def test_abs_max_min_global(self):
+        #print(iformat('4si3f', 2))
+        str(abs_max_min_global([0.0, 2.0, 1.0]))
+        str(abs_max_min_global([0.0, 2.0, -1.0]))
+        str(abs_max_min_global([0.0, 2.0, -3.0]))
+        str(abs_max_min_global(np.array([0.0, 2.0, -3.0])))
+        str(abs_max_min_global([1.0]))
+
+        # gets the global max/min value
+        str(abs_max_min_global([
+            [0.0, 2.0, -3.0],
+            [0.0, 2.0, -4.0],
+        ]))
+        str(abs_max_min_global(np.array([
+            [0.0, 2.0, -3.0],
+            [0.0, 2.0, -4.0],
+        ])))
+
+    def test_abs_max_min_vector(self):
+        str(abs_max_min_vector(np.array([
+            [0.0, 2.0, 1.0],
+            [0.0, 2.0, -1.0],
+            [0.0, 2.0, -3.0],
+        ])))
+
+        str(abs_max_min_vector([
+            [0.0, 2.0, 1.0],
+            [0.0, 2.0, -1.0],
+            [0.0, 2.0, -3.0],
+            [0.0, 2.0, 4.0],
+        ]))
+        str(abs_max_min_vector(np.array([
+            [0.0, 2.0, 1.0],
+            [0.0, 2.0, -1.0],
+            [0.0, 2.0, -3.0],
+            [0.0, 2.0, 4.0],
+        ])))
+
+        str(abs_max_min_vector(np.array([
+            [3.0, 2.0, -3.0],
+            [-3.0, 2.0, 3.0],
+        ])))
+
+        # not an array
+        #print(abs_max_min([
+            #[0.0, 2.0, 1.0],
+            #[0.0, 2.0, -1.0],
+            #[0.0, 2.0, -3.0],
+            #[0.0, 2.0, 4.0],
+        #]))
+
+
 class TestAutodeskOP2(Tester):
     """various OP2 tests"""
     def _test_op2_autodesk_1(self):
@@ -289,15 +493,233 @@ class TestSATKOP2(Tester):
         #save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
-        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
-                write_f06=True, write_op2=False,
-                is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude_results=None, short_stats=False,
-                compare=False, debug=False, binary_debug=True,
-                quiet=True,
-                stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=False, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False,
+            build_pandas=True, log=log)
+        assert is_passed, is_passed
+        print(op2.get_op2_stats())
+        x = 1
+
+    def test_bdf_op2_satk_3(self):
+        """checks pn_mwe_s-sol_111.dat, which tests PSD tables"""
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(MODEL_PATH, 'cbush_psd_bug', 'pn_mwe_s-sol_111.dat')
+        op2_filename = os.path.join(MODEL_PATH, 'cbush_psd_bug', 'pn_mwe_s-sol_111.op2')
+        op2_filename2 = os.path.join(MODEL_PATH, 'cbush_psd_bug', 'pn_mwe_s-rd_satk-rbe.op2')
+
+        #  can't parse replication
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            '', bdf_filename, log=log)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model.safe_cross_reference()
+
+        save_load_deck(model, run_save_load=True, run_renumber=False)
+
+        log = get_logger(level='warning')
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=False, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False,
+            build_pandas=True, log=log)
+        assert is_passed, is_passed
+        #op2_results.psds.accelerations:
+            # (subtitle, analysis_code, stress_strain_flag, node, dof)
+            #('SUBCASE - MODAL FREQUENCY 1', 9, 4)
+
+        #op2_results.psds.force:
+            # (subtitle, analysis_code, stress_strain_flag, node, dof)
+            #('SUBCASE - MODAL FREQUENCY 1', 2, 2)
+            #('SUBCASE - MODAL FREQUENCY 1', 8, 2)
+
+        #op2_results.eqexin: EQEXIN(nid, ndof, doftype); nnodes=7
+        #op2_results.gpdt: GPDT(nid_cp_cd_ps, xyz); nnodes=7
+        #op2_results.bgpdt: BGPDT(cd, xyz); nnodes=7
+        assert len(op2.op2_results.force.cbush_force[1].modes) == 8
+            #type=RealCBushForceArray ntimes=8 nelements=1
+            #data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
+            #data.shape = (8, 1, 6)
+            #element.shape = (1,)
+            #element name: CBUSH
+            #sort1
+            #modes = [1 2 3 4 5 6 7 8]; dtype=int32
+            #eigns = [1.607e+05 1.607e+05 2.224e+07 1.204e+09 1.204e+09 1.102e+10 1.102e+10
+                   #2.544e+10]; dtype=float64
+            #cycles = [   63.804    63.804   750.561  5522.769  5522.769 16707.479 16707.479
+                       #25385.576]; dtype=float64
+
+        assert len(op2.op2_results.force.cbar_force[1].modes) == 8
+            #type=RealCBarForceArray ntimes=8 nelements=5; table_name='OEF1'
+            #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+            #data.shape = (8, 5, 8)
+            #element.shape = (5,)
+            #element name: CBAR-34
+            #sort1
+            #modes = [1 2 3 4 5 6 7 8]; dtype=int32
+            #eigns = [1.607e+05 1.607e+05 2.224e+07 1.204e+09 1.204e+09 1.102e+10 1.102e+10
+                   #2.544e+10]; dtype=float64
+            #cycles = [   63.804    63.804   750.561  5522.769  5522.769 16707.479 16707.479
+                       #25385.576]; dtype=float64
+
+        assert len(op2.op2_results.psd.accelerations[(3, 5, 2, 0, 0, '', 'RANDOM  103')].freqs) == 127
+            #isubcase = 3
+            #type=RealAccelerationArray ntimes=127 nnodes=7, table_name=OUGPSD1
+            #data: [t1, t2, t3, r1, r2, r3] shape=[127, 7, 6] dtype=float32
+            #node_gridtype.shape = (7, 2)
+            #sort1
+            #freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
+
+        assert len(op2.op2_results.psd.cbar_force[(3, 5, 2, 0, 0, '', 'RANDOM  103')].freqs) == 127
+            #type=RealCBarForceArray ntimes=127 nelements=5; table_name='OEFPSD1'
+            #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+            #data.shape = (127, 10, 8)
+            #element.shape = (5,)
+            #element name: CBAR-34
+            #sort1
+            #freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
+
+        assert len(op2.op2_results.psd.cbush_force[(3, 5, 2, 0, 0, '', 'RANDOM  103')].freqs) == 127
+            #type=RealCBushForceArray ntimes=1 nelements=127
+            #data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
+            #data.shape = (127, 1, 6)
+            #element.shape = (1,)
+            #element name: CBUSH
+            #sort1
+            #freqs = [  20.      20.943   21.93  ... 1861.173 1909.985 2000.   ]; dtype=float32
+
+        assert len(op2.op2_results.rms.accelerations[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
+            #isubcase = 3
+            #type=RealAccelerationArray ntimes=1 nnodes=7, table_name=OUGRMS1
+            #data: [t1, t2, t3, r1, r2, r3] shape=[1, 7, 6] dtype=float32
+            #node_gridtype.shape = (7, 2)
+            #sort1
+            #freqs = [0.]; dtype=float32
+
+        assert len(op2.op2_results.rms.cbar_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
+            #type=RealCBarForceArray ntimes=1 nelements=5; table_name='OEFRMS1'
+            #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+            #data.shape = (1, 5, 8)
+            #element.shape = (5,)
+            #element name: CBAR-34
+            #sort1
+            #freqs = [0.]; dtype=float32
+
+        assert len(op2.op2_results.rms.cbush_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
+            #type=RealCBushForceArray ntimes=1 nelements=1
+            #data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
+            #data.shape = (1, 1, 6)
+            #element.shape = (1,)
+            #element name: CBUSH
+            #sort1
+            #freqs = [0.]; dtype=float32
+
+        assert len(op2.op2_results.no.accelerations[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
+            #isubcase = 3
+            #type=RealAccelerationArray ntimes=1 nnodes=7, table_name=OUGNO1
+            #data: [t1, t2, t3, r1, r2, r3] shape=[1, 7, 6] dtype=float32
+            #node_gridtype.shape = (7, 2)
+            #sort1
+            #freqs = [0.]; dtype=float32
+
+        assert len(op2.op2_results.no.cbar_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
+            #type=RealCBarForceArray nelements=5; table_name='OEFNO1'
+            #data: [1, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+            #data.shape = (1, 5, 8)
+            #element.shape = (5,)
+            #element name: CBAR-34
+            #sort1
+            #freqs = [0.]; dtype=float32
+
+        assert len(op2.op2_results.no.cbush_force[(3, 5, 1, 0, 0, '', 'RANDOM  103')].freqs) == 1
+            #type=RealCBushForceArray nelements=1
+            #data: [1, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
+            #data.shape = (1, 1, 6)
+            #element.shape = (1,)
+            #element name: CBUSH
+            #sort1
+            #freqs = [0.]; dtype=float32
+
+        op2.eigenvalues['']
+            #type=RealEigenvalues neigenvalues=8
+            #title, extraction_order, eigenvalues, radians, cycles, generalized_mass, generalized_stiffness
+
+        op2.matrices['BHH']
+        op2.matrices['KHH']
+            #Matrix['BHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=float64;   desc=symmetric
+            #Matrix['KHH'];      shape=(8, 8);     type=scipy.sparse._coo.coo_matrix;     dtype=complex128; desc=symmetric
+
+        print(op2.get_op2_stats())
+        x = 1
+
+        op2, is_passed = run_op2(
+            op2_filename2, make_geom=True, write_bdf=False, read_bdf=False,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude_results=None, short_stats=False,
+            compare=False, debug=False, binary_debug=True,
+            quiet=True,
+            stop_on_failure=True, dev=False,
+            build_pandas=True, log=log)
+        assert is_passed, is_passed
+        #print(op2.get_op2_stats())
+        #op2_results.gpdt: GPDT(nid_cp_cd_ps, xyz); nnodes=7
+
+        assert len(op2.op2_results.psd.displacements[(1, 5, 2, 0, 0, '', '')].freqs) == 298
+          #isubcase = 1
+          #type=RealDisplacementArray ntimes=298 nnodes=6, table_name=OUGPSD1
+          #data: [t1, t2, t3, r1, r2, r3] shape=[298, 6, 6] dtype=float32
+          #node_gridtype.shape = (6, 2)
+          #sort1
+          #freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
+
+        assert len(op2.op2_results.psd.accelerations[(1, 5, 2, 0, 0, '', '')].freqs) == 298
+          #isubcase = 1
+          #type=RealAccelerationArray ntimes=298 nnodes=6, table_name=OUGPSD1
+          #data: [t1, t2, t3, r1, r2, r3] shape=[298, 6, 6] dtype=float32
+          #node_gridtype.shape = (6, 2)
+          #sort1
+          #freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
+
+        assert len(op2.op2_results.psd.cbar_force[(1, 5, 2, 0, 0, '', '')].freqs) == 298
+          #type=RealCBarForceArray ntimes=298 nelements=5; table_name='OEFPSD1'
+          #data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+          #data.shape = (298, 10, 8)
+          #element.shape = (5,)
+          #element name: CBAR-34
+          #sort1
+          #freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
+
+        assert len(op2.op2_results.psd.cbush_force[(1, 5, 2, 0, 0, '', '')].freqs) == 298
+          #type=RealCBushForceArray ntimes=1 nelements=298
+          #data: [ntimes, nnodes, 6] where 6=[fx, fy, fz, mx, my, mz]
+          #data.shape = (298, 1, 6)
+          #element.shape = (1,)
+          #element name: CBUSH
+          #sort1
+          #freqs = [  20.      20.222   20.447 ... 1987.249 1993.657 2000.   ]; dtype=float32
+
+        assert len(op2.op2_results.rms.displacements[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(op2.op2_results.rms.velocities[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(op2.op2_results.rms.accelerations[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(op2.op2_results.rms.cbar_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        assert len(op2.op2_results.rms.cbush_force[(1, 5, 1, 0, 0, '', '')].freqs) == 1
+        x = 2
 
 
 class TestOP2(Tester):
@@ -306,117 +728,6 @@ class TestOP2(Tester):
         #op2 = OP2()
         #op2.set_results('solidStress.oxx')
         #op2.read_op2(op2_filename, vectorized=False)
-
-    def test_cd_displacement(self):
-        log = get_logger(level='debug')
-        data_code = {
-            'device_code' : 1,
-            'analysis_code' : 1,
-            'table_code' : 1,
-            'nonlinear_factor' : None,
-            'sort_bits' : [0, 0, 0],
-            'sort_method' : 1,
-            'is_msc' : True,
-            'format_code' : 1,
-            'data_names' : [],
-            'tCode' : 1,
-            'table_name' : 'OUGV1',
-            '_encoding' : 'utf-8',
-        }
-
-        bdf_model = BDF(log=log)
-        bdf_model.add_grid(1, [0., 0., 0.], cd=0)
-        bdf_model.add_grid(2, [0., 0., 0.], cd=1)
-        bdf_model.add_grid(3, [0., 0., 0.], cp=2, cd=2)
-
-        bdf_model.add_grid(11, [1., 0., 0.], cd=0)
-        bdf_model.add_grid(12, [1., 0., 0.], cd=1)
-        bdf_model.add_grid(13, [1., 0., 0.], cp=2, cd=2)
-
-        #bdf_model.add_grid(21, [1., 0., 0.], cd=0)
-        #bdf_model.add_grid(22, [1., 0., 0.], cd=1)
-        bdf_model.add_grid(23, [1., 90., 0.], cp=2, cd=2)
-        bdf_model.add_grid(24, [0., 1., 0.], cp=0, cd=2)
-        bdf_model.add_grid(25, [-1., 0., 0.], cp=0, cd=2)
-
-        #bdf_model.add_grid(31, [1., 0., 0.], cp=3, cd=3)  # [0,1,0]
-        #bdf_model.add_grid(32, [1., 90., 0.], cp=3, cd=3) # [0,-1,0]
-
-        origin = [0., 0., 0.]
-        zaxis = [0., 0., 1.]
-        xzplane = [1., 0., 0.]
-        bdf_model.add_cord2r(1, origin, zaxis, xzplane, rid=0, comment='')
-        unused_coord = bdf_model.add_cord2c(2, origin, zaxis, xzplane, rid=0, comment='')
-
-        origin = [0., 0., 0.]
-        zaxis = [1., 0., 0.]
-        xzplane = [0., 1., 0.]
-        bdf_model.add_cord2c(3, origin, zaxis, xzplane, rid=0, comment='')
-
-        dxyz = np.array([[
-            [1., 0., 0., 0., 0., 0.], # 1
-            [1., 0., 0., 0., 0., 0.], # 2
-            [1., 0., 0., 0., 0., 0.], # 3
-
-            [1., 0., 0., 0., 0., 0.], # 11
-            [1., 0., 0., 0., 0., 0.], # 12
-            [1., 0., 0., 0., 0., 0.], # 13
-
-            [1., 0., 0., 0., 0., 0.], # 23 - [0., 1., 0.]
-            [1., 0., 0., 0., 0., 0.], # 24 - answer=same as 23
-            [1., 0., 0., 0., 0., 0.], # 25 - [-1, 0., 0.]
-
-            #[1., 0., 0., 0., 0., 0.], # 31 - [0,1,0]
-            #[1., 0., 0., 0., 0., 0.], # 32 - [0,-1,0]
-        ]])
-        #--------------------------------------------
-        #out = bdf_model.get_displacement_index_xyz_cp_cd(
-            #fdtype='float64', idtype='int32', sort_ids=True)
-        #out = icd_transform, icp_transform, xyz_cp, nid_cp_cd
-        out = bdf_model.get_xyz_in_coord_array(
-            cid=0, fdtype='float64', idtype='int32')
-        unused_nid_cp_cd, xyz_cid0, unused_xyz_cp, icd_transform, unused_icp_transform = out
-
-        op2_model = OP2(log=log)
-
-        is_sort1 = True
-        isubcase = 1
-        dt = None
-        disp = RealDisplacementArray(data_code, is_sort1, isubcase, dt)
-        disp.data = dxyz
-        op2_model.displacements[1] = disp
-
-        op2_model.transform_displacements_to_global(
-            icd_transform, bdf_model.coords, xyz_cid0=xyz_cid0, debug=True)
-
-
-        # we're working in a 2D plane
-        icd2 = icd_transform[2]
-        unused_dispi_cd2 = op2_model.displacements[1].data[0, icd2, :2]
-        #op2_model.log.info("dispi2:\n%s" % dispi_cd2)
-
-        dispi = op2_model.displacements[1].data[0, :, :2]
-        expected_disp = np.array([
-            [1., 0.,], # 1
-            [1., 0.,], # 2
-            [1., 0.,], # 3
-
-            [1., 0.,], # 11
-            [1., 0.,], # 12
-            [1., 0.,], # 13
-
-            [0., 1.,], # 23
-            [0., 1.,], # 24
-            [-1., 0.,], # 25
-
-            #[0., 1.,], # 31
-            #[0., -1.,], # 32
-        ])
-        assert is_array_close(dispi, expected_disp)
-        #print(is_array_close(dispi, expected_disp))
-        #print(dispi)
-
-        ## TODO: fix the thetad in the cid=3 coordinates (nid=33,34)
 
     def test_generalized_tables(self):
         """tests that set_additional_generalized_tables_to_read overwrites the GEOM1S class"""
@@ -440,77 +751,6 @@ class TestOP2(Tester):
             model2.read_op2(op2_filename=op2_filename, combine=True, build_dataframe=False,
                             skip_undefined_matrices=False,
                             encoding=None)
-
-
-    def test_filter1d(self):
-        """tests filtering small values out of arrays"""
-        a = np.array([1., 2., 0.1])
-        i = filter1d(a, zero_tol=0.5)
-        res = np.array([0, 1])
-        self.assertTrue(np.array_equal(i, res), 'A i=%s res=%s' % (i, res))
-
-        a = np.array([1., 2., 0.1])
-        b = np.array([1., -0.1, 0.1])
-        res = np.array([0, 1])
-        i = filter1d(a, b, zero_tol=0.5)
-        self.assertTrue(np.array_equal(i, res), 'B i=%s res=%s' % (i, res))
-
-        a = np.array([1., 2., 0.1])
-        b = np.array([1., -0.1, 0.1])
-        i = filter1d(a, b, zero_tol=1.1)
-        res = np.array([1])
-        self.assertTrue(np.array_equal(i, res), 'C i=%s res=%s' % (i, res))
-
-    def test_abs_max_min_global(self):
-        #print(iformat('4si3f', 2))
-        str(abs_max_min_global([0.0, 2.0, 1.0]))
-        str(abs_max_min_global([0.0, 2.0, -1.0]))
-        str(abs_max_min_global([0.0, 2.0, -3.0]))
-        str(abs_max_min_global(np.array([0.0, 2.0, -3.0])))
-        str(abs_max_min_global([1.0]))
-
-        # gets the global max/min value
-        str(abs_max_min_global([
-            [0.0, 2.0, -3.0],
-            [0.0, 2.0, -4.0],
-        ]))
-        str(abs_max_min_global(np.array([
-            [0.0, 2.0, -3.0],
-            [0.0, 2.0, -4.0],
-        ])))
-
-    def test_abs_max_min_vector(self):
-        str(abs_max_min_vector(np.array([
-            [0.0, 2.0, 1.0],
-            [0.0, 2.0, -1.0],
-            [0.0, 2.0, -3.0],
-        ])))
-
-        str(abs_max_min_vector([
-            [0.0, 2.0, 1.0],
-            [0.0, 2.0, -1.0],
-            [0.0, 2.0, -3.0],
-            [0.0, 2.0, 4.0],
-        ]))
-        str(abs_max_min_vector(np.array([
-            [0.0, 2.0, 1.0],
-            [0.0, 2.0, -1.0],
-            [0.0, 2.0, -3.0],
-            [0.0, 2.0, 4.0],
-        ])))
-
-        str(abs_max_min_vector(np.array([
-            [3.0, 2.0, -3.0],
-            [-3.0, 2.0, 3.0],
-        ])))
-
-        # not an array
-        #print(abs_max_min([
-            #[0.0, 2.0, 1.0],
-            #[0.0, 2.0, -1.0],
-            #[0.0, 2.0, -3.0],
-            #[0.0, 2.0, 4.0],
-        #]))
 
     def test_ibulk(self):
         """this test will fail if IBULK talble doesn't work"""
@@ -1035,7 +1275,8 @@ class TestOP2(Tester):
                 build_pandas=IS_PANDAS, log=log)
 
     def test_bdf_op2_other_06(self):
-        """checks randvar2.bdf, which is an CTRIAX problem
+        """
+        checks randvar2.bdf, which is an CTRIAX problem
         CBEND - 2
         """
         log = get_logger(level='warning')
@@ -3462,24 +3703,35 @@ class TestOP2(Tester):
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
-    def test_spcadd(self):
-        """tests loading SPCADD/MPCADDs"""
-        model = BDF()
-        model.is_debug_file = False
-        datai = np.array([2, 1, 10, -1], dtype='int32')
-        _read_spcadd_mpcadd(model, 'SPCADD', datai)
+    #def test_bdf_op2_random_small_plate(self):
+        #"""checks small_plate.op2, which tests PSD tables"""
+        #log = get_logger(level='info')
+        ##bdf_filename = os.path.join(MODEL_PATH, 'small_plate', 'small_plate.dat')
+        #op2_filename = os.path.join(MODEL_PATH, 'small_plate', 'small_plate.op2')
 
-        datai = np.array([3, 1, -1], dtype='int32')
-        _read_spcadd_mpcadd(model, 'SPCADD', datai)
+        ##  can't parse replication
+        ##unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            ##'', bdf_filename, log=log)
+        ##diff_cards2 = list(set(diff_cards))
+        ##diff_cards2.sort()
+        ##assert len(diff_cards2) == 0, diff_cards2
 
+        ##model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        ##model.safe_cross_reference()
 
-        datai = np.array([4, 1, 10, -1], dtype='int32')
-        _read_spcadd_mpcadd(model, 'MPCADD', datai)
+        #save_load_deck(model, run_save_load=True, run_renumber=False)
 
-        datai = np.array([5, 1, -1], dtype='int32')
-        _read_spcadd_mpcadd(model, 'MPCADD', datai)
-        assert len(model.spcadds) == 2, model.spcadds
-        assert len(model.mpcadds) == 2, model.mpcadds
+        #log = get_logger(level='warning')
+        #run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                #write_f06=True, write_op2=False,
+                #is_mag_phase=False,
+                #is_sort2=False, is_nx=None, delete_f06=True,
+                #subcases=None, exclude_results=None, short_stats=False,
+                #compare=False, debug=False, binary_debug=True,
+                #quiet=True,
+                #stop_on_failure=True, dev=False,
+                #build_pandas=True, log=log)
+
 
 def _verify_ids(bdf, op2, isubcase=1):
     """helper function for tests"""

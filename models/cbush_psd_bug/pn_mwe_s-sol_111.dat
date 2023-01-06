@@ -1,0 +1,188 @@
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*                    Simcenter v2008.0.0.1721 Translator
+$*                    for Simcenter Nastran version 2022.1
+$*
+$*        ANALYSIS TYPE: Structural
+$*        SOLUTION NAME: SOL 111
+$*        SOLUTION TYPE: SOL 111 Modal Frequency Response
+$*
+$*    SOLVER INPUT FILE: pn_mwe_s-sol_111.dat
+$*        CREATION DATE:  5-Dec-2022
+$*        CREATION TIME: 16:34:36
+$*
+$*                UNITS: mm (milli-newton)
+$*                      ... LENGTH : mm
+$*                      ... TIME   : sec
+$*                      ... MASS   : kilogram (kg)
+$*                      ... TEMPERATURE : deg Celsius
+$*                      ... FORCE  : milli-newton
+$*                      ... THERMAL ENERGY : mN-mm (micro-joule)
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* FILE MANAGEMENT
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* EXECUTIVE CONTROL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+ID,NASTRAN,pn_mwe_s-sol_111
+SOL 111
+CEND
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* CASE CONTROL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+ECHO = NONE
+SPC = 2
+FREQUENCY = 100
+METHOD = 100
+SDAMPING = 100
+OUTPUT
+ACCELERATION(PLOT,REAL,PSDF,RMS) = ALL
+FORCE(PLOT,REAL,CENTER,PSDF,RMS) = ALL
+$*  Step: Subcase - Normal Modes 1
+SUBCASE 1
+  LABEL = Subcase - Normal Modes 1
+  METHOD = 100
+  ANALYSIS = MODES
+$*  Step: Subcase - Modal Frequency 1
+SUBCASE 2
+  LABEL = Subcase - Modal Frequency 1
+  DLOAD = 302
+  SPC = 102
+  SDAMPING = 100
+$*  Step: Subcase - Random 1
+SUBCASE 3
+  LABEL = Subcase - Random 1
+  RANDOM(RPOSTS1=0) = 103
+  OUTPUT
+  ACCELERATION(PLOT,REAL,PSDF,RMS) = ALL
+  FORCE(PLOT,REAL,CENTER,PSDF,RMS) = ALL
+  ANALYSIS = RANDOM
+  $* KEYIN TEXT
+  OUTPUT(XYPLOT)
+  XYPRINT,ACCE,PSDF/9(T2)
+  XYPRINT,ELFORCE,PSDF/8(2)
+  XYPRINT,ELFORCE,PSDF/2(2)
+  $*
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$* BULK DATA
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+BEGIN BULK
+$*
+$* SOLUTION CARDS
+$*
+$*  Modeling Object: Forcing Frequencies - Modal1
+FREQ3        100 20.0000 2000.00  LINEAR      101.000000
+$*  Modeling Object: Forcing Frequencies1
+FREQ2        100 20.0000 2000.00     100
+$*  Modeling Object: Real Eigenvalue - Lanczos1
+EIGRL        1000.100000 2000.00               0       7            MASS
+TABDMP1      100       G                                                +
++         0.00000.0200001.000+100.020000    ENDT
+$*  Modeling Object: Power Spectral Density Factors1
+RANDPS       103       2       21.000000  0.0000       1
+TABRND1        1     LOG     LOG                                        +
++        20.00000.010000 50.00000.015000700.00000.015000800.00000.030000+
++       925.00000.030000 2000.000.006440    ENDT
+$*
+$* PARAM CARDS
+$*
+PARAM      DDRMM      -1
+PARAM          G  0.0000
+PARAM      K6ROT100.0000
+PARAM      KDAMP       1
+PARAM     OIBULK     YES
+PARAM    OMACHPR     YES
+PARAM    OUGCORD  GLOBAL
+PARAM       POST      -2
+PARAM    POSTEXT     YES
+PARAM    UNITSYS   MN-MM
+$*
+$* GRID CARDS
+$*
+GRID*                  1               00.0000000000E+000.0000000000E+00+
+*       0.0000000000E+00               0
+GRID*                  3               01.0000000000E+020.0000000000E+00+
+*       0.0000000000E+00               0
+GRID*                  4               02.0000000000E+010.0000000000E+00+
+*       0.0000000000E+00               0
+GRID*                  5               04.0000000000E+010.0000000000E+00+
+*       0.0000000000E+00               0
+GRID*                  6               06.0000000000E+010.0000000000E+00+
+*       0.0000000000E+00               0
+GRID*                  7               08.0000000000E+010.0000000000E+00+
+*       0.0000000000E+00               0
+GRID*                  9               00.0000000000E+000.0000000000E+00+
+*       0.0000000000E+00               0
+$*
+$* ELEMENT CARDS
+$*
+$*  Mesh Collector: Bar Collector(1)
+$*  Mesh: 1d_manual_mesh(1)
+CBAR           2       1       1       4  0.00001.000000  0.0000
+CBAR           3       1       4       5  0.00001.000000  0.0000
+CBAR           4       1       5       6  0.00001.000000  0.0000
+CBAR           5       1       6       7  0.00001.000000  0.0000
+CBAR           6       1       7       3  0.00001.000000  0.0000
+$*  Mesh Collector: Concentrated Mass Collector(1)
+$*  Mesh: 0d_manual_mesh(1)
+CONM2          7       3       0 10.0000
+$*  Mesh Collector: Cbush Collector(1)
+$*  Mesh: 1d_extracted_mesh(1)
+CBUSH          8       2       9       1                               1
+$*
+$* PROPERTY CARDS
+$*
+$*  Property: PBARL1
+$*  Section: ROD(1)
+PBARL          1       2 MSCBML0     ROD                                +
++        10.0000  0.0000
+$*  Property: PBUSH1 - Ridig Link
+PBUSH          2       K1.000+121.000+121.000+121.000+121.000+121.000+12
+$*
+$* MATERIAL CARDS
+$*
+$*  Material: Al 7075 T62::PN_MWE::[2]
+MAT1           27.1019+7        0.3300002.7957-62.2140-5 20.00000.020000+
++       4.9644+54.9644+5
+$*
+$* LOAD AND CONSTRAINT CARDS
+$*
+$*  Constraint: Fixed
+SPC            2       9  123456  0.0000
+$*  Solver Set: Frequency Excitation Set - Enforced Acceleration(2)
+RLOAD1         4       5  0.0000  0.0000       5  0.0000       3
+TABLED1        5                                                        +
++        10.00001.000000 2000.001.000000    ENDT
+$*  Load: Enforced Load(1)
+$*  Solver Set: Load Set (General) - Enforced Motion(3)
+SPCD           5       9       21.000000
+SPC1           1       2       9
+SPCADD       102       1       2
+DLOAD        3021.0000001.000000       4
+$*
+$* COORDINATE SYSTEM CARDS
+$*
+$*  Coordinate System: csys
+CORD2R*                1               00.0000000000E+000.0000000000E+00+
+*       0.0000000000E+000.0000000000E+000.0000000000E+001.0000000000E+00+
+*       1.0000000000E+000.0000000000E+000.0000000000E+00                +
+*
+ENDDATA f928c1a3
