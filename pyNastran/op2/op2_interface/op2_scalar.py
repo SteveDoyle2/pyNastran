@@ -993,13 +993,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OCRUG' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'nonlinear buckling displacement'],   # displacement
             b'OCRPG' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'nonlinear buckling load'],  # loads
 
+            b'BOPG1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'applied load in cid=0 frame'],  # applied loads in basic coordinate system
+
             # eigenvectors
             b'OPHIG' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'eigenvectors in cid=0 frame'],    # basic coordinate system
             b'BOPHIG' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'eigenvectors in cid=0 frame'],   # basic coordinate system
             b'BOPHIGF' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'eigenvectors in cid=0 frame'],  # basic coordinate system for the fluid portion of the model
             b'BOPHIGS' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'eigenvectors in cid=0 frame'],  # basic coordinate system for the structural portion of the model
-
-            b'BOPG1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'applied load in cid=0 frame'],  # applied loads in basic coordinate system
 
             #=======================
             # extreme values of the respective table
