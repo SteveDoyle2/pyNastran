@@ -20,16 +20,17 @@ There are a 2 different ways to run the GUI:
 If you're using the binary, just open it like any program.
 
 Otherwise, once you've installed pyNastran, open a terminal/command prompt and type:
-```
-pyNastranGUI
-```
+
+.. code-block:: console
+
+  pyNastranGUI
+
 It's case insensitive (at least on Windows), but Linux/Mac are case sensitive.
 
 Once you've loaded it, you'll get something that looks like this:
 
 .. image:: blank.png
    :scale: 75%
-
 
 A nice bonus of the command line option is the default folder will be in the current directory, so it's faster to find models if you just start from where the file already is.
 
@@ -39,7 +40,11 @@ Loading a Nastran Model
 If you've checked out pyNastran from github you'll find the ATA-E developed iSat model in:
  - "models/iSat/ISat_Dploy_Sm.dat"
 
-Go to **File** -> **Load Geometry...** to make the following window pop up
+You can also download it from `Github
+<https://github.com/SteveDoyle2/pyNastran/blob/main/models/iSat/ISat_Dploy_Sm.dat>`_
+
+
+Go to **File** -> **Load Geometry...** to make the following window pop up:
 
 .. image:: file_load.png
    :scale: 75%
@@ -65,6 +70,11 @@ When you're zooming around, notice there's a transparent blue highlighted region
 You can also change the center of rotation by pressing on:
 .. image:: ../../../../pyNastran/gui/icons/trotation_center.png
    :scale: 50%
+
+..
+  .. |Substitution Name| image:: path/filename.png
+    :width: 400
+    :alt: Alternative text
 
 and then clicking on the model.
 
