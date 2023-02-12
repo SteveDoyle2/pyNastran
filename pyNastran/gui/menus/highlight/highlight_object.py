@@ -1,9 +1,11 @@
+from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.gui.menus.highlight.highlight import HighlightWindow
 
 
-class HighlightObject:
+class HighlightObject(BaseGui):
     def __init__(self, gui):
-        self.gui = gui
+        #self.gui = gui
+        super().__init__(gui)
         self._highlight_window_shown = False
         self._highlight_window = None
 
@@ -53,9 +55,10 @@ class HighlightObject:
             self._highlight_window.activateWindow()
 
 
-class MarkObject:
+class MarkObject(BaseGui):
     def __init__(self, gui):
-        self.gui = gui
+        #self.gui = gui
+        super().__init__(gui)
         self._mark_window_shown = False
         self._mark_window = None
 

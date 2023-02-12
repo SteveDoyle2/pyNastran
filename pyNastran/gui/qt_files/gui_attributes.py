@@ -43,6 +43,7 @@ from pyNastran.gui.menus.camera.camera_object import CameraObject
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
     EditGeometryPropertiesObject)
 
+from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.gui.utils.vtk.gui_utils import remove_actors_from_gui
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
@@ -52,11 +53,13 @@ from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 
-class GeometryObject:
+
+class GeometryObject(BaseGui):
     """
     """
-    def __init__(self, parent):
-        self.gui = parent
+    def __init__(self, gui):
+        super().__init__(gui)
+        #self.gui = parent
 
     def show(self):
         pass

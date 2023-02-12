@@ -116,6 +116,8 @@ Go to **Edit** -> **Edit Geometry Properties...** to load the following window. 
 .. image:: edit_geom_open.png
    :scale: 75%
 
+..
+  .. image:: edit_geom_properties_material_coord.png
 
 You'll see lots of coordinate systems, so you can click and turn each one on/off.  Scroll down to:
 

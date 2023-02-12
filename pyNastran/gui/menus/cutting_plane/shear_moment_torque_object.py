@@ -11,15 +11,18 @@ from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
 
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque import ShearMomentTorqueWindow
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
+from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.op2.tables.ogf_gridPointForces.smt import (
     get_nid_cd_xyz_cid0, plot_smt, setup_coord_from_plane)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
-class ShearMomentTorqueObject:
+
+class ShearMomentTorqueObject(BaseGui):
     """wrapper around ShearMomentTorqueWindow"""
     def __init__(self, gui):
-        self.gui = gui
+        #self.gui = gui
+        super().__init__(gui)
         self._smt_shown = False
         self._smt_window = None
         self._smt_window_shown = False
