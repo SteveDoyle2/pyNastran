@@ -4,13 +4,15 @@ defines:
 
 """
 from copy import deepcopy
+from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.gui.menus.camera.camera import CameraWindow
 
-class CameraObject:
+class CameraObject(BaseGui):
     """defines CameraObject"""
     def __init__(self, gui):
         """creates CameraObject"""
-        self.gui = gui
+        super().__init__(gui)
+        #self.gui = gui
         self.cameras = {}
         self._camera_window_shown = False
         self._camera_window = None
@@ -79,7 +81,7 @@ class CameraObject:
 
         Parameters
         ----------
-        camera_data : Dict[key] : value
+        camera_data : dict[key] : value
             defines the camera
             position : (float, float, float)
                 where am I is xyz space

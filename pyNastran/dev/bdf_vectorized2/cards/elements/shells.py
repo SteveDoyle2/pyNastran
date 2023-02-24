@@ -190,7 +190,7 @@ class CTRIA3v(ShellElement):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int]
+        nids : list[int, int, int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -203,7 +203,7 @@ class CTRIA3v(ShellElement):
         thickness_flag : int; default=0
             0 : Ti are actual user specified thicknesses
             1 : Ti are fractions relative to the T value of the PSHELL
-        thickness : List[float, float, float]; default=None
+        thickness : list[float, float, float]; default=None
             If a thickness is not supplied, then the thickness will be set equal
             to the value of T on the PSHELL entry.
         comment : str; default=''
@@ -420,7 +420,7 @@ class CTRIA6v(ShellElement):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int/None, int/None, int/None]
+        nids : list[int, int, int, int/None, int/None, int/None]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -433,7 +433,7 @@ class CTRIA6v(ShellElement):
         thickness_flag : int; default=0
             0 : Ti are actual user specified thicknesses
             1 : Ti are fractions relative to the T value of the PSHELL
-        thickness : List[float, float, float]; default=None
+        thickness : list[float, float, float]; default=None
             If a thickness is not supplied, then the thickness will be set equal
             to the value of T on the PSHELL entry.
         comment : str; default=''
@@ -549,7 +549,7 @@ class CTRIARv(ShellElement):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int]
+        nids : list[int, int, int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -562,7 +562,7 @@ class CTRIARv(ShellElement):
         thickness_flag : int; default=0
             0 : Ti are actual user specified thicknesses
             1 : Ti are fractions relative to the T value of the PSHELL
-        thickness : List[float, float, float]; default=None
+        thickness : list[float, float, float]; default=None
             If a thickness is not supplied, then the thickness will be set equal
             to the value of T on the PSHELL entry.
         comment : str; default=''
@@ -670,7 +670,7 @@ class CQUAD4v(ShellElement):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int]
+        nids : list[int, int, int, int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -683,7 +683,7 @@ class CQUAD4v(ShellElement):
         thickness_flag : int; default=0
             0 : Ti are actual user specified thicknesses
             1 : Ti are fractions relative to the T value of the PSHELL
-        thickness : List[float, float, float, float]; default=None
+        thickness : list[float, float, float, float]; default=None
             If a thickness is not supplied, then the thickness will be set equal
             to the value of T on the PSHELL entry.
         comment : str; default=''
@@ -847,7 +847,7 @@ class CQUAD8v(ShellElement):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int, int/None, int/None, int/None, int/None]
+        nids : list[int, int, int, int, int/None, int/None, int/None, int/None]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference
@@ -860,7 +860,7 @@ class CQUAD8v(ShellElement):
         thickness_flag : int; default=0
             0 : Ti are actual user specified thicknesses
             1 : Ti are fractions relative to the T value of the PSHELL
-        thickness : List[float, float, float, float]; default=None
+        thickness : list[float, float, float, float]; default=None
             If a thickness is not supplied, then the thickness will be set equal
             to the value of T on the PSHELL entry.
         comment : str; default=''
@@ -1034,7 +1034,7 @@ class CQUADv(ShellElement):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int, int/None, int/None,
+        nids : list[int, int, int, int, int/None, int/None,
                     int/None, int/None, int/None]
             node ids
         theta_mcid : float; default=0.0
@@ -1201,7 +1201,7 @@ class CQUADRv(ShellElement):
             element id
         pid : int
             property id (PSHELL/PCOMP/PCOMPG)
-        nids : List[int, int, int, int]
+        nids : list[int, int, int, int]
             node ids
         zoffset : float; default=0.0
             Offset from the surface of grid points to the element reference

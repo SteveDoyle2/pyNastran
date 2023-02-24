@@ -36,6 +36,7 @@ class QFloatEdit(QLineEdit):
         qfloat_validator = QDoubleValidator()
         self.setValidator(qfloat_validator)
 
+
 class PyDialog(QDialog):
     """
     common class for QDialog so value checking & escape/close code
@@ -99,7 +100,7 @@ def make_combo_box(items, initial_value):
 
     Parameters
     ----------
-    items : List[str]
+    items : list[str]
         the values of the combo box
     initial_value : str
         the value to set the combo box to

@@ -4,12 +4,12 @@ defines:
 """
 import urllib.request
 import urllib.error
-from typing import List, Tuple, Optional
+from typing import Optional
 
 import pyNastran
 
 
-def get_data_from_website(target_url: str) -> Tuple[Optional[List[str]], bool]:
+def get_data_from_website(target_url: str) -> tuple[Optional[list[str]], bool]:
     """downloads the byte data from the website"""
     is_failed = True
     data = ''
@@ -27,13 +27,13 @@ def get_data_from_website(target_url: str) -> Tuple[Optional[List[str]], bool]:
         #print(help(urllib))
         #raise
 
-    lines = [] # type: List[str]
+    lines = [] # type: list[str]
     if not is_failed:
         data = data_bytes.read().decode('utf-8')
         lines = data.split('\n')  # basically data.readlines()
     return lines, is_failed
 
-def split_version(version: str, msg: str) -> Tuple[int, int, int]:
+def split_version(version: str, msg: str) -> tuple[int, int, int]:
     try:
         major, minor, rev = version.split('+')[0].split('.')
     except ValueError:
@@ -45,7 +45,7 @@ def split_version(version: str, msg: str) -> Tuple[int, int, int]:
     tuple_version = (imajor, iminor, irev)
     return tuple_version
 
-def get_latest_version_from_data(data: str) -> Tuple[Optional[str], List[str]]:
+def get_latest_version_from_data(data: str) -> tuple[Optional[str], list[str]]:
     """finds the latest released version"""
     version_latest = None
     for line in data: # files are iterable
@@ -57,7 +57,7 @@ def get_latest_version_from_data(data: str) -> Tuple[Optional[str], List[str]]:
 
 def check_for_newer_version(version_current: Optional[str]=None,
                             version_latest: Optional[str]=None,
-                            quiet: bool=False) -> Tuple[Optional[str], Optional[str], bool]:
+                            quiet: bool=False) -> tuple[Optional[str], Optional[str], bool]:
     """
     Checks to see if a newer version of pyNastran has been released.
     Only checks this for the GUI.
@@ -90,7 +90,7 @@ def check_for_newer_version(version_current: Optional[str]=None,
     is_newer = _check_if_version_is_newer(version_latest, version_current, quiet)
     return version_latest, version_current, is_newer
 
-def _get_latest_version(version_latest: Optional[str]) -> Tuple[bool, str]:
+def _get_latest_version(version_latest: Optional[str]) -> tuple[bool, str]:
     is_failed = False
     if version_latest is None:
         target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/latest.txt'

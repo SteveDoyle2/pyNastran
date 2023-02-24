@@ -11,8 +11,8 @@ defines:
 from __future__ import annotations
 import os
 from struct import Struct
-from numpy import array, unique #, hstack
-from typing import List, Optional, TYPE_CHECKING
+from numpy import array, unique
+from typing import Optional, TYPE_CHECKING
 
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.utils import check_path
@@ -30,7 +30,7 @@ if TYPE_CHECKING:  # pragma: no cover
 def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename: str,
                                               bdf_filename: str,
                                               ugrid_filename_out: str,
-                                              pshell_pids_to_remove: List[int],
+                                              pshell_pids_to_remove: list[int],
                                               update_equivalence: bool=True,
                                               tol: float=0.01,
                                               log: Optional[SimpleLogger]=None):
@@ -45,7 +45,7 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename: str,
         the BDF filename
     ugrid_filename_out : str
         the output AFLR3/UGrid3d filename
-    pshell_pids_to_remove : List[int, ...]
+    pshell_pids_to_remove : list[int, ...]
         ???
     tol : float; default=0.01
         the equivalence tolerance
@@ -207,7 +207,7 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename: str,
 
 
 def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename: str, bdf_filename: str,
-                                       pshell_pids_to_remove: List[int],
+                                       pshell_pids_to_remove: list[int],
                                        tol: float=0.01, renumber: bool=True,
                                        log: Optional[SimpleLogger]=None):
     """
@@ -220,7 +220,7 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename: str, bdf_filename: str,
         the AFLR3/UGrid3d filename
     bdf_filename : str
         the BDF filename
-    pshell_pids_to_remove : List[int, ...]
+    pshell_pids_to_remove : list[int, ...]
     tol : float; default=0.01
         the equivalence tolerance
     renumber : bool; default=True
@@ -273,7 +273,7 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename: str, bdf_filename: str,
 
 def _update_merge(ugrid_filename: str,
                   bdf_filename: str,
-                  pshell_pids_to_remove: List[int],
+                  pshell_pids_to_remove: list[int],
                   tol: float,
                   log: Optional[SimpleLogger]=None) -> BDF:
     ugrid_model = UGRID(log=log, debug=False)

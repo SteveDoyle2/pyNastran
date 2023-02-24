@@ -273,9 +273,9 @@ def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> dict[int, float]:
     theta_rad = np.deg2rad(theta_deg)
     log = bdf.log
     if debug:
-        log.info(f'eids = {eids}')
-        log.info(f'mcid = {mcid}')
-        log.info(f'theta_deg = {theta_deg}')
+        log.info(f'eids = {str(eids)}')
+        log.info(f'mcid = {str(mcid)}')
+        log.info(f'theta_deg = {str(theta_deg)}')
 
     #NOTE separating quad types to get vectorizable "corner"
     cquad_types = ['CQUAD4', 'CQUAD8', 'CQUADR']

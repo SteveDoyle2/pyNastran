@@ -370,7 +370,7 @@ class GuiVTKCommon(GuiQtCommon):
         """
         Show these actors only
 
-        names : str, List[str]
+        names : str, list[str]
             names to show
             If they're hidden, show them.
             If they're shown and shouldn't be, hide them.
@@ -383,7 +383,7 @@ class GuiVTKCommon(GuiQtCommon):
         """
         Hide all the actors
 
-        except_names : str, List[str], None
+        except_names : str, list[str], None
             list of names to exclude
             None : hide all
 

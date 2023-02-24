@@ -1,8 +1,8 @@
 from functools import wraps
-from typing import Tuple, Optional
+from typing import Optional
 
 
-def check_locale_float(text: str) -> Tuple[Optional[str], bool]:
+def check_locale_float(text: str) -> tuple[Optional[str], bool]:
     """
     This is intended as a locale safe way to parse a float.
     It supports various types of floats.
@@ -109,7 +109,7 @@ def nocrash_str_bool(func):
     return wrapper
 
 @nocrash_str_bool
-def check_format_str(text: str) -> Tuple[str, bool]:
+def check_format_str(text: str) -> tuple[str, bool]:
     """
     Checks a QLineEdit string formatter
 

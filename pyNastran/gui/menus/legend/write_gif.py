@@ -6,7 +6,7 @@ Defines:
 
 """
 import os
-from typing import Tuple, List, Optional
+from typing import Optional
 
 import numpy as np
 from pyNastran.utils import int_version
@@ -50,14 +50,14 @@ def setup_animation(scale, istep=None,
 
     Returns
     -------
-    phases : List[float]
-        List[float] : the phase angles
-    icases_fringe/disp/vector : List[int]
-        List[int] : the icases to run
-    isteps : List[int]
+    phases : list[float]
+        list[float] : the phase angles
+    icases_fringe/disp/vector : list[int]
+        list[int] : the icases to run
+    isteps : list[int]
         nominal isteps = [0, 1, 2, 3, 4, ..., nframes]
         we can analyze pictures [1, 3, 4] by providing a subset
-    scales : List[float]
+    scales : list[float]
         the displacement scale factor; true scale
     analysis_time : float
         the time that needs to be simulated for the analysis; not the runtime
@@ -151,7 +151,7 @@ def fix_nframes(nframes: int, profile: str) -> int:
         nframes = 4 * (nframes_div_4 + 1) + 1
     return nframes
 
-def _get_scale_profile_info(profile: str) -> Tuple[str, bool, bool, bool]:
+def _get_scale_profile_info(profile: str) -> tuple[str, bool, bool, bool]:
     if isinstance(profile, str):
         profile = profile.lower()
         if profile == '0 to scale':
@@ -418,7 +418,7 @@ def get_analysis_time(time, onesided=True):
     return analysis_time
 
 def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
-                            isteps: List[int], scales: List[float],
+                            isteps: list[int], scales: list[float],
                             analysis_time: float, fps: int):
     """
     Simplifies the format of phases, icases, steps, scales to make them
@@ -426,16 +426,16 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
 
     Parameters
     ----------
-    phases : List[float] or None
-        List[float] : the phase angles
+    phases : list[float] or None
+        list[float] : the phase angles
         None : real result (same as [0., 0., ...])
-    icases_fringe/disp/vector : List[int] or int
-        List[int] : the icases to run
+    icases_fringe/disp/vector : list[int] or int
+        list[int] : the icases to run
         int : single icase (e.g., SOL 101, 103, 145; same as [icase, icase, ...]
-    isteps : List[int]
+    isteps : list[int]
         nominal isteps = [0, 1, 2, 3, 4, ..., nframes]
         we can analyze pictures [1, 3, 4] by providing a subset
-    scales : List[float]
+    scales : list[float]
         the displacement scale factor; true scale
     analysis_time: float
         used for logging
@@ -594,7 +594,7 @@ def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, is
     #print('scales2     =%s n=%s, isteps2=%s' % (scales, len(scales), isteps))
     return scales, phases, icases_fringe, icases_disp, icases_vector, isteps
 
-def write_gif(gif_filename: str, png_filenames: List[str], time: float=2.0,
+def write_gif(gif_filename: str, png_filenames: list[str], time: float=2.0,
               onesided: bool=True, nrepeat: int=0,
               delete_images: bool=False, make_gif: bool=True) -> bool:
     """
@@ -604,7 +604,7 @@ def write_gif(gif_filename: str, png_filenames: List[str], time: float=2.0,
     ----------
     gif_filename : str
         path to the output gif & png folder
-    png_filenames : List[str]
+    png_filenames : list[str]
         the pictures to make the gif from
     time : float; default=2.0
         the runtime of the gif (seconds)

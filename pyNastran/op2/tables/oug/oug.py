@@ -682,11 +682,12 @@ class OUG:
         """reads the SORT1 version of table 4 (the data table)"""
         op2 = self.op2
         table_name_bytes = op2.table_name
+        #print(op2.code_information())
         if op2.table_code == 1:   # Displacements
-            if table_name_bytes in [b'OUGV1', b'OUGV2',
+            if table_name_bytes in {b'OUGV1', b'OUGV2',
                                     b'OUG1',
                                     b'BOUGV1',
-                                    b'OUPV1', b'OUG1F']:
+                                    b'OUPV1', b'OUG1F'}:
                 # OUG1F - acoustic displacements?
                 #msg = f'table_name={op2.table_name} table_code={op2.table_code}'
                 #raise AssertionError(msg)
@@ -705,6 +706,10 @@ class OUG:
             else:
                 raise NotImplementedError(op2.code_information())
         elif op2.table_code == 7:
+            assert table_name_bytes in {b'OUG1', b'OUGV1', b'OUGV2', b'OUG1S', b'OUGF1', b'OPHIG',
+                                        b'BOUGV1', b'BOPHIG', b'BOPHIGF', b'BOUGF1',
+                                        b'ROUGV1',
+                                        b'RADCONS', b'RADEFFM', b'RADEATC'}, op2.code_information()
             n = self._read_oug_eigenvector(data, ndata)
         elif op2.table_code == 10:
             n = self._read_oug_velocity(data, ndata)
@@ -712,7 +717,7 @@ class OUG:
             n = self._read_oug_acceleration(data, ndata)
 
         elif op2.table_code == 14:  # eigenvector (solution set)
-            assert table_name_bytes in [b'OPHSA'], op2.table_name
+            assert table_name_bytes in {b'OPHSA'}, op2.table_name
             op2.to_nx(f' because table_name={op2.table_name} was found')
             n = self._read_oug_eigenvector(data, ndata)
         elif op2.table_code == 15:  # displacement (solution set)
@@ -1008,16 +1013,19 @@ class OUG:
         # 3: for cyclic symmetric;
         # 0: otherwise
         assert op2.thermal in [0, 2, 3], op2.code_information()
-        if op2.table_name in [b'OUGV1', b'OUGV2', b'OUG1',
-                               b'BOUGV1',
-                               b'OPHIG', b'BOPHIG', b'OUGV1PAT']:
+        if op2.table_name in {b'OUGV1', b'OUGV2', b'OUG1',
+                              b'BOUGV1',
+                              b'OPHIG', b'BOPHIG', b'OUGV1PAT'}:
             op2._setup_op2_subcase('VECTOR')
             result_name = 'eigenvectors'
-        elif op2.table_name in [b'OUGF1', b'OUGF2',
-                                 b'BOUGF1',
-                                 b'BOPHIGF']:
+        elif op2.table_name in {b'OUGF1', b'OUGF2',
+                                b'BOUGF1',
+                                b'BOPHIGF'}:
             op2._setup_op2_subcase('VECTOR')
             result_name = 'eigenvectors_fluid'
+        elif op2.table_name in {b'OUG1S'}:
+            op2._setup_op2_subcase('VECTOR')
+            result_name = 'eigenvectors_structure'
 
         elif op2.table_name == b'OPHSA':
             op2.to_nx(f' because table_name={op2.table_name} was found')

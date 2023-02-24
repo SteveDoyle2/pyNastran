@@ -42,13 +42,13 @@ class TEMPv(BaseLoad):
 
         Parameters
         ----------
-        sid : List[int]
+        sid : list[int]
             constraint ids
-        nodes : List[int]
+        nodes : list[int]
             GRID/SPOINT ids
-        temperatures : List[float]
+        temperatures : list[float]
             the nodal temperature
-        enforced : List[float]
+        enforced : list[float]
             the constrained value for the given node (typically 0.0)
         """
         if comment:
@@ -149,9 +149,9 @@ class TEMPDv(BaseLoad):
 
         Parameters
         ----------
-        sid : List[int]
+        sid : list[int]
             constraint ids
-        temperatures : List[float]
+        temperatures : list[float]
             the nodal temperature
         """
         if comment:

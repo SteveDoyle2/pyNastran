@@ -117,7 +117,7 @@ class NodeGroup:
         return msg
 
 def _get_collapsed_text(values):
-    # type: (List[int]) -> str
+    # type: (list[int]) -> str
     """writes the collapsed text for ``Group`` and ``NodeGroup``"""
     singles, doubles = collapse_colon_packs(values)
     text = ' '.join([str(s) for s in singles]) + ' '

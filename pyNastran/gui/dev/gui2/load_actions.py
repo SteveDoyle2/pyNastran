@@ -155,7 +155,7 @@ class LoadActions:
         self.gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
             infile_name, self.gui.format, main_str))
 
-    def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> Tuple[bool, Any]:
+    def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> tuple[bool, Any]:
         """gets the filename and format"""
         wildcard = ''
         is_failed = False
@@ -235,7 +235,7 @@ class LoadActions:
         return is_failed, (infile_name, load_function, filter_index, formats, geometry_format)
 
     def create_load_file_dialog(self, qt_wildcard: str, title: str,
-                                default_filename: Optional[str]=None) -> Tuple[str, str]:
+                                default_filename: Optional[str]=None) -> tuple[str, str]:
         #options = QFileDialog.Options()
         #options |= QFileDialog.DontUseNativeDialog
         #fname, flt = QFileDialog.getOpenFileName(

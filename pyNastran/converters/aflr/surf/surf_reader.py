@@ -9,7 +9,7 @@ def combine_surfs(surf_filenames, surf_out_filename=None):
 
     Parameters
     ----------
-    surf_filenames : List[str]
+    surf_filenames : list[str]
         list of surf filenames
     surf_out_filename : str; default=None -> no writing
         string of stl output filename

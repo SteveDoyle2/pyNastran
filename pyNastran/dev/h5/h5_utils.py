@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict, Callable, Union, Optional, Any, TYPE_CHECKING
+from typing import Callable, Union, Optional, Any, TYPE_CHECKING
 import h5py
 import pandas as pd
 if TYPE_CHECKING:  # pragma: no cover
@@ -16,7 +16,7 @@ def h5py_to_dataframe(group: h5py._hl.dataset.Dataset) -> pd.DataFrame:
 
 def get_tree(h5_group: Union[h5py._hl.group.Group,
                              h5py._hl.dataset.Dataset],
-             mydict: Optional[Dict[str, str]]=None) -> Dict[str, str]:
+             mydict: Optional[dict[str, str]]=None) -> dict[str, str]:
     """
     Dataset:
     attrs  : <Attributes of HDF5 object at 1238427909672>
@@ -61,7 +61,7 @@ def get_tree(h5_group: Union[h5py._hl.group.Group,
         get_tree(header_group, mydict2)
         mydict[header] = mydict2
     return mydict
-#def show_tree(h5_group: h5py.File) -> Dict[str, str]:
+#def show_tree(h5_group: h5py.File) -> dict[str, str]:
     #assert isinstance(h5_group, h5py.File), h5_group
     #out = {}
     #headers = list(h5_group)
@@ -73,7 +73,7 @@ def get_tree(h5_group: Union[h5py._hl.group.Group,
     #return out
 
 BasicCallable = Callable[
-    [int, int, List[int], str],
+    [int, int, list[int], str],
     Any]
 
 def read_basic_element(group: h5py._hl.dataset.Dataset, geom_model: BDF,

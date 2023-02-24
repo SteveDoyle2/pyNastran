@@ -5,7 +5,6 @@ import locale
 import platform
 import importlib
 import warnings
-from typing import Tuple, Dict
 with warnings.catch_warnings():  # avoid an imp module deprecation warning
     warnings.simplefilter("ignore")
     import setuptools
@@ -31,19 +30,19 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog
 
 def get_qt_license(qt_name: str) -> str:
     if qt_name == 'PyQt5':
-        qt = '* Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt  = '* Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
         qt += '* PyQt5 Python bindings for Qt5, by Riverbank Computing Limited.\n\n'
         qt += '* Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.'
     elif qt_name == 'PyQt6':
-        qt = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
-        qt += ' * PyQt6 Python bindings for Qt6, by Riverbank Computing Limited.\n\n'
+        qt  = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt += '* PyQt6 Python bindings for Qt6, by Riverbank Computing Limited.\n\n'
         qt += '* Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.'
     elif qt_name == 'PySide2':
-        qt = ' * Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
-        qt += '\n * PySide2 Python bindings for Qt5, by Qt for Python.'
+        qt  = '* Qt5 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt += '* PySide2 Python bindings for Qt5, by Qt for Python.'
     elif qt_name == 'PySide6':
-        qt = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
-        qt += ' * PySide6 Python bindings for Qt6, by Qt for Python.'
+        qt  = '* Qt6 cross-platform GUI toolkit, developed by many contributors.\n\n'
+        qt += '* PySide6 Python bindings for Qt6, by Qt for Python.'
     else:
         raise NotImplementedError(qt_name)
     return qt
@@ -197,7 +196,7 @@ class AboutWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
-def get_packages() -> Dict[str, str]:
+def get_packages() -> dict[str, str]:
     """makes the packages data"""
     #python = str(sys.version_info)
     #'python_branch', 'python_revision', 'python_build', 'python_compiler', 'python_implementation',
@@ -234,7 +233,7 @@ def get_packages() -> Dict[str, str]:
         packages[name] = module.__version__
     return packages
 
-def get_version() -> Dict[str, str]:
+def get_version() -> dict[str, str]:
     """makes the version data"""
     sys_platform = sys.platform
     localei, unused_encoding = locale.getdefaultlocale()
@@ -379,7 +378,7 @@ def _shortcuts_tab():
     shortcuts_tab.setLayout(vbox)
     return shortcuts_tab
 
-def get_shortcuts() -> Tuple[Dict[str, str], Dict[str, str]]:
+def get_shortcuts() -> tuple[dict[str, str], dict[str, str]]:
     """makes the shortcuts data"""
 
     mouse_shortcuts = {

@@ -202,9 +202,9 @@ class CONM2v(RodElement):
            the mass of the CONM2
         cid : int; default=0
            coordinate frame of the offset (-1=absolute coordinates)
-        X : (3, ) List[float]; default=None -> [0., 0., 0.]
+        X : (3, ) list[float]; default=None -> [0., 0., 0.]
             xyz offset vector relative to nid
-        I : (6, ) List[float]; default=None -> [0., 0., 0., 0., 0., 0.]
+        I : (6, ) list[float]; default=None -> [0., 0., 0., 0., 0., 0.]
             mass moment of inertia matrix about the CG
             I11, I21, I22, I31, I32, I33 = I
         comment : str; default=''
@@ -343,7 +343,7 @@ class CRODv(RodElement):
             element id
         pid : int
             property id (PROD)
-        nids : List[int, int]
+        nids : list[int, int]
             node ids
         comment : str; default=''
             a comment for the card
@@ -436,7 +436,7 @@ class CTUBEv(RodElement):
             element id
         pid : int
             property id
-        nids : List[int, int]
+        nids : list[int, int]
             node ids
         comment : str; default=''
             a comment for the card

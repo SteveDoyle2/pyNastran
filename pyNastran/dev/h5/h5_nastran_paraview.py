@@ -49,7 +49,7 @@ def get_paraview_nastran_ugrid(hdf5_filename: str,
                                subcases=None,  # default=None -> all
                                modes=None, # default=None -> all
                                results=None, # default=None -> all,
-                      ) -> Tuple[BDF, vtk.vtkUnstructuredGrid]:
+                      ) -> tuple[BDF, vtk.vtkUnstructuredGrid]:
     #subcases = [1, 2]
     #modes = range(1, 10)
     #results = ['eigenvectors', 'displacement', 'stress', 'strain']

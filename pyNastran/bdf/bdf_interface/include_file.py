@@ -129,8 +129,7 @@ def split_filename_into_tokens(include_dir: str, filename: str,
     pth_out = inc / pth3
     return pth_out
 
-def split_tokens(tokens, is_windows):
-    # type: (Tuple[str], bool) -> list[str]
+def split_tokens(tokens: tuple[str], is_windows: bool) -> list[str]:
     """converts a series of path tokens into a joinable path"""
     tokens2 = [] # type: list[str]
     is_mac_linux = not is_windows

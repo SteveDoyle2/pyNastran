@@ -1,7 +1,7 @@
 from typing import List
 import numpy as np
 
-def get_groups_sorted_by_name(data) -> List[str]:
+def get_groups_sorted_by_name(data) -> list[str]:
     keys = []
     values = []
     for key, group in data.items():

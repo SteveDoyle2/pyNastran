@@ -1,7 +1,7 @@
 """creates 3d beams"""
 from __future__ import annotations
 from collections import defaultdict
-from typing import Tuple, List, Dict, Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -47,8 +47,8 @@ if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF, CBAR, CBEAM
 
-def get_bar_nids(model: BDF, bar_beam_eids: List[int]) -> Tuple[List[int],
-                                                                Dict[int, Tuple[int, int]]]:
+def get_bar_nids(model: BDF, bar_beam_eids: list[int]) -> tuple[list[int],
+                                                                dict[int, tuple[int, int]]]:
     """gets the bar nids"""
     nids = set([])
     nid_release_map = defaultdict(list)
@@ -68,7 +68,7 @@ def get_bar_nids(model: BDF, bar_beam_eids: List[int]) -> Tuple[List[int],
     return nids, nid_release_map
 
 def get_beam_sections_map(model: BDF,
-                          bar_beam_eids: List[int]) -> Dict[int, List[int]]:
+                          bar_beam_eids: list[int]) -> dict[int, list[int]]:
     """gets the beams sorted by property_id that can be represented as 3d elements"""
     bar_pid_to_eids = defaultdict(list)
     int_offts = []
@@ -103,7 +103,7 @@ def get_beam_sections_map(model: BDF,
     return bar_pid_to_eids
 
 def create_3d_beams(model: BDF,
-                    bar_pid_to_eids: Dict[int, List[int]]) -> Optional[vtk.vtkUnstructuredGrid]:
+                    bar_pid_to_eids: dict[int, list[int]]) -> Optional[vtk.vtkUnstructuredGrid]:
     if len(bar_pid_to_eids) == 0:
         return None
     ugrid = vtk.vtkUnstructuredGrid()
@@ -187,7 +187,7 @@ def create_3d_beams(model: BDF,
     ugrid.Modified()
     return ugrid
 
-def _create_vtk_points_from_list(points_list: [List[np.ndarray]]):
+def _create_vtk_points_from_list(points_list: [list[np.ndarray]]):
     #points_array = _make_points_array(points_list)
     points_array = np.vstack(points_list)
     points = vtk.vtkPoints()
@@ -202,7 +202,7 @@ def _create_vtk_points_from_list(points_list: [List[np.ndarray]]):
 
 def update_3d_beams(ugrid,
                     model: BDF,
-                    bar_pid_to_eids: Dict[int, List[int]]) -> Any:
+                    bar_pid_to_eids: dict[int, list[int]]) -> Any:
     node0 = 0
     points_list = []
     for pid, eids in bar_pid_to_eids.items():

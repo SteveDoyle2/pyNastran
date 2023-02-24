@@ -319,7 +319,7 @@ class GRID(VectorizedCard):
         ----------
         bdf_file : file
             a file object
-        i : List[int] (default=None -> all)
+        i : list[int] (default=None -> all)
             the indicies
         size : int; default=8
             the field width (8/16)

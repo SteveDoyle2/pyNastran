@@ -662,7 +662,7 @@ class NLPARM(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
@@ -936,11 +936,11 @@ class TSTEP(BaseCard):
         ----------
         sid : int
             the time step id
-        N : List[int/None]
+        N : list[int/None]
             ???
-        DT : List[float/None]
+        DT : list[float/None]
             ???
-        NO : List[int/None]
+        NO : list[int/None]
             ???
         comment : str; default=''
             a comment for the card
@@ -1183,7 +1183,7 @@ class TSTEPNL(BaseCard):
 
         Parameters
         ----------
-        data : List[varies]
+        data : list[varies]
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card

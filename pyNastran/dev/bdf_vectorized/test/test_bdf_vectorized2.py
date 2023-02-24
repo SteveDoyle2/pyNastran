@@ -34,36 +34,36 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     ----------
     folder : str
         the folder where the bdf_filename is
-    filenames : List[str]
+    filenames : list[str]
         the bdf files to analyze
     debug : bool, optional
         run with debug logging (default=False)
-    xref : bool / str / List[bool/str], optional
+    xref : bool / str / list[bool/str], optional
         True : cross reference the model
         False  : don't cross reference the model
         'safe' : do safe cross referencing
-    check : bool / List[bool], optional
+    check : bool / list[bool], optional
         validate cards for things like mass, area, etc. (default=True)
-    punch : bool / List[bool], optional
+    punch : bool / list[bool], optional
         this is a PUNCH file (no executive/case control decks; default=False)
     cid : int / None, optional
         convert the model grids to an alternate coordinate system (default=None; no conversion)
-    size : int / List[int], optional
+    size : int / list[int], optional
         The field width of the model (8/16)
-    is_double : bool / List[bool], optional
+    is_double : bool / list[bool], optional
         Is this a double precision model?
             True : size = 16
             False : size = {8, 16}
     nastran : str, optional
         the path to nastran (default=''; no analysis)
-    post : int / List[int], optional
+    post : int / list[int], optional
         the PARAM,POST,value to run
     sum_load : bool; default=True
         should the loads be summed
     dev : bool; default=True
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
-    crash_cards : List[str, str, ...]
+    crash_cards : list[str, str, ...]
         list of cards that are invalid and automatically crash the run
 
     Examples

@@ -2147,8 +2147,8 @@ def form_rbe3(uset, GRID_dep, DOF_dep, Ind_List, UM_List=None):
     wtdof = np.array([])
     usetdof = uset[:, :2].astype(np.int64)
     for j in range(0, len(Ind_List), 2):
-        DOF_ind = np.atleast_1d(Ind_List[j])
-        GRIDS_ind = np.atleast_1d(Ind_List[j+1])
+        DOF_ind = np.atleast_1d(Ind_list[j])
+        GRIDS_ind = np.atleast_1d(Ind_list[j+1])
         if len(DOF_ind) == 2:
             wtcur = DOF_ind[1]
             DOF_ind = DOF_ind[0]
@@ -2172,8 +2172,8 @@ def form_rbe3(uset, GRID_dep, DOF_dep, Ind_List, UM_List=None):
     if UM_List is not None:
         mdof = np.array([], dtype=np.int64).reshape(0, 2)
         for j in range(0, len(UM_List), 2):
-            GRID_MSET = np.atleast_1d(UM_List[j])
-            DOF_MSET = np.atleast_1d(UM_List[j+1])
+            GRID_MSET = np.atleast_1d(UM_list[j])
+            DOF_MSET = np.atleast_1d(UM_list[j+1])
             mdofcur = expand_trim(DOF_MSET)
             grids = np.dot(np.ones((len(mdofcur), 1), dtype=np.int64),
                            GRID_MSET.reshape(1, -1))

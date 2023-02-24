@@ -29,6 +29,31 @@ from pyNastran.op2.tables.onmd import ONMD
 from pyNastran.op2.tables.opr import OPR
 from pyNastran.op2.tables.ogpwg import OGPWG
 
+class Op2Readers:
+    def __init__(self, op2):
+        #self.op2 = op2
+        self.reader_onmd = ONMD(op2)
+        self.reader_ogpwg = OGPWG(op2)
+        self.reader_lama = LAMA(op2)
+
+        self.reader_oes = OES(op2)
+        self.reader_opg = OPG(op2)
+        self.reader_oqg = OQG(op2)
+        self.reader_opr = OPR(op2)
+        self.reader_ogs = OGS(op2)
+        self.reader_onr = ONR(op2)
+        self.reader_ogpf = OGPF(op2)
+
+        # OUG - displacement, velocity, acceleration, eigenvector, temperature
+        self.reader_oug = OUG(op2)
+        self.reader_otemp = OTEMP(op2)  # Siemens
+        self.reader_ougpk = OUGPK(op2)  # STK
+
+        #  OEF - element force, heat flux
+        self.reader_oef = OEF(op2)
+        self.reader_oefpk = OEFPK(op2) # STK
+
+
 class FortranFormat:
     """defines basic methods for reading Fortran formatted data files"""
     def __init__(self):
@@ -49,26 +74,8 @@ class FortranFormat:
         self.valid_subcases = []
         #self.op2_reader = OP2Reader()
         self.IS_TESTING = False
-        self.reader_onmd = ONMD(self)
-        self.reader_ogpwg = OGPWG(self)
-        self.reader_lama = LAMA(self)
 
-        self.reader_oes = OES(self)
-        self.reader_opg = OPG(self)
-        self.reader_oqg = OQG(self)
-        self.reader_opr = OPR(self)
-        self.reader_ogs = OGS(self)
-        self.reader_onr = ONR(self)
-        self.reader_ogpf = OGPF(self)
-
-        # OUG - displacement, velocity, acceleration, eigenvector, temperature
-        self.reader_oug = OUG(self)
-        self.reader_otemp = OTEMP(self)  # Siemens
-        self.reader_ougpk = OUGPK(self)  # STK
-
-        #  OEF - element force, heat flux
-        self.reader_oef = OEF(self)
-        self.reader_oefpk = OEFPK(self) # STK
+        self._op2_readers = Op2Readers(self)
 
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""

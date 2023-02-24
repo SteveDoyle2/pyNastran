@@ -601,6 +601,8 @@ class OP2(OP2_Scalar, OP2Writer):
         self.combine_results(combine=combine)
         self.log.debug('finished reading op2')
         str(self.op2_results)
+        if len(self.op2_results.thermal_load):
+            self.app = 'HEAT'
 
     def _finalize(self) -> None:
         """internal method"""
@@ -617,7 +619,10 @@ class OP2(OP2_Scalar, OP2Writer):
             except AttributeError:
                 self.log.error(f'result_type = {result_type}')
                 raise
+            if len(values) == 0:
+                continue
 
+            #print(result_type)
             for obj in values:
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
@@ -1105,7 +1110,7 @@ class OP2(OP2_Scalar, OP2Writer):
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
     def transform_displacements_to_global(self, icd_transform: Any,
-                                          coords: Dict[int, Any],
+                                          coords: dict[int, Any],
                                           xyz_cid0: Any=None,
                                           debug: bool=False) -> None:
         """

@@ -248,7 +248,7 @@ def A_I1_I2_I12(prop, beam_type: str,
     return A, I1, I2, I12
 
 def _bar_areaL(class_name: str, beam_type: str, dim: list[float],
-               prop: Any) -> float:
+               prop: Any) -> tuple[float, float, float, float]:
     """
     Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
 
@@ -324,7 +324,7 @@ def _bar_areaL(class_name: str, beam_type: str, dim: list[float],
             beam_type, class_name)
         raise NotImplementedError(msg)
     assert A > 0, 'beam_type=%r dim=%r A=%s\n%s' % (beam_type, dim, A, prop)
-    return A
+    return A, I1, I2, I12
 
 def rod_section(class_name, beam_type, dim, prop):
     # This is a circle if you couldn't tell...
@@ -1742,7 +1742,7 @@ class PBARL(LineProperty):
 
     def Area(self) -> float:
         """Gets the area :math:`A` of the CBAR."""
-        return _bar_areaL('PBARL', self.beam_type, self.dim, self)
+        return _bar_areaL('PBARL', self.beam_type, self.dim, self)[0]
 
     def Nsm(self) -> float:
         """Gets the non-structural mass :math:`nsm` of the CBAR."""

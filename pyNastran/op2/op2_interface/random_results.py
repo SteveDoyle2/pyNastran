@@ -462,6 +462,19 @@ class RASCONS:
         ]
         return ['RASCONS.' + table for table in tables]
 
+
+class RAQCONS:
+    """
+    storage class for the RAQCONS objects
+    Constraint mode MPC force table
+    """
+    def __init__(self):
+        self.mpc_forces = {}
+
+    def get_table_types(self):
+        tables = ['mpc_forces', ]
+        return ['RAQCONS.' + table for table in tables]
+
 class RARCONS:
     """
     storage class for the RARCONS objects
@@ -667,6 +680,16 @@ class RAREATC:
             'spc_forces',
         ]
         return ['RAREATC.' + table for table in tables]
+
+class RAQEATC:
+    """storage class for the RAQEATC objects"""
+    def __init__(self):
+        self.mpc_forces = {}
+    def get_table_types(self):
+        tables = [
+            'mpc_forces',
+        ]
+        return ['RAQEATC.' + table for table in tables]
 
 class RAFEATC:
     """storage class for the RAFEATC objects"""

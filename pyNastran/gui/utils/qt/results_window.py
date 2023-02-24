@@ -1,4 +1,4 @@
-from typing import Tuple, List, Any
+from typing import Any
 from qtpy import QtGui
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView
 from pyNastran.gui.utils.qt.qtreeview2 import RightClickTreeView, GenericRightClickTreeView
@@ -10,7 +10,7 @@ class ResultsWindow(QWidget):
     results case.  It does not have an apply button.
     """
     def __init__(self, parent, name, data, choices,
-                 actions: List[Tuple[str, Any, bool]]=None,
+                 actions: list[tuple[str, Any, bool]]=None,
                  include_clear=True, include_export_case=True,
                  include_delete=True,
                  include_results=True):
@@ -20,7 +20,7 @@ class ResultsWindow(QWidget):
         actions : varies
             None:
                 use the default actions
-            List[Tuple[str, Any, bool]]:
+            list[tuple[str, Any, bool]]:
                 action : (name, function, return_icase)
                 name : str
                     the name of the action

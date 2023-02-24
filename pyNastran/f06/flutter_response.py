@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import count
-from typing import  List, Dict, Union, Tuple, Iterable, Optional, Any, TYPE_CHECKING
+from typing import Union, Iterable, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -81,9 +81,9 @@ class FlutterResponse:
     def __init__(self, subcase: int, configuration: str,
                  xysym: str, xzsym: str,
                  mach: float, density_ratio: float, method: str,
-                 modes: List[int], results: Any,
-                 f06_units: Union[None, str, Dict[str, str]]=None,
-                 out_units: Union[None, str, Dict[str, str]]=None,
+                 modes: list[int], results: Any,
+                 f06_units: Union[None, str, dict[str, str]]=None,
+                 out_units: Union[None, str, dict[str, str]]=None,
                  make_alt: bool=False) -> None:
         """
         Parameters
@@ -92,14 +92,14 @@ class FlutterResponse:
             the subcase id
         method : str
             PK, PKNL, ???
-        modes : List[int]; (default=None -> all)
+        modes : list[int]; (default=None -> all)
             the modes; typically 1 to N
         results : varies
             method = PK
-                List[List[float] * 7] * nmodes
+                list[list[float] * 7] * nmodes
                 kfreq, 1/kfreq,                velocity, damping, freq, eigr, eigi
             method = PKNL
-                List[List[float] * 9] * nmodes
+                list[list[float] * 9] * nmodes
                 kfreq, 1/kfreq, density, mach, velocity, damping, freq, eigr, eigi
 
         Units
@@ -226,8 +226,8 @@ class FlutterResponse:
             #for color in colors:
                 #symbol_list.append('%s-%s' % (shape, color))
         self.noline = False
-        self._symbols = []  # type: List[str]
-        self._colors = []  # type: List[str]
+        self._symbols = []  # type: list[str]
+        self._colors = []  # type: list[str]
         self.generate_symbols()
 
     def set_pknl_results(self, results):
@@ -302,7 +302,7 @@ class FlutterResponse:
     def set_plot_options(self, noline: bool=False) -> None:
         self.noline = noline
 
-    def _get_unit_factor(self, name: str) -> Tuple[float, str]:
+    def _get_unit_factor(self, name: str) -> tuple[float, str]:
         if not self.f06_units or not self.out_units:
             msg = 'name=%r f06_units=%s out_units=%s' % (name, self.f06_units, self.out_units)
             raise RuntimeError(msg)
@@ -366,7 +366,7 @@ class FlutterResponse:
 
         Parameters
         ----------
-        modes : List[int] / int ndarray; (default=None -> all)
+        modes : list[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
         fig : plt.figure
             figure object
@@ -672,7 +672,7 @@ class FlutterResponse:
         # 4. find the critical mode
         # 5. ???
 
-    def _get_symbols_colors_from_modes(self, modes) -> Tuple[List[str], List[str]]:
+    def _get_symbols_colors_from_modes(self, modes) -> tuple[list[str], list[str]]:
         """
         We need to make sure we have a symbol and color for each mode,
         even if we repeat them.
@@ -705,7 +705,7 @@ class FlutterResponse:
 
         Parameters
         ----------
-        modes : List[int] / int ndarray; (default=None -> all)
+        modes : list[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
         legend : bool; default=True
             should the legend be shown
@@ -798,7 +798,7 @@ class FlutterResponse:
         if close:
             plt.close()
 
-    def export_to_veas(self, veas_filename: str, modes: Optional[List[int]]=None) -> None:
+    def export_to_veas(self, veas_filename: str, modes: Optional[list[int]]=None) -> None:
         """
         Exports a ZONA .veas file
 
@@ -806,7 +806,7 @@ class FlutterResponse:
         ----------
         veas_filename : str
             the filename to write
-        modes : List[int] / int ndarray; (default=None -> all)
+        modes : list[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
 
         *.VEAS
@@ -857,7 +857,7 @@ class FlutterResponse:
             imodes = modes - 1
         return imodes
 
-    def _modes_nmodes(self, modes: Optional[Iterable[int]]) -> Tuple[Iterable[int], int]:
+    def _modes_nmodes(self, modes: Optional[Iterable[int]]) -> tuple[Iterable[int], int]:
         """gets the modes and nmodes"""
         if modes is None:
             nmodes = self.results.shape[0]
@@ -867,7 +867,7 @@ class FlutterResponse:
         return modes, nmodes
 
     def export_to_f06(self, f06_filename: str,
-                      modes: Optional[List[int]]=None,
+                      modes: Optional[list[int]]=None,
                       page_stamp: Optional[str]=None,
                       page_num: int=1) -> int:
         if page_stamp is None:
@@ -899,10 +899,10 @@ class FlutterResponse:
         return page_num
 
     def export_to_zona(self, zona_filename: str,
-                       modes: Optional[List[int]]=None,
-                       xlim: Optional[List[float]]=None,
+                       modes: Optional[list[int]]=None,
+                       xlim: Optional[list[float]]=None,
                        plot_type: str='tas',
-                       damping_ratios: Optional[List[float]]=None) -> str:
+                       damping_ratios: Optional[list[float]]=None) -> str:
         """
         Writes a custom ZONA flutter file
 
@@ -910,7 +910,7 @@ class FlutterResponse:
         ----------
         zona_filename : str
             the filename to write
-        modes : List[int] / int ndarray; (default=None -> all)
+        modes : list[int] / int ndarray; (default=None -> all)
             the modes; typically 1 to N
 
         TODO: not done
@@ -980,7 +980,7 @@ class FlutterResponse:
             zona_file.write(msg)
         return msg
 
-    def _plot_type_to_ix_xlabel(self, plot_type: str) -> Tuple[int, str]:
+    def _plot_type_to_ix_xlabel(self, plot_type: str) -> tuple[int, str]:
         """helper method for ``plot_vg_vf``"""
         plot_type = plot_type.lower()
         if plot_type == 'tas':
@@ -1045,12 +1045,12 @@ class FlutterResponse:
             * 'private' - names that begin with single underscore
             * 'both' - private and public
             * 'all' - all attributes that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
 
         Returns
         -------
-        attribute_names : List[str]
+        attribute_names : list[str]
             sorted list of the names of attributes of a given type or None
             if the mode is wrong
         """
@@ -1072,12 +1072,12 @@ class FlutterResponse:
             * "private" - names that begin with single underscore
             * "both" - private and public
             * "all" - all methods that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
 
         Returns
         -------
-        method : List[str]
+        method : list[str]
             sorted list of the names of methods of a given type
             or None if the mode is wrong
         """

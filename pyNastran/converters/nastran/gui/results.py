@@ -14,9 +14,9 @@ class LayeredTableResults(Table):
 
         Parameters
         ----------
-        headers : List[str]
+        headers : list[str]
             the sidebar word
-        titles : List[str]
+        titles : list[str]
             the legend title
 
         """
@@ -127,9 +127,9 @@ class SimpleTableResults(Table):
 
         Parameters
         ----------
-        headers : List[str]
+        headers : list[str]
             the sidebar word
-        titles : List[str]
+        titles : list[str]
             the legend title
 
         """

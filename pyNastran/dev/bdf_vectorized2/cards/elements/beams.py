@@ -176,9 +176,9 @@ class CBEAMv(BeamElement):
             property id
         mid : int
             material id
-        nids : List[int, int]
+        nids : list[int, int]
             node ids; connected grid points at ends A and B
-        x : List[float, float, float]
+        x : list[float, float, float]
             Components of orientation vector, from GA, in the displacement
             coordinate system at GA (default), or in the basic coordinate system
         g0 : int
@@ -193,10 +193,10 @@ class CBEAMv(BeamElement):
             at end B relative to end A.
             For beam p-elements ONLY!
             None : offt is active
-        pin_flags : List[int, int]; default=None
+        pin_flags : list[int, int]; default=None
             None : [0, 0]; don't release the DOFs
             Pin Flag at End A/B.  Releases the specified DOFs
-        wa / wb : List[float, float, float]
+        wa / wb : list[float, float, float]
             Components of offset vectors from the grid points to the end
             points of the axis of the shear center
         sa / sb : int; default=0
@@ -319,8 +319,8 @@ class CBEAMv(BeamElement):
         Returns
         -------
         x_g0 : varies
-            g0 : List[int, None, None]
-            x : List[float, float, float]
+            g0 : list[int, None, None]
+            x : list[float, float, float]
 
         """
         if g0 is not None:

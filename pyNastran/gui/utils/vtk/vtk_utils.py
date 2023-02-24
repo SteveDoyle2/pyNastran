@@ -6,7 +6,7 @@ defines:
 from __future__ import annotations
 import warnings
 from collections import defaultdict
-from typing import Tuple, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 import vtk
@@ -236,10 +236,10 @@ def create_vtk_cells_of_constant_element_types(grid: vtk.vtkUnstructuredGrid,
 
     grid : vtk.vtkUnstructuredGrid()
         the unstructured grid
-    elements_list : List[elements, ...]
+    elements_list : list[elements, ...]
         elements : (nelements, nnodes_per_element) int ndarray
             the elements to add
-    etypes_list : List[etype, ...]
+    etypes_list : list[etype, ...]
         etype : int
             the VTK flag as defined in
             ``create_vtk_cells_of_constant_element_type``
@@ -396,8 +396,8 @@ def find_point_id_closest_to_xyz(grid: vtk.vtkUnstructuredGrid,
 def map_element_centroid_to_node_fringe_result(
         ugrid: vtk.vtkUnstructuredGrid,
         location: str,
-        log: SimpleLogger) -> Tuple[bool,
-                                    Tuple[int, int, float, float]]:
+        log: SimpleLogger) -> tuple[bool,
+                                    tuple[int, int, float, float]]:
     """
     Maps elemental fringe results to nodal fringe results.
 

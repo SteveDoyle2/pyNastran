@@ -78,7 +78,7 @@ class RealBushArray(OES_Object):
             print('flipping the order...')
             ntimes, ntotal = ntotal, ntimes
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
         element = zeros(ntotal, dtype=idtype)
         data = zeros((ntimes, ntotal, 6), dtype=fdtype)
 
@@ -170,6 +170,7 @@ class RealBushArray(OES_Object):
 
     def add_sort1(self, dt, eid, tx, ty, tz, rx, ry, rz):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
@@ -179,6 +180,7 @@ class RealBushArray(OES_Object):
 
     def add_sort2(self, dt, eid, tx, ty, tz, rx, ry, rz):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itime = self.ielement
         itotal = self.itime
@@ -191,7 +193,7 @@ class RealBushArray(OES_Object):
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
+            return [f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                     f'  ntimes: {self.ntimes:d}\n',
                     f'  ntotal: {self.ntotal:d}\n',
                     ]

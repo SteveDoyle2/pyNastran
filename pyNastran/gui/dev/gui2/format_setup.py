@@ -21,7 +21,7 @@ except ImportError:  # pragma: no cover
 
 def build_fmts(gui: MainWindow2,
                format_class_map,
-               fmt_order: List[str],
+               fmt_order: list[str],
                log: SimpleLogger,
                stop_on_failure: bool=False,
                ) -> Any:
@@ -59,14 +59,14 @@ def build_fmts(gui: MainWindow2,
         raise RuntimeError('no modules were loaded...')
     return fmts, supported_formats
 
-def _add_fmt(fmts: List[str], fmt: str, geom_results_funcs, data):
+def _add_fmt(fmts: list[str], fmt: str, geom_results_funcs, data):
     """
     Adds a format
 
     Parameters
     ----------
-    fmts : List[formats]
-        format : List[fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func]
+    fmts : list[formats]
+        format : list[fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func]
         macro_name : ???
             ???
         geo_fmt : ???

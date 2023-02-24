@@ -404,7 +404,7 @@ def read_conm1(name: str, group: h5py._hl.dataset.Dataset, geom_model: BDF) -> N
         str(obj)
 
 def load_geometry_block(node: h5py._hl.group.Group,
-                        name_map: Dict[str, GeomCallable],
+                        name_map: dict[str, GeomCallable],
                         geom_model: BDF) -> None:
     assert node is not None, node
     assert isinstance(node, h5py._hl.group.Group)

@@ -2160,6 +2160,8 @@ class EDT:
                     value = 'ELMOFF'
                 elif value == 65:
                     value = 'NODIFF'
+                elif value == 96:
+                    value = 'NOMASS'
                 elif value in [128, 192]:
                     value = 'LROFF'
                 else:

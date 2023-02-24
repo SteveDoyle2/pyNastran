@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List, Dict, Optional, Any
+from typing import Optional, Any
 
 #import ctypes
 # kills the program when you hit Cntl+C from the command line
@@ -94,8 +94,8 @@ class MainWindow2(QMainWindow):
         # TODO: what is this for?
         self.title = ''
 
-        self.cases = {} # type: Dict[int, Any]
-        self.form = []  # type: List[Any]
+        self.cases = {} # type: dict[int, Any]
+        self.form = []  # type: list[Any]
         # -----------------------------------------
         self.name = 'main'
         self.model_type = None
@@ -103,24 +103,24 @@ class MainWindow2(QMainWindow):
         self.eid_maps = {}
 
         # the info in the lower left part of the screen
-        self.text_actors = {} # type: Dict[int, vtk.vtkTextActor]
+        self.text_actors = {} # type: dict[int, vtk.vtkTextActor]
 
         # the various coordinate systems (e.g., cid=0, 1)
-        self.axes = {} # type: Dict[int, vtk.vtkAxesActor]
+        self.axes = {} # type: dict[int, vtk.vtkAxesActor]
 
-        self.models = {}  # type: Dict[str, Any]
-        self.grid_mappers = {} # type: Dict[str, Any]
-        self.main_grids = {} #  type: Dict[str, vtk.vtkUnstructuredGrid]
-        self.alt_grids = {} # type: Dict[str, vtk.vtkUnstructuredGrid]
-        self.geometry_actors = {} # type: Dict[str, vtkLODActor]
-        self.actions = {}  # type: Dict[str, QAction]
+        self.models = {}  # type: dict[str, Any]
+        self.grid_mappers = {} # type: dict[str, Any]
+        self.main_grids = {} #  type: dict[str, vtk.vtkUnstructuredGrid]
+        self.alt_grids = {} # type: dict[str, vtk.vtkUnstructuredGrid]
+        self.geometry_actors = {} # type: dict[str, vtkLODActor]
+        self.actions = {}  # type: dict[str, QAction]
         #geometry_actors
         # -----------------------------------------
         self.settings = Settings(self)
         settings = QtCore.QSettings()
         self.settings.load(settings)
 
-        self.actions = {}  # type: Dict[str, QAction]
+        self.actions = {}  # type: dict[str, QAction]
         self.load_actions = LoadActions(self)
         self.view_actions = ViewActions(self)
         self.tool_actions = ToolActions(self)
@@ -356,7 +356,7 @@ class MainWindow2(QMainWindow):
     # geometry
     def set_quad_grid(self, box_name: str,
                       nodes: np.ndarray, elements: np.ndarray,
-                      color: Optional[List[float]]=None,
+                      color: Optional[list[float]]=None,
                       line_width: float=1, opacity: float=1.) -> None:
         self.vtk_interface.set_quad_grid(box_name, nodes, elements,
                                          color=color, line_width=line_width, opacity=opacity)
@@ -369,17 +369,17 @@ class MainWindow2(QMainWindow):
     # geometry
     #-----------------------------------------------------------------------
     # results post-processing
-    def _finish_results_io2(self, model_name: str, form: List[Any], cases: Dict[int, Any]):
+    def _finish_results_io2(self, model_name: str, form: list[Any], cases: dict[int, Any]):
         self.form = form
         #self.cases = cases
         self.log.warning('_finish_results_io2')
     def get_new_icase(self) -> int:
         return 0
-    def update_result_cases(self, cases: Dict[int, Any]) -> None:
+    def update_result_cases(self, cases: dict[int, Any]) -> None:
         for case_id, case in cases.items():
             self.cases[case_id] = case
         return
-    def get_form(self) -> List[Any]:
+    def get_form(self) -> list[Any]:
         return self.form
 
     #def _setup_formats(self):
@@ -456,7 +456,7 @@ class MainWindow2(QMainWindow):
 
         self.actions = self._setup_actions(
             help, self.view_actions,
-            base_actions=self.actions)  # type: Dict[str, QAction]
+            base_actions=self.actions)  # type: dict[str, QAction]
         #self.actions['pulldown'] =
 
         #self.combo = QtGui.QComboBox()
@@ -468,7 +468,7 @@ class MainWindow2(QMainWindow):
     def _setup_actions(self,
                        help: HelpActions,
                        view_actions: ViewActions,
-                       base_actions: Optional[Dict[str, QAction]]) -> Dict[str, QAction]:
+                       base_actions: Optional[dict[str, QAction]]) -> dict[str, QAction]:
         assert isinstance(base_actions, dict), base_actions
 
         icon_path = os.path.join(PKG_PATH, 'gui', 'icons')
@@ -566,11 +566,11 @@ class MainWindow2(QMainWindow):
             actor = self.geometry_actors[filename]
             self.rend.RemoveActor(actor)
             del self.geometry_actors[filename]
-        #self.models = {}  # type: Dict[str, Any]
-        #self.grid_mappers = {} # type: Dict[str, Any]
-        #self.main_grids = {} #  type: Dict[str, vtk.vtkUnstructuredGrid]
-        #self.alt_grids = {} # type: Dict[str, vtk.vtkUnstructuredGrid]
-        #self.geometry_actors = {} # type: Dict[str, vtkLODActor]
+        #self.models = {}  # type: dict[str, Any]
+        #self.grid_mappers = {} # type: dict[str, Any]
+        #self.main_grids = {} #  type: dict[str, vtk.vtkUnstructuredGrid]
+        #self.alt_grids = {} # type: dict[str, vtk.vtkUnstructuredGrid]
+        #self.geometry_actors = {} # type: dict[str, vtkLODActor]
 
     def _reset_model(self, name: str) -> None:
         """resets the grids; sets up alt_grids"""

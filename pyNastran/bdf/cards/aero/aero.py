@@ -538,7 +538,7 @@ class AELINK(BaseCard):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
         Adds an AELINK card from ``BDF.add_card(...)``
 
@@ -1701,8 +1701,9 @@ class CAERO1(BaseCard):
                       comment=comment)
 
     @classmethod
-    def add_quad(cls, eid, pid, span, chord, igroup,
-                 p1, p2, p3, p4, cp=0, spanwise='y', comment=''):
+    def add_quad(cls, eid: int, pid: int, span: int, chord: int, igroup: int,
+                 p1: np.ndarray, p2: np.ndarray, p3: np.ndarray, p4: np.ndarray,
+                 cp: int=0, spanwise: str='y', comment: str='') -> CAERO1:
         r"""
         ::
 
@@ -2878,7 +2879,7 @@ class CAERO3(BaseCard):
         -------
         npoints : int
             The number of nodes for the CAERO
-        nelmements : int
+        nelements : int
             The number of elements for the CAERO
 
         """
@@ -3228,7 +3229,7 @@ class CAERO4(BaseCard):
         -------
         npoints : int
             The number of nodes for the CAERO
-        nelmements : int
+        nelements : int
             The number of elements for the CAERO
 
         """
@@ -3668,170 +3669,6 @@ class CAERO5(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
-
-
-class PAERO5(BaseCard):
-    type = 'PAERO5'
-    _properties = ['ltaus_id', 'lxis_id']
-
-    @classmethod
-    def _init_from_empty(cls):
-        pid = 1
-        caoci = [0., 0., 0.]
-        return PAERO5(pid, caoci, nalpha=0, lalpha=0, nxis=0, lxis=0, ntaus=0, ltaus=0, comment='')
-
-    def __init__(self, pid, caoci,
-                 nalpha=0, lalpha=0,
-                 nxis=0, lxis=0,
-                 ntaus=0, ltaus=0, comment=''):
-        """
-        +--------+-------+--------+--------+---------+-------+-------+-------+
-        |   1    |   2   |    3   |   4    |    5    |   6   |   7   |   8   |
-        +========+=======+========+========+=========+=======+=======+=======+
-        | PAERO5 |  PID  | NALPHA | LALPHA |  NXIS   | LXIS  | NTAUS | LTAUS |
-        +--------+-------+--------+--------+---------+-------+-------+-------+
-        |        | CAOC1 | CAOC2  | CAOC3  |  CAOC4  | CAOC5 |       |       |
-        +--------+-------+--------+--------+---------+-------+-------+-------+
-        | PAERO5 | 7001  |   1    |  702   |    1    | 701   |   1   |  700  |
-        +--------+-------+--------+--------+---------+-------+-------+-------+
-        |        |  0.0  |  0.0   |  5.25  | 3.99375 |  0.0  |       |       |
-        +--------+-------+--------+--------+---------+-------+-------+-------+
-        """
-        BaseCard.__init__(self)
-        if comment:
-            self.comment = comment
-        self.pid = pid
-        self.nalpha = nalpha
-        self.lalpha = lalpha
-
-        # number of dimensionless chord coordinates in zeta ()
-        self.nxis = nxis
-        # ID of AEFACT that lists zeta
-        self.lxis = lxis
-
-        # number of dimensionless thickess coordinates in tau
-        self.ntaus = ntaus
-        # ID of AEFACT that lists thickness ratios (t/c)
-        self.ltaus = ltaus
-
-        # ca/c - control surface chord / strip chord
-        self.caoci = np.array(caoci, dtype='float64')
-        self.lxis_ref = None
-        self.ltaus_ref = None
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        """
-        Adds a PAERO5 card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-
-        """
-        pid = integer(card, 1, 'property_id')
-        nalpha = integer_or_blank(card, 2, 'nalpha', default=0)
-        lalpha = integer_or_blank(card, 3, 'lalpha', default=0)
-
-        nxis = integer_or_blank(card, 4, 'nxis', default=0)
-        lxis = integer_or_blank(card, 5, 'lxis', default=0)
-
-        ntaus = integer_or_blank(card, 6, 'ntaus', default=0)
-        ltaus = integer_or_blank(card, 7, 'ltaus', default=0)
-
-        caoci = []
-        for n, i in enumerate(range(9, len(card))):
-            ca = double(card, i, 'ca/ci_%i' % (n+1))
-            caoci.append(ca)
-        return PAERO5(pid, caoci,
-                      nalpha=nalpha, lalpha=lalpha, nxis=nxis, lxis=lxis,
-                      ntaus=ntaus, ltaus=ltaus,
-                      comment=comment)
-    @property
-    def lxis_id(self):
-        if self.lxis_ref is not None:
-            return  self.lxis_ref.sid
-        return self.lxis
-
-    @property
-    def ltaus_id(self):
-        if self.ltaus_ref is not None:
-            return self.ltaus_ref.sid
-        return self.ltaus
-
-    def cross_reference(self, model: BDF) -> None:
-        """
-        Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-
-        """
-        msg = ', which is required by PAERO5 eid=%s' % self.pid
-        if self.lxis != 0:
-            self.lxis_ref = model.AEFact(self.lxis_id, msg=msg)
-        if self.ltaus != 0:
-            self.ltaus_ref = model.AEFact(self.ltaus_id, msg=msg)
-
-    def safe_cross_reference(self, model: BDF, xref_errors):
-        msg = ', which is required by PAERO5 eid=%s' % self.pid
-        if self.lxis != 0:
-            self.lxis_ref = model.safe_aefact(self.lxis_id, self.pid, xref_errors, msg=msg)
-        if self.ltaus != 0:
-            self.ltaus_ref = model.safe_aefact(self.ltaus_id, self.pid, xref_errors, msg=msg)
-
-    def uncross_reference(self) -> None:
-        """Removes cross-reference links"""
-        self.lxis = self.lxis_id
-        self.ltaus = self.ltaus_id
-        self.lxis_ref = None
-        self.ltaus_ref = None
-
-    def raw_fields(self):
-        list_fields = ['PAERO5', self.pid, self.nalpha, self.lalpha, self.nxis,
-                       self.lxis_id, self.ntaus, self.ltaus_id] + list(self.caoci)
-        return list_fields
-
-    def repr_fields(self):
-        list_fields = self.raw_fields()
-        list_fields.insert(8, None)
-        return list_fields
-
-    def write_card(self, size: int=8, is_double: bool=False) -> str:
-        card = self.repr_fields()
-        return self.comment + print_card_8(card)
-
-    #def integrals(self):
-        ## chord location
-        #x = self.lxis.fractions
-
-        ## thickness
-        #y = self.ltaus.fractions
-
-        ## slope of airfoil semi-thickness
-        #yp = derivative1(y/2, x)
-
-        ## x hinge
-        #for xh in self.caoci:
-            #I1 = integrate(yp, x, 0., 1.)
-            #I2 = integrate(x * yp, x, 0., 1.)
-            #I3 = integrate(x**2*yp, x, 0., 1.)
-            #I4 = integrate(yp**2, x, 0., 1.)
-            #I5 = integrate(x**2 * yp**2, x, 0., 1.)
-
-            #J1 = integrate(yp, x, xh, 1.)
-            #J2 = integrate(x * yp, x, xh, 1.)
-            #J3 = integrate(x**2*yp, x, xh, 1.)
-            #J4 = integrate(yp**2, x, xh, 1.)
-            #J5 = integrate(x**2 * yp**2, x, xh, 1.)
-
-        #return(I1, I2, I3, I4, I5,
-               #J1, J2, J3, J4, J5)
 
 
 class MONPNT1(BaseCard):
@@ -5147,6 +4984,170 @@ class PAERO4(BaseCard):
         return self.comment + print_card_8(card)
 
 
+class PAERO5(BaseCard):
+    """
+    +--------+-------+--------+--------+---------+-------+-------+-------+
+    |   1    |   2   |    3   |   4    |    5    |   6   |   7   |   8   |
+    +========+=======+========+========+=========+=======+=======+=======+
+    | PAERO5 |  PID  | NALPHA | LALPHA |  NXIS   | LXIS  | NTAUS | LTAUS |
+    +--------+-------+--------+--------+---------+-------+-------+-------+
+    |        | CAOC1 | CAOC2  | CAOC3  |  CAOC4  | CAOC5 |       |       |
+    +--------+-------+--------+--------+---------+-------+-------+-------+
+    | PAERO5 | 7001  |   1    |  702   |    1    | 701   |   1   |  700  |
+    +--------+-------+--------+--------+---------+-------+-------+-------+
+    |        |  0.0  |  0.0   |  5.25  | 3.99375 |  0.0  |       |       |
+    +--------+-------+--------+--------+---------+-------+-------+-------+
+    """
+    type = 'PAERO5'
+    _properties = ['ltaus_id', 'lxis_id']
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        caoci = [0., 0., 0.]
+        return PAERO5(pid, caoci, nalpha=0, lalpha=0, nxis=0, lxis=0, ntaus=0, ltaus=0, comment='')
+
+    def __init__(self, pid: int, caoci,
+                 nalpha: int=0, lalpha: int=0,
+                 nxis=0, lxis: int=0,
+                 ntaus: int=0, ltaus: int=0, comment=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.pid = pid
+        self.nalpha = nalpha
+        self.lalpha = lalpha
+
+        # number of dimensionless chord coordinates in zeta ()
+        self.nxis = nxis
+        # ID of AEFACT that lists zeta
+        self.lxis = lxis
+
+        # number of dimensionless thickess coordinates in tau
+        self.ntaus = ntaus
+        # ID of AEFACT that lists thickness ratios (t/c)
+        self.ltaus = ltaus
+
+        # ca/c - control surface chord / strip chord
+        self.caoci = np.array(caoci, dtype='float64')
+        self.lxis_ref = None
+        self.ltaus_ref = None
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a PAERO5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        pid = integer(card, 1, 'property_id')
+        nalpha = integer_or_blank(card, 2, 'nalpha', default=0)
+        lalpha = integer_or_blank(card, 3, 'lalpha', default=0)
+
+        nxis = integer_or_blank(card, 4, 'nxis', default=0)
+        lxis = integer_or_blank(card, 5, 'lxis', default=0)
+
+        ntaus = integer_or_blank(card, 6, 'ntaus', default=0)
+        ltaus = integer_or_blank(card, 7, 'ltaus', default=0)
+
+        caoci = []
+        for n, i in enumerate(range(9, len(card))):
+            ca = double(card, i, 'ca/ci_%i' % (n+1))
+            caoci.append(ca)
+        return PAERO5(pid, caoci,
+                      nalpha=nalpha, lalpha=lalpha, nxis=nxis, lxis=lxis,
+                      ntaus=ntaus, ltaus=ltaus,
+                      comment=comment)
+    @property
+    def lxis_id(self):
+        if self.lxis_ref is not None:
+            return  self.lxis_ref.sid
+        return self.lxis
+
+    @property
+    def ltaus_id(self):
+        if self.ltaus_ref is not None:
+            return self.ltaus_ref.sid
+        return self.ltaus
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PAERO5 eid=%s' % self.pid
+        if self.lxis != 0:
+            self.lxis_ref = model.AEFact(self.lxis_id, msg=msg)
+        if self.ltaus != 0:
+            self.ltaus_ref = model.AEFact(self.ltaus_id, msg=msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        msg = ', which is required by PAERO5 eid=%s' % self.pid
+        if self.lxis != 0:
+            self.lxis_ref = model.safe_aefact(self.lxis_id, self.pid, xref_errors, msg=msg)
+        if self.ltaus != 0:
+            self.ltaus_ref = model.safe_aefact(self.ltaus_id, self.pid, xref_errors, msg=msg)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.lxis = self.lxis_id
+        self.ltaus = self.ltaus_id
+        self.lxis_ref = None
+        self.ltaus_ref = None
+
+    def raw_fields(self):
+        list_fields = ['PAERO5', self.pid, self.nalpha, self.lalpha, self.nxis,
+                       self.lxis_id, self.ntaus, self.ltaus_id] + list(self.caoci)
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = self.raw_fields()
+        list_fields.insert(8, None)
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+    #def integrals(self):
+        ## chord location
+        #x = self.lxis.fractions
+
+        ## thickness
+        #y = self.ltaus.fractions
+
+        ## slope of airfoil semi-thickness
+        #yp = derivative1(y/2, x)
+
+        ## x hinge
+        #for xh in self.caoci:
+            #I1 = integrate(yp, x, 0., 1.)
+            #I2 = integrate(x * yp, x, 0., 1.)
+            #I3 = integrate(x**2*yp, x, 0., 1.)
+            #I4 = integrate(yp**2, x, 0., 1.)
+            #I5 = integrate(x**2 * yp**2, x, 0., 1.)
+
+            #J1 = integrate(yp, x, xh, 1.)
+            #J2 = integrate(x * yp, x, xh, 1.)
+            #J3 = integrate(x**2*yp, x, xh, 1.)
+            #J4 = integrate(yp**2, x, xh, 1.)
+            #J5 = integrate(x**2 * yp**2, x, xh, 1.)
+
+        #return(I1, I2, I3, I4, I5,
+               #J1, J2, J3, J4, J5)
+
+
 class Spline(BaseCard):
     def __init__(self):
         BaseCard.__init__(self)
@@ -5797,7 +5798,7 @@ class SPLINE3(Spline):
             assert isinstance(coeff, float), self.coeffs
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPLINE3 card from ``BDF.add_card(...)``
 
@@ -5816,7 +5817,7 @@ class SPLINE3(Spline):
         node = integer(card, 5, 'G1')
         displacement_component = integer(card, 6, 'C1')
         coeff = double(card, 7, 'A1')
-        usage = string_or_blank(card, 8, 'usage', 'BOTH')
+        usage = string_or_blank(card, 8, 'usage', default='BOTH')
 
         nfields = len(card) - 1
         nrows = nfields // 8
@@ -6256,18 +6257,18 @@ class SPLINE5(Spline):
         aelist = integer(card, 3, 'aelist')
         # None
         setg = integer(card, 5, 'setq')
-        dz = double_or_blank(card, 6, 'dz', 0.0)
-        dtor = double_or_blank(card, 7, 'dtor', 1.0)
-        cid = integer_or_blank(card, 8, 'cid', 0)
+        dz = double_or_blank(card, 6, 'dz', default=0.0)
+        dtor = double_or_blank(card, 7, 'dtor', default=1.0)
+        cid = integer_or_blank(card, 8, 'cid', default=0)
         thx = double(card, 9, 'thx')
         thy = double(card, 10, 'thy')
-        usage = string_or_blank(card, 12, 'usage', 'BOTH')
+        usage = string_or_blank(card, 12, 'usage', default='BOTH')
         # per nast/tpl/fmondsp.dat, METH can be a double(0.0) ???
-        method = string_or_blank(card, 13, 'meth', 'BEAM')
-        ftype = string_or_blank(card, 15, 'ftype', 'WF2')
+        method = string_or_blank(card, 13, 'meth', default='BEAM')
+        ftype = string_or_blank(card, 15, 'ftype', default='WF2')
         rcore = double_or_blank(card, 16, 'rcore')
 
-        usage = string_or_blank(card, 12, 'usage', 'BOTH')
+        usage = string_or_blank(card, 12, 'usage', default='BOTH')
         assert len(card) <= 16, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
         return SPLINE5(eid, caero, aelist, setg, thx, thy, dz=dz, dtor=dtor, cid=cid,
                        usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)

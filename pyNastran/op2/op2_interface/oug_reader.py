@@ -19,6 +19,7 @@ def read_real_table_static(op2: OP2, obj: Any, flag:str,
     for unused_inode in range(nnodes):
         out = s.unpack(data[n:n+ntotal])
         (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
+        #print(out)
         eid = eid_device // 10
         if op2.is_debug_file:
             op2.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
@@ -35,6 +36,7 @@ def read_real_table_sort1(op2: OP2, obj: Any, dt: Union[int, float], flag: str,
     for unused_inode in range(nnodes):
         out = s.unpack(data[n:n+ntotal])
         (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
+        #print(out)
         assert grid_type != 1065353216, out  # caused by an op2 writer bug with int64 numbers being downcast directly to float32
         eid = eid_device // 10
         if op2.is_debug_file:
@@ -160,6 +162,7 @@ def read_real_table_sort2(self: OP2, obj: Any, flag: str, nid: int,
         edata = data[n:n+ntotal]
         out = structi.unpack(edata)
         (dt, grid_type, tx, ty, tz, rx, ry, rz) = out
+        #print(out)
         if self.is_debug_file:
             self.binary_debug.write(
                     f'  nid={nid} {flag}={dt} ({type(dt)}); {str(out)}\n')

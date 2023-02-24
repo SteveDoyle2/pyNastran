@@ -61,7 +61,7 @@ class PLOADv(BaseLoad):
             load id
         pressure : float
             the pressure to apply
-        nodes : List[int]
+        nodes : list[int]
             The nodes that are used to define the normal are defined
             using the same method as the CTRIA3/CQUAD4 normal.
             n = 3 or 4
@@ -314,7 +314,7 @@ class PLOAD2v(BaseLoad):
             load id
         pressure : float
             the pressure to apply to the elements
-        eids : List[int]
+        eids : list[int]
             the elements to apply pressure to
             n < 6 or a continouus monotonic list of elements (e.g., [1, 2, ..., 1000])
         comment : str; default=''
@@ -450,10 +450,10 @@ class PLOAD4v(BaseLoad):
         ----------
         sid : int
             the load id
-        eids : List[int, ...]
+        eids : list[int, ...]
             shells : the range of element ids; must be sequential
             solids : must be length 1
-        pressures : List[float, float, float, float]
+        pressures : list[float, float, float, float]
             tri : must be length 4 (the last value should be the same as the 0th value)
             quad : must be length 4
         g1 : int/None

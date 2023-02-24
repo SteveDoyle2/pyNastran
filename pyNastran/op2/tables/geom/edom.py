@@ -3,6 +3,7 @@ defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
 from __future__ import annotations
 from struct import Struct
+from itertools import count
 from typing import Union, TYPE_CHECKING
 import numpy as np
 
@@ -1449,6 +1450,9 @@ class EDOM(GeomCommon):
           Word 10 repeats until -1 occurs
         FLAG = 62 TACCL
 
+        [31, 538981700, 538976288, 5, 538976288, 538976288, 0, 3, 0, 5, -1,
+         32, 538981444, 538976288, 60, 538976288, 538976288, 0, 3, -1, 4, -1,
+         33, 1195984215, 538989640, 1, 538976288, 538976288, 0, 33, -9999, -1]
         """
         op2 = self.op2
         flag_to_resp = {
@@ -1493,6 +1497,7 @@ class EDOM(GeomCommon):
         #self.show_data(data[n:], types='qds')
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
+        #print(ints.tolist())
         istart, iend = get_minus1_start_end(ints)
         #if self.size == 4:
             #struct1 = Struct(op2._endian + b'i 8s i')
@@ -1524,15 +1529,21 @@ class EDOM(GeomCommon):
             return attb
 
         size = self.size
-        for (i0, i1) in zip(istart, iend):
+        idresps_to_skip = set()
+        for (idresp, i0, i1) in zip(count(), istart, iend):
             assert ints[i1] == -1, ints[i1]
+            if idresp in idresps_to_skip:
+                #print(f'skipping idresp={idresp}')
+                n += (i1 - i0 + 1) * self.size
+                continue
             #print(i0, i1)
+            #print('ints: ', ints[i0:i1])
             dresp_id = ints[i0]
             label_bytes = data[n+size:n+3*size]
             label = reshape_bytes_block_size(label_bytes, size=size)
             flag = ints[i0+3]
             response_type = flag_to_resp[flag]
-            #print(dresp_id, flag, label)
+            #print(f'dresp_id={dresp_id} flag={flag}->response_type={response_type!r} label={label!r}')
             if flag == 1:
                 # WEIGHT
                 # 5 UNDEF(2) None
@@ -1773,6 +1784,42 @@ class EDOM(GeomCommon):
                 attbf = floats[i0+8]
                 attb = _pick_attbi_attbf(attbi, attbf)
                 atti = ints[i0+9:i1].tolist()
+            elif flag == 60:
+                #FLAG = 60 TDISP
+                #  5 UNDEF(2) None
+                #  7 REGION I Region identifier for constraint screening
+                #  8 ATTA I Response attribute
+                #  9 ATTB RS Time value; -1 (integer) spawn for all time steps
+                #  in set; -1.10000E+08 for SUM; -1.20000E+08 for
+                #  AVG; -1.30000E+08 for SSQ; -1.40000E+08 for
+                #  RSS; -1.50000E+08 for MAX; -1.60000E+08 for MIN
+                #  10 ATTi I Grid point IDs
+                #  Word 10 repeats until -1 occurs
+                property_type = None
+                region, atta, attb_int = ints[i0+6:i0+9]
+                #print('ints: region, atta, attb=', region, atta, attb_int)
+
+                #region, atta, attb_float = floats[i0+6:i0+9]
+                #print('floats: region, atta, attb=', region, atta, attb_float)
+                attb = attb_int
+                if attb_int == -1:
+                    attb = None
+                else:
+                    attb = floats[i0+8]
+                    #print('attb =', attb)
+                    raise RuntimeError(('attb', attb))
+
+                #print('ints =', ints[i0+6:i1].tolist())
+                #print('floats =', floats[i0+6:i1].tolist())
+
+                #print('---')
+                # the grids are on the next idresp, so we'll just skip it on the next round
+                i0b = istart[idresp+1]
+                i1b = iend[idresp+1]
+                atti = grids = ints[i0b:i1b].tolist()
+                #print('grids=', grids)
+                del grids
+                idresps_to_skip.add(idresp+1)
             elif flag == 84:
                 # nx flutter
                 print('ints =', ints)
@@ -1795,6 +1842,7 @@ class EDOM(GeomCommon):
             dresp1 = op2.add_dresp1(dresp_id, label,
                                     response_type, property_type, region,
                                     atta, attb, atti, validate=True)
+            #print(dresp1)
             dresp1.write_card_16()
             n += (i1 - i0 + 1) * self.size
             del dresp_id, label, response_type, property_type, region, atta, attb, atti

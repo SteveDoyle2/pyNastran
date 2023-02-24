@@ -8,14 +8,16 @@ import vtk
 from pyNastran.gui.menus.edit_geometry_properties.manage_actors import EditGeometryProperties
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
+from pyNastran.gui.qt_files.base_gui import BaseGui
 
 
 # EDIT ACTOR PROPERTIES
-class EditGeometryPropertiesObject:
+class EditGeometryPropertiesObject(BaseGui):
     """defines EditGeometryPropertiesObject"""
     def __init__(self, gui):
         """creates EditGeometryPropertiesObject"""
-        self.gui = gui
+        #self.gui = gui
+        super().__init__(gui)
         self._edit_geometry_properties_window_shown = False
         self._edit_geometry_properties = None
 

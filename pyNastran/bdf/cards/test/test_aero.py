@@ -2190,7 +2190,7 @@ class TestAero(unittest.TestCase):
 
     def test_flfact(self):
         """checks the FLFACT card"""
-        #List[f1, THRU, fnf, nf, fmid]
+        #list[f1, THRU, fnf, nf, fmid]
             #f1 : float
                 #first value
             #THRU : str

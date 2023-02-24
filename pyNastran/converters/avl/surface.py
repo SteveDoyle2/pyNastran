@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.cards.aero.utils import (
@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class Surface:
     def __init__(self,
                  name: str,
-                 sections: List[Any],
+                 sections: list[Any],
                  nchord: int, chord_spacing: float,
                  nspan: int, span_spacing: float,
                  component: Optional[int]=None,
@@ -182,13 +182,13 @@ class Surface:
 
     def get_nodes_elements(self,
                            isurface: int,
-                           surfaces: List[Union[Surface, Body]],
+                           surfaces: list[Union[Surface, Body]],
                            dirname: str,
-                           nodes: List[np.ndarray],
+                           nodes: list[np.ndarray],
                            ipoint: int,
-                           line_elements: List[np.ndarray],
-                           quad_elements: List[np.ndarray],
-                           is_cs_list: List[np.ndarray],
+                           line_elements: list[np.ndarray],
+                           quad_elements: list[np.ndarray],
+                           is_cs_list: list[np.ndarray],
                            log: SimpleLogger) -> int:
         """builds the surface mesh"""
         xyz_scale = self.scale
@@ -213,10 +213,10 @@ class Surface:
                   xyz_scale: np.ndarray,
                   dxyz: np.ndarray,
                   ipoint: int,
-                  nodes: List[np.ndarray],
-                  quad_elements: List[np.ndarray],
-                  surfaces: List[Union[Surface, Body]],
-                  is_cs_list: List[np.ndarray],
+                  nodes: list[np.ndarray],
+                  quad_elements: list[np.ndarray],
+                  surfaces: list[Union[Surface, Body]],
+                  is_cs_list: list[np.ndarray],
                   yduplicate: float,
                   log: SimpleLogger) -> int:
         log.debug('get_wing')
@@ -311,7 +311,7 @@ class Surface:
 
 def _section_get_nodes_elements(isurface: int, i: int,
                                 section0, section1,
-                                airfoil_sections: List[Any],
+                                airfoil_sections: list[Any],
                                 x: np.ndarray,
                                 y: np.ndarray,
                                 nspan: int,
@@ -320,10 +320,10 @@ def _section_get_nodes_elements(isurface: int, i: int,
                                 xyz_scale: np.ndarray,
                                 dxyz: np.ndarray,
                                 ipoint: int,
-                                nodes: List[np.ndarray],
-                                quad_elements: List[np.ndarray],
-                                surfaces: List[Union[Surface, Body]],
-                                is_cs_list: List[np.ndarray]):
+                                nodes: list[np.ndarray],
+                                quad_elements: list[np.ndarray],
+                                surfaces: list[Union[Surface, Body]],
+                                is_cs_list: list[np.ndarray]):
     #print(section0)
     #print('*****************')
     #print(section1)
@@ -416,10 +416,10 @@ def _section_get_nodes_elements(isurface: int, i: int,
     #print('  ', section)
     return ipoint
 
-def get_airfoils_from_sections(sections, log: SimpleLogger) -> Tuple[np.ndarray,
-                                                                     List[Optional[np.ndarray]],
+def get_airfoils_from_sections(sections, log: SimpleLogger) -> tuple[np.ndarray,
+                                                                     list[Optional[np.ndarray]],
                                                                      np.ndarray,
-                                                                     List[int]]:
+                                                                     list[int]]:
     nspans = []
     airfoil_sections = []
     is_airfoil_defined = False

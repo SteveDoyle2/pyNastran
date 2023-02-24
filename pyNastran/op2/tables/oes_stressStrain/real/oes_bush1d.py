@@ -78,7 +78,7 @@ class RealBush1DStressArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements,
             #self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.ntotal, dtype='int32')
         self.is_failed = zeros((self.ntimes, self.ntotal, 1), dtype='int32')
 
@@ -151,6 +151,7 @@ class RealBush1DStressArray(OES_Object):
     def add_sort1(self, dt, eid, element_force, axial_displacement, axial_velocity,
                   axial_stress, axial_strain, plastic_strain, is_failed):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         # pyNastran_examples\move_tpl\ar29scb1.op2
         #print('dt=%s eid=%s force=%s' % (dt, eid, element_force))
@@ -169,7 +170,7 @@ class RealBush1DStressArray(OES_Object):
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
+            return [f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                     f'  ntimes: {self.ntimes:d}\n',
                     f'  ntotal: {self.ntotal:d}\n',
                     ]

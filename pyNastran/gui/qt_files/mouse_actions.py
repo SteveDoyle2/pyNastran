@@ -519,7 +519,7 @@ class MouseActions:
 
     def create_highlighted_actor(self, ugrid: vtk.vtkUnstructuredGrid,
                                  representation='wire',
-                                 add_actor=True) -> List[vtk.vtkLODActor]:
+                                 add_actor=True) -> list[vtk.vtkLODActor]:
         """creates a highlighted actor given a vtkUnstructuredGrid"""
         actor = create_highlighted_actor(
             self.gui, ugrid, representation=representation, add_actor=add_actor)

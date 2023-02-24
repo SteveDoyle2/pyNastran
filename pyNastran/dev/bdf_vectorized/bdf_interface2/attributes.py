@@ -506,22 +506,22 @@ class BDFAttributes:
         # ------------------------- thermal defaults -------------------------
         # BCs
         #: stores thermal boundary conditions - CONV,RADBC
-        self.bcs = {}    # type: Dict[key, Any]
+        self.bcs = {}    # type: dict[key, Any]
 
         #: stores PHBDY
-        self.phbdys = {}  # type: Dict[key, Any]
+        self.phbdys = {}  # type: dict[key, Any]
         #: stores convection properties - PCONV, PCONVM ???
-        self.convection_properties = {}  # type: Dict[key, Any]
+        self.convection_properties = {}  # type: dict[key, Any]
         #: stores TEMPD
-        self.tempds = {}  # type: Dict[key, Any]
+        self.tempds = {}  # type: dict[key, Any]
 
         # -------------------------contact cards-------------------------------
-        self.bcrparas = {}  # type: Dict[key, Any]
-        self.bctadds = {}  # type: Dict[key, Any]
-        self.bctparas = {}  # type: Dict[key, Any]
-        self.bctsets = {}  # type: Dict[key, Any]
-        self.bsurf = {}  # type: Dict[key, Any]
-        self.bsurfs = {}  # type: Dict[key, Any]
+        self.bcrparas = {}  # type: dict[key, Any]
+        self.bctadds = {}  # type: dict[key, Any]
+        self.bctparas = {}  # type: dict[key, Any]
+        self.bctsets = {}  # type: dict[key, Any]
+        self.bsurf = {}  # type: dict[key, Any]
+        self.bsurfs = {}  # type: dict[key, Any]
 
         # ---------------------------------------------------------------------
 
@@ -624,12 +624,12 @@ class BDFAttributes:
             * 'private' - names that begin with single underscore
             * 'both' - private and public
             * 'all' - all attributes that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
 
         Returns
         -------
-        attribute_names : List[str]
+        attribute_names : list[str]
             sorted list of the names of attributes of a given type or None
             if the mode is wrong
         """
@@ -666,12 +666,12 @@ class BDFAttributes:
             * "private" - names that begin with single underscore
             * "both" - private and public
             * "all" - all methods that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
+        keys_to_skip : list[str]; default=None -> []
             names to not consider to avoid deprecation warnings
 
         Returns
         -------
-        method : List[str]
+        method : list[str]
             sorted list of the names of methods of a given type
             or None if the mode is wrong
         """

@@ -20,7 +20,7 @@ class ColorDisplay(QWidget):
         self.color = default_color
         self.setColor(self.color)
 
-    def setColor(self, color: List[float]) -> None:
+    def setColor(self, color: list[float]) -> None:
         if color is not None:
             color = [int(255 * i) for i in color]
         self.color = QtGui.QColor(*color)

@@ -6,7 +6,6 @@ creates:
 
 """
 from functools import partial
-from typing import Tuple
 from qtpy import QtGui
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QTreeView, QMessageBox, QMenu
@@ -59,7 +58,7 @@ class QTreeView2(QTreeView):
 
         Parameters
         ----------
-        rows : List[int]
+        rows : list[int]
             the trace on the data/form block
 
         form = [
@@ -230,7 +229,7 @@ class QTreeView2(QTreeView):
         is_valid, irow, unused_data = self.get_trace()
         return is_valid, irow
 
-    def get_trace(self) -> Tuple[bool, int, str]:
+    def get_trace(self) -> tuple[bool, int, str]:
         """
         Returns
         -------

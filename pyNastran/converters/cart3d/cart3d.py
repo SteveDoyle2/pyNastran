@@ -352,7 +352,7 @@ class Cart3D(Cart3dReaderWriter):
 
         Parameters
         ----------
-        result_names : List[str]; default=None (All)
+        result_names : list[str]; default=None (All)
             result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
                             'Mach', 'U', 'V', 'W', 'E']
 
@@ -410,7 +410,7 @@ class Cart3D(Cart3dReaderWriter):
 
         Parameters
         ----------
-        result_names : List[str]
+        result_names : list[str]
             the variables to calculate
         results : (n,6) float ndarray
             the non-dimensional primitive flow variables
@@ -644,7 +644,7 @@ def comp2tri(in_filenames, out_filename,
 
     Parameters
     ----------
-    in_filenames : List[str]
+    in_filenames : list[str]
         list of filenames
     out_filename : str
         output filename

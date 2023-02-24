@@ -118,7 +118,7 @@ class SolidElement:
             element id
         pid : int
             property id (PSOLID, PLSOLID)
-        nids : List[int]
+        nids : list[int]
             node ids; n=4
         comment : str; default=''
             a comment for the card

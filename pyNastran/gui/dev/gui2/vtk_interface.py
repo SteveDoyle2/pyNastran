@@ -56,7 +56,7 @@ class VtkInterface:
 
     def set_quad_grid(self, box_name: str,
                       nodes: np.ndarray, elements: np.ndarray,
-                      color: Optional[List[float]]=None,
+                      color: Optional[list[float]]=None,
                       line_width: float=1, opacity: float=1.) -> None:
         if color is None:
             color = BLACK_FLOAT
@@ -68,7 +68,7 @@ class VtkInterface:
 
 def fill_render_window(vtk_interactor,
                        rend: vtk.vtkRenderer,
-                       nframes: int=1) -> List[vtk.vtkRenderer]:
+                       nframes: int=1) -> list[vtk.vtkRenderer]:
     assert nframes in [1, 2, 4], nframes
 
     render_window = vtk_interactor.GetRenderWindow()

@@ -96,7 +96,7 @@ class ComplexPlateArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
 
         if self.is_sort1:
             ntimes = self.ntimes
@@ -114,7 +114,7 @@ class ComplexPlateArray(OES_Object):
             #print(f'  SORT2: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
         #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
 
-        self._times = np.zeros(ntimes, dtype=dtype)
+        self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         # the number is messed up because of the offset for the element's properties
@@ -200,6 +200,7 @@ class ComplexPlateArray(OES_Object):
     def add_sort1(self, dt, eid, node_id,
                   fdr1, oxx1, oyy1, txy1,
                   fdr2, oxx2, oyy2, txy2) -> None:
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -220,6 +221,7 @@ class ComplexPlateArray(OES_Object):
     def add_sort2(self, dt, eid, nid,
                   fd1, oxx1, oyy1, txy1,
                   fd2, oxx2, oyy2, txy2) -> None:
+        assert self.is_sort2, self
         nnodes = self.nnodes_per_element
         itime = self.ielement // nnodes
         inid = self.ielement % nnodes
@@ -257,7 +259,7 @@ class ComplexPlateArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

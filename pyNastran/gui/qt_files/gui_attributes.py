@@ -43,6 +43,7 @@ from pyNastran.gui.menus.camera.camera_object import CameraObject
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
     EditGeometryPropertiesObject)
 
+from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.gui.utils.vtk.gui_utils import remove_actors_from_gui
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
@@ -52,11 +53,13 @@ from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 
-class GeometryObject:
+
+class GeometryObject(BaseGui):
     """
     """
-    def __init__(self, parent):
-        self.gui = parent
+    def __init__(self, gui):
+        super().__init__(gui)
+        #self.gui = parent
 
     def show(self):
         pass
@@ -272,7 +275,7 @@ class GuiAttributes:
     def groups(self):
         return self.model_data.groups
     @groups.setter
-    def groups(self, groups: Dict[str, Any]):
+    def groups(self, groups: dict[str, Any]):
         self.model_data.groups = groups
 
     @property
@@ -300,14 +303,14 @@ class GuiAttributes:
     def label_actors(self):
         return self.model_data.label_actors
     @label_actors.setter
-    def label_ids(self, label_actors: List[Any]):
+    def label_ids(self, label_actors: list[Any]):
         self.model_data.label_actors = label_actors
 
     @property
     def label_ids(self):
         return self.model_data.label_ids
     @label_ids.setter
-    def label_ids(self, label_ids: List[int]):
+    def label_ids(self, label_ids: list[int]):
         self.model_data.label_ids = label_ids
 
     @property
@@ -321,7 +324,7 @@ class GuiAttributes:
     def result_cases(self):
         return self.model_data.result_cases
     @result_cases.setter
-    def result_cases(self, result_cases: Dict[int, Any]):
+    def result_cases(self, result_cases: dict[int, Any]):
         self.model_data.result_cases = result_cases
 
     @property
@@ -367,7 +370,7 @@ class GuiAttributes:
 
     #-------------------------------------------------------------------
     # deprecated attributes
-    def deprecated(self, old_name: str, new_name: str, deprecated_version: Optional[List[int]]) -> None:
+    def deprecated(self, old_name: str, new_name: str, deprecated_version: Optional[list[int]]) -> None:
         """
         Throws a deprecation message and crashes if past a specific version.
 
@@ -986,7 +989,7 @@ class GuiAttributes:
         #msg2 += msg
         self.setWindowTitle(msg)
 
-    def build_fmts(self, fmt_order: List[str], stop_on_failure: bool=False):
+    def build_fmts(self, fmt_order: list[str], stop_on_failure: bool=False):
         """populates the formats that will be supported"""
         fmts = []
         #assert 'h5nastran' in fmt_order
@@ -1281,7 +1284,7 @@ class GuiAttributes:
             cell_id, world_position, icase=icase)
         return res_name, result_values, xyz
 
-    def mark_elements(self, eids: List[int],
+    def mark_elements(self, eids: list[int],
                       stop_on_failure: bool=False,
                       show_command: bool=True):
         """mark the elements by the ElementID"""
@@ -1292,7 +1295,7 @@ class GuiAttributes:
             stop_on_failure=stop_on_failure, show_command=False)
         self.log_command(f'mark_elements(eids={eids})')
 
-    def mark_elements_by_case(self, eids: List[int],
+    def mark_elements_by_case(self, eids: list[int],
                               stop_on_failure: bool=False,
                               show_command: bool=True):
         """mark the elements by the current case"""
@@ -1303,7 +1306,7 @@ class GuiAttributes:
             stop_on_failure=stop_on_failure, show_command=False)
         self.log_command(f'mark_elements_by_case(eids={eids})')
 
-    def mark_elements_by_different_case(self, eids: List[int],
+    def mark_elements_by_different_case(self, eids: list[int],
                                         icase_result: int,
                                         icase_to_apply: int,
                                         stop_on_failure: bool=False,
@@ -1313,7 +1316,7 @@ class GuiAttributes:
 
         Parameters
         ----------
-        eids : int, List[int]
+        eids : int, list[int]
             the elements to apply a message to
         icase_result : int
             the case to draw the result from
@@ -1350,11 +1353,11 @@ class GuiAttributes:
 
         Parameters
         ----------
-        nids : int, List[int]
+        nids : int, list[int]
             the nodes to apply a message to
         icase : int
             the key in label_actors to slot the result into
-        text : str, List[str]
+        text : str, list[str]
             the text to display
 
         0 corresponds to the NodeID result
@@ -1634,7 +1637,7 @@ class GuiAttributes:
 
         Parameters
         ----------
-        camera_data : Dict[key] : value
+        camera_data : dict[key] : value
             defines the camera
             position : (float, float, float)
                 where am I is xyz space
@@ -1753,14 +1756,14 @@ class ModelData:
                f'result_cases.keys() = {self.result_cases.keys()}')
         return msg
 
-def _add_fmt(fmts: List[str], fmt: str, geom_results_funcs, data):
+def _add_fmt(fmts: list[str], fmt: str, geom_results_funcs, data):
     """
     Adds a format
 
     Parameters
     ----------
-    fmts : List[formats]
-        format : List[fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func]
+    fmts : list[formats]
+        format : list[fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func]
         macro_name : ???
             ???
         geo_fmt : ???

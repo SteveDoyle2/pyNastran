@@ -12,7 +12,7 @@ http://www.vtk.org/Wiki/VTK/Examples/Cxx/Picking/HighlightSelection
 http://public.kitware.com/pipermail/vtkusers/2012-January/072046.html
 http://vtk.1045678.n5.nabble.com/Getting-the-original-cell-id-s-from-vtkExtractUnstructuredGrid-td1239667.html
 """
-from typing import Tuple, List, Union
+from typing import Union
 import numpy as np
 import vtk
 #from vtk.util import numpy_support
@@ -171,7 +171,7 @@ def get_actors_by_area_picker(gui, area_picker,
                               model_name: str,
                               is_nids: bool=True, is_eids: bool=True,
                               representation: str='points',
-                              add_actors: bool=False) -> Tuple[List[vtk.vtkActor], List[int], List[int]]:
+                              add_actors: bool=False) -> tuple[list[vtk.vtkActor], list[int], list[int]]:
     """doesn't handle multiple actors yet..."""
     frustum = area_picker.GetFrustum() # vtkPlanes
 
@@ -204,7 +204,7 @@ def get_actors_by_area_picker(gui, area_picker,
 
 def get_depth_ids(gui, frustum: vtk.vtkPlanes, model_name: str='main',
                   is_nids: bool=True, is_eids: bool=True,
-                  representation: str='points') -> Tuple[List[vtk.vtkActor], List[int], List[int]]:
+                  representation: str='points') -> tuple[list[vtk.vtkActor], list[int], list[int]]:
     """
     Picks the nodes and/or elements.  Only one grid (e.g., the elements)
     is currently returned.
@@ -243,7 +243,7 @@ def get_depth_ids(gui, frustum: vtk.vtkPlanes, model_name: str='main',
 def get_inside_point_ids(gui, ugrid: vtk.vtkUnstructuredGrid,
                          ugrid_flipped: vtk.vtkUnstructuredGrid,
                          model_name: str,
-                         representation: str='points') -> Tuple[vtk.vtkUnstructuredGrid, List[int]]:
+                         representation: str='points') -> tuple[vtk.vtkUnstructuredGrid, list[int]]:
     """
     The points that are returned from the frustum, despite being
     defined as inside are not all inside.  The cells are correct

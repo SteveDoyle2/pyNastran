@@ -108,7 +108,7 @@ class pyNastranH5:
         self.log = SimpleLogger(level='debug', encoding='utf-8', log_func=None)
 
     def read_h5_nastran(self, h5_filename: str,
-                        subcases: Optional[List[int]]=None) -> None:
+                        subcases: Optional[list[int]]=None) -> None:
         self.filename = h5_filename
         print(f'opening {h5_filename}')
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
@@ -208,7 +208,7 @@ class pyNastranH5:
         self.geom_model = geom_model
 
     def _load_results(self, hdf5_file: h5py.File,
-                      subcases: Optional[List[int]]=None) -> None:
+                      subcases: Optional[list[int]]=None) -> None:
         geom_model = self.geom_model
         node_ids = geom_model._node_ids
         element_ids = geom_model._element_ids
@@ -259,18 +259,18 @@ class pyNastranH5:
         self.results = results_dict
 
         #geom_model.write_bdf(r'C:\NASA\m4\formats\git\pyNastran\models\msc\6+element-nastran-sol103.bdf')
-        #self.results = results  # type: Dict[int, RealVectorTableOptistruct]
+        #self.results = results  # type: dict[int, RealVectorTableOptistruct]
         #self.results_model = model
 
     def _load_elemental_results(self, iresult: int,
                                 result_str: str, result_index_str: str,
-                                results: Dict[int, Any],
+                                results: dict[int, Any],
                                 geom_model: BDF,
                                 model: OP2,
                                 element_ids: np.ndarray,
                                 domains_df: pd.DataFrame,
                                 hdf5_file: h5py.File,
-                                subcases: Optional[List[int]]=None) -> int:
+                                subcases: Optional[list[int]]=None) -> int:
 
         elemental_str = result_str + '/ELEMENTAL'
         elemental_index_str = result_index_str + '/ELEMENTAL'
@@ -310,13 +310,13 @@ class pyNastranH5:
         #load_geometry_block(element, element_map, geom_model)
 
     def _load_nodal_results(self, iresult: int,
-                            results: Dict[int, Any],
+                            results: dict[int, Any],
                             geom_model: BDF,
                             model: OP2,
                             node_ids: np.ndarray,
                             domains_df: pd.DataFrame,
                             hdf5_file: h5py.File,
-                            subcases: Optional[List[int]]=None) -> int:
+                            subcases: Optional[list[int]]=None) -> int:
         assert domains_df is not None
         nodal_str = '/NASTRAN/RESULT/NODAL'
         nodal_index_str = '/INDEX/NASTRAN/RESULT/NODAL'
@@ -386,7 +386,7 @@ def finish_geometry(geom_model: BDF):
 
 def load_strain_energy(basename_orig: str,
                        iresult: int,
-                       results: Dict[int, Function],
+                       results: dict[int, Function],
 
                        domains_df: pd.DataFrame,
                        element_group: h5py._hl.group.Group,
@@ -395,7 +395,7 @@ def load_strain_energy(basename_orig: str,
                        ids: np.ndarray,
                        geom_model: BDF,
                        model: OP2,
-                       subcases: Optional[List[int]]=None) -> int:
+                       subcases: Optional[list[int]]=None) -> int:
     return iresult
     basename = 'Strain Energy'
     #assert ids is not None
@@ -628,7 +628,7 @@ def load_strain_energy(basename_orig: str,
 
 def load_stress_strain(basename_orig: str,
                        iresult: int,
-                       results: Dict[int, Function],
+                       results: dict[int, Function],
 
                        domains_df: pd.DataFrame,
                        element_group: h5py._hl.group.Group,
@@ -638,7 +638,7 @@ def load_stress_strain(basename_orig: str,
                        geom_model: BDF,
                        model: OP2,
                        is_stress: bool=True,
-                       subcases: Optional[List[int]]=None) -> int:
+                       subcases: Optional[list[int]]=None) -> int:
     for ires, name in enumerate(element_group):
         group = element_group.get(name)
         index = element_index.get(name)
@@ -677,14 +677,14 @@ def load_stress_strain(basename_orig: str,
 
 def load_eigenvector(basename_orig: str,
                      iresult: int,
-                     results: Dict[int, Function],
+                     results: dict[int, Function],
                      domains_df: pd.DataFrame,
                      group: h5py._hl.dataset.Dataset,
                      index: h5py._hl.dataset.Dataset,
                      ids: np.ndarray,
                      geom_model: BDF,
                      model: OP2,
-                     subcases: Optional[List[int]]=None) -> int:
+                     subcases: Optional[list[int]]=None) -> int:
     """
     <HDF5 dataset "EIGENVECTOR": shape (147,), type "|V64">
     Dataset:
@@ -876,14 +876,14 @@ def load_eigenvector(basename_orig: str,
 
 def load_eigenvector_complex(basename: str,
                              iresult: int,
-                             results: Dict[int, Function],
+                             results: dict[int, Function],
                              domains_df: pd.DataFrame,
                              group: h5py._hl.dataset.Dataset,
                              index: h5py._hl.dataset.Dataset,
                              ids: np.ndarray,
                              geom_model: BDF,
                              model: OP2,
-                             subcases: Optional[List[int]]=None) -> int:
+                             subcases: Optional[list[int]]=None) -> int:
     basename += ' (complex)'
     # TODO: check real/imaginary or magnitude/phase
     #'ID', 'X', 'Y', 'Z', 'RX', 'RY', 'RZ', 'DOMAIN_ID',

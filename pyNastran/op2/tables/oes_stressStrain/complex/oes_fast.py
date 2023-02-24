@@ -66,8 +66,8 @@ class ComplexFastArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         self.element = np.zeros(self.nelements, dtype=idtype)
@@ -136,7 +136,7 @@ class ComplexFastArray(OES_Object):
 
     def add_sort1(self, dt, eid, force_x, force_y, force_z, moment_x, moment_y, moment_z):
         """unvectorized method for adding SORT1 transient data"""
-        #print(force_x, force_y)
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [force_x, force_y, force_z, moment_x, moment_y, moment_z]
@@ -147,7 +147,7 @@ class ComplexFastArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

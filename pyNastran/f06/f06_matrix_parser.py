@@ -32,8 +32,8 @@ SKIP_FLAGS = [
 ]
 def read_f06_matrices(f06_filename: str,
                       log: Optional[SimpleLogger]=None,
-                      nlines_max: int=1_000_000) -> Tuple[Dict[str, np.ndarray],
-                                                          Dict[str, np.ndarray]]:
+                      nlines_max: int=1_000_000) -> tuple[dict[str, np.ndarray],
+                                                          dict[str, np.ndarray]]:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
     log = get_logger(log=log, level='debug', encoding='utf-8')
     with open(f06_filename, 'r') as f06_file:
@@ -44,7 +44,7 @@ def read_f06_matrices(f06_filename: str,
         log.info('found the following matrices in the f06: %s' % (list(matrices)))
     return tables, matrices
 
-def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> Dict[str, np.ndarray]:
+def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> dict[str, np.ndarray]:
     i = 0
     debug = False
     tables = {}
@@ -112,7 +112,7 @@ def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> 
     matrices2 = _compress_matrices(matrices)
     return tables, matrices2
 
-def _compress_matrices(matrices: Dict[str, List[np.ndarray]]) -> Dict[str, np.ndarray]:
+def _compress_matrices(matrices: dict[str, list[np.ndarray]]) -> dict[str, np.ndarray]:
     matrices2 = {}
     for key, list_matrices in matrices.items():
         if len(list_matrices) == 1:
@@ -125,7 +125,7 @@ def _compress_matrices(matrices: Dict[str, List[np.ndarray]]) -> Dict[str, np.nd
 
 def _read_real_eigenvalues(f06_file: TextIO,
                            log: SimpleLogger,
-                           line: str, i: int) -> Tuple[np.ndarray,
+                           line: str, i: int) -> tuple[np.ndarray,
                                                        np.ndarray,
                                                        np.ndarray]:
     line = f06_file.readline()
@@ -166,7 +166,7 @@ def _read_real_eigenvalues(f06_file: TextIO,
     return Mhh, Bhh, Khh
 
 def _read_matrix(f06_file: TextIO,
-                 line: str, i: int, log: SimpleLogger, debug: bool) -> Tuple[str, np.ndarray, str, int]:
+                 line: str, i: int, log: SimpleLogger, debug: bool) -> tuple[str, np.ndarray, str, int]:
     """
     0      MATRIX QHHA     (GINO NAME 101 ) IS A COMPLEX          100 COLUMN X          10 ROW RECTANG  MATRIX.
     0COLUMN        1      ROWS        1 THRU       10 --------------------------------------------------
@@ -280,7 +280,7 @@ def _read_matrix(f06_file: TextIO,
     #print(matrix)
     return table_name, matrix, line, i
 
-def _parse_complex_row_lines(lines: list[str]) -> Tuple[int, int]:
+def _parse_complex_row_lines(lines: list[str]) -> tuple[int, int]:
     """
     1) -3.5846E+01,-1.3275E+02  -1.5510E+01, 2.3578E-01  -3.2339E+01,-4.9373E+00   6.8078E+01, 1.3428E+01   3.0262E+01, 2.4554E+01
     6) -3.5846E+01,-1.3275E+02  -1.5510E+01, 2.3578E-01  -3.2339E+01,-4.9373E+00   6.8078E+01, 1.3428E+01   3.0262E+01, 2.4554E+01
@@ -314,7 +314,7 @@ def _parse_complex_row_lines(lines: list[str]) -> Tuple[int, int]:
     data = np.array(data_list, dtype='complex128')
     return row_index, data
 
-def _parse_real_row_lines(lines: list[str]) -> Tuple[int, int]:
+def _parse_real_row_lines(lines: list[str]) -> tuple[int, int]:
     """
     1)    1.1010E+01  1.3762E+00 -4.2021E+00 -5.2526E-01
     """
@@ -356,7 +356,7 @@ def _parse_real_row_lines(lines: list[str]) -> Tuple[int, int]:
     return row_index, data
 
 def _read_table(f06_file: TextIO, line: str, i: int,
-                log: SimpleLogger) -> Tuple[str, np.ndarray, str, int]:
+                log: SimpleLogger) -> tuple[str, np.ndarray, str, int]:
     """
     '0    TABLE   MKLIST                      LINES CONTAINING BINARY  ZERO HAVE BEEN DELETED.\n'
     ''

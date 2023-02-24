@@ -86,7 +86,7 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
             ntimes = self.ntotal
             ntotal = self.ntimes
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
         element_layer = zeros((ntotal, 2), dtype=idtype)
 
         #[strength_ratio_ply, failure_index_bonding, strength_ratio_bonding]
@@ -242,6 +242,7 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
                       strength_ratio_bonding: float, min_sr_bonding_fi_bonding: float,
                       flag: str):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert eid is not None
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_layer[self.itotal, :] = [eid, ply_id]
@@ -276,7 +277,7 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             msg = [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

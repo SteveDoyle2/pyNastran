@@ -8,6 +8,7 @@ from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
 
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
     RealGridPointForcesArray, ComplexGridPointForcesArray)
@@ -26,7 +27,9 @@ class OGPF:
         return self.op2.factor
 
     def _read_ogpf1_3(self, data: bytes, ndata: int):
-        self.op2.reader_opg._read_opg1_3(data, ndata)  # TODO: this is wrong...
+        self.op2._op2_readers.reader_opg._read_opg1_3(data, ndata)  # TODO: this is wrong...
+    def _read_ogpf2_3(self, data: bytes, ndata: int):
+        self.op2._op2_readers.reader_opg._read_opg2_3(data, ndata)  # TODO: this is wrong...
 
     def _read_ogpf1_4(self, data: bytes, ndata: int) -> int:
         op2 = self.op2
@@ -41,15 +44,23 @@ class OGPF:
             else:
                 msg = f'table_name={op2.table_name} table_code={op2.table_code}'
                 raise RuntimeError(msg)
-            n = self._read_grid_point_forces(data, ndata, prefix=prefix)
+            n = self.read_grid_point_forces1(data, ndata, prefix=prefix)
         else:
             raise NotImplementedError(op2.table_code)
         return n
 
-    def _read_grid_point_forces(self, data, ndata, prefix=''):
-        """
-        table_code = 19
-        """
+    def _read_ogpf2_4(self, data: bytes, ndata: int) -> int:
+        op2 = self.op2
+        prefix = ''
+        if op2.table_code == 19:  # grid point force balance
+            assert op2.table_name == b'OGPFB2', op2.code_information()
+            n = self.read_grid_point_forces2(data, ndata, prefix=prefix)
+        else:
+            raise NotImplementedError(op2.table_code)
+        return n
+
+    def read_grid_point_forces1(self, data: bytes, ndata: int, prefix: str='') -> int:
+        """table_code = 19"""
         op2 = self.op2
         op2._setup_op2_subcase('GPFORCE')
         dt = op2.nonlinear_factor
@@ -67,7 +78,7 @@ class OGPF:
                 ntotal = 40 * self.factor # 4*10
                 nnodes = ndata // ntotal
                 obj_vector_real = RealGridPointForcesArray
-                auto_return, is_vectorized = op2.reader_oes._create_ntotal_object(
+                auto_return, is_vectorized = op2._op2_readers.reader_oes._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nnodes * ntotal
@@ -152,7 +163,7 @@ class OGPF:
                 nnodes = ndata // ntotal
                 assert self.size == 4, self.size
                 obj_vector_real = ComplexGridPointForcesArray
-                auto_return, is_vectorized = op2.reader_oes._create_ntotal_object(
+                auto_return, is_vectorized = op2._op2_readers.reader_oes._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nnodes * op2.num_wide * 4
@@ -227,4 +238,58 @@ class OGPF:
             raise NotImplementedError(op2.code_information())
             #msg = op2.code_information()
             #return self._not_implemented_or_skip(data, ndata, msg)
+        return n
+
+    def read_grid_point_forces2(self, data: bytes, ndata: int, prefix: str='') -> int:
+        """table_code = 19"""
+        op2 = self.op2
+        #op2._setup_op2_subcase('GPFORCE')
+        dt = op2.nonlinear_factor
+        n = 0
+        is_magnitude_phase = op2.is_magnitude_phase()
+
+        assert op2.thermal == 0, op2.code_information()
+        #if op2.thermal == 0:
+
+        result_name = prefix + 'grid_point_forces'
+        #print(op2.code_information())
+        if op2._results.is_not_saved(result_name):
+            return ndata
+        op2._results._found_result(result_name)
+        slot = op2.get_result(result_name)
+
+        if op2.num_wide == 8:
+            ntotal = 32 * self.factor # 4*8
+            nnodes = ndata // ntotal
+            #obj_vector_real = RealGridPointForcesArray
+            #auto_return, is_vectorized = op2._op2_readers.reader_oes._create_ntotal_object(
+                #nnodes, result_name, slot, obj_vector_real)
+            auto_return = data is None
+            if auto_return:
+                return nnodes * ntotal
+            if self.size == 4:
+                fmt = op2._endian + op2._analysis_code_fmt + b'4s 6f'
+            else:
+                fmt = op2._endian + mapfmt(op2._analysis_code_fmt, 8) + b'8s 6d'
+
+            eid = op2.nonlinear_factor
+            s = Struct(fmt)
+            for i in range(nnodes):
+                edata = data[n:n+ntotal]
+                out = s.unpack(edata)
+                #print(out)
+                (dt, word, f1, f2, f3, m1, m2, m3) = out
+                #print(dt, eid, word)
+                assert word in {b'G   '}, out
+                #eid, dt = get_eid_dt_from_eid_device(
+                    #eid_device, op2.nonlinear_factor, op2.sort_method)
+                #nid = nid_device // 10
+                #elem_name = elem_name.strip()
+                #if op2.is_debug_file:
+                    #op2.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
+                #op2.obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
+                n += ntotal
+        else:
+            raise RuntimeError(op2.code_information())
+
         return n

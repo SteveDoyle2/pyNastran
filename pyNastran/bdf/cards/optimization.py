@@ -4706,7 +4706,7 @@ class DVPREL1(DVXREL1):
         assert len(msg) == 0, msg
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DVPREL1 card from ``BDF.add_card(...)``
 

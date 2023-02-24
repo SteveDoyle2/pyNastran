@@ -1,4 +1,4 @@
-from typing import Tuple, List, Dict, Optional, TextIO
+from typing import Optional, TextIO
 import os
 import numpy as np
 #import scipy.sparse
@@ -93,7 +93,7 @@ def read_f06_trim(f06_filename: str,
     return trim_results
 
 def _skip_to_page_stamp_and_rewind(f06_file: TextIO, line: str, i: int,
-                                   nlines_max: int) -> Tuple[str, int, int]:
+                                   nlines_max: int) -> tuple[str, int, int]:
     seek0 = f06_file.tell()
     line_end, iend = _skip_to_page_stamp(f06_file, line, i, nlines_max)
     seek1 = f06_file.tell()
@@ -102,7 +102,7 @@ def _skip_to_page_stamp_and_rewind(f06_file: TextIO, line: str, i: int,
     return line_end, iend, seek1
 
 def _skip_to_page_stamp(f06_file: TextIO, line: str, i: int,
-                        nlines_max: int) -> Tuple[str, int]:
+                        nlines_max: int) -> tuple[str, int]:
     line = f06_file.readline()
     i += 1
     # JANUARY  26, 2012  SIMCENTER NASTRAN  3/12/20   PAGE     2
@@ -118,7 +118,7 @@ def _skip_to_page_stamp(f06_file: TextIO, line: str, i: int,
 
 def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
                    nlines_max: int, dirname: str,
-                   debug: bool=False) -> Tuple[TrimResults, str, np.ndarray]:
+                   debug: bool=False) -> tuple[TrimResults, str, np.ndarray]:
     i = 0
     #debug = True
     tables = {}
@@ -193,7 +193,7 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
     return trim_results, tables, matrices
 
 def _get_title_subtitle_subcase(f06_file: TextIO,
-                                line: str, i: int, nlines_max: int) -> Tuple[str, int,
+                                line: str, i: int, nlines_max: int) -> tuple[str, int,
                                                                              str, str, str]:
     """
     1    144                                                                   FEBRUARY   1, 2021  SIMCENTER NASTRAN  3/12/20   PAGE    10
@@ -411,7 +411,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     f06_file.seek(seek1)
     return line_end, iend
 
-def _get_controller_state(header_lines: List[str]) -> Dict[str, float]:
+def _get_controller_state(header_lines: list[str]) -> dict[str, float]:
     controller_state = {}
     controller_lines = []
     for i, line in enumerate(header_lines):
@@ -435,7 +435,7 @@ def _get_controller_state(header_lines: List[str]) -> Dict[str, float]:
 
 def _read_aeroelastic_trim_variables(f06_file: TextIO,
                                      line: str, i: int, nlines_max: int,
-                                     trim_results: TrimResults, isubcase: int) -> Tuple[str, int]:
+                                     trim_results: TrimResults, isubcase: int) -> tuple[str, int]:
     """
     '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = SYMMETRIC      XZ-SYMMETRY = SYMMETRIC'
@@ -489,7 +489,7 @@ def _read_aeroelastic_trim_variables(f06_file: TextIO,
     return line_end, iend
 
 
-def _split_trim_variable(line: str) -> Tuple[int, str, str, str, float, str]:
+def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     """101     ANGLEA             RIGID BODY           FIXED      1.000000E-01  RADIANS'"""
     line2 = line.rstrip() # s.split()
 
@@ -529,7 +529,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                                                 title: str, subtitle: str, subcase: str,
                                                 dirname: str,
                                                 ipressure: int, iforce: int,
-                                                log: SimpleLogger) -> Tuple[str, int, int, int]:
+                                                log: SimpleLogger) -> tuple[str, int, int, int]:
     """
     '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'      <----- you are here
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'

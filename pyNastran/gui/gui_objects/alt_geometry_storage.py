@@ -48,7 +48,7 @@ class AltGeometry:
             is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
-        label_actors : List[annotation]; None -> []
+        label_actors : list[annotation]; None -> []
             stores annotations (e.g., for a control surface)
 
         """

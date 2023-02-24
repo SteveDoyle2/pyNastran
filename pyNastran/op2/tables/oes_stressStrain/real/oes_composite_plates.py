@@ -88,7 +88,7 @@ class RealCompositePlateArray(OES_Object):
             ntimes = self.ntotal
             ntotal = self.ntimes
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
         element_layer = zeros((ntotal, 2), dtype=idtype)
 
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
@@ -330,6 +330,7 @@ class RealCompositePlateArray(OES_Object):
 
     def add_eid_sort1(self, etype, dt, eid, layer, o11, o22, t12, t1z, t2z,
                           angle, major, minor, ovm):
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
@@ -339,6 +340,7 @@ class RealCompositePlateArray(OES_Object):
     def add_sort1(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                   major, minor, ovm):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert eid is not None
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_layer[self.itotal, :] = [eid, layer]
@@ -347,6 +349,7 @@ class RealCompositePlateArray(OES_Object):
 
     def add_eid_sort2(self, etype, dt, eid, layer, o11, o22, t12, t1z, t2z,
                           angle, major, minor, ovm):
+        assert self.is_sort2, self
         itime = self.itotal
         itotal = self.itime
         self._times[itime] = dt
@@ -358,6 +361,7 @@ class RealCompositePlateArray(OES_Object):
     def add_sort2(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                   major, minor, ovm):
         """unvectorized method for adding SORT2 transient data"""
+        assert self.is_sort2, self
         assert eid is not None
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itime = self.itotal

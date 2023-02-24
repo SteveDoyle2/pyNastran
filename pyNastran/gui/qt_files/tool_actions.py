@@ -2,7 +2,7 @@
 from __future__ import annotations
 import os
 import traceback
-from typing import Tuple, List, Dict, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 import vtk
@@ -28,7 +28,7 @@ class ToolActions:
         self.itext = 0
 
     #---------------------------------------------------------------------------
-    def export_case_data(self, icases: Optional[List[int]]=None) -> None:
+    def export_case_data(self, icases: Optional[list[int]]=None) -> None:
         """exports CSVs of the requested cases"""
         if icases is None:
             icases = self.gui.result_cases.keys()
@@ -284,7 +284,7 @@ class ToolActions:
         self._screenshot_teardown(line_widths0, point_sizes0,
                                   coord_scale0, coord_text_scale0, line_width0, axes_actor)
 
-    def _get_screenshot_filename(self, fname: Optional[str]) -> Tuple[str, str]:
+    def _get_screenshot_filename(self, fname: Optional[str]) -> tuple[str, str]:
         """helper method for ``on_take_screenshot``"""
         if fname is None or fname is False:
             filt = ''
@@ -327,10 +327,10 @@ class ToolActions:
                 flt = 'png'
         return fname, flt
 
-    def _screenshot_setup(self, magnify: Optional[int], render_large: vtk.vtkvtkRenderLargeImage) -> Tuple[
-            Dict[str, int], Dict[str, int],
-            Dict[str, float], Dict[str, float],
-            Dict[str, int],
+    def _screenshot_setup(self, magnify: Optional[int], render_large: vtk.vtkvtkRenderLargeImage) -> tuple[
+            dict[str, int], dict[str, int],
+            dict[str, float], dict[str, float],
+            dict[str, int],
             vtk.vtkAxesActor, magnify: int]:
         """helper method for ``on_take_screenshot``"""
         if magnify is None:
@@ -380,9 +380,9 @@ class ToolActions:
         axes_actor.SetVisibility(False)
         return line_widths0, point_sizes0, coord_scale0, coord_text_scale0, linewidth0, axes_actor, magnify
 
-    def _screenshot_teardown(self, line_widths0: Dict[str, int],
-                             point_sizes0: Dict[str, int],
-                             coord_scale0: Dict[str, float],
+    def _screenshot_teardown(self, line_widths0: dict[str, int],
+                             point_sizes0: dict[str, int],
+                             coord_scale0: dict[str, float],
                              coord_text_scale0: float,
                              linewidth0: int,
                              axes_actor: vtk.vtkAxesActor):
@@ -413,7 +413,7 @@ class ToolActions:
     #---------------------------------------------------------------------------
     def on_load_user_geom(self, csv_filename: Optional[str]=None,
                           name: Optional[str]=None,
-                          color: Optional[List[float]]=None) -> None:
+                          color: Optional[list[float]]=None) -> None:
         """
         Loads a User Geometry CSV File of the form:
 
@@ -473,7 +473,7 @@ class ToolActions:
         self.gui.log_command('on_load_user_geom(%r, %r, %s)' % (
             csv_filename, name, str(color)))
 
-    def _add_user_geometry(self, csv_filename: str, name: str, color: List[float]) -> None:
+    def _add_user_geometry(self, csv_filename: str, name: str, color: list[float]) -> None:
         """
         helper method for ``on_load_user_geom``
 
@@ -539,7 +539,7 @@ class ToolActions:
     #---------------------------------------------------------------------------
     def on_load_csv_points(self, csv_filename: Optional[str]=None,
                            name: Optional[str]=None,
-                           color: Optional[List[float]]=None):
+                           color: Optional[list[float]]=None):
         """
         Loads a User Points CSV File of the form:
 
@@ -587,7 +587,7 @@ class ToolActions:
         return is_failed
 
     def _add_user_points_from_csv(self, csv_points_filename: str, name: str,
-                                  color: List[float], point_size: int=4) -> bool:
+                                  color: list[float], point_size: int=4) -> bool:
         """
         Helper method for adding csv nodes to the gui
 
@@ -597,7 +597,7 @@ class ToolActions:
             CSV filename that defines one xyz point per line
         name : str
             name of the geometry actor
-        color : List[float, float, float]
+        color : list[float, float, float]
             RGB values; [0. to 1.]
         point_size : int; default=4
             the nominal point size
@@ -627,7 +627,7 @@ class ToolActions:
         return False
 
     def _add_user_points(self, user_points: np.ndarray,
-                         name: str, color: List[float],
+                         name: str, color: list[float],
                          csv_points_filename: str='',
                          point_size: int=4) -> None:
         """
@@ -639,7 +639,7 @@ class ToolActions:
             the points to add
         name : str
             name of the geometry actor
-        color : List[float, float, float]
+        color : list[float, float, float]
             RGB values; [0. to 1.]
         point_size : int; default=4
             the nominal point size
@@ -694,7 +694,7 @@ class ToolActions:
     #---------------------------------------------------------------------------
     def _add_alt_geometry(self, grid: vtk.vtkUnstructuredGrid,
                           name: str,
-                          color: Optional[List[float]]=None,
+                          color: Optional[list[float]]=None,
                           line_width: Optional[int]=None,
                           opacity: Optional[float]=None,
                           representation: Optional[str]=None) -> None:
@@ -789,7 +789,7 @@ class ToolActions:
 def add_user_geometry(alt_grid: vtk.vtkUnstructuredGrid,
                       geom_grid: vtk.vtkUnstructuredGrid,
                       xyz: np.ndarray,
-                      nid_map: Dict[int, int],
+                      nid_map: dict[int, int],
                       nnodes: int,
                       bars: np.ndarray,
                       tris: np.ndarray,
@@ -990,7 +990,7 @@ def get_delimiter_from_filename(csv_filename: str) -> Optional[str]:
         delimiter = None
     return delimiter
 
-def _get_unique_name(geometry_actors: Dict[str, Any], name: str) -> str:
+def _get_unique_name(geometry_actors: dict[str, Any], name: str) -> str:
     """
     Duplicate names in a dictionary are not allowed,
     so append a number to the name if it's invalid

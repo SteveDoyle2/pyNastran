@@ -169,7 +169,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.fix_format_code()
         if self.num_wide == 8:
             self.format_code = 1
-            self.data_code['format_code'] = 1
+            self.data_code['format_code'] = 1  # real
         else:
             #self.fix_format_code()
             if self.format_code == 1:
@@ -218,7 +218,7 @@ class OP2Common(Op2Codes, F06Writer):
         #print(self.code_information())
         #print('tCode =', self.tCode)
         result_type = func7(self.tCode)
-        #print(f'format_code={self.format_code}; result_type (func7)={result_type}')
+        #self.log.debug(f'format_code={self.format_code}; result_type (func7)={result_type}')
 
         if self.table_name in [b'OESRT']:
             self.format_code = 1 # real
@@ -2329,8 +2329,9 @@ class OP2Common(Op2Codes, F06Writer):
 
         elif hasattr(self, 'struct_2i'):
             del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s, self.struct_8s_i
-        out = [outi for outi in self.object_attributes() if 'struct_' in outi]
-        assert len(out) == 0, out
+        #out = [outi for outi in self.object_attributes() if 'struct_' in outi]
+        #assert len(out) == 0, out
+        x = 1
 
 def _cast_nonlinear_factor(value):
     """h5py is picky about it's data types"""

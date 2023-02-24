@@ -150,13 +150,13 @@ class Sidebar(QWidget):
             the gui
         debug : bool; default=False
             flag for debug info
-        data : List[tree]
+        data : list[tree]
             the tree
         clear_data : bool; default=True
             ???
         name : str; default='main'
             the active name
-        setup_dict : Dict[irow] = List[QWidgets]
+        setup_dict : dict[irow] = list[QWidgets]
             a way to add additional widgets to the sidebar
 
         """
@@ -251,7 +251,7 @@ class Sidebar(QWidget):
         #if self.include_vector_scale:
             #self.vector_scale.valueChanged.connect(self.on_vector_scale)
 
-    def set_max_case(self, cases: Union[List[int], Dict[int, Any]]):
+    def set_max_case(self, cases: Union[list[int], dict[int, Any]]):
         """
         The max case id needs to be dynamic because additional results
         can be added
@@ -266,7 +266,7 @@ class Sidebar(QWidget):
             self.case_spinner.setMaximum(max(cases) + 1)
             self._on_case()
 
-    def set_case_keys(self, case_keys: List[int]):
+    def set_case_keys(self, case_keys: list[int]):
         """set the available keys for the case spinner"""
         if not self.include_case_spinner:
             return
@@ -471,7 +471,7 @@ class Sidebar(QWidget):
 
         Parameters
         ----------
-        data : List[tuple]
+        data : list[tuple]
             the form data
         name : str
             the name that goes at the side
