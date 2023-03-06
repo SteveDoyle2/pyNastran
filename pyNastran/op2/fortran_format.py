@@ -3,7 +3,8 @@ Defines:
  - FortranFormat
 
 """
-from typing import Optional
+from __future__ import annotations
+from typing import Optional, TYPE_CHECKING
 from pyNastran.utils import object_attributes
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.op2.errors import FortranMarkerError, SortCodeError
@@ -28,9 +29,12 @@ from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.onmd import ONMD
 from pyNastran.op2.tables.opr import OPR
 from pyNastran.op2.tables.ogpwg import OGPWG
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
-class Op2Readers:
-    def __init__(self, op2):
+
+class Op2Tables:
+    def __init__(self, op2: OP2):
         #self.op2 = op2
         self.reader_onmd = ONMD(op2)
         self.reader_ogpwg = OGPWG(op2)
@@ -75,7 +79,7 @@ class FortranFormat:
         #self.op2_reader = OP2Reader()
         self.IS_TESTING = False
 
-        self._op2_readers = Op2Readers(self)
+        self._op2_readers = Op2Tables(self)
 
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""

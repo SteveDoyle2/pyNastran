@@ -1481,7 +1481,7 @@ class GEOM2:
             1077697529, 1065830415, 0, 1077697529, 1073264625, 0,
             1073980423, 1073264625, 0,
             1073980423, 1065830415, 0, 1077697529,
-            1065830415, 1036831949, 1077697529, 1073264625, 1036831949, 1073980423, 1073264625, 1036831949, 1073980423, 1065830415, 1036831949, -1082130432,
+            1065830415, 1036831949, 1077697529, 1073264625, 1036831949, 1073980423, 1073264625, 1036831949, 1073980423, 1065830415, 1036831949, -1.0,
             7, 19,
             0.001, 2.5, 1.5, 0.1, 2.5, 1.5, 0.0, 2.5, 1.5,
             0.1)
@@ -2183,7 +2183,7 @@ class GEOM2:
         CONV(12701,127,408) - the marker for Record 59
         """
         op2 = self.op2
-        ntotal = 48  # 12*4
+        ntotal = 48 * self.factor  # 12*4
         s = Struct(op2._endian + b'4i 8i')
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -2214,7 +2214,7 @@ class GEOM2:
         CONV(12701,127,408) - the marker for Record 60
         """
         op2 = self.op2
-        ntotal = 80  # 20*4
+        ntotal = 80 * self.factor  # 20*4
         s = Struct(op2._endian + b'12i 8f')
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -3112,15 +3112,15 @@ class GEOM2:
         C:\MSC.Software\msc_nastran_runs\cc179h.op2
 
         data = (
-            eid   pid n1     n2     n3     n4     theta ?  ?  ?   t1    t2    t3    t4   flag
-            101,  30, 30000, 30001, 30101, 30100, 19.2, 0, 0, 0,  0.2,  0.2,  0.2,  0.2, -1,
-            102,  30, 30001, 30002, 30102, 30101, 19.2, 0, 0, 0,  0.2,  0.2,  0.2,  0.2, -1,
-            103,  30, 30002, 30003, 30103, 30102, 19.2, 0, 0, 0,  0.2,  0.2,  0.2,  0.2, -1,
-            104,  30, 30100, 30101, 30201, 30200, 19.2, 0, 0, 0,  0.2,  0.2,  0.2,  0.2, -1,
-            1001, 20, 20000, 20001, 20101, 20100, 0,    0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
-            1002, 20, 20001, 20002, 20102, 20101, 0,    0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
-            1003, 20, 20002, 20003, 20103, 20102, 0,    0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
-            1004, 20, 20100, 20101, 20201, 20200, 0,    0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1)
+            eid   pid n1     n2     n3     n4     theta zoffs  blank, tflag   t1    t2    t3    t4   -1/mcid?
+            101,  30, 30000, 30001, 30101, 30100, 19.2, 0.0,   0,     0,      0.2,  0.2,  0.2,  0.2, -1,
+            102,  30, 30001, 30002, 30102, 30101, 19.2, 0.0,   0,     0,      0.2,  0.2,  0.2,  0.2, -1,
+            103,  30, 30002, 30003, 30103, 30102, 19.2, 0.0,   0,     0,      0.2,  0.2,  0.2,  0.2, -1,
+            104,  30, 30100, 30101, 30201, 30200, 19.2, 0.0,   0,     0,      0.2,  0.2,  0.2,  0.2, -1,
+            1001, 20, 20000, 20001, 20101, 20100, 0,    0.0,   0,     0,     -1.0, -1.0, -1.0, -1.0, -1,
+            1002, 20, 20001, 20002, 20102, 20101, 0,    0.0,   0,     0,     -1.0, -1.0, -1.0, -1.0, -1,
+            1003, 20, 20002, 20003, 20103, 20102, 0,    0.0,   0,     0,     -1.0, -1.0, -1.0, -1.0, 42,
+            1004, 20, 20100, 20101, 20201, 20200, 0,    0.0,   0,     0,     -1.0, -1.0, -1.0, -1.0, -1)
         """
         op2 = self.op2
         elements = []
@@ -3128,6 +3128,7 @@ class GEOM2:
         nelements = (len(data) - n) // ntotal
         leftover = (len(data) - n) % ntotal
         assert leftover == 0, leftover
+
 
         #  TODO: not sure...
         #   6i is correct
@@ -3142,6 +3143,8 @@ class GEOM2:
             op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
                                     'unused_blank, [tflag, t1, t2, t3, t4]); theta_mcid\n')
 
+        cids = set(list(self.op2.coords.keys()))
+        check_cids = max(cids) > 0 if len(cids) else False
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             #self.show_data(edata)
@@ -3150,33 +3153,33 @@ class GEOM2:
             (eid, pid, n1, n2, n3, n4,
              theta, zoffs, blank, tflag,
              t1, t2, t3, t4,
-             minus1) = out
+             minus1_mcid) = out
             assert blank == 0.0
             assert isinstance(tflag, int), tflag
             #minus1 = out[-1]
             #eid, pid, n1, n2, n3, n4, theta, a, b, c, t1, t2, t3, t4, minus1 = out
             #print(eid, pid)
-
-            msg = ('eid=%s pid=%s nodes=%s '
-                   'theta=%s zoffs=%s '
-                   'blank=%s tflag=%s '
-                   't1-t4=%s minus1=%s' % (
-                       eid, pid, (n1, n2, n3, n4),
-                       theta, zoffs,
-                       blank, tflag,
-                       (t1, t2, t3, t4), minus1))
+            theta_mcid = theta
+            if minus1_mcid != -1:
+                theta_mcid = minus1_mcid
+                assert theta == 0., theta
+                if check_cids:
+                    assert minus1_mcid in cids, minus1_mcid
+            msg = (
+                f'eid={eid} pid={pid} nodes=({n1}, {n2}, {n3}, {n4}) '
+                f'theta={theta} zoffs={zoffs} blank={blank} '
+                f'tflag={tflag} t1-t4=({t1}, {t2}, {t3}, {t4}) '
+                f'minus1_mcid={minus1_mcid} -> theta_mcid={theta_mcid}')
             #print(msg)
             #assert theta == 0, msg
             assert zoffs == 0, msg
             assert blank == 0, msg
             assert tflag == 0, msg
 
-            theta_mcid = convert_theta_to_mcid(theta)
             if op2.is_debug_file:
                 op2.binary_debug.write(
                     f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}], '
                     f'{theta}, {zoffs}, {blank}, [{tflag}, {t1}, {t2}, {t3}, {t4})]; {theta_mcid}\n')
-            assert minus1 == -1, minus1
 
             data_init = [
                 eid, pid, n1, n2, n3, n4, theta_mcid, zoffs,
@@ -3437,13 +3440,35 @@ class GEOM2:
 # CQUADP
 
     def _read_cquadr(self, data: bytes, n: int) -> int:
-        """CQUADR(8009,80,367)  - the marker for Record 75"""
-        nx_method = partial(self._run_cquad4_nx_56, CQUADR)
-        msc_method = partial(self._run_cquad4_msc_60, CQUADR)
-        n = self._read_dual_card(
-            data, n,
-            nx_method, msc_method,
-            'CQUADR', self.add_op2_element)
+        """CQUADR(8009,80,367)  - the marker for Record 75
+
+        ints    = (8009, 80, 367,
+            pshell go from 1-242
+            nids   go from 1-29382
+            1, 1,   3600, 3310, 3797, 731, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0, 1,
+            2, 1, 731, 3797, 3798, 732, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0, 1,
+            3, 1, 732, 3798, 3799, 733, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0, 1,
+            ...
+        )
+        """
+        #return len(data)
+        #self.op2.show_data(data, types='if')
+        card_name = 'CQUADR'
+        card_obj = CQUADR
+        methods = {
+            56 : self._run_cquad4_nx_56,
+            60 : self._run_cquad4_msc_60,  # 15*4
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
+        except DoubleCardError:
+            nx_method = partial(self._run_cquad4_nx_56, card_obj)
+            msc_method = partial(self._run_cquad4_msc_60, card_obj)
+            n = self._read_dual_card(
+                data, n,
+                nx_method, msc_method,
+                card_name, self.add_op2_element)
         return n
 
     def _read_cquadx(self, data: bytes, n: int) -> int:
@@ -3822,6 +3847,8 @@ class GEOM2:
         ntotal = 56 * self.factor  # 13*4
         s = Struct(mapfmt(op2._endian + b'5i f 4i 3f i', self.size))
         nelements = (len(data) - n)// ntotal
+        cids = set(list(self.op2.coords.keys()))
+        check_cids = max(cids) > 0 if len(cids) else False
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
@@ -3831,7 +3858,7 @@ class GEOM2:
                       #eid, pid, n1, n2, n3, theta, zoffs,
                       #blank1, blank2, tflag, t1, t2, t3))
             (eid, pid, n1, n2, n3, theta, a, b, c, d,
-             t1, t2, t3, minus1) = out
+             t1, t2, t3, minus1_mcid) = out
             abcd = (a, b, c, d)
             assert abcd == (0, 0, 0, 0), abcd
             if op2.is_debug_file:
@@ -3839,7 +3866,13 @@ class GEOM2:
 
             zoffs = 0.0
             tflag = 0
-            theta_mcid = convert_theta_to_mcid(theta)
+            theta_mcid = theta
+            if minus1_mcid != -1:
+                theta_mcid = minus1_mcid
+                assert theta == 0., theta
+                if check_cids:
+                    assert minus1_mcid in cids, minus1_mcid
+
             data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3.add_op2_data(data_in)
             elements.append(elem)
@@ -4165,7 +4198,7 @@ class GEOM2:
             out = s.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  CTRIA6=%s\n' % str(out))
-            #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag, minus1) = out
+            (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag, minus1) = out
             #print('eid=%s pid=%s nids[%s, %s %s] theta=%s zoffs=%s '
                   #'tflag=%s t1=%s t2=%s t3=%s' % (
                       #eid, pid, n1, n2, n3, theta, zoffs,
@@ -4174,7 +4207,8 @@ class GEOM2:
             assert minus1 == -1
             #op2.log.info('ctria6 tflag = %s' % tflag)
             #print(minus1)
-            elem = CTRIA6.add_op2_data(out)
+            data_in = [eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag]
+            elem = CTRIA6.add_op2_data(data_in)
             self.add_op2_element(elem)
             assert tflag in [-1, 0, 1], tflag
             elements.append(elem)
@@ -4233,9 +4267,10 @@ class GEOM2:
         14 TFLAG  I Relative thickness flag
         """
         op2 = self.op2
+        ntotal = 52 * self.factor
         s = Struct(op2._endian + b'8i 5f')
-        nelements = (len(data) - n) // 52  # 13*4
-        assert (len(data) - n) % 52 == 0
+        nelements = (len(data) - n) // ntotal # 13*4
+        assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n + 52]
@@ -4250,7 +4285,7 @@ class GEOM2:
             out = (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, 0)
             elem = CTRIA6.add_op2_data(out)
             elements.append(elem)
-            n += 52
+            n += ntotal
         return n, elements
 
 # CTRIA6FD
@@ -4386,7 +4421,7 @@ class GEOM2:
     def _read_ctriax_8(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIAX]]:
         """(10108, 101, 512)"""
         op2 = self.op2
-        ntotal = 32  # 9*4
+        ntotal = 32 * self.factor  # 9*4
         struc = Struct(op2._endian + b'8i')
 
         nentries = (len(data) - n) // ntotal
@@ -4409,7 +4444,7 @@ class GEOM2:
     def _read_ctriax_9(self, card_obj, data: bytes, n: int) -> tuple[int, list[CTRIAX]]:
         """(10108, 101, 512)"""
         op2 = self.op2
-        ntotal = 36  # 9*4
+        ntotal = 36 * self.factor  # 9*4
         struc = Struct(op2._endian + b'9i')
 
         nentries = (len(data) - n) // ntotal
