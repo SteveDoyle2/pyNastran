@@ -100,6 +100,132 @@ DENSE_MATRICES = [
     b'EFMASSS', b'EFMFACS', b'EFMFSMS',
     b'MEFMASS', b'MEFWTS', b'MPFACS', b'RBMASSS',
 ]
+# https://pyyeti.readthedocs.io/en/latest/modules/nastran/generated/pyyeti.nastran.bulk.wtextseout.html
+EXTSEOUT = [
+    'KAA', 'MAA', 'BAA', 'K4XX', 'PA', 'GPXX', 'GDXX', 'RVAX',
+    'VA', 'MUG1', 'MUG1O', 'MES1', 'MES1O', 'MEE1', 'MEE1O', 'MGPF',
+    'MGPFO', 'MEF1', 'MEF1O', 'MQG1', 'MQG1O', 'MQMG1', 'MQMG1O',
+]
+
+class QualInfo:
+    def __init__(self,
+                 AUXMID=0,
+                 AFPMID=0,
+                 DESITER=0,
+                 HIGHQUAL=0,
+                 DESINC=0,
+                 MASSID=0,
+                 ARBMID=0,
+                 PARTNAME=' ',
+                 TRIMID=0,
+                 MODULE=0,
+                 FLXBDYID=0,
+                 DFPHASE=' ',
+                 ISOLAPP=0,
+                 #ISOLAPP=1,
+                 SEID=0,
+                 PEID=0,
+
+                 DISCRETE=False,
+                 PRESEQP=False,
+                 DELTA=False,
+                 BNDSHP=False,
+                 ADJOINT=False,
+                 APRCH=' ',
+                 QCPLD=' ',
+                 DBLOCFRM=' ',
+                 P2G=' ',
+                 K2GG=' ',
+                 M2GG=' ',
+                 CASEF06=' ',
+
+                 NL99=0,
+                 MTEMP=0,
+                 SUBCID=0,
+                 #OSUBID=1,
+                 OSUBID=0,
+                 STEPID=0,
+                 RGYRO=0,
+                 SSTEPID=0,
+                 ):
+        # ints
+        self.AUXMID = AUXMID
+        self.AFPMID = AFPMID
+        self.DESITER = DESITER
+        self.HIGHQUAL = HIGHQUAL
+        self.DESINC = DESINC
+        self.MASSID = MASSID
+        self.ARBMID = ARBMID
+        self.TRIMID = TRIMID
+        self.MODULE = MODULE
+
+        # booleans
+        self.DISCRETE = DISCRETE
+        self.PRESEQP = PRESEQP
+        self.DELTA = DELTA
+        self.BNDSHP = BNDSHP
+        self.ADJOINT = ADJOINT
+
+        # strings
+        self.PARTNAME = PARTNAME
+        self.DFPHASE = DFPHASE
+        self.APRCH = APRCH
+        self.QCPLD = QCPLD
+        self.DBLOCFRM = DBLOCFRM
+        self.P2G = P2G
+        self.K2GG = K2GG
+        self.M2GG = M2GG
+        self.CASEF06 = CASEF06
+
+        # other
+        self.FLXBDYID = FLXBDYID
+        self.ISOLAPP = ISOLAPP
+        self.SEID = SEID
+        self.PEID = PEID
+        self.NL99 = NL99
+        self.MTEMP = MTEMP
+        self.SUBCID = SUBCID
+        self.OSUBID = OSUBID
+        self.STEPID = STEPID
+        self.RGYRO = RGYRO
+        self.SSTEPID = SSTEPID
+
+    @classmethod
+    def from_str(self, db_key: int, qual_str: str, log):
+        assert qual_str[0] == '(', f'qual_str={qual_str!r}'
+        assert qual_str[-1] == ')', f'qual_str={qual_str!r}'
+        qual_str2 = qual_str[1:-1]
+        slines = qual_str2.split(';')
+
+        def _parse(slines: list[str], debug: bool=False) -> dict[str, Any]:
+            data_dict = {}
+            for i, sline in enumerate(slines):
+                key, value = sline.split('=', 1)
+                if value == 'FALSE':
+                    value = False
+                elif value == "TRUE":
+                    value = True
+                elif value == "' '":
+                    value = ''
+                else:
+                    value = value.strip()
+                    if value.isdigit():
+                        value = int(value)
+                if debug:
+                    log.warning(f'{key}={value!r},')
+                data_dict[key] = value
+            return data_dict
+
+        data_dict = _parse(slines, debug=False)
+        try:
+            qual_info = QualInfo(**data_dict)
+        except TypeError as exception:
+            qual_info = QualInfo()
+            log.debug(f'{db_key: 7d} {qual_str}')
+            data_dict = _parse(slines, debug=True)
+            log.error(str(exception))
+            #raise
+        return qual_info
 
 
 class OP2Reader:
@@ -203,11 +329,15 @@ class OP2Reader:
             b'EQEXINS' : (self.read_eqexin, 'internal/external ids (superelement)'),
 
             b'XSOP2DIR' : (self.read_xsop2dir, 'list of external superelement matrices?'),
+            #b'TEF1': (self._read_mef1, 'superelement matrix'),
+            #b'MEF1': (self._read_mef1, 'superelement matrix'),
+            #b'MUG1B': (self._read_mef1, 'superelement matrix'),
+            b'MATPOOL' : (self._read_matrix_matpool, 'matrices'),
 
             b'OBC1': (self.read_obc1, 'Contact pressures and tractions at grid points'),
             b'OBG1': (self.read_obc1, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
             b'PTMIC' : (self._read_ptmic, 'property of VATV microphone points'),
-            b'MATPOOL' : (self._read_matrix_matpool, 'matrices'),
+
             # OVG: Table of aeroelastic x-y plot data for V-g or V-f curves
             b'MKLIST': (self._read_mklist, 'M/K aero pairs'),
         }
@@ -2057,6 +2187,7 @@ class OP2Reader:
         """
         # we read the table on the first pass, so if we ever see a
         # 64-bit table, the error message makes a bit more sense
+        self.op2.set_as_msc()
         read_record_ndata = self.get_skip_read_record_ndata()
 
         op2 = self.op2
@@ -2081,6 +2212,7 @@ class OP2Reader:
         assert ndata == 8, self.show_data(data)
 
         itable = -3
+        qual_strings = {}
         while 1:
             self.read_3_markers([itable, 1, 0])
             stop_marker = self.get_marker1(rewind=True)
@@ -2092,7 +2224,8 @@ class OP2Reader:
                 db_key, qlen = unpack(self._endian + b'2i', data[:8])
                 fmt = self._endian + b'%is' % (ndata - 8)
                 qual_str = unpack(fmt, data[8:])[0].decode('latin1')
-                self.log.debug(f'{db_key: 7d} {qual_str}')
+                qual = QualInfo.from_str(db_key, qual_str.rstrip(), self.log)
+                qual_strings[db_key] = qual_str
             itable -= 1
         stop_marker = self.get_marker1(rewind=False)
 
@@ -4901,6 +5034,56 @@ class OP2Reader:
                 #self._goto(i)
                 #self._skip_table(op2.table_name)
 
+    def _read_mef1(self):
+        op2 = self.op2
+        table_name = self._read_table_name(rewind=False, stop_on_failure=True)
+        utable_name = table_name.decode('utf-8')
+        #print(utable_name)
+        self.read_markers([-1])
+
+        #(101, 15, 12, 2, 2, 4, 1333)
+        data = self._read_record()
+        ints = unpack(self._endian + b'7i', data)
+        print(ints)
+
+        self.read_3_markers([-2, 1, 0])
+        data = self._read_record()
+        name, int1, int2 = unpack(self._endian + b'8s ii', data)
+        print(name, int1, int2)
+        #self.show_data(data, types='ifs', endian=None, force=False)
+
+        self.read_3_markers([-3, 1])
+        read_dofs(op2, size=4)
+        #data = self._read_record()
+        #(4, 2, 4, 12, 1, -901, -1074790401, 12,
+         #4, 2, 4, 12, 7, -901, -1074790401, 12)
+        #self.show_data(data, types='ifsqd', endian=None, force=False)
+        #self.show_data(data[4:], types='ifsqd', endian=None, force=False)
+
+        assert op2.f.tell() == op2.n
+
+        ni = -4
+        marker = 1
+        while marker != 0:
+            #print(f'ni = {ni}')
+            self.read_3_markers([ni, 1])
+            read_dofs(op2, size=4)
+            ni -= 1
+
+            marker = self.get_marker1(rewind=True, macro_rewind=False)
+            #if marker == 0:
+                #break
+        #print('marker =', marker)
+        marker = self.get_marker1(rewind=False, macro_rewind=False)
+        #self.read_3_markers([ni, 1])
+        #self.show_ndata(200, types='ifs')
+
+        #self.read_3_markers([-9, 1])
+        #read_dofs(op2, size=4)
+
+    # (104, 32768, 0, 0, 0, 0, 0)
+        #aaa
+
     def _read_matrix_matpool(self):
         """
         Reads a MATPOOL matrix
@@ -6854,32 +7037,32 @@ class OP2Reader:
         #data8 = data[:ndoubles * 8]
         if 's' in types:
             strings = unpack('%s%is' % (endian, n), data[:n])
-            f.write("  strings = %s\n" % str(strings))
+            f.write(f"  strings = {strings}\n")
         if 'i' in types:
             ints = unpack('%s%ii' % (endian, nints), data4)
-            f.write("  ints    = %s\n" % str(ints))
+            f.write(f'  ints    = {ints}\n')
         if 'f' in types:
             floats = unpack('%s%if' % (endian, nints), data4)
-            f.write("  floats  = %s\n" % str(floats))
+            f.write(f'  floats  = {floats}\n')
         if 'd' in types:
             doubles = unpack('%s%id' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("  doubles (float64) = %s\n" % str(doubles))
+            f.write(f'  doubles (float64) = {doubles}\n')
 
         if 'l' in types:
             longs = unpack('%s%il' % (endian, nints), data4)
-            f.write("  long  = %s\n" % str(longs))
+            f.write(f'  long  = {longs}\n')
         if 'I' in types:
             ints2 = unpack('%s%iI' % (endian, nints), data4)
-            f.write("  unsigned int = %s\n" % str(ints2))
+            f.write(f'  unsigned int = %s\n' % str(ints2))
         if 'L' in types:
             longs2 = unpack('%s%iL' % (endian, nints), data4)
-            f.write("  unsigned long = %s\n" % str(longs2))
+            f.write(f'  unsigned long = {longs2}\n')
         if 'q' in types:
             longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("  long long (int64) = %s\n" % str(longs))
+            f.write(f'  long long (int64) = {longs}\n')
         if 'Q' in types:
             longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("  unsigned long long (int64) = %s\n" % str(longs))
+            f.write(f'  unsigned long long (int64) = {longs}\n')
         f.write('\n')
         return strings, ints, floats
 
@@ -7437,6 +7620,35 @@ def _cast_matrix_mat(GCi: np.ndarray, GCj: np.ndarray,
             matrix = real_array
     return matrix
 
+
+
+def read_dofs(op2: OP2, size: int=4) -> None:
+    op2.log.debug('read_dofs')
+    dofs = []
+    while 1:
+        #self.show_ndata(32, types='if')
+        tell = op2.f.tell()
+        data = op2.f.read(12)
+        out = unpack(b'<3i', data)
+        if out[1] != 2:
+            #print(out)
+            op2.f.seek(tell)
+            break
+        op2.n += 16
+        #if
+        #tell = op2.f.tell()
+        data = op2.f.read(20)
+        a_int, b_int, c_int, d_int, e_float = unpack(op2._endian + b'3i f i', data)
+        dofs.append((a_int, b_int, c_int, d_int, e_float))
+        #out = op2.struct_3i.unpack(data)
+        op2.n += 16
+        #op2.show_data(data, types='if')
+        #op2.show_ndata(64, types='if')
+        #bbb
+    for dof in dofs:
+        print('dof', dof)
+    print()
+    return dofs
 
 def reshape_trmbd(element_name: str, nnodes: int, int_data, float_data):
     ndata_per_element = 1 + nnodes + 3 * nnodes  # 1+4*(nnnodes) = 1+4*2 = 9
