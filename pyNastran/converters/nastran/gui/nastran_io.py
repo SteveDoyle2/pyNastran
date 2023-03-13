@@ -120,6 +120,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
+    from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
 
 SIDE_MAP = {}
 SIDE_MAP['CHEXA'] = {
@@ -3025,7 +3026,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             self.normals = normals
         return nid_to_pid_map, icase, cases, form
 
-    def _build_mcid_vectors(self, model: BDF, nplies: int):
+    def _build_mcid_vectors(self, model: BDF, nplies: int) -> None:
         """creates the shell material coordinate vectors"""
         etype = 3 # vtkLine
 
@@ -5224,7 +5225,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             nplies = nplies_pcomp.max()
 
         if nastran_settings.is_shell_mcids and nplies is not None:
-            self._build_mcid_vectors(model, nplies)
+            try:
+                self._build_mcid_vectors(model, nplies)
+            except Exception as exception:
+                model.log.error(str(exception))
+
         return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
 
     def _plot_pressures(self, model: BDF, cases, form0,
@@ -7214,19 +7219,18 @@ def _create_monpnt(gui: MainWindow,
                    model: BDF,
                    xyz_cid0: np.ndarray,
                    nid_cp_cd: np.ndarray):
-    from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
     cell_type_point = 1  # vtk.vtkVertex().GetCellType()
 
     all_nids = nid_cp_cd[:, 0]
     log = model.log
     for monpnt in model.monitor_points:
-        monpnt = monpnt # type: MONPNT1
-        coord = model.coords[monpnt.cp]
-        coord = coord # type: CORD2R
+        monpnt: MONPNT1 = monpnt
+        coord: CORD2R = model.coords[monpnt.cp]
+        coord = coord
         xyz_global = coord.transform_node_to_global(monpnt.xyz).reshape(1, 3)
         label = monpnt.label
         try:
-            aecomp = model.aecomps[monpnt.comp]  # type: AECOMP
+            aecomp: AECOMP = model.aecomps[monpnt.comp]
         except KeyError:
             key = monpnt.comp
             keys = list(model.aecomps.keys())
@@ -7238,7 +7242,7 @@ def _create_monpnt(gui: MainWindow,
                 #set1_ids = aecomp.lists
                 nids = []
                 for set1_id in aecomp.lists:
-                    set1 = model.sets[set1_id]  # type: SET1
+                    set1: SET1 = model.sets[set1_id]
                     nids += set1.ids
 
                 nids = np.unique(nids)

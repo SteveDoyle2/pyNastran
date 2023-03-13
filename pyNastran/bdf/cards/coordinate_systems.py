@@ -917,10 +917,10 @@ class Coord(BaseCard):
         """
         assert n < 10, 'n=%r' % n
         matrix = self.beta()
-        t = np.zeros((3*n, 3*n), dtype='float64')  # transformation matrix
+        xform = np.zeros((3*n, 3*n), dtype='float64')  # transformation matrix
         for i in range(n):
-            t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
-        return t
+            xform[i*3:i*3+3, i*3:i*3+3] = matrix
+        return xform
 
 
     def transform_matrix_to_global(self, matrix):
