@@ -61,6 +61,7 @@ from pyNastran.op2.result_objects.eqexin import EQEXIN
 from pyNastran.op2.result_objects.matrix import Matrix
 from pyNastran.op2.result_objects.matrix_dict import MatrixDict
 from pyNastran.op2.result_objects.design_response import DSCMCOL
+from pyNastran.op2.result_objects.qualinfo import QualInfo
 from pyNastran.op2.op2_interface.msc_tables import MSC_GEOM_TABLES
 from pyNastran.op2.op2_interface.nx_tables import NX_GEOM_TABLES
 
@@ -106,126 +107,6 @@ EXTSEOUT = [
     'VA', 'MUG1', 'MUG1O', 'MES1', 'MES1O', 'MEE1', 'MEE1O', 'MGPF',
     'MGPFO', 'MEF1', 'MEF1O', 'MQG1', 'MQG1O', 'MQMG1', 'MQMG1O',
 ]
-
-class QualInfo:
-    def __init__(self,
-                 AUXMID=0,
-                 AFPMID=0,
-                 DESITER=0,
-                 HIGHQUAL=0,
-                 DESINC=0,
-                 MASSID=0,
-                 ARBMID=0,
-                 PARTNAME=' ',
-                 TRIMID=0,
-                 MODULE=0,
-                 FLXBDYID=0,
-                 DFPHASE=' ',
-                 ISOLAPP=0,
-                 #ISOLAPP=1,
-                 SEID=0,
-                 PEID=0,
-
-                 DISCRETE=False,
-                 PRESEQP=False,
-                 DELTA=False,
-                 BNDSHP=False,
-                 ADJOINT=False,
-                 APRCH=' ',
-                 QCPLD=' ',
-                 DBLOCFRM=' ',
-                 P2G=' ',
-                 K2GG=' ',
-                 M2GG=' ',
-                 CASEF06=' ',
-
-                 NL99=0,
-                 MTEMP=0,
-                 SUBCID=0,
-                 #OSUBID=1,
-                 OSUBID=0,
-                 STEPID=0,
-                 RGYRO=0,
-                 SSTEPID=0,
-                 ):
-        # ints
-        self.AUXMID = AUXMID
-        self.AFPMID = AFPMID
-        self.DESITER = DESITER
-        self.HIGHQUAL = HIGHQUAL
-        self.DESINC = DESINC
-        self.MASSID = MASSID
-        self.ARBMID = ARBMID
-        self.TRIMID = TRIMID
-        self.MODULE = MODULE
-
-        # booleans
-        self.DISCRETE = DISCRETE
-        self.PRESEQP = PRESEQP
-        self.DELTA = DELTA
-        self.BNDSHP = BNDSHP
-        self.ADJOINT = ADJOINT
-
-        # strings
-        self.PARTNAME = PARTNAME
-        self.DFPHASE = DFPHASE
-        self.APRCH = APRCH
-        self.QCPLD = QCPLD
-        self.DBLOCFRM = DBLOCFRM
-        self.P2G = P2G
-        self.K2GG = K2GG
-        self.M2GG = M2GG
-        self.CASEF06 = CASEF06
-
-        # other
-        self.FLXBDYID = FLXBDYID
-        self.ISOLAPP = ISOLAPP
-        self.SEID = SEID
-        self.PEID = PEID
-        self.NL99 = NL99
-        self.MTEMP = MTEMP
-        self.SUBCID = SUBCID
-        self.OSUBID = OSUBID
-        self.STEPID = STEPID
-        self.RGYRO = RGYRO
-        self.SSTEPID = SSTEPID
-
-    @classmethod
-    def from_str(self, db_key: int, qual_str: str, log):
-        assert qual_str[0] == '(', f'qual_str={qual_str!r}'
-        assert qual_str[-1] == ')', f'qual_str={qual_str!r}'
-        qual_str2 = qual_str[1:-1]
-        slines = qual_str2.split(';')
-
-        def _parse(slines: list[str], debug: bool=False) -> dict[str, Any]:
-            data_dict = {}
-            for i, sline in enumerate(slines):
-                key, value = sline.split('=', 1)
-                if value == 'FALSE':
-                    value = False
-                elif value == "TRUE":
-                    value = True
-                elif value == "' '":
-                    value = ''
-                else:
-                    value = value.strip()
-                    if value.isdigit():
-                        value = int(value)
-                if debug:
-                    log.warning(f'{key}={value!r},')
-                data_dict[key] = value
-            return data_dict
-
-        data_dict = _parse(slines, debug=False)
-        try:
-            qual_info = QualInfo(**data_dict)
-        except TypeError as exception:
-            qual_info = QualInfo()
-            log.debug(f'{db_key: 7d} {qual_str}')
-            data_dict = _parse(slines, debug=True)
-            log.error(str(exception))
-            #raise
-        return qual_info
 
 
 class OP2Reader:
