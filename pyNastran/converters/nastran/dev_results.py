@@ -13,16 +13,16 @@ class TransientElementResults:
         """
         subcase_id : int
             the flag that points to self.subcases for a message
-        headers : List[str]
+        headers : list[str]
             the sidebar word
-        titles : List[str]
+        titles : list[str]
             the legend title
         scalars : (nnodes,n) float ndarray
             #the data to make a contour plot with
             does nothing
         scales : ???
             the deflection scale factors
-        data_formats : List[str]
+        data_formats : list[str]
             the type of data result (e.g. '%i', '%.2f', '%.3f')
         uname : str
             some unique name for ...

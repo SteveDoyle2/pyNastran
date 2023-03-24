@@ -28,7 +28,7 @@ defines some methods for working with arrays:
 from __future__ import annotations
 from struct import calcsize
 from itertools import count
-from typing import Optional, Dict, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 from numpy import arccos, sqrt, pi, in1d, cos, unique, cross, ndarray
 if TYPE_CHECKING:  # pragma: no cover
@@ -353,7 +353,7 @@ def principal_3d(o11, o22, o33, o12, o23, o13):
 
 
 def transform_force(force_in_local,
-                    coord_out: CORDx, coords: Dict[int, CORDx],
+                    coord_out: CORDx, coords: dict[int, CORDx],
                     nid_cd: int, unused_icd_transform):
     """
     Transforms force/moment from global to local and returns all the forces.
@@ -409,8 +409,8 @@ def transform_force(force_in_local,
 
 
 def transform_force_moment(force_in_local, moment_in_local,
-                           coord_out: CORDx, coords: Dict[int, CORDx],
-                           nid_cd: int, icd_transform: Dict[int, ndarray],
+                           coord_out: CORDx, coords: dict[int, CORDx],
+                           nid_cd: int, icd_transform: dict[int, ndarray],
                            xyz_cid0: ndarray,
                            summation_point_cid0: Optional[NDArray3float]=None,
                            consider_rxf: bool=True,
@@ -588,8 +588,8 @@ def transform_force_moment(force_in_local, moment_in_local,
     return force_out, moment_out
 
 def transform_force_moment_sum(force_in_local: NDArrayN3float, moment_in_local: NDArrayN3float,
-                               coord_out: CORDx, coords: Dict[int, CORDx],
-                               nid_cd: NDArrayN2int, icd_transform: Dict[int, NDArrayNint],
+                               coord_out: CORDx, coords: dict[int, CORDx],
+                               nid_cd: NDArrayN2int, icd_transform: dict[int, NDArrayNint],
                                xyz_cid0, summation_point_cid0=None,
                                consider_rxf=True,
                                debug=False, log=None):

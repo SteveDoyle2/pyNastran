@@ -1278,13 +1278,13 @@ class SPCDv(BaseLoad):
 
         Parameters
         ----------
-        sid : List[int]
+        sid : list[int]
             constraint ids
-        nodes : List[int]
+        nodes : list[int]
             GRID/SPOINT ids
-        constraints : List[str]
+        constraints : list[str]
             the degree of freedoms to constrain (e.g., '1', '123')
-        enforced : List[float]
+        enforced : list[float]
             the constrained value for the given node (typically 0.0)
 
         .. note:: len(nodes) == len(constraints) == len(enforced)

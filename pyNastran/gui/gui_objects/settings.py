@@ -241,7 +241,7 @@ class Settings:
 
         self.nastran_settings = NastranSettings()
 
-    def add_model_settings_to_dict(self, data: Dict[str, Any]):
+    def add_model_settings_to_dict(self, data: dict[str, Any]):
         nastran_settings = self.nastran_settings
         for key in NASTRAN_BOOL_KEYS:
             base, key2 = key.split('_', 1)
@@ -366,7 +366,7 @@ class Settings:
         is_loaded = True
         return is_loaded
 
-    def _load_nastran_settings(self, settings: QSettings, setting_keys: List[str]) -> None:
+    def _load_nastran_settings(self, settings: QSettings, setting_keys: list[str]) -> None:
         """
         loads the settings from 'nastran_displacement' (or similar)
         and save it to 'nastran_settings.displacement'
@@ -387,8 +387,8 @@ class Settings:
             #print(f'key={key!r} key2={key2!r} default={default!r} value={value!r}')
             setattr(nastran_settings, key2, value)
 
-    def _set_setting(self, settings, setting_keys: List[str],
-                     setting_names: List[str], default: Any,
+    def _set_setting(self, settings, setting_keys: list[str],
+                     setting_names: list[str], default: Any,
                      save: bool=True, auto_type=None) -> Any:
         """
         helper method for ``reapply_settings``
@@ -670,7 +670,7 @@ class Settings:
             self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
 
-    def set_highlight_color(self, color: List[float]) -> None:
+    def set_highlight_color(self, color: list[float]) -> None:
         """
         Set the highlight color
 
@@ -710,7 +710,7 @@ class Settings:
     #---------------------------------------------------------------------------
     # TEXT ACTORS - used for lower left notes
 
-    def set_text_color(self, color: List[float], render: str=True) -> None:
+    def set_text_color(self, color: list[float], render: str=True) -> None:
         """
         Set the text color
 
@@ -780,7 +780,7 @@ class Settings:
             msg += '  %r = %r\n' % (key, value)
         return msg
 
-def update_axes_text_size(axes: Dict[int, vtk.vtkAxes],
+def update_axes_text_size(axes: dict[int, vtk.vtkAxes],
                           coord_text_scale: float,
                           width: float=1.0, height: float=0.25):
     """updates the coordinate system text size"""

@@ -364,7 +364,7 @@ class BCBODY(BaseCard):
             #print('*', word)
             if word == 'ADVANCE':
                 # | ADVANCE | SANGLE | COPTB | | MIDNO |
-                sangle = blank(card, i+1, 'sangle')
+                sangle = double_or_blank(card, i+1, 'sangle', default=60.)
                 coptb = integer(card, i+2, 'coptb')
                 user = blank(card, i+3, 'user')
                 min_nod = blank(card, i+4, 'min_nod')
@@ -432,23 +432,40 @@ class BCBODY(BaseCard):
                 itype = integer_or_blank(card, i+7, 'itype')
                 i += 8
 
-                bnc = double(card, i+1, 'bnc')
-                emiss = double(card, i+2, 'emiss')
-                hbl = double(card, i+3, 'hbl')
-                hnl = blank(card, i+4, 'hnl')
-                bnl = blank(card, i+5, 'bnl')
-                hnle = blank(card, i+6, 'hnle')
-                bnle = blank(card, i+7, 'bnle')
+                bnc = double_or_blank(card, i+1, 'bnc', default=1.)
+                emiss = double_or_blank(card, i+2, 'emiss', default=0.)
+                hbl = double_or_blank(card, i+3, 'hbl', default=0.)
+                hnl = integer_double_or_blank(card, i+4, 'hnl', default=0.)
+                bnl = integer_double_or_blank(card, i+5, 'bnl', default=1.)
+                hnle = integer_double_or_blank(card, i+6, 'hnle', default=0.)
+                bnle = integer_double_or_blank(card, i+7, 'bnle', default=1.)
                 i += 8
 
-                hnce = blank(card, i+1, 'hnce')
-                bnce = blank(card, i+2, 'bnce')
-                cmb = blank(card, i+3, 'cmb')
-                cms = blank(card, i+4, 'cms')
+                hnce = integer_double_or_blank(card, i+1, 'hnce', default=0.)
+                bnce = integer_double_or_blank(card, i+2, 'bnce', default=1.)
+                cmb = double_or_blank(card, i+3, 'cmb', default=0.)
+                cms = double_or_blank(card, i+4, 'cms', default=0.)
                 i += 8
+            elif word == 'GROW':
+                #'GROW' GF1 GF2 GF3 TAB-GF1 TAB-GF2 TAB-GF3
+                gf1 = double_or_blank(card, i+1, 'GF1', default=1.0)
+                gf2 = double_or_blank(card, i+2, 'GF2', default=1.0)
+                gf3 = double_or_blank(card, i+3, 'GF3', default=1.0)
+                tab_gf1 = integer_or_blank(card, i+4, 'tab_GF1')
+                tab_gf2 = integer_or_blank(card, i+5, 'tab_GF2')
+                tab_gf3 = integer_or_blank(card, i+6, 'tab_GF3')
+                #blank = blank(card, i+7, 'GROW blank')
+                #print('grow values =', [gf1, gf2, gf3, tab_gf1, tab_gf2, tab_gf3])
+                i += 8
+                #GF1 GF2 GF3 TAB-GF1 TAB-GF2 TAB-GF3
             elif word == 'NURBS':
                 i, values = _get_bcbody_section_values(card, i, word)
                 #print('end of NURBS -> ', valuei)
+            elif word == 'PATCH3D':
+                #'PATCH3D' NPATCH
+                #          IDP G1 G2 G3 G4
+                #          IDP G1 G2 G3 G4
+                i, values = _get_bcbody_section_values(card, i, word)
             elif word == 'RIGID':
                 i += 8
             elif word == 'BEZIER':
@@ -1178,8 +1195,8 @@ class BCPARA(BaseCard):
                 #NODESURF Node to segment contact. (Default)
                 #SEGTOSEG Segment to segment contact.
                 value = string_choice_or_blank(card, i, f'value{j}',
-                                       ('NODESURF', 'SEGTOSEG', 'SEGLARGE'),
-                                       'NODESURF')
+                                       ('NODESURF', 'SEGTOSEG', 'SEGSMALL', 'SEGLARGE'),
+                                        'NODESURF')
             elif param == 'MAXENT':
                 # MAXENT (2,2) Maximum number of entities created for any contact body. (Integer >
                 # 0 or blank; default is max element number or 1.5 times the number of

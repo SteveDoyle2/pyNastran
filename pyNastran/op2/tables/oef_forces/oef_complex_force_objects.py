@@ -1,12 +1,12 @@
-from itertools import cycle
+#from itertools import cycle
 from abc import abstractmethod
-from typing import List
 
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
-from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.result_objects.op2_objects import BaseElement, get_complex_times_dtype
+from pyNastran.utils.numpy_utils import integer_types, empty_array
+from pyNastran.op2.result_objects.op2_objects import (
+    BaseElement, get_complex_times_dtype, get_sort_element_sizes)
 from pyNastran.op2.tables.oef_forces.oef_force_objects import ForceObject, oef_complex_data_code
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     oes_complex_data_code, set_element_case, set_freq_case, set_complex_modes_case)
@@ -65,7 +65,7 @@ class ComplexRodForceArray(ComplexForceObject):
         else:
             raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial_force', 'torque']
         return headers
 
@@ -88,9 +88,9 @@ class ComplexRodForceArray(ComplexForceObject):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
 
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.nelements, dtype=idtype)
 
         #[axial_force, torque]
@@ -182,16 +182,17 @@ class ComplexRodForceArray(ComplexForceObject):
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -400,7 +401,7 @@ class ComplexCShearForceArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'force41', 'force14', 'force21', 'force12', 'force32', 'force23',
             'force43', 'force34', 'kickForce1', 'kickForce2', 'kickForce3',
@@ -428,8 +429,8 @@ class ComplexCShearForceArray(BaseElement):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.nelements, dtype=idtype)
 
         #[force41, force14, force21, force12, force32, force23, force43, force34,
@@ -534,6 +535,7 @@ class ComplexCShearForceArray(BaseElement):
                   kick_force1, kick_force2, kick_force3, kick_force4,
                   shear12, shear23, shear34, shear41):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
@@ -543,10 +545,10 @@ class ComplexCShearForceArray(BaseElement):
             shear12, shear23, shear34, shear41]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -694,7 +696,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['spring_force']
         return headers
 
@@ -717,12 +719,14 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype=idtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+
+        ntimes, nelements, ntotal = get_sort_element_sizes(self)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = zeros(nelements, dtype=idtype)
 
         #[axial_force, torque]
-        self.data = zeros((self.ntimes, self.ntotal, 1), dtype=cfdtype)
+        self.data = zeros((ntimes, ntotal, 1), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -813,16 +817,35 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
 
     def add_sort1(self, dt, eid, force):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, 0] = force
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def add_sort2(self, dt, eid, force):
+        """unvectorized method for adding SORT1 transient data"""
+        assert self.is_sort2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #self._times[self.itime] = dt
+        #self.element[self.ielement] = eid
+        #self.data[self.itime, self.ielement, 0] = force
+        #self.ielement += 1
+
+        #itotal = self.itime
+        itime = self.itotal
+        #print(f'itime={itime}/{len(self._times)}; itotal={itotal}/{self.ntotal}; self.ielement={self.ielement}/{len(self.element)}')
+        self._times[itime] = dt
+        self.element[self.ielement] = eid
+        self.data[itime, self.ielement, 0] = force
+        self.itotal += 1
+
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -1046,7 +1069,7 @@ class ComplexViscForceArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial_force', 'torque']
         return headers
 
@@ -1073,10 +1096,7 @@ class ComplexViscForceArray(BaseElement):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.nelements, dtype='int32')
 
         #[axial_force, torque]
@@ -1129,16 +1149,17 @@ class ComplexViscForceArray(BaseElement):
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -1264,7 +1285,7 @@ class ComplexPlateForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
         return headers
 
@@ -1275,20 +1296,34 @@ class ComplexPlateForceArray(ComplexForceObject):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
+
+        if self.is_sort1:
+            self.nelements //= self.ntimes
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntotal = self.ntotal
+        else:
+            self.ntimes, self.nelements = self.nelements, self.ntimes
+            #print(f'ComplexPlateForceArray {self.element_name}-{self.element_type}: ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntimes = self.ntotal
+            ntotal = ntimes
+            #print(f'-> ntimes={ntimes} nelements={nelements} ntotal={ntotal}')
+            self.ntimes = ntimes
         #self.ntimes = 0
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype=idtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = zeros(nelements, dtype=idtype)
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=cfdtype)
+        self.data = np.full((ntimes, ntotal, 8), np.nan, dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1356,8 +1391,12 @@ class ComplexPlateForceArray(ComplexForceObject):
                     raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+    def add_sort1(self, dt, eid: int,
+                  mx: float, my: float, mxy: float,
+                  bmx: float, bmy: float, bmxy: float,
+                  tx: float, ty: float) -> None:
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
@@ -1365,14 +1404,32 @@ class ComplexPlateForceArray(ComplexForceObject):
         self.ielement += 1
         self.itotal += 1
 
+    def add_sort2(self, dt, eid: int,
+                  mx: float, my: float, mxy: float,
+                  bmx: float, bmy: float, bmxy: float,
+                  tx: float, ty: float) -> None:
+        """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itime = self.itotal
+        ielement = self.itime
+        ntimes = len(self._times)
+        nelement = len(self.element)
+        #print(f'ComplexPlateForceArray: itime={itime}/{ntimes} -> dt={dt}; ielement={ielement}/{nelement}-> eid={eid}')
+        self._times[itime] = dt
+        self.element[ielement] = eid
+        self.data[itime, ielement, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.ielement += 1
+        self.itotal += 1
+
     #@property
     #def nnodes_per_element(self):
         #return 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -1597,7 +1654,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
         return headers
 
@@ -1610,8 +1667,6 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        self.nelements //= self.ntimes
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -1619,14 +1674,45 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        #print(self.object_stats())
+        idtype, cfdtype = get_complex_times_dtype(self.size)
 
-        self.element = zeros(self.nelements, dtype=idtype)
-        self.element_node = zeros((self.ntotal, 2), dtype=idtype)
+        if self.is_sort1:
+            self.nelements //= self.ntimes
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntotal = self.ntotal
+        else:
+            #ComplexPlate2ForceArray: ntimes=2 nelements=4002 ntotal=10005
+            # -> ntimes=4002 nelements=2 ntotal=10005
+            #ntimes_actual = 2001
+            #nelement_nid_actual = 10
+            #{(2, 43), (2, 4), (20, 53), (2, 23), (20, 4),
+             #(20, 52), (20, 32), (2, 22), (2, 44), (20, 31)}
+            #self.all_times = set()
+            #self.all_elements = set()
+            #print(f'ComplexPlateForceArray: {self.element_name}-{self.element_type}: '
+                  #f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}'
+                  #f' nnodes/element={self.nnodes_per_element}')
+
+            #ntimes = self.nelements
+            nelements = self.ntimes # ntotal // ntimes
+            ntotal = nelements * self.nnodes_per_element
+            #self.itotal // self.nnodes_per_element
+            ntimes = self.ntotal // self.nnodes_per_element
+            #ntotal = self.ntotal
+            #print('-> ntimes=%s nelements=%s ntotal=%s' % (ntimes, nelements, ntotal))
+            #asdf
+        self.ntimes = ntimes
+        self.nelements = nelements
+        #self.ntotal = ntotal
+
+        self._times = empty_array(ntimes, dtype=self.analysis_fmt)
+        self.element = np.full(nelements, -1, dtype=idtype)
+        self.element_node = zeros((ntotal, 2), dtype=idtype)
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=cfdtype)
+        self.data = np.full((ntimes, ntotal, 8), np.nan, dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1679,10 +1765,10 @@ class ComplexPlate2ForceArray(ComplexForceObject):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element_node):
+                for itotal, e in enumerate(self.element_node):
                     (eid, nid) = e
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                    t1 = self.data[itime, itotal, :]
+                    t2 = table.data[itime, itotal, :]
                     (mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1) = t1
                     (mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2) = t2
 
@@ -1690,6 +1776,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
                         base1 = '(%s, %s)   ' % (eid, nid)
                         base2 = ' ' * len(base1)
                         msg += (
+                            f'itime={itime} itotal={itotal}\n' +
                             '%s (%s, %s, %s, %s, %s, %s, %s, %s)\n'
                             '%s(%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 base1,
@@ -1704,7 +1791,10 @@ class ComplexPlate2ForceArray(ComplexForceObject):
                     raise ValueError(msg)
         return True
 
-    def add_new_element_sort1(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+    def add_new_element_sort1(self, dt, eid: int, term: str, nid: int,
+                              mx: float, my: float, mxy: float,
+                              bmx: float, bmy: float, bmxy: float,
+                              tx: float, ty: float) -> None:
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.element_node[self.itotal, :] = [eid, nid]
@@ -1712,8 +1802,12 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         self.itotal += 1
         self.ielement += 1
 
-    def add_sort1(self, dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+    def add_sort1(self, dt, eid: int, inid: int, nid: int,
+                  mx: float, my: float, mxy: float,
+                  bmx: float, bmy: float, bmxy: float,
+                  tx: float, ty: float) -> None:
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #assert self.element[self.ielement - 1] == eid, eid
@@ -1721,8 +1815,66 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
 
+    def add_new_element_sort2(self, dt, eid: int, term: str, nid: int,
+                              mx: float, my: float, mxy: float,
+                              bmx: float, bmy: float, bmxy: float,
+                              tx: float, ty: float) -> None:
+        assert isinstance(nid, int), nid
+        #print(f'ntimes={self.ntimes} nelement={self.nelements} ntotal={self.ntotal}')
+        #self.all_times.add(dt)
+        #self.all_elements.add((eid, nid))
+        itime = self.itotal // self.nnodes_per_element
+        ntimes = len(self._times)
+        #ielement = self.ielement
+        #ielement = self.itotal // ntimes
+        ielement = self.itime
+        nelement = len(self.element)
+        #itotal = self.itotal
+        #itotala = self.itotal // self.ntimes
+        #itotal = ielement *self.nnodes_per_element + self.itotal // ntimes
+        itotal = ielement * self.nnodes_per_element
+        ntotal = len(self.element_node)
+        #print(f'ComplexPlate2ForceArrayA: itime={itime}/{ntimes} -> dt={dt}; ielement={ielement}/{nelement}-> eid={eid}; itotal={itotal}/{ntotal}-> nid={nid}')
+        self._times[itime] = dt
+        self.element[ielement] = eid
+        self.element_node[itotal, :] = [eid, nid]
+        self.data[itime, itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.itotal += 1
+        #self.ielement += 1
+        #print(self.element_node)
+
+    def add_sort2(self, dt, eid: int, inid: int, nid: int,
+                  mx: float, my: float, mxy: float,
+                  bmx: float, bmy: float, bmxy: float,
+                  tx: float, ty: float) -> None:
+        """unvectorized method for adding SORT2 transient data"""
+        assert isinstance(nid, int), nid
+        #self.all_times.add(dt)
+        #self.all_elements.add((eid, nid))
+        assert self.sort_method == 2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itime = self.itotal // self.nnodes_per_element
+        ntimes = len(self._times)
+        ielement = self.itime
+        #ielement = self.ielement
+        nelement = len(self.element)
+        #itotal = self.itotal // self.ntimes
+        #itotal = ielement * self.nnodes_per_element + self.itotal // ntimes
+        itotal = ielement * self.nnodes_per_element + inid + 1
+        ntotal = len(self.element_node)
+        #print(self.all_elements)
+        #print(f'ComplexPlate2ForceArrayB: itime={itime}/{ntimes} -> dt={dt}; ielement={ielement}/{nelement}-> eid={eid}; itotal={itotal}/{ntotal}-> nid={nid}; inid={inid}')
+        #print(len(self.all_times), len(self.all_elements))
+
+        self._times[itime] = dt
+        #assert self.element[self.ielement] == eid, eid
+        self.element_node[itotal, :] = [eid, nid]
+        self.data[itime, itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.itotal += 1
+
+
     @property
-    def nnodes_per_element(self):
+    def nnodes_per_element(self) -> int:
         if self.element_type == 144:  # CQUAD4
             nnodes_element = 5
         elif self.element_type == 64:  # CQUAD8
@@ -1737,10 +1889,10 @@ class ComplexPlate2ForceArray(ComplexForceObject):
             raise NotImplementedError('element_type=%s element_name=%s' % (self.element_type, self.element_name))
         return nnodes_element
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -2003,7 +2155,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['bending_moment_1a', 'bending_moment_2a',
                    'bending_moment_1b', 'bending_moment_2b',
                    'shear1', 'shear2', 'axial', 'torque', ]
@@ -2019,7 +2171,18 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
 
         #self.names = []
         #self.nelements //= nnodes
-        self.nelements //= self.ntimes
+        if self.is_sort1:
+            self.nelements //= self.ntimes
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntotal = nelements
+        else:
+            #print(f'{self.class_name}: ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
+            self.ntimes, self.nelements = self.ntotal, self.ntimes
+            #print(f'-> ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntotal = nelements
         #self.ntotal //= self.ntimes
         self.itime = 0
         self.ielement = 0
@@ -2027,9 +2190,9 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.ntotal, dtype=idtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+        self._times = empty_array(ntimes, dtype=self.analysis_fmt)
+        self.element = zeros(ntotal, dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
 
@@ -2038,7 +2201,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
                 #self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
             #raise RuntimeError(msg)
         #[bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=cfdtype)
+        self.data = np.full((ntimes, ntotal, 8), np.nan, dtype=cfdtype)
 
 
     def build_dataframe(self):
@@ -2089,18 +2252,37 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
                 raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
+    def add_sort1(self, dt, eid: int, bm1a: float, bm2a: float, bm1b: float, bm2b: float,
+                  ts1: float, ts2: float, af: float, trq: float):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
         self.element[self.itotal] = eid
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def add_sort2(self, dt, eid: int, bm1a: float, bm2a: float, bm1b: float, bm2b: float,
+                  ts1: float, ts2: float, af: float, trq: float):
+        """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itime = self.itotal
+        ielement = self.itime
+        ntimes = len(self._times)
+        nelement = len(self.element)
+        #print(f'ComplexCBarForceArray: itime={itime}/{ntimes} -> dt={dt}; ielement={ielement}/{nelement}-> eid={eid}')
+        itime = self.itotal
+        ielement = self.itime
+        self._times[itime] = dt
+        self.data[itime, ielement, :] = [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
+        self.element[ielement] = eid
+        self.itotal += 1
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -2361,7 +2543,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
             'axial_force', 'total_torque', 'warping_torque', ]
@@ -2383,8 +2565,8 @@ class ComplexCBeamForceArray(ComplexForceObject):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+        self._times = zeros(self.ntimes, self.analysis_fmt)
         self.element = zeros(self.ntotal, idtype)
         self.element_node = zeros((self.ntotal, 2), idtype)
 
@@ -2521,6 +2703,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s type=%s' % (dt, eid, type(eid))
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
@@ -2528,10 +2711,10 @@ class ComplexCBeamForceArray(ComplexForceObject):
         self.element_node[self.itotal, :] = [eid, nid]
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -2798,7 +2981,7 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'bending_moment_1a', 'bending_moment_2a', 'shear_1a', 'shear_2a', 'axial_a', 'torque_a',
             'bending_moment_1b', 'bending_moment_2b', 'shear_1b', 'shear_2b', 'axial_b', 'torque_b',
@@ -2820,10 +3003,7 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element_node = zeros((self.nelements, 3), dtype='int32')
 
         #[bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a
@@ -2915,6 +3095,7 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
         #bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
@@ -2929,10 +3110,10 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -3068,7 +3249,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['ax', 'ay', 'az', 'vx', 'vy', 'vz', 'pressure']
         return headers
 
@@ -3094,8 +3275,8 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.nelements, dtype=idtype)
 
         #[ax, ay, az, vx, vy, vz, pressure]
@@ -3153,16 +3334,17 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
 
     def add_sort1(self, dt, eid, ename, ax, ay, az, vx, vy, vz, pressure):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -3408,7 +3590,7 @@ class ComplexForceMomentArray(ComplexForceObject):
         self.itime = 0
         self.nelements = 0  # result specific
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
 
@@ -3450,8 +3632,8 @@ class ComplexForceMomentArray(ComplexForceObject):
             ntimes = self.ntotal
             ntotal = self.ntimes
             #print(f'CBUSH SORT2: ntimes={ntimes} ntotal={ntotal}')
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(ntimes, dtype=dtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(ntotal, dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
@@ -3516,6 +3698,7 @@ class ComplexForceMomentArray(ComplexForceObject):
 
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #[fx, fy, fz, mx, my, mz]
         self._times[self.itime] = dt
@@ -3525,19 +3708,21 @@ class ComplexForceMomentArray(ComplexForceObject):
 
     def add_sort2(self, dt, eid, fx, fy, fz, mx, my, mz):
         """unvectorized method for adding SORT2 transient data"""
+        assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #[fx, fy, fz, mx, my, mz]
         itime = self.itotal
         itotal = self.itime
+        #print(itime, itotal, dt, eid)
         self._times[itime] = dt
         self.data[itime, itotal, :] = [fx, fy, fz, mx, my, mz]
         self.element[itotal] = eid
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros, allclose
 
@@ -63,7 +62,7 @@ class RandomShearArray(OES_Object):
             nelements = self.ntimes
 
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(nelements, dtype='int32')
 
         # [max_shear, avg_shear]
@@ -123,6 +122,7 @@ class RandomShearArray(OES_Object):
           ID.             SHEAR          SHEAR        ID.             SHEAR          SHEAR
             328        1.721350E+03   1.570314E+03
         """
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [max_shear, avg_shear]
@@ -134,17 +134,19 @@ class RandomShearArray(OES_Object):
           ID.             SHEAR          SHEAR        ID.             SHEAR          SHEAR
             328        1.721350E+03   1.570314E+03
         """
-        itime = self.ielement
-        ielement = self.itotal
+        assert self.is_sort2, self
+        itime = self.itotal
+        ielement = self.itime
+        #print(f'dt={dt:g} eid={eid} itime={itime} ielement={ielement}')
         self._times[itime] = dt
         self.element[ielement] = eid
         self.data[itime, ielement, :] = [max_shear, avg_shear]
-        self.ielement += 1
+        self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -220,7 +222,7 @@ class RandomShearStressArray(RandomShearArray, StressObject):
         RandomShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['max_shear', 'avg_shear']
         return headers
 
@@ -239,7 +241,7 @@ class RandomShearStrainArray(RandomShearArray, StrainObject):
         RandomShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['max_shear', 'avg_shear']
         return headers
 

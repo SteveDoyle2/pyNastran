@@ -2,7 +2,7 @@
 from __future__ import annotations
 from itertools import chain
 from collections import defaultdict
-from typing import List, Dict, Union, Optional, Iterable, Any, TYPE_CHECKING
+from typing import Union, Optional, Iterable, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -609,14 +609,15 @@ class GetMethods(BDFAttributes):
                                #% (aesurf_id, msg, _unique_keys(self.aesurf)))
         #else:
         assert isinstance(aesurf_name, str), f'aesurf_name={aesurf_name!r}'
-        names = []
+
         for aesurf_int, aesurf in self.aesurf.items():
             if aesurf.label == aesurf_name:
                 return aesurf
-            names.append(aesurf.label)
-        names.sort()
-        raise KeyError('aesurf=%r not found%s.  Allowed AESURF=%s' % (
-            aesurf_name, msg, names))
+
+        aesurf_names = list(aesurf.label for aesurf in self.aesurf.values())
+        aeparam_names = list(aeparm.label for aeparm in self.aeparams.values())
+        raise KeyError('aesurf=%r not found%s.  Allowed AESURF=%s.  Allowed AEPARM=%s.' % (
+            aesurf_name, msg, aesurf_names, aeparam_names))
 
     def AESurf_int(self, aesurf_id: int, msg: str='') -> AESURF:
         """gets an AESURF"""
@@ -709,7 +710,29 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # AERO CONTROL SURFACE CARDS
-    def AEStat(self, aid: int, msg: str='') -> AESTAT:
+    def AEStat(self, aestat_name: str, msg: str='') -> AESTAT:
+        """gets an AESTAT"""
+        #if isinstance(aesurf_name, integer_types):
+            #aesurf_id = aesurf_name
+            #try:
+                #return self.aesurf[aesurf_id]
+            #except KeyError:
+                #raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
+                               #% (aesurf_id, msg, _unique_keys(self.aesurf)))
+        #else:
+        assert isinstance(aestat_name, str), f'aestat_name={aestat_name!r}'
+
+        for aestat_int, aestat in self.aestats.items():
+            if aestat.label == aestat_name:
+                return aestat
+
+        aesurf_names = list(aesurf.label for aesurf in self.aesurf.values())
+        aeparam_names = list(aeparm.label for aeparm in self.aeparams.values())
+        aestat_names = list(aeparm.label for aeparm in self.aeparams.values())
+        raise KeyError('aestat=%r not found%s.  Allowed AESURF=%s.  Allowed AEPARM=%s.  Allowed AESTAT=%s' % (
+            aestat_name, msg, aesurf_names, aeparam_names, aestat_names))
+
+    def AEStat_int(self, aid: int, msg: str='') -> AESTAT:
         """gets an AESTAT"""
         try:
             return self.aestats[aid]
@@ -733,7 +756,28 @@ class GetMethods(BDFAttributes):
             raise KeyError('link_id=%s not found%s.  Allowed AELINKs=%s'
                            % (link_id, msg, _unique_keys(self.aelinks)))
 
-    def AEParam(self, aid: int, msg: str='') -> AEPARM:
+    def AEParam(self, aeparm_name: str, msg: str='') -> AEPARM:
+        """gets an AEPARM"""
+        #if isinstance(aeparam_name, integer_types):
+            #aeparam_id = aeparam_name
+            #try:
+                #return self.aeparams[aesurf_id]
+            #except KeyError:
+                #raise KeyError('aesurf=%s not found%s.  Allowed AEPARM=%s'
+                               #% (aesurf_id, msg, _unique_keys(self.aesurf)))
+        #else:
+        assert isinstance(aeparm_name, str), f'aeparm_name={aeparm_name!r}'
+
+        for aeparam_int, aeparam in self.aeparams.items():
+            if aeparam.label == aeparm_name:
+                return aeparam
+
+        aesurf_names = list(aesurf.label for aesurf in self.aesurf.values())
+        aeparam_names = list(aeparm.label for aeparm in self.aeparams.values())
+        raise KeyError('aeparam=%r not found%s.  Allowed AESURF=%s.  Allowed AEPARM=%s.' % (
+            aeparm_name, msg, aesurf_names, aeparam_names))
+
+    def AEParam_int(self, aid: int, msg: str='') -> AEPARM:
         """gets an AEPARM"""
         try:
             return self.aeparams[aid]

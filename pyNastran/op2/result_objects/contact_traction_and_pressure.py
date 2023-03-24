@@ -22,80 +22,20 @@ these are used by:
  - ComplexAppliedLoadsArray
 
 """
-import copy
 from struct import Struct, pack
 import warnings
-from typing import List
 
 import numpy as np
 #from numpy import float32
 
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
+from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
+from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e # write_imag_floats_13e
 from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
 
 float_types = (float, np.float32)
 integer_types = (int, np.int32)
-
-SORT2_TABLE_NAME_MAP = {
-    # sort2_name : sort1_name
-    # displacement
-    'OUGATO2' : 'OUGATO1',
-    'OUGCRM2' : 'OUGCRM1',
-    'OUGNO2' : 'OUGNO1',
-    'OUGPSD2' : 'OUGPSD1',
-    'OUGRMS2' : 'OUGRMS1',
-
-    # velocity
-    'OVGATO2' : 'OVGATO1',
-    'OVGCRM2' : 'OVGCRM1',
-    'OVGNO2' : 'OVGNO1',
-    'OVGPSD2' : 'OVGPSD1',
-    'OVGRMS2' : 'OVGRMS1',
-
-    # acceleration
-    'OAGATO2' : 'OAGATO1',
-    'OAGCRM2' : 'OAGCRM1',
-    'OAGNO2' : 'OAGNO1',
-    'OAGPSD2' : 'OAGPSD1',
-    'OAGRMS2' : 'OAGRMS1',
-
-    # spc forces
-    'OQGATO2' : 'OQGATO1',
-    'OQGCRM2' : 'OQGCRM1',
-    'OQGNO2' : 'OQGNO1',
-    'OQGPSD2' : 'OQGPSD1',
-    'OQGRMS2' : 'OQGRMS1',
-
-    # mpc forces
-    'OQMATO2' : 'OQMATO1',
-    'OQMCRM2' : 'OQMCRM1',
-    'OQMNO2' : 'OQMNO1',
-    'OQMPSD2' : 'OQMPSD1',
-    'OQMRMS2' : 'OQMRMS1',
-
-    # load vector
-    'OPGATO2' : 'OPGATO1',
-    'OPGCRM2' : 'OPGCRM1',
-    'OPGNO2' : 'OPGNO1',
-    'OPGPSD2' : 'OPGPSD1',
-    'OPGRMS2' : 'OPGRMS1',
-
-    #'OUG2' : 'OUG1',
-    'OUGV2' : 'OUGV1',
-    'OQG2' : 'OQG1',
-    'OQMG2' : 'OQMG1',
-    'OPG2' : 'OPG1',
-    'OPNL2' : 'OPNL1',
-    'OUXY2' : 'OUXY1',
-}
-SORT1_TABLES = list(SORT2_TABLE_NAME_MAP.values())
-SORT1_TABLES.extend([
-    'BOUGV1', 'OUG1F',
-])
-SORT2_TABLES = list(SORT2_TABLE_NAME_MAP.keys())
 
 table_name_to_table_code = {
     # displacement (msc/nx)
@@ -293,7 +233,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
     def data_type(self):
         raise NotImplementedError()
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
                 '<%s>; table_name=%r\n' % (self.__class__.__name__, self.table_name),
@@ -340,13 +280,13 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         return msg
 
     @property
-    def headers(self) -> List[str]:
+    def headers(self) -> list[str]:
         return ['pressure', 's1', 's2', 's3']
 
-    def _get_headers(self) -> List[str]:
+    def _get_headers(self) -> list[str]:
         return self.headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()
 
     def _reset_indices(self) -> None:
@@ -438,32 +378,11 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         """changes the table into SORT1"""
         #if not self.table_name != 'OQMRMS1':
             #return
-        if self.is_sort1:
-            return
-        #print('set_as_sort1: table_name=%r' % self.table_name)
-        try:
-            analysis_method = self.analysis_method
-        except AttributeError:
-            print(self.code_information())
-            raise
-        #print(self.get_stats())
-        #print(self.node_gridtype)
-        #print(self.data.shape)
-        self.sort_method = 1
-        self.sort_bits[1] = 0
-        bit0, bit1, bit2 = self.sort_bits
-        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
-        self.sort_code = bit0 + 2*bit1 + 4*bit2
-        #print(self.code_information())
-        assert self.is_sort1
-        if analysis_method != 'N/A':
-            self.data_names[0] = analysis_method
-            #print(self.table_name_str, analysis_method, self._times)
-            setattr(self, self.analysis_method + 's', self._times)
-        del self.analysis_method
+        set_as_sort1(self)
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(node_id, int) and node_id > 0, 'dt=%s node_id=%s' % (dt, node_id)
         # itotal - the node number
         # itime - the time/frequency step
@@ -475,6 +394,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         self.itotal += 1
 
     def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        assert self.is_sort2, self
         #if node_id < 1:
             #msg = self.code_information()
             #msg += "(%s, %s) dt=%g node_id=%s v1=%g v2=%g v3=%g" % (

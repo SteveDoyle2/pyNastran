@@ -1232,6 +1232,8 @@ def _update_case_control(model, mapper):
                     pass
                 elif key == '':
                     pass
+                elif key.startswith('XYPRINT'):
+                    continue
                 else:
                     msg = 'key=%s options=%s param_type=%s value=%s' % (
                         key, options, param_type, value)

@@ -1,5 +1,4 @@
 from collections import Counter
-from typing import List, Dict
 import numpy as np
 
 MSC_ELEMENTS = {
@@ -385,7 +384,7 @@ MSC_MATRIX_TABLES = [
     b'PMRF', b'PERF', b'PFRF', b'PGRF', b'AFRF', b'AGRF', b'MP3F',
 
     b'FEFFMOD',  #  think this is right
-] # type: List[bytes]
+] # type: list[bytes]
 
 MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # Qualifier Information Table - which is what???
@@ -718,7 +717,7 @@ MSC_TABLE_CONTENT = {
     #55: 'OGMPF2M - ???',
     56: 'OESRT - Ply strength ratios???',
     89: 'OESRT - Ply strength ratios',
-} # type: Dict[int, str]
+} # type: dict[int, str]
 MSC_OEF_REAL_MAPPER = {
     1: 3,   # CROD
     2: 1 + (10 - 1) * 11,  # CBEAM

@@ -11,7 +11,7 @@ def merge_stl_files(stl_filenames, stl_out_filename=None, remove_bad_elements=Fa
 
     Parameters
     ----------
-    stl_filenames : List[str, str, ...]
+    stl_filenames : list[str, str, ...]
         list of stl filenames or a string filename
         (useful for removing bad elements)
     remove_bad_elements : bool; default=False

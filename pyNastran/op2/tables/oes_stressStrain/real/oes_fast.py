@@ -1,6 +1,5 @@
 from struct import pack
 import inspect
-from typing import List
 
 import numpy as np
 from numpy import zeros, allclose
@@ -59,7 +58,7 @@ class RealFastArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        _times = zeros(self.ntimes, dtype=dtype)
+        _times = zeros(self.ntimes, dtype=self.analysis_fmt)
         element = zeros(self.nelements, dtype='int32')
 
         # [force_x, force_y, force_z, moment_x, moment_y, moment_z]
@@ -145,15 +144,16 @@ class RealFastArray(OES_Object):
                279      -1.485744E-01    -3.137333E-01    -6.343584E-01    -9.968021E-03     7.256226E-01     7.248363E-02
 
         """
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force_x, force_y, force_z, moment_x, moment_y, moment_z]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -181,7 +181,7 @@ class RealFastArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def get_f06_header(self) -> List[str]:
+    def get_f06_header(self) -> list[str]:
         raise NotImplementedError('CWELD...')
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
@@ -312,11 +312,11 @@ class RealFastStressArray(RealFastArray, StressObject):
         RealFastArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['force_x', 'force_y', 'force_z', 'moment_x', 'moment_y', 'moment_z']
         return headers
 
-    def get_f06_header(self) -> List[str]:
+    def get_f06_header(self) -> list[str]:
         msg = [
             '                           S T R E S S E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )\n'
             ' \n'
@@ -330,11 +330,11 @@ class RealFastStrainArray(RealFastArray, StrainObject):
         RealFastArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['disp_x', 'disp_y', 'disp_z', 'rotation_x', 'rotation_y', 'rotation_z']
         return headers
 
-    def get_f06_header(self) -> List[str]:
+    def get_f06_header(self) -> list[str]:
         msg = [
             '                     S T R A I N (D I S P)   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )\n'
             ' \n'

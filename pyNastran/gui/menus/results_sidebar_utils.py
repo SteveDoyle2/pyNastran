@@ -8,14 +8,14 @@ def build_pruned_tree(tree, cases):
 
     Parameters
     ----------
-    tree : List[...]
+    tree : list[...]
         the sidebar tree
-    cases : List[int]
+    cases : list[int]
         the cases to keep
 
     Returns
     -------
-    tree_final : List[...]
+    tree_final : list[...]
         the updated sidebar tree
 
     Examples
@@ -93,12 +93,12 @@ def get_cases_from_tree(tree):
 
     Parameters
     ----------
-    tree : List[...]
+    tree : list[...]
         the sidebar tree
 
     Returns
     -------
-    cases : List[int]
+    cases : list[int]
         the cases in the tree
 
     Examples
@@ -131,12 +131,12 @@ def _get_cases_from_tree(tree, path={}, path2=[], level=0):
 
     Parameters
     ----------
-    tree : List[...]
+    tree : list[...]
         the sidebar tree
 
     Returns
     -------
-    cases : List[int]
+    cases : list[int]
         the cases in the tree
 
     Examples

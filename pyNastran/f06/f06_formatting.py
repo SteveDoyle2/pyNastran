@@ -32,7 +32,7 @@ def write_float_13e(val: float) -> str:
     return val2
 
 
-def write_floats_10e(vals: List[float]) -> List[str]:
+def write_floats_10e(vals: list[float]) -> list[str]:
     """writes a series of Nastran formatted 10.3 floats"""
     vals2 = []
     for v in vals:
@@ -43,7 +43,7 @@ def write_floats_10e(vals: List[float]) -> List[str]:
     return vals2
 
 
-def write_floats_12e(vals: List[float]) -> List[str]:
+def write_floats_12e(vals: list[float]) -> list[str]:
     """writes a series of Nastran formatted 12.5 floats"""
     vals2 = []
     for v in vals:
@@ -54,7 +54,7 @@ def write_floats_12e(vals: List[float]) -> List[str]:
     return vals2
 
 
-def write_floats_13e(vals: List[float]) -> List[str]:
+def write_floats_13e(vals: list[float]) -> list[str]:
     """writes a series of Nastran formatted 13.6 floats"""
     vals2 = []
     for v in vals:
@@ -65,8 +65,8 @@ def write_floats_13e(vals: List[float]) -> List[str]:
     return vals2
 
 
-def write_imag_floats_13e(vals: List[float], is_mag_phase: bool) -> List[str]:
-    vals2 = []  # type: List[str]
+def write_imag_floats_13e(vals: list[float], is_mag_phase: bool) -> list[str]:
+    vals2 = []
 
     if is_mag_phase:
         for v in vals:
@@ -98,7 +98,7 @@ def write_imag_floats_13e(vals: List[float], is_mag_phase: bool) -> List[str]:
     return vals2
 
 
-def write_floats_8p4f(vals: List[float]) -> List[str]:
+def write_floats_8p4f(vals: list[float]) -> list[str]:
     """writes an 8.4F formatted number"""
     vals2 = []
     for val in vals:
@@ -110,7 +110,7 @@ def write_floats_8p4f(vals: List[float]) -> List[str]:
         vals2.append(val2)
     return vals2
 
-def write_floats_8p1e(vals: List[float]) -> List[str]:
+def write_floats_8p1e(vals: list[float]) -> list[str]:
     """writes an 8.1E formatted number"""
     vals2 = []
     for val in vals:

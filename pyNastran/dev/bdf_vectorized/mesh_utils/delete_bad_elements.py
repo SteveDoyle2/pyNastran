@@ -51,7 +51,7 @@ def get_bad_shells(model, max_theta=175., max_skew=70.,
 
     Returns
     -------
-    eids_failed : List[int]
+    eids_failed : list[int]
         element ids that fail the criteria
 
     shells with a edge length=0.0 are automatically added

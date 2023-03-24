@@ -3,7 +3,7 @@ Defines various utilities for replicated BDF parsing including:
  - to_fields
 
 """
-from typing import List, Optional
+from typing import Optional
 
 from pyNastran.bdf.bdf_interface.utils import expand_tabs
 from pyNastran.bdf.cards.utils import wipe_empty_fields

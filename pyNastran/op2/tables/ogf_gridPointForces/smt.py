@@ -27,13 +27,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
 from pyNastran.nptyping_interface import NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float
 
-def smt_setup(model: BDF) -> Tuple[NDArrayNint, NDArrayN2int, NDArrayN3float,
-                                   Dict[int, NDArrayNint], NDArrayNint, NDArrayN3float]:
+def smt_setup(model: BDF) -> tuple[NDArrayNint, NDArrayN2int, NDArrayN3float,
+                                   dict[int, NDArrayNint], NDArrayNint, NDArrayN3float]:
     nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
     eids, element_centroids_cid0 = get_element_centroids(model, fdtype='float64')
     return nids, nid_cd, xyz_cid0, icd_transform, eids, element_centroids_cid0
 
-def setup_coord_from_plane(model: Tuple[BDF, OP2Geom], xyz_cid0: NDArrayN3float,
+def setup_coord_from_plane(model: tuple[BDF, OP2Geom], xyz_cid0: NDArrayN3float,
                            p1: NDArray3float, p2: NDArray3float, p3: NDArray3float,
                            zaxis: NDArray3float,
                            method: str='Z-Axis Projection',

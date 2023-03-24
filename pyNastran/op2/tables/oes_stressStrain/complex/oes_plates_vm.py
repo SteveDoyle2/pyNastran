@@ -1,6 +1,5 @@
 import warnings
 from struct import Struct, pack
-from typing import List, Tuple
 
 import numpy as np
 from numpy import zeros
@@ -94,7 +93,7 @@ class ComplexPlateVMArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
 
         # nelements is the actual number of elements
         if self.is_sort1:
@@ -110,7 +109,7 @@ class ComplexPlateVMArray(OES_Object):
             #print(f'  SORT2: ntimes={ntimes} nelements={nelements} nnodes={nnodes} nlayers={nlayers} {self.element_name}-{self.element_type}')
         #print(f'{self.element_name}-{self.element_type} nelements={nelements} nlayers={nlayers} ntimes={ntimes}')
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         # the number is messed up because of the offset for the element's properties
@@ -197,6 +196,7 @@ class ComplexPlateVMArray(OES_Object):
     def add_sort1(self, dt, eid, node_id,
                   fdr1, oxx1, oyy1, txy1, ovm1,
                   fdr2, oxx2, oyy2, txy2, ovm2) -> None:
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -218,6 +218,7 @@ class ComplexPlateVMArray(OES_Object):
     def add_sort2(self, dt, eid, nid,
                   fd1, oxx1, oyy1, txy1, ovm1,
                   fd2, oxx2, oyy2, txy2, ovm2) -> None:
+        assert self.is_sort2, self
         nnodes = self.nnodes_per_element
         itime = self.ielement // nnodes
         inid = self.ielement % nnodes
@@ -253,10 +254,10 @@ class ComplexPlateVMArray(OES_Object):
         #if debug:
             #print(self.element_node)
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -567,7 +568,7 @@ class ComplexPlateVMArray(OES_Object):
             new_result = False
         return itable
 
-def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> Tuple[List[str], int, bool]:
+def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> tuple[list[str], int, bool]:
     #if self.is_von_mises:
         #von_mises = 'VON MISES'
     #else:
@@ -675,7 +676,7 @@ class ComplexPlateVMStressArray(ComplexPlateVMArray, StressObject):
         headers = ['oxx', 'oyy', 'txy', 'ovm']
         return headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()
 
 
@@ -689,5 +690,5 @@ class ComplexPlateVMStrainArray(ComplexPlateVMArray, StrainObject):
         headers = ['exx', 'eyy', 'exy', 'evm']
         return headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()

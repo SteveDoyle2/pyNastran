@@ -319,7 +319,7 @@ class PARAM(BaseCard):
         ----------
         key : str
             the name of the PARAM
-        values : int/float/str/List
+        values : int/float/str/list
             varies depending on the type of PARAM
         comment : str; default=''
             a comment for the card
@@ -384,9 +384,9 @@ class PARAM(BaseCard):
             value = string_or_blank(card, 2, 'value1', 'NO')
             if value == 'NONS':  # assume
                 value = 'NONSMEAR'
-            if value == 'SMEAR':  # assume
+            if value in {'SMEAR', 'SMEARED'}:  # assume
                 value = 'YES'
-            assert value in ['YES', 'NO', 'NONSMEAR'], 'value=%r' % value
+            assert value in {'YES', 'NO', 'NONSMEAR'}, 'value=%r' % value
 
         elif key == 'POST':
             value = integer_or_blank(card, 2, 'value', 1)
@@ -589,7 +589,7 @@ class PARAM_NASA95(BaseCard):
         ----------
         key : str
             the name of the PARAM
-        values : int/float/str/List
+        values : int/float/str/list
             varies depending on the type of PARAM
         comment : str; default=''
             a comment for the card
@@ -1158,7 +1158,7 @@ class PARAM_MYSTRAN(BaseCard):
         ----------
         key : str
             the name of the PARAM
-        values : int/float/str/List
+        values : int/float/str/list
             varies depending on the type of PARAM
         comment : str; default=''
             a comment for the card

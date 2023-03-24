@@ -3,7 +3,7 @@ import numpy as np
 
 def build_groups(objs, name, is_element=False):
     """
-    objs : List[CTETRA4, CPENTA6, CHEXA8, ...]
+    objs : list[CTETRA4, CPENTA6, CHEXA8, ...]
         the objects that are being considered
     name : str
         element_id, etc.

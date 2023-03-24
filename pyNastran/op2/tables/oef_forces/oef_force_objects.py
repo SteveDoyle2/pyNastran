@@ -5,13 +5,14 @@ import copy
 import warnings
 from abc import abstractmethod
 import inspect
-from typing import List, Union
+from typing import Union
 
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
-from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
+from pyNastran.op2.result_objects.op2_objects import (
+    BaseElement, get_times_dtype, get_sort_element_sizes, set_as_sort1)
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_12e,
     write_float_13e, # write_float_12e,
@@ -26,14 +27,6 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
 from pyNastran.op2.writer.utils import fix_table3_types
 
 
-SORT2_TABLE_NAME_MAP = {
-    'OEF2' : 'OEF1',
-    'OEFATO2' : 'OEFATO1',
-    'OEFCRM2' : 'OEFCRM1',
-    'OEFPSD2' : 'OEFPSD1',
-    'OEFRMS2' : 'OEFRMS1',
-    'OEFNO2' : 'OEFNO1',
-}
 TABLE_NAME_TO_TABLE_CODE = {
     'OEF1' : 4,
     'OEF1X' : 4,
@@ -166,16 +159,8 @@ class ForceObject(BaseElement):
 
     def set_as_sort1(self) -> None:
         """the data is in SORT1, but the flags are wrong"""
-        if self.is_sort1:
-            return
-        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
-        self.sort_bits[1] = 0 # sort1
-        self.sort_method = 1
-        assert self.is_sort1 is True, self.is_sort1
-        self._update_time_word()
-
-    def _update_time_word(self) -> None:
-        update_stress_force_time_word(self)
+        set_as_sort1(self)
+        #update_stress_force_time_word(self)
 
     def _reset_indices(self) -> None:
         self.itotal = 0
@@ -448,7 +433,7 @@ class FailureIndicesArray(RealForceObject):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.failure_theory = np.full(self.nelements, '', dtype='U8')
         self.element_layer = zeros((self.nelements, 2), dtype=idtype)
 
@@ -498,7 +483,7 @@ class FailureIndicesArray(RealForceObject):
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         #headers = ['eid', 'failure_theory', 'ply', 'failure_index_for_ply (direct stress/strain)',
                    #'failure_index_for_bonding (interlaminar stresss)', 'failure_index_for_element', 'flag']
         headers = ['failure_index_for_ply (direct stress/strain)',
@@ -511,6 +496,7 @@ class FailureIndicesArray(RealForceObject):
     def add_sort1(self, dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
                   interlaminar_stress, max_value, nine):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_layer[self.ielement] = [eid, ply_id]
@@ -518,10 +504,10 @@ class FailureIndicesArray(RealForceObject):
         self.data[self.itime, self.ielement, :] = [failure_stress_for_ply, interlaminar_stress, max_value]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -555,7 +541,7 @@ class FailureIndicesArray(RealForceObject):
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
-        msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        #msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         f06_file.write('skipping FailureIndices f06\n')
 
         return page_num
@@ -663,15 +649,18 @@ class RealSpringDamperForceArray(RealForceObject):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self.build_data(self.ntimes, self.nelements, dtype, idtype, fdtype)
+        dtype, idtype, fdtype = get_times_dtype(
+            self.nonlinear_factor, self.size, self.analysis_fmt)
+
+        ntimes, nelements, ntotal = get_sort_element_sizes(self)
+        self.build_data(ntimes, nelements, dtype, idtype, fdtype)
 
     def build_data(self, ntimes, nelements, dtype, idtype, fdtype):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(nelements, dtype=idtype)
 
         #[force]
@@ -765,6 +754,7 @@ class RealSpringDamperForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, force):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #print('dt=%s eid=%s' % (dt, eid))
         self._times[self.itime] = dt
@@ -772,10 +762,21 @@ class RealSpringDamperForceArray(RealForceObject):
         self.data[self.itime, self.ielement, :] = [force]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def add_sort2(self, dt, eid, force):
+        """unvectorized method for adding SORT2 transient data"""
+        assert self.is_sort2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #print('dt=%s eid=%s' % (dt, eid))
+        itime = self.itotal
+        self._times[itime] = dt
+        self.element[self.ielement] = eid
+        self.data[itime, self.ielement, :] = [force]
+        self.itotal += 1
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -936,7 +937,7 @@ class RealSpringForceArray(RealSpringDamperForceArray):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['spring_force']
         return headers
 
@@ -968,7 +969,7 @@ class RealDamperForceArray(RealSpringDamperForceArray):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['damper_force']
         return headers
 
@@ -1069,7 +1070,7 @@ class RealRodForceArray(RealForceObject):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -1102,8 +1103,9 @@ class RealRodForceArray(RealForceObject):
         #self.ntimes = 0
         #self.nelements = 0
 
+        ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self.build_data(self.ntimes, self.nelements, float_fmt='float32')
+        self.build_data(ntimes, nelements, float_fmt='float32')
 
     def build_data(self, ntimes, nelements, float_fmt='float32'):
         """actually performs the build step"""
@@ -1111,7 +1113,7 @@ class RealRodForceArray(RealForceObject):
         self.nelements = nelements
         #self.ntotal = ntimes * nelements
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(nelements, dtype=idtype)
 
         #[axial_force, torque]
@@ -1139,6 +1141,7 @@ class RealRodForceArray(RealForceObject):
 
     def add_sort1(self, dt: Union[int, float], eid: int, axial: float, torque: float) -> None:
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
@@ -1147,10 +1150,22 @@ class RealRodForceArray(RealForceObject):
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def add_sort2(self, dt: Union[int, float], eid: int, axial: float, torque: float) -> None:
+        """unvectorized method for adding SORT2 transient data"""
+        assert self.is_sort2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itime = self.itotal
+        self._times[itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [axial, torque]
+        self.itotal += 1
+        #if self.ielement == self.nelements:
+            #self.ielement = 0
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -1363,6 +1378,7 @@ class RealRodForceArray(RealForceObject):
 
 
 class RealCBeamForceArray(RealForceObject):
+    """11 nodes/element"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         #ForceObject.__init__(self, data_code, isubcase)
         RealForceObject.__init__(self, data_code, isubcase)
@@ -1394,10 +1410,12 @@ class RealCBeamForceArray(RealForceObject):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype)
-        self.element = zeros(self.ntotal, idtype)
-        self.element_node = zeros((self.ntotal, 2), idtype)
+        dtype, idtype, fdtype = get_times_dtype(
+            self.nonlinear_factor, self.size, self.analysis_fmt)
+        ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
+        self._times = zeros(ntimes, dtype)
+        self.element = zeros(ntotal, idtype)
+        self.element_node = zeros((ntotal, 2), idtype)
 
         # the number is messed up because of the offset for the element's properties
         if not (self.nelements * nnodes) == self.ntotal:
@@ -1410,11 +1428,11 @@ class RealCBeamForceArray(RealForceObject):
             else:
                 warnings.warn(msg)
         #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-        self.data = zeros((self.ntimes, self.ntotal, 8), fdtype)
+        self.data = np.full((ntimes, ntotal, 8), np.nan, fdtype)
 
     def finalize(self):
         sd = self.data[0, :, 0]
-        i_sd_zero = np.where(sd != 0.0)[0]
+        i_sd_zero = np.where(np.isfinite(sd) & (sd != 0.0))[0]
         i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
         assert i_node_zero.max() > 0, "CBEAM element_node hasn't been filled"
         i = np.union1d(i_sd_zero, i_node_zero)
@@ -1689,6 +1707,7 @@ class RealCBeamForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
@@ -1696,10 +1715,10 @@ class RealCBeamForceArray(RealForceObject):
         self.element_node[self.itotal, :] = [eid, nid]
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -1752,7 +1771,7 @@ class RealCBeamForceArray(RealForceObject):
             #assert self.is_sort1 is True, str(self)
         return page_num - 1
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
             'axial_force', 'total_torque', 'warping_torque', ]
@@ -1956,7 +1975,7 @@ class RealCShearForceArray(RealForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'force41', 'force21', 'force12', 'force32', 'force23', 'force43',
             'force34', 'force14',
@@ -1985,14 +2004,15 @@ class RealCShearForceArray(RealForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = zeros(nelements, dtype='int32')
 
         #[force41, force21, force12, force32, force23, force43,
         # force34, force14,
         # kick_force1, shear12, kick_force2, shear23,
         # kick_force3, shear34, kick_force4, shear41]
-        self.data = zeros((self.ntimes, self.ntotal, 16), dtype='float32')
+        self.data = zeros((ntimes, ntotal, 16), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -2108,6 +2128,7 @@ class RealCShearForceArray(RealForceObject):
                   kick_force1, kick_force2, kick_force3, kick_force4,
                   shear12, shear23, shear34, shear41):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
@@ -2117,10 +2138,25 @@ class RealCShearForceArray(RealForceObject):
             shear12, shear23, shear34, shear41]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def add_sort2(self, dt, eid,
+                  force41, force14, force21, force12, force32, force23, force43, force34,
+                  kick_force1, kick_force2, kick_force3, kick_force4,
+                  shear12, shear23, shear34, shear41):
+        """unvectorized method for adding SORT1 transient data"""
+        assert self.is_sort2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        self._times[self.itotal] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itotal, self.ielement, :] = [
+            force41, force14, force21, force12, force32, force23, force43, force34,
+            kick_force1, kick_force2, kick_force3, kick_force4,
+            shear12, shear23, shear34, shear41]
+        self.itotal += 1
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -2351,7 +2387,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -2378,11 +2414,12 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = zeros(nelements, dtype='int32')
 
         #[axial_force, torque]
-        self.data = zeros((self.ntimes, self.ntotal, 2), dtype='float32')
+        self.data = zeros((ntimes, ntotal, 2), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -2430,16 +2467,26 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def add_sort2(self, dt, eid, axial, torque):
+        """unvectorized method for adding SORT1 transient data"""
+        assert self.is_sort2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        self._times[self.itotal] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itotal, self.ielement, :] = [axial, torque]
+        self.itotal += 1
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -2593,7 +2640,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
     def build(self):
@@ -2615,11 +2662,28 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.ntotal, dtype=idtype)
+
+        ntimes, nelements, ntotal = self._get_sort_element_sizes()
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = zeros(ntotal, dtype=idtype)
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
+        self.data = zeros((ntimes, ntotal, 8), dtype=fdtype)
+
+    def _get_sort_element_sizes(self):
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntotal = self.ntotal
+            #print("SORT1: ntimes=%s nelements=%s ntotal=%s" % (ntimes, nelements, ntotal))
+        else:
+            #ntimes=1 nelements=21 ntotal=105
+            ntimes = self.nelements
+            nelements = self.ntimes
+            ntotal = self.ntotal # // ntimes
+            #raise RuntimeError("SORT2: ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+            #print("SORT2: ntimes=%s nelements=%s ntotal=%s" % (ntimes, nelements, ntotal))
+        return ntimes, nelements, ntotal
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -2695,14 +2759,22 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
 
-    def add_sort2(self, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        raise NotImplementedError('SORT2')
+    def add_sort2(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        assert self.is_sort2, self
+
+        itime = self.itotal
+        self._times[itime] = dt
+        self.element[self.itotal] = eid
+        self.data[itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.itotal += 1
+        #raise NotImplementedError('SORT2')
         #if dt not in self.mx:
             #self.add_new_transient(dt)
         #self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -2711,10 +2783,10 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def nnodes_per_element(self):
         return 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -2958,7 +3030,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
     def build(self):
@@ -2975,16 +3047,38 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         #self.ntimes = 0
         #self.nelements = 0
 
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        dtype, idtype, fdtype = get_times_dtype(
+            self.nonlinear_factor, self.size, self.analysis_fmt)
+        ntimes, nelements, ntotal = self._get_sort_element_sizes(debug=False)
+
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self.element_node = zeros((ntotal, 2), dtype='int32')
 
         # -MEMBRANE FORCES-   -BENDING MOMENTS- -TRANSVERSE SHEAR FORCES -
         #     FX FY FXY           MX MY MXY            QX QY
         #[fx, fy, fxy,  mx,  my,  mxy, qx, qy]
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        self.data = zeros((ntimes, ntotal, 8), dtype='float32')
+
+    def _get_sort_element_sizes(self, debug: bool=False):
+        if debug:
+            print("RAW: ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntotal = self.ntotal
+            if debug:
+                print("SORT1: ntimes=%s nelements=%s ntotal=%s" % (ntimes, nelements, ntotal))
+        else:
+            #ntimes=1 nelements=21 ntotal=105
+            #ntimes = self.nelements // self.ntimes
+            ntimes = self.ntotal
+            nelements = self.ntimes
+            ntotal = nelements * self.nnodes_per_element
+            #raise RuntimeError("SORT2: ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+            if debug:
+                print("SORT2: ntimes=%s nelements=%s ntotal=%s" % (ntimes, nelements, ntotal))
+        return ntimes, nelements, ntotal
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -3056,19 +3150,41 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                     raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+    def add_sort1(self, dt, eid, term,
+                  inode, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_node[self.itotal] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
 
-    def add_sort2(self, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-        raise NotImplementedError('SORT2')
-        #if dt not in self.mx:
-            #self.add_new_transient(dt)
-        #self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+    def add_sort2(self, dt, eid, term,
+                  inode, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        assert self.is_sort2, self
+        itime = self.itotal
+        ielement = self.itime
+
+        #nelement_node_total = self.element_node.shape[0]
+        #ndata_total = self.data.shape[1]
+        jelement = ielement * self.nnodes_per_element + inode
+
+        #print(f'RealPlateBilinearForceArray SORT2 '
+              #f'dt={dt} eid={eid} nid={nid} inode={inode}\n  '
+              ##f'self.itime={self.itime} self.ielement={self.ielement} self.itotal={self.itotal}\n  '
+              #f'itime={itime}/{len(self._times)} jelement={jelement}/{nelement_node_total}'
+              ##f'itime={itime}/{len(self._times)} '
+              ##f'ielement={ielement}/{nelement_node_total} itotal={self.itotal}/{ndata_total}'
+              #)
+        self._times[itime] = dt
+
+        #try:
+        self.element_node[jelement] = [eid, nid]
+        self.data[itime, jelement, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        #except:
+            #pass
+        self.itotal += 1
 
     @property
     def nnodes_per_element(self):
@@ -3086,10 +3202,10 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             raise NotImplementedError('element_type=%s element_name=%s' % (self.element_type, self.element_name))
         return nnodes_element
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -3391,7 +3507,7 @@ class RealCBarFastForceArray(RealForceObject):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'bending_moment_a1', 'bending_moment_a2',
             'bending_moment_b1', 'bending_moment_b2',
@@ -3435,7 +3551,7 @@ class RealCBarFastForceArray(RealForceObject):
         self.ntotal = ntotal
         #print(f"*ntimes={ntimes} nelements={nelements} ntotal={ntotal} data_names={self.data_names}")
         unused_dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(nelements, dtype=idtype)
 
         #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
@@ -3461,6 +3577,7 @@ class RealCBarFastForceArray(RealForceObject):
     def add_sort1(self, dt, eid, bending_moment_a1, bending_moment_a2,
                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #[eid, bending_moment_a1, bending_moment_a2,
          #bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
@@ -3475,6 +3592,7 @@ class RealCBarFastForceArray(RealForceObject):
     def add_sort2(self, dt, eid, bending_moment_a1, bending_moment_a2,
                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque):
         """unvectorized method for adding SORT2 transient data"""
+        assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #[eid, bending_moment_a1, bending_moment_a2,
          #bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque] = data
@@ -3489,10 +3607,10 @@ class RealCBarFastForceArray(RealForceObject):
             shear1, shear2, axial, torque]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -3673,7 +3791,7 @@ class RealCBarFastForceArray(RealForceObject):
         return itable
 
     @abstractmethod
-    def _words(self) -> List[str]:
+    def _words(self) -> list[str]:
         return []
 
 class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
@@ -3739,7 +3857,7 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
                                      modes, eigrs, eigis)
         return obj
 
-    def _words(self) -> List[str]:
+    def _words(self) -> list[str]:
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
@@ -3755,7 +3873,7 @@ class RealCWeldForceArrayMSC(RealCBarFastForceArray):  # 118-WELDP
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def _words(self) -> List[str]:
+    def _words(self) -> list[str]:
         words = ['                                  F O R C E S   I N   W E L D   E L E M E N T S   ( C W E L D P )\n',
         ' \n',
         '    ELEMENT           BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
@@ -3790,7 +3908,7 @@ class RealConeAxForceArray(RealForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'hopa', 'bmu', 'bmv', 'tm', 'su', 'sv'
         ]
@@ -3819,7 +3937,7 @@ class RealConeAxForceArray(RealForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.nelements, dtype='int32')
 
         #[hopa, bmu, bmv, tm, su, sv]
@@ -3878,16 +3996,26 @@ class RealConeAxForceArray(RealForceObject):
 
     def add_sort1(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    #def add_sort2(self, dt, eid, hopa, bmu, bmv, tm, su, sv):
+        #"""unvectorized method for adding SORT2 transient data"""
+        #assert self.is_sort2, self
+        #assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #self._times[itime] = dt
+        #self.element[self.ielement] = eid
+        #self.data[itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
+        #self.ielement += 1
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -3982,7 +4110,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'station', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2', 'axial', 'torque'
         ]
@@ -4004,7 +4132,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.nelements, dtype='int32')
 
         # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
@@ -4045,6 +4173,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
     def add_sort1(self, dt, eid, sd, bm1, bm2, ts1, ts2, af, trq):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
@@ -4053,10 +4182,10 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         self.data[self.itime, self.ielement, :] = [sd, bm1, bm2, ts1, ts2, af, trq]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             msg = [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -4277,7 +4406,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'fx', 'sfy', 'sfz', 'u', 'v', 'w', 'sv', 'sw'
         ]
@@ -4302,7 +4431,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.nelements, dtype='int32')
 
         # [fx, sfy, sfz, u, v, w, sv, sw]
@@ -4372,16 +4501,17 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
 
     def add_sort1(self, dt, eid, fx, sfy, sfz, u, v, w, sv, sw):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [fx, sfy, sfz, u, v, w, sv, sw]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -4456,7 +4586,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'bending_moment_1a', 'bending_moment_2a', 'shear_1a', 'shear_2a', 'axial_a', 'torque_a',
             'bending_moment_1b', 'bending_moment_2b', 'shear_1b', 'shear_2b', 'axial_b', 'torque_b',
@@ -4469,7 +4599,15 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        self.nelements //= self.ntimes
+        if self.is_sort1:
+            self.nelements //= self.ntimes
+        else:
+            #2 6 3
+            #print('SORT2 RealBendForceArray******', self.ntimes, self.nelements, self.ntotal)
+            #self.ntotal //= self.nelements # ntotal: 0
+            #self.ntotal //= self.ntimes  # ntotal: 1
+            self.nelements //= self.ntimes  # passes, but ntotal is small
+
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         self.itime = 0
         self.ielement = 0
@@ -4479,12 +4617,15 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.nelements, 3), dtype='int32')
+        ntimes, nelements, ntotal = get_sort_element_sizes(self, debug=False)
+        self.ntimes = ntimes
+        self.nelements = nelements
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self.element_node = zeros((nelements, 3), dtype='int32')
 
         #[bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a
         # bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b]
-        self.data = zeros((self.ntimes, self.nelements, 12), dtype='float32')
+        self.data = zeros((ntimes, ntotal, 12), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -4513,6 +4654,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
 
         self._times[self.itime] = dt
@@ -4525,10 +4667,45 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def add_sort2(self, dt, eid,
+                  nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
+                  nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
+        """unvectorized method for adding SORT1 transient data"""
+        assert self.is_sort2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+
+        itime = self.itotal
+        jelement = self.itime
+        ielement = self.itotal // self.ntotal
+        #print(f'RealBendForceArray SORT2 itime={itime}/{len(self._times)} '
+              #f'ielement={ielement}/{len(self.element_node)} jelement={jelement}, '
+              #f'itotal={self.itotal}/{self.data.shape[1]}'
+              #f' -> dt={dt:g} eid={eid}')
+        self._times[itime] = dt
+        self.element_node[jelement, :] = [eid, nid_a, nid_b]
+        #print('RealBendForceArray', '%g' % dt, eid, nid_a, nid_b)
+        #self.data[0, ielement, :] = [
+            #bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
+            #bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b,
+        #]
+        #self.data[itime, 0, :] = [
+            #bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
+            #bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b,
+        #]
+        warnings.warn('RealBendForceArray add_sort2 skipped')
+        self.data[itime, ielement, :] = [
+            bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
+            bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b,
+        ]
+        #if self.itotal == self.ntotal:
+            #self.itotal = 0
+            #self.ielement += 1
+        self.itotal += 1
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -4679,7 +4856,7 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'ax', 'ay', 'az', 'vx', 'vy', 'vz', 'pressure'
         ]
@@ -4699,20 +4876,32 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        self.nelements //= self.ntimes
+        if self.is_sort1:
+            self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
 
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype=idtype)
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntotal = self.ntotal
+        else:
+            #print("RealSolidPressureForceArray: ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+            ntimes = self.ntotal
+            ntotal = self.ntimes
+            nelements = ntotal
+            #print("-> ntimes=%s nelements=%s ntotal=%s" % (ntimes, nelements, ntotal))
+            assert nelements == 1
+
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = zeros(nelements, dtype=idtype)
 
         #[ax, ay, az, vx, vy, vz, pressure]
-        self.data = zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
+        self.data = zeros((ntimes, ntotal, 7), dtype=fdtype)
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
@@ -4747,16 +4936,31 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
 
     def add_sort1(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def add_sort2(self, dt, eid, etype, ax, ay, az, vx, vy, vz, pressure):
+        """unvectorized method for adding SORT2 transient data"""
+        assert self.sort_method == 2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itime = self.itotal
+        itotal = self.itime
+        ntimes = len(self._times)
+        ntotal = self.data.shape[1]
+        print(f'RealSolidPressureForceArray: itime={itime}/{ntimes} itotal={itotal}/{ntotal} -> dt={dt:g} eid={eid}')
+        self._times[itime] = dt
+        self.element[itotal] = eid
+        self.data[itime, itotal, :] = [ax, ay, az, vx, vy, vz, pressure]
+        self.itotal += 1
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -4891,7 +5095,7 @@ class RealForceMomentArray(RealForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
 
@@ -4914,11 +5118,13 @@ class RealForceMomentArray(RealForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+
+        ntimes, nelements, ntotal = get_sort_element_sizes(self)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
+        self.element = zeros(nelements, dtype='int32')
 
         #[fx, fy, fz, mx, my, mz]
-        self.data = zeros((self.ntimes, self.nelements, 6), dtype='float32')
+        self.data = zeros((ntimes, nelements, 6), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -5012,16 +5218,32 @@ class RealForceMomentArray(RealForceObject):
 
     def add_sort1(self, dt, eid, fx, fy, fz, mx, my, mz):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #print('dt=%s eid=%s' % (dt, eid))
+        #asdf
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def add_sort2(self, dt, eid, fx, fy, fz, mx, my, mz):
+        """unvectorized method for adding SORT2 transient data"""
+        assert self.is_sort2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itotal = self.itime
+        itime = self.itotal
+        #print(f'itime={self.itime} itotal={self.itotal} dt={dt}')
+        self._times[itime] = dt
+        self.element[self.ielement] = eid
+        self.data[itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
+        self.itotal += 1
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

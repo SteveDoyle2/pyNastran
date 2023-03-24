@@ -9,9 +9,9 @@ def build_spline(x, y):
 
     Parameters
     ----------
-    x : List[float]
+    x : list[float]
         the independent variable
-    y : List[float]
+    y : list[float]
         the dependent variable
 
     Returns
@@ -42,9 +42,9 @@ def integrate_positive_unit_line(x, y, min_value=0.):
 
     Parameters
     ----------
-    x : List[float]
+    x : list[float]
         the independent variable
-    y : List[float]
+    y : list[float]
         the dependent variable
     min_value : float; default=0.0
         ???
@@ -71,9 +71,9 @@ def integrate_unit_line(x, y):
 
     Parameters
     ----------
-    x : List[float]
+    x : list[float]
         the independent variable
-    y : List[float]
+    y : list[float]
         the dependent variable
 
     Returns

@@ -309,8 +309,8 @@ def load_case_control(geom_model: BDF, hdf5_case_control):
     geom_model.case_control_deck = cc
 
 def _load_special_names(special_names, hdf5_case_control,
-                        subcases: Dict[int, Subcase],
-                        sids: List[int],
+                        subcases: dict[int, Subcase],
+                        sids: list[int],
                         log: SimpleLogger):
     for name_str in special_names:
         values = hdf5_case_control[name_str]

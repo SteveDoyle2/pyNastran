@@ -577,14 +577,14 @@ class MAT1(IsotropicMaterial):
         g = data[2]
         nu = data[3]
         rho = data[4]
-        a = data[5]
+        alpha = data[5]
         tref = data[6]
         ge = data[7]
         St = data[8]
         Sc = data[9]
         Ss = data[10]
         mcsid = data[11]
-        return MAT1(mid, e, g, nu, rho, a, tref, ge,
+        return MAT1(mid, e, g, nu, rho, alpha, tref, ge,
                     St, Sc, Ss, mcsid, comment=comment)
 
     def _verify(self, xref):
@@ -2687,6 +2687,8 @@ def _mat10_get_bulk_rho_c(bulk, rho, c):
 
 class MATG(Material):
     """
+    per MSC 2018.2
+
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
     |   1  |   2    |   3    |    4    |   5    |   6    |    7    |    8   |   9    |
     +======+========+========+=========+========+========+=========+========+========+
@@ -2785,8 +2787,8 @@ class MATG(Material):
         tabld = integer(card, 4, 'tabld')
 
         tablu = [
-            integer(card, 5, 'tablu1'),
-            integer(card, 6, 'tablu2'),
+            integer_or_blank(card, 5, 'tablu1'),
+            integer_or_blank(card, 6, 'tablu2'),
             integer_or_blank(card, 7, 'tablu3'),
             integer_or_blank(card, 8, 'tablu4'),
         ]

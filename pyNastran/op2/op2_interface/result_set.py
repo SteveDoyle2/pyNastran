@@ -21,7 +21,7 @@ Defines:
 """
 import re
 from copy import deepcopy
-from typing import List, Union
+from typing import Union
 
 
 class ResultSet:
@@ -31,8 +31,8 @@ class ResultSet:
     It's an interface tool between the code and the results the user requests.
 
     """
-    def __init__(self, allowed_results: List[int],
-                 results_map, unused_log):
+    def __init__(self, allowed_results: list[int],
+                 results_map, log):
         #self.log = log
         #allowed_results.sort()
         #for a in allowed_results:
@@ -51,6 +51,7 @@ class ResultSet:
 
     def is_saved(self, result: str) -> bool:
         """checks to see if a result is saved"""
+        #assert result in self.results_map, f'result={result}'
         if result not in self.allowed:
             #allowed2 = list(self.allowed)
             #allowed2.sort()
@@ -81,19 +82,23 @@ class ResultSet:
         """clears all the results"""
         self.saved.clear()
 
-    def add(self, results: Union[str, List[str]])  -> List[str]:
+    def add(self, results: Union[str, list[str]])  -> list[str]:
         """adds a list/str of results"""
         added = []
         if len(results) == 0:
             return added
+        #print(f'saved = {self.saved}')
+        #print(f'results = {results}')
         all_matched_results = self._get_matched_results(results)
         for result in all_matched_results:
+            #print(f'  result = {result}')
             if result not in self.saved:
                 self.saved.add(result)
                 added.append(result)
+        #print(f'saved = {self.saved}')
         return added
 
-    def remove(self, results: Union[str, List[str]]) -> List[str]:
+    def remove(self, results: Union[str, list[str]]) -> list[str]:
         """removes a list/str of results"""
         removed = []
         if len(results) == 0:
@@ -107,17 +112,20 @@ class ResultSet:
         #self.saved.difference(disable_set)
         return removed
 
-    def _get_matched_results(self, results: Union[str, List[str]]) -> List[str]:
+    def _get_matched_results(self, results: Union[str, list[str]]) -> list[str]:
         """handles expansion of regexs"""
         if isinstance(results, str):
             results = [results]
         all_matched_results = []
         for result in results:
+            #print(result)
             if result in self.allowed:
+                #print('allowed')
                 all_matched_results.append(result)
                 continue
 
             resulti = _get_regex(result)
+            #print('resulti =', resulti)
             regex = re.compile(resulti)
             matched_results = list(filter(regex.match, self.allowed))
             if len(matched_results) == 0:
@@ -136,7 +144,7 @@ class ResultSet:
             raise RuntimeError(msg) # check line ~640 in op2_f06_common.py if this is a new result
         self.found.add(result)
 
-    def update(self, results: List[str]) -> None:
+    def update(self, results: list[str]) -> None:
         for result in results:
             self.add(result)
 

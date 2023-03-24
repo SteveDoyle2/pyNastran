@@ -1,6 +1,5 @@
 import os
 import sys
-from typing import List, Dict
 import numpy as np
 from pyNastran.bdf import read_bdf, BDF
 from pyNastran.op2 import read_op2
@@ -34,7 +33,7 @@ def run_map_deflections(node_list, bdf_filename, out_filename,
 
     Parameters
     ----------
-    node_list : List[int]
+    node_list : list[int]
         the list of nodes from the BDF to spline???
         is this just the SPLINE1 card???
     bdf_filename : str
@@ -71,7 +70,7 @@ def run_map_deflections(node_list, bdf_filename, out_filename,
 
 def get_wa(node_list, C: NDArray3float, wS: NDArray3float,
            model: BDF,
-           aero_points: Dict[int, NDArray3float],
+           aero_points: dict[int, NDArray3float],
            log=None):
     """
     Cannot use solve
@@ -82,7 +81,7 @@ def get_wa(node_list, C: NDArray3float, wS: NDArray3float,
 
     Parameters
     ----------
-    node_list : List[int]
+    node_list : list[int]
         list of node ids
     C : (3+nnodes, 3+nnodes) float ndarray
         ???
@@ -90,7 +89,7 @@ def get_wa(node_list, C: NDArray3float, wS: NDArray3float,
         [wS] = [C]*[P]
     aero_points : ???
         ???
-    aero_points : : Dict[int, NDArray3float]
+    aero_points : : dict[int, NDArray3float]
         nid -> xyz mapping
 
     Returns
@@ -114,7 +113,7 @@ def get_wa(node_list, C: NDArray3float, wS: NDArray3float,
 
 
 def get_xk_matrix(Cws, node_list, model: BDF,
-                  aero_points: Dict[int, NDArray3float], log=None):
+                  aero_points: dict[int, NDArray3float], log=None):
     """
     Calculates the XK matrix to
 
@@ -161,11 +160,11 @@ def get_xk_matrix(Cws, node_list, model: BDF,
     return wa
 
 
-def get_ws(node_list: List[int], deflections, log=None):
+def get_ws(node_list: list[int], deflections, log=None):
     """
     Parameters
     ----------
-    node_list : List[int]
+    node_list : list[int]
         list of node ids
 
     """
@@ -189,11 +188,11 @@ def get_ws(node_list: List[int], deflections, log=None):
     return w_column
 
 
-def get_c_matrix(node_list: List[int], model: BDF, log=None):
+def get_c_matrix(node_list: list[int], model: BDF, log=None):
     """
     Parameters
     ----------
-    node_list : List[int]
+    node_list : list[int]
         list of node ids
 
     Returns

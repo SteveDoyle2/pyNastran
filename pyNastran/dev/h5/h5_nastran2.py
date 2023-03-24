@@ -318,9 +318,9 @@ def set_caero_grid(alt_grids, ncaeros_points: int, model: BDF):
     caero_grid.SetPoints(vtk_points)
 
 def set_spc_mpc_suport_grid(model: BDF,
-                            alt_grids: Dict[str, vtk.vtkUnstructuredGrid],
-                            nid_to_pid_map: Dict[int, int],
-                            nid_map: Dict[int, int],
+                            alt_grids: dict[str, vtk.vtkUnstructuredGrid],
+                            nid_to_pid_map: dict[int, int],
+                            nid_map: dict[int, int],
                             idtype: str):
     """
     for each subcase, make secondary actors including:
@@ -480,8 +480,8 @@ def _fill_dependent_independent(unused_mpc_id: int, model: BDF,
                                 lines,
                                 depname: str, indname: str, linename: str,
                                 idtype: str,
-                                alt_grids: Dict[str, vtk.vtkUnstructuredGrid],
-                                nid_map: Dict[int, int]) -> List[str]:
+                                alt_grids: dict[str, vtk.vtkUnstructuredGrid],
+                                nid_map: dict[int, int]) -> list[str]:
     """creates the mpc actors"""
     if not lines:
         return []
@@ -522,7 +522,7 @@ def _fill_dependent_independent(unused_mpc_id: int, model: BDF,
     return mpc_names
 
 def _add_nastran_lines_to_grid(alt_grid: vtk.vtkUnstructuredGrid,
-                               nid_map: Dict[int, int],
+                               nid_map: dict[int, int],
                                name: str, lines, model: BDF, nid_to_pid_map=None):
     """used to create MPC lines"""
     nlines = lines.shape[0]
@@ -571,7 +571,7 @@ def _add_nastran_lines_to_grid(alt_grid: vtk.vtkUnstructuredGrid,
 
 def fill_vtk_unstructured_grid_aero(model: BDF,
                                     nodes, node_ids,
-                                    alt_grids: Dict[str, vtk.vtkUnstructuredGrid]):
+                                    alt_grids: dict[str, vtk.vtkUnstructuredGrid]):
     if model.caeros:
         ncaeros_points = 0
         ugrid_aero = vtk.vtkUnstructuredGrid()
@@ -581,7 +581,7 @@ def fill_vtk_unstructured_grid_aero(model: BDF,
     if model.masses:
         set_mass_grid(alt_grids, model, nodes, node_ids)
 
-def set_mass_grid(alt_grids: Dict[str, vtk.vtkUnstructuredGrid],
+def set_mass_grid(alt_grids: dict[str, vtk.vtkUnstructuredGrid],
                   model: BDF, nodes, node_ids) -> None:
     #nmass = len(model.masses)
     #eid_array = np.full(nmass, -1, dtype='int32')
@@ -630,8 +630,8 @@ def set_mass_grid(alt_grids: Dict[str, vtk.vtkUnstructuredGrid],
     alt_grids['mass'] = mass_grid
 
 def fill_vtk_unstructured_grid_constraints(model: BDF,
-                                           alt_grids: Dict[str, vtk.vtkUnstructuredGrid],
-                                           nid_map: Dict[int, int]):
+                                           alt_grids: dict[str, vtk.vtkUnstructuredGrid],
+                                           nid_map: dict[int, int]):
     #if model.caeros:
         #ncaeros_points = 0
         #ugrid_aero = vtk.vtkUnstructuredGrid()
@@ -651,7 +651,7 @@ def get_gui_nastran_ugrid(hdf5_filename: str,
                           subcases=None,  # default=None -> all
                           modes=None, # default=None -> all
                           results=None, # default=None -> all,
-                          ) -> Tuple[BDF, vtk.vtkUnstructuredGrid]:
+                          ) -> tuple[BDF, vtk.vtkUnstructuredGrid]:
     add_aero = False
     add_constraints = False
     add_results = False

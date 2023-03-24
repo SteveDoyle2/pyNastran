@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List, Optional
+from typing import Optional
 
 import pyNastran
 from pyNastran.utils.dev import get_files_of_type
@@ -51,7 +51,7 @@ def parse_skipped_cards(fname):
     return files_to_analyze
 
 
-def get_directories(folders_file: str) -> List[str]:
+def get_directories(folders_file: str) -> list[str]:
     with open(folders_file, 'r') as file_obj:
         lines = file_obj.readlines()
 
@@ -78,7 +78,7 @@ def get_directories(folders_file: str) -> List[str]:
             dirnames.append(move_dir)
     return dirnames
 
-def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> List[str]:
+def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> list[str]:
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
 
@@ -93,7 +93,7 @@ def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> Lis
 
     Returns
     -------
-    filenames : List[str]
+    filenames : list[str]
         a series of filenames that were found
     """
     files2 = []
@@ -101,14 +101,14 @@ def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> Lis
     files2 = get_files_from_directories(dirnames, file_type, max_size=max_size)
     return files2
 
-def get_files_from_directories(dirnames: List[str], file_type: str,
-                               max_size: float=4.2) -> List[str]:
+def get_files_from_directories(dirnames: list[str], file_type: str,
+                               max_size: float=4.2) -> list[str]:
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
 
     Parameters
     ----------
-    dirnames : List[str]
+    dirnames : list[str]
         paths to the file with a list of folders
     file_type : str
         a file extension
@@ -117,7 +117,7 @@ def get_files_from_directories(dirnames: List[str], file_type: str,
 
     Returns
     -------
-    filenames : List[str]
+    filenames : list[str]
         a series of filenames that were found
 
     """
@@ -131,8 +131,8 @@ def get_files_from_directories(dirnames: List[str], file_type: str,
     #print('nfiles = %s' % len(files2))
     return files2
 
-def get_op2_model_directories(folders_filennames: List[str],
-                              filter_simcenter: bool) -> List[str]:
+def get_op2_model_directories(folders_filennames: list[str],
+                              filter_simcenter: bool) -> list[str]:
     dirnames = []
     for filename in folders_filennames:
         dirnames.extend(get_directories(filename))
@@ -150,7 +150,8 @@ def get_op2_model_directories(folders_filennames: List[str],
 def run(regenerate=True, make_geom=False, combine=True,
         write_bdf=False, build_pandas=True,
         xref_safe=False,
-        exclude: Optional[str]=None,
+        include_results: Optional[str]=None,
+        exclude_results: Optional[str]=None,
         save_cases=True, debug=False, write_f06=True, write_op2=False,
         compare=True, short_stats=False, write_hdf5=True):
     # works
@@ -212,7 +213,8 @@ def run(regenerate=True, make_geom=False, combine=True,
     failed_files = run_lots_of_files(files, make_geom=make_geom, combine=combine,
                                      write_bdf=write_bdf,
                                      xref_safe=xref_safe,
-                                     exclude=exclude,
+                                     include_results=include_results,
+                                     exclude_results=exclude_results,
                                      write_f06=write_f06, delete_f06=True,
                                      write_op2=write_op2, delete_op2=True,
                                      write_hdf5=write_hdf5, delete_hdf5=True,
@@ -274,6 +276,7 @@ def main():
     msg += "  --nocombine            Disables case combination\n"
     msg += "  -s, --save_cases       Disables saving of the cases (default=False)\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
+    msg += "  -i <arg>, --include    Include specific results\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
@@ -295,14 +298,16 @@ def main():
     short_stats = data['--short_stats']
     compare = not data['--disablecompare']
     build_pandas = not data['--skip_dataframe']
-    exclude = data['--exclude']
+    include_results = [] # data['--include']
+    exclude_results = data['--exclude']
     xref_safe = data['--safe']
     combine = not data['--nocombine']
     run(regenerate=regenerate, make_geom=make_geom,
         combine=combine,
         write_bdf=write_bdf,
         xref_safe=xref_safe,
-        exclude=exclude,
+        include_results=include_results,
+        exclude_results=exclude_results,
         save_cases=save_cases, write_f06=write_f06, write_op2=write_op2,
         write_hdf5=write_hdf5, short_stats=short_stats,
         build_pandas=build_pandas, compare=compare, debug=debug)

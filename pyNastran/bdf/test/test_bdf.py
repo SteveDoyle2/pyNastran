@@ -12,7 +12,7 @@ import sys
 import traceback
 import warnings
 from itertools import chain
-from typing import List, Optional, Union, Any
+from typing import Optional, Union, Any
 from io import StringIO
 
 import numpy as np
@@ -246,8 +246,8 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                 sys.stderr.write(f'*{nfailed:d} {abs_filename}')
                 nfailed += 1
                 failed_files.append(abs_filename)
-            if ifile % 500:
-                sys.stderr.write(f'{npass:d}/{nfiles:d}; nfailed={nfailed:d}')
+            if ifile % 500 == 0:
+                sys.stderr.write(f'\n{npass:d}/{nfiles:d}; nfailed={nfailed:d}')
             sys.stderr.write('\n')
 
     print('*' * 80)

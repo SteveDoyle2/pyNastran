@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from pyNastran.bdf import MAX_INT
 from pyNastran.op2.errors import SixtyFourBitError
 if TYPE_CHECKING:  # pragma: no cover
@@ -159,7 +159,7 @@ def write_block(op2_file, op2_ascii, nvalues, key):
     op2_ascii.write(str(key) + '\n')
     return nbytes
 
-def init_table(table_name: bytes) -> List[int]:
+def init_table(table_name: bytes) -> list[int]:
     data = [
         4, 2, 4,
         #4, 2,4,

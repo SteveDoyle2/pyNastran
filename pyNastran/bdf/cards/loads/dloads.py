@@ -1130,8 +1130,10 @@ class TLOAD1(DynamicLoad):
         tid = 1
         return TLOAD1(sid, excite_id, tid, delay=0, Type='LOAD', us0=0.0, vs0=0.0, comment='')
 
-    def __init__(self, sid: int, excite_id: int, tid: int, delay: Union[int, float]=0,
-                 Type: str='LOAD', us0: float=0.0, vs0: float=0.0, comment: str=''):
+    def __init__(self, sid: int, excite_id: int,
+                 tid: Union[int, float], delay: Union[int, float]=0,
+                 Type: str='LOAD',
+                 us0: float=0.0, vs0: float=0.0, comment: str=''):
         """
         Creates a TLOAD1 card, which defienes a time-dependent load
         based on a DTABLE.
@@ -1142,10 +1144,9 @@ class TLOAD1(DynamicLoad):
             load id
         excite_id : int
             node id where the load is applied
-        tid : int
+        tid : int / float
             TABLEDi id that defines F(t) for all degrees of freedom in
             EXCITEID entry
-            float : MSC not supported
         delay : int/float; default=None
             the delay; if it's 0/blank there is no delay
             float : delay in units of time
@@ -1224,11 +1225,11 @@ class TLOAD1(DynamicLoad):
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        delay = integer_double_or_blank(card, 3, 'delay', 0)
+        delay = integer_double_or_blank(card, 3, 'delay', default=0)
         Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
-        tid = integer(card, 5, 'tid')
-        us0 = double_or_blank(card, 6, 'us0', 0.0)
-        vs0 = double_or_blank(card, 7, 'vs0', 0.0)
+        tid = integer_double_or_blank(card, 5, 'tid', default=0)
+        us0 = double_or_blank(card, 6, 'us0', default=0.0)
+        vs0 = double_or_blank(card, 7, 'vs0', default=0.0)
 
         assert len(card) <= 8, f'len(TLOAD1 card) = {len(card):d}\ncard={card}'
         return TLOAD1(sid, excite_id, tid, delay=delay, Type=Type, us0=us0, vs0=vs0, comment=comment)
@@ -1247,7 +1248,7 @@ class TLOAD1(DynamicLoad):
         """
         msg = ', which is required by TLOAD1=%s' % (self.sid)
         _cross_reference_excite_id(self, model, msg)
-        if self.tid:
+        if isinstance(self.tid, integer_types) and self.tid:
             self.tid_ref = model.TableD(self.tid, msg=msg)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay, msg=msg)
@@ -1255,7 +1256,7 @@ class TLOAD1(DynamicLoad):
     def safe_cross_reference(self, model: BDF, debug=True):
         msg = ', which is required by TLOAD1=%s' % (self.sid)
         _cross_reference_excite_id(self, model, msg)
-        if self.tid:
+        if isinstance(self.tid, integer_types) and self.tid:
             #try:
             self.tid_ref = model.TableD(self.tid, msg=msg)
             #except
@@ -1269,7 +1270,7 @@ class TLOAD1(DynamicLoad):
         self.tid_ref = None
         self.delay_ref = None
 
-    def Tid(self) -> int:
+    def Tid(self) -> Union[int, float]:
         if self.tid_ref is not None:
             return self.tid_ref.tid
         elif self.tid == 0 or self.tid is None:
@@ -1307,7 +1308,12 @@ class TLOAD1(DynamicLoad):
         time2[i] = 0.
 
         response = np.zeros(time.shape, dtype=time.dtype)
-        response = self.tid_ref.interpolate(time2)
+        if isinstance(self.tid, integer_types):
+            response = self.tid_ref.interpolate(time2)
+        else:
+            # float
+            response += self.tid
+
         is_spcd = False
         if self.Type == 'VELO' and is_spcd:
             response[0] = self.us0
@@ -1351,15 +1357,15 @@ def fix_loadtype_tload1(load_type: Union[int, str]) -> str:
     12 Velocity of the center of gravity of a rigid body (SOL 700 only)
     13 Force or moment on the center of gravity of a rigid body (SOL 700 only).
     """
-    if load_type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+    if load_type in {0, 'L', 'LO', 'LOA', 'LOAD'}:
         load_type = 'LOAD'
-    elif load_type in [1, 'D', 'DI', 'DIS', 'DISP']:
+    elif load_type in {1, 'D', 'DI', 'DIS', 'DISP'}:
         load_type = 'DISP'
-    elif load_type in [2, 'V', 'VE', 'VEL', 'VELO']:
+    elif load_type in {2, 'V', 'VE', 'VEL', 'VELO'}:
         load_type = 'VELO'
-    elif load_type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+    elif load_type in {3, 'A', 'AC', 'ACC', 'ACCE'}:
         load_type = 'ACCE'
-    elif load_type in [4, 5, 6, 7, 12, 13]:  # MSC-only
+    elif load_type in {4, 5, 6, 7, 12, 13}:  # MSC-only
         pass
     else:
         msg = 'invalid TLOAD1 type  Type={load_type!r}'
@@ -1367,15 +1373,15 @@ def fix_loadtype_tload1(load_type: Union[int, str]) -> str:
     return load_type
 
 def fix_loadtype_tload2(load_type: Union[int, str]) -> str:
-    if load_type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+    if load_type in {0, 'L', 'LO', 'LOA', 'LOAD'}:
         load_type = 'LOAD'
-    elif load_type in [1, 'D', 'DI', 'DIS', 'DISP']:
+    elif load_type in {1, 'D', 'DI', 'DIS', 'DISP'}:
         load_type = 'DISP'
-    elif load_type in [2, 'V', 'VE', 'VEL', 'VELO']:
+    elif load_type in {2, 'V', 'VE', 'VEL', 'VELO'}:
         load_type = 'VELO'
-    elif load_type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+    elif load_type in {3, 'A', 'AC', 'ACC', 'ACCE'}:
         load_type = 'ACCE'
-    elif load_type in [5, 6, 7, 12, 13]: # MSC only
+    elif load_type in {5, 6, 7, 12, 13}: # MSC only
         pass
     else:
         msg = f'invalid TLOAD2 type  Type={load_type!r}'
@@ -1383,13 +1389,13 @@ def fix_loadtype_tload2(load_type: Union[int, str]) -> str:
     return load_type
 
 def fix_loadtype_rload1(load_type: Union[int, str]) -> str:
-    if load_type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+    if load_type in {0, 'L', 'LO', 'LOA', 'LOAD'}:
         load_type = 'LOAD'
-    elif load_type in [1, 'D', 'DI', 'DIS', 'DISP']:
+    elif load_type in {1, 'D', 'DI', 'DIS', 'DISP'}:
         load_type = 'DISP'
-    elif load_type in [2, 'V', 'VE', 'VEL', 'VELO']:
+    elif load_type in {2, 'V', 'VE', 'VEL', 'VELO'}:
         load_type = 'VELO'
-    elif load_type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+    elif load_type in {3, 'A', 'AC', 'ACC', 'ACCE'}:
         load_type = 'ACCE'
     else:
         msg = f'invalid RLOAD1 type  Type={load_type!r}\n'
@@ -1397,13 +1403,13 @@ def fix_loadtype_rload1(load_type: Union[int, str]) -> str:
     return load_type
 
 def fix_loadtype_rload2(load_type: Union[int, str]) -> str:
-    if load_type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+    if load_type in {0, 'L', 'LO', 'LOA', 'LOAD'}:
         load_type = 'LOAD'
-    elif load_type in [1, 'D', 'DI', 'DIS', 'DISP']:
+    elif load_type in {1, 'D', 'DI', 'DIS', 'DISP'}:
         load_type = 'DISP'
-    elif load_type in [2, 'V', 'VE', 'VEL', 'VELO']:
+    elif load_type in {2, 'V', 'VE', 'VEL', 'VELO'}:
         load_type = 'VELO'
-    elif load_type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+    elif load_type in {3, 'A', 'AC', 'ACC', 'ACCE'}:
         load_type = 'ACCE'
     else:
         msg = f'invalid RLOAD2 type  Type={load_type!r}\n'
@@ -1457,7 +1463,7 @@ class TLOAD2(DynamicLoad):
     def __init__(self, sid: int,
                  excite_id: int,
                  delay: Union[int, float]=0,
-                 Type: st='LOAD',
+                 Type: str='LOAD',
                  T1: float=0.,
                  T2: Optional[float]=None,
                  frequency: float=0.,

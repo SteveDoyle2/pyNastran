@@ -1,7 +1,7 @@
 from __future__ import annotations
 from struct import pack, Struct
 from collections import defaultdict
-from typing import List, Dict, Tuple, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
 from pyNastran.bdf import MAX_INT, MAX_32_BIT_INT
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
@@ -95,8 +95,8 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
     #-------------------------------------
 
 
-def _build_loads_by_type(model: Union[BDF, OP2Geom]) -> Dict[str, Any]:
-    loads_by_type = defaultdict(list)  # type: Dict[str, Any]
+def _build_loads_by_type(model: Union[BDF, OP2Geom]) -> dict[str, Any]:
+    loads_by_type = defaultdict(list)  # type: dict[str, Any]
     for unused_id, rigid_element in model.rigid_elements.items():
         loads_by_type[rigid_element.type].append(rigid_element)
     for aset in model.asets:
@@ -203,7 +203,7 @@ def write_card(op2_file, op2_ascii, card_type: str, cards, endian: bytes,
         raise NotImplementedError(card0)
     return nbytes
 
-def write_header_nvalues(name: str, nvalues: int, key: Tuple[int, int, int], op2_file, op2_ascii):
+def write_header_nvalues(name: str, nvalues: int, key: tuple[int, int, int], op2_file, op2_ascii):
     """a more precise version of write_header for when card lengths can vary"""
     nvalues += 3 # +3 comes from the keys
     nbytes = nvalues * 4
@@ -214,7 +214,7 @@ def write_header_nvalues(name: str, nvalues: int, key: Tuple[int, int, int], op2
     op2_ascii.write('%s %s\n' % (name, str(key)))
     return nbytes
 
-def write_header(name: str, nfields: int, ncards: int, key: Tuple[int, int, int],
+def write_header(name: str, nfields: int, ncards: int, key: tuple[int, int, int],
                  op2_file, op2_ascii) -> int:
     """writes the op2 card header given the number of cards and the fields per card"""
     nvalues = nfields * ncards
@@ -233,7 +233,7 @@ def _write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
     if max_nid > MAX_32_BIT_INT:
         raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
 
-    data = []  # type: List[Union[int, float]]
+    data = []  # type: list[Union[int, float]]
     if nastran_format == 'msc':
         # MSC
         # SPC(5501,55,16) - Record 44
@@ -301,7 +301,7 @@ def _write_rbe1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     """
     # TODO: neither reader or writer considers alpha; no current examples
     key = (6801, 68, 294)
-    fields = []  # type: List[int]
+    fields = []  # type: list[int]
     max_eid = max([rbe1.eid for rbe1 in cards])
     if max_eid > MAX_INT:
         raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max RBE1 eid={max_eid}')
@@ -354,7 +354,7 @@ def _write_rbe2(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
             is_alpha = True
 
     key = (6901, 69, 295)
-    fields = []  # type: List[Union[int, float]]
+    fields = []  # type: list[Union[int, float]]
     fmt = endian
     if is_tref:
         for rbe2 in cards:
@@ -399,7 +399,7 @@ def _write_rbe3(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     # TODO: alpha is not supported in the writer
     # TODO: tref is not supported in the writer
     key = (7101, 71, 187)
-    fields = []  # type: List[Union[int, float]]
+    fields = []  # type: list[Union[int, float]]
     fmt = endian
     for rbe3 in cards:
         fieldsi = [rbe3.eid, rbe3.refgrid, int(rbe3.refc)]
@@ -434,7 +434,7 @@ def _write_rbar(card_type: str, cards, ncards: int, op2_file, op2_ascii,
     """writes an RBAR"""
     # MSC
     key = (6601, 66, 292)
-    fields = []  # type: List[Union[int, float]]
+    fields = []  # type: list[Union[int, float]]
     if nastran_format == 'msc':
         fmt = endian + b'7if' * ncards
         for rbar in cards:
@@ -499,8 +499,8 @@ def _write_spc1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
         raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
 
     nfields = 0
-    fields = []  # type: List[int]
-    data = defaultdict(list)  # type: Dict[Tuple[int, int], List[int]]
+    fields = []  # type: list[int]
+    data = defaultdict(list)  # type: dict[tuple[int, int], list[int]]
     for spc in cards:
         data_key = (spc.conid, int(spc.components))
         ids = spc.node_ids
@@ -546,7 +546,7 @@ def _write_xset(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     else:  # pragma: no cover
         raise NotImplementedError(card_type)
 
-    data = []  # type: List[int]
+    data = []  # type: list[int]
     fmt = endian
     for set_obj in cards:
         nnodes = len(set_obj.components)
@@ -587,7 +587,7 @@ def _write_xset1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     else:  # pragma: no cover
         raise NotImplementedError(card_type)
 
-    data = []  # type: List[int]
+    data = []  # type: list[int]
     fmt = endian
     for set_obj in cards:
         nodes = set_obj.node_ids

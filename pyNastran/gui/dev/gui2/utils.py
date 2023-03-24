@@ -10,11 +10,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from qtpy.QtWidgets import QMainWindow
 
 def build_actions(self: QMainWindow,
-                  base_actions: Dict[str, QAction],
+                  base_actions: dict[str, QAction],
                   icon_path: str,
-                  tools_list: List[Tuple[str, str, str, str, str, Callable[Any]]],
+                  tools_list: list[tuple[str, str, str, str, str, Callable[Any]]],
                   checkables_set: Set[str],
-                  log: SimpleLogger) -> Dict[str, Any]:
+                  log: SimpleLogger) -> dict[str, Any]:
     checkables = {}
 
     actions = base_actions
@@ -55,8 +55,8 @@ def build_actions(self: QMainWindow,
 
 
 def fill_menus(self: QMainWindow,
-               menus_list: List[Tuple[str, str, List[str]]],
-               actions: Dict[str, QAction],
+               menus_list: list[tuple[str, str, list[str]]],
+               actions: dict[str, QAction],
                allow_missing_actions: bool=False) -> None:
     assert len(self.actions) > 0, self.actions
     menus = {}

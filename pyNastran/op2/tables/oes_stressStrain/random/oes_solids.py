@@ -1,6 +1,5 @@
 # pylint: disable=C0301,R0913,R0914,R0904,C0111,R0201,R0902
 from itertools import count
-from typing import List
 
 import numpy as np
 from numpy import zeros, where, searchsorted
@@ -61,7 +60,7 @@ class RandomSolidArray(OES_Object):
             ntotal = self.ntotal
             dtype = self._get_analysis_code_dtype()
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
 
         # TODO: could be more efficient by using nelements for cid
         self.element_node = zeros((ntotal, 2), dtype='int32')
@@ -171,10 +170,10 @@ class RandomSolidArray(OES_Object):
             raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
         return nnodes
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -282,7 +281,7 @@ class RandomSolidStressArray(RandomSolidArray, StressObject):
         RandomSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
         return headers
 
@@ -292,7 +291,7 @@ class RandomSolidStrainArray(RandomSolidArray, StrainObject):
         RandomSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
         return headers
 

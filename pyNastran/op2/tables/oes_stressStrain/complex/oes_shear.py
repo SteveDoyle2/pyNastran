@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -69,8 +68,8 @@ class ComplexShearArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         self.element = np.zeros(self.nelements, dtype=idtype)
@@ -219,6 +218,7 @@ class ComplexShearArray(OES_Object):
 
     def add_sort1(self, dt, eid, max_shear, avg_shear):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [max_shear, avg_shear]
@@ -226,10 +226,10 @@ class ComplexShearArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -322,10 +322,10 @@ class ComplexShearArray(OES_Object):
         return page_num - 1
 
     @property
-    def headers(self) -> List[str]:
+    def headers(self) -> list[str]:
         return self._get_headers()
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self.headers
 
 class ComplexShearStressArray(ComplexShearArray, StressObject):
@@ -333,7 +333,7 @@ class ComplexShearStressArray(ComplexShearArray, StressObject):
         ComplexShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self) -> List[str]:
+    def _get_headers(self) -> list[str]:
         return ['max_shear', 'avg_shear']
 
 class ComplexShearStrainArray(ComplexShearArray, StrainObject):

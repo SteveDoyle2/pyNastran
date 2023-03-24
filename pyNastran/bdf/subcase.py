@@ -183,8 +183,8 @@ class Subcase:
             self.add('LABEL', data_code['label'], [], 'STRING-type')
 
         #OUGF1, # OUG1F
-        if table_name in ['OUGV1', 'BOUGV1', 'OUGV2', 'OUG1', 'OUGV1PAT', 'OUGMC1', 'OUGMC2',
-                          'OUGF1', 'OUGF2', 'BOUGF1', 'OUG1F']:
+        if table_name in {'OUGV1', 'BOUGV1', 'OUGV2', 'OUG1', 'OUGV1PAT', 'OUGMC1', 'OUGMC2',
+                          'OUGF1', 'OUGF2', 'BOUGF1', 'OUG1F', 'OUG1S'}:
             # OUG1F - acoustic displacements
             if table_code == 1:
                 thermal = data_code['thermal']

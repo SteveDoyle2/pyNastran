@@ -13,7 +13,7 @@ Multi-segment beams are IntegratedLineProperty objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy import unique, allclose, ndarray
 
@@ -1522,7 +1522,7 @@ class PBEAML(IntegratedLineProperty):
         rho = self.Rho()
         mass_per_lengths = []
         for (dim, nsm) in zip(self.dim, self.nsm):
-            a = _bar_areaL('PBEAML', self.beam_type, dim, self)
+            a = _bar_areaL('PBEAML', self.beam_type, dim, self)[0]
             try:
                 mass_per_lengths.append(a * rho + nsm)
             except Exception:
@@ -1554,7 +1554,7 @@ class PBEAML(IntegratedLineProperty):
         """
         areas = []
         for dim in self.dim:
-            areas.append(_bar_areaL('PBEAML', self.beam_type, dim, self))
+            areas.append(_bar_areaL('PBEAML', self.beam_type, dim, self)[0])
         try:
             A = integrate_unit_line(self.xxb, areas)
         except ValueError:

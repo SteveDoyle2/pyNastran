@@ -1,7 +1,7 @@
 from __future__ import annotations
 from struct import Struct
 from itertools import count
-from typing import Tuple, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 import scipy  # type: ignore
@@ -1263,7 +1263,7 @@ def _cast_matrix_matpool(table_name: str,
                          real_imag_array,
                          col_nids_array, col_dofs_array,
                          row_nids_array, row_dofs_array,
-                         matrix_shape: Tuple[int, int],
+                         matrix_shape: tuple[int, int],
                          dtype: str, is_symmetric: bool,
                          log: SimpleLogger,
                          apply_symmetry: bool=False) -> Matrix:
@@ -1469,7 +1469,7 @@ def find_all_dmigs_start_stop(data: bytes, header_fmt: bytes, size: int,
     return istart, istop, outs, kstarts, kstops
 
 def _get_dmig_kstop(ig: int, nvalues: int, istop: int, iminus1,
-                    debug: bool=True) -> Tuple[np.ndarray, np.ndarray]:
+                    debug: bool=True) -> tuple[np.ndarray, np.ndarray]:
     assert isinstance(debug, bool), debug
     kstart = []
     kstop = []
@@ -1500,7 +1500,7 @@ def _get_dmig_kstop(ig: int, nvalues: int, istop: int, iminus1,
     kstop = np.array(kstop, dtype='int32')
     return kstart, kstop
 
-def get_dtype_fdtype_from_tout(op2: OP2, tout: int) -> Tuple[str, str]:
+def get_dtype_fdtype_from_tout(op2: OP2, tout: int) -> tuple[str, str]:
     if tout == 1:
         dtype = 'float32'
         fdtype = op2.fdtype
@@ -1564,7 +1564,7 @@ def grids_comp_array_to_indexi(nid_comp_to_dof_index: Any,
 
 def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
                               make_matrix_symmetric: bool,
-                              idtype: str='int32') -> Tuple[Any, Any, int, int, int]:
+                              idtype: str='int32') -> tuple[Any, Any, int, int, int]:
     """
     Maps the dofs
 

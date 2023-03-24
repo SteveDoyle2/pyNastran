@@ -1,7 +1,7 @@
 from __future__ import annotations
 import sys
 from collections import OrderedDict
-from typing import Dict, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.femutils.utils import pivot_table
@@ -25,9 +25,9 @@ class StressObject:
         #print('--StressObject--')
         self.model = model
         self.vm_word = None
-        self.header_dict = OrderedDict()  # type: Dict[Any, str]
-        self.keys_map = {}  # type: Dict[str, str]
-        self.composite_ieids = {}  # type: Dict[str, str]
+        self.header_dict = OrderedDict()  # type: dict[Any, str]
+        self.keys_map = {}  # type: dict[str, str]
+        self.composite_ieids = {}  # type: dict[str, str]
         self.is_stress = is_stress
 
         self.composite_data_dict = create_composite_plates(model, key, is_stress, self.keys_map)
@@ -55,7 +55,7 @@ class StressObject:
                                  key: int, itime: int,
                                  oxx: Any, oyy: Any, txy: Any, tyz: Any, txz: Any,
                                  max_principal: Any, min_principal: Any, ovm: Any,
-                                 is_element_on: Any, header_dict: Dict[Any, Any]) -> str:
+                                 is_element_on: Any, header_dict: dict[Any, Any]) -> str:
         for element_type, composite_data in self.composite_data_dict.items():
             try:
                 element_layer, unused_ueids, data2, vm_word, unused_ntimes, headers = composite_data[key]
@@ -87,7 +87,7 @@ class StressObject:
 
     def set_composite_stress_by_layer(self,
                                       key: int, itime: int, nelements: int,
-                                      header_dict: Dict[Any, Any]) -> str:
+                                      header_dict: dict[Any, Any]) -> str:
         """get all the ply stresses/strains"""
         nlayers = 0
         nelements2 = 0
@@ -172,7 +172,7 @@ class StressObject:
         msg += '    composite_ieids = %s\n' % self.composite_ieids
         return msg
 
-def create_plates(model: Any, key: str, is_stress: bool) -> Dict[str, Any]:
+def create_plates(model: Any, key: str, is_stress: bool) -> dict[str, Any]:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
         plates = [

@@ -1,11 +1,10 @@
 from itertools import count
-from typing import List
 
 import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
-from pyNastran.op2.result_objects.op2_objects import get_times_dtype
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype, get_sort_element_sizes
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, set_static_case, set_modal_case,
@@ -222,15 +221,18 @@ class RealSpringArray(OES_Object):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, unused_idtype, unused_fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self.build_data(self.ntimes, self.nelements, dtype)
+        ntimes, nelements, unused_ntotal = get_sort_element_sizes(self)
+        dtype, unused_idtype, unused_fdtype = get_times_dtype(
+            self.nonlinear_factor, self.size, self.analysis_fmt)
+        self.build_data(ntimes, nelements, dtype)
 
     def build_data(self, ntimes, nelements, dtype):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
-        _times = zeros(ntimes, dtype=dtype)
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
+        dtype, idtype, fdtype = get_times_dtype(
+            self.nonlinear_factor, self.size, self.analysis_fmt)
         element = zeros(nelements, dtype=idtype)
 
         #[stress]
@@ -330,6 +332,7 @@ class RealSpringArray(OES_Object):
         return True
 
     def add_sort1(self, dt, eid, stress):
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         #if self.itime == 0:
         #print('itime=%s eid=%s' % (self.itime, eid))
@@ -337,10 +340,20 @@ class RealSpringArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [stress]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def add_sort2(self, dt, eid, stress):
+        assert self.is_sort2, self
+        itime = self.itotal
+        self._times[itime] = dt
+        #if self.itime == 0:
+        #print('itime=%s eid=%s' % (self.itime, eid))
+        self.element[self.ielement] = eid
+        self.data[itime, self.ielement, :] = [stress]
+        self.itotal += 1
+
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -516,7 +529,7 @@ class RealSpringStressArray(RealSpringArray, StressObject):
         RealSpringArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['spring_stress']
         return headers
 
@@ -545,7 +558,7 @@ class RealSpringStrainArray(RealSpringArray, StrainObject):
         RealSpringArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['spring_strain']
         return headers
 
@@ -614,7 +627,7 @@ class RealNonlinearSpringStressArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['force', 'stress']
         return headers
 
@@ -634,8 +647,9 @@ class RealNonlinearSpringStressArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        _times = zeros(self.ntimes, dtype=dtype)
+        _times = zeros(self.ntimes, dtype=self.analysis_fmt)
         element = zeros(self.nelements, dtype='int32')
+
 
         #[force, stress]
         data = zeros((self.ntimes, self.nelements, 2), dtype='float32')
@@ -687,16 +701,17 @@ class RealNonlinearSpringStressArray(OES_Object):
 
     def add_sort1(self, dt, eid, force, stress):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force, stress]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

@@ -352,7 +352,7 @@ class GuiResult(GuiResultCommon):
             the NaN marker when scalars are ints
         data_format : str
             the type of data result (e.g. '%i', '%.2f', '%.3f')
-        data_map : Dict[???, ???]
+        data_map : dict[???, ???]
             ???
         uname : str
             some unique name for ...

@@ -1,6 +1,5 @@
 # coding: utf-8
 #pylint disable=C0103
-from typing import List
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
@@ -77,7 +76,7 @@ class RealCPLSTRNPlateArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = np.zeros(self.ntotal, dtype='int32')
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
@@ -113,10 +112,10 @@ class RealCPLSTRNPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -228,7 +227,7 @@ class RealCPLSTRNPlateStressArray(RealCPLSTRNPlateArray, StressObject):
         RealCPLSTRNPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['oxx', 'oyy', 'txy', 'von_mises']
         return headers
 
@@ -238,7 +237,7 @@ class RealCPLSTRNPlateStrainArray(RealCPLSTRNPlateArray, StrainObject):
         RealCPLSTRNPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['exx', 'eyy', 'exy', 'von_mises']
         return headers
 

@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from numpy import zeros
 
@@ -55,7 +53,7 @@ class ComplexBeamArray(OES_Object):
         self.itotal = 0
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
         #self.element = array(self.nelements, dtype='|S8')
 
         #self.ntotal = self.nelements * nnodes
@@ -68,7 +66,7 @@ class ComplexBeamArray(OES_Object):
             #print(f'complex beam: ntimes={ntimes} ntotal={ntotal}')
 
         # ntotal is nelements
-        self._times = zeros(ntimes, dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element_node = zeros((ntotal, 2), idtype)
         self.sd = zeros(ntotal, 'float32')
 
@@ -166,6 +164,7 @@ class ComplexBeamArray(OES_Object):
         201 60001 1.0 (-8.231933179558837e-08+2.7437032645849513e-09j)
         202 60001 0.0 (-1.8220836750515446e-07+6.073004765738688e-09j)
         """
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, f'dt={dt} eid={eid} grid={grid}'
         assert isinstance(eid, integer_types) and grid >= 0, f'dt={dt} eid={eid} grid={grid}'
         #print(eid, grid, sd, exc)
@@ -176,10 +175,10 @@ class ComplexBeamArray(OES_Object):
         self._times[self.itime] = dt
         self.itotal += 1
 
-
     def add_sort2(self, dt, eid, grid, sd,
                   exc, exd, exe, exf):
         """adds the non-vectorized data"""
+        assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, f'dt={dt} eid={eid} grid={grid}'
         assert isinstance(eid, integer_types) and grid >= 0, f'dt={dt} eid={eid} grid={grid}'
         itotal = self.itime
@@ -192,10 +191,10 @@ class ComplexBeamArray(OES_Object):
         self._times[itime] = dt
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -509,7 +508,7 @@ class ComplexBeamStressArray(ComplexBeamArray, StressObject):
         ComplexBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['sxc', 'sxd', 'sxe', 'sxf']
         return headers
 
@@ -518,6 +517,6 @@ class ComplexBeamStrainArray(ComplexBeamArray, StrainObject):
         ComplexBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['exc', 'exd', 'exe', 'exf']
         return headers

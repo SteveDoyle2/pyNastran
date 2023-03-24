@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from collections import defaultdict
 from struct import pack, Struct
-from typing import List, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from cpylog import get_logger2
 
 #import pyNastran
@@ -43,8 +43,8 @@ class OP2Writer(OP2_F06_Common):
     def write_op2(self, op2_out_filename: str,
                   post: int=-1,
                   endian: bytes=b'<',
-                  includes: Optional[List[str]]=None,
-                  skips: Optional[List[str]]=None,
+                  includes: Optional[list[str]]=None,
+                  skips: Optional[list[str]]=None,
                   nastran_format: Optional[str]=None) -> int:
         """
         Writes an OP2 file based on the data we have stored in the object
@@ -57,9 +57,9 @@ class OP2Writer(OP2_F06_Common):
             the PARAM,POST flag
         endian : bytes; default='<'
             little endian is strongly recommended
-        includes : List[str]; default=None
+        includes : list[str]; default=None
             list of results to include; exclusive with skips; default for both includes/skips=None -> all included
-        skips : List[str]; default=None
+        skips : list[str]; default=None
             list of results to skip; exclusive with includes
         nastran_format : str; default=None -> 'msc'
             supported formats: ['msc', 'nx', 'optistruct']
@@ -102,15 +102,15 @@ class OP2Writer(OP2_F06_Common):
             raise
         return total_case_count
 
-def _set_skips(model: OP2Writer, includes: Optional[List[str]], skips: Optional[List[str]]):
+def _set_skips(model: OP2Writer, includes: Optional[list[str]], skips: Optional[list[str]]):
     """
     Helper method for ``write_op2``
 
     Parameters
     ----------
-    includes : List[str]; default=None
+    includes : list[str]; default=None
         list of results to include; exclusive with skips; default for both includes/skips=None -> all included
-    skips : List[str]; default=None
+    skips : list[str]; default=None
         list of results to skip; exclusive with includes
 
     """
@@ -156,7 +156,7 @@ def _set_skips(model: OP2Writer, includes: Optional[List[str]], skips: Optional[
 def _write_op2(op2_file, fop2_ascii, obj: OP2,
                skips: set[str],
                post: int=-1, endian: bytes=b'<',
-               nastran_format: str='nx') -> Tuple[int, List[str]]:
+               nastran_format: str='nx') -> tuple[int, list[str]]:
     """actually writes the op2"""
     date = obj.date
     #op2_ascii.write('writing [3, 7, 0] header\n')
@@ -201,7 +201,7 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
 
 def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                          struct_3i,
-                         endian, skips: set[str]) -> Tuple[int, List[str]]:
+                         endian, skips: set[str]) -> tuple[int, list[str]]:
     """writes the op2 result tables"""
     table_names_found = []
     date = obj.date
@@ -437,7 +437,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     fop2_ascii.close()
     return total_case_count, table_names_found
 
-def _fix_subcase_id(key: Union[int, Tuple[Any]], res: Any) -> None:
+def _fix_subcase_id(key: Union[int, tuple[Any]], res: Any) -> None:
     """
     The subcase id may be inconsistent between the op2 result object
     and the key. The key takes priority to make doing a load case

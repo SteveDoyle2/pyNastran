@@ -21,7 +21,7 @@ def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
         BDF() : a BDF object
     ugrid_filename_out : str (default=None -> ???)
         the path to the ugrid_filename
-    properties : Dict[pid_old]=pid_new???
+    properties : dict[pid_old]=pid_new???
         ???
     check_shells : bool (default=True)
         verify that there is at least one shell element

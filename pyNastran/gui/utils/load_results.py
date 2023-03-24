@@ -13,7 +13,7 @@ defines:
 import os
 import sys
 import traceback
-from typing import List, Tuple, Any
+from typing import Any
 
 import numpy as np
 import pyNastran
@@ -26,11 +26,11 @@ from pyNastran.converters.stl.stl import read_stl
 
 
 def create_res_obj(islot: int,
-                   headers: List[str], # str too?
-                   header: str,  # List[str] too?
+                   headers: list[str], # str too?
+                   header: str,  # list[str] too?
                    A, fmt_dict, result_type,
                    is_deflection: bool=False, is_force: bool=False,
-                   dim_max=None, xyz_cid0=None, colormap: str='jet') -> Tuple[Any, str]:
+                   dim_max=None, xyz_cid0=None, colormap: str='jet') -> tuple[Any, str]:
     """
     Parameters
     ----------
@@ -46,7 +46,7 @@ def create_res_obj(islot: int,
             secondary dimension
             N/A : 1D array
             3 : deflection
-    headers : List[str]
+    headers : list[str]
         the titles???
     fmt_dict : dict[header] = fmt
         the format of the arrays

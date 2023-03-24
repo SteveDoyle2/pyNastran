@@ -1,6 +1,4 @@
 #pylint disable=C0103,C0301
-from typing import List
-
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -42,7 +40,7 @@ class Real1DHeatFluxArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'xgrad', 'ygrad', 'zgrad', 'xflux', 'yflux', 'zflux'
         ]
@@ -71,7 +69,7 @@ class Real1DHeatFluxArray(BaseElement):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = np.zeros(self.nelements, dtype='int32')
         self.element_data_type = np.empty(self.nelements, dtype='|U8')
 
@@ -164,6 +162,7 @@ class Real1DHeatFluxArray(BaseElement):
 
     def add_sort1(self, dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
@@ -171,10 +170,10 @@ class Real1DHeatFluxArray(BaseElement):
         self.data[self.itime, self.ielement, :] = [xgrad, ygrad, zgrad, xflux, yflux, zflux]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -287,7 +286,7 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
         return self._write_f06_block(words, header, page_stamp, page_num, f06_file,
                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return ['grad1', 'grad2', 'grad3', 'flux1', 'flux2', 'flux3']
 
 
@@ -321,7 +320,7 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'free_conv', 'free_conv_k',
         ]
@@ -343,7 +342,7 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element_node = np.zeros((self.nelements, 2), dtype='int32')
 
         #[free_conv, free_conv_k]
@@ -430,16 +429,17 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def add_sort1(self, dt, eid, cntl_node, free_conv, free_conv_k):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_node[self.ielement, :] = [eid, cntl_node]
         self.data[self.itime, self.ielement, :] = [free_conv, free_conv_k]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -538,7 +538,7 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             'fapplied', 'free_conv', 'force_conv', 'frad', 'ftotal',
         ]
@@ -563,7 +563,7 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = np.zeros(self.nelements, dtype='int32')
         self.element_type = np.empty(self.nelements, dtype='|U8')
 
@@ -649,6 +649,7 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def add_sort1(self, dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
@@ -656,10 +657,10 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.data[self.itime, self.ielement, :] = [fapplied, free_conv, force_conv, frad, ftotal]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -757,10 +758,10 @@ class RealHeatFluxVUShellArray(BaseElement):
     def data_type(self) -> str:
         return 'float32'
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -908,6 +909,7 @@ class RealHeatFluxVUShellArray(BaseElement):
     def add_sort1(self, dt, eid, parent, coord, unused_icord, unused_theta,
                   xgrad, ygrad, zgrad, xflux, yflux, zflux):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         # itotal - the node number
         # itime - the time/frequency step

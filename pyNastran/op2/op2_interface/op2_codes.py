@@ -1,19 +1,21 @@
-from typing import List, Tuple, Union, Optional
+from typing import Union, Optional
 from pyNastran.op2.op2_interface.function_codes import func7
 from pyNastran.op2.op2_interface.nx_tables import NX_ELEMENTS, NX_TABLE_CONTENT
 from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTENT
 
 # strings
 SORT1_TABLES_BYTES = [
+    b'OUG1S',
+
     b'OES1', b'OES1C', b'OES1X', b'OES1X1', b'OESVM1', b'OESVM1C',
     b'OSTR1C', b'OSTR1X', b'OSTRVM1', b'OSTRVM1C',
     b'OSTRMS1C',
 
     b'OESNLXR', b'OESTRCP',
     # ----------
-    b'OEF1X', b'OEF1', b'OEFIT',
+    b'OEF1X', b'OEF1',
     b'HOEF1', b'DOEF1',
-    b'OEFITSTN',
+    b'OEFIT', b'OEFITSTN', b'OESRT', b'OESRTN',
     # --------
     # random
 
@@ -40,7 +42,7 @@ SORT2_TABLES_BYTES = [
 
     b'OES2', b'OES2C', b'OESVM2',
     b'OSTR2', b'OSTR2C', b'OSTRVM2',
-    b'OEF2',
+    b'OEF2', b'OEFNO2',
 
     # random
     b'OEFATO2', b'OEFCRM2', b'OEFPSD2',
@@ -324,7 +326,36 @@ class Op2Codes:
             # 8 - post-buckling
             # 9 - complex eigenvalues
             # 10 - nonlinear statics
-            fmts = ('float32', 'float64')
+            if hasattr(self, 'analysis_method'):
+                name = self.analysis_method
+            else:
+                name = self.name
+            #try:
+                #name = self.analysis_method
+            #except AttributeError:
+                #print(self.object_stats())
+                #raise
+            if name == 'N/A' and self.result_name.startswith(('rms.', 'no.')):
+                self.name = 'freq'
+                name = self.name
+                #fmts = ('float32', 'float64')
+            elif name is None:
+                name = 'lsdvmn'
+                self.name = 'lsdvmn'
+                #print(self.object_stats())
+                #asdf
+
+            #print(name)
+            if name in {'N/A', 'element_id'}:
+                fmts = ('float32', 'float64')
+            else:
+                if name in 'mode':
+                    fmts = ('int32', 'int64')
+                else:
+                    assert name in {'freq', 'dt', 'time',
+                                    'lsdvmn', 'lftsfq', 'loadFactor', 'load_step', 'loadID', 'thresh'}, name + self.object_stats() # 'eigr', 'eign'
+                    fmts = ('float32', 'float64')
+
         elif self.analysis_code in [1, 7, 11]:
             # 1 - static
             # 7 - pre-buckling
@@ -332,7 +363,8 @@ class Op2Codes:
             fmts = ('int32', 'int64')
         else:
             raise NotImplementedError(self.code_information())
-        index = self.size // 4 - 1  # factor is size/4 -> subtract 1
+        index = int(self.size == 8)
+        #index = self.size // 4 - 1  # factor is size/4 -> subtract 1
         return fmts[index]
 
     def code_information(self, include_time: bool=True) -> str:
@@ -490,6 +522,10 @@ class Op2Codes:
 
         if self.is_msc:
             msg += '  MSC Nastran\n'
+        #elif self.is_optistruct:
+            #msg += '  Optistruct\n'
+        #elif self.is_autodesk:
+            #msg += '  Autodesk/NEi Nastran\n'
         elif self.is_nasa95:
             msg += '  NASA 95 Nastran\n'
         else:
@@ -522,7 +558,7 @@ class Op2Codes:
         return disp_temp
 
     def get_table_code_name(self, disp_temp: str='', force_flux: str='',
-                            stress_word: str='') -> Tuple[int, str]:
+                            stress_word: str='') -> tuple[int, str]:
         """gets the name of the active table"""
         table = '???'
         table_code = self.table_code
@@ -592,6 +628,9 @@ class Op2Codes:
                 except ValueError:
                     raise ValueError(f'is this SORT1/2?  table_name={table_name!r}')
         return is_sort1_table
+
+    def sort_method2(self) -> int:
+        return 1 if self.is_sort1 else 2
 
     @property
     def is_sort1(self) -> bool:
@@ -665,7 +704,7 @@ class Op2Codes:
         }
         unused_t_code = map_sort_bits[(is_complex, is_sort2, is_random)]
 
-    def _table_specs(self) -> Tuple[int, bool, bool]:
+    def _table_specs(self) -> tuple[int, bool, bool]:
         """
         +-------+-----------+-------------+----------+
         | Value | Sort Type | Data Format | Random ? |
@@ -753,7 +792,7 @@ SCODE_MAP = {
     31: ('Coordinate Material - Strain Fiber von Mises', (1, 1, 1, 1, 1)),
 }
 
-def get_scode_word_assert(s_code: int, stress_bits: List[int]) -> str:
+def get_scode_word_assert(s_code: int, stress_bits: list[int]) -> str:
     try:
         s_word, stress_bits_expected = SCODE_MAP[s_code]
         assert stress_bits == stress_bits_expected, f's_code={s_code} stress_bits={stress_bits} != {stress_bits_expected}'
@@ -762,7 +801,7 @@ def get_scode_word_assert(s_code: int, stress_bits: List[int]) -> str:
         s_word = '???'
     return s_word
 
-def get_scode_word(s_code: int, stress_bits: List[int]) -> str:
+def get_scode_word(s_code: int, stress_bits: list[int]) -> str:
     try:
         s_word, stress_bits_expected = SCODE_MAP[s_code]
     except KeyError:
@@ -771,7 +810,7 @@ def get_scode_word(s_code: int, stress_bits: List[int]) -> str:
     return s_word
 
 def determine_sort_bits_meaning(table_code: int, sort_code: int,
-                                sort_bits: Tuple[int, int, int]) -> Tuple[int, bool, bool]:
+                                sort_bits: tuple[int, int, int]) -> tuple[int, bool, bool]:
     """
     Value Sort type Data format Random
     ===== ========= =========== ======

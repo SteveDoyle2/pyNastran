@@ -1239,7 +1239,7 @@ def _convert_loads(model: BDF,
     #model.log.debug('accel_scale (F/L) = %g ???\n' % accel_scale)
 
     for dloads in model.dloads.values():
-        assert isinstance(dloads, str), dloads  # TEMP
+        assert isinstance(dloads, list), dloads  # TEMP
 
     skip_dloads = {'TLOAD2', 'RANDPS', 'RANDT1', 'QVECT'}
     tabled_scales = set()
@@ -1336,7 +1336,7 @@ def _convert_loads(model: BDF,
                         load.p2 *= moment_scale
                     else:
                         raise RuntimeError(load)
-                elif load.scale in ['FR', 'RFPR']:  # fractional
+                elif load.scale in ['FR', 'FRPR']:  # fractional
                     pass
                 else:
                     raise RuntimeError(load)
@@ -1388,6 +1388,8 @@ def _convert_loads(model: BDF,
                 load.tai = [tempi * temperature_scale for tempi in load.tai]
                 load.tp1 = [tempi * temperature_scale if tempi is not None else tempi for tempi in load.tp1]
                 load.tp2 = [tempi * temperature_scale if tempi is not None else tempi for tempi in load.tp2]
+            elif load_type == 'SPCD':
+                load.enforced = [enforcedi * xyz_scale for enforcedi in load.enforced]
             else:
                 raise NotImplementedError(f'{load.get_stats()}\n{load}')
     _write_scales(model.log, scale_map, scales, {'length'})
@@ -1398,12 +1400,12 @@ def _convert_aero(model: BDF,
                   force_scale: float) -> None:
     """
     Converts the aero cards
-      - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESURF
+      - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARM, AESURF
 
     Supports: AERO, AEROS, CAERO1, CAERO2, TRIM*, MONPNT1, FLUTTER FLFACT-rho/vel
               GUST, AESURF, PAERO2
     Skips: PAERO1, AESTAT, AESURFS, AECOMP, AELIST
-    Doesn't support:CAERO3-5, PAERO3-5, SPLINEx, AEPARAM,  AELINK, AEPRESS, AEFORCE,
+    Doesn't support:CAERO3-5, PAERO3-5, SPLINEx, AEPARM,  AELINK, AEPRESS, AEFORCE,
     *probably not done
 
     """

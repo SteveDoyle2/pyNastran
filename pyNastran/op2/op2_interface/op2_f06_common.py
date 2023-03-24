@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from numpy import unique, int32, int64
 
 from pyNastran import is_release
@@ -933,6 +933,8 @@ class OP2_F06_Common:
 
         #: OUG - eigenvectors
         self.eigenvectors = {}            # tCode=7 thermal=0
+        self.eigenvectors_structure = {}  #  OUG1S
+        self.eigenvectors_fluid = {}  #  OUG1F???
 
         # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
 
@@ -974,8 +976,6 @@ class OP2_F06_Common:
         self.spc_forces_v = {} # OQGV1
 
         self.mpc_forces = {}  # tCode=39
-        self.mpc_forces_RAQCONS = {}
-        self.mpc_forces_RAQEATC = {}
 
         self.contact_forces = {} # OQGCF1
         self.contact_tractions_and_pressure = {}  # OBC1
@@ -1087,13 +1087,13 @@ class OP2_F06_Common:
             # OUG - displacement, temperatures, eigenvectors, velocity, acceleration
             'displacements', # 'displacements_scaled',
             'temperatures',
-            'eigenvectors',
+            'eigenvectors', 'eigenvectors_structure', 'eigenvectors_fluid',
             'velocities',
             'accelerations',
 
             # OQG - spc/mpc forces
             'spc_forces', 'spc_forces_v',
-            'mpc_forces', 'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
+            'mpc_forces',
             'contact_forces', 'contact_tractions_and_pressure',
             'glue_forces',
             'thermal_gradient_and_flux',
@@ -1166,6 +1166,9 @@ class OP2_F06_Common:
             'eigenvalues', # LAMA, CLAMA, BLAMA, LAMAS
             'eigenvalues_fluid', # LAMAF
 
+            # OUG1S
+            #'eigenvectors_structure',
+
             # HISADD
             #'convergence_history',
 
@@ -1229,7 +1232,7 @@ class OP2_F06_Common:
             'card_count', 'data_code', 'element_mapper', 'isubcase_name_map',
             'labels', 'subtitles', 'additional_matrices', 'matrices', 'matdicts',
             'subcase_key', 'end_options', 'expected_times', 'generalized_tables',
-            'op2_reader', 'table_count']
+            'op2_reader', 'table_count', 'table_mapper']
 
         table_types = self.get_table_types()
         tables = object_attributes(self, 'public', filter_properties=True)
@@ -1362,7 +1365,7 @@ def _get_op2_stats(model: OP2, short=False):
             assert isinstance(msgi, str), msgi
         raise
 
-def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
+def _get_op2_stats_short(model: OP2, table_types: list[str], log) -> list[str]:
     """helper for get_op2_stats(...)"""
     msg = []
     handled_previously = ['params', 'grid_point_weight', 'psds']
@@ -1414,7 +1417,7 @@ def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
                 #raise RuntimeError(msgi)
     return msg
 
-def _get_op2_results_stats_dict(obj: Dict[Any, Any], table_type: str, short: bool) -> msg:
+def _get_op2_results_stats_dict(obj: dict[Any, Any], table_type: str, short: bool) -> msg:
     msg = []
     for key, obji in obj.items():
         if isinstance(obji, list):
@@ -1426,7 +1429,7 @@ def _get_op2_results_stats_dict(obj: Dict[Any, Any], table_type: str, short: boo
             msg.extend(f'op2_results.{table_type}[{key}]: ' + stats)
     return msg
 
-def _get_op2_stats_full(model: OP2, table_types: List[str], log):
+def _get_op2_stats_full(model: OP2, table_types: list[str], log):
     """helper for get_op2_stats(...)"""
     msg = []
     handled_previously = ['params', 'grid_point_weight', 'psds']

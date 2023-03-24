@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Any
 import numpy as np
 
 class RandomObjects:
@@ -207,7 +207,7 @@ class PSDObjects():
                 msg += '\n'
         return msg
 
-    def get_psds_by_subtitles(self) -> Dict[Any, Any]:
+    def get_psds_by_subtitles(self) -> dict[Any, Any]:
         psd_results = self.get_results()
         if not psd_results:
             return {}
@@ -380,7 +380,7 @@ class ScaledResponseSpectra:
         self.cquad8_strain = {}
         self.cquad8_force = {}
 
-    def get_table_types(self) -> List[str]:
+    def get_table_types(self) -> list[str]:
         tables = [
             'displacements', 'velocities', 'accelerations', 'spc_forces', 'mpc_forces',
             'cbar_force',
@@ -461,6 +461,19 @@ class RASCONS:
             'ctetra_strain', 'chexa_strain', 'cpenta_strain',
         ]
         return ['RASCONS.' + table for table in tables]
+
+
+class RAQCONS:
+    """
+    storage class for the RAQCONS objects
+    Constraint mode MPC force table
+    """
+    def __init__(self):
+        self.mpc_forces = {}
+
+    def get_table_types(self):
+        tables = ['mpc_forces', ]
+        return ['RAQCONS.' + table for table in tables]
 
 class RARCONS:
     """
@@ -667,6 +680,16 @@ class RAREATC:
             'spc_forces',
         ]
         return ['RAREATC.' + table for table in tables]
+
+class RAQEATC:
+    """storage class for the RAQEATC objects"""
+    def __init__(self):
+        self.mpc_forces = {}
+    def get_table_types(self):
+        tables = [
+            'mpc_forces',
+        ]
+        return ['RAQEATC.' + table for table in tables]
 
 class RAFEATC:
     """storage class for the RAFEATC objects"""

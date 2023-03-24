@@ -10,8 +10,8 @@ def save_wing_elements(isurface: int,
                        point: np.ndarray, element: np.ndarray,
                        xyz_scale: np.ndarray,
                        dxyz: np.ndarray,
-                       nodes: List[np.ndarray], quad_elements: List[np.ndarray],
-                       surfaces: List[Union[Surface, Body]],
+                       nodes: list[np.ndarray], quad_elements: list[np.ndarray],
+                       surfaces: list[Union[Surface, Body]],
                        is_cs_list, is_cs,
                        ipoint: int) -> int:
     npoint = point.shape[0]
@@ -78,8 +78,8 @@ def save_wing_elements(isurface: int,
                        point: np.ndarray, element: np.ndarray,
                        xyz_scale: np.ndarray,
                        dxyz: np.ndarray,
-                       nodes: List[np.ndarray], quad_elements: List[np.ndarray],
-                       surfaces: List[Union[Surface, Body]],
+                       nodes: list[np.ndarray], quad_elements: list[np.ndarray],
+                       surfaces: list[Union[Surface, Body]],
                        is_cs_list, is_cs,
                        ipoint: int) -> int:
     npoint = point.shape[0]

@@ -1,5 +1,5 @@
 """Defines the BDFCard class that is passed into the various Nastran cards."""
-from typing import List, Union, Optional, Any
+from typing import Union, Optional, Any
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_16 import print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields

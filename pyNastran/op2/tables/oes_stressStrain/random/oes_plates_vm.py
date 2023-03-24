@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from numpy import zeros
 
@@ -96,7 +94,7 @@ class RandomPlateVMArray(OES_Object):
             #nelements_nnodes = nelements * nnodes
             #ntotal = nelements * 2
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
-            print(f"***SORT1 ntimes={ntimes} nelements={nelements} nnodes={nnodes} ntotal={ntotal} nlayers={nlayers}")
+            #print(f"***SORT1 ntimes={ntimes} nelements={nelements} nnodes={nnodes} ntotal={ntotal} nlayers={nlayers}")
             assert nlayers == ntotal, f'SORT1 nlayers={nlayers} ntotal={ntotal}'
             #ddd
         elif self.is_sort2:
@@ -110,8 +108,8 @@ class RandomPlateVMArray(OES_Object):
             nlayers = nelements * 2 * nnodes
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
             #if self.element_name in ['CQUAD4']:
-            print(f'SORT2 element_type={self.element_name}-{self.element_type} '
-                  f'ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}')
+            #print(f'SORT2 element_type={self.element_name}-{self.element_type} '
+                  #f'ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}')
         else:  # pragma: no cover
             raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
 
@@ -138,10 +136,10 @@ class RandomPlateVMArray(OES_Object):
         self.nelements = nelements
         #ntotal = nelements * 2
         self.ntotal = nlayers
-        #_times = zeros(ntimes, dtype=dtype)
+        #_times = zeros(ntimes, dtype=self.analysis_fmt)
         #element = zeros(nelements, dtype='int32')
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         #print(f'***nelements={nelements} nlayers={nlayers} ntimes={ntimes}')
@@ -318,6 +316,7 @@ class RandomPlateVMArray(OES_Object):
                   fd1, oxx1, oyy1, txy1, ovm1,
                   fd2, oxx2, oyy2, txy2, ovm2):
         """unvectorized method for adding SORT2 transient data"""
+        assert self.is_sort2, self
         #self.add_sort2(dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2)
         self.add_sort1(dt, eid, nid,
                        fd1, oxx1, oyy1, txy1, ovm1,
@@ -325,10 +324,10 @@ class RandomPlateVMArray(OES_Object):
 
     #---------------------------------------------------------------------------
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -588,7 +587,7 @@ class RandomPlateVMStressArray(RandomPlateVMArray, StressObject):
         headers = ['oxx', 'oyy', 'txy', 'ovm']
         return headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()
 
 
@@ -602,5 +601,5 @@ class RandomPlateVMStrainArray(RandomPlateVMArray, StrainObject):
         headers = ['exx', 'eyy', 'exy', 'evm']
         return headers
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return self._get_headers()

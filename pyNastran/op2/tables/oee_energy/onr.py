@@ -1,6 +1,6 @@
 #pylint: disable=C0326,C0301
 from __future__ import annotations
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from struct import Struct
 import numpy as np
 
@@ -85,7 +85,7 @@ class ONR:
     def factor(self) -> int:
         return self.op2.factor
 
-    def get_onr_prefix_postfix(self) -> Tuple[str, str]:
+    def get_onr_prefix_postfix(self) -> tuple[str, str]:
         """
         Creates the prefix/postfix that splits off ATO, CRM, PSD, nonlinear,
         etc. results.  We also fix some of the sort bits as typing:
@@ -171,10 +171,10 @@ class ONR:
         op2.set_id = op2.add_data_parameter(data, 'set_id', b'i', 13, False)
 
         #: Natural eigenvalue - real part
-        op2.eigen_real = op2.add_data_parameter(data, 'eigen_real', b'i', 14, False)
+        op2.eigen_real = op2.add_data_parameter(data, 'eigen_real', b'f', 14, False)
 
         #: Natural eigenvalue - imaginary part
-        op2.eigen_imag = op2.add_data_parameter(data, 'eigen_imag', b'i', 15, False)
+        op2.eigen_imag = op2.add_data_parameter(data, 'eigen_imag', b'f', 15, False)
 
         #: Natural frequency
         op2.freq = op2.add_data_parameter(data, 'freq', b'f', 16, False)
@@ -218,8 +218,8 @@ class ONR:
         #elif op2.analysis_code == 4: # differential stiffness
             #op2.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif op2.analysis_code == 5:   # frequency
-            op2.freq2 = op2.add_data_parameter(data, 'freq2', b'f', 5)  ## frequency
-            op2.data_names = op2.apply_data_code_value('data_names', ['freq2'])
+            op2.freq = op2.add_data_parameter(data, 'freq', b'f', 5)  ## frequency
+            op2.data_names = op2.apply_data_code_value('data_names', ['freq'])
         elif op2.analysis_code == 6:  # transient
             op2.time = op2.add_data_parameter(data, 'time', b'f', 5)  ## time step
             op2.data_names = op2.apply_data_code_value('data_names', ['time'])
@@ -232,7 +232,9 @@ class ONR:
             op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)  ## mode number
             op2.eigr = op2.eigen_real
             op2.eigi = op2.eigen_imag
-            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eigr', 'eign'])
+            op2.data_code['eigr'] = op2.eigr
+            op2.data_code['eigi'] = op2.eigi
+            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif op2.analysis_code == 10:  # nonlinear statics
             self.loadFactor = op2.add_data_parameter(data, 'loadFactor', b'f', 5)  ## load factor
             op2.data_names = op2.apply_data_code_value('data_names', ['loadFactor'])
@@ -317,10 +319,10 @@ class ONR:
         op2.set_id = op2.add_data_parameter(data, 'set_id', b'i', 13, False)
 
         #: Natural eigenvalue - real part
-        op2.eigen_real = op2.add_data_parameter(data, 'eigen_real', b'i', 14, False)
+        #op2.eigen_real = op2.add_data_parameter(data, 'eigen_real', b'f', 14, False)
 
         #: Natural eigenvalue - imaginary part
-        op2.eigen_imag = op2.add_data_parameter(data, 'eigen_imag', b'i', 15, False)
+        #op2.eigen_imag = op2.add_data_parameter(data, 'eigen_imag', b'f', 15, False)
 
         #: Natural frequency
         op2.freq = op2.add_data_parameter(data, 'freq', b'f', 16, False)
@@ -499,6 +501,7 @@ class ONR:
                     #obj.dt_temp = dt
                 return nelements * ntotal
             #itime = obj.itime #// obj.nelement_types
+            #op2.show_data(data, types='if')
 
             obj = op2.obj
             itime = obj.itime
@@ -508,6 +511,9 @@ class ONR:
                 op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
                 op2.binary_debug.write('  #elementi = [eid_device, energy, percent, density]\n')
                 op2.binary_debug.write('  nelements=%i\n' % nelements)
+
+            if op2.is_optistruct:
+                op2.use_vector = False
 
             if op2.use_vector and op2.sort_method == 1: # and op2.is_sort1:
                 n = nelements * ntotal
@@ -521,7 +527,7 @@ class ONR:
                 #if obj.itime == 0:
                 ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nelements, 4)
                 eids = ints[:, 0] // 10
-                assert eids.min() > 0, f'etype={self.element_name} isubtable={self.isubtable} eids.min()={eids.min()}'
+                assert eids.min() > 0, f'etype={element_name} isubtable={op2.isubtable} eids.min()={eids.min()}'
                 obj.element[itime, ielement:ielement2] = eids
 
                 #[energy, percent, density]
@@ -529,22 +535,8 @@ class ONR:
                 obj.itotal2 = itotal2
                 obj.ielement = ielement2
             else:
-                fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'3f', self.size)
-                struct1 = Struct(fmt)
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
-
-                    out = struct1.unpack(edata)
-                    (eid_device, energy, percent, density) = out
-                    if op2.sort_method == 1:
-                        eid = eid_device // 10
-                    else:
-                        eid = op2.nonlinear_factor
-                        dt = eid_device
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
-                    op2.obj.add_sort1(dt, eid, energy, percent, density)
-                    n += ntotal
+                n = real_strain_energy_4(op2, data, op2.sort_method,
+                                         self.size, n, ntotal, nelements, dt)
         elif op2.format_code == 1 and op2.num_wide == 5:
             assert op2.cvalres in [0, 1, 2], op2.cvalres # 0??
             ntotal = 20
@@ -589,16 +581,8 @@ class ONR:
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(op2._endian + b'8s3f')
-                for unused_i in range(nnodes):
-                    edata = data[n:n+20]
-                    out = s.unpack(edata)
-                    (word, energy, percent, density) = out
-                    word = word.strip()
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('  eid/word=%r; %s\n' % (word, str(out)))
-                    obj.add_sort1(dt, word, energy, percent, density)
-                    n += ntotal
+                n = complex_strain_energy_4(op2, data, op2.sort_method,
+                                            self.size, n, ntotal, nelements, dt)
         elif op2.format_code in [2, 3] and op2.num_wide == 5:
             #ELEMENT-ID   STRAIN-ENERGY (MAG/PHASE)  PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
             #    5         2.027844E-10 /   0.0            1.2581            2.027844E-09
@@ -732,3 +716,96 @@ class ONR:
             return op2._not_implemented_or_skip(data, ndata, msg)
             #raise NotImplementedError(op2.code_information())
         return n
+
+def real_strain_energy_4(op2: OP2,
+                         data: bytes,
+                         sort_method: int,
+                         size: int,
+                         n: int,
+                         ntotal: int,
+                         nelements: int,
+                         dt) -> int:
+    """
+    (eid_device       eid energy percent  density)
+    (11                 1 0.0114 0.1983   0.01147) typical
+    ( 0                 0      0      0        -1) optistruct - final
+    (1000000000 100000000    sum    sum       NaN) nx/msc     - final
+
+    """
+    fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'3f', size)
+    struct1 = Struct(fmt)
+    obj = op2.obj  # type: RealStrainEnergyArray
+
+    if op2.is_optistruct:
+        fmt2 = mapfmt(op2._endian + op2._analysis_code_fmt + b'2f i', size)
+        struct2 = Struct(fmt2)
+
+        edata = data[n:n+ntotal]
+        sum_energy = 0.
+        sum_percent = 0.
+        for unused_i in range(nelements-1):
+            edata = data[n:n+ntotal]
+
+            out = struct1.unpack(edata)
+            (eid_device, energy, percent, density) = out
+            if sort_method == 1:
+                eid = eid_device // 10
+            else:
+                eid = op2.nonlinear_factor
+                dt = eid_device
+            #print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} energy={energy:g} percent={percent:g} density={density:g}')
+            if op2.is_debug_file:
+                op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+            sum_energy += energy
+            sum_percent += percent
+            obj.add_sort1(dt, eid, energy, percent, density)
+            n += ntotal
+            edata = data[n:n+ntotal]
+
+        out = struct2.unpack(edata)
+        (eid_device, energy, percent, density) = out
+        assert eid_device == 0, eid_device
+        if sort_method == 1:
+            eid = eid_device // 10
+        else:
+            raise NotImplementedError(sort_method)
+            #eid = op2.nonlinear_factor
+            #dt = eid_device
+        #print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} energy={energy:g} percent={percent:g} density={density:g}')
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+
+        eid = 100000000
+        obj.add_sort1(dt, eid, sum_energy, sum_percent, np.nan)
+        n += ntotal
+    else:
+        for unused_i in range(nelements):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            (eid_device, energy, percent, density) = out
+            if sort_method == 1:
+                eid = eid_device // 10
+            else:
+                eid = op2.nonlinear_factor
+                dt = eid_device
+            #print(f'adding dt={dt:g} eid_device={eid_device} eid={eid} energy={energy} percent={percent:g} density={density:g}')
+            if op2.is_debug_file:
+                op2.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+            obj.add_sort1(dt, eid, energy, percent, density)
+            n += ntotal
+    return n
+
+def complex_strain_energy_4(op2, data, sort_method,
+                            size, n, ntotal, nnodes, dt):
+    obj = op2.obj  # type: ComplexStrainEnergyArray
+    s = Struct(op2._endian + b'8s3f')
+    for unused_i in range(nnodes):
+        edata = data[n:n+20]
+        out = s.unpack(edata)
+        (word, energy, percent, density) = out
+        word = word.strip()
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid/word=%r; %s\n' % (word, str(out)))
+        obj.add_sort1(dt, word, energy, percent, density)
+        n += ntotal
+    return n

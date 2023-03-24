@@ -1,6 +1,5 @@
 from math import sqrt
 from struct import pack
-from typing import Tuple, List
 
 import numpy as np
 
@@ -34,7 +33,7 @@ class RealEigenvalues(BaseScalarObject):
     def __eq__(self, table):  # pragma: no cover
         return True
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         msg = []
         neigenvalues = len(self.extraction_order)
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__,
@@ -64,7 +63,7 @@ class RealEigenvalues(BaseScalarObject):
         self.generalized_mass[imode] = gen_mass
         self.generalized_stiffness[imode] = gen_stiffness
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['eigenvalue', 'radians', 'cycle', 'generalized_mass', 'generalized_stiffness']
         return headers
 
@@ -304,7 +303,7 @@ class RealEigenvalues(BaseScalarObject):
                 mode_num, extract_order, eigenvalue, radian, cycle, gen_m, gen_k)
         return msg
 
-    def Mhh_Khh(self, diag: bool=False) -> Tuple[np.ndarray, np.ndarray]:
+    def Mhh_Khh(self, diag: bool=False) -> tuple[np.ndarray, np.ndarray]:
         isort = np.argsort(self.eigenvalues)
         Mhh = self.generalized_mass[isort]
         Khh = self.eigenvalues[isort]
@@ -395,7 +394,7 @@ class ComplexEigenvalues(BaseScalarObject):
     def __eq__(self, table):  # pragma: no cover
         return True
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         neigenvalues = len(self.extraction_order)
         msg = []
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues))
@@ -423,7 +422,7 @@ class ComplexEigenvalues(BaseScalarObject):
         for imode, line in enumerate(data):
             self.add_op2_line(line, imode)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['eigenvalue', 'frequency', 'damping']
         return headers
 
@@ -673,7 +672,7 @@ class BucklingEigenvalues(BaseScalarObject):
     def __eq__(self, table):  # pragma: no cover
         return True
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         neigenvalues = len(self.extraction_order)
         msg = []
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues))
@@ -734,7 +733,7 @@ class BucklingEigenvalues(BaseScalarObject):
         self.data_frame = df1.join([df2])
         #print(self.data_frame)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['eigenvalue', 'radians', 'cycles', 'generalized_mass', 'generalized_stiffness']
         return headers
 

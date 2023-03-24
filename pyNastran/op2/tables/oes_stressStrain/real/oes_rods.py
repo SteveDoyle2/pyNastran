@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -162,7 +161,7 @@ class RealRodArray(OES_Object):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
         element = zeros(nelements, dtype=idtype)
 
         #[axial, torsion, SMa, SMt]
@@ -246,6 +245,7 @@ class RealRodArray(OES_Object):
         return True
 
     def add_sort1(self, dt, eid, axial, SMa, torsion, SMt):
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         #if self.itime == 0:
         #print('itime=%s eid=%s' % (self.itime, eid))
@@ -253,10 +253,10 @@ class RealRodArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [axial, SMa, torsion, SMt]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -449,7 +449,7 @@ class RealBushStressArray(RealRodArray, StressObject):
         RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 
@@ -473,7 +473,7 @@ class RealRodStressArray(RealRodArray, StressObject):
         RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 
@@ -493,7 +493,7 @@ class RealRodStrainArray(RealRodArray, StrainObject):
         RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 

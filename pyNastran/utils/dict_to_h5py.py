@@ -496,7 +496,7 @@ def _cast_array(h5_result_attr) -> Optional[Any]:
         #out = out.decode(encoding)
     return out
 
-def cast_strings(group, encoding: str) -> List[str]:
+def cast_strings(group, encoding: str) -> list[str]:
     bytes_list = _cast(group)
     str_list = [bytesi.decode(encoding) for bytesi in bytes_list]
     return str_list

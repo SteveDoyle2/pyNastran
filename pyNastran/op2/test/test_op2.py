@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from traceback import print_exc
-from typing import Tuple, List, Dict, Optional, Any
+from typing import Optional, Any
 
 import numpy as np
 
@@ -33,7 +33,7 @@ except ImportError:
 #warnings.filterwarnings('error')
 #warnings.filterwarnings('error', category=UnicodeWarning)
 
-def parse_table_names_from_f06(f06_filename: str) -> List[str]:
+def parse_table_names_from_f06(f06_filename: str) -> list[str]:
     """gets the op2 names from the f06"""
 
     marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
@@ -50,8 +50,9 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
                       write_bdf: bool=False, write_f06: bool=True,
                       delete_f06: bool=True, delete_op2: bool=True, delete_hdf5: bool=True,
                       delete_debug_out: bool=True, build_pandas: bool=True, write_op2: bool=False,
-                      write_hdf5: bool=True, debug: bool=True, skip_files: Optional[List[str]]=None,
-                      exclude: Optional[str]=None,
+                      write_hdf5: bool=True, debug: bool=True, skip_files: Optional[list[str]]=None,
+                      include_results: Optional[str]=None,
+                      exclude_results: Optional[str]=None,
                       stop_on_failure: bool=False, nstart: int=0, nstop: int=1000000000,
                       short_stats: bool=False, binary_debug: bool=False,
                       compare: bool=True, quiet: bool=False, dev: bool=True, xref_safe: bool=False):
@@ -100,7 +101,8 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
                                      delete_debug_out=delete_debug_out,
                                      build_pandas=build_pandas,
                                      write_hdf5=write_hdf5,
-                                     exclude=exclude,
+                                     include_results=include_results,
+                                     exclude_results=exclude_results,
                                      short_stats=short_stats,
                                      subcases=subcases, debug=debug,
                                      stop_on_failure=stop_on_failure,
@@ -133,7 +135,9 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             delete_f06: bool=False, delete_op2: bool=False, delete_hdf5: bool=False,
             delete_debug_out: bool=False,
             build_pandas: bool=True,
-            subcases: Optional[str]=None, exclude: Optional[str]=None,
+            subcases: Optional[str]=None,
+            include_results: Optional[str]=None,
+            exclude_results: Optional[str]=None,
             short_stats: bool=False, compare: bool=True,
             debug: bool=False, log: Any=None,
             binary_debug: bool=False, quiet: bool=False,
@@ -141,7 +145,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             dev: bool=False, xref_safe: bool=False,
             post: Any=None, load_as_h5: bool=False,
             is_testing: bool=False,
-            name: str='') -> Tuple[OP2, bool]:
+            name: str='') -> tuple[OP2, bool]:
     """
     Runs an OP2
 
@@ -190,10 +194,14 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         deletes the OP2 (assumes write_op2 is True)
     delete_hdf5 : bool; default=False
         deletes the HDF5 (assumes write_hdf5 is True)
-    subcases : List[int, ...]; default=None
+    subcases : list[int, ...]; default=None
         limits subcases to specified values; default=None -> no limiting
-    exclude : List[str, ...]; default=None
+    include_results : list[str, ...]; default=None
         limits result types; (remove what's listed)
+        include_results/exclude_results are exclusive
+    exclude_results : list[str, ...]; default=None
+        limits result types; (remove what's listed)
+        include_results/exclude_results are exclusive
     short_stats : bool; default=False
         print a short version of the op2 stats
     compare : bool
@@ -234,8 +242,6 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     op2_nv = None
     if subcases is None:
         subcases = []
-    if exclude is None:
-        exclude = []
     if isinstance(is_sort2, bool):
         sort_methods = [is_sort2]
     else:
@@ -296,8 +302,17 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     if subcases:
         op2.set_subcases(subcases)
         op2_nv.set_subcases(subcases)
-    op2.remove_results(exclude)
-    op2_nv.remove_results(exclude)
+
+
+    op2.include_exclude_results(
+        exclude_results=exclude_results,
+        include_results=include_results)
+    op2_nv.include_exclude_results(
+        exclude_results=exclude_results,
+        include_results=include_results)
+
+    #op2.remove_results(exclude)
+    #op2_nv.remove_results(exclude)
 
     try:
         #op2.read_bdf(op2.bdf_filename, includeDir=None, xref=False)
@@ -497,7 +512,7 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename: str,
                 raise
     #os.remove(bdf_filename)
 
-def get_test_op2_data(argv=None) -> Dict[str, str]:
+def get_test_op2_data(argv=None) -> dict[str, str]:
     if argv is None:
         argv = sys.argv[1:]  # same as argparse
         #print('get_inputs; argv was None -> %s' % argv)
@@ -552,6 +567,7 @@ def get_test_op2_data(argv=None) -> Dict[str, str]:
     nasa95 = '|--nasa95' if is_dev else ''
     version = f'[--nx|--autodesk{nasa95}]'
     options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
+    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5]'
     if is_dev:
         line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
     else:
@@ -641,7 +657,7 @@ def get_test_op2_data(argv=None) -> Dict[str, str]:
     x = 1
     return data
 
-def get_test_op2_data(argv) -> Dict[str, str]:
+def get_test_op2_data(argv) -> dict[str, str]:
     """defines the docopt interface"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
@@ -651,6 +667,7 @@ def get_test_op2_data(argv) -> Dict[str, str]:
     nasa95 = '|--nasa95' if is_dev else ''
     version = f'[--nx|--optistruct|--autodesk{nasa95}]'
     options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
+    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5]'
     if is_dev:
         line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
     else:
@@ -690,6 +707,7 @@ def get_test_op2_data(argv) -> Dict[str, str]:
     msg += "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
     msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
+    msg += "  -i <arg>, --include    Include specific results\n"
     msg += "  --post POST            Set the PARAM,POST flag\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
 
@@ -763,7 +781,7 @@ def remove_file(filename):
         pass
 
 
-def set_versions(op2s: List[OP2],
+def set_versions(op2s: list[OP2],
                  is_nx: bool, is_optistruct: bool,
                  is_autodesk: bool, is_nasa95: bool,
                  post: int=0, is_testing: bool=False) -> None:
@@ -824,7 +842,8 @@ def main(argv=None, show_args: bool=True) -> None:
             is_mag_phase=data['is_mag_phase'],
             build_pandas=data['pandas'],
             subcases=data['subcase'],
-            exclude=data['exclude'],
+            include_results=data['include'],
+            exclude_results=data['exclude'],
             debug=not data['quiet'],
             binary_debug=data['binarydebug'],
             is_sort2=data['is_sort2'],
@@ -858,7 +877,8 @@ def main(argv=None, show_args: bool=True) -> None:
             is_mag_phase=data['is_mag_phase'],
             build_pandas=data['pandas'],
             subcases=data['subcase'],
-            exclude=data['exclude'],
+            include_results=data['include'],
+            exclude_results=data['exclude'],
             short_stats=data['short_stats'],
             debug=not data['quiet'],
             binary_debug=data['binarydebug'],

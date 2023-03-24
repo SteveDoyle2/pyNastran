@@ -1,4 +1,4 @@
-from typing import Tuple, List, Any
+from typing import Any
 import numpy as np
 import vtk
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk # , numpy_to_vtkIdTypeArray
@@ -7,7 +7,7 @@ from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk # , numpy_to_vtkIdTy
 class Table:
     def __init__(self,
                  name: str,
-                 itime: int, iresult: int, iresults: List[int],
+                 itime: int, iresult: int, iresults: list[int],
                  domain: int, position: int, length: int):
         # unique name
         self.name = name
@@ -27,7 +27,7 @@ class Table:
 class RealVectorTable(Table):
     def __init__(self,
                  name: str,
-                 itime: int, iresult: int, iresults: List[int],
+                 itime: int, iresult: int, iresults: list[int],
                  domain: int, position: int, length: int,
                  ID, TX, TY, TZ, RX, RY, RZ, DOMAIN,
                  location: str):
@@ -46,10 +46,10 @@ class RealVectorTable(Table):
         self.RZ = RZ
         self.DOMAIN = DOMAIN
 
-    def headers(self) -> List[str]:
+    def headers(self) -> list[str]:
         return ['TX', 'TY', 'TZ', 'RX', 'RY', 'RZ']
 
-    def get_results(self) -> Tuple[List[str], List[Any]]:
+    def get_results(self) -> tuple[list[str], list[Any]]:
         txyz = np.stack([self.TX, self.TY, self.TZ], axis=1)
         txyz_array = numpy_to_vtk(txyz, deep=1, array_type=None)
         return [self.name], [txyz_array]
@@ -68,7 +68,7 @@ class RealVectorTable(Table):
 class RealVectorTableOptistruct(Table):
     def __init__(self,
                  name: str,
-                 itime: int, iresult: int, iresults: List[int],
+                 itime: int, iresult: int, iresults: list[int],
                  domain: int, position: int, length: int,
                  ID, VALUE, DOMAIN: int,
                  location: str):
@@ -84,7 +84,7 @@ class RealVectorTableOptistruct(Table):
         self.DOMAIN = DOMAIN
         assert self.location == 'node', self.location
 
-    def get_results(self) -> List[Any]:
+    def get_results(self) -> list[Any]:
         print(self)
         #txyz = self.VALUE[:, :3].copy()
         txyz = self.VALUE
@@ -92,7 +92,7 @@ class RealVectorTableOptistruct(Table):
         txyz_array = numpy_to_vtk(txyz, deep=1, array_type=None)
         return [self.name], [txyz_array]
 
-    def headers(self) -> List[str]:
+    def headers(self) -> list[str]:
         return ['TX', 'TY', 'TZ', 'RX', 'RY', 'RZ']
 
     def __repr__(self) -> str:
@@ -109,7 +109,7 @@ class RealVectorTableOptistruct(Table):
 class RealStrainEnergyOptistruct(Table):
     def __init__(self,
                  name: str,
-                 itime: int, iresult: int, iresults: List[int],
+                 itime: int, iresult: int, iresults: list[int],
                  domain: int, position: int, length: int,
                  EID, ENERGY, PERCENT, DENSITY, DOMAIN: int,
                  location: str):
@@ -130,7 +130,7 @@ class RealStrainEnergyOptistruct(Table):
         self.DOMAIN = DOMAIN
         assert self.location == 'element', self.location
 
-    def get_results(self) -> List[Any]:
+    def get_results(self) -> list[Any]:
         print(self)
         isort = self.eids.argsort()
         eids_sorted = self.eids[isort]
@@ -144,7 +144,7 @@ class RealStrainEnergyOptistruct(Table):
                    for arrayi in (self.ENERGY, self.PERCENT, self.DENSITY)]
         return names, results
 
-    def headers(self) -> List[str]:
+    def headers(self) -> list[str]:
         return ['Energy', 'Percent', 'Density']
 
     def __repr__(self) -> str:
@@ -182,7 +182,7 @@ class StressTensor3D:
 
 class ShellStressTable:
     def __init__(self,
-                 itime: int, iresult: int, iresults: List[int],
+                 itime: int, iresult: int, iresults: list[int],
                  domain: int, position: int, length: int,
                  EID,
                  FD1, X1, Y1, XY1,

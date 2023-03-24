@@ -57,7 +57,7 @@ def read_plotel(name: str, group: h5py._hl.dataset.Dataset, geom_model: BDF) -> 
 
 
 SolidElementCallable = Callable[
-    [int, int, List[int], str],
+    [int, int, list[int], str],
     Any,
 ]
 def _read_solid(name: str, group: h5py._hl.dataset.Dataset, geom_model: BDF,

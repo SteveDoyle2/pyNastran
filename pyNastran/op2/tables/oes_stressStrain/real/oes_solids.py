@@ -2,7 +2,7 @@
 import warnings
 from itertools import count
 from struct import pack
-from typing import Tuple, List, Any
+from typing import Any
 
 import numpy as np
 from numpy import zeros, where, searchsorted
@@ -149,7 +149,7 @@ class RealSolidArray(OES_Object):
         #self.ntotal = ntotal
         #self.nelements = nelements
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
 
         # TODO: could be more efficient by using nelements for cid
         element_node = zeros((ntotal, 2), dtype=idtype)
@@ -488,10 +488,10 @@ class RealSolidArray(OES_Object):
             raise NotImplementedError(f'element_name={self.element_name} self.element_type={self.element_type}')
         return nnodes
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -799,7 +799,7 @@ class RealSolidStressArray(RealSolidArray, StressObject):
         RealSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         if self.is_von_mises:
             von_mises = 'von_mises'
         else:
@@ -813,7 +813,7 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
         RealSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         if self.is_von_mises:
             von_mises = 'von_mises'
         else:
@@ -871,7 +871,7 @@ def _get_f06_header_nnodes(self: RealSolidArray, is_mag_phase=True):
 def calculate_principal_components(ntimes: int, nelements_nnodes: int,
                                    oxx, oyy, ozz,
                                    txy, tyz, txz,
-                                   is_stress: bool) -> Tuple[Any, Any, Any]:
+                                   is_stress: bool) -> tuple[Any, Any, Any]:
     """
     TODO: scale by 2 for strain
     """
@@ -909,7 +909,7 @@ def calculate_principal_eigenvectors5(ntimes: int, nelements: int, nnodes: int,
 
     TODO: scale by 2 for strain
     """
-    a_matrix = np.empty((ntimes, nelements, nnodes, 3, 3), dtype=dtype)
+    a_matrix = np.empty((ntimes, nelements, nnodes, 3, 3), dtype=self.analysis_fmt)
 
     # we're only filling the lower part of the A matrix
     a_matrix[:, :, :, 0, 0] = oxx
@@ -945,8 +945,9 @@ def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
         the eigenvalues
     eigenvectors : (ntimes, nnodes, 3, 3)
         the eigenvectors
+
     """
-    a_matrix = np.empty((ntimes, nnodes, 3, 3), dtype=dtype)
+    a_matrix = np.zeros((ntimes, nnodes, 3, 3), dtype=dtype)
 
     # we're only filling the lower part of the A matrix
     try:
@@ -959,10 +960,15 @@ def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
     except Exception:
         raise RuntimeError(f'a_matrix.shape={a_matrix.shape} oxx.shape={oxx.shape}')
 
-    # _lambda: ntimes, nnodes, (3)
-    # v:       ntimes, nnodes, (3, 3)
-    (_lambda, v) = eigh(a_matrix)  # a hermitian matrix is a symmetric-real matrix
-    return _lambda, v
+    # eigenvalues:  ntimes, nnodes, (3)
+    # eigenvectors: ntimes, nnodes, (3, 3)
+    #try:
+    eigenvalues, eigenvectors = eigh(a_matrix)  # a hermitian matrix is a symmetric-real matrix
+    #except FloatingPointError:
+        #eigenvalues, eigenvectors = eigh(a_matrix.astype('float64'))
+        #eigenvalues = eigenvalues.astype('float32')
+        #eigenvectors = eigenvectors.astype('float32')
+    return eigenvalues, eigenvectors
 
 
 def calculate_ovm_shear(oxx, oyy, ozz,

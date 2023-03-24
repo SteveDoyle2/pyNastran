@@ -3,7 +3,7 @@ import copy
 from datetime import date
 from collections import defaultdict
 from itertools import count
-from typing import List, Dict, Tuple, Set, Union, Any
+from typing import Set, Union, Any
 
 import numpy as np
 import scipy as sp
@@ -185,9 +185,9 @@ class Solver:
         loads, scales, is_grav = model.get_reduced_loads(
             load_id, scale=1., consider_load_combinations=True,
             skip_scale_factor0=False, stop_on_failure=True, msg='')
-        #loads : List[loads]
+        #loads : list[loads]
             #a series of load objects
-        #scale_factors : List[float]
+        #scale_factors : list[float]
             #the associated scale factors
         #is_grav : bool
             #is there a gravity card
@@ -790,7 +790,7 @@ class Solver:
                            node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,
                            obj: Union[RealSPCForcesArray],
                            f06_request_name: str,
-                           table_name: str, slot: Dict[Any, RealSPCForcesArray],
+                           table_name: str, slot: dict[Any, RealSPCForcesArray],
                            ngrid: int, ndof_per_grid: int,
                            title: str='', subtitle: str='', label: str='',
                            idtype: str='int32', fdtype: str='float32',
@@ -1008,7 +1008,7 @@ class Solver:
         str(idtype)
 
 
-def partition_matrix(matrix, sets) -> Dict[Tuple[str, str], NDArrayNNfloat]:
+def partition_matrix(matrix, sets) -> dict[tuple[str, str], NDArrayNNfloat]:
     """partitions a matrix"""
     matrices = {}
     for aname, aset in sets:
@@ -1016,7 +1016,7 @@ def partition_matrix(matrix, sets) -> Dict[Tuple[str, str], NDArrayNNfloat]:
             matrices[aname + bname] = matrix[aset, :][:, bset]
     return matrices
 
-def partition_vector(vector, sets, fdtype: str='float64') -> List[NDArrayNfloat]:  # pragma: no cover
+def partition_vector(vector, sets, fdtype: str='float64') -> list[NDArrayNfloat]:  # pragma: no cover
     """partitions a vector"""
     vectors = []
     for unused_aname, aset in sets:
@@ -1028,7 +1028,7 @@ def partition_vector(vector, sets, fdtype: str='float64') -> List[NDArrayNfloat]
     return vectors
 
 def partition_vector2(vector, sets,
-                      fdtype: str='float64') -> Tuple[NDArrayNfloat, NDArrayNfloat]:
+                      fdtype: str='float64') -> tuple[NDArrayNfloat, NDArrayNfloat]:
     """partitions a vector"""
     assert len(sets) == 2, sets
     #vectors = partition_vector(vector, sets, fdtype=fdtype)
@@ -1038,7 +1038,7 @@ def partition_vector2(vector, sets,
     return vectors
 
 def partition_vector3(vector, sets,
-                      fdtype: str='float64') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
+                      fdtype: str='float64') -> tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """partitions a vector"""
     assert len(sets) == 3, sets
     #vectors = partition_vector(vector, sets, fdtype=fdtype)
@@ -1253,7 +1253,7 @@ def _get_node_gridtype(model: BDF, idtype: str='int32') -> NDArrayN2int:
     node_gridtype_array = np.array(node_gridtype, dtype=idtype)
     return node_gridtype_array
 
-def get_aset(model: BDF) -> Set[Tuple[int, int]]:
+def get_aset(model: BDF) -> Set[tuple[int, int]]:
     aset_map = set()
     for aset in model.asets:
         if aset.type == 'ASET1':
@@ -1269,7 +1269,7 @@ def get_aset(model: BDF) -> Set[Tuple[int, int]]:
             raise NotImplementedError(aset)
     return aset_map
 
-def get_bset(model: BDF) -> Set[Tuple[int, int]]:
+def get_bset(model: BDF) -> Set[tuple[int, int]]:
     """creates the b-set"""
     bset_map = set()
     for bset in model.bsets:
@@ -1286,7 +1286,7 @@ def get_bset(model: BDF) -> Set[Tuple[int, int]]:
             raise NotImplementedError(bset)
     return bset_map
 
-def get_cset(model: BDF) -> Set[Tuple[int, int]]:
+def get_cset(model: BDF) -> Set[tuple[int, int]]:
     """creates the c-set"""
     cset_map = set()
     for cset in model.csets:
@@ -1303,7 +1303,7 @@ def get_cset(model: BDF) -> Set[Tuple[int, int]]:
             raise NotImplementedError(cset)
     return cset_map
 
-def get_omit_set(model: BDF) -> Set[Tuple[int, int]]:
+def get_omit_set(model: BDF) -> Set[tuple[int, int]]:
     """creates the o-set"""
     omit_set_map = set()
     for omit in model.omits:
@@ -1320,7 +1320,7 @@ def get_omit_set(model: BDF) -> Set[Tuple[int, int]]:
             raise NotImplementedError(omit)
     return omit_set_map
 
-def get_rset(model: BDF) -> Set[Tuple[int, int]]:
+def get_rset(model: BDF) -> Set[tuple[int, int]]:
     """creates the r-set"""
     rset_map = set()
     for rset in model.suport:
@@ -1335,7 +1335,7 @@ def get_rset(model: BDF) -> Set[Tuple[int, int]]:
                 rset_map.add((nid, int(compi)))
     return rset_map
 
-def get_qset(model: BDF) -> Set[Tuple[int, int]]:
+def get_qset(model: BDF) -> Set[tuple[int, int]]:
     """creates the q-set"""
     qset_map = set()
     for qset in model.qsets:
@@ -1920,7 +1920,7 @@ def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
     M0 = D.T @ Mbb @ D
     return reference_point, M0
 
-def dof_map_to_tr_set(dof_map, ndof: int) -> Tuple[NDArrayNbool, NDArrayNbool]:
+def dof_map_to_tr_set(dof_map, ndof: int) -> tuple[NDArrayNbool, NDArrayNbool]:
     """creates the translation/rotation sets"""
     trans_set = np.zeros(ndof, dtype='bool')
     rot_set = np.zeros(ndof, dtype='bool')
@@ -1931,7 +1931,7 @@ def dof_map_to_tr_set(dof_map, ndof: int) -> Tuple[NDArrayNbool, NDArrayNbool]:
             rot_set[idof] = True
     return trans_set, rot_set
 
-def ps_to_sg_set(ndof: int, ps: List[int]):
+def ps_to_sg_set(ndof: int, ps: list[int]):
     """creates the SPC on the GRID (PS-field) set, {sg}"""
     # all DOFs are initially assumed to be active
     sg_set = np.ones(ndof, dtype='bool')

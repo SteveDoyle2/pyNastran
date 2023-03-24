@@ -5,7 +5,7 @@ defines readers for BDF objects in the OP2 EPT/EPTS table
 from __future__ import annotations
 from struct import unpack, Struct
 from functools import partial
-from typing import Tuple, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -193,7 +193,6 @@ class EPT:
 
             datai = data[n:n+8]
             desc_id, nwords = struct_2i.unpack(datai)
-            #print(desc_id, nwords)
             ndatai = 8 + nwords * 4
             word_bytes = data[n+8:n+ndatai]
             word = word_bytes.decode('ascii').rstrip()
@@ -850,24 +849,24 @@ class EPT:
             n += ntotal
 
             out = struct1.unpack(edata)
-            (pid, mid, group, beam_type, value) = out
+            (pid, mid, group, bar_type_bytes, value) = out
             if pid > 100000000 or pid < 1:
-                op2.log.debug("  pid=%s mid=%s group=%r beam_type=%r value=%s" % (
-                    pid, mid, group, beam_type, value))
+                op2.log.debug("  pid=%s mid=%s group=%r bar_type=%r value=%s" % (
+                    pid, mid, group, bar_type_bytes, value))
                 raise RuntimeError('bad parsing...')
 
-            beam_type = reshape_bytes_block_size(beam_type, size=size)
+            bar_type = reshape_bytes_block_size(bar_type_bytes, size=size)
             group = reshape_bytes_block_size(group, size=size)
-            data_in = [pid, mid, group, beam_type, value]
+            data_in = [pid, mid, group, bar_type, value]
 
-            expected_length = valid_types[beam_type]
+            expected_length = valid_types[bar_type]
             iformat = op2._endian + b'%if' % expected_length
 
             ndelta = expected_length * 4
             dims_nsm = list(unpack(iformat, data[n:n+ndelta]))
             data_in += dims_nsm
-            #print("  pid=%s mid=%s group=%r beam_type=%r value=%s dims_nsm=%s" % (
-                #pid, mid, group, beam_type, value, dims_nsm))
+            #print("  pid=%s mid=%s group=%r bar_type=%r value=%s dims_nsm=%s" % (
+                #pid, mid, group, bar_type, value, dims_nsm))
 
             # TODO why do i need the +4???
             #      is that for the nsm?
@@ -1389,7 +1388,7 @@ class EPT:
                                  #'PBUSH', self._add_op2_property)
         return n
 
-    def _read_pbush_nx_72(self, card_obj: PBUSH, data: bytes, n: int) -> Tuple[int, List[PBUSH]]:
+    def _read_pbush_nx_72(self, card_obj: PBUSH, data: bytes, n: int) -> tuple[int, list[PBUSH]]:
         """
         PBUSH(1402,14,37) - 18 fields
         legacy MSC/NX format
@@ -1419,7 +1418,7 @@ class EPT:
             n += ntotal
         return n, props
 
-    def _read_pbush_msc_92(self, card_obj: PBUSH, data: bytes, n: int) -> Tuple[int, List[PBUSH]]:
+    def _read_pbush_msc_92(self, card_obj: PBUSH, data: bytes, n: int) -> tuple[int, list[PBUSH]]:
         """PBUSH(1402,14,37) - 23 fields
 
         MSC 2005r2 to <MSC 2016
@@ -1446,7 +1445,7 @@ class EPT:
             n += ntotal
         return n, props
 
-    def _read_pbush_msc_96(self, card_obj: PBUSH, data: bytes, n: int) -> Tuple[int, List[PBUSH]]:
+    def _read_pbush_msc_96(self, card_obj: PBUSH, data: bytes, n: int) -> tuple[int, list[PBUSH]]:
         """PBUSH(1402,14,37) - 24 fields
 
         MSC 2016.1? to 2020
@@ -1473,7 +1472,7 @@ class EPT:
             n += ntotal
         return n, props
 
-    def _read_pbush_msc_108(self, card_obj: PBUSH, data: bytes, n: int) -> Tuple[int, List[PBUSH]]:
+    def _read_pbush_msc_108(self, card_obj: PBUSH, data: bytes, n: int) -> tuple[int, list[PBUSH]]:
         """
         PBUSH(1402,14,37) - 27 fields
         MSC 2021 to current
@@ -1896,7 +1895,7 @@ class EPT:
                 'PCOMP', self._add_op2_property)
         return n2
 
-    def _read_pcomp_64_bit(self, data: bytes, n: int) -> Tuple[int, List[PCOMP]]:
+    def _read_pcomp_64_bit(self, data: bytes, n: int) -> tuple[int, list[PCOMP]]:
         r"""
         PCOMP(2706,27,287) - the marker for Record 22
 
@@ -2024,7 +2023,7 @@ class EPT:
             props.append(prop)
         return n, props
 
-    def _read_pcomp_32_bit(self, data: bytes, n: int) -> Tuple[int, List[PCOMP]]:  # pragma: no cover
+    def _read_pcomp_32_bit(self, data: bytes, n: int) -> tuple[int, list[PCOMP]]:  # pragma: no cover
         """PCOMP(2706,27,287) - the marker for Record 22"""
         op2 = self.op2
         nproperties = 0

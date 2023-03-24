@@ -1,6 +1,4 @@
 from itertools import count
-from typing import List
-
 import numpy as np
 from numpy import zeros, searchsorted
 
@@ -67,7 +65,7 @@ class RealBar10NodesArray(OES_Object):
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
-        _times = zeros(self.ntimes, dtype=dtype)
+        _times = zeros(self.ntimes, dtype=self.analysis_fmt)
         element = zeros(self.ntotal, dtype='int32')
 
         #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
@@ -184,10 +182,10 @@ class RealBar10NodesArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -281,7 +279,7 @@ class RealBar10NodesStressArray(RealBar10NodesArray, StressObject):
         RealBar10NodesArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         #if self.is_fiber_distance:
             #fiber_dist = 'fiber_distance'
         #else:
@@ -309,7 +307,7 @@ class RealBar10NodesStrainArray(RealBar10NodesArray, StrainObject):
         RealBar10NodesArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         #if self.is_fiber_distance:
             #fiber_dist = 'fiber_distance'
         #else:

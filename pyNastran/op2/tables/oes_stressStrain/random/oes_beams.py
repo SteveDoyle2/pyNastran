@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from numpy import zeros
 
@@ -86,7 +84,7 @@ class RandomBeamArray(OES_Object):
             ntimes = self.ntotal
             ntotal = self.ntimes
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element_node = zeros((ntotal, 2), dtype='int32')
 
         # sxc, sxd, sxe, sxf
@@ -192,6 +190,7 @@ class RandomBeamArray(OES_Object):
 
     def add_sort2(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
         """unvectorized method for adding SORT2 transient data"""
+        assert self.is_sort2, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itotal = self.itime
         itime = self.itotal
@@ -200,10 +199,10 @@ class RandomBeamArray(OES_Object):
         self.data[itime, itotal, :] = [sxc, sxd, sxe, sxf]
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -302,7 +301,7 @@ class RandomBeamStressArray(RandomBeamArray, StressObject):
         RandomBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             #'grid', 'xxb',
             'sxc', 'sxd', 'sxe', 'sxf',
@@ -329,7 +328,7 @@ class RandomBeamStrainArray(RandomBeamArray, StrainObject):
         RandomBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = [
             #'grid', 'xxb',
             'sxc', 'sxd', 'sxe', 'sxf',

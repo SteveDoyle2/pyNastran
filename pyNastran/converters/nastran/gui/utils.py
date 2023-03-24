@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Tuple, List, Dict, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 import numpy as np
 
 from cpylog import properties as log_properties
@@ -8,7 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, CTRIA3, CTRIA6, CQUAD4, CQUAD8, CQUADR, CQUAD
 
 def get_shell_material_coord(element: Union[CTRIA3, CTRIA6, CTRIAR,
-                                            CQUAD4, CQUAD8, CQUADR, CQUAD]) -> Tuple[int, float]:
+                                            CQUAD4, CQUAD8, CQUADR, CQUAD]) -> tuple[int, float]:
     """
     used by:
      - CQUAD4, CQUADR, CQUAD8, CQUAD, CQUADX
@@ -39,9 +39,9 @@ def get_nastran_gui_layer_word(i: int, ilayer: int, is_pshell_pcomp: bool) -> st
             word += f'PCOMP: ilayer={ilayer:d}'
     return word
 
-def check_for_missing_control_surface_boxes(name: str, cs_box_ids: List[int],
-                                            box_id_to_caero_element_map: Dict[int, int],
-                                            log, store_msg: bool=False) -> Tuple[List[int], str]:
+def check_for_missing_control_surface_boxes(name: str, cs_box_ids: list[int],
+                                            box_id_to_caero_element_map: dict[int, int],
+                                            log, store_msg: bool=False) -> tuple[list[int], str]:
     """helper method for creating control surface"""
     boxes_to_show = []
     missing_boxes = []
@@ -83,13 +83,13 @@ def store_warning(log, store_msg: bool, msg: str) -> str:
     return out_msg
 
 
-def make_nid_map(nid_map: Dict[int, int], nids: List[int]) -> Dict[int, int]:
+def make_nid_map(nid_map: dict[int, int], nids: list[int]) -> dict[int, int]:
     """make the node map"""
     for i, nid in enumerate(nids):
         nid_map[nid] = i
     return nid_map
 
-def get_elements_nelements_unvectorized(model: BDF) -> Tuple[Any, int, List[Dict[int, Any]]]:
+def get_elements_nelements_unvectorized(model: BDF) -> tuple[Any, int, list[dict[int, Any]]]:
     nelements = len(model.elements)
     #eid_map = self.gui.eid_map
     elements = model.elements
@@ -110,7 +110,7 @@ def get_elements_nelements_unvectorized(model: BDF) -> Tuple[Any, int, List[Dict
     return elements, nelements, superelements
 
 
-def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: int):
+def build_offset_normals_dims(model: BDF, eid_map: dict[int, int], nelements: int):
     normals = np.full((nelements, 3), np.nan, dtype='float32')
     offset = np.full(nelements, np.nan, dtype='float32')
     xoffset = np.full(nelements, np.nan, dtype='float32')
@@ -316,7 +316,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
         #ielement += 1
     return normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array
 
-def build_map_centroidal_result(model: BDF, nid_map: Dict[int, int],
+def build_map_centroidal_result(model: BDF, nid_map: dict[int, int],
                                 stop_on_failure: bool=True) -> None:
     """
     Sets up map_centroidal_result.  Used for:
@@ -338,7 +338,7 @@ def build_map_centroidal_result(model: BDF, nid_map: Dict[int, int],
             raise
         raise
 
-def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
+def _build_map_centroidal_result(model: BDF, nid_map: dict[int, int]) -> None:
     """
     Sets up map_centroidal_result.  Used for:
      - cutting plane

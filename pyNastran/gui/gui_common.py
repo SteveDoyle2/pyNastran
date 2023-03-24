@@ -3,7 +3,7 @@
 import os.path
 from math import ceil
 from collections import OrderedDict
-from typing import Tuple, List, Dict, Optional, Callable, Any
+from typing import Optional, Callable, Any
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -229,8 +229,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             enter_data.clear()
 
     def set_tools(self,
-                  tools: List[Tuple[str, str, str, Optional[str], str, Callable]]=None,
-                  checkables: Optional[Dict[str, bool]]=None):
+                  tools: list[tuple[str, str, str, Optional[str], str, Callable]]=None,
+                  checkables: Optional[dict[str, bool]]=None):
         """Creates the GUI tools"""
         if checkables is None:
             checkables = {
@@ -392,7 +392,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #print('qkey_event =', qkey_event.key())
         super(GuiCommon, self).keyPressEvent(qkey_event)
 
-    def _create_menu_bar(self, menu_bar_order: Optional[List[str]]=None):
+    def _create_menu_bar(self, menu_bar_order: Optional[list[str]]=None):
         self.menu_bar_oder = menu_bar_order
         if menu_bar_order is None:
             menu_bar_order = ['menu_file', 'menu_view', 'menu_window', 'menu_help']
@@ -531,7 +531,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.actions['show_error'].setChecked(self.settings.show_error)
 
 
-    def _populate_menu(self, menu_items: Dict[str, Tuple[Any, Any]],
+    def _populate_menu(self, menu_items: dict[str, tuple[Any, Any]],
                        actions=None) -> None:
         """populate menus and toolbar"""
         assert isinstance(menu_items, dict), menu_items
@@ -1847,18 +1847,18 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         ----------
         gif_filename : str
             path to the output gif & png folder
-        icases_fringe/disp/vector : int / List[int]
+        icases_fringe/disp/vector : int / list[int]
             the result case to plot the deflection for
-        scales : List[float]
-            List[float] : the deflection scale factors; true scale
-        phases : List[float]; default=None
-            List[float] : the phase angles (degrees)
+        scales : list[float]
+            list[float] : the deflection scale factors; true scale
+        phases : list[float]; default=None
+            list[float] : the phase angles (degrees)
             None -> animate scale
         max_value : float; default=None
             the max value on the plot
         min_value : float; default=None
             the min value on the plot
-        isteps : List[int]
+        isteps : list[int]
             the png file numbers (let's you pick a subset of images)
             useful for when you press ``Step``
         time : float; default=2.0
@@ -2001,17 +2001,17 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         ----------
         model_name : str
             the name of the model; unused
-        form : List[pairs]
+        form : list[pairs]
             There are two types of pairs
-            header_pair : (str, None, List[pair])
+            header_pair : (str, None, list[pair])
                 defines a heading
                 str : the sidebar label
                 None : flag that there are sub-results
-                List[pair] : more header/result pairs
-            result_pair : (str, int, List[])
+                list[pair] : more header/result pairs
+            result_pair : (str, int, list[])
                 str : the sidebar label
                 int : the case id
-                List[] : flag that there are no sub-results
+                list[] : flag that there are no sub-results
         cases : dict[case_id] = result
             case_id : int
                 the case id

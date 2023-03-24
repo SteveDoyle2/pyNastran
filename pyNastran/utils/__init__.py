@@ -199,7 +199,7 @@ def __object_attr(obj, mode, keys_to_skip, attr_type, filter_properties: bool=Fa
 
 
 def object_methods(obj: Any, mode: str='public',
-                   keys_to_skip: Optional[List[str]]=None) -> List[str]:
+                   keys_to_skip: Optional[list[str]]=None) -> list[str]:
     """
     List the names of methods of a class as strings. Returns public methods
     as default.
@@ -214,20 +214,21 @@ def object_methods(obj: Any, mode: str='public',
         * "private" - names that begin with single underscore
         * "both" - private and public
         * "all" - all methods that are defined for the object
-    keys_to_skip : List[str]; default=None -> []
+    keys_to_skip : list[str]; default=None -> []
         names to not consider to avoid deprecation warnings
 
     Returns
     -------
-    method : List[str]
+    method : list[str]
         sorted list of the names of methods of a given type
         or None if the mode is wrong
 
     """
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
-def object_stats(obj: Any, mode: str='public',
-                 keys_to_skip: Optional[List[str]]=None,
+def object_stats(obj: Any,
+                 mode: str='public',
+                 keys_to_skip: Optional[list[str]]=None,
                  filter_properties: bool=False) -> str:
     """Prints out an easy to read summary of the object"""
     msg = '%s:\n' % obj.__class__.__name__
@@ -243,8 +244,8 @@ def object_stats(obj: Any, mode: str='public',
     return msg
 
 def object_attributes(obj: Any, mode: str='public',
-                      keys_to_skip: Optional[List[str]]=None,
-                      filter_properties: bool=False) -> List[str]:
+                      keys_to_skip: Optional[list[str]]=None,
+                      filter_properties: bool=False) -> list[str]:
     """
     List the names of attributes of a class as strings. Returns public
     attributes as default.
@@ -259,14 +260,14 @@ def object_attributes(obj: Any, mode: str='public',
         * 'private' - names that begin with single underscore
         * 'both' - private and public
         * 'all' - all attributes that are defined for the object
-    keys_to_skip : List[str]; default=None -> []
+    keys_to_skip : list[str]; default=None -> []
         names to not consider to avoid deprecation warnings
     filter_properties: bool: default=False
         filters the @property objects
 
     Returns
     -------
-    attribute_names : List[str]
+    attribute_names : list[str]
         sorted list of the names of attributes of a given type or None
         if the mode is wrong
 
@@ -291,7 +292,7 @@ def object_attributes(obj: Any, mode: str='public',
     #return failed_list
 
 
-def int_version(name: str, version: str) -> List[int]:
+def int_version(name: str, version: str) -> list[int]:
     """splits the version into a tuple of integers"""
     sversion = version.split('-')[0].split('+')[0].split('a')[0].split('b')[0].split('rc')[0]
     #numpy
@@ -313,7 +314,7 @@ def int_version(name: str, version: str) -> List[int]:
 
 
 def deprecated(old_name: str, new_name: str, deprecated_version: str,
-               levels: Optional[List[int]]=None) -> None:
+               levels: Optional[list[int]]=None) -> None:
     """
     Throws a deprecation message and crashes if past a specific version.
 
@@ -325,7 +326,7 @@ def deprecated(old_name: str, new_name: str, deprecated_version: str,
         the new function name
     deprecated_version : float
         the version the method was first deprecated in
-    levels : List[int]
+    levels : list[int]
         the deprecation levels to show
         [1, 2, 3] shows 3 levels up from this function (good for classes)
         None : ???

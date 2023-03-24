@@ -161,6 +161,7 @@ class LoadCombination(BaseCard):
             'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2', 'PLOADX1', 'LOAD',
             'RFORCE', 'RFORCE1', #'RFORCE2'
             'ACCEL', 'ACCEL1', 'SLOAD', 'ACSRCE',
+            'QBDY3',
         ]
         for loads in self.load_ids_ref:
             load_idsi = []

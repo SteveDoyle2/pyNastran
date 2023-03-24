@@ -4,7 +4,6 @@ The highlight menu handles:
  - Preferences
 
 """
-from typing import Tuple, List
 import numpy as np
 
 from qtpy import QtGui
@@ -459,7 +458,7 @@ def create_node_labels(point_id_filter: vtk.vtkIdFilter,
 def create_highlighted_actors(gui, grid: vtk.vtkUnstructuredGrid,
                               all_nodes=None, nodes=None, set_node_scalars: bool=True,
                               all_elements=None, elements=None, set_element_scalars: bool=True,
-                              add_actors: bool=False) -> List[vtk.vtkLODActor]:
+                              add_actors: bool=False) -> list[vtk.vtkLODActor]:
     """creates nodes & element highlighted objects"""
     actors = []
     nnodes = 0
@@ -511,7 +510,7 @@ def check_float(cell):
 
 def create_color_menu(parent, win_parent, title: str,
                       color_edit: QPushButtonColor,
-                      rgb_color_ints: List[int],
+                      rgb_color_ints: list[int],
                       func_name: str):
     """helper method for ``on_background_color`` and ``on_background_color2``"""
     passed, rgb_color_ints, rgb_color_floats = _pop_color_dialog(
@@ -525,7 +524,7 @@ def create_color_menu(parent, win_parent, title: str,
 
 def _pop_color_dialog(parent,
                       color_edit: QPushButtonColor,
-                      rgb_color_ints: List[int], title: str) -> Tuple[bool, List[int], List[float]]:
+                      rgb_color_ints: list[int], title: str) -> tuple[bool, list[int], list[float]]:
     """pops a color dialog"""
     col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), parent, title)
     if not col.isValid():

@@ -2,7 +2,6 @@
 #pylint disable=C0103
 from itertools import count
 import warnings
-from typing import Tuple, List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -179,7 +178,7 @@ class RealPlateArray(OES_Object):
                               f'sort_method={self.sort_method} nlayers_per_element={nlayers_per_element} nlayers={nlayers}')
 
         assert nlayers >= 2, self.code_information()
-        _times = np.zeros(ntimes, dtype=dtype)
+        _times = np.zeros(ntimes, dtype=self.analysis_fmt)
         element_node = np.zeros((nlayers, 2), dtype=idtype)
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
@@ -400,6 +399,7 @@ class RealPlateArray(OES_Object):
     def add_sort1(self, dt, eid, node_id,
                   fiber_dist1, oxx1, oyy1, txy1, angle1, major_principal1, minor_principal1, ovm1,
                   fiber_dist2, oxx2, oyy2, txy2, angle2, major_principal2, minor_principal2, ovm2):
+        assert self.sort_method == 1, self
         assert eid is not None, eid
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, integer_types), node_id
@@ -413,7 +413,7 @@ class RealPlateArray(OES_Object):
         #self.ielement += 2
 
     def _get_sort2_itime_ilower_iupper_from_itotal(self, dt, eid: int, nid: int,
-                                                   debug=False) -> Tuple[int, int, int]:
+                                                   debug=False) -> tuple[int, int, int]:
         ntimes = self.data.shape[0]
 
         # the monotonic element index (no duplicates)
@@ -505,6 +505,7 @@ class RealPlateArray(OES_Object):
     def add_sort2(self, dt, eid, node_id,
                   fiber_dist1, oxx1, oyy1, txy1, angle1, major_principal1, minor_principal1, ovm1,
                   fiber_dist2, oxx2, oyy2, txy2, angle2, major_principal2, minor_principal2, ovm2):
+        assert self.is_sort2, self
         assert eid is not None, eid
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, integer_types), node_id
@@ -522,10 +523,10 @@ class RealPlateArray(OES_Object):
         self.itotal += 2
         #self.ielement += 2
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -673,7 +674,7 @@ class RealPlateArray(OES_Object):
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        from struct import Struct, pack
+        from struct import Struct
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -820,7 +821,7 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         fiber_dist = 'fiber_distance' if self.is_fiber_distance else 'fiber_curvature'
         ovm = 'von_mises' if self.is_von_mises else 'max_shear'
         headers = [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
@@ -837,7 +838,7 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         fiber_dist = 'fiber_distance' if self.is_fiber_distance else 'fiber_curvature'
         ovm = 'von_mises' if self.is_von_mises else 'max_shear'
         headers = [fiber_dist, 'exx', 'eyy', 'exy', 'angle', 'emax', 'emin', ovm]

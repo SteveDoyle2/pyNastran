@@ -1,5 +1,4 @@
 import warnings
-from typing import List
 import numpy as np
 
 class Responses:
@@ -56,6 +55,11 @@ class Responses:
         return ['responses.' + table for table in tables
                 #if getattr(self, table) is not None
                 ]
+
+    def __repr__(self) -> str:
+        msg = 'Responses:\n - ' + '\n - '.join(self.get_table_types()).rstrip('\n -')
+        return msg
+
 
 class WeightResponse:
     def __init__(self):
@@ -578,7 +582,7 @@ class DSCMCOL:
         str(msg)
 
     @property
-    def external_ids(self) -> List[int]:
+    def external_ids(self) -> list[int]:
         external_ids = []
         for resp in self.responses.values():
             external_ids.append(resp['external_response_id'])
@@ -586,7 +590,7 @@ class DSCMCOL:
         return external_ids
 
     @property
-    def names(self) -> List[str]:
+    def names(self) -> list[str]:
         names = []
         for resp in self.responses.values():
             names.append(resp['name'])

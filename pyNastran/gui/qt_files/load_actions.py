@@ -2,7 +2,7 @@ import os
 import sys
 import traceback
 import time as time_module
-from typing import Tuple, Optional, Any
+from typing import Optional, Any
 
 import numpy as np
 from qtpy.compat import getopenfilename
@@ -10,20 +10,19 @@ from qtpy.compat import getopenfilename
 from pyNastran.bdf.patran_utils.read_patran_custom_results import load_patran_nod
 from pyNastran.utils import print_bad_path
 
-from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv
-from pyNastran.gui.utils.load_results import create_res_obj
+from pyNastran.gui.qt_files.base_gui import BaseGui
+from pyNastran.gui.utils.load_results import (
+    load_csv, load_deflection_csv, create_res_obj)
 IS_TESTING = 'test' in sys.argv[0]
 
 
-class LoadActions:
+class LoadActions(BaseGui):
     """performance mode should be handled in the main gui to minimize flipping"""
-    def __init__(self, gui):
-        self.gui = gui
 
-    @property
-    def log(self):
-        """links the the GUI's log"""
-        return self.gui.log
+    #@property
+    #def log(self):
+        #"""links the the GUI's log"""
+        #return self.gui.log
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
                          plot=True, raise_error=False):
@@ -151,7 +150,7 @@ class LoadActions:
         self.gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
             infile_name, self.gui.format, main_str))
 
-    def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> Tuple[bool, Any]:
+    def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> tuple[bool, Any]:
         """gets the filename and format"""
         wildcard = ''
         is_failed = False
@@ -537,7 +536,7 @@ class LoadActions:
                 the name
             fmt : str
                 '%i', '%f'
-        headers : List[str]???
+        headers : list[str]???
             the titles???
         result_type : str
             'node', 'centroid'
@@ -593,7 +592,7 @@ class LoadActions:
             self.gui.res_widget.update_results(form, 'main')
 
     def create_load_file_dialog(self, qt_wildcard: str, title: str,
-                                default_filename: Optional[str]=None) -> Tuple[str, str]:
+                                default_filename: Optional[str]=None) -> tuple[str, str]:
         #options = QFileDialog.Options()
         #options |= QFileDialog.DontUseNativeDialog
         #fname, flt = QFileDialog.getOpenFileName(

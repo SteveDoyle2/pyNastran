@@ -163,9 +163,9 @@ class CELAS1(SpringElement):
             element id
         pid : int
             property id (PELAS)
-        nids : List[int]
+        nids : list[int]
             GRID/SPOINT ids; n=2
-        dofs : List[int]
+        dofs : list[int]
             node ids; n=2
         comment : str; default=''
             a comment for the card
@@ -271,9 +271,9 @@ class CELAS2(SpringElement):
             element id
         k : float
             spring stiffness
-        nids : List[int]
+        nids : list[int]
             GRID/SPOINT ids; n=2
-        dofs : List[int]
+        dofs : list[int]
             node ids; n=2
         ge : float
             ???
@@ -386,7 +386,7 @@ class CELAS3(SpringElement):
             element id
         pid : int
             property id (PELAS)
-        nids : List[int]
+        nids : list[int]
             SPOINT ids; n=2
         comment : str; default=''
             a comment for the card
@@ -480,7 +480,7 @@ class CELAS4(SpringElement):
             element id
         k : float
             spring stiffness
-        nids : List[int]
+        nids : list[int]
             SPOINT ids; n=2
         comment : str; default=''
             a comment for the card

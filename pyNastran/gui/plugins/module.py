@@ -7,11 +7,11 @@ class Module:
         Gets the module's tools and checkables
         Returns
         -------
-        tools : List[tool]
-            tool : List[name, menu_name path, command, desc, func)
+        tools : list[tool]
+            tool : list[name, menu_name path, command, desc, func)
             ('load_geometry', 'Load &Geometry...', 'load_geometry.png',
              'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry)
-        checkables : Dict[name]=bool
+        checkables : dict[name]=bool
             is the action checkable
 
     Examples

@@ -1795,7 +1795,7 @@ def read_table(card, table_id, table_type):
     xy = []
     for i in range(nterms):
         n = 9 + i * 2
-        if card.field(n) == 'ENDT':
+        if card.field(n) == 'ENDT' or card.field(n+1) == 'ENDT':
             break
         xi = double_or_string(card, n, 'x' + str(i + 1))
         yi = double_or_string(card, n + 1, 'y' + str(i + 1))

@@ -561,6 +561,95 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
                      plot: bool=True, show: bool=False) -> tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
     model = read_bdf(bdf_filename, log=log)
     model2 = read_bdf(bdf_filename, log=log)
+
+    out = _get_station_data(
+        model, model2,
+        dys, coords, normal_plane,
+        ytol, dirname)
+    thetas, y, dx, dz, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2 = out
+
+    assert len(y) > 0, y
+    thetas_csv_filename = os.path.join(dirname, 'thetas.csv')
+
+    with open(thetas_csv_filename, 'w') as csv_filename:
+        csv_filename.write('# eid(%i),theta,Ex,Ey,Gxy\n')
+        for eid, (theta, Ex, Ey, Gxy) in sorted(thetas.items()):
+            csv_filename.write('%d,%f,%f,%f,%f\n' % (eid, theta, Ex, Ey, Gxy))
+
+    inid = 1
+    beam_model = BDF(debug=False)
+    avg_centroid[:, 1] = y
+
+    # wrong
+    mid = 1
+    E = 3.0e7
+    G = None
+    nu = 0.3
+    model.add_mat1(mid, E, G, nu, rho=0.1)
+
+    #   0    1    2    3    4    5
+    # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
+    Ix = I[:, 0]
+    Iy = I[:, 1]
+    Iz = I[:, 2]
+    Ixz = I[:, 5]
+
+    ExIx = EI[:, 0]
+    ExIy = EI[:, 1]
+    ExIz = EI[:, 2]
+    ExIxz = EI[:, 5]
+
+    J = Ix + Iz
+    #i1, i2, i12 = Ix, Iy, Ixy
+    for inid, xyz in enumerate(avg_centroid):
+        beam_model.add_grid(inid+1, xyz)
+    for eid in range(1, len(A)):
+        pid = eid
+        nids = [eid, eid + 1]
+        x = [1., 0., 0.]
+        g0 = None
+        beam_model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
+                             pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+
+        # j = i1 + i2
+        so = ['YES', 'YES']
+        xxb = [0., 1.]
+        area = [A[eid-1], A[eid]]
+        i1 = [Ix[eid-1], Ix[eid]]
+        i2 = [Iz[eid-1], Iz[eid]]
+        i12 = [Ixz[eid-1], Ixz[eid]]
+        j = [J[eid-1], J[eid]]
+        beam_model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+                             c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
+                             k1=1., k2=1., s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
+                             m1a=0., m2a=0., m1b=None, m2b=None,
+                             n1a=0., n2a=0., n1b=None, n2b=None,
+                             comment='')
+
+    beam_model_bdf_filename = os.path.join(dirname, 'equivalent_beam_model.bdf')
+    beam_model.write_bdf(beam_model_bdf_filename)
+
+    X = np.vstack([y, dx, dz, A, Ix, Iz, Ixz, ExIx, ExIz, ExIxz]).T
+    Y = np.hstack([X, avg_centroid])
+    header = 'y, dx, dz, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid'
+    cut_data_span_filename = os.path.join(dirname, 'cut_data_vs_span.csv')
+    np.savetxt(cut_data_span_filename, Y, header=header, delimiter=',')
+
+    plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show, dirname=dirname)
+    return y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
+
+def _get_station_data(model: BDF, model2: BDF,
+                     dys, coords, normal_plane: np.ndarray,
+                     ytol: float, dirname: str, ) -> tuple[
+                         dict[int, tuple[float, float, float, float]],  # thetas
+                         #y, dx, dz,
+                         #A, I, J,
+                         #EI, GJ, avg_centroid
+                         Any, Any, Any,
+                         Any, Any, Any,
+                         Any, Any, Any,
+                         #plane_bdf_filenames, plane_bdf_filenames2,
+                         list[str], list[str]]:
     # initialize theta
     thetas = {}
     for eid in model.elements:
@@ -633,12 +722,6 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
         avg_centroid.append(avg_centroidi)
         #break
     assert len(y) > 0, y
-    thetas_csv_filename = os.path.join(dirname, 'thetas.csv')
-
-    with open(thetas_csv_filename, 'w') as csv_filename:
-        csv_filename.write('# eid(%i),theta,Ex,Ey,Gxy\n')
-        for eid, (theta, Ex, Ey, Gxy) in sorted(thetas.items()):
-            csv_filename.write('%i,%f,%f,%f,%f\n' % (eid, theta, Ex, Ey, Gxy))
 
     y = np.array(y, dtype='float64')
     A = np.array(A, dtype='float64')
@@ -649,68 +732,7 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
     EI = np.array(EI, dtype='float64')
     GJ = np.array(GJ, dtype='float64')
     avg_centroid = np.array(avg_centroid, dtype='float64')
-
-    inid = 1
-    beam_model = BDF(debug=False)
-    avg_centroid[:, 1] = y
-
-    # wrong
-    mid = 1
-    E = 3.0e7
-    G = None
-    nu = 0.3
-    model.add_mat1(mid, E, G, nu, rho=0.1)
-
-    #   0    1    2    3    4    5
-    # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
-    Ix = I[:, 0]
-    Iy = I[:, 1]
-    Iz = I[:, 2]
-    Ixz = I[:, 5]
-
-    ExIx = EI[:, 0]
-    ExIy = EI[:, 1]
-    ExIz = EI[:, 2]
-    ExIxz = EI[:, 5]
-
-    J = Ix + Iz
-    #i1, i2, i12 = Ix, Iy, Ixy
-    for inid, xyz in enumerate(avg_centroid):
-        beam_model.add_grid(inid+1, xyz)
-    for eid in range(1, len(A)):
-        pid = eid
-        nids = [eid, eid + 1]
-        x = [1., 0., 0.]
-        g0 = None
-        beam_model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
-                             pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
-
-        # j = i1 + i2
-        so = ['YES', 'YES']
-        xxb = [0., 1.]
-        area = [A[eid-1], A[eid]]
-        i1 = [Ix[eid-1], Ix[eid]]
-        i2 = [Iz[eid-1], Iz[eid]]
-        i12 = [Ixz[eid-1], Ixz[eid]]
-        j = [J[eid-1], J[eid]]
-        beam_model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
-                             c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
-                             k1=1., k2=1., s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
-                             m1a=0., m2a=0., m1b=None, m2b=None,
-                             n1a=0., n2a=0., n1b=None, n2b=None,
-                             comment='')
-
-    beam_model_bdf_filename = os.path.join(dirname, 'equivalent_beam_model.bdf')
-    beam_model.write_bdf(beam_model_bdf_filename)
-
-    X = np.vstack([y, dx, dz, A, Ix, Iz, Ixz, ExIx, ExIz, ExIxz]).T
-    Y = np.hstack([X, avg_centroid])
-    header = 'y, dx, dz, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid'
-    cut_data_span_filename = os.path.join(dirname, 'cut_data_vs_span.csv')
-    np.savetxt(cut_data_span_filename, Y, header=header, delimiter=',')
-
-    plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show, dirname=dirname)
-    return y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
+    return thetas, y, dx, dz, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames, plane_bdf_filenames2
 
 
 def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True, dirname: str=''):

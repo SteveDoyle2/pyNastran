@@ -7,7 +7,7 @@ import traceback
 from itertools import chain
 from io import StringIO
 from collections import defaultdict, OrderedDict
-from typing import Tuple, List, Dict, Set, Optional, Any, TYPE_CHECKING
+from typing import Set, Optional, Any, TYPE_CHECKING
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -120,6 +120,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     from pyNastran.gui.main_window import MainWindow
+    from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
 
 SIDE_MAP = {}
 SIDE_MAP['CHEXA'] = {
@@ -242,7 +243,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         Parameters
         -----------
         names : list [str, ...]
-            List of names.
+            list of names.
 
         Returns
         --------
@@ -927,7 +928,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             the result number
         cases : dict
             the GuiResult objects
-        form : List[???, ???, ???]
+        form : list[???, ???, ???]
             the Results sidebar data
 
         TDOO: Not quite done on:
@@ -1329,7 +1330,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.Render()
 
     def _create_aero(self, model: BDF,
-                     box_id_to_caero_element_map: Dict[int, Any],
+                     box_id_to_caero_element_map: dict[int, Any],
                      cs_box_ids,
                      caero_points,
                      ncaeros_points: int,
@@ -1470,7 +1471,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             if has_control_surface and hasattr(geometry_actors['caero_subpanels'], 'Update'):
                 geometry_actors['caero_control_surfaces'].Update()
 
-    def _create_splines(self, model: BDF, box_id_to_caero_element_map: Dict[int, int], caero_points):
+    def _create_splines(self, model: BDF, box_id_to_caero_element_map: dict[int, int], caero_points):
         """
         Sets the following actors:
           - spline_%s_structure_points % spline_id
@@ -1544,8 +1545,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             model.log.warning('\n' + '\n'.join(stored_msg))
 
     def make_caeros(self, model: BDF,
-                    create_secondary_actors=True) -> Tuple[np.ndarray, int, int, int, int, bool,
-                                                           Dict[int, int], List[int]]:
+                    create_secondary_actors=True) -> tuple[np.ndarray, int, int, int, int, bool,
+                                                           dict[int, int], list[int]]:
         """
         Creates the CAERO panel inputs including:
          - caero
@@ -1579,7 +1580,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             used to map the CAEROx box id to index in the ???
             (aero panel elements) array, which will be used with
             cs_box_ids
-        cs_box_ids : dict[control_surface_name] : List[panel ids]
+        cs_box_ids : dict[control_surface_name] : list[panel ids]
             list of panels used by each aero panel
 
         """
@@ -1720,8 +1721,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         return
 
 
-    def set_caero_control_surface_grid(self, name: str, cs_box_ids: List[int],
-                                       box_id_to_caero_element_map: Dict[int, Any],
+    def set_caero_control_surface_grid(self, name: str, cs_box_ids: list[int],
+                                       box_id_to_caero_element_map: dict[int, Any],
                                        caero_points: np.ndarray,
                                        note: Optional[str]=None,
                                        zfighting_offset: float=0.001,
@@ -1733,9 +1734,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         ----------
         name : str
             ???
-        aero_box_ids : List[int]
+        aero_box_ids : list[int]
             the ids of the box as seen on the AESURF? SET card?
-        box_id_to_caero_element_map : Dict[key]=value
+        box_id_to_caero_element_map : dict[key]=value
             key : ???
                 ???
             value : ???
@@ -2424,7 +2425,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             the result number
         cases : dict
             the GuiResult objects
-        form : List[???, ???, ???]
+        form : list[???, ???, ???]
             the Results sidebar data
 
         TDOO: Not quite done on:
@@ -3025,7 +3026,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             self.normals = normals
         return nid_to_pid_map, icase, cases, form
 
-    def _build_mcid_vectors(self, model: BDF, nplies: int):
+    def _build_mcid_vectors(self, model: BDF, nplies: int) -> None:
         """creates the shell material coordinate vectors"""
         etype = 3 # vtkLine
 
@@ -5224,7 +5225,11 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             nplies = nplies_pcomp.max()
 
         if nastran_settings.is_shell_mcids and nplies is not None:
-            self._build_mcid_vectors(model, nplies)
+            try:
+                self._build_mcid_vectors(model, nplies)
+            except Exception as exception:
+                model.log.error(str(exception))
+
         return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
 
     def _plot_pressures(self, model: BDF, cases, form0,
@@ -5986,7 +5991,7 @@ def _build_normals_quality(settings: Settings,
                            area, max_skew_angle, taper_ratio,
                            max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio,
                            make_offset_normals_dim=True,
-                           make_xyz=False, make_nnodes_result=False) -> Tuple[int, Any]:
+                           make_xyz=False, make_nnodes_result=False) -> tuple[int, Any]:
     """
     Creates some nastran specific results
 
@@ -6354,7 +6359,7 @@ def _build_materials(model: BDF, pcomp, pshell, is_pshell_pcomp,
 
 def _add_material_mid_e11_e22(model: BDF, icase: int,
                               midsi: np.ndarray,
-                              cases: Dict[int, Any],
+                              cases: dict[int, Any],
                               form_layer: Any) -> int:
     """
     Adds material results:
@@ -6610,7 +6615,7 @@ def _prepare_superelement_model(model: BDF, log: SimpleLogger) -> None:
 def get_caero_control_surface_grid(grid,
                                    box_id_to_caero_element_map,
                                    caero_points,
-                                   boxes_to_show: List[int],
+                                   boxes_to_show: list[int],
                                    log):
     j = 0
     areas = []
@@ -6647,15 +6652,15 @@ def get_caero_control_surface_grid(grid,
     elements = np.asarray(plot_elements, dtype='int32')
     return all_points, elements, centroids, areas
 
-def _set_nid_to_pid_map(nid_to_pid_map: Dict[int, List[int]],
+def _set_nid_to_pid_map(nid_to_pid_map: dict[int, list[int]],
                         pid: int,
-                        node_ids: List[int]) -> None:
+                        node_ids: list[int]) -> None:
     for nid in node_ids:
         nid_to_pid_map[nid].append(pid)
 
-def _set_nid_to_pid_map_or_blank(nid_to_pid_map: Dict[int, List[int]],
+def _set_nid_to_pid_map_or_blank(nid_to_pid_map: dict[int, list[int]],
                             pid: int,
-                            node_ids: List[Optional[int]]) -> None:
+                            node_ids: list[Optional[int]]) -> None:
     for nid in node_ids:
         if nid is not None:
             nid_to_pid_map[nid].append(pid)
@@ -6729,7 +6734,7 @@ def _map_elements3_helper(model: BDF,
                           nid_cp_cd,
                           xyz_cid0,
                           eid_map,
-                          elements: Dict[int, Any],
+                          elements: dict[int, Any],
                           nelements: int,
                           dtype: str):
     """helper for ``_map_elements3``"""
@@ -7214,19 +7219,18 @@ def _create_monpnt(gui: MainWindow,
                    model: BDF,
                    xyz_cid0: np.ndarray,
                    nid_cp_cd: np.ndarray):
-    from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
     cell_type_point = 1  # vtk.vtkVertex().GetCellType()
 
     all_nids = nid_cp_cd[:, 0]
     log = model.log
     for monpnt in model.monitor_points:
-        monpnt = monpnt # type: MONPNT1
-        coord = model.coords[monpnt.cp]
-        coord = coord # type: CORD2R
+        monpnt: MONPNT1 = monpnt
+        coord: CORD2R = model.coords[monpnt.cp]
+        coord = coord
         xyz_global = coord.transform_node_to_global(monpnt.xyz).reshape(1, 3)
         label = monpnt.label
         try:
-            aecomp = model.aecomps[monpnt.comp]  # type: AECOMP
+            aecomp: AECOMP = model.aecomps[monpnt.comp]
         except KeyError:
             key = monpnt.comp
             keys = list(model.aecomps.keys())
@@ -7238,7 +7242,7 @@ def _create_monpnt(gui: MainWindow,
                 #set1_ids = aecomp.lists
                 nids = []
                 for set1_id in aecomp.lists:
-                    set1 = model.sets[set1_id]  # type: SET1
+                    set1: SET1 = model.sets[set1_id]
                     nids += set1.ids
 
                 nids = np.unique(nids)
@@ -7297,8 +7301,8 @@ def get_results_to_exclude(nastran_settings: NastranSettings) -> Set[str]:
         exclude_results.add('grid_point_forces')
     return exclude_results
 
-def _get_pcomp_nplies(properties: Dict[int, Union[PCOMP, PCOMPG, PCOMPS, PCOMPLS]],
-                      property_ids_pcomp: List[int]) -> int:
+def _get_pcomp_nplies(properties: dict[int, Union[PCOMP, PCOMPG, PCOMPS, PCOMPLS]],
+                      property_ids_pcomp: list[int]) -> int:
     """
     layer 0 will be defined as the total, so:
     thickness   -> total thickness

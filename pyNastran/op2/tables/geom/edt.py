@@ -3,7 +3,7 @@ defines readers for BDF objects in the OP2 EDT/EDTS table
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Tuple, List, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.cards.aero.aero import (
@@ -1090,7 +1090,7 @@ class EDT:
         #return n
 
 
-    def _read_acmodl_nx_72(self, card, data: bytes, n: int) -> Tuple[int, List[ACMODL]]:
+    def _read_acmodl_nx_72(self, card, data: bytes, n: int) -> tuple[int, list[ACMODL]]:
         """
         NX 2019.2 - 72 bytes
         Word Name Type Description
@@ -1184,7 +1184,7 @@ class EDT:
             n += ntotal
         return n, acmodls
 
-    def _read_acmodl_msc_64(self, card, data: bytes, n: int) ->  Tuple[int, List[ACMODL]]:
+    def _read_acmodl_msc_64(self, card, data: bytes, n: int) ->  tuple[int, list[ACMODL]]:
         """
         MSC 2018.2 - 64 bytes
         Word Name Type Description
@@ -1641,7 +1641,7 @@ class EDT:
         #n = self._read_spline4_nx(data, n)
         #return n
 
-    def _read_spline4_nx_44(self, spline: SPLINE4, data: bytes, n: int) -> Tuple[int, SPLINE4]:
+    def _read_spline4_nx_44(self, spline: SPLINE4, data: bytes, n: int) -> tuple[int, SPLINE4]:
         """
         MSC 2018.2
 
@@ -1685,7 +1685,7 @@ class EDT:
         op2.to_nx(' because SPLINE4-NX was found')
         return n, splines
 
-    def _read_spline4_msc_52(self, spline: SPLINE4, data: bytes, n: int) -> Tuple[int, SPLINE4]:
+    def _read_spline4_msc_52(self, spline: SPLINE4, data: bytes, n: int) -> tuple[int, SPLINE4]:
         """
         MSC 2018.2
 
@@ -1747,7 +1747,7 @@ class EDT:
             raise
         return n
 
-    def _read_spline5_msc_68(self, spline: SPLINE5, data: bytes, n: int) -> Tuple[int, List[SPLINE5]]:
+    def _read_spline5_msc_68(self, spline: SPLINE5, data: bytes, n: int) -> tuple[int, list[SPLINE5]]:
         """
         reads the SPLINE5 card
 
@@ -1808,7 +1808,7 @@ class EDT:
         op2.to_msc(' because SPLINE5-MSC was found')
         return n, splines
 
-    def _read_spline5_nx_60(self, spline: SPLINE5, data: bytes, n: int) -> Tuple[int, List[SPLINE5]]:
+    def _read_spline5_nx_60(self, spline: SPLINE5, data: bytes, n: int) -> tuple[int, list[SPLINE5]]:
         """
         reads the SPLINE5 card
 
@@ -1885,7 +1885,7 @@ class EDT:
             raise
         return n
 
-    def _read_monpnt1_nx_92(self, monpnt1: MONPNT1, data: bytes, n: int) -> Tuple[int, List[MONPNT1]]:
+    def _read_monpnt1_nx_92(self, monpnt1: MONPNT1, data: bytes, n: int) -> tuple[int, list[MONPNT1]]:
         """
         MSC 2018.2
 
@@ -1926,7 +1926,7 @@ class EDT:
         op2.to_nx(' because MONPNT1-NX was found')
         return n, monpnt1s
 
-    def _read_monpnt1_96(self, monpnt1: MONPNT1, data: bytes, n: int) -> Tuple[int, List[MONPNT1]]:
+    def _read_monpnt1_96(self, monpnt1: MONPNT1, data: bytes, n: int) -> tuple[int, list[MONPNT1]]:
         """
         MSC 2018.2
 
@@ -2160,6 +2160,8 @@ class EDT:
                     value = 'ELMOFF'
                 elif value == 65:
                     value = 'NODIFF'
+                elif value == 96:
+                    value = 'NOMASS'
                 elif value in [128, 192]:
                     value = 'LROFF'
                 else:
@@ -2526,7 +2528,7 @@ def _expand_vals(grids):
     return grids2
 
 
-def _read_group_elem_prop_nids(ints, i, n, size) -> Tuple[int, int, Any]:
+def _read_group_elem_prop_nids(ints, i, n, size) -> tuple[int, int, Any]:
     """helper for _read_group"""
     i += 1
     n += size

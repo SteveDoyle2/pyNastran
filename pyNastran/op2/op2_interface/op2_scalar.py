@@ -44,7 +44,7 @@ Defines the sub-OP2 class.  This should never be called outside of the OP2 class
 import os
 from struct import Struct, unpack
 from collections import defaultdict
-from typing import List, Tuple, Dict, Union, Optional, Any
+from typing import Union, Optional, Any
 
 from numpy import array
 import numpy as np
@@ -187,7 +187,7 @@ AUTODESK_MATRIX_TABLES = [
     #b'BELM',
     b'KELM',
     #b'MELM',
-] # type: List[bytes]
+] # type: list[bytes]
 # this will be split later
 TEST_MATRIX_TABLES = [b'ATB', b'BTA', b'MYDOF']
 
@@ -368,7 +368,7 @@ STR_PARAMS_1 = SATK_STR_PARAMS1 | {
     b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
     b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
     b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
-    b'CDIF', b'SUPAERO', b'RSCON', b'AUTOMPC', b'DBCCONV',
+    b'CDIF', b'SUPAERO', b'RSCON', b'AUTOMPC', b'AUTOQSET', b'DBCCONV',
     b'AUTOSPRT', b'PBRPROP', b'OMID', b'HEATSTAT', b'SECOMB', b'ELEMITER',
     b'ELITASPC', b'DBCONV', b'SHLDAMP', b'COMPMATT', b'SPCSTR', b'ASCOUP',
     b'PRTRESLT', b'SRCOMPS', b'CHECKOUT', b'SEMAP', b'AESMETH', b'RESVALT',
@@ -420,7 +420,7 @@ STR_PARAMS_1 = SATK_STR_PARAMS1 | {
     b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', b'DEBUG',
     b'AEDBX', b'AERO', b'AUTOSUP0', b'AXIOPT',
 }
-def _check_unique_sets(*sets: List[set[str]]):
+def _check_unique_sets(*sets: list[set[str]]):
     """verifies that the sets are unique"""
     for i, seti in enumerate(sets):
         for unused_j, setj in enumerate(sets[i+1:]):
@@ -468,23 +468,23 @@ class OP2_Scalar(OP2Common, FortranFormat):
         return self.matrices['MEFWTS']#.dataframe
 
 
-    @property
-    def monitor1(self):
-        self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
-        return self.op2_results.monitor1
-    @monitor1.setter
-    def monitor1(self, monitor1):
-        self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
-        self.op2_results.monitor1 = monitor1
+    #@property
+    #def monitor1(self):
+        #self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
+        #return self.op2_results.monitor1
+    #@monitor1.setter
+    #def monitor1(self, monitor1):
+        #self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
+        #self.op2_results.monitor1 = monitor1
 
-    @property
-    def monitor3(self):
-        self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
-        return self.op2_results.monitor3
-    @monitor3.setter
-    def monitor3(self, monitor3):
-        self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
-        self.op2_results.monitor3 = monitor3
+    #@property
+    #def monitor3(self):
+        #self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
+        #return self.op2_results.monitor3
+    #@monitor3.setter
+    #def monitor3(self, monitor3):
+        #self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
+        #self.op2_results.monitor3 = monitor3
 
     @property
     def matrix_tables(self):
@@ -521,8 +521,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.is_optistruct = False
         self.is_nasa95 = True
         self._nastran_format = 'nasa95'
-        self.reader_oes._read_oes1_loads = self.reader_oes._read_oes1_loads_nasa95
-        self.reader_oef._read_oef1_loads = self.reader_oef._read_oef1_loads_nasa95
+        self._op2_readers.reader_oes._read_oes1_loads = self._op2_readers.reader_oes._read_oes1_loads_nasa95
+        self._op2_readers.reader_oef._read_oef1_loads = self._op2_readers.reader_oef._read_oef1_loads_nasa95
 
         if hasattr(self, 'reader_geom2') and hasattr(self.reader_geom2, '_read_cquad4_nasa95'):
             self.reader_geom2.geom2_map[(5408, 54, 261)] = ['CQUAD4', self.reader_geom2._read_cquad4_nasa95]
@@ -597,7 +597,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         Parameters
         ----------
-        subcases : List[int, ...] / int; default=None->all subcases
+        subcases : list[int, ...] / int; default=None->all subcases
             list of [subcase1_ID,subcase2_ID]
 
         """
@@ -642,246 +642,282 @@ class OP2_Scalar(OP2Common, FortranFormat):
         """gets the dictionary of function3 / function4"""
 
         # MSC table mapper
-        reader_lama = self.reader_lama
-        reader_ogpwg = self.reader_ogpwg
-        reader_ogpf = self.reader_ogpf
-        reader_onr = self.reader_onr
-        reader_opg = self.reader_opg
-        reader_opr = self.reader_opr
-        reader_oqg = self.reader_oqg
-        reader_ogs = self.reader_ogs
+        reader_lama = self._op2_readers.reader_lama
+        reader_ogpwg = self._op2_readers.reader_ogpwg
+        reader_ogpf = self._op2_readers.reader_ogpf
+        reader_onr = self._op2_readers.reader_onr
+        reader_opg = self._op2_readers.reader_opg
+        reader_opr = self._op2_readers.reader_opr
+        reader_oqg = self._op2_readers.reader_oqg
+        reader_ogs = self._op2_readers.reader_ogs
 
         # oug
-        reader_oug = self.reader_oug
-        reader_ougpk = self.reader_ougpk
-        reader_otemp = self.reader_otemp
+        reader_oug = self._op2_readers.reader_oug
+        reader_ougpk = self._op2_readers.reader_ougpk
+        reader_otemp = self._op2_readers.reader_otemp
 
         # oef
-        reader_oef = self.reader_oef
-        reader_oefpk = self.reader_oefpk
+        reader_oef = self._op2_readers.reader_oef
+        reader_oefpk = self._op2_readers.reader_oefpk
 
         # oes
-        reader_oes = self.reader_oes
+        reader_oes = self._op2_readers.reader_oes
+
+        reader_onmd = self._op2_readers.reader_onmd
 
         satk_tables = {
-            b'OUGPK1'  : [self.reader_ougpk._read_ougpk1_3, self.reader_ougpk._read_ougpk1_4],
-            b'OEFPK1'  : [self.reader_oefpk._read_oefpk1_3, self.reader_oefpk._read_oefpk1_4],
+            b'OUGPK1'  : [reader_ougpk._read_ougpk1_3, reader_ougpk._read_ougpk1_4, 'displacement/velocity/acceleration peak-to-peak'],
+            b'OEFPK1'  : [reader_oefpk._read_oefpk1_3, reader_oefpk._read_oefpk1_4, 'element force peak-to-peak'],
         }
 
         nasa95_tables = {
-        b'OESC1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
+        b'OESC1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'composite stress'],
         }
 
         table_mapper_geometry = {
             # -----------------------------------------------------------
             # geometry
-            b'GEOM1' : [self._table_passer, self._table_passer], # GEOM1-Geometry-related bulk data
-            b'GEOM2' : [self._table_passer, self._table_passer], # GEOM2-element connectivity and SPOINT-related data
-            b'GEOM3' : [self._table_passer, self._table_passer], # GEOM3-Static and thermal loads
-            b'GEOM4' : [self._table_passer, self._table_passer], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
+            b'GEOM1' : [self._table_passer, self._table_passer, 'grid/coord cards'], # GEOM1-Geometry-related bulk data
+            b'GEOM2' : [self._table_passer, self._table_passer, 'element cards'], # GEOM2-element connectivity and SPOINT-related data
+            b'GEOM3' : [self._table_passer, self._table_passer, 'constraint cards'], # GEOM3-Static and thermal loads
+            b'GEOM4' : [self._table_passer, self._table_passer, 'load cards'], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
+
+            b'GEOM1X' : [self._table_passer, self._table_passer, 'grid/coord cards'], # GEOM1-Geometry-related bulk data
+            b'GEOM2X' : [self._table_passer, self._table_passer, 'element cards'], # GEOM2-element connectivity and SPOINT-related data
+            #b'GEOM3X' : [self._table_passer, self._table_passer, 'constraint cards'], # GEOM3-Static and thermal loads
+            b'GEOM4X' : [self._table_passer, self._table_passer, 'load cards'], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
+
+            b'GEOM1EXA' : [self._table_passer, self._table_passer, 'grid/coord cards'], # GEOM1-Geometry-related bulk data
+            b'GEOM2EXA' : [self._table_passer, self._table_passer, 'element cards'], # GEOM2-element connectivity and SPOINT-related data
+            #b'GEOM3X' : [self._table_passer, self._table_passer, 'constraint cards'], # GEOM3-Static and thermal loads
+            b'GEOM4EXA' : [self._table_passer, self._table_passer, 'load cards'], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
+
+            b'GEOM1ATV' : [self._table_passer, self._table_passer, 'grid/coord cards'], # GEOM1-Geometry-related bulk data
+            b'GEOM2ATV' : [self._table_passer, self._table_passer, 'element cards'], # GEOM2-element connectivity and SPOINT-related data
+            #b'GEOM3ATV' : [self._table_passer, self._table_passer, 'constraint cards'], # GEOM3-Static and thermal loads
+            #b'GEOM4ATV' : [self._table_passer, self._table_passer, 'load cards'], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
+            b'EPTATV' : [self._table_passer, self._table_passer, 'property cards'],  # elements - superelements
+            b'ATVMAP' : [self._table_passer, self._table_passer, 'ATV cards'],  # elements - superelements
 
             # superelements
-            b'GEOM1S' : [self._table_passer, self._table_passer],  # GEOMx + superelement
-            b'GEOM2S' : [self._table_passer, self._table_passer],
-            b'GEOM3S' : [self._table_passer, self._table_passer],
-            b'GEOM4S' : [self._table_passer, self._table_passer],
+            b'GEOM1S' : [self._table_passer, self._table_passer, 'grid/coord cards (superelement)'],  # GEOMx + superelement
+            b'GEOM2S' : [self._table_passer, self._table_passer, 'element cards (superelement)'],
+            b'GEOM3S' : [self._table_passer, self._table_passer, 'constraint cards (superelement)'],
+            b'GEOM4S' : [self._table_passer, self._table_passer, 'load cards (superelement)'],
 
-            b'GEOM1VU' : [self._table_passer, self._table_passer],
-            b'GEOM2VU' : [self._table_passer, self._table_passer],
-            b'BGPDTVU' : [self._table_passer, self._table_passer],
+            b'GEOM1VU' : [self._table_passer, self._table_passer, 'grid/coord cards (VU)'],
+            b'GEOM2VU' : [self._table_passer, self._table_passer, 'element cards (VU)'],
+            b'BGPDTVU' : [self._table_passer, self._table_passer, 'basic grid point locations (VU)'],
 
-            b'GEOM1N' : [self._table_passer, self._table_passer],
-            b'GEOM2N' : [self._table_passer, self._table_passer],
-            b'GEOM3N' : [self._table_passer, self._table_passer],
-            b'GEOM4N' : [self._table_passer, self._table_passer],
+            b'GEOM1N' : [self._table_passer, self._table_passer, 'grid/coord cards (buckling?)'],
+            b'GEOM2N' : [self._table_passer, self._table_passer, 'element cards (buckling?)'],
+            b'GEOM3N' : [self._table_passer, self._table_passer, 'constraint cards (buckling?)'],
+            b'GEOM4N' : [self._table_passer, self._table_passer, 'load cards (buckling?)'],
 
-            b'GEOM1OLD' : [self._table_passer, self._table_passer],
-            b'GEOM2OLD' : [self._table_passer, self._table_passer],
-            b'GEOM3OLD' : [self._table_passer, self._table_passer],
-            b'GEOM4OLD' : [self._table_passer, self._table_passer],
+            b'GEOM1OLD' : [self._table_passer, self._table_passer, 'grid/coord cards (old)'],
+            b'GEOM2OLD' : [self._table_passer, self._table_passer, 'element cards (old)'],
+            b'GEOM3OLD' : [self._table_passer, self._table_passer, 'constraint cards (old)'],
+            b'GEOM4OLD' : [self._table_passer, self._table_passer, 'load cards (old)'],
 
-            b'EPT' : [self._table_passer, self._table_passer],  # elements
-            b'EPTS' : [self._table_passer, self._table_passer],  # elements - superelements
-            b'EPTOLD' : [self._table_passer, self._table_passer],
+            b'EPT' : [self._table_passer, self._table_passer, 'property cards'],  # elements
+            b'EPTS' : [self._table_passer, self._table_passer, 'property cards (superelement)'],  # elements - superelements
+            b'EPTOLD' : [self._table_passer, self._table_passer, 'property cards (old)'],
 
-            b'MPT' : [self._table_passer, self._table_passer],  # materials
-            b'MPTS' : [self._table_passer, self._table_passer],  # materials - superelements
+            b'MPT' : [self._table_passer, self._table_passer, 'material cards'],  # materials
+            b'MPTS' : [self._table_passer, self._table_passer, 'material cards (superelement)'],  # materials - superelements
 
-            b'DYNAMIC' : [self._table_passer, self._table_passer],
-            b'DYNAMICS' : [self._table_passer, self._table_passer],
-            b'DIT' : [self._table_passer, self._table_passer],
-            b'DITS' : [self._table_passer, self._table_passer],
+            b'DYNAMIC' : [self._table_passer, self._table_passer, 'dynamic cards'],
+            b'DYNAMICS' : [self._table_passer, self._table_passer, 'dynamic cards (superelement)'],
+            b'DIT' : [self._table_passer, self._table_passer, 'TABLEx cards'],
+            b'DITS' : [self._table_passer, self._table_passer, 'TABLEx cards (superelement))'],
 
             # this comment may refer to CSTM?
             #F:\work\pyNastran\examples\Dropbox\pyNastran\bdf\cards\test\test_mass_01.op2
             #F:\work\pyNastran\examples\matpool\gpsc1.op2
-            b'AXIC': [self._table_passer, self._table_passer],
+            b'AXIC': [self._table_passer, self._table_passer, 'axisymmetic cards'],
 
             # EDT - aero cards
             #       element deformation, aerodynamics, p-element, divergence analysis,
             #       and iterative solver input (includes SET1 entries)
-            b'EDT' : [self._table_passer, self._table_passer],
-            b'EDTS' : [self._table_passer, self._table_passer],
+            b'EDT' : [self._table_passer, self._table_passer, 'aero cards'],
+            b'EDTS' : [self._table_passer, self._table_passer, 'aero cards (superelement)'],
 
             # contact/glue
-            b'CONTACT' : [self._table_passer, self._table_passer],
-            b'CONTACTS' : [self._table_passer, self._table_passer],
+            b'CONTACT' : [self._table_passer, self._table_passer, 'contact cards'],
+            b'CONTACTS' : [self._table_passer, self._table_passer, 'contact cards (superelement)'],
 
-            b'EDOM' : [self._table_passer, self._table_passer],     # optimization
-            b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
+            b'EDOM' : [self._table_passer, self._table_passer, 'optimization cards'],     # optimization
+            b'VIEWTB' : [self._table_passer, self._table_passer, 'view elements'],   # view elements
             # =========================end geom passers=========================
         }
 
         table_mapper = {
             # per NX
-            b'OESVM1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],    # isat_random
-            b'OESVM1C' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],   # isat_random
-            b'OSTRVM1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],   # isat_random
-            b'OSTRVM1C' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],  # isat_random
+            b'OESVM1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'NX random stress'],    # isat_random
+            b'OESVM1C' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'NX random stress'],   # isat_random
+            b'OSTRVM1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'NX random strain'],   # isat_random
+            b'OSTRVM1C' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'NX random strain'],  # isat_random
 
-            b'OSTRVM2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],
+            b'OSTRVM2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'NX random strain'],
 
-            b'OESVM2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],    # big random
-            b'OES2C' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],
-            b'OSTR2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4], # TODO: disable
-            b'OSTR2C' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],
+            b'OESVM2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'NX random stress'],    # big random
+            b'OES2C' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'NX random stress'],
+            b'OSTR2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'NX random strain'], # TODO: disable
+            b'OSTR2C' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'NX random strain'],
 
-            b'OTEMP1' : [reader_otemp._read_otemp1_3, reader_otemp._read_otemp1_4],
+            b'OTEMP1' : [reader_otemp._read_otemp1_3, reader_otemp._read_otemp1_4, 'temperature'],
             # --------------------------------------------------------------------------
             # MSC TABLES
             # common tables
 
             # unorganized
-            b'RADCONS': [reader_oug._read_oug1_3, reader_oug._read_oug_4], # Displacement Constraint Mode (OUG)
-            b'RADEFFM': [reader_oug._read_oug1_3, reader_oug._read_oug_4], # Displacement Effective Inertia Mode (OUG)
-            b'RADEATC': [reader_oug._read_oug1_3, reader_oug._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
+            b'RADCONS': [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'Displacement Constraint Mode'], # Displacement Constraint Mode (OUG)
+            b'RADEFFM': [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'Displacement Effective Inertia Mode'], # Displacement Effective Inertia Mode (OUG)
+            b'RADEATC': [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'Displacement Equivalent Inertia Attachment mode'], # Displacement Equivalent Inertia Attachment mode (OUG)
 
             # broken - isat_launch_100hz.op2 - wrong numwide
             # spc forces
-            b'RAQCONS': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4], # Constraint mode MPC force table (OQG)
-            b'RAQEATC': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4], # Attachment mode MPC force table (OQG)
+            b'RAQCONS': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'Constraint mode MPC force'], # Constraint mode MPC force table (OQG)
+            b'RAQEATC': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'Attachment mode MPC force'], # Attachment mode MPC force table (OQG)
             #b'RAQCONS': [self._table_passer, self._table_passer], # temporary
             #b'RAQEATC': [self._table_passer, self._table_passer], # temporary
 
-            b'RAREATC': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4], # spc forces?
-            b'RARCONS': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4], # spc forces?
+            b'RAREATC': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'spc forces?'], # spc forces?
+            b'RARCONS': [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'spc forces?'], # spc forces?
 
             # element forces
-            b'RAFCONS': [reader_oef._read_oef1_3, reader_oef._read_oef1_4], # Element Force Constraint Mode (OEF)
-            b'RAFEATC': [reader_oef._read_oef1_3, reader_oef._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
+            b'RAFCONS': [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'Element Force Constraint Mode'], # Element Force Constraint Mode (OEF)
+            b'RAFEATC': [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'Element Force Equivalent Inertia Attachment mode'], # Element Force Equivalent Inertia Attachment mode (OEF)
             #b'RAFCONS': [self._table_passer, self._table_passer], # temporary
             #b'RAFEATC': [self._table_passer, self._table_passer], # temporary
 
             # grid point forces
-            b'RAGCONS': [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4], # Grid Point Forces Constraint Mode (OGPFB)
-            b'RAGEATC': [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
+            b'RAGCONS': [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4, 'Grid Point Force Constraint Mode'], # Grid Point Forces Constraint Mode (OGPFB)
+            b'RAGEATC': [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4, 'Grid Point Force Equivalent Inertia Attachment mode'], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
             #b'RAGCONS': [self._table_passer, self._table_passer], # Grid Point Forces Constraint Mode (OGPFB)
             #b'RAGEATC': [self._table_passer, self._table_passer], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
 
             # stress
-            b'RAPCONS': [reader_oes._read_oes1_3, reader_oes._read_oes1_4], # Constraint mode ply stress table (OES)
-            b'RAPEATC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4], # Attachment mode ply stress table (OES)
+            b'RAPCONS': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'Constraint mode ply stress'], # Constraint mode ply stress table (OES)
+            b'RAPEATC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'Attachment mode ply stress'], # Attachment mode ply stress table (OES)
             #b'RAPCONS': [self._table_passer, self._table_passer], # Constraint mode ply stress table (OES)
             #b'RAPEATC': [self._table_passer, self._table_passer], # Attachment mode ply stress table (OES)
 
             # stress
-            b'RASCONS': [reader_oes._read_oes1_3, reader_oes._read_oes1_4], # Stress Constraint Mode (OES)
-            b'RASEATC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
+            b'RASCONS': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'Stress Constraint Mode'], # Stress Constraint Mode (OES)
+            b'RASEATC': [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'Stress Equivalent Inertia Attachment mode'], # Stress Equivalent Inertia Attachment mode (OES)
             #b'RASCONS': [self._table_passer, self._table_passer], # temporary
             #b'RASEATC': [self._table_passer, self._table_passer], # temporary
 
             # strain
-            b'RAEEATC': [reader_oes._read_oes1_3, reader_oes._read_ostr1_4], # Strain Equivalent Inertia Attachment mode (OES)
-            b'RAECONS': [reader_oes._read_oes1_3, reader_oes._read_ostr1_4], # Strain Constraint Mode (OSTR)
+            b'RAEEATC': [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'Strain Equivalent Inertia Attachment mode'], # Strain Equivalent Inertia Attachment mode (OES)
+            b'RAECONS': [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'Strain Constraint Mode'], # Strain Constraint Mode (OSTR)
             #b'RAEEATC': [self._table_passer, self._table_passer], # temporary
             #b'RAECONS': [self._table_passer, self._table_passer], # temporary
 
             # strain energy
-            b'RANEATC' : [reader_onr._read_onr1_3, reader_onr._read_onr1_4], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
-            b'RANCONS': [reader_onr._read_onr1_3, reader_onr._read_onr1_4], # Constraint mode element strain energy table (ORGY1)
+            b'RANEATC' : [reader_onr._read_onr1_3, reader_onr._read_onr1_4, 'Strain Energy Equivalent Inertia Attachment mode'], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
+            b'RANCONS': [reader_onr._read_onr1_3, reader_onr._read_onr1_4, 'Constraint mode element strain energy table'], # Constraint mode element strain energy table (ORGY1)
             #b'RANEATC': [self._table_passer, self._table_passer], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
             #b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
 
 
             #b'TOL': [self._table_passer, self._table_passer],
 
-            b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries
+            b'MATPOOL': [self._table_passer, self._table_passer, 'DMIG matrices'], # DMIG bulk data entries
 
-            b'RSOUGV1': [self._table_passer, self._table_passer],
-            b'RESOES1': [self._table_passer, self._table_passer],
-            b'RESEF1' : [self._table_passer, self._table_passer],
-            b'DESCYC' : [self._table_passer, self._table_passer],
+            b'RSOUGV1': [self._table_passer, self._table_passer, '????'],
+            b'RESOES1': [self._table_passer, self._table_passer, '????'],
+            b'RESEF1' : [self._table_passer, self._table_passer, '????'],
             #b'AEMONPT' : [self._read_aemonpt_3, self._read_aemonpt_4],
+
+            # in op2 reader
+            #b'DESCYC' : [self._table_passer, self._table_passer, '????'],
             #=======================
             # OEF
             # element forces
             #b'OEFITSTN' : [self._table_passer, self._table_passer], # works
-            b'OEFITSTN' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],
-            b'OEFIT' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],  # failure indices
-            b'OEF1X' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],  # element forces at intermediate stations
-            b'OEF1'  : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],  # element forces or heat flux
-            b'HOEF1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],  # element heat flux
+
+            #OEFIT    OEF Table of composite element failure indices. Output by SDRCOMP.
+            #OEFITDS  OEF Table of composite element failure indices for design responses.
+            #OEFITDSN OEF Table of composite element failure indices for the perturbed configuration.
+            b'OEFITSTN' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'failure indices strain????'],
+            b'OEFIT' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'failure indices'],  # failure indices
+            b'OEF1X' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'element force at intermediate stations'],  # element forces at intermediate stations
+            b'OEF1'  : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'element force/heat flux'],  # element forces or heat flux
+            b'HOEF1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'element heat flux'],  # element heat flux
 
             # off force
-            b'OEF2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4],  # element forces or heat flux
+            b'OEF2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'element force/heat flux'],  # element forces or heat flux
             #=======================
             # OQG
             # spc forces
             # OQG1/OQGV1 - spc forces in the nodal frame
             # OQP1 - scaled response spectra - spc-forces
-            b'OQG1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4],
-            b'OQG2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4],
+            b'OQG1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'spc/mpc forces'],
+            b'OQG2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'spc/mpc forces'],
 
-            b'OQGV1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4],
-            b'OQGV2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4],
+            b'OQGV1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'spc/mpc forces'],
+            b'OQGV2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'spc/mpc forces'],
 
-            b'PSDF' : [self._read_psdf_3, self._read_psdf_4],  # MSC NASA/goesr
+            b'PSDF' : [self._read_psdf_3, self._read_psdf_4, 'psds'],  # MSC NASA/goesr
 
             #=======================
             # OPG
             # applied loads
-            b'OPG1'  : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],  # applied loads in the nodal frame
-            b'OPGV1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],  # solution set applied loads?
-            b'OPNL1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],  # nonlinear loads
+            b'OPG1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'g-set applied loads in the CD frame'],  # applied loads in the nodal frame
+            b'OPG2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4, 'g-set applied loads in the CD frame'],   # applied loads in the nodal frame
 
-            b'OPG2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4],   # applied loads in the nodal frame
-            b'OPNL2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4],  # nonlinear loads
+            b'OPGV1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'g-set solution-set applied loads in the CD frame'],  # solution set applied loads?
+
+            b'OPNL1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'g-set nonlinear applied loads in the CD frame'],  # nonlinear loads
+            b'OPNL2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4, 'g-set nonlinear applied loads in the CD frame'],  # nonlinear loads
 
             #=======================
             # OGPFB1
             # grid point forces
-            b'OGPFB1' : [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4],  # grid point forces
-            #b'OGPFB2' : [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4],  # grid point forces
+            b'OGPFB1' : [reader_ogpf._read_ogpf1_3, reader_ogpf._read_ogpf1_4, 'grid point forces; SORT1'],  # grid point forces
+            b'OGPFB2' : [reader_ogpf._read_ogpf2_3, reader_ogpf._read_ogpf2_4, 'grid point forces; SORT2'],  # grid point forces
 
             #=======================
             # ONR/OEE
             # strain energy density
-            b'ONRGY'  : [reader_onr._read_onr1_3, reader_onr._read_onr1_4],
-            b'ONRGY1' : [reader_onr._read_onr1_3, reader_onr._read_onr1_4],  # strain energy density
-            b'ONRGY2':  [reader_onr._read_onr2_3, reader_onr._read_onr1_4],
+            b'ONRGY'  : [reader_onr._read_onr1_3, reader_onr._read_onr1_4, 'strain energy density'],
+            b'ONRGY1' : [reader_onr._read_onr1_3, reader_onr._read_onr1_4, 'strain energy density'],  # strain energy density
+            b'ONRGY2':  [reader_onr._read_onr2_3, reader_onr._read_onr1_4, 'strain energy density'],
             #b'ONRGY2':  [self._table_passer, self._table_passer],
             #===========================================================
             # OES
             # stress
             # OES1C - Table of composite element stresses or strains in SORT1 format
             # OESRT - Table of composite element ply strength ratio. Output by SDRCOMP
-            b'OES1X1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4], # stress - nonlinear elements
-            b'OES1'   : [reader_oes._read_oes1_3, reader_oes._read_oes1_4], # stress - linear only
-            b'OES1X'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4], # element stresses at intermediate stations & nonlinear stresses
-            b'OES1C'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4], # stress - composite
-            b'OESCP'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4], # stress - nonlinear???
-            b'OESRT'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4], # ply strength ratio
+            b'OES1X1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'nonlinear stress'], # stress - nonlinear elements
+            b'OES1'   : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'linear stress'], # stress - linear only
+            b'OES1X'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'linear stress'], # element stresses at intermediate stations & nonlinear stresses
+            b'OES1C'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'composite stress'], # stress - composite
+            b'OESCP'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'nonlinear? stress'], # stress - nonlinear???
+            b'OESRT'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'ply strength ratio'], # ply strength ratio
+            b'OESRTN' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'ply strength ratio; nonlinear?'], # ply strength ratio
 
             # strain
-            b'OSTR1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],  # strain - autodesk/9zk6b5uuo.op2
-            b'OSTR1X'  : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],  # strain - isotropic
-            b'OSTR1C'  : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],  # strain - composite
-            b'OESTRCP' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],  # strain - composite ply
+            b'OSTR1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'linear strain'],  # strain - autodesk/9zk6b5uuo.op2
+            b'OSTR1X'  : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'isotropic linear strain'],  # strain - isotropic
+            b'OSTR1C'  : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'composite strain'],  # strain - composite
+            b'OESTRCP' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'composite ply strain'],  # strain - composite ply
 
-            b'OSTR1PL' : [self._table_passer, self._table_passer],  # Table of ply strains-plastic in SORT1 format
-            b'OSTR1THC' : [self._table_passer, self._table_passer], # ????
-            b'OSTR1CR' : [self._table_passer, self._table_passer],  # ????
-            #b'OEFIIP'
+            b'OSTR1PL'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 ply strains-plastic'],  # Table of ply strains-plastic in SORT1 format
+            b'OSTR1THC' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 ply strains-thermal'],
+            b'OSTR1CR'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 creep strain at Gauss points'],
+            b'OSTR1EL'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 elastic strain in SORT1 format'],
+            b'OSTR1TH'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of thermal strain; SORT1'],
+            b'OSTR1ING' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 OES output table of initial strains at corner Gauss points in the basic coordinate system; SORT1'],
+
+            b'OSTR1CRC' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of composite creep strain; SORT1'],
+            b'OSTR1PLC' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of ply strains-plastic; SORT1'],
+            b'OSTR1ELG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of elastic strain at Gauss points; SORT1'],
+            b'OSTR1THG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of thermal strain at Gauss points; SORT1'],
+            b'OSTR1PLG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of plastic strain at Gauss points; SORT1'],
+            b'OSTR1CRG' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Table of creep strain at Gauss points; SORT1'],
 
             # special nonlinear tables
             # OESNLBR - Slideline stresses
@@ -889,171 +925,190 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # OESNLXR - Nonlinear stress
             #           Table of nonlinear element stresses in SORT1 format and appended for all subcases
 
-            b'OESNLXR' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],  # nonlinear stresses
-            b'OESNLXD' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],  # nonlinear transient stresses
-            b'OESNLBR' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
-            b'OESNL1X' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
+            b'OESNLXR' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'nonlinear stress'],  # nonlinear stresses
+            b'OESNLXD' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'nonlinear transient stress'],  # nonlinear transient stresses
+            b'OESNLBR' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'Slideline stress'],
+            b'OESNL1X' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'nonlinear stress?'],
 
-            b'OESNL2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],
-            b'OESNLXR2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],
-            b'OESNLBR2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],
+            b'OESNL2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'nonlinear stress?'],
+            b'OESNLXR2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'nonlinear stress'],
+            b'OESNLBR2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'Slideline stress'],
             #b'OESNLXR2' : [self._table_passer, self._table_passer],
             #b'OESNLBR2' : [self._table_passer, self._table_passer],
 
             # off stress
-            b'OES2'    : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],  # stress - linear only - disabled; need better tests
+            b'OES2'    : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'linear stress'],  # stress - linear only - disabled; need better tests
 
             #=======================
             # OUG
             # displacement/velocity/acceleration/eigenvector/temperature
-            b'OUG1'    : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # displacements in nodal frame
-            b'OVG1'    : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # velocity in nodal frame
-            b'OAG1'    : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # accelerations in nodal frame
+            b'OUG1'    : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set U in CD frame'],  # displacements in nodal frame
+            b'OVG1'    : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set Velocity in CD frame'],  # velocity in nodal frame
+            b'OAG1'    : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set Acceleration in CD frame'],  # accelerations in nodal frame
 
-            b'OUG1F'    : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # acoustic displacements in ? frame
+            b'OUG1F'    : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set acoustic displacements'],  # acoustic displacements in ? frame
 
             #b'OVG'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # aeroelastic velocity
-            b'OUGV1'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # displacements in nodal frame
-            b'BOUGV1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # OUG1 on the boundary???
-            b'BOUGF1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # OUG1 on the boundary???
-            b'OUGV1PAT': [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # OUG1 + coord ID
-            b'TOUGV1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # grid point temperature
-            b'ROUGV1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # relative OUG
-            b'OPHSA'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # Displacement table in SORT1
-            b'OUXY1'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # Displacements in SORT1 format for h-set or d-set.
-            b'OUGPC1'  : [reader_oug._read_ougpc1_3, reader_oug._read_ougpc_4],  # panel contributions
-            b'OUGPC2'  : [reader_oug._read_ougpc2_3, reader_oug._read_ougpc_4],  # panel contributions
-            b'OUGF1' : [reader_oug._read_oug1_3, reader_oug._read_oug_4], # Acoustic pressures at microphone points in SORT1 format
-            b'OUGF2' : [reader_oug._read_oug2_3, reader_oug._read_oug_4], # Acoustic pressures at microphone points in SORT1 format
+            b'OUGV1'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set U in CD frame'],  # displacements in nodal frame
+            b'BOUGV1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set U in cid=0 frame'],  # OUG1 on the boundary???
+            b'BOUGF1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set boundary U in cid=0 frame'],  # OUG1 on the boundary???
+            b'OUGV1PAT': [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set U in CD frame with coord id'],  # OUG1 + coord ID
+            b'TOUGV1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set grid point temperature'],  # grid point temperature
+            b'ROUGV1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set relative U in CD frame'],  # relative OUG
+            b'OPHSA'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'g-set displacement in CD frame'],  # Displacement table in SORT1
+            b'OUXY1'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'h/d-set displacement in CD frame'],  # Displacements in SORT1 format for h-set or d-set.
+            b'OUGPC1'  : [reader_oug._read_ougpc1_3, reader_oug._read_ougpc_4, 'panel contributions'],  # panel contributions
+            b'OUGPC2'  : [reader_oug._read_ougpc2_3, reader_oug._read_ougpc_4, 'panel contributions'],  # panel contributions
+            b'OUGF1' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'Acoustic pressures at microphone points'], # Acoustic pressures at microphone points in SORT1 format
+            b'OUGF2' : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'Acoustic pressures at microphone points'], # Acoustic pressures at microphone points in SORT1 format
 
-            b'OUGV2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4],  # displacements in nodal frame
-            b'ROUGV2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_4],  # relative OUG
-            b'OUXY2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4],  # Displacements in SORT2 format for h-set or d-set.
+            b'OUGV2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set displacements in nodal frame'],  # displacements in nodal frame
+            b'ROUGV2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set relative U in CD frame'],  # relative OUG
+            b'OUXY2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'h/d-set displacements'],  # Displacements in SORT2 format for h-set or d-set.
+            b'OUG1S'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'structural eigenvectors'],  # Displacements in SORT2 format for h-set or d-set.
 
             #  scaled response spectra - ABS / NRL / SRSS
-            b'OUPV1' : [reader_oug._read_oug1_3, reader_oug._read_oug_4],    # displacement, velocity, acceleration
-            b'OQP1'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4],    # spc forces
-            b'OQP2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4],    # spc forces
-            b'DOEF1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],   # forces
-            b'DOES1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],  # stress
-            b'DOSTR1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4], # strain
+            b'OUPV1' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'ABS/NRL/SRSS displacement/velocity/acceleration'],    # displacement, velocity, acceleration
+            b'OQP1'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'ABS/NRL/SRSS spc force'],    # spc forces
+            b'OQP2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'ABS/NRL/SRSS spc force'],    # spc forces
+            b'DOEF1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'ABS/NRL/SRSS element force'],   # forces
+            b'DOES1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'ABS/NRL/SRSS stress'],  # stress
+            b'DOSTR1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'ABS/NRL/SRSS strain'], # strain
 
             # modal contribution
-            b'OUGMC1'  : [reader_oug._read_oug1_3, reader_oug._read_ougmc_4],  # displacement
-            b'OQGMC1'  : [reader_oqg._read_oqg1_3, reader_oug._read_ougmc_4],  # spc/mpc? force
-            b'OESMC1'  : [reader_oes._read_oes1_3, reader_oes._read_oesmc_4],  # stress
-            b'OSTRMC1'  : [reader_oes._read_oes1_3, reader_oes._read_oesmc_4], # strain
+            b'OUGMC1'  : [reader_oug._read_oug1_3, reader_oug._read_ougmc_4, 'NX 2019.2 modal contribution displacement'],  # displacement
+            b'OQGMC1'  : [reader_oqg._read_oqg1_3, reader_oug._read_ougmc_4, 'NX 2019.2 modal contribution spc/mpc? force'],  # spc/mpc? force
+            b'OESMC1'  : [reader_oes._read_oes1_3, reader_oes._read_oesmc_4, 'NX 2019.2 modal contribution stress'],  # stress
+            b'OEFMC1'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution force'],  # force
+            b'OSTRMC1' : [reader_oes._read_oes1_3, reader_oes._read_oesmc_4, 'NX 2019.2 modal contribution strain'], # strain
+
+            b'OUGMC2'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution displacement; SORT2'],  # displacement
+            b'OQGMC2'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution spc/mpc? force'],  # spc/mpc? force
+            b'OESMC2'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution stress'],  # stress
+            b'OEFMC2'  : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution force'],  # force
+            b'OSTRMC2' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 modal contribution strain'], # strain
 
             #F:\work\pyNastran\examples\Dropbox\move_tpl\sbuckl2a.op2
             # post-buckling / nonlinear buckling
-            b'OCRUG' : [reader_oug._read_oug1_3, reader_oug._read_oug_4],   # displacement
-            b'OCRPG' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],  # loads
+            b'OCRUG' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'nonlinear buckling displacement'],   # displacement
+            b'OCRPG' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'nonlinear buckling load'],  # loads
+
+            b'BOPG1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'applied load in cid=0 frame'],  # applied loads in basic coordinate system
 
             # eigenvectors
-            b'OPHIG' : [reader_oug._read_oug1_3, reader_oug._read_oug_4],    # basic coordinate system
-            b'BOPHIG' : [reader_oug._read_oug1_3, reader_oug._read_oug_4],   # basic coordinate system
-            b'BOPHIGF' : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # basic coordinate system for the fluid portion of the model
-            b'BOPHIGS' : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # basic coordinate system for the structural portion of the model
-
-            b'BOPG1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],  # applied loads in basic coordinate system
+            b'OPHIG' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'eigenvectors in cid=0 frame'],    # basic coordinate system
+            b'BOPHIG' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'eigenvectors in cid=0 frame'],   # basic coordinate system
+            b'BOPHIGF' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'eigenvectors in cid=0 frame'],  # basic coordinate system for the fluid portion of the model
+            b'BOPHIGS' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'eigenvectors in cid=0 frame'],  # basic coordinate system for the structural portion of the model
 
             #=======================
             # extreme values of the respective table
-            b'OUGV1MX' : [self._table_passer, self._table_passer],
-            b'OEF1MX' : [self._table_passer, self._table_passer],
-            b'OES1MX' : [self._table_passer, self._table_passer],
+            b'OUGV1MX' : [self._table_passer, self._table_passer, 'extreme values of U'],
+            b'OEF1MX' : [self._table_passer, self._table_passer, 'extreme values of element force'],
+            b'OES1MX' : [self._table_passer, self._table_passer, 'extreme values of stress'],
 
             #=======================
             # contact
-            b'OQGCF1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4], # Contact force at grid point.
-            b'OQGCF2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4], # Contact force at grid point.
+            b'OQGCF1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'contact force at grid point'], # Contact force at grid point.
+            b'OQGCF2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'contact force at grid point'], # Contact force at grid point.
 
-            b'OSPDS1' : [reader_oqg._read_opsds1_3, reader_oqg._read_opsds1_4],  # Final separation distance.
-            b'OSPDS2' : [self._nx_table_passer, self._table_passer],
+            b'OSPDS1' : [reader_oqg._read_opsds1_3, reader_oqg._read_opsds1_4, 'Final separation distance'],  # Final separation distance.
+            b'OSPDS2' : [self._nx_table_passer, self._table_passer, 'Final separation distance'],
 
-            b'OSPDSI1' : [reader_oqg._read_opsdi1_3, reader_oqg._read_opsdi1_4], # Initial separation distance.
-            b'OSPDSI2' : [self._nx_table_passer, self._table_passer], # Output contact separation distance results.
+            b'OSPDSI1' : [reader_oqg._read_opsdi1_3, reader_oqg._read_opsdi1_4, 'Initial separation distance'], # Initial separation distance.
+            b'OSPDSI2' : [self._nx_table_passer, self._table_passer, 'contact separation distance'], # Output contact separation distance results.
 
             #b'OBC1' : [self._read_obc1_3, self._read_obc1_4],
-            #b'OBC2' : [self._nx_table_passer, self._table_passer], # Contact pressures and tractions at grid points.
+            b'OBC1' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'],
+            b'OBC2' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'], # Contact pressures and tractions at grid points.
 
-            #b'OSLIDE1'
-            b'OCPSDFC' : [self._nx_table_passer, self._table_passer],
-            b'OCCORFC' : [self._nx_table_passer, self._table_passer],
+            b'OCPSDF':   [self._table_passer, self._table_passer, 'Output table of cross-PSD functions'],
+            b'OCPSDFC' : [self._nx_table_passer, self._table_passer, 'NX cross-PSD functions for composites'],
+            b'OCCORFC' : [self._nx_table_passer, self._table_passer, 'NX cross-correlation functions for composites'],
 
             # Glue normal and tangential tractions at grid point in basic coordinate system
-            b'OBG1' : [self._nx_table_passer, self._table_passer],
-            b'OBG2' : [self._nx_table_passer, self._table_passer],
+            b'OBG1' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
+            b'OBG2' : [self._nx_table_passer, self._table_passer, 'Glue normal and tangential tractions at grid point in cid=0 frame'],
 
             # Glue forces at grid point in basic coordinate system
-            b'OQGGF1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4],
-            b'OQGGF2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4],
+            b'OQGGF1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'Glue forces at grid point in cid=0 frame'],
+            b'OQGGF2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'Glue forces at grid point in cid=0 frame'],
 
             # Table of Euler Angles for transformation from material to basic coordinate system in the:
-            b'TRMBU' : [self._nx_table_passer, self._table_passer], # undeformed configuration
-            b'TRMBD' : [self._nx_table_passer, self._table_passer],
+            b'TRMBU' : [self._nx_table_passer, self._table_passer, 'xform for undeformed configuration'], # undeformed configuration
+            b'TRMBD' : [self._nx_table_passer, self._table_passer, 'xform for deformed configuration'],
             #=======================
             # OGPWG
             # grid point weight
-            b'OGPWG'  : [reader_ogpwg._read_ogpwg_3, reader_ogpwg._read_ogpwg_4],  # grid point weight
-            b'OGPWGM' : [reader_ogpwg._read_ogpwg_3, reader_ogpwg._read_ogpwg_4],  # modal? grid point weight
-
+            b'OGPWG'  : [reader_ogpwg._read_ogpwg_3, reader_ogpwg._read_ogpwg_4, 'grid point weight'],  # grid point weight
+            b'OGPWGM' : [reader_ogpwg._read_ogpwg_3, reader_ogpwg._read_ogpwg_4, 'modal? grid point weight'],  # modal? grid point weight
+            b'OGPSTRN': [self._table_passer, self._table_passer, 'grid point forces? / composite strength ratio?'],
+            b'OGPFIN': [self._table_passer, self._table_passer, 'Grid point force balance data block for which grid point force balance totals are to be recalculated; SORT1'],
+            b'OGPSRN': [self._table_passer, self._table_passer, 'grid point forces? / composite strength ratio?'],
             #=======================
             # OGS
             # grid point stresses
-            b'OGS1' : [reader_ogs._read_ogs1_3, reader_ogs._read_ogs1_4],  # grid point stresses
-            #b'OGS2' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
+            b'OSTR1G': [self._table_passer, self._table_passer, 'OEE Table of grid point strains; SORT1'],
+            b'OGS1X': [reader_ogs._read_ogs1_3, reader_ogs._read_ogs1_4, 'grid point stress???'],
+            b'OGS1' : [reader_ogs._read_ogs1_3, reader_ogs._read_ogs1_4, 'grid point stress'],  # grid point stresses
+            #b'OGS2' : [self._read_ogs1_3, self._read_ogs1_4, 'grid point stress'],  # grid point stresses
 
-            b'OGSTR1' : [reader_ogs._read_ogstr1_3, reader_ogs._read_ogstr1_4],  # grid point strains
+            b'OGSTR1' : [reader_ogs._read_ogstr1_3, reader_ogs._read_ogstr1_4, 'grid point strain'],  # grid point strains
             #=======================
             # eigenvalues
-            b'BLAMA' : [reader_lama._read_buckling_eigenvalue_3, reader_lama._read_buckling_eigenvalue_4], # buckling eigenvalues
-            b'CLAMA' : [reader_lama._read_complex_eigenvalue_3, reader_lama._read_complex_eigenvalue_4],   # complex eigenvalues
-            b'LAMA'  : [reader_lama._read_real_eigenvalue_3, reader_lama._read_real_eigenvalue_4],         # eigenvalues
-            b'LAMAS' : [reader_lama._read_real_eigenvalue_3, reader_lama._read_real_eigenvalue_4],         # eigenvalues-structure
-            b'LAMAF' : [reader_lama._read_real_eigenvalue_3, reader_lama._read_real_eigenvalue_4],         # eigenvalues-fluid
+            b'BLAMA' : [reader_lama._read_buckling_eigenvalue_3, reader_lama._read_buckling_eigenvalue_4, 'buckling eigenvalues'], # buckling eigenvalues
+            b'CLAMA' : [reader_lama._read_complex_eigenvalue_3, reader_lama._read_complex_eigenvalue_4, 'complex eigenvalues'],   # complex eigenvalues
+            b'LAMA'  : [reader_lama._read_real_eigenvalue_3, reader_lama._read_real_eigenvalue_4, 'eigenvalues'],         # eigenvalues
+            b'LAMAS' : [reader_lama._read_real_eigenvalue_3, reader_lama._read_real_eigenvalue_4, 'eigenvalues-structure'],         # eigenvalues-structure
+            b'LAMAF' : [reader_lama._read_real_eigenvalue_3, reader_lama._read_real_eigenvalue_4, 'eigenvalues-fluid'],         # eigenvalues-fluid
 
             # ===passers===
             #b'EQEXIN': [self._table_passer, self._table_passer],
             #b'EQEXINS': [self._table_passer, self._table_passer],
 
-            b'GPDT' : [self._table_passer, self._table_passer],     # grid points?
-            b'BGPDT' : [self._table_passer, self._table_passer],    # basic grid point definition table
-            b'BGPDTS' : [self._table_passer, self._table_passer],
-            b'BGPDTOLD' : [self._table_passer, self._table_passer],
+            # in op2_reader
+            #b'GPDT' : [self._table_passer, self._table_passer],     # grid points?
+            #b'BGPDT' : [self._table_passer, self._table_passer],    # basic grid point definition table
+            #b'BGPDTS' : [self._table_passer, self._table_passer],
+            #b'BGPDTOLD' : [self._table_passer, self._table_passer],
 
-            b'PVT' : [self._read_pvto_3, self._read_pvto_4], # PVT - Parameter Variable Table
-            b'PVTS' : [self._read_pvto_3, self._read_pvto_4], # ???
-            b'PVT0' : [self._read_pvto_3, self._read_pvto_4],  # user parameter value table
-            b'TOLD' : [self._table_passer, self._table_passer],
+            # in op2_reader
             #b'CASECC' : [self._table_passer, self._table_passer],  # case control deck
             #b'XCASECC' : [self._table_passer, self._table_passer], # ???
+            #b'STDISP' : [self._table_passer, self._table_passer], # matrix?
 
-            b'STDISP' : [self._table_passer, self._table_passer], # matrix?
-            b'AEDISP' : [self._table_passer, self._table_passer], # matrix?
+            b'PVT' : [self._read_pvto_3, self._read_pvto_4, 'PARAM cards'], # PVT - Parameter Variable Table
+            b'PVTS' : [self._read_pvto_3, self._read_pvto_4, 'PARAM cards'], # ???
+            b'PVT0' : [self._read_pvto_3, self._read_pvto_4, 'PARAM cards'],  # user parameter value table
+            b'TOLD' : [self._table_passer, self._table_passer, '????'],
+
+
+            b'AEDISP' : [self._table_passer, self._table_passer, '???'], # matrix?
             #b'TOLB2' : [self._table_passer, self._table_passer], # matrix?
 
-            b'FOL' : [self._table_passer, self._table_passer],
-            b'PERF' : [self._table_passer, self._table_passer],
+            # in op2_reader
+            #b'FOL' : [self._table_passer, self._table_passer],
+
+            #b'PERF' : [self._table_passer, self._table_passer, '???'],
 
             # DSCMCOL - Correlation table for normalized design sensitivity coefficient matrix.
             #           Output by DSTAP2.
             # DBCOPT - Design optimization history table for ???
 
-            b'OEKE1' : [self._table_passer, self._table_passer],
+            b'OEKE1' : [self._table_passer, self._table_passer, 'element kinetic energy'],
             #b'DSCMCOL' : [self._table_passer, self._table_passer],
             #b'DBCOPT' : [self._table_passer, self._table_passer],
             #b'FRL0': [self._table_passer, self._table_passer],  # frequency response list
 
             #==================================
             # modal participation factors
-            b'OFMPF2M' : [self._read_mpf_3, self._read_mpf_4], # OFMPF2M Table of fluid mode participation factors by normal mode.
-            b'OLMPF2M' : [self._read_mpf_3, self._read_mpf_4], # OLMPF2M Load mode participation factors by normal mode.
-            b'OPMPF2M' : [self._read_mpf_3, self._read_mpf_4], # OPMPF2M Panel mode participation factors by normal mode.
-            b'OSMPF2M' : [self._read_mpf_3, self._read_mpf_4],
+            b'OFMPF2M' : [self._read_mpf_3, self._read_mpf_4, 'fluid mode: modal participation factors'], # OFMPF2M Table of fluid mode participation factors by normal mode.
+            b'OLMPF2M' : [self._read_mpf_3, self._read_mpf_4, 'load: modal participation factors'], # OLMPF2M Load mode participation factors by normal mode.
+            b'OPMPF2M' : [self._read_mpf_3, self._read_mpf_4, 'panel mode: modal participation factors'], # OPMPF2M Panel mode participation factors by normal mode.
+            b'OSMPF2M' : [self._read_mpf_3, self._read_mpf_4, 'structural mode: modal participation factors'],
 
             # OGMPF2M Grid mode participation factors by normal mode.
-            b'OGPMPF2M' : [self._read_mpf_3, self._read_mpf_4],
+            b'OGPMPF2M' : [self._read_mpf_3, self._read_mpf_4, 'grid mode: modal participation factors'],
 
             #OFMPF2E Table of fluid mode participation factors by excitation frequencies.
             #OSMPF2E Table of structure mode participation factors by excitation frequencies.
@@ -1063,187 +1118,316 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             #==================================
             #b'GPL': [self._table_passer, self._table_passer],
-            #b'OMM2' : [self._table_passer, self._table_passer],  # max/min table - kinda useless
-            b'ERRORN' : [self._table_passer, self._table_passer],  # p-element error summary table
+            b'ERRORN' : [self._table_passer, self._table_passer, ' p-element error summary table'],  # p-element error summary table
+
+            # in op2_reader, but we need the max/min flag?
+            b'OMM2' : [self._table_passer, self._table_passer, 'max/min table'],  # max/min table - kinda useless
             #==================================
-            b'OUG2T' : [self._table_passer, self._table_passer],
+            b'OUG2T' : [self._table_passer, self._table_passer, '???'],
 
             # nx cohesive zone
-            b'ODAMGCZT' : [self._nx_table_passer, self._table_passer], # nx - Table of tractions for cohesive elements
-            b'ODAMGCZR' : [self._nx_table_passer, self._table_passer], # nx - Table of relative displacements for cohesive elements
-            b'ODAMGCZD' : [self._nx_table_passer, self._table_passer], # nx - Table of damage values for cohesive elements
+            b'ODAMGCZT' : [self._nx_table_passer, self._table_passer, 'tractions for cohesive elements'], # nx - Table of tractions for cohesive elements
+            b'ODAMGCZR' : [self._nx_table_passer, self._table_passer, 'relative displacements for cohesive elements'], # nx - Table of relative displacements for cohesive elements
+            b'ODAMGCZD' : [self._nx_table_passer, self._table_passer, 'damage for cohesive elements'], # nx - Table of damage values for cohesive elements
 
             # Normalized Mass Density
-            b'ONMD' : [self.reader_onmd._read_onmd_3, self.reader_onmd._read_onmd_4],
+            b'ONMD' : [reader_onmd._read_onmd_3, reader_onmd._read_onmd_4, 'Normalized Mass Density'],
+
+            ## Equivalent Radiated Power
+            b'OERP':    [self._table_passer, self._table_passer, 'Equivalent Radiated Power Output'],
+            b'OERPDSN': [self._table_passer, self._table_passer, 'Equivalent Radiated Power Output; design response'],
+            b'OERPM':   [self._table_passer, self._table_passer, 'Modal Participation Factors of Equivalent Radiated Power Output'], # 'MODAL PARTICIPATION FACTORS OF EQUIVALENT RADIATED POWER',
+            b'OERPEL1': [self._table_passer, self._table_passer, 'NX 2019.2 ERP design responses at element level; SORT1'],
+            b'OERPEL2': [self._table_passer, self._table_passer, 'NX 2019.2 ERP design responses at element level; SORT2'],
+
+            ## NX optimization
+            b'ODELBGPD' : [self._nx_table_passer, self._table_passer, 'NX 2019.2 Shape optimization geometry changes'],
+            b'OSHT1': [self._nx_table_passer, self._table_passer, 'NX 2019.2 optimization thicknesses for DVEREL1 elements'],
+
+            ## MSC unsorted
+            b'OUTSFLOW': [self._table_passer, self._table_passer, 'MSC 2020.0 Shear Flow Approximation'],
+            b'OEXTFIB': [self._table_passer, self._table_passer, 'MSC 2020.0 Table of extreme fibre output for composite elements'],
+            b'OVINT': [self._table_passer, self._table_passer, 'MSC 2020.0 Vibration Intensity table'],
+            b'OGTEMP': [self._table_passer, self._table_passer, 'MSC 2020.0 Vibration Intensity table'],
+            b'OETEMP': [self._table_passer, self._table_passer, 'MSC 2020.0 Average Element Temperatures'],
+
+            ## NX unsorted
+            b'OES1G' : [self._table_passer, self._table_passer, 'NX 2019.2 Grid point stress or strain table and interpolated from the centroidal stress table/OES1M; SORT1'],
+            b'OBOLT1': [self._table_passer, self._table_passer, 'NX 2019.2 Bolt output'],
+            b'OSTR1IN': [self._table_passer, self._table_passer, 'NX 2019.2 OES output table of initial strains at corner grids in the cid=0 frame'],
+            b'OELAR': [self._table_passer, self._table_passer, 'NX 2019.2 Inactive element status and addition/removal time'],
+            b'OJINT': [self._table_passer, self._table_passer, 'NX 2019.2 Table for J integral output'],
+
+            ## unsorted
+            b'OCOMPQT': [self._table_passer, self._table_passer, 'composite (???)'],
+            b'OSMPF1': [self._table_passer, self._table_passer, 'Table of structural modal participation factors in SORT1 format'],
+            b'OGPSR': [self._table_passer, self._table_passer, 'Table of global ply strength ratios'],
+            b'OGPSTRS': [self._table_passer, self._table_passer, 'Table of global ply strength ratios (OGPSR)'],
+            b'OELAFG' : [self._table_passer, self._table_passer, 'OFP table of Elastic Forces'],
+            b'OGK1': [self._table_passer, self._table_passer, 'gasket element results'],
+            b'OEDE1': [self._table_passer, self._table_passer, 'Elemental energy loss'],
+
+            b'OGPFI': [self._table_passer, self._table_passer, 'initial? grid point forces'],
+            #b'OEDE1': [self._table_passer, self._table_passer, ''],
+            #b'OEDE1': [self._table_passer, self._table_passer, ''],
+
+            b'OESRIP': [self._table_passer, self._table_passer, 'NX 2019.2 In-plane ply strength ratios'],
+            b'OEFIIP': [self._table_passer, self._table_passer, 'NX 2019.2 Plane ply failure indices'],
+            b'OEFIIS': [self._table_passer, self._table_passer, 'NX 2019.2 Interlaminar shear failure indices'],
+            b'OESRIS': [self._table_passer, self._table_passer, 'NX 2019.2 Interlaminar shear strength ratios'],
+
+            b'OMEOSC1': [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating total modal energies; SORT1'],
+            b'OMECON1': [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant total modal energies; SORT1'],
+            b'OMEOSC1': [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating total modal energies; SORT1'],
+            b'OMKEC1':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant modal kinetic energies; SORT1'],
+            b'OMKEO1':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating modal kinetic energies; SORT1'],
+            b'OMSEC1':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant modal strain energies; SORT1'],
+            b'OMSEO1':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating modal strain energies; SORT1'],
+
+            b'OMEOSC2': [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating total modal energies; SORT2'],
+            b'OMECON2': [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant total modal energies; SORT2'],
+            b'OMEOSC2': [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating total modal energies; SORT2'],
+            b'OMKEC2':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant modal kinetic energies; SORT2'],
+            b'OMKEO2':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating modal kinetic energies; SORT2'],
+            b'OMSEC2':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of constant modal strain energies; SORT2'],
+            b'OMSEO2':  [self._table_passer, self._table_passer, 'NX 2019.2 Table of oscillating modal strain energies; SORT2'],
+            #b'OMEOSC2': [self._table_passer, self._table_passer, 'NX 2019.2 ???'],
+            #b'OMEOSC2': [self._table_passer, self._table_passer, 'NX 2019.2 ???'],
+            #b'OMEOSC2': [self._table_passer, self._table_passer, 'NX 2019.2 ???'],
+            #
+
+            ## NX damage
+            b'ODAMGPFD': [self._table_passer, self._table_passer, 'NX 2019.2 Table of damage values for ply failure for SOL 401'],
+            b'ODAMGPFE': [self._table_passer, self._table_passer, 'NX 2019.2 Table of damage energy for ply failure for SOL 401'],
+            b'ODAMGPFS': [self._table_passer, self._table_passer, 'NX 2019.2 Table of damage status for SOL 401'],
+            b'ODAMGPFR': [self._table_passer, self._table_passer, 'NX 2019.2 Table of crack density for ply failure EUD model from SOL 401. Crack density at corner grids on the middle of plies. The values are unitless'],
+
+            ## NX acoustics
+            b'OACCQ'    : [self._table_passer, self._table_passer, 'NX 2019.2 Acoustic coupling information; SORT1'],
+            b'OCCORF'   : [self._table_passer, self._table_passer, 'NX 2019.2 Output table of acoustic cross-correlation functions'],
+            b'OEFMXORD' : [self._table_passer, self._table_passer, 'NX 2019.2 Maximum frequency per element and element order contribution in SOL 108 FEMAO analysis'],
+            b'OACPERF'  : [self._table_passer, self._table_passer, 'NX 2019.2 Performance data indicating computation time per frequency in seconds and memory consumed in GB per frequency in FEMAO analysis'],
+            b'OACPWR2'  : [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic power for AML regions and GROUPs of 2D elements; SORT2'],
+            b'OAPPSD2'  : [self._table_passer, self._table_passer, 'NX 2019.2 Table of acoustic power for the PSD function; SORT2'],
+            b'OACPWRI2' : [self._table_passer, self._table_passer, 'NX 2019.2 Data block of incident acoustic power for FACES or GROUPs of 2D elements; SORT2'],
+            b'OACPWRT2' : [self._table_passer, self._table_passer, 'NX 2019.2 Data block of transmitted acoustic power for AML regions and GROUPs of 2D elements; SORT2'],
+            b'OACTRLS2': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic transmission loss; SORT2'],
+
+            b'OACVELO1': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic velocities at microphone points; SORT1'],
+            b'OACVELO2': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic velocities at microphone points; SORT2'],
+
+            b'OACINT1': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic intensities at microphone points; SORT1'],
+            b'OACINT2': [self._table_passer, self._table_passer, 'NX 2019.2 Data block of acoustic intensities at microphone points; SORT2'],
+
+            b'OUGRC1': [self._table_passer, self._table_passer, 'NX 2019.2 Table of reciprocal panel contributions; SORT1'],
+            b'OUGRC2': [self._table_passer, self._table_passer, 'NX 2019.2 Table of reciprocal panel contributions; SORT2'],
+
+            b'OUGGC1': [self._table_passer, self._table_passer, 'NX 2019.2 acoustic grid contribution; SORT1'],
+            b'OUGGC2': [self._table_passer, self._table_passer, 'NX 2019.2 acoustic grid contribution; SORT2'],
+
+            # glue
+            b'OTEMPP': [self._table_passer, self._table_passer, 'TOP/BOT/MID temperature'],
+            b'OCOMP': [self._table_passer, self._table_passer, 'OFP Table for Marc Composite Output (Linear Perturbation)'],
+            b'OQS2SGN1': [self._table_passer, self._table_passer, 'OFP Table of S2S glued contact normal forces/moments'],
+            b'OQS2SGT1': [self._table_passer, self._table_passer, 'OFP Table of S2S glued contact tangential forces/moments'],
+
+            #OSMPF1
+            #OSMPF2M Table of structure mode participation factors by normal mode.
+            #OSMPF2E Table of structure mode participation factors by excitation frequencies.
+
+            # NX contact
+            b'OSLIDE1': [self._table_passer, self._table_passer, 'NX 2019.2 Incremental and total slide/slip distance'],
+            b'OCONST1' : [self._table_passer, self._table_passer, 'NX2019.2 Contact status in SORT1 format'],
+            b'OSLIDEG1' : [self._table_passer, self._table_passer, 'NX2019.2 Glue slide distance output'],
+            b'OBCKL' : [self._table_passer, self._table_passer, 'NX2019.2 Table of load factor vs. cumulative arc-length in SORT2 format'],
+            #b'ASDFFFF' : [self._table_passer, self._table_passer, 'NX2019.2 ???'],
+            #b'ASDFFFF' : [self._table_passer, self._table_passer, 'NX2019.2 ???'],
+            #b'ASDFFFF' : [self._table_passer, self._table_passer, 'NX2019.2 ???'],
+
+            ## MSC contact
+            b'OFCON3D0' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of Rigid/Flexible Body contact stresses; initial'],
+            b'OFCON3DD' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of Rigid/Flexible Body contact stresses; deformed'],
+
+            b'OBCNURB0' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of analytical contact surface spline; initial'],
+            b'OBCNURBD' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of analytical contact surface spline; deformed'],
+
+            b'OCNTCHK0' : [self._table_passer, self._table_passer, 'MSC 2020.0 OUG-type table of contact check of active nodes status and distance; initial'],
+            b'OCNTCHKD' : [self._table_passer, self._table_passer, 'MSC 2020.0 OUG-type table of contact check of active nodes status and distance; deformed'],
+            b'OFGCOND' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of Global Contact Output'],
+            b'OFCRFMD' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of resultant force/moment for each CONTACT Pair; deformed'],
+
+            b'OUGSTRS0': [self._table_passer, self._table_passer, 'OUG-type table of geometry adjustment by initial stress-free contact'],
+            #b'OFCON3D' : 'Table of initial contact status information'],
+            #b'OCONTACT' : 'Table of contact pairs if BCONTAT=AUTO'],
         }
         table_mapper_random = {
             # random OUG (displacement, velocity, acceleration)
-            b'OUGATO1' : [reader_oug._read_oug1_3, reader_oug._read_oug_ato],
-            b'OUGCRM1' : [reader_oug._read_oug1_3, reader_oug._read_oug_crm],
-            b'OUGPSD1' : [reader_oug._read_oug1_3, reader_oug._read_oug_psd],
-            b'OUGRMS1' : [reader_oug._read_oug1_3, reader_oug._read_oug_rms],
-            b'OUGNO1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_no],
+            b'OUGATO1' : [reader_oug._read_oug1_3, reader_oug._read_oug_ato, 'g-set auto-correlation for U'],
+            b'OUGCRM1' : [reader_oug._read_oug1_3, reader_oug._read_oug_crm, 'g-set cumulative RMS for U'],
+            b'OUGPSD1' : [reader_oug._read_oug1_3, reader_oug._read_oug_psd, 'g-set PSD for U'],
+            b'OUGRMS1' : [reader_oug._read_oug1_3, reader_oug._read_oug_rms, 'g-set RMS for U'],
+            b'OUGNO1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_no, 'g-set number of crossings for U'],
 
-            b'OUGATO2' : [reader_oug._read_oug2_3, reader_oug._read_oug_ato],
-            b'OUGCRM2' : [reader_oug._read_oug2_3, reader_oug._read_oug_crm],
-            b'OUGPSD2' : [reader_oug._read_oug2_3, reader_oug._read_oug_psd],
-            b'OUGRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
-            b'OUGNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
+            b'OUGATO2' : [reader_oug._read_oug2_3, reader_oug._read_oug_ato, 'g-set auto-correlation for U'],
+            b'OUGCRM2' : [reader_oug._read_oug2_3, reader_oug._read_oug_crm, 'g-set cumulative RMS for U'],
+            b'OUGPSD2' : [reader_oug._read_oug2_3, reader_oug._read_oug_psd, 'g-set PSD for U'],
+            b'OUGRMS2' : [self._table_passer, self._table_passer, 'g-set RMS for U'],  # buggy on isat random
+            b'OUGNO2'  : [self._table_passer, self._table_passer, 'g-set number of crossings for U'],  # buggy on isat random
             #b'OUGRMS2' : [reader_oug._read_oug2_3, reader_oug._read_oug_rms],  # buggy on isat random
             #b'OUGNO2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_no],  # buggy on isat random
 
             # velocity
-            b'OVGATO1' : [reader_oug._read_oug1_3, reader_oug._read_oug_ato],
-            b'OVGCRM1' : [reader_oug._read_oug1_3, reader_oug._read_oug_crm],
-            b'OVGPSD1' : [reader_oug._read_oug1_3, reader_oug._read_oug_psd],
-            b'OVGRMS1' : [reader_oug._read_oug1_3, reader_oug._read_oug_rms],
-            b'OVGNO1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_no],
+            b'OVGATO1' : [reader_oug._read_oug1_3, reader_oug._read_oug_ato, 'g-set auto-correlation for velocity'],
+            b'OVGCRM1' : [reader_oug._read_oug1_3, reader_oug._read_oug_crm, 'g-set cumulative RMS for velocity'],
+            b'OVGPSD1' : [reader_oug._read_oug1_3, reader_oug._read_oug_psd, 'g-set PSD for velocity'],
+            b'OVGRMS1' : [reader_oug._read_oug1_3, reader_oug._read_oug_rms, 'g-set RMS for velocity'],
+            b'OVGNO1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_no, 'g-set number of crossings for velocity'],
 
-            b'OVGATO2' : [reader_oug._read_oug2_3, reader_oug._read_oug_ato],
-            b'OVGCRM2' : [reader_oug._read_oug2_3, reader_oug._read_oug_crm],
-            b'OVGPSD2' : [reader_oug._read_oug2_3, reader_oug._read_oug_psd],
-            #b'OVGRMS2' : [self._table_passer, self._table_passer],
-            #b'OVGNO2'  : [self._table_passer, self._table_passer],
-            b'OVGRMS2' : [reader_oug._read_oug2_3, reader_oug._read_oug_rms],
-            b'OVGNO2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_no],
+            b'OVGATO2' : [reader_oug._read_oug2_3, reader_oug._read_oug_ato, 'g-set auto-correlation for velocity'],
+            b'OVGCRM2' : [reader_oug._read_oug2_3, reader_oug._read_oug_crm, 'g-set cumulative RMS for velocity'],
+            b'OVGPSD2' : [reader_oug._read_oug2_3, reader_oug._read_oug_psd, 'g-set PSD for velocity'],
+            #b'OVGRMS2' : [self._table_passer, self._table_passer],        , 'g-set RMS for velocity'],
+            #b'OVGNO2'  : [self._table_passer, self._table_passer],         'g-set number of crossings for velocity'],
+            b'OVGRMS2' : [reader_oug._read_oug2_3, reader_oug._read_oug_rms, 'g-set RMS for velocity'],
+            b'OVGNO2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_no, 'g-set number of crossings for velocity'],
 
             # acceleration
-            b'OAGATO1' : [reader_oug._read_oug1_3, reader_oug._read_oug_ato],
-            b'OAGCRM1' : [reader_oug._read_oug1_3, reader_oug._read_oug_crm],
-            b'OAGPSD1' : [reader_oug._read_oug1_3, reader_oug._read_oug_psd],
-            b'OAGRMS1' : [reader_oug._read_oug1_3, reader_oug._read_oug_rms],
-            b'OAGNO1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_no],
+            b'OAGATO1' : [reader_oug._read_oug1_3, reader_oug._read_oug_ato, 'g-set auto-correlation for acceleration'],
+            b'OAGCRM1' : [reader_oug._read_oug1_3, reader_oug._read_oug_crm, 'g-set cumulative RMS for acceleration'],
+            b'OAGPSD1' : [reader_oug._read_oug1_3, reader_oug._read_oug_psd, 'g-set PSD for acceleration'],
+            b'OAGRMS1' : [reader_oug._read_oug1_3, reader_oug._read_oug_rms, 'g-set RMS for acceleration'],
+            b'OAGNO1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_no, 'g-set number of crossings for acceleration'],
 
-            b'OAGATO2' : [reader_oug._read_oug2_3, reader_oug._read_oug_ato],
-            b'OAGCRM2' : [reader_oug._read_oug2_3, reader_oug._read_oug_crm],
-            b'OAGPSD2' : [reader_oug._read_oug2_3, reader_oug._read_oug_psd],
-            #b'OAGRMS2' : [self._table_passer, self._table_passer],
-            #b'OAGNO2'  : [self._table_passer, self._table_passer],
-            b'OAGRMS2' : [reader_oug._read_oug2_3, reader_oug._read_oug_rms],
-            b'OAGNO2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_no],
+            b'OAGATO2' : [reader_oug._read_oug2_3, reader_oug._read_oug_ato, 'g-set auto-correlation for acceleration'],
+            b'OAGCRM2' : [reader_oug._read_oug2_3, reader_oug._read_oug_crm, 'g-set cumulative RMS for acceleration'],
+            b'OAGPSD2' : [reader_oug._read_oug2_3, reader_oug._read_oug_psd, 'g-set PSD for acceleration'],
+            #b'OAGRMS2' : [self._table_passer, self._table_passer],        , 'g-set RMS for acceleration'],
+            #b'OAGNO2'  : [self._table_passer, self._table_passer],         'g-set number of crossings for acceleration'],
+            b'OAGRMS2' : [reader_oug._read_oug2_3, reader_oug._read_oug_rms, 'g-set RMS for acceleration'],
+            b'OAGNO2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_no, 'g-set number of crossings for acceleration'],
 
             # applied load
-            b'OPGATO1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],
-            b'OPGCRM1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],
-            b'OPGPSD1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],
-            b'OPGRMS1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],
-            b'OPGNO1'  : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],
+            b'OPGATO1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'g-set auto-correlation for applied load'],
+            b'OPGCRM1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'g-set cumulative RMS for applied load'],
+            b'OPGPSD1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'g-set PSD for applied load'],
+            b'OPGRMS1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'g-set RMS for applied load'],
+            b'OPGNO1'  : [reader_opg._read_opg1_3, reader_opg._read_opg1_4, 'g-set number of crossings for applied load'],
 
-            b'OPGATO2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4],
-            b'OPGCRM2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4],
-            b'OPGPSD2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4],
-            #b'OPGRMS2' : [self._table_passer, self._table_passer],
-            #b'OPGNO2'  : [self._table_passer, self._table_passer],
-            b'OPGRMS2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4],
-            b'OPGNO2'  : [reader_opg._read_opg2_3, reader_opg._read_opg1_4],
+            b'OPGATO2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4, 'g-set auto-correlation for applied load'],
+            b'OPGCRM2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4, 'g-set cumulative RMS for applied load'],
+            b'OPGPSD2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4, 'g-set PSD for applied load'],
+            #b'OPGRMS2' : [self._table_passer, self._table_passer],       , 'g-set RMS for applied load'],
+            #b'OPGNO2'  : [self._table_passer, self._table_passer],       'g-set number of crossings for applied load'],
+            b'OPGRMS2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4, 'g-set RMS for applied load'],
+            b'OPGNO2'  : [reader_opg._read_opg2_3, reader_opg._read_opg1_4, 'g-set number of crossings for applied load'],
 
             # SPC/MPC tables depending on table_code
             # SPC - NX/MSC
             # MPC - MSC
-            b'OQGATO1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4],
-            b'OQGCRM1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4],
-            b'OQGPSD1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4],
-            b'OQGRMS1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4],
-            b'OQGNO1'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4],
+            b'OQGATO1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'g-set auto-correlation for spc/mpc force'],
+            b'OQGCRM1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'g-set cumulative RMS for spc/mpc force'],
+            b'OQGPSD1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'g-set PSD for spc/mpc force'],
+            b'OQGRMS1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'g-set RMS for spc/mpc force'],
+            b'OQGNO1'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'g-set number of crossings for spc/mpc force'],
 
-            b'OQGATO2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4],
-            b'OQGCRM2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4],
-            b'OQGPSD2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4],
-            b'OQGRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
-            b'OQGNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
-            #b'OQGRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4],  # buggy on isat random
-            #b'OQGNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4],  # buggy on isat random
+            b'OQGATO2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'g-set auto-correlation for spc/mpc force'],
+            b'OQGCRM2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'g-set cumulative RMS for spc/mpc force'],
+            b'OQGPSD2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'g-set PSD for spc/mpc force'],
+            b'OQGRMS2' : [self._table_passer, self._table_passer, 'g-set RMS for spc/mpc force'],  # buggy on isat random
+            b'OQGNO2'  : [self._table_passer, self._table_passer, 'g-set number of crossings for spc/mpc force'],  # buggy on isat random
+            #b'OQGRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'g-set RMS for spc/mpc force'],  # buggy on isat random
+            #b'OQGNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'g-set number of crossings for spc/mpc force'],  # buggy on isat random
 
             # MPC Forces
             # these are NX tables
             # OQGM1 - mpc forces in the nodal frame
-            b'OQMG1'   : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_forces],
-            b'OQMATO1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_ato],
-            b'OQMCRM1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_crm],
-            b'OQMPSD1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_psd],
-            b'OQMRMS1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_rms],
-            b'OQMNO1'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_no],
+            b'OQMG1'   : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_forces, 'g-set mpc force in CD frame'],
+            b'OQMATO1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_ato, 'g-set auto-correlation for mpc force'],
+            b'OQMCRM1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_crm, 'g-set cumulative RMS for mpc force'],
+            b'OQMPSD1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_psd, 'g-set PSD for mpc force'],
+            b'OQMRMS1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_rms, 'g-set RMS for mpc force'],
+            b'OQMNO1'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_no, 'g-set number of crossings for mpc force'],
 
-            b'OQMG2'   : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_forces], # big random
-            b'OQMATO2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_ato],
-            b'OQMCRM2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_crm],
-            b'OQMPSD2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_psd],
-            b'OQMRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
-            b'OQMNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
-            #b'OQMRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_rms],  # buggy on isat random
-            #b'OQMNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_no],  # buggy on isat random
+            b'OQMG2'   : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_forces, 'g-set mpc force in CD frame'], # big random
+            b'OQMATO2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_ato, 'g-set auto-correlation for mpc force'],
+            b'OQMCRM2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_crm, 'g-set cumulative RMS for mpc force'],
+            b'OQMPSD2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_psd, 'g-set PSD for mpc force'],
+            b'OQMRMS2' : [self._table_passer, self._table_passer, 'g-set RMS for mpc force'],  # buggy on isat random
+            b'OQMNO2'  : [self._table_passer, self._table_passer, 'g-set number of crossings for mpc force'],  # buggy on isat random
+            #b'OQMRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_rms, 'g-set RMS for mpc force'],  # buggy on isat random
+            #b'OQMNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_no, 'g-set number of crossings for mpc force'],  # buggy on isat random
 
-            b'ROQGM1'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_forces],  # relative OQM
+            b'ROQGM1'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_forces, 'relative mpc forces'],  # relative OQM
 
             # acoustic pressure
-            b'OPRATO1' : [reader_opr._read_opr1_3, reader_opr._read_opr_ato],
-            b'OPRCRM1' : [reader_opr._read_opr1_3, reader_opr._read_opr_crm],
-            b'OPRPSD1' : [reader_opr._read_opr1_3, reader_opr._read_opr_psd],
-            b'OPRRMS1' : [self._nx_table_passer, self._table_passer],
-            b'OPRNO1' : [reader_opr._read_opr1_3, reader_opr._read_opr_no],
+            b'OPRATO1' : [reader_opr._read_opr1_3, reader_opr._read_opr_ato, 'g-set auto-correlation for acoustic pressure'],
+            b'OPRCRM1' : [reader_opr._read_opr1_3, reader_opr._read_opr_crm, 'g-set cumulative RMS for acoustic pressure'],
+            b'OPRPSD1' : [reader_opr._read_opr1_3, reader_opr._read_opr_psd, 'g-set PSD for acoustic pressure'],
+            b'OPRRMS1' : [self._nx_table_passer, self._table_passer, 'g-set RMS for acoustic pressure'],
+            b'OPRNO1' : [reader_opr._read_opr1_3, reader_opr._read_opr_no, 'g-set number of crossings for acoustic pressure'],
 
-            b'OPRATO2' : [reader_opr._read_opr2_3, reader_opr._read_opr_ato],
-            b'OPRCRM2' : [reader_opr._read_opr2_3, reader_opr._read_opr_crm],
-            b'OPRPSD2' : [reader_opr._read_opr2_3, reader_opr._read_opr_psd],
-            b'OPRRMS2' : [self._nx_table_passer, self._table_passer],
-            b'OPRNO2' : [reader_opr._read_opr2_3, reader_opr._read_opr_no],
+            b'OPRATO2' : [reader_opr._read_opr2_3, reader_opr._read_opr_ato, 'g-set auto-correlation for acoustic pressure'],
+            b'OPRCRM2' : [reader_opr._read_opr2_3, reader_opr._read_opr_crm, 'g-set cumulative RMS for acoustic pressure'],
+            b'OPRPSD2' : [reader_opr._read_opr2_3, reader_opr._read_opr_psd, 'g-set PSD for acoustic pressure'],
+            b'OPRRMS2' : [self._nx_table_passer, self._table_passer, 'g-set RMS for acoustic pressure'],
+            b'OPRNO2' : [reader_opr._read_opr2_3, reader_opr._read_opr_no, 'g-set number of crossings for acoustic pressure'],
 
             # stress
-            b'OESATO1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
-            b'OESCRM1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
-            b'OESPSD1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
-            b'OESRMS1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
-            b'OESNO1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
+            b'OESATO1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'auto-correlation for stress'],
+            b'OESCRM1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'cumulative RMS for stress'],
+            b'OESPSD1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'PSD for stress'],
+            b'OESRMS1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'RMS for stress'],
+            b'OESNO1'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'number of crossings for stress'],
 
             # OESXRM1C : Composite element RMS stresses in SORT1 format for random analysis that includes von Mises stress output.
-            b'OESXRMS1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
-            b'OESXRM1C' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
-            b'OESXNO1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
-            b'OESXNO1C' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],
+            b'OESXRMS1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'RMS for stress with von Mises'],
+            b'OESXRM1C' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'RMS for composite stress with von Mises'],
+            b'OESXNO1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'number of crossings for stress with von Mises'],
+            b'OESXNO1C' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'number of crossings for stress with von Mises'],
 
+            b'OESATO2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'auto-correlation for stress'],
+            b'OESCRM2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'cumulative RMS for stress'],
+            b'OESPSD2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'PSD for stress'],
+            #b'OESRMS2' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'RMS for stress'],  # buggy on isat random
+            #b'OESNO2'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'number of crossings for stress'],  # buggy on isat random
+            b'OESRMS2' : [self._table_passer, self._table_passer, 'RMS for stress'],  # buggy on isat random
+            b'OESNO2'  : [self._table_passer, self._table_passer, 'number of crossings for stress'],  # buggy on isat random
 
-            b'OESATO2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],
-            b'OESCRM2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],
-            b'OESPSD2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],
-            #b'OESRMS2' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],  # buggy on isat random
-            #b'OESNO2'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],  # buggy on isat random
-            b'OESRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
-            b'OESNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
-
-            b'OESPSD2C' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],  # isat_random (nx)
-            b'OSTPSD2C' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4], # isat_random (nx)
+            b'OESPSD2C' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'PSD for composite stress'],  # isat_random (nx)
+            b'OSTPSD2C' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'PSD for composite strain'], # isat_random (nx)
             #=======================
 
             # strain
-            b'OSTRATO1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],
-            b'OSTRCRM1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],
-            b'OSTRPSD1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],
-            b'OSTRRMS1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4], # isat_random
-            b'OSTRNO1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],  # isat_random
+            b'OSTRATO1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'auto-correlation for strain'],
+            b'OSTRCRM1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'cumulative RMS for strain'],
+            b'OSTRPSD1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'PSD for composite strain'],
+            b'OSTRRMS1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'RMS for composite strain'], # isat_random
+            b'OSTRNO1' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'number of crossings for strain'],  # isat_random
 
-            b'OSTRATO2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],
-            b'OSTRCRM2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],
-            b'OSTRPSD2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],
-            b'OSTRRMS2' : [self._table_passer, self._table_passer], # buggy on isat random
-            b'OSTRNO2' : [self._table_passer, self._table_passer],  # buggy on isat random
-            #b'OSTRRMS2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4], # buggy on isat random
-            #b'OSTRNO2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],  # buggy on isat random
+            b'OSTRATO2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'auto-correlation for strain'],
+            b'OSTRCRM2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'cumulative RMS for strain'],
+            b'OSTRPSD2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'PSD for composite strain'],
+            b'OSTRRMS2' : [self._table_passer, self._table_passer, 'RMS for composite strain'], # buggy on isat random
+            b'OSTRNO2' : [self._table_passer, self._table_passer, 'number of crossings for strain'],  # buggy on isat random
+            #b'OSTRRMS2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'RMS for composite strain'], # buggy on isat random
+            #b'OSTRNO2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'number of crossings for strain'],  # buggy on isat random
 
-            b'OSTRMS1C' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4], # isat_random
-            b'OSTNO1C' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4],  # isat_random
-
+            b'OSTRMS1C' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'RMS for composite strain'], # isat_random
+            b'OSTNO1C' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'number of crossings for composite strain'],  # isat_random
 
             # force
-            b'OEFATO1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],
-            b'OEFCRM1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],
-            b'OEFPSD1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],
-            b'OEFRMS1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],
-            b'OEFNO1'  : [reader_oef._read_oef1_3, reader_oef._read_oef1_4],
+            b'OEFATO1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'auto-correlation for element force'],
+            b'OEFCRM1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'cumulative RMS for element force'],
+            b'OEFPSD1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'PSD for composite element force'],
+            b'OEFRMS1' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'RMS for composite element force'],
+            b'OEFNO1'  : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'number of crossings for element force'],
 
-            b'OEFATO2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4],
-            b'OEFCRM2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4],
-            b'OEFPSD2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4],
-            #b'OEFRMS2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4], # buggy on isat random
+            b'OEFATO2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'auto-correlation for element force'],
+            b'OEFCRM2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'cumulative RMS for element force'],
+            b'OEFPSD2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'PSD for composite element force'],
+            b'OEFRMS2' : [self._table_passer, self._table_passer, 'RMS for element force'], # buggy on isat random
+            b'OEFNO2'  : [self._table_passer, self._table_passer, 'number of crossings for element force'],
+            #b'OEFRMS2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'number of crossings for element force'], # buggy on isat random
         }
 
         table_mapper.update(table_mapper_geometry)
@@ -1254,30 +1438,37 @@ class OP2_Scalar(OP2Common, FortranFormat):
             _table_mapper = {
                 #b'OUGRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OUGNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
-                b'OUGRMS2' : [reader_oug._read_oug2_3, reader_oug._read_oug_rms],  # buggy on isat random
-                b'OUGNO2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_no],  # buggy on isat random
+                b'OUGRMS2' : [reader_oug._read_oug2_3, reader_oug._read_oug_rms, 'RMS for U'],  # buggy on isat random
+                b'OUGNO2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_no, 'number of crossings for U'],  # buggy on isat random
 
                 #b'OQMRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OQMNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
-                b'OQMRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_rms],  # buggy on isat random
-                b'OQMNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_no],  # buggy on isat random
+                b'OQMRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_rms, 'RMS for spc_forces'],  # buggy on isat random
+                b'OQMNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_no, 'number of crossings for spc_forces'],  # buggy on isat random
 
                 #b'OSTRRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OSTRNO2' : [self._table_passer, self._table_passer],  # buggy on isat random
-                b'OSTRRMS2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],  # buggy on isat random
-                b'OSTRNO2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4],  # buggy on isat random
+                b'OSTRRMS2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'RMS for strain'],  # buggy on isat random
+                b'OSTRNO2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'number of crossings for strain'],  # buggy on isat random
 
-                b'OESRMS2' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],  # buggy on isat random
-                b'OESNO2'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],  # buggy on isat random
+                b'OESRMS2' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'RMS for stress'],  # buggy on isat random
+                b'OESNO2'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'number of crossings for stress'],  # buggy on isat random
                 #b'OESRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OESNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
 
-                b'OEFNO2'  : [reader_oef._read_oef2_3, reader_oef._read_oef2_4],
+                b'OEFNO2'  : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'number of crossings for force'],
                 #b'OEFNO2' : [self._table_passer, self._table_passer], # buggy on isat_random_steve2.op2
             }
             for key, value in _table_mapper.items():
                 table_mapper[key] = value
             #table_mapper.update(table_mapper2)
+
+        for key, values in table_mapper.items():
+            assert len(values) == 3, key
+        desc_map = {key: values[2] for key, values in table_mapper.items()
+                    #if len(values) == 3
+                   }
+        self.op2_reader.desc_map.update(desc_map)
         return table_mapper
 
     def _read_mpf_3(self, data, ndata: int) -> int:
@@ -1644,7 +1835,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
     def _nx_table_passer(self, data, ndata: int):
         """auto-table skipper"""
-        self.to_nx(f' because table_name={self.table_name} was found')
+        desc = self.op2_reader.desc_map.get(self.table_name, '???')
+        #assert desc != '???', self.table_name
+        self.to_nx(f' because table_name={self.table_name} ({desc}) was found')
         self._table_passer(data, ndata)
 
     def _table_passer(self, data, ndata: int):
@@ -1652,7 +1845,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if self.is_debug_file:
             self.binary_debug.write(f'  skipping table = {self.table_name}\n')
         if self.table_name not in GEOM_TABLES and self.isubtable > -4:
-            self.log.warning(f'    skipping table: {self.table_name_str}')
+            desc = self.op2_reader.desc_map[self.table_name]
+            self.log.warning(f'    skipping {self.table_name_str:<8} ({desc})')
         if not is_release and self.isubtable > -4:
             if self.table_name in GEOM_TABLES and not self.make_geom:
                 pass
@@ -1919,7 +2113,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         #table_mapper = self._get_table_mapper()
         #RESULT_TABLES = table_mapper.keys()
 
-    def _read_tables(self, table_name: bytes, table_names: List[bytes]) -> None:
+    def _read_tables(self, table_name: bytes, table_names: list[bytes]) -> None:
         """
         Reads all the geometry/result tables.
         The OP2 header is not read by this function.
@@ -1928,10 +2122,13 @@ class OP2_Scalar(OP2Common, FortranFormat):
         ----------
         table_name : bytes str
             the first table's name
-        table_names : List[bytes str]
+        table_names : list[bytes str]
             the table names that were read
 
         """
+        self.table_mapper = self._get_table_mapper()
+        desc_map = self.op2_reader.desc_map
+
         op2_reader = self.op2_reader
         self.table_count = defaultdict(int)
         while table_name is not None:
@@ -1943,7 +2140,26 @@ class OP2_Scalar(OP2Common, FortranFormat):
                 self.binary_debug.write(f'table_name = {table_name!r}\n')
 
             if is_release:
-                self.log.debug(f'  table_name={table_name!r}')
+                #self.log.info("table_name = %r ()" % (
+                    #table_name + ' (' + self.desc_map.get(table_name, '') + ')').rstrip('( )'))
+                #self.log.info("table_name = %r ()" % (
+                    #table_name + ' (' + self.desc_map.get(table_name, '') + ')').rstrip('( )'))
+                #self.log.debug(f'  table_name={table_name!r}')
+                try:
+                    desc = desc_map[table_name]
+                except KeyError:
+                    if table_name in MATRIX_TABLES:
+                        desc = 'matrix'
+                    else:
+                        desc = '???'
+                        #self.log.debug('unknown table')
+                        #raise
+                #print(table_name, desc)
+                #desc = desc_map.get(table_name, '???')
+                assert isinstance(desc, str), table_name
+                table_name2 = f'{table_name!r}'
+                self.log.debug(f'  table_name={table_name2:<11} ({desc})')
+                #assert desc != '???', table_name2
 
             self.table_name = table_name
             #if 0:
@@ -1956,7 +2172,8 @@ class OP2_Scalar(OP2Common, FortranFormat):
                 assert self.f.tell() != t0, 'the position was unchanged...'
             elif table_name in op2_reader.mapped_tables:
                 t0 = self.f.tell()
-                op2_reader.mapped_tables[table_name]()
+                func, unused_desc = op2_reader.mapped_tables[table_name]
+                func()
                 assert self.f.tell() != t0, 'the position was unchanged...'
             elif table_name in GEOM_TABLES:
                 op2_reader.read_geom_table()  # DIT (agard)
@@ -2032,7 +2249,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
         Parameters
         ----------
-        tables : Dict[bytes] = varies
+        tables : dict[bytes] = varies
             a dictionary of key=name, value=list[method3, method4]/False,
             False : skips a table
                 applies self._table_passer to method3 and method4
@@ -2086,16 +2303,16 @@ class OP2_Scalar(OP2Common, FortranFormat):
         #RESULT_TABLES.sort()
         #assert 'OESXRMS1' in RESULT_TABLES, RESULT_TABLES
 
-    def set_additional_matrices_to_read(self, matrices: Union[List[str], Dict[str, bool]]):
+    def set_additional_matrices_to_read(self, matrices: Union[list[str], dict[str, bool]]):
         """
         Matrices (e.g., KHH) can be sparse or dense.
 
         Parameters
         ----------
-        matrices : List[str]; Dict[str] = bool
-            List[str]:
+        matrices : list[str]; dict[str] = bool
+            list[str]:
                 simplified method to add matrices; value will be True
-            Dict[str] = bool:
+            dict[str] = bool:
                 a dictionary of key=name, value=True/False,
                 where True/False indicates the matrix should be read
 
@@ -2291,7 +2508,7 @@ def main():  # pragma: no cover
     #f06_outname = model + '.test_op2.f06'
     #o.write_f06(f06_outname)
 
-def create_binary_debug(op2_filename: str, debug_file: str, log) -> Tuple[bool, Any]:
+def create_binary_debug(op2_filename: str, debug_file: str, log) -> tuple[bool, Any]:
     """helper method"""
     binary_debug = None
 

@@ -2,7 +2,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
-from typing import List, Union, Any, TYPE_CHECKING
+from typing import Union, Any, TYPE_CHECKING
 
 from pyNastran.op2.tables.geom.edom import DSCREEN_RTYPE_TO_INT
 from .geom1_writer import write_geom_header, close_geom_table
@@ -110,7 +110,7 @@ def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'
     #-------------------------------------
 
 def _write_dscreen(model: Union[BDF, OP2Geom], name: str,
-                   dscreens: List[Any], ncards: int,
+                   dscreens: list[Any], ncards: int,
                    op2_file, op2_ascii, endian: bytes) -> int:
     """
     DSCREEN(4206, 42, 363)
@@ -138,7 +138,7 @@ def _write_dscreen(model: Union[BDF, OP2Geom], name: str,
     return nbytes
 
 def _write_desvar(model: Union[BDF, OP2Geom], name: str,
-                  desvar_ids: List[int], ncards: int,
+                  desvar_ids: list[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes) -> int:
     """
     (3106, 31, 352)
@@ -186,7 +186,7 @@ def _write_desvar(model: Union[BDF, OP2Geom], name: str,
     return nbytes
 
 def _write_dconstr(model: Union[BDF, OP2Geom], name: str,
-                   dconstrs: List[int], ncards: int,
+                   dconstrs: list[int], ncards: int,
                    op2_file, op2_ascii, endian: bytes) -> int:
     """
     Record – DCONSTR(4106,41,362)
@@ -239,7 +239,7 @@ def _write_dconstr(model: Union[BDF, OP2Geom], name: str,
     return nbytes
 
 def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
-                   dvprel_ids: List[int], ncards: int,
+                   dvprel_ids: list[int], ncards: int,
                    op2_file, op2_ascii, endian: bytes):
     """
     Record – DVPREL2(3406,34,355)
@@ -322,7 +322,7 @@ def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
     return nbytes
 
 def _write_dvprel1(model: Union[BDF, OP2Geom], name: str,
-                   dvprel_ids: List[int], ncards: int,
+                   dvprel_ids: list[int], ncards: int,
                    op2_file, op2_ascii, endian: bytes):
     """
     Word Name Type Description
@@ -419,7 +419,7 @@ def _write_dvprel1(model: Union[BDF, OP2Geom], name: str,
     return nbytes
 
 def _write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
-                   dvmrel_ids: List[int], ncards: int,
+                   dvmrel_ids: list[int], ncards: int,
                    op2_file, op2_ascii, endian: bytes):
     """
     Word Name Type Description
@@ -555,7 +555,7 @@ def _get_dvmrel_coeffs(dvmrel):
     return mp_min, mp_max
 
 def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
-                   dvmrel_ids: List[int], ncards: int,
+                   dvmrel_ids: list[int], ncards: int,
                    op2_file, op2_ascii, endian: bytes):
     """
     Record – DVMREL2(6400,64,432)
@@ -627,7 +627,7 @@ def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
     return nbytes
 
 def _write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
-                   dvcrel_ids: List[int], ncards: int,
+                   dvcrel_ids: list[int], ncards: int,
                    op2_file, op2_ascii, endian: bytes):
     key = (6200, 62, 430)
     structi = Struct(endian + b'ii 4f ii')
@@ -683,7 +683,7 @@ def _write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: List[Any]) -> bytes:
+def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: list[Any]) -> bytes:
     """writes the DVxREL2 flag table"""
     fmt = b''
     ndesvars = len(dvxrel2.dvids)
@@ -701,7 +701,7 @@ def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: List[Any]) -> by
     return fmt
 
 def _write_dtable(model: Union[BDF, OP2Geom], name: str,
-                  dtables: List[DTABLE], ncards: int,
+                  dtables: list[DTABLE], ncards: int,
                   op2_file, op2_ascii, endian: bytes) -> int:
     """
     Record – DTABLE(3706,37,358)

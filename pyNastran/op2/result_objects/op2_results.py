@@ -1,8 +1,8 @@
-from typing import Dict, Any
+from typing import Any
 
 from pyNastran.op2.op2_interface.random_results import (
-    RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS, RARCONS,
-    RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC, RAREATC,
+    RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS, RARCONS, RAQCONS,
+    RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC, RAREATC, RAQEATC,
     ROUGV1, ROQGM1,
     RADEFFM, SRSS, ABS, NRL,
     AutoCorrelationObjects, PowerSpectralDensityObjects, RootMeansSquareObjects,
@@ -56,6 +56,7 @@ class Results:
         self.RAPCONS = RAPCONS() # composite stress
         self.RANCONS = RANCONS() # strain energy
         self.RARCONS = RARCONS() # spc force
+        self.RAQCONS = RAQCONS() # mpc force
 
         self.RADEATC = RADEATC() # eigenvectors
         self.RAFEATC = RAFEATC() # force
@@ -65,6 +66,7 @@ class Results:
         self.RAPEATC = RAPEATC() # composite stress
         self.RANEATC = RANEATC() # strain energy
         self.RAREATC = RAREATC() # spc force
+        self.RAQEATC = RAQEATC() # mpcforce
         self.srss = SRSS()
         self.abs = ABS()
         self.nrl = NRL()
@@ -109,14 +111,14 @@ class Results:
             self.solution_set,
             self.ROUGV1, self.ROQGM1,
             self.RADEFFM,
-            self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS, self.RARCONS,
-            self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC, self.RAREATC,
+            self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS, self.RARCONS, self.RAQCONS,
+            self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC, self.RAREATC, self.RAQEATC,
 
             self.srss, self.abs, self.nrl,
         ]
         return sum_objs
 
-    def _get_base_objects_map(self) -> Dict[str, Any]:
+    def _get_base_objects_map(self) -> dict[str, Any]:
         """gets only the objects that are do not contain sub-objects"""
         base_names = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
@@ -167,28 +169,44 @@ class Results:
         return msg
 
 
-class SolutionSet:
+class Load:
+    def __len__(self) -> int:
+        names = self.get_table_types(include_class=False)
+        length = sum((len(getattr(self, name)) for name in names))
+        return length
+
+    def get_table_types(self):
+        raise NotImplementedError('get_table_types')
+
+
+class SolutionSet(Load):
     def __init__(self):
+        super().__init__()
         self.displacements = {}
         self.velocities = {}
         self.accelerations = {}
         self.eigenvectors = {}
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             'displacements', 'velocities', 'accelerations', 'eigenvectors',
         ]
-        return ['solution_set.' + table for table in tables]
+        if include_class:
+            return ['solution_set.' + table for table in tables]
+        return tables
 
-class Acoustic:
+class Acoustic(Load):
     def __init__(self):
+        super().__init__()
         self.displacements = {}
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             'displacements',
         ]
-        return ['acoustic.' + table for table in tables]
+        if include_class:
+            return ['acoustic.' + table for table in tables]
+        return tables
 
 class ModalContribution:
     def __init__(self):
@@ -260,7 +278,7 @@ class ModalContribution:
         self.cbush_stress = {}
         self.cbush_strain = {}
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             'displacements', # 'velocities', 'accelerations',
             #'load_vectors', 'spc_forces', 'mpc_forces',
@@ -299,7 +317,9 @@ class ModalContribution:
             #'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
             #'cvisc_force',
         ]
-        return ['modal_contribution.' + table for table in tables]
+        if include_class:
+            return ['modal_contribution.' + table for table in tables]
+        return tables
 
 class StrengthRatio:
     def __init__(self):
@@ -317,7 +337,7 @@ class StrengthRatio:
         self.ctria6_composite_strain = {}
         self.ctriar_composite_strain = {}
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             'cquad4_composite_stress', 'cquad8_composite_stress', 'cquadr_composite_stress',
             'ctria3_composite_stress', 'ctria6_composite_stress', 'ctriar_composite_stress',
@@ -325,7 +345,9 @@ class StrengthRatio:
             'cquad4_composite_strain', 'cquad8_composite_strain', 'cquadr_composite_strain',
             'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
         ]
-        return ['strength_ratio.' + table for table in tables]
+        if include_class:
+            return ['strength_ratio.' + table for table in tables]
+        return tables
 
 class FailureIndices:
     def __init__(self):
@@ -336,7 +358,7 @@ class FailureIndices:
         self.ctria6_composite_force = {}
         self.ctriar_composite_force = {}
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             'cquad4_composite_force',
             'cquad8_composite_force',
@@ -345,10 +367,13 @@ class FailureIndices:
             'ctria6_composite_force',
             'ctriar_composite_force',
         ]
-        return ['failure_indices.' + table for table in tables]
+        if include_class:
+            return ['failure_indices.' + table for table in tables]
+        return tables
 
-class Force:
+class Force(Load):
     def __init__(self):
+        super().__init__()
         self.celas1_force = {}
         self.celas2_force = {}
         self.celas3_force = {}
@@ -391,8 +416,7 @@ class Force:
         self.ctetra_pressure_force = {}
         self.cpyram_pressure_force = {}
 
-
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             # 0d
             'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
@@ -413,11 +437,14 @@ class Force:
             'chexa_pressure_force', 'cpenta_pressure_force',
             'ctetra_pressure_force', 'cpyram_pressure_force',
         ]
-        return ['force.' + table for table in tables]
+        if include_class:
+            return ['force.' + table for table in tables]
+        return tables
 
 
-class ThermalLoad:
+class ThermalLoad(Load):
     def __init__(self):
+        super().__init__()
         #OEF - Fluxes - tCode=4 thermal=1
         self.conv_thermal_load = {}
 
@@ -463,7 +490,7 @@ class ThermalLoad:
         self.cpenta_thermal_load_flux = {}
         #self.temperatureForces = {}
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             'conv_thermal_load',
             # flux
@@ -508,7 +535,9 @@ class ThermalLoad:
             'chexa_thermal_load_flux',
             'cpenta_thermal_load_flux',
         ]
-        return ['thermal_load.' + table for table in tables]
+        if include_class:
+            return ['thermal_load.' + table for table in tables]
+        return tables
 
 class Stress:
     def __init__(self):
@@ -526,7 +555,7 @@ class Stress:
         self.chexa_composite_stress = {}
         self.cpenta_composite_stress = {}
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
             'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
@@ -536,7 +565,9 @@ class Stress:
 
             'chexa_composite_stress', 'cpenta_composite_stress',
         ]
-        return ['stress.' + table for table in tables]
+        if include_class:
+            return ['stress.' + table for table in tables]
+        return tables
 
 class Strain:
     def __init__(self):
@@ -555,7 +586,7 @@ class Strain:
         self.chexa_composite_strain = {}
         self.cpenta_composite_strain = {}
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
             'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
@@ -565,7 +596,9 @@ class Strain:
 
             'chexa_composite_strain', 'cpenta_composite_strain',
         ]
-        return ['strain.' + table for table in tables]
+        if include_class:
+            return ['strain.' + table for table in tables]
+        return tables
 
 class StrainEnergy:
     def __init__(self):
@@ -621,7 +654,7 @@ class StrainEnergy:
         self.cfast_strain_energy = {}
         self.cseam_strain_energy = {}
 
-    def get_table_types(self):
+    def get_table_types(self, include_class: bool=True) -> list[str]:
         tables = [
             # OEE - strain energy density # tCode=18
             'cquad4_strain_energy', 'cquad8_strain_energy', 'cquadr_strain_energy',
@@ -656,28 +689,30 @@ class StrainEnergy:
             'rbe1_strain_energy', 'rbe3_strain_energy',
             'cweld_strain_energy', 'cfast_strain_energy', 'cseam_strain_energy',
         ]
-        return ['strain_energy.' + table for table in tables]
+        if include_class:
+            return ['strain_energy.' + table for table in tables]
+        return tables
 
 
 class CSTM:
     def __init__(self):
         self.headers = {"cid": 0,
-                                 "cid_type": 1,
-                                 "unused_int_index": 2,
-                                 "unused_double_index": 3,
-                                 "ox": 4,
-                                 "oy": 5,
-                                 "oz": 6,
-                                 "T11": 7,
-                                 "T12": 8,
-                                 "T13": 9,
-                                 "T21": 10,
-                                 "T22": 11,
-                                 "T23": 12,
-                                 "T31": 13,
-                                 "T32": 14,
-                                 "T33": 15
-                                 }
+                        "cid_type": 1,
+                        "unused_int_index": 2,
+                        "unused_double_index": 3,
+                        "ox": 4,
+                        "oy": 5,
+                        "oz": 6,
+                        "T11": 7,
+                        "T12": 8,
+                        "T13": 9,
+                        "T21": 10,
+                        "T22": 11,
+                        "T23": 12,
+                        "T31": 13,
+                        "T32": 14,
+                        "T33": 15
+                    }
         self.data = None  # type: Optional[np.ndarray]  # Coordinate Transformation Matrices from Native to Global
 
     def __repr__(self) -> str:

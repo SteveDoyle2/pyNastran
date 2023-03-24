@@ -50,7 +50,7 @@ if TYPE_CHECKING:  # pragma: no cover
         RADBC, #TEMPBC,
         # aero
         MONPNT1, MONPNT2, MONPNT3,
-        AECOMP, AEFACT, AELINK, AELIST, AEPARAM, AESURF, AESURFS, AESTAT,
+        AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS, AESTAT,
         AERO, AEROS,
         CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
         PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
@@ -646,8 +646,8 @@ class BDFAttributes:
         self.aelinks = {}  # type: dict[int, list[AELINK]]
         #: stores AELIST
         self.aelists = {}  # type: dict[int, AELIST]
-        #: stores AEPARAM
-        self.aeparams = {}  # type: dict[int, AEPARAM]
+        #: stores AEPARM
+        self.aeparams = {}  # type: dict[int, AEPARM]
         #: stores AESURF
         self.aesurf = {}  # type: dict[int, AESURF]
         #: stores AESURFS

@@ -60,8 +60,8 @@ class Nodes:
 
     def get_displacement_index_xyz_cp_cd(self,
                                          fdtype: str='float64',
-                                         idtype: str='int32') -> Tuple[Dict[int, NDArrayNint],
-                                                                       Dict[int, NDArrayNint],
+                                         idtype: str='int32') -> tuple[dict[int, NDArrayNint],
+                                                                       dict[int, NDArrayNint],
                                                                        NDArrayN3float, NDArrayN3int]:
         """
         Get index and transformation matricies for nodes with
@@ -112,8 +112,8 @@ class Nodes:
         [2]
         """
         self.grid.make_current()
-        nids_cd_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
-        nids_cp_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
+        nids_cd_transform = defaultdict(list)  # type: dict[int, np.ndarray]
+        nids_cp_transform = defaultdict(list)  # type: dict[int, np.ndarray]
 
         nnodes = len(self.model.grid)
         nspoints = 0
@@ -244,7 +244,7 @@ class GRIDv:
         self._seid = []
         self.comment = defaultdict(str)
 
-    def add(self, nid: int, xyz: List[float], cp: int=0, cd: int=0, ps: str='', seid: int=0, comment: str=''):
+    def add(self, nid: int, xyz: list[float], cp: int=0, cd: int=0, ps: str='', seid: int=0, comment: str=''):
         """
         Creates the GRID card
 

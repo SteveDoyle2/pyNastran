@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros
 
@@ -64,8 +63,8 @@ class ComplexSpringDamperArray(OES_Object):
         #self.nelements = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.nelements, dtype=idtype)
 
         #[spring_stress]
@@ -179,16 +178,17 @@ class ComplexSpringDamperArray(OES_Object):
 
     def add_sort1(self, dt, eid, stress):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, 0] = stress
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -368,7 +368,7 @@ class ComplexSpringStressArray(ComplexSpringDamperArray, StressObject):
         ComplexSpringDamperArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['spring_stress']
         return headers
 
@@ -378,6 +378,6 @@ class ComplexSpringStrainArray(ComplexSpringDamperArray, StrainObject):
         ComplexSpringDamperArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['spring_strain']
         return headers

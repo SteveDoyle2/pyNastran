@@ -2,7 +2,6 @@ import os
 import unittest
 import numpy as np
 from cpylog import get_logger
-from typing import Dict
 
 import pyNastran
 from pyNastran.utils import print_bad_path
@@ -184,7 +183,7 @@ class TestMaterialCoordReal(unittest.TestCase):
                     assert np.allclose(data, ref_result, rtol=RTOL, atol=ATOL)
             #print('OK')
 
-def _check_theta(model: BDF, eid_to_theta_deg_expected: Dict[int, float]):
+def _check_theta(model: BDF, eid_to_theta_deg_expected: dict[int, float]):
     model.cross_reference()
 
     model.log.level = 'warning'

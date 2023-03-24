@@ -238,7 +238,7 @@ class XrefMesh(BDFAttributes):
     def _cross_reference_aero(self, check_caero_element_ids: bool=False) -> None:
         """
         Links up all the aero cards
-          - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
+          - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARM, AESTAT, AESURF, AESURFS
         """
         self.zona.cross_reference()
         for caero in self.caeros.values():
@@ -315,7 +315,7 @@ class XrefMesh(BDFAttributes):
             #'AEFACT',   ## aefacts
             #'AELINK',   ## aelinks
             #'AELIST',   ## aelists
-            #'AEPARAM',  ## aeparams
+            #'AEPARM',  ## aeparams
             #'AESTAT',   ## aestats
             #'AESURF',  ## aesurfs
 

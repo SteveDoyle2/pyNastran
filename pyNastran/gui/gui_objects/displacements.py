@@ -9,7 +9,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 class VectorTable(GuiResultCommon):
     def __init__(self, subcase_id: int, location: str,
-                 titles: List[str], headers: List[str],
+                 titles: list[str], headers: list[str],
                  dxyz: Any, linked_scale_factor: bool, #xyz, scalar,
                  scales,
                  data_formats: Optional[str]=None,
@@ -26,9 +26,9 @@ class VectorTable(GuiResultCommon):
         ----------
         subcase_id : int
             the flag that points to self.subcases for a message
-        headers : List[str]
+        headers : list[str]
             the sidebar word
-        titles : List[str]
+        titles : list[str]
             the legend title
         #scalars : (nnodes,n) float ndarray
             ##the data to make a contour plot with
@@ -39,10 +39,10 @@ class VectorTable(GuiResultCommon):
             is the displacement scale factor linked
             displacements/loads steps should be
             force/eigenvectors should not be
-        scales : List[float]
+        scales : list[float]
             the table (e.g., deflection, SPC Forces) scale factors
             nominally, this starts as an empty list and is filled later
-        data_formats : List[str]
+        data_formats : list[str]
             the type of data result (e.g. '%i', '%.2f', '%.3f')
         ncolors : int; default=None
             sets the default for reverting the legend ncolors
@@ -383,10 +383,10 @@ class ElementalTableResults(VectorTable):
 
 
 class ForceTableResults(VectorTable):
-    def __init__(self, subcase_id: int, titles: List[str], headers: List[str],
+    def __init__(self, subcase_id: int, titles: list[str], headers: list[str],
                  dxyz: Any,
                  unused_scalar: Any,
-                 scales: List[float],
+                 scales: list[float],
                  data_formats: Optional[str]=None,
                  nlabels: Optional[int]=None,
                  labelsize: Optional[int]=None,
@@ -481,9 +481,9 @@ class DisplacementResults(VectorTable):
         ----------
         subcase_id : int
             the flag that points to self.subcases for a message
-        headers : List[str]
+        headers : list[str]
             the sidebar word
-        titles : List[str]
+        titles : list[str]
             the legend title
         xyz : (nnodes, 3)
             the nominal xyz locations
@@ -492,10 +492,10 @@ class DisplacementResults(VectorTable):
         scalars : (nnodes,n) float ndarray
             #the data to make a contour plot with
             does nothing
-        scales : List[float]
+        scales : list[float]
             the deflection scale factors
             nominally, this starts as an empty list and is filled later
-        data_formats : List[str]
+        data_formats : list[str]
             the type of data result (e.g. '%i', '%.2f', '%.3f')
         ncolors : int; default=None
             sets the default for reverting the legend ncolors

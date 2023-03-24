@@ -87,7 +87,7 @@ class CONROD(RodElement):
         """
         Parameters
         ----------
-        cards : List[BDFCard(), ...]
+        cards : list[BDFCard(), ...]
             the list of CONROD cards
         """
         assert self.n != 0, self.n

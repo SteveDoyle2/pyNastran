@@ -437,9 +437,9 @@ class XPoints(BaseCard):
         """
         return len(self.points)
 
-    def add_points(self, sList):
+    def add_points(self, slist):
         """Adds more EPOINTs/SPOINTs to this object"""
-        self.points = self.points.union(set(sList))
+        self.points = self.points.union(set(slist))
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -1140,8 +1140,7 @@ class GRID(BaseCard):
         self.elements_ref = None # type: list[Element]
 
     @classmethod
-    def add_op2_data(cls, data, comment: str='') -> Any:
-        # (List[Union[int, float]], str) -> GRID
+    def add_op2_data(cls, data: list[Union[int, float]], comment: str='') -> GRID:
         """
         Adds a GRID card from the OP2.
 
@@ -1166,8 +1165,7 @@ class GRID(BaseCard):
         return GRID(nid, xyz, cp, cd, ps, seid, comment=comment)
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment: str='') -> Any:
-        # (Any, str) -> GRID
+    def add_card(cls, card: BDFCard, comment: str='') -> GRID:
         """
         Adds a GRID card from ``BDF.add_card(...)``
 
@@ -1736,8 +1734,7 @@ class POINT(BaseCard):
         return POINT(nid, xyz, cp=cp, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
-        # type: (List[Union[int, float]], str) -> POINT
+    def add_op2_data(cls, data: list[Union[int, float]], comment: str='') -> POINT:
         """
         Adds a POINT card from the OP2
 

@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -49,8 +48,8 @@ class ComplexCBushArray(OES_Object):
         self.itotal = 0
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element = zeros(self.nelements, dtype=idtype)
 
         #[tx, ty, tz, rx, ry, rz]
@@ -111,16 +110,17 @@ class ComplexCBushArray(OES_Object):
 
     def add_sort1(self, dt, eid, tx, ty, tz, rx, ry, rz):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [tx, ty, tz, rx, ry, rz]
         self.ielement += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -309,7 +309,7 @@ class ComplexCBushStressArray(ComplexCBushArray, StressObject):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         return headers
 
@@ -348,7 +348,7 @@ class ComplexCBushStrainArray(ComplexCBushArray, StrainObject):
         ComplexCBushArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz'] # tx, ty, tz, rx, ry, rz
         return headers
 

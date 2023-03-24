@@ -21,9 +21,10 @@ from pyNastran.bdf.mesh_utils.cutting_plane_plotter import cut_and_plot_model
 
 from pyNastran.gui.menus.cutting_plane.cutting_plane import CuttingPlaneWindow
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
+from pyNastran.gui.qt_files.base_gui import BaseGui
 
 
-class CuttingPlaneObject:
+class CuttingPlaneObject(BaseGui):
     def __init__(self, gui):
         self.gui = gui
         self._cutting_plane_window_shown = False

@@ -12,3 +12,23 @@ def zip_strict(*arrays):
    assert min(lengths) == max(lengths), f'lengths={lengths} should be the same'
    assert len(lengths) > 0, lengths
    return zip(*arrays)
+
+def empty_array(shape, dtype: str, default_int: int=-1) -> np.ndarray:
+   """creates a null int/float array"""
+   if dtype in {'int32', 'int64'}:
+      out = np.full(shape, default_int, dtype=dtype)
+   else:
+      out = np.full(shape, np.nan, dtype=dtype)
+   return out
+
+def cast_ints(ints: list[int], dtype='int32') -> np.ndarray:
+   if dtype == 'int32':
+      try:
+         int_array = np.array(ints, dtype='int32')
+      except OverflowError:
+         int_array = np.array(ints, dtype='int64')
+   elif dtype == 'int64':
+      int_array = np.array(ints, dtype='int64')
+   else:
+      raise RuntimeError(dtype)
+   return int_array

@@ -163,7 +163,7 @@ class Usm3d:
            1-based patch/"property" IDs
         mapbc : dict[patch_id] : map_line
            patch_id : int
-           map_line : List[bc, family, surf, surf_ids]
+           map_line : list[bc, family, surf, surf_ids]
                bc : int
                    boundary condition number
                family : int
@@ -488,7 +488,7 @@ class Usm3d:
             n is typically the number of points, but is not required to be
             this lets you read nodes 1...n, but not greater than n+1.
             node_ids must be set to None.
-        node_ids : List[int]; default=None
+        node_ids : list[int]; default=None
             the specific points to read (n must be set to None).
 
         nvars = 5

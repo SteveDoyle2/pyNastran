@@ -87,7 +87,7 @@ class OGS:
             ## real eigenvalue
             op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
             op2.mode_cycle = 0.0
-            op2.reader_oug.update_mode_cycle('mode_cycle')
+            op2._op2_readers.reader_oug.update_mode_cycle('mode_cycle')
             op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
         #elif op2.analysis_code == 3: # differential stiffness
         #elif op2.analysis_code == 4: # differential stiffness
@@ -132,7 +132,7 @@ class OGS:
             n = self._read_ogs1_table26(data, ndata, restype)
         elif op2.table_code == 27:
             #OGS1 - grid point stresses - volume direct
-            assert op2.table_name in [b'OGS1', b'OGSTR1'], f'table_name={op2.table_name} table_code={op2.table_code}'
+            assert op2.table_name in [b'OGS1', b'OGSTR1', b'OGS1X'], f'table_name={op2.table_name} table_code={op2.table_code}'
             n = self._read_ogs1_table27(data, ndata, restype)
         elif op2.table_code == 28:
             #OGS1- grid point stresses - principal

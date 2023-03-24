@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QVBoxLayout, QPushButton,
@@ -28,7 +28,7 @@ class ModifyMenu(PyDialog):
 
         model = data['model']  # type: BDF
         obj = data['obj']  # type: Any
-        variables = data['variables']  # type: List[str]
+        variables = data['variables']  # type: list[str]
         self.obj = obj
         self.variables = variables
         self.update_function_name = data['update_function_name']
@@ -122,7 +122,7 @@ class ModifyMenu(PyDialog):
         font.setPointSize(value)
         self.setFont(font)
 
-def create_grid_objs_from_model(model: BDF, variables: List[Any], obj: Any) -> Tuple[Dict[int, int],
+def create_grid_objs_from_model(model: BDF, variables: list[Any], obj: Any) -> tuple[dict[int, int],
                                                                                      QGridLayout]:
     i = 0
     grid_objs = {}

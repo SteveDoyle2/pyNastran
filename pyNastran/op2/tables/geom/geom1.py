@@ -5,7 +5,7 @@ defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
 from __future__ import annotations
 from struct import Struct
 from collections import defaultdict
-from typing import Tuple, Dict, Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 
 import numpy as np
 
@@ -407,7 +407,7 @@ class GEOM1:
         #print(a, b, c)
         coord = op2.add_cord2c(cid, origin, zaxis, xzplane, rid=rid,
                                setup=True, comment='')
-        print(coord)
+        #print(coord)
         return len(data)
 
     def _read_cord2rx(self, data: bytes, n: int) -> int:
@@ -464,7 +464,7 @@ class GEOM1:
                     setup=True, comment='')
             else:
                 raise RuntimeError((two, one))
-            print(coord)
+            #print(coord)
             n += ntotal
         return n
 
@@ -559,7 +559,7 @@ class GEOM1:
         return n
 
     def _read_cord2x(self, data: bytes, n: int, card_name: str, card_obj,
-                     coord_flag: Tuple[int, int]) -> int:
+                     coord_flag: tuple[int, int]) -> int:
         op2 = self.op2
         if op2.table_name == b'GEOM1N' and op2.factor == 1:
             try:
@@ -579,7 +579,7 @@ class GEOM1:
     def _read_cord2x_22(self, data: bytes, n: int,
                         coord_name: str,
                         coord_cls: Union[CORD2R, CORD2C, CORD2S],
-                        flags: Tuple[int, int]) -> int:
+                        flags: tuple[int, int]) -> int:
         """
         (2101,21,8) - CORD2R
         (2201,22,10) - CORD2S
@@ -608,7 +608,7 @@ class GEOM1:
     def _read_cord2x_13(self, data: bytes, n: int,
                         coord_name: str,
                         coord_cls: Union[CORD2R, CORD2C, CORD2S],
-                        flags: Tuple[int, int]) -> int:
+                        flags: tuple[int, int]) -> int:
         op2 = self.op2
         ntotal = 52 * op2.factor # 13*4
         s = Struct(mapfmt(op2._endian + b'4i9f', op2.size))
@@ -738,7 +738,7 @@ class GEOM1:
         op2.card_count['GRID'] = ngrids
         return n
 
-    def _read_grid_8(self, data: bytes, n: int) -> Tuple[int, Dict[int, GRID]]:  # 21.8 sec, 18.9
+    def _read_grid_8(self, data: bytes, n: int) -> tuple[int, dict[int, GRID]]:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         op2 = self.op2
         structi = Struct(mapfmt(op2._endian + b'ii 3f 3i', op2.size))
@@ -777,7 +777,7 @@ class GEOM1:
         #op2.increase_card_count('GRID', nentries - nfailed)
         return n, grids
 
-    def _read_grid_11(self, data: bytes, n: int) -> Tuple[int, Dict[int, GRID]]:  # 21.8 sec, 18.9
+    def _read_grid_11(self, data: bytes, n: int) -> tuple[int, dict[int, GRID]]:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         op2 = self.op2
         ntotal = 44

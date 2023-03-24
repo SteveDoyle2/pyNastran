@@ -47,7 +47,7 @@ import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct # , error as struct_error
-from typing import Tuple, Optional, Callable, TYPE_CHECKING
+from typing import Optional, Callable, TYPE_CHECKING
 
 import numpy as np
 import scipy  # type: ignore
@@ -61,12 +61,19 @@ from pyNastran.op2.result_objects.eqexin import EQEXIN
 from pyNastran.op2.result_objects.matrix import Matrix
 from pyNastran.op2.result_objects.matrix_dict import MatrixDict
 from pyNastran.op2.result_objects.design_response import DSCMCOL
+from pyNastran.op2.result_objects.qualinfo import QualInfo
 from pyNastran.op2.op2_interface.msc_tables import MSC_GEOM_TABLES
-from pyNastran.op2.op2_interface.nx_tables import NX_VERSIONS, NX_GEOM_TABLES
+from pyNastran.op2.op2_interface.nx_tables import NX_GEOM_TABLES
 
 from pyNastran.op2.op2_interface.utils import (
     mapfmt, reshape_bytes_block,
     reshape_bytes_block_size)
+
+from .version import parse_nastran_version
+from .gpdt import (_get_gpdt_nnodes2,
+                   _read_gpdt_8_14, _read_gpdt_4_7, _read_gpdt_4_10)
+from .extdb import _read_extdb_extdb, _read_extdb_geomx, _read_extdb_phip
+
 from pyNastran.op2.op2_interface.utils_matpool import (
     read_matpool_dmig, read_matpool_dmig_4, read_matpool_dmig_8)
 from pyNastran.op2.result_objects.monpnt import MONPNT1, MONPNT3
@@ -86,18 +93,6 @@ class SubTableReadError(Exception):
     pass
 
 GEOM_TABLES = MSC_GEOM_TABLES + NX_GEOM_TABLES
-MSC_VERSIONS = [b'V2005R3B', b'XXXXXXXX']
-MSC_LONG_VERSION = [
-    b'XXXXXXXX20140', b'XXXXXXXX20141', b'XXXXXXXX20142',
-    b'XXXXXXXX20150', b'XXXXXXXX20151', b'XXXXXXXX20152',
-    b'XXXXXXXX20160', b'XXXXXXXX20161', b'XXXXXXXX20162',
-    b'XXXXXXXX20170', b'XXXXXXXX20171', b'XXXXXXXX20172',
-    b'XXXXXXXX20180', b'XXXXXXXX20181', b'XXXXXXXX20182',
-    b'XXXXXXXX20190', b'XXXXXXXX20191', b'XXXXXXXX20192',
-    b'XXXXXXXX20200', b'XXXXXXXX20201', b'XXXXXXXX20202',
-    b'XXXXXXXX20210', b'XXXXXXXX20211', b'XXXXXXXX20212', b'XXXXXXXX20214',
-    b'XXXXXXXX20220', b'XXXXXXXX20221', b'XXXXXXXX20222',
-]
 
 DENSE_MATRICES = [
     b'KELM', b'MELM', b'BELM',
@@ -106,16 +101,14 @@ DENSE_MATRICES = [
     b'EFMASSS', b'EFMFACS', b'EFMFSMS',
     b'MEFMASS', b'MEFWTS', b'MPFACS', b'RBMASSS',
 ]
-OPTISTRUCT_VERSIONS = [
-    b'OS11XXXX', b'OS12.210', b'OS14.210',
-    b'OS2017.1', b'OS2017.2',
-    b'OS2018.1',
-    b'OS2019.1', b'OS2019.2',
-    b'OS2020', b'OS2020.1',
+# https://pyyeti.readthedocs.io/en/latest/modules/nastran/generated/pyyeti.nastran.bulk.wtextseout.html
+EXTSEOUT = [
+    'KAA', 'MAA', 'BAA', 'K4XX', 'PA', 'GPXX', 'GDXX', 'RVAX',
+    'VA', 'MUG1', 'MUG1O', 'MES1', 'MES1O', 'MEE1', 'MEE1O', 'MGPF',
+    'MGPFO', 'MEF1', 'MEF1O', 'MQG1', 'MQG1O', 'MQMG1', 'MQMG1O',
 ]
-AUTODESK_VERSIONS = [
-    b'NE  0824',  # this means NEi Nastran...
-]
+
+
 class OP2Reader:
     """Stores methods that aren't useful to an end user"""
     def __init__(self, op2: OP2):
@@ -135,50 +128,51 @@ class OP2Reader:
         self.op2 = op2  # type: OP2
 
         self.mapped_tables = {
-            b'GPL' : self.read_gpl,
-            b'GPLS' : self.read_gpls,
+            b'RST': (self.read_rst, 'restart file?'),
+            b'GPL' : (self.read_gpl, 'grid point list'),
+            b'GPLS' : (self.read_gpls, 'grid point list (superelement)'),
 
             # GPDT  - Grid point definition table
-            b'GPDT' : self.read_gpdt,
-            b'GPDTS' : self.read_gpdt,
+            b'GPDT' : (self.read_gpdt, 'grid point locations'),
+            b'GPDTS' : (self.read_gpdt, 'grid point locations (superelement)'),
 
             # BGPDT - Basic grid point definition table.
-            b'BGPDT' : self.read_bgpdt,
-            b'BGPDTS' : self.read_bgpdt,
-            b'BGPDTOLD' : self.read_bgpdt,
-            b'BGPDTVU' : self.read_bgpdt,
+            b'BGPDT' : (self.read_bgpdt, 'grid points in cid=0 frame'),
+            b'BGPDTS' : (self.read_bgpdt, 'grid points in cid=0 (superelement)'),
+            b'BGPDTOLD' : (self.read_bgpdt, 'grid points in cid=0 frame'),
+            b'BGPDTVU' : (self.read_bgpdt, 'VU grid points in cid=0 frame'),
 
             # optimization
-            b'DESCYC' : self.read_descyc,
-            b'DBCOPT' : self.read_dbcopt,
-            b'DSCMCOL' : self.read_dscmcol,
-            b'DESTAB' :  self._read_destab,
+            b'DESCYC' : (self.read_descyc, 'design iteration'),
+            b'DBCOPT' : (self.read_dbcopt, 'design variable history table'),
+            b'DSCMCOL' : (self.read_dscmcol, 'creates op2_results.responses.dscmcol'),
+            b'DESTAB' :  (self._read_destab, 'creates op2_results.responses.desvars'),
 
             #b'MEFF' : self.read_meff,
-            b'INTMOD' : self.read_intmod,
-            b'HISADD' : self.read_hisadd,
-            b'EXTDB' : self.read_extdb,
-            b'OMM2' : self.read_omm2,
-            b'STDISP' : self.read_stdisp,
-            b'TOL' : self.read_tol,
-            b'PCOMPT' : self._read_pcompts,
-            b'PCOMPTS' : self._read_pcompts,
-            b'MONITOR' : self.read_monitor,
-            b'AEMONPT' : self.read_aemonpt,
-            b'FOL' : self.read_fol,  # frequency response list
-            b'FRL' : self.read_frl,  # frequency response list
-            b'SDF' : self.read_sdf,
-            b'IBULK' : self.read_ibulk,
-            b'ICASE' : self.read_icase,
-            b'CASECC': self.read_casecc,
-            b'XCASECC': self.read_xcasecc,
+            b'INTMOD' : (self.read_intmod, '???'),
+            b'HISADD' : (self.read_hisadd, 'optimization history; op2_results.responses.convergence_data'),
+            b'EXTDB' : (self.read_extdb, 'external superlelements'),
+            b'OMM2' : (self.read_omm2, 'max/min table'),
+            b'STDISP' : (self.read_stdisp, 'aero-structural displacement?'),
+            b'TOL' : (self.read_tol, 'time output list?'),
+            b'PCOMPT' : (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry'),
+            b'PCOMPTS' : (self._read_pcompts, 'NX: LAM option input from the PCOMP bulk entry (superelement)'),
+            b'MONITOR' : (self.read_monitor, 'MONITOR point output'),
+            b'AEMONPT' : (self.read_aemonpt, 'aero matrix'),
+            b'FOL' : (self.read_fol, 'frequency output list'),
+            b'FRL' : (self.read_frl, 'frequency response list'),
+            b'SDF' : (self.read_sdf, 'aero-structural displacement?'),
+            b'IBULK' : (self.read_ibulk, 'explicit bulk data'),
+            b'ICASE' : (self.read_icase, 'explicit case control'),
+            b'CASECC': (self.read_casecc, 'case control'),
+            b'XCASECC': (self.read_xcasecc, 'case control'),
 
-            b'CDDATA' : self.read_cddata,
-            b'CMODEXT' : self._read_cmodext,
+            b'CDDATA' : (self.read_cddata, 'Cambell diagram'),
+            b'CMODEXT' : (self._read_cmodext, 'Component mode synthesis - external'),
 
             #MSC
             #msc / units_mass_spring_damper
-            b'UNITS' : self._read_units,
+            b'UNITS' : (self._read_units, 'units'),
             #b'CPHSF': self._read_cphsf,
 
             # element matrices
@@ -189,41 +183,57 @@ class OP2Reader:
             #b'MELMP' : self._read_element_matrix,
 
             # element dictionaries
-            b'KDICT' : self._read_dict,
-            b'MDICT' : self._read_dict,
-            b'BDICT' : self._read_dict,
-            b'KDICTP' : self._read_dict,
-            b'MDICTP' : self._read_dict,
-            b'KDICTDS' : self._read_dict,
-            b'KDICTX' : self._read_dict,
-            b'XDICT' : self._read_dict,
-            b'XDICTB' : self._read_dict,
-            b'XDICTDS' : self._read_dict,
-            b'XDICTX' : self._read_dict,
+            b'KDICT' : (self._read_dict, 'matrix'),
+            b'MDICT' : (self._read_dict, 'matrix'),
+            b'BDICT' : (self._read_dict, 'matrix'),
+            b'KDICTP' : (self._read_dict, 'matrix'),
+            b'MDICTP' : (self._read_dict, 'matrix'),
+            b'KDICTDS' : (self._read_dict, 'matrix'),
+            b'KDICTX' : (self._read_dict, 'matrix'),
+            b'XDICT' : (self._read_dict, 'matrix'),
+            b'XDICTB' : (self._read_dict, 'matrix'),
+            b'XDICTDS' : (self._read_dict, 'matrix'),
+            b'XDICTX' : (self._read_dict, 'matrix'),
 
             # coordinate system transformation matrices
-            b'CSTM' : self.read_cstm,
-            b'CSTMS' : self.read_cstm,
+            b'CSTM' : (self.read_cstm, 'coordinate transforms'),
+            b'CSTMS' : (self.read_cstm, 'coordinate transforms (superelement)'),
             #b'TRMBD': self.read_trmbd,
             #b'TRMBU': self.read_trmbu,
 
-            b'R1TABRG': self.read_r1tabrg,
+            b'R1TABRG': (self.read_r1tabrg, 'DRESP1 optimization table'),
             # Qualifier info table???
-            b'QUALINFO' : self.read_qualinfo,
+            b'QUALINFO' : (self.read_qualinfo, 'Qualifier info table'),
 
             # Equivalence between external and internal grid/scalar numbers
-            b'EQEXIN' : self.read_eqexin,
-            b'EQEXINS' : self.read_eqexin,
+            b'EQEXIN' : (self.read_eqexin, 'internal/external ids'),
+            b'EQEXINS' : (self.read_eqexin, 'internal/external ids (superelement)'),
 
-            b'XSOP2DIR' : self.read_xsop2dir,
+            b'XSOP2DIR' : (self.read_xsop2dir, 'list of external superelement matrices?'),
+            #b'TEF1': (self._read_mef1, 'superelement matrix'),
+            #b'MEF1': (self._read_mef1, 'superelement matrix'),
+            #b'MUG1B': (self._read_mef1, 'superelement matrix'),
+            b'MATPOOL' : (self._read_matrix_matpool, 'matrices'),
 
-            b'OBC1': self.read_obc1,
-            b'OBG1': self.read_obc1,
-            b'PTMIC' : self._read_ptmic,
-            b'MATPOOL' : self._read_matrix_matpool,
+            b'OBC1': (self.read_obc1, 'Contact pressures and tractions at grid points'),
+            b'OBG1': (self.read_obc1, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
+            b'PTMIC' : (self._read_ptmic, 'property of VATV microphone points'),
+
             # OVG: Table of aeroelastic x-y plot data for V-g or V-f curves
-            b'MKLIST': self._read_mklist,
+            b'MKLIST': (self._read_mklist, 'M/K aero pairs'),
         }
+        desc_map = {
+            b'PERF': 'aero matrix',
+            b'META': 'string matrix',
+            b'TUG1' : 'external superelement',
+            b'TQG1' : 'external superelement',
+            b'MKQG1' : 'external superelement',
+            b'MATRV': 'external superelement',
+            b'MUG1B': 'external superelement',
+        }
+        desc_map.update({key: values[1] for key, values in self.mapped_tables.items()})
+        #desc_map = {key: values[1] for key, values in self.mapped_tables.items()}
+        self.desc_map = desc_map
 
     def read_nastran_version(self, mode: str) -> None:
         """
@@ -254,7 +264,7 @@ class OP2Reader:
             if op2.post is None:
                 op2.post = -1
             self.read_markers([3])
-            data = self.read_block()   # TODO: is this the date...pretty sure at least for MSC
+            data = self._read_block()   # TODO: is this the date...pretty sure at least for MSC
             ndata = len(data)
             if ndata == 4:
                 one = Struct(self._endian + b'i').unpack(data)[0]
@@ -298,7 +308,7 @@ class OP2Reader:
             #print('version = %r' % version_str)
 
             if macro_version == 'nastran':
-                mode = _parse_nastran_version(
+                mode = parse_nastran_version(
                     data, version, self._encoding, self.op2.log)
                 # don't uncomment this...it breaks tests
                 #op2._nastran_format = mode
@@ -628,8 +638,13 @@ class OP2Reader:
         eqexin2 = np.frombuffer(data, dtype=op2.idtype)
 
         self.read_markers([-5, 1, 0, 0])
-        nid, dof, doftype = eqexin_to_nid_dof_doftype(eqexin1, eqexin2)
-        op2.op2_results.eqexin = EQEXIN(nid, dof, doftype)
+
+        result_name = 'eqexin'
+        if op2._results.is_saved(result_name):
+            op2._results._found_result(result_name)
+
+            nid, dof, doftype = eqexin_to_nid_dof_doftype(eqexin1, eqexin2)
+            op2.op2_results.eqexin = EQEXIN(nid, dof, doftype)
         #print('nid = %s' % nid.tolist()) [1,2,3,...]
         #print('dof = %s' % dof.tolist()) [1,7,13,...]
         #print('doftype = %s' % doftype.tolist())
@@ -1057,7 +1072,7 @@ class OP2Reader:
         #op2.show_ndata(200)
         #sss
 
-    def _read_cmodext_helper(self, marker_orig, debug=False) -> Tuple[int, bool]:
+    def _read_cmodext_helper(self, marker_orig, debug=False) -> tuple[int, bool]:
         r"""
 
         64-bit:
@@ -1131,7 +1146,7 @@ class OP2Reader:
                 #if marker == -4:
                     #self.show(200, types='isq', endian=None, force=False)
                 assert marker in [1, 2, 3, 10, 13, 16], marker
-            data = self.read_block()
+            data = self._read_block()
             ndata = len(data)
             nvalues = ndata // size
             if nvalues == 2:
@@ -1239,7 +1254,7 @@ class OP2Reader:
         print('****marker  = %s' % marker)
         #print('****marker2 = %s' % marker2)
         #assert marker == 696, marker
-        #data = self.read_block()
+        #data = self._read_block()
         #self.show_data(data)
 
         #marker = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
@@ -1964,7 +1979,7 @@ class OP2Reader:
                 data = self._read_record() # 584
                 ndata = len(data)
                 #print('ndata A =', ndata)
-                op2.reader_oqg._read_obc1_3(data, ndata)
+                op2._op2_readers.reader_oqg._read_obc1_3(data, ndata)
                 #print('---------------')
 
                 self.read_3_markers([itable, 1, 0])  # -4
@@ -2008,7 +2023,7 @@ class OP2Reader:
         #self.show(2000)
         #aaa
 
-    def _read_subtable_name(self, table_names: List[str]):
+    def _read_subtable_name(self, table_names: list[str]):
         data, ndata = self._read_record_ndata()
         if ndata == 8:
             table_name2, = self.op2.struct_8s.unpack(data)
@@ -2053,6 +2068,7 @@ class OP2Reader:
         """
         # we read the table on the first pass, so if we ever see a
         # 64-bit table, the error message makes a bit more sense
+        self.op2.set_as_msc()
         read_record_ndata = self.get_skip_read_record_ndata()
 
         op2 = self.op2
@@ -2077,6 +2093,7 @@ class OP2Reader:
         assert ndata == 8, self.show_data(data)
 
         itable = -3
+        qual_strings = {}
         while 1:
             self.read_3_markers([itable, 1, 0])
             stop_marker = self.get_marker1(rewind=True)
@@ -2088,7 +2105,8 @@ class OP2Reader:
                 db_key, qlen = unpack(self._endian + b'2i', data[:8])
                 fmt = self._endian + b'%is' % (ndata - 8)
                 qual_str = unpack(fmt, data[8:])[0].decode('latin1')
-                self.log.debug(f'{db_key: 7d} {qual_str}')
+                qual = QualInfo.from_str(db_key, qual_str.rstrip(), self.log)
+                qual_strings[db_key] = qual_str
             itable -= 1
         stop_marker = self.get_marker1(rewind=False)
 
@@ -2225,7 +2243,7 @@ class OP2Reader:
                 nfields_test = self.get_marker1(rewind=True)
                 while nfields_test > 0:
                     nfields = self.get_marker1(rewind=False)
-                    block = self.read_block()
+                    block = self._read_block()
                     nblock = len(block)
                     ndouble = (nblock - 4) // 8
                     fmt = mapfmt(self._endian + b'i%dd' % (ndouble), self.size)
@@ -2661,6 +2679,88 @@ class OP2Reader:
         del isubtable
         self.read_markers([0])
 
+    def read_rst(self):
+        """
+        reads the RST table (restart file?)
+
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\k402rerun3d2ss.op2
+        """
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        header_data = self._read_record()  # (101, 1, 0, 0, 0, 0, 0) - longs
+        #self.show_data(header_data, types='qds', endian=None, force=False)
+
+        self.read_3_markers([-2, 1, 0])
+        data = self._read_record()
+        #print(data[:16])
+
+        table_name, = Struct('<16s').unpack(data[:16])
+        #date
+        #self.show_data(data[16:], types='qds', endian=None, force=False)
+
+        self.read_3_markers([-3, 1, 0])
+        data = self._read_record()
+        #self.show_data(data, types='qd', endian=None, force=False)
+
+
+        self.read_3_markers([-4, 1, 0])
+        data = self._read_record()
+        #self.show_data(data, types='ifqds', endian=None, force=False)
+
+        if 0:  # pragma: no cover
+            #(1, 10, 4617315517961601024, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536, 2314885530818453536,
+            # -1, -1)
+            ndata = len(data) - 5 * 8
+            #print(len(data))
+            aint, bint, cfloat, spaces, m1a, m1b = unpack('<2qd ' + str(ndata) +'s' + ' 2q', data)
+            #print((aint, bint, cfloat, spaces, m1a, m1b))
+            spaces = spaces.decode('latin1').strip()
+            print((aint, bint, cfloat, spaces, m1a, m1b))
+
+
+        ints = np.frombuffer(data, op2.idtype8)
+        #print('ints', ints)
+        i1 = np.where(ints == -1)[0]
+        print('i1', i1)
+        i0 = i1[:-1] + 1
+        i0 = np.hstack([[0], i0])
+
+        print(f'i0={i0}')
+        print(f'i1={i1}')
+
+        # header = (101, 1, 0, 0, 0, 0, 0)
+        # num = 402
+        # data = [
+        #    (1, 16, 0.8000000000000002, '', -1); nspaces=1024
+        #    (2, 24, 1.2, '', -1); nspaces=1024
+        # ]
+        for i0i, i1i in zip(i0, i1):
+            if i0i == i1i:
+                continue
+            datai = data[i0i*8:i1i*8+8]
+            ndatai = len(datai) - 4 * 8
+            fmt = '<2qd ' + str(ndatai) +'s' + ' q'
+            #print(fmt)
+            aint, bint, cfloat, spaces, m1a = unpack(fmt, datai)
+            nspaces = len(spaces)
+            spaces = spaces.decode('latin1').strip()
+            print((aint, bint, cfloat, spaces, m1a), nspaces)
+            #self.show_data(datai, types='qds', endian=None, force=False)
+        #aaa
+        #ints2 = [val if val != 2314885530818453536 else ' '
+                 #for val in ints]
+        #ints2[2] = cfloat
+        #print(ints2)
+        #ints = np.frombuffer(data, op2.idtype8).tolist()
+        #floats = np.frombuffer(data, op2.fdtype8).tolist()
+
+        #self.show_data(data, types='qds', endian=None, force=False)
+        self.read_3_markers([-5, 1, 0, 0])
+
+        #self.show(32, types='ifqds', endian=None, force=False)
+        #asdf
+
     def read_gpl(self):
         """
         reads the GPL table (grid point list?)
@@ -2755,12 +2855,12 @@ class OP2Reader:
         #data = self._read_record()
         #self.show_data(data, types='ifs', endian=None)
 
-    def read_table_name(self, table_names: List[bytes]) -> str:
+    def read_table_name(self, table_names: list[bytes]) -> str:
         if self.size == 4:
             return self.read_table_name4(table_names)
         return self.read_table_name8(table_names)
 
-    def read_table_name4(self, table_names: List[bytes]) -> str:
+    def read_table_name4(self, table_names: list[bytes]) -> str:
         assert isinstance(table_names, list), table_names
         data, ndata = self._read_record_ndata4() # GPL
         if ndata == 8:
@@ -2776,7 +2876,7 @@ class OP2Reader:
         assert table_name_str in table_names, f'actual={table_name_str} allowed={table_names}'
         return table_name_str
 
-    def read_table_name8(self, table_names: List[bytes]) -> str:
+    def read_table_name8(self, table_names: list[bytes]) -> str:
         assert isinstance(table_names, list), table_names
         data, ndata = self._read_record_ndata8() # GPL
         if ndata == 16:
@@ -2844,7 +2944,15 @@ class OP2Reader:
 
 
         ## TODO: no idea how this works...
-        if self.read_mode == 1:
+        read_mode = self.read_mode
+        result_name = 'gpdt'
+        #if op2._results.is_not_saved(result_name):
+            #read_mode = 2 #  fake the read mode to skip the table
+        #else:
+            #op2._results._found_result(result_name)
+
+        if read_mode == 1 and op2._results.is_saved(result_name):
+            op2._results._found_result(result_name)
             i = 0
             data = read_record() # nid,cp,x,y,z,cd,ps
             ndata = len(data)
@@ -2854,7 +2962,6 @@ class OP2Reader:
             # assume nodes
             #_get_gpdt_nnodes(self.size, ndata, header_ints, self.log)
             nnodes, numwide = _get_gpdt_nnodes2(ndata, header_ints, self.size)
-
             if (self.size, numwide) == (8, 14):
                 # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\z402cdamp1_04.op2
                 nid_cp_cd_ps, xyz = _read_gpdt_8_14(op2, data, nnodes)
@@ -3045,238 +3152,242 @@ class OP2Reader:
             # assert len(data) % xword == 0
 
             numwide = nvalues4 // nnodes
-            if self.size == 4:
-                #C:\NASA\m4\formats\git\examples\x33_blog\blog_materials\pressure_vessel_fem1_sim1-my_limit_load.bdf
-                #GRID*                  1               0-1.792343211E+003.4539249252E+00+
-                #*       3.6302008282E-01               0
-                #GRID*                  2               0-1.792313297E+003.3970433059E+00+
-                #*       7.2220293673E-01               0
-                #GRID*                  3               0-1.792337984E+003.3029109367E+00+
-                #*       1.0733895770E+00               0
-                #GRID*                  4               0-1.792341147E+003.1725968908E+00+
-                #*       1.4128346960E+00               0
-                #GRID*                  5               0-1.792333634E+003.0076863630E+00+
-                #*       1.7364594482E+00               0
+            result_name = 'bgpdt'
+            if op2._results.is_saved(result_name):
+                op2._results._found_result(result_name)
 
-                assert nvalues4 % nnodes == 0, nvalues4 % nnodes
-                #print(self.size, numwide, nvalues4, len(data))
+                if self.size == 4:
+                    #C:\NASA\m4\formats\git\examples\x33_blog\blog_materials\pressure_vessel_fem1_sim1-my_limit_load.bdf
+                    #GRID*                  1               0-1.792343211E+003.4539249252E+00+
+                    #*       3.6302008282E-01               0
+                    #GRID*                  2               0-1.792313297E+003.3970433059E+00+
+                    #*       7.2220293673E-01               0
+                    #GRID*                  3               0-1.792337984E+003.3029109367E+00+
+                    #*       1.0733895770E+00               0
+                    #GRID*                  4               0-1.792341147E+003.1725968908E+00+
+                    #*       1.4128346960E+00               0
+                    #GRID*                  5               0-1.792333634E+003.0076863630E+00+
+                    #*       1.7364594482E+00               0
 
-                if numwide == 4:
-                    assert numwide == 4, numwide
-                    ntotal = 16 # 4*4
-                    assert len(data) % ntotal == 0, len(data) % ntotal
-                    structi = Struct(self._endian + b'i3f')  # 16
-                    for j in range(nnodes):
-                        out = structi.unpack(data[i:i+ntotal])
-                        cd, x, y, z = out
-                        outs = f'nid={j+1} cd={cd} xyz=({x:g},{y:g},{z:g})'
-                        #print(outs)
-                        i += ntotal
-                    # [cd, x, y, z]
-                    cd = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 4)[:, :-3]
-                    xyz = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 4)[:, -3:]
+                    assert nvalues4 % nnodes == 0, nvalues4 % nnodes
+                    #print(self.size, numwide, nvalues4, len(data))
 
-                elif numwide == 12:
-                    ntotal = 48 # (9+3)*4
-                    structi = Struct(self._endian + b'6i3d')
-                    # len(data) // 4 / ngrids = 4
-                    # 30768 // 4 / 1923
-                    nrows = get_table_size_from_ncolumns('BGPDT', nvalues4, 12)
-                    for j in range(nnodes):
-                        edata = data[i:i+ntotal]
-                        #self.show_data(edata, 'ifqd')
-                        out = structi.unpack(edata)
+                    if numwide == 4:
+                        assert numwide == 4, numwide
+                        ntotal = 16 # 4*4
+                        assert len(data) % ntotal == 0, len(data) % ntotal
+                        structi = Struct(self._endian + b'i3f')  # 16
+                        for j in range(nnodes):
+                            out = structi.unpack(data[i:i+ntotal])
+                            cd, x, y, z = out
+                            outs = f'nid={j+1} cd={cd} xyz=({x:g},{y:g},{z:g})'
+                            #print(outs)
+                            i += ntotal
+                        # [cd, x, y, z]
+                        cd = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 4)[:, :-3]
+                        xyz = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 4)[:, -3:]
 
-                        #self.show_data(data[i:i+ntotal], types='qd')
-                        #print(out)
-                        cd, sil, nid, sixtyone, ps, zero_c, x, y, z = out
-                        outs = f'cd={cd} sil={sil} nid={nid} sixtyone={sixtyone} ps={ps} zero_c={zero_c} xyz=({x:g},{y:g},{z:g})'
-                        assert nid > 0, outs
-                        #print(outs)
-                        #assert zero_a in [0, 225, 362, 499], out
-                        #assert zero_c == 0, outs
-                        #11: C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\gluedg01f.op2
-                        assert sixtyone in [11, 12, 61], f'sixtyone={sixtyone} outs={outs}'
-                        i += ntotal
+                    elif numwide == 12:
+                        ntotal = 48 # (9+3)*4
+                        structi = Struct(self._endian + b'6i3d')
+                        # len(data) // 4 / ngrids = 4
+                        # 30768 // 4 / 1923
+                        nrows = get_table_size_from_ncolumns('BGPDT', nvalues4, 12)
+                        for j in range(nnodes):
+                            edata = data[i:i+ntotal]
+                            #self.show_data(edata, 'ifqd')
+                            out = structi.unpack(edata)
 
-                    # [cd, x, y, z]
-                    #self.show_data(data, types='if', endian=None, force=False)
-                    #[0, num, nid, 61, 0, 0, x, _, y, _, z, _]
-                    ints = np.frombuffer(data, op2.idtype).reshape(nrows, 12).copy()
-                    floats = np.frombuffer(data, 'float64').reshape(nrows, 6).copy()
-                    cd = ints[:, 0]
-                    xyz = floats[:, 1:]
-                    #print(ints[:-6])
-                    #print(xyz)
-                else:  # pragma: no cover
-                    raise NotImplementedError((self.size, numwide))
-                op2.op2_results.bgpdt = BGPDT(cd, xyz)
-            else:
-                #bad = []
-                #nvalues = len(data) // 4
-                #for i in [2, 3, 6]: # 2-16 checked
-                    #if nvalues % i != 0:
-                        #bad.append(i)
-                #if bad:
-                    #print(nvalues, bad)
-                #self.show_data(data, types='ifqd')
-                #print(nvalues4)
-                # 112 / 28.
-                #nrows9 = nvalues4 // 18
-                #nrows4 = nvalues4 // 8
-                #nvalues_9 = nvalues4 % 18
-                #nvalues_4 = nvalues4 % 8
-                #print('nvalues_9', nvalues_9, nvalues_9)
-                #print('nvalues_4', nvalues_4, nvalues_4)
-                if numwide == 18: # nvalues_9 == 0 and nvalues_4 != 0:
-                    #assert nvalues4 % 18 == 0, nvalues4 % 18
-                    #print(nrows)
-                    #i = np.arange(0, nrows)
-                    #i1 = i * 4
-                    #i2 = (i + 1) * 4
-                    #zero_a, sil, nid, sixtyone, ps, zero_c, x, y, z
-                    ints = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 9)[:, :-3]
-                    floats = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 9)[:, -3:]
-                    nid = ints[:, 2]
-                    cd = ints[:, [4, 5]]
-                    xyz = floats
+                            #self.show_data(data[i:i+ntotal], types='qd')
+                            #print(out)
+                            cd, sil, nid, sixtyone, ps, zero_c, x, y, z = out
+                            outs = f'cd={cd} sil={sil} nid={nid} sixtyone={sixtyone} ps={ps} zero_c={zero_c} xyz=({x:g},{y:g},{z:g})'
+                            assert nid > 0, outs
+                            #print(outs)
+                            #assert zero_a in [0, 225, 362, 499], out
+                            #assert zero_c == 0, outs
+                            #11: C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\gluedg01f.op2
+                            assert sixtyone in [11, 12, 61], f'sixtyone={sixtyone} outs={outs}'
+                            i += ntotal
 
-                    #GRID           1       0    27.5    20.0     0.0       0
-                    #GRID           2       0 25.30329 25.30329     0.0       0
-                    #GRID           3       0    20.0    27.5     0.0       0
-                    #GRID           4       0 14.69671 25.30329     0.0       0
-
-                    #GRID           1       0    27.5    20.0     0.0       0
-                    #GRID           2       025.3032925.30329     0.0       0
-                    #GRID           3       0    20.0    27.5     0.0       0
-                    #GRID           4       014.6967125.30329     0.0       0
-                    #GRID           5       0    12.5    20.0     0.0       0
-                    #GRID           6       014.6967114.69671     0.0       0
-                    #GRID           7       0    20.0    12.5     0.0       0
-                    #GRID           8       025.3032914.69671     0.0       0
-                    #GRID           9       0 22.3122 7.30685     0.0       0
-                    #GRID          10       017.8372532.93714     0.0       0
-                    #GRID          11       07.22962217.75039     0.0       0
-                    #GRID          12       032.86626 17.7885     0.0       0
-                    #GRID          13       0 30.56189.511215     0.0       0
-                    #GRID          14       024.9442132.70425     0.0       0
-                    #GRID          15       032.4224632.42249     0.0       0
-                    #GRID          16       032.6858324.92913     0.0       0
-                    #GRID          17       09.68575330.94779     0.0       0
-                    #GRID          18       07.90302224.50037     0.0       0
-                    #GRID          19       09.0897749.672205     0.0       0
-                    #GRID          20       015.524677.918942     0.0       0
-                    #GRID          21       0     0.0    32.0     0.0       0
-                    #GRID          22       0     0.0    24.0     0.0       0
-                    #GRID          23       0     0.0    16.0     0.0       0
-                    #GRID          24       0     0.0     8.0     0.0       0
-                    #GRID          25       0     8.0     0.0     0.0       0
-                    #GRID          26       0    16.0     0.0     0.0       0
-                    #GRID          27       0    24.0     0.0     0.0       0
-                    #GRID          28       0    32.0     0.0     0.0       0
-                    #GRID          29       0    32.0    40.0     0.0       0
-                    #GRID          30       0    24.0    40.0     0.0       0
-                    #GRID          31       0    16.0    40.0     0.0       0
-                    #GRID          32       0     8.0    40.0     0.0       0
-                    #GRID          33       0    40.0     8.0     0.0       0
-                    #GRID          34       0    40.0    16.0     0.0       0
-                    #GRID          35       0    40.0    24.0     0.0       0
-                    #GRID          36       0    40.0    32.0     0.0       0
-                    #GRID          37       0     0.0     0.0     0.0       0
-                    #GRID          38       0     0.0    40.0     0.0       0
-                    #GRID          39       0    40.0     0.0     0.0       0
-                    #GRID          40       0    40.0    40.0     0.0       0
-                    #GRID          41       0    12.5    20.0    20.1       0
-                    #(0, 1, 1, 61, 0, 0, 27.5, 20.0, 0.0)
-                    #(0, 7, 2, 61, 0, 0, 25.30329, 25.30329, 0.0)
-                    #(0, 13, 3, 61, 0, 0, 20.0, 27.5, 0.0)
-                    #(0, 19, 4, 61, 0, 0, 14.69671, 25.30329, 0.0)
-                    #(0, 25, 5, 61, 0, 0, 12.5, 20.0, 0.0)
-                    #(0, 31, 6, 61, 0, 0, 14.69671, 14.69671, 0.0)
-                    #(0, 37, 7, 61, 0, 0, 20.0, 12.5, 0.0)
-                    #(0, 43, 8, 61, 0, 0, 25.30329, 14.69671, 0.0)
-                    #(0, 49, 9, 61, 0, 0, 22.3122, 7.30685, 0.0)
-                    #(0, 55, 10, 61, 0, 0, 17.83725, 32.93714, 0.0)
-                    #(0, 61, 11, 61, 0, 0, 7.229622, 17.75039, 0.0)
-                    #(0, 67, 12, 61, 0, 0, 32.86626, 17.7885, 0.0)
-                    #(0, 73, 13, 61, 0, 0, 30.5618, 9.511215, 0.0)
-                    #(0, 79, 14, 61, 0, 0, 24.94421, 32.70425, 0.0)
-                    #(0, 85, 15, 61, 0, 0, 32.42246, 32.42249, 0.0)
-                    #(0, 91, 16, 61, 0, 0, 32.68583, 24.92913, 0.0)
-                    #(0, 97, 17, 61, 0, 0, 9.685753, 30.94779, 0.0)
-                    #(0, 103, 18, 61, 0, 0, 7.903022, 24.50037, 0.0)
-                    #(0, 109, 19, 61, 0, 0, 9.089774, 9.672205, 0.0)
-                    #(0, 115, 20, 61, 0, 0, 15.52467, 7.918942, 0.0)
-                    #(0, 121, 21, 61, 0, 0, 0.0, 32.0, 0.0)
-                    #(0, 127, 22, 61, 0, 0, 0.0, 24.0, 0.0)
-                    #(0, 133, 23, 61, 0, 0, 0.0, 16.0, 0.0)
-                    #(0, 139, 24, 61, 0, 0, 0.0, 8.0, 0.0)
-                    #(0, 145, 25, 61, 0, 0, 8.0, 0.0, 0.0)
-                    #(0, 151, 26, 61, 0, 0, 16.0, 0.0, 0.0)
-                    #(0, 157, 27, 61, 0, 0, 24.0, 0.0, 0.0)
-                    #(0, 163, 28, 61, 0, 0, 32.0, 0.0, 0.0)
-                    #(0, 169, 29, 61, 0, 0, 32.0, 40.0, 0.0)
-                    #(0, 175, 30, 61, 0, 0, 24.0, 40.0, 0.0)
-                    #(0, 181, 31, 61, 0, 0, 16.0, 40.0, 0.0)
-                    #(0, 187, 32, 61, 0, 0, 8.0, 40.0, 0.0)
-                    #(0, 193, 33, 61, 0, 0, 40.0, 8.0, 0.0)
-                    #(0, 199, 34, 61, 0, 0, 40.0, 16.0, 0.0)
-                    #(0, 205, 35, 61, 0, 0, 40.0, 24.0, 0.0)
-                    #(0, 211, 36, 61, 0, 0, 40.0, 32.0, 0.0)
-                    #(0, 217, 37, 61, 0, 0, 0.0, 0.0, 0.0)
-                    #(0, 223, 38, 61, 0, 0, 0.0, 40.0, 0.0)
-                    #(0, 229, 39, 61, 0, 0, 40.0, 0.0, 0.0)
-                    #(0, 235, 40, 61, 0, 0, 40.0, 40.0, 0.0)
-                    #(0, 241, 41, 61, 0, 0, 12.5, 20.0, 20.1)
-                    #doubles (float64) = (0, 7, 2, 61, 0.0, 0.0, 25.30329, 25.30329, 0.0)
-                    #long long (int64) = (0, 7, 2, 61, 0, 0, 25.30329, 25.30329, 0)
-                    #self.show_data(data[:80], types='qd')
-                    ntotal = 72 # 9*8
-                    structi = Struct(self._endian + b'6q3d')
-                    for j in range(nnodes):
-                        out = structi.unpack(data[i:i+ntotal])
-                        #self.show_data(data[i:i+ntotal], types='qd')
-                        #print(out)
-                        cd, sil, nid, sixtyone, ps, zero_c, x, y, z = out
-                        outs = f'cd={cd} sil={sil} nid={nid} sixtyone={sixtyone} ps={ps} zero_c={zero_c} xyz=({x:g},{y:g},{z:g})'
-                        assert nid > 0, outs
-
-                        assert zero_c == 0, outs
-                        assert sixtyone == 61, outs
-                        i += ntotal
-
-
-                # elif nvalues_9 != 0 and nvalues_4 == 0:
-                elif numwide == 8:
-                    #assert numwide == 8, numwide
-                    ntotal = 32 # 24+4 = 28
-                    assert len(data) % ntotal == 0, len(data) % ntotal
-                    structi = Struct(self._endian + b'q3d')  # 28
-                    for j in range(nnodes):
-                        out = structi.unpack(data[i:i+ntotal])
-                        #self.show_data(data[i:i+ntotal], types='ifqd')
-                        #print(out)
-                        cd, x, y, z = out
-                        i += ntotal
-                    # [cd, x, y, z]
-                    cd = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 4)[:, :-3]
-                    xyz = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 4)[:, -3:]
+                        # [cd, x, y, z]
+                        #self.show_data(data, types='if', endian=None, force=False)
+                        #[0, num, nid, 61, 0, 0, x, _, y, _, z, _]
+                        ints = np.frombuffer(data, op2.idtype).reshape(nrows, 12).copy()
+                        floats = np.frombuffer(data, 'float64').reshape(nrows, 6).copy()
+                        cd = ints[:, 0]
+                        xyz = floats[:, 1:]
+                        #print(ints[:-6])
+                        #print(xyz)
+                    else:  # pragma: no cover
+                        raise NotImplementedError((self.size, numwide))
+                    op2.op2_results.bgpdt = BGPDT(cd, xyz)
                 else:
-                    raise RuntimeError((self.size, numwide))
-                #cd = ints[::7]
-                # [cd, x, _, y, _, z, _]
+                    #bad = []
+                    #nvalues = len(data) // 4
+                    #for i in [2, 3, 6]: # 2-16 checked
+                        #if nvalues % i != 0:
+                            #bad.append(i)
+                    #if bad:
+                        #print(nvalues, bad)
+                    #self.show_data(data, types='ifqd')
+                    #print(nvalues4)
+                    # 112 / 28.
+                    #nrows9 = nvalues4 // 18
+                    #nrows4 = nvalues4 // 8
+                    #nvalues_9 = nvalues4 % 18
+                    #nvalues_4 = nvalues4 % 8
+                    #print('nvalues_9', nvalues_9, nvalues_9)
+                    #print('nvalues_4', nvalues_4, nvalues_4)
+                    if numwide == 18: # nvalues_9 == 0 and nvalues_4 != 0:
+                        #assert nvalues4 % 18 == 0, nvalues4 % 18
+                        #print(nrows)
+                        #i = np.arange(0, nrows)
+                        #i1 = i * 4
+                        #i2 = (i + 1) * 4
+                        #zero_a, sil, nid, sixtyone, ps, zero_c, x, y, z
+                        ints = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 9)[:, :-3]
+                        floats = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 9)[:, -3:]
+                        nid = ints[:, 2]
+                        cd = ints[:, [4, 5]]
+                        xyz = floats
 
-                #print(ints)
-                #print(floats)
-                #print(nrows*7, len(floats))
-                #ints = ints[2:].reshape(nrows, 7)
-                #floats = floats[2:].reshape(nrows, 7)
-                #for inti, floati in zip(ints, floats):
-                    #print(inti[:-3], floats[-3:])
-                #print(xyz, xyz.shape)
-                op2.op2_results.bgpdt = BGPDT(cd, xyz)
-            #print('cd = %s' % cd.tolist())
-            #print('xyz:\n%s' % xyz)
+                        #GRID           1       0    27.5    20.0     0.0       0
+                        #GRID           2       0 25.30329 25.30329     0.0       0
+                        #GRID           3       0    20.0    27.5     0.0       0
+                        #GRID           4       0 14.69671 25.30329     0.0       0
+
+                        #GRID           1       0    27.5    20.0     0.0       0
+                        #GRID           2       025.3032925.30329     0.0       0
+                        #GRID           3       0    20.0    27.5     0.0       0
+                        #GRID           4       014.6967125.30329     0.0       0
+                        #GRID           5       0    12.5    20.0     0.0       0
+                        #GRID           6       014.6967114.69671     0.0       0
+                        #GRID           7       0    20.0    12.5     0.0       0
+                        #GRID           8       025.3032914.69671     0.0       0
+                        #GRID           9       0 22.3122 7.30685     0.0       0
+                        #GRID          10       017.8372532.93714     0.0       0
+                        #GRID          11       07.22962217.75039     0.0       0
+                        #GRID          12       032.86626 17.7885     0.0       0
+                        #GRID          13       0 30.56189.511215     0.0       0
+                        #GRID          14       024.9442132.70425     0.0       0
+                        #GRID          15       032.4224632.42249     0.0       0
+                        #GRID          16       032.6858324.92913     0.0       0
+                        #GRID          17       09.68575330.94779     0.0       0
+                        #GRID          18       07.90302224.50037     0.0       0
+                        #GRID          19       09.0897749.672205     0.0       0
+                        #GRID          20       015.524677.918942     0.0       0
+                        #GRID          21       0     0.0    32.0     0.0       0
+                        #GRID          22       0     0.0    24.0     0.0       0
+                        #GRID          23       0     0.0    16.0     0.0       0
+                        #GRID          24       0     0.0     8.0     0.0       0
+                        #GRID          25       0     8.0     0.0     0.0       0
+                        #GRID          26       0    16.0     0.0     0.0       0
+                        #GRID          27       0    24.0     0.0     0.0       0
+                        #GRID          28       0    32.0     0.0     0.0       0
+                        #GRID          29       0    32.0    40.0     0.0       0
+                        #GRID          30       0    24.0    40.0     0.0       0
+                        #GRID          31       0    16.0    40.0     0.0       0
+                        #GRID          32       0     8.0    40.0     0.0       0
+                        #GRID          33       0    40.0     8.0     0.0       0
+                        #GRID          34       0    40.0    16.0     0.0       0
+                        #GRID          35       0    40.0    24.0     0.0       0
+                        #GRID          36       0    40.0    32.0     0.0       0
+                        #GRID          37       0     0.0     0.0     0.0       0
+                        #GRID          38       0     0.0    40.0     0.0       0
+                        #GRID          39       0    40.0     0.0     0.0       0
+                        #GRID          40       0    40.0    40.0     0.0       0
+                        #GRID          41       0    12.5    20.0    20.1       0
+                        #(0, 1, 1, 61, 0, 0, 27.5, 20.0, 0.0)
+                        #(0, 7, 2, 61, 0, 0, 25.30329, 25.30329, 0.0)
+                        #(0, 13, 3, 61, 0, 0, 20.0, 27.5, 0.0)
+                        #(0, 19, 4, 61, 0, 0, 14.69671, 25.30329, 0.0)
+                        #(0, 25, 5, 61, 0, 0, 12.5, 20.0, 0.0)
+                        #(0, 31, 6, 61, 0, 0, 14.69671, 14.69671, 0.0)
+                        #(0, 37, 7, 61, 0, 0, 20.0, 12.5, 0.0)
+                        #(0, 43, 8, 61, 0, 0, 25.30329, 14.69671, 0.0)
+                        #(0, 49, 9, 61, 0, 0, 22.3122, 7.30685, 0.0)
+                        #(0, 55, 10, 61, 0, 0, 17.83725, 32.93714, 0.0)
+                        #(0, 61, 11, 61, 0, 0, 7.229622, 17.75039, 0.0)
+                        #(0, 67, 12, 61, 0, 0, 32.86626, 17.7885, 0.0)
+                        #(0, 73, 13, 61, 0, 0, 30.5618, 9.511215, 0.0)
+                        #(0, 79, 14, 61, 0, 0, 24.94421, 32.70425, 0.0)
+                        #(0, 85, 15, 61, 0, 0, 32.42246, 32.42249, 0.0)
+                        #(0, 91, 16, 61, 0, 0, 32.68583, 24.92913, 0.0)
+                        #(0, 97, 17, 61, 0, 0, 9.685753, 30.94779, 0.0)
+                        #(0, 103, 18, 61, 0, 0, 7.903022, 24.50037, 0.0)
+                        #(0, 109, 19, 61, 0, 0, 9.089774, 9.672205, 0.0)
+                        #(0, 115, 20, 61, 0, 0, 15.52467, 7.918942, 0.0)
+                        #(0, 121, 21, 61, 0, 0, 0.0, 32.0, 0.0)
+                        #(0, 127, 22, 61, 0, 0, 0.0, 24.0, 0.0)
+                        #(0, 133, 23, 61, 0, 0, 0.0, 16.0, 0.0)
+                        #(0, 139, 24, 61, 0, 0, 0.0, 8.0, 0.0)
+                        #(0, 145, 25, 61, 0, 0, 8.0, 0.0, 0.0)
+                        #(0, 151, 26, 61, 0, 0, 16.0, 0.0, 0.0)
+                        #(0, 157, 27, 61, 0, 0, 24.0, 0.0, 0.0)
+                        #(0, 163, 28, 61, 0, 0, 32.0, 0.0, 0.0)
+                        #(0, 169, 29, 61, 0, 0, 32.0, 40.0, 0.0)
+                        #(0, 175, 30, 61, 0, 0, 24.0, 40.0, 0.0)
+                        #(0, 181, 31, 61, 0, 0, 16.0, 40.0, 0.0)
+                        #(0, 187, 32, 61, 0, 0, 8.0, 40.0, 0.0)
+                        #(0, 193, 33, 61, 0, 0, 40.0, 8.0, 0.0)
+                        #(0, 199, 34, 61, 0, 0, 40.0, 16.0, 0.0)
+                        #(0, 205, 35, 61, 0, 0, 40.0, 24.0, 0.0)
+                        #(0, 211, 36, 61, 0, 0, 40.0, 32.0, 0.0)
+                        #(0, 217, 37, 61, 0, 0, 0.0, 0.0, 0.0)
+                        #(0, 223, 38, 61, 0, 0, 0.0, 40.0, 0.0)
+                        #(0, 229, 39, 61, 0, 0, 40.0, 0.0, 0.0)
+                        #(0, 235, 40, 61, 0, 0, 40.0, 40.0, 0.0)
+                        #(0, 241, 41, 61, 0, 0, 12.5, 20.0, 20.1)
+                        #doubles (float64) = (0, 7, 2, 61, 0.0, 0.0, 25.30329, 25.30329, 0.0)
+                        #long long (int64) = (0, 7, 2, 61, 0, 0, 25.30329, 25.30329, 0)
+                        #self.show_data(data[:80], types='qd')
+                        ntotal = 72 # 9*8
+                        structi = Struct(self._endian + b'6q3d')
+                        for j in range(nnodes):
+                            out = structi.unpack(data[i:i+ntotal])
+                            #self.show_data(data[i:i+ntotal], types='qd')
+                            #print(out)
+                            cd, sil, nid, sixtyone, ps, zero_c, x, y, z = out
+                            outs = f'cd={cd} sil={sil} nid={nid} sixtyone={sixtyone} ps={ps} zero_c={zero_c} xyz=({x:g},{y:g},{z:g})'
+                            assert nid > 0, outs
+
+                            assert zero_c == 0, outs
+                            assert sixtyone == 61, outs
+                            i += ntotal
+
+
+                    # elif nvalues_9 != 0 and nvalues_4 == 0:
+                    elif numwide == 8:
+                        #assert numwide == 8, numwide
+                        ntotal = 32 # 24+4 = 28
+                        assert len(data) % ntotal == 0, len(data) % ntotal
+                        structi = Struct(self._endian + b'q3d')  # 28
+                        for j in range(nnodes):
+                            out = structi.unpack(data[i:i+ntotal])
+                            #self.show_data(data[i:i+ntotal], types='ifqd')
+                            #print(out)
+                            cd, x, y, z = out
+                            i += ntotal
+                        # [cd, x, y, z]
+                        cd = np.frombuffer(data, op2.idtype8).copy().reshape(nnodes, 4)[:, :-3]
+                        xyz = np.frombuffer(data, op2.fdtype8).copy().reshape(nnodes, 4)[:, -3:]
+                    else:
+                        raise RuntimeError((self.size, numwide))
+                    #cd = ints[::7]
+                    # [cd, x, _, y, _, z, _]
+
+                    #print(ints)
+                    #print(floats)
+                    #print(nrows*7, len(floats))
+                    #ints = ints[2:].reshape(nrows, 7)
+                    #floats = floats[2:].reshape(nrows, 7)
+                    #for inti, floati in zip(ints, floats):
+                        #print(inti[:-3], floats[-3:])
+                    #print(xyz, xyz.shape)
+                    op2.op2_results.bgpdt = BGPDT(cd, xyz)
+                #print('cd = %s' % cd.tolist())
+                #print('xyz:\n%s' % xyz)
 
         self.read_3_markers([-4, 1, 0])
         marker = self.get_nmarkers(1, rewind=True)[0]
@@ -3444,7 +3555,7 @@ class OP2Reader:
 
 
     def _read_deck_section(self, deck_filename: str, save_lines: bool,
-                           write_deck: bool, mode='w', read_mode: int=1) -> List[str]:
+                           write_deck: bool, mode='w', read_mode: int=1) -> list[str]:
         """helper for ``read_ibulk`` and ``read_icase``"""
         marker = -2
         if save_lines and write_deck:
@@ -3706,7 +3817,7 @@ class OP2Reader:
                 #   DATTYP=6 for list of whirl direction codes (2.0=backwards, 3.0=forward, 4.0=linear)
                 #   DATTYP=7 for list of converted frequencies in analysis system
                 #   DATTYP=8 for list of whirl directions codes for converted solution (2.0=backwards, 3.0=forward, 4.0=linear)
-                # 4 VALS(NVAL) RS List of values
+                # 4 VALS(NVAL) RS list of values
                 # Words 1–4 repeat for NCRV curves. For DATTYP≠1, NVAL and NCRV=0
 
                 dict_map = {
@@ -4343,10 +4454,27 @@ class OP2Reader:
         self.read_3_markers([-3, 1, 1])
 
         unused_markers0 = self.get_nmarkers(1, rewind=False)
-        unused_record = self.read_block()
+        record = self._read_block()
+        self.show_data(record, types='ifs', endian=None, force=False)
 
         #data = self._read_record()
-        self.read_markers([-4, 1, 0, 0])
+        self.read_markers([-4, 1, 0])
+        return
+        self.read_markers([-4, 1, 1])
+        record, ndata = self._read_block_ndata()
+        #ndata, = op2.struct_i.unpack(record)
+        nbytes = ndata * self.size
+
+        print(f'*sdf ndata={ndata} nbytes={nbytes}')
+        self.show_data(record, types='ifs', endian=None, force=False)
+
+        self.show_ndata(100, types='ifs', force=False, endian=None)
+
+        #markers1 = self.get_nmarkers4(1, rewind=True)
+        #print('markers1', markers1)
+        #self.show_ndata(100, types='ifs', force=False, endian=None)
+        sys.stdout.flush()
+        self.read_markers([0])
         #self._read_subtables()
 
     def read_tol(self):
@@ -4599,7 +4727,7 @@ class OP2Reader:
                     GCj += GCjj
 
                     #-----------
-                    data = self.read_block()
+                    data = self._read_block()
                     if self.size == 8:
                         #self.log.warning('skipping matrix')
                         #self.show_data(data, types='ifqd')
@@ -4786,6 +4914,56 @@ class OP2Reader:
                 raise
                 #self._goto(i)
                 #self._skip_table(op2.table_name)
+
+    def _read_mef1(self):
+        op2 = self.op2
+        table_name = self._read_table_name(rewind=False, stop_on_failure=True)
+        utable_name = table_name.decode('utf-8')
+        #print(utable_name)
+        self.read_markers([-1])
+
+        #(101, 15, 12, 2, 2, 4, 1333)
+        data = self._read_record()
+        ints = unpack(self._endian + b'7i', data)
+        print(ints)
+
+        self.read_3_markers([-2, 1, 0])
+        data = self._read_record()
+        name, int1, int2 = unpack(self._endian + b'8s ii', data)
+        print(name, int1, int2)
+        #self.show_data(data, types='ifs', endian=None, force=False)
+
+        self.read_3_markers([-3, 1])
+        read_dofs(op2, size=4)
+        #data = self._read_record()
+        #(4, 2, 4, 12, 1, -901, -1074790401, 12,
+         #4, 2, 4, 12, 7, -901, -1074790401, 12)
+        #self.show_data(data, types='ifsqd', endian=None, force=False)
+        #self.show_data(data[4:], types='ifsqd', endian=None, force=False)
+
+        assert op2.f.tell() == op2.n
+
+        ni = -4
+        marker = 1
+        while marker != 0:
+            #print(f'ni = {ni}')
+            self.read_3_markers([ni, 1])
+            read_dofs(op2, size=4)
+            ni -= 1
+
+            marker = self.get_marker1(rewind=True, macro_rewind=False)
+            #if marker == 0:
+                #break
+        #print('marker =', marker)
+        marker = self.get_marker1(rewind=False, macro_rewind=False)
+        #self.read_3_markers([ni, 1])
+        #self.show_ndata(200, types='ifs')
+
+        #self.read_3_markers([-9, 1])
+        #read_dofs(op2, size=4)
+
+    # (104, 32768, 0, 0, 0, 0, 0)
+        #aaa
 
     def _read_matrix_matpool(self):
         """
@@ -5179,7 +5357,7 @@ class OP2Reader:
         self.read_markers([0])
     #---------------------------------------------------------------------------
 
-    def _get_marker_n(self, nmarkers: int) -> List[int]:
+    def _get_marker_n(self, nmarkers: int) -> list[int]:
         """
         Gets N markers
 
@@ -5193,7 +5371,7 @@ class OP2Reader:
 
         Returns
         -------
-        markers : List[int, int, int]
+        markers : list[int, int, int]
             a list of nmarker integers
 
         """
@@ -5224,7 +5402,7 @@ class OP2Reader:
 
         Returns
         -------
-        markers : List[int]
+        markers : list[int]
             list of [1, 2, 3, ...] markers
 
         """
@@ -5262,7 +5440,7 @@ class OP2Reader:
 
         Returns
         -------
-        markers : List[int]
+        markers : list[int]
             list of [1, 2, 3, ...] markers
 
         """
@@ -5287,12 +5465,12 @@ class OP2Reader:
                         i, macro_rewind or rewind))
         return markers
 
-    def read_markers(self, markers: List[int], macro_rewind: bool=True) -> None:
+    def read_markers(self, markers: list[int], macro_rewind: bool=True) -> None:
         if self.size == 4:
             return self.read_markers4(markers, macro_rewind=macro_rewind)
         return self.read_markers8(markers, macro_rewind=macro_rewind)
 
-    def read_markers4(self, markers: List[int], macro_rewind: bool=True) -> None:
+    def read_markers4(self, markers: list[int], macro_rewind: bool=True) -> None:
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
         The "marker" corresponds to the value, so 3 markers takes up 9 integers.
@@ -5304,7 +5482,7 @@ class OP2Reader:
 
         Parameters
         ----------
-        markers : List[int]
+        markers : list[int]
             markers to get; markers = [-10, 1]
 
         Raises
@@ -5327,7 +5505,7 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write(f'  read_markers -> [4, {marker:d}, 4]\n')
 
-    def read_markers8(self, markers: List[int], macro_rewind: int=True) -> None:
+    def read_markers8(self, markers: list[int], macro_rewind: int=True) -> None:
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
         The "marker" corresponds to the value, so 3 markers takes up 9 integers.
@@ -5339,7 +5517,7 @@ class OP2Reader:
 
         Parameters
         ----------
-        markers : List[int]
+        markers : list[int]
             markers to get; markers = [-10, 1]
 
         Raises
@@ -5404,7 +5582,7 @@ class OP2Reader:
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one in [0, 1], one  # 0, 50
 
-    def _set_op2_date(self, month: int, day: int, year: int) -> Tuple[int, int, int]:
+    def _set_op2_date(self, month: int, day: int, year: int) -> tuple[int, int, int]:
         """sets the date the job was run"""
         date = (month, day, year)
         self.op2.date = date
@@ -5428,13 +5606,13 @@ class OP2Reader:
             return self._read_record_ndata4(debug=debug, macro_rewind=macro_rewind)[0]
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)[0]
 
-    def _read_record_ndata(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
+    def _read_record_ndata(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
         """reads a record and the length of the record"""
         if self.size == 4:
             return self._read_record_ndata4(debug=debug, macro_rewind=macro_rewind)
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)
 
-    def _read_record_ndata4(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
+    def _read_record_ndata4(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
         """reads a record and the length of the record for size=4"""
         op2 = self.op2
         marker0 = self.get_marker1_4(rewind=False, macro_rewind=macro_rewind)
@@ -5485,7 +5663,7 @@ class OP2Reader:
             record = b''.join(records)
         return record, nrecord
 
-    def _read_record_ndata8(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
+    def _read_record_ndata8(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
         """reads a record and the length of the record for size=8"""
         op2 = self.op2
         markers0 = self.get_nmarkers8(1, rewind=False, macro_rewind=macro_rewind)
@@ -5535,7 +5713,7 @@ class OP2Reader:
 
         return record, nrecord
 
-    def _read_block_ndata4(self):
+    def _read_block_ndata4(self) -> tuple[bytes, int]:
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
@@ -5557,7 +5735,7 @@ class OP2Reader:
         op2.n += 8 + ndata
         return data_out, ndata
 
-    def _read_block_ndata(self):
+    def _read_block_ndata(self) -> tuple[bytes, int]:
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
@@ -5574,7 +5752,7 @@ class OP2Reader:
             return self._read_block_ndata4()
         return self._read_block_ndata8()
 
-    def _read_block_ndata8(self):
+    def _read_block_ndata8(self) -> tuple[bytes, int]:
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
@@ -5709,13 +5887,13 @@ class OP2Reader:
             #print(table_name)
         return table_name
 
-    def read_block(self):
+    def _read_block(self):
         if self.size == 4:
             return self.read_block4()
         return self.read_block8()
 
     def read_string_block(self) -> bytes:
-        block = self.read_block()
+        block = self._read_block()
         if self.size == 4:
             return block
         return reshape_bytes_block(block)
@@ -5806,7 +5984,7 @@ class OP2Reader:
 
         Parameters
         ----------
-        markers : List[int, int, int]
+        markers : list[int, int, int]
             markers to get; markers = [-10, 1, 0]
 
         Raises
@@ -5987,7 +6165,10 @@ class OP2Reader:
         while markers[0] != 0:
             unused_data = self._skip_record()
             if self.is_debug_file:
-                self.log.debug("skipping table_name = %r" % op2.table_name)
+                desc = self.desc_map.get(op2.table_name, '???')
+                #assert desc != '???', self.table_name
+                msgi = "skipping table_name = %r ({desc})".rstrip('(?)')
+                self.log.debug(msgi)
             #if len(data) == 584:
                 #self._parse_results_table3(data)
             #else:
@@ -6157,7 +6338,7 @@ class OP2Reader:
         """
         return self._skip_block_ndata()[0]
 
-    def _skip_block_ndata(self) -> Tuple[None, int]:
+    def _skip_block_ndata(self) -> tuple[None, int]:
         """
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
@@ -6226,7 +6407,7 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
             #self.binary_debug.write('marker = [4, -1, 4]\n')
-        data = self._read_record()
+        data = self._read_record_ndata4()[0]
         # (101, 0, 1, 0, 0, 0, 3)
         #self.show_data(data)  # TODO: what is this???
 
@@ -6249,7 +6430,7 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
             #self.binary_debug.write('marker = [4, -1, 4]\n')
-        data = self._read_record()
+        data = self._read_record_ndata8()[0]
 
         self.read_markers8([-2, 1, 0])
         if self.is_debug_file:
@@ -6296,7 +6477,7 @@ class OP2Reader:
                 self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 12:
-            subtable_name, unused_ten = unpack(self._endian + b'8si', data)  # type: Tuple[bytes, int]
+            subtable_name, unused_ten = unpack(self._endian + b'8si', data)  # type: tuple[bytes, int]
             subtable_name = subtable_name.strip().decode(self._encoding)
             #assert ten == 10, self.show_data(data, types='ifs', endian=None)
             assert subtable_name in ['GPL', 'GPLS'], subtable_name
@@ -6405,16 +6586,25 @@ class OP2Reader:
         # down (yes down) to 4 to indicate table4.  If we count down again, we end up
         # back at table 3 (with isubtable=-5), which will occur in the case of multiple
         # times/element types/results in a single macro table (e.g. OUG, OES).
-        table_mapper = op2._get_table_mapper()
+        #table_mapper = op2._get_table_mapper()
+        table_mapper = op2.table_mapper
         table_name = op2.table_name
+        desc = '???'
         if table_name in table_mapper:
             #if self.read_mode == 2:
                 #self.log.debug("table_name = %r" % table_name)
-            table3_parser, table4_parser = table_mapper[table_name]
+            try:
+                table3_parser, table4_parser = table_mapper[table_name]
+            except:
+                table3_parser, table4_parser, desc = table_mapper[table_name]
             passer = False
         else:
+            if table_name in op2.op2_reader.desc_map:
+                desc = op2.op2_reader.desc_map[table_name]
+
             if self.read_mode == 2:
-                self.log.info(f'skipping table_name = {table_name!r}')
+                self.log.info(f'skipping table_name = {table_name!r} ({desc})')
+                #assert desc != '???', table_name
                     #raise NotImplementedError(table_name)
             table3_parser = None
             table4_parser = None
@@ -6728,32 +6918,32 @@ class OP2Reader:
         #data8 = data[:ndoubles * 8]
         if 's' in types:
             strings = unpack('%s%is' % (endian, n), data[:n])
-            f.write("  strings = %s\n" % str(strings))
+            f.write(f"  strings = {strings}\n")
         if 'i' in types:
             ints = unpack('%s%ii' % (endian, nints), data4)
-            f.write("  ints    = %s\n" % str(ints))
+            f.write(f'  ints    = {ints}\n')
         if 'f' in types:
             floats = unpack('%s%if' % (endian, nints), data4)
-            f.write("  floats  = %s\n" % str(floats))
+            f.write(f'  floats  = {floats}\n')
         if 'd' in types:
             doubles = unpack('%s%id' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("  doubles (float64) = %s\n" % str(doubles))
+            f.write(f'  doubles (float64) = {doubles}\n')
 
         if 'l' in types:
             longs = unpack('%s%il' % (endian, nints), data4)
-            f.write("  long  = %s\n" % str(longs))
+            f.write(f'  long  = {longs}\n')
         if 'I' in types:
             ints2 = unpack('%s%iI' % (endian, nints), data4)
-            f.write("  unsigned int = %s\n" % str(ints2))
+            f.write(f'  unsigned int = %s\n' % str(ints2))
         if 'L' in types:
             longs2 = unpack('%s%iL' % (endian, nints), data4)
-            f.write("  unsigned long = %s\n" % str(longs2))
+            f.write(f'  unsigned long = {longs2}\n')
         if 'q' in types:
             longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("  long long (int64) = %s\n" % str(longs))
+            f.write(f'  long long (int64) = {longs}\n')
         if 'Q' in types:
             longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("  unsigned long long (int64) = %s\n" % str(longs))
+            f.write(f'  unsigned long long (int64) = {longs}\n')
         f.write('\n')
         return strings, ints, floats
 
@@ -6769,7 +6959,7 @@ class OP2Reader:
         op2.f.seek(op2.n)
         return self._write_data(f, data, types=types, force=force, endian=endian)
 
-def eqexin_to_nid_dof_doftype(eqexin1, eqexin2) -> Tuple[Any, Any, Any]:
+def eqexin_to_nid_dof_doftype(eqexin1, eqexin2) -> tuple[Any, Any, Any]:
     """assemble dof table"""
     dof = eqexin2[1::2] // 10
     doftype = eqexin2[1::2] - 10 * dof
@@ -6790,7 +6980,7 @@ def get_table_size_from_ncolumns(table_name: str, nvalues: int, ncolumns: int) -
         raise RuntimeError(msg)
     return nrows
 
-def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
+def dscmcol_dresp1(responses: dict[int, dict[str, Any]],
                    nresponses_dresp1: int,
                    ints, floats) -> None:
     """helper for DSCMCOL"""
@@ -7205,7 +7395,7 @@ def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
         idata += 9
     return
 
-def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
+def dscmcol_dresp2(responses: dict[int, dict[str, Any]],
                    nresponses_dresp2: int,
                    ints, floats) -> None:
     """helper for DSCMCOL"""
@@ -7243,697 +7433,12 @@ def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
         idata += 6
     return
 
-def _parse_nastran_version(data: bytes, version: bytes, encoding: bytes,
-                           log: SimpleLogger) -> str:
-    """parses a Nastran version string"""
-    if len(data) == 32:
-        #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
-        #self.show_data(data[16:], types='ifsdqlILQ', endian=None)
-        if data[:16].strip() in MSC_LONG_VERSION:
-            # 'XXXXXXXX20140   0   \x00\x00\x00\x00        '
-            # 'XXXXXXXX20141   0   \x00\x00\x00\x00        '
-            mode = 'msc'
-        else:
-            raise NotImplementedError(f'check={data[:16].strip()} data={data!r}; '
-                                      f'len(data)={len(data)}')
-    elif len(data) == 8:
-        mode = _parse_nastran_version_8(data, version, encoding, log)
-    elif len(data) == 16:
-        mode = _parse_nastran_version_16(data, version, encoding, log)
-    else:
-        raise NotImplementedError(f'version={version!r}; n={len(data)}')
-    return mode
-
-def _parse_nastran_version_16(data: bytes, version: bytes, encoding: str, log) -> str:
-    """parses an 8 character version string"""
-    version2 = reshape_bytes_block(version)
-    if version2[:2] == b'NX':
-        version_str = version2[2:].decode('latin1')
-        if version_str in NX_VERSIONS:
-            mode = 'nx'
-        else:
-            raise RuntimeError(f'unknown version={version_str}')
-    else:
-        raise RuntimeError(f'unknown version={version}')
-    return mode
-
-def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) -> str:
-    """parses an 8 character version string"""
-    if version.startswith(b'NX'):
-        mode = 'nx'
-        version_str = version[2:].strip().decode(encoding)
-        if version_str not in NX_VERSIONS:
-            log.warning(f'nx version={version_str!r} is not supported')
-    elif version.startswith(b'MODEP'):
-        # TODO: why is this separate?
-        # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
-        #print('found NX table?...')
-        #log.warning('Assuming NX Nastran')
-        mode = 'nx'
-    elif version.startswith(b'AEROFREQ'):
-        # TODO: why is this separate?
-        # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-        #print('found MSC table?...')
-        #log.warning('Assuming MSC Nastran')
-        mode = 'msc'
-    elif version.startswith(b'AEROTRAN'):
-        # TODO: why is this separate?
-        # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-        #log.warning('Assuming MSC Nastran')
-        mode = 'msc'
-    elif version in MSC_VERSIONS:
-        mode = 'msc'
-    #elif version in [b'XXXXXXXX']:
-        ##log.warning('Assuming MSC Nastran')
-        #mode = 'msc'
-    elif version in OPTISTRUCT_VERSIONS:
-        # should this be called optistruct or radioss?
-        mode = 'optistruct'
-    elif version in AUTODESK_VERSIONS:
-        mode = 'autodesk'
-    #elif data[:20] == b'XXXXXXXX20141   0   ':
-        #self.set_as_msc()
-        #self.set_table_type()
-    elif version == b'NASA95':
-        mode = 'nasa95'
-    else:
-        raise RuntimeError(f'unknown version={version!r}')
-    return mode
-
 def update_op2_datacode(op2, data_code_old):
     op2.data_code = data_code_old
     for key, value in data_code_old.items():
         if key == 'size':
             continue
         setattr(op2, key, value)
-
-def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: str) -> None:
-    #TODO: needs work...
-    # ints    = (0, 6, 2, 2, 0, 0, 1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1)
-    # strings = (b'r\x00\x00\x00\x01\x00\x00\x00x\x00\x00\x00EXTDB   \x00\x00\x00\x00\x06\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xfa\x03\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00N\xc76+\x9f\x05\x86A\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\xee\x92\x91Z',)
-    # ints    = (114, 1, 120, EXTDB, 0, 6, 2, 2, 0, 0, 1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1, 1, 2, 1, 1, 1519489774)
-    # floats  = (114, 1, 120, EXTDB, 0.0, 6, 2, 2, 0.0, 0.0, 1.4265218366826638e-42, 1, 1, 1, 1, 6.493597977039189e-13, 16.752744674682617, nan, nan, 1, 2, 1, 1, 2.048771126145843e+16)
-    #self.log.debug('start _read_extdb_extdb')
-    size = self.size
-    factor = self.factor
-    if size == 4:
-        struct2i = Struct(b'2i')
-        struct2id = Struct(b'2i d')
-        struct7i = Struct(b'7i')
-        ntotal2 = 16
-    else:
-        struct2i = Struct(b'2q')
-        struct2id = Struct(b'2q d')
-        struct7i = Struct(b'7q')
-        ntotal2 = 24
-
-    name_bytes = data[12*factor:20*factor]
-    unused_name = name_bytes.decode('latin1').rstrip()
-    #print(name)
-    #self.show_data(data[20:4000], types='if', force=True)
-    ints = np.frombuffer(data[20*factor:], dtype=idtype)
-    iminus1 = np.where(ints == -1)[0]
-    i2 = np.where(iminus1[:-1] + 1 == iminus1[1:])[0]
-    #print(iminus1.tolist())
-    #print(i2)
-    istart = [0] + (iminus1[i2] + 1).tolist()# [:-1]
-    iend = iminus1[i2]
-    #print(istart, len(istart))
-    #print(iend, len(iend))
-
-    n = 20 * factor
-    for i0, i1 in zip(istart, iend):
-        edata = data[n+i0*size:n+i1*size]
-        if len(edata) == 0:
-            break
-
-        n2 = 0
-        flag, niii = Struct(mapfmt(self._endian + b'ii', size)).unpack(edata[:8*factor])
-
-        #print(n, i0, i1)
-        # inputs = (0, 6, 2, 2, 0, 0,
-        #           1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1
-        # ints = (  0, 9, 2, 2, 0, 0, 1, 1, 1, # ???
-        #          1, 1, 0, 1.875,
-        #          1, 2, 0, 1.875,
-        #          1, 3, 0, 1.875,
-        #          1, 4, 0, 1.875,
-        #          1, 5, 0, 1.875,
-        #          1, 6, 0, 1.875,
-
-        #          2, 1, 0, 1.875,
-        #          2, 2, 0, 1.875,
-        #          2, 3, 0, 1.875,
-        #          2, 4, 0, 1.875,
-        #          2, 5, 0, 1.875,
-        #          2, 6, 0, 1.875,
-
-        #          3, 1, 0, 1.875,
-        #          3, 2, 0, 1.875,
-        #          3, 3, 0, 1.875,
-        #          3, 4, 0, 1.875,
-        #          3, 5, 0, 1.875,
-        #          3, 6, 0, 1.875,
-
-        #          4, 1, 0, 1.875,
-        #          4, 2, 0, 1.875,
-        #          4, 3, 0, 1.875,
-        #          4, 4, 0, 1.875,
-        #          4, 5, 0, 1.875,
-        #          4, 6, 0, 1.875,
-        #          100001, 0, 0, 1.875,
-        #          100002, 0, 0, 1.875,
-        #          100003, 0, 0, 1.875,
-        #          100004, 0, 0, 1.875)
-        #self.show_data(data, types='ifqsd', force=True)
-        #print(len(edata))
-
-        # 0, 6, 2, 2, 0, 0,
-        # 1018...
-
-        # DMIG    KAAX           0       6       2       0                     243
-
-        #(1, 2,
-         #1, 1, 37772923, 1094840434,
-         #1, 2, 2351332.017589388, 9779310.02896148)
-
-        if flag == 0:  #  was counter
-            out = struct7i.unpack(edata[:7*size])
-            zero_a, ifo, tin, tout, polar, zero_b, ncols = out
-            #self.log.info(f'flag0: ifo={ifo} tin={tin} tout={tout} polar={polar} ncols={ncols}')
-            #, zero_a, ifo, tin, tout, polar, zero_b, ncols
-            assert zero_a == 0, out
-            assert zero_b == 0, out
-            assert polar == 0, polar
-            assert ifo in [6, 9], ifo
-            #ifo : int
-            #    matrix shape
-            #    4=Lower Triangular
-            #    5=Upper Triangular
-            #    6=Symmetric
-            #    8=Identity (m=nRows, n=m)
-
-            #tin : int
-            #    matrix input precision
-            #    1=Real, Single Precision
-            #    2=Real, Double Precision
-            #    3=Complex, Single Precision
-            #    4=Complex, Double Precision
-            #tout : int
-            #    matrix output precision
-            #    0=same as tin
-            #    1=Real, Single Precision
-            #    2=Real, Double Precision
-            #    3=Complex, Single Precision
-            #    4=Complex, Double Precision
-            tin_tout = tin, tout
-            # TODO: this should only be tin or tout (probably tout), but until we have validation...
-            if tin_tout == (2, 2):
-                n2 = 7 * size
-            elif tin_tout == (1, 1):
-                n2 = 7 * size
-            else:
-                raise NotImplementedError(tin_tout)
-        else:
-            #self.log.debug(f'flag = {flag}')
-            assert flag == -1, flag
-            n2 = size
-            #edata = edata[7*size:]
-
-        len_edata = len(edata) - n2
-
-        nvalues = len_edata // size  # assume doubles are 2
-
-        if tin_tout == (2, 2):
-            # 2 = (gi, ci)
-            # 4 = (gj, cj, real_a, real_b) = (gj, cj, real)
-            ngrid_components = (nvalues - 2) // 4  # 4 values
-            assert (nvalues - 2) % 4 == 0
-            #int_type = 'int32'
-            #float_type = 'float64'
-            #dint = 1
-            #dfloat = 2
-            #float_factor = 2
-        elif tin_tout == (1, 1):
-            # 2 = (gi, ci)
-            # 3 = (gj, cj, real)
-            ngrid_components = (nvalues - 2) // 3  # 3 values
-            #int_type = 'int32'
-            #float_type = 'float32'
-            #dint = 1
-            #dfloat = 1
-            #float_factor = 1
-        else:
-            raise RuntimeError(tin_tout)
-        #float_factor = dfloat // dint
-        #print(float_type)
-
-        GCj = []
-        GCi = []
-        reals = []
-        edatai = edata[n2:n2+2*size]
-        n2 += 2*size
-
-        #1, 1,
-        gj, cj = struct2i.unpack(edatai)
-        gcj = gj, cj
-        for ii in range(ngrid_components):
-            # (1, 1, 11933743.780688906)
-            edata2 = edata[n2:n2+ntotal2]
-            # (1, 1, 0, 1.875)
-            out = struct2id.unpack(edata2)
-            #self.log.debug(' 16: ' + str(out))
-            gi, ci, real = out
-            gci = gi, ci
-            GCj.append(gcj)
-            GCi.append(gci)
-            reals.append(real)
-            n2 += ntotal2
-            if ii > 0:
-                #self.log.info(f'  breaking n2={n2}')
-                break
-
-        dmig = self.op2.add_dmig(name_str, ifo, tin, tout, polar, ncols, GCj, GCi,
-                                 reals, Complex=None, comment='')
-        if flag == 0:
-            print(dmig)
-        #print(dmig)
-        str(dmig)
-        #n += (i1 - i0 + 1) * 4
-    #self.log.debug('end _read_extdb_extdb')
-    return
-
-def _read_extdb_geomx(self, data: bytes, endian: bytes, function_map):
-    """this is literally a GEOMx table, but embedded in a EXTRN table"""
-    size = self.size
-
-    struct3i = Struct(mapfmt(endian + b'3i', size))
-
-    factor = self.factor
-    n = 12 * factor
-    code = struct3i.unpack(data[:n])
-    if code in function_map:
-        name, func = function_map[code]
-        self.log.debug(f'code = {code} -> {name}')
-        func(data, n)
-    else:
-        self.log.error(f'code = {code}')
-        raise RuntimeError(code)
-    return
-
-
-def _read_extdb_phip(self, marker: int,
-                     data: bytes, endian: bytes,
-                     int_type: str, idtype: str):
-    #   ints    = (1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0,
-    #              10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0, 16, 0, 17, 0, 18, 0, 19, 0,
-    #              20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0, 26, 0, 27, 0, 28, 0)
-    factor = self.factor
-    if marker == -3:
-        self.log.warning('showing for marker=-3')
-        self.show_data(data, types=int_type)
-    elif marker == -4:
-        #data = (
-        #    'TYPE  IDCOMP ROW    TYPE  IDCOMP ROW',
-        #    1, 1, 6, 1, 0,
-        #    1, 2, 6, 7, 0,
-        # ...
-        #    1, 168, 6, 1003, 0,
-        #    1, 169, 6, 1009, 0,
-        #    2, 100001, 6, 1015, 0,
-        #    2, 100002, 6, 1021, 0,
-        #    2, 100003, 6, 1027, 0,
-        #    2, 100004, 6, 1033, 0)
-        word = data[:40*factor].decode('latin1')
-        print(f'word = {word!r}')
-        self.log.info(f'itable = {marker}')
-
-        ints = np.frombuffer(data[40*factor:], dtype=idtype)
-        nints = len(ints)
-        ints2 = ints.reshape(nints//5, 5).copy()
-        print(ints2)
-    elif marker == -5:
-        # 33      1       -2.500002.500000
-        # 33      2       -2.500002.500000
-        # 33      3       -2.500002.500000
-        # 33      4       -2.500002.500000
-        # 33      5       -2.500002.500000
-        # 33      6       -2.500002.500000
-        # 33      7       -2.500002.500000
-        # 33      8       -2.500002.500000
-        # 33      9       -2.500002.500000
-        # 33      10      -2.500002.500000
-        # 33      11      -2.500002.500000
-        # 33      12      -2.500002.500000
-        # 33      13      -2.500002.500000
-        # 33      14      -2.500002.500000
-        # 33      15      -2.500002.500000
-        # 33      16      -2.500002.500000
-        # 33      17      -2.500002.500000
-        # 33      18      -2.500002.500000
-        # 33      19      -2.500002.500000
-        # 33      20      -2.500002.500000
-        # 33      21      -2.500002.500000
-        # 33      22      -2.500002.500000
-        # 33      23      -2.500002.500000
-        # 33      24      -2.500002.500000
-        # 33      25      -2.500002.500000
-        # 33      26      -2.500002.500000
-        # 33      27      -2.500002.500000
-        # 33      28      -2.500002.500000
-        # 33      29      -2.500002.500000
-        # 33      30      -2.500002.500000
-        # 33      31      -2.500002.500000
-        # 33      32      -2.500002.500000
-        # 33      33      -2.500002.500000
-        # 33      34      -2.500002.500000
-        # 33      35      -2.500002.500000
-        # 33      36      -2.500002.500000
-        # 33      37      -2.500002.500000
-        # 33      38      -2.500002.500000
-        # 33      39      -2.500002.500000
-        # 33      40      -2.500002.500000
-        # 33      41      -2.500002.500000
-        # 33      42      -2.500002.500000
-        # 33      43      -2.500002.500000
-        # 33      44      -2.500002.500000
-        # 33      45      -2.500002.500000
-        # 33      46      -2.500002.500000
-        # 33      47      -2.500002.500000
-        # 33      48      -2.500002.500000
-        # 33      49      -2.500002.500000
-        # 33      50      -2.500002.500000
-        # 33      51      -2.500002.500000
-        # 33      52      -2.500002.500000
-        # 33      53      -2.500002.500000
-        # 33      54      -2.500002.500000
-        # 33      55      -2.500002.500000
-        # 33      56      -2.500002.500000
-        # 33      57      -2.500002.500000
-        # 33      58      -2.500002.500000
-        # 33      59      -2.500002.500000
-        # 33      60      -2.500002.500000
-        # 33      61      -2.500002.500000
-        # 33      62      -2.500002.500000
-        # 33      63      -2.500002.500000
-        # 33      64      -2.500002.500000
-        # 33      65      -2.500002.500000
-        # 33      66      -2.500002.500000
-        # 33      67      -2.500002.500000
-        # 33      68      -2.500002.500000
-        # 33      69      -2.500002.500000
-        # 33      70      -2.500002.500000
-        # 33      71      -2.500002.500000
-        # 33      72      -2.500002.500000
-        # 33      73      -2.500002.500000
-        # 33      74      -2.500002.500000
-        # 33      75      -2.500002.500000
-        # 33      76      -2.500002.500000
-        # 33      77      -2.500002.500000
-        # 33      78      -2.500002.500000
-        # 33      79      -2.500002.500000
-        # 33      80      -2.500002.500000
-        # 33      81      -2.500002.500000
-        # 33      82      -2.500002.500000
-        # 33      83      -2.500002.500000
-        # 33      84      -2.500002.500000
-        # 33      85      -2.500002.500000
-        # 33      86      -2.500002.500000
-        # 33      87      -2.500002.500000
-        # 33      88      -2.500002.500000
-        # 33      89      -2.500002.500000
-        # 33      90      -2.500002.500000
-        # 33      91      -2.500002.500000
-        # 33      92      -2.500002.500000
-        # 33      93      -2.500002.500000
-        # 33      94      -2.500002.500000
-        # 33      95      -2.500002.500000
-        # 33      96      -2.500002.500000
-        # 33      97      -2.500002.500000
-        # 33      98      -2.500002.500000
-        # 33      99      -2.500002.500000
-        # 33      100     -2.500002.500000
-        # 33      101     -2.500002.500000
-        # 33      102     -2.500002.500000
-        # 33      103     -2.500002.500000
-        # 33      104     -2.500002.500000
-        # 33      105     -2.500002.500000
-        # 33      106     -2.500002.500000
-        # 33      107     -2.500002.500000
-        # 33      108     -2.500002.500000
-        # 33      109     -2.500002.500000
-        # 33      110     -2.500002.500000
-        # 33      111     -2.500002.500000
-        # 33      112     -2.500002.500000
-        # 33      113     -2.500002.500000
-        # 33      114     -2.500002.500000
-        # 33      115     -2.500002.500000
-        # 33      116     -2.500002.500000
-        # 33      117     -2.500002.500000
-        # 33      118     -2.500002.500000
-        # 33      119     -2.500002.500000
-        # 33      120     -2.500002.500000
-        # 33      121     -2.500002.500000
-        # 33      122     -2.500002.500000
-        # 33      123     -2.500002.500000
-        # 33      124     -2.500002.500000
-        # 33      125     -2.500002.500000
-        # 33      126     -2.500002.500000
-        # 33      127     -2.500002.500000
-        # 33      128     -2.500002.500000
-        # 33      129     -2.500002.500000
-        # 33      130     -2.500002.500000
-        # 33      131     -2.500002.500000
-        # 33      132     -2.500002.500000
-        # 33      133     -2.500002.500000
-        # 33      134     -2.500002.500000
-        # 33      135     -2.500002.500000
-        # 33      136     -2.500002.500000
-        # 33      137     -2.500002.500000
-        # 33      138     -2.500002.500000
-        # 33      139     -2.500002.500000
-        # 33      140     -2.500002.500000
-        # 33      141     -2.500002.500000
-        # 33      142     -2.500002.500000
-        # 33      143     -2.500002.500000
-        # 33      144     -2.500002.500000
-        ndata = len(data)
-        ntotali = 32
-        nrows = ndata // ntotali
-        #self.show_data(data, types='s', force=True)
-        for irow in range(nrows):
-            out = data[irow*ntotali:(irow+1)*ntotali]
-            if irow > 5:
-                self.log.info(f'  breaking irow={irow}')
-                break
-            print(out)
-    elif marker == -5:
-        self.log.warning('showing for marker=-5')
-        self.show_data(data, types='ifs', force=True)
-        aaa
-    return
-
-def _get_gpdt_nnodes_numwide(size: int, ndata: int,
-                             header_ints,
-                             log: SimpleLogger) -> Tuple[int, int]:  # pragma: no cover
-    """
-    size=4; ndata=1120 [102  40   0   0   0   0   0] -> nnodes=40
-      1120=(7*4)*4*10 -> 7 words; nnodes=40
-      1120=28*40
-    """
-    unused_table_id, nnodes_nbytes, nwords, *other = header_ints
-    #print("header_ints =", header_ints)
-    nvalues = ndata // 4
-    #nnodes_nbytes,
-    if nwords == 0:
-        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\c402pen12f.op2
-        # size=8 ndata=1568 nnodes=28
-        #    1568 = 2* 4^2 * 7^2
-        #
-        # [102  18   0   0   0   0   0]
-        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\rbarthm1.op2
-        # size=4; ndata=168
-        #   168 = 4 * 2 * 3*7
-        #if self.op2.table_name in [b'GPDT', b'GPDTS']:
-            #is_nodes = True
-            ##self.size = 4 168
-            #self.log.warning(f'size={self.size} ndata={ndata}')
-        #else:  # pragma: no cover
-        try:
-            is_nodes, numwide, nnodes = _get_gpdt_numwide_from_nodes_null_nwords(size, nnodes_nbytes, ndata)
-        except Exception:
-            is_nodes = True
-            numwide = 0
-            raise
-        log.debug(f'ndata={ndata} numwide={numwide} nnodes={nnodes}; is_nodes={is_nodes}')
-
-        if is_nodes:
-            nnodes = nnodes_nbytes
-            #nnodes = ndata // nwords // 4
-            #assert nnodes == 3, nnodes
-            numwide = nvalues // nnodes
-        if numwide not in [7, 10, 14]:
-            if size == 8:
-                numwide = 14
-            else:
-                numwide = 7
-            nnodes = ndata // (4 * numwide)
-            assert ndata % (4 * numwide) == 0
-            if numwide not in [7, 10, 14]:
-                raise RuntimeError(f'numwide={numwide} must be 7, 10, or 14')
-    else:
-        nnodes = nnodes_nbytes
-        numwide = nvalues // nnodes
-        assert ndata % 4 == 0
-
-    #print(f'nnodes={nnodes} numwide={numwide} error={nvalues % nnodes}')
-    return nnodes, numwide
-
-def _get_gpdt_numwide_from_nodes_null_nwords(size: bool, nbytes: int,  # pragma: no cover
-                                             ndata: int) -> Tuple[bool, int]:
-    """
-    size=4 ndata=392 nnodes_nbytes=28
-      392 = 4 * 2. * 7^2
-    """
-    is_nodes = False
-    if nbytes % 2: # or (size == 4 and nnodes_nbytes not in [28, 40]):
-        is_nodes = True
-        #self.log.warning('is_nodes = True')
-        numwide = 0
-        nnodes = 0
-        return is_nodes, numwide, nnodes
-
-    nnodes = ndata // nbytes
-    #print('size =', size, ndata, nbytes)
-    assert ndata % nbytes == 0
-
-    nvalues = ndata // 4
-    assert ndata % 4 == 0
-    numwide = nvalues // nnodes
-    assert nvalues % nnodes == 0, f'size={size} ndata={ndata} nvalues={nvalues} nnodes={nnodes}'
-    #if (self.size == 4 and nnodes_nbytes in [28, 40]):
-    if size == 4:
-        assert ndata == numwide * nnodes * 4, f'size=4 ndata={ndata} numwide={numwide} nnodes={nnodes}'
-        if numwide not in [7, 10]:
-            is_nodes = True
-    elif size == 8:
-        assert ndata == numwide * nnodes * 4, f'size=8 ndata={ndata} numwide={numwide} nnodes={nnodes}'
-        assert numwide == 14, numwide
-        #if numwide not in [7, 10]:
-            #is_nodes = True
-    return is_nodes, numwide, nnodes
-
-def _read_gpdt_8_14(op2, data, nnodes):
-    i = 0
-    ntotal = 7 * 8  #  6 ints, 3 floats
-    # (nid, cp, x, y, z, cd, 0)
-    structi = Struct(op2._endian + b'qq 3d qq')
-
-    for j in range(nnodes):
-        edata = data[i:i+ntotal]
-        out = structi.unpack(edata)
-        #print(out)
-        i += ntotal
-
-    #   0   1  2  3  4  5   6
-    # nid, cp, x, y, z, cd, ps
-    iints = [0, 1, 5, 6]
-    ifloats = [2, 3, 4]
-
-    ints = np.frombuffer(data, op2.idtype8).reshape(nnodes, 7).copy()[:, iints]
-    floats = np.frombuffer(data, op2.idtype8).reshape(nnodes, 7).copy()[:, ifloats]
-    nid_cp_cd_ps = ints
-    xyz = floats
-    return nid_cp_cd_ps, xyz
-
-
-def _read_gpdt_4_7(op2, data, nnodes):
-    i = 0
-    ntotal = 7 * 4  #  6 ints, 3 floats
-    # (nid, cp, x, y, z, cd, 0)
-    structi = Struct(op2._endian + b'ii 3f ii')
-
-    #ntotal = 16
-    #structi = Struct(self._endian + b'')
-    #self.show_data(data, types='if')
-    for j in range(nnodes):
-        edata = data[i:i+ntotal]
-        #self.show_data(edata, types='if')
-        out = structi.unpack(edata)
-        #print(out)
-        nid, zero_a, x, y, z, cd, zero_b = out
-        outs = f'nid={nid} zero_a={zero_a} xyz=({x},{y},{z}) cd={cd} zero_b={zero_b}'
-        assert nid > 0, outs
-        #assert zero_a == 0, (nid, zero_a, x, y, z, cd, zero_b)
-        #assert zero_b == 0, (nid, zero_a, x, y, z, cd, zero_b)
-        i += ntotal
-
-    #   0   1  2  3  4  5   6
-    # nid, cp, x, y, z, cd, ps
-    iints = [0, 1, 5, 6]
-    ifloats = [2, 3, 4]
-
-    ints = np.frombuffer(data, op2.idtype).reshape(nnodes, 7).copy()[:, iints]
-    floats = np.frombuffer(data, op2.idtype).reshape(nnodes, 7).copy()[:, ifloats]
-    nid_cp_cd_ps = ints
-    xyz = floats
-    return nid_cp_cd_ps, xyz
-
-def _read_gpdt_4_10(op2, data, nnodes):
-    i = 0
-    ntotal = 40  #  6 ints, 3 floats
-    # (nid, 0, x, y, z, cd, 0)
-    structi = Struct(op2._endian + b'2i 3d 2i')
-    for j in range(nnodes):
-        edata = data[i:i+ntotal]
-        #self.show_data(edata, types='ifqd')
-        out = structi.unpack(edata)
-        nid, zero_a, x, y, z, cd, zero_b = out
-        outs = f'nid={nid} zero_a={zero_a} xyz=({x},{y},{z}) cd={cd} zero_b={zero_b}'
-        #assert zero_a == 0, (nid, zero_a, x, y, z, cd, zero_b)
-        #assert zero_b == 0, (nid, zero_a, x, y, z, cd, zero_b)
-        i += ntotal
-        #print(outs)
-        assert nid > 0, outs
-
-    #   0   1    2  3  4  5  6  7  8   9
-    # nid, zero, x, _, y, _, z, _, cd, zero
-    iints = [0, 1, 8, 9]
-
-    # 0  1  2  3  4
-    # a, x, y, z, b
-    ifloats = [1, 2, 3]
-
-    ints = np.frombuffer(data, op2.idtype).reshape(nnodes, 10).copy()[:, iints]
-    floats = np.frombuffer(data, 'float64').reshape(nnodes, 5).copy()[:, ifloats]
-    nid_cp_cd_ps = ints
-    xyz = floats
-    return nid_cp_cd_ps, xyz
-
-
-def _get_gpdt_nnodes2(ndata, header_ints, size):
-    unused_table_id, nnodes_nbytes, nwords, *other = header_ints
-    nvalues = ndata // 4
-    assert nvalues > 0
-    assert ndata % 4 == 0
-    try:
-        # assume nodes
-        nnodes = nnodes_nbytes
-        numwide = nvalues // nnodes
-        assert nvalues % nnodes == 0
-        if size == 4:
-            assert numwide in [7, 10], numwide
-        else:
-            assert numwide == 14, numwide
-    except AssertionError:
-        # calculate the bytes
-        if size == 4:
-            numwide = 7
-        elif numwide == 8:
-            numwide = 14
-        nnodes = nvalues // numwide
-    assert ndata == nnodes * numwide * 4
-    return nnodes, numwide
 
 def _cast_matrix_mat(GCi: np.ndarray, GCj: np.ndarray,
                      mrows: int, ncols: int,
@@ -7996,6 +7501,35 @@ def _cast_matrix_mat(GCi: np.ndarray, GCj: np.ndarray,
             matrix = real_array
     return matrix
 
+
+
+def read_dofs(op2: OP2, size: int=4) -> None:
+    op2.log.debug('read_dofs')
+    dofs = []
+    while 1:
+        #self.show_ndata(32, types='if')
+        tell = op2.f.tell()
+        data = op2.f.read(12)
+        out = unpack(b'<3i', data)
+        if out[1] != 2:
+            #print(out)
+            op2.f.seek(tell)
+            break
+        op2.n += 16
+        #if
+        #tell = op2.f.tell()
+        data = op2.f.read(20)
+        a_int, b_int, c_int, d_int, e_float = unpack(op2._endian + b'3i f i', data)
+        dofs.append((a_int, b_int, c_int, d_int, e_float))
+        #out = op2.struct_3i.unpack(data)
+        op2.n += 16
+        #op2.show_data(data, types='if')
+        #op2.show_ndata(64, types='if')
+        #bbb
+    for dof in dofs:
+        print('dof', dof)
+    print()
+    return dofs
 
 def reshape_trmbd(element_name: str, nnodes: int, int_data, float_data):
     ndata_per_element = 1 + nnodes + 3 * nnodes  # 1+4*(nnnodes) = 1+4*2 = 9

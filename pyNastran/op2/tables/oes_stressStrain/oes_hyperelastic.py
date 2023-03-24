@@ -1,5 +1,4 @@
 from itertools import cycle
-from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -41,7 +40,7 @@ class HyperelasticQuadArray(OES_Object):
     #def get_headers(self):
         #raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         return ['oxx', 'oyy', 'txy', 'angle', 'majorp', 'minorp']
 
     #def is_bilinear(self):
@@ -92,7 +91,7 @@ class HyperelasticQuadArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         self.element_node = np.zeros((self.ntotal, 2), dtype='int32')
 
         #self.Type[eid] = Type
@@ -197,10 +196,10 @@ class HyperelasticQuadArray(OES_Object):
         self.data[self.itime, self.itotal, :] = [oxx, oyy, txy, angle, majorP, minorP]
         self.itotal += 1
 
-    def get_stats(self, short: bool=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

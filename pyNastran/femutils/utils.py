@@ -28,14 +28,16 @@ def hstack0(list_of_arrays: list[np.ndarray],
         raise RuntimeError(f'cannot unique without sorting; unique={unique} sort={sort}')
     return myarray
 
-def hstack_lists(list_of_arrays: List[np.ndarray]) -> np.ndarray:
+def hstack_lists(list_of_arrays: list[np.ndarray], sort: bool=True) -> np.ndarray:
     if len(list_of_arrays) == 1:
         array = list_of_arrays[0]
     else:
         array = np.hstack(list_of_arrays)
+    if sort:
+        array = np.unique(array)
     return array
 
-def vstack_lists(list_of_arrays: List[np.ndarray]) -> np.ndarray:
+def vstack_lists(list_of_arrays: list[np.ndarray]) -> np.ndarray:
     if len(list_of_arrays) == 1:
         array = list_of_arrays[0]
     else:
@@ -70,7 +72,8 @@ def pivot_table(data, rows, cols):
     #print(pivot_table)
 
     ipivot_row, ipivot_col = np.where(pivot_table != -1)
-    data2 = np.full(shape2, np.nan, dtype=data.dtype)
+    default_val = np.nan if data.dtype.name not in {'int32', 'int64'} else -1
+    data2 = np.full(shape2, default_val, dtype=data.dtype)
 
     if nshape == 3:
         data2[:, ipivot_row, ipivot_col, :] = data[:, icount, :]
