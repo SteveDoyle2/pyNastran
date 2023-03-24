@@ -58,6 +58,7 @@ def make_mass_matrix(model: BDF,
         'CROD', 'CONROD', 'CTUBE',
         'CBAR', 'CBEAM', 'CBEND', 'CBEAM3',
         'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+        'CONM1', 'CONM2',
 
         'CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8', 'CQUAD',
 
@@ -225,11 +226,11 @@ def make_reduced_mass_matrix(model: BDF,
     Mgg, nids, cps, cds, xyz_cid0, spoints = make_mass_matrix(
         model, fdtype=fdtype, idtype=idtype)
     log = model.log
-    D, Mo, S, mass, cg, II, IQ, Q = make_gpwg(
+    D, Mo, mass, cg, S, IS, II, IQ, Q = make_gpwg(
         Mgg, reference_point,
         nids, cps, cds, xyz_cid0,
         spoints, model.coords, log)
-    return Mgg, D, Mo, S, mass, cg, II, IQ, Q
+    return Mgg, D, Mo, S, mass, cg, IS, II, IQ, Q
 
 def make_gpwg(Mgg: sp.sparse.dok_matrix,
               reference_point: np.ndarray,
@@ -302,19 +303,21 @@ def make_gpwg(Mgg: sp.sparse.dok_matrix,
         grid_nids, grid_cps, grid_cds, xyz_cid0,
         coords, spoints, reference_point, log,
         fdtype=fdtype)
-    Mo, S, mass, cg, II, IQ, Q = _D_to_inertia(
+    Mo, mass, cg, S, IS, II, IQ, Q = _D_to_inertia(
         Mgg, D, log, fdtype=fdtype)
-    return D, Mo, S, mass, cg, II, IQ, Q
+    return D, Mo, mass, cg, S, IS, II, IQ, Q
 
 
 def _D_to_inertia(Mgg: sp.sparse.dok_matrix,
                   D: np.ndarray,
                   log: SimpleLogger,
-                  fdtype: str='float32') -> tuple[
+                  fdtype: str='float32',
+                  filter_iq: bool=False) -> tuple[
                       np.ndarray,  # Mo
-                      np.ndarray,  # S
                       np.ndarray,  # mass
                       np.ndarray,  # cg
+                      np.ndarray,  # S
+                      np.ndarray,  # IS
                       np.ndarray,  # II
                       np.ndarray,  # IQ
                       np.ndarray,  # Q
@@ -330,7 +333,8 @@ def _D_to_inertia(Mgg: sp.sparse.dok_matrix,
     except ValueError:
         raise ValueError(f'D.shape={D.shape} Mgg.shape={Mgg.shape}\n [Mo] = [D][Mgg][D]')
     log.info('Mgg=\n%s\n' % Mgg)
-    log.info('Mo=\n%s\n' % Mo)
+    log.info('[Mo] = [D]^T[Mgg][D]; Mo=\n%s\n' % Mo)
+    log.info('omega_Mo = eigh(Mo)=\n%s\n' % np.linalg.eigvalsh(Mo))
 
     # t-translation; r-rotation
     Mtt_bar = Mo[:3, :3]
@@ -347,14 +351,35 @@ def _D_to_inertia(Mgg: sp.sparse.dok_matrix,
         Mtt_bar[1, 2],
     ])
 
-
-    log.info('Mt_bar (correct) =\n%s\n' % Mtt_bar)
+    log.info('Mtt_bar (correct) =\n%s\n' % Mtt_bar)
     log.info(f'delta   = {delta:g}')
     log.info(f'epsilon = {epsilon:g}')
     log.info(f'e/d     = {epsilon / delta:g}\n')
     if epsilon / delta > 0.001:
         # user warning 3042
-        unused_eigvals, S = np.linalg.eigh(Mtt_bar)
+        eig_s, S = np.linalg.eigh(Mtt_bar)
+        #for i in range(3):
+            #si = S[:, i]
+            #si_max = si.max()
+            #print(f'si_max={si_max:g}')
+            #if si_max <= 0:
+                #print(si)
+                #S[:, i] *= -1.
+
+        #if 1:
+            #S = S.T
+        #elif 0:
+            #row_swap = [1, 0]
+            #S[:, row_swap] = S[:, row_swap]
+            #S[row_swap, :] = S[row_swap, :]
+        #elif 0:
+            #S = np.array([
+                #[ 0.43213312,  0.90180983,  0.        ],
+                #[-0.90180983,  0.43213312,  0.        ],
+                #[-0.        ,  0.        ,  1.        ]])
+        #else:
+            #eig_s, S = _reorder3(eig_s, S)
+
         msg = (
             '*** USER WARNING MESSAGE 3042 MODULE = GPWG\n'
             f'INCONSISTENT SCALAR MASSES HAVE BEEN USED. EPSILON/DELTA = {epsilon/delta:.7E}\n')
@@ -371,7 +396,7 @@ def _D_to_inertia(Mgg: sp.sparse.dok_matrix,
         Mrr = Mrr_bar  # rotational
 
     #log.info('omega=%s' % omega)
-    log.info('S (right, but not correct order) =\n%s\n' % S)
+    log.info('[omegaS, S] = eig(Mtt); S (right, but not correct order) =\n%s\n' % S)
 
     # 4. determine the principal axis & cg in the principal mass axis system
     # eq G-18
@@ -419,28 +444,43 @@ def _D_to_inertia(Mgg: sp.sparse.dok_matrix,
     I32 = I23
     I33 = Mrr[2, 2] - Mtx * yx ** 2 - Mty * xy ** 2
 
-    II = np.array([
+    IS = np.array([
         [I11, I12, I13],
-        [I21, I22, I13],
+        [I21, I22, I23],
         [I31, I32, I33],
     ], dtype=fdtype)
-    II = np.nan_to_num(II)
+    II = -np.nan_to_num(IS, nan=0.0)
 
-    log.info('I(S)=\n%s\n' % II)
+    log.info('I(S) =\n%s\n' % IS)
 
     # 6. Reverse the sign of the off diagonal terms
-    np.fill_diagonal(-II, np.diag(II))
-    #print('I~=\n%s\n' % II)
+    # II must not have a sign or we'll mess up the cast
+    #   II = np.nan_to_num(IS, nan=0.0)
+    #   np.fill_diagonal(-II, np.diag(II))
+    # so we moved the negative sign :)
+    np.fill_diagonal(II, np.diag(IS))
+
+    log.info('I~ =\n%s\n' % II)
     if np.nan in II:
         Q = np.zeros((3, 3), dtype=fdtype)
     else:
         omegaQ, Q = np.linalg.eig(II)
+        #omegaaQ, Q = _reorder3(omegaQ, Q)
     #i = argsort(omegaQ)
     log.info('omegaQ = %s' % omegaQ)
-    log.info('Q -> wrong =\n%s\n' % Q)
+    log.info('[omegaQ, Q] = eig(I) -> Q =\n%s\n' % Q)
+
+    # IQ: principal inertia matrix
     IQ = triple(Q, II)
-    #print('I(Q) -> wrong =\n%s\n' % IQ)
-    return Mo, S, mass, cg, II, IQ, Q
+    log.info('I(Q) = [Q]^T[I][Q] =\n%s\n' % IQ)
+    if filter_iq:
+        iq_abs = np.abs(IQ)
+        iq_ref = np.diag(iq_abs).min()
+        ismall = np.where(iq_abs < iq_ref / 1e6)
+        IQ[ismall] = 0.
+        log.info('I(Q) zeroed =\n%s\n' % IQ)
+
+    return Mo, mass, cg, S, IS, II, IQ, Q
 
 def triple(A, B):
     """
@@ -495,11 +535,20 @@ def get_6x6_rb_matrix(grid_nids: np.ndarray,
     """reduces the (N,N) mass matrix (MGG)"""
     isin = np.isin(grid_nids, spoints)
     nnodes = xyz_cid0.shape[0]
-    nspoints = len(spoints)
-    nd_dof = nnodes*6 - nspoints*5
+    #nspoints = len(spoints)
+    nd_dof = nnodes*6 # - nspoints*5
     D = np.zeros((nd_dof, 6), dtype=fdtype)
 
     # we subtract ref point so as to not change xyz_cid0
+    betas = {}
+    for cd in np.unique(grid_cds):
+        icd = np.where(grid_cds == cd)[0]
+        beta_nids = grid_nids[icd]
+        Ti = coords[cd].beta().T
+        betas[cd] = Ti
+        if not np.array_equal(Ti, np.eye(3)):
+            log.info(f'cd={cd:d}; nids={beta_nids}; [Ti]=\n{Ti}\n')
+
     for i, isini, nid, xyz in zip(count(), isin, grid_nids, xyz_cid0 - reference_point):
         if isini:
             print(f'skipping {nid}')
@@ -512,9 +561,7 @@ def get_6x6_rb_matrix(grid_nids: np.ndarray,
         #print('Tr[%i]=\n%s\n' % (i+1, Tr))
 
         cd = grid_cds[i]
-        Ti = coords[cd].beta().T
-        if not np.array_equal(Ti, np.eye(3)):
-            log.info(f'cd={cd:d}; Ti[{i+1:d}]=\n{Ti}\n')
+        Ti = betas[cd]
         TiT = Ti.T
         d = np.zeros((6, 6), dtype=fdtype)
         d[:3, :3] = TiT
@@ -543,3 +590,8 @@ def _lambda_1d(v1):
     Lambda[0, 1] = Lambda[1, 4] = m
     Lambda[0, 2] = Lambda[1, 5] = n
     return Lambda
+
+#def _reorder3(eig_s, S):
+    #absS = np.abs(S)
+    #imax
+    #return eig_s, S
