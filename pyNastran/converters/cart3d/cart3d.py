@@ -19,7 +19,7 @@ Defines:
 import sys
 from math import ceil
 from collections import defaultdict
-from typing import Union
+from typing import Union, Optional
 
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
@@ -232,26 +232,14 @@ class Cart3D(Cart3dReaderWriter):
         self.loads = loads2
         return (nodes2, elements2, regions2, loads2)
 
-    def remove_elements(self, ielements_to_remove=None, ielements_to_keep=None,
-                        remove_associated_nodes: bool=True) -> np.ndarray:
-        if ielements_to_remove is not None and ielements_to_keep is not None:
-            raise RuntimeError('Either ielements_to_remove or ielements_to_keep must not be None')
-        remove = False
-        keep = False
-        if ielements_to_remove is not None and len(ielements_to_remove):
-            remove = True
-        if ielements_to_keep is not None and len(ielements_to_keep):
-            keep = True
-
-        if not(remove or keep):
-            raise RuntimeError('Either ielements_to_remove or ielements_to_keep must be None')
-
-        if remove:
-            iall_elements = np.arange(self.nelements)
-            ielements_to_keep = np.setdiff1d(iall_elements, ielements_to_remove)
-        assert len(ielements_to_keep) > 0, ielements_to_keep
-        self.elements = self.elements[ielements_to_keep, :]
-        self.regions = self.regions[ielements_to_keep]
+    def keep_elements(self,
+                      ielements: np.ndarray,
+                      remove_associated_nodes: bool=True) -> np.ndarray:
+        """keeps a set of elements from the model"""
+        assert len(ielements) > 0, ielements
+        self.log.debug(f'elements.shape = {self.elements.shape}')
+        self.elements = self.elements[ielements, :]
+        self.regions = self.regions[ielements]
 
         if remove_associated_nodes:
             used_nodes = np.unique(self.elements.ravel())
@@ -265,6 +253,20 @@ class Cart3D(Cart3dReaderWriter):
             # in-place operation on loads
             for key, load in loads2.items():
                 self.loads[key] = load
+        return self.elements
+
+    def remove_elements(self,
+                        ielements: np.ndarray,
+                        remove_associated_nodes: bool=True) -> np.ndarray:
+        """removes a set of elements from the model"""
+        assert ielements is not None, ielements
+        assert len(ielements) > 0, ielements
+
+        nelements = self.nelements
+        iall_elements = np.arange(nelements)
+        ielements_to_keep = np.setdiff1d(iall_elements, ielements)
+        self.keep_elements(ielements_to_keep,
+                           remove_associated_nodes=remove_associated_nodes)
         return self.elements
 
     def get_free_edges(self, elements):
@@ -301,7 +303,6 @@ class Cart3D(Cart3dReaderWriter):
         if is_binary_file(infilename):
             endian = self._endian
             self._read_cart3d_binary(infilename, endian)
-
         else:
             self._read_cart3d_ascii(infilename, self._encoding,
                                     result_names=result_names)

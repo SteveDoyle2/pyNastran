@@ -93,14 +93,17 @@ class Base:
 
 
 def read_tecplot(tecplot_filename: str, use_cols=None, dtype=None,
-                 filetype='guess',
+                 filetype: str='guess',
+                 zones_to_exclude: Optional[list[int]] = None,
                  log=None, debug=False):
     """loads a tecplot file"""
     tecplot = Tecplot(log=log, debug=debug)
     if use_cols:
         tecplot.use_cols = use_cols
         tecplot.dtype = dtype
-    tecplot.read_tecplot(tecplot_filename, filetype)
+    tecplot.read_tecplot(tecplot_filename,
+                         filetype=filetype,
+                         zones_to_exclude=zones_to_exclude)
     return tecplot
 
 class Tecplot(Base):
@@ -170,7 +173,9 @@ class Tecplot(Base):
         """gets the number of zones"""
         return len(self.zones)
 
-    def read_tecplot(self, tecplot_filename: str, filetype: str='guess'):
+    def read_tecplot(self, tecplot_filename: str,
+                     filetype: str='guess',
+                     zones_to_exclude: Optional[list[int]] = None):
         """
         Reads an ASCII/binary Tecplot file.
 
@@ -184,9 +189,11 @@ class Tecplot(Base):
         assert filetype in ['guess', 'ascii', 'binary'], filetype
         if filetype == 'binary' or (filetype == 'guess' and is_binary_file(tecplot_filename)):
             return self.read_tecplot_binary(tecplot_filename)
-        return self.read_tecplot_ascii(tecplot_filename)
+        return self.read_tecplot_ascii(tecplot_filename, zones_to_exclude=zones_to_exclude)
 
-    def read_tecplot_ascii(self, tecplot_filename: Union[str, PurePath, StringIO], nnodes=None, nelements=None):
+    def read_tecplot_ascii(self, tecplot_filename: Union[str, PurePath, StringIO],
+                           nnodes=None, nelements=None,
+                           zones_to_exclude: Optional[list[int]]=None):
         """
         Reads a Tecplot ASCII file.
 
@@ -199,6 +206,11 @@ class Tecplot(Base):
         .. note :: assumes single typed results
         .. warning:: BLOCK option doesn't work if line length isn't the same...
         """
+        if zones_to_exclude is None:
+            set_zones_to_exclude = set([])
+        else:
+            set_zones_to_exclude = set(zones_to_exclude)
+
         self.tecplot_filename = tecplot_filename
         iline = 0
         nnodes = -1
@@ -220,6 +232,7 @@ class Tecplot(Base):
         line = lines[iline].strip()
         iline += 1
         iblock = 0
+        izone = 0
         while 1:
             #print('start...')
             iline, title_line, header_lines, line = _read_header_lines(
@@ -275,12 +288,17 @@ class Tecplot(Base):
                 msg += 'line = %r' % line.strip()
                 raise NotImplementedError(msg)
 
-            self.zones.append(zone)
-
-            #sline = line.split()
-            #print('stack...')
-            _stack(zone, xyz_list, quads_list, tris_list, tets_list, hexas_list, results_list, self.log)
             #print(zone)
+            if izone in set_zones_to_exclude:
+                print(f'skipping izone={izone}')
+            else:
+                self.zones.append(zone)
+
+                #sline = line.split()
+                #print('stack...')
+                _stack(zone, xyz_list, quads_list, tris_list, tets_list, hexas_list,
+                       results_list, self.log)
+
             if line is None:
                 return
             try:
@@ -293,6 +311,7 @@ class Tecplot(Base):
             tets_list = []
             xyz_list = []
             results_list = []
+            izone += 1
 
     def stack_geometry(self) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                       np.ndarray, np.ndarray, np.ndarray,
@@ -400,7 +419,7 @@ class Tecplot(Base):
 
         tets = stack(tets)
         hexas = stack(hexas)
-        zone_ids = np.hstack(zone_ids)
+        zone_ids = np.hstack(zone_ids).astype('int32')
         return nodes, tris, quads, tets, hexas, zone_ids, names
 
     def stack_results(self) -> np.ndarray:
@@ -566,7 +585,6 @@ class Tecplot(Base):
                         msg += 'sline = %s' % str(sline)
                         print(msg)
                         raise
-
                     iline, line, sline = get_next_sline(lines, iline)
             elif data_packing == 'BLOCK':
                 iline, line, sline = read_zone_block(lines, iline, xyz, results, nresults, zone_type,
@@ -575,16 +593,8 @@ class Tecplot(Base):
             else:
                 raise NotImplementedError(data_packing)
         elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETRIANGLE'):
-            sline = split_line(line.strip())
-            for inode in range(nnodesi):
-                #print(iline, inode, sline)
-                xyz[inode, :] = sline[:3]
-                #if abs(xyz[inode, 1]) <= 5.0:
-                    #msg = 'inode=%s xyz=%s'  % (inode, xyz[inode, :])
-                    #raise RuntimeError(msg)
-
-                results[inode, :] = sline[3:]
-                iline, line, sline = get_next_sline(lines, iline)
+            iline, line, sline = _read_zonetype_fe(
+                iline, line, lines, nnodesi, xyz, results)
 
         elif zone_type == 'POINT':
             nvars = len(zone.variables)
@@ -1383,6 +1393,61 @@ def _simplify_variables(headers_dict) -> None:
     variables = headers_dict['VARIABLES']
     headers_dict['VARIABLES'] = [var.strip('"') for var in variables]
 
+def _read_zonetype_fe(iline: int,
+                      line: str,
+                      lines: list[str],
+                      nnodesi: int,
+                      xyz: np.ndarray,
+                      result: np.ndarray) -> tuple[int, str, list[str]]:
+    """
+    reads:
+     - FEPOINT
+     - FEQUADRILATERAL
+     - FETRIANGLE
+    """
+    sline = split_line(line.strip())
+    nexpected = 3 + result.shape[1]
+    if len(sline) == nexpected:
+        for inode in range(nnodesi):
+            #print(iline, inode, sline, len(sline))
+            xyz[inode, :] = sline[:3]
+            #if abs(xyz[inode, 1]) <= 5.0:
+                #msg = 'inode=%s xyz=%s'  % (inode, xyz[inode, :])
+                #raise RuntimeError(msg)
+
+            result[inode, :] = sline[3:]
+            iline, line, sline = get_next_sline(lines, iline)
+    else:
+        nvalues_to_read = nexpected * nnodesi
+        inode = 0
+        #print(sline)
+        while len(sline) <= nvalues_to_read:
+            iline, line, slinei = get_next_sline(lines, iline)
+            #print(iline, inode, slinei, len(sline))
+            #if iline % 10 == 0:
+                #print(iline, len(sline), nvalues_to_read)
+            sline.extend(slinei)
+            inode += 1
+        # remove the last sline
+        nslinei = len(slinei)
+        xyz_result = sline[:-nslinei]
+        assert len(xyz_result) == nvalues_to_read, (len(xyz_result), nvalues_to_read)
+        xyz_result = np.array(xyz_result, dtype='float32')
+        if 0:
+            xyz_result = xyz_result.reshape((nnodesi, nexpected))
+        else:
+            xyz_result = xyz_result.reshape((nexpected, nnodesi)).T
+        xyz[:, :] = xyz_result[:, :3]
+        result[:, :] = xyz_result[:, 3:]
+
+        assert xyz.shape == (nnodesi, 3), xyz.shape
+        assert result.shape == (nnodesi, nexpected - 3), result.shape
+        del sline, xyz_result, inode
+
+        #print(iline, slinei)
+        sline = slinei
+
+    return iline, line, sline
 
 def stack(elements: list[np.ndarray]) -> np.ndarray:
     if len(elements) == 0:
@@ -1906,6 +1971,15 @@ def main2():  # pragma: no cover
     for iprocessor, tecplot_filename in enumerate(fnames):
         plt.read_tecplot(tecplot_filename)
         plt.write_tecplot(f'processor_{iprocessor:d}.plt')
+
+def main3():  # pragma: no cover
+    """test"""
+    plt = Tecplot()
+    zones_to_exclude = [0, 3, 5, 6, 9, 10]
+
+    tecplot_filename = r'C:\code\pyNastran\pyNastran\converters\tecplot\junk.dat'
+    plt.read_tecplot(tecplot_filename, read_tecplot='ascii',
+                     zones_to_exclude=zones_to_exclude)
 
 if __name__ == '__main__':   # pragma: no cover
     main()

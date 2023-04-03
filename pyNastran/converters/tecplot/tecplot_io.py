@@ -39,7 +39,10 @@ class TecplotIO:
             #fnames = [os.path.join('time20000', fname) for fname in fnames]
             #model = merge_tecplot_files(fnames, tecplot_filename_out=None, log=self.log)
         #else:
-        model = read_tecplot(tecplot_filename, log=self.gui.log, debug=False)
+        zones_to_exclude = None
+        #zones_to_exclude = [0, 5, 6, 9, 10]
+        model = read_tecplot(tecplot_filename, log=self.gui.log, debug=False,
+                             zones_to_exclude=zones_to_exclude)
 
         self.gui.model_type = 'tecplot'
         self.gui.nnodes = sum([zone.nnodes for zone in model.zones])
