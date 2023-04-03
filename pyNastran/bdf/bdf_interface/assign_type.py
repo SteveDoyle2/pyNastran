@@ -275,7 +275,8 @@ def modal_components(card: BDFCard, ifield: int, fieldname: str) -> int:
                           'card=%s' % (fieldname, value, ifield, card))
     return value
 
-def modal_components_or_blank(card: BDFCard, ifield: int, fieldname: str, default: any=None) -> int:
+def modal_components_or_blank(card: BDFCard, ifield: int, fieldname: str,
+                              default: int) -> int:
     """
     Gets the modal components (allows a -1 value); used by TIC
 

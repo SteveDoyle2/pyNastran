@@ -2,16 +2,16 @@ from __future__ import annotations
 #from math import log, exp
 from typing import Optional, TYPE_CHECKING
 
-import numpy as np
+#import numpy as np
 #from numpy import unique, hstack
 
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import (
-    BaseCard, expand_thru, expand_thru_by
+    BaseCard, expand_thru_by, expand_thru,
 )
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank,
+    integer, integer_or_blank, double, double_or_blank, string,
     #string_or_blank, blank, fields, components_or_blank,
     #integer_string_or_blank, integer_or_double, #parse_components,
     #modal_components_or_blank,
@@ -21,6 +21,83 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
+
+class BOLT_MSC(BaseCard):
+    """
+    +-------+--------+-------+-------+------+------+------+------+------+
+    |   1   |   2    |   3   |   4   |  5   |  6   |   7  |  8   |  9   |
+    +=======+========+=======+=======+======+======+======+======+======+
+    | BOLT  | ID     | GRIDC |       |      |      |      |      |      |
+    +-------+--------+-------+-------+------+------+------+------+------+
+    |       | TOP    | GT1   |  GT2  |  GT3 |  GT4 |  GT5 |  GT6 |  GT7 |
+    +-------+--------+-------+-------+------+------+------+------+------+
+    |       | GT8    | GT9   |  etc  |      |      |      |      |      |
+    +-------+--------+-------+-------+------+------+------+------+------+
+    |       | BOTTOM | GB1   |  GB2  |  GB3 |  GB4 |  GB5 |  GB6 |  GB7 |
+    +-------+--------+-------+-------+------+------+------+------+------+
+    |       | GB8    | GB9   |  etc  |      |      |      |      |      |
+    +-------+--------+-------+-------+------+------+------+------+------+
+    """
+    type = 'BOLT'
+    def __init__(self, bolt_id: int, gridc: int,
+                 nids_top: Optional[list[int]]=None,
+                 nids_btm: Optional[list[int]]=None,
+                 comment: str=''):
+        BaseCard.__init__(self)
+        self.bolt_id = bolt_id
+        self.gridc = gridc
+        self.nids_top = nids_top
+        self.nids_btm = nids_btm
+
+        #self.nid_ref = None
+        #self.nids_ref = None
+
+    @classmethod
+    def add_card(self, card, comment: str=''):
+        bolt_id = integer(card, 1, 'bolt_id')
+        gridc = integer(card, 2, 'gridc')
+        top = string(card, 9, 'top')
+        itop = card.index('TOP')
+        ibtm = card.index('BOTTOM')
+        nids_top = []
+        nids_btm = []
+        if itop and ibtm:
+            assert itop < ibtm, (itop, ibtm)
+            fields_top = card[itop+1:ibtm]
+            fields_btm = card[ibtm+1:]
+            nids_top = expand_thru(fields_top)
+            nids_btm = expand_thru(fields_btm)
+        elif itop:
+            nids_top = card[itop+1:]
+        elif ibtm:
+            nids_btm = card[ibtm+1:]
+        else:
+            raise RuntimeError((itop, ibtm))
+        assert top == 'TOP', top
+        return BOLT_MSC(bolt_id, gridc, nids_top, nids_btm, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def repr_fields(self) -> list[str]:
+        card = ['BOLT', self.bolt_id, self.gridc, None, None, None, None, None, None]
+        if len(self.nids_top):
+            nextra = 8 - (len(self.nids_top) + 1) % 8
+            extra = [None] * nextra
+            card.extend(['TOP', ] + self.nids_top + extra)
+        if len(self.nids_btm):
+            card.extend(['BOTTOM', ] + self.nids_btm)
+        return card
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            #if self.tid > MAX_INT:
+                #return self.comment + print_card_16(card)
+            return self.comment + print_card_8(card)
+        #if is_double:
+            #return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 class BOLT(BaseCard):
     """
@@ -113,6 +190,9 @@ class BOLT(BaseCard):
             assert self.idir in {None, 0, 1, 2, 3}, idir
         self.nid = None  #  GP
 
+        self.nid_ref = None
+        self.eids_ref = None
+        self.nids_ref = None
 
     @classmethod
     def add_card(self, card, comment: str=''):
@@ -170,9 +250,14 @@ class BOLT(BaseCard):
 
     def cross_reference(self, model: BDF) -> None:
         """xref eids/nids/nid"""
-        self.nid_ref = None
+        msg = ', which is required by BOLT bolt_id=%s' % self.bolt_id
         if self.nid is not None:
-            self.nid_ref = model.Node(self.nid, msg='')
+            self.nid_ref = model.Node(self.nid, msg=msg)
+
+        if self.eids is not None:
+            self.eids_ref = model.Elements(self.eids, msg=msg)
+        if self.nids is not None:
+            self.nids_ref = model.Nodes(self.nids, msg=msg)
 
     def repr_fields(self) -> list[str]:
         card = ['BOLT', self.bolt_id, self.element_type]
@@ -261,10 +346,36 @@ class BOLTSEQ(BaseCard):
         return BOLTSEQ(sid, s_nos, b_ids, n_incs=n_incs)
 
     def cross_reference(self, model: BDF) -> None:
-        for s_no in self.s_nos:
-            pass
-        for b_id in self.b_ids:
-            pass
+        self.so_nos_ref = []
+        self.b_ids_ref = []
+
+        for bolt_id in self.s_nos:
+            boltfor = None
+            boltfrc = None
+            boltld = None
+            # BOLTLD, BOLTFOR, and BOLTFRC
+            if bolt_id in model.boltld:
+                boltld = model.boltld[bolt_id]
+            if bolt_id in model.boltfor:
+                boltfor = model.boltfor[bolt_id]
+            if bolt_id in model.boltfrc:
+                boltfrc = model.boltfrc[bolt_id]
+            bolts = (boltld, boltfor, boltfrc)
+            self.so_nos_ref.append(bolts)
+
+        for bolt_id in self.b_ids:
+            boltfor = None
+            boltfrc = None
+            boltld = None
+            # BOLTLD, BOLTFOR, and BOLTFRC
+            if bolt_id in model.boltld:
+                boltld = model.boltld[bolt_id]
+            if bolt_id in model.boltfor:
+                boltfor = model.boltfor[bolt_id]
+            if bolt_id in model.boltfrc:
+                boltfrc = model.boltfrc[bolt_id]
+            bolts = (boltld, boltfor, boltfrc)
+            self.b_ids_ref.append(bolts)
         #Sequence order number for the BOLTLD, BOLTFOR, and BOLTFRC
         #IDs to be applied. (Integer; No default)
         #B_IDi SID of BOLTLD, BOLTFOR, or BOLTFRC bulk entries defining a bolt
@@ -327,22 +438,23 @@ class BOLTFOR(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         self.bolt_ids_ref = []
         for bolt_id in self.bolt_ids:
+            boltld = None
             boltfor = None
             boltfrc = None
-            boltld = None
             boltseq = None
 
-            # SOL 401: BOLTFOR, BOLTFRC, BOLTLD, or BOLTSEQ
+            # SOL 401: BOLTLD, BOLTFOR, BOLTFRC, or BOLTSEQ
+            if bolt_id in model.boltld:
+                boltld = model.boltld[bolt_id]
             if bolt_id in model.boltfor:
                 boltfor = model.boltfor[bolt_id]
             if bolt_id in model.boltfrc:
                 boltfrc = model.boltfrc[bolt_id]
-            if bolt_id in model.boltfor:
-                boltld = model.boltld[bolt_id]
-            if bolt_id in model.boltfor:
+            if bolt_id in model.boltseq:
                 boltseq = model.boltseq[bolt_id]
-            bolts = (boltfor, boltfrc, boltld, boltseq)
+            bolts = (boltld, boltfor, boltfrc, boltseq)
             self.bolt_ids_ref.append(bolts)
+
     def repr_fields(self) -> list[str]:
         fields = ['BOLTFOR', self.sid, self.load_value] + self.bolt_ids
         return fields

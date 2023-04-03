@@ -65,7 +65,7 @@ from .cards.elements.solid import (
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
 from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
-from .cards.bolt import BOLT, BOLTLD, BOLTFOR, BOLTSEQ, BOLTFRC
+from .cards.bolt import BOLT, BOLTLD, BOLTFOR, BOLTSEQ, BOLTFRC, BOLT_MSC
 
 from .cards.axisymmetric.axisymmetric import (
     AXIF, RINGFL,
@@ -319,8 +319,11 @@ MISSING_CARDS = {
     'MPHEAT', 'NLHEAT', 'MCHSTAT', 'MINSTAT',
     'MHEATSHL', 'MTHERM',
 
-    ## bolts
-    'MBOLT', 'MBOLTUS', 'BOLT', 'BOLTFRC', 'BOLTFOR',
+    ## nx bolts
+    'BOLT', 'BOLTFRC', 'BOLTFOR', 'BOLTLD', 'BOLTSEQ',
+
+    ## msc bolts?
+    'MBOLT', 'MBOLTUS', # 'BOLT'
 
     ## uds
     'PORUDS', 'YLDUDS', 'SHRUDS', 'FAILUDS', 'COMPUDS',
@@ -2098,7 +2101,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BCBODY' : (BCBODY, add_methods._add_bcbody_object),
 
             # 'BOLT', 'BOLTFOR', 'BOLTFRC', 'BOLTLD', 'BOLTSEQ'
-            'BOLT' : (BOLT, add_methods._add_bolt_object),
             'BOLTFOR' : (BOLTFOR, add_methods._add_boltfor_object),
             'BOLTSEQ' : (BOLTSEQ, add_methods._add_boltseq_object),
             #'BOLTFRC' : (BOLTFRC, add_methods._add_boltfrc_object),
@@ -2606,6 +2608,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         }
 
         self._card_parser_prepare = {
+            'BOLT': self._prepare_bolt,
+
             'PLOTEL': self._prepare_plotel,
             'CBAR' : self._prepare_cbar,
             'CBEAM' : self._prepare_cbeam,
@@ -2712,6 +2716,21 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #if ' ' in card_name:
                 #_check_for_spaces(card_name, card_lines, comment, self.log)
             self.log.info('    rejecting card_name = %s' % card_name)
+
+    def _prepare_bolt(self, card: list[str], card_obj: BDFCard, comment: str='') -> list[BOLT | BOLT_MSC]:
+        """adds a BOLT"""
+        card_obj.card = [value.upper() if isinstance(value, str) else value
+                         for value in card_obj.card]
+        if 'TOP' in card_obj.card or 'BOTTOM' in card_obj.card:
+            self.set_as_msc()
+
+        if self.is_nx:
+            bolt = BOLT.add_card(card_obj, comment=comment)
+        else:
+            bolt = BOLT_MSC.add_card(card_obj, comment=comment)
+
+        self._add_methods._add_bolt_object(bolt)
+        return bolt
 
     def _prepare_plotel(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[PLOTEL]:
         """adds a PLOTEL"""

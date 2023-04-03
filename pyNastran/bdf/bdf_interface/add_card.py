@@ -7450,13 +7450,18 @@ class AddCards:
         self._add_methods._add_dmncon_object(dmncon)
         return dmncon
     # ------------------------------------------
-    def add_modtrak(self) -> MODTRAK:
-        modtrak = MODTRAK()
+    def add_modtrak(self, sid, low_range, high_range, mt_filter, comment: str='') -> MODTRAK:
+        modtrak = MODTRAK(sid, low_range, high_range, mt_filter, comment=comment)
         self._add_methods._add_modtrak_object(modtrak)
         return modtrak
 
-    def add_mondsp1(self, name, label, axes, aecomp_name, xyz,
-                          cp=0, cd=None, ind_dof='123', comment='') -> MONDSP1:
+    def add_mondsp1(self, name: str, label: str,
+                    axes: str,
+                    aecomp_name: str,
+                    xyz: np.ndarray,
+                    cp: int=0, cd=None,
+                    ind_dof: str='123',
+                    comment: str='') -> MONDSP1:
         """
         Creates a MONDSP1 card
 
@@ -8847,6 +8852,8 @@ class AddCards:
         self._add_methods._add_acoustic_property_object(pacabs)
         return pacabs
 
+    def add_bolt_msc(self):
+        asdf
     def add_bolt_nx(self, bolt_id: int,
                     element_type: int,
                     eids: Optional[list]=None,  # element_type=1

@@ -25,6 +25,56 @@ DSCREEN_INT_TO_RTYPE = {
     #9: '???b',
     12: 'FREQ',  # goland_final_test.op2
 }
+
+FLAG_TO_RESP_MSC = {
+    1 : 'WEIGHT',
+    2 : 'VOLUME',
+    3 : 'LAMA',
+    4 : 'EIGN',
+    5 : 'DISP',
+    6 : 'STRESS',
+    7 : 'STRAIN',
+    8 : 'FORCE',
+}
+FLAG_TO_RESP_NX = {
+    1 : 'WEIGHT',
+    2 : 'VOLUME',
+    3 : 'LAMA',
+    4 : 'EIGN',
+    5 : 'DISP',
+    6 : 'STRESS',
+    7 : 'STRAIN',
+    8 : 'FORCE',
+    9 : 'CFAILURE',
+    10 : 'CSTRESS',
+    11 : 'CSTRAIN',
+    12 : 'FREQ',
+    13 : 'SPCFORCE',
+    14 : 'ESE',
+    15 : 'CEIG',
+    17 : 'Compliance',
+    19 : 'ERP',
+    20: 'FRDISP',
+    21: 'FRVELO',
+    22: 'FRACCL',
+    23: 'FRSPCF',
+    24: 'FRSTRE',
+    25: 'FRFORC',
+    26: 'RMSDISP',
+    27: 'RMSVELO',
+    28: 'RMSACCL',
+    29: 'PSDDISP',
+    30: 'PSDVELO',
+    31: 'PSDACCL',
+
+    60 : 'TDISP',
+    61 : 'TVELO',
+    62 : 'TACCL',
+
+    # nx
+    #84 : 'FLUTTER',
+}
+
 DSCREEN_RTYPE_TO_INT = {value: key for key, value in DSCREEN_INT_TO_RTYPE.items()}
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -1415,19 +1465,6 @@ class EDOM(GeomCommon):
           -1.60000E+08 for MIN
           10 ATTi I Grid point IDs
           Word 10 repeats until -1 occurs
-        FLAG = 31 PSDACCL
-          5 UNDEF None
-          6 PTYPE I Random ID
-          7 REGION I Region identifier for constraint screening
-          8 ATTA I Response attribute
-          9 ATTB RS Frequency value; -1 (integer) spawn for all
-          frequencies in set; -1.10000E+08 for SUM;
-          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
-          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
-          -1.60000E+08 for MIN
-          10 ATTi I Grid point IDs
-          Word 10 repeats until -1 occurs
-
         FLAG = 60 TDISP
           5 UNDEF(2) None
           7 REGION I Region identifier for constraint screening
@@ -1455,44 +1492,15 @@ class EDOM(GeomCommon):
          33, 1195984215, 538989640, 1, 538976288, 538976288, 0, 33, -9999, -1]
         """
         op2 = self.op2
-        flag_to_resp = {
-            1 : 'WEIGHT',
-            2 : 'VOLUME',
-            3 : 'LAMA',
-            4 : 'EIGN',
-            5 : 'DISP',
-            6 : 'STRESS',
-            7 : 'STRAIN',
-            8 : 'FORCE',
-            9 : 'CFAILURE',
-            10 : 'CSTRESS',
-            11 : 'CSTRAIN',
-            12 : 'FREQ',
-            13 : 'SPCFORCE',
-            14 : 'ESE',
-            15 : 'CEIG',
-            17 : 'Compliance',
-            19 : 'ERP',
-            20: 'FRDISP',
-            21: 'FRVELO',
-            22: 'FRACCL',
-            23: 'FRSPCF',
-            24: 'FRSTRE',
-            25: 'FRFORC',
-            26: 'RMSDISP',
-            27: 'RMSVELO',
-            28: 'RMSACCL',
-            29: 'PSDDISP',
-            30: 'PSDVELO',
-            31: 'PSDACCL',
-
-            60 : 'TDISP',
-            61 : 'TVELO',
-            62 : 'TACCL',
-
-            # nx
-            #84 : 'FLUTTER',
-        }
+        is_nx = False
+        is_msc = False
+        if op2.is_msc:
+            is_msc = True
+            flag_to_resp = FLAG_TO_RESP_NX
+        else:
+            # NX
+            is_nx = True
+            flag_to_resp = FLAG_TO_RESP_NX
 
         #self.show_data(data[n:], types='qds')
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
@@ -1542,8 +1550,15 @@ class EDOM(GeomCommon):
             label_bytes = data[n+size:n+3*size]
             label = reshape_bytes_block_size(label_bytes, size=size)
             flag = ints[i0+3]
-            response_type = flag_to_resp[flag]
-            #print(f'dresp_id={dresp_id} flag={flag}->response_type={response_type!r} label={label!r}')
+            #d0 = i0 * size
+            d1 = i1 * size + size
+            op2.show_data(data[n:n+d1], types='ifs')
+            try:
+                response_type = flag_to_resp[flag]
+            except KeyError:
+                op2.show_data(data[n:], types='ifs')
+                raise RuntimeError(f'dresp_id={dresp_id} label={label!r}')
+            print(f'dresp_id={dresp_id} flag={flag}->response_type={response_type!r} label={label!r}')
             if flag == 1:
                 # WEIGHT
                 # 5 UNDEF(2) None
@@ -1647,7 +1662,7 @@ class EDOM(GeomCommon):
                 #   10 ATTi  I Element numbers (if Word 5 is ELEM) or composite property IDs
                 #   Word 10 repeats until -1 occurs
 
-            elif flag == 12:
+            elif flag == 12 and is_nx: # FREQ
                 # FLAG = 12 FREQ
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier for constraint screening
@@ -1657,7 +1672,7 @@ class EDOM(GeomCommon):
                 property_type = None
                 region, atta, attb = ints[i0+6:i0+9]
                 atti = None
-            elif flag == 15:
+            elif flag == 15 and is_nx: # CEIG
                 # FLAG = 15 CEIG
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier for constraint screening
@@ -1669,7 +1684,7 @@ class EDOM(GeomCommon):
                 property_type = None
                 region, atta, attb = ints[i0+6:i0+9]
                 atti = None
-            elif flag == 17:
+            elif flag == 17 and is_nx: # Compliance
                 ## TODO: is this right?
                 # FLAG = 17 Compliance
                 #   5 UNDEF(2) None
@@ -1680,7 +1695,7 @@ class EDOM(GeomCommon):
                 region, atta, attb = ints[i0+6:i0+9]
                 atti = None
                 #print(17, region, atta, attb)
-            elif flag == 19:
+            elif flag == 19 and is_nx: # ERP
                 # FLAG = 19 ERP
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier
@@ -1692,7 +1707,7 @@ class EDOM(GeomCommon):
                 region, atta, attb = ints[i0+6:i0+9]
                 atti = ints[i0+9:i1].tolist()
 
-            elif flag == 20:
+            elif flag == 20 and is_nx: # FRDISP
                 property_type = None
                 # FLAG = 20 FRDISP
                 #   5 UNDEF(2) None
@@ -1715,7 +1730,7 @@ class EDOM(GeomCommon):
 
                 attb = _pick_attbi_attbf(attbi, attbf)
                 #print(region, atta, attb, atti)
-            elif flag == 22:
+            elif flag == 22 and is_nx: # FRACCL
                 # FLAG = 22 FRACCL
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier for constraint screening
@@ -1733,7 +1748,7 @@ class EDOM(GeomCommon):
                 attb = _pick_attbi_attbf(attbi, attbf)
                 atti = ints[i0+9:i1].tolist()
 
-            elif flag in [24, 25]:
+            elif flag in [24, 25] and is_nx: # FRSTRE, FRFORC
                 # FLAG = 24 FRSTRE
                 #   5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
                 #   7 REGION I Region identifier for constraint screening
@@ -1745,6 +1760,19 @@ class EDOM(GeomCommon):
                 #   -1.60000E+08 for MIN
                 #   10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
                 #   Word 10 repeats until -1 occurs
+                #
+                # FRDISP
+                #  5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+                #  7 REGION I Region identifier for constraint screening
+                #  8 ATTA   I Response attribute
+                #  9 ATTB  RS Frequency value; -1 (integer) spawn for all
+                #  frequencies in set; -1.10000E+08 for SUM;
+                #  -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+                #  -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+                #  -1.60000E+08 for MIN
+                #  10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
+                #  Word 10 repeats until -1 occurs
+                #
                 property_type_bytes = data[n+4*size:n+6*size]
                 property_type = reshape_bytes_block_size(property_type_bytes, size=size)
 
@@ -1752,20 +1780,42 @@ class EDOM(GeomCommon):
                 attbf = floats[i0+8]
                 attb = _pick_attbi_attbf(attbi, attbf)
                 atti = ints[i0+9:i1].tolist()
-                #print(property_type, region, atta, attb, atti)
-            #elif flag == 25:
-                # FRDISP
-                # 5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
-                # 7 REGION I Region identifier for constraint screening
-                # 8 ATTA   I Response attribute
-                # 9 ATTB  RS Frequency value; -1 (integer) spawn for all
-                # frequencies in set; -1.10000E+08 for SUM;
-                # -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
-                # -1.40000E+08 for RSS; -1.50000E+08 for MAX;
-                # -1.60000E+08 for MIN
-                # 10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
-                # Word 10 repeats until -1 occurs
-            elif flag == 29:
+                print(property_type, region, atta, attb, atti)
+            elif flag in {20} and is_msc: # PSDDISP
+                # DRESP1       ID   LABEL   RTYPE   PTYPE  REGION    ATTA    ATTB    ATT1
+                # DRESP1        11      L1 PSDDISP      91               3   60.00       3
+                #5 NTUSED CHAR4
+                #6 RPSID I RANDPS ID
+                #7 REGION I
+                #8 ATTA I
+                #9 ATTB RS
+                #10 ATTI I
+                #Word 10 repeats until End of Record
+                property_type_bytes = data[n+4*size:n+6*size]
+                property_type = reshape_bytes_block_size(property_type_bytes, size=size)
+                print(data[n:+10*size])
+                print(ints[i0:i1+1])
+                print(floats[i0:i1+1])
+                op2.show_data(data[n:])
+                randps_id, region, atta = ints[i0+6:i0+9]
+                attb = floats[i0+10]
+                atti = ints[i0+9:i1].tolist()
+                print(f'property_type={property_type!r} randps_id={randps_id} '
+                      f'region={region} atta={atta} attb={attb} atti={atti}')
+                raise RuntimeError('not done...')
+            elif flag in {29} and is_msc: # PSDDISP
+                # DRESP1       ID   LABEL   RTYPE   PTYPE  REGION    ATTA    ATTB    ATT1
+                # DRESP1        11      L1 PSDDISP      91               3   60.00       3
+                property_type, region, atta, attbi = ints[i0+5:i0+9]
+                #print(ints[i0+4:i1+5])
+                #print(floats[i0+4:i1+5])
+                attbf = floats[i0+8]
+                attb = _pick_attbi_attbf(attbi, attbf)
+                atti = ints[i0+9:i1].tolist()
+                print(property_type, region, atta, attb, atti)
+
+                asdf
+            elif flag in {29} and is_nx: # PSDDISP
                 #FLAG = 29 PSDDISP
                 #  5 UNDEF None
                 #  6 PTYPE  I Random ID
@@ -1784,7 +1834,28 @@ class EDOM(GeomCommon):
                 attbf = floats[i0+8]
                 attb = _pick_attbi_attbf(attbi, attbf)
                 atti = ints[i0+9:i1].tolist()
-            elif flag == 60:
+            elif flag == 31 and is_nx:
+                #FLAG = 31 PSDACCL
+                #  5 UNDEF None
+                #  6 PTYPE I Random ID
+                #  7 REGION I Region identifier for constraint screening
+                #  8 ATTA I Response attribute
+                #  9 ATTB RS Frequency value; -1 (integer) spawn for all
+                #  frequencies in set; -1.10000E+08 for SUM;
+                #  -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+                #  -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+                #  -1.60000E+08 for MIN
+                #  10 ATTi I Grid point IDs
+                #  Word 10 repeats until -1 occurs
+                property_type, region, atta, attbi = ints[i0+5:i0+9]
+                #print(ints[i0+4:i1+5])
+                #print(floats[i0+4:i1+5])
+                attbf = floats[i0+8]
+                attb = _pick_attbi_attbf(attbi, attbf)
+                atti = ints[i0+9:i1].tolist()
+
+
+            elif flag == 60 and is_nx:
                 #FLAG = 60 TDISP
                 #  5 UNDEF(2) None
                 #  7 REGION I Region identifier for constraint screening
@@ -1820,7 +1891,7 @@ class EDOM(GeomCommon):
                 #print('grids=', grids)
                 del grids
                 idresps_to_skip.add(idresp+1)
-            elif flag == 84:
+            elif flag == 84 and is_nx:
                 # nx flutter
                 print('ints =', ints)
                 print('floats =', floats)
@@ -1829,6 +1900,8 @@ class EDOM(GeomCommon):
                 raise NotImplementedError(flag)
 
             #print(response_type)
+            if property_type == '':
+                property_type = None
             if atta == 0:
                 atta = None
             if attb == 0:
@@ -1842,7 +1915,7 @@ class EDOM(GeomCommon):
             dresp1 = op2.add_dresp1(dresp_id, label,
                                     response_type, property_type, region,
                                     atta, attb, atti, validate=True)
-            #print(dresp1)
+            print(dresp1)
             dresp1.write_card_16()
             n += (i1 - i0 + 1) * self.size
             del dresp_id, label, response_type, property_type, region, atta, attb, atti
