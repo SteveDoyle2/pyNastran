@@ -211,6 +211,11 @@ class WriteMesh(BDFAttributes):
             self._write_elements(bdf_file, elements_size, is_double, is_long_ids=is_long_ids)
             self._write_properties(bdf_file, size, is_double, is_long_ids=is_long_ids)
             #self._write_properties_by_element_type(bdf_file, size, is_double, is_long_ids)
+
+        for cards in (self.bolt, self.boltseq, self.boltfor, self.boltfrc, self.boltld):
+            for key, card in cards.items():
+                bdf_file.write(card.write_card(size, is_double))
+
         self._write_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         self._write_masses(bdf_file, size, is_double, is_long_ids=is_long_ids)

@@ -65,6 +65,7 @@ from .cards.elements.solid import (
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
 from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+from .cards.bolt import BOLT, BOLTLD, BOLTFOR, BOLTSEQ, BOLTFRC
 
 from .cards.axisymmetric.axisymmetric import (
     AXIF, RINGFL,
@@ -889,6 +890,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # cyclic
             'CYJOIN', 'CYAX',
+
+            # bolt nx
+            'BOLT', 'BOLTSEQ', 'BOLTLD', 'BOLTFOR',
 
             # other
             'INCLUDE',  # '='
@@ -2093,9 +2097,18 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BGSET' : (BGSET, add_methods._add_bgset_object),
             'BCBODY' : (BCBODY, add_methods._add_bcbody_object),
 
-            # 'BOLT', 'BOLTFOR'
-            'BOLT' : (Crash, None),
-            'BOLTFOR' : (Crash, None),
+            # 'BOLT', 'BOLTFOR', 'BOLTFRC', 'BOLTLD', 'BOLTSEQ'
+            'BOLT' : (BOLT, add_methods._add_bolt_object),
+            'BOLTFOR' : (BOLTFOR, add_methods._add_boltfor_object),
+            'BOLTSEQ' : (BOLTSEQ, add_methods._add_boltseq_object),
+            #'BOLTFRC' : (BOLTFRC, add_methods._add_boltfrc_object),
+            #'BOLTLD' : (BOLTLD, add_methods._add_boltld_object),
+            'BOLTFRC': (Crash, None),
+            'BOLTLD': (Crash, None),
+
+            # msc bolts
+            # 'BOUTPUT',
+            'BOUTPUT': (Crash, None),
 
             #'CBEAR', 'PBEAR', 'ROTORB',
             'CBEAR' : (Crash, None),
@@ -2535,11 +2548,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BCTPARA' : (BCTPARA, add_methods._add_bctpara_object),
             'BSURF' : (BSURF, add_methods._add_bsurf_object),
             'BSURFS' : (BSURFS, add_methods._add_bsurfs_object),
-            # 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
-            'BOUTPUT': (Crash, None),
-            'BOLT': (Crash, None),
-            'BOLTFOR': (Crash, None),
-            'BOLTFRC': (Crash, None),
 
             'RADCAV' : (RADCAV, add_methods._add_radcav_object), #
             #'RADLST' : (RADLST, add_methods._add_radcav_object), # TestOP2.test_bdf_op2_thermal_02

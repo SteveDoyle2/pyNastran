@@ -154,6 +154,7 @@ class XrefMesh(BDFAttributes):
             self._cross_reference_coordinates()
 
         if xref_elements:
+            self._cross_reference_bolts()
             self._cross_reference_elements()
             self._cross_reference_rigid_elements()
         if xref_properties:
@@ -342,6 +343,11 @@ class XrefMesh(BDFAttributes):
         #if model.has_key()
         #for param_key, param in self.params:
             #if
+
+    def _cross_reference_bolts(self) -> None:
+        for bolt_dict in (self.bolt, self.boltfor, self.boltseq, self.boltld, self.boltfrc):
+            for bolt in bolt_dict.values():
+                bolt.cross_reference(self)
 
     def _cross_reference_elements(self) -> None:
         """

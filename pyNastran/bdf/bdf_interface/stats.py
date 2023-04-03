@@ -178,6 +178,10 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'sload', 'spcd',
         'temp', 'tempd',
 
+        # ----
+        #new
+        'bolt', 'boltld', 'boltfor', 'boltseq', 'boltfrc',
+
     ] + list_attrs + card_dict_groups + scalar_attrs
     missed_attrs = []
     for attr in model.object_attributes(filter_properties=True,

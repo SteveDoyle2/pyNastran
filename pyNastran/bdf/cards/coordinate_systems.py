@@ -28,7 +28,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, string_or_blank, string)
+    integer, integer_or_blank, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -872,13 +872,13 @@ class Coord(BaseCard):
         return self.beta().T
 
     @property
-    def local_to_global(self):
+    def local_to_global(self) -> np.ndarray:
         """
         Gets the 3 x 3 local to global transform
         """
         return self.beta()
 
-    def beta(self):
+    def beta(self) -> np.ndarray:
         r"""
         Gets the 3 x 3 transformation
 
@@ -892,7 +892,7 @@ class Coord(BaseCard):
         matrix = np.vstack([self.i, self.j, self.k])
         return matrix
 
-    def beta_n(self, n: int):
+    def beta_n(self, n: int) -> np.ndarray:
         r"""
         Gets the 3n x 3n transformation
 
@@ -923,15 +923,17 @@ class Coord(BaseCard):
         return xform
 
 
-    def transform_matrix_to_global(self, matrix):
+    def transform_matrix_to_global(self, matrix: np.ndarray) -> np.ndarray:
         _check_square(matrix)
         n = matrix.shape[0] // 3
         T = self.beta_n(n)
         matrix_out = T.T @ matrix @ T
         return matrix_out
 
-    def transform_matrix_to_global_from_element_coord(self, matrix, n: int,
-                                                      i, j, k):
+    def transform_matrix_to_global_from_element_coord(self, matrix:np.ndarray, n: int,
+                                                      i:np.ndarray,
+                                                      j:np.ndarray,
+                                                      k:np.ndarray) -> np.ndarray:
         Tlocal = np.vstack([i, j, k])
         _check_square(Tlocal)
         n = matrix.shape[0] // 3
@@ -940,7 +942,7 @@ class Coord(BaseCard):
         matrix_out = T.T @ matrix @ T
         return matrix_out
 
-    def repr_fields(self):
+    def repr_fields(self) -> list:
         return self.raw_fields()
 
     def move_origin(self, xyz: NDArray3float, maintain_rid: bool=False) -> None:
@@ -960,14 +962,14 @@ class Coord(BaseCard):
             self.setup()
 
         xyz = _fix_xyz_shape(xyz)
-        if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+        if self.type in {'CORD2R', 'CORD2C', 'CORD2S'}:
             self.origin = xyz
             self.update_e123(maintain_rid=maintain_rid)
         else:
             raise RuntimeError('Cannot move %s; cid=%s' % (self.type, self.cid))
         self.origin = xyz
 
-def _check_square(matrix: np.ndarray):
+def _check_square(matrix: np.ndarray) -> None:
     nx, ny = matrix.shape
     assert nx == ny, f'nx={nx} ny={ny}'
     assert nx % 3 == 0, f'nx={nx} is not a multiple of 3'

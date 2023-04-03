@@ -9,6 +9,7 @@ if TYPE_CHECKING:  # pragma: no cover
         TOPVAR, MPCAX, CORD3G,
         SESUPORT, SEUSET, SEUSET1,
     )
+    from pyNastran.bdf.cards.bolt import BOLT, BOLTFOR, BOLTSEQ, BOLTLD
     from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
     from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
     from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
@@ -1744,3 +1745,30 @@ class AddMethods:
             self.model._type_to_id_map[edge.type].append(key)
 
     #---------------------------------------------------------------------------
+    # nx bolts
+    def _add_bolt_object(self, bolt: BOLT, allow_overwrites: bool=False) -> None:
+        key = bolt.bolt_id
+        if key in self.model.bolt and not allow_overwrites:
+            if not bolt == self.model.bolt[key]:
+                raise RuntimeError(f'bolt is duplicated\n{bolt}\nold:\n{self.model.bolt[key]}')
+        else:
+            self.model.bolt[bolt.bolt_id] = bolt
+            self.model._type_to_id_map[bolt.type].append(key)
+
+    def _add_boltseq_object(self, boltseq: BOLTSEQ, allow_overwrites: bool=False) -> None:
+        key = boltseq.sid
+        if key in self.model.boltseq and not allow_overwrites:
+            if not boltseq == self.model.boltseq[key]:
+                raise RuntimeError(f'boltseq is duplicated\n{boltseq}\nold:\n{self.model.boltseq[key]}')
+        else:
+            self.model.boltseq[boltseq.sid] = boltseq
+            self.model._type_to_id_map[boltseq.type].append(key)
+
+    def _add_boltfor_object(self, boltfor: BOLTFOR, allow_overwrites: bool=False) -> None:
+        key = boltfor.sid
+        if key in self.model.boltfor and not allow_overwrites:
+            if not boltfor == self.model.boltfor[key]:
+                raise RuntimeError(f'boltfor is duplicated\n{boltfor}\nold:\n{self.model.boltfor[key]}')
+        else:
+            self.model.boltfor[boltfor.sid] = boltfor
+            self.model._type_to_id_map[boltfor.type].append(key)

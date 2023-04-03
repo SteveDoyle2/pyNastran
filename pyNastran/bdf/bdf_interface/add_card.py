@@ -13,6 +13,7 @@ from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
+from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
@@ -177,9 +178,12 @@ CARD_MAP = {
     'BGADD' : BGADD,
     'BGSET' : BGSET,
 
-    #'BOLT', 'BOLTFOR'
-    #'BOLT' : Crash, None),
-    #'BOLTFOR' : Crash, None),
+    # nx bolt
+    'BOLT' : BOLT,
+    'BOLTFOR' : BOLTFOR,
+    'BOLTFRC' : BOLTFRC,
+    'BOLTLD' : BOLTLD,
+    'BOLTSEQ' : BOLTSEQ,
 
     #'CBEAR', 'PBEAR', 'ROTORB',
     #'CBEAR' : Crash, None),
@@ -8842,6 +8846,35 @@ class AddCards:
                         comment=comment)
         self._add_methods._add_acoustic_property_object(pacabs)
         return pacabs
+
+    def add_bolt_nx(self, bolt_id: int,
+                    element_type: int,
+                    eids: Optional[list]=None,  # element_type=1
+                    nids: Optional[list]=None,  # element_type=2
+                    csid=None,  # element_type=2
+                    idir=None,  # element_type=2
+                    comment: str='') -> BOLT:
+        bolt = BOLT(bolt_id, element_type,
+                    eids=eids, nids=nids,
+                    csid=csid, idir=idir, comment=comment)
+        self._add_methods._add_bolt_object(bolt)
+        return bolt
+
+    def add_boltseq_nx(self, sid: int,
+                       s_nos: list[int],
+                       b_ids: list[int],
+                       n_incs: Optional[list[int]]=None,
+                       comment: str='') -> BOLT:
+        bolt = BOLTSEQ(sid, s_nos, b_ids, n_incs=n_incs, comment=comment)
+        self._add_methods._add_boltseq_object(bolt)
+        return bolt
+
+    def add_boltfor_nx(self, sid: int, load_value: float, bolt_ids: list[int],
+                       comment: str='') -> BOLTFOR:
+        boltfor = BOLTFOR(sid, load_value, bolt_ids, comment=comment)
+        self._add_methods._add_boltfor_object(boltfor)
+        return boltfor
+    #def add_boltld_nx(self, ) -> BOLTLD:
 
 def add_beam_stress_strain_constraints(model, pid: int, label: str,
                                        response_type: str, static_stress_constraints,

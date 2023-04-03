@@ -756,6 +756,11 @@ class BDFAttributes:
         self.csuper = {}  # type: dict[int, CSUPER]
         self.csupext = {}  # type: dict[int, CSUPEXT]
 
+        self.bolt = {} # type: dict[int, BOLT]
+        self.boltseq = {} # type: dict[int, BOLTSEQ]
+        self.boltfor = {} # type: dict[int, BOLTFOR]
+        self.boltfrc = {}
+        self.boltld = {}
         # ---------------------------------------------------------------------
         self._type_to_id_map = defaultdict(list)  # type: dict[int, list[Any]]
         self._slot_to_type_map = {
@@ -1063,6 +1068,12 @@ class BDFAttributes:
             'views' : ['VIEW'],
             'view3ds' : ['VIEW3D'],
 
+            # nx bolts
+            'bolt': ['BOLT'],
+            'boltld': ['BOLTLD'],
+            'boltfor': ['BOLTFOR'],
+            'boltfrc': ['BOLTFRC'],
+            'boltseq': ['BOLTSEQ'],
             ## other
             #'INCLUDE',  # '='
             #'ENDDATA',
