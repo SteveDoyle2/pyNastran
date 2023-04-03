@@ -48,7 +48,23 @@ class TestBolt(unittest.TestCase):
         bolt_ids = [101, 102, 103, 104, 105, 106, 107]
         boltfor = model.add_boltfor_nx(sid, load_value, bolt_ids)
 
-        model2 = save_load_deck(model, xref='standard', punch=True, run_remove_unused=True, run_convert=True, run_renumber=True,
+        for nid in nids:
+            model.add_grid(nid, [0., 0., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        pid = 10
+        mid = 11
+        x = [0., 0., 1.]
+        g0 = None
+        nidsi = [1, 2]
+        for eid in eids:
+            model.add_cbar(eid, pid, nidsi, x, g0, offt='GGG', pa=0, pb=0, wa=None, wb=None, comment='', validate=False)
+        model.add_pbarl(pid, mid, 'BAR', [1., 2.], group='MSCBML0', nsm=0., comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model2 = save_load_deck(model, xref='standard', punch=True, run_remove_unused=True, run_convert=True, run_renumber=False,
                                 run_mirror=True, run_save_load=True, run_quality=True, write_saves=True, run_save_load_hdf5=True,
                                 run_mass_properties=True, run_loads=True, run_test_bdf=True, run_op2_writer=True, run_op2_reader=True,
                                 remove_disabled_cards=True, nastran_format='nx', op2_log_level='warning')

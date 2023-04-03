@@ -2723,6 +2723,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          for value in card_obj.card]
         if 'TOP' in card_obj.card or 'BOTTOM' in card_obj.card:
             self.set_as_msc()
+        else:
+            self.set_as_nx()
 
         if self.is_nx:
             bolt = BOLT.add_card(card_obj, comment=comment)
