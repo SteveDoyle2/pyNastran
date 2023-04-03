@@ -129,7 +129,8 @@ class TecplotIO:
                 is_surface=is_surface)
             self.gui.nelements = nelements
         else:
-            raise NotImplementedError()
+            raise NotImplementedError('shells or solids only\n'
+                                      f'ntris={ntris} nquads={nquads}; ntets={ntets}; nhexas={nhexas}')
 
         #----------------------------------------------
         #print('nnodes', nnodes, inode)

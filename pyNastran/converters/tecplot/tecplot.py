@@ -13,90 +13,22 @@ from typing import Optional, Any, Union
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
 
-from pyNastran.utils import is_binary_file, object_attributes, object_methods, object_stats
+from pyNastran.utils import is_binary_file
 from pyNastran.converters.tecplot.zone import Zone, CaseInsensitiveDict, is_3d
-
-
-class Base:
-    def object_attributes(obj: Any, mode: str='public',
-                          keys_to_skip: Optional[list[str]]=None,
-                          filter_properties: bool=False) -> list[str]:
-        """
-        List the names of attributes of a class as strings. Returns public
-        attributes as default.
-
-        Parameters
-        ----------
-        obj : instance
-            the object for checking
-        mode : str
-            defines what kind of attributes will be listed
-            * 'public' - names that do not begin with underscore
-            * 'private' - names that begin with single underscore
-            * 'both' - private and public
-            * 'all' - all attributes that are defined for the object
-        keys_to_skip : list[str]; default=None -> []
-            names to not consider to avoid deprecation warnings
-        filter_properties: bool: default=False
-            filters the @property objects
-
-        Returns
-        -------
-        attribute_names : list[str]
-            sorted list of the names of attributes of a given type or None
-            if the mode is wrong
-
-        """
-        return object_attributes(obj,
-                                 mode=mode,
-                                 keys_to_skip=keys_to_skip,
-                                 filter_properties=filter_properties)
-
-    def object_methods(obj: Any, mode: str='public',
-                       keys_to_skip: Optional[list[str]]=None) -> list[str]:
-        """
-        List the names of methods of a class as strings. Returns public methods
-        as default.
-
-        Parameters
-        ----------
-        obj : instance
-            the object for checking
-        mode : str
-            defines what kind of methods will be listed
-            * "public" - names that do not begin with underscore
-            * "private" - names that begin with single underscore
-            * "both" - private and public
-            * "all" - all methods that are defined for the object
-        keys_to_skip : list[str]; default=None -> []
-            names to not consider to avoid deprecation warnings
-
-        Returns
-        -------
-        method : list[str]
-            sorted list of the names of methods of a given type
-            or None if the mode is wrong
-
-        """
-        return object_methods(obj,
-                              mode=mode,
-                              keys_to_skip=keys_to_skip)
-
-    def object_stats(obj: Any, mode: str='public',
-                 keys_to_skip: Optional[list[str]]=None,
-                 filter_properties: bool=False) -> str:
-        """Prints out an easy to read summary of the object"""
-        return object_stats(obj,
-                            mode=mode,
-                            keys_to_skip=keys_to_skip,
-                            filter_properties=filter_properties)
+from pyNastran.converters.tecplot.tecplot_binary import TecplotBinary, zones_to_exclude_to_set
 
 
 def read_tecplot(tecplot_filename: str, use_cols=None, dtype=None,
                  filetype: str='guess',
                  zones_to_exclude: Optional[list[int]] = None,
                  log=None, debug=False):
-    """loads a tecplot file"""
+    """loads a tecplot file
+
+    Parameters
+    ----------
+    zones_to_exclude : list[int]; default=None -> []
+        0-based list of zones to exlcude
+    """
     tecplot = Tecplot(log=log, debug=debug)
     if use_cols:
         tecplot.use_cols = use_cols
@@ -106,7 +38,8 @@ def read_tecplot(tecplot_filename: str, use_cols=None, dtype=None,
                          zones_to_exclude=zones_to_exclude)
     return tecplot
 
-class Tecplot(Base):
+
+class Tecplot(TecplotBinary):
     """
     Parses a hexa binary/ASCII Tecplot 360 file.
     Writes an ASCII Tecplot 10 file.
@@ -141,33 +74,6 @@ class Tecplot(Base):
             msg += str(zone)
         return msg
 
-    def __init__(self, log=None, debug: bool=False):
-        # defines binary file specific features
-        self._endian = b'<'
-        self._n = 0
-
-        self.tecplot_filename = ''
-        self.log = get_logger2(log, debug=debug)
-        self.debug = debug
-
-        # mesh = None : model hasn't been read
-        self.is_mesh = None
-
-        self.title = 'tecplot geometry and solution file'
-        self.variables = None
-
-        self.zones = []
-        # mesh = True : this is a structured/unstructured grid
-
-        # mesh = False : this is a plot file
-        self.use_cols = None
-
-        # TODO: what is this for?
-        self.dtype = None
-
-        self._uendian = ''
-        self.n = 0
-
     @property
     def nzones(self):
         """gets the number of zones"""
@@ -188,7 +94,7 @@ class Tecplot(Base):
         filetype = filetype.lower()
         assert filetype in ['guess', 'ascii', 'binary'], filetype
         if filetype == 'binary' or (filetype == 'guess' and is_binary_file(tecplot_filename)):
-            return self.read_tecplot_binary(tecplot_filename)
+            return self.read_tecplot_binary(tecplot_filename, zones_to_exclude=zones_to_exclude)
         return self.read_tecplot_ascii(tecplot_filename, zones_to_exclude=zones_to_exclude)
 
     def read_tecplot_ascii(self, tecplot_filename: Union[str, PurePath, StringIO],
@@ -206,11 +112,7 @@ class Tecplot(Base):
         .. note :: assumes single typed results
         .. warning:: BLOCK option doesn't work if line length isn't the same...
         """
-        if zones_to_exclude is None:
-            set_zones_to_exclude = set([])
-        else:
-            set_zones_to_exclude = set(zones_to_exclude)
-
+        set_zones_to_exclude = zones_to_exclude_to_set(zones_to_exclude)
         self.tecplot_filename = tecplot_filename
         iline = 0
         nnodes = -1
@@ -331,6 +233,7 @@ class Tecplot(Base):
             nodes3d = zone.xyz
             nnodes2d = nodes2d.shape[0]
             nnodes3d = nodes3d.shape[0]
+            assert nnodes2d == 0, zone
 
             # elements
             if 'I' in zone.headers_dict:
@@ -383,6 +286,7 @@ class Tecplot(Base):
             ntetsi = len(tetsi)
             nhexasi = len(hexasi)
             nelementsi = nquadsi + ntrisi + ntetsi + nhexasi
+            assert nelementsi > 0, str(zone)
             if nquadsi:
                 quads.append(inode + quadsi)
             if ntrisi:
@@ -394,7 +298,8 @@ class Tecplot(Base):
 
             # nodes
             if nnodes2d and nnodes3d:
-                raise RuntimeError('2d and 3d nodes is not supported')
+                raise RuntimeError('2d and 3d nodes is not supported\n'
+                                   f'name={zone.name!r} zone.xy={zone.xy} zone.xyz={zone.xyz}')
             elif nnodes2d:
                 nodes[inode:inode+nnodes2d, :2] = nodes2d
                 inode += nnodes2d
@@ -643,13 +548,16 @@ class Tecplot(Base):
         self.log.debug('final sline=%s' % sline)
         return iline
 
-    def read_tecplot_binary(self, tecplot_filename: str, nnodes=None,
+    def _read_tecplot_binary(self, tecplot_filename: str,
+                            zones_to_exclude: Optional[list[int]] = None,
+                            nnodes=None,
                             nelements=None):
         """
         The binary file reader must have ONLY CHEXAs and be Tecplot 360
         with:
         `rho`, `u`, `v`, `w`, and `p`.
         """
+        set_zones_to_exclude = zones_to_exclude_to_set(zones_to_exclude)
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
         with open(tecplot_filename, 'rb') as tecplot_file:
@@ -1352,7 +1260,7 @@ def _header_lines_to_header_dict(title_line: str, header_lines: list[str],
                                 'I', 'J', 'K',]
                 assert ukey in allowed_keys, 'ukey=%r; allowed=[%s]' % (ukey, ', '.join(allowed_keys))
             parse = False
-    print('headers_dict', headers_dict)
+    log.debug(f'headers_dict = {headers_dict}')
     #print(headers_dict.keys())
 
     _simplify_header(headers_dict, variables)
@@ -1433,10 +1341,7 @@ def _read_zonetype_fe(iline: int,
         xyz_result = sline[:-nslinei]
         assert len(xyz_result) == nvalues_to_read, (len(xyz_result), nvalues_to_read)
         xyz_result = np.array(xyz_result, dtype='float32')
-        if 0:
-            xyz_result = xyz_result.reshape((nnodesi, nexpected))
-        else:
-            xyz_result = xyz_result.reshape((nexpected, nnodesi)).T
+        xyz_result = xyz_result.reshape((nexpected, nnodesi)).T
         xyz[:, :] = xyz_result[:, :3]
         result[:, :] = xyz_result[:, 3:]
 
@@ -1972,14 +1877,6 @@ def main2():  # pragma: no cover
         plt.read_tecplot(tecplot_filename)
         plt.write_tecplot(f'processor_{iprocessor:d}.plt')
 
-def main3():  # pragma: no cover
-    """test"""
-    plt = Tecplot()
-    zones_to_exclude = [0, 3, 5, 6, 9, 10]
-
-    tecplot_filename = r'C:\code\pyNastran\pyNastran\converters\tecplot\junk.dat'
-    plt.read_tecplot(tecplot_filename, read_tecplot='ascii',
-                     zones_to_exclude=zones_to_exclude)
 
 if __name__ == '__main__':   # pragma: no cover
     main()
