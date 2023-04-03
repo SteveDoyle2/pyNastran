@@ -187,6 +187,11 @@ def export_to_hdf5(self, group, log):
         #if hasattr(value, 'export_to_hdf5'):
             #msg = 'sub-object export_to_hdf5 not supported\nkey=%s value=%s' % (key, value)
             #raise NotImplementedError(msg)
+        if isinstance(value, np.ndarray) and value.dtype.name.startswith('str'):
+             # str256
+            n = value.dtype.name[3:]
+            value = np.asarray(value, dtype='|S'+n)
+
         try:
             group.create_dataset(name, data=value)
         except TypeError:

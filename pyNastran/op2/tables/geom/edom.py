@@ -1662,7 +1662,7 @@ class EDOM(GeomCommon):
                 #   10 ATTi  I Element numbers (if Word 5 is ELEM) or composite property IDs
                 #   Word 10 repeats until -1 occurs
 
-            elif flag == 12 and is_nx: # FREQ
+            elif flag == 12: # FREQ; no is_nx
                 # FLAG = 12 FREQ
                 #   5 UNDEF(2) None
                 #   7 REGION I Region identifier for constraint screening
