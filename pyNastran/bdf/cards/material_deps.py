@@ -316,6 +316,10 @@ class MATDMG(MaterialDependence):
         MaterialDependence.__init__(self)
         if comment:
             self.comment = comment
+        if ppf_model == 'EUD':
+            assert gic is not None, f'Invalid GIC; {gic}; should be a float in case of PPFMOD == "EUD"'
+            assert giic is not None, f'Invalid GIIC; {giic}; should be a float in case of PPFMOD == "EUD"'
+            assert giiic is not None, f'Invalid GIIIC; {giiic}; should be a float in case of PPFMOD == "EUD"'
 
         self.mid = mid
         self.ppf_model = ppf_model
@@ -385,7 +389,7 @@ class MATDMG(MaterialDependence):
         tau = double(card, 23, 'TAU')
         adel = double(card, 24, 'ADEL')
 
-        if ppf_model == "UD":
+        if ppf_model == 'UD':
             plyuni = integer_or_blank(card, 25, 'PLYUNI')
             tid = integer_or_blank(card, 26, 'TID')
             hbar = double(card, 27, 'HBAR')
@@ -398,7 +402,7 @@ class MATDMG(MaterialDependence):
             gic = None
             giic = None
             giiic = None
-        elif ppf_model == "EUD":
+        elif ppf_model == 'EUD':
             user = integer(card, 25, 'USER')
             r01 = double(card, 26, 'R01')
             hbar = double(card, 27, 'HBAR')
@@ -411,6 +415,8 @@ class MATDMG(MaterialDependence):
             plyuni = None
             tid = None
             pe = None
+        else:
+            raise RuntimeError(f'Invalid PPFMOD: mid={mid}; PPFMOD={ppf_model}; must be UD or EUD.')
 
         return MATDMG(mid, ppf_model,
                       y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
