@@ -699,8 +699,8 @@ class OP2_F06_Common:
     def cpyram_stress(self, cpyram_stress):
         self.op2_results.stress.cpyram_stress = cpyram_stress
 
-    @chexa_stress.setter
-    def chexa_composite_stress(self):
+    @chexa_composite_stress.setter
+    def chexa_composite_stress(self, chexa_composite_stress):
         self.op2_results.stress.chexa_composite_stress = chexa_composite_stress
     @cpenta_composite_stress.setter
     def cpenta_composite_stress(self, cpenta_composite_stress):
