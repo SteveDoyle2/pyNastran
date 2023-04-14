@@ -794,6 +794,8 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(material.write_card(size, is_double))
             for (unused_mid, material) in sorted(self.MATT9.items()):
                 bdf_file.write(material.write_card(size, is_double))
+            for (unused_mid, material) in sorted(self.MATDMG.items()):
+                bdf_file.write(material.write_card(size, is_double))
             for (unused_sid, nxstrat) in sorted(self.nxstrats.items()):
                 bdf_file.write(nxstrat.write_card(size, is_double))
 

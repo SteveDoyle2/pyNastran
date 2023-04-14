@@ -578,6 +578,61 @@ class TestMaterials(unittest.TestCase):
                                        comment='mats1')
         save_load_deck(model, xref='standard', punch=True, run_remove_unused=False)
 
+    def test_matdmg(self):
+        """tests MATDMG"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+
+        mid = 10
+        e1 = 1.3e8
+        e2 = 7707000.0
+        e3 = 7707000.0
+        nu12 = 0.234
+        nu13 = 0.234
+        nu23 = 0.391
+        g12 = 4154800.0
+        g13 = 4154800.0
+        g23 = 2770000.0
+        model.add_mat11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, 0.0, comment="mat11")
+
+        ppf_model = "UD"
+        y012 = 22.5
+        yc12 = 8526.4
+        ys12 = 1918.0
+        ys22 = 490.0
+        y11limt = 15840.0
+        y11limc = 15840.0
+        ksit = None
+        ksic = None
+        b2 = 2.5
+        b3 = 0.733
+        a = 0.5
+        litk = 20000.0
+        bigk = 518810.0
+        expn = 0.3648
+        tau = 0.0025
+        adel = 1.0
+        plyuni = 0
+        tid = None
+        hbar = 0.0001
+        dmax = 0.999
+        pe = 0
+        user = None
+        r01 = None
+        ds = None
+        gic = None
+        giic = None
+        giiic = None
+
+        model.add_matdmg(mid, ppf_model,
+                      y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
+                      b2, b3, a, litk, bigk, expn, tau, adel,
+                      plyuni, tid, hbar, dmax, pe,
+                      user, r01, ds, gic, giic, giiic,
+                      comment='matdmg')
+
+        save_load_deck(model, xref='standard', punch=True, run_remove_unused=False)
+
     def test_multiple_materials(self):
         """tests multiple materials"""
         log = get_logger(level='warning')

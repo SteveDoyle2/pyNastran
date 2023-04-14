@@ -125,7 +125,7 @@ from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                               MATG, MATHE, MATHP, MATEV,
                               CREEP, EQUIV, NXSTRAT)
 from .cards.material_deps import (
-    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
+    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1, MATDMG)
 
 from .cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from .cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
@@ -363,7 +363,7 @@ MISSING_CARDS = {
     'MATDT01', 'MATDIGI', 'MATUSR', 'MATTC',
     'MATORT', 'MATTORT', 'MATTHE', 'MATPLCY',
     'MATSMA', 'MAT8A', 'MATTEP',
-    'MATPOR', 'MATDMG',
+    'MATPOR', # 'MATDMG',
     'MAT2F', 'MAT8F',
 
     ## loads
@@ -681,6 +681,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## Material dependence - MATT1/MATT2/etc.
             'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
             'MATS1', #'MATS3', 'MATS8',
+            'MATDMG',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
 
@@ -2330,6 +2331,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MATT5' : (MATT5, add_methods._add_material_dependence_object),
             'MATT8' : (MATT8, add_methods._add_material_dependence_object),
             'MATT9' : (MATT9, add_methods._add_material_dependence_object),
+
+            'MATDMG': (MATDMG, add_methods._add_material_dependence_object),
+
             'NXSTRAT' : (NXSTRAT, add_methods._add_nxstrat_object),
 
             # hasn't been verified, links up to MAT1, MAT2, MAT9 w/ same MID

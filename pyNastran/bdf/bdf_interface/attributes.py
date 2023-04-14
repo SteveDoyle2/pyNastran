@@ -476,6 +476,7 @@ class BDFAttributes:
         self.MATT5 = {}  # type: dict[int, Any]
         self.MATT8 = {}  # type: dict[int, Any]
         self.MATT9 = {}  # type: dict[int, Any]
+        self.MATDMG = {}  # type: dict[int, Any]
         self.nxstrats = {}  # type: dict[int, Any]
 
         #: stores the CREEP card
@@ -855,6 +856,7 @@ class BDFAttributes:
             'MATT8' : ['MATT8'],
             'MATT9' : ['MATT9'],
             'MATS1' : ['MATS1'],
+            'MATDMG': ['MATDMG'],
             'MATS3' : ['MATS3'],
             'MATS8' : ['MATS8'],
             'nxstrats' : ['NXSTRAT'],
