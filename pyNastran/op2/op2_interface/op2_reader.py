@@ -198,8 +198,8 @@ class OP2Reader:
             # coordinate system transformation matrices
             b'CSTM' : (self.read_cstm, 'coordinate transforms'),
             b'CSTMS' : (self.read_cstm, 'coordinate transforms (superelement)'),
-            #b'TRMBD': self.read_trmbd,
-            #b'TRMBU': self.read_trmbu,
+            b'TRMBD': (self.read_trmbd, 'euler angles for transforming from material to (deformed) basic csys'),
+            b'TRMBU': (self.read_trmbu, 'euler angles for transforming from material to (undeformed) basic csys'),
 
             b'R1TABRG': (self.read_r1tabrg, 'DRESP1 optimization table'),
             # Qualifier info table???
