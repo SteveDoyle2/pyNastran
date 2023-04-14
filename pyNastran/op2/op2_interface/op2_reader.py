@@ -1734,6 +1734,7 @@ class OP2Reader:
                 nodes = np.empty([n_elements, grids.shape[1] + 1], dtype='int32')
                 nodes[:, 0] = eids
                 nodes[:, 1:] = grids
+                trmbd.nodes[element] = nodes
 
             itime = tstep_to_index_mapper[time_step]
             trmbd.eulersx[subcase][element][itime, :, :] = eulers_x
