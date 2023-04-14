@@ -1795,7 +1795,7 @@ class BGSET(BaseCard):
             exts.append(double_or_blank(card, i + 4, 'mind%s' % j, 0.0))
             #else:
                 #exts.append(None)
-            i += 10
+            i += 8
             j += 1
         return BGSET(glue_id, sids, tids, sdists, exts,
                      comment=comment, sol=sol)

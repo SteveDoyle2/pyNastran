@@ -21,7 +21,8 @@ All table cards are defined in this file.  This includes:
  * TABRNDG
 
 """
-from typing import Any
+from __future__ import annotations
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
@@ -33,6 +34,9 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
     double_or_string, double_or_blank, integer_or_string)
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+
 
 def make_xy(table_id, table_type, xy):
     try:
@@ -1357,7 +1361,7 @@ class TABLEST(Table):
             self.comment = comment
         self.tid = tid
         self.x = np.asarray(x, dtype='float64')
-        self.y = np.asarray(y, dtype='float64')
+        self.y = np.asarray(y, dtype='float64')  # TODO: shouldn't this be integers
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1391,11 +1395,14 @@ class TABLEST(Table):
         """
         table_id = data[0]
         xy = data[1:]
-        xy = np.array(xy, dtype='float64')
+        xy = np.array(xy, dtype='float64')  # TODO: shouldn't this be integers
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLEST(table_id, x, y, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        raise RuntimeError('TABLEST')
 
     def raw_fields(self):
         xy = []
