@@ -304,10 +304,14 @@ class MATDMG(MaterialDependence):
     type = 'MATDMG'
 
     def __init__(self, mid, ppf_model,
-                 y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
-                 b2, b3, a, litk, bigk, expn, tau, adel,
-                 plyuni, tid, hbar, dmax, pe,
-                 user, r01, ds, gic, giic, giiic,
+                 y012, yc12, ys12, ys22, y11limt, y11limc,
+                 ksit=None, ksic=None,
+                 b2=None, b3=None, a=None,
+                 litk=None, bigk=None, expn=None,
+                 tau=None, adel=None,
+                 plyuni=None, tid=None, hbar=None, dmax=None, pe=None,
+                 user=None, r01=None, ds=None,
+                 gic=None, giic=None, giiic=None,
                  comment=''):
         MaterialDependence.__init__(self)
         if comment:
@@ -360,20 +364,24 @@ class MATDMG(MaterialDependence):
         mid = integer(card, 1, 'mid')
         ppf_model = string(card, 2, 'PPFMOD')
 
-        y012 = double_or_blank(card, 9, 'Y012')
-        yc12 = double_or_blank(card, 10, 'YC12')
+        y012 = double(card, 9, 'Y012')
+        yc12 = double(card, 10, 'YC12')
         ys12 = double(card, 11, 'YS12')
         ys22 = double(card, 12, 'YS22')
+
         y11limt = double(card, 13, 'Y11LIMT')
         y11limc = double(card, 14, 'Y11LIMC')
         ksit = double_or_blank(card, 15, 'KSIT')
         ksic = double_or_blank(card, 16, 'KSIC')
+
         b2 = double(card, 17, 'B2')
         b3 = double(card, 18, 'B3')
         a = double(card, 19, 'A')
+
         litk = double(card, 20, 'LITK')
         bigk = double(card, 21, 'BIGK')
         expn = double(card, 22, 'EXPN')
+        
         tau = double(card, 23, 'TAU')
         adel = double(card, 24, 'ADEL')
 

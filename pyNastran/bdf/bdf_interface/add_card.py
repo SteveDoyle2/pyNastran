@@ -3787,20 +3787,16 @@ class AddCards:
         self._add_methods._add_material_dependence_object(mat)
         return mat
 
-    def add_matdmg(self, mid, ppf_model,
-                   y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
-                   b2, b3, a, litk, bigk, expn, tau, adel,
-                   plyuni, tid, hbar, dmax, pe,
-                   user, r01, ds, gic, giic, giiic,
+    def add_matdmg(self, mid, ppf_model, y012, yc12, ys12, ys22, y11limt, y11limc,
+                   ksit=None, ksic=None, b2=None, b3=None, a=None, litk=None, bigk=None, expn=None,
+                   tau=None, adel=None, plyuni=None, tid=None, hbar=None, dmax=None, pe=None,
+                   user=None, r01=None, ds=None, gic=None, giic=None, giiic=None,
                    comment='') -> MATDMG:
         """Creates a MATDMG card"""
 
-        mat = MATDMG(mid, ppf_model,
-                      y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
-                      b2, b3, a, litk, bigk, expn, tau, adel,
-                      plyuni, tid, hbar, dmax, pe,
-                      user, r01, ds, gic, giic, giiic,
-                      comment=comment)
+        mat = MATDMG(mid, ppf_model, y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
+                      b2, b3, a, litk, bigk, expn, tau, adel, plyuni, tid, hbar, dmax, pe,
+                      user, r01, ds, gic, giic, giiic, comment=comment)
         self._add_methods._add_material_dependence_object(mat)
         return mat
 
