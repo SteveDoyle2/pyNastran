@@ -1925,7 +1925,6 @@ class OP2Reader:
             eids = (int_data[:, 0] - op2.device_code) // 10
             eulers = float_data[:, 1:]
 
-            trmbu = op2.trmbu
             if subcase not in trmbu.eulers:
                 trmbu.eulers[subcase] = {}
             if element not in trmbu.eulers[subcase]:
