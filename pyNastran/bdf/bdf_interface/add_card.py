@@ -84,7 +84,7 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MATG, MATHE, MATHP, CREEP, MATEV,
                                            EQUIV, NXSTRAT)
 from pyNastran.bdf.cards.material_deps import (
-    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
+    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1, MATDMG)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
@@ -421,6 +421,8 @@ CARD_MAP = {
     'MAT5' : MAT5,
 
     'MATS1' : MATS1,
+    'MATDMG': MATDMG,
+
     #'MATS3' : MATS3,
     #'MATS8' : MATS8,
     'MATT1' : MATT1,
@@ -3782,6 +3784,23 @@ class AddCards:
     def add_mats1(self, mid, tid, Type, h, hr, yf, limit1, limit2, comment='') -> MATS1:
         """Creates a MATS1 card"""
         mat = MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
+        self._add_methods._add_material_dependence_object(mat)
+        return mat
+
+    def add_matdmg(self, mid, ppf_model,
+                   y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
+                   b2, b3, a, litk, bigk, expn, tau, adel,
+                   plyuni, tid, hbar, dmax, pe,
+                   user, r01, ds, gic, giic, giiic,
+                   comment='') -> MATDMG:
+        """Creates a MATDMG card"""
+
+        mat = MATDMG(mid, ppf_model,
+                      y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
+                      b2, b3, a, litk, bigk, expn, tau, adel,
+                      plyuni, tid, hbar, dmax, pe,
+                      user, r01, ds, gic, giic, giiic,
+                      comment=comment)
         self._add_methods._add_material_dependence_object(mat)
         return mat
 

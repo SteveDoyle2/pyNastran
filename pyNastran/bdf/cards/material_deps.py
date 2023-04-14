@@ -259,6 +259,192 @@ class MATS1(MaterialDependence):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+class MATDMG(MaterialDependence):
+    """
+    Material Properties for Progressive Ply Failure
+
+    Defines material properties and parameters for progressive ply failure in composite solid elements defined with the
+    PCOMPS bulk entry. Used in combination with MAT11 entries that have the same MID. Valid for SOLs 401 and 402.
+
+    +--------+-------+--------+-------+------+-----+-----+-----+-----+
+    |   1    |   2   |    3   |  4    |  5   |  6  |  7  |  8  |  9  |
+    +========+=======+========+=======+======+=====+=====+=====+=====+
+    | MATDMG |  MID  | PPFMOD |       |      |     |     |     |     |
+    +--------+-------+--------+-------+------+-----+-----+-----+-----+
+    |        | COEF1 | COEF2  | -etc- |      |     |     |     |     |
+    +--------+-------+--------+-------+------+-----+-----+-----+-----+
+
+    Format for PPFMOD == "UD"
+    +--------+--------+------+------+------+---------+---------+------+------+
+    |   1    |   2    |   3  |  4   |  5   |    6    |    7    |  8   |  9   |
+    +========+========+======+======+======+=========+=========+======+======+
+    | MATDMG |  MID   |  UD  |      |      |         |         |      |      |
+    +--------+--------+------+------+------+---------+---------+------+------+
+    |        |  Y012  | YC12 | YS12 | YS22 | Y11LIMT | Y11LIMC | KSIT | KSIC |
+    +--------+--------+------+------+------+---------+---------+------+------+
+    |        |   B2   |  B3  |  A   | LITK |   BIGK  |   EXPN  | TAU | ADEL  |
+    +--------+--------+------+------+------+---------+---------+------+------+
+    |        | PLYUNI | TID  | HBAR | DMAX |   PE    |         |     |       |
+    +--------+--------+------+------+------+---------+---------+------+------+
+
+    Format for PPFMOD == "EUD"
+    +--------+--------+------+------+-------+---------+---------+------+------+
+    |   1    |   2    |   3  |  4   |  5    |    6    |    7    |  8   |  9   |
+    +========+========+======+======+=======+=========+=========+======+======+
+    | MATDMG |   MID  | EUD  |      |       |         |         |      |      |
+    +--------+--------+------+------+-------+---------+---------+------+------+
+    |        |  Y012  | YC12 |   K  | ALPHA | Y11LIMT | Y11LIMC | KSIT | KSIC |
+    +--------+--------+------+------+-------+---------+---------+------+------+
+    |        |   B2   |  B3  |   A  | LITK  |  BIGK   |  EXPN   | TAU  | ADEL |
+    +--------+--------+------+------+-------+---------+---------+------+------+
+    |        |  USER  | R01  | HBAR | DMAX  |   DS    |   GIC   | GIIC | GIIIC|
+    +--------+--------+------+------+-------+---------+---------+------+------+
+
+    """
+    type = 'MATDMG'
+
+    def __init__(self, mid, ppf_model,
+                 y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
+                 b2, b3, a, litk, bigk, expn, tau, adel,
+                 plyuni, tid, hbar, dmax, pe,
+                 user, r01, ds, gic, giic, giiic,
+                 comment=''):
+        MaterialDependence.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.mid = mid
+        self.ppf_model = ppf_model
+
+        self.y012 = y012
+        self.yc12 = yc12
+        self.ys12 = ys12
+        self.ys22 = ys22
+        self.y11limt = y11limt
+        self.y11limc = y11limc
+        self.ksit = ksit
+        self.ksic = ksic
+        self.b2 = b2
+        self.b3 = b3
+        self.a = a
+        self.litk = litk
+        self.bigk = bigk
+        self.expn = expn
+        self.tau = tau
+        self.adel = adel
+        self.plyuni = plyuni
+        self.tid = tid
+        self.hbar = hbar
+        self.dmax = dmax
+        self.pe = pe
+        self.user = user
+        self.r01 = r01
+        self.ds = ds
+        self.gic = gic
+        self.giic = giic
+        self.giiic = giiic
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a MATDMG card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        mid = integer(card, 1, 'mid')
+        ppf_model = string(card, 2, 'PPFMOD')
+
+        y012 = double_or_blank(card, 9, 'Y012')
+        yc12 = double_or_blank(card, 10, 'YC12')
+        ys12 = double(card, 11, 'YS12')
+        ys22 = double(card, 12, 'YS22')
+        y11limt = double(card, 13, 'Y11LIMT')
+        y11limc = double(card, 14, 'Y11LIMC')
+        ksit = double_or_blank(card, 15, 'KSIT')
+        ksic = double_or_blank(card, 16, 'KSIC')
+        b2 = double(card, 17, 'B2')
+        b3 = double(card, 18, 'B3')
+        a = double(card, 19, 'A')
+        litk = double(card, 20, 'LITK')
+        bigk = double(card, 21, 'BIGK')
+        expn = double(card, 22, 'EXPN')
+        tau = double(card, 23, 'TAU')
+        adel = double(card, 24, 'ADEL')
+
+        if ppf_model == "UD":
+            plyuni = integer_or_blank(card, 25, 'PLYUNI')
+            tid = integer_or_blank(card, 26, 'TID')
+            hbar = double(card, 27, 'HBAR')
+            dmax = double(card, 28, 'DMAX')
+            pe = integer_or_blank(card, 29, 'PE')
+
+            user = None
+            r01 = None
+            ds = None
+            gic = None
+            giic = None
+            giiic = None
+        elif ppf_model == "EUD":
+            user = integer(card, 25, 'USER')
+            r01 = double(card, 26, 'R01')
+            hbar = double(card, 27, 'HBAR')
+            dmax = double(card, 28, 'DMAX')
+            ds = double_or_blank(card, 29, 'DS')
+            gic = double(card, 30, 'GIC')
+            giic = double(card, 31, 'GIIC')
+            giiic = double(card, 32, 'GIIIC')
+
+            plyuni = None
+            tid = None
+            pe = None
+
+        return MATDMG(mid, ppf_model,
+                      y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
+                      b2, b3, a, litk, bigk, expn, tau, adel,
+                      plyuni, tid, hbar, dmax, pe,
+                      user, r01, ds, gic, giic, giiic,
+                      comment=comment)
+
+    def raw_fields(self):
+
+        if self.ppf_model == "UD":
+            list_fields = ['MATDMG', self.mid, self.ppf_model, None, None, None, None, None, None,
+                           self.y012, self.yc12, self.ys12, self.ys22, self.y11limt, self.y11limc, self.ksit, self.ksic,
+                           self.b2, self.b3, self.a, self.litk, self.bigk, self.expn, self.tau, self.adel,
+                           self.plyuni, self.tid, self.hbar, self.dmax, self.pe,
+                           self.user, self.r01, self.ds, self.gic, self.giic, self.giiic]
+        else:
+            list_fields = ['MATDMG', self.mid, self.ppf_model, None, None, None, None, None, None,
+                           self.y012, self.yc12, self.ys12, self.ys22, self.y11limt, self.y11limc, self.ksit, self.ksic,
+                           self.b2, self.b3, self.a, self.litk, self.bigk, self.expn, self.tau, self.adel,
+                           self.user, self.r01, self.hbar, self.dmax, self.ds,
+                           self.gic, self.giic, self.giiic]
+
+        return list_fields
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
+
+        """
+        return self.raw_fields()
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class MATT1(MaterialDependenceThermal):
     """
