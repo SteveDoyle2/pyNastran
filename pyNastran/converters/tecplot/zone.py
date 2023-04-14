@@ -1,12 +1,13 @@
 from __future__ import annotations
+import copy
 from collections import defaultdict
 from typing import TextIO, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.nptyping_interface import NDArrayN3float, NDArrayN3int, NDArrayN4int
 
-if TYPE_CHECKING:  # pragma: no cover
-    from cpylog import SimpleLogger
+#if TYPE_CHECKING:  # pragma: no cover
+from cpylog import SimpleLogger
 
 class CaseInsensitiveDict(dict):
     def __contains__(self, key: str) -> bool:
@@ -32,13 +33,76 @@ class Zone:
         self.hexa_elements = np.array([], dtype='int32')
         self.quad_elements = np.array([], dtype='int32')
         self.tri_elements = np.array([], dtype='int32')
-        self.variables = []
+
+        # TODO: does or does not consider xyz?
+        self.variables: list[str] = []
 
         # VARLOCATION=([3-7,10]=CELLCENTERED, [11-12]=CELLCENTERED)
         # default=NODAL
         self.nodal_results = np.array([], dtype='float32')
         self.A = None
         #self.centroidal_results = np.array([], dtype='float32')
+
+    @classmethod
+    def set_zone_from_360(self,
+                          log: SimpleLogger,
+                          header_dict,
+                          variables: list[str],
+                          name: str,
+                          xy=None,
+                          xyz=None,
+                          tris=None,
+                          quads=None,
+                          tets=None,
+                          hexas=None,
+                          nodal_results=None):
+        assert isinstance(log, SimpleLogger), log
+        assert isinstance(header_dict, dict), header_dict
+        assert isinstance(variables, list), variables
+        assert isinstance(name, str), name
+        for variable in variables:
+            assert isinstance(variable, str), variable
+        variables = copy.deepcopy(variables)
+        zone = Zone(log)
+        zone.name = name
+        if xy is not None:
+            zone.xy = xy
+        if xyz is not None:
+            zone.xyz = xyz
+
+        if tris is not None:
+            zone.tri_elements = tris
+        if quads is not None:
+            zone.quad_elements = quads
+
+        if tets is not None:
+            zone.tet_elements = tets
+        if hexas is not None:
+            zone.hexa_elements = hexas
+
+        if nodal_results is not None:
+            if all(var in variables for var in ['rho', 'u', 'v', 'w']):
+                nnodes = nodal_results.shape[0]
+                irho = variables.index('rho')
+                iu = variables.index('u')
+                iv = variables.index('v')
+                iw = variables.index('w')
+
+                rho = nodal_results[:, irho]
+                uvw = nodal_results[:, [iu, iv, iw]]
+                uvw_mag = np.linalg.norm(uvw, axis=1)
+                rho_uvw_mag = (rho * uvw_mag).reshape((nnodes, 1))
+                rho_uvw = np.abs(rho[:, np.newaxis] * uvw)
+                nodal_results = np.hstack([nodal_results, rho_uvw, rho_uvw_mag])
+                variables.extend(['rhoU', 'rhoV', 'rhoW', 'rhoUVW'])
+            zone.nodal_results = nodal_results
+            header_dict['variables'] = variables
+
+        zone.headers_dict = header_dict
+        zone.variables = variables
+
+        print(str(zone))
+        return zone
 
     @property
     def nnodes(self) -> int:

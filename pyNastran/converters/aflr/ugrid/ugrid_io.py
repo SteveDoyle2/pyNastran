@@ -7,6 +7,7 @@ from numpy import amax, amin, arange, ones, zeros, where, unique
 import vtk
 #from vtk import vtkTriangle, vtkQuad
 
+from cpylog import SimpleLogger
 from pyNastran.converters.aflr.surf.surf_reader import TagReader
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
@@ -15,7 +16,6 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
 from pyNastran.gui.qt_files.colors import RED_FLOAT
-
 
 class UGRID_IO:
     def __init__(self, gui):
@@ -444,10 +444,10 @@ class UGRID_IO:
         results_form = []
         if len(results_form):
             form.append(('Results', None, results_form))
-        self.gui.log.info(form)
+        self.gui.log.info(str(form))
         return form, cases, nids, eids
 
-def get_ugrid_model(ugrid_filename, read_solids, log):
+def get_ugrid_model(ugrid_filename: str, read_solids: bool, log: SimpleLogger):
     """helper method for UGRID_IO"""
     if read_solids or is_binary_file(ugrid_filename):
         model = UGRID(log=log, debug=True, read_solids=read_solids)
