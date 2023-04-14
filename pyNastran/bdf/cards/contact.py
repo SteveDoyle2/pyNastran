@@ -1792,10 +1792,10 @@ class BGSET(BaseCard):
             tids.append(integer(card, i + 1, 'tid%s' % j))
             sdists.append(double_or_blank(card, i + 2, 'fric%s' % j, 0.0))
             #if sol == 101:
-            exts.append(double_or_blank(card, i + 3, 'mind%s' % j, 0.0))
+            exts.append(double_or_blank(card, i + 4, 'mind%s' % j, 0.0))
             #else:
                 #exts.append(None)
-            i += 8
+            i += 10
             j += 1
         return BGSET(glue_id, sids, tids, sdists, exts,
                      comment=comment, sol=sol)
