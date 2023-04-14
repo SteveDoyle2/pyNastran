@@ -498,6 +498,7 @@ class BDFAttributes:
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
         self.coords = {0 : coord}   # type: dict[int, Any]
+        self.MATCID = {}
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
@@ -947,6 +948,7 @@ class BDFAttributes:
             'coords' : ['CORD1R', 'CORD1C', 'CORD1S',
                         'CORD2R', 'CORD2C', 'CORD2S',
                         'GMCORD', 'ACOORD', 'CORD3G'],
+            'matcid': ['MATCID'],
 
             # temperature cards
             'tempds' : ['TEMPD'],

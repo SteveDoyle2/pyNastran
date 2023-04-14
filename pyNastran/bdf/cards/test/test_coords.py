@@ -1019,7 +1019,7 @@ class TestCoords(unittest.TestCase):
             cids)
         make_monpnt1s_from_cids(model, nids, cids, cid_to_inids)
         #model.write_bdf('spike.bdf')
-
+        
 def make_tri(model):
     model.add_grid(1, [0., 0., 0.])
     model.add_grid(3, [0., 0., 1.])
