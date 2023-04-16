@@ -49,6 +49,8 @@ class Zone:
                           header_dict,
                           variables: list[str],
                           name: str,
+                          zone_type: str,
+                          data_packing: str,
                           xy=None,
                           xyz=None,
                           tris=None,
@@ -60,6 +62,10 @@ class Zone:
         assert isinstance(header_dict, dict), header_dict
         assert isinstance(variables, list), variables
         assert isinstance(name, str), name
+        assert isinstance(zone_type, str), zone_type
+        assert isinstance(data_packing, str), data_packing
+        assert zone_type in {'FEQUADRILATERAL', 'FEBRICK'}, zone_type
+        assert data_packing in {'POINT', 'BLOCK'}, data_packing
         for variable in variables:
             assert isinstance(variable, str), variable
         variables = copy.deepcopy(variables)
@@ -83,13 +89,24 @@ class Zone:
         if nodal_results is not None:
             if all(var in variables for var in ['rho', 'u', 'v', 'w']):
                 nnodes = nodal_results.shape[0]
-                irho = variables.index('rho')
-                iu = variables.index('u')
-                iv = variables.index('v')
-                iw = variables.index('w')
+                if len(variables) == nodal_results.shape[1]:
+                    irho = variables.index('rho')
+                    iu = variables.index('u')
+                    iv = variables.index('v')
+                    iw = variables.index('w')
+                else:
+                    irho = variables.index('rho') - 3
+                    iu = variables.index('u') - 3
+                    iv = variables.index('v') - 3
+                    iw = variables.index('w') - 3
 
-                rho = nodal_results[:, irho]
-                uvw = nodal_results[:, [iu, iv, iw]]
+                try:
+                    rho = nodal_results[:, irho]
+                    uvw = nodal_results[:, [iu, iv, iw]]
+                except IndexError:
+                    print(nodal_results.shape)
+                    print(irho, iu, iv, iw)
+                    raise
                 uvw_mag = np.linalg.norm(uvw, axis=1)
                 rho_uvw_mag = (rho * uvw_mag).reshape((nnodes, 1))
                 rho_uvw = np.abs(rho[:, np.newaxis] * uvw)
@@ -98,10 +115,12 @@ class Zone:
             zone.nodal_results = nodal_results
             header_dict['variables'] = variables
 
-        zone.headers_dict = header_dict
+        zone.headers_dict = copy.copy(header_dict)
+        zone.headers_dict['datapacking'] = data_packing
+        zone.headers_dict['zonetype'] = zone_type
         zone.variables = variables
 
-        print(str(zone))
+        #print(str(zone))
         return zone
 
     @property
@@ -140,6 +159,23 @@ class Zone:
     @title.setter
     def title(self, title: str) -> None:
         self.headers_dict['TITLE'] = title
+
+    @property
+    def is_point(self) -> bool:
+        if 'F' in self.headers_dict:
+            raise RuntimeError(self.headers_dict)
+        if 'DATAPACKING' not in self.headers_dict:
+            return True
+        is_point = (self.headers_dict['DATAPACKING'] == 'POINT')
+        is_block = (self.headers_dict['DATAPACKING'] == 'BLOCK')
+        assert is_point or is_block
+        return is_point
+
+    @property
+    def is_block(self) -> bool:
+        return not self.is_point
+
+
     @property
     def datapacking(self) -> Optional[str]:
         """'POINT', 'BLOCK'"""
@@ -261,7 +297,7 @@ class Zone:
             ('CTRIA3', self.tri_elements),
             ('CQUAD4', self.quad_elements),
         ]
-        is_points = True
+        is_point = self.is_point
         is_tets = False
         is_hexas = False
         is_tris = False
@@ -304,7 +340,7 @@ class Zone:
             is_structured = True
         else:  # pragma: no cover
             raise RuntimeError('is this structured or unstructured?')
-        return is_structured, is_unstructured, is_points, zone_type, is_tris, is_quads, is_tets, is_hexas
+        return is_structured, is_unstructured, is_point, zone_type, is_tris, is_quads, is_tets, is_hexas
 
     def _write_elements(self, tecplot_file: TextIO, nnodes: int,
                         is_tris: bool, is_quads: bool, is_tets: bool, is_hexas: bool,
@@ -347,7 +383,8 @@ class Zone:
         for element in elements:
             tecplot_file.write(efmt % tuple(element))
 
-    def _write_xyz_results(self, tecplot_file: TextIO, is_points: bool,
+    def _write_xyz_results(self, tecplot_file: TextIO,
+                           is_points: bool,
                            ivars: list[int]) -> None:
         """writes XY/XYZs and results in POINT or BLOCK format"""
         # xyz
@@ -498,8 +535,11 @@ def is_3d(headers_dict: dict[str, Any]) -> bool:
     is_3d = 'Z' in variables or 'z' in variables
     return is_3d
 
-def _write_xyz_results_point(tecplot_file: TextIO, nodes, nodal_results,
-                             nresults: int, ivars,
+def _write_xyz_results_point(tecplot_file: TextIO,
+                             nodes: np.ndarray,
+                             nodal_results: np.ndarray,
+                             nresults: int,
+                             ivars: np.ndarray,
                              ndim: int=3, word: str='xyz') -> None:
     """writes a POINT formatted result of X,Y,Z,res1,res2 output"""
     if nresults:
@@ -528,7 +568,7 @@ def _write_xyz_results_point(tecplot_file: TextIO, nodes, nodal_results,
     np.savetxt(tecplot_file, data, fmt=fmt)
 
 def _write_xyz_results_block(tecplot_file: TextIO, nodes: NDArrayN3float,
-                             nodal_results, nresults: int, ivars: list[int],
+                             nodal_results: np.ndarray, nresults: int, ivars: list[int],
                              ndim: int=3, word: str='xyz') -> None:
     """TODO: hasn't been tested for 2d?"""
     #nvalues_per_line = 5
@@ -546,6 +586,8 @@ def _write_xyz_results_block(tecplot_file: TextIO, nodes: NDArrayN3float,
     if nresults:
         #print('nnodes_per_element =', nnodes_per_element)
         # for ivar in range(nnodes_per_element):
+        if len(ivars) > nodal_results.shape[1]:
+            ivars = ivars[ndim:]
         for ivar in ivars:
             #tecplot_file.write('# ivar=%i\n' % ivar)
             vals = nodal_results[:, ivar].ravel()
