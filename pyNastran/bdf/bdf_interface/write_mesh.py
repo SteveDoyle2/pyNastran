@@ -600,11 +600,12 @@ class WriteMesh(BDFAttributes):
 
         if len(self.MATCID):
             bdf_file.write('$MATCID\n')
-        for (cid, matcid) in sorted(self.MATCID.items()):
-            try:
-                bdf_file.write(matcid.write_card(size, is_double))
-            except RuntimeError:
-                bdf_file.write(matcid.write_card_16(is_double))
+        for (cid, matcids) in sorted(self.MATCID.items()):
+            for matcid in matcids:
+                try:
+                    bdf_file.write(matcid.write_card(size, is_double))
+                except RuntimeError:
+                    bdf_file.write(matcid.write_card_16(is_double))
 
     def _write_dmigs(self, bdf_file: Any, size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:

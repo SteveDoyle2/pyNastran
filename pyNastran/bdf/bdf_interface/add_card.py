@@ -880,11 +880,9 @@ class AddCards:
         self._add_methods._add_point_object(point)
         return point
 
-    def add_matcid(self, cid: int,
-                   eids,
-                   all_eids: bool,
-                   thru: Optional[int],
-                   by: Optional[int],
+    def add_matcid(self, cid: int, form: int,
+                   eids = None,
+                   start: Optional[int] = None, thru: Optional[int] = None, by: Optional[int] = None,
                    comment: str='') -> MATCID:
         """
         Creates the MATCID card, which defines the Material Coordinate System for Solid Elements
@@ -901,10 +899,12 @@ class AddCards:
         ----------
         cid : int
             coordinate system id
+        form: int
+            integer indicating the format alternative (for reference, see the 4 different formats below)
         eids : array[int, ...]
             Array of element identification numbers
-        all_eids : bool
-            True if MATCID points to "ALL" EIDs in format alternative 4
+        start: int
+            used in format alternative 2 and 3, indicates starting eID
         thru : int
             used in format alternative 2 and 3
         by : int

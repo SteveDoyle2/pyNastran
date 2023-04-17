@@ -862,19 +862,16 @@ class AddMethods:
             self.model.coords[key] = coord
             self.model._type_to_id_map[coord.type].append(key)
 
-    def _add_matcid_object(self, matcid: Union[MATCID],
-                          allow_overwrites: bool=False) -> None:
+    def _add_matcid_object(self, matcid: Union[MATCID]) -> None:
         """adds a MATCID object"""
         key = matcid.cid
         assert matcid.cid > -1, 'cid=%s coord=\n%s' % (key, matcid)
 
-        # Multiple MATCIDs can share the same CID.
-        # Combine their eids together in a single MATCID
+        # Multiple MATCIDs can share the same CID
         if key in self.model.MATCID:
-            self.model.MATCID[key].combine_eids(matcid)
-
+            self.model.MATCID[key].append(matcid)
         else:
-            self.model.MATCID[key] = matcid
+            self.model.MATCID[key] = [matcid]
             self.model._type_to_id_map[matcid.type].append(key)
 
     def _add_load_combination_object(self, load: Union[LOAD, CLOAD]) -> None:

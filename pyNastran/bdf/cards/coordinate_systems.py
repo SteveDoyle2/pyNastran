@@ -1259,16 +1259,48 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
     return coord
 
 
-class MATCID():
+class MATCID:
     """
-    TODO: Explanation
+    Initializes the MATCID card
+
+    Format (alternative 1):
+        +--------+-------+--------+-------+-------+------+------+------+------+
+        |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+        +========+=======+========+=======+=======+======+======+======+======+
+        | MATCID |  CID  | EID1   | EID2  | EID3  | EID4 | EID5 | EID6 | EID7 |
+        +--------+-------+--------+-------+-------+------+------+------+------+
+        |        | EID8  | EID9   | -etc- |       |      |      |      |      |
+        +--------+-------+--------+-------+-------+------+------+------+------+
+
+    Format (alternative 2):
+        +--------+-------+--------+--------+------+------+------+------+------+
+        |   1    |   2   |    3   |   4    |  5   |  6   |  7   |   8  |  9   |
+        +========+=======+========+========+======+======+======+======+======+
+        | MATCID |  CID  | EID1   | "THRU" | EID2 |      |      |      |      |
+        +--------+-------+--------+--------+------+------+------+------+------+
+
+    Format (alternative 3):
+        +--------+-------+--------+--------+-------+------+------+------+------+
+        |   1    |   2   |    3   |  4    |  5    |  6   |   7   |   8  |  9   |
+        +========+=======+========+========+=======+======+======+======+======+
+        | MATCID |  CID  | EID1   | "THRU" | EID2  | "BY" |  N   |      |      |
+        +--------+-------+--------+--------+-------+------+------+------+------+
+
+    Format (alternative 4):
+        +--------+-------+--------+-------+-------+------+------+------+------+
+        |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+        +========+=======+========+=======+=======+======+======+======+======+
+        | MATCID |  CID  | "ALL"  |       |       |      |      |      |      |
+        +--------+-------+--------+-------+-------+------+------+------+------+
+
+    .. note :: no type checking
     """
     type = 'MATCID'
     # Type = 'M'
 
-    def __init__(self, cid, eids=None,
-                 all_eids: bool = False,
-                 thru: Optional[int] = None, by: Optional[int] = None,
+    def __init__(self, cid, form: int,
+                 eids=None,
+                 start: Optional[int] = None, thru: Optional[int] = None, by: Optional[int] = None,
                  comment=''):
         """
         Creates the MATCID card, which defines the Material Coordinate System for Solid Elements
@@ -1285,10 +1317,12 @@ class MATCID():
         ----------
         cid : int
             coordinate system id
+        form: int
+            integer indicating the format alternative (for reference, see the 4 different formats below)
         eids : array[int, ...]
             Array of element identification numbers
-        all_eids : bool
-            True if MATCID points to "ALL" EIDs in format alternative 4
+        start: int
+            used in format alternative 2 and 3, indicates starting eID
         thru : int
             used in format alternative 2 and 3
         by : int
@@ -1327,11 +1361,45 @@ class MATCID():
             +--------+-------+--------+-------+-------+------+------+------+------+
         """
         self.cid = cid
-        self.eids = eids
-        self.all_eids = all_eids
-        self.all = all
-        self.thru = thru  # End eid
-        self.by = by  # Skip factor
+        self.form = form
+
+        if form == 1:
+            assert eids is not None, f'cid={cid}'
+            assert start is thru is by is None, f'cid={cid}, start={start}, thru={thru}, by={by}'
+
+            self.eids = eids
+            self.start = self.thru = self.by = None
+
+        elif form == 2:
+            assert eids is by is None, f'cid={cid}, eids={eids}, by={by}'
+            assert type(start) is int, f'cid={cid}, start={start}'
+            assert type(thru) is int, f'cid={cid}, thru={thru}'
+
+            self.start = start
+            self.thru = thru
+
+            self.eids = self.by = None
+
+        elif form == 3:
+            assert eids is None, f'cid={cid}, eids={eids}'
+            assert type(start) is int, f'cid={cid}, start={start}'
+            assert type(thru) is int, f'cid={cid}, thru={thru}'
+            assert type(by) is int, f'cid={cid}, thru={by}'
+
+            self.start = start
+            self.thru = thru
+            self.by = by
+
+            self.eids = None
+
+        elif form == 4:
+            assert eids is start is by is thru is None, f'cid={cid}, eids={eids}, start={start}, thru={thru}, by={by}'
+
+            self.eids = self.start = self.thru = self.by = None
+
+        else:
+            raise RuntimeError(f'Form can only take a value of 1, 2, 3 or 4; form = {form}')
+
         self.comment = comment
 
     @classmethod
@@ -1380,58 +1448,51 @@ class MATCID():
 
         #: coordinate system ID
         cid = integer(card, 1, 'cid')
-        all_eids = False
 
-        data_length = len(card)
+        # first field, either "ALL" or an integer (eID1)
+        field2 = integer_or_string(card, 2, 'field2')
+        if type(field2) is str:
+            assert field2 == 'ALL', f'{field2}'
 
-        if data_length > 3:  # More than 1 eID referenced
+            form = 4
+            return cls(cid, form, None, None, None, None, comment=comment)
+        else:
+            assert field2 > 0, f'{field2}'
 
-            pos3 = integer_or_string(card, 3, 'pos3')
-            if type(pos3) is str:  # THRU
+            n_fields = len(card)
 
-                by = 1
-                if data_length > 5: # BY
+            if n_fields > 3:  # More than 1 eID referenced
+                field3 = integer_or_string(card, 3, 'pos3')
+                if type(field3) is str:  # THRU
+                    assert field3 == 'THRU', f'{field3}'
 
-                    by = integer_or_blank(card, 6, 'skip_factor', 1)
-                    thru = integer(card, 4, 'eid_end')
-                    start_id = integer(card, 2, 'eid_start')
-                    eids = np.arange(start_id, thru+1, by)
-                    return cls(cid, eids, comment=comment)
+                    start = integer(card, 2, 'start')
+                    thru = integer(card, 4, 'thru')
+                    assert thru > start, f'start={start}, thru={thru}'
 
-                thru = integer(card, 4, 'eid_end')
-                start_id = integer(card, 2, 'eid_start')
-                eids = np.arange(start_id, thru + 1, by)
-                return cls(cid, eids, comment=comment)
+                    if n_fields > 5:  # BY
+                        form = 3
+                        by = integer(card, 6, 'by')
 
-            else:
-                eids = np.empty([data_length])
+                        assert by > 0, f'{by}'
 
-                index = 0
-                for i in range(2, data_length+1):
-                    eids[index] = integer(card, i, 'eid')
-                    index += 1
+                        return cls(cid, form, None, start, thru, by, comment=comment)
 
-                return cls(cid, eids, comment=comment)
+                    else:
+                        form = 2
+                        return cls(cid, form, None, start, thru, None, comment=comment)
+                else:  # Multiple eIDs referenced without using THRU / BY
+                    form = 1
+                    eids = np.empty([n_fields - 2])
+                    for i in range(2, n_fields + 1):
+                        eids[i] = integer(card, i, 'eid')
+                    return cls(cid, form, eids, None, None, None, comment=comment)
 
-        else:  # Only 1 eID referenced or "ALL"
-            pos2 = integer_or_string(card, 2, 'pos2')
-            if type(pos2) is str:
-                all_eids = True
-                eids = None
-                return cls(cid, eids, all_eids, comment=comment)
-            else:
-                eids = np.array([integer(card, 2, 'eid1')])
-                return cls(cid, eids, comment=comment)
+            else:  # Single eID referenced
+                form = 1
+                eids = np.array([field2], dtype=int)
 
-    def combine_eids(self, matcid) -> None:
-        """
-        Concatenates the eids of both MATCID cards.
-        """
-
-        assert self.all_eids is False, f"all={self.all_eids}, {self}"
-        assert matcid.all_eids is False, f"all={matcid.all_eids}, {matcid}"
-
-        self.eids = np.concatenate((self.eids, matcid.eids))
+                return cls(cid, form, eids, None, None, None, comment=comment)
 
     def Cid(self) -> int:
         return self.cid
@@ -1455,15 +1516,17 @@ class MATCID():
         return self.raw_fields()
 
     def raw_fields(self):
-        if self.thru is not None:
-            if self.by is not None:
-                return ['MATCID', self.cid, self.eids[0], 'THRU', self.thru, 'BY', self.by]
-            else:
-                return ['MATCID', self.cid, self.eids[0], 'THRU', self.thru]
-        if self.all_eids is True:
+
+        if self.form == 1:
+            return ['MATCID', self.cid] + list(self.eids)
+        elif self.form == 2:
+            return ['MATCID', self.cid, self.start, 'THRU', self.thru]
+        elif self.form == 3:
+            return ['MATCID', self.cid, self.start, 'THRU', self.thru, 'BY', self.by]
+        elif self.form == 4:
             return ['MATCID', self.cid, 'ALL']
         else:
-            return ['MATCID', self.cid] + list(self.eids)
+            raise RuntimeError(f'cid={self.cid}, form={self.form}')
 
     # Not working
     def _verify(self, xref):
