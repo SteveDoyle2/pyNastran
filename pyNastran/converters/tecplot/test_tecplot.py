@@ -32,15 +32,16 @@ class TestTecplot(unittest.TestCase):
         tecplot_filenames = [
             'binary/point_febrick_3d_02.plt',  # works
         ]
-        log = SimpleLogger(level='warning', encoding='utf-8')
-        #junk_plt = os.path.join(MODEL_PATH, 'junk.plt')
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        junk_plt = os.path.join(MODEL_PATH, 'junk.plt')
         for fname in tecplot_filenames:
             tecplot_filename = os.path.join(MODEL_PATH, fname)
             #print(fname)
             log.info('read %r' % fname)
             model = read_tecplot(tecplot_filename, log=log)
             str(model)
-            #model.write_tecplot(junk_plt, res_types=None, adjust_nids=True)
+            model.write_tecplot_binary(junk_plt)
+            read_tecplot(junk_plt, log=log)
         #os.remove(junk_plt)
 
     def test_tecplot_ascii_models(self):

@@ -1,6 +1,7 @@
+# encoding: utf-8
 import os
 import sys
-from struct import Struct, unpack
+from struct import Struct, unpack, pack
 from collections import namedtuple
 from typing import BinaryIO, Optional, Union, Any
 
@@ -12,6 +13,7 @@ from pyNastran.utils import object_attributes, object_methods, object_stats
 from cpylog import get_logger2
 
 ZoneTuple = namedtuple('Zone', ['zone_name',
+                                'strand_id', 'solution_time',
                                 'zone_type', 'zone_type_str',
                                 'data_packing', 'data_packing_str',
                                 'celldim',
@@ -240,6 +242,18 @@ class TecplotBinary(Base):
         self.f.seek(self.n)
         return self._write_data(f, data, types=types)
 
+    def write_tecplot_binary(self, tecplot_filename: str,
+                             version: str='102') -> None:
+        assert version == '102', version
+
+        nvars = len(self.variables)
+        with open(tecplot_filename, 'wb') as tecplot_file:
+            _write_binary_header(self, tecplot_file, version)
+            _write_binary_zone_headers(
+                self, tecplot_file, nvars, version)
+            _write_binary_results(
+                self, tecplot_file, nvars, version)
+
     def read_tecplot_binary(self, tecplot_filename: str,
                             zones_to_exclude: Optional[list[int]]=None) -> None:
         """
@@ -266,14 +280,14 @@ class TecplotBinary(Base):
             #self.show(1000, types='ifdq')
             for izone, zone_tuple in enumerate(zone_tuples):
                 zone_name = zone_tuple.zone_name
-                print(f'-----izone={izone} {zone_name!r}-----')
-                quads, hexas, zone_data = _read_binary_zone(
+                log.info(f'-----izone={izone} {zone_name!r}-----')
+                tris, quads, tets, hexas, zone_data = _read_binary_results(
                     self, file_obj, zone_tuple, nvars, version)
                 if quads is not None:
-                    print(f'quads.min/max = {quads.min()} {quads.max()}')
+                    log.debug(f'quads.min/max = {quads.min()} {quads.max()}')
                     assert quads.min() >= 0, quads.min()
                 xyz = zone_data[:, :3]
-                print(xyz)
+                #print(xyz)
                 assert xyz.shape[1] == 3, xyz.shape
                 nodal_results = zone_data[:, 3:]
                 nresults = zone_data.shape[1] - 3
@@ -283,11 +297,12 @@ class TecplotBinary(Base):
                     zone = Zone.set_zone_from_360(
                         log, header_dict, variables,
                         zone_name,
+                        strand_id=zone_tuple.strand_id,
                         data_packing=zone_tuple.data_packing_str,
                         zone_type=zone_tuple.zone_type_str,
                         xy=None, xyz=xyz,
-                        tris=None, quads=quads,
-                        tets=None, hexas=hexas,
+                        tris=tris, quads=quads,
+                        tets=tets, hexas=hexas,
                         nodal_results=nodal_results)
                     self.zones.append(zone)
                 #assert quads.max() <= 236_064, (zone_name, quads.max())
@@ -303,20 +318,175 @@ class TecplotBinary(Base):
         self.variables = zone.variables
         del self.f
 
-def _read_binary_zone(self: TecplotBinary,
-                      file_obj: BinaryIO,
-                      zone: ZoneTuple,
-                      nvars: int,
-                      version: bytes) -> tuple[np.ndarray,  # xyz
-                                               Optional[np.ndarray], # quads
-                                               Optional[np.ndarray], # hexas
-                                               ]:
+
+def _write_binary_zone_headers(model: TecplotBinary,
+                               tecplot_file: BinaryIO,
+                               nvars: int,
+                               version: bytes) -> None:
+    #end 357.0, 299.0,
+    start_of_zone_flag = pack(b'<f', 299.0)
+    for zone in model.zones:
+        tecplot_file.write(start_of_zone_flag)
+        zone_type = zone.zone_type_int
+
+        if version == '102':
+            data = _write_string(zone.name)
+            tecplot_file.write(data)
+
+            data = pack('<2i', zone.strand_id, zone_type)
+            tecplot_file.write(data)
+
+            data = pack('<3i', 0, 0, 0)
+            tecplot_file.write(data)
+
+            data = pack('<2i', zone.nnodes, zone.nelements)
+            tecplot_file.write(data)
+
+            data = pack('<4i', 0, 0, 0, 0)
+            tecplot_file.write(data)
+
+            #specify_var = 0
+            #data_packing = 0  # BLOCK
+            raw_local = 0
+            solution_time = np.nan
+        elif version == '112':
+            raise RuntimeError(version)
+            assert -2 <= strand_id < 32700, strand_id
+            print(f'  parent_zone={parent_zone} strand_id={strand_id} solution_time={solution_time:g}')
+            print(f'  zone_type={zone_type} data_packing={data_packing} specify_var={specify_var}')
+            data = unpack('<iid 4i', (parent_zone, strand_id, solution_time,
+                 unused_a, zone_type, data_packing, specify_var))
+            tecplot_file.write(data)
+
+            ordered_zone = is_ordered_zone(zone_type)
+            fe_poly = is_fe_poly_zone(zone_type)
+            #specify_var = 1
+            if specify_var:
+                ndatai = 4 * nvars; data = file_obj.read(ndatai); n += ndatai
+                specify_varsi = np.frombuffer(data, dtype='int32')
+
+            print(f'  raw_local={raw_local} n_misc_neighbor_connections={n_misc_neighbor_connections}')
+            assert raw_local in {0, 1}, raw_local
+            assert n_misc_neighbor_connections >= 0, n_misc_neighbor_connections
+            data = unpack('<2i', raw_local, n_misc_neighbor_connections)
+            tecplot_file.write(data)
+
+            # Are raw local 1-to-1 face neighbors supplied?
+            # (0=FALSE 1=TRUE).
+            if is_fe_zone(zone_type):
+                pass
+                #show_ndata(file_obj, 100, types='ifsqd', endian='<')
+            if ordered_zone:
+                raise RuntimeError('ordered zone; p.153')
+            if fe_poly:
+                raise RuntimeError(' FEPOLYGON or FEPOLYHEDRON; p.153')
+
+            print(f'  nelement={nelement} celldim={celldim}')
+            data = unpack('<4i', nelement, *celldim)
+            tecplot_file.write(data)
+
+            data = file_obj.read(4); n += 4
+        else:
+            raise NotImplementedError(version)
+    return
+
+def _write_binary_results(model: TecplotBinary,
+                          tecplot_file: BinaryIO,
+                          nvars: int, version: str) -> None:
+    #elif flag == 357.0:
+    # EOHMARKER (end of header marker)
+
+    assert isinstance(version, str), version
+
+    #end 357.0, 299.0,
+    start_of_results_flag = pack(b'<f', 357.0)
+    start_of_zone_flag = pack(b'<f', 299.0)
+
+    #print('writing 357.0')
+    tecplot_file.write(start_of_results_flag)
+
+    for zone in model.zones:
+        #print('writing 299.0')
+        tecplot_file.write(start_of_zone_flag)
+        zone_type = zone.zone_type_int
+
+        # INT32*N
+        # Variable data format, N=Total number of vars
+        # 1=Float, 2=Double, 3=LongInt,
+        # 4=ShortInt, 5=Byte, 6=Bit
+        results = []
+        dtypes = []
+        #_prep_results_dtypes(results, dtypes, zone.xy)
+        _prep_results_dtypes(results, dtypes, zone.xyz)
+        _prep_results_dtypes(results, dtypes, zone.nodal_results)
+        nnodes = len(results[0])
+
+        data = pack(f'<{nvars}i', *dtypes)
+        tecplot_file.write(data)
+
+        has_passive_vars = 0
+        data = pack(b'<i', has_passive_vars)
+        tecplot_file.write(data)
+
+        connectivity_sharing = -1
+        data = pack(b'<i', connectivity_sharing)
+        tecplot_file.write(data)
+
+        if version != '102': # definitely right
+            # Tecplot 10
+            min_max_data = _get_min_max(results)
+            tecplot_file.write(min_max_data)
+
+        ## Zone Data. Each variable is in data format as
+        ## specified above
+        for result in results:
+            datai = result.tostring()
+            tecplot_file.write(datai)
+
+        if zone_type == 2: # FETRIA
+            elements = zone.tri_elements
+        elif zone_type == 3: # FEQUAD
+            elements = zone.quad_elements
+        elif zone_type == 5:  # FEBRICK
+            elements = zone.hexa_elements
+        else:
+            raise RuntimeError(zone_type)
+        tecplot_file.write(elements.ravel().tostring())
+    return
+
+
+def _prep_results_dtypes(results_list: list[np.ndarray],
+                         dtypes: list[int],
+                         data: np.ndarray,) -> None:
+    if data is None or len(data) == 0:
+        return
+    nvars = data.shape[1]
+    assert nvars >= 1, nvars
+    for i in range(nvars):
+        results_list.append(data[:, i])
+    dtypes += _get_dtypes_from_array(data)
+    assert len(dtypes) > 0
+
+def _read_binary_results(
+        self: TecplotBinary,
+        file_obj: BinaryIO,
+        zone: ZoneTuple,
+        nvars: int,
+        version: bytes) -> tuple[np.ndarray,  # xyz
+                                 Optional[np.ndarray], # tris
+                                 Optional[np.ndarray], # quads
+                                 Optional[np.ndarray], # tets
+                                 Optional[np.ndarray], # hexas
+                                 ]:
     """
     II. DATA SECTION (don’t forget to separate the header from the data
     with an EOHMARKER). The data section contains all of the data
     associated with the zone definitions in the header.
     """
+    log = self.log
+    tris = None
     quads = None
+    tets = None
     hexas = None
     zone_type = zone.zone_type
     data_packing = zone.data_packing
@@ -365,13 +535,13 @@ def _read_binary_zone(self: TecplotBinary,
     #    8 for BRICKS
     #
     #L = 0
-    if zone_type in {3, 4}:
+    #if zone_type in {3, 4}:
         # FEQUADRILATERAL, FETETRAHEDRON
-        L = 4
-    elif zone_type == 5: # BRICKS
-        L = 8
-    else:
-        raise RuntimeError(zone_type)
+        #L = 4
+    #elif zone_type == 5: # BRICKS
+        #L = 8
+    #else:
+        #raise RuntimeError(zone_type)
 
     # :--------------------i. For both ordered and fe zones:--------------------
     # FLOAT32
@@ -379,6 +549,7 @@ def _read_binary_zone(self: TecplotBinary,
     ndata = 4; data = file_obj.read(ndata); self.n += ndata
     marker, = unpack('<f', data)
     assert marker == 299.0, marker
+    log.debug(f'marker = {marker}')
 
     #  INT32*N
     # Variable data format, N=Total number of vars
@@ -388,9 +559,9 @@ def _read_binary_zone(self: TecplotBinary,
     fmt = '<%ii' % nvars
     data_fmt = unpack(fmt, data)
     #assert data_fmt in {0, 1, 2, 3, 4, 5, 6}
-    print(f'data_fmt={data_fmt}')
-    show_ndata(file_obj, 100, types='ifsdq')
-    #aaa
+    log.debug(f'data_fmt={data_fmt}')
+    #show_ndata(file_obj, 100, types='ifsdq')
+
     #if version == b'102':
         ## Tecplot 10
         #has_var_sharing = 0
@@ -440,13 +611,6 @@ def _read_binary_zone(self: TecplotBinary,
     if is_ordered_zone(zone_type):
         raise RuntimeError('is_ordered; p.158')
 
-    # 38913 7087 7094 7094
-    #for i in range(5000):
-        #data = file_obj.read(2000*4)
-        #ints = np.frombuffer(data, dtype='int32')
-        #print(i, ints.min(), ints.max())
-        #self.show_data(data, types='i')
-
     if is_fe_zone(zone_type):
         if connectivity_sharing != -1:
             raise RuntimeError('is_fe_zone; p.158')
@@ -477,21 +641,31 @@ def _read_binary_zone(self: TecplotBinary,
         assert file_obj.tell() == self.n
         #find_ints(file_obj, self.n)
 
-        if zone_type == 3: # FEQUAD
+        if zone_type == 2: # FETRIANGLE
+            nints = 3 * nelement
+            tris, ndatai = _load_binary_data(file_obj, nints, data_fmt='int32')
+            tris = tris.reshape(nelement, 3)
+        elif zone_type == 3: # FEQUADRILATERAL
             nints = 4 * nelement
             quads, ndatai = _load_binary_data(file_obj, nints, data_fmt='int32')
             quads = quads.reshape(nelement, 4)
+        elif zone_type == 4:  # FETETRAHEDRON
+            nints = 4 * nelement
+            tets, ndatai = _load_binary_data(file_obj, nints, data_fmt='int32')
+            tets = tets.reshape(nelement, 4)
         elif zone_type == 5:  # FEBRICK
             nints = 8 * nelement
             hexas, ndatai = _load_binary_data(file_obj, nints, data_fmt='int32')
             hexas = hexas.reshape(nelement, 8)
+        else:
+            raise RuntimeError(zone_type)
         self.n += ndatai
 
     #self.show(10000, types='ifd')
     #self.show(10000, types='if')
 
     del fe_poly
-    return quads, hexas, zone_data
+    return tris, quads, tets, hexas, zone_data
     # :--------------------ii. specific to ordered zones:--------------------
     if is_ordered_zone(zone_type):
         raise RuntimeError('is_ordered; p.158')
@@ -636,32 +810,54 @@ def _data_fmt_to_list(data_fmt: Union[str, int, list[int]]) -> list[int]:
         data_fmts = data_fmt
     return data_fmts
 
-def _read_binary_zones(self, file_obj: BinaryIO,
-                       n: int, nvars: int,
-                       version: bytes) -> [int, list[ZoneTuple]]:
+def _get_dtypes_from_array(data: np.ndarray) -> list[int]:
+    """
+     INT32*N
+    Variable data format, N=Total number of vars
+    1=Float, 2=Double, 3=LongInt,
+    4=ShortInt, 5=Byte, 6=Bit
+    """
+    assert len(data.shape) == 2, data.shape
+    dtype = data.dtype.name
+    nvars = data.shape[1]
+    if dtype == 'float32':
+        dtypes = [1] * nvars
+    elif dtype == 'float64':
+        dtypes = [1] * nvars
+    else:
+        raise RuntimeError(dtype)
+    return dtypes
+
+def _read_binary_zone_headers(
+        self,
+        file_obj: BinaryIO,
+        n: int, nvars: int,
+        version: bytes) -> [int, list[ZoneTuple]]:
     """TODO: has an artificial cap of 1000 zones"""
     zones = []
     izone = -1
+    log = self.log
     while izone < 1000:
         izone += 1
+        #self.n = n; self.show_ndata(120, types='ifs')
         data = file_obj.read(4); n += 4
         assert n == file_obj.tell()
         zone_marker = unpack('<f', data)[0]
         if zone_marker != 299.0:
-            print('end of zones!', zone_marker)
+            log.debug('end of zones! %s' % zone_marker)
             #self.n = n; self.show(1000, types='ifs')
             n -= 4
             file_obj.seek(n)
             break
         else:
-            print('new zone', zone_marker)
+            log.debug('new zone %s' % zone_marker)
         assert zone_marker == 299.0, zone_marker
         assert n == file_obj.tell()
         #self.n = n; show(file_obj, 100, types='ifsd')
         # Zone name.
         # N = (length of zone name) + 1.
         zone_name, n = _read_string(file_obj, n)
-        print(f'zone_name = {zone_name!r}')
+        log.debug(f'zone_name = {zone_name!r}')
         assert n == file_obj.tell()
         #self.n = n; show(file_obj, 80, types='ifsd')
 
@@ -698,14 +894,14 @@ def _read_binary_zones(self, file_obj: BinaryIO,
         if version == b'102':
             # per 2008 data format guide
             # BLOCK
-            # ints    = (-1, 5, 0, 0, 0, 125, 64, 0, 0, 0, 0, 1135771648, 1133871104)
+            # ints   = (-1, 5, 0, 0, 0, 125, 64, 0, 0, 0, 0, 1135771648, 1133871104)
             #chrs    = [-1, 5, 0, 0, 0, '}', '@', 0, 0, 0, 0, 1135771648, 1133871104]
             #floats  = (nan, 7.006492321624085e-45, 0.0, 0.0, 0.0, 1.7516230804060213e-43, 8.96831017167883e-44, 0.0, 0.0, 0.0, 0.0, 357.0, 299.0)
 
             #
             #ints    = (-1, 5, 0, 0, 0, 125, 64, 0, 0, 0, 0, 1135771648, 1133871104, 1, 1, 1, 1, 0, -1, 0)
             #dn = 80; data = file_obj.read(dn); n += dn
-            show_ndata(file_obj, 52, types='ifqd', endian='<')
+            #show_ndata(file_obj, 52, types='ifqd', endian='<')
             #show_data(data[4:], types='qd', endian='<')
 
             #-1, 5, 0, 0, 0, 125, 64, 0, 0, 0, 0,
@@ -714,23 +910,27 @@ def _read_binary_zones(self, file_obj: BinaryIO,
             strand_id, zone_type = unpack('<2i', data)
             assert strand_id == -1, strand_id # ???
             assert zone_type in {0, 1, 2, 3, 4, 5, 6, 7}, zone_type
+            log.debug(f'strand_id={strand_id} zone_type={zone_type}')
 
             data = file_obj.read(12); n += 12
             a, b, c = unpack('<3i', data)
             assert (a, b, c) == (0, 0, 0), (a, b, c) # POINT_FEBRICK_3D_02.plt
+            log.debug('abc = (0, 0, 0)')
 
             data = file_obj.read(8); n += 8
             nnodes, nelement = unpack('<2i', data)
+            log.debug(f'nnodes={nnodes} nelement={nelement}')
 
             data = file_obj.read(16); n += 16
             a, b, c, d = unpack('<4i', data)
             assert (a, b, c, d) == (0, 0, 0, 0), (a, b, c, d) # POINT_FEBRICK_3D_02.plt
-            #show(file_obj, 24, types='ifqd')
+            #show(file_obj, 24, types='if')
+            log.debug('abcd = (0, 0, 0, 0)')
 
             # POINT_FEBRICK_3D_02.plt
             assert zone_type == 5, zone_type # POINT_FEBRICK_3D_02.plt
-            assert nnodes == 125, nnodes
-            assert nelement == 64, nelement
+            #assert nnodes == 125, nnodes
+            #assert nelement == 64, nelement
             celldim = nnodes
             n_misc_neighbor_connections = nnodes
 
@@ -768,7 +968,7 @@ def _read_binary_zones(self, file_obj: BinaryIO,
             # Are raw local 1-to-1 face neighbors supplied?
             # (0=FALSE 1=TRUE).
             if is_fe_zone(zone_type):
-                show_ndata(file_obj, 100, types='ifsqd', endian='<')
+                show_ndata(file_obj, 100, types='ifs', endian='<')
             if ordered_zone:
                 raise RuntimeError('ordered zone; p.153')
             if fe_poly:
@@ -795,27 +995,38 @@ def _read_binary_zones(self, file_obj: BinaryIO,
         # 1 = Point
         data_packing_str = 'BLOCK' if data_packing == 0 else 'POINT'
 
-        if zone_type == 3:
-            zone_type_str = 'FEQUADRILATERAL'
-        elif zone_type == 5:
-            zone_type_str = 'FEBRICK'
-        else:
-            raise NotImplementedError(zone_type)
+        zone_type_str = zone_type_int_to_str(zone_type)
 
-        zone = ZoneTuple(zone_name=zone_name,
-                         celldim=celldim,
-                         zone_type=zone_type,
-                         zone_type_str=zone_type_str,
-                         data_packing=data_packing,
-                         data_packing_str=data_packing_str,
-                         raw_local=raw_local,
-                         n_misc_neighbor_connections=n_misc_neighbor_connections,
-                         nelement=nelement)
+        zone = ZoneTuple(
+            zone_name=zone_name,
+            strand_id=strand_id,
+            solution_time=solution_time,
+            zone_type=zone_type,
+            zone_type_str=zone_type_str,
+            data_packing=data_packing,
+            data_packing_str=data_packing_str,
+            raw_local=raw_local,
+            n_misc_neighbor_connections=n_misc_neighbor_connections,
+            celldim=celldim,
+            nelement=nelement)
         zones.append(zone)
 
         # ----------------------------------------------
         #print()
     return n, zones
+
+def zone_type_int_to_str(zone_type: int) -> str:
+    if zone_type == 2:
+        zone_type_str = 'FETRIANGLE'
+    if zone_type == 3:
+        zone_type_str = 'FEQUADRILATERAL'
+    elif zone_type == 4:
+        zone_type_str = 'FETETRAHEDRON'
+    elif zone_type == 5:
+        zone_type_str = 'FEBRICK'
+    else:
+        raise NotImplementedError(zone_type)
+    return zone_type_str
 
 def is_ordered_zone(zone_type: int) -> bool:
     """
@@ -859,6 +1070,46 @@ def is_fe_zone(zone_type: int) -> bool:
     fe_poly = (zone_type in {1, 2, 3, 4, 5, 6, 7})
     return fe_poly
 
+def _write_string(title: str) -> bytes:
+    """we convert to an A to 65 using the ascii system"""
+    ints = []
+
+    # verify we're in ascii, so we don't get ord bugs
+    title_bytes = title.encode('ascii')
+
+    for char in title:
+        ints.append(ord(char))
+    ints.append(0)  # end of string flag
+    nchars = len(ints)
+
+    data = pack(f'<{nchars}i', *ints)
+    #print(f'string_ints = {title} {ints}')
+    return data
+
+def _write_binary_header(model: TecplotBinary,
+                         teplot_file: BinaryIO,
+                         version: str) -> None:
+    # write header
+    assert version == '102', version
+    version_bytes = version.encode('ascii')
+    version_marker = b'#!TDV' + version_bytes
+    assert version_marker in {b'#!TDV102', b'#!TDV111', b'#!TDV112', }, version_marker
+
+    byte_order = 1 # little endian
+    data = pack('<8si', version_marker, byte_order)
+    teplot_file.write(data)
+    teplot_file.write(_write_string(model.title))
+
+    #header_dict['title'] = title
+    #header_dict['variables'] = var_names
+
+    nvars = len(model.variables)
+    data = pack(b'<i', nvars)
+    teplot_file.write(data)
+    assert len(model.variables) > 0
+    for var in model.variables:
+        teplot_file.write(_write_string(var))
+
 def _read_binary_header(model: TecplotBinary,
                         file_obj: BinaryIO) -> tuple[bytes, CaseInsensitiveDict,
                                                      str, str,
@@ -872,6 +1123,7 @@ def _read_binary_header(model: TecplotBinary,
     definitions.
     """
     self = model
+    log = self.log
     data = file_obj.read(8); self.n += 8
 
     # i. Magic number, Version number
@@ -884,7 +1136,7 @@ def _read_binary_header(model: TecplotBinary,
 
     version = version_marker[5:]
     assert version in {b'102', b'112'}, version
-    print(f'version = {version!r}')
+    log.info(f'version = {version!r}')
 
     # ii. Integer value of 1.
     data = file_obj.read(4); self.n += 4
@@ -909,7 +1161,7 @@ def _read_binary_header(model: TecplotBinary,
         raise NotImplementedError(file_type_int)
 
     title, n = _read_string(file_obj, self.n)
-    print(title)
+    log.info(f'title = {title!r}')
     self.n = n
 
     # Number of variables (NumVar) in the datafile.
@@ -927,19 +1179,21 @@ def _read_binary_header(model: TecplotBinary,
         var_name, n = _read_string(file_obj, self.n)
         self.n = n
         var_names.append(var_name)
-    print('var_names = ', var_names)
+    log.info('var_names = %s' % var_names)
     assert self.n == self.f.tell()
 
     #------------------------------------------
     # iv. Zones
     #Zone marker. Value = 299.0
-    n, zones = _read_binary_zones(self, self.f, self.n, nvars, version)
+    n, zones = _read_binary_zone_headers(
+        self, self.f, self.n, nvars, version)
     self.n = n
 
     data = file_obj.read(4); self.n += 4
     flag = unpack('f', data)[0]
 
     if flag == 299.0:
+        raise RuntimeError('geometry')
         # geometry
         y = 1
         # INT32
@@ -1000,11 +1254,22 @@ def _read_binary_header(model: TecplotBinary,
         # EOHMARKER (end of header marker)
         pass
     else:
+        self.show_ndata(100, types='if')
         raise RuntimeError(flag)
+
     header_dict = CaseInsensitiveDict()
     header_dict['title'] = title
     header_dict['variables'] = var_names
     return version, header_dict, title, file_type, var_names, zones
+
+
+def _get_min_max(results: list[np.ndarray]) -> list[np.ndarray]:
+    min_max = []
+    for result in results:
+        mini = result.min()
+        maxi = result.max()
+        min_max.append(np.array([mini, maxi]))
+    return min_max
 
 def _read_binary_min_max(file_obj: BinaryIO, nvars: int) -> tuple[np.ndarray, int]:
     """

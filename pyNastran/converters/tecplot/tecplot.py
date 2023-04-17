@@ -684,9 +684,13 @@ class Tecplot(TecplotBinary):
             1-based in ASCII
 
         """
+        self.write_tecplot_ascii(tecplot_filename, res_types, adjust_nids)
+
+    def write_tecplot_ascii(self, tecplot_filename: str,
+                            res_types: list[str]=None,
+                            adjust_nids: bool=True) -> None:
         self.log.info('writing tecplot %s' % tecplot_filename)
         msg, ivars = self._get_write_header(res_types)
-
         with open(tecplot_filename, 'w') as tecplot_file:
             tecplot_file.write(msg)
             for zone in self.zones:

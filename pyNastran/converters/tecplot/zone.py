@@ -51,6 +51,7 @@ class Zone:
                           name: str,
                           zone_type: str,
                           data_packing: str,
+                          strand_id: int,
                           xy=None,
                           xyz=None,
                           tris=None,
@@ -71,6 +72,7 @@ class Zone:
         variables = copy.deepcopy(variables)
         zone = Zone(log)
         zone.name = name
+        zone.strand_id = strand_id
         if xy is not None:
             zone.xy = xy
         if xyz is not None:
@@ -175,7 +177,6 @@ class Zone:
     def is_block(self) -> bool:
         return not self.is_point
 
-
     @property
     def datapacking(self) -> Optional[str]:
         """'POINT', 'BLOCK'"""
@@ -183,6 +184,32 @@ class Zone:
             return self.headers_dict['DATAPACKING']
         except KeyError:
             return None
+
+    @property
+    def zone_type_int(self) -> int:
+        """
+        0=ORDERED
+        1=FELINESEG
+        2=FETRIANGLE
+        3=FEQUADRILATERAL
+        4=FETETRAHEDRON
+        5=FEBRICK
+        6=FEPOLYGON
+        7=FEPOLYHEDRON
+        """
+        zonetype = self.headers_dict['ZONETYPE']
+        if zonetype == 'FETRIANGLE':
+            zone_type_int = 2
+        elif zonetype == 'FEQUADRILATERAL':
+            zone_type_int = 3
+        elif zonetype == 'FETETRAHEDRON':
+            zone_type_int = 4
+        elif zonetype == 'FEBRICK':
+            zone_type_int = 5
+        else:
+            raise RuntimeError(zonetype)
+        return zone_type_int
+
     @property
     def zonetype(self) -> Optional[str]:
         """FEBrick,  FETETRAHEDRON,  FETRIANGLE,  FEQUADRILATERAL"""
@@ -277,7 +304,7 @@ class Zone:
         is_unstructured : bool
            is this an unstructured grid
         is_points : bool
-           ???
+           is the zone in POINT/BLOCK format
         zone_type : str / None
            str : FEBrick,  FETETRAHEDRON,  FETRIANGLE,  FEQUADRILATERAL
            None : ???
@@ -292,10 +319,10 @@ class Zone:
 
         """
         etype_elements = [
-            ('CHEXA', self.hexa_elements),
-            ('CTETRA', self.tet_elements),
-            ('CTRIA3', self.tri_elements),
-            ('CQUAD4', self.quad_elements),
+            ('HEXA', self.hexa_elements),
+            ('TETRA', self.tet_elements),
+            ('TRIA3', self.tri_elements),
+            ('QUAD4', self.quad_elements),
         ]
         is_point = self.is_point
         is_tets = False
@@ -309,22 +336,22 @@ class Zone:
         for etype, elements in etype_elements:
             if not len(elements):
                 continue
-            if etype == 'CHEXA' and len(elements):
+            if etype == 'HEXA' and len(elements):
                 # is_points = False
                 is_hexas = True
                 #nnodes_per_element = 8
                 zone_type = 'FEBrick'
-            elif etype == 'CTETRA' and len(elements):
+            elif etype == 'TETRA' and len(elements):
                 # is_points = False
                 is_tets = True
                 #nnodes_per_element = 4
                 zone_type = 'FETETRAHEDRON'
-            elif etype == 'CTRIA3' and len(elements):
+            elif etype == 'TRIA3' and len(elements):
                 # is_points = True
                 is_tris = True
                 #nnodes_per_element = 3
                 zone_type = 'FETRIANGLE'
-            elif etype == 'CQUAD4' and len(elements):
+            elif etype == 'QUAD4' and len(elements):
                 # is_points = True
                 is_quads = True
                 #nnodes_per_element = 4
