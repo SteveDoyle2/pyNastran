@@ -1483,9 +1483,9 @@ class MATCID:
                         return cls(cid, form, None, start, thru, None, comment=comment)
                 else:  # Multiple eIDs referenced without using THRU / BY
                     form = 1
-                    eids = np.empty([n_fields - 2])
-                    for i in range(2, n_fields + 1):
-                        eids[i] = integer(card, i, 'eid')
+                    eids = np.empty([n_fields - 2], dtype=int)
+                    for i in range(2, n_fields):
+                        eids[i-2] = integer(card, i, 'eid')
                     return cls(cid, form, eids, None, None, None, comment=comment)
 
             else:  # Single eID referenced
