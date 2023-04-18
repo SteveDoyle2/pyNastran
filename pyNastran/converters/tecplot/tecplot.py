@@ -164,8 +164,8 @@ class Tecplot(TecplotBinary):
                     results_list,
                     data_packing=data_packing)
                 iline -= 1
-            elif 'F' in headers_dict:
-                fe = headers_dict['F'] # FEPoint
+            elif 'DATAPACKING' in headers_dict:
+                fe = headers_dict['DATAPACKING'] # FEPoint
                 assert isinstance(fe, str), headers_dict
                 zone_type = fe.upper() # FEPoint
                 self.log.debug('zone_type = %r' % zone_type[0])
@@ -233,7 +233,7 @@ class Tecplot(TecplotBinary):
             nodes3d = zone.xyz
             nnodes2d = nodes2d.shape[0]
             nnodes3d = nodes3d.shape[0]
-            assert nnodes2d == 0, zone
+            #assert nnodes2d == 0, zone
 
             # elements
             if 'I' in zone.headers_dict:
@@ -548,331 +548,6 @@ class Tecplot(TecplotBinary):
         self.log.debug('final sline=%s' % sline)
         return iline
 
-    def _read_tecplot_binary(self, tecplot_filename: str,
-                            zones_to_exclude: Optional[list[int]] = None,
-                            nnodes=None,
-                            nelements=None):
-        """
-        The binary file reader must have ONLY CHEXAs and be Tecplot 360
-        with:
-        `rho`, `u`, `v`, `w`, and `p`.
-        """
-        set_zones_to_exclude = zones_to_exclude_to_set(zones_to_exclude)
-        self.tecplot_filename = tecplot_filename
-        assert os.path.exists(tecplot_filename), tecplot_filename
-        with open(tecplot_filename, 'rb') as tecplot_file:
-            self.f = tecplot_file
-            self._uendian = '<'
-            self.n = 0
-            self.variables = ['rho', 'u', 'v', 'w', 'p']
-
-            data = tecplot_file.read(8)
-            self.n += 8
-            word, = unpack(b'8s', data)
-            self.log.debug('word = %r' % word)
-
-            #self.show(100, endian='<')
-
-            # http://home.ustc.edu.cn/~cbq/360_data_format_guide.pdf
-            # page 151
-            if 1:
-                values = []
-                ii = 0
-                for ii in range(100):
-                    datai = tecplot_file.read(4)
-                    vali, = unpack(b'i', datai)
-                    valf, = unpack(b'f', datai)
-                    self.n += 4
-                    values.append((vali, valf))
-                    if vali == 9999:
-                        #print('breaking...')
-                        break
-                #for j, vals in enumerate(values):
-                    #print('  ', j, vals)
-                assert ii < 100, ii
-
-                nbytes = 3 * 4
-                data = tecplot_file.read(nbytes)
-                self.n += nbytes
-                self.show_data(data, types='if', endian='<')
-
-            nbytes = 1 * 4
-            data = tecplot_file.read(nbytes)
-            self.n += nbytes
-            zone_type, = unpack(b'i', data)
-            self.log.debug('zone_type = %s' % zone_type)
-            self.show(100, types='if', endian='<')
-
-            nbytes = 11 * 4
-            data = tecplot_file.read(nbytes)
-            self.n += nbytes
-            #self.show_data(data, types='if', endian='<') # 'if'?
-            s = unpack('2f 9i', data)
-            self.log.debug(str(s))
-            #assert self.n == 360, self.n
-            #print('----------')
-
-            nbytes = 2 * 4
-            data = tecplot_file.read(nbytes)
-            self.n += nbytes
-            nnodes2, nelements2 = unpack('2i', data)
-            assert nnodes2 > 0, nnodes2
-            assert nelements2 > 0, nelements2
-            #self.show_data(data, types='if', endian='<') # 'if'?
-            if nnodes and nelements:
-                self.log.debug('nnodes=%s nelements=%s' % (nnodes, nelements))
-                self.log.debug('nnodes2=%s nelements2=%s' % (nnodes2, nelements2))
-            else:
-                nnodes = nnodes2
-                nelements = nelements2
-
-            self.log.info('nnodes=%s nelements=%s' % (nnodes, nelements))
-            assert nnodes == nnodes2
-            assert nelements == nelements2
-            #assert nnodes2 < 10000, nnodes
-            #assert nelements2 < 10000, nelements
-
-            nbytes = 35 * 4
-            data = tecplot_file.read(nbytes)
-            self.n += nbytes
-            #self.show_data(data, types='if', endian='<')
-            #print('----------')
-
-            nbytes = 30 * 4
-            data = tecplot_file.read(nbytes)
-            self.n += nbytes
-
-            #print('----------------------')
-            #self.show_data(data, types='if', endian='<')
-            #print('----------------------')
-
-            # 0 - ORDERED (meaning?)
-            # 1 - FELINESEG (meaning?)
-            # 2 - FETRIANGLE
-            # 3 - FEQUADRILATERAL
-            # 4 - FETETRAHEDRON
-            # 5 - FEBRICK
-            assert zone_type in [0, 1, 2, 3, 4, 5], zone_type
-
-            # p.93
-            # zone_title
-            # zone_type
-            #   0 = ORDERED
-            #   1 = FELINESEG
-            #   2 = FETRIANGLE
-            #   3 = FEQUADRILATERAL
-            #   4 = FETETRAHEDRON
-            #   5 = FEBRICK
-            # i_max_or_num_points
-            # j_max_or_num_elements
-            # k_max
-            # i_cell_max
-            # j_cell_max
-            # k_cell_max
-            # solution_time
-            # strand_id
-            # parent_zone
-            # is_block (0=POINT, 1=BLOCK)
-            # num_face_connections
-            # face_neighbor_mode
-            # passive_var_list
-            # value_location (0=cell-centered; 1=node-centered)
-            # share_var_from_zone
-            # share_connectivity_from_zone
-
-            # http://www.hgs.k12.va.us/tecplot/documentation/tp_data_format_guide.pdf
-
-            # 0=POINT
-            # 1=BLOCK
-            is_block = False
-
-            # value_location:
-            #   0=cell-centered
-            #   1=node-centered
-            #value_location = None
-            if is_block:
-                raise NotImplementedError('is_block=%s' % is_block)
-            else:
-                # is_point
-                #print('----------')
-                # the variables: [x, y, z]
-                nvars = 3
-                #nnodes = 3807
-
-                ni = nnodes * nvars
-                nbytes = ni * 4
-                #print('nbytes =', nbytes)
-                data = tecplot_file.read(nbytes)
-                self.n += nbytes
-                xyzvals = unpack('%if' % ni, data)
-                xyz = np.array(xyzvals, dtype='float32').reshape(3, nnodes).T
-
-                # the variables: [rho, u, v, w, p]
-                nvars = 5
-                dunno = 0    # what's with this...
-                ni = nnodes * nvars + dunno
-                nbytes = ni * 4
-                data = tecplot_file.read(nbytes)
-                self.n += nbytes
-                resvals = unpack('%if' % ni, data)
-                nodal_results = np.array(resvals, dtype='float32').reshape(nvars, nnodes).T
-
-
-                # 7443 elements
-                if zone_type == 5:
-                    # CHEXA
-                    nnodes_per_element = 8 # 8 nodes/elements
-                    nvals = nnodes_per_element * nelements
-                #elif zone_type == 1:
-                    #asdf
-                elif zone_type == 0:
-                    # CQUAD4
-                    nnodes_per_element = 4
-                    nvals = nnodes_per_element * nelements
-                    self.log.debug('nvals = %s' % nvals)
-                else:
-                    raise NotImplementedError('zone_type=%s' % zone_type)
-
-                nbytes = nvals * 4
-                node_ids = unpack(b'%ii' % nvals, tecplot_file.read(nbytes))
-                self.n += nbytes
-
-                elements = np.array(node_ids).reshape(nelements, nnodes_per_element)
-                #print(elements)
-
-                #self.show_data(data, types='ifs', endian='<')
-                #print(vals)
-
-                #self.show(100, endian='<')
-                zone = Zone(self.log)
-                if zone_type == 5:
-                    zone.hexa_elements = elements
-                elif zone_type == 0:
-                    zone.quad_elements = elements
-                else:
-                    raise NotImplementedError(zone_type)
-            del self.f
-
-        zone.xyz = xyz
-        zone.nodal_results = nodal_results
-        self.zones.append(zone)
-        #self.log.debug('done...')
-
-    def show(self, n: int, types: str='ifs', endian=None):  # pragma: no cover
-        assert self.n == self.f.tell()
-        nints = n // 4
-        data = self.f.read(4 * nints)
-        strings, ints, floats = self.show_data(data, types=types, endian=endian)
-        self.f.seek(self.n)
-        return strings, ints, floats
-
-    def show_data(self, data: bytes, types: str='ifs', endian=None):  # pragma: no cover
-        """
-        Shows a data block as various types
-
-        Parameters
-        ----------
-        data : bytes
-            the binary string bytes
-        types : str; default='ifs'
-            i - int
-            f - float
-            s - string
-            d - double (float64; 8 bytes)
-            q - long long (int64; 8 bytes)
-
-            l - long (int; 4 bytes)
-            I - unsigned int (int; 4 bytes)
-            L - unsigned long (int; 4 bytes)
-            Q - unsigned long long (int; 8 bytes)
-        endian : str; default=None -> auto determined somewhere else in the code
-            the big/little endian {>, <}
-
-        .. warning:: 's' is apparently not Python 3 friendly
-
-        """
-        return self._write_data(sys.stdout, data, types=types, endian=endian)
-
-    def _write_data(self, f, data: bytes, types: str='ifs', endian=None):  # pragma: no cover
-        """
-        Useful function for seeing what's going on locally when debugging.
-
-        Parameters
-        ----------
-        data : bytes
-            the binary string bytes
-        types : str; default='ifs'
-            i - int
-            f - float
-            s - string
-            d - double (float64; 8 bytes)
-            q - long long (int64; 8 bytes)
-
-            l - long (int; 4 bytes)
-            I - unsigned int (int; 4 bytes)
-            L - unsigned long (int; 4 bytes)
-            Q - unsigned long long (int; 8 bytes)
-        endian : str; default=None -> auto determined somewhere else in the code
-            the big/little endian {>, <}
-
-        """
-        n = len(data)
-        nints = n // 4
-        ndoubles = n // 8
-        strings = None
-        ints = None
-        floats = None
-        longs = None
-
-        if endian is None:
-            endian = self._uendian
-            assert endian is not None, endian
-
-        f.write('\nndata = %s:\n' % n)
-        for typei in types:
-            assert typei in 'sifdq lIL', 'type=%r is invalid' % typei
-
-        if 's' in types:
-            strings = unpack('%s%is' % (endian, n), data)
-            f.write("  strings = %s\n" % str(strings))
-        if 'i' in types:
-            ints = unpack('%s%ii' % (endian, nints), data)
-            f.write("  ints    = %s\n" % str(ints))
-        if 'f' in types:
-            floats = unpack('%s%if' % (endian, nints), data)
-            f.write("  floats  = %s\n" % str(floats))
-        if 'd' in types:
-            doubles = unpack('%s%id' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("  doubles (float64) = %s\n" % str(doubles))
-
-        if 'l' in types:
-            longs = unpack('%s%il' % (endian, nints), data)
-            f.write("  long  = %s\n" % str(longs))
-        if 'I' in types:
-            ints2 = unpack('%s%iI' % (endian, nints), data)
-            f.write("  unsigned int = %s\n" % str(ints2))
-        if 'L' in types:
-            longs2 = unpack('%s%iL' % (endian, nints), data)
-            f.write("  unsigned long = %s\n" % str(longs2))
-        if 'q' in types:
-            longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("  long long (int64) = %s\n" % str(longs))
-        f.write('\n')
-        return strings, ints, floats
-
-    def show_ndata(self, n: int, types: str='ifs'):  # pragma: no cover
-        return self._write_ndata(sys.stdout, n, types=types)
-
-    def _write_ndata(self, f, n: int, types: str='ifs'):  # pragma: no cover
-        """
-        Useful function for seeing what's going on locally when debugging.
-        """
-        nold = self.n
-        data = self.f.read(n)
-        self.n = nold
-        self.f.seek(self.n)
-        return self._write_data(f, data, types=types)
-
     def slice_x(self, xslice):
         """TODO: doesn't remove unused nodes/renumber elements"""
         zone = self.zones[0]
@@ -934,12 +609,14 @@ class Tecplot(TecplotBinary):
 
     def _get_write_header(self, res_types: list[str]) -> tuple[str, np.ndarray]:
         """gets the tecplot header"""
+        is_x = True
         is_y = True
         is_z = True
         #is_results = False
         assert self.nzones >= 1, self.nzones
         for zone in self.zones:
             variables = zone.variables
+            is_x = 'X' in zone.headers_dict['VARIABLES']
             is_y = 'Y' in zone.headers_dict['VARIABLES']
             is_z = 'Z' in zone.headers_dict['VARIABLES']
             is_results = bool(len(zone.nodal_results))
@@ -955,7 +632,8 @@ class Tecplot(TecplotBinary):
             msg = 'TITLE = %s\n' % self.title
         else:
             msg = 'TITLE = "%s"\n' % self.title
-        msg += 'VARIABLES = "X"\n'
+        if is_x:
+            msg += 'VARIABLES = "X"\n'
         if is_y:
             msg += '"Y"\n'
         if is_z:
@@ -988,7 +666,8 @@ class Tecplot(TecplotBinary):
             ivars = []
         return msg, ivars
 
-    def write_tecplot(self, tecplot_filename: str, res_types=None,
+    def write_tecplot(self, tecplot_filename: str,
+                      res_types: list[str]=None,
                       adjust_nids: bool=True) -> None:
         """
         Only handles single type writing
@@ -1005,9 +684,13 @@ class Tecplot(TecplotBinary):
             1-based in ASCII
 
         """
+        self.write_tecplot_ascii(tecplot_filename, res_types, adjust_nids)
+
+    def write_tecplot_ascii(self, tecplot_filename: str,
+                            res_types: list[str]=None,
+                            adjust_nids: bool=True) -> None:
         self.log.info('writing tecplot %s' % tecplot_filename)
         msg, ivars = self._get_write_header(res_types)
-
         with open(tecplot_filename, 'w') as tecplot_file:
             tecplot_file.write(msg)
             for zone in self.zones:
@@ -1230,6 +913,9 @@ def _header_lines_to_header_dict(title_line: str, header_lines: list[str],
                 ukey = 'N'
             if ukey == 'ELEMENTS':
                 ukey = 'E'
+            if ukey == 'F':
+                ukey = 'DATAPACKING'
+
             if 'DATASETAUXDATA' in ukey:
                 #DATASETAUXDATA Common.AngleOfAttack="0.000000"
                 #DATASETAUXDATA Common.DensityVar="5"
@@ -1877,6 +1563,14 @@ def main2():  # pragma: no cover
         plt.read_tecplot(tecplot_filename)
         plt.write_tecplot(f'processor_{iprocessor:d}.plt')
 
+def main3():  # pragma: no cover
+    import sys
+    tecplot_filename = sys.argv[1]
+    plt = Tecplot()
+    plt.read_tecplot(tecplot_filename)
+    tecplot_filename_out = tecplot_filename + '.out'
+    plt.write_tecplot(tecplot_filename_out, res_types=None, adjust_nids=False)
+    x = 1
 
 if __name__ == '__main__':   # pragma: no cover
-    main()
+    main3()

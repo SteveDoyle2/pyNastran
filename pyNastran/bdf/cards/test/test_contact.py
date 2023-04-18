@@ -124,8 +124,6 @@ class TestContact(unittest.TestCase):
             None, sids[1], tids[1], sdists[1], None, exts[1], None, None,
             None, sids[2], tids[2], sdists[2], None, exts[2], None, None,
         ]
-        from pyNastran.bdf.bdf import print_card_8
-        print(print_card_8(card))
         card = model.add_card(card, 'BGSET', comment='comment', ifile=None, is_list=True, has_none=True)
         save_load_deck(model)
         #bgset = model.add_bgset

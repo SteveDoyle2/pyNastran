@@ -20,13 +20,29 @@ NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 class TestTecplot(unittest.TestCase):
 
     def test_split_headers(self):
-        log = SimpleLogger(level='debug', encoding='utf-8')
+        log = SimpleLogger(level='info', encoding='utf-8')
         headers = [
             ('Zone I=    17, J=    17, K=     1, F=POINT', 4)
         ]
         for header, nheaders in headers:
             headers = split_headers(header, log)
             assert len(headers) == nheaders, headers
+
+    def test_tecplot_binary_models(self):
+        tecplot_filenames = [
+            'binary/point_febrick_3d_02.plt',  # works
+        ]
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        junk_plt = os.path.join(MODEL_PATH, 'junk.plt')
+        for fname in tecplot_filenames:
+            tecplot_filename = os.path.join(MODEL_PATH, fname)
+            #print(fname)
+            log.info('read %r' % fname)
+            model = read_tecplot(tecplot_filename, log=log)
+            str(model)
+            model.write_tecplot_binary(junk_plt)
+            read_tecplot(junk_plt, log=log)
+        #os.remove(junk_plt)
 
     def test_tecplot_ascii_models(self):
         tecplot_filenames = [
@@ -149,13 +165,29 @@ class TestTecplot(unittest.TestCase):
             '1. 0. 1. 21. 22. 23. 24.',
             '1. 1. 1. 31. 32. 33. 34.',
             '1 2 4 3',
+
+            'ZONE T="\"boundary 4 fairing\""',
+            ' STRANDID=1003, SOLUTIONTIME=5000',
+            ' Nodes=3, Elements=1, ZONETYPE=FETriangle',
+            ' DATAPACKING=POINT',
+            ' DT=(SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE )',
+            '1. 0. 0. 1. 2. 3. 4.',
+            '1. 1. 0. 11. 12. 13. 14.',
+            '1. 0. 1. 21. 22. 23. 24.',
+            '1 2 3',
         ]
         file = StringIO()
         file.write('\n'.join(lines))
         file.seek(0)
         log = SimpleLogger(level='warning')
         model = read_tecplot(file, use_cols=None, dtype=None,
-                             filetype='ascii', log=None, debug=False)
+                             filetype='ascii', log=log, debug=False)
+        nodes, tris, quads, tets, hexas, zone_ids, names = model.stack_geometry()
+        assert nodes.shape == (11, 3)
+        assert tris.shape == (1, 3)
+        assert quads.shape == (2, 4)
+        assert len(tets) == 0
+        assert len(hexas) == 0
 
     def test_tecplot_360_point_euler(self):
         lines = [
@@ -190,6 +222,12 @@ class TestTecplot(unittest.TestCase):
         log = SimpleLogger(level='warning')
         model = read_tecplot(file, use_cols=None, dtype=None,
                              filetype='ascii', log=log, debug=False)
+        nodes, tris, quads, tets, hexas, zone_ids, names = model.stack_geometry()
+        assert nodes.shape == (4, 3)
+        assert tris.shape == (1, 3)
+        assert len(quads) == 0
+        assert len(tets) == 0
+        assert len(hexas) == 0
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
