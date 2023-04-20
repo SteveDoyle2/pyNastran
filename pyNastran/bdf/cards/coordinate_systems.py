@@ -8,6 +8,7 @@ All coordinate cards are defined in this file.  This includes:
  * CORD2R
  * CORD2C
  * CORD2S
+ * MATCID
 
 {ug} = [Tgb]{ub}
 {ub} = [Tbg]{ug}
@@ -24,11 +25,12 @@ from numpy.linalg import norm  # type: ignore
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.bdf.bdf import BDF
+    from typing import Optional
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, string_or_blank)
+    integer, integer_or_blank, double_or_blank, string_or_blank, integer_or_string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -1255,6 +1257,291 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
     if add:
         model._add_methods._add_coord_object(coord)
     return coord
+
+
+class MATCID:
+    """
+    Initializes the MATCID card
+
+    Format (alternative 1):
+        +--------+-------+--------+-------+-------+------+------+------+------+
+        |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+        +========+=======+========+=======+=======+======+======+======+======+
+        | MATCID |  CID  | EID1   | EID2  | EID3  | EID4 | EID5 | EID6 | EID7 |
+        +--------+-------+--------+-------+-------+------+------+------+------+
+        |        | EID8  | EID9   | -etc- |       |      |      |      |      |
+        +--------+-------+--------+-------+-------+------+------+------+------+
+
+    Format (alternative 2):
+        +--------+-------+--------+--------+------+------+------+------+------+
+        |   1    |   2   |    3   |   4    |  5   |  6   |  7   |   8  |  9   |
+        +========+=======+========+========+======+======+======+======+======+
+        | MATCID |  CID  | EID1   | "THRU" | EID2 |      |      |      |      |
+        +--------+-------+--------+--------+------+------+------+------+------+
+
+    Format (alternative 3):
+        +--------+-------+--------+--------+-------+------+------+------+------+
+        |   1    |   2   |    3   |  4    |  5    |  6   |   7   |   8  |  9   |
+        +========+=======+========+========+=======+======+======+======+======+
+        | MATCID |  CID  | EID1   | "THRU" | EID2  | "BY" |  N   |      |      |
+        +--------+-------+--------+--------+-------+------+------+------+------+
+
+    Format (alternative 4):
+        +--------+-------+--------+-------+-------+------+------+------+------+
+        |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+        +========+=======+========+=======+=======+======+======+======+======+
+        | MATCID |  CID  | "ALL"  |       |       |      |      |      |      |
+        +--------+-------+--------+-------+-------+------+------+------+------+
+
+    .. note :: no type checking
+    """
+    type = 'MATCID'
+    # Type = 'M'
+
+    def __init__(self, cid, form: int,
+                 eids=None,
+                 start: Optional[int] = None, thru: Optional[int] = None, by: Optional[int] = None,
+                 comment=''):
+        """
+        Creates the MATCID card, which defines the Material Coordinate System for Solid Elements
+
+        -Overrides the material coordinate system for CHEXA, CPENTA, CTETRA, and CPYRAM solid elements when the elements
+        reference a PSOLID property.
+
+        -Overrides the material coordinate system for CHEXA and CPENTA solid elements when
+        the elements reference a PCOMPS property.
+
+        -Overrides the material coordinate system for CHEXCZ and CPENTCZ solid elements.
+
+        Parameters
+        ----------
+        cid : int
+            coordinate system id
+        form: int
+            integer indicating the format alternative (for reference, see the 4 different formats below)
+        eids : array[int, ...]
+            Array of element identification numbers
+        start: int
+            used in format alternative 2 and 3, indicates starting eID
+        thru : int
+            used in format alternative 2 and 3
+        by : int
+            used in format alternative 3
+        comment : str; default=''
+            a comment for the card
+
+        Format (alternative 1):
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+            +========+=======+========+=======+=======+======+======+======+======+
+            | MATCID |  CID  | EID1   | EID2  | EID3  | EID4 | EID5 | EID6 | EID7 |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |        | EID8  | EID9   | -etc- |       |      |      |      |      |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+
+        Format (alternative 2):
+            +--------+-------+--------+--------+------+------+------+------+------+
+            |   1    |   2   |    3   |   4    |  5   |  6   |  7   |   8  |  9   |
+            +========+=======+========+========+======+======+======+======+======+
+            | MATCID |  CID  | EID1   | "THRU" | EID2 |      |      |      |      |
+            +--------+-------+--------+--------+------+------+------+------+------+
+
+        Format (alternative 3):
+            +--------+-------+--------+--------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |   7   |   8  |  9   |
+            +========+=======+========+========+=======+======+======+======+======+
+            | MATCID |  CID  | EID1   | "THRU" | EID2  | "BY" |  N   |      |      |
+            +--------+-------+--------+--------+-------+------+------+------+------+
+
+        Format (alternative 4):
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+            +========+=======+========+=======+=======+======+======+======+======+
+            | MATCID |  CID  | "ALL"  |       |       |      |      |      |      |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+        """
+        self.cid = cid
+        self.form = form
+
+        if form == 1:
+            assert eids is not None, f'cid={cid}'
+            assert start is thru is by is None, f'cid={cid}, start={start}, thru={thru}, by={by}'
+
+            self.eids = eids
+            self.start = self.thru = self.by = None
+
+        elif form == 2:
+            assert eids is by is None, f'cid={cid}, eids={eids}, by={by}'
+            assert type(start) is int, f'cid={cid}, start={start}'
+            assert type(thru) is int, f'cid={cid}, thru={thru}'
+
+            self.start = start
+            self.thru = thru
+
+            self.eids = self.by = None
+
+        elif form == 3:
+            assert eids is None, f'cid={cid}, eids={eids}'
+            assert type(start) is int, f'cid={cid}, start={start}'
+            assert type(thru) is int, f'cid={cid}, thru={thru}'
+            assert type(by) is int, f'cid={cid}, thru={by}'
+
+            self.start = start
+            self.thru = thru
+            self.by = by
+
+            self.eids = None
+
+        elif form == 4:
+            assert eids is start is by is thru is None, f'cid={cid}, eids={eids}, start={start}, thru={thru}, by={by}'
+
+            self.eids = self.start = self.thru = self.by = None
+
+        else:
+            raise RuntimeError(f'Form can only take a value of 1, 2, 3 or 4; form = {form}')
+
+        self.comment = comment
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Material Coordinate System for Solid Elements
+
+        -Overrides the material coordinate system for CHEXA, CPENTA, CTETRA, and CPYRAM solid elements when the elements
+        reference a PSOLID property.
+
+        -Overrides the material coordinate system for CHEXA and CPENTA solid elements when
+        the elements reference a PCOMPS property.
+
+        -Overrides the material coordinate system for CHEXCZ and CPENTCZ solid elements.
+
+        Format (alternative 1):
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+            +========+=======+========+=======+=======+======+======+======+======+
+            | MATCID |  CID  | EID1   | EID2  | EID3  | EID4 | EID5 | EID6 | EID7 |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |        | EID8  | EID9   | -etc- |       |      |      |      |      |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+
+        Format (alternative 2):
+            +--------+-------+--------+--------+------+------+------+------+------+
+            |   1    |   2   |    3   |   4    |  5   |  6   |  7   |   8  |  9   |
+            +========+=======+========+========+======+======+======+======+======+
+            | MATCID |  CID  | EID1   | "THRU" | EID2 |      |      |      |      |
+            +--------+-------+--------+--------+------+------+------+------+------+
+
+        Format (alternative 3):
+            +--------+-------+--------+--------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |   7   |   8  |  9   |
+            +========+=======+========+========+=======+======+======+======+======+
+            | MATCID |  CID  | EID1   | "THRU" | EID2  | "BY" |  N   |      |      |
+            +--------+-------+--------+--------+-------+------+------+------+------+
+
+        Format (alternative 4):
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+            +========+=======+========+=======+=======+======+======+======+======+
+            | MATCID |  CID  | "ALL"  |       |       |      |      |      |      |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+        """
+
+        #: coordinate system ID
+        cid = integer(card, 1, 'cid')
+
+        # first field, either "ALL" or an integer (eID1)
+        field2 = integer_or_string(card, 2, 'field2')
+        if type(field2) is str:
+            assert field2 == 'ALL', f'{field2}'
+
+            form = 4
+            return cls(cid, form, None, None, None, None, comment=comment)
+        else:
+            assert field2 > 0, f'{field2}'
+
+            n_fields = len(card)
+
+            if n_fields > 3:  # More than 1 eID referenced
+                field3 = integer_or_string(card, 3, 'pos3')
+                if type(field3) is str:  # THRU
+                    assert field3 == 'THRU', f'{field3}'
+
+                    start = integer(card, 2, 'start')
+                    thru = integer(card, 4, 'thru')
+                    assert thru > start, f'start={start}, thru={thru}'
+
+                    if n_fields > 5:  # BY
+                        form = 3
+                        by = integer(card, 6, 'by')
+
+                        assert by > 0, f'{by}'
+
+                        return cls(cid, form, None, start, thru, by, comment=comment)
+
+                    else:
+                        form = 2
+                        return cls(cid, form, None, start, thru, None, comment=comment)
+                else:  # Multiple eIDs referenced without using THRU / BY
+                    form = 1
+                    eids = np.empty([n_fields - 2], dtype=int)
+                    for i in range(2, n_fields):
+                        eids[i-2] = integer(card, i, 'eid')
+                    return cls(cid, form, eids, None, None, None, comment=comment)
+
+            else:  # Single eID referenced
+                form = 1
+                eids = np.array([field2], dtype=int)
+
+                return cls(cid, form, eids, None, None, None, comment=comment)
+
+    def Cid(self) -> int:
+        return self.cid
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        elif is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
+    def write_card_16(self, is_double: bool=False) -> str:
+        """Writes a MATCID card in 16-field format"""
+        card = self.repr_fields()
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def raw_fields(self):
+
+        if self.form == 1:
+            return ['MATCID', self.cid] + list(self.eids)
+        elif self.form == 2:
+            return ['MATCID', self.cid, self.start, 'THRU', self.thru]
+        elif self.form == 3:
+            return ['MATCID', self.cid, self.start, 'THRU', self.thru, 'BY', self.by]
+        elif self.form == 4:
+            return ['MATCID', self.cid, 'ALL']
+        else:
+            raise RuntimeError(f'cid={self.cid}, form={self.form}')
+
+    # Not working
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+
+        """
+
+        cid = self.Cid()
+        assert isinstance(cid, integer_types), 'cid=%r' % cid
 
 
 class RectangularCoord:

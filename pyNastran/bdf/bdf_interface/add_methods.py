@@ -58,6 +58,7 @@ if TYPE_CHECKING:  # pragma: no cover
                                                  GMSPC)
     from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                         CORD2R, CORD2C, CORD2S, #CORD3G,
+                                                        MATCID,
                                                         )
     from pyNastran.bdf.cards.deqatn import DEQATN
     from pyNastran.bdf.cards.dynamic import (
@@ -863,6 +864,18 @@ class AddMethods:
         else:
             self.model.coords[key] = coord
             self.model._type_to_id_map[coord.type].append(key)
+
+    def _add_matcid_object(self, matcid: Union[MATCID]) -> None:
+        """adds a MATCID object"""
+        key = matcid.cid
+        assert matcid.cid > -1, 'cid=%s coord=\n%s' % (key, matcid)
+
+        # Multiple MATCIDs can share the same CID
+        if key in self.model.MATCID:
+            self.model.MATCID[key].append(matcid)
+        else:
+            self.model.MATCID[key] = [matcid]
+            self.model._type_to_id_map[matcid.type].append(key)
 
     def _add_load_combination_object(self, load: Union[LOAD, CLOAD]) -> None:
         """adds a load object to a load case"""

@@ -66,7 +66,8 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, S
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
-                                                    CORD2R, CORD2C, CORD2S, CORD3G)
+                                                    CORD2R, CORD2C, CORD2S, CORD3G,
+                                                    MATCID,)
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
@@ -240,6 +241,8 @@ CARD_MAP = {
     'CORD2R' : CORD2R,
     'CORD2C' : CORD2C,
     'CORD2S' : CORD2S,
+
+    'MATCID': MATCID,
 
     # msgmesh
     #'GMCORD' : GMCORD,
@@ -878,6 +881,73 @@ class AddCards:
         point = POINT(nid, xyz, cp=cp, comment=comment)
         self._add_methods._add_point_object(point)
         return point
+
+    def add_matcid(self, cid: int, form: int,
+                   eids = None,
+                   start: Optional[int] = None, thru: Optional[int] = None, by: Optional[int] = None,
+                   comment: str='') -> MATCID:
+        """
+        Creates the MATCID card, which defines the Material Coordinate System for Solid Elements
+
+        -Overrides the material coordinate system for CHEXA, CPENTA, CTETRA, and CPYRAM solid elements when the elements
+        reference a PSOLID property.
+
+        -Overrides the material coordinate system for CHEXA and CPENTA solid elements when
+        the elements reference a PCOMPS property.
+
+        -Overrides the material coordinate system for CHEXCZ and CPENTCZ solid elements.
+
+        Parameters
+        ----------
+        cid : int
+            coordinate system id
+        form: int
+            integer indicating the format alternative (for reference, see the 4 different formats below)
+        eids : array[int, ...]
+            Array of element identification numbers
+        start: int
+            used in format alternative 2 and 3, indicates starting eID
+        thru : int
+            used in format alternative 2 and 3
+        by : int
+            used in format alternative 3
+        comment : str; default=''
+            a comment for the card
+
+        Format (alternative 1):
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+            +========+=======+========+=======+=======+======+======+======+======+
+            | MATCID |  CID  | EID1   | EID2  | EID3  | EID4 | EID5 | EID6 | EID7 |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |        | EID8  | EID9   | -etc- |       |      |      |      |      |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+
+        Format (alternative 2):
+            +--------+-------+--------+--------+------+------+------+------+------+
+            |   1    |   2   |    3   |   4    |  5   |  6   |  7   |   8  |  9   |
+            +========+=======+========+========+======+======+======+======+======+
+            | MATCID |  CID  | EID1   | "THRU" | EID2 |      |      |      |      |
+            +--------+-------+--------+--------+------+------+------+------+------+
+
+        Format (alternative 3):
+            +--------+-------+--------+--------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |   7   |   8  |  9   |
+            +========+=======+========+========+=======+======+======+======+======+
+            | MATCID |  CID  | EID1   | "THRU" | EID2  | "BY" |  N   |      |      |
+            +--------+-------+--------+--------+-------+------+------+------+------+
+
+        Format (alternative 4):
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+            +========+=======+========+=======+=======+======+======+======+======+
+            | MATCID |  CID  | "ALL"  |       |       |      |      |      |      |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+        """
+
+        matcid = MATCID(cid, form, eids, start, thru, by, comment=comment)
+        self._add_methods._add_matcid_object(matcid)
+        return matcid
 
     def add_cord2r(self, cid: int,
                    origin: Optional[Union[list[float], NDArray3float]],

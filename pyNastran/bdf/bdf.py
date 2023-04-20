@@ -102,7 +102,8 @@ from .cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
 from .cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                 MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                 GMSPC)
-from .cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
+from .cards.coordinate_systems import (MATCID,
+                                       CORD1R, CORD1C, CORD1S,
                                        CORD2R, CORD2C, CORD2S, #CORD3G,
                                        transform_coords_vectorized,
                                        CORDx)
@@ -756,6 +757,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## coords
             'CORD1R', 'CORD1C', 'CORD1S',
             'CORD2R', 'CORD2C', 'CORD2S',
+
+            'MATCID',
 
             # temperature cards
             'TEMP', 'TEMPD', 'TEMPB3', 'TEMPAX',
@@ -2161,6 +2164,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CORD2R' : (CORD2R, add_methods._add_coord_object),
             'CORD2C' : (CORD2C, add_methods._add_coord_object),
             'CORD2S' : (CORD2S, add_methods._add_coord_object),
+
+            'MATCID' : (MATCID, add_methods._add_matcid_object),
 
             # parametric
             'PSET' : (PSET, add_methods._add_pset),
