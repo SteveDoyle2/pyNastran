@@ -235,6 +235,10 @@ class Zone:
         return xyz
 
     def __repr__(self) -> str:
+        name = ''
+        if hasattr(self, 'name'):
+            name = f'  name = {self.name}\n'
+
         xy_shape = str(self.xy.shape)
         xyz_shape = str(self.xyz.shape)
         a_shape = str(self.A.shape) if self.A is not None else None
@@ -249,9 +253,10 @@ class Zone:
 
         title2 = '  T = %r\n' % self.headers_dict['T'] if 'T' in self.headers_dict else ''
         msg = (
-            'Zone:'
+            'Zone:\n'
             #f'  filename = {self.tecplot_filename!r}\n'
             #f'  is_mesh = {self.is_mesh}\n'
+            + name +
             f'  variables = {self.variables}\n'
             f'  is3d = {is3d}\n'
             f'    xy.shape = {xy_shape}\n'
@@ -405,7 +410,7 @@ class Zone:
         # assert elements.max() == nnodes, elements.max()
 
         if adjust_nids:
-            elements += 1
+            elements = _add_one_to_writeable(elements)
 
         for element in elements:
             tecplot_file.write(efmt % tuple(element))
@@ -555,6 +560,13 @@ class Zone:
             #if
         #self.hexa_elements
 
+def _add_one_to_writeable(elements: np.ndarray) -> np.ndarray:
+    """if the array isn't writeable, we need to be able to write to it :)"""
+    if elements.flags.writeable:
+        elements += 1
+    else:
+        elements = elements + 1
+    return elements
 
 def is_3d(headers_dict: dict[str, Any]) -> bool:
     #print(headers_dict)
@@ -614,7 +626,7 @@ def _write_xyz_results_block(tecplot_file: TextIO, nodes: NDArrayN3float,
         #print('nnodes_per_element =', nnodes_per_element)
         # for ivar in range(nnodes_per_element):
         if len(ivars) > nodal_results.shape[1]:
-            ivars = ivars[ndim:]
+            ivars = ivars[ndim:] - ndim
         for ivar in ivars:
             #tecplot_file.write('# ivar=%i\n' % ivar)
             vals = nodal_results[:, ivar].ravel()

@@ -266,6 +266,7 @@ class TecplotBinary(Base):
         log = self.log
         assert os.path.exists(tecplot_filename), print_bad_path(tecplot_filename)
 
+        self.n = 0
         with open(tecplot_filename, 'rb') as self.f:
             file_obj = self.f
             version, header_dict, title, file_type, variables, zone_tuples = _read_binary_header(self, file_obj)
@@ -312,7 +313,7 @@ class TecplotBinary(Base):
             if len(data):
                 raise RuntimeError("there is data at the end of the file "
                                    "that wasn't read")
-        print(str(self))
+        #print(str(self))
         self.header_dict = zone.headers_dict
         zone.headers_dict['DATAPACKING']
         self.variables = zone.variables
@@ -908,7 +909,6 @@ def _read_binary_zone_headers(
             parent_zone = 0
             data = file_obj.read(8); n += 8
             strand_id, zone_type = unpack('<2i', data)
-            assert strand_id == -1, strand_id # ???
             assert zone_type in {0, 1, 2, 3, 4, 5, 6, 7}, zone_type
             log.debug(f'strand_id={strand_id} zone_type={zone_type}')
 
@@ -928,9 +928,6 @@ def _read_binary_zone_headers(
             log.debug('abcd = (0, 0, 0, 0)')
 
             # POINT_FEBRICK_3D_02.plt
-            assert zone_type == 5, zone_type # POINT_FEBRICK_3D_02.plt
-            #assert nnodes == 125, nnodes
-            #assert nelement == 64, nelement
             celldim = nnodes
             n_misc_neighbor_connections = nnodes
 
@@ -948,7 +945,6 @@ def _read_binary_zone_headers(
             data = file_obj.read(32); n += 32
             (parent_zone, strand_id, solution_time,
              unused_a, zone_type, data_packing, specify_var) = unpack('<iid 4i', data)
-            assert -2 <= strand_id < 32700, strand_id
             print(f'  parent_zone={parent_zone} strand_id={strand_id} solution_time={solution_time:g}')
             print(f'  zone_type={zone_type} data_packing={data_packing} specify_var={specify_var}')
 
@@ -981,6 +977,7 @@ def _read_binary_zone_headers(
         else:
             raise NotImplementedError(version)
         assert zone_type in {0, 1, 2, 3, 4, 5, 6, 7}, zone_type
+        assert -2 <= strand_id < 32700, strand_id
         assert data_packing in {0, 1}, data_packing
         assert nelement > 0, nelement
 
@@ -1391,11 +1388,13 @@ def _write_data(f, data: bytes, types: str='ifs', endian: str='<'):
         I - unsigned int (int; 4 bytes)
         L - unsigned long (int; 4 bytes)
         Q - unsigned long long (int; 8 bytes)
+        h/H - signed/unsigned short (16 bit int)
     endian : str; default=None -> auto determined somewhere else in the code
         the big/little endian {>, <}
 
     """
     n = len(data)
+    nshorts = n // 2
     nints = n // 4
     ndoubles = n // 8
     strings = None
@@ -1406,36 +1405,43 @@ def _write_data(f, data: bytes, types: str='ifs', endian: str='<'):
     assert endian is not None, endian
     f.write('\nndata = %s:\n' % n)
     for typei in types:
-        assert typei in 'sifdq lIL', 'type=%r is invalid' % typei
+        assert typei in 'sifdq lIL hH', 'type=%r is invalid' % typei
 
     if 's' in types:
         strings = unpack('%s%is' % (endian, n), data)
         f.write("  strings = %s\n" % str(strings))
-    if 'i' in types:
+    if 'i' in types and nints > 0:
         ints = unpack('%s%ii' % (endian, nints), data)
         chrs = [chr(val) if 32 <= val <= 130 else val
                 for val in ints]
         f.write("  ints    = %s\n" % str(ints))
         f.write("  chrs    = %s\n" % str(chrs))
-    if 'f' in types:
+    if 'f' in types and nints > 0:
         floats = unpack('%s%if' % (endian, nints), data)
         f.write("  floats  = %s\n" % str(floats))
-    if 'd' in types:
+    if 'd' in types and ndoubles > 0:
         doubles = unpack('%s%id' % (endian, ndoubles), data[:ndoubles*8])
         f.write("  doubles (float64) = %s\n" % str(doubles))
 
-    if 'l' in types:
+    if 'l' in types and nints > 0:
         longs = unpack('%s%il' % (endian, nints), data)
         f.write("  long  = %s\n" % str(longs))
-    if 'I' in types:
+    if 'I' in types and nints > 0:
         ints2 = unpack('%s%iI' % (endian, nints), data)
         f.write("  unsigned int = %s\n" % str(ints2))
-    if 'L' in types:
+    if 'L' in types and nints > 0:
         longs2 = unpack('%s%iL' % (endian, nints), data)
         f.write("  unsigned long = %s\n" % str(longs2))
-    if 'q' in types:
+    if 'q' in types and ndoubles > 0:
         longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
         f.write("  long long (int64) = %s\n" % str(longs))
+
+    if 'h' in types and nshorts > 0:
+        signed_short = unpack('%s%ih' % (endian, nshorts), data)
+        f.write("  signed short (int16) = %s\n" % str(signed_short))
+    if 'H' in types and nshorts > 0:
+        unsigned_short = unpack('%s%iH' % (endian, nshorts), data)
+        f.write("  unsigned short (int16) = %s\n" % str(unsigned_short))
     f.write('\n')
     return strings, ints, floats
 

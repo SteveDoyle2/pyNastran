@@ -1,7 +1,10 @@
+from typing import Optional
 from numpy import vstack
 from pyNastran.converters.tecplot.tecplot import Tecplot
 
-def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
+def merge_tecplot_files(tecplot_filenames: list[str],
+                        tecplot_filename_out: Optional[str]=None,
+                        log=None) -> Tecplot:
     """merges one or more tecplot files"""
     assert isinstance(tecplot_filenames, (list, tuple)), type(tecplot_filenames)
     assert len(tecplot_filenames) > 0, tecplot_filenames
@@ -24,17 +27,18 @@ def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
     for tecplot_filename in tecplot_filenames:
         model.log.info('reading %s' % tecplot_filename)
         model.read_tecplot(tecplot_filename)
-        xyz.append(model.xyz)
-        if len(model.tri_elements):
-            tri_elements.append(model.tri_elements + nnodes)
-        if len(model.quad_elements):
-            quad_elements.append(model.quad_elements + nnodes)
-        if len(model.tet_elements):
-            tet_elements.append(model.tet_elements + nnodes)
-        if len(model.hexa_elements):
-            hexa_elements.append(model.hexa_elements + nnodes)
-        results.append(model.results)
-        nnodes += model.nnodes
+        for zone in model.zones:
+            xyz.append(zone.xyz)
+            if len(zone.tri_elements):
+                tri_elements.append(zone.tri_elements + nnodes)
+            if len(zone.quad_elements):
+                quad_elements.append(zone.quad_elements + nnodes)
+            if len(zone.tet_elements):
+                tet_elements.append(zone.tet_elements + nnodes)
+            if len(zone.hexa_elements):
+                hexa_elements.append(zone.hexa_elements + nnodes)
+            results.append(zone.nodal_results)
+            nnodes += zone.nnodes
 
     model.xyz = vstack(xyz)
     if tri_elements:
@@ -49,5 +53,3 @@ def merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
     if tecplot_filename_out is not None:
         model.write_tecplot(tecplot_filename_out)
     return model
-
-
