@@ -420,7 +420,7 @@ def _write_binary_results(model: TecplotBinary,
         #_prep_results_dtypes(results, dtypes, zone.xy)
         _prep_results_dtypes(results, dtypes, zone.xyz)
         _prep_results_dtypes(results, dtypes, zone.nodal_results)
-        nnodes = len(results[0])
+        #nnodes = len(results[0])
 
         data = pack(f'<{nvars}i', *dtypes)
         tecplot_file.write(data)

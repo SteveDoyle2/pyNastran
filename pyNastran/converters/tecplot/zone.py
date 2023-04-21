@@ -289,7 +289,7 @@ class Zone:
                                 is_tris: bool, is_quads: bool, is_tets: bool, is_hexas: bool,
                                 adjust_nids: bool=True) -> None:
         msg = 'ZONE '
-        self.log.info(f'is_points = {is_points}')
+        self.log.debug(f'is_points = {is_points}')
         datapacking = 'POINT' if  is_points else 'BLOCK'
         msg += f' n={nnodes:d}, e={nelements:d}, ZONETYPE={zone_type}, DATAPACKING={datapacking}\n'
         tecplot_file.write(msg)
@@ -378,8 +378,8 @@ class Zone:
                         is_tris: bool, is_quads: bool, is_tets: bool, is_hexas: bool,
                         adjust_nids: bool=True) -> None:
         """Writes the unstructured elements.  Verifies that nodes are sequential."""
-        self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' %
-                      (is_hexas, is_tets, is_quads, is_tris))
+        self.log.debug('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' %
+                       (is_hexas, is_tets, is_quads, is_tris))
         if is_hexas:
             efmt = ' %d %d %d %d %d %d %d %d\n'
             elements = self.hexa_elements
@@ -398,7 +398,7 @@ class Zone:
         # we do this before the nid adjustment
         node_min = elements.min()
         node_max = elements.max()
-        self.log.info(f'inode: min={node_min:d} max={node_max:d}')
+        self.log.debug(f'inode: min={node_min:d} max={node_max:d}')
         assert node_min >= 0, node_min
 
         if node_max > nnodes:
