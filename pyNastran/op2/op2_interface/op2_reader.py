@@ -1755,7 +1755,7 @@ class OP2Reader:
                 nnodes = 4
 
             elif element_type == 300: # or eltype == 67:
-                element = 'CHEXA8'
+                element = 'CHEXA'
                 nnodes = 8
 
             elif element_type == 345:
@@ -1994,7 +1994,7 @@ class OP2Reader:
                 element = 'CPYRAM'
 
             elif element_type == 300: # or eltype == 67:
-                element = 'CHEXA8'
+                element = 'CHEXA'
 
                 numwide = 4
                 n_elements = int_data.shape[0] // numwide  # elid + 3 euler angles
