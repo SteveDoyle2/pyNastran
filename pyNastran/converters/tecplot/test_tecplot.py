@@ -5,7 +5,8 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
-from pyNastran.converters.tecplot.tecplot import read_tecplot, split_headers
+from pyNastran.converters.tecplot.tecplot import read_tecplot
+from pyNastran.converters.tecplot.read_ascii import split_headers
 from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
 from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
 from pyNastran.converters.nastran.nastran_to_tecplot import (
@@ -33,32 +34,59 @@ class TestTecplot(unittest.TestCase):
             'binary/point_febrick_3d_02.plt',  # works
         ]
         log = SimpleLogger(level='debug', encoding='utf-8')
-        junk_plt = os.path.join(MODEL_PATH, 'junk.plt')
+        binary_plt = os.path.join(MODEL_PATH, 'ascii.plt')
+        ascii_plt = os.path.join(MODEL_PATH, 'binary.plt')
         for fname in tecplot_filenames:
             tecplot_filename = os.path.join(MODEL_PATH, fname)
             #print(fname)
-            log.info('read %r' % fname)
+            log.info(f'read {fname!r}')
             model = read_tecplot(tecplot_filename, log=log)
             str(model)
-            model.write_tecplot_binary(junk_plt)
-            read_tecplot(junk_plt, log=log)
+            model.write_tecplot_ascii(ascii_plt)
+            model.write_tecplot_binary(binary_plt)
+            read_tecplot(ascii_plt, log=log)
+            read_tecplot(binary_plt, log=log)
         #os.remove(junk_plt)
 
-    def test_tecplot_ascii_models(self):
+    def test_tecplot_ascii_structured_models(self):
         tecplot_filenames = [
             'ascii/3dgeom.dat', #  good; multi-zone, geometry
-            'ascii/block_febrick_3d.dat', # 3d unstructured block; good
-            #'ascii/block_fetet_3d.dat', # bad; no decimal values
             'ascii/channel.dat', # 2d structured point; good
             #'ascii/cylinder_slice.dat', # 3d structured point; block 2 has poor formatting
             #'ascii/cylindrical.dat',  # 3d structured empty lines; good
-            'ascii/ell.dat', # 2d; good
-            'ascii/humanoid_quad.dat', # good
-            'ascii/humanoid_tri.dat', # good
 
             'ascii/movie.dat',  # csv -> good
             'ascii/multzn2d.dat',  #  2d structured; good
             'ascii/plane_slice.dat',  # 2d structured multi-line; good
+            #'ascii/simp3dbk.dat',  # 3d structured block - bad
+            'ascii/simp3dpt.dat', #  good
+        ]
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        binary_plt = os.path.join(MODEL_PATH, 'ascii.plt')
+        ascii_plt = os.path.join(MODEL_PATH, 'binary.plt')
+        #junk_plt = os.path.join(MODEL_PATH, 'junk.plt')
+        for fname in tecplot_filenames:
+            tecplot_filename = os.path.join(MODEL_PATH, fname)
+            #print(fname)
+            log.info(f'read {fname}')
+            model = read_tecplot(tecplot_filename, log=log)
+            str(model)
+            assert model.zones[0].is_structured, f'{fname} {model.zones[0]}'
+            model.write_tecplot_ascii(ascii_plt)
+            #model.write_tecplot_binary(binary_plt)
+            #read_tecplot(ascii_plt, log=log)
+            #read_tecplot(binary_plt, log=log)
+            #model.write_tecplot(junk_plt, res_types=None, adjust_nids=True)
+        #os.remove(junk_plt)
+
+    def test_tecplot_ascii_unstructured_models(self):
+        tecplot_filenames = [
+            'ascii/block_febrick_3d.dat', # 3d unstructured block; good
+            #'ascii/block_fetet_3d.dat', # bad; no decimal values
+            'ascii/humanoid_quad.dat', # good
+            'ascii/humanoid_tri.dat', # good
+            'ascii/ell.dat', # 2d; good
+
             #'ascii/point_febrick_3d_02.dat',  # difficult header and funny write bug; bad
             'ascii/point_fequad_2d.dat',  # 2d; good
             'ascii/point_fetet_3d.dat',  # good
@@ -66,23 +94,27 @@ class TestTecplot(unittest.TestCase):
             'ascii/point_fetri_2d_02.dat',  # good
             'ascii/point_fetri_2d_03.dat',  # good
 
-            #'ascii/simp3dbk.dat',  # 3d structured block - bad
-            'ascii/simp3dpt.dat', #  good
             #'ascii/simpscat.dat', #  bad -> text
             #'ascii/simpxy.dat',  # no xyz; it's a plot -> bad
             #'ascii/simpxy2.dat',  # no xyz; it's a plot -> bad
             'ascii/tiny.dat',  # good
         ]
         log = SimpleLogger(level='warning', encoding='utf-8')
-        junk_plt = os.path.join(MODEL_PATH, 'junk.plt')
+        binary_plt = os.path.join(MODEL_PATH, 'ascii.plt')
+        ascii_plt = os.path.join(MODEL_PATH, 'binary.plt')
         for fname in tecplot_filenames:
             tecplot_filename = os.path.join(MODEL_PATH, fname)
             #print(fname)
-            log.info('read %r' % fname)
+            log.info(f'read {fname}')
             model = read_tecplot(tecplot_filename, log=log)
             str(model)
-            model.write_tecplot(junk_plt, res_types=None, adjust_nids=True)
-        os.remove(junk_plt)
+            assert model.zones[0].is_unstructured, f'{fname} {model.zones[0]}'
+            model.write_tecplot_ascii(ascii_plt)
+            #model.write_tecplot_binary(binary_plt)
+            read_tecplot(ascii_plt, log=log)
+            #read_tecplot(binary_plt, log=log)
+            #model.write_tecplot(junk_plt, res_types=None, adjust_nids=True)
+        #os.remove(junk_plt)
 
     def test_tecplot_ctria3(self):
         """CTRIA3 elements"""

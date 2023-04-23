@@ -26,6 +26,8 @@ class Zone:
     def __init__(self, log: SimpleLogger):
         self.log = log
 
+        self.name = '???'
+        self.strand_id = -1
         self.headers_dict = CaseInsensitiveDict()
         self.xy = np.array([], dtype='float32')
         self.xyz = np.array([], dtype='float32')
@@ -124,6 +126,20 @@ class Zone:
 
         #print(str(zone))
         return zone
+
+    @property
+    def is_unstructured(self) -> bool:
+        """are there unstructured elements"""
+        is_unstructured = (
+            len(self.tri_elements) or len(self.quad_elements) or
+            len(self.tet_elements) or len(self.hexa_elements)
+        )
+        return is_unstructured
+
+    @property
+    def is_structured(self) -> bool:
+        """is the model in plot3d style format"""
+        return not self.is_unstructured
 
     @property
     def nnodes(self) -> int:
@@ -238,7 +254,7 @@ class Zone:
         xy_shape = str(self.xy.shape)
         xyz_shape = str(self.xyz.shape)
         a_shape = str(self.A.shape) if self.A is not None else None
-        is3d = is_3d(self.headers_dict)
+        is3d = self.is_3d
         if 'I' in self.headers_dict:
             msgi = self.repr_nijk()
         else:
@@ -405,7 +421,7 @@ class Zone:
         # assert elements.max() == nnodes, elements.max()
 
         if adjust_nids:
-            elements += 1
+            elements = elements + 1
 
         for element in elements:
             tecplot_file.write(efmt % tuple(element))
@@ -438,12 +454,13 @@ class Zone:
         assert self.nnodes > 0, f'nnodes={self.nnodes:d}'
         nresults = len(ivars)
         if is_points:
-            _write_xyz_results_point(tecplot_file, nodes, self.nodal_results, nresults, ivars,
-                                     ndim=ndim, word=word)
-
+            _write_xyz_results_point(
+                tecplot_file, nodes, self.nodal_results, nresults, ivars,
+                ndim=ndim, word=word)
         else:
-            _write_xyz_results_block(tecplot_file, nodes, self.nodal_results, nresults, ivars,
-                                     ndim=ndim, word=word)
+            _write_xyz_results_block(
+                tecplot_file, nodes, self.nodal_results, nresults, ivars,
+                ndim=ndim, word=word)
 
     def write_structured_zone(self, tecplot_file: TextIO, ivars: list[int],
                               log: SimpleLogger, headers_dict: dict[str, Any],
@@ -555,11 +572,17 @@ class Zone:
             #if
         #self.hexa_elements
 
+    @property
+    def is_3d(self) -> bool:
+        variables = self.headers_dict['VARIABLES']
+        is_3d = 'Z' in variables or 'z' in variables
+        return is_3d
 
 def is_3d(headers_dict: dict[str, Any]) -> bool:
     #print(headers_dict)
     variables = headers_dict['VARIABLES']
     is_3d = 'Z' in variables or 'z' in variables
+    asdf
     return is_3d
 
 def _write_xyz_results_point(tecplot_file: TextIO,
@@ -614,7 +637,7 @@ def _write_xyz_results_block(tecplot_file: TextIO, nodes: NDArrayN3float,
         #print('nnodes_per_element =', nnodes_per_element)
         # for ivar in range(nnodes_per_element):
         if len(ivars) > nodal_results.shape[1]:
-            ivars = ivars[ndim:]
+            ivars = ivars[ndim:] - ndim
         for ivar in ivars:
             #tecplot_file.write('# ivar=%i\n' % ivar)
             vals = nodal_results[:, ivar].ravel()
