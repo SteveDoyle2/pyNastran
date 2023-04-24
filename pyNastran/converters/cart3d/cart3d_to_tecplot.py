@@ -14,7 +14,8 @@ def cart3d_to_tecplot(cart3d_filename, tecplot_filename, log=None, debug=False):
     tecplot.log = model.log
     zone = Zone(model.log)
     zone.headers_dict['VARIABLES'] = ['X', 'Y', 'Z']
-    zone.xyz = model.points
+    zone.headers_dict['ZONETYPE'] = 'FETRIANGLE'
+    zone.zone_data = model.points
     zone.tri_elements = model.elements + 1
     tecplot.zones = [zone]
 

@@ -85,12 +85,16 @@ def nastran_to_tecplot(model):
     nnot_hexas = ntets + npentas
     if ntris and not nnot_tris and not nsolids:
         zone.tri_elements = np.array(tris, dtype='int32')
+        zone_type = 'FETRIANGLE'
     elif nquads and not nnot_quads and not nsolids:
         zone.quad_elements = np.array(quads, dtype='int32')
+        zone_type = 'FEQUADRILATERAL'
     elif ntets and not nnot_tets and not nshells:
         zone.tet_elements = np.array(tets, dtype='int32')
+        zone_type = 'FETETRAHEDRON'
     elif nhexas and not nnot_hexas and not nshells:
         zone.hexa_elements = np.array(hexas, dtype='int32')
+        zone_type = 'FEBRICK'
     elif not nshells:
         elements = np.zeros((nelements, 8), dtype='int32')
         if ntets:
@@ -112,6 +116,7 @@ def nastran_to_tecplot(model):
             elements[ntets + npentas:ntets + npentas + nhexas, 6] = elements[:ntets, 5]
             elements[ntets + npentas:ntets + npentas + nhexas, 7] = elements[:ntets, 5]
         zone.hexa_elements = np.array(elements)
+        zone_type = 'FEBRICK'
     elif not nsolids:
         elements = np.zeros((nelements, 4), dtype='int32')
         tris = np.array(tris, dtype='int32')
@@ -120,12 +125,15 @@ def nastran_to_tecplot(model):
 
         quads = np.array(quads, dtype='int32')
         elements[ntris:, :] = quads
+        zone_type = 'FEQUADRILATERAL'
     else:
         msg = 'Only solids or shells are allowed (not both)\n'
         msg += '  nsolids=%s nshells=%s\n' % (nsolids, nshells)
         msg += '  ntris=%s nquads=%s\n' % (ntris, nquads)
         msg += '  ntets=%s npentas=%s nhexas=%s\n' % (ntets, npentas, nhexas)
         raise NotImplementedError(msg)
+    zone.headers_dict['ZONETYPE'] = zone_type
+
     tecplot.zones = [zone]
     str(zone)
     return tecplot
@@ -150,6 +158,7 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=
     assert len(model.nodes) == i, 'model.nodes=%s i=%s' % (len(model.nodes), i)
 
     elements_list = []
+    zone_type = 'FEBRICK'
     for unused_eid, element in sorted(model.elements.items()):
         if element.type in ['CTETRA']:
             n1, n2, n3, n4 = element.node_ids
@@ -185,6 +194,7 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=
 
     tecplot = Tecplot(log=model.log)
     zone = Zone(model.log)
+    zone.headers_dict['ZONETYPE'] = zone_type
     zone.headers_dict['VARIABLES'] = ['X', 'Y', 'Z']
     zone.zone_data = nodes
     zone.hexa_elements = elements
