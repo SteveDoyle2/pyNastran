@@ -286,12 +286,6 @@ class TecplotBinary(Base):
                 if quads is not None:
                     log.debug(f'quads.min/max = {quads.min()} {quads.max()}')
                     assert quads.min() >= 0, quads.min()
-                xyz = zone_data[:, :3]
-                #print(xyz)
-                assert xyz.shape[1] == 3, xyz.shape
-                nodal_results = zone_data[:, 3:]
-                nresults = zone_data.shape[1] - 3
-                assert nodal_results.shape[1] == nresults, nodal_results.shape
 
                 if izone not in set_zones_to_exclude:
                     zone = Zone.set_zone_from_360(
@@ -300,10 +294,10 @@ class TecplotBinary(Base):
                         strand_id=zone_tuple.strand_id,
                         data_packing=zone_tuple.data_packing_str,
                         zone_type=zone_tuple.zone_type_str,
-                        xy=None, xyz=xyz,
                         tris=tris, quads=quads,
                         tets=tets, hexas=hexas,
-                        nodal_results=nodal_results)
+                        zone_data=zone_data,
+                        )
                     self.zones.append(zone)
                 #assert quads.max() <= 236_064, (zone_name, quads.max())
 
@@ -416,9 +410,7 @@ def _write_binary_results(model: TecplotBinary,
         # 4=ShortInt, 5=Byte, 6=Bit
         results = []
         dtypes = []
-        #_prep_results_dtypes(results, dtypes, zone.xy)
-        _prep_results_dtypes(results, dtypes, zone.xyz)
-        _prep_results_dtypes(results, dtypes, zone.nodal_results)
+        _prep_results_dtypes(results, dtypes, zone.zone_data)
         nnodes = len(results[0])
 
         data = pack(f'<{nvars}i', *dtypes)
@@ -447,6 +439,8 @@ def _write_binary_results(model: TecplotBinary,
             elements = zone.tri_elements
         elif zone_type == 3: # FEQUAD
             elements = zone.quad_elements
+        elif zone_type == 4: # FETETRAHEDRON
+            elements = zone.tet_elements
         elif zone_type == 5:  # FEBRICK
             elements = zone.hexa_elements
         else:
@@ -615,7 +609,7 @@ def _read_binary_results(
         if connectivity_sharing != -1:
             raise RuntimeError('is_fe_zone; p.158')
 
-        assert zone_type in {3, 5}, zone_type # fequad
+        assert zone_type in {2, 3, 4, 5}, zone_type # fequad
         assert data_packing in {0, 1}, data_packing # block
         assert raw_local == 0, raw_local
         assert n_misc_neighbor_connections > 0, n_misc_neighbor_connections
@@ -928,7 +922,7 @@ def _read_binary_zone_headers(
             log.debug('abcd = (0, 0, 0, 0)')
 
             # POINT_FEBRICK_3D_02.plt
-            assert zone_type == 5, zone_type # POINT_FEBRICK_3D_02.plt
+            #assert zone_type == 5, zone_type # POINT_FEBRICK_3D_02.plt
             #assert nnodes == 125, nnodes
             #assert nelement == 64, nelement
             celldim = nnodes
@@ -984,7 +978,7 @@ def _read_binary_zone_headers(
         assert data_packing in {0, 1}, data_packing
         assert nelement > 0, nelement
 
-        assert zone_type in {3, 5}, zone_type
+        #assert zone_type in {3, 5}, zone_type
         #assert data_packing == 0, data_packing
         assert specify_var in {0, 1}, specify_var
 
@@ -1018,7 +1012,7 @@ def _read_binary_zone_headers(
 def zone_type_int_to_str(zone_type: int) -> str:
     if zone_type == 2:
         zone_type_str = 'FETRIANGLE'
-    if zone_type == 3:
+    elif zone_type == 3:
         zone_type_str = 'FEQUADRILATERAL'
     elif zone_type == 4:
         zone_type_str = 'FETETRAHEDRON'

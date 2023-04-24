@@ -5,7 +5,6 @@ from .zone import Zone
 
 def write_ascii_header(title: str,
                        is_x: bool, is_y: bool, is_z: bool,
-                       is_results: bool,
                        res_types: list[str],
                        variables: list[str]) -> tuple[str, np.ndarray]:
     """"
@@ -17,29 +16,32 @@ def write_ascii_header(title: str,
         msg = 'TITLE = "%s"\n' % title
 
     variables_ = []
-    if is_x:
-        variables_.append('X')
-    if is_y:
-        variables_.append('Y')
-    if is_z:
-        variables_.append('Z')
-
     result_indices_to_write = []
-    if is_results:
-        #msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
-        #print(f'res_types = {res_types}')
-        #print(f'vars = {variables}')
-        for ivar, var in enumerate(res_types):
-            if var not in variables:
-                raise RuntimeError(f'var={var!r} not in variables={variables}')
-            #print(f'adding {var}')
-            result_indices_to_write.append(variables.index(var))
-        ivars = np.unique(result_indices_to_write)
-        ivars.sort()
-    else:
-        #if res_types is None:
-        assert len(res_types) == 0, len(res_types)
-        ivars = np.array([], dtype='int32')
+    #if is_x:
+        #ivar = variables.index('X')
+        #variables_.append('X')
+        #result_indices_to_write.append(ivar)
+    #if is_y:
+        #ivar = variables.index('Y')
+        #variables_.append('Y')
+        #result_indices_to_write.append(ivar)
+    #if is_z:
+        #ivar = variables.index('Z')
+        #variables_.append('Z')
+        #result_indices_to_write.append(ivar)
+
+
+    #msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
+    #print(f'res_types = {res_types}')
+    #print(f'vars = {variables}')
+    for ivar, var in enumerate(res_types):
+        if var not in variables:
+            raise RuntimeError(f'var={var!r} not in variables={variables}')
+        #print(f'adding {var}')
+        result_indices_to_write.append(variables.index(var))
+    ivars = np.unique(result_indices_to_write)
+    ivars.sort()
+    assert len(result_indices_to_write) == len(ivars)
 
     for ivar in ivars:
         var = variables[ivar]
@@ -48,6 +50,7 @@ def write_ascii_header(title: str,
     #if len(variables_):
     msg += 'VARIABLES = ' + ''.join(f'"{var}"\n' for var in variables_)
     #print(f'ivars = {ivars}')
+    assert len(ivars) > 0, ivars
     return msg, ivars
 
 def write_ascii_tecplot_zone(tecplot_file: TextIO,

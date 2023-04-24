@@ -3,6 +3,7 @@ models from:
     http://people.sc.fsu.edu/~jburkardt/data/tec/tec.html
 """
 import os
+import copy
 import itertools
 from io import StringIO
 from pathlib import PurePath
@@ -12,7 +13,7 @@ import numpy as np
 from cpylog import SimpleLogger
 
 from pyNastran.utils import is_binary_file
-from pyNastran.converters.tecplot.zone import Zone, is_3d
+from pyNastran.converters.tecplot.zone import Zone
 from pyNastran.converters.tecplot.tecplot_binary import (
     TecplotBinary, zones_to_exclude_to_set)
 from pyNastran.converters.tecplot.write_ascii import (
@@ -144,8 +145,7 @@ class Tecplot(TecplotBinary):
         hexas_list: list[np.ndarray] = []
         tris_list: list[np.ndarray] = []
         tets_list: list[np.ndarray] = []
-        xyz_list: list[np.ndarray] = []
-        results_list: list[np.ndarray] = []
+        zone_data_list: list[np.ndarray] = []
 
         line = lines[iline].strip()
         iline += 1
@@ -162,7 +162,7 @@ class Tecplot(TecplotBinary):
                 break
 
             zone = Zone(self.log)
-            zone.headers_dict = headers_dict
+            zone.headers_dict = copy.deepcopy(headers_dict)
             self.variables = headers_dict['VARIABLES']
             if 'NAME' in headers_dict:
                 zone.name = headers_dict['NAME']
@@ -170,14 +170,13 @@ class Tecplot(TecplotBinary):
 
             #print(headers_dict.keys())
             if 'ZONETYPE' in headers_dict:
-                zone_type = headers_dict['ZONETYPE'].upper() # FEBrick
+                zone_type = zone.zonetype  # febrick
                 data_packing = headers_dict['DATAPACKING'].upper() # block
                 iline = read_zonetype(
                     self.log,
                     zone, zone_type, lines, iline, iblock, headers_dict, line,
                     nnodes, nelements,
-                    xyz_list, hexas_list, tets_list, quads_list, tris_list,
-                    results_list,
+                    zone_data_list, hexas_list, tets_list, quads_list, tris_list,
                     data_packing=data_packing)
                 iline -= 1
             elif 'DATAPACKING' in headers_dict:
@@ -189,8 +188,7 @@ class Tecplot(TecplotBinary):
                     self.log,
                     zone, zone_type, lines, iline, iblock, headers_dict, line,
                     nnodes, nelements,
-                    xyz_list, hexas_list, tets_list, quads_list, tris_list,
-                    results_list,
+                    zone_data_list, hexas_list, tets_list, quads_list, tris_list,
                     fe=data_packing)
                 iline -= 1
             elif (('ZONE' in headers_dict) and
@@ -210,16 +208,15 @@ class Tecplot(TecplotBinary):
 
             #print(zone)
             if izone in set_zones_to_exclude:
-                print(f'skipping izone={izone}')
+                log.warning(f'skipping izone={izone}')
             else:
                 self.zones.append(zone)
 
                 #sline = line.split()
                 #print('stack...')
-                _stack(zone, xyz_list,
+                _stack(zone, zone_data_list,
                        quads_list, tris_list,
                        tets_list, hexas_list,
-                       results_list,
                        self.log)
 
             if line is None:
@@ -232,14 +229,18 @@ class Tecplot(TecplotBinary):
             hexas_list = []
             tris_list = []
             tets_list = []
-            xyz_list = []
-            results_list = []
+            zone_data_list = []
             izone += 1
+
+    @property
+    def nnodes(self) -> int:
+        nnodes = sum([zone.nnodes for zone in self.zones])
+        return nnodes
 
     def stack_geometry(self) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                       np.ndarray, np.ndarray, np.ndarray,
                                       list[str]]:
-        nnodes = sum([zone.nnodes for zone in self.zones])
+        nnodes = self.nnodes
         nodes = np.zeros((nnodes, 3), dtype='float32')
         inode = 0
         tris = []
@@ -427,32 +428,6 @@ class Tecplot(TecplotBinary):
         inodes = np.where(y < slice_value)[0]
         zone._slice_plane_inodes(inodes)
 
-    def _get_write_header(self, res_types: list[str]) -> tuple[str, np.ndarray]:
-        """gets the tecplot header"""
-        is_x = True
-        is_y = True
-        is_z = True
-        #is_results = False
-        assert self.nzones >= 1, self.nzones
-        for zone in self.zones:
-            variables = zone.variables
-            is_x = 'X' in zone.headers_dict['VARIABLES']
-            is_y = 'Y' in zone.headers_dict['VARIABLES']
-            is_z = 'Z' in zone.headers_dict['VARIABLES']
-            is_results = bool(len(zone.nodal_results))
-            if res_types is None:
-                res_types = zone.variables
-            elif isinstance(res_types, str):
-                res_types = [res_types]
-            break
-
-        title = self.title
-        msg, ivars = write_ascii_header(
-            title, is_x, is_y, is_z,
-            is_results, res_types,
-            variables)
-        return msg, ivars
-
     def write_tecplot(self, tecplot_filename: str,
                       res_types: list[str]=None,
                       adjust_nids: bool=True) -> None:
@@ -478,7 +453,7 @@ class Tecplot(TecplotBinary):
                             adjust_nids: bool=True) -> None:
         """writes an ASCII tecplot file"""
         self.log.info('writing tecplot %s' % tecplot_filename)
-        msg, ivars = self._get_write_header(res_types)
+        msg, ivars = _get_write_header(self.title, self.zones, res_types)
         with open(tecplot_filename, 'w') as tecplot_file:
             tecplot_file.write(msg)
             for zone in self.zones:
@@ -564,6 +539,46 @@ class Tecplot(TecplotBinary):
             model.write_tecplot(slice_filename)
         return model
 
+def _get_write_header(title: str,
+                      zones: list[Zone],
+                      res_types: list[str]) -> tuple[str, np.ndarray]:
+    """gets the tecplot header"""
+    is_x = True
+    is_y = True
+    is_z = True
+    #is_results = False
+    nzones = len(zones)
+    assert nzones >= 1, nzones
+    for zone in zones:
+        variables = zone.variables
+        is_x = 'X' in zone.headers_dict['VARIABLES']
+        is_y = 'Y' in zone.headers_dict['VARIABLES']
+        is_z = 'Z' in zone.headers_dict['VARIABLES']
+        res_types_all = []
+        if is_x:
+            res_types_all.append('X')
+        if is_y:
+            res_types_all.append('Y')
+        if is_z:
+            res_types_all.append('Z')
+
+        if res_types is None:
+            res_types = zone.variables
+        elif isinstance(res_types, str):
+            res_types = [res_types]
+
+        for res in res_types:
+            if res not in res_types_all:
+                res_types_all.append(res)
+        break
+
+    assert len(variables), variables
+    msg, ivars = write_ascii_header(
+        title, is_x, is_y, is_z,
+        res_types_all, variables)
+    return msg, ivars
+
+
 def stack(elements: list[np.ndarray]) -> np.ndarray:
     if len(elements) == 0:
         pass
@@ -579,10 +594,9 @@ def stack(elements: list[np.ndarray]) -> np.ndarray:
     return elements
 
 def _stack(zone: Zone,
-           xyz_list: list[np.ndarray],
+           zone_data_list: list[np.ndarray],
            quads_list: list[np.ndarray], tris_list: list[np.ndarray],
            tets_list: list[np.ndarray], hexas_list: list[np.ndarray],
-           results_list: list[np.ndarray],
            log: SimpleLogger):
     """
     elements are read as a list of lines, so we need to stack them
@@ -604,37 +618,28 @@ def _stack(zone: Zone,
     #if 'zonetype' not in zone.headers_dict:
         #raise RuntimeError('no elements')
 
-    log.debug('stacking nodes')
-    if len(xyz_list) == 1:
-        xyz = xyz_list[0]
-    else:
-        xyz = np.vstack(xyz_list)
+    #log.debug('stacking nodes')
+    #if len(xyz_list) == 1:
+        #xyz = xyz_list[0]
+    #else:
+        #xyz = np.vstack(xyz_list)
 
     #self.elements = elements - 1
     #print(self.elements)
+    if zone_data_list:
+        zone.zone_data = np.vstack(zone_data_list)
+        #print('**', len(zone_data_list), 'shape=', zone.zone_data.shape)
 
     if zone.is_3d:
         zone.log.info('3d zone')
-        zone.xyz = xyz
-
-        nresults = len(results_list)
-        if nresults == 1:
-            results = results_list[0]
-        else:
-            results = np.vstack(results_list)
-        zone.nodal_results = results
+        zone.xyz
+        zone.nodal_results
     else:
+        assert zone.is_2d
         zone.log.info('2d zone')
-        zone.xy = xyz[:, :2]
-        nresults = len(results_list) + 1
-        nnodes_temp = xyz.shape[0]
-        if nresults == 1:
-            zone.nodal_results = xyz[:, 2].reshape(nnodes_temp, 1)
-        else:
-            inputs = [xyz[:, 2].reshape(nnodes_temp, 1), *results_list]
-            zone.nodal_results = np.hstack(inputs)
-        del nnodes_temp
-    zone.variables = [var for var in zone.variables if var not in ['X', 'Y', 'Z']]
+        zone.xy
+        zone.nodal_results
+    x = 1
 
 def main():  # pragma: no cover
     #plt = Tecplot()

@@ -227,7 +227,7 @@ def header_lines_to_header_dict(title_line: str, header_lines: list[str],
             parse = False
     log.debug(f'headers_dict = {headers_dict}')
     #print(headers_dict.keys())
-    print(headers_dict)
+    #print(headers_dict)
 
     _simplify_header(headers_dict, variables)
     assert len(headers_dict) > 0, headers_dict
@@ -316,12 +316,11 @@ def read_zonetype(log: SimpleLogger,
                   headers_dict: dict[str, Any],
                   line: str,
                   nnodes: int, nelements: int,
-                  xyz_list: list[np.ndarray],
+                  zone_data_list: list[np.ndarray],
                   hexas_list: list[np.ndarray],
                   tets_list: list[np.ndarray],
                   quads_list: list[np.ndarray],
                   tris_list: list[np.ndarray],
-                  results_list: list[np.ndarray],
                   data_packing: Optional[str]=None,
                   fe: Optional[str]=None) -> int:
     """
@@ -369,9 +368,10 @@ def read_zonetype(log: SimpleLogger,
     #print('iblock =', iblock)
     if iblock == 0:
         variables = headers_dict['VARIABLES']
-        zone.variables = [variable.strip(' \r\n\t"\'') for variable in variables]
+        variables = [variable.strip(' \r\n\t"\'') for variable in variables]
+        zone.variables = variables
         log.debug('zone.variables = %s' % zone.variables)
-        nresults = len(variables) - 3 # x, y, z, rho, u, v, w, p
+        nresults = len(variables) # x, y, z, rho, u, v, w, p
         log.debug('nresults = %s' % nresults)
 
     log.debug(str(headers_dict))
@@ -410,8 +410,8 @@ def read_zonetype(log: SimpleLogger,
 
     assert nnodesi > 0, nnodesi
     assert nresults >= 0, 'nresults=%s' % nresults
-    xyz = np.zeros((nnodesi, 3), dtype='float32')
-    results = np.zeros((nnodesi, nresults), dtype='float32')
+
+    xyz_results = np.zeros((nnodesi, nresults), dtype='float32')
     if zone_type == 'FEBRICK':
         # hex
         elements = np.zeros((nelementsi, 8), dtype='int32')
@@ -438,13 +438,12 @@ def read_zonetype(log: SimpleLogger,
             for inode in range(nnodesi):
                 if inode == 0:
                     log.debug('zone_type=%s sline=%s' %(zone_type, sline))
-                if not len(sline[3:]) == len(results[inode, :]):
-                    msg = 'sline[3:]=%s results[inode, :]=%s' % (sline[:3], results[inode, :])
-                    raise RuntimeError(msg)
+                #if not len(sline[3:]) == len(results[inode, :]):
+                    #msg = 'sline[3:]=%s results[inode, :]=%s' % (sline[:3], results[inode, :])
+                    #raise RuntimeError(msg)
 
                 try:
-                    xyz[inode, :] = sline[:3]
-                    results[inode, :] = sline[3:]
+                    xyz_results[inode, :] = sline
                 except ValueError:
                     msg = 'i=%s line=%r\n' % (inode, line)
                     msg += 'sline = %s' % str(sline)
@@ -453,24 +452,24 @@ def read_zonetype(log: SimpleLogger,
                 iline, line, sline = get_next_sline(lines, iline)
         elif data_packing == 'BLOCK':
             iline, line, sline = read_zone_block(
-                lines, iline, xyz, results, nresults, zone_type,
+                lines, iline, xyz_results, nresults, zone_type,
                 sline, nnodesi, log)
             #print('sline =', sline)
         else:
             raise NotImplementedError(data_packing)
     elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETRIANGLE'):
         iline, line, sline = _read_zonetype_fe(
-            iline, line, lines, nnodesi, xyz, results)
+            iline, line, lines, nnodesi, xyz_results)
 
     elif zone_type == 'POINT':
         nvars = len(zone.variables)
         iline, line, sline = read_point(
-            lines, iline, xyz, results, zone_type,
+            lines, iline, xyz_results, zone_type,
             line, sline, nnodesi, nvars, log)
     elif zone_type == 'BLOCK':
         nvars = len(zone.variables)
         iline, line, sline = read_block(
-            lines, iline, xyz, results, zone_type,
+            lines, iline, xyz_results, zone_type,
             line, sline, nnodesi, nvars, log)
     else:  # pragma: no cover
         raise NotImplementedError(zone_type)
@@ -500,8 +499,7 @@ def read_zonetype(log: SimpleLogger,
             raise NotImplementedError(zone_type)
     else:
         raise RuntimeError()
-    xyz_list.append(xyz)
-    results_list.append(results)
+    zone_data_list.append(xyz_results)
     nnodes += nnodesi
     nelements += nelementsi
     log.debug('nnodes=%s nelements=%s (0-based)' % (nnodes, nelements))
@@ -516,8 +514,7 @@ def _read_zonetype_fe(iline: int,
                       line: str,
                       lines: list[str],
                       nnodesi: int,
-                      xyz: np.ndarray,
-                      result: np.ndarray) -> tuple[int, str, list[str]]:
+                      xyz_result: np.ndarray) -> tuple[int, str, list[str]]:
     """
     reads:
      - FEPOINT
@@ -525,16 +522,15 @@ def _read_zonetype_fe(iline: int,
      - FETRIANGLE
     """
     sline = split_line(line.strip())
-    nexpected = 3 + result.shape[1]
+    nexpected = xyz_result.shape[1]
     if len(sline) == nexpected:
         for inode in range(nnodesi):
             #print(iline, inode, sline, len(sline))
-            xyz[inode, :] = sline[:3]
+            xyz_result[inode, :] = sline
             #if abs(xyz[inode, 1]) <= 5.0:
                 #msg = 'inode=%s xyz=%s'  % (inode, xyz[inode, :])
                 #raise RuntimeError(msg)
 
-            result[inode, :] = sline[3:]
             iline, line, sline = get_next_sline(lines, iline)
     else:
         nvalues_to_read = nexpected * nnodesi
@@ -549,16 +545,11 @@ def _read_zonetype_fe(iline: int,
             inode += 1
         # remove the last sline
         nslinei = len(slinei)
-        xyz_result = sline[:-nslinei]
-        assert len(xyz_result) == nvalues_to_read, (len(xyz_result), nvalues_to_read)
-        xyz_result = np.array(xyz_result, dtype='float32')
-        xyz_result = xyz_result.reshape((nexpected, nnodesi)).T
-        xyz[:, :] = xyz_result[:, :3]
-        result[:, :] = xyz_result[:, 3:]
-
-        assert xyz.shape == (nnodesi, 3), xyz.shape
-        assert result.shape == (nnodesi, nexpected - 3), result.shape
-        del sline, xyz_result, inode
+        xyz_result_list = sline[:-nslinei]
+        assert len(xyz_result) == nvalues_to_read, (len(xyz_result_list), nvalues_to_read)
+        xyz_result_temp = np.array(xyz_result_list, dtype='float32')
+        xyz_result[:, :] = xyz_result_temp.reshape((nexpected, nnodesi)).T
+        del sline, inode
 
         #print(iline, slinei)
         sline = slinei
@@ -566,8 +557,7 @@ def _read_zonetype_fe(iline: int,
     return iline, line, sline
 
 def read_zone_block(lines: list[str], iline: int,
-                    xyz: np.ndarray,
-                    results: np.ndarray, nresults: int,
+                    xyz_results: np.ndarray, nresults: int,
                     zone_type: str,
                     sline: list[str], nnodes: int,
                     log: SimpleLogger,
@@ -580,14 +570,14 @@ def read_zone_block(lines: list[str], iline: int,
     #iresult = len(sline)
     #nresult = len(sline)
 
-    result = []
+    xyz_result_list: list[str] = []
     iresult = 0
     nresult = 0
-    nnodes_max = (3 + nresults) * nnodes
+    nnodes_max = nresults * nnodes
     #print('nnodes_max =', nnodes_max)
     while nresult < nnodes_max: #  changed from iresult to nresult
         #print('zb', iline, sline, len(sline))
-        result += sline
+        xyz_result_list += sline
         nresult += len(sline)
         if iresult >= nnodes_max:
             log.debug('breaking...')
@@ -598,24 +588,20 @@ def read_zone_block(lines: list[str], iline: int,
         iresult += len(sline)
         #print('len', iresult, nresult, len(result))
     #print(result, len(result))
-    for i, value in enumerate(result):
+    for i, value in enumerate(xyz_result_list):
         assert '.' in value, 'i=%i value=%s' % (i, value)
-    assert len(result) == nnodes_max, 'len(result)=%s expected=%s' % (len(result), nnodes_max)
+    assert len(xyz_result_list) == nnodes_max, 'len(xyz_result_list)=%s expected=%s' % (len(xyz_result_list), nnodes_max)
     #-----------------
 
     # pack data
-    for ires in range(3 + nresults):
+    for ires in range(nresults):
         i0 = ires * nnodes
         i1 = (ires + 1) * nnodes #+ 1
-        if len(result[i0:i1]) != nnodes:
+        if len(xyz_result_list[i0:i1]) != nnodes:
             msg = 'ires=%s len=%s nnodes=%s' % (
-                ires, len(result[i0:i1]), nnodes)
+                ires, len(xyz_result_list[i0:i1]), nnodes)
             raise RuntimeError(msg)
-        if ires in [0, 1, 2]:
-            log.debug('ires=%s nnodes=%s len(result)=%s' % (ires, nnodes, len(result)))
-            xyz[:, ires] = result[i0:i1]
-        else:
-            results[:, ires - 3] = result[i0:i1]
+        xyz_results[:, ires] = xyz_result_list[i0:i1]
 
     # setup
     #iline, line, sline = get_next_sline(lines, iline)
@@ -645,8 +631,7 @@ def read_unstructured_elements(lines: list[str], iline: int, sline: list[str],
 
 
 def read_point(lines: list[str], iline: int,
-               xyz: np.ndarray,
-               results: np.ndarray,
+               xyz_results: np.ndarray,
                zone_type: str,
                line: str, sline: list[str],
                nnodes: int, nvars: int,
@@ -662,13 +647,12 @@ def read_point(lines: list[str], iline: int,
             #log.debug('zone_type=%s sline=%s' %(zone_type, sline))
 
 
-        if not len(sline[3:]) == len(results[inode, :]):
-            msg = 'sline[3:]=%s results[inode, :]=%s' % (sline[:3], results[inode, :])
+        if not len(sline) == len(xyz_results[inode, :]):
+            msg = 'sline=%s results[inode, :]=%s' % (sline[:3], results[inode, :])
             raise RuntimeError(msg)
 
         try:
-            xyz[inode, :] = sline[:3]
-            results[inode, :] = sline[3:]
+            xyz_results[inode, :] = sline
         except ValueError:
             msg = 'i=%s line=%r\n' % (inode, line)
             msg += 'sline = %s' % str(sline)
@@ -680,7 +664,7 @@ def read_point(lines: list[str], iline: int,
     return iline, line, sline
 
 def read_block(lines: list[str], iline: int,
-               xyz: np.ndarray, results: np.ndarray,
+               xyz_results: np.ndarray,
                zone_type: str, line: str,
                sline: list[str],
                nnodes: int, nvars: int,

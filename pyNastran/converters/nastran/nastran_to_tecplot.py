@@ -28,7 +28,7 @@ def nastran_to_tecplot(model):
         raise RuntimeError(msg)
     zone = Zone(model.log)
     zone.headers_dict['VARIABLES'] = ['X', 'Y', 'Z']
-    zone.xyz = xyz
+    zone.zone_data = xyz
 
     nquads = model.card_count['CQUAD4'] if 'CQUAD4' in model.card_count else 0
     ntets = model.card_count['CTETRA'] if 'CTETRA' in model.card_count else 0
@@ -127,6 +127,7 @@ def nastran_to_tecplot(model):
         msg += '  ntets=%s npentas=%s nhexas=%s\n' % (ntets, npentas, nhexas)
         raise NotImplementedError(msg)
     tecplot.zones = [zone]
+    str(zone)
     return tecplot
 
 def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=False):
@@ -138,7 +139,6 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=
     #log.info('card_count = %s' % model.card_count)
     nnodes = len(model.nodes)
     nodes = np.zeros((nnodes, 3), dtype='float64')
-    elements = []
 
     i = 0
     nodeid_to_i_map = {}
@@ -149,45 +149,46 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=
         i += 1
     assert len(model.nodes) == i, 'model.nodes=%s i=%s' % (len(model.nodes), i)
 
+    elements_list = []
     for unused_eid, element in sorted(model.elements.items()):
         if element.type in ['CTETRA']:
             n1, n2, n3, n4 = element.node_ids
             i1, i2, i3, i4 = (nodeid_to_i_map[n1], nodeid_to_i_map[n2],
                               nodeid_to_i_map[n3], nodeid_to_i_map[n4])
-            elements.append([i1, i2, i3, i4,
-                             i4, i4, i4, i4])
+            elements_list.append([i1, i2, i3, i4,
+                                  i4, i4, i4, i4])
         elif element.type in ['CPENTA']:
             n1, n2, n3, n4, n5, n6 = element.node_ids
             i1, i2, i3, i4, i5, i6 = (
                 nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n4],
                 nodeid_to_i_map[n5], nodeid_to_i_map[n6])
-            elements.append([i1, i2, i3, i4,
-                             i5, i6, i6, i6])
+            elements_list.append([i1, i2, i3, i4,
+                                  i5, i6, i6, i6])
         elif element.type in ['CPYRAM']:
             n1, n2, n3, n4, n5 = element.node_ids
             i1, i2, i3, i4, i5 = (
                 nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n4],
                 nodeid_to_i_map[n5])
-            elements.append([i1, i2, i3, i4,
-                             i5, i5, i5, i5])
+            elements_list.append([i1, i2, i3, i4,
+                                  i5, i5, i5, i5])
         elif element.type in ['CHEXA']:
             n1, n2, n3, n4, n5, n6, n7, n8 = element.node_ids
             i1, i2, i3, i4, i5, i6, i7, i8 = (
                 nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n4],
                 nodeid_to_i_map[n5], nodeid_to_i_map[n6], nodeid_to_i_map[n7], nodeid_to_i_map[n8])
-            elements.append([i1, i2, i3, i4,
-                             i5, i6, i7, i8])
+            elements_list.append([i1, i2, i3, i4,
+                                  i5, i6, i7, i8])
         else:
             model.log.info('skip etype=%r' % element.type)
             model.log.info(element)
-    elements = np.array(elements, dtype='int32')
+    elements = np.array(elements_list, dtype='int32')
 
     tecplot = Tecplot(log=model.log)
     zone = Zone(model.log)
     zone.headers_dict['VARIABLES'] = ['X', 'Y', 'Z']
-    zone.xyz = nodes
+    zone.zone_data = nodes
     zone.hexa_elements = elements
-    zone.nodal_results = np.array([], dtype='float32')
     tecplot.zones = [zone]
+    str(zone)
     tecplot.write_tecplot(tecplot_filename)
     return tecplot
