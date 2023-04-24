@@ -58,6 +58,7 @@ if TYPE_CHECKING:  # pragma: no cover
                                                  GMSPC)
     from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                         CORD2R, CORD2C, CORD2S, #CORD3G,
+                                                        MATCID,
                                                         )
     from pyNastran.bdf.cards.deqatn import DEQATN
     from pyNastran.bdf.cards.dynamic import (
@@ -76,6 +77,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                                MAT8, MAT9, MAT10, MAT11, MAT3D,
                                                MATG, MATHE, MATHP, CREEP, EQUIV,
+                                               MATDMG,
                                                NXSTRAT)
     from pyNastran.bdf.cards.material_deps import (
         MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
@@ -796,13 +798,14 @@ class AddMethods:
             self.model._type_to_id_map[material.type].append(key)
 
     def _add_material_dependence_object(self, material: Union[MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9,
-                                                              MATS1], # MATS3, MATS8
+                                                              MATS1, MATDMG], # MATS3, MATS8
                                         allow_overwrites: bool=False) -> None:
         """
         adds the following objects:
             MATS1, MATS3, MATS8,
             MATT1, MATT2, MATT3,
-            MATT4, MATT5, MATT8, MATT9
+            MATT4, MATT5, MATT8, MATT9,
+            MATDMG
         """
         Type = material.type
         key = material.mid
@@ -818,6 +821,7 @@ class AddMethods:
             'MATT5' : self.model.MATT5,
             'MATT8' : self.model.MATT8,
             'MATT9' : self.model.MATT9,
+            'MATDMG': self.model.MATDMG,
         }
         slot = mapper[Type]
         if key in slot and not allow_overwrites:
@@ -860,6 +864,18 @@ class AddMethods:
         else:
             self.model.coords[key] = coord
             self.model._type_to_id_map[coord.type].append(key)
+
+    def _add_matcid_object(self, matcid: Union[MATCID]) -> None:
+        """adds a MATCID object"""
+        key = matcid.cid
+        assert matcid.cid > -1, 'cid=%s coord=\n%s' % (key, matcid)
+
+        # Multiple MATCIDs can share the same CID
+        if key in self.model.MATCID:
+            self.model.MATCID[key].append(matcid)
+        else:
+            self.model.MATCID[key] = [matcid]
+            self.model._type_to_id_map[matcid.type].append(key)
 
     def _add_load_combination_object(self, load: Union[LOAD, CLOAD]) -> None:
         """adds a load object to a load case"""

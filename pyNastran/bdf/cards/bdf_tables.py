@@ -1362,6 +1362,7 @@ class TABLEST(Table):
         self.tid = tid
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')  # TODO: shouldn't this be integers
+        self.yref = []
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1402,7 +1403,10 @@ class TABLEST(Table):
         return TABLEST(table_id, x, y, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        raise RuntimeError('TABLEST')
+        self.yref = []
+        for tid in self.y:
+            table = model.Table(tid, msg='')
+            self.yref.append(table)
 
     def raw_fields(self):
         xy = []

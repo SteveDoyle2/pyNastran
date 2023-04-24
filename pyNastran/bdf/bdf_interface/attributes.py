@@ -476,6 +476,7 @@ class BDFAttributes:
         self.MATT5 = {}  # type: dict[int, Any]
         self.MATT8 = {}  # type: dict[int, Any]
         self.MATT9 = {}  # type: dict[int, Any]
+        self.MATDMG = {}  # type: dict[int, Any]
         self.nxstrats = {}  # type: dict[int, Any]
 
         #: stores the CREEP card
@@ -498,6 +499,7 @@ class BDFAttributes:
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
         self.coords = {0 : coord}   # type: dict[int, Any]
+        self.MATCID = {}
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
@@ -855,6 +857,7 @@ class BDFAttributes:
             'MATT8' : ['MATT8'],
             'MATT9' : ['MATT9'],
             'MATS1' : ['MATS1'],
+            'MATDMG': ['MATDMG'],
             'MATS3' : ['MATS3'],
             'MATS8' : ['MATS8'],
             'nxstrats' : ['NXSTRAT'],
@@ -947,6 +950,7 @@ class BDFAttributes:
             'coords' : ['CORD1R', 'CORD1C', 'CORD1S',
                         'CORD2R', 'CORD2C', 'CORD2S',
                         'GMCORD', 'ACOORD', 'CORD3G'],
+            'matcid': ['MATCID'],
 
             # temperature cards
             'tempds' : ['TEMPD'],

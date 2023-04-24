@@ -496,6 +496,7 @@ class WriteMesh(BDFAttributes):
         self._write_parametric(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_rejects(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_matcids(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         if self.acmodl:
             bdf_file.write(self.acmodl.write_card(size, is_double))
@@ -591,6 +592,20 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(coord.write_card(size, is_double))
             except RuntimeError:
                 bdf_file.write(coord.write_card_16(is_double))
+
+    def _write_matcids(self, bdf_file: Any, size: int=8, is_double: bool=False,
+                      is_long_ids: Optional[bool]=None) -> None:
+        """Writes the MATCID cards in a sorted order"""
+        size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
+
+        if len(self.MATCID):
+            bdf_file.write('$MATCID\n')
+        for (cid, matcids) in sorted(self.MATCID.items()):
+            for matcid in matcids:
+                try:
+                    bdf_file.write(matcid.write_card(size, is_double))
+                except RuntimeError:
+                    bdf_file.write(matcid.write_card_16(is_double))
 
     def _write_dmigs(self, bdf_file: Any, size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
@@ -793,6 +808,8 @@ class WriteMesh(BDFAttributes):
             for (unused_mid, material) in sorted(self.MATT8.items()):
                 bdf_file.write(material.write_card(size, is_double))
             for (unused_mid, material) in sorted(self.MATT9.items()):
+                bdf_file.write(material.write_card(size, is_double))
+            for (unused_mid, material) in sorted(self.MATDMG.items()):
                 bdf_file.write(material.write_card(size, is_double))
             for (unused_sid, nxstrat) in sorted(self.nxstrats.items()):
                 bdf_file.write(nxstrat.write_card(size, is_double))

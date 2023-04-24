@@ -31,6 +31,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
     """
     card_dict_groups = [
         'params', 'nodes', 'spoints', 'epoints', 'points', 'gridb',
+        'coords',
 
         'elements', 'ao_element_flags', 'normals', 'rigid_elements', 'plotels',
 
@@ -40,9 +41,10 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'materials', 'creep_materials', 'hyperelastic_materials',
         'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
         'MATS1', 'MATS3', 'MATS8', 'MATT8',
-        'coords', 'mpcs',
+        'MATCID', 'MATDMG',
 
         # axisysmmetric
+        'ringaxs', 'ringfl',
 
         # dynamic cards
         'dareas', 'delays', 'dphases', 'nlparms', 'nlpcis',
@@ -100,8 +102,9 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'se_sets', 'se_usets', 'release',
 
         # ???
-        'dscreen', 'dti', 'nxstrats', 'radcavs', 'radmtx', 'ringaxs', 'ringfl',
+        'dscreen', 'dti', 'nxstrats', 'radcavs', 'radmtx',
         'tempds', 'spcoffs',
+        'mpcs',
 
         # cyclic
         'cyjoin',
