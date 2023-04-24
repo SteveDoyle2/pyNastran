@@ -115,11 +115,11 @@ def merge_tecplot(argv: Optional[list[str]] = None) -> Tecplot:
 
     model.log.info(f'nzones_total = {model.nzones}')
     if is_binary:
-        model.write_tecplot_ascii(
-            tecplot_filename_out, res_types=None, adjust_nids=True)
-    else:
         model.write_tecplot_binary(
             tecplot_filename_out, version='102')
+    else:
+        model.write_tecplot_ascii(
+            tecplot_filename_out, res_types=None, adjust_nids=True)
     model.log.info(f'finished creating {tecplot_filename_out}')
     return model
 
