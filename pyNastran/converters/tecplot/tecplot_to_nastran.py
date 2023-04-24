@@ -225,3 +225,9 @@ def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str,
         zone.nodal_results = nodal_results[:, ivars]
         tecplot_model.write_tecplot(
             tecplot_filename, res_types=None, adjust_nids=False)
+
+if __name__ == '__main__':  # pragma: no cover
+    import sys
+    tecplot_filename = sys.argv[1]
+    bdf_filename = sys.argv[2]
+    tecplot_to_nastran_filename(tecplot_filename, bdf_filename, log=None, debug=True)

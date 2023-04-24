@@ -254,9 +254,12 @@ class Zone:
         return xyz
 
     def __repr__(self) -> str:
-        #xy_shape = str(self.xy.shape)
+        name = ''
+        if hasattr(self, 'name'):
+            name = f'  name = {self.name}\n'
+
+        xy_shape = str(self.xy.shape)
         xyz_shape = str(self.xyz.shape)
-        #a_shape = str(self.A.shape) if self.A is not None else None
         is3d = self.is_3d
         if 'I' in self.headers_dict:
             msgi = self.repr_nijk()
@@ -268,14 +271,13 @@ class Zone:
 
         title2 = '  T = %r\n' % self.headers_dict['T'] if 'T' in self.headers_dict else ''
         msg = (
-            'Zone:'
+            'Zone:\n'
             #f'  filename = {self.tecplot_filename!r}\n'
             #f'  is_mesh = {self.is_mesh}\n'
+            + name +
             f'  variables = {self.variables}\n'
             f'  is3d = {is3d}\n'
-            #f'    xy.shape = {xy_shape}\n'
             f'    xyz.shape = {xyz_shape}\n'
-            #f'  A.shape = {a_shape}\n'
             f'  nodal_results.shape = {str(self.nodal_results.shape)}\n'
             #f'  headers_dict = {self.headers_dict}\n'
             f'  title = {self.title!r}\n{title2}{msgi}'
@@ -656,3 +658,4 @@ def _write_xyz_results_block(tecplot_file: TextIO,
                 tecplot_file.write(msg)
                 msg = '\n'
         tecplot_file.write(msg.rstrip() + '\n')
+
