@@ -1681,13 +1681,16 @@ class OP2Reader:
             time_step = identifiers_float[4]
 
             if subcase not in time_steps:
-                time_steps[subcase] = [time_step, ]
+                time_steps[subcase] = {time_step, }  # Set because time step can be repeated
             else:
-                time_steps[subcase].append(time_step)
+                time_steps[subcase].add(time_step)
 
         # Create time step to tid mapper per subcase
         for subcase, tsteps in time_steps.items():
-            time_steps[subcase] = np.array(tsteps)  # convert set to numpy array
+            tsteps = np.array(list(tsteps))
+            tstep_indices = np.argsort(tsteps)  # Sort because set does not retain ordering
+            time_steps[subcase] = tsteps[tstep_indices]
+
             tstep_to_index_mapper = {time_steps[subcase][x]: x for x in range(0, time_steps[subcase].shape[0])}
 
         trmbd = op2.trmbd
@@ -1952,13 +1955,16 @@ class OP2Reader:
             time_step = identifiers_float[4]
 
             if subcase not in time_steps:
-                time_steps[subcase] = [time_step, ]
+                time_steps[subcase] = {time_step, }  # Set because time step can be repeated
             else:
-                time_steps[subcase].append(time_step)
+                time_steps[subcase].add(time_step)
 
         # Create time step to tid mapper per subcase
         for subcase, tsteps in time_steps.items():
-            time_steps[subcase] = np.array(tsteps)  # convert set to numpy array
+            tsteps = np.array(list(tsteps))
+            tstep_indices = np.argsort(tsteps)  # Sort because set does not retain ordering
+            time_steps[subcase] = tsteps[tstep_indices]
+
             tstep_to_index_mapper = {time_steps[subcase][x]: x for x in range(0, time_steps[subcase].shape[0])}
 
         # Read data
