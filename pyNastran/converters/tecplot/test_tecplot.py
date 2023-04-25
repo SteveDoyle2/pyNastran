@@ -11,6 +11,7 @@ from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_f
 from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
 from pyNastran.converters.nastran.nastran_to_tecplot import (
     nastran_to_tecplot, nastran_to_tecplot_filename)
+from pyNastran.converters.tecplot.utils import merge_tecplot
 from pyNastran.converters.format_converter import cmd_line_format_converter
 
 PKG_PATH = pyNastran.__path__[0]
@@ -79,10 +80,27 @@ class TestTecplot(unittest.TestCase):
             #model.write_tecplot(junk_plt, res_types=None, adjust_nids=True)
         #os.remove(junk_plt)
 
+    def test_merge_tecplot(self):
+        """tests merge_tecplot"""
+        tecplot_filenames = [
+            #os.path.join(MODEL_PATH, 'ascii/humanoid_quad.dat'),
+            #os.path.join(MODEL_PATH, 'ascii/humanoid_quad.dat'),
+            os.path.join(MODEL_PATH, 'ascii/humanoid_tri.dat'),
+            os.path.join(MODEL_PATH, 'ascii/humanoid_tri.dat'),
+        ]
+        tecplot_filename_out = os.path.join(MODEL_PATH, 'junk.plt')
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        args = tecplot_filenames + ['-b', '-o', tecplot_filename_out]
+        merge_tecplot(argv=args)
+
+        args = tecplot_filenames + ['-v']
+        with self.assertRaises(SystemExit):
+            merge_tecplot(argv=args)
+
     def test_tecplot_ascii_unstructured(self):
         tecplot_filenames = [
             'ascii/block_febrick_3d.dat', # 3d unstructured block; good
-            #'ascii/block_fetet_3d.dat', # bad; no decimal values
+            'ascii/block_fetet_3d.dat', # bad; no decimal values
             'ascii/humanoid_quad.dat', # good
             'ascii/humanoid_tri.dat', # good
             'ascii/ell.dat', # 2d; good
@@ -161,10 +179,11 @@ class TestTecplot(unittest.TestCase):
     def test_tecplot_ctetra(self):
         """CTETRA10 elements"""
         log = SimpleLogger(level='warning')
-        nastran_filename1 = os.path.join(NASTRAN_MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
-        nastran_filename2 = os.path.join(NASTRAN_MODEL_PATH, 'solid_bending', 'solid_bending2.bdf')
-        tecplot_filename = os.path.join(NASTRAN_MODEL_PATH, 'solid_bending', 'solid_bending.plt')
-        tecplot_filename2 = os.path.join(NASTRAN_MODEL_PATH, 'solid_bending', 'solid_bending2.plt')
+        model_path = os.path.join(NASTRAN_MODEL_PATH, 'solid_bending')
+        nastran_filename1 = os.path.join(model_path, 'solid_bending.bdf')
+        nastran_filename2 = os.path.join(model_path, 'solid_bending2.bdf')
+        tecplot_filename = os.path.join(model_path, 'solid_bending.plt')
+        tecplot_filename2 = os.path.join(model_path, 'solid_bending2.plt')
         unused_tecplot = nastran_to_tecplot_filename(nastran_filename1, tecplot_filename, log=log)
         #tecplot.write_tecplot(tecplot_filename)
         tecplot_to_nastran_filename(tecplot_filename, nastran_filename2, log=log)

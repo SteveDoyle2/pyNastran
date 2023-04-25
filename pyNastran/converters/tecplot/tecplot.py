@@ -634,10 +634,10 @@ def _stack(zone: Zone,
         zone.log.info('3d zone')
         zone.xyz
         zone.nodal_results
-    else:
-        assert zone.is_2d
+    elif zone.is_2d:
         zone.log.info('2d zone')
         zone.xy
+    else:
         zone.nodal_results
     x = 1
 

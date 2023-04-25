@@ -247,6 +247,7 @@ class TecplotBinary(Base):
         assert version == '102', version
 
         nvars = len(self.variables)
+        #sprint('vars =', self.variables)
         assert nvars > 1, self.variables
         with open(tecplot_filename, 'wb') as tecplot_file:
             _write_binary_header(self, tecplot_file, version)
@@ -416,7 +417,6 @@ def _write_binary_results(model: TecplotBinary,
         results = []
         dtypes = []
         _prep_results_dtypes(results, dtypes, zone.zone_data)
-        #nnodes = len(results[0])
 
         data = pack(f'<{nvars}i', *dtypes)
         tecplot_file.write(data)
@@ -457,8 +457,6 @@ def _write_binary_results(model: TecplotBinary,
 def _prep_results_dtypes(results_list: list[np.ndarray],
                          dtypes: list[int],
                          data: np.ndarray,) -> None:
-    if data is None or len(data) == 0:
-        return
     nvars = data.shape[1]
     assert nvars >= 1, nvars
     for i in range(nvars):

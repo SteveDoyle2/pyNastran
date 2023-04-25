@@ -10,14 +10,6 @@ def merge_tecplot_files(tecplot_filenames: list[str],
     assert isinstance(tecplot_filenames, (list, tuple)), type(tecplot_filenames)
     assert len(tecplot_filenames) > 0, tecplot_filenames
 
-    #xyz = []
-    #tri_elements = []
-    #quad_elements = []
-    #tet_elements = []
-    #hexa_elements = []
-    #results = []
-    #nnodes = 0
-
     model = Tecplot(log=log)
     model.log.info('reading %s' % tecplot_filenames[0])
     model.read_tecplot(tecplot_filenames[0])
@@ -34,29 +26,6 @@ def merge_tecplot_files(tecplot_filenames: list[str],
         model.read_tecplot(tecplot_filename)
         model.log.info(f'  nzones = {model.nzones}')
         zones += model.zones
-        #for zone in model.zones:
-            #xyz.append(zone.xyz)
-            #if len(zone.tri_elements):
-                #tri_elements.append(zone.tri_elements + nnodes)
-            #if len(zone.quad_elements):
-                #quad_elements.append(zone.quad_elements + nnodes)
-            #if len(zone.tet_elements):
-                #tet_elements.append(zone.tet_elements + nnodes)
-            #if len(zone.hexa_elements):
-                #hexa_elements.append(zone.hexa_elements + nnodes)
-            #results.append(zone.nodal_results)
-            #nnodes += zone.nnodes
-
-    #model.xyz = vstack(xyz)
-    #if tri_elements:
-        #model.tri_elements = vstack(tri_elements)
-    #if quad_elements:
-        #model.quad_elements = vstack(quad_elements)
-    #if tet_elements:
-        #model.tet_elements = vstack(tet_elements)
-    #if hexa_elements:
-        #model.hexa_elements = vstack(hexa_elements)
-    #model.results = vstack(results)
     model.zones = zones
 
     if tecplot_filename_out is not None:
@@ -108,7 +77,8 @@ def merge_tecplot(argv: Optional[list[str]] = None) -> Tecplot:
     if len(tecplot_filenames) == 0:
         sys.exit(msg)
 
-    print(f'tecplot_filenames={tecplot_filenames} tecplot_filename_out={tecplot_filename_out}')
+    print(f'tecplot_filenames={tecplot_filenames} '
+          f'tecplot_filename_out={tecplot_filename_out}')
     model = merge_tecplot_files(
         tecplot_filenames,
         tecplot_filename_out=None, log=None)

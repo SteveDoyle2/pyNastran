@@ -57,6 +57,7 @@ def read_header_lines(lines: list[str], iline: int, line: str,
     while i < 30:
         #print(iline, i, line.strip())
         #self.n = 0
+        #log.info(f'{iline:d}: {line}')
         if len(line) == 0 or line[0] == '#':
             line = lines[iline].strip()
             iline += 1
@@ -101,6 +102,7 @@ def read_header_lines(lines: list[str], iline: int, line: str,
         #if active_key
         i += 1
         line = lines[iline].strip()
+        #log.info(f'*{iline:d}: {line}')
         iline += 1
 
     log.debug('vars_found = %s' % vars_found)
@@ -588,8 +590,8 @@ def read_zone_block(lines: list[str], iline: int,
         iresult += len(sline)
         #print('len', iresult, nresult, len(result))
     #print(result, len(result))
-    for i, value in enumerate(xyz_result_list):
-        assert '.' in value, 'i=%i value=%s' % (i, value)
+    #for i, value in enumerate(xyz_result_list):
+        #assert '.' in value, 'i=%i value=%s' % (i, value)
     assert len(xyz_result_list) == nnodes_max, 'len(xyz_result_list)=%s expected=%s' % (len(xyz_result_list), nnodes_max)
     #-----------------
 

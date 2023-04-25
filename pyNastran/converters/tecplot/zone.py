@@ -636,6 +636,8 @@ class Zone:
             out = self.zone_data[:, 3:]
         elif self.is_2d:
             out = self.zone_data[:, 2:]
+        else:
+            out = self.zone_data
         return out
 
 def _write_xyz_results_point(tecplot_file: TextIO,
