@@ -77,7 +77,9 @@ class Zone:
         for variable in variables:
             assert isinstance(variable, str), variable
         variables = copy.deepcopy(variables)
+
         zone = Zone(log)
+        zone.headers_dict = copy.copy(header_dict)
         zone.name = name
         zone.strand_id = strand_id
 
@@ -93,59 +95,56 @@ class Zone:
             zone.hexa_elements = hexas
 
         nxyz = zone.nxyz
-        if nodal_results is not None:
-            nvars = len(variables)
-            nvars_actual = nodal_results.shape[1] + nxyz
-            if not nvars == nvars_actual:
-                raise RuntimeError(f'variables={variables} nvars={nvars}; '
-                                   f'nodal_results.shape={nodal_results.shape} nxyz={nxyz}\n'
-                                   f'nvars={nvars} nvars_actual={nvars_actual}')
 
-            if self.variables_exist(variables, ['rho', 'u', 'v', 'w'], ['rhoUVW']):
-                nnodes = nodal_results.shape[0]
-                irho = variables.index('rho') - nxyz
-                iu = variables.index('u') - nxyz
-                iv = variables.index('v') - nxyz
-                iw = variables.index('w') - nxyz
+        nvars = len(variables)
+        nvars_actual = zone_data.shape[1]
+        if not nvars == nvars_actual:
+            raise RuntimeError(f'variables={variables} nvars={nvars}; '
+                               f'nodal_results.shape={nodal_results.shape} nxyz={nxyz}\n'
+                               f'nvars={nvars} nvars_actual={nvars_actual}')
 
-                rho = nodal_results[:, irho]
-                uvw = nodal_results[:, [iu, iv, iw]]
+        nnodes = zone_data.shape[0]
+        if self.variables_exist(variables, ['rho', 'u', 'v', 'w'], ['rhoUVW']):
+            irho = variables.index('rho')
+            iu = variables.index('u')
+            iv = variables.index('v')
+            iw = variables.index('w')
 
-                uvw_mag = np.linalg.norm(uvw, axis=1)
-                rho_uvw_mag = (rho * uvw_mag).reshape((nnodes, 1))
-                rho_uvw = np.abs(rho[:, np.newaxis] * uvw)
-                nodal_results = np.hstack([nodal_results, rho_uvw, rho_uvw_mag])
-                variables.extend(['rhoU', 'rhoV', 'rhoW', 'rhoUVW'])
+            rho = zone_data[:, irho]
+            uvw = zone_data[:, [iu, iv, iw]]
 
+            uvw_mag = np.linalg.norm(uvw, axis=1)
+            rho_uvw_mag = (rho * uvw_mag).reshape((nnodes, 1))
+            rho_uvw = np.abs(rho[:, np.newaxis] * uvw)
+            zone_data = np.hstack([zone_data, rho_uvw, rho_uvw_mag])
+            variables.extend(['rhoU', 'rhoV', 'rhoW', 'rhoUVW'])
 
-            assert self.variables_exist(variables, ['mach', 'tt', 'gamma'], ['ttot'])
-            if self.variables_exist(variables, ['mach', 'tt', 'gamma'], ['ttot', 'ptot']):
-                nnodes = nodal_results.shape[0]
-                itt = variables.index('tt') - nxyz  # translational-rotational temperature
-                ip = variables.index('p') - nxyz  # pressure
-                imach = variables.index('mach') - nxyz
-                igamma = variables.index('gamma') - nxyz
+        #assert self.variables_exist(variables, ['mach', 'tt', 'gamma'], ['ttot'])
+        if self.variables_exist(variables, ['mach', 'tt', 'gamma'], ['ttot', 'ptot']):
+            itt = variables.index('tt')  # translational-rotational temperature
+            ip = variables.index('p')  # pressure
+            imach = variables.index('mach')
+            igamma = variables.index('gamma')
 
-                tt = nodal_results[:, itt]
-                p = nodal_results[:, ip]
-                gamma = nodal_results[:, igamma]
-                mach = nodal_results[:, imach]
+            tt = zone_data[:, itt]
+            p = zone_data[:, ip]
+            gamma = zone_data[:, igamma]
+            mach = zone_data[:, imach]
 
-                # t0 / t = 1 + (gamma - 1) / 2 * mach ^ 2
-                gm1 = gamma - 1
-                ktemp = 1 + gm1 / 2 * mach ** 2
-                ttot = tt * ktemp
-                ptot = p * ktemp ** (gamma / gm1) # https://en.wikipedia.org/wiki/Total_pressure
+            # t0 / t = 1 + (gamma - 1) / 2 * mach ^ 2
+            gm1 = gamma - 1
+            ktemp = 1 + gm1 / 2 * mach ** 2
+            ttot = tt * ktemp
+            ptot = p * ktemp ** (gamma / gm1) # https://en.wikipedia.org/wiki/Total_pressure
 
-                nodal_results = np.hstack([nodal_results,
-                                           ttot.reshape((nnodes, 1)),
-                                           ptot.reshape((nnodes, 1))])
-                variables.extend(['ttot', 'ptot'])
+            zone_data = np.hstack([zone_data,
+                                   ttot.reshape((nnodes, 1)),
+                                   ptot.reshape((nnodes, 1))])
+            variables.extend(['ttot', 'ptot'])
+        zone.zone_data = zone_data
+        header_dict['variables'] = variables
 
-            zone.nodal_results = nodal_results
-            header_dict['variables'] = variables
-
-        zone.headers_dict = copy.copy(header_dict)
+        #zone.headers_dict = copy.copy(header_dict)
         zone.headers_dict['datapacking'] = data_packing
         zone.headers_dict['zonetype'] = zone_type
         zone.variables = variables
