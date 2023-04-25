@@ -247,6 +247,7 @@ class TecplotBinary(Base):
         assert version == '102', version
 
         nvars = len(self.variables)
+        assert nvars > 1, self.variables
         with open(tecplot_filename, 'wb') as tecplot_file:
             _write_binary_header(self, tecplot_file, version)
             _write_binary_zone_headers(
@@ -269,7 +270,9 @@ class TecplotBinary(Base):
         self.n = 0
         with open(tecplot_filename, 'rb') as self.f:
             file_obj = self.f
-            version, header_dict, title, file_type, variables, zone_tuples = _read_binary_header(self, file_obj)
+            out = _read_binary_header(self, file_obj)
+            version, header_dict, title, file_type, variables, zone_tuples = out
+            del out
 
             self.is_mesh = True
             self.header_dict = header_dict
@@ -325,6 +328,7 @@ def _write_binary_zone_headers(model: TecplotBinary,
         zone_type = zone.zone_type_int
 
         if version == '102':
+            #print(f'writing name={zone.name!r}')
             data = _write_string(zone.name)
             tecplot_file.write(data)
 
@@ -433,7 +437,7 @@ def _write_binary_results(model: TecplotBinary,
         ## Zone Data. Each variable is in data format as
         ## specified above
         for result in results:
-            datai = result.tostring()
+            datai = result.tobytes()
             tecplot_file.write(datai)
 
         if zone_type == 2: # FETRIA
@@ -446,7 +450,7 @@ def _write_binary_results(model: TecplotBinary,
             elements = zone.hexa_elements
         else:
             raise RuntimeError(zone_type)
-        tecplot_file.write(elements.ravel().tostring())
+        tecplot_file.write(elements.ravel().tobytes())
     return
 
 
@@ -1160,6 +1164,8 @@ def _read_binary_header(model: TecplotBinary,
     data = file_obj.read(4); self.n += 4
     nvars = unpack('<i', data)[0]
     assert 3 <= nvars <= 100, nvars
+    print(f'nvars = {nvars}')
+    model.log.info(f'nvars = {nvars}')
 
     # Variable names.
     # N = L[1] + L[2] + .... L[NumVar]
@@ -1286,13 +1292,17 @@ def _read_string(file_obj: BinaryIO, n: int) -> tuple[str, int]:
     All character strings are null terminated
     (i.e. terminated by a zero value)
     """
-    buffer = 100 * 4
-    fmt = Struct('<100i')
+    buffer = 20 * 4
+    fmt = Struct('<20i')
     all_ints = []
     while 1:
         data = file_obj.read(buffer)
         ints = fmt.unpack(data)
-        i0 = ints.index(0)
+        #print('ints =', ints)
+        try:
+            i0 = ints.index(0)
+        except ValueError:
+            i0 = -1
 
         if i0 == -1:
             n += buffer
@@ -1305,6 +1315,7 @@ def _read_string(file_obj: BinaryIO, n: int) -> tuple[str, int]:
 
     chars = [chr(val) for val in all_ints]
     string = ''.join(chars)
+    #print('string =', string)
     return string, n
 
 def zones_to_exclude_to_set(zones_to_exclude: Optional[list[int]]=None) -> set[int]:

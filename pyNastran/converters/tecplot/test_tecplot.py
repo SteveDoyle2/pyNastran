@@ -48,7 +48,7 @@ class TestTecplot(unittest.TestCase):
             read_tecplot(binary_plt, log=log)
         #os.remove(junk_plt)
 
-    def test_tecplot_ascii_structured_models(self):
+    def test_tecplot_ascii_structured(self):
         tecplot_filenames = [
             'ascii/3dgeom.dat', #  good; multi-zone, geometry
             'ascii/channel.dat', # 2d structured point; good
@@ -79,7 +79,7 @@ class TestTecplot(unittest.TestCase):
             #model.write_tecplot(junk_plt, res_types=None, adjust_nids=True)
         #os.remove(junk_plt)
 
-    def test_tecplot_ascii_unstructured_models(self):
+    def test_tecplot_ascii_unstructured(self):
         tecplot_filenames = [
             'ascii/block_febrick_3d.dat', # 3d unstructured block; good
             #'ascii/block_fetet_3d.dat', # bad; no decimal values
@@ -96,8 +96,11 @@ class TestTecplot(unittest.TestCase):
             #'ascii/simpscat.dat', #  bad -> text
             #'ascii/simpxy.dat',  # no xyz; it's a plot -> bad
             #'ascii/simpxy2.dat',  # no xyz; it's a plot -> bad
+
+            'ascii/point_fequad_2d.dat',  # 2d; good
+            'ascii/tiny.dat',  # good
         ]
-        log = SimpleLogger(level='warning', encoding='utf-8')
+        log = SimpleLogger(level='debug', encoding='utf-8')
         ascii_plt = os.path.join(MODEL_PATH, 'ascii.plt')
         binary_plt = os.path.join(MODEL_PATH, 'binary.plt')
         for fname in tecplot_filenames:
@@ -114,26 +117,24 @@ class TestTecplot(unittest.TestCase):
             #model.write_tecplot(junk_plt, res_types=None, adjust_nids=True)
         #os.remove(junk_plt)
 
-    def test_tecplot_ascii_unstructured_models_no_binary(self):
-        tecplot_filenames = [
-            'ascii/point_fequad_2d.dat',  # 2d; good
-            'ascii/tiny.dat',  # good
-        ]
-        log = SimpleLogger(level='warning', encoding='utf-8')
-        ascii_plt = os.path.join(MODEL_PATH, 'ascii.plt')
-        binary_plt = os.path.join(MODEL_PATH, 'binary.plt')
-        for fname in tecplot_filenames:
-            tecplot_filename = os.path.join(MODEL_PATH, fname)
-            #print(fname)
-            log.info(f'read {fname}')
-            model = read_tecplot(tecplot_filename, log=log)
-            str(model)
-            assert model.zones[0].is_unstructured, f'{fname} {model.zones[0]}'
-            model.write_tecplot_ascii(ascii_plt)
-            model.write_tecplot_binary(binary_plt)
-            read_tecplot(ascii_plt, log=log)
-            with self.assertRaises(Exception):
-                read_tecplot(binary_plt, log=log)
+    #def test_tecplot_ascii_unstructured_no_binary(self):
+        #tecplot_filenames = [
+        #]
+        #log = SimpleLogger(level='warning', encoding='utf-8')
+        #ascii_plt = os.path.join(MODEL_PATH, 'ascii.plt')
+        #binary_plt = os.path.join(MODEL_PATH, 'binary.plt')
+        #for fname in tecplot_filenames:
+            #tecplot_filename = os.path.join(MODEL_PATH, fname)
+            ##print(fname)
+            #log.info(f'read {fname}')
+            #model = read_tecplot(tecplot_filename, log=log)
+            #str(model)
+            #assert model.zones[0].is_unstructured, f'{fname} {model.zones[0]}'
+            #model.write_tecplot_ascii(ascii_plt)
+            #model.write_tecplot_binary(binary_plt)
+            #read_tecplot(ascii_plt, log=log)
+            #with self.assertRaises(Exception):
+            #read_tecplot(binary_plt, log=log)
             #model.write_tecplot(junk_plt, res_types=None, adjust_nids=True)
         #os.remove(junk_plt)
 
