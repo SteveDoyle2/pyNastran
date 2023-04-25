@@ -1,6 +1,7 @@
 """tests the Nastran converters"""
 import os
 import unittest
+import numpy as np
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -17,12 +18,24 @@ from pyNastran.converters.cart3d.cart3d import read_cart3d
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 
 import pyNastran.converters.nastran.nastran_to_ugrid3d
+from pyNastran.converters.tecplot.tecplot_to_nastran import nastran_tables_to_tecplot_filenames
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
-class TestNastran(unittest.TestCase):
 
+class FakeCase:
+    def __init__(self, times: np.ndarray):
+        self._times = times
+        self.headers = ['a', 'b']
+        self.title = 'title'
+        self.subtitle = 'subtitle'
+        ntimes = 4
+        nresults = len(self.headers)
+        self.data = np.zeros((ntimes, 36, 2))
+
+
+class TestNastran(unittest.TestCase):
     def test_nastran_to_tecplot(self):
         """tests a large number of elements and results in SOL 101"""
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
@@ -106,6 +119,17 @@ class TestNastran(unittest.TestCase):
         stl_filename = os.path.join(MODEL_PATH, 'plate', 'plate.stl')
         log = SimpleLogger(level='warning', encoding='utf-8')
         nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=log)
+
+    def test_nastran_to_tecplot_case(self):
+        bdf_filename = os.path.join(MODEL_PATH, 'plate', 'plate.bdf')
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        bdf_model = read_bdf(bdf_filename, log=log, debug=False)
+
+        times = np.arange(2)
+        case = FakeCase(times)
+        tecplot_filename_base = 'cat%d'
+        nastran_tables_to_tecplot_filenames(tecplot_filename_base, bdf_model, case,
+                                            variables=None, ivars=None)
 
     def test_format_converter(self):
         """tests nastran_to_stl"""
@@ -212,7 +236,4 @@ class TestNastran(unittest.TestCase):
         os.remove(bdf_clean_filename)
 
 if __name__ == '__main__':  # pragma: no cover
-    import time
-    time0 = time.time()
     unittest.main()
-    print("dt = %s" % (time.time() - time0))

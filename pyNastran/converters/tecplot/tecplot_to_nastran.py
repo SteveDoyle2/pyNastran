@@ -13,6 +13,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.tecplot.tecplot import Tecplot, Zone, read_tecplot
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
+    from pyNastran.op2.result_objects.table_object import TableArray
 
 
 def tecplot_to_nastran_filename(tecplot_filename: Union[str, Tecplot], bdf_filename: str,
@@ -181,32 +182,59 @@ def _write_solids(bdf_file: TextIO, zone: Zone, pid: int, log,
     return ielem, removed_nodes
 
 
-def nastran_table_to_tecplot(bdf_model: BDF, case, variables: list[str]) -> Tecplot:
+def nastran_table_to_tecplot(bdf_model: BDF,
+                             case: TableArray,
+                             variables: list[str]) -> Tecplot:
     """assumes only triangles"""
-    xyz = []
+    title = ('%s; %s' % (case.title, case.subtitle)).strip(' ;')
+    ntimes, nnodes, nresults = case.data.shape
+
+    xyz_list = []
     tris = []
     nid_map = {}
+    #all_nids = list(bdf_model.nodes.keys())
     for inid, (nid, node) in enumerate(sorted(bdf_model.nodes.items())):
-        xyz.append(node.get_position())
+        xyz_list.append(node.get_position())
         nid_map[nid] = inid
     for eid, elem in sorted(bdf_model.elements.items()):
-        tris.append([nid_map[nid] for nid in elem.node_ids])
+        if elem.type == 'CQUAD4':
+            node_ids = elem.node_ids
+            tri_nids = [node_ids[:3], node_ids[1:]]
+        elif elem.type == 'CTRIA3':
+            tri_nids = [elem.node_ids]
+        else:
+            raise NotImplementedError(elem)
+
+        for nids in tri_nids:
+            assert len(nids) == 3, tri_nids
+            new_tri = []
+            for nid in nids:
+                new_tri.append(nid_map[nid])
+            #except:
+                #raise
+            #new_tri = [nid_map[nid] for nid in nids]
+            tris.append(new_tri)
 
     tecplot_model = Tecplot(log=bdf_model.log, debug=bdf_model.debug)
     zone = Zone(bdf_model.log)
-    zone.xyz = np.array(xyz, dtype='float64')
-    zone.tri_elements = tris = np.array(tris, dtype='int32') + 1
+    xyz = np.array(xyz_list, dtype='float64')
 
-    tecplot_model.title = ('%s; %s' % (case.title, case.subtitle)).strip(' ;')
+    results = np.full((nnodes, nresults), np.nan, dtype=xyz.dtype)
+    zone.zone_data = np.hstack([xyz, results])
+    zone.tri_elements = np.array(tris, dtype='int32') + 1
+
+    tecplot_model.title = title
     zone.headers_dict['VARIABLES'] = variables
     zone.variables = variables
     tecplot_model.zones = [zone]
     return tecplot_model
 
 def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str,
-                                        bdf_model: BDF, case,
+                                        bdf_model: BDF,
+                                        case: TableArray,
                                         variables: Optional[list[str]]=None,
                                         ivars: Optional[list[int]]=None) -> None:
+    """case is intended as an op2 object like DisplacementArray"""
     if variables is None:
         variables = case.headers
     if ivars is None:
@@ -222,7 +250,7 @@ def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str,
 
         # you can't combine the two lines or it transposes it...
         nodal_results = case.data[itime, :, :]
-        zone.nodal_results = nodal_results[:, ivars]
+        zone.zone_data[:, 3:] = nodal_results[:, ivars]
         tecplot_model.write_tecplot(
             tecplot_filename, res_types=None, adjust_nids=False)
 
