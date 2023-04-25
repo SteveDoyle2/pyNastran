@@ -683,10 +683,10 @@ class MouseActions:
                 gui.log_error(msg)
             return return_flag, None, None, None
         msg = f'{result_name} = {result_value}'
-        if gui.result_name in {'Node_ID', 'Node ID', 'NodeID'}:
-            x1, y1, z1 = xyz
-            x2, y2, z2 = world_position
-            msg += f'; xyz=({x1}, {y1}, {z1}); pierce_xyz=({x2}, {y2}, {z2})'
+        #if gui.result_name in {'Node_ID', 'Node ID', 'NodeID'}:
+        x1, y1, z1 = xyz
+        x2, y2, z2 = world_position
+        msg += f'; xyz=({x1}, {y1}, {z1}); pierce_xyz=({x2}, {y2}, {z2})'
         gui.log_info(msg)
         return return_flag, duplicate_key, result_value, result_name, xyz
 
