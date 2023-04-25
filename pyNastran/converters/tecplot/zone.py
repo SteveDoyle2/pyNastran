@@ -43,6 +43,14 @@ class Zone:
         self.A = None
         #self.centroidal_results = np.array([], dtype='float32')
 
+    @property
+    def nxyz(self) -> int:
+        nxyz = 0
+        for var in self.headers_dict['variables']:
+            if var.lower() in ['x', 'y', 'z']:
+                nxyz += 1
+        return nxyz
+
     @classmethod
     def set_zone_from_360(self,
                           log: SimpleLogger,
@@ -73,6 +81,8 @@ class Zone:
         zone = Zone(log)
         zone.name = name
         zone.strand_id = strand_id
+        zone.headers_dict = copy.copy(header_dict)
+
         if xy is not None:
             zone.xy = xy
         if xyz is not None:
@@ -88,32 +98,56 @@ class Zone:
         if hexas is not None:
             zone.hexa_elements = hexas
 
+        nxyz = zone.nxyz
         if nodal_results is not None:
-            if all(var in variables for var in ['rho', 'u', 'v', 'w']):
-                nnodes = nodal_results.shape[0]
-                if len(variables) == nodal_results.shape[1]:
-                    irho = variables.index('rho')
-                    iu = variables.index('u')
-                    iv = variables.index('v')
-                    iw = variables.index('w')
-                else:
-                    irho = variables.index('rho') - 3
-                    iu = variables.index('u') - 3
-                    iv = variables.index('v') - 3
-                    iw = variables.index('w') - 3
+            nvars = len(variables)
+            nvars_actual = nodal_results.shape[1] + nxyz
+            if not nvars == nvars_actual:
+                raise RuntimeError(f'variables={variables} nvars={nvars}; '
+                                   f'nodal_results.shape={nodal_results.shape} nxyz={nxyz}\n'
+                                   f'nvars={nvars} nvars_actual={nvars_actual}')
 
-                try:
-                    rho = nodal_results[:, irho]
-                    uvw = nodal_results[:, [iu, iv, iw]]
-                except IndexError:
-                    print(nodal_results.shape)
-                    print(irho, iu, iv, iw)
-                    raise
+            if self.variables_exist(variables, ['rho', 'u', 'v', 'w'], ['rhoUVW']):
+                nnodes = nodal_results.shape[0]
+                irho = variables.index('rho') - nxyz
+                iu = variables.index('u') - nxyz
+                iv = variables.index('v') - nxyz
+                iw = variables.index('w') - nxyz
+
+                rho = nodal_results[:, irho]
+                uvw = nodal_results[:, [iu, iv, iw]]
+
                 uvw_mag = np.linalg.norm(uvw, axis=1)
                 rho_uvw_mag = (rho * uvw_mag).reshape((nnodes, 1))
                 rho_uvw = np.abs(rho[:, np.newaxis] * uvw)
                 nodal_results = np.hstack([nodal_results, rho_uvw, rho_uvw_mag])
                 variables.extend(['rhoU', 'rhoV', 'rhoW', 'rhoUVW'])
+
+
+            assert self.variables_exist(variables, ['mach', 'tt', 'gamma'], ['ttot'])
+            if self.variables_exist(variables, ['mach', 'tt', 'gamma'], ['ttot', 'ptot']):
+                nnodes = nodal_results.shape[0]
+                itt = variables.index('tt') - nxyz  # translational-rotational temperature
+                ip = variables.index('p') - nxyz  # pressure
+                imach = variables.index('mach') - nxyz
+                igamma = variables.index('gamma') - nxyz
+
+                tt = nodal_results[:, itt]
+                p = nodal_results[:, ip]
+                gamma = nodal_results[:, igamma]
+                mach = nodal_results[:, imach]
+
+                # t0 / t = 1 + (gamma - 1) / 2 * mach ^ 2
+                gm1 = gamma - 1
+                ktemp = 1 + gm1 / 2 * mach ** 2
+                ttot = tt * ktemp
+                ptot = p * ktemp ** (gamma / gm1) # https://en.wikipedia.org/wiki/Total_pressure
+
+                nodal_results = np.hstack([nodal_results,
+                                           ttot.reshape((nnodes, 1)),
+                                           ptot.reshape((nnodes, 1))])
+                variables.extend(['ttot', 'ptot'])
+
             zone.nodal_results = nodal_results
             header_dict['variables'] = variables
 
@@ -124,6 +158,14 @@ class Zone:
 
         #print(str(zone))
         return zone
+
+    def variables_exist(variables: list[str],
+                        variables_to_check: list[str],
+                        variables_to_save: list[str]) -> bool:
+        all_exist = all(var in variables for var in variables_to_check)
+        if all(var in variables for var in variables_to_save):
+            all_exist = True
+        return all_exist
 
     @property
     def nnodes(self) -> int:
