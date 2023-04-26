@@ -642,6 +642,9 @@ class OP2(OP2_Scalar, OP2Writer):
          - RealCompositePlateStrainArray (???)
 
         """
+        import pandas
+        if pandas.__version__ >= '2.0.0':
+            raise NotImplementedError('pandas >= 2.0 is not supported')
         # TODO: sorter = uniques.argsort()
         #C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198:
         #    DeprecationWarning: unorderable dtypes;

@@ -8,12 +8,11 @@ CLASSIFIERS = [
     'Natural Language :: English',
     'Intended Audience :: Science/Research',
     'License :: OSI Approved :: BSD License',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
 ]
 
-PYTHON_REQUIRES = '>=3.8'
+PYTHON_REQUIRES = '>=3.10'
 
 EXCLUDE_WORDS = [
     'pyNastran.f06.dev',
@@ -69,10 +68,9 @@ MAX_VERSION = '3.10'
 def check_python_version() -> None:
     """verifies the python version"""
     imajor, minor1, minor2 = sys.version_info[:3]
-    if sys.version_info < (3, 8, 0):  # 3.9.4 used
-        sys.exit('Upgrade your Python to 3.8+; version=(%s.%s.%s)' % (
+    if sys.version_info < (3, 9, 0):  # 3.9.4 used
+        sys.exit('Upgrade your Python to 3.9+; version=(%s.%s.%s)' % (
             imajor, minor1, minor2))
-
 
 def int_version(name: str, version: str) -> List[int]:
     """splits the version into a tuple of integers"""
