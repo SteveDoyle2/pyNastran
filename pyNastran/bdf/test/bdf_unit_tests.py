@@ -18,7 +18,8 @@ MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 class Tester(unittest.TestCase):
 
-    def run_bdf(self, folder, bdf_filename, xref=False, size=8,
+    def run_bdf(self, folder: str, bdf_filename: str,
+                xref=False, size=8,
                 mesh_form='combined', dynamic_vars=None, debug=False, quiet=True,
                 run_extract_bodies=True,
                 run_skin_solids=True, save_file_structure=False,
