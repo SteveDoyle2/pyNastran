@@ -103,44 +103,11 @@ class Zone:
                                f'nodal_results.shape={nodal_results.shape} nxyz={nxyz}\n'
                                f'nvars={nvars} nvars_actual={nvars_actual}')
 
-        nnodes = zone_data.shape[0]
-        if self.variables_exist(variables, ['rho', 'u', 'v', 'w'], ['rhoUVW']):
-            irho = variables.index('rho')
-            iu = variables.index('u')
-            iv = variables.index('v')
-            iw = variables.index('w')
+        #zone_data = _add_rho_uvw(zone_data, variables)
+        zone_data = _add_ttot(zone_data, variables)
+        zone_data = _add_ptot(zone_data, variables)
+        zone_data = _add_rhotot(zone_data, variables)
 
-            rho = zone_data[:, irho]
-            uvw = zone_data[:, [iu, iv, iw]]
-
-            uvw_mag = np.linalg.norm(uvw, axis=1)
-            rho_uvw_mag = (rho * uvw_mag).reshape((nnodes, 1))
-            rho_uvw = np.abs(rho[:, np.newaxis] * uvw)
-            zone_data = np.hstack([zone_data, rho_uvw, rho_uvw_mag])
-            variables.extend(['rhoU', 'rhoV', 'rhoW', 'rhoUVW'])
-
-        #assert self.variables_exist(variables, ['mach', 'tt', 'gamma'], ['ttot'])
-        if self.variables_exist(variables, ['mach', 'tt', 'gamma'], ['ttot', 'ptot']):
-            itt = variables.index('tt')  # translational-rotational temperature
-            ip = variables.index('p')  # pressure
-            imach = variables.index('mach')
-            igamma = variables.index('gamma')
-
-            tt = zone_data[:, itt]
-            p = zone_data[:, ip]
-            gamma = zone_data[:, igamma]
-            mach = zone_data[:, imach]
-
-            # t0 / t = 1 + (gamma - 1) / 2 * mach ^ 2
-            gm1 = gamma - 1
-            ktemp = 1 + gm1 / 2 * mach ** 2
-            ttot = tt * ktemp
-            ptot = p * ktemp ** (gamma / gm1) # https://en.wikipedia.org/wiki/Total_pressure
-
-            zone_data = np.hstack([zone_data,
-                                   ttot.reshape((nnodes, 1)),
-                                   ptot.reshape((nnodes, 1))])
-            variables.extend(['ttot', 'ptot'])
         zone.zone_data = zone_data
         header_dict['variables'] = variables
 
@@ -155,10 +122,7 @@ class Zone:
     def variables_exist(variables: list[str],
                         variables_to_check: list[str],
                         variables_to_save: list[str]) -> bool:
-        all_exist = all(var in variables for var in variables_to_check)
-        if all(var in variables for var in variables_to_save):
-            all_exist = True
-        return all_exist
+        return variables_exist(variables, variables_to_check, variables_to_save)
 
     @property
     def is_unstructured(self) -> bool:
@@ -639,6 +603,114 @@ class Zone:
         else:
             out = self.zone_data
         return out
+
+def variables_exist(variables: list[str],
+                    variables_to_check: list[str],
+                    variables_to_save: list[str]) -> bool:
+    """
+    Checks to see if the required variable exist.  If so, and the 
+    new variable doesn't exist, then make it.
+    """
+    all_exist = all(var in variables for var in variables_to_check)
+    if all(var in variables for var in variables_to_save):
+        all_exist = False
+    return all_exist
+
+def _add_ptot(zone_data: np.ndarray,
+              variables: list[str]) -> np.ndarray:
+    """create total pressure"""
+    if not variables_exist(variables, ['mach', 'tt', 'gamma'], ['ptot']):
+        return zone_data
+
+    ip = variables.index('p')  # pressure
+    imach = variables.index('mach')
+    igamma = variables.index('gamma')
+
+    p = zone_data[:, ip]
+    gamma = zone_data[:, igamma]
+    mach = zone_data[:, imach]
+    nnodes = len(mach)
+
+    # https://en.wikipedia.org/wiki/Total_pressure
+    gm1 = gamma - 1
+    ktemp = 1 + gm1 / 2 * mach ** 2
+    exp = gamma / gm1
+    ptot = (p * ktemp ** exp).reshape((nnodes, 1))
+
+    zone_data = np.hstack([zone_data, ptot])
+    variables.append('ptot')
+    return zone_data
+
+
+def _add_ttot(zone_data: np.ndarray,
+              variables: list[str]) -> np.ndarray:
+    """create total temperature"""
+    if not variables_exist(variables, ['mach', 'tt', 'gamma'], ['ttot']):
+        return zone_data
+    itt = variables.index('tt')  # translational-rotational temperature
+    imach = variables.index('mach')
+    igamma = variables.index('gamma')
+
+    tt = zone_data[:, itt]
+    gamma = zone_data[:, igamma]
+    mach = zone_data[:, imach]
+    nnodes = len(mach)
+
+    # t0 / t = 1 + (gamma - 1) / 2 * mach ^ 2
+    gm1 = gamma - 1
+    ktemp = 1 + gm1 / 2 * mach ** 2
+    ttot = (tt * ktemp).reshape((nnodes, 1))
+
+    zone_data = np.hstack([zone_data, ttot])
+    variables.append('ttot')
+    return zone_data
+
+def _add_rhotot(zone_data: np.ndarray,
+                variables: list[str]) -> np.ndarray
+    """
+    Create total density
+    https://www.hkdivedi.com/2019/01/stagnation-properties-in-fluid.html#:~:text=Stagnation%20density-,The%20point%2C%20at%20which%20resultant%20velocity%20of%20the%20fluid%20becomes,be%20called%20as%20stagnation%20density.
+    """
+    if not variables_exist(variables, ['mach', 'rho', 'gamma'], ['rhotot']):
+        return zone_data
+    irho = variables.index('rho')
+    imach = variables.index('mach')
+    igamma = variables.index('gamma')
+
+    rho = zone_data[:, irho]
+    gamma = zone_data[:, igamma]
+    mach = zone_data[:, imach]
+    nnodes = len(mach)
+
+    # t0 / t = 1 + (gamma - 1) / 2 * mach ^ 2
+    gm1 = gamma - 1
+    ktemp = 1 + gm1 / 2 * mach ** 2
+    exp = 1 / gm1
+    ttot = (rho * ktemp ** exp).reshape((nnodes, 1))
+
+    zone_data = np.hstack([zone_data, ttot])
+    variables.append('rhotot')
+    return zone_data
+
+def _add_rho_uvw(zone_data: np.ndarray,
+                 variables: list[str]) -> np.ndarray:
+    if not variables_exist(variables, ['rho', 'u', 'v', 'w'], ['rhoUVW']):
+        return zone_data
+    irho = variables.index('rho')
+    iu = variables.index('u')
+    iv = variables.index('v')
+    iw = variables.index('w')
+
+    rho = zone_data[:, irho]
+    uvw = zone_data[:, [iu, iv, iw]]
+    nnodes = len(rho)
+
+    uvw_mag = np.linalg.norm(uvw, axis=1)
+    rho_uvw_mag = (rho * uvw_mag).reshape((nnodes, 1))
+    rho_uvw = np.abs(rho[:, np.newaxis] * uvw)
+    zone_data = np.hstack([zone_data, rho_uvw, rho_uvw_mag])
+    variables.extend(['rhoU', 'rhoV', 'rhoW', 'rhoUVW'])
+    return zone_data
 
 def _write_xyz_results_point(tecplot_file: TextIO,
                              zone_data: np.ndarray,
