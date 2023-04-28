@@ -608,7 +608,7 @@ def variables_exist(variables: list[str],
                     variables_to_check: list[str],
                     variables_to_save: list[str]) -> bool:
     """
-    Checks to see if the required variable exist.  If so, and the 
+    Checks to see if the required variable exist.  If so, and the
     new variable doesn't exist, then make it.
     """
     all_exist = all(var in variables for var in variables_to_check)
@@ -666,7 +666,7 @@ def _add_ttot(zone_data: np.ndarray,
     return zone_data
 
 def _add_rhotot(zone_data: np.ndarray,
-                variables: list[str]) -> np.ndarray
+                variables: list[str]) -> np.ndarray:
     """
     Create total density
     https://www.hkdivedi.com/2019/01/stagnation-properties-in-fluid.html#:~:text=Stagnation%20density-,The%20point%2C%20at%20which%20resultant%20velocity%20of%20the%20fluid%20becomes,be%20called%20as%20stagnation%20density.
