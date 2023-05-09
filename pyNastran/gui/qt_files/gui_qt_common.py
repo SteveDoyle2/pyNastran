@@ -104,7 +104,7 @@ class GuiQtCommon(GuiAttributes):
                 icase -= 1
         self.update_icase()
 
-    def on_cycle_results(self, show_msg=True):
+    def on_cycle_results(self, show_msg: bool=True):
         """the gui method for calling cycle_results"""
         if len(self.case_keys) <= 1:
             return
