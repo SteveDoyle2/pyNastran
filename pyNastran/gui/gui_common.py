@@ -249,6 +249,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 'rotation_center' : False,
                 'measure_distance' : False,
                 'probe_result' : False,
+                'probe_result_all' : False,
                 'highlight_cell' : False,
                 'highlight_node' : False,
                 'area_pick' : False,
@@ -359,8 +360,13 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('measure_distance', 'Measure Distance', 'measure_distance.png', None, 'Measure the distance between two nodes', self.mouse_actions.on_measure_distance),
                 ('highlight_cell', 'Highlight Cell', '', None, 'Highlight a single cell', self.mouse_actions.on_highlight_cell),
                 ('highlight_node', 'Highlight Node', '', None, 'Highlight a single node', self.mouse_actions.on_highlight_node),
+
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.mouse_actions.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result),
+
+                ('probe_result_all', 'Probe All', '', None, 'Probe results for all cases', self.mouse_actions.on_probe_result_all),
+                ('quick_probe_result_all', 'Quick Probe All', 'q', None, 'Probe all cases', self.mouse_actions.on_quick_probe_result_all),
+
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.mouse_actions.on_zoom),
 
                 # font size
@@ -477,7 +483,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             'left_view', 'right_view',
             'magnify', 'shrink', 'zoom',
             'rotate_clockwise', 'rotate_cclockwise',
-            'rotation_center', 'measure_distance', 'probe_result',
+            'rotation_center', 'measure_distance',
+            'probe_result', 'probe_result_all',
             #'highlight_cell', 'highlight_node',
             'area_pick', 'highlight_nodes_elements', 'mark_nodes_elements',
             'wireframe', 'surface', 'edges']

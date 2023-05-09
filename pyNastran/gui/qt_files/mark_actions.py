@@ -3,6 +3,7 @@ defines:
  - MarkActions
 
 """
+from typing import Optional, Any
 import numpy as np
 import vtk
 
@@ -20,7 +21,7 @@ class MarkActions:
     def log(self):
         return self.gui.log
 
-    def create_annotation(self, text, x, y, z):
+    def create_annotation(self, text: str, x, y, z):
         """
         Creates the actual annotation and appends it to slot
 
@@ -40,9 +41,13 @@ class MarkActions:
         annotation = create_annotation(self.gui, text, x, y, z)
         return annotation
 
-    def get_result_by_xyz_cell_id(self, node_xyz, cell_id: int):
+    def get_result_by_xyz_cell_id(self, node_xyz: np.ndarray,
+                                  cell_id: int,
+                                  icase: Optional[int]=None):
         """won't handle multiple cell_ids/node_xyz"""
-        case_key = self.gui.case_keys[self.gui.icase_fringe]
+        if icase is None:
+            icase = self.gui.icase_fringe
+        case_key = self.gui.case_keys[icase]
         result_name = self.gui.result_name
 
         grid = self.gui.grid_selected
@@ -158,7 +163,9 @@ class MarkActions:
                 eids, icase_result, icase_to_apply))
         self.gui.vtk_interactor.Render()
 
-    def get_result_by_cell_id(self, cell_id, world_position, icase=None):
+    def get_result_by_cell_id(self, cell_id: int,
+                              world_position: np.ndarray,
+                              icase: Optional[int]=None) -> tuple[str, Any, np.ndarray]:
         """should handle multiple cell_ids"""
         if icase is None:
             icase = self.gui.icase_fringe
@@ -242,7 +249,7 @@ class MarkActions:
             raise NotImplementedError(msg)
         return res_name, result_values, xyz
 
-    def get_result_by_cell_ids(self, cell_ids, icase=None):
+    def get_result_by_cell_ids(self, cell_ids, icase: Optional[int]=None):
         """should handle multiple cell_ids"""
         if icase is None:
             icase = self.gui.icase_fringe
@@ -264,10 +271,10 @@ class MarkActions:
         return res_name, result_values
 
     def highlight_nodes_elements(self, nids=None, eids=None,
-                                 representation='wire',
+                                 representation: str='wire',
                                  model_name=None,
                                  #callback=self.on_focus_callback,
-                                 force=True):
+                                 force: bool=True):
         """
         Highlights a series of nodes/elements
 
@@ -291,7 +298,7 @@ class MarkActions:
             actors.append(actor)
         return actors
 
-    def highlight_nodes(self, nids, model_name='', add_actor=True):
+    def highlight_nodes(self, nids, model_name: str='', add_actor: bool=True):
         """
         Highlights a series of nodes
 
@@ -317,7 +324,7 @@ class MarkActions:
         self.gui.vtk_interactor.Render()
         return actor
 
-    def highlight_elements(self, eids, model_name='', add_actor=True):
+    def highlight_elements(self, eids, model_name: str='', add_actor: bool=True):
         """
         Highlights a series of elements
 
@@ -349,7 +356,8 @@ class MarkActions:
         #return actor
 
     def _highlight_picker_by_selection_node(self, grid, selection_node,
-                                            representation='surface', add_actor=True):
+                                            representation: str='surface',
+                                            add_actor: bool=True):
         """
         helper method for:
             - _highlight_picker_cell
@@ -369,7 +377,7 @@ class MarkActions:
             ugrid, representation=representation, add_actor=add_actor)
         return actor
 
-    def mark_nodes(self, nids, icase, text):
+    def mark_nodes(self, nids: list[int], icase: int, text: str) -> None:
         """
         Marks a series of nodes with custom text labels
 

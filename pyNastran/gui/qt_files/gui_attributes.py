@@ -1269,16 +1269,20 @@ class GuiAttributes:
         unused_zaxis_xyz = self.model.coords[cid_zaxis].transform_node_to_global(zaxis)
 
     #---------------------------------------------------------------------------
-    def get_result_by_xyz_cell_id(self, node_xyz, cell_id: int):
+    def get_result_by_xyz_cell_id(self, node_xyz: np.ndarray,
+                                  cell_id: int,
+                                  icase: Optional[int]=None) -> tuple[str, Any, int, np.ndarray]:
         """won't handle multiple cell_ids/node_xyz"""
-        out = self.mark_actions.get_result_by_xyz_cell_id(node_xyz, cell_id)
+        out = self.mark_actions.get_result_by_xyz_cell_id(node_xyz, cell_id, icase=icase)
         if out is None:
             print('attrs.get_result_by_xyz_cell_id bug')
             return None
         result_name, result_values, node_id, xyz = out
         return result_name, result_values, node_id, xyz
 
-    def get_result_by_cell_id(self, cell_id: int, world_position, icase=None):
+    def get_result_by_cell_id(self, cell_id: int,
+                              world_position: np.ndarray,
+                              icase: Optional[int]=None) -> tuple[str, Any, np.ndarray]:
         """should handle multiple cell_ids"""
         res_name, result_values, xyz = self.mark_actions.get_result_by_cell_id(
             cell_id, world_position, icase=icase)
