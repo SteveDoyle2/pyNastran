@@ -524,7 +524,7 @@ class TestSATKOP2(Tester):
         model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         model.safe_cross_reference()
 
-        save_load_deck(model, run_save_load=True, run_renumber=False)
+        save_load_deck(model, run_save_load=True, run_renumber=False, run_save_load_hdf5=False)
 
         log = get_logger(level='warning')
         op2, is_passed = run_op2(

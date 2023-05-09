@@ -115,15 +115,29 @@ class OP2_F06_Common:
         """allows for simple OP2 vectorization"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
-    #@property
-    #def cstm(self):
-        #return self.op2_results.cstm
-    #@property
-    #def trmbd(self):
-        #return self.op2_results.trmbd
-    #@property
-    #def trmbu(self):
-        #return self.op2_results.trmbu
+    # ------------------------------------------------------------------
+    # Coordinate transformation - Getter
+    @property
+    def cstm(self):
+        return self.op2_results.cstm
+    @property
+    def trmbd(self):
+        return self.op2_results.trmbd
+    @property
+    def trmbu(self):
+        return self.op2_results.trmbu
+
+    # ------------------------------------------------------------------
+    # Coordinate transformation - Setter
+    @cstm.setter
+    def cstm(self, cstm):
+        self.op2_results.cstm = cstm
+    @trmbd.setter
+    def trmbd(self, trmbd):
+        self.op2_results.trmbd = trmbd
+    @trmbu.setter
+    def trmbu(self, trmbu):
+        self.op2_results.trmbu = trmbu
 
     # ------------------------------------------------------------------
     # Strain Energy - Getter

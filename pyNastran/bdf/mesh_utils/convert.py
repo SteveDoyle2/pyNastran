@@ -1220,6 +1220,9 @@ def _convert_loads(model: BDF,
     accel_scale = force_scale / xyz_scale
     velocity_scale = xyz_scale / time_scale
 
+    # RANDPS: The units of Sq(w) are velocity squared per frequency(f).
+    velocity_psd_scale = velocity_scale ** 2 / frequency_scale
+
     model.log.debug('--Load Scales--')
     scales = set([])
     scale_map = {
@@ -1229,6 +1232,7 @@ def _convert_loads(model: BDF,
         'moment' : 'moment_scale (F*L) = %g' % moment_scale,
         'pressure' : 'pressure_scale (F/L^2) = %g' % pressure_scale,
         'velocity' : 'velocity_scale (L/T) = %g' % velocity_scale,
+        'randps' : 'velocity_psd_scale (L^2/T) = %g' % velocity_psd_scale,
         'accel' : 'accel_scale (F/L) = %g ???' % accel_scale,
         'temperature': 'temperature_scale (theta) = %g ???' % temperature_scale,
     }
@@ -1241,11 +1245,13 @@ def _convert_loads(model: BDF,
     for dloads in model.dloads.values():
         assert isinstance(dloads, list), dloads  # TEMP
 
-    skip_dloads = {'TLOAD2', 'RANDPS', 'RANDT1', 'QVECT'}
+    skip_dloads = {'TLOAD2', 'RANDT1', 'QVECT'}
     tabled_scales = set()
+    tabrnd1_scales = set()
     for dloads in model.dload_entries.values():
         for dload in dloads:
-            if dload.type == 'RLOAD1':
+            dload_type = dload.type
+            if dload_type == 'RLOAD1':
                 #self.excite_id = excite_id
                 #self.delay = delay
                 #self.dphase = dphase
@@ -1280,7 +1286,7 @@ def _convert_loads(model: BDF,
 
                 #darea = model.dareas[dload.excite_id]
                 #print(darea.get_stats())
-            elif dload.type == 'TLOAD1':
+            elif dload_type == 'TLOAD1':
                 if isinstance(dload.delay, float):
                     dload.delay *= time_scale
                     scales.add('time')
@@ -1294,10 +1300,35 @@ def _convert_loads(model: BDF,
                 scale = _get_dload_scale(dload, scales, xyz_scale, velocity_scale,
                                          accel_scale, force_scale)
                 tabled_scales.add((dload.tid, scale))
-            elif dload.type in skip_dloads:
+            elif dload_type == 'RANDPS':
+                # velocity^2/Hz
+                #j      : 2
+                #k      : 2
+                #sid    : 103
+                #tid    : 1
+                #tid_ref : TABRND1        1     LOG     LOG
+                #           20.     .01     50.    .015    700.    .015    800.     .03
+                #          925.     .03   2000.  .00644    ENDT
+                #x      : 1.0
+                #y      : 0.0
+                if dload.tid > 0:
+                    tabrnd1_scales.add((dload.tid, velocity_psd_scale))
+
+            elif dload_type in skip_dloads:
                 model.log.warning(f'skipping {dload.type}')
             else:
                 raise NotImplementedError(dload)
+
+    for tid, unused_scale in tabrnd1_scales:
+        table = model.random_tables[tid]
+        if table.type == 'TABRND1':
+            table.x *= frequency_scale
+            table.y *= velocity_psd_scale
+        elif table.type == 'TABRNDG':
+            table.LU *= time_scale # units of time
+            table.WG *= velocity_scale
+        else:
+            raise NotImplementedError(table.get_stats())
     for tid, scale in tabled_scales:
         tabled = model.TableD(tid)
         tabled.y *= scale

@@ -303,7 +303,7 @@ def compare_matrices(fem1, fem2):
     for key in fem1.dmig:
         card1 = fem1.dmig[key]
         card2 = fem2.dmig[key]
-        assert str(card1) == str(card2)
+        assert card1.write_card() == card2.write_card()
         #assert_fields(card1, card2)
 
     #for key in fem1.dmi:

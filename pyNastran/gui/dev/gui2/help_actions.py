@@ -29,7 +29,7 @@ class HelpActions:
     # help
     def open_website(self) -> None:
         """opens the website"""
-        self._urlopen(pyNastran.__website__)
+        self._openbrowswer(pyNastran.__website__)
 
     def open_docs(self) -> None:
         url = pyNastran.__docs__
@@ -37,15 +37,15 @@ class HelpActions:
             urllib.request.urlopen(url)
         except (urllib.error.HTTPError, urllib.error.URLError):
             url = pyNastran.__docs_rtd__
-            self._urlopen(url)
+            self._openbrowswer(url)
 
     def open_issue(self) -> None:
         """loads the pyNastran issue tracker"""
-        self._urlopen(pyNastran.__issue__)
+        self._openbrowswer(pyNastran.__issue__)
 
     def open_discussion_forum(self) -> None:
         """loads the pyNastran discussion forum website"""
-        self._urlopen(pyNastran.__discussion_forum__)
+        self._openbrowswer(pyNastran.__discussion_forum__)
 
     def about_dialog(self) -> None:
         """Display about dialog"""
@@ -56,7 +56,7 @@ class HelpActions:
         win = AboutWindow(data, win_parent=self.gui, show_tol=True)
         win.show()
 
-    def _urlopen(self, url: str) -> None:
+    def _openbrowswer(self, url: str) -> None:
         """opens a URL"""
         if self.gui.is_gui:
             webbrowser.open(url)

@@ -198,8 +198,8 @@ class OP2Reader:
             # coordinate system transformation matrices
             b'CSTM' : (self.read_cstm, 'coordinate transforms'),
             b'CSTMS' : (self.read_cstm, 'coordinate transforms (superelement)'),
-            #b'TRMBD': self.read_trmbd,
-            #b'TRMBU': self.read_trmbu,
+            b'TRMBD': (self.read_trmbd, 'euler angles for transforming from material to (deformed) basic csys'),
+            b'TRMBU': (self.read_trmbu, 'euler angles for transforming from material to (undeformed) basic csys'),
 
             b'R1TABRG': (self.read_r1tabrg, 'DRESP1 optimization table'),
             # Qualifier info table???
@@ -1528,8 +1528,98 @@ class OP2Reader:
 
     def read_trmbd(self):
         """
-        Reads the TRMBD table, which defines the transform from material (deformed) to basic.
+        Reads the TRMBD table
+
+        Table of Euler Angles for transformation from material to basic coordinate system in the deformed configuration
+
+        Record - HEADER
+        +------+---------+-------+---------------------------------+
+        | Word | Name    | Type  | Description                     |
+        +======+=========+=======+=================================+
+        |  1   | NAME(2) | CHAR4 | Data block name                 |
+        +------+---------+-------+---------------------------------+
+        |  3   | WORD    | I     | No Def or Month, Year, One, One |
+        +------+---------+-------+---------------------------------+
+
+        Record IDENT
+        +------+------------+-------+---------------------------------------------------+
+        | Word | Name       | Type  | Description                                       |
+        +======+============+=======+===================================================+
+        |  1   | ACODE(C)   | I     | Device code + 10*Approach code = 60 + iand        |
+        |      |            |       | (print, plot)                                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  2   | TCODE      | I     | Table code                                        |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | ELTYPE(C)  | I     | Element type number                               |
+        +------+------------+-------+---------------------------------------------------+
+        |  4   | SUBCASE    | I     | Subcase number                                    |
+        +------+------------+-------+---------------------------------------------------+
+        | TCODE,1 = 1       | Sort 1                                                    |
+        +------+------------+-------+---------------------------------------------------+
+        | ACODE,4 = 02      | Real eigenvalues                                          |
+        +------+------------+-------+---------------------------------------------------+
+        | 5    | UNDEF(5)   | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | ACODE,4 = 06      | Transient                                                 |
+        +------+------------+-------+---------------------------------------------------+
+        | 5    | TIME       | RS    | Current time step                                 |
+        +------+------------+-------+---------------------------------------------------+
+        | 6    | UNDEF(4)   | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | ACODE,4 = 10      | Nonlinear statics                                         |
+        +------+------------+-------+---------------------------------------------------+
+        | 5    | LFTSFQ     | RS    | Load step for SOL401 arc-length only              |
+        +------+------------+-------+---------------------------------------------------+
+        | 6    | TIME       | RS    | Time for SOL401 arc-length only                   |
+        +------+------------+-------+---------------------------------------------------+
+        | 7    | AL_TOTAL   | RS    | Accumulated arc-length for SOL401 arc-length only |
+        +------+------------+-------+---------------------------------------------------+
+        | 8    | UNDEF(2)   | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | End ACODE,4       |       |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | TCODE,1 = 02      | Sort 2                                                    |
+        +------+------------+-------+---------------------------------------------------+
+        | End TCODE,1       |       |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | 10   | NUMWDE     | I     | Number of words per entry in DATA record          |
+        +------+------------+-------+---------------------------------------------------+
+        | 11   | UNDEF(40)  | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | 51   | TITLE(32)  | CHAR4 | Title character string (TITLE)                    |
+        +------+------------+-------+---------------------------------------------------+
+        | 83   | SUBTITL(32)| CHAR4 | Subtitle character string (SUBTITLE)              |
+        +------+------------+-------+---------------------------------------------------+
+        | 115  | LABEL(32)  | CHAR4 | LABEL character string (LABEL)                    |
+        +------+------------+-------+---------------------------------------------------+
+
+        Record DATA
+        +------+------------+-------+---------------------------------------------------+
+        | Word | Name       | Type  | Description                                       |
+        +======+============+=======+===================================================+
+        |  1   | ELID       | I     | Element ID * 10 + device code                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  2   | GRID       | I     | External grid ID                                  |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AX         | RS    | Euler angle X                                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AY         | RS    | Euler angle Y                                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AZ         | RS    | Euler angle Z                                     |
+        +------+------------+-------+---------------------------------------------------+
+        | Words 2 thru 5 repeat for each end of corner grid point                       |
+        | (for example, 8 grids for CHEXA, 6 grids for XPENTA, 2 grids for CBAR,        |
+        | 4 grids for CQUADX4                                                           |
+        +------+------------+-------+---------------------------------------------------+
+
+        Record TRAILER
+        +------+------------+-------+---------------------------------------------------+
+        | Word | Name       | Type  | Description                                       |
+        +======+============+=======+===================================================+
+        |  1   | UNDEF(6)   | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
         """
+
         op2 = self.op2
         is_geometry = op2.is_geometry
         unused_table_name = self._read_table_name(rewind=False)
@@ -1591,13 +1681,16 @@ class OP2Reader:
             time_step = identifiers_float[4]
 
             if subcase not in time_steps:
-                time_steps[subcase] = {time_step, }
+                time_steps[subcase] = {time_step, }  # Set because time step can be repeated
             else:
                 time_steps[subcase].add(time_step)
 
         # Create time step to tid mapper per subcase
         for subcase, tsteps in time_steps.items():
-            time_steps[subcase] = np.array(list(tsteps))  # convert set to numpy array
+            tsteps = np.array(list(tsteps))
+            tstep_indices = np.argsort(tsteps)  # Sort because set does not retain ordering
+            time_steps[subcase] = tsteps[tstep_indices]
+
             tstep_to_index_mapper = {time_steps[subcase][x]: x for x in range(0, time_steps[subcase].shape[0])}
 
         trmbd = op2.trmbd
@@ -1665,7 +1758,7 @@ class OP2Reader:
                 nnodes = 4
 
             elif element_type == 300: # or eltype == 67:
-                element = 'CHEXA8'
+                element = 'CHEXA'
                 nnodes = 8
 
             elif element_type == 345:
@@ -1734,6 +1827,7 @@ class OP2Reader:
                 nodes = np.empty([n_elements, grids.shape[1] + 1], dtype='int32')
                 nodes[:, 0] = eids
                 nodes[:, 1:] = grids
+                trmbd.nodes[element] = nodes
 
             itime = tstep_to_index_mapper[time_step]
             trmbd.eulersx[subcase][element][itime, :, :] = eulers_x
@@ -1744,7 +1838,67 @@ class OP2Reader:
 
     def read_trmbu(self):
         """
-        Reads the TRMBU table, which defines the transform from material (undeformed) to basic.
+        Reads the TRMBU table
+
+        Table of Euler Angles for transformation from material to basic coordinate system
+        in the undeformed configuration
+
+        Record - HEADER
+        +------+---------+-------+---------------------------------+
+        | Word | Name    | Type  | Description                     |
+        +======+=========+=======+=================================+
+        |  1   | NAME(2) | CHAR4 | Data block name                 |
+        +------+---------+-------+---------------------------------+
+        |  3   | WORD    | I     | No Def or Month, Year, One, One |
+        +------+---------+-------+---------------------------------+
+
+        Record IDENT
+        +---------+------------+-------+---------------------------------------------------+
+        | Word    | Name       | Type  | Description                                       |
+        +=========+============+=======+===================================================+
+        |  1      | ACODE      | I     | Device code + 10*Approach code = 60 + iand        |
+        |         |            |       | (print, plot)                                     |
+        +---------+------------+-------+---------------------------------------------------+
+        |  2      | TCODE      | I     | Table code                                        |
+        +---------+------------+-------+---------------------------------------------------+
+        |  3      | ELTYPE(C)  | I     | Element type number                               |
+        +---------+------------+-------+---------------------------------------------------+
+        |  4      | SUBCASE    | I     | Subcase number                                    |
+        +---------+------------+-------+---------------------------------------------------+
+        | 5       | TIME       | RS    | Time Step                                         |
+        +---------+------------+-------+---------------------------------------------------+
+        | 6-9     | UNDEF(4)   | None  |                                                   |
+        +---------+------------+-------+---------------------------------------------------+
+        | 10      | NUMWDE     | I     | Number of words per entry in DATA record          |
+        +---------+------------+-------+---------------------------------------------------+
+        | 11-50   | UNDEF(40)  | None  |                                                   |
+        +---------+------------+-------+---------------------------------------------------+
+        | 51-82   | TITLE(32)  | CHAR4 | Title character string (TITLE)                    |
+        +---------+------------+-------+---------------------------------------------------+
+        | 83-114  | SUBTITL(32)| CHAR4 | Subtitle character string (SUBTITLE)              |
+        +---------+------------+-------+---------------------------------------------------+
+        | 115-146 | LABEL(32)  | CHAR4 | LABEL character string (LABEL)                    |
+        +---------+------------+-------+---------------------------------------------------+
+
+        Record DATA
+        +------+------------+-------+---------------------------------------------------+
+        | Word | Name       | Type  | Description                                       |
+        +======+============+=======+===================================================+
+        |  1   | EID        | I     | Element ID * 10 + device code                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AX         | RS    | Euler angle X                                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AY         | RS    | Euler angle Y                                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AZ         | RS    | Euler angle Z                                     |
+        +------+------------+-------+---------------------------------------------------+
+
+        Record TRAILER
+        +------+------------+-------+---------------------------------------------------+
+        | Word | Name       | Type  | Description                                       |
+        +======+============+=======+===================================================+
+        |  1   | UNDEF(6)   | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
         """
         op2 = self.op2
         #is_geometry = op2.is_geometry
@@ -1801,13 +1955,16 @@ class OP2Reader:
             time_step = identifiers_float[4]
 
             if subcase not in time_steps:
-                time_steps[subcase] = {time_step, }
+                time_steps[subcase] = {time_step, }  # Set because time step can be repeated
             else:
                 time_steps[subcase].add(time_step)
 
         # Create time step to tid mapper per subcase
         for subcase, tsteps in time_steps.items():
-            time_steps[subcase] = np.array(list(tsteps))  # convert set to numpy array
+            tsteps = np.array(list(tsteps))
+            tstep_indices = np.argsort(tsteps)  # Sort because set does not retain ordering
+            time_steps[subcase] = tsteps[tstep_indices]
+
             tstep_to_index_mapper = {time_steps[subcase][x]: x for x in range(0, time_steps[subcase].shape[0])}
 
         # Read data
@@ -1843,7 +2000,7 @@ class OP2Reader:
                 element = 'CPYRAM'
 
             elif element_type == 300: # or eltype == 67:
-                element = 'CHEXA8'
+                element = 'CHEXA'
 
                 numwide = 4
                 n_elements = int_data.shape[0] // numwide  # elid + 3 euler angles
@@ -1924,7 +2081,6 @@ class OP2Reader:
             eids = (int_data[:, 0] - op2.device_code) // 10
             eulers = float_data[:, 1:]
 
-            trmbu = op2.trmbu
             if subcase not in trmbu.eulers:
                 trmbu.eulers[subcase] = {}
             if element not in trmbu.eulers[subcase]:

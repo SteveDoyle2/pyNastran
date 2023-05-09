@@ -650,7 +650,7 @@ def read_point(lines: list[str], iline: int,
 
 
         if not len(sline) == len(xyz_results[inode, :]):
-            msg = 'sline=%s results[inode, :]=%s' % (sline[:3], results[inode, :])
+            msg = 'sline=%s xyz_results[inode, :]=%s' % (sline, xyz_results[inode, :])
             raise RuntimeError(msg)
 
         try:

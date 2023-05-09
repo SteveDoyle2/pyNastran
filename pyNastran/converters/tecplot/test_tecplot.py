@@ -34,7 +34,7 @@ class TestTecplot(unittest.TestCase):
         tecplot_filenames = [
             'binary/point_febrick_3d_02.plt',  # works
         ]
-        log = SimpleLogger(level='debug', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         binary_plt = os.path.join(MODEL_PATH, 'ascii.plt')
         ascii_plt = os.path.join(MODEL_PATH, 'binary.plt')
         for fname in tecplot_filenames:
@@ -118,7 +118,7 @@ class TestTecplot(unittest.TestCase):
             'ascii/point_fequad_2d.dat',  # 2d; good
             'ascii/tiny.dat',  # good
         ]
-        log = SimpleLogger(level='debug', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         ascii_plt = os.path.join(MODEL_PATH, 'ascii.plt')
         binary_plt = os.path.join(MODEL_PATH, 'binary.plt')
         for fname in tecplot_filenames:
@@ -249,11 +249,11 @@ class TestTecplot(unittest.TestCase):
             '1. 0. 1. 21. 22. 23. 24.',
             '1 2 3',
         ]
-        file = StringIO()
-        file.write('\n'.join(lines))
-        file.seek(0)
+        tecplot_file = StringIO()
+        tecplot_file.write('\n'.join(lines))
+        tecplot_file.seek(0)
         log = SimpleLogger(level='warning')
-        model = read_tecplot(file, use_cols=None, dtype=None,
+        model = read_tecplot(tecplot_file, use_cols=None, dtype=None,
                              filetype='ascii', log=log, debug=False)
         nodes, tris, quads, tets, hexas, zone_ids, names = model.stack_geometry()
         assert nodes.shape == (11, 3)
@@ -261,6 +261,18 @@ class TestTecplot(unittest.TestCase):
         assert quads.shape == (2, 4)
         assert len(tets) == 0
         assert len(hexas) == 0
+        cart3d_filename = os.path.join(MODEL_PATH, 'junk.tri')
+        cart3d_model = tecplot_to_cart3d_filename(
+            model, cart3d_filename, remove_degenerate_tris=False,
+            log=log, debug=True)
+        assert cart3d_model.nodes.shape == (11, 3), cart3d_model.nodes.shape
+        assert cart3d_model.elements.shape == (5, 3), cart3d_model.elements.shape
+
+        cart3d_model = tecplot_to_cart3d_filename(
+            model, cart3d_filename, remove_degenerate_tris=True,
+            log=log, debug=True)
+        assert cart3d_model.nodes.shape == (11, 3), cart3d_model.nodes.shape
+        assert cart3d_model.elements.shape == (3, 3), cart3d_model.elements.shape
 
     def test_tecplot_360_point_euler(self):
         lines = [
