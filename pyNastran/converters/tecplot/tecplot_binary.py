@@ -267,6 +267,7 @@ class TecplotBinary(Base):
         set_zones_to_exclude = zones_to_exclude_to_set(zones_to_exclude)
         log = self.log
         assert os.path.exists(tecplot_filename), print_bad_path(tecplot_filename)
+        log.info(f'reading tecplot: {tecplot_filename}')
 
         self.n = 0
         with open(tecplot_filename, 'rb') as self.f:
@@ -324,9 +325,11 @@ def _write_binary_zone_headers(model: TecplotBinary,
                                version: bytes) -> None:
     #end 357.0, 299.0,
     start_of_zone_flag = pack(b'<f', 299.0)
+    log = model.log
     for zone in model.zones:
         tecplot_file.write(start_of_zone_flag)
         zone_type = zone.zone_type_int
+        strand_id = zone.strand_id
 
         if version == '102':
             #print(f'writing name={zone.name!r}')
@@ -352,8 +355,8 @@ def _write_binary_zone_headers(model: TecplotBinary,
         elif version == '112':
             raise RuntimeError(version)
             assert -2 <= strand_id < 32700, strand_id
-            print(f'  parent_zone={parent_zone} strand_id={strand_id} solution_time={solution_time:g}')
-            print(f'  zone_type={zone_type} data_packing={data_packing} specify_var={specify_var}')
+            log.debug(f'  parent_zone={parent_zone} strand_id={strand_id} solution_time={solution_time:g}')
+            log.debug(f'  zone_type={zone_type} data_packing={data_packing} specify_var={specify_var}')
             data = unpack('<iid 4i', (parent_zone, strand_id, solution_time,
                  unused_a, zone_type, data_packing, specify_var))
             tecplot_file.write(data)
@@ -365,7 +368,7 @@ def _write_binary_zone_headers(model: TecplotBinary,
                 ndatai = 4 * nvars; data = file_obj.read(ndatai); n += ndatai
                 specify_varsi = np.frombuffer(data, dtype='int32')
 
-            print(f'  raw_local={raw_local} n_misc_neighbor_connections={n_misc_neighbor_connections}')
+            log.debug(f'  raw_local={raw_local} n_misc_neighbor_connections={n_misc_neighbor_connections}')
             assert raw_local in {0, 1}, raw_local
             assert n_misc_neighbor_connections >= 0, n_misc_neighbor_connections
             data = unpack('<2i', raw_local, n_misc_neighbor_connections)
@@ -381,7 +384,7 @@ def _write_binary_zone_headers(model: TecplotBinary,
             if fe_poly:
                 raise RuntimeError(' FEPOLYGON or FEPOLYHEDRON; p.153')
 
-            print(f'  nelement={nelement} celldim={celldim}')
+            log.debug(f'  nelement={nelement} celldim={celldim}')
             data = unpack('<4i', nelement, *celldim)
             tecplot_file.write(data)
 
@@ -942,8 +945,8 @@ def _read_binary_zone_headers(
             data = file_obj.read(32); n += 32
             (parent_zone, strand_id, solution_time,
              unused_a, zone_type, data_packing, specify_var) = unpack('<iid 4i', data)
-            print(f'  parent_zone={parent_zone} strand_id={strand_id} solution_time={solution_time:g}')
-            print(f'  zone_type={zone_type} data_packing={data_packing} specify_var={specify_var}')
+            log.debug(f'  parent_zone={parent_zone} strand_id={strand_id} solution_time={solution_time:g}')
+            log.debug(f'  zone_type={zone_type} data_packing={data_packing} specify_var={specify_var}')
 
             ordered_zone = is_ordered_zone(zone_type)
             fe_poly = is_fe_poly_zone(zone_type)
@@ -956,12 +959,12 @@ def _read_binary_zone_headers(
             raw_local, n_misc_neighbor_connections = unpack('<2i', data)
             assert raw_local in {0, 1}, raw_local
             assert n_misc_neighbor_connections >= 0, n_misc_neighbor_connections
-            print(f'  raw_local={raw_local} n_misc_neighbor_connections={n_misc_neighbor_connections}')
+            log.debug(f'  raw_local={raw_local} n_misc_neighbor_connections={n_misc_neighbor_connections}')
 
             # Are raw local 1-to-1 face neighbors supplied?
             # (0=FALSE 1=TRUE).
-            if is_fe_zone(zone_type):
-                show_ndata(file_obj, 100, types='ifs', endian='<')
+            #if is_fe_zone(zone_type):
+                #show_ndata(file_obj, 100, types='ifs', endian='<')
             if ordered_zone:
                 raise RuntimeError('ordered zone; p.153')
             if fe_poly:
@@ -969,7 +972,7 @@ def _read_binary_zone_headers(
 
             data = file_obj.read(16); n += 16
             nelement, *celldim = unpack('<4i', data)
-            print(f'  nelement={nelement} celldim={celldim}')
+            log.debug(f'  nelement={nelement} celldim={celldim}')
             data = file_obj.read(4); n += 4
         else:
             raise NotImplementedError(version)
@@ -1069,7 +1072,7 @@ def _write_string(title: str) -> bytes:
     ints = []
 
     # verify we're in ascii, so we don't get ord bugs
-    title_bytes = title.encode('ascii')
+    unused_title_bytes = title.encode('ascii')
 
     for char in title:
         ints.append(ord(char))
@@ -1162,7 +1165,7 @@ def _read_binary_header(model: TecplotBinary,
     data = file_obj.read(4); self.n += 4
     nvars = unpack('<i', data)[0]
     assert 3 <= nvars <= 100, nvars
-    print(f'nvars = {nvars}')
+    #print(f'nvars = {nvars}')w
     model.log.info(f'nvars = {nvars}')
 
     # Variable names.

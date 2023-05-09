@@ -1,10 +1,10 @@
 from __future__ import annotations
 import copy
 from collections import defaultdict
-from typing import TextIO, Optional, Any, TYPE_CHECKING
+from typing import TextIO, Optional, Any # , TYPE_CHECKING
 
 import numpy as np
-from pyNastran.nptyping_interface import NDArrayN3float, NDArrayN3int, NDArrayN4int
+from pyNastran.nptyping_interface import NDArrayN3int, NDArrayN4int # NDArrayN3float,
 
 #if TYPE_CHECKING:  # pragma: no cover
 from cpylog import SimpleLogger
@@ -30,10 +30,10 @@ class Zone:
         self.strand_id = -1
         self.headers_dict = CaseInsensitiveDict()
         self.zone_data = np.zeros((0, 0), dtype='float32')
-        self.tet_elements = np.array([], dtype='int32')
-        self.hexa_elements = np.array([], dtype='int32')
-        self.quad_elements = np.array([], dtype='int32')
-        self.tri_elements = np.array([], dtype='int32')
+        self.tet_elements = np.zeros((0, 4), dtype='int32')
+        self.hexa_elements = np.zeros((0, 8), dtype='int32')
+        self.quad_elements = np.zeros((0, 4), dtype='int32')
+        self.tri_elements = np.zeros((0, 3), dtype='int32')
 
         # TODO: does or does not consider xyz?
         #self.variables: list[str] = []
@@ -55,7 +55,7 @@ class Zone:
     @classmethod
     def set_zone_from_360(self,
                           log: SimpleLogger,
-                          header_dict,
+                          header_dict: dict[str, Any],
                           variables: list[str],
                           name: str,
                           zone_type: str,
@@ -100,13 +100,15 @@ class Zone:
         nvars_actual = zone_data.shape[1]
         if not nvars == nvars_actual:
             raise RuntimeError(f'variables={variables} nvars={nvars}; '
-                               f'nodal_results.shape={nodal_results.shape} nxyz={nxyz}\n'
+                               f'nodal_results.shape={zone_data.shape} nxyz={nxyz}\n'
                                f'nvars={nvars} nvars_actual={nvars_actual}')
 
         #zone_data = _add_rho_uvw(zone_data, variables)
         zone_data = _add_ttot(zone_data, variables)
         zone_data = _add_ptot(zone_data, variables)
         zone_data = _add_rhotot(zone_data, variables)
+        zone_data = _add_mixture_Cp(zone_data, variables)
+        zone_data = _add_mixture_Cv(zone_data, variables)
 
         zone.zone_data = zone_data
         header_dict['variables'] = variables
@@ -119,7 +121,8 @@ class Zone:
         #print(str(zone))
         return zone
 
-    def variables_exist(variables: list[str],
+    def variables_exist(self,
+                        variables: list[str],
                         variables_to_check: list[str],
                         variables_to_save: list[str]) -> bool:
         return variables_exist(variables, variables_to_check, variables_to_save)
@@ -253,7 +256,7 @@ class Zone:
         if hasattr(self, 'name'):
             name = f'  name = {self.name}\n'
 
-        xy_shape = str(self.xy.shape)
+        unused_xy_shape = str(self.xy.shape)
         xyz_shape = str(self.xyz.shape)
         is3d = self.is_3d
         if 'I' in self.headers_dict:
@@ -430,12 +433,6 @@ class Zone:
                            is_points: bool,
                            ivars: list[int]) -> None:
         """writes XY/XYZs and results in POINT or BLOCK format"""
-        # xyz
-        xyz = self.xyz
-        xy = self.xy
-
-        #print('nnodes', nodes.shape)
-        #print('results', self.nodal_results.shape)
         assert self.nnodes > 0, f'nnodes={self.nnodes:d}'
         nresults = len(ivars)
         assert nresults, ivars
@@ -647,6 +644,7 @@ def _add_ttot(zone_data: np.ndarray,
     """create total temperature"""
     if not variables_exist(variables, ['mach', 'tt', 'gamma'], ['ttot']):
         return zone_data
+
     itt = variables.index('tt')  # translational-rotational temperature
     imach = variables.index('mach')
     igamma = variables.index('gamma')
@@ -710,6 +708,48 @@ def _add_rho_uvw(zone_data: np.ndarray,
     rho_uvw = np.abs(rho[:, np.newaxis] * uvw)
     zone_data = np.hstack([zone_data, rho_uvw, rho_uvw_mag])
     variables.extend(['rhoU', 'rhoV', 'rhoW', 'rhoUVW'])
+    return zone_data
+
+def _add_mixture_Cp(zone_data: np.ndarray,
+                    variables: list[str]) -> np.ndarray:
+    """https://www.tau.ac.il/~tsirel/dump/Static/knowino.org/wiki/Specific_heat_ratio.html."""
+    if not variables_exist(variables, ['mixture_mol_weight', 'gamma'], ['mix_Cp']):
+        return zone_data
+
+    iR = variables.index('mixture_mol_weight')  # gas constant
+    igamma = variables.index('gamma')
+
+    R = zone_data[:, iR]
+    gamma = zone_data[:, igamma]
+    nnodes = len(gamma)
+
+    # Cp = gamma*R/(gamma-1)
+    # Cv = R / (gamma-1)
+    #
+    Cp = gamma * R / (gamma-1)
+    zone_data = np.hstack([zone_data, Cp.reshape((nnodes, 1))])
+    variables.append('mixture_Cp')
+    return zone_data
+
+def _add_mixture_Cv(zone_data: np.ndarray,
+                    variables: list[str]) -> np.ndarray:
+    """https://www.tau.ac.il/~tsirel/dump/Static/knowino.org/wiki/Specific_heat_ratio.html."""
+    if not variables_exist(variables, ['mixture_mol_weight', 'gamma'], ['mix_Cp']):
+        return zone_data
+
+    iR = variables.index('mixture_mol_weight')  # gas constant
+    igamma = variables.index('gamma')
+
+    R = zone_data[:, iR]
+    gamma = zone_data[:, igamma]
+    nnodes = len(gamma)
+
+    # Cp = gamma*R/(gamma-1)
+    # Cv = R / (gamma-1)
+    #
+    Cv = R / (gamma-1)
+    zone_data = np.hstack([zone_data, Cv.reshape((nnodes, 1))])
+    variables.append('mixture_Cv')
     return zone_data
 
 def _write_xyz_results_point(tecplot_file: TextIO,

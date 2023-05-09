@@ -19,8 +19,8 @@ class TecplotIO:
         pass
 
     def get_tecplot_wildcard_geometry_results_functions(self):
-        data = ('Tecplot Binary FEBlock',
-                'Tecplot Binary FEBlock (*.dat; *.plt; *.tec)', self.load_tecplot_geometry,
+        data = ('Tecplot',
+                'Tecplot (*.dat; *.plt; *.tec)', self.load_tecplot_geometry,
                 None, None)
         return data
 

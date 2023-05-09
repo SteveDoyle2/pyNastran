@@ -425,7 +425,7 @@ def read_zonetype(log: SimpleLogger,
         elements = np.zeros((nelementsi, 3), dtype='int32')
     #elif zone_type == 'FEBLOCK':
         #pass
-    elif  zone_type in ['POINT', 'BLOCK']:
+    elif  zone_type in {'POINT', 'BLOCK'}:
         # already handled
         #print('data')
         pass

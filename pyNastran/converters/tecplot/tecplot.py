@@ -28,7 +28,8 @@ def read_tecplot(tecplot_filename: str,
                  use_cols=None, dtype=None,
                  filetype: str='guess',
                  zones_to_exclude: Optional[list[int]] = None,
-                 log=None, debug=False):
+                 log: Optional[SimpleLogger]=None,
+                 debug: bool=False):
     """loads a tecplot file
 
     Parameters

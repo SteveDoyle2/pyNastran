@@ -1034,6 +1034,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         if unxref:
             self.uncross_reference()
+        self.log.info(f'saving BDF obj {obj_filename}')
         with open(obj_filename, 'wb') as obj_file:
             dump(self, obj_file)
 
@@ -1045,6 +1046,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #del self.case_control_deck
         #self.uncross_reference()
         #import types
+        self.log.info(f'loading  BDF obj {obj_filename}')
         with open(obj_filename, 'rb') as obj_file:
             obj = load(obj_file)
 
@@ -1063,7 +1065,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
             'wtmass',
         ]
-        for key in object_attributes(self, mode='all', keys_to_skip=keys_to_skip):
+        attrs = object_attributes(self, mode='all', keys_to_skip=keys_to_skip)
+        for key in attrs:
             if key.startswith('__') and key.endswith('__'):
                 continue
 
@@ -1074,8 +1077,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             try:
                 setattr(self, key, val)
             except AttributeError:  # pragma: no cover
-                raise AttributeError('key=%r val=%s\nupdate ~line 860 of bdf.py and '
-                                     'add the new key (%s)' % (key, val, key))
+                raise AttributeError(f'key={key!r} val={val}\nupdate ~line 1050 of bdf.py and '
+                                     f'add the new key ({key})')
 
         self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
         #self.log.debug('done loading!')
