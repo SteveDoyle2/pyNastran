@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Tuple, List, Dict, TextIO, Optional
+from typing import TextIO, Optional
 
 import numpy as np
 import scipy.sparse
@@ -44,7 +44,9 @@ def read_f06_matrices(f06_filename: str,
         log.info('found the following matrices in the f06: %s' % (list(matrices)))
     return tables, matrices
 
-def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> dict[str, np.ndarray]:
+def _read_f06_matrices(f06_file: TextIO,
+                       log: SimpleLogger,
+                       nlines_max: int) -> dict[str, np.ndarray]:
     i = 0
     debug = False
     tables = {}
@@ -166,7 +168,8 @@ def _read_real_eigenvalues(f06_file: TextIO,
     return Mhh, Bhh, Khh
 
 def _read_matrix(f06_file: TextIO,
-                 line: str, i: int, log: SimpleLogger, debug: bool) -> tuple[str, np.ndarray, str, int]:
+                 line: str, i: int, log: SimpleLogger,
+                 debug: bool) -> tuple[str, np.ndarray, str, int]:
     """
     0      MATRIX QHHA     (GINO NAME 101 ) IS A COMPLEX          100 COLUMN X          10 ROW RECTANG  MATRIX.
     0COLUMN        1      ROWS        1 THRU       10 --------------------------------------------------

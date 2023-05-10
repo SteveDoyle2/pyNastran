@@ -6,7 +6,6 @@ import os
 import copy
 import itertools
 from io import StringIO
-from pathlib import PurePath
 from typing import TextIO, Union, Optional, Any
 
 import numpy as np
@@ -15,7 +14,7 @@ from cpylog import SimpleLogger
 from pyNastran.utils import is_binary_file
 from pyNastran.converters.tecplot.zone import Zone
 from pyNastran.converters.tecplot.tecplot_binary import (
-    TecplotBinary, zones_to_exclude_to_set)
+    PathLike, TecplotBinary, zones_to_exclude_to_set)
 from pyNastran.converters.tecplot.write_ascii import (
     write_ascii_header, write_ascii_tecplot_zone)
 from pyNastran.converters.tecplot.read_ascii import (
@@ -23,8 +22,7 @@ from pyNastran.converters.tecplot.read_ascii import (
     read_zonetype,
 )
 
-
-def read_tecplot(tecplot_filename: str,
+def read_tecplot(tecplot_filename: PathLike,
                  use_cols=None, dtype=None,
                  filetype: str='guess',
                  zones_to_exclude: Optional[list[int]] = None,
@@ -97,7 +95,7 @@ class Tecplot(TecplotBinary):
         """gets the number of zones"""
         return len(self.zones)
 
-    def read_tecplot(self, tecplot_filename: str,
+    def read_tecplot(self, tecplot_filename: PathLike,
                      filetype: str='guess',
                      zones_to_exclude: Optional[list[int]] = None):
         """
@@ -115,7 +113,7 @@ class Tecplot(TecplotBinary):
             return self.read_tecplot_binary(tecplot_filename, zones_to_exclude=zones_to_exclude)
         return self.read_tecplot_ascii(tecplot_filename, zones_to_exclude=zones_to_exclude)
 
-    def read_tecplot_ascii(self, tecplot_filename: Union[str, PurePath, StringIO],
+    def read_tecplot_ascii(self, tecplot_filename: Union[PathLike, StringIO],
                            nnodes=None, nelements=None,
                            zones_to_exclude: Optional[list[int]]=None):
         """
@@ -130,6 +128,7 @@ class Tecplot(TecplotBinary):
         .. note :: assumes single typed results
         .. warning:: BLOCK option doesn't work if line length isn't the same...
         """
+        log = self.log
         set_zones_to_exclude = zones_to_exclude_to_set(zones_to_exclude)
         self.tecplot_filename = tecplot_filename
         iline = 0
@@ -155,14 +154,14 @@ class Tecplot(TecplotBinary):
         while 1:
             #print('start...')
             iline, title_line, header_lines, line = read_header_lines(
-                lines, iline, line, self.log)
+                lines, iline, line, log)
             #print('header_lines', header_lines)
             headers_dict = header_lines_to_header_dict(
-                title_line, header_lines, self.variables, self.log)
+                title_line, header_lines, self.variables, log)
             if headers_dict is None:
                 break
 
-            zone = Zone(self.log)
+            zone = Zone(log)
             zone.headers_dict = copy.deepcopy(headers_dict)
             self.variables = headers_dict['VARIABLES']
             if 'NAME' in headers_dict:
@@ -174,7 +173,7 @@ class Tecplot(TecplotBinary):
                 zone_type = zone.zonetype  # febrick
                 data_packing = headers_dict['DATAPACKING'].upper() # block
                 iline = read_zonetype(
-                    self.log,
+                    log,
                     zone, zone_type, lines, iline, iblock, headers_dict, line,
                     nnodes, nelements,
                     zone_data_list, hexas_list, tets_list, quads_list, tris_list,
@@ -184,9 +183,9 @@ class Tecplot(TecplotBinary):
                 data_packing = headers_dict['DATAPACKING'] # FEPoint
                 assert isinstance(data_packing, str), headers_dict
                 zone_type = data_packing.upper() # FEPoint
-                self.log.debug('zone_type = %r' % zone_type[0])
+                log.debug('zone_type = %r' % zone_type[0])
                 iline = read_zonetype(
-                    self.log,
+                    log,
                     zone, zone_type, lines, iline, iblock, headers_dict, line,
                     nnodes, nelements,
                     zone_data_list, hexas_list, tets_list, quads_list, tris_list,
@@ -197,8 +196,9 @@ class Tecplot(TecplotBinary):
                   ('T' in headers_dict)):
                 lines2 = itertools.chain((line, ), iter(lines[iline:]))
                 A = self._read_table_from_lines(lines2, headers_dict)
+
                 self.A = A
-                self.log.debug(f'read_table; A.shape={A.shape}...')
+                log.debug(f'read_table; A.shape={A.shape}...')
                 asdf
                 return
             else:
@@ -218,7 +218,7 @@ class Tecplot(TecplotBinary):
                 _stack(zone, zone_data_list,
                        quads_list, tris_list,
                        tets_list, hexas_list,
-                       self.log)
+                       log)
 
             if line is None:
                 return
@@ -244,12 +244,12 @@ class Tecplot(TecplotBinary):
         nnodes = self.nnodes
         nodes = np.zeros((nnodes, 3), dtype='float32')
         inode = 0
-        tris = []
-        quads = []
-        tets = []
-        hexas = []
-        zone_ids = []
-        names = []
+        tris: list[np.ndarray] = []
+        quads: list[np.ndarray] = []
+        tets: list[np.ndarray] = []
+        hexas: list[np.ndarray] = []
+        zone_ids: list[np.ndarray] = []
+        names: list[str] = []
         for izone, zone in enumerate(self.zones):
             names.append(zone.name)
             nodes2d = zone.xy
@@ -337,18 +337,24 @@ class Tecplot(TecplotBinary):
             zone_idsi = np.ones(nelementsi) * izone
             zone_ids.append(zone_idsi)
         #print('stack', len(quads))
-        quads = stack(quads)
-        tris = stack(tris)
-        if len(quads) and not len(tris):
+        quads_array = stack(quads)
+        tris_array = stack(tris)
+        del quads, tris
+        if len(quads_array) and not len(tris_array):
             # convert quads written as tris into tris
-            itri = (quads[:, 2] == quads[:, 3])
-            tris = quads[itri, :3]
-            quads = quads[~itri, :]
+            itri = (quads_array[:, 2] == quads_array[:, 3])
+            tris = quads_array[itri, :3]
+            quads = quads_array[~itri, :]
 
-        tets = stack(tets)
-        hexas = stack(hexas)
-        zone_ids = np.hstack(zone_ids).astype('int32')
-        return nodes, tris, quads, tets, hexas, zone_ids, names
+        tets_array = stack(tets)
+        hexas_array = stack(hexas)
+        zone_ids_array = np.hstack(zone_ids).astype('int32')
+        out = (
+            nodes, tris_array, quads_array,
+            tets_array, hexas_array, zone_ids_array,
+            names,
+        )
+        return out
 
     def stack_results(self) -> np.ndarray:
         results = []
@@ -370,25 +376,28 @@ class Tecplot(TecplotBinary):
         A, blank = self._read_table_from_lines(lines, headers_dict)
         return A, None
 
-    def slice_x(self, xslice):
+    def slice_x(self, xslice: float) -> None:
         """TODO: doesn't remove unused nodes/renumber elements"""
         zone = self.zones[0]
         x = zone.xyz[:, 0]
         self._slice_plane(zone, x, xslice)
 
-    def slice_y(self, yslice):
+    def slice_y(self, yslice: float) -> None:
         """TODO: doesn't remove unused nodes/renumber elements"""
         zone = self.zones[0]
         y = zone.xyz[:, 1]
         self._slice_plane(zone, y, yslice)
 
-    def slice_z(self, zslice):
+    def slice_z(self, zslice: float) -> None:
         """TODO: doesn't remove unused nodes/renumber elements"""
         zone = self.zones[0]
         z = zone.xyz[:, 2]
         self._slice_plane(zone, z, zslice)
 
-    def slice_xyz(self, xslice, yslice, zslice):
+    def slice_xyz(self,
+                  xslice: Optional[float],
+                  yslice: Optional[float],
+                  zslice: Optional[float]) -> None:
         """TODO: doesn't remove unused nodes/renumber elements"""
         zone = self.zones[0]
         x = zone.xyz[:, 0]
@@ -420,7 +429,10 @@ class Tecplot(TecplotBinary):
         if nodes is not None:
             zone._slice_plane_inodes(nodes)
 
-    def _slice_plane(self, zone: Zone, y: np.ndarray, slice_value: float) -> None:
+    def _slice_plane(self,
+                     zone: Zone,
+                     y: np.ndarray,
+                     slice_value: float) -> None:
         """
         - Only works for CHEXA
         - Doesn't remove unused nodes/renumber elements
@@ -429,8 +441,8 @@ class Tecplot(TecplotBinary):
         inodes = np.where(y < slice_value)[0]
         zone._slice_plane_inodes(inodes)
 
-    def write_tecplot(self, tecplot_filename: str,
-                      res_types: list[str]=None,
+    def write_tecplot(self, tecplot_filename: PathLike,
+                      res_types: Optional[list[str]]=None,
                       adjust_nids: bool=True) -> None:
         """
         Only handles single type writing
@@ -449,8 +461,8 @@ class Tecplot(TecplotBinary):
         """
         self.write_tecplot_ascii(tecplot_filename, res_types, adjust_nids)
 
-    def write_tecplot_ascii(self, tecplot_filename: str,
-                            res_types: list[str]=None,
+    def write_tecplot_ascii(self, tecplot_filename: PathLike,
+                            res_types: Optional[list[str]]=None,
                             adjust_nids: bool=True) -> None:
         """writes an ASCII tecplot file"""
         self.log.info('writing tecplot %s' % tecplot_filename)
@@ -471,14 +483,16 @@ class Tecplot(TecplotBinary):
         #sss
         #return free_faces
 
-    def extract_y_slice(self, y0, tol=0.01, slice_filename=None):
+    def extract_y_slice(self, y0: float,
+                        tol: float=0.01,
+                        slice_filename: Optional[str]=None):
         """
         doesn't work...
         """
         self.log.info('slicing...')
-        zone = model.zones[0]
-        y = self.xyz[:, 1]
-        nodes = self.xyz
+        zone = self.zones[0]
+        y = zone.xyz[:, 1]
+        nodes = zone.xyz
         assert tol > 0.0, tol
         elements = zone.hexa_elements
         results = zone.nodal_results
@@ -530,11 +544,14 @@ class Tecplot(TecplotBinary):
         nodes2 = nodes[inodes, :]
         nodal_results2 = results[inodes, :]
         model = Tecplot()
-        zone = Zone(self.log)
-        zone.xyz = nodes2
-        zone.nodal_results = nodal_results2
-        zone.hexa_elements = elements3
-        model.zones = [zone]
+        zone2 = Zone(self.log)
+
+        zone_data = np.hstack([nodes2, nodal_results2])
+        zone2.zone_data = zone_data
+        #zone2.xyz = nodes2
+        #zone2.nodal_results = nodal_results2
+        zone2.hexa_elements = elements3
+        model.zones = [zone2]
 
         if slice_filename:
             model.write_tecplot(slice_filename)
@@ -582,17 +599,18 @@ def _get_write_header(title: str,
 
 def stack(elements: list[np.ndarray]) -> np.ndarray:
     if len(elements) == 0:
+        elements_array = np.array((0, 0), dtype='int32')
         pass
     elif len(elements) == 1:
-        elements = elements[0]
+        elements_array = elements[0]
         #print(elements)
     else:
         #print('----stack------')
         #for elementsi in elements:
             #print(elementsi)
         #print('----stack------')
-        elements = np.vstack(elements)
-    return elements
+        elements_array = np.vstack(elements)
+    return elements_array
 
 def _stack(zone: Zone,
            zone_data_list: list[np.ndarray],

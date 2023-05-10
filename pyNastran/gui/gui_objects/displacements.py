@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Optional, Any
+from typing import Optional, Any
 
 from numpy import zeros
 import numpy as np
@@ -119,8 +119,9 @@ class VectorTable(GuiResultCommon):
             self.max_values = None
             self.min_values = None
 
-    def save_defaults(self):
-        self.data_formats = ['%g'] * len(self.titles)
+    def save_defaults(self) -> None:
+        ntitles = len(self.titles)
+        self.data_formats = ['%g'] * ntitles
         self.titles_default = deepcopy(self.titles)
         self.headers_default = deepcopy(self.headers)
         self.scales_default = deepcopy(self.scales)
@@ -136,54 +137,55 @@ class VectorTable(GuiResultCommon):
         self.max_values = deepcopy(self.default_maxs)
 
     # getters
-    def get_location(self, i, unused_name):
+    def get_location(self, i: int, unused_name: str) -> str:
         return self.location
 
-    def get_header(self, i, unused_name):
+    def get_header(self, i: int, unused_name: str) -> str:
         #j = self.titles_default.index(name)
         #return self.titles[j]
         return self.headers[i]
 
-    def get_phase(self, i, name):
+    def get_phase(self, i: int, name: str) -> Optional[float]:
         if self.is_real:
             return None
         return self.phases[i]
 
-    def get_data_format(self, i, name):
+    def get_data_format(self, i: int, name: str) -> str:
         return self.data_formats[i]
 
-    def get_scale(self, i, name):
+    def get_scale(self, i: int, name: str) -> float:
         return self.scales[i]
 
-    def get_title(self, i, name):
+    def get_title(self, i: int, name: str) -> str:
         return self.titles[i]
 
-    def get_min_max(self, i, name):
+    def get_min_max(self, i: int, name: str) -> tuple[float, float]:
         return self.min_values[i], self.max_values[i]
 
     #-------------------------------------
     # setters
 
-    def set_data_format(self, i, name, data_format):
+    def set_data_format(self, i: int, name: str, data_format: str) -> None:
         self.data_formats[i] = data_format
 
-    def set_scale(self, i, name, scale):
+    def set_scale(self, i: int, name: str, scale: float) -> None:
         #j = self.titles_default.index(name)
         if self.linked_scale_factor:
             self.scales[:] = scale
         else:
             self.scales[i] = scale
 
-    def set_phase(self, i, name, phase):
+    def set_phase(self, i: int, name: str, phase: float) -> None:
         if self.is_real:
             return
         #j = self.titles_default.index(name)
         self.phases[i] = phase
 
-    def set_title(self, i, name, title):
+    def set_title(self, i: int, name: str, title: str) -> None:
         self.titles[i] = title
 
-    def set_min_max(self, i, name, min_value, max_value):
+    def set_min_max(self, i: int, name: str,
+                    min_value: float, max_value: float) -> None:
         self.min_values[i] = min_value
         self.max_values[i] = max_value
 
@@ -258,12 +260,12 @@ class VectorTable(GuiResultCommon):
         dxyz = self.dxyz[i, :].real * np.cos(theta) + self.dxyz[i, :].imag * np.sin(theta)
         return dxyz
 
-    def _get_complex_displacements(self, i):
+    def _get_complex_displacements(self, i: int) -> np.ndarray:
         """see ``_get_complex_displacements_by_phase``"""
         dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         return dxyz
 
-    def get_result(self, i, name):
+    def get_result(self, i: int, name: str) -> np.ndarray:
         if self.is_real:
             if self.dim == 2:
                 # single result
@@ -282,7 +284,7 @@ class VectorTable(GuiResultCommon):
         assert len(dxyz.shape) == 2, dxyz.shape
         return dxyz
 
-    def get_vector_result(self, i, name):
+    def get_vector_result(self, i: int, name: str) -> tuple[np.ndarray, np.ndarray]:
         #assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             xyz, deflected_xyz = self.get_vector_result_by_scale_phase(
@@ -303,7 +305,7 @@ class VectorTable(GuiResultCommon):
         #self.dim = len(self.dxyz.shape)
 
 
-        self.uname = uname
+        #self.uname = uname
         #self.dxyz_norm = norm(dxyz, axis=1)
 
         #self.deflects = deflects
@@ -356,16 +358,18 @@ class ElementalTableResults(VectorTable):
             colormap=colormap, set_max_min=set_max_min,
             uname=uname)
 
-    def get_methods(self, i):
+    def get_methods(self, i: int) -> list[str]:
         if self.is_real:
             return ['magnitude', 'x', 'y', 'z']
-        else:
-            raise NotImplementedError('self.is_real=%s' % self.is_real)
+        raise NotImplementedError('self.is_real=%s' % self.is_real)
 
-    def deflects(self, unused_i, unused_res_name):
+    def deflects(self, unused_i: int, unused_res_name: str) -> bool:
         return False
 
-    def get_vector_result_by_scale_phase(self, i, unused_name, unused_scale, phase=0.):
+    def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
+                                         unused_scale: float,
+                                         phase: float=0.,
+                                         ) -> tuple[Optional[np.ndarray], np.ndarray]:
         xyz = None
         #assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
@@ -404,7 +408,7 @@ class ForceTableResults(VectorTable):
             colormap=colormap, set_max_min=set_max_min,
             uname=uname)
 
-    def get_methods(self, i):
+    def get_methods(self, i: int) -> list[str]:
         if self.is_real:
             return ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         else:
@@ -414,10 +418,13 @@ class ForceTableResults(VectorTable):
         #"""the result type"""
         #return 'node'
 
-    def deflects(self, unused_i, unused_res_name):
+    def deflects(self, unused_i: int, unused_res_name: str) -> bool:
         return False
 
-    def get_vector_result_by_scale_phase(self, i, unused_name, unused_scale, phase=0.):
+    def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
+                                         unused_scale: float,
+                                         phase: float=0.,
+                                         ) -> tuple[Optional[np.ndarray], np.ndarray]:
         """
         Gets the real/complex deflection result
 
@@ -455,7 +462,7 @@ class ForceTableResults(VectorTable):
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return xyz, deflected_xyz
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """defines str(self)"""
         msg = 'ForceTableResults\n'
         msg += f'    titles={self.titles!r}\n'
@@ -524,16 +531,16 @@ class DisplacementResults(VectorTable):
     #-------------------------------------
     # unmodifyable getters
 
-    def deflects(self, unused_i, unused_res_name):
+    def deflects(self, unused_i: int, unused_res_name: str) -> bool:
         return True
 
-    def get_location(self, unused_i, unused_name):
+    def get_location(self, unused_i: int, unused_name: str) -> str:
         """the result type"""
         return 'node'
 
     #-------------------------------------
 
-    def get_methods(self, i):
+    def get_methods(self, i: int) -> list[str]:
         if self.is_real:
             return ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         else:
@@ -547,7 +554,8 @@ class DisplacementResults(VectorTable):
         #print(self.dxyz_norm)
         #return self.dxyz_norm
 
-    def get_vector_result_by_scale_phase(self, i, unused_name, scale, phase=0.):
+    def get_vector_result_by_scale_phase(self, i: int, unused_name: str,
+                                         scale: float, phase: float=0.) -> tuple[np.ndarray, np.ndarray]:
         """
         Gets the real/complex deflection result
 
@@ -586,7 +594,7 @@ class DisplacementResults(VectorTable):
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return self.xyz, deflected_xyz
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """defines str(self)"""
         msg = 'DisplacementResults\n'
         msg += f'    titles={self.titles!r}\n'

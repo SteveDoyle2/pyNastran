@@ -4,7 +4,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import List, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 #import matplotlib
 #matplotlib.use('Qt5Agg')
 #from pyNastran.gui.matplotlib_backend import  matplotlib_backend

@@ -8,7 +8,6 @@ This includes:
  - augmented_identity(A)
 
 """
-from typing import List
 import numpy as np
 
 #ver = np.lib.NumpyVersion(np.__version__)

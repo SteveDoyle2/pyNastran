@@ -1042,7 +1042,7 @@ class SET1(Set):
         #:  Unique identification number. (Integer > 0)
         self.sid = sid
 
-        #:  List of structural grid point or element identification numbers.
+        #:  list of structural grid point or element identification numbers.
         #:  (Integer > 0 or 'THRU'; for the 'THRU' option, ID1 < ID2 or 'SKIN';
         #:  in field 3)
         self.ids = expand_thru(ids, set_fields=False, sort_fields=False)

@@ -19,7 +19,7 @@ from pathlib import PurePath
 import traceback
 from collections import defaultdict
 from typing import (
-    List, Dict, Set, Tuple, Sequence, Optional, Union, Any, TYPE_CHECKING)
+    Sequence, Optional, Union, Any, TYPE_CHECKING)
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -1114,7 +1114,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         Parameters
         ----------
-        cards : list[str]; Set[str]
+        cards : list[str]; set[str]
             a list/set of cards that should not be read
 
         .. python ::
@@ -1130,13 +1130,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             disable_set = set(cards)
         self.cards_to_read = self.cards_to_read.difference(disable_set)
 
-    def set_cards(self, cards: Union[list[str],Set[str]]) -> None:
+    def set_cards(self, cards: Union[list[str], set[str]]) -> None:
         """
         Method for setting the cards that will be processed
 
         Parameters
         ----------
-        cards : list[str]; Set[str]
+        cards : list[str]; set[str]
             a list/set of cards that should not be read
 
         .. python ::

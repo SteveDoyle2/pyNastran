@@ -6,7 +6,7 @@ import os
 import sys
 import traceback
 from collections import OrderedDict
-from typing import List, Dict, Any, Optional
+from typing import Any, Optional
 
 import numpy as np
 import vtk

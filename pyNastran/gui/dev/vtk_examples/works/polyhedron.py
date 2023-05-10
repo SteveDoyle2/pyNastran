@@ -21,7 +21,7 @@ points.InsertNextPoint( 1.0, 1.0, 1.0)
 points.InsertNextPoint(-1.0, 1.0, 1.0)
 
 
-# List of pointIds that make up the face
+# list of pointIds that make up the face
 
 faceList = [
     [0, 3, 2, 1],

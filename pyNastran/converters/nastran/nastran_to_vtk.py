@@ -76,7 +76,7 @@ def _save_nastran_results(test: NastranGUI) -> vtk.vtkUnstructuredGrid:
 
 def _save_force_table_results(key: int, index_name,
                               case: ForceTableResults,
-                              used_titles: Set[str],
+                              used_titles: set[str],
                               point_data, cell_data, log: SimpleLogger) -> None:
     if index_name[0] != 0:
         return
@@ -104,7 +104,7 @@ def _save_force_table_results(key: int, index_name,
 
 def _save_displacement_results(key: int, index_name,
                                case: DisplacementResults,
-                               used_titles: Set[str],
+                               used_titles: set[str],
                                point_data, cell_data, log: SimpleLogger) -> None:
     if index_name[0] != 0:
         return
@@ -124,7 +124,7 @@ def _save_displacement_results(key: int, index_name,
 
 def _save_simple_table_results(key: int, index_name,
                                case: SimpleTableResults,
-                               used_titles: Set[str],
+                               used_titles: set[str],
                                point_data, cell_data, log: SimpleLogger) -> None:
     # (1, (0, 0, 'Static'))
     # SimpleTableResults:
@@ -161,7 +161,7 @@ def _save_simple_table_results(key: int, index_name,
 
 def _save_layered_table_results(key: int, index_name,
                                 case: LayeredTableResults,
-                                used_titles: Set[str],
+                                used_titles: set[str],
                                 point_data, cell_data, log: SimpleLogger) -> vtk.vtkFloatArray:
         assert case.location == 'centroid', case
         #(1, (0, 0, 'Static')) = index_name
@@ -220,7 +220,7 @@ def _add_array(location, point_data, cell_data, vtk_array):
         cell_data.AddArray(vtk_array)
 
 
-def _check_title(title: str, used_titles: Set[str]) -> None:
+def _check_title(title: str, used_titles: set[str]) -> None:
     #print(title)
     assert title not in used_titles, title
     used_titles.add(title)

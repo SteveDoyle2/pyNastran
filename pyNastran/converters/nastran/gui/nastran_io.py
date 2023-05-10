@@ -7,7 +7,7 @@ import traceback
 from itertools import chain
 from io import StringIO
 from collections import defaultdict, OrderedDict
-from typing import Set, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -346,7 +346,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             cid_type = cid_types[coord.Type]
             self.gui._create_coord(dim_max, cid, coord, cid_type)
 
-    def _remove_old_nastran_geometry(self, bdf_filename):
+    def _remove_old_nastran_geometry(self, bdf_filename: str) -> bool:
         """cleans up the nastran model"""
         #return self._remove_old_geometry(bdf_filename)
 
@@ -1423,7 +1423,10 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 form0.append(formi)
         return icase
 
-    def _create_caero_actors(self, ncaeros, ncaeros_sub, ncaeros_cs, has_control_surface):
+    def _create_caero_actors(self, ncaeros: int,
+                             ncaeros_sub: int,
+                             ncaeros_cs: int,
+                             has_control_surface: bool) -> None:
         """
         This just creates the following actors.  It does not fill them.
         These include:
@@ -2318,16 +2321,17 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         if nspoints == 0:
             self.log.warning('0 spoints added for %r' % name)
             return
-        self.gui.create_alternate_vtk_grid(
+        gui = self.gui
+        gui.create_alternate_vtk_grid(
             name, color=BLUE_FLOAT, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=True)
 
-        self.gui.follower_nodes[name] = spoint_ids
+        gui.follower_nodes[name] = spoint_ids
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nspoints)
 
         j = 0
-        alt_grid = self.gui.alt_grids[name]
+        alt_grid = gui.alt_grids[name]
         for spointi in sorted(spoint_ids):
             try:
                 unused_i = nid_map[spointi]
@@ -7278,7 +7282,7 @@ def _create_monpnt(gui: MainWindow,
             raise NotImplementedError(aecomp)
 
 
-def get_results_to_exclude(nastran_settings: NastranSettings) -> Set[str]:
+def get_results_to_exclude(nastran_settings: NastranSettings) -> set[str]:
     exclude_results = set([])
     if not nastran_settings.eigenvector:
         exclude_results.add('eigenvectors')

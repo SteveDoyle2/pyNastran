@@ -9,6 +9,9 @@ from pyNastran.nptyping_interface import NDArrayN3int, NDArrayN4int # NDArrayN3f
 #if TYPE_CHECKING:  # pragma: no cover
 from cpylog import SimpleLogger
 
+Face = tuple[int, int, int, int]
+
+
 class CaseInsensitiveDict(dict):
     def __contains__(self, key: str) -> bool:
         val_in = dict.__contains__(self, key.upper())
@@ -41,7 +44,6 @@ class Zone:
         # VARLOCATION=([3-7,10]=CELLCENTERED, [11-12]=CELLCENTERED)
         # default=NODAL
         #self.nodal_results = np.array([], dtype='float32')
-        self.A = None
         #self.centroidal_results = np.array([], dtype='float32')
 
     @property
@@ -107,7 +109,7 @@ class Zone:
         zone_data = _add_ttot(zone_data, variables)
         zone_data = _add_ptot(zone_data, variables)
         zone_data = _add_rhotot(zone_data, variables)
-        zone_data = _add_mixture_Cp(zone_data, variables)
+        zone_data = _add_mixture_R_Cp(zone_data, variables)
         zone_data = _add_mixture_Cv(zone_data, variables)
 
         zone.zone_data = zone_data
@@ -130,16 +132,19 @@ class Zone:
     @property
     def is_unstructured(self) -> bool:
         """are there unstructured elements"""
-        is_unstructured = (
-            len(self.tri_elements) or len(self.quad_elements) or
-            len(self.tet_elements) or len(self.hexa_elements)
+        is_unstructured: bool = (
+            len(self.tri_elements) or
+            len(self.quad_elements) or
+            len(self.tet_elements) or
+            len(self.hexa_elements)
         )
         return is_unstructured
 
     @property
     def is_structured(self) -> bool:
         """is the model in plot3d style format"""
-        return not self.is_unstructured
+        is_structured = not self.is_unstructured
+        return is_structured
 
     @property
     def nnodes(self) -> int:
@@ -227,7 +232,7 @@ class Zone:
         return zone_type_int
 
     @property
-    def zonetype(self) -> Optional[str]:
+    def zonetype(self) -> str:
         """FEBrick,  FETETRAHEDRON,  FETRIANGLE,  FEQUADRILATERAL"""
         #headers_dict['ZONETYPE'].upper() # FEBrick
         #try:
@@ -308,7 +313,8 @@ class Zone:
         msg += f' n={nnodes:d}, e={nelements:d}, ZONETYPE={zone_type}, DATAPACKING={datapacking}\n'
         tecplot_file.write(msg)
 
-        self._write_xyz_results(tecplot_file, is_points, ivars)
+        ivars_array = np.asarray(ivars, dtype='int32')
+        self._write_xyz_results(tecplot_file, is_points, ivars_array)
         self._write_elements(tecplot_file, nnodes,
                              is_tris, is_quads, is_tets, is_hexas,
                              adjust_nids=adjust_nids)
@@ -431,7 +437,7 @@ class Zone:
 
     def _write_xyz_results(self, tecplot_file: TextIO,
                            is_points: bool,
-                           ivars: list[int]) -> None:
+                           ivars: np.ndarray) -> None:
         """writes XY/XYZs and results in POINT or BLOCK format"""
         assert self.nnodes > 0, f'nnodes={self.nnodes:d}'
         nresults = len(ivars)
@@ -461,7 +467,9 @@ class Zone:
             msg = f'ZONE I={ni:d}, F=POINT\n'
         tecplot_file.write(msg)
         is_points = True
-        self._write_xyz_results(tecplot_file, is_points, ivars)
+
+        ivars_array = np.asarray(ivars, dtype='int32')
+        self._write_xyz_results(tecplot_file, is_points, ivars_array)
 
     def skin_elements(self) -> tuple[NDArrayN3int, NDArrayN4int]:
         """get the tris/quads from tets/hexas"""
@@ -507,16 +515,17 @@ class Zone:
             right = [element[1], element[2], element[6], element[5]]
             front = [element[0], element[1], element[5], element[4]]
             back = [element[3], element[2], element[6], element[7]]
-            for face in [btm, top, left, right, front, back]:
+            for face in (btm, top, left, right, front, back):
                 if len(np.unique(face)) >= 3:
                     sort_face = tuple(sorted(face))
                     sort_face_to_element_map[sort_face].append(ie)
                     sort_face_to_face[sort_face] = face
 
-        free_faces = []
+        free_faces: list[Face] = []
         for sort_face, eids in sort_face_to_element_map.items():
             if len(eids) == 1:
-                free_faces.append(sort_face_to_face[sort_face])
+                facei: Face = sort_face_to_face[sort_face]
+                free_faces.append(facei)
         self.log.info('finished get_free_faces')
         return free_faces
 
@@ -562,13 +571,13 @@ class Zone:
         self.headers_dict['variables'] = variables
 
     @property
-    def xyz(self):
+    def xyz(self) -> np.ndarray:
         if self.is_3d:
             return self.zone_data[:, :3]
         return np.zeros((0, 3), dtype='float32')
 
     @property
-    def xy(self):
+    def xy(self) -> np.ndarray:
         if self.is_2d:
             return self.zone_data[:, :2]
         return np.zeros((0, 2), dtype='float32')
@@ -710,16 +719,19 @@ def _add_rho_uvw(zone_data: np.ndarray,
     variables.extend(['rhoU', 'rhoV', 'rhoW', 'rhoUVW'])
     return zone_data
 
-def _add_mixture_Cp(zone_data: np.ndarray,
-                    variables: list[str]) -> np.ndarray:
+def _add_mixture_R_Cp(zone_data: np.ndarray,
+                      variables: list[str]) -> np.ndarray:
     """https://www.tau.ac.il/~tsirel/dump/Static/knowino.org/wiki/Specific_heat_ratio.html."""
     if not variables_exist(variables, ['mixture_mol_weight', 'gamma'], ['mix_Cp']):
         return zone_data
 
-    iR = variables.index('mixture_mol_weight')  # gas constant
+    imolecular_weight = variables.index('mixture_mol_weight')
     igamma = variables.index('gamma')
 
-    R = zone_data[:, iR]
+    molecular_weight = zone_data[:, imolecular_weight] # g/mol
+    Runv = 8314 # J/(kg*K)
+    R: np.ndarray = Runv / molecular_weight  # J/(kg*K)
+
     gamma = zone_data[:, igamma]
     nnodes = len(gamma)
 
@@ -727,17 +739,21 @@ def _add_mixture_Cp(zone_data: np.ndarray,
     # Cv = R / (gamma-1)
     #
     Cp = gamma * R / (gamma-1)
-    zone_data = np.hstack([zone_data, Cp.reshape((nnodes, 1))])
-    variables.append('mixture_Cp')
+    zone_data = np.hstack([
+        zone_data,
+        R.reshape((nnodes, 1)),
+        Cp.reshape((nnodes, 1)),
+    ])
+    variables.extend(['R', 'mixture_Cp'])
     return zone_data
 
 def _add_mixture_Cv(zone_data: np.ndarray,
                     variables: list[str]) -> np.ndarray:
     """https://www.tau.ac.il/~tsirel/dump/Static/knowino.org/wiki/Specific_heat_ratio.html."""
-    if not variables_exist(variables, ['mixture_mol_weight', 'gamma'], ['mix_Cp']):
+    if not variables_exist(variables, ['R', 'gamma'], ['mix_Cp']):
         return zone_data
 
-    iR = variables.index('mixture_mol_weight')  # gas constant
+    iR = variables.index('R')  # gas constant
     igamma = variables.index('gamma')
 
     R = zone_data[:, iR]
@@ -754,7 +770,7 @@ def _add_mixture_Cv(zone_data: np.ndarray,
 
 def _write_xyz_results_point(tecplot_file: TextIO,
                              zone_data: np.ndarray,
-                             ivars: np.ndarray) -> None:
+                             ivars: np.ndarray | list[int]) -> None:
     """writes a POINT formatted result of X,Y,Z,res1,res2 output"""
     assert len(ivars), ivars
     try:
@@ -772,7 +788,7 @@ def _write_xyz_results_point(tecplot_file: TextIO,
 
 def _write_xyz_results_block(tecplot_file: TextIO,
                              zone_results: np.ndarray,
-                             ivars: list[int]) -> None:
+                             ivars: np.ndarray) -> None:
     """TODO: hasn't been tested for 2d?"""
     #print('nnodes_per_element =', nnodes_per_element)
     # for ivar in range(nnodes_per_element):
@@ -787,4 +803,3 @@ def _write_xyz_results_block(tecplot_file: TextIO,
                 tecplot_file.write(msg)
                 msg = '\n'
         tecplot_file.write(msg.rstrip() + '\n')
-

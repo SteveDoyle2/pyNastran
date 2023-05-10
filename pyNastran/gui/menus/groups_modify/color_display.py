@@ -4,7 +4,6 @@ defines:
 
 """
 # -*- coding: utf-8 -*-
-from typing import List
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QWidget,

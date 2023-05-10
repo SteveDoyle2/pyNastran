@@ -533,7 +533,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         Parameters
         ----------
-        cards : list[str]; Set[str]
+        cards : list[str]; set[str]
             a list/set of cards that should not be read
 
         .. python ::

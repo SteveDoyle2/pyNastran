@@ -11,7 +11,6 @@ import os
 import sys
 import traceback
 import warnings
-from typing import List
 import numpy as np
 warnings.simplefilter('always')
 
@@ -711,8 +710,6 @@ def run_fem2(bdf_model, out_model, xref, punch,
             msg = 'PARAM,POST,0 is not supported by the OP2 reader'
             fem2.log.error(msg)
 
-        p0 = np.array([0., 0., 0.])
-
         subcase_keys = fem2.case_control_deck.get_subcase_list()
         subcases = fem2.subcases
 
@@ -722,6 +719,8 @@ def run_fem2(bdf_model, out_model, xref, punch,
         for line in fem2.system_command_lines:
             if line.strip().upper().startswith('RESTART'):
                 is_restart = True
+
+        #p0 = np.array([0., 0., 0.])
         #if not is_restart:
             #validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
                                   #stop_on_failure=stop_on_failure)

@@ -19,7 +19,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import List, Dict, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 from qtpy import QtGui
 

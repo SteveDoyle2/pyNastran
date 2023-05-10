@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from pyNastran.gui.dev.gui2 import IS_TESTING, IS_OFFICIAL_RELEASE
 if TYPE_CHECKING:  # pragma: no cover
@@ -43,7 +43,7 @@ def build_fmts(gui: MainWindow2,
                 if log is None:
                     print('***', msg)
                 else:
-                    self.log_error(msg)
+                    gui.log_error(msg)
         _add_fmt(fmts, fmt, geom_results_funcs, data)
 
     if len(fmts) == 0:

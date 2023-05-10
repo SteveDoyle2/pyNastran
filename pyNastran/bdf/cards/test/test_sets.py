@@ -63,6 +63,7 @@ class TestSets(unittest.TestCase):
         set1a = SET1(sid, ids, is_skin=False, comment='set1')
         set1b = SET1.add_card(BDFCard(['SET1', sid] + ids))
         set1a.write_card()
+        set1b.write_card()
 
     def test_set2_01(self):
         """checks the SET2 card"""
@@ -116,7 +117,7 @@ class TestSets(unittest.TestCase):
         """checks the SET3 card"""
         model = BDF()
 
-        # List of grid IDs
+        # list of grid IDs
         grid_list = [1, 2, 3, 4, 5, 6, 7, 13, 15,
                      20, 21, 22, 23, 30, 31, 32, 33]
 

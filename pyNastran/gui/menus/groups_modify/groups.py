@@ -4,7 +4,6 @@ defines:
 
 """
 # -*- coding: utf-8 -*-
-from typing import List
 
 from numpy import ndarray
 

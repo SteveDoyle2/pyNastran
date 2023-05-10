@@ -1,8 +1,9 @@
 # encoding: utf-8
 import os
 import sys
-from struct import Struct, unpack, pack
+from pathlib import PurePath
 from collections import namedtuple
+from struct import Struct, unpack, pack
 from typing import BinaryIO, Optional, Union, Any
 
 import numpy as np
@@ -11,6 +12,7 @@ from pyNastran.converters.tecplot.zone import Zone, CaseInsensitiveDict
 from pyNastran.utils import object_attributes, object_methods, object_stats
 
 from cpylog import get_logger2
+PathLike = PurePath | str
 
 ZoneTuple = namedtuple('Zone', ['zone_name',
                                 'strand_id', 'solution_time',
@@ -99,10 +101,10 @@ class Base:
 class TecplotBinary(Base):
     def __init__(self, log=None, debug: bool=False):
         # defines binary file specific features
-        self._endian = b'<'
+        self._endian: bytes = b'<'
         self._n = 0
 
-        self.tecplot_filename = ''
+        self.tecplot_filename: PathLike = ''
         self.log = get_logger2(log, debug=debug)
         self.debug = debug
 
@@ -242,7 +244,7 @@ class TecplotBinary(Base):
         self.f.seek(self.n)
         return self._write_data(f, data, types=types)
 
-    def write_tecplot_binary(self, tecplot_filename: str,
+    def write_tecplot_binary(self, tecplot_filename: PathLike,
                              version: str='102') -> None:
         assert version == '102', version
 
@@ -256,7 +258,7 @@ class TecplotBinary(Base):
             _write_binary_results(
                 self, tecplot_file, nvars, version)
 
-    def read_tecplot_binary(self, tecplot_filename: str,
+    def read_tecplot_binary(self, tecplot_filename: PathLike,
                             zones_to_exclude: Optional[list[int]]=None) -> None:
         """
         Supports multiblock, but FEQUADs in BLOCK format only
@@ -322,7 +324,7 @@ class TecplotBinary(Base):
 def _write_binary_zone_headers(model: TecplotBinary,
                                tecplot_file: BinaryIO,
                                nvars: int,
-                               version: bytes) -> None:
+                               version: str) -> None:
     #end 357.0, 299.0,
     start_of_zone_flag = pack(b'<f', 299.0)
     log = model.log
@@ -365,7 +367,7 @@ def _write_binary_zone_headers(model: TecplotBinary,
             fe_poly = is_fe_poly_zone(zone_type)
             #specify_var = 1
             if specify_var:
-                ndatai = 4 * nvars; data = file_obj.read(ndatai); n += ndatai
+                ndatai = 4 * nvars; data = tecplot_file.read(ndatai); n += ndatai
                 specify_varsi = np.frombuffer(data, dtype='int32')
 
             log.debug(f'  raw_local={raw_local} n_misc_neighbor_connections={n_misc_neighbor_connections}')
@@ -388,7 +390,7 @@ def _write_binary_zone_headers(model: TecplotBinary,
             data = unpack('<4i', nelement, *celldim)
             tecplot_file.write(data)
 
-            data = file_obj.read(4); n += 4
+            data = tecplot_file.read(4); n += 4
         else:
             raise NotImplementedError(version)
     return

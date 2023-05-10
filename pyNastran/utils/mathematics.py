@@ -48,7 +48,9 @@ from scipy.integrate import quad  # type: ignore
         # i.append(where(eids_all == eid)[0])
     # return hstack(i)
 
-def get_abs_max(min_values, max_values, dtype='float32'):
+def get_abs_max(min_values: np.ndarray,
+                max_values: np.ndarray,
+                dtype: str='float32') -> tuple[np.ndarray]:
     """Get return the value with the greatest magnitude, preserving sign."""
     min_values = np.asarray(min_values)
     max_values = np.asarray(max_values)
@@ -66,7 +68,8 @@ def get_abs_max(min_values, max_values, dtype='float32'):
     #return data[i[:], k]
 
 
-def get_abs_index(data, axis=1):
+def get_abs_index(data: np.ndarray,
+                  axis: int=1) -> tuple[np.ndarray, np.ndarray]:
     """
     Gets the maximum absolute value of a 2D matrix along an axis
 
@@ -91,7 +94,7 @@ def get_abs_index(data, axis=1):
     k = arange(nvalues, dtype='int32')
     return data[i[:], k], i
 
-def get_max_index(data, axis=1):
+def get_max_index(data: np.ndarray, axis: int=1) -> tuple[np.ndarray, np.ndarray]:
     """
     Gets the maximum values of a 2D matrix along an axis
 
@@ -116,7 +119,7 @@ def get_max_index(data, axis=1):
     k = arange(nvalues, dtype='int32')
     return data[i[:], k], i
 
-def get_min_index(data, axis=1):
+def get_min_index(data: np.ndarray, axis: int=1) -> tuple[np.ndarray, np.ndarray]:
     """
     Gets the minimum values of a 2D matrix along an axis
 
@@ -141,7 +144,7 @@ def get_min_index(data, axis=1):
     return data[i[:], k], i
 
 
-def integrate_unit_line(x, y):
+def integrate_unit_line(x: list[float], y: list[float]) -> float:
     """
     Integrates a line of length 1.0 by linear interpolation
 
@@ -173,7 +176,7 @@ def integrate_unit_line(x, y):
 
 
 
-def integrate_positive_unit_line(x, y, min_value=0.):
+def integrate_positive_unit_line(x, y, min_value: float=0.) -> float:
     """
     Integrates a line of length 1.0 by linear interpolation
 
@@ -198,7 +201,8 @@ def integrate_positive_unit_line(x, y, min_value=0.):
     return integrate_unit_line(x, y)
 
 
-def reduce_matrix(matrix_a, nids):
+def reduce_matrix(matrix_a: np.ndarray,
+                  nids: list[int]) -> np.ndarray:
     """
     takes a list of ids and removes those rows and cols
     """
@@ -210,7 +214,9 @@ def reduce_matrix(matrix_a, nids):
     return matrix_b
 
 
-def is_list_ranged(a, List, b):
+def is_list_ranged(a: float,
+                   alist: list[float],
+                   b: float) -> bool:
     """
     Returns true if a<= x <= b or a-x < 0 < b-x
 
@@ -228,13 +234,15 @@ def is_list_ranged(a, List, b):
     is_ranged : bool
         True/False
     """
-    for x in List:
+    for x in alist:
         if not is_float_ranged(a, x, b):
             return False
     return True
 
 
-def is_float_ranged(a, x, b):
+def is_float_ranged(a: float,
+                    x: list[float],
+                    b: float) -> bool:
     """
     Returns true if a<= x <= b or a-x < 0 < b-x.
 
@@ -260,7 +268,7 @@ def is_float_ranged(a, x, b):
     return True
 
 
-def print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8):
+def print_annotated_matrix(A: np.ndarray, row_names=None, col_names=None, tol=1e-8):
     """
     Takes a list/dictionary and annotates the row number with that value
     indicies go from 0 to N
@@ -289,18 +297,21 @@ def print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8):
     return c
 
 
-def print_matrix(A, tol=1e-8):
+def print_matrix(A: np.ndarray, tol: float=1e-8):
     """prints a 2d matrix in a readable format"""
     B = array(A)
     return ''.join([list_print(B[i, :], tol) + '\n' for i in range(B.shape[0])])
 
 
-def list_print(list_a, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
+def list_print(list_a,
+               tol: float=1e-8,
+               float_fmt: str='%-3.2g',
+               zero_fmt: str='    0') -> str:
     """prints a list / numpy array in a readable format"""
     if len(list_a) == 0:
         return '[]'
 
-    def _print(a):
+    def _print(a) -> str:
         if isinstance(a, str):
             return a
         for i, j in ((float, float_fmt), (float32, float_fmt),
@@ -350,7 +361,7 @@ def list_print(list_a, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
 
 Area = lambda a, b: 0.5 * norm(cross(a, b))
 
-def gauss(n):  # pragma: no cover
+def gauss(n: int) -> tuple[Any, Any]:  # pragma: no cover
     r"""
     A quadrature rule: an approximation of the definite integral of a function.
     Currently implementation supports up to 5 quadrature points.
@@ -416,7 +427,7 @@ def gauss(n):  # pragma: no cover
                                   '5 quadrature points')
     return points, weights
 
-def roundup(value, round_increment=100):
+def roundup(value: int, round_increment: int=100) -> int:
     """
     Rounds up to the next N.
 

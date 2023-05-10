@@ -10,7 +10,7 @@ import getpass
 from datetime import date
 from collections import defaultdict
 from traceback import print_exc
-from typing import Optional, List, Dict, Union, cast, TYPE_CHECKING
+from typing import Union, Optional, cast, TYPE_CHECKING
 
 import numpy as np
 
@@ -543,7 +543,7 @@ class F06Writer(OP2_F06_Common):
 
         """
         log = self.log
-        is_failed = False
+        #is_failed = False
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
 

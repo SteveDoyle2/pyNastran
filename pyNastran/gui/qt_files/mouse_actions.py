@@ -1,4 +1,5 @@
-from typing import List, Optional, Callable
+from __future__ import annotations
+from typing import Optional, Callable, TYPE_CHECKING
 import numpy as np
 import vtk
 
@@ -12,10 +13,12 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 from pyNastran.gui.utils.vtk.vtk_utils import (
         find_point_id_closest_to_xyz, create_vtk_selection_node_by_cell_ids)
+if TYPE_CHECKING:
+    from pyNastran.gui.gui import MainWindow
 
 
 class MouseActions:
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         self.gui = gui
         #self._camera_mode = None
         self._camera_mode = 'default'
@@ -603,7 +606,7 @@ class MouseActions:
             self.rend.RemoveActor(self.actor)
         #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
         self.vtk_interactor.RemoveObserver(self.cleanup_observer)
-        cleanup_observer = None
+        #cleanup_observer = None
 
     def depress_buttons(self) -> None:
         """buttons may still be clicked after reverting, unpress them"""
@@ -705,16 +708,17 @@ class MouseActions:
         if cell_id < 0:
             pass
         else:
-            #icase_temp = self.gui.icase_fringe
-            #if icase_temp is None:
-                #return
+            gui = self.gui
+            icase_temp = gui.icase_fringe
+            if icase_temp is None:
+                return
             world_position = picker.GetPickPosition()
 
-            ncases = len(self.gui.result_cases)
+            ncases = len(gui.result_cases)
             for icase in range(ncases):
-                self.gui.cycle_results(icase)
-                key = self.gui.case_keys[icase]
-                location = self.gui.get_case_location(key)
+                gui.cycle_results(icase)
+                key = gui.case_keys[icase]
+                location = gui.get_case_location(key)
 
                 try:
                     if location == 'centroid':
@@ -732,9 +736,9 @@ class MouseActions:
                     continue
 
                 # prevent duplicate labels with the same value on the same cell
-                if duplicate_key is not None and duplicate_key in self.gui.label_ids[icase]:
+                if duplicate_key is not None and duplicate_key in gui.label_ids[icase]:
                     continue
-                self.gui.label_ids[icase].add(duplicate_key)
+                gui.label_ids[icase].add(duplicate_key)
 
                 #if 0:
                     #result_value2, xyz2 = self.convert_units(case_key, result_value, xyz)
@@ -744,9 +748,10 @@ class MouseActions:
                 x, y, z = xyz
                 text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
                 text = str(result_value)
-                assert icase in self.gui.label_actors, icase
-                print(f'icase={icase}/{ncases}: text={text!r}')
-                self.gui.label_actors[icase].append(self.gui.create_annotation(text, x, y, z))
+                assert icase in gui.label_actors, icase
+                #print(f'icase={icase}/{ncases}: text={text!r}')
+                gui.label_actors[icase].append(gui.create_annotation(text, x, y, z))
+            gui.cycle_results(icase_temp)
             self.vtk_interactor.Render()
         if self.revert:
             self.setup_mouse_buttons(mode='default')

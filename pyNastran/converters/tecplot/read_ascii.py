@@ -610,7 +610,8 @@ def read_zone_block(lines: list[str], iline: int,
     return iline, line, sline
 
 def read_unstructured_elements(lines: list[str], iline: int, sline: list[str],
-                               elements: np.ndarray, nelements: int,
+                               elements: np.ndarray,
+                               nelements: int,
                                ) -> tuple[int, str, list[str]]: # iline, line, sline
     assert '.' not in sline[0], sline
 
