@@ -11,6 +11,8 @@ from typing import Optional, TYPE_CHECKING
 import numpy as np
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk # vtk_to_numpy
+
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.gui.utils.vtk.base_utils import (
     vtkConstants, numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk)
@@ -165,7 +167,7 @@ def _check_shape(etype: int, elements: np.ndarray, nnodes_per_element: int) -> N
         raise RuntimeError(etype)
 
 
-def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
+def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
                                               elements: np.ndarray,
                                               etype: int) -> None:
     """
@@ -173,7 +175,7 @@ def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
 
     Parameters
     ----------
-    grid : vtk.vtkUnstructuredGrid()
+    grid : vtkUnstructuredGrid()
         the unstructured grid
     elements : (nelements, nnodes_per_element) int ndarray
         the elements to add
@@ -227,14 +229,14 @@ def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
 
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
-def create_vtk_cells_of_constant_element_types(grid: vtk.vtkUnstructuredGrid,
+def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
                                                elements_list, etypes_list):
     """
     Adding constant type elements is overly complicated enough as in
     ``create_vtk_cells_of_constant_element_type``.  Now we extend
     this to multiple element types.
 
-    grid : vtk.vtkUnstructuredGrid()
+    grid : vtkUnstructuredGrid()
         the unstructured grid
     elements_list : list[elements, ...]
         elements : (nelements, nnodes_per_element) int ndarray
@@ -297,9 +299,9 @@ def create_vtk_cells_of_constant_element_types(grid: vtk.vtkUnstructuredGrid,
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
 def create_unstructured_point_grid(points: vtk.vtkPoints,
-                                   npoints: int) -> vtk.vtkUnstructuredGrid:
+                                   npoints: int) -> vtkUnstructuredGrid:
     """creates a point grid"""
-    ugrid = vtk.vtkUnstructuredGrid()
+    ugrid = vtkUnstructuredGrid()
     ugrid.SetPoints(points)
 
     cell_type_vertex = vtk.vtkVertex().GetCellType()
@@ -311,8 +313,8 @@ def create_unstructured_point_grid(points: vtk.vtkPoints,
     return ugrid
 
 
-def extract_selection_node_from_grid_to_ugrid(grid: vtk.vtkUnstructuredGrid,
-                                              selection_node: vtk.vtkSelectionNode) -> vtk.vtkUnstructuredGrid:
+def extract_selection_node_from_grid_to_ugrid(grid: vtkUnstructuredGrid,
+                                              selection_node: vtkSelectionNode) -> vtkUnstructuredGrid:
     """
     Creates a sub-UGRID from a UGRID and a vtkSelectionNode.  In other
     words, we use a selection criteria (a definition of a subset of
@@ -362,7 +364,7 @@ def _convert_ids_to_vtk_idtypearray(ids):
         id_type_array.InsertNextValue(idi)
     return id_type_array
 
-def find_point_id_closest_to_xyz(grid: vtk.vtkUnstructuredGrid,
+def find_point_id_closest_to_xyz(grid: vtkUnstructuredGrid,
                                  cell_id: int,
                                  node_xyz: np.ndarray) -> Optional[int]:
     cell = grid.GetCell(cell_id)
@@ -394,7 +396,7 @@ def find_point_id_closest_to_xyz(grid: vtk.vtkUnstructuredGrid,
     return point_id
 
 def map_element_centroid_to_node_fringe_result(
-        ugrid: vtk.vtkUnstructuredGrid,
+        ugrid: vtkUnstructuredGrid,
         location: str,
         log: SimpleLogger) -> tuple[bool,
                                     tuple[int, int, float, float]]:

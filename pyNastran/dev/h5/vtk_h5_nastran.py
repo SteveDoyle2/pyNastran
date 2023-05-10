@@ -1,6 +1,7 @@
 import h5py
 import vtk
 from vtk.util.vtkAlgorithm import VTKPythonAlgorithmBase
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkMultiBlockDataSet
 
 
 class vtkH5NastranReader(VTKPythonAlgorithmBase):
@@ -27,7 +28,7 @@ class vtkH5NastranReader(VTKPythonAlgorithmBase):
         hdf5_filename = self.__FileName
 
         geom_model, vtk_ugrid, root, alt_grids = get_paraview_nastran_ugrid(hdf5_filename)
-        #ugrid = vtk.vtkUnstructuredGrid()
+        #ugrid = vtkUnstructuredGrid()
         idx = 0
         output.SetBlock(idx, ugrid)
         ug = dsa.WrapDataObject(ugrid)
@@ -35,7 +36,7 @@ class vtkH5NastranReader(VTKPythonAlgorithmBase):
         f = h5py.File(self.__FileName, 'r')
         idx = 0
         for grp_name in f:
-            ug = vtk.vtkUnstructuredGrid()
+            ug = vtkUnstructuredGrid()
             output.SetBlock(idx, ug)
             idx += 1
             ug = dsa.WrapDataObject(ug)

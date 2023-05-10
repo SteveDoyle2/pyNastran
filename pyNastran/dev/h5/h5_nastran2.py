@@ -17,6 +17,8 @@ import numpy as np
 import h5py
 import vtk
 import vtkmodules
+
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from vtk.numpy_interface import dataset_adapter as dsa
 from vtk.util import keys
 from vtk.util.vtkAlgorithm import VTKPythonAlgorithmBase
@@ -116,7 +118,7 @@ class HDF5Source(VTKPythonAlgorithmBase):
 
     def RequestData(self, request, inInfo, outInfo) -> int:
         filename = r'C:\NASA\m4\formats\git\pyNastran\pyNastran\utils\hdf5\data60.h5'
-        vtk_grid = vtk.vtkUnstructuredGrid()
+        vtk_grid = vtkUnstructuredGrid()
 
         #f = h5py.File(filename, 'r')
         #data = f['RTData'][:]
@@ -186,7 +188,7 @@ class HDF5Source(VTKPythonAlgorithmBase):
         return 1
 
 def fill_gui_vtk_unstructured_grid_results(model: pyNastranH5,
-                                           vtk_ugrid: vtk.vtkUnstructuredGrid,
+                                           vtk_ugrid: vtkUnstructuredGrid,
                                            eids: np.ndarray) -> None:
     for i, res in model.results.items():
         if res.location == 'node':
@@ -318,7 +320,7 @@ def set_caero_grid(alt_grids, ncaeros_points: int, model: BDF):
     caero_grid.SetPoints(vtk_points)
 
 def set_spc_mpc_suport_grid(model: BDF,
-                            alt_grids: dict[str, vtk.vtkUnstructuredGrid],
+                            alt_grids: dict[str, vtkUnstructuredGrid],
                             nid_to_pid_map: dict[int, int],
                             nid_map: dict[int, int],
                             idtype: str):
@@ -453,7 +455,7 @@ def set_spc_mpc_suport_grid(model: BDF,
             idsi = suport.node_ids
             ids += idsi
         grid_name = 'SUPORT'
-        suport_ugrid = vtk.vtkUnstructuredGrid()
+        suport_ugrid = vtkUnstructuredGrid()
         #i = np.searchsorted(model.nids, ids)
         #alt_grids[grid_name]
         #numpy_to_vtk_points(idsi)
@@ -480,7 +482,7 @@ def _fill_dependent_independent(unused_mpc_id: int, model: BDF,
                                 lines,
                                 depname: str, indname: str, linename: str,
                                 idtype: str,
-                                alt_grids: dict[str, vtk.vtkUnstructuredGrid],
+                                alt_grids: dict[str, vtkUnstructuredGrid],
                                 nid_map: dict[int, int]) -> list[str]:
     """creates the mpc actors"""
     if not lines:
@@ -495,7 +497,7 @@ def _fill_dependent_independent(unused_mpc_id: int, model: BDF,
     #self.gui.create_alternate_vtk_grid(
         #linename, color=LIGHT_GREEN_FLOAT, line_width=5, opacity=1.,
         #point_size=5, representation='wire', is_visible=False)
-    line_grid = vtk.vtkUnstructuredGrid()
+    line_grid = vtkUnstructuredGrid()
     alt_grids[linename] = line_grid
 
     lines2 = []
@@ -521,7 +523,7 @@ def _fill_dependent_independent(unused_mpc_id: int, model: BDF,
     mpc_names = [depname, indname, linename]
     return mpc_names
 
-def _add_nastran_lines_to_grid(alt_grid: vtk.vtkUnstructuredGrid,
+def _add_nastran_lines_to_grid(alt_grid: vtkUnstructuredGrid,
                                nid_map: dict[int, int],
                                name: str, lines, model: BDF, nid_to_pid_map=None):
     """used to create MPC lines"""
@@ -571,17 +573,17 @@ def _add_nastran_lines_to_grid(alt_grid: vtk.vtkUnstructuredGrid,
 
 def fill_vtk_unstructured_grid_aero(model: BDF,
                                     nodes, node_ids,
-                                    alt_grids: dict[str, vtk.vtkUnstructuredGrid]):
+                                    alt_grids: dict[str, vtkUnstructuredGrid]):
     if model.caeros:
         ncaeros_points = 0
-        ugrid_aero = vtk.vtkUnstructuredGrid()
+        ugrid_aero = vtkUnstructuredGrid()
         alt_grids['caero'] = ugrid_aero
         set_caero_grid(alt_grids, ncaeros_points, model)
 
     if model.masses:
         set_mass_grid(alt_grids, model, nodes, node_ids)
 
-def set_mass_grid(alt_grids: dict[str, vtk.vtkUnstructuredGrid],
+def set_mass_grid(alt_grids: dict[str, vtkUnstructuredGrid],
                   model: BDF, nodes, node_ids) -> None:
     #nmass = len(model.masses)
     #eid_array = np.full(nmass, -1, dtype='int32')
@@ -591,7 +593,7 @@ def set_mass_grid(alt_grids: dict[str, vtk.vtkUnstructuredGrid],
     eids = []
     mass = []
     xyz = []
-    mass_grid = vtk.vtkUnstructuredGrid()
+    mass_grid = vtkUnstructuredGrid()
     for eid, element in model.masses.items():
         if element.type == 'CONM2':
             nid = element.nid
@@ -630,11 +632,11 @@ def set_mass_grid(alt_grids: dict[str, vtk.vtkUnstructuredGrid],
     alt_grids['mass'] = mass_grid
 
 def fill_vtk_unstructured_grid_constraints(model: BDF,
-                                           alt_grids: dict[str, vtk.vtkUnstructuredGrid],
+                                           alt_grids: dict[str, vtkUnstructuredGrid],
                                            nid_map: dict[int, int]):
     #if model.caeros:
         #ncaeros_points = 0
-        #ugrid_aero = vtk.vtkUnstructuredGrid()
+        #ugrid_aero = vtkUnstructuredGrid()
         #alt_grids['caero'] = ugrid_aero
     nid_to_pid_map = None
     idtype = 'int32'
@@ -645,13 +647,13 @@ def fill_vtk_unstructured_grid_constraints(model: BDF,
                             idtype)
 
 def get_gui_nastran_ugrid(hdf5_filename: str,
-                          ugrid_main: vtk.vtkUnstructuredGrid,
+                          ugrid_main: vtkUnstructuredGrid,
                           add_property_info: bool=True,
                           add_material_info: bool=True,
                           subcases=None,  # default=None -> all
                           modes=None, # default=None -> all
                           results=None, # default=None -> all,
-                          ) -> tuple[BDF, vtk.vtkUnstructuredGrid]:
+                          ) -> tuple[BDF, vtkUnstructuredGrid]:
     add_aero = False
     add_constraints = False
     add_results = False
@@ -661,7 +663,7 @@ def get_gui_nastran_ugrid(hdf5_filename: str,
     geom_model = model.geom_model
     geom_model.log.info(geom_model.card_count)
 
-    #ugrid_main = vtk.vtkUnstructuredGrid()
+    #ugrid_main = vtkUnstructuredGrid()
     alt_grids = {
         'main' : ugrid_main,
     }

@@ -12,6 +12,21 @@ from cpylog import SimpleLogger
 from cpylog.html_utils import str_to_html
 import numpy as np
 import vtk
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+try:
+    from vtkmodules.vtkRenderingCore import vtkDataSetMapper, vtkCamera, vtkTextActor
+except:
+    from vtk import vtkDataSetMapper, vtkCamera, vtkTextActor
+
+try:
+    from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
+except:
+    from vtk import vtkAxesActor
+
+try:
+    from vtkmodules.vtkRenderingLOD import vtkLODActor
+except:
+    from vtk import vtkAxesActor
 
 import pyNastran
 from qtpy import QtCore, QtGui #, API
@@ -103,17 +118,17 @@ class MainWindow2(QMainWindow):
         self.eid_maps = {}
 
         # the info in the lower left part of the screen
-        self.text_actors = {} # type: dict[int, vtk.vtkTextActor]
+        self.text_actors: dict[int, vtkTextActor] = {}
 
         # the various coordinate systems (e.g., cid=0, 1)
-        self.axes = {} # type: dict[int, vtk.vtkAxesActor]
+        self.axes: dict[int, vtkAxesActor]= {}
 
-        self.models = {}  # type: dict[str, Any]
-        self.grid_mappers = {} # type: dict[str, Any]
-        self.main_grids = {} #  type: dict[str, vtk.vtkUnstructuredGrid]
-        self.alt_grids = {} # type: dict[str, vtk.vtkUnstructuredGrid]
-        self.geometry_actors = {} # type: dict[str, vtkLODActor]
-        self.actions = {}  # type: dict[str, QAction]
+        self.models: dict[str, Any] = {}
+        self.grid_mappers: dict[str, Any] = {}
+        self.main_grids: dict[str, vtkUnstructuredGrid] = {}
+        self.alt_grids:dict[str, vtkUnstructuredGrid] = {}
+        self.geometry_actors: dict[str, vtkLODActor] = {}
+        self.actions: dict[str, QAction] = {}
         #geometry_actors
         # -----------------------------------------
         self.settings = Settings(self)
@@ -327,7 +342,7 @@ class MainWindow2(QMainWindow):
         #print('build_vtk_frame')
 
     @property
-    def grid(self) -> vtk.vtkUnstructuredGrid:
+    def grid(self) -> vtkUnstructuredGrid:
         return self.main_grids[self.name]
 
     @property
@@ -346,7 +361,7 @@ class MainWindow2(QMainWindow):
     def render(self) -> None:
         self.vtk_interactor.GetRenderWindow().Render()
 
-    def get_camera(self) -> vtk.vtkCamera:
+    def get_camera(self) -> vtkCamera:
         return self.rend.GetActiveCamera()
 
     def turn_text_off(self) -> None:
@@ -568,15 +583,15 @@ class MainWindow2(QMainWindow):
             del self.geometry_actors[filename]
         #self.models = {}  # type: dict[str, Any]
         #self.grid_mappers = {} # type: dict[str, Any]
-        #self.main_grids = {} #  type: dict[str, vtk.vtkUnstructuredGrid]
-        #self.alt_grids = {} # type: dict[str, vtk.vtkUnstructuredGrid]
+        #self.main_grids = {} #  type: dict[str, vtkUnstructuredGrid]
+        #self.alt_grids = {} # type: dict[str, vtkUnstructuredGrid]
         #self.geometry_actors = {} # type: dict[str, vtkLODActor]
 
     def _reset_model(self, name: str) -> None:
         """resets the grids; sets up alt_grids"""
         if hasattr(self, 'main_grids') and name not in self.main_grids:
-            grid = vtk.vtkUnstructuredGrid()
-            grid_mapper = vtk.vtkDataSetMapper()
+            grid = vtkUnstructuredGrid()
+            grid_mapper = vtkDataSetMapper()
             grid_mapper.SetInputData(grid)
 
             geometry_actor = vtk.vtkLODActor()

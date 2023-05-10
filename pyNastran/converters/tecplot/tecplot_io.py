@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import numpy as np
 #from numpy import arange, mean, amax, amin, array
-from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
+from pyNastran.gui.vtk_interface import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
 from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot
 #from pyNastran.converters.tecplot.utils import merge_tecplot_files

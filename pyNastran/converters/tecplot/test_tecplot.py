@@ -259,8 +259,8 @@ class TestTecplot(unittest.TestCase):
         assert nodes.shape == (11, 3)
         assert tris.shape == (1, 3)
         assert quads.shape == (2, 4)
-        assert len(tets) == 0
-        assert len(hexas) == 0
+        assert len(tets) == 0, tets
+        assert len(hexas) == 0, hexas
         cart3d_filename = os.path.join(MODEL_PATH, 'junk.tri')
         cart3d_model = tecplot_to_cart3d_filename(
             model, cart3d_filename, remove_degenerate_tris=False,

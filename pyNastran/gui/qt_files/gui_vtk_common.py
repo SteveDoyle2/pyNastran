@@ -4,6 +4,7 @@ from collections import OrderedDict
 import numpy as np
 import vtk
 
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.qt_version import qt_version
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
@@ -67,7 +68,7 @@ class GuiVTKCommon(GuiQtCommon):
             actor.SetVisibility(False)
 
         # vtk actors
-        self.grid = vtk.vtkUnstructuredGrid()
+        self.grid = vtkUnstructuredGrid()
 
         # edges
         self.edge_actor = vtk.vtkLODActor()

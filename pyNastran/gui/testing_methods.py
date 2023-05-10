@@ -13,6 +13,8 @@ from vtk import (
     vtkGlyph3D,
     vtkPolyDataMapper,
 )
+
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.test.mock_vtk import (
     GeometryProperty,
     GridMapper,
@@ -109,7 +111,7 @@ class FakeGUIMethods(GuiVTKCommon):
             #'main' : vtkActor(),
         #}
         self.scalar_bar = ScalarBar()
-        self.grid = vtk.vtkUnstructuredGrid()
+        self.grid = vtkUnstructuredGrid()
         self.main_grid_mappers = {'main' : GridMapper()}
         if 1:  # pragma: no cover
             #self.scalar_bar_actor = ScalarBar()

@@ -6,6 +6,7 @@ import vtk
 from cpylog import SimpleLogger
 
 import pyNastran
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
@@ -23,7 +24,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         self.build_fmts(['nastran'], stop_on_failure=True)
 
 
-def _save_nastran_results(test: NastranGUI) -> vtk.vtkUnstructuredGrid:
+def _save_nastran_results(test: NastranGUI) -> vtkUnstructuredGrid:
     log = test.log
     vtk_ugrid = test.grid
 

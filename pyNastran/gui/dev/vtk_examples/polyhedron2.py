@@ -1,5 +1,5 @@
 import numpy as np
-
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 def box_faces(n1, n2):
     """
@@ -475,7 +475,7 @@ def faces_to_element_facelist(faces):
     return face_idlist
 
 face_idlist = faces_to_element_facelist(faceList)
-ugrid = vtk.vtkUnstructuredGrid()
+ugrid = vtkUnstructuredGrid()
 ugrid.SetPoints(points)
 ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, faceId)
 

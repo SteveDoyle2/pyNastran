@@ -13,6 +13,7 @@ from qtpy.QtWidgets import (
 import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
@@ -427,7 +428,7 @@ class HighlightWindow(PyDialog):
 
 
 def create_node_labels(point_id_filter: vtk.vtkIdFilter,
-                       grid: vtk.vtkUnstructuredGrid,
+                       grid: vtkUnstructuredGrid,
                        rend: vtk.vtkRenderer,
                        label_size: float=10.0):
     """creates the node labels"""
@@ -455,7 +456,7 @@ def create_node_labels(point_id_filter: vtk.vtkIdFilter,
     label_actor.SetMapper(label_mapper)
     return label_actor
 
-def create_highlighted_actors(gui, grid: vtk.vtkUnstructuredGrid,
+def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
                               all_nodes=None, nodes=None, set_node_scalars: bool=True,
                               all_elements=None, elements=None, set_element_scalars: bool=True,
                               add_actors: bool=False) -> list[vtk.vtkLODActor]:

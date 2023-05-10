@@ -35,6 +35,7 @@ http://www.vtk.org/Wiki/VTK/Examples/Python/Visualization/ClampGlyphSizes
 """
 import numpy as np
 import vtk
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
 
@@ -91,7 +92,7 @@ def mixed_type_unstructured_grid():
     vtk_cells.SetCells(2, vtk_cells_id_type)
 
     # Now create the unstructured grid
-    ug = vtk.vtkUnstructuredGrid()
+    ug = vtkUnstructuredGrid()
 
     points_data = numpy_to_vtk(pts, deep=1)
 

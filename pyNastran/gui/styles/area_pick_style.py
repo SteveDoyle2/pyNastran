@@ -16,6 +16,7 @@ from typing import Union
 import numpy as np
 import vtk
 #from vtk.util import numpy_support
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from vtk.util.numpy_support import vtk_to_numpy
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_unstructured_point_grid, numpy_to_vtk_points)
@@ -240,10 +241,10 @@ def get_depth_ids(gui, frustum: vtk.vtkPlanes, model_name: str='main',
     return ugrid, eids, nids
 
 
-def get_inside_point_ids(gui, ugrid: vtk.vtkUnstructuredGrid,
-                         ugrid_flipped: vtk.vtkUnstructuredGrid,
+def get_inside_point_ids(gui, ugrid: vtkUnstructuredGrid,
+                         ugrid_flipped: vtkUnstructuredGrid,
                          model_name: str,
-                         representation: str='points') -> tuple[vtk.vtkUnstructuredGrid, list[int]]:
+                         representation: str='points') -> tuple[vtkUnstructuredGrid, list[int]]:
     """
     The points that are returned from the frustum, despite being
     defined as inside are not all inside.  The cells are correct
@@ -257,14 +258,14 @@ def get_inside_point_ids(gui, ugrid: vtk.vtkUnstructuredGrid,
 
     Parameters
     ==========
-    ugrid : vtk.vtkUnstructuredGrid()
+    ugrid : vtkUnstructuredGrid()
         the "inside" grid
-    ugrid_flipped : vtk.vtkUnstructuredGrid()
+    ugrid_flipped : vtkUnstructuredGrid()
         the outside grid
 
     Returns
     =======
-    ugrid : vtk.vtkUnstructuredGrid()
+    ugrid : vtkUnstructuredGrid()
         an updated grid that has the correct points
     nids : (n, ) int ndarray
         the node_ids
@@ -309,7 +310,7 @@ def get_inside_point_ids(gui, ugrid: vtk.vtkUnstructuredGrid,
     return ugrid, nids
 
 
-def get_ids_filter(grid: Union[vtk.vtkUnstructuredGrid, vtk.vtkPolyData],
+def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtk.vtkPolyData],
                    idsname: str='Ids',
                    is_nids: bool=True, is_eids: bool=True) -> vtk.vtkIdFilter:
     """
@@ -318,7 +319,7 @@ def get_ids_filter(grid: Union[vtk.vtkUnstructuredGrid, vtk.vtkPolyData],
 
     """
     ids = vtk.vtkIdFilter()
-    if isinstance(grid, vtk.vtkUnstructuredGrid):
+    if isinstance(grid, vtkUnstructuredGrid):
         # this is typically what's called in the gui
         ids.SetInputData(grid)
     elif isinstance(grid, vtk.vtkPolyData):  # pragma: no cover
@@ -383,8 +384,8 @@ def grid_ids_frustum_to_ugrid_ugrid_flipped(grid, ids, frustum):
         ugrid_flipped = None
     return ugrid, ugrid_flipped
 
-def create_filtered_point_ugrid(ugrid: vtk.vtkUnstructuredGrid,
-                                nids, nids2) -> vtk.vtkUnstructuredGrid:
+def create_filtered_point_ugrid(ugrid: vtkUnstructuredGrid,
+                                nids, nids2) -> vtkUnstructuredGrid:
     """
     We need to filter the nodes that were filtered by the
     numpy setdiff1d, so we don't show extra points

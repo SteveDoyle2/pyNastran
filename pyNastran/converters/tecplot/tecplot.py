@@ -6,7 +6,7 @@ import os
 import copy
 import itertools
 from io import StringIO
-from typing import TextIO, Union, Optional, Any
+from typing import TextIO, Iterable, Union, Optional, Any
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -195,7 +195,8 @@ class Tecplot(TecplotBinary):
                   (headers_dict['ZONE'] is None) and
                   ('T' in headers_dict)):
                 lines2 = itertools.chain((line, ), iter(lines[iline:]))
-                A = self._read_table_from_lines(lines2, headers_dict)
+                A = _read_table_from_lines(lines2, headers_dict,
+                                           self.dtype, self.use_cols)
 
                 self.A = A
                 log.debug(f'read_table; A.shape={A.shape}...')
@@ -337,8 +338,8 @@ class Tecplot(TecplotBinary):
             zone_idsi = np.ones(nelementsi) * izone
             zone_ids.append(zone_idsi)
         #print('stack', len(quads))
-        quads_array = stack(quads)
-        tris_array = stack(tris)
+        quads_array = stack(quads, 4)
+        tris_array = stack(tris, 3)
         del quads, tris
         if len(quads_array) and not len(tris_array):
             # convert quads written as tris into tris
@@ -346,8 +347,8 @@ class Tecplot(TecplotBinary):
             tris = quads_array[itri, :3]
             quads = quads_array[~itri, :]
 
-        tets_array = stack(tets)
-        hexas_array = stack(hexas)
+        tets_array = stack(tets, 4)
+        hexas_array = stack(hexas, 8)
         zone_ids_array = np.hstack(zone_ids).astype('int32')
         out = (
             nodes, tris_array, quads_array,
@@ -373,7 +374,8 @@ class Tecplot(TecplotBinary):
         # add on the preceding line to the line "list"
         # that's not a hack at all...
         lines = itertools.chain((line, ), iter(tecplot_file))
-        A, blank = self._read_table_from_lines(lines, headers_dict)
+        A, blank = _read_table_from_lines(lines, headers_dict,
+                                          self.dtype, self.use_cols)
         return A, None
 
     def slice_x(self, xslice: float) -> None:
@@ -597,10 +599,10 @@ def _get_write_header(title: str,
     return msg, ivars
 
 
-def stack(elements: list[np.ndarray]) -> np.ndarray:
+def stack(elements: list[np.ndarray], nnodes: int) -> np.ndarray:
+    """merges multiple arrays """
     if len(elements) == 0:
-        elements_array = np.array((0, 0), dtype='int32')
-        pass
+        elements_array = np.zeros((0, nnodes), dtype='int32')
     elif len(elements) == 1:
         elements_array = elements[0]
         #print(elements)
@@ -610,13 +612,15 @@ def stack(elements: list[np.ndarray]) -> np.ndarray:
             #print(elementsi)
         #print('----stack------')
         elements_array = np.vstack(elements)
+    assert len(elements_array.shape) == 2, elements_array.shape
+    assert elements_array.shape[1] == nnodes, elements_array.shape
     return elements_array
 
 def _stack(zone: Zone,
            zone_data_list: list[np.ndarray],
            quads_list: list[np.ndarray], tris_list: list[np.ndarray],
            tets_list: list[np.ndarray], hexas_list: list[np.ndarray],
-           log: SimpleLogger):
+           log: SimpleLogger) -> None:
     """
     elements are read as a list of lines, so we need to stack them
     and cast them while we're at it.
@@ -659,6 +663,24 @@ def _stack(zone: Zone,
     else:
         zone.nodal_results
     x = 1
+
+def _read_table_from_lines(lines: Iterable[str],
+                           headers_dict: dict[str, Any],
+                           dtype: Optional[str],
+                           use_cols: Optional[list[str]]) -> np.ndarray:
+    variables = [var.strip('" ') for var in headers_dict['VARIABLES']]
+    #print('variables = %s' % variables)
+    #self.dtype[]
+    if use_cols is None:
+        use_cols_ints = None
+    else:
+        use_cols_ints = [variables.index(var) for var in use_cols]
+
+    A = np.loadtxt(lines, dtype=dtype, comments='#', delimiter=None,  # type: ignore
+                   converters=None, skiprows=0,
+                   usecols=use_cols_ints, unpack=False, ndmin=0)
+    return A
+
 
 def main():  # pragma: no cover
     #plt = Tecplot()

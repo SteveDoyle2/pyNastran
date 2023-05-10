@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
-import vtk
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 from cpylog import SimpleLogger
 from pyNastran.utils.numpy_utils import integer_types
@@ -535,7 +535,7 @@ def _create_bar_types_dict(model: BDF,
     node0 = 0
     found_bar_types = set()
     nid_release_map = defaultdict(list)
-    ugrid = vtk.vtkUnstructuredGrid()
+    ugrid = vtkUnstructuredGrid()
     points_list = []
 
     allowed_types = [

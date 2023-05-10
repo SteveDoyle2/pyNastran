@@ -529,7 +529,7 @@ class Zone:
         self.log.info('finished get_free_faces')
         return free_faces
 
-    def _slice_plane_inodes(self, inodes: list[int]) -> None:
+    def _slice_plane_inodes(self, inodes: np.ndarray | list[int]) -> None:
         """TODO: doesn't remove unused nodes/renumber elements"""
         # old_num = inodes
         # new_num = arange(self.xyz.shape[0], dtype='int32')

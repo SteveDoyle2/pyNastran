@@ -483,20 +483,22 @@ def read_zonetype(log: SimpleLogger,
     if is_structured:
         pass
     elif is_unstructured:
+        assert isinstance(elements, np.ndarray), elements
         iline, line, sline = read_unstructured_elements(
             lines, iline, sline, elements, nelementsi)
 
         #print(f.readline())
 
+        shifted_elements: np.ndarray = elements + nnodes
         if zone_type == 'FEBRICK':
-            hexas_list.append(elements + nnodes)
+            hexas_list.append(shifted_elements)
         elif zone_type == 'FETETRAHEDRON':
-            tets_list.append(elements + nnodes)
+            tets_list.append(shifted_elements)
         elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
             # TODO: why are points stuck in the quads?
-            quads_list.append(elements + nnodes)
+            quads_list.append(shifted_elements)
         elif zone_type == 'FETRIANGLE':
-            tris_list.append(elements + nnodes)
+            tris_list.append(shifted_elements)
         else:
             raise NotImplementedError(zone_type)
     else:
@@ -507,8 +509,8 @@ def read_zonetype(log: SimpleLogger,
     log.debug('nnodes=%s nelements=%s (0-based)' % (nnodes, nelements))
     del headers_dict
     iblock += 1
-    if iblock == 10:
-        return
+    #if iblock == 10:
+        #return
     log.debug('final sline=%s' % sline)
     return iline
 
@@ -682,7 +684,7 @@ def read_block(lines: list[str], iline: int,
     #print('nvars =', nvars)
     ndata = nnodes * nvars
     #print('ndata =', ndata)
-    results = []
+    results: list[str] = []
 
     while len(results) < ndata:
         sline = split_line(line)

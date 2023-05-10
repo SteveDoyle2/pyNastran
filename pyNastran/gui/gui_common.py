@@ -9,6 +9,7 @@ import numpy as np
 from cpylog import SimpleLogger
 
 from pyNastran.gui.qt_version import qt_int, qt_version
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
@@ -1290,7 +1291,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         # In selection
         if create_grid_selected:
-            self.grid_selected = vtk.vtkUnstructuredGrid()
+            self.grid_selected = vtkUnstructuredGrid()
             self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
 
         #if 0:

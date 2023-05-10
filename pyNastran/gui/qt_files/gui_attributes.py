@@ -21,6 +21,7 @@ except ImportError:
 
 import pyNastran
 from pyNastran import DEV
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.gui_objects.settings import Settings
 
 from pyNastran.gui.qt_files.tool_actions import ToolActions
@@ -1035,7 +1036,7 @@ class GuiAttributes:
     def _reset_model(self, name: str):
         """resets the grids; sets up alt_grids"""
         if hasattr(self, 'main_grids') and name not in self.main_grids:
-            grid = vtk.vtkUnstructuredGrid()
+            grid = vtkUnstructuredGrid()
             grid_mapper = vtk.vtkDataSetMapper()
             grid_mapper.SetInputData(grid)
 

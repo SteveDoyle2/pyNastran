@@ -353,7 +353,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         # skip_reading = self.removeOldGeometry(bdf_filename)
         skip_reading = False
         if bdf_filename is None or bdf_filename == '':
-            #self.grid = vtk.vtkUnstructuredGrid()
+            #self.grid = vtkUnstructuredGrid()
             #self.scalar_bar_actor.VisibilityOff()
             skip_reading = True
             return skip_reading
@@ -1055,7 +1055,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                                         array_type=vtk.VTK_ID_TYPE)
 
         grid = self.gui.grid
-        #grid = vtk.vtkUnstructuredGrid()
+        #grid = vtkUnstructuredGrid()
         grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
         return results
 
@@ -2515,7 +2515,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                                         array_type=vtk.VTK_ID_TYPE)
 
         grid = self.grid
-        #grid = vtk.vtkUnstructuredGrid()
+        #grid = vtkUnstructuredGrid()
         grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
         #-----------------------------------------------------------------

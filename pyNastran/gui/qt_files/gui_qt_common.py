@@ -1637,7 +1637,7 @@ class GuiQtCommon(GuiAttributes):
             the nodes that are brought along with a deflection
         follower_function : function
             a custom follower_node update function
-        ugrid : vtk.vtkUnstructuredGrid(); default=None
+        ugrid : vtkUnstructuredGrid(); default=None
             the grid object; one will be created that you can fill
             if None is passed in
 

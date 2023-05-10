@@ -7,6 +7,7 @@ import numpy as np
 from numpy.linalg import norm
 import vtk
 
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk
 from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 from pyNastran.bdf.cards.elements.beam_connectivity import (
@@ -103,10 +104,10 @@ def get_beam_sections_map(model: BDF,
     return bar_pid_to_eids
 
 def create_3d_beams(model: BDF,
-                    bar_pid_to_eids: dict[int, list[int]]) -> Optional[vtk.vtkUnstructuredGrid]:
+                    bar_pid_to_eids: dict[int, list[int]]) -> Optional[vtkUnstructuredGrid]:
     if len(bar_pid_to_eids) == 0:
         return None
-    ugrid = vtk.vtkUnstructuredGrid()
+    ugrid = vtkUnstructuredGrid()
     node0 = 0
     points_list = []
     eids_bad = []

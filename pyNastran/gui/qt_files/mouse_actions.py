@@ -3,6 +3,7 @@ from typing import Optional, Callable, TYPE_CHECKING
 import numpy as np
 import vtk
 
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.bdf.utils import write_patran_syntax_dict
 
 from pyNastran.gui.styles.highlight_style import HighlightStyle
@@ -531,15 +532,15 @@ class MouseActions:
 
     def _highlight_picker_cell(self,
                                cell_ids: list[int],
-                               grid: vtk.vtkUnstructuredGrid) -> vtk.vtkLODActor:
+                               grid: vtkUnstructuredGrid) -> vtk.vtkLODActor:
         """won't handle multiple cell_ids/node_xyz"""
         selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
         actor = self._highlight_picker_by_selection_node(
             grid, selection_node, representation='surface')
         return actor
 
-    def _highlight_picker_by_selection_node(self, grid: vtk.vtkUnstructuredGrid,
-                                            selection_node: vtk.vtkSelectionNode,
+    def _highlight_picker_by_selection_node(self, grid: vtkUnstructuredGrid,
+                                            selection_node: vtkSelectionNode,
                                             representation: str='surface',
                                             add_actor: bool=True) -> vtk.vtkLODActor:
         selection = vtk.vtkSelection()
@@ -557,7 +558,7 @@ class MouseActions:
 
         #-----------------------------------------------
 
-    def create_highlighted_actor(self, ugrid: vtk.vtkUnstructuredGrid,
+    def create_highlighted_actor(self, ugrid: vtkUnstructuredGrid,
                                  representation: str='wire',
                                  add_actor: bool=True) -> list[vtk.vtkLODActor]:
         """creates a highlighted actor given a vtkUnstructuredGrid"""
@@ -914,7 +915,7 @@ class MouseActions:
         return self.gui.get_element_ids(model_name, ids)
 
 
-def create_highlighted_actor(gui, ugrid: vtk.vtkUnstructuredGrid,
+def create_highlighted_actor(gui, ugrid: vtkUnstructuredGrid,
                              representation: str='wire',
                              add_actor: bool=True) -> vtk.vtkLODActor:
     """creates a highlighted actor given a vtkUnstructuredGrid"""

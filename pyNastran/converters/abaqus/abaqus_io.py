@@ -5,7 +5,9 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 
 import vtk
-from vtk import vtkLine, vtkTriangle, vtkQuad, vtkTetra, vtkHexahedron
+from pyNastran.gui.vtk_interface import (
+    vtkLine, vtkTriangle, vtkQuad, vtkTetra, vtkHexahedron,
+    vtkUnstructuredGrid)
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
@@ -159,7 +161,10 @@ class AbaqusIO:
         icase = 2
         return form, cases, icase, node_ids, element_ids
 
-def add_part(grid: vtk.vtkUnstructuredGrid, part, nids: list[np.ndarray], nid_offset: int) -> int:
+def add_part(grid: vtkUnstructuredGrid,
+             part,
+             nids: list[np.ndarray],
+             nid_offset: int) -> int:
     nnodesi = part.nodes.shape[0]
     nidsi = part.nids
     nids.append(nidsi)
@@ -190,7 +195,7 @@ def add_part(grid: vtk.vtkUnstructuredGrid, part, nids: list[np.ndarray], nid_of
     nid_offset += nnodesi
     return nid_offset
 
-def add_lines(grid: vtk.vtkUnstructuredGrid,
+def add_lines(grid: vtkUnstructuredGrid,
               nids, eids, elem_nids: np.ndarray, nid_offset: int) -> int:
     """adds line elements to the vtkUnstructuredGrid"""
     nelements = 0
@@ -209,7 +214,7 @@ def add_lines(grid: vtk.vtkUnstructuredGrid,
     return nelements
 
 
-def add_tris(grid: vtk.vtkUnstructuredGrid,
+def add_tris(grid: vtkUnstructuredGrid,
              nids, eids, elem_nids: np.ndarray, nid_offset: int) -> int:
     """adds tri elements to the vtkUnstructuredGrid"""
     nelements = 0
@@ -227,7 +232,7 @@ def add_tris(grid: vtk.vtkUnstructuredGrid,
     return nelements
 
 
-def add_quads(grid: vtk.vtkUnstructuredGrid,
+def add_quads(grid: vtkUnstructuredGrid,
               nids, eids: np.ndarray, elem_nids: np.ndarray, nid_offset: int) -> int:
     """adds quad elements to the vtkUnstructuredGrid"""
     nelements = 0
@@ -248,7 +253,7 @@ def add_quads(grid: vtk.vtkUnstructuredGrid,
     return nelements
 
 
-def add_tetras(grid: vtk.vtkUnstructuredGrid,
+def add_tetras(grid: vtkUnstructuredGrid,
                nids, eids: np.ndarray, elem_nids: np.ndarray, nid_offset: int) -> int:
     """adds tet elements to the vtkUnstructuredGrid"""
     nelements = 0
@@ -267,7 +272,7 @@ def add_tetras(grid: vtk.vtkUnstructuredGrid,
     return nelements
 
 
-def add_hexas(grid: vtk.vtkUnstructuredGrid,
+def add_hexas(grid: vtkUnstructuredGrid,
               nids, eids: np.ndarray, elem_nids: np.ndarray, nid_offset: int) -> int:
     """adds hex elements to the vtkUnstructuredGrid"""
     nelements = 0

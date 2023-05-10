@@ -9,6 +9,7 @@ import vtk
 
 from qtpy.compat import getsavefilename
 
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.locale import func_str
@@ -692,7 +693,7 @@ class ToolActions:
         prop.SetPointSize(point_size)
 
     #---------------------------------------------------------------------------
-    def _add_alt_geometry(self, grid: vtk.vtkUnstructuredGrid,
+    def _add_alt_geometry(self, grid: vtkUnstructuredGrid,
                           name: str,
                           color: Optional[list[float]]=None,
                           line_width: Optional[int]=None,
@@ -786,8 +787,8 @@ class ToolActions:
         return self.gui.vtk_interactor
 
 
-def add_user_geometry(alt_grid: vtk.vtkUnstructuredGrid,
-                      geom_grid: vtk.vtkUnstructuredGrid,
+def add_user_geometry(alt_grid: vtkUnstructuredGrid,
+                      geom_grid: vtkUnstructuredGrid,
                       xyz: np.ndarray,
                       nid_map: dict[int, int],
                       nnodes: int,

@@ -24,6 +24,7 @@ Multi-segment beams are IntegratedLineProperty objects.
 
 """
 from math import sqrt, ceil
+from typing import Any
 
 from numpy import (float32, float64, complex64, complex128, array, cross,
                    allclose, argmax, argmin, arange)
