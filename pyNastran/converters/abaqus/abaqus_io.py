@@ -1,5 +1,4 @@
 """Defines how the GUI reads Abaqus files"""
-from collections import OrderedDict
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
@@ -96,7 +95,7 @@ class AbaqusIO:
         note = ''
         self.gui.isubcase_name_map = {1: ['Abaqus%s' % note, '']}
         #form = []
-        cases = OrderedDict()
+        cases = {}
         ID = 1
         form, cases, unused_icase, node_ids, element_ids = self._fill_abaqus_case(
             cases, ID, nids, nodes, nelements, model)

@@ -5,7 +5,6 @@ defines:
 """
 from __future__ import annotations
 import os
-from collections import OrderedDict
 from typing import TYPE_CHECKING
 
 from qtpy.QtCore import Qt
@@ -419,7 +418,7 @@ class AnimationWindow(PyDialog):
             )
 
         self.animation_type = QLabel('Animation Type:')
-        animation_type = OrderedDict()
+        animation_type = {}
         #scale_msg = 'Scale\n'
         #phase_msg = 'Phase\n'
         #time_msg = 'Time\n'

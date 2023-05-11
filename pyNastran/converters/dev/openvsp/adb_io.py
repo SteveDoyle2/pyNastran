@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from numpy import arange, amax, amin, zeros, hstack
 
 import vtk
@@ -30,7 +29,7 @@ class ADB_IO:  # pragma: no cover
             self.gui.turn_text_off()
             self.gui.grid.Reset()
 
-            self.gui.result_cases = OrderedDict()
+            self.gui.result_cases = {}
             self.gui.ncases = 0
             try:
                 del self.gui.case_keys
@@ -147,7 +146,7 @@ class ADB_IO:  # pragma: no cover
         beta = model.betas[0]
         note = ':  Mach=%.2f, alpha=%.1f, beta=%.1f' % (mach, alpha, beta)
         self.gui.isubcase_name_map = {1: ['OpenVSP%s' % note, '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         form, cases = self._fill_adb_case(cases, ID, model, plot_wakes)

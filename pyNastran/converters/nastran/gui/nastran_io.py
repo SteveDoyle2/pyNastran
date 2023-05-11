@@ -6,7 +6,7 @@ import sys
 import traceback
 from itertools import chain
 from io import StringIO
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from typing import Optional, Any, TYPE_CHECKING
 
 #VTK_TRIANGLE = 5
@@ -683,7 +683,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         has_control_surface = False
         geometry_names = []
         #------------------------------------------------------------
-        cases = OrderedDict()
+        cases = {}
         form = ['Geometry', None, []]
         form0 = form[2]
 
@@ -2523,7 +2523,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         nid_to_pid_map = None
         self.isubcase_name_map = {1: ['Nastran', '']}
         icase = 0
-        cases = OrderedDict()
+        cases = {}
         form = ['Geometry', None, []]
         form0 = form[2]
 
@@ -2936,8 +2936,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         grid.Modified()
 
-        cases = OrderedDict()
-
+        cases = {}
 
         self.gui.isubcase_name_map = {1: ['Nastran', '']}
         icase = 0
@@ -5446,7 +5445,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 icd_transform, self.model.coords, xyz_cid0=self.xyz_cid0)
 
         #if 0:
-            #cases = OrderedDict()
+            #cases = {}
             #self.isubcase_name_map = {}
             #form = []
             #icase = 0

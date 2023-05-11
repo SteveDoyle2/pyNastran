@@ -1,6 +1,5 @@
 """Defines the GUI IO file for Fast."""
 import os
-from collections import OrderedDict
 
 import numpy as np
 from vtk import vtkTriangle, vtkTetra
@@ -107,7 +106,7 @@ class FastIO:
         # regions/loads
         self.gui.scalar_bar_actor.Modified()
 
-        cases = OrderedDict()
+        cases = {}
         #cases = self.result_cases
         form = []
         node_ids, element_ids = self._fill_fast_results(

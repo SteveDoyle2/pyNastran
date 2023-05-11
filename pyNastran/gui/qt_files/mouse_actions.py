@@ -34,7 +34,7 @@ class MouseActions:
         self._depress_when_done = []
 
     def setup_mouse_buttons(self,
-                            mode=None,
+                            mode: str='',
                             revert: bool=False,
                             left_button_down: Optional[Callable]=None,
                             left_button_up: Optional[Callable]=None,
@@ -109,7 +109,7 @@ class MouseActions:
 
             self.vtk_interactor.RemoveObservers('EndPickEvent')
             self.vtk_interactor.AddObserver('EndPickEvent', left_button_down)
-        elif mode in ['probe_result', 'probe_result_all', 'highlight_cell', 'highlight_node']:
+        elif mode in {'probe_result', 'probe_result_all', 'highlight_cell', 'highlight_node'}:
             # hackish b/c the default setting is so bad
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
@@ -206,7 +206,7 @@ class MouseActions:
         if active_name != 'probe_result_all':
             probe_button = self.actions['probe_result_all']
             is_checked = probe_button.isChecked()
-            if is_checked:  # revert probe_result
+            if is_checked:  # revert probe_result_all
                 probe_button.setChecked(False)
                 self.setup_mouse_buttons(mode='default')
                 return
@@ -285,6 +285,7 @@ class MouseActions:
                                  revert=True)
 
     def on_probe_result(self) -> None:
+        #print('on_probe_result')
         self.revert_pressed('probe_result')
         is_checked = self.actions['probe_result'].isChecked()
         if not is_checked:
@@ -297,12 +298,16 @@ class MouseActions:
         #self.vtk_interactor.SetInteractorStyle(style)
 
     def on_quick_probe_result(self) -> None:
+        """is this used?"""
+        #print('on_quick_probe_result')
         self.revert_pressed('probe_result')
         unused_is_checked = self.actions['probe_result'].isChecked()
         self.setup_mouse_buttons('probe_result',
                                  left_button_down=self._probe_picker, revert=True)
 
     def on_probe_result_all(self) -> None:
+        """called by button press, then click till done"""
+        #print('on_probe_result_all')
         self.revert_pressed('probe_result_all')
         is_checked = self.actions['probe_result_all'].isChecked()
         if not is_checked:
@@ -312,12 +317,16 @@ class MouseActions:
         self.setup_mouse_buttons('probe_result_all', left_button_down=self._probe_picker_all)
 
     def on_quick_probe_result_all(self) -> None:
+        """click and THEN press a"""
+        #print('on_quick_probe_result_all')
         self.revert_pressed('probe_result_all')
         unused_is_checked = self.actions['probe_result_all'].isChecked()
         self.setup_mouse_buttons('probe_result_all',
                                  left_button_down=self._probe_picker_all, revert=True)
 
-    def on_area_pick_callback(self, eids: list[int], nids: list[int], name: str) -> None:
+    def on_area_pick_callback(self, eids: list[int],
+                              nids: list[int],
+                              name: str) -> None:
         """prints the message when area_pick succeeds"""
         msg = ''
         if eids is not None and len(eids):
@@ -482,6 +491,7 @@ class MouseActions:
                                  left_button_down=self._measure_distance_picker)
 
     def _measure_distance_picker(self, unused_obj, unused_event) -> None:
+        """picking is based on the two closest nodes"""
         picker = self.cell_picker
         pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
@@ -615,8 +625,10 @@ class MouseActions:
             self.actions[button_name].setChecked(False)
 
     def _probe_picker(self, unused_obj, unused_event) -> None:
-        """pick a point and apply the label based on the current displayed result"""
-
+        """
+        pick a point and apply the label based on the
+        current displayed result
+        """
         picker = self.cell_picker
         pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
@@ -627,20 +639,23 @@ class MouseActions:
         if cell_id < 0:
             pass
         else:
-            icase = self.gui.icase_fringe
+            gui = self.gui
+            icase = gui.icase_fringe
             if icase is None:
                 return
 
             world_position = picker.GetPickPosition()
+            mark_actions = gui.mark_actions
             if 0:  # pragma : no cover
                 camera = self.rend.GetActiveCamera()
                 #focal_point = world_position
-                out = self.gui.get_result_by_xyz_cell_id(world_position, cell_id)
+                out = mark_actions.get_result_by_xyz_cell_id(
+                    world_position, cell_id)
                 #if out is None:
                     #return
                 _result_name, result_value, unused_node_id, node_xyz = out
                 focal_point = node_xyz
-                self.gui.log_info('focal_point = %s' % str(focal_point))
+                gui.log_info('focal_point = %s' % str(focal_point))
                 self.setup_mouse_buttons(mode='default')
 
                 # now we can actually modify the camera
@@ -654,8 +669,8 @@ class MouseActions:
                 cell_id = picker.GetCellId()
                 #ds = picker.GetDataSet()
                 #select_point = picker.GetSelectionPoint()
-                self.gui.log_command("annotate_cell_picker()")
-                self.gui.log_info("XYZ Global = %s" % str(world_position))
+                gui.log_command("annotate_cell_picker()")
+                gui.log_info("XYZ Global = %s" % str(world_position))
                 #self.log_info("cell_id = %s" % cell_id)
                 #self.log_info("data_set = %s" % ds)
                 #self.log_info("selPt = %s" % str(select_point))
@@ -663,24 +678,24 @@ class MouseActions:
                 #method = 'get_result_by_cell_id()' # self.model_type
                 #print('pick_state =', self.pick_state)
 
-            key = self.gui.case_keys[icase]
-            location = self.gui.get_case_location(key)
+            key = gui.case_keys[icase]
+            location = gui.get_case_location(key)
 
             if location == 'centroid':
                 out = self._cell_centroid_pick(cell_id, world_position)
             elif location == 'node':
                 out = self._cell_node_pick(cell_id, world_position)
             else:
-                raise RuntimeError('invalid pick location=%r' % location)
+                raise RuntimeError(f'probe_picker: invalid pick location={location!r}')
 
             return_flag, duplicate_key, result_value, unused_result_name, xyz = out
             if return_flag is True:
                 return
 
             # prevent duplicate labels with the same value on the same cell
-            if duplicate_key is not None and duplicate_key in self.gui.label_ids[icase]:
+            if duplicate_key is not None and duplicate_key in gui.label_ids[icase]:
                 return
-            self.gui.label_ids[icase].add(duplicate_key)
+            gui.label_ids[icase].add(duplicate_key)
 
             #if 0:
                 #result_value2, xyz2 = self.convert_units(case_key, result_value, xyz)
@@ -690,15 +705,15 @@ class MouseActions:
             x, y, z = xyz
             text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
             text = str(result_value)
-            assert icase in self.gui.label_actors, icase
-            self.gui.label_actors[icase].append(self.gui.create_annotation(text, x, y, z))
+            assert icase in gui.label_actors, icase
+            annotation = mark_actions.create_annotation(text, x, y, z)
+            gui.label_actors[icase].append(annotation)
             self.vtk_interactor.Render()
         if self.revert:
             self.setup_mouse_buttons(mode='default')
 
     def _probe_picker_all(self, unused_obj, unused_event) -> None:
         """pick a point and apply the appropriate label for all cases"""
-
         picker = self.cell_picker
         pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
@@ -706,20 +721,28 @@ class MouseActions:
         cell_id = picker.GetCellId()
         #print('_probe_picker', cell_id)
 
+        #print(f'_probe_picker_all; cell_id={cell_id}')
         if cell_id < 0:
             pass
         else:
             gui = self.gui
             icase_temp = gui.icase_fringe
             if icase_temp is None:
+                #print(f'return icase_temp={icase_temp}')
                 return
+            mark_actions = gui.mark_actions
             world_position = picker.GetPickPosition()
 
             ncases = len(gui.result_cases)
             for icase in range(ncases):
-                gui.cycle_results(icase)
+                gui.cycle_results(icase, update=False)
                 key = gui.case_keys[icase]
                 location = gui.get_case_location(key)
+
+                # RuntimeError: invalid pick location
+                if location is None:
+                    gui.log_warning(f'skipping probing on case {icase}/{ncases} key={key} location={location}')
+                    continue
 
                 try:
                     if location == 'centroid':
@@ -727,9 +750,10 @@ class MouseActions:
                     elif location == 'node':
                         out = self._cell_node_pick(cell_id, world_position, icase=icase)
                     else:
-                        raise RuntimeError('invalid pick location=%r' % location)
+                        raise RuntimeError(f'probe_picker_all: invalid pick location={location!r}')
                 except IndexError:
-                    print(f'failed probing on case {icase}/{ncases} key={key} location={location}')
+                    # IndexError: out of range?
+                    gui.log_warning(f'failed probing on case {icase}/{ncases} key={key} location={location}')
                     continue
 
                 return_flag, duplicate_key, result_value, result_name, xyz = out
@@ -751,7 +775,8 @@ class MouseActions:
                 text = str(result_value)
                 assert icase in gui.label_actors, icase
                 #print(f'icase={icase}/{ncases}: text={text!r}')
-                gui.label_actors[icase].append(gui.create_annotation(text, x, y, z))
+                annotation = mark_actions.create_annotation(text, x, y, z)
+                gui.label_actors[icase].append(annotation)
             gui.cycle_results(icase_temp)
             self.vtk_interactor.Render()
         if self.revert:
@@ -761,19 +786,20 @@ class MouseActions:
                         world_position: np.ndarray,
                         icase: Optional[int]=None):
         gui = self.gui
-        if icase is not None:
+        if icase is None:
             icase = gui.icase
+        assert icase in gui.label_actors, f'icase={icase!r} result_name={result_name!r}'
 
         duplicate_key = None
         pick_state = self.pick_state
         if pick_state == 'node/centroid':
             return_flag = False
-            out = gui.get_result_by_xyz_cell_id(world_position, cell_id, icase=icase)
+            out = gui.mark_actions.get_result_by_xyz_cell_id(
+                world_position, cell_id, icase=icase)
             if out is None:
                 print('MouseActions._cell_node_pick bug')
                 #return return_flag, None, None, None, None
             result_name, result_value, node_id, xyz = out
-            assert icase in gui.label_actors, result_name
             assert not isinstance(xyz, int), xyz
             duplicate_key = node_id
         else:
@@ -800,8 +826,9 @@ class MouseActions:
                             world_position: np.ndarray,
                             icase: Optional[int]=None):
         gui = self.gui
-        if icase is not None:
+        if icase is None:
             icase = gui.icase
+        assert icase in gui.label_actors, f'icase={icase!r} result_name={result_name!r}'
 
         duplicate_key = None
         pick_state = self.pick_state
@@ -810,7 +837,6 @@ class MouseActions:
             duplicate_key = cell_id
             out = gui.get_result_by_cell_id(cell_id, world_position, icase=icase)
             result_name, result_value, xyz = out
-            assert icase in gui.label_actors, icase
         else:
             #cell = self.grid.GetCell(cell_id)
             # get_nastran_centroidal_pick_state_nodal_by_xyz_cell_id()

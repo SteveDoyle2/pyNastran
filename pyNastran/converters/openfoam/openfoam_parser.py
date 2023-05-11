@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 
 def remove_c_comments(lines):
     # remove // comments
@@ -40,7 +38,7 @@ def convert_to_dict(self, lines, debug=True):
     #lines = ' '.join(lines).replace('\n', ' ')
     #lines = lines.replace('  ', ' ')
     i = 0
-    data = OrderedDict()
+    data = {}
 
     active_key = None
     active_data = data
@@ -63,7 +61,7 @@ def convert_to_dict(self, lines, debug=True):
             if debug:
                 self.log.debug('%s*A1a %r' % (step, line))
             #active_keys.append(active_key)
-            active_data[active_key] = OrderedDict()
+            active_data[active_key] = {}
             active_data = active_data[active_key]
             if debug:
                 self.log.debug('   %sstepping; active_key=%r' % (step, active_key))
@@ -72,7 +70,7 @@ def convert_to_dict(self, lines, debug=True):
             if debug:
                 self.log.debug('%s*A1b %r' % (step, line))
             #active_keys.append(active_key)
-            active_data[active_key] = OrderedDict()
+            active_data[active_key] = {}
             active_data = active_data[active_key]
             if debug:
                 self.log.debug('   %sstepping; active_key=%r' % (step, active_key))
@@ -171,10 +169,10 @@ def write_dict(openfoam_dict, nbase=0, baseword='name'):
     msg += '%s{\n' % baseword
     msg += '%s#keys (%s)=%s\n' % (space2, type(openfoam_dict), openfoam_dict.keys())
     for key, value in sorted(openfoam_dict.items()):
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             value = value.strip()
 
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             msg += '%s%s : ' % (space2, key)
         else:
             msg += '%s%s (%s) : ' % (space2, key, type(value))

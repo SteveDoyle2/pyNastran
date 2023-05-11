@@ -1,6 +1,6 @@
 """Defines the GUI IO file for Usm3d."""
 import os
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 
 import numpy as np
 
@@ -211,7 +211,7 @@ class Usm3dIO:
         # regions/loads
         self.gui.scalar_bar_actor.Modified()
 
-        cases = OrderedDict()
+        cases = {}
         form = []
         form, cases = self._fill_usm3d_results(cases, form,
                                                bcs, mapbc, bcmap_to_bc_name, loads,

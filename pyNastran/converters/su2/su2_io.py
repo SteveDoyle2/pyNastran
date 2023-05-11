@@ -1,6 +1,4 @@
 """Defines the GUI IO file for SU2."""
-from collections import OrderedDict
-
 import numpy as np
 
 import vtk
@@ -131,7 +129,7 @@ class SU2_IO:
         self.gui.scalar_bar_actor.VisibilityOff()
         self.gui.scalar_bar_actor.Modified()
 
-        cases = OrderedDict()
+        cases = {}
         self.gui.isubcase_name_map = {}
         ID = 1
 

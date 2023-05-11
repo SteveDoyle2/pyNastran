@@ -1,5 +1,5 @@
 """Defines the GUI IO file for S/HABP."""
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 import numpy as np
 from numpy import zeros, cross, amax, amin
@@ -82,7 +82,7 @@ class ShabpIO:
         self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['S/HABP', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         self.gui.log.debug("nNodes=%i nElements=%i" % (

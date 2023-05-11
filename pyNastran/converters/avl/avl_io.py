@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import numpy as np
 
 import vtk
@@ -98,7 +97,7 @@ class AVL_IO:
 
         note = ''
         self.gui.isubcase_name_map = {1: ['AVL%s' % note, '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         form, cases, node_ids, element_ids = self._fill_avl_case(

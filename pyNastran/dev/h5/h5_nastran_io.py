@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from pyNastran.dev.h5.h5_nastran2 import get_gui_nastran_ugrid
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.qt_files.colors import (

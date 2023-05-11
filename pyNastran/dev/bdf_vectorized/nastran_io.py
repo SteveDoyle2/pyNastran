@@ -1,6 +1,5 @@
 # pylint: disable=C0103,C0111,E1101
 import os
-from collections import OrderedDict
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -54,7 +53,7 @@ class NastranIO(NastranIO_xref):
             self.turn_text_off()
             self.grid.Reset()
 
-            self.result_cases = OrderedDict()
+            self.result_cases = {}
             self.ncases = 0
         for i in ('case_keys', 'icase', 'isubcase_name_map'):
             if hasattr(self, i):
@@ -732,7 +731,7 @@ class NastranIO(NastranIO_xref):
         self.grid2.Update()
         self.log_info("updated grid")
 
-        cases = OrderedDict()
+        cases = {}
 
         if 0:
             nelements = len(model.elements)
@@ -986,7 +985,7 @@ class NastranIO(NastranIO_xref):
             #print("nodeID=%s t=%s" % (nodeID, translation))
         #self.isubcase_name_map[self.isubcase] = [Subtitle, Label]
 
-        cases = OrderedDict()
+        cases = {}
         subcase_ids = model.isubcase_name_map.keys()
         self.isubcase_name_map = model.isubcase_name_map
 

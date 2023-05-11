@@ -20,48 +20,44 @@ from pyNastran.gui.utils.load_results import load_user_geom
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.femutils.io import loadtxt_nice
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.gui import MainWindow
     from pyNastran.gui.gui_objects.settings import Settings
 
 
 class ToolActions:
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         self.gui = gui
         self.itext = 0
 
     #---------------------------------------------------------------------------
     def export_case_data(self, icases: Optional[list[int]]=None) -> None:
         """exports CSVs of the requested cases"""
+        gui = self.gui
         if icases is None:
-            icases = self.gui.result_cases.keys()
+            icases = gui.result_cases.keys()
         elif isinstance(icases, integer_types):
             icases = [icases]
 
         for icase in icases:
-            (obj, (i, name)) = self.gui.result_cases[icase]
+            (obj, (i, name)) = gui.result_cases[icase]
             subcase_id = obj.subcase_id
             location = obj.get_location(i, name)
 
             case = obj.get_result(i, name)
             if case is None:
                 continue # normals
-            subtitle, label = self.gui.get_subtitle_label(subcase_id)
+            subtitle, label = gui.get_subtitle_label(subcase_id)
             label2 = obj.get_header(i, name)
             data_format = obj.get_data_format(i, name)
             unused_vector_size = obj.get_vector_size(i, name)
             print(subtitle, label, label2, location, name)
 
-            word, eids_nids = self.gui.get_mapping_for_location(location)
+            word, eids_nids = gui.get_mapping_for_location(location)
+            unused_fname = _export_case(eids_nids, case, icase,
+                                        word, label2, data_format)
 
-            # fixing cast int data
-            header = '%s(%%i),%s(%s)' % (word, label2, data_format)
-            if 'i' in data_format and isinstance(case.dtype, np.floating):
-                header = '%s(%%i),%s' % (word, label2)
-
-            fname = '%s_%s.csv' % (icase, _remove_invalid_filename_characters(name))
-            out_data = np.column_stack([eids_nids, case])
-            np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
         if icases:
-            self.gui.log_command(f'self.export_case_data(icases={icases})')
+            gui.log_command(f'self.export_case_data(icases={icases})')
 
     #---------------------------------------------------------------------------
     def create_corner_axis(self) -> None:
@@ -174,12 +170,13 @@ class ToolActions:
         Label: SUBCASE 1; Static
 
         """
+        gui = self.gui
         if location == 'node':
-            nodes = self.gui.node_ids
+            nodes = gui.node_ids
             min_msgi = f'Node: %d' % nodes[imin]
             max_msgi = f'Node: %d' % nodes[imax]
         elif location == 'centroid':
-            elements = self.gui.element_ids
+            elements = gui.element_ids
             min_msgi = f'Element: %d' % elements[imin]
             max_msgi = f'Element: %d' % elements[imax]
         else:
@@ -215,12 +212,12 @@ class ToolActions:
 
         ntext = len(texts)
         for itext, text in enumerate(texts):
-            self.gui.text_actors[itext].SetInput(text)
+            gui.text_actors[itext].SetInput(text)
 
         if ntext == 4:  # label
-            self.gui.text_actors[3].VisibilityOn()
+            gui.text_actors[3].VisibilityOn()
         else:
-            self.gui.text_actors[3].VisibilityOff()
+            gui.text_actors[3].VisibilityOff()
 
     def turn_text_off(self) -> None:
         """turns all the text actors off"""
@@ -292,17 +289,18 @@ class ToolActions:
             default_filename = ''
 
             title = ''
-            if self.gui.title is not None:
+            gui = self.gui
+            if gui.title is not None:
                 title = self.gui.title
 
-            if self.gui.out_filename is None:
+            if gui.out_filename is None:
                 default_filename = ''
                 if self.gui.infile_name is not None:
-                    base, ext = os.path.splitext(os.path.basename(self.gui.infile_name))
-                    default_filename = self.gui.infile_name
+                    base, ext = os.path.splitext(os.path.basename(gui.infile_name))
+                    default_filename = gui.infile_name
                     default_filename = base + '.png'
             else:
-                base, ext = os.path.splitext(os.path.basename(self.gui.out_filename))
+                base, ext = os.path.splitext(os.path.basename(gui.out_filename))
                 default_filename = title + '_' + base + '.png'
 
             file_types = (
@@ -313,7 +311,7 @@ class ToolActions:
                 'PostScript Document *.ps (*.ps)')
 
             title = 'Choose a filename and type'
-            fname, flt = getsavefilename(parent=self.gui, caption=title, basedir='',
+            fname, flt = getsavefilename(parent=gui, caption=title, basedir='',
                                          filters=file_types, selectedfilter=filt,
                                          options=None)
             if fname in [None, '']:
@@ -328,7 +326,8 @@ class ToolActions:
                 flt = 'png'
         return fname, flt
 
-    def _screenshot_setup(self, magnify: Optional[int], render_large: vtk.vtkvtkRenderLargeImage) -> tuple[
+    def _screenshot_setup(self, magnify: Optional[int],
+                          render_large: vtk.vtkvtkRenderLargeImage) -> tuple[
             dict[str, int], dict[str, int],
             dict[str, float], dict[str, float],
             dict[str, int],
@@ -379,7 +378,11 @@ class ToolActions:
         # hide corner axis
         axes_actor = self.gui.corner_axis.GetOrientationMarker()
         axes_actor.SetVisibility(False)
-        return line_widths0, point_sizes0, coord_scale0, coord_text_scale0, linewidth0, axes_actor, magnify
+        out = (
+            line_widths0, point_sizes0, coord_scale0, coord_text_scale0,
+            linewidth0, axes_actor, magnify,
+        )
+        return out
 
     def _screenshot_teardown(self, line_widths0: dict[str, int],
                              point_sizes0: dict[str, int],
@@ -456,25 +459,28 @@ class ToolActions:
             RGB values as 0.0 <= rgb <= 1.0
 
         """
+        gui = self.gui
         if csv_filename in [None, False]:
             title = 'Load User Geometry'
-            csv_filename = self.gui._create_load_file_dialog(
-                self.gui.wildcard_delimited + ';;STL (*.stl)', title)[1]
+            csv_filename = gui._create_load_file_dialog(
+                gui.wildcard_delimited + ';;STL (*.stl)', title)[1]
             if not csv_filename:
                 return
 
         if color is None:
             # we mod the num_user_points so we don't go outside the range
-            icolor = self.gui.num_user_points % len(self.gui.color_order)
-            color = self.gui.color_order[icolor]
+            icolor = gui.num_user_points % len(gui.color_order)
+            color = gui.color_order[icolor]
         if name is None:
             name = os.path.basename(csv_filename).rsplit('.', 1)[0]
 
         self._add_user_geometry(csv_filename, name, color)
-        self.gui.log_command('on_load_user_geom(%r, %r, %s)' % (
+        gui.log_command('on_load_user_geom(%r, %r, %s)' % (
             csv_filename, name, str(color)))
 
-    def _add_user_geometry(self, csv_filename: str, name: str, color: list[float]) -> None:
+    def _add_user_geometry(self, csv_filename: str,
+                           name: str,
+                           color: list[float]) -> None:
         """
         helper method for ``on_load_user_geom``
 
@@ -491,8 +497,8 @@ class ToolActions:
         point_name = name + '_point'
         geom_name = name + '_geom'
 
-        grid_ids, xyz, bars, tris, quads = load_user_geom(csv_filename, self.gui.log,
-                                                          encoding='latin1')
+        grid_ids, xyz, bars, tris, quads = load_user_geom(
+            csv_filename, self.gui.log, encoding='latin1')
         nbars = len(bars)
         ntris = len(tris)
         nquads = len(quads)
@@ -565,25 +571,26 @@ class ToolActions:
 
         """
         is_failed = True
+        gui = self.gui
         if csv_filename in [None, False]:
             title = 'Load User Points'
-            csv_filename = self.gui._create_load_file_dialog(
-                self.gui.wildcard_delimited, title)[1]
+            csv_filename = gui._create_load_file_dialog(
+                gui.wildcard_delimited, title)[1]
             if not csv_filename:
                 return is_failed
         if color is None:
             # we mod the num_user_points so we don't go outside the range
-            icolor = self.gui.num_user_points % len(self.gui.color_order)
-            color = self.gui.color_order[icolor]
+            icolor = gui.num_user_points % len(gui.color_order)
+            color = gui.color_order[icolor]
         if name is None:
             sline = os.path.basename(csv_filename).rsplit('.', 1)
             name = sline[0]
-        name = _get_unique_name(self.gui.geometry_actors, name)
+        name = _get_unique_name(gui.geometry_actors, name)
 
         is_failed = self._add_user_points_from_csv(csv_filename, name, color)
         if not is_failed:
-            self.gui.num_user_points += 1
-            self.gui.log_command('on_load_csv_points(%r, %r, %s)' % (
+            gui.num_user_points += 1
+            gui.log_command('on_load_csv_points(%r, %r, %s)' % (
                 csv_filename, name, str(color)))
         return is_failed
 
@@ -867,20 +874,41 @@ def make_vtk_transform(origin: Optional[np.ndarray],
         #print('origin%s = %s' % (label, str(origin)))
         transform.Translate(*origin)
     elif matrix_3x3 is not None:  # origin can be None
-        xform = np.eye(4, dtype='float32')
-        xform[:3, :3] = matrix_3x3
-        if origin is not None:
-            xform[:3, 3] = origin
+        xform = xform3_to_xform4(matrix_3x3, origin)
         transform.SetMatrix(xform.ravel())
     else:
         raise RuntimeError('unexpected coordinate system')
     return transform
 
+def xform3_to_xform4(matrix_3x3: np.ndarray,
+                     origin: Optional[np.ndarray]) -> np.ndarray:
+    """
+    creates a 4x4 transform
+            [[xform_3x3] [origin]]
+    xform = [[0        ]    1    ]
+
+    Parameters
+    ----------
+    origin : (3, ) float ndarray/list/tuple
+        the origin
+    matrix_3x3 : (3, 3) float ndarray
+        a standard Nastran-style coordinate system
+
+    https://www.brainvoyager.com/bv/doc/UsersGuide/CoordsAndTransforms/SpatialTransformationMatrices.html
+    """
+    xform = np.eye(4, dtype='float32')
+    xform[:3, :3] = matrix_3x3
+    if origin is not None:
+        xform[:3, 3] = origin
+    return xform
 
 def _set_base_axes(axes: vtk.vtkAxesActor,
                    transform: vtk.vtkTransform,
                    coord_type: str, label: str,
-                   coord_scale: float, coord_text_scale: float, linewidth: int) -> None:
+                   coord_scale: float,
+                   coord_text_scale: float,
+                   linewidth: int) -> None:
+    """sets the names of the axes"""
     #axes.GetLength() # pi
     #axes.GetNormalizedShaftLength() # (0.8, 0.8, 0.8)
     #axes.GetNormalizedTipLength() # (0.2, 0.2, 0.2)
@@ -949,6 +977,22 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
     yaxis.SetLineWidth(linewidth)
     zaxis.SetLineWidth(linewidth)
 
+
+def _export_case(self, name: str,
+                 eids_nids: np.ndarray,
+                 case: np.ndarray,
+                 icase: int,
+                 word: str, label2: str, data_format: str) -> str:
+    # fixing cast int data
+    header = '%s(%%i),%s(%s)' % (word, label2, data_format)
+    if 'i' in data_format and isinstance(case.dtype, np.floating):
+        header = '%s(%%i),%s' % (word, label2)
+
+    fname = '%s_%s.csv' % (icase, _remove_invalid_filename_characters(name))
+    out_data = np.column_stack([eids_nids, case])
+    np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
+    return fname
+
 def _remove_invalid_filename_characters(basename: str) -> str:
     """
     Helper method for exporting cases of 12*I/t^3.csv,
@@ -991,7 +1035,8 @@ def get_delimiter_from_filename(csv_filename: str) -> Optional[str]:
         delimiter = None
     return delimiter
 
-def _get_unique_name(geometry_actors: dict[str, Any], name: str) -> str:
+def _get_unique_name(geometry_actors: dict[str, Any],
+                     name: str) -> str:
     """
     Duplicate names in a dictionary are not allowed,
     so append a number to the name if it's invalid

@@ -1,5 +1,4 @@
 import os
-from collections import OrderedDict
 
 from numpy import amax, amin, arange, ones, zeros, where, unique
 
@@ -173,7 +172,7 @@ class UGRID_IO:
         self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['AFLR UGRID Surface', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         if hasattr(model, 'pids'):

@@ -1,6 +1,5 @@
 from __future__ import annotations
 from itertools import count
-from collections import OrderedDict
 import numpy as np
 import h5py
 import vtk
@@ -65,7 +64,7 @@ def fill_gui_vtk_unstructured_grid(geom_model: BDF,
     #point_data = vtk_ugrid.GetPointData()
 
     iresult = 0
-    cases = OrderedDict()
+    cases = {}
     form, iresult = _fill_gui_geometry_arrays(
         geom_model, vtk_ugrid,
         node_ids, eids, pids, iresult, cases,

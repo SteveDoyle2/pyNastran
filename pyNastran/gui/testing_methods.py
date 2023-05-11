@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 import numpy as np
 from cpylog import get_logger
 
@@ -199,11 +197,9 @@ class FakeGUIMethods(GuiVTKCommon):
         assert isinstance(self.nelements, int), 'nelements=%r must be an integer' % self.nelements
 
         assert len(cases) > 0, cases
-        if isinstance(cases, OrderedDict):
-            self.case_keys = list(cases.keys())
-        else:
-            self.case_keys = sorted(cases.keys())
-            assert isinstance(cases, dict), type(cases)
+        self.case_keys = list(cases.keys())
+        #self.case_keys = sorted(cases.keys())
+        assert isinstance(cases, dict), type(cases)
 
         #print('self.case_keys = ', self.case_keys)
         for key in self.case_keys:
