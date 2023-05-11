@@ -53,7 +53,7 @@ class ToolActions:
             print(subtitle, label, label2, location, name)
 
             word, eids_nids = gui.get_mapping_for_location(location)
-            unused_fname = _export_case(eids_nids, case, icase,
+            unused_fname = _export_case(name, eids_nids, case, icase,
                                         word, label2, data_format)
 
         if icases:
@@ -978,11 +978,14 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
     zaxis.SetLineWidth(linewidth)
 
 
-def _export_case(self, name: str,
+def _export_case(name: str,
                  eids_nids: np.ndarray,
                  case: np.ndarray,
                  icase: int,
                  word: str, label2: str, data_format: str) -> str:
+    """
+    Writes a csv of a gui result in a form that you can load back in.
+    """
     # fixing cast int data
     header = '%s(%%i),%s(%s)' % (word, label2, data_format)
     if 'i' in data_format and isinstance(case.dtype, np.floating):
