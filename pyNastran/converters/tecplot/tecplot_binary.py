@@ -12,7 +12,7 @@ from pyNastran.converters.tecplot.zone import Zone, CaseInsensitiveDict
 from pyNastran.utils import object_attributes, object_methods, object_stats
 
 from cpylog import get_logger2
-PathLike = PurePath | str
+PathLike = Union[PurePath, str]
 
 ZoneTuple = namedtuple('Zone', ['zone_name',
                                 'strand_id', 'solution_time',

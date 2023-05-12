@@ -5,11 +5,17 @@ works in vtk 7; missing surface though
 
 import math
 import vtk
+from pyNastran.gui.vtk_renering_core import (
+    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
+    vtkActor, vtkBillboardTextActor3D,
+    vtkPolyDataMapper,
+)
+
 
 # Available surfaces are:
 SURFACE_TYPE = set(["TORUS", "PARAMETRIC_HILLS", "PARAMETRIC_TORUS"])
 
-def WritePNG(ren, fn, magnification = 1):
+def WritePNG(ren, fn, magnification=1):
     """
     Save the image as a PNG
     :param: ren - the renderer.
@@ -131,7 +137,7 @@ def MakeTorus():
 
     :return: vtkPolyData with normal and scalar data.
     """
-    source = vtk.vtkSuperquadricSource();
+    source = vtk.vtkSuperquadricSource()
     source.SetCenter(0.0, 0.0, 0.0)
     source.SetScale(1.0, 1.0, 1.0)
     source.SetPhiResolution(64)
@@ -421,7 +427,7 @@ def DisplaySurface(st):
     surface = st.upper()
     if  not(surface in SURFACE_TYPE):
         print(st, "is not a surface.")
-        iren = vtk.vtkRenderWindowInteractor()
+        iren = vtkRenderWindowInteractor()
         return iren
     # ------------------------------------------------------------
     # Create the surface, lookup tables, contour filter etc.
@@ -494,23 +500,23 @@ def DisplaySurface(st):
     src_mapper.SetLookupTable(lut)
     src_mapper.SetScalarModeToUseCellData()
 
-    src_actor = vtk.vtkActor()
+    src_actor = vtkActor()
     src_actor.SetMapper(src_mapper)
     src_actor.RotateX(-45)
     src_actor.RotateZ(45)
 
     # Create contour edges
-    edge_mapper = vtk.vtkPolyDataMapper()
+    edge_mapper = vtkPolyDataMapper()
     edge_mapper.SetInputData(bcf.GetContourEdgesOutput())
     edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
-    edge_actor = vtk.vtkActor()
+    edge_actor = vtkActor()
     edge_actor.SetMapper(edge_mapper)
     edge_actor.GetProperty().SetColor(0, 0, 0)
     edge_actor.RotateX(-45)
     edge_actor.RotateZ(45)
 
-    glyph_mapper = vtk.vtkPolyDataMapper()
+    glyph_mapper = vtkPolyDataMapper()
     glyph_mapper.SetInputConnection(glyph.GetOutputPort())
     glyph_mapper.SetScalarModeToUsePointFieldData()
     glyph_mapper.SetColorModeToMapScalars()
@@ -535,9 +541,9 @@ def DisplaySurface(st):
     # ------------------------------------------------------------
     # Create the RenderWindow, Renderer and Interactor
     # ------------------------------------------------------------
-    ren = vtk.vtkRenderer()
-    ren_win = vtk.vtkRenderWindow()
-    iren = vtk.vtkRenderWindowInteractor()
+    ren = vtkRenderer()
+    ren_win = vtkRenderWindow()
+    iren = vtkRenderWindowInteractor()
 
     ren_win.AddRenderer(ren)
     iren.SetRenderWindow(ren_win)

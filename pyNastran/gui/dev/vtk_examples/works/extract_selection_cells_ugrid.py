@@ -4,7 +4,10 @@ based on:
 """
 
 import vtk
-from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from pyNastran.gui.vtk_renering_core import (
+    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
+    vtkActor, vtkCamera, vtkDataSetMapper)
+from pyNastran.gui.vtk_interface import vtkTriangle, vtkUnstructuredGrid
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -69,7 +72,7 @@ def main():
         nid += 1
 
     for tri in tris:
-        elem = vtk.vtkTriangle()
+        elem = vtkTriangle()
         (n1, n2, n3) = tri
         elem.GetPointIds().SetId(0, n1)
         elem.GetPointIds().SetId(1, n2)
@@ -78,17 +81,17 @@ def main():
 
     ugrid.SetPoints(points)
 
-    grid_mapper = vtk.vtkDataSetMapper()
+    grid_mapper = vtkDataSetMapper()
     if vtk.VTK_MAJOR_VERSION <= 5:
         grid_mapper.SetInputConnection(ugrid.GetProducerPort())
     else:
         grid_mapper.SetInputData(ugrid)
-    input_actor = vtk.vtkActor()
+    input_actor = vtkActor()
     input_actor.SetMapper(grid_mapper)
 
-    render_window = vtk.vtkRenderWindow()
-    camera = vtk.vtkCamera()
-    interactor = vtk.vtkRenderWindowInteractor()
+    render_window = vtkRenderWindow()
+    camera = vtkCamera()
+    interactor = vtkRenderWindowInteractor()
 
     interactor.SetRenderWindow(render_window)
 
@@ -103,7 +106,6 @@ def main():
 
     for id_to_show in ids_to_show:
         ids.InsertNextValue(id_to_show)
-
 
     selection_node = vtk.vtkSelectionNode()
     selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
@@ -148,7 +150,7 @@ def main():
     else:
         selected_mapper.SetInputData(grid_selected)
 
-    selected_actor = vtk.vtkActor()
+    selected_actor = vtkActor()
     selected_actor.SetMapper(selected_mapper)
 
     not_selected_mapper = vtk.vtkDataSetMapper()
@@ -157,15 +159,15 @@ def main():
     else:
         not_selected_mapper.SetInputData(not_selected)
 
-    not_selected_actor = vtk.vtkActor()
+    not_selected_actor = vtkActor()
     not_selected_actor.SetMapper(not_selected_mapper)
 
     # There will be one render window
-    render_window = vtk.vtkRenderWindow()
+    render_window = vtkRenderWindow()
     render_window.SetSize(900, 300)
 
     # And one interactor
-    interactor = vtk.vtkRenderWindowInteractor()
+    interactor = vtkRenderWindowInteractor()
     interactor.SetRenderWindow(render_window)
 
     # Define viewport ranges
@@ -174,16 +176,16 @@ def main():
     right_viewport = [0.5, 0.0, 1.0, 1.0]
 
     # Create a camera for all renderers
-    camera = vtk.vtkCamera()
+    camera = vtkCamera()
 
     # Setup the renderers
-    left_renderer = vtk.vtkRenderer()
+    left_renderer = vtkRenderer()
     render_window.AddRenderer(left_renderer)
     left_renderer.SetViewport(left_viewport)
     left_renderer.SetBackground(.6, .5, .4)
     left_renderer.SetActiveCamera(camera)
 
-    right_renderer = vtk.vtkRenderer()
+    right_renderer = vtkRenderer()
     render_window.AddRenderer(right_renderer)
     right_renderer.SetViewport(right_viewport)
     right_renderer.SetBackground(.3, .1, .4)

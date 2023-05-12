@@ -717,7 +717,7 @@ class MouseActions:
 
             ncases = len(gui.result_cases)
             for icase in range(ncases):
-                gui.cycle_results(icase)
+                gui.cycle_results(icase, show_msg=False)
                 key = gui.case_keys[icase]
                 location = gui.get_case_location(key)
 
@@ -752,7 +752,7 @@ class MouseActions:
                 assert icase in gui.label_actors, icase
                 #print(f'icase={icase}/{ncases}: text={text!r}')
                 gui.label_actors[icase].append(gui.create_annotation(text, x, y, z))
-            gui.cycle_results(icase_temp)
+            gui.cycle_results(icase_temp, show_msg=False)
             self.vtk_interactor.Render()
         if self.revert:
             self.setup_mouse_buttons(mode='default')

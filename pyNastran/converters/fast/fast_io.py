@@ -3,7 +3,7 @@ import os
 from collections import OrderedDict
 
 import numpy as np
-from vtk import vtkTriangle, vtkTetra
+from pyNastran.gui.vtk_interface import vtkTriangle, vtkTetra
 
 from pyNastran.converters.fast.fgrid_reader import read_fgrid
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points

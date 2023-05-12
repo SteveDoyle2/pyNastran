@@ -1,5 +1,6 @@
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor
 
 class myInteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
     #def __init__(self, parent=None
@@ -20,7 +21,7 @@ class InteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
 
     def InteractorStyle(self):
         self.selected_mapper = vtk.vtkDataSetMapper()
-        self.selected_actor = vtk.vtkActor()
+        self.selected_actor = vtkActor()
         self.selected_actor.SetMapper(selected_mapper)
 
     def OnLeftButtonUp(self):
@@ -34,7 +35,7 @@ class InteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
 
         if vtk.VTK_MAJOR_VERSION <= 5:
             extract_geometry.SetInput(self.Points)
-        else:
+         else:
             extract_geometry.SetInputData(self.Points)
         extract_geometry.Update()
 
@@ -100,12 +101,12 @@ if 1:
         mapper.SetInputData(poly_input)
     mapper.ScalarVisibilityOff()
 
-    actor = vtk.vtkActor()
+    actor = vtkActor()
     actor.SetMapper(mapper)
 
     # Visualize
-    renderer = vtk.vtkRenderer()
-    render_window = vtk.vtkRenderWindow()
+    renderer = vtkRenderer()
+    render_window = vtkRenderWindow()
     render_window.AddRenderer(renderer)
 
     area_picker = vtk.vtkAreaPicker()
@@ -118,7 +119,7 @@ if 1:
 
     render_window.Render()
 
-    style = vtk.vtkRenderWindowInteractor()
+    style = vtkRenderWindowInteractor()
     #style = myInteractorStyle()
     #style = InteractorStyle()
     #style = QVTKRenderWindowInteractor()

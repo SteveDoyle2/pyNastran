@@ -18,6 +18,8 @@ import vtk
 from vtk import vtkUnstructuredGrid
 
 #import pyNastran
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from pyNastran.gui.vtk_renering_core import vtkActor, vtkActor2D, vtkPolyDataMapper
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 
@@ -79,7 +81,7 @@ class GuiQtCommon(GuiAttributes):
         while self.icase != 0:
             self.on_cycle_results(show_msg=False)
             if i > 10000:   # pragma: no cover
-                raise RuntimeError('max cycle count; i=%s' % i)
+                raise RuntimeError(f'max cycle count; i={i}')
             i += 1
 
     def on_rcycle_results(self, show_msg: bool=True) -> None:
@@ -132,7 +134,9 @@ class GuiQtCommon(GuiAttributes):
         """updates the Qt sidebar"""
         self.res_widget.update_icase(self.icase)
 
-    def cycle_results(self, case=None, show_msg: bool=True) -> None:
+    def cycle_results(self,
+                      case: Optional[int]=None,
+                      show_msg: bool=True) -> None:
         """
         Selects the next case
 
@@ -1871,14 +1875,14 @@ class GuiQtCommon(GuiAttributes):
             label_mapper.SetLabelModeToLabelScalars()
             label_mapper.SetLabelFormat("%6.2f")
 
-            isolabels_actor = vtk.vtkActor2D()
+            isolabels_actor = vtkActor2D()
             isolabels_actor.SetMapper(label_mapper)
 
-        contour_mapper = vtk.vtkPolyDataMapper()
+        contour_mapper = vtkPolyDataMapper()
         contour_mapper.SetInputConnection(contour_stripper.GetOutputPort())
         contour_mapper.ScalarVisibilityOff()
 
-        isolines_actor = vtk.vtkActor()
+        isolines_actor = vtkActor()
         isolines_actor.SetMapper(contour_mapper)
         isolines_actor.GetProperty().SetColor(0., 0., 0.)
 

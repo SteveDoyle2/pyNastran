@@ -1,4 +1,5 @@
 import vtk
+from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow, vtkActor
 
 class MyInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
 
@@ -25,14 +26,14 @@ source.Update()
 mapper = vtk.vtkPolyDataMapper()
 mapper.SetInputConnection(source.GetOutputPort())
 
-actor = vtk.vtkActor()
+actor = vtkActor()
 actor.SetMapper(mapper)
 
-renderer = vtk.vtkRenderer()
+renderer = vtkRenderer()
 renderer.SetBackground(1, 1, 1)
 renderer.AddActor(actor)
 
-renwin = vtk.vtkRenderWindow()
+renwin = vtkRenderWindow()
 renwin.AddRenderer(renderer)
 
 interactor = vtk.vtkRenderWindowInteractor()

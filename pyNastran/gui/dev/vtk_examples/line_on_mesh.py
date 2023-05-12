@@ -3,7 +3,11 @@
 import vtk
 import random
 import numpy
-
+from pyNastran.gui.vtk_interface import vtkTriangle, vtkPolyData
+from pyNastran.gui.vtk_renering_core import (
+    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor,
+    vtkPolyDataMapper,
+)
 
 # Make a 32 x 32 grid
 size = 32
@@ -34,10 +38,11 @@ for i in range(size-1):
         points.InsertNextPoint(i, (j+1), z2)
         points.InsertNextPoint((i+1), j, z3)
 
-        triangle = vtk.vtkTriangle()
-        triangle.GetPointIds().SetId(0, count)
-        triangle.GetPointIds().SetId(1, count + 1)
-        triangle.GetPointIds().SetId(2, count + 2)
+        triangle = vtkTriangle()
+        point_ids = triangle.GetPointIds()
+        point_ids.SetId(0, count)
+        point_ids.SetId(1, count + 1)
+        point_ids.SetId(2, count + 2)
 
         triangles.InsertNextCell(triangle)
 
@@ -50,10 +55,11 @@ for i in range(size-1):
         points.InsertNextPoint((i+1), (j+1), z2)
         points.InsertNextPoint((i+1), j, z3)
 
-        triangle = vtk.vtkTriangle()
-        triangle.GetPointIds().SetId(0, count + 3)
-        triangle.GetPointIds().SetId(1, count + 4)
-        triangle.GetPointIds().SetId(2, count + 5)
+        triangle = vtkTriangle()
+        point_ids = triangle.GetPointIds()
+        point_ids.SetId(0, count + 3)
+        point_ids.SetId(1, count + 4)
+        point_ids.SetId(2, count + 5)
 
         count += 6
 
@@ -61,15 +67,24 @@ for i in range(size-1):
 
         # Add some color
         r = [int(i/float(size)*255),int(j/float(size)*255),0]
-        colors.InsertNextTupleValue(r)
-        colors.InsertNextTupleValue(r)
-        colors.InsertNextTupleValue(r)
-        colors.InsertNextTupleValue(r)
-        colors.InsertNextTupleValue(r)
-        colors.InsertNextTupleValue(r)
+        if 1:
+            # vtk 9.1?
+            colors.InsertNextTuple(r)
+            colors.InsertNextTuple(r)
+            colors.InsertNextTuple(r)
+            colors.InsertNextTuple(r)
+            colors.InsertNextTuple(r)
+            colors.InsertNextTuple(r)
+        else:
+            colors.InsertNextTupleValue(r)
+            colors.InsertNextTupleValue(r)
+            colors.InsertNextTupleValue(r)
+            colors.InsertNextTupleValue(r)
+            colors.InsertNextTupleValue(r)
+            colors.InsertNextTupleValue(r)
 
 # Create a polydata object
-trianglePolyData = vtk.vtkPolyData()
+trianglePolyData = vtkPolyData()
 
 # Add the geometry and topology to the polydata
 trianglePolyData.SetPoints(points)
@@ -86,9 +101,9 @@ smooth_loop.SetNumberOfSubdivisions(3)
 smooth_loop.SetInputConnection(cleanPolyData.GetOutputPort())
 
 # Create a mapper and actor for smoothed dataset
-mapper = vtk.vtkPolyDataMapper()
+mapper = vtkPolyDataMapper()
 mapper.SetInputConnection(smooth_loop.GetOutputPort())
-actor_loop = vtk.vtkActor()
+actor_loop = vtkActor()
 actor_loop.SetMapper(mapper)
 actor_loop.GetProperty().SetInterpolationToFlat()
 
@@ -138,16 +153,16 @@ mapper = vtk.vtkPolyDataMapper()
 mapper.SetInputConnection(functionSource.GetOutputPort())
 
 # Define the line actor
-actor = vtk.vtkActor()
+actor = vtkActor()
 actor.SetMapper(mapper)
 actor.GetProperty().SetColor([1.0, 0.0, 0.0])
 actor.GetProperty().SetLineWidth(3)
 
 # Visualize
-renderer = vtk.vtkRenderer()
-renderWindow = vtk.vtkRenderWindow()
+renderer = vtkRenderer()
+renderWindow = vtkRenderWindow()
 renderWindow.AddRenderer(renderer)
-renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+renderWindowInteractor = vtkRenderWindowInteractor()
 renderWindowInteractor.SetRenderWindow(renderWindow)
 
 # Add actors and render
