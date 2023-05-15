@@ -12,18 +12,64 @@ from cpylog import SimpleLogger
 Face = tuple[int, int, int, int]
 
 
-class CaseInsensitiveDict(dict):
+#class CaseInsensitiveDict(dict):
+    #def __contains__(self, key: str) -> bool:
+        #val_in = dict.__contains__(self, key.upper())
+        #return val_in
+    #def __getitem__(self, key) -> Any:
+        #val = dict.__getitem__(self, key.upper())
+        ##log.info("GET %s['%s'] = %s" % str(dict.get(self, 'name_label')), str(key), str(val)))
+        #return val
+    #def __setitem__(self, key, val) -> None:
+        ##log.info("SET %s['%s'] = %s" % str(dict.get(self, 'name_label')), str(key), str(val)))
+        #dict.__setitem__(self, key.upper(), val)
+
+
+class CaseInsensitiveDictAlternates(dict):
+    def __init__(self, *args, **kwargs):
+        self._key_map: dict[str, str] = {}
+        super().__init__(*args, **kwargs)
+
+    def set_key_map(self, key_map: dict[str, str]) -> None:
+        _key_map = {}
+        for key, value in key_map.items():
+            key_upper = key.upper()
+            value_upper = value.upper()
+            _key_map[key_upper] = value_upper
+        self._key_map = _key_map
+
     def __contains__(self, key: str) -> bool:
-        val_in = dict.__contains__(self, key.upper())
-        return val_in
-    def __getitem__(self, key) -> Any:
-        val = dict.__getitem__(self, key.upper())
+        key_upper = key.upper()
+        val_in = dict.__contains__(self, key_upper)
+        if key:
+            return val_in
+        return key in self._key_map
+
+    def __getitem__(self, key: str) -> Union[int, float, str]:
+        key_upper = key.upper()
+        key2 = self._key_map.get(key_upper, key_upper)
+        #print(f'key_upper={key_upper} key2={key2}')
+        try:
+            val = dict.__getitem__(self, key2)
+        except KeyError:
+            #print(f'key={key!r} key_upper={key_upper!r} key2={key2!r} self._key_map={self._key_map}')
+            raise
         #log.info("GET %s['%s'] = %s" % str(dict.get(self, 'name_label')), str(key), str(val)))
         return val
-    def __setitem__(self, key, val) -> None:
+    def __setitem__(self, key: str, val: Union[int, float, str]) -> None:
         #log.info("SET %s['%s'] = %s" % str(dict.get(self, 'name_label')), str(key), str(val)))
-        dict.__setitem__(self, key.upper(), val)
+        key_upper = key.upper()
+        key2 = self._key_map.get(key_upper, key_upper)
+        dict.__setitem__(self, key2, val)
 
+class TecplotDict(CaseInsensitiveDictAlternates):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        alternate_map = {
+            'data_packing': 'datapacking',
+            'ZONE_TYPE': 'ZONETYPE',
+        }
+        self.set_key_map(alternate_map)
 
 class Zone:
     def __init__(self, log: SimpleLogger):
@@ -31,7 +77,7 @@ class Zone:
 
         self.name = '???'
         self.strand_id = -1
-        self.headers_dict = CaseInsensitiveDict()
+        self.headers_dict = TecplotDict()
         self.zone_data = np.zeros((0, 0), dtype='float32')
         self.tet_elements = np.zeros((0, 4), dtype='int32')
         self.hexa_elements = np.zeros((0, 8), dtype='int32')
@@ -50,7 +96,7 @@ class Zone:
     def nxyz(self) -> int:
         nxyz = 0
         for var in self.headers_dict['variables']:
-            if var.lower() in ['x', 'y', 'z']:
+            if var.lower() in {'x', 'y', 'z'}:
                 nxyz += 1
         return nxyz
 
@@ -189,8 +235,8 @@ class Zone:
             raise RuntimeError(self.headers_dict)
         if 'DATAPACKING' not in self.headers_dict:
             return True
-        is_point = (self.headers_dict['DATAPACKING'] == 'POINT')
-        is_block = (self.headers_dict['DATAPACKING'] == 'BLOCK')
+        is_point = (self.headers_dict['DATA_PACKING'] == 'POINT')
+        is_block = (self.headers_dict['DATA_PACKING'] == 'BLOCK')
         assert is_point or is_block
         return is_point
 

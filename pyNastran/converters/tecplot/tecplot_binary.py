@@ -8,7 +8,7 @@ from typing import BinaryIO, Optional, Union, Any
 
 import numpy as np
 from pyNastran.utils import print_bad_path
-from pyNastran.converters.tecplot.zone import Zone, CaseInsensitiveDict
+from pyNastran.converters.tecplot.zone import Zone, TecplotDict
 from pyNastran.utils import object_attributes, object_methods, object_stats
 
 from cpylog import get_logger2
@@ -1111,7 +1111,7 @@ def _write_binary_header(model: TecplotBinary,
         teplot_file.write(_write_string(var))
 
 def _read_binary_header(model: TecplotBinary,
-                        file_obj: BinaryIO) -> tuple[bytes, CaseInsensitiveDict,
+                        file_obj: BinaryIO) -> tuple[bytes, TecplotDict,
                                                      str, str,
                                                      list[str], list[ZoneTuple]]:
     #version, header_dict, title, file_type, var_names, zones
@@ -1259,7 +1259,7 @@ def _read_binary_header(model: TecplotBinary,
         model.show_ndata(100, types='if')
         raise RuntimeError(flag)
 
-    header_dict = CaseInsensitiveDict()
+    header_dict = TecplotDict()
     header_dict['title'] = title
     header_dict['variables'] = var_names
     return version, header_dict, title, file_type, var_names, zones

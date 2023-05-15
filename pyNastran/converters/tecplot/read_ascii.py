@@ -1,7 +1,8 @@
 from typing import Optional, Any, cast
 import numpy as np
 from cpylog import SimpleLogger
-from pyNastran.converters.tecplot.zone import CaseInsensitiveDict, Zone
+from pyNastran.converters.tecplot.zone import (
+    Zone, TecplotDict)
 
 
 def read_header_lines(lines: list[str], iline: int, line: str,
@@ -117,7 +118,7 @@ def header_lines_to_header_dict(title_line: str, header_lines: list[str],
     """parses the parsed header lines"""
     #print('header_lines', header_lines)
     #headers_dict = {}
-    headers_dict = CaseInsensitiveDict()
+    headers_dict = TecplotDict()
     if title_line:
         title_sline = title_line.split('=', 1)
         title = title_sline[1]
