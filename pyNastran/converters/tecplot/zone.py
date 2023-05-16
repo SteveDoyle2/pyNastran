@@ -310,7 +310,7 @@ class Zone:
         msg = 'ZONE '
         self.log.debug(f'is_points = {is_points}')
         datapacking = 'POINT' if  is_points else 'BLOCK'
-        msg += f' T={self.title}, n={nnodes:d}, e={nelements:d}, ZONETYPE={zone_type}, DATAPACKING={datapacking}\n'
+        msg += f' T=\"{self.title}\", n={nnodes:d}, e={nelements:d}, ZONETYPE={zone_type}, DATAPACKING={datapacking}\n'
         tecplot_file.write(msg)
 
         ivars_array = np.asarray(ivars, dtype='int32')
@@ -459,12 +459,12 @@ class Zone:
             nj = headers_dict['J']
             if 'K' in headers_dict:
                 nk = headers_dict['K']
-                msg = f'ZONE T={self.title}, I={ni:d}, J={nj:d}, K={nk:d} F=POINT\n'
+                msg = f'ZONE T=\"{self.title}\", I={ni:d}, J={nj:d}, K={nk:d} F=POINT\n'
             else:
-                msg = f'ZONE T={self.title}, I={ni:d}, J={nj:d}, F=POINT\n'
+                msg = f'ZONE T=\"{self.title}\", I={ni:d}, J={nj:d}, F=POINT\n'
         else:
             assert 'K' not in headers_dict, list(headers_dict.keys())
-            msg = f'ZONE T={self.title}, I={ni:d}, F=POINT\n'
+            msg = f'ZONE T=\"{self.title}\", I={ni:d}, F=POINT\n'
         tecplot_file.write(msg)
         is_points = True
 
