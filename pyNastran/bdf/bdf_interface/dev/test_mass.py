@@ -153,7 +153,7 @@ class TestMassGeneration(unittest.TestCase):
         ])
         assert np.allclose(D, D_expected)
         assert np.allclose(Mo, Mo_expected)
-        assert np.allclose(S, S_expected)
+        assert np.allclose(S, S_expected), f'S:\n{S}\nS_expected:\n{S_expected}'
         assert np.allclose(mass, mass_expected)
         assert np.allclose(cg, cg_expected)
         assert np.allclose(IS, IS_expected)
@@ -286,7 +286,7 @@ class TestMassGeneration(unittest.TestCase):
             [-3.5335850e-07,  1.3223152e-07,  4.4632468e+00]])
         assert np.allclose(D, D_expected)
         assert np.allclose(Mo, Mo_expected)
-        assert np.allclose(S, S_expected)
+        assert np.allclose(S, S_expected), f'S:\n{S}\nS_expected:\n{S_expected}'
         assert np.allclose(mass, mass_expected)
         assert np.allclose(cg, cg_expected)
         assert np.allclose(IS, IS_expected)
