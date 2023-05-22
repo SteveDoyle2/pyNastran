@@ -331,7 +331,7 @@ class GetCard(GetMethods):
 
     def get_cards_by_card_types(self, card_types: list[str],
                                 reset_type_to_slot_map: bool=False,
-                                stop_on_missing_card: bool=False) -> None:
+                                stop_on_missing_card: bool=False) -> dict[str, Any]:
         """
         Parameters
         ----------

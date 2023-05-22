@@ -87,11 +87,11 @@ def _cleanup_load(load_combo: LOAD,
     scale_factors = []
     for load_id, scale_factor in zip(load_combo.load_ids, load_combo.scale_factors):
         if load_id not in all_loads2:
-            continue
+            return
         load_ids.append(load_id)
         scale_factors.append(scale_factor)
     if len(load_ids) == 0:
-        continue
+        return
     load_combo.load_ids = load_ids
     load_combo.scale_factors = scale_factors
     load_combos2.append(load_combo)

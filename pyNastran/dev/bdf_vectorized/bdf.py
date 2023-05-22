@@ -1577,7 +1577,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 """the method that forces the crash"""
                 raise NotImplementedError(card)
 
-        add_methods = self._add_methods
+        add_methods = self #._add_methods
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),
@@ -3252,10 +3252,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 'CMASS4' : self._parse_cmass4,
                 'PMASS' : self._parse_pmass,
 
-                'CDAMP1' : self._parse_cdamp1,
-                'CDAMP2' : self._parse_cdamp2,
-                'CDAMP3' : self._parse_cdamp3,
-                'CDAMP4' : self._parse_cdamp4,
+                #'CDAMP1' : self._parse_cdamp1,
+                #'CDAMP2' : self._parse_cdamp2,
+                #'CDAMP3' : self._parse_cdamp3,
+                #'CDAMP4' : self._parse_cdamp4,
             }
             # self._is_cards_dict = True
             # this is the loop that hits...
