@@ -18,7 +18,7 @@ constraint GO, GOGADGX, UEXP, UEXPT, MUG1, MUG1T
 """
 from __future__ import annotations
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import cast, TYPE_CHECKING
 import numpy as np
 import scipy as sp
 
@@ -27,6 +27,8 @@ if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF, CONM2, CMASS2
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from cpylog import SimpleLogger
+
+Components = dict[tuple[int, int], int]
 
 
 def make_mass_matrix(model: BDF,
@@ -111,114 +113,135 @@ def make_mass_matrix(model: BDF,
 
     #etypes_skipped = set()
     for etype, eids in model._type_to_id_map.items():
+        assert isinstance(etype, str), etype
         if etype in no_mass_cards:
             continue
         assert etype in mass_cards, etype
 
         #print(all_eids, eids, etype)
-        if etype in ['CROD', 'CONROD']:
-            eids2 = get_sub_eids(all_eids, eids, etype)
-
-            # lumped
-            mass_mat = np.ones((2, 2), dtype=fdtype)
-            mass_mat[0, 0] = mass_mat[2, 2] = 1.
-            #mass_mat[2, 2] = mass_mat[5, 5] = 0.
-
-            #
-            #mi = (rho * A * L + nsm) / 6.
-            #m = array([[2., 1.],
-                       #[1., 2.]])  # 1D rod consistent
-            #m = array([[1., 0.],
-                       #[0., 1.]])  # 1D rod lumped
-
-            for eid in eids2:
-                elem = model.elements[eid]
-                n1, n2 = elem.node_ids
-
-                i1, i2, i3 = components[(n1, 1)], components[(n1, 2)], components[(n1, 3)]
-                j1, j2, j3 = components[(n2, 1)], components[(n2, 2)], components[(n2, 3)]
-
-                inid1 = inids[n1]
-                inid2 = inids[n2]
-                v1 = xyz_cid0[inid2, :] - xyz_cid0[inid1, :]
-                length = np.linalg.norm(v1)
-                mpl = elem.MassPerLength()
-                massi = mpl * length / 2.
-                Lambda = _lambda_1d(v1)
-                mass_mat2 = (Lambda.T @ mass_mat @ Lambda) * massi
-                assert mass_mat2.shape == (6, 6), mass_mat2
-                Mgg[i1, i1] = mass_mat2[0, 0]
-                Mgg[i2, i2] = mass_mat2[1, 1]
-                Mgg[i3, i3] = mass_mat2[2, 2]
-
-                Mgg[j1, j1] = mass_mat2[3, 3]
-                Mgg[j2, j2] = mass_mat2[4, 4]
-                Mgg[j3, j3] = mass_mat2[5, 5]
-
-                #centroid = (xyz[n1] + xyz[n2]) / 2.
-                #mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+        if etype in {'CROD', 'CONROD'}:
+            _mass_matrix_rod(model, Mgg, all_eids, eids, etype,
+                             inids, xyz_cid0, components, fdtype)
         elif etype == 'CMASS2':
-            eids2 = get_sub_eids(all_eids, eids, etype)
-            for eid in eids2:
-                elem = model.masses[eid] # type: CMASS2
-                n1, n2 = elem.nodes
-                c1, c2 = elem.c1, elem.c2
-                assert n1 >= 0, n1
-                assert n2 >= 0, n2
-                i1, i2 = components[(n1, c1)], components[(n2, c2)]
-                Mgg[i1, i2] = elem.mass
-
+            _mass_matrix_cmass2(model, Mgg, all_eids, eids, etype,
+                                components, fdtype)
         elif etype == 'CONM2':
-            mass_mat = np.zeros((6, 6), dtype=fdtype)
-            eids2 = get_sub_eids(all_eids, eids, etype)
-            for eid in eids2:
-                elem = model.masses[eid] # type: CONM2
-                n1 = elem.nid
-                massi = elem.Mass()
-                unused_rx, unused_ry, unused_rz = elem.X
-                mass_mat[0, 0] = massi
-                mass_mat[1, 1] = massi
-                mass_mat[2, 2] = massi
-                #mass_mat[3, 3] = i11
-                #mass_mat[3, 4] = mass_mat[4, 3] = -i12
-                #mass_mat[3, 5] = mass_mat[5, 3] = -i13
-                #mass_mat[4, 4] = i22
-                #mass_mat[4, 5] = mass_mat[5, 4] = -i23
-                #mass_mat[5, 5] = i33
-                inertia = elem.Inertia()
-                #inertia = np.ones((3, 3))
-                mass_mat[3:, 3:] = inertia
-                #print(mass_mat)
-
-                i1, i2, i3 = components[(n1, 1)], components[(n1, 2)], components[(n1, 3)]
-                i4, i5, i6 = components[(n1, 4)], components[(n1, 5)], components[(n1, 6)]
-                Mgg[i1, i1] += mass_mat[0, 0]
-                Mgg[i2, i2] += mass_mat[1, 1]
-                Mgg[i3, i3] += mass_mat[2, 2]
-
-                Mgg[i4, i4] += mass_mat[3, 3]
-                Mgg[i4, i5] += mass_mat[3, 4]
-                Mgg[i5, i4] += mass_mat[3, 4]
-                Mgg[i4, i6] += mass_mat[3, 5]
-                Mgg[i6, i4] += mass_mat[3, 5]
-
-                Mgg[i5, i5] += mass_mat[4, 4]
-                Mgg[i5, i6] += mass_mat[4, 5]
-                Mgg[i6, i5] += mass_mat[4, 5]
-
-                Mgg[i6, i6] += mass_mat[5, 5]
-
+            _mass_matrix_conm2(model, Mgg, all_eids, eids, etype,
+                               components, fdtype)
         else:
             log.warning(f'skipping etype={etype}')
 
     return Mgg, nids, cps, cds, xyz_cid0, spoints
+
+def _mass_matrix_rod(model: BDF,
+                     Mgg: sp.sparse.dok_matrix,
+                     all_eids: np.ndarray,
+                     eids: list[int],
+                     etype: str,
+                     inids: np.ndarray, xyz_cid0: np.ndarray,
+                     components: Components,
+                     fdtype: str = 'float32') -> None:
+    """fills up the global mass matrix for the CRODs/CONRODs"""
+    assert isinstance(etype, str), etype
+    eids2 = get_sub_eids(all_eids, eids, etype)
+
+    # lumped
+    mass_mat = np.ones((2, 2), dtype=fdtype)
+    mass_mat[0, 0] = mass_mat[2, 2] = 1.
+    #mass_mat[2, 2] = mass_mat[5, 5] = 0.
+
+    #
+    #mi = (rho * A * L + nsm) / 6.
+    #m = array([[2., 1.],
+               #[1., 2.]])  # 1D rod consistent
+    #m = array([[1., 0.],
+               #[0., 1.]])  # 1D rod lumped
+
+    for eid in eids2:
+        elem = model.elements[eid]
+        n1, n2 = elem.node_ids
+
+        i1, i2, i3 = components[(n1, 1)], components[(n1, 2)], components[(n1, 3)]
+        j1, j2, j3 = components[(n2, 1)], components[(n2, 2)], components[(n2, 3)]
+
+        inid1 = inids[n1]
+        inid2 = inids[n2]
+        v1 = xyz_cid0[inid2, :] - xyz_cid0[inid1, :]
+        length = np.linalg.norm(v1)
+        mpl = elem.MassPerLength()
+        massi = mpl * length / 2.
+        Lambda = _lambda_1d(v1)
+        mass_mat2 = (Lambda.T @ mass_mat @ Lambda) * massi
+        assert mass_mat2.shape == (6, 6), mass_mat2
+        Mgg[i1, i1] = mass_mat2[0, 0]
+        Mgg[i2, i2] = mass_mat2[1, 1]
+        Mgg[i3, i3] = mass_mat2[2, 2]
+
+        Mgg[j1, j1] = mass_mat2[3, 3]
+        Mgg[j2, j2] = mass_mat2[4, 4]
+        Mgg[j3, j3] = mass_mat2[5, 5]
+
+        #centroid = (xyz[n1] + xyz[n2]) / 2.
+        #mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+
+def _mass_matrix_cmass2(model: BDF,
+                       Mgg: sp.sparse.dok_matrix,
+                       all_eids: np.ndarray,
+                       eids: list[int],
+                       etype: str,
+                       components: Components,
+                       fdtype: str = 'float32') -> None:
+    """fills up the global mass matrix for the CMASS2s"""
+    eids2 = get_sub_eids(all_eids, eids, etype)
+    for eid in eids2:
+        elem: CMASS2 = model.masses[eid]
+        n1, n2 = elem.nodes
+        c1, c2 = elem.c1, elem.c2
+        assert n1 >= 0, n1
+        assert n2 >= 0, n2
+        i1, i2 = components[(n1, c1)], components[(n2, c2)]
+        Mgg[i1, i2] = elem.mass
+
+def _mass_matrix_conm2(model: BDF,
+                       Mgg: sp.sparse.dok_matrix,
+                       all_eids: np.ndarray,
+                       eids: list[int],
+                       etype: str,
+                       components: Components,
+                       fdtype: str = 'float32') -> None:
+    """fills up the global mass matrix for the CONM2s"""
+    eids2 = get_sub_eids(all_eids, eids, etype)
+    for eid in eids2:
+        elem: CONM2 = model.masses[eid]
+        n1 = elem.nid
+        mass_mat = elem.mass_matrix()
+
+        i1, i2, i3 = components[(n1, 1)], components[(n1, 2)], components[(n1, 3)]
+        i4, i5, i6 = components[(n1, 4)], components[(n1, 5)], components[(n1, 6)]
+        Mgg[i1, i1] += mass_mat[0, 0]
+        Mgg[i2, i2] += mass_mat[1, 1]
+        Mgg[i3, i3] += mass_mat[2, 2]
+
+        Mgg[i4, i4] += mass_mat[3, 3]
+        Mgg[i4, i5] += mass_mat[3, 4]
+        Mgg[i5, i4] += mass_mat[3, 4]
+        Mgg[i4, i6] += mass_mat[3, 5]
+        Mgg[i6, i4] += mass_mat[3, 5]
+
+        Mgg[i5, i5] += mass_mat[4, 4]
+        Mgg[i5, i6] += mass_mat[4, 5]
+        Mgg[i6, i5] += mass_mat[4, 5]
+
+        Mgg[i6, i6] += mass_mat[5, 5]
+    #Mgg_dense = Mgg.todense()
+    #x = 1
 
 def make_reduced_mass_matrix(model: BDF,
                              reference_point: np.ndarray,
                              fdtype: str='float64',
                              idtype: str='int32'):
     """
-    Performs an accurate RB mass calculation
+    Performs an accurate rigid body mass calculation
 
     ..todo:: not anywhere close to being done
     ..todo:: doesn't support SPOINTs/EPOINTs
@@ -236,11 +259,15 @@ def make_gpwg(Mgg: sp.sparse.dok_matrix,
               reference_point: np.ndarray,
               grid_nids: np.ndarray,
               grid_cps: np.ndarray,
-              grid_cds,
+              grid_cds: np.ndarray,
               xyz_cid0: np.ndarray,
               spoints: np.ndarray,
               coords: dict[int, Coord],
-              log) -> tuple[str, ]:
+              log) -> tuple[np.ndarray,
+                            np.ndarray, np.ndarray, np.ndarray,
+                            np.ndarray, np.ndarray,
+                            np.ndarray,
+                            np.ndarray, np.ndarray]:
     """
     Calculates the Grid Point Weight Generator (GPWG) table.
 
@@ -270,6 +297,8 @@ def make_gpwg(Mgg: sp.sparse.dok_matrix,
 
     Returns
     -------
+    D : (6*nnodes, 6) float ndarray
+        global transformation matrix
     Mo : (6, 6) float ndarray
         the rigid body mass matrix in the basic coordinate system
     S : (3, 3) float ndarray
@@ -351,11 +380,12 @@ def _D_to_inertia(Mgg: sp.sparse.dok_matrix,
         Mtt_bar[1, 2],
     ])
 
+    epsilon_delta = epsilon / delta
     log.info('Mtt_bar (correct) =\n%s\n' % Mtt_bar)
     log.info(f'delta   = {delta:g}')
     log.info(f'epsilon = {epsilon:g}')
-    log.info(f'e/d     = {epsilon / delta:g}\n')
-    if epsilon / delta > 0.001:
+    log.info(f'e/d     = {epsilon_delta:g}\n')
+    if epsilon_delta > 0.001:
         # user warning 3042
         eig_s, S = np.linalg.eigh(Mtt_bar)
         #for i in range(3):
@@ -394,6 +424,7 @@ def _D_to_inertia(Mgg: sp.sparse.dok_matrix,
         Mtt = Mtt_bar  # translational
         Mtr = Mtr_bar
         Mrr = Mrr_bar  # rotational
+    S = cast(np.ndarray, S)
 
     #log.info('omega=%s' % omega)
     log.info('[omegaS, S] = eig(Mtt); S (right, but not correct order) =\n%s\n' % S)
@@ -482,7 +513,7 @@ def _D_to_inertia(Mgg: sp.sparse.dok_matrix,
 
     return Mo, mass, cg, S, IS, II, IQ, Q
 
-def triple(A, B):
+def triple(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """
     Performs the following matrix triple product:
 
@@ -501,7 +532,7 @@ def triple(A, B):
 def _get_dofs_from_nid_cp_cd(spoints: np.ndarray,
                              nids: np.ndarray,
                              exclude_spoints: bool=False) -> tuple[dict[int, int],
-                                                                   dict[tuple[int, int]]]:
+                                                                   Components]:
     """gets the GRID/SPOINT components"""
     inids = {}
     components = {}
@@ -571,7 +602,7 @@ def get_6x6_rb_matrix(grid_nids: np.ndarray,
     return D
 
 
-def _lambda_1d(v1):
+def _lambda_1d(v1: np.ndarray) -> np.ndarray:
     """
     ::
       3d  [l,m,n,0,0,0]  2x6

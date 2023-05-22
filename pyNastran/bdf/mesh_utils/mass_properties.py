@@ -607,7 +607,9 @@ def _get_nid_xyzcid0(model: BDF) -> tuple[np.ndarray, np.ndarray]:
     all_nids = nid_cp_cd[:, 0]
     return all_nids, xyz_cid0
 
-def get_sub_eids(all_eids: np.ndarray, eids: list[int], etype: str) -> np.ndarray:
+def get_sub_eids(all_eids: np.ndarray,
+                 eids: list[int],
+                 etype: str) -> np.ndarray:
     """supports limiting the element/mass ids"""
     eids_ = np.array(eids)
     ieids = np.searchsorted(all_eids, eids_)

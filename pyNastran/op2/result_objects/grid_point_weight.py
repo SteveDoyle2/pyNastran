@@ -422,10 +422,10 @@ class GridPointWeight:
         f06_file.write('\n'.join(msg))
         return page_num + 1
 
-def make_grid_point_weight(reference_point, MO,
-                           approach_code=1, table_code=13,
-                           title='', subtitle='', label='',
-                           superelement_adaptivity_index='') -> None:
+def make_grid_point_weight(reference_point: int, MO: np.ndarray,
+                           approach_code: int=1, table_code: int=13,
+                           title: str='', subtitle: str='', label: str='',
+                           superelement_adaptivity_index: str='') -> None:
     """creates a grid point weight table"""
     Mtt_ = MO[:3, :3]
     Mrr_ = MO[3:, 3:]

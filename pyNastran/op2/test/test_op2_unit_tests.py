@@ -31,7 +31,7 @@ from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
 
-from pyNastran.bdf.test.bdf_unit_tests import Tester
+from pyNastran.bdf.test.test_bdf_unit_tests import Tester
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.bdf_interface.compare_card_content import compare_elements
 
@@ -722,7 +722,7 @@ class TestSATKOP2(Tester):
         x = 2
 
 
-class TestOP2(Tester):
+class TestOP2Main(Tester):
     """various OP2 tests"""
     #def _spike(self):
         #op2 = OP2()

@@ -3276,7 +3276,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 ncards = len(card)
                 if self.is_reject(card_name):# and card_name not in :
                     self.log.warning('n%s = %s (rejecting)' % (card_name, ncards))
-                    asdf
                     #self.log.info('  rejecting card_name = %s' % card_name)
                     for comment, card_lines in card:
                         self.rejects.append([_format_comment(comment)] + card_lines)
