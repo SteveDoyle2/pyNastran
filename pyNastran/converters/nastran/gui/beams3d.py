@@ -1,7 +1,7 @@
 """creates 3d beams"""
 from __future__ import annotations
 from collections import defaultdict
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Union, Optional, cast, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -44,12 +44,18 @@ BEAM_SETUP_MAP = {
     #'DBOX' : dbox_setup,
 }
 
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL
+from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML
+
 if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.nptyping_interface import NDArray3float
-    from pyNastran.bdf.bdf import BDF, CBAR, CBEAM
+    from pyNastran.bdf.bdf import (
+        BDF, CBAR, CBEAM) #, PBAR, PBARL, PBEAM, PBEAML
+BarProperty = Union[PBAR, PBARL, PBEAM, PBEAML]
 
-def get_bar_nids(model: BDF, bar_beam_eids: list[int]) -> tuple[list[int],
-                                                                dict[int, tuple[int, int]]]:
+def get_bar_nids(model: BDF,
+                 bar_beam_eids: list[int]) -> tuple[list[int],
+                                                    dict[int, tuple[int, int]]]:
     """gets the bar nids"""
     nids_set = set([])
     nid_release_map_default = defaultdict(list)
@@ -71,35 +77,46 @@ def get_bar_nids(model: BDF, bar_beam_eids: list[int]) -> tuple[list[int],
 def get_beam_sections_map(model: BDF,
                           bar_beam_eids: list[int]) -> dict[int, list[int]]:
     """gets the beams sorted by property_id that can be represented as 3d elements"""
+    log = model.log
     bar_pid_to_eids_default = defaultdict(list)
     int_offts = []
+    missing_properties_set = set()
     for eid in bar_beam_eids:
-        elem = model.elements[eid]  # type: Union[CBAR, CBEAM]
+        elem: Union[CBAR, CBEAM] = model.elements[eid]
         if isinstance(elem.offt, int):
             int_offts.append(eid)
             continue
 
         pid_ref = elem.pid_ref
+        pid = elem.pid
         if pid_ref is None:
-            pid_ref = model.Property(elem.pid)
+            if pid not in model.properties:
+                missing_properties_set.add(pid)
+                continue
+            pid_ref = model.Property(pid)
         assert not isinstance(pid_ref, int), elem
-        ptype = pid_ref.type
-        if ptype in {'PBEAML', 'PBARL'}:
+        pid_ref = cast(BarProperty, pid_ref)
+
+        #ptype: str = pid_ref.type
+        if isinstance(pid_ref, (PBEAML, PBARL)): #ptype in {'PBEAML', 'PBARL'}:
             pass
-        elif ptype in {'PBEAM', 'PBAR'}:
+        elif isinstance(pid_ref, (PBEAM, PBAR)): #ptype in {'PBEAM', 'PBAR'}:
             continue
         else:
             raise NotImplementedError(pid_ref)
-        beam_type = pid_ref.Type
+        beam_type: str = pid_ref.Type
         if beam_type not in BEAM_SETUP_MAP:
-            model.log.warning(f'The following beam section is not supported:\n{pid_ref}')
+            log.warning(f'The following beam section is not supported:\n{pid_ref}')
             continue
-        pid = pid_ref.pid
         bar_pid_to_eids_default[pid].append(eid)
     bar_pid_to_eids = dict(bar_pid_to_eids_default)
     if int_offts:
         int_offts.sort()
-        model.log.warning(f'The following CBAR/CBEAMs have integer OFFTs: {int_offts}')
+        log.warning(f'The following CBAR/CBEAMs have integer OFFTs: {int_offts}')
+    if missing_properties_set:
+        missing_properties_list = list(missing_properties_set)
+        missing_properties_list.sort()
+        log.warning(f'The following CBAR/CBEAMs property ids are missing: {missing_properties_list}')
 
     return bar_pid_to_eids
 
@@ -112,15 +129,15 @@ def create_3d_beams(model: BDF,
     points_list = []
     eids_bad = []
     for pid, eids in bar_pid_to_eids.items():
-        pid_ref = model.properties[pid]
-        ptype = pid_ref.type
+        pid_ref: BarProperty = model.properties[pid]
+        #ptype = pid_ref.type
         bar_type = pid_ref.beam_type
         if bar_type == {'BAR', 'TUBE', 'TUBE2', 'ROD', 'DBOX', 'HAT1', 'BOX1'}:# TODO: wut?
             continue
 
-        if ptype == 'PBARL':
+        if isinstance(pid_ref, PBARL): #ptype == 'PBARL'
             dim1 = dim2 = pid_ref.dim
-        elif ptype == 'PBEAML':
+        elif isinstance(pid_ref, PBEAML): #ptype == 'PBEAML':
             dim1 = pid_ref.dim[0, :]
             dim2 = pid_ref.dim[-1, :]
         else:
@@ -281,7 +298,7 @@ def faces_to_element_facelist(faces: Faces, node0: int) -> vtkIdList:
         [face_idlist.InsertNextId(i + node0) for i in face]
     return face_idlist
 
-def get_bar_type(ptype: str, pid_ref):
+def get_bar_type(ptype: str, pid_ref) -> str:
     """helper method for _get_bar_yz_arrays"""
     if ptype in ['PBAR', 'PBEAM']:
         bar_type = 'bar'

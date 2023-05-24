@@ -4,7 +4,7 @@ def get_numpy_typing():
     https://stackoverflow.com/questions/71109838/numpy-typing-with-specific-shape-and-datatype
     https://stackoverflow.com/questions/66349242/specific-type-annotation-for-numpy-ndarray-using-mypy
     """
-    from typing import Annotated, Literal #, TypeVar
+    from typing import Optional, Annotated, Literal #, TypeVar
     import numpy as np
     import numpy.typing as npt
     #npt.NDArray[np.complex64]
@@ -15,7 +15,7 @@ def get_numpy_typing():
 
     FloatArray = npt.NDArray[np.float_]
     IntArray = npt.NDArray[np.int_]
-    BoolArray = npt.NDArray[np.bool]
+    BoolArray = npt.NDArray[np.bool_]
 
     # vector:
     # [0., 0., 0.]
