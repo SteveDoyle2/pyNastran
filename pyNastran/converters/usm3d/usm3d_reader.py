@@ -11,7 +11,6 @@ Defines:
 """
 import os
 from struct import pack, unpack
-from collections import OrderedDict
 
 import numpy as np
 from pyNastran.utils import check_path
@@ -684,7 +683,7 @@ def read_flo(flo_filename, n=None, node_ids=None):
     irho_zero = np.where(rho < rho_min)[0]
     rho[irho_zero] = rho_min
 
-    loads = OrderedDict()
+    loads = {}
 
     if '.aux.' in flo_filename:
         # the names (rho, e, rhoU, etc.) aren't correct, but that's OK

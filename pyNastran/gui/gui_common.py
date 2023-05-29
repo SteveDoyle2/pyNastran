@@ -2,7 +2,6 @@
 # pylint: disable=W0201,C0301
 import os.path
 from math import ceil
-from collections import OrderedDict
 from typing import Optional, Callable, Any
 
 import numpy as np
@@ -62,6 +61,8 @@ except ImportError:
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.formats import CLASS_MAP
 
+Tool = tuple[str, str, str, Optional[str], str, Callable]
+BANNED_SHORTCUTS = {}
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
 class GuiCommon(QMainWindow, GuiVTKCommon):
@@ -260,7 +261,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if tools is None:
             file_tools = [
-
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent),
 
                 ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
@@ -362,11 +362,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('highlight_cell', 'Highlight Cell', '', None, 'Highlight a single cell', self.mouse_actions.on_highlight_cell),
                 ('highlight_node', 'Highlight Node', '', None, 'Highlight a single node', self.mouse_actions.on_highlight_node),
 
+                # name, gui_name, png, shortcut, desc, func
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.mouse_actions.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result),
 
                 ('probe_result_all', 'Probe All', '', None, 'Probe results for all cases', self.mouse_actions.on_probe_result_all),
-                ('quick_probe_result_all', 'Quick Probe All', 'q', None, 'Probe all cases', self.mouse_actions.on_quick_probe_result_all),
+                ('quick_probe_result_all', 'Quick Probe All', '', 'a', 'Probe all cases', self.mouse_actions.on_quick_probe_result_all),
 
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.mouse_actions.on_zoom),
 
@@ -392,14 +393,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('min', 'Min', '', None, 'Show/Hide Min Label', self.show_hide_min_actor),
                 ('max', 'Max', '', None, 'Show/Hide Max Label', self.show_hide_max_actor),
             ]
-        self.tools = tools
-        self.checkables = checkables
+        self.tools: list[Tool] = tools
+        self.checkables: dict[str, bool] = checkables
 
     def keyPressEvent(self, qkey_event):
         #print('qkey_event =', qkey_event.key())
         super(GuiCommon, self).keyPressEvent(qkey_event)
 
-    def _create_menu_bar(self, menu_bar_order: Optional[list[str]]=None):
+    def _create_menu_bar(self, menu_bar_order: Optional[list[str]]=None) -> None:
         self.menu_bar_oder = menu_bar_order
         if menu_bar_order is None:
             menu_bar_order = ['menu_file', 'menu_view', 'menu_window', 'menu_help']
@@ -423,7 +424,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.menu_hidden = self.menubar.addMenu('&Hidden')
         self.menu_hidden.menuAction().setVisible(False)
 
-    def _create_menu_items(self, actions=None, create_menu_bar=True, menu_bar_order=None):
+    def _create_menu_items(self, actions=None,
+                           create_menu_bar=True,
+                           menu_bar_order=None) -> dict[str, tuple[QMenu, tuple[str, ...]]]:
         if actions is None:
             actions = self.actions
 
@@ -494,9 +497,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             '', # 'exit'
         ]
         hidden_tools = ('cycle_results', 'rcycle_results',
-                        'font_size_increase', 'font_size_decrease', 'highlight')
+                        'font_size_increase', 'font_size_decrease', 'highlight',
+                        'quick_probe_result_all')
 
-        menu_items = OrderedDict()
+        menu_items = {}
         if create_menu_bar:
             menu_items['file'] = (self.menu_file, menu_file)
             menu_items['view'] = (self.menu_view, menu_view)
@@ -628,7 +632,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #y_limits = [0., 1.]
         #return origin, vx, vy, vz, x_limits, y_limits
 
-    def _prepare_actions(self, icon_path: str, tools, checkables=None):
+    def _prepare_actions(self, icon_path: str,
+                         tools: list[Tool],
+                         checkables: Optional[dict[str, bool]]=None):
         """
         Prepare actions that will  be used in application in a way
         that's independent of the  menus & toolbar
@@ -643,16 +649,21 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.actions['reswidget'].setStatusTip('Show/Hide results selection')
         return self.actions
 
-    def _prepare_actions_helper(self, icon_path: str, tools, actions, checkables=None):
+    def _prepare_actions_helper(self, icon_path: str,
+                                tools: list[Tool],
+                                actions,
+                                checkables: Optional[dict[str, bool]]=None):
         """
         Prepare actions that will  be used in application in a way
         that's independent of the  menus & toolbar
         """
         if checkables is None:
-            checkables = []
+            checkables = {}
 
+        used_shortcuts = {}
         for tool in tools:
             (name, txt, icon, shortcut, tip, func) = tool
+            #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
             if name in actions:
                 self.log_error('trying to create a duplicate action %r' % name)
                 continue
@@ -673,8 +684,20 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 actions[name] = QAction(ico, txt, self)
 
             if shortcut:
+                #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
+                if shortcut in BANNED_SHORTCUTS:
+                    raise RuntimeError(f'tool name={name!r} has a shortcut='
+                                       f'{shortcut!r} that is banned.  '
+                                       'Pick a different letter')
+                if shortcut in used_shortcuts:
+                    raise RuntimeError(f'tool name={name!r} has a shortcut='
+                                       f'{shortcut!r} that is already used.  '
+                                       'Pick a different letter.  '
+                                       f'Used={used_shortcuts[shortcut]}')
+                used_shortcuts[shortcut] = shortcut
                 actions[name].setShortcut(shortcut)
                 #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)
+
             if tip:
                 actions[name].setStatusTip(tip)
             if func:
@@ -2057,11 +2080,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.turn_text_on()
         self._set_results(form, cases)
         # assert len(cases) > 0, cases
-        # if isinstance(cases, OrderedDict):
-            # self.case_keys = cases.keys()
-        # else:
-            # self.case_keys = sorted(cases.keys())
-            # assert isinstance(cases, dict), type(cases)
+        # self.case_keys = cases.keys()
+        # self.case_keys = sorted(cases.keys())
+        assert isinstance(cases, dict), type(cases)
 
         self.on_update_geometry_properties(self.geometry_properties, write_log=False)
         # self.result_cases = cases

@@ -1,6 +1,4 @@
 """Defines the GUI IO file for Tecplot."""
-from collections import OrderedDict
-
 import numpy as np
 #from numpy import arange, mean, amax, amin, array
 from pyNastran.gui.vtk_interface import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
@@ -69,7 +67,7 @@ class TecplotIO:
         else:
             note = ''
         self.gui.isubcase_name_map = {1: ['Tecplot%s' % note, '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         form, cases, node_ids, element_ids = self._fill_tecplot_case(

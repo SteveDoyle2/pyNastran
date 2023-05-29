@@ -1,6 +1,4 @@
 # coding: utf-8
-from collections import OrderedDict
-
 import numpy as np
 import vtk
 
@@ -448,11 +446,9 @@ class GuiVTKCommon(GuiQtCommon):
 
     def _set_results(self, form, cases):
         assert len(cases) > 0, cases
-        if isinstance(cases, OrderedDict):
-            self.case_keys = list(cases.keys())
-        else:
-            self.case_keys = sorted(cases.keys())
-            assert isinstance(cases, dict), type(cases)
+        self.case_keys = list(cases.keys())
+        #self.case_keys = sorted(cases.keys())
+        assert isinstance(cases, dict), type(cases)
 
         self.model_data.result_cases = cases
 

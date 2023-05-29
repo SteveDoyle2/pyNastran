@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import numpy as np
 from numpy import amax, amin
 
@@ -103,7 +102,7 @@ class DegenGeomIO:
         #note = ':  Mach=%.2f, alpha=%.1f, beta=%.1f' % (mach, alpha, beta)
         note = 'name=%s' % name
         self.gui.isubcase_name_map = {1: ['OpenVSP%s' % note, '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         form, cases, node_ids, element_ids = _fill_degen_geom_case(cases, ID, model, nnodes, nelements)

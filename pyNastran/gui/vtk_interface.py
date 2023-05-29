@@ -8,7 +8,9 @@ try:
         vtkUnstructuredGrid, vtkMultiBlockDataSet,
         vtkSelectionNode, vtkCellArray,
         vtkPolyData,
+        VTK_POLYHEDRON,
     )
+
 except ImportError:
     from vtk import (
         vtkLine,
@@ -19,4 +21,6 @@ except ImportError:
         vtkUnstructuredGrid, vtkMultiBlockDataSet,
         vtkSelectionNode, vtkCellArray,
         vtkPolyData,
+        VTK_POLYHEDRON,
     )
+

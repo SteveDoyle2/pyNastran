@@ -5,7 +5,6 @@ and is inherited from many GUI classes
 import os
 import sys
 import traceback
-from collections import OrderedDict
 from typing import Callable, Optional, Any
 
 import numpy as np
@@ -211,11 +210,11 @@ class GuiAttributes:
         self.tools = []
         self.checkables = []
         self.actions = {}
-        self.modules = OrderedDict()
+        self.modules = {}
 
         # actor_slots
         self.text_actors = {}
-        self.geometry_actors = OrderedDict()
+        self.geometry_actors = {}
         self.alt_grids = {} #additional grids
 
         # coords
@@ -628,7 +627,7 @@ class GuiAttributes:
             self.turn_text_off()
             self.grid.Reset()
 
-            self.model_data.result_cases = OrderedDict()
+            self.model_data.result_cases = {}
             self.ncases = 0
             for param in params_to_delete:
                 if hasattr(self, param):  # TODO: is this correct???
@@ -1745,7 +1744,7 @@ class GuiAttributes:
 
 class ModelData:
     def __init__(self, parent: GuiAttributes):
-        self.geometry_properties = OrderedDict()
+        self.geometry_properties = {}
 
         self.groups = {}
         self.group_active = 'main'

@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import vtk
 from vtk import vtkQuad
 
@@ -117,7 +116,7 @@ class Plot3d_io:  # pragma: no cover
         self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['Plot3d', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         #cases = self._fill_stl_case(cases, ID, elements)

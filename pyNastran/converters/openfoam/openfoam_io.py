@@ -4,7 +4,6 @@ defines:
 
 """
 import os
-from collections import OrderedDict
 
 import numpy as np
 from numpy import zeros, arange, where, unique, cross
@@ -272,7 +271,7 @@ class OpenFoamIO:
         self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {0: ['OpenFoam BlockMeshDict', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         #print("nElements = ",nElements)

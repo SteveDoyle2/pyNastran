@@ -4,7 +4,6 @@ defines:
 
 """
 import os
-from collections import OrderedDict
 
 import numpy as np
 import vtk
@@ -93,7 +92,7 @@ class BEdge_IO:
         self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['AFLR BEDGE', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         self.gui._add_alt_actors(self.gui.alt_grids)

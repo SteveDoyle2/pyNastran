@@ -1,6 +1,4 @@
 """Defines the GUI IO file for LaWGS."""
-from collections import OrderedDict
-
 import vtk
 from vtk import vtkQuad
 from numpy import array, arange, cross
@@ -73,7 +71,7 @@ class LaWGS_IO:
         #self.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['LaWGS', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         #print("nElements = %s" % nElements)

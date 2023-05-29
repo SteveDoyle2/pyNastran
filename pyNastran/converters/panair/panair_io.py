@@ -1,6 +1,5 @@
 """Defines the GUI IO file for Panair."""
 import os
-from collections import OrderedDict
 
 import numpy as np
 from numpy import zeros, amax, amin, arange
@@ -84,7 +83,7 @@ class PanairIO:
             self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['Panair', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         loads = []

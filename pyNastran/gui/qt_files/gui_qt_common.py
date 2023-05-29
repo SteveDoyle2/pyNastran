@@ -15,7 +15,6 @@ import numpy as np
 from numpy import issubdtype
 from numpy.linalg import norm  # type: ignore
 import vtk
-from vtk import vtkUnstructuredGrid
 
 #import pyNastran
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
@@ -134,9 +133,9 @@ class GuiQtCommon(GuiAttributes):
         """updates the Qt sidebar"""
         self.res_widget.update_icase(self.icase)
 
-    def cycle_results(self,
-                      case: Optional[int]=None,
-                      show_msg: bool=True) -> None:
+    def cycle_results(self, case=None,
+                      show_msg: bool=True,
+                      update: bool=True) -> None:
         """
         Selects the next case
 
@@ -145,6 +144,9 @@ class GuiQtCommon(GuiAttributes):
         case : int; default=None
             selects the icase
             None : defaults to self.icase+1
+        update : bool; default=True
+            True:  normal operation
+            False: dont update legend/render
 
         """
         #print('-----------------')
@@ -161,7 +163,8 @@ class GuiQtCommon(GuiAttributes):
             if self.ncases == 0:
                 self.scalar_bar_actor.SetVisibility(False)
             return
-        case = self.cycle_results_explicit(case, explicit=False, show_msg=show_msg)
+        case = self.cycle_results_explicit(case, explicit=False,
+                                           show_msg=show_msg, update=update)
         assert case is not False, case
         if show_msg:
             self.log_command('cycle_results(case=%r)' % self.icase)
@@ -782,11 +785,18 @@ class GuiQtCommon(GuiAttributes):
                                explicit: bool=True,
                                min_value: Optional[Union[int, float]]=None,
                                max_value: Optional[Union[int, float]]=None,
-                               show_msg: bool=True) -> int:
+                               show_msg: bool=True,
+                               update: bool=True) -> int:
         """
         Forces the result to cycle regardless of whether or not the
         icase value is the same.  You'd do this when you've just
         loaded a model.
+
+        Parameters
+        ----------
+        update : bool; default=True
+            True:  normal operation
+            False: dont update legend/render
 
         """
         assert case is not False, case
@@ -796,7 +806,7 @@ class GuiQtCommon(GuiAttributes):
         if found_cases:
             icase = self._set_case(case, self.icase, explicit=explicit, cycle=True,
                                    min_value=min_value, max_value=max_value,
-                                   show_msg=show_msg)
+                                   show_msg=show_msg, update=update)
             assert icase is not False, case
         else:
             icase = None
@@ -856,7 +866,9 @@ class GuiQtCommon(GuiAttributes):
                   skip_click_check: bool=False,
                   min_value: Optional[Union[int, float]]=None,
                   max_value: Optional[Union[int, float]]=None,
-                  is_legend_shown: Optional[bool]=None, show_msg: bool=True) -> Optional[int]:
+                  is_legend_shown: Optional[bool]=None,
+                  show_msg: bool=True,
+                  update: bool=True) -> Optional[int]:
         """
         Internal method for doing results updating
 
@@ -888,6 +900,9 @@ class GuiQtCommon(GuiAttributes):
             show the command when we're doing in the log
         show_msg : bool; default=True
             ???
+        update : bool; default=True
+            True:  normal operation
+            False: dont update legend/render
 
         """
         #if icase is None:
@@ -1021,6 +1036,8 @@ class GuiQtCommon(GuiAttributes):
                                name_vector, grid_result_vector,
                                key, subtitle, label,
                                min_value, max_value, show_msg)
+        if not update:
+            return self.icase
 
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
@@ -1251,10 +1268,12 @@ class GuiQtCommon(GuiAttributes):
         self._update_forces(vector_data, set_scalars=False, scale=arrow_scale)
         #self._update_elemental_vectors(forces_array, set_scalars=True, scale=None)
 
-    def final_grid_update(self, icase, name, grid_result,
+    def final_grid_update(self, icase: int, name: str,
+                          grid_result,
                           name_vector, grid_result_vector,
-                          key, subtitle, label,
-                          min_value, max_value, show_msg):
+                          key: int, subtitle: str, label: str,
+                          min_value, max_value,
+                          show_msg: bool):
         assert isinstance(key, integer_types), key
         (obj, (i, res_name)) = self.result_cases[key]
         subcase_id = obj.subcase_id

@@ -6,11 +6,12 @@ this is no longer true...but should be
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
-from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from vtk import vtkPoints, VTK_FLOAT
+from pyNastran.gui.vtk_interface import vtkHexahedron, vtkUnstructuredGrid, VTK_POLYHEDRON
 
 from cpylog import SimpleLogger
 from pyNastran.utils.numpy_utils import integer_types
@@ -25,8 +26,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 from .beams3d import create_3d_beams, faces_to_element_facelist, get_bar_type # update_3d_beams,
 from pyNastran.femutils.utils import vstack_lists
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.nptyping_interface import NDArray3float
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.nptyping_interface import NDArray3float, NDArray33float
+    from pyNastran.bdf.bdf import BDF, PBARL, PBEAML
 
 
 from pyNastran.gui.qt_files.colors import BLUE_FLOAT
@@ -35,6 +36,13 @@ BEAM_GEOM_TYPES = [
     'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
     'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z',
 ]
+Bar = tuple[
+    list[int], #eids
+    list[tuple[np.ndarray, np.ndarray]], # (centroid, yaxis)
+    list[tuple[np.ndarray, np.ndarray]], # (centroid, zaxis)
+]
+BarTypes = dict[str, Bar]
+PinFlagRelaseMap = dict[int, list[tuple[int, int]]] # tuple(nid, dof)
 
 
 class NastranGuiAttributes:
@@ -103,50 +111,13 @@ class NastranGeometryHelper(NastranGuiAttributes):
     def _get_bar_yz_arrays(self, model: BDF,
                            bar_beam_eids: list[int],
                            bar_pid_to_eids: dict[int, list[int]],
-                           scale: float, debug: bool) -> None:
-        lines_bar_y = []
-        lines_bar_z = []
-
-        bar_types = {
-            # PBEAML/PBARL
-            "ROD": [],
-            "TUBE": [],
-            "TUBE2" : [],
-            "I": [],
-            "CHAN": [],
-            "T": [],
-            "BOX": [],
-            "BAR": [],
-            "CROSS": [],
-            "H": [],
-            "T1": [],
-            "I1": [],
-            "CHAN1": [],
-            "Z": [],
-            "CHAN2": [],
-            "T2": [],
-            "BOX1": [],
-            "HEXA": [],
-            "HAT": [],
-            "HAT1": [],
-            "DBOX": [],  # was 12
-
-            'bar' : [], # PBAR
-            'beam' : [], # PBEAM
-            'pbcomp' : [], # PBCOMP
-
-            # PBEAML specific
-            "L" : [],
-        }  # for GROUP="MSCBML0"
-
-        #neids = len(self.element_ids)
-        for bar_type, data in bar_types.items():
-            eids = []
-            lines_bar_y = []
-            lines_bar_z = []
-            bar_types[bar_type] = (eids, lines_bar_y, lines_bar_z)
-            #bar_types[bar_type] = [eids, lines_bar_y, lines_bar_z]
-
+                           scale: float, debug: bool) -> tuple[set[int],
+                                                               BarTypes,
+                                                               PinFlagRelaseMap]:
+        """bar_nids, bar_types, nid_release_map"""
+        #lines_bar_y = []
+        #lines_bar_z = []
+        bar_types = _get_default_bar_types()
         if 0:
             node0 = len(bar_pid_to_eids)
             ugrid = None
@@ -159,7 +130,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
         self._create_bar_yz_update(model, node0, ugrid, points_list,
                                    bar_beam_eids, bar_pid_to_eids)
-
         #print('bar_types =', bar_types)
         for bar_type in list(bar_types):
             bars = bar_types[bar_type]
@@ -202,11 +172,14 @@ class NastranGeometryHelper(NastranGuiAttributes):
             return
 
         gui = self.gui
-        def update_grid_function(unused_nid_map, ugrid, points, nodes) -> None:  # pragma: no cover
+        def update_grid_function(unused_nid_map,
+                                 ugrid: vtkUnstructuredGrid,
+                                 points: vtkPoints,
+                                 nodes: np.ndarray) -> None:  # pragma: no cover
             """custom function to update the 3d bars"""
             if not gui.settings.nastran_is_3d_bars_update:
                 return
-            points_list = []
+            points_list: list[np.ndarray] = []
             node0b = 0
             for eid in bar_beam_eids:
                 elem = self.model.elements[eid]
@@ -250,7 +223,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             points_array2 = numpy_to_vtk(
                 num_array=points_array,
                 deep=1,
-                array_type=vtk.VTK_FLOAT,
+                array_type=VTK_FLOAT,
             )
             points.SetData(points_array2)
 
@@ -419,9 +392,16 @@ def get_material_arrays(model: BDF,
     return has_mat8, has_mat11, e11, e22, e33
 
 
-def add_3d_bar_element(bar_type: str, ptype: str, pid_ref,
-                       n1: NDArray3float, n2: NDArray3float, xform,
-                       ugrid, node0, points_list, add_to_ugrid=True):
+def add_3d_bar_element(bar_type: str,
+                       ptype: str,
+                       pid_ref: Union[PBARL, PBEAML],
+                       n1: NDArray3float,
+                       n2: NDArray3float,
+                       xform: NDArray33float,
+                       ugrid: vtkUnstructuredGrid,
+                       node0: int,
+                       points_list: list[np.ndarray],
+                       add_to_ugrid: bool=True):
     """adds a 3d bar element to the unstructured grid"""
     if ptype == 'PBARL':
         dim1 = dim2 = pid_ref.dim
@@ -429,12 +409,12 @@ def add_3d_bar_element(bar_type: str, ptype: str, pid_ref,
         dim1 = pid_ref.dim[0, :]
         dim2 = pid_ref.dim[-1, :]
     else:
-        dim1 = dim2 = None
+        #dim1 = dim2 = None
         return node0
 
     if bar_type == 'BAR':
         pointsi = bar_faces(n1, n2, xform, dim1, dim2)
-        elem = vtk.vtkHexahedron()
+        elem = vtkHexahedron()
         point_ids = elem.GetPointIds()
         point_ids.SetId(0, node0 + 0)
         point_ids.SetId(1, node0 + 1)
@@ -524,19 +504,28 @@ def add_3d_bar_element(bar_type: str, ptype: str, pid_ref,
         #print('skipping 3d bar_type = %r' % bar_type)
         return node0
     if add_to_ugrid:
-        ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, face_idlist)
+        ugrid.InsertNextCell(VTK_POLYHEDRON, face_idlist)
     points_list.append(pointsi)
     return node0
 
 def _create_bar_types_dict(model: BDF,
-                           bar_types: dict[str, list[list[int], list[Any], list[Any]]],
+                           bar_types: BarTypes,
                            bar_beam_eids: list[int],
-                           eid_map, log: SimpleLogger, scale: float, debug: bool=False):
+                           eid_map: dict[int, int],
+                           log: SimpleLogger,
+                           scale: float,
+                           debug: bool=False,
+                           ) -> tuple[int,
+                                      vtkUnstructuredGrid,
+                                      list[np.ndarray],
+                                      set[int],
+                                      PinFlagRelaseMap]:
+    """node0, ugrid, points_list, bar_nids, nid_release_map"""
     node0 = 0
     found_bar_types = set()
     nid_release_map = defaultdict(list)
     ugrid = vtkUnstructuredGrid()
-    points_list = []
+    points_list: list[np.ndarray] = []
 
     allowed_types = [
         'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
@@ -629,7 +618,28 @@ def _create_bar_types_dict(model: BDF,
                 ugrid, node0, points_list)
 
         centroid = (n1 + n2) / 2.
-        bar_types[bar_type][0].append(eid)
-        bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
-        bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
+        bari = bar_types[bar_type]
+        bari[0].append(eid)
+        bari[1].append((centroid, centroid + yhat * Li * scale))
+        bari[2].append((centroid, centroid + zhat * Li * scale))
     return node0, ugrid, points_list, bar_nids, nid_release_map
+
+def _get_default_bar_types() -> BarTypes:
+    keys = [
+        # PBEAML/PBARL
+        'ROD', 'TUBE', 'TUBE2', 'I', 'CHAN', 'T', 'BOX', 'BAR', 'CROSS', 'H',
+        'T1', 'I1', 'CHAN1', 'Z', 'CHAN2', 'T2', 'BOX1', 'HEXA', 'HAT', 'HAT1',
+        'DBOX',   # was 12
+        'bar',    # PBAR
+        'beam',   # PBEAM
+        'pbcomp', # PBCOMP
+        'L',      # PBEAML specific
+    ]
+    bar_types = {}
+    for bar_type in keys:
+        eids: list[int] = []
+        lines_bar_y: list[tuple[np.ndarray, np.ndarray]] = []
+        lines_bar_z: list[tuple[np.ndarray, np.ndarray]] = []
+        bar_types[bar_type] = (eids, lines_bar_y, lines_bar_z)
+        #bar_types[bar_type] = [eids, lines_bar_y, lines_bar_z]
+    return bar_types
