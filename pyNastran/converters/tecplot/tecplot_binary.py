@@ -8,7 +8,7 @@ from typing import BinaryIO, Optional, Union, Any
 
 import numpy as np
 from pyNastran.utils import print_bad_path
-from pyNastran.converters.tecplot.zone import Zone, CaseInsensitiveDict
+from pyNastran.converters.tecplot.zone import Zone, TecplotDict
 from pyNastran.utils import object_attributes, object_methods, object_stats
 
 from cpylog import get_logger2
@@ -251,6 +251,7 @@ class TecplotBinary(Base):
         nvars = len(self.variables)
         #sprint('vars =', self.variables)
         assert nvars > 1, self.variables
+        self.log.info(f'writing Tecplot binary {tecplot_filename}')
         with open(tecplot_filename, 'wb') as tecplot_file:
             _write_binary_header(self, tecplot_file, version)
             _write_binary_zone_headers(
@@ -288,7 +289,7 @@ class TecplotBinary(Base):
             #self.show(1000, types='ifdq')
             for izone, zone_tuple in enumerate(zone_tuples):
                 zone_name = zone_tuple.zone_name
-                log.info(f'-----izone={izone} {zone_name!r}-----')
+                log.debug(f'-----izone={izone} {zone_name!r}-----')
                 tris, quads, tets, hexas, zone_data = _read_binary_results(
                     self, file_obj, zone_tuple, nvars, version)
                 if quads is not None:
@@ -1110,7 +1111,7 @@ def _write_binary_header(model: TecplotBinary,
         teplot_file.write(_write_string(var))
 
 def _read_binary_header(model: TecplotBinary,
-                        file_obj: BinaryIO) -> tuple[bytes, CaseInsensitiveDict,
+                        file_obj: BinaryIO) -> tuple[bytes, TecplotDict,
                                                      str, str,
                                                      list[str], list[ZoneTuple]]:
     #version, header_dict, title, file_type, var_names, zones
@@ -1123,7 +1124,7 @@ def _read_binary_header(model: TecplotBinary,
     """
     self = model
     log = self.log
-    data = file_obj.read(8); self.n += 8
+    data = file_obj.read(8); model.n += 8
 
     # i. Magic number, Version number
     version_marker = unpack('<8s', data)[0]
@@ -1135,10 +1136,10 @@ def _read_binary_header(model: TecplotBinary,
 
     version = version_marker[5:]
     assert version in {b'102', b'112'}, version
-    log.info(f'version = {version!r}')
+    log.debug(f'version = {version!r}')
 
     # ii. Integer value of 1.
-    data = file_obj.read(4); self.n += 4
+    data = file_obj.read(4); model.n += 4
     byte_order = unpack('<i', data)[0]
     assert byte_order == 1, byte_order
 
@@ -1150,7 +1151,7 @@ def _read_binary_header(model: TecplotBinary,
         #   0 = FULL,
         #   1 = GRID,
         #   2 = SOLUTION
-        data = file_obj.read(4); self.n += 4
+        data = file_obj.read(4); model.n += 4
         file_type_int = unpack('<i', data)[0]
         assert file_type_int == 0, file_type_int
 
@@ -1159,16 +1160,16 @@ def _read_binary_header(model: TecplotBinary,
     else:
         raise NotImplementedError(file_type_int)
 
-    title, n = _read_string(file_obj, self.n)
-    log.info(f'title = {title!r}')
-    self.n = n
+    title, n = _read_string(file_obj, model.n)
+    log.debug(f'title = {title!r}')
+    model.n = n
 
     # Number of variables (NumVar) in the datafile.
-    data = file_obj.read(4); self.n += 4
+    data = file_obj.read(4); model.n += 4
     nvars = unpack('<i', data)[0]
     assert 3 <= nvars <= 100, nvars
     #print(f'nvars = {nvars}')w
-    model.log.info(f'nvars = {nvars}')
+    log.debug(f'nvars = {nvars}')
 
     # Variable names.
     # N = L[1] + L[2] + .... L[NumVar]
@@ -1177,20 +1178,20 @@ def _read_binary_header(model: TecplotBinary,
     # (for the terminating 0 value).
     var_names = []
     for unused_ivar in range(nvars):
-        var_name, n = _read_string(file_obj, self.n)
-        self.n = n
+        var_name, n = _read_string(file_obj, model.n)
+        model.n = n
         var_names.append(var_name)
-    log.info('var_names = %s' % var_names)
-    assert self.n == self.f.tell()
+    log.debug('var_names = %s' % var_names)
+    assert model.n == model.f.tell()
 
     #------------------------------------------
     # iv. Zones
     #Zone marker. Value = 299.0
     n, zones = _read_binary_zone_headers(
-        self, self.f, self.n, nvars, version)
-    self.n = n
+        model, model.f, model.n, nvars, version)
+    model.n = n
 
-    data = file_obj.read(4); self.n += 4
+    data = file_obj.read(4); model.n += 4
     flag = unpack('f', data)[0]
 
     if flag == 299.0:
@@ -1245,7 +1246,7 @@ def _read_binary_header(model: TecplotBinary,
             4 * 4 + 3 * 8 +
             4 * 5 + 8
         )
-        data = file_obj.read(ndata); self.n += ndata
+        data = file_obj.read(ndata); model.n += ndata
         (position_coord, scope, draw_order, x, y, z, zone,
         color, fillcolor, is_filled, geom_type, linepattern, pattern_length,
         ) = unpack('<3idddi 5id ', data)
@@ -1255,10 +1256,10 @@ def _read_binary_header(model: TecplotBinary,
         # EOHMARKER (end of header marker)
         pass
     else:
-        self.show_ndata(100, types='if')
+        model.show_ndata(100, types='if')
         raise RuntimeError(flag)
 
-    header_dict = CaseInsensitiveDict()
+    header_dict = TecplotDict()
     header_dict['title'] = title
     header_dict['variables'] = var_names
     return version, header_dict, title, file_type, var_names, zones

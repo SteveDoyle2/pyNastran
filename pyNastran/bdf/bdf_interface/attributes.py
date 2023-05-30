@@ -75,10 +75,17 @@ if TYPE_CHECKING:  # pragma: no cover
         # superelements
         SEBULK, SENQSET, SENQSET1, SEBNDRY, RELEASE, SELOC, SEMPLN, SETREE,
         SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,
+
+        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATDMG,
+        NXSTRAT,
+        PMASS, #CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
+        NSMADD,
+
+
     )
     #Coord = Union[CORD1R, CORD1C, CORD1S,
     #              CORD2R, CORD2C, CORD2S]
-    from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
+    from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIAX
     from pyNastran.bdf.subcase import Subcase
 
 BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'nasa95', 'mystran'}
@@ -235,7 +242,7 @@ class BDFAttributes:
         """
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []  # type: list[str]
+        my_keys_to_skip: list[str] = []
 
         my_keys_to_skip = [
             #'case_control_deck',
@@ -260,8 +267,8 @@ class BDFAttributes:
         self.__init_attributes()
 
         self.nodes = {}
-        self.loads = {}  # type: dict[int, list[Any]]
-        self.load_combinations = {}  # type: dict[int, list[Any]]
+        self.loads: dict[int, list[Any]] = {}
+        self.load_combinations: dict[int, list[Any]] = {}
 
     def reset_errors(self) -> None:
         """removes the errors from the model"""
@@ -287,13 +294,13 @@ class BDFAttributes:
         self.force_echo_off = True
 
         #: list of Nastran SYSTEM commands
-        self.system_command_lines = []  # type: list[str]
+        self.system_command_lines: list[str] = []
 
         #: list of execive control deck lines
-        self.executive_control_lines = []  # type: list[str]
+        self.executive_control_lines: list[str] = []
 
         #: list of case control deck lines
-        self.case_control_lines = []  # type: list[str]
+        self.case_control_lines: list[str] = []
 
         # dictionary of BDFs
         self.superelement_models = {}
@@ -379,16 +386,16 @@ class BDFAttributes:
         self._nparse_errors = 0
         self._stop_on_parsing_error = True
         self._stop_on_duplicate_error = True
-        self._stored_parse_errors = []  # type: list[str]
+        self._stored_parse_errors: list[str] = []
 
-        self._duplicate_nodes = []  # type: list[str]
-        self._duplicate_elements = []  # type: list[str]
-        self._duplicate_properties = []  # type: list[str]
-        self._duplicate_materials = []  # type: list[str]
-        self._duplicate_masses = []  # type: list[str]
-        self._duplicate_thermal_materials = []  # type: list[str]
-        self._duplicate_coords = []  # type: list[str]
-        self.values_to_skip = {}  # type: dict[str, list[int]]
+        self._duplicate_nodes: list[str] = []
+        self._duplicate_elements: list[str] = []
+        self._duplicate_properties: list[str] = []
+        self._duplicate_materials: list[str] = []
+        self._duplicate_masses: list[str] = []
+        self._duplicate_thermal_materials: list[str] = []
+        self._duplicate_coords: list[str] = []
+        self.values_to_skip: dict[str, list[int]] = {}
 
         # ------------------------ structural defaults -----------------------
         #: the analysis type
@@ -396,91 +403,91 @@ class BDFAttributes:
         #: used in solution 600, method
         self.sol_method = None
         #: the line with SOL on it, marks ???
-        self.sol_iline = None  # type : Optional[int]
-        self.case_control_deck = None  # type: Optional[CaseControlDeck]
+        self.sol_iline: Optional[int] = None
+        self.case_control_deck: Optional[CaseControlDeck] = None
 
         #: store the PARAM cards
-        self.params = {}    # type: dict[str, PARAM]
+        self.params: dict[str, PARAM] = {}
         self.mdlprm = None  # type: MDLPRM
         # ------------------------------- nodes -------------------------------
         # main structural block
         #: stores POINT cards
-        self.points = {}  # type: dict[int, POINT]
+        self.points: dict[int, POINT] = {}
         #self.grids = {}
 
-        self.spoints = {}  # type: dict[int, SPOINT]
-        self.epoints = {}  # type: dict[int, EPOINT]
+        self.spoints: dict[int, SPOINT] = {}
+        self.epoints: dict[int, EPOINT] = {}
 
         #: stores GRIDSET card
-        self.grdset = None  # type: Optional[GRDSET]
+        self.grdset: Optional[GRDSET] = None
 
         #: stores SEQGP cards
-        self.seqgp = None  # type: Optional[SEQGP]
+        self.seqgp: Optional[SEQGP] = None
 
         ## stores RINGAX
-        self.ringaxs = {}  # type: dict[int, RINGAX]
+        self.ringaxs: dict[int, RINGAX] = {}
 
         ## stores GRIDB
-        self.gridb = {}  # type: dict[int, GRIDB]
+        self.gridb: dict[int, GRIDB] = {}
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
-        self.elements = {}  # type: dict[int, Any]
+        self.elements: dict[int, Any] = {}
 
         #: stores CBARAO, CBEAMAO
-        self.ao_element_flags = {}  # type: dict[int, Any]
+        self.ao_element_flags: dict[int, Any] = {}
         #: stores BAROR
-        self.baror = None  # type: Optional[BAROR]
+        self.baror: Optional[BAROR] = None
         #: stores BEAMOR
-        self.beamor = None  # type: Optional[BEAMOR]
+        self.beamor: Optional[BEAMOR] = None
         #: stores SNORM
-        self.normals = {}  # type: dict[int, SNORM]
+        self.normals: dict[int, SNORM] = {}
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements = {}  # type: dict[int, Any]
         #: stores PLOTELs
         self.plotels = {}  # type: Optional[PLOTEL]
 
-        #: stores CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
-        self.masses = {}  # type: dict[int, Any]
+        #: stores CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5
+        self.masses: dict[int, Any] = {}
         #: stores PMASS
-        self.properties_mass = {}  # type: dict[int, Any]
+        self.properties_mass: dict[int, PMASS] = {}
 
         #: stores NSM, NSM1, NSML, NSML1
-        self.nsms = {}  # type: dict[int, list[Any]]
+        self.nsms: dict[int, list[Any]] = {}
         #: stores NSMADD
-        self.nsmadds = {}  # type: dict[int, list[Any]]
+        self.nsmadds: dict[int, list[NSMADD]] = {}
 
         #: stores LOTS of properties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
-        self.properties = {}  # type: dict[int, Any]
+        self.properties: dict[int, Any] = {}
 
         #: stores MAT1, MAT2, MAT3, MAT8, MAT10, MAT11
-        self.materials = {}  # type: dict[int, Any]
+        self.materials: dict[int, Any] = {}
 
         #: defines the MAT4, MAT5
-        self.thermal_materials = {}  # type: dict[int, Any]
+        self.thermal_materials: dict[int, Any] = {}
 
         #: defines the MATHE, MATHP
-        self.hyperelastic_materials = {}  # type: dict[int, Any]
+        self.hyperelastic_materials: dict[int, Any] = {}
 
         #: stores MATSx
-        self.MATS1 = {}  # type: dict[int, Any]
-        self.MATS3 = {}  # type: dict[int, Any]
-        self.MATS8 = {}  # type: dict[int, Any]
+        self.MATS1: dict[int, Any] = {}
+        self.MATS3: dict[int, Any] = {}
+        self.MATS8: dict[int, Any] = {}
 
         #: stores MATTx
-        self.MATT1 = {}  # type: dict[int, Any]
-        self.MATT2 = {}  # type: dict[int, Any]
-        self.MATT3 = {}  # type: dict[int, Any]
-        self.MATT4 = {}  # type: dict[int, Any]
-        self.MATT5 = {}  # type: dict[int, Any]
-        self.MATT8 = {}  # type: dict[int, Any]
-        self.MATT9 = {}  # type: dict[int, Any]
-        self.MATDMG = {}  # type: dict[int, Any]
-        self.nxstrats = {}  # type: dict[int, Any]
+        self.MATT1: dict[int, MATT1] = {}
+        self.MATT2: dict[int, MATT2] = {}
+        self.MATT3: dict[int, MATT3] = {}
+        self.MATT4: dict[int, MATT4] = {}
+        self.MATT5: dict[int, MATT5] = {}
+        self.MATT8: dict[int, MATT8] = {}
+        self.MATT9: dict[int, MATT9] = {}
+        self.MATDMG: dict[int, MATDMG] = {}
+        self.nxstrats: dict[int, NXSTRAT] = {}
 
         #: stores the CREEP card
-        self.creep_materials = {}  # type: dict[int, Any]
+        self.creep_materials: dict[int, Any] = {}
 
         self.tics = {}  # type: Optional[Any]
 
@@ -531,13 +538,13 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
-        self.dmi = {}  # type: dict[str, DMI]
-        self.dmig = {}  # type: dict[str, DMIG]
-        self.dmij = {}  # type: dict[str, DMIJ]
-        self.dmiji = {}  # type: dict[str, DMIJI]
-        self.dmik = {}  # type: dict[str, DMIK]
-        self.dmiax = {}  # type: dict[str, DMIAX]
-        self.dti = {}  # type: dict[str, Any]
+        self.dmi: dict[str, DMI] = {}
+        self.dmig: dict[str, DMIG] = {}
+        self.dmij: dict[str, DMIJ] = {}
+        self.dmiji: dict[str, DMIJI] = {}
+        self.dmik: dict[str, DMIK] = {}
+        self.dmiax: dict[str, DMIAX] = {}
+        self.dti: dict[str, Any] = {}
         self._dmig_temp = defaultdict(list)  # type: dict[str, list[str]]
 
         # ----------------------------------------------------------------

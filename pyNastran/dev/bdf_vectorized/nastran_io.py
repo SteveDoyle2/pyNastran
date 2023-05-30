@@ -16,7 +16,7 @@ import os
 #VTK_HEXAHEDRON = 12
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
-from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, array
+from numpy import zeros, abs, mean, nan_to_num, amax, amin, array
 from numpy import nan as NaN
 from numpy.linalg import norm  # type: ignore
 
@@ -44,7 +44,8 @@ class NastranIO(NastranIO_xref):
         self.is_sub_panels = False
         self.save_data = False
 
-    def load_nastran_geometry(self, bdf_filename, dirname, name='main'):
+    def load_nastran_geometry(self, bdf_filename: str, dirname: str,
+                              name: str='main') -> None:
         self.eid_map = {}
         self.nid_map = {}
         if bdf_filename is None or bdf_filename == '':
@@ -170,7 +171,7 @@ class NastranIO(NastranIO_xref):
                         #if None in node_ids:
                             #nsprings += 1
 
-        points2.SetNumberOfPoints(nCAerosPoints * 4 + nCONM2 + nsprings)
+        points2.SetNumberOfPoints(ncaeros_points * 4 + nconm2 + nsprings)
         for (eid, element) in sorted(model.caeros.items()):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
                 if self.is_sub_panels:

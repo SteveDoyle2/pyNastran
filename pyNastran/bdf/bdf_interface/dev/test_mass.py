@@ -68,17 +68,17 @@ class TestMassGeneration(unittest.TestCase):
 
         reference_point = 0
         #print(model.elements)
-        Mgg, D, Mo, mass, cg, S, IS, II, IQ, Q = make_reduced_mass_matrix(
+        Mgg, D, Mo, S, mass, cg, IS, II, IQ, Q = make_reduced_mass_matrix(
             model, reference_point, fdtype='float64', idtype='int32')
 
-        Mo_expected = [
+        Mo_expected = np.array([
             [13.,   0.,  0.,  0. ,  5., -3. ],
             [ 0.,  13.,  0., -5. ,  0.,  7. ],
             [ 0.,   0., 13.,  3. , -7.,  0. ],
             [ 0.,  -5.,  3.,  8. , -1.5,-2.5],
             [ 5.,   0., -7., -1.5, 10.,  0. ],
             [-3.,   7.,  0., -2.5,  0.,  8. ],
-        ]
+        ])
         S_expected = np.eye(3)
 
         #MASS AXIS SYSTEM (S) MASS X-C.G. Y-C.G. Z-C.G.
@@ -153,7 +153,7 @@ class TestMassGeneration(unittest.TestCase):
         ])
         assert np.allclose(D, D_expected)
         assert np.allclose(Mo, Mo_expected)
-        assert np.allclose(S, S_expected)
+        assert np.allclose(S, S_expected), f'S:\n{S}\nS_expected:\n{S_expected}'
         assert np.allclose(mass, mass_expected)
         assert np.allclose(cg, cg_expected)
         assert np.allclose(IS, IS_expected)
@@ -224,9 +224,14 @@ class TestMassGeneration(unittest.TestCase):
 
         reference_point = 0
         #print(model.elements)
-        Mgg, D, Mo, mass, cg, S, IS, II, IQ, Q = make_reduced_mass_matrix(
+        Mgg, D, Mo, S, mass, cg, IS, II, IQ, Q = make_reduced_mass_matrix(
             model, reference_point, fdtype='float64', idtype='int32')
-        x = 1
+
+        Mgg_dense_diag_expected = np.array([
+            2., 2., 2., 0., 0., 0.,
+            3., 3., 3., 0., 0., 0.,
+            3., 3., 3., 0., 0., 0.,
+            5., 5., 5., 0., 0., 0.])
         Mo_expected = np.array([
             [ 9.24999974, -0.93301261,   0.,  0. , 2.  , -2.96650635],
             [-0.93301263, 10.74999982,   0., -3. , 0.  ,  6.05801277],
@@ -286,7 +291,7 @@ class TestMassGeneration(unittest.TestCase):
             [-3.5335850e-07,  1.3223152e-07,  4.4632468e+00]])
         assert np.allclose(D, D_expected)
         assert np.allclose(Mo, Mo_expected)
-        assert np.allclose(S, S_expected)
+        assert np.allclose(S, S_expected), f'S:\n{S}\nS_expected:\n{S_expected}'
         assert np.allclose(mass, mass_expected)
         assert np.allclose(cg, cg_expected)
         assert np.allclose(IS, IS_expected)

@@ -389,7 +389,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     cid_map = {}
     if 'cid' in starting_id_dict and cid is not None:
-        cids = model.coords.coords.keys()
+        cids = list(model.coords.coords.keys())
         #print(cids)
         ncoords = len(cids)
         cids.sort()
@@ -402,7 +402,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     if 'eid' in starting_id_dict and pid is not None:
 
         eids = [element.element_id for element in elements if element.n]
-        eids.append(model.rigid_elements.keys())
+        eids.append(list(model.rigid_elements.keys()))
         eids = np.hstack(eids)
         neids = len(eids)
         eids.sort()

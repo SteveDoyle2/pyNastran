@@ -433,9 +433,9 @@ def _set_groups_key(argdict: dict[str, str]):
 
 def _update_format(argdict: dict[str, Any],
                    input_filenames: list[str]) -> list[str]:
-    formats = argdict['format']  # type: Optional[list[str]]
+    formats: Optional[list[str]] = argdict['format']
 
-    input_formats = []  # type: list[str]
+    input_formats: list[str] = []
     if input_filenames and formats is None:
         for input_filenamei in input_filenames:
             if isinstance(input_filenamei, str):

@@ -1,13 +1,14 @@
 import numpy as np
 
 try:
-    import matplotlib
+    import matplotlib  # type: ignore
     IS_MATPLOTLIB = True
 except ModuleNotFoundError:
     IS_MATPLOTLIB = False
 
 try:
-    import h5py  #missing-imports
+    # missing-imports
+    import h5py  # type: ignore
     IS_H5PY = True
 except ModuleNotFoundError:
     IS_H5PY = False

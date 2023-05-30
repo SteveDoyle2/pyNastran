@@ -6,7 +6,7 @@ this is no longer true...but should be
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import Union, TYPE_CHECKING
+from typing import Union, cast, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -26,8 +26,15 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 from .beams3d import create_3d_beams, faces_to_element_facelist, get_bar_type # update_3d_beams,
 from pyNastran.femutils.utils import vstack_lists
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.gui import MainWindow
     from pyNastran.nptyping_interface import NDArray3float, NDArray33float
     from pyNastran.bdf.bdf import BDF, PBARL, PBEAML
+
+from pyNastran.bdf.cards.materials import (
+    MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11, MAT3D)
+StructuralMaterial = Union[MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11, MAT3D]
+ThermalMaterial = Union[MAT4, MAT5]
+Material = Union[MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11, MAT3D]
 
 
 from pyNastran.gui.qt_files.colors import BLUE_FLOAT
@@ -117,6 +124,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         """bar_nids, bar_types, nid_release_map"""
         #lines_bar_y = []
         #lines_bar_z = []
+        log = model.log
         bar_types = _get_default_bar_types()
         if 0:
             node0 = len(bar_pid_to_eids)
@@ -126,7 +134,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             nid_release_map = {}
         else:
             node0, ugrid, points_list, bar_nids, nid_release_map = _create_bar_types_dict(
-                model, bar_types, bar_beam_eids, self.eid_map, self.log, scale, debug=debug)
+                model, bar_types, bar_beam_eids, self.eid_map, log, scale, debug=debug)
 
         self._create_bar_yz_update(model, node0, ugrid, points_list,
                                    bar_beam_eids, bar_pid_to_eids)
@@ -171,7 +179,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         if ugrid is None:
             return
 
-        gui = self.gui
+        gui = self.gui  # type: MainWindow
         def update_grid_function(unused_nid_map,
                                  ugrid: vtkUnstructuredGrid,
                                  points: vtkPoints,
@@ -301,7 +309,9 @@ def get_suport_node_ids(model, suport_id):
                 node_ids.append(suport_id)
     return np.unique(node_ids)
 
-def _get_material(materials, thermal_materials, mid):
+def _get_material(materials: dict[int, StructuralMaterial],
+                  thermal_materials: dict[int, ThermalMaterial],
+                  mid: int) -> Material:
     """gets a structural or thermal material"""
     try:
         mat = materials[mid]
@@ -336,6 +346,7 @@ def get_material_arrays(model: BDF,
         materials.update(superelement.materials)
         thermal_materials.update(superelement.thermal_materials)
 
+    encoding = cast(str, model._encoding)
     for umid in np.unique(mids):
         if umid == 0:
             continue
@@ -350,10 +361,11 @@ def get_material_arrays(model: BDF,
             print('  mids = %s' % mids)
             print('  mids = %s' % materials.keys())
             continue
-        if mat.type == 'MAT1':
+
+        if isinstance(mat, MAT1): #mat.type == 'MAT1':
             e11i = e22i = e33i = mat.e
             rhoi = mat.rho
-        elif mat.type == 'MAT8':
+        elif isinstance(mat, MAT8): #mat.type == 'MAT8':
             e11i = e33i = mat.e11
             e22i = mat.e22
             has_mat8 = True
@@ -362,13 +374,13 @@ def get_material_arrays(model: BDF,
             # Defines the material properties for linear, temperature-independent,
             #anisotropic materials for solid isoparametric elements (PSOLID)
             #g11i = mat.G11
-        elif mat.type in ['MAT11', 'MAT3D']:
+        elif isinstance(mat, (MAT11, MAT3D)): #mat.type in ['MAT11', 'MAT3D']:
             e11i = mat.e1
             e22i = mat.e2
             e33i = mat.e3
             has_mat11 = True
             rhoi = mat.rho
-        elif mat.type == 'MAT10':
+        elif isinstance(mat, MAT10): #mat.type == 'MAT10':
             bulki = mat.bulk
             rhoi = mat.rho
             speed_of_soundi = mat.c
@@ -378,7 +390,7 @@ def get_material_arrays(model: BDF,
         else:
             msg = 'skipping\n%s' % mat
             #print(msg.encode('utf16'))
-            print(msg.encode(model._encoding))
+            print(msg.encode(encoding))
             continue
             #raise NotImplementedError(mat)
         #print('mid=%s e11=%e e22=%e' % (umid, e11i, e22i))
@@ -536,6 +548,7 @@ def _create_bar_types_dict(model: BDF,
 
     #debug = True
     bar_nids = set()
+    missing_properties_set = set()
     #print('bar_beam_eids = %s' % bar_beam_eids)
     for eid in bar_beam_eids:
         if eid not in eid_map:
@@ -547,7 +560,11 @@ def _create_bar_types_dict(model: BDF,
         elem = model.elements[eid]
         pid_ref = elem.pid_ref
         if pid_ref is None:
-            pid_ref = model.Property(elem.pid)
+            pid = elem.pid
+            if pid not in model.properties:
+                missing_properties_set.add(pid)
+                continue
+            pid_ref = model.Property(pid)
         assert not isinstance(pid_ref, integer_types), elem
 
         ptype = pid_ref.type
@@ -622,6 +639,12 @@ def _create_bar_types_dict(model: BDF,
         bari[0].append(eid)
         bari[1].append((centroid, centroid + yhat * Li * scale))
         bari[2].append((centroid, centroid + zhat * Li * scale))
+
+    if missing_properties_set:
+        missing_properties_list = list(missing_properties_set)
+        missing_properties_list.sort()
+        model.log.warning(f'The following CBAR/CBEAMs property ids are missing: {missing_properties_list}')
+
     return node0, ugrid, points_list, bar_nids, nid_release_map
 
 def _get_default_bar_types() -> BarTypes:

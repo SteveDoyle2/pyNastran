@@ -217,7 +217,7 @@ def _transform_solid_stress_obj(bdf_model: BDF, stress_obj, Tout):
         ueids = eids_cids[ieids, 0]
         nodes_xyz = {}
         for nid in np.unique(nodes[ieids, 1:].ravel()):
-            node = bdf_model.nodes[nid] # type: GRID
+            node: GRID = bdf_model.nodes[nid]
             nodes_xyz[nid] = node.get_position_wrt(bdf_model, ucid)
 
         for eid, ieid in zip(ueids, ieids):

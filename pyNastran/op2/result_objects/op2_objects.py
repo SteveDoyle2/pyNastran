@@ -15,6 +15,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.errors import OverwriteTableError
 from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_sort_method_from_table_name
 from pyNastran.op2.op2_interface.write_utils import write_table_header, export_to_hdf5
+Date = tuple[int, int, int]
 
 NULL_GRIDTYPE = {538976288, 1065353216}
 GRID_TYPE_INT_TO_STR = {
@@ -744,8 +745,8 @@ class ScalarObject(BaseScalarObject):
                             include_date=include_date)
 
 def _write_table_header(op2_file, fascii,
-                        date: tuple[int, int, int],
-                        table_name: bytes,
+                        date: Date,
+                        table_name: str,
                         subtable_name: bytes,
                         include_date: bool=True) -> None:
     endian = b'<'
@@ -872,7 +873,7 @@ def get_sort_node_sizes(self, debug: bool=False) -> tuple[int, int, int]:
         ntotal = nnodes
         if debug:
             print(f'***SORT2 {self.__class__.__name__} ntimes={ntimes} nnodes={nnodes} ntotal={ntotal}')
-        nx = ntimes
+        #nx = ntimes
         #ny = nnodes
         #print("***SORT2 ntotal=%s nnodes=%s ntimes=%s" % (ntotal, nnodes, ntimes))
     else:

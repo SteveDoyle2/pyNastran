@@ -1,7 +1,8 @@
 from typing import Optional, Any, cast
 import numpy as np
 from cpylog import SimpleLogger
-from pyNastran.converters.tecplot.zone import CaseInsensitiveDict, Zone
+from pyNastran.converters.tecplot.zone import (
+    Zone, TecplotDict)
 
 
 def read_header_lines(lines: list[str], iline: int, line: str,
@@ -117,7 +118,7 @@ def header_lines_to_header_dict(title_line: str, header_lines: list[str],
     """parses the parsed header lines"""
     #print('header_lines', header_lines)
     #headers_dict = {}
-    headers_dict = CaseInsensitiveDict()
+    headers_dict = TecplotDict()
     if title_line:
         title_sline = title_line.split('=', 1)
         title = title_sline[1]
@@ -129,11 +130,11 @@ def header_lines_to_header_dict(title_line: str, header_lines: list[str],
         #raise RuntimeError(header_lines)
         return None
 
-    header = _join_headers(header_lines)
+    headers_joined = _join_headers(header_lines)
 
     # this is so overly complicataed and probably not even enough...
     # what about the following 'quote' style?
-    headers = split_headers(header, log)
+    headers = split_headers(headers_joined, log)
     #headers = header.replace('""', '","').split(',')
 
     #TITLE = "Weights=1/6,6,1"
@@ -236,12 +237,46 @@ def header_lines_to_header_dict(title_line: str, header_lines: list[str],
     return headers_dict
 
 def split_headers(headers_in: str, log: SimpleLogger) -> list[str]:
+    """
+    Takes a single header line and splits it.
+    This is trickier it than it needs to be because there can be quotes.
+    """
+    headers = []
+    ichar = 0
+    nchars = len(headers_in)
+    word = ''
+    while ichar < nchars:
+        char = headers_in[ichar]
+        if char == ',':
+            print(f'adding word = {word!r}')
+            headers.append(word.strip())
+            word = ''
+            ichar += 1
+        elif char == '"':  #opening char
+            word += char
+            ichar += 1
+            while ichar < nchars:
+                char2 = headers_in[ichar]
+                word += char2
+                ichar += 1
+                if char2 == '"':
+                    break
+            print(f'finished quoted word = {word}')
+        else:
+            word += char
+            ichar += 1
+    if word:
+        headers.append(word.strip())
+    return headers
+
+def split_headers_old(headers_in: str, log: SimpleLogger) -> list[str]:
     log.debug(f'headers_in = {headers_in}')
     #allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
                     #'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
                     #'I', 'J', 'K'
                     #]
     #print(f'header1 = {headers_in}')
+
     header = headers_in.replace('""', '","')
     #print(f'header2 = {header}')
     cheaders = header.split(',')

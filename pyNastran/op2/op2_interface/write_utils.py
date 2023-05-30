@@ -2,11 +2,12 @@
 Defines methods for the op2 & hdf5 writer
 """
 from struct import Struct, pack
+from typing import BinaryIO, TextIO
 
 import numpy as np
 import scipy
 import scipy.sparse as sp
-from pyNastran.utils.numpy_utils import integer_float_types
+#from pyNastran.utils.numpy_utils import integer_float_types
 from pyNastran.utils import int_version
 
 SCIPY_VERSION = int_version('scipy', scipy.__version__)[:2]
@@ -16,13 +17,13 @@ IS_NEW_SCIPY = (SCIPY_VERSION >= [1, 8])
 IS_OLD_SCIPY = not IS_NEW_SCIPY
 
 
-def set_table3_field(str_fields, ifield, value):
+def set_table3_field(str_fields, ifield: int, value):
     """
     ifield is 1 based
     """
     return str_fields[:ifield-1] + value + str_fields[ifield:]
 
-def _write_markers(op2_file, fascii, markers):
+def _write_markers(op2_file: BinaryIO, fascii: TextIO, markers):
     """
     writes pairs of markers
 
@@ -43,7 +44,7 @@ def _write_markers(op2_file, fascii, markers):
     op2_file.write(pack(b'<%ii' % n, *out))
 
 
-def write_table_header(op2_file, fascii, table_name):
+def write_table_header(op2_file: BinaryIO, fascii: TextIO, table_name: str):
     """
     Writes the beginning of an op2 table
 
@@ -105,7 +106,7 @@ def get_complex_fdtype(dtype):
         return np.float32(1).dtype
     return np.float64(1).dtype # 8
 
-def view_idtype_as_fdtype(int_array, fdtype):
+def view_idtype_as_fdtype(int_array: np.ndarray, fdtype: str) -> np.ndarray:
     """
     If we're downcasting from int64 to float32, we can't directly go to float32.
     We need to first go to int32, then to float32.
@@ -117,7 +118,7 @@ def view_idtype_as_fdtype(int_array, fdtype):
         int_array = view_dtype(int_array, fdtype)
     return int_array
 
-def view_dtype(array_obj, dtype):
+def view_dtype(array_obj: np.ndarray, dtype) -> np.ndarray:
     """handles downcasting data"""
     if array_obj.dtype.itemsize == dtype.itemsize:
         return array_obj.view(dtype)

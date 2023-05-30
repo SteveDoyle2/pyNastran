@@ -41,7 +41,7 @@ class Tester(unittest.TestCase):
                        log=log)
 
 
-class TestBDF(Tester):
+class TestBDFUnit(Tester):
 
     def test_bdf_test(self):
         #log = SimpleLogger(level='warning', encoding='utf-8')

@@ -1,6 +1,90 @@
+
+def get_numpy_typing():
+    """
+    https://stackoverflow.com/questions/71109838/numpy-typing-with-specific-shape-and-datatype
+    https://stackoverflow.com/questions/66349242/specific-type-annotation-for-numpy-ndarray-using-mypy
+    """
+    from typing import Optional, Annotated, Literal #, TypeVar
+    import numpy as np
+    import numpy.typing as npt
+    #npt.NDArray[np.complex64]
+    #DType = TypeVar("DType", bound=np.generic)
+    #Array4 = Annotated[npt.NDArray[DType], Literal[4]]
+    #Array3x3 = Annotated[npt.NDArray[DType], Literal[3, 3]]
+    #ArrayNxNx3 = Annotated[npt.NDArray[DType], Literal["N", "N", 3]]
+
+    FloatArray = npt.NDArray[np.float_]
+    IntArray = npt.NDArray[np.int_]
+    BoolArray = npt.NDArray[np.bool_]
+
+    # vector:
+    # [0., 0., 0.]
+    NDArray3float = Annotated[FloatArray, Literal[3]]
+    NDArray33float = Annotated[FloatArray, Literal[3, 3]]
+    test = Optional[NDArray3float]
+    del test
+
+    # vector:
+    # [0., 0., 0., 0., 0., 0.]
+    NDArray6float = Annotated[FloatArray, Literal[6]]
+    NDArray66float = Annotated[FloatArray, Literal[6, 6]]
+
+    # vector:
+    # [0., 0., 0., ...]
+    NDArrayNbool = Annotated[BoolArray, Literal['N']]
+    NDArrayNfloat = Annotated[FloatArray, Literal['N']]
+    NDArrayNint = Annotated[IntArray, Literal['N']]
+
+    # float matrix:
+    # [1., 0., 0.]
+    # [2., 0., 0.]
+    # [3., 0., 0.]
+    NDArrayN3float = Annotated[FloatArray, Literal['N', 3]]
+    NDArrayN4float = Annotated[FloatArray, Literal['N', 4]]
+    NDArrayNNfloat = Annotated[FloatArray, Literal['N', 'N']]
+
+    # int matrix:
+    # [1, 0]
+    # [2, 0]
+    # [3, 0]
+    NDArrayN2int = Annotated[IntArray, Literal['N', 2]]
+
+    # int matrix:
+    # [1, 0, 0]
+    # [2, 0, 0]
+    # [3, 0, 0]
+    NDArrayN3int = Annotated[IntArray, Literal['N', 3]]
+
+    # int matrix:
+    # [1, 0, 0, 0]
+    # [2, 0, 0, 0]
+    # [3, 0, 0, 0]
+    NDArrayN4int = Annotated[IntArray, Literal['N', 4]]
+    NDArrayN6int = Annotated[IntArray, Literal['N', 6]]
+    NDArrayN8int = Annotated[IntArray, Literal['N', 8]]
+    NDArrayN9int = Annotated[IntArray, Literal['N', 9]]
+    NDArrayN10int = Annotated[IntArray, Literal['N', 10]]
+    NDArrayN13int = Annotated[IntArray, Literal['N', 13]]
+    NDArrayN15int = Annotated[IntArray, Literal['N', 15]]
+    NDArrayN20int = Annotated[IntArray, Literal['N', 20]]
+
+    out = (
+        NDArrayNbool,
+        NDArray3float, NDArray6float,
+        NDArrayNint, NDArrayNfloat,
+        NDArray66float,
+        NDArrayN3float, NDArrayN4float,
+        NDArray33float,
+        NDArrayN2int, NDArrayN3int, NDArrayN4int, NDArrayN6int, NDArrayN8int, NDArrayN9int,
+        NDArrayN10int, NDArrayN13int, NDArrayN15int, NDArrayN20int,
+        NDArrayNNfloat,
+    )
+    return out
+
 def get_nptyping_v2():
     from typing import Optional
     from nptyping import NDArray, Float, Int, Bool, Shape
+
     # vector:
     # [0., 0., 0.]
     NDArray3float = NDArray[Shape['3'], Float]
@@ -66,72 +150,6 @@ def get_nptyping_v2():
     )
     return out
 
-def get_nptyping_v1():
-    from typing import Optional, Any
-    from nptyping import NDArray
-    # vector:
-    # [0., 0., 0.]
-    NDArray3float = NDArray[(3, ), float]
-    NDArray33float = NDArray[(3, 3), float]
-    test = Optional[NDArray3float]
-    del test
-
-    # vector:
-    # [0., 0., 0., 0., 0., 0.]
-    NDArray6float = NDArray[(6, ), float]
-    NDArray66float = NDArray[(6, 6), float]
-
-    # vector:
-    # [0., 0., 0., ...]
-    NDArrayNbool = NDArray[(Any, ), bool]
-    NDArrayNfloat = NDArray[(Any, ), float]
-    NDArrayNint = NDArray[(Any, ), int]
-
-    # float matrix:
-    # [1., 0., 0.]
-    # [2., 0., 0.]
-    # [3., 0., 0.]
-    NDArrayN3float = NDArray[(Any, 3), float]
-    NDArrayN4float = NDArray[(Any, 4), float]
-
-    NDArrayNNfloat = NDArray[(Any, Any), float]
-
-    # int matrix:
-    # [1, 0]
-    # [2, 0]
-    # [3, 0]
-    NDArrayN2int = NDArray[(Any, 2), int]
-
-    # int matrix:
-    # [1, 0, 0]
-    # [2, 0, 0]
-    # [3, 0, 0]
-    NDArrayN3int = NDArray[(Any, 3), int]
-
-    # int matrix:
-    # [1, 0, 0, 0]
-    # [2, 0, 0, 0]
-    # [3, 0, 0, 0]
-    NDArrayN4int = NDArray[(Any, 4), int]
-    NDArrayN6int = NDArray[(Any, 6), int]
-    NDArrayN8int = NDArray[(Any, 8), int]
-    NDArrayN9int = NDArray[(Any, 9), int]
-    NDArrayN10int = NDArray[(Any, 10), int]
-    NDArrayN13int = NDArray[(Any, 13), int]
-    NDArrayN15int = NDArray[(Any, 15), int]
-    NDArrayN20int = NDArray[(Any, 20), int]
-    out = (
-        NDArrayNbool,
-        NDArray3float, NDArray6float,
-        NDArrayNint, NDArrayNfloat,
-        NDArray66float,
-        NDArrayN3float, NDArrayN4float,
-        NDArray33float,
-        NDArrayN2int, NDArrayN3int, NDArrayN4int, NDArrayN6int, NDArrayN8int, NDArrayN9int,
-        NDArrayN10int, NDArrayN13int, NDArrayN15int, NDArrayN20int,
-        NDArrayNNfloat,
-    )
-    return out
 
 def get_nptyping_null():
     from typing import Any
@@ -158,14 +176,16 @@ def get_nptyping_null():
     )
     return out
 
-try:
-    import nptyping
-    if nptyping.__version__ > '2.0':
-        out = get_nptyping_v2()
-    else:
-        out = get_nptyping_v1()
 
-except ImportError:
+
+
+import numpy as np
+if np.__version__ > '1.20':
+    out = get_numpy_typing()
+    #import nptyping
+    #assert nptyping.__version__ > '2.0'
+    #out = get_nptyping_v2()
+else:
     out = get_nptyping_null()
 
 (

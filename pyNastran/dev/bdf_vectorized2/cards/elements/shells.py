@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -227,7 +227,6 @@ class CTRIA3v(ShellElement):
             self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card: BDFCard, comment: str=''):
-        # type: (Any, str) -> CTRIA3
         """
         Adds a CTRIA3 card from ``BDF.add_card(...)``
 
@@ -456,7 +455,7 @@ class CTRIA6v(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card: Any, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> None:
         """
         Adds a CTRIA6 card from ``BDF.add_card(...)``
 
@@ -585,8 +584,7 @@ class CTRIARv(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
-        # type: (Any, str) -> CTRIAR
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CTRIAR card from ``BDF.add_card(...)``
 
@@ -706,7 +704,7 @@ class CQUAD4v(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CQUAD4 card from ``BDF.add_card(...)``
 
@@ -883,7 +881,7 @@ class CQUAD8v(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CQUAD8 card from ``BDF.add_card(...)``
 
@@ -1059,7 +1057,7 @@ class CQUADv(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CQUAD card from ``BDF.add_card(...)``
 
@@ -1237,7 +1235,7 @@ class CQUADRv(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CQUADR card from ``BDF.add_card(...)``
 
