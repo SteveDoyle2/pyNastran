@@ -65,7 +65,7 @@ def merge_tecplot(argv: Optional[list[str]] = None) -> Tecplot:
 
     import docopt
     args = docopt.docopt(docstring=msg, argv=argv, default_help=True, version=ver,
-                         options_first=False, more_magic=False)
+                         options_first=False)
 
     print('args =', args)
     if args['--output'] is None:
