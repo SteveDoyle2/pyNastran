@@ -243,6 +243,7 @@ class OP2Reader:
           4, 2, 4, 8, 1482184792, 1482184792, 8, 4, -1, 4, 4, 0, 4, 4, 2, 4, 8, 1297040711, 538976305, 8, 4, -1
           """
         #try:
+        version_str = ''
         op2 = self.op2
         markers = self.get_nmarkers(1, rewind=True)
         #except Exception:
@@ -308,7 +309,7 @@ class OP2Reader:
             #print('version = %r' % version_str)
 
             if macro_version == 'nastran':
-                mode = parse_nastran_version(
+                mode, version_str = parse_nastran_version(
                     data, version, self._encoding, self.op2.log)
                 # don't uncomment this...it breaks tests
                 #op2._nastran_format = mode
@@ -349,7 +350,7 @@ class OP2Reader:
             self.log.warning("No mode was set, assuming 'msc'")
             mode = 'msc'
         if self.read_mode == 1:
-            self.log.debug(f'mode = {mode!r}')
+            self.log.debug(f'mode={mode!r} version={version_str!r}')
         self.op2.set_mode(mode)
         self.op2.set_table_type()
 
