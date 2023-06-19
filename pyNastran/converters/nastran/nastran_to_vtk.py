@@ -67,11 +67,18 @@ def _save_nastran_results(test: NastranGUI) -> vtkUnstructuredGrid:
                 titlei = f'{case.title}_subcase={case.subcase_id:d}'
 
             vtk_array = numpy_to_vtk(case.scalar, deep=0, array_type=None)
-            if titlei in used_titles:
-                log.warning(f'skipping GuiResult {titlei} because it is already used')
-                continue
-            _check_title(titlei, used_titles)
-            vtk_array.SetName(titlei)
+
+            title_out = titlei
+            i = 1
+            while title_out in used_titles:
+                title_out = f'{titlei}_{i}'
+                i += 1
+
+            #if i != 1:
+                #log.warning(f'duplicate GuiResult {titlei} because it is already used -> {title_out}')
+            _check_title(title_out, used_titles)
+
+            vtk_array.SetName(title_out)
         _add_array(case.location, point_data, cell_data, vtk_array)
     return vtk_ugrid
 
@@ -186,12 +193,15 @@ def _save_layered_table_results(key: int, index_name,
         return vtk_array
 
 def nastran_to_vtk(op2_filename: str, vtk_filename: str):
+    """kind of a hack, but it will always work assuming the GUI works"""
     test = NastranGUI()
     test.create_secondary_actors = False
 
     log = test.log
     log.level = 'error'
     log.level = 'warning'
+    #log.set_level('error')
+    #log.set_level('warning')
 
     test.load_nastran_geometry(op2_filename)
     test.load_nastran_results(op2_filename)

@@ -1,14 +1,26 @@
 try:
     from vtkmodules.vtkCommonDataModel import (
         vtkLine,
-        vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra,
+        vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
+        vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
+        vtkQuadraticWedge, vtkQuadraticHexahedron,
+        vtkPyramid, vtkQuadraticPyramid,
         vtkUnstructuredGrid, vtkMultiBlockDataSet,
-        vtkSelectionNode,
-        VTK_POLYHEDRON)
+        vtkSelectionNode, vtkCellArray,
+        vtkPolyData,
+        VTK_POLYHEDRON,
+    )
+
 except ImportError:
     from vtk import (
         vtkLine,
-        vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra,
+        vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
+        vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
+        vtkQuadraticWedge, vtkQuadraticHexahedron,
+        vtkPyramid, vtkQuadraticPyramid,
         vtkUnstructuredGrid, vtkMultiBlockDataSet,
-        vtkSelectionNode,
-        VTK_POLYHEDRON)
+        vtkSelectionNode, vtkCellArray,
+        vtkPolyData,
+        VTK_POLYHEDRON,
+    )
+

@@ -46,10 +46,12 @@ from qtpy import QtCore
 from qtpy.QtWidgets import QDockWidget
 
 import vtk
-from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
-                 vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
-                 vtkQuadraticWedge, vtkQuadraticHexahedron,
-                 vtkPyramid, vtkQuadraticPyramid)
+from pyNastran.gui.vtk_interface import (
+    vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
+    vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
+    vtkQuadraticWedge, vtkQuadraticHexahedron,
+    vtkPyramid, vtkQuadraticPyramid,
+)
 
 #from pyNastran import is_release
 from pyNastran import __version__

@@ -612,7 +612,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #splane.SetPoint2(origin + dy * vy)
 
         #actor = vtk.vtkLODActor()
-        #mapper = vtk.vtkPolyDataMapper()
+        #mapper = vtkPolyDataMapper()
         ##mapper.InterpolateScalarsBeforeMappingOn()
         ##mapper.UseLookupTableScalarRangeOn()
 

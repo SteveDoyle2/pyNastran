@@ -1,5 +1,9 @@
 import sys
 import vtk
+from pyNastran.gui.vtk_renering_core import (
+    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
+    vtkActor,
+    vtkPolyDataMapper)
 
 def main():
     input_data = vtk.vtkPolyData()
@@ -117,9 +121,9 @@ def main():
     polydata.SetPolys(tris)
 
     # Display the control mesh
-    mesh_mapper = vtk.vtkPolyDataMapper()
+    mesh_mapper = vtkPolyDataMapper()
     mesh_mapper.SetInputData(polydata)
-    mesh_actor = vtk.vtkActor()
+    mesh_actor = vtkActor()
     mesh_actor.SetMapper(mesh_mapper)
     mesh_actor.GetProperty().SetRepresentationToWireframe()
     mesh_actor.GetProperty().SetColor(0, 0, 0)
@@ -139,15 +143,15 @@ def main():
     points.Modified()
 
     # Display the warped polydata
-    poly_mapper = vtk.vtkPolyDataMapper()
+    poly_mapper = vtkPolyDataMapper()
     poly_mapper.SetInputConnection(deform.GetOutputPort())
-    poly_actor = vtk.vtkActor()
+    poly_actor = vtkActor()
     poly_actor.SetMapper(poly_mapper)
 
-    renderer = vtk.vtkRenderer()
-    ren_win = vtk.vtkRenderWindow()
+    renderer = vtkRenderer()
+    ren_win = vtkRenderWindow()
     ren_win.AddRenderer(renderer)
-    iren = vtk.vtkRenderWindowInteractor()
+    iren = vtkRenderWindowInteractor()
     iren.SetRenderWindow(ren_win)
 
     renderer.AddActor(poly_actor)

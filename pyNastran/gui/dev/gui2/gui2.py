@@ -12,6 +12,7 @@ from cpylog import SimpleLogger
 from cpylog.html_utils import str_to_html
 import numpy as np
 import vtk
+from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 try:
     from vtkmodules.vtkRenderingCore import vtkDataSetMapper, vtkCamera, vtkTextActor
@@ -349,13 +350,13 @@ class MainWindow2(QMainWindow):
     def vtk_interactor(self) -> QVTKRenderWindowInteractor:
         return self.vtk_interface.vtk_interactor
     @property
-    def rend(self) -> vtk.vtkRenderer:
+    def rend(self) -> vtkRenderer:
         return self.vtk_interface.rend
     @property
     def iren(self) -> QVTKRenderWindowInteractor:
         return self.vtk_interface.vtk_interactor
     @property
-    def render_window(self) -> vtk.vtkRenderWindow:
+    def render_window(self) -> vtkRenderWindow:
         return self.vtk_interactor.GetRenderWindow()
 
     def render(self) -> None:
@@ -615,7 +616,7 @@ class MainWindow2(QMainWindow):
 
             #self.edge_actor = vtk.vtkLODActor()
             #self.edge_actor.DragableOff()
-            #self.edge_mapper = vtk.vtkPolyDataMapper()
+            #self.edge_mapper = vtkPolyDataMapper()
 
             # create the edges
             #self.get_edges()

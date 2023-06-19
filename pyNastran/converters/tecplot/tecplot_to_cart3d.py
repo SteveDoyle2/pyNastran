@@ -3,7 +3,7 @@ Defines:
  - tecplot_to_cart3d_filename(tecplot_filename, cart3d_filename, debug=True)
  - tecplot_to_cart3d(tecplot_filename, cart3d_filename=None, debug=True)
 """
-from typing import Optional
+from typing import Union, Optional
 import numpy as np
 #from pyNastran.bdf.mesh_utils.remove_unused import remove_unassociated_nodes
 from cpylog import SimpleLogger
@@ -21,7 +21,7 @@ def tecplot_to_cart3d_filename(tecplot_filename: str, cart3d_filename: str,
                              log=log, debug=debug)
 
 
-def tecplot_to_cart3d(tecplot_filename: str | Tecplot,
+def tecplot_to_cart3d(tecplot_filename: Union[str, Tecplot],
                       cart3d_filename: Optional[str]=None,
                       remove_degenerate_tris: bool=True,
                       log=None, debug: bool=True) -> Cart3D:

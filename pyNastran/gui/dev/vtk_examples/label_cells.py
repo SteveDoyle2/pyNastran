@@ -1,5 +1,9 @@
 import os
 import vtk
+from pyNastran.gui.vtk_renering_core import (
+    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
+    vtkActor, vtkActor2D)
+#from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 def main():
     inputFilename = '3_cells.vtk'
@@ -72,19 +76,19 @@ def main():
     label_mapper.SetLabelModeToLabelScalars()
 
     # actor.
-    actor = vtk.vtkActor()
+    actor = vtkActor()
     actor.SetMapper(mapper)
     actor.GetProperty().SetRepresentationToWireframe()
 
     # label actor.
-    label_actor = vtk.vtkActor2D()
+    label_actor = vtkActor2D()
     label_actor.SetMapper(label_mapper)
 
     # renderer.
-    renderer = vtk.vtkRenderer()
-    renderWindow = vtk.vtkRenderWindow()
+    renderer = vtkRenderer()
+    renderWindow = vtkRenderWindow()
     renderWindow.AddRenderer(renderer)
-    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+    renderWindowInteractor = vtkRenderWindowInteractor()
     renderWindowInteractor.SetRenderWindow(renderWindow)
     renderer.AddActor(actor)
     renderer.AddActor(label_actor)

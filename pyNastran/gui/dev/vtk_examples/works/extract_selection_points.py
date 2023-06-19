@@ -5,6 +5,7 @@ converted from:
 
 import vtk
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor
 
 def main():
     point_source = vtk.vtkPointSource()
@@ -90,16 +91,16 @@ def main():
         not_selected_mapper.SetInputConnection(not_selected.GetProducerPort())
     else:
         not_selected_mapper.SetInputData(not_selected)
-    not_selected_actor = vtk.vtkActor()
+    not_selected_actor = vtkActor()
     not_selected_actor.SetMapper(not_selected_mapper)
 
 
     # There will be one render window
-    render_window = vtk.vtkRenderWindow()
+    render_window = vtkRenderWindow()
     render_window.SetSize(900, 300)
 
     # And one interactor
-    interactor = vtk.vtkRenderWindowInteractor()
+    interactor = vtkRenderWindowInteractor()
     interactor.SetRenderWindow(render_window)
 
     # Define viewport ranges

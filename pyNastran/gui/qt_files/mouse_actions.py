@@ -777,7 +777,7 @@ class MouseActions:
                 #print(f'icase={icase}/{ncases}: text={text!r}')
                 annotation = mark_actions.create_annotation(text, x, y, z)
                 gui.label_actors[icase].append(annotation)
-            gui.cycle_results(icase_temp)
+            gui.cycle_results(icase_temp, show_msg=False)
             self.vtk_interactor.Render()
         if self.revert:
             self.setup_mouse_buttons(mode='default')

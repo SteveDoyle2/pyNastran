@@ -2,7 +2,12 @@
 import numpy as np
 import vtk
 
+from pyNastran.gui.vtk_renering_core import (
+    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
+    vtkActor, vtkCamera,
+    vtkDataSetMapper, vtkPolyDataMapper)
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+
 from pyNastran.gui.qt_version import qt_version
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
@@ -23,7 +28,7 @@ from pyNastran.gui.menus.menus import Group
 #class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
     #def __init__(self, parent=None):
 
-        #render_window = vtk.vtkRenderWindow()
+        #render_window = vtkRenderWindow()
         #iren = Interactor()
         #iren.SetRenderWindow(render_window)
         #kwargs = {
@@ -71,7 +76,7 @@ class GuiVTKCommon(GuiQtCommon):
         # edges
         self.edge_actor = vtk.vtkLODActor()
         self.edge_actor.DragableOff()
-        self.edge_mapper = vtk.vtkPolyDataMapper()
+        self.edge_mapper = vtkPolyDataMapper()
 
         self.create_cell_picker()
 
@@ -145,7 +150,7 @@ class GuiVTKCommon(GuiQtCommon):
             #self.geom_filter = vtk.vtkGeometryFilter()
             #self.geom_filter.SetInput(self.warp_filter.GetUnstructuredGridOutput())
 
-            #self.geom_mapper = vtk.vtkPolyDataMapper()
+            #self.geom_mapper = vtkPolyDataMapper()
             #self.geom_actor.setMapper(self.geom_mapper)
 
         #if 0:
@@ -216,7 +221,7 @@ class GuiVTKCommon(GuiQtCommon):
         glyphs_centroid.ClampingOn()
         glyphs_centroid.SetSourceConnection(glyph_source.GetOutputPort())
 
-        glyph_mapper_centroid = vtk.vtkPolyDataMapper()
+        glyph_mapper_centroid = vtkPolyDataMapper()
         glyph_mapper_centroid.SetInputConnection(glyphs_centroid.GetOutputPort())
         glyph_mapper_centroid.ScalarVisibilityOff()
 
@@ -611,7 +616,7 @@ def build_glyph(grid):
     #glyphs.SetScaleModeToDataScalingOff()
     #glyphs.SetScaleFactor(10.0)  # bwb
     #glyphs.SetScaleFactor(1.0)  # solid-bending
-    glyph_mapper = vtk.vtkPolyDataMapper()
+    glyph_mapper = vtkPolyDataMapper()
     glyph_mapper.SetInputConnection(glyphs.GetOutputPort())
     glyph_mapper.ScalarVisibilityOff()
 

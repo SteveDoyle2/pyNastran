@@ -1,6 +1,6 @@
 from numpy import arange, mean, amax, amin, array
 
-from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
+from pyNastran.gui.vtk_interface import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid
 from pyNastran.gui.gui_objects.gui_result import GuiResult

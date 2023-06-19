@@ -1,4 +1,5 @@
 import vtk
+from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow, vtkActor, vtkPolyDataMapper
 
 class vtkTimerCallback:
     def __init__(self):
@@ -19,19 +20,19 @@ def main():
     sphere_source.SetRadius(5)
 
     #Create a mapper and actor
-    mapper = vtk.vtkPolyDataMapper()
+    mapper = vtkPolyDataMapper()
     mapper.SetInputConnection(sphere_source.GetOutputPort())
-    actor = vtk.vtkActor()
+    actor = vtkActor()
     actor.SetMapper(mapper)
     prop = actor.GetProperty()
 
     # Setup a renderer, render window, and interactor
-    renderer = vtk.vtkRenderer()
-    render_window = vtk.vtkRenderWindow()
+    renderer = vtkRenderer()
+    render_window = vtkRenderWindow()
     #render_window.SetWindowName('Test')
 
     render_window.AddRenderer(renderer)
-    render_window_interactor = vtk.vtkRenderWindowInteractor()
+    render_window_interactor = vtkRenderWindowInteractor()
     render_window_interactor.SetRenderWindow(render_window)
 
     #Add the actor to the scene

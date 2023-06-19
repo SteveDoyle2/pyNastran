@@ -3348,7 +3348,7 @@ def oef_cbush_imag_13(self, data: bytes,
     """
     op2 = self
     n = 0
-    s = Struct(op2._endian + op2._analysis_code_fmt + b'12f')
+    s = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'12f', op2.size))
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
