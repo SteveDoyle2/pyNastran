@@ -14,7 +14,7 @@ from cpylog import SimpleLogger
 from pyNastran.utils import is_binary_file
 from pyNastran.converters.tecplot.zone import Zone
 from pyNastran.converters.tecplot.tecplot_binary import (
-    PathLike, TecplotBinary, zones_to_exclude_to_set)
+    PathLike, TecplotBinary, get_zones_set, get_save_zone_flag)
 from pyNastran.converters.tecplot.write_ascii import (
     write_ascii_header, write_ascii_tecplot_zone)
 from pyNastran.converters.tecplot.read_ascii import (
@@ -26,6 +26,7 @@ def read_tecplot(tecplot_filename: PathLike,
                  use_cols=None, dtype=None,
                  filetype: str='guess',
                  zones_to_exclude: Optional[list[int]] = None,
+                 zones_to_include: Optional[list[int]] = None,
                  log: Optional[SimpleLogger]=None,
                  debug: bool=False):
     """loads a tecplot file
@@ -34,6 +35,8 @@ def read_tecplot(tecplot_filename: PathLike,
     ----------
     zones_to_exclude : list[int]; default=None -> []
         0-based list of zones to exlcude
+    zones_to_include : list[int]; default=None -> []
+        0-based list of zones to include (exclusive)
     """
     tecplot = Tecplot(log=log, debug=debug)
     if use_cols:
@@ -41,7 +44,8 @@ def read_tecplot(tecplot_filename: PathLike,
         tecplot.dtype = dtype
     tecplot.read_tecplot(tecplot_filename,
                          filetype=filetype,
-                         zones_to_exclude=zones_to_exclude)
+                         zones_to_exclude=zones_to_exclude,
+                         zones_to_include=zones_to_include)
     return tecplot
 
 
@@ -97,7 +101,8 @@ class Tecplot(TecplotBinary):
 
     def read_tecplot(self, tecplot_filename: PathLike,
                      filetype: str='guess',
-                     zones_to_exclude: Optional[list[int]] = None):
+                     zones_to_exclude: Optional[list[int]] = None,
+                     zones_to_include: Optional[list[int]] = None) -> None:
         """
         Reads an ASCII/binary Tecplot file.
 
@@ -106,16 +111,33 @@ class Tecplot(TecplotBinary):
         The ASCII file reader has only been tested with Tecplot 10, but will
         probably work on Tecplot360.  It **should** work with any set of
         variables.
+
+        Parameters
+        ----------
+        zones_to_exclude : list[int]; default=None -> []
+            0-based list of zones to exlcude
+        zones_to_include : list[int]; default=None -> []
+            0-based list of zones to include (exclusive)
+
         """
         filetype = filetype.lower()
         assert filetype in ['guess', 'ascii', 'binary'], filetype
         if filetype == 'binary' or (filetype == 'guess' and is_binary_file(tecplot_filename)):
-            return self.read_tecplot_binary(tecplot_filename, zones_to_exclude=zones_to_exclude)
-        return self.read_tecplot_ascii(tecplot_filename, zones_to_exclude=zones_to_exclude)
+            self.read_tecplot_binary(
+                tecplot_filename,
+                zones_to_exclude=zones_to_exclude,
+                zones_to_include=zones_to_include)
+        else:
+            self.read_tecplot_ascii(
+                tecplot_filename,
+                zones_to_exclude=zones_to_exclude,
+                zones_to_include=zones_to_include)
+        return
 
     def read_tecplot_ascii(self, tecplot_filename: Union[PathLike, StringIO],
                            nnodes=None, nelements=None,
-                           zones_to_exclude: Optional[list[int]]=None):
+                           zones_to_exclude: Optional[list[int]]=None,
+                           zones_to_include: Optional[list[int]] = None):
         """
         Reads a Tecplot ASCII file.
 
@@ -129,7 +151,11 @@ class Tecplot(TecplotBinary):
         .. warning:: BLOCK option doesn't work if line length isn't the same...
         """
         log = self.log
-        set_zones_to_exclude = zones_to_exclude_to_set(zones_to_exclude)
+        set_zones_to_exclude, set_zones_to_include = get_zones_set(
+            zones_to_exclude, zones_to_include)
+        log.info(f'set_zones_to_exclude = {set_zones_to_exclude}')
+        log.info(f'set_zones_to_include = {set_zones_to_include}')
+
         self.tecplot_filename = tecplot_filename
         iline = 0
         nnodes = -1
@@ -209,9 +235,9 @@ class Tecplot(TecplotBinary):
                 raise NotImplementedError(msg)
 
             #print(zone)
-            if izone in set_zones_to_exclude:
-                log.warning(f'skipping izone={izone}')
-            else:
+            save_zone = get_save_zone_flag(
+                log, izone, set_zones_to_exclude, set_zones_to_include)
+            if save_zone:
                 self.zones.append(zone)
 
                 #sline = line.split()

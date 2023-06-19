@@ -1,4 +1,7 @@
 """Defines the GUI IO file for Tecplot."""
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import numpy as np
 #from numpy import arange, mean, amax, amin, array
 from pyNastran.gui.vtk_interface import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
@@ -7,13 +10,15 @@ from pyNastran.converters.tecplot.tecplot import read_tecplot, Tecplot
 #from pyNastran.converters.tecplot.utils import merge_tecplot_files
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
+if TYPE_CHECKING:
+    from pyNastran.gui.gui import MainWindow
 
 
 class TecplotIO:
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         self.gui = gui
 
-    def _remove_old_cart3d_geometry(self, tecplot_filename):
+    def _remove_old_cart3d_geometry(self, tecplot_filename: str) -> None:
         pass
 
     def get_tecplot_wildcard_geometry_results_functions(self):
@@ -22,7 +27,8 @@ class TecplotIO:
                 None, None)
         return data
 
-    def load_tecplot_geometry(self, tecplot_filename, name='main', plot=True):
+    def load_tecplot_geometry(self, tecplot_filename: str, name: str='main',
+                              plot: bool=True) -> None:
         model_name = name
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -38,9 +44,12 @@ class TecplotIO:
             #model = merge_tecplot_files(fnames, tecplot_filename_out=None, log=self.log)
         #else:
         zones_to_exclude = None
+        zones_to_include = None
         #zones_to_exclude = [0, 5, 6, 9, 10]
+        #zones_to_include = np.array([54, 55, 56, 57, 58, 59, 60, 61]) - 1
         model = read_tecplot(tecplot_filename, log=self.gui.log, debug=False,
-                             zones_to_exclude=zones_to_exclude)
+                             zones_to_exclude=zones_to_exclude,
+                             zones_to_include=zones_to_include)
 
         self.gui.model_type = 'tecplot'
         self.gui.nnodes = sum([zone.nnodes for zone in model.zones])
