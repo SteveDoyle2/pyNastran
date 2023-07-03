@@ -315,6 +315,10 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         #'        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
 
         #line = _remove_intermediate_spaces(line)
+        #line2 = _remove_intermediate_spaces(line.replace('MONITOR POINT NAME', 'MONITOR_POINT_NAME'))
+        #sline2 = line2.split(' ')
+        #assert len(line2) == 3, sline2
+
         name_comp_class = line.split('MONITOR POINT NAME =')[1]
         name_comp, classi = name_comp_class.rsplit('CLASS = ')
         name_comp = name_comp.strip()
