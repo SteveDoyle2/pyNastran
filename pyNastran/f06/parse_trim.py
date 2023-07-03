@@ -313,6 +313,8 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         #'        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               '
         #'        LABEL = Full Vehicle Integrated Loads                           '
         #'        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
+
+        #line = _remove_intermediate_spaces(line)
         name_comp_class = line.split('MONITOR POINT NAME =')[1]
         name_comp, classi = name_comp_class.rsplit('CLASS = ')
         name_comp = name_comp.strip()
@@ -331,10 +333,8 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         i += 1
         label = line.split('LABEL =')[1].strip()
 
-        #'        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
-        line = f06_file.readline().strip()
-        while ' =' in line or '= ' in line or '  ' in line:
-            line = line.replace(' =', '=').replace('= ', '=').replace('  ', ' ')
+c        line = f06_file.readline()
+        line = _remove_intermediate_spaces(line)
         i += 1
 
         sline = line.split(' ')
@@ -464,6 +464,27 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     trim_results.controller_state[isubcase] = controller_state
     f06_file.seek(seek1)
     return line_end, iend
+
+def _remove_intermediate_spaces(line_in: str) -> str:
+    """
+    Simplifies parsing of the following line
+
+    Parameters
+    ----------
+    line_in : str
+        a line that looks like:
+        '        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
+    
+    Returns
+    -------
+    line : str
+        a simple to split line
+        'CID=102 X=0.00000E+00 Y=0.00000E+00 Z=0.00000E+00'
+    """
+    line = line_in.strip()
+    while ' =' in line or '= ' in line or '  ' in line:
+        line = line.replace(' =', '=').replace('= ', '=').replace('  ', ' ')
+    return line
 
 def _get_controller_state(header_lines: list[str]) -> ControllerState:
     controller_state: ControllerState = {}

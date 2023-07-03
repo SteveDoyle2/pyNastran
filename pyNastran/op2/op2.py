@@ -176,7 +176,7 @@ class OP2(OP2_Scalar, OP2Writer):
         return is_equal
 
     def assert_op2_equal(self, op2_model, skip_results: Optional[list[str]]=None,
-                         stop_on_failure: bool=True, debug: bool=False) -> None:
+                         stop_on_failure: bool=True, debug: bool=False) -> bool:
         """
         Diffs the current op2 model vs. another op2 model.
 
@@ -204,14 +204,15 @@ class OP2(OP2_Scalar, OP2Writer):
 
         """
         if skip_results is None:
-            skip_results = set()
+            skip_results_set = set()
         else:
-            skip_results = set(skip_results)
+            skip_results_set = set(skip_results)
+        del skip_results
 
-        skip_results.add('gpdt')
-        skip_results.add('bgpdt')
-        skip_results.add('eqexin')
-        skip_results.add('psds')
+        skip_results_set.add('gpdt')
+        skip_results_set.add('bgpdt')
+        skip_results_set.add('eqexin')
+        skip_results_set.add('psds')
 
         if not self.read_mode == op2_model.read_mode:
             self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
@@ -220,7 +221,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
         table_types = self.get_table_types()
         for table_type in table_types:
-            if table_type in skip_results or table_type.startswith('responses.'):
+            if table_type in skip_results_set or table_type.startswith('responses.'):
                 continue
             # model.displacements
             adict = self.get_result(table_type)
@@ -784,7 +785,7 @@ class OP2(OP2_Scalar, OP2Writer):
         from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
         export_op2_to_hdf5_file(hdf5_file, self)
 
-    def combine_results(self, combine: str=True) -> None:
+    def combine_results(self, combine: bool=True) -> None:
         """
         we want the data to be in the same format and grouped by subcase, so
         we take
@@ -980,11 +981,18 @@ class OP2(OP2_Scalar, OP2Writer):
 
             for isubcase in unique_isubcases:
                 for case_key in case_keys:
-                    #print('isubcase=%s case_key=%s' % (isubcase, case_key))
+                    #print(f'isubcase={isubcase} case_key={case_key}')
                     assert not isinstance(case_key, str), result_type
                     if isinstance(case_key, integer_types):
-                        if isubcase == case_key and case_key not in subcase_key2[isubcase]:
+                        if isubcase == case_key and (
+                            #isinstance(subcase_key2[isubcase], integer_types) and
+                            isinstance(case_key, integer_types) and
+                            not _inlist(case_key, subcase_key2[isubcase])):
+                            #case_key not in subcase_key2[isubcase]):
                             subcase_key2[isubcase] = [isubcase]
+                        #else:
+                            #print(f'duplicate: isubcase={isubcase}; case_key={case_key}')
+                            #pass #  duplicate
                     else:
                         try:
                             subcasei = case_key[0]
@@ -1250,6 +1258,25 @@ class OP2(OP2_Scalar, OP2Writer):
                                              nids_all, nids_transform,
                                              icd_transform, coords, xyz_cid0, self.log)
         self.log.debug('-----------')
+
+
+def _inlist(case_key: int, keys: list[Any]) -> bool:
+    """
+    case_key not in subcase_key2[isubcase])
+    """
+    if len(keys) == 0:
+        return False
+    assert isinstance(case_key, integer_types), case_key
+    assert isinstance(keys, list), keys
+    #print(type(case_key))
+    found_case_key = False
+    for key in keys:
+        if isinstance(key, tuple):
+            continue
+        #print(case_key, key)
+        if key == case_key:
+            return True
+    return found_case_key
 
 
 def read_op2(op2_filename: Optional[str]=None,
