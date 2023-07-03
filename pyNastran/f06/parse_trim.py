@@ -333,7 +333,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         i += 1
         label = line.split('LABEL =')[1].strip()
 
-c        line = f06_file.readline()
+        line = f06_file.readline()
         line = _remove_intermediate_spaces(line)
         i += 1
 
@@ -474,7 +474,7 @@ def _remove_intermediate_spaces(line_in: str) -> str:
     line_in : str
         a line that looks like:
         '        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
-    
+
     Returns
     -------
     line : str
