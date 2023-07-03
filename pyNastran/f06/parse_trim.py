@@ -118,11 +118,13 @@ def _skip_to_page_stamp(f06_file: TextIO, line: str, i: int,
 
 def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
                    nlines_max: int, dirname: str,
-                   debug: bool=False) -> tuple[TrimResults, str, np.ndarray]:
+                   debug: bool=False) -> tuple[TrimResults,
+                                               dict[str, np.ndarray],
+                                               dict[str, np.ndarray]]:
     i = 0
     #debug = True
-    tables = {}
-    matrices = {}
+    tables: dict[str, np.ndarray] = {}
+    matrices: dict[str, np.ndarray] = {}
     trim_results = TrimResults()
     iblank_count = 0
 
@@ -208,7 +210,7 @@ def _get_title_subtitle_subcase(f06_file: TextIO,
     #'SUBCASE 1'
     if 'SUBCASE' not in subcase_line:
         f06_file.seek(n)
-        return line, i, title, None, None
+        return line, i, title, '', ''
 
     i += 2
     assert 'SUBCASE' in subcase_line, f'i={i:d} subcase_line={subcase_line!r}'
@@ -266,7 +268,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         #dirname, log)
 
     if 'MONITOR POINT NAME' not in line:
-        asfd
+        raise RuntimeError("'MONITOR POINT NAME' not in line")
 
     controller_state = _get_controller_state(header_lines)
     line_end, iend, seek1 = _skip_to_page_stamp_and_rewind(f06_file, line, i, nlines_max)
@@ -316,7 +318,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
                float(sline[3][:-1]),
                float(sline[4])]
 
-        line0a = f06_file.readline()
+        unused_line0a = f06_file.readline()
         line0b = f06_file.readline().strip()
         i += 2
 
@@ -391,22 +393,22 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         cids.append(cid)
         xyzs.append(xyz)
         all_coeffs.append(coeffs)
-    all_coeffs = np.stack(all_coeffs, axis=0)
+    all_coeffs_stacked = np.stack(all_coeffs, axis=0)
     nrows = len(names)
-    assert all_coeffs.shape == (nrows, 6, 4), all_coeffs.shape
+    assert all_coeffs_stacked.shape == (nrows, 6, 4), all_coeffs_stacked.shape
 
-    names = np.array(names)
-    comps = np.array(comps)
-    classes = np.array(classes)
-    labels = np.array(labels)
-    cids = np.array(cids, dtype='int32')
-    xyzs = np.array(xyzs, dtype='float64')
-    all_coeffs = np.array(all_coeffs, dtype='float64')
+    names_array = np.array(names)
+    comps_array = np.array(comps)
+    classes_array = np.array(classes)
+    labels_array = np.array(labels)
+    cids_array = np.array(cids, dtype='int32')
+    xyzs_array = np.array(xyzs, dtype='float64')
+    all_coeffs_array = np.array(all_coeffs_stacked, dtype='float64')
 
     isubcase = int(subcase)
     trim_results.structural_monitor_loads[isubcase] = MonitorLoads(
-        names, comps, classes, labels,
-        cids, xyzs, all_coeffs)
+        names_array, comps_array, classes_array, labels_array,
+        cids_array, xyzs_array, all_coeffs_array)
     trim_results.controller_state[isubcase] = controller_state
     f06_file.seek(seek1)
     return line_end, iend
@@ -505,7 +507,7 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     name = line2[40:50].strip()
     Type = line2[50:70].strip()
     trim_status = line2[70:90].strip()
-    ux = line2[90:106]
+    ux_str = line2[90:106]
     ux_unit = line2[106:130]
     assert line2[130:].strip() == '', line2[130:]
     #idi, name, type, trim_status, ux, ux_unit
@@ -515,8 +517,8 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     else:
         int_id = 0
 
-    #print('%r %r %r %r ux=%r %r' % (int_id, name, Type, trim_status, ux, ux_unit))
-    ux = float(ux)
+    #print('%r %r %r %r ux=%r %r' % (int_id, name, Type, trim_status, ux_str, ux_unit))
+    ux = float(ux_str)
     assert Type in {'RIGID BODY', 'CONTROL SURFACE'}, Type
     assert trim_status in {'FIXED', 'FREE', 'LINKED'}, trim_status
     assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE'}, ux_unit
@@ -558,7 +560,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     i += 1
     assert 'CHORD' in line, line.strip()
 
-    line1 = f06_file.readline()
+    unused_line1 = f06_file.readline()
     line2 = f06_file.readline()
     i += 2
     if 'TRIM ALGORITHM USED: LINEAR TRIM SOLUTION WITHOUT REDUNDANT CONTROL SURFACES.' in line2:
@@ -619,12 +621,10 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                 for nid, data in zip(grid_id, loads.tolist()):
                     msg = f'{nid:d},' + fmt % tuple(data)
                     file_obj.write(msg)
-        x = 1
         iforce += 1
     else:
         raise NotImplementedError(line3.strip())
 
-    x = 1
     return line, i, ipressure, iforce
 
 def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
@@ -644,9 +644,9 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
     '                                          33     LS            4.857536E-02         4.857536E-02'
     """
     log.debug(' - reading aero pressure')
-    line1 = f06_file.readline()
-    line2 = f06_file.readline()
-    line3 = f06_file.readline()
+    unused_line1 = f06_file.readline()
+    unused_line2 = f06_file.readline()
+    unused_line3 = f06_file.readline()
     line_strip = f06_file.readline().strip()
     i += 4
 
@@ -670,7 +670,6 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
         grid_id[i] = grid
         Cp_pressure[i, :] = [Cp, pressure]
 
-    x = 1
     return line, i, grid_id, Cp_pressure
 
 
@@ -718,16 +717,15 @@ def _read_aerostatic_data_recover_output_table_force(f06_file: TextIO,
     loads = np.zeros((ndata, 6), dtype='float64')
     for i, line in enumerate(data_lines):
         group_str, grid_str, label, *force_moment = line.split()
-        group = int(group_str)
+        unused_group = int(group_str)
         grid = int(grid_str)
         grid_id[i] = grid
         force_moment_float = [float(val) for val in force_moment]
         loads[i] = force_moment_float
-    x = 1
     return line, i, grid_id, loads
 
 
-def main():
+def main() -> None:
     f06_filename = r'C:\NASA\ase2\ar9_caero.f06'
     read_f06_trim(f06_filename, log=None, nlines_max=1_000_000)
 
