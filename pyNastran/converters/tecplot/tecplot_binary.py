@@ -260,14 +260,17 @@ class TecplotBinary(Base):
                 self, tecplot_file, nvars, version)
 
     def read_tecplot_binary(self, tecplot_filename: PathLike,
-                            zones_to_exclude: Optional[list[int]]=None) -> None:
+                            zones_to_exclude: Optional[list[int]]=None,
+                            zones_to_include: Optional[list[int]] = None,
+                            ) -> None:
         """
         Supports multiblock, but FEQUADs in BLOCK format only
         This is actually a semi-competent reader, so that's the good news
 
         http://www.hgs.k12.va.us/tecplot/documentation/tp_data_format_guide.pdf
         """
-        set_zones_to_exclude = zones_to_exclude_to_set(zones_to_exclude)
+        set_zones_to_exclude, set_zones_to_include = get_zones_set(
+            zones_to_exclude, zones_to_include)
         log = self.log
         assert os.path.exists(tecplot_filename), print_bad_path(tecplot_filename)
         log.info(f'reading tecplot: {tecplot_filename}')
@@ -296,7 +299,9 @@ class TecplotBinary(Base):
                     log.debug(f'quads.min/max = {quads.min()} {quads.max()}')
                     assert quads.min() >= 0, quads.min()
 
-                if izone not in set_zones_to_exclude:
+                save_zone = get_save_zone_flag(
+                    log, izone, set_zones_to_exclude, set_zones_to_include)
+                if save_zone:
                     zone = Zone.set_zone_from_360(
                         log, header_dict, variables,
                         zone_name,
@@ -1321,6 +1326,39 @@ def _read_string(file_obj: BinaryIO, n: int) -> tuple[str, int]:
     string = ''.join(chars)
     #print('string =', string)
     return string, n
+
+
+def get_zones_set(zones_to_exclude: Optional[set[int]],
+                  zones_to_include: Optional[set[int]],
+                  ) -> tuple[Optional[set[int]],
+                             Optional[set[int]]]:
+    set_zones_to_exclude = None
+    set_zones_to_include = None
+    if zones_to_exclude is not None and zones_to_include is not None:
+        raise RuntimeError()
+    elif zones_to_include:
+        set_zones_to_include = zones_to_exclude_to_set(zones_to_include)
+    else:
+        set_zones_to_exclude = zones_to_exclude_to_set(zones_to_exclude)
+    return set_zones_to_exclude, set_zones_to_include
+
+def get_save_zone_flag(log,
+                       izone: int,
+                       set_zones_to_exclude: Optional[set[int]],
+                       set_zones_to_include: Optional[set[int]]) -> bool:
+    if set_zones_to_exclude is not None:
+        save_zone = True
+        if izone in set_zones_to_exclude:
+            save_zone = False
+            log.warning(f'skipping izone={izone} by exclusion')
+    elif set_zones_to_include is not None:
+        save_zone = False
+        if izone not in set_zones_to_include:
+            save_zone = True
+            log.warning(f'skipping izone={izone} by inclusion')
+    else:
+        raise RuntimeError((set_zones_to_exclude, set_zones_to_include))
+    return save_zone
 
 def zones_to_exclude_to_set(zones_to_exclude: Optional[list[int]]=None) -> set[int]:
     """

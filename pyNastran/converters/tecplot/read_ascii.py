@@ -248,7 +248,7 @@ def split_headers(headers_in: str, log: SimpleLogger) -> list[str]:
     while ichar < nchars:
         char = headers_in[ichar]
         if char == ',':
-            print(f'adding word = {word!r}')
+            #print(f'adding word = {word!r}')
             headers.append(word.strip())
             word = ''
             ichar += 1
@@ -261,7 +261,7 @@ def split_headers(headers_in: str, log: SimpleLogger) -> list[str]:
                 ichar += 1
                 if char2 == '"':
                     break
-            print(f'finished quoted word = {word}')
+            #print(f'finished quoted word = {word}')
         else:
             word += char
             ichar += 1
