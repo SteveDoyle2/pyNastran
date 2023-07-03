@@ -2,7 +2,7 @@ from typing import Optional, TextIO
 import os
 import numpy as np
 #import scipy.sparse
-from cpylog import SimpleLogger, get_logger
+from cpylog import SimpleLogger, get_logger2
 from pyNastran.utils import print_bad_path
 
 #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
@@ -38,7 +38,13 @@ SKIP_FLAGS = [
 
 
 class MonitorLoads:
-    def __init__(self, name, comp, classi, label, cp, xyz, coefficient):
+    def __init__(self, name: np.ndarray,
+                 comp: np.ndarray,
+                 classi: np.ndarray,
+                 label: np.ndarray,
+                 cp: np.ndarray,
+                 xyz: np.ndarray,
+                 coefficient: np.ndarray):
         self.name = name
         self.comp = comp
         self.group = classi
@@ -47,14 +53,25 @@ class MonitorLoads:
         self.xyz = xyz
         self.coefficient = coefficient
 
+    def __repr__(self) -> str:
+        msg = f'MonitorLoads; n={len(self.name)}'
+        return msg
 
 class TrimResults:
     def __init__(self):
-        self.aero_pressure = {}
-        self.aero_force = {}
-        self.structural_monitor_loads = {}
-        self.controller_state = {}
-        self.trim_variables = {} # TODO: not supported
+        # aero_pressure[(subcase, subtitle)] = (grid_id, loads)
+        self.aero_pressure: dict[tuple[str, str], tuple[np.ndarray, np.ndarray]] = {}
+
+        # aero_force[(subcase, subtitle)] = (grid_id, loads)
+        self.aero_force: dict[tuple[str, str], tuple[np.ndarray, np.ndarray]] = {}
+        self.structural_monitor_loads: dict[int, MonitorLoads] = {}
+
+        # controller_state = {'ALPHA': 2.0}
+        self.controller_state: dict[int, ControllerState] = {}
+
+        # trim_variables[name] = [idi, Type, trim_status, ux, ux_unit]
+        TrimVariables = dict[str, TrimVariable]
+        self.trim_variables: dict[int, TrimVariables] = {} # TODO: not supported
 
     def __repr__(self) -> str:
         msg = (
@@ -73,12 +90,15 @@ class TrimResults:
             msg += '\n  len(aero_pressure) = 0'
         return msg
 
+TrimVariable = tuple[int, str, str, float, str]
+ControllerState = dict[str, float]
+
 def read_f06_trim(f06_filename: str,
-                      log: Optional[SimpleLogger]=None,
-                      nlines_max: int=1_000_000,
-                      debug: bool=False) -> TrimResults:
+                  log: Optional[SimpleLogger]=None,
+                  nlines_max: int=1_000_000,
+                  debug: bool=False) -> TrimResults:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
-    log = get_logger(log=log, level='debug', encoding='utf-8')
+    log = get_logger2(log=log, debug=debug, encoding='utf-8')
     dirname = os.path.dirname(os.path.abspath(f06_filename))
     assert os.path.exists(f06_filename), print_bad_path(f06_filename)
     log.info(f'reading {f06_filename!r}')
@@ -230,7 +250,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
                                                     title: str, subtitle: str, subcase: str,
                                                     dirname: str,
                                                     #ipressure: int, iforce: int,
-                                                    log: SimpleLogger):
+                                                    log: SimpleLogger) -> tuple[str, int]:
     """
     '                              S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S'
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
@@ -395,7 +415,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         all_coeffs.append(coeffs)
     all_coeffs_stacked = np.stack(all_coeffs, axis=0)
     nrows = len(names)
-    assert all_coeffs_stacked.shape == (nrows, 6, 4), all_coeffs_stacked.shape
+    assert all_coeffs_stacked.shape == (nrows, 6, 5), all_coeffs_stacked.shape
 
     names_array = np.array(names)
     comps_array = np.array(comps)
@@ -413,9 +433,9 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     f06_file.seek(seek1)
     return line_end, iend
 
-def _get_controller_state(header_lines: list[str]) -> dict[str, float]:
-    controller_state = {}
-    controller_lines = []
+def _get_controller_state(header_lines: list[str]) -> ControllerState:
+    controller_state: ControllerState = {}
+    controller_lines: list[str] = []
     for i, line in enumerate(header_lines):
         if 'CONTROLLER STATE:' in line:
             controller_lines = header_lines[i+1:]
@@ -469,10 +489,10 @@ def _read_aeroelastic_trim_variables(f06_file: TextIO,
     line = f06_file.readline()
     i += 2
 
-    trim_variables = {}
+    trim_variables: dict[str, TrimVariable] = {}
     assert 'INTERCEPT' in line, line
     idi, name, Type, trim_status, ux, ux_unit = _split_trim_variable(line)
-    trim_variables[name] = [idi, Type, trim_status, ux, ux_unit]
+    trim_variables[name] = (idi, Type, trim_status, ux, ux_unit)
 
     line_end, iend, seek1 = _skip_to_page_stamp_and_rewind(f06_file, line, i, nlines_max)
 
@@ -484,7 +504,7 @@ def _read_aeroelastic_trim_variables(f06_file: TextIO,
         if len(line2) == 0:
             continue
         idi, name, Type, trim_status, ux, ux_unit = _split_trim_variable(line2)
-        trim_variables[name] = [idi, Type, trim_status, ux, ux_unit]
+        trim_variables[name] = (idi, Type, trim_status, ux, ux_unit)
     trim_results.trim_variables[isubcase] = trim_variables
     f06_file.seek(seek1)
 
@@ -628,7 +648,8 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     return line, i, ipressure, iforce
 
 def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
-                                                        line: str, i: int, nlines_max: int, log: SimpleLogger):
+                                                        line: str, i: int, nlines_max: int, log: SimpleLogger) -> tuple[
+                                                            str, int, np.ndarray, np.ndarray]:
     """
     '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'

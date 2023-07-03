@@ -32,11 +32,16 @@ MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class TestF06Utils(unittest.TestCase):
-    def _test_f06_trim(self):
+    def test_f06_trim(self):
         """tests split_float_colon"""
         f06_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm.f06')
-        _trim_results = read_f06_trim(f06_filename,
-                                     log=None, nlines_max=1_000_000, debug=False)
+        trim_results = read_f06_trim(f06_filename,
+                                     log=None, nlines_max=1_000_000, debug=None)
+        assert len(trim_results.aero_force.keys()) == 2
+        assert len(trim_results.aero_pressure.keys()) == 2
+        assert len(trim_results.controller_state.keys()) == 2
+        assert len(trim_results.trim_variables.keys()) == 2
+        assert len(trim_results.structural_monitor_loads.keys()) == 2
 
     def test_split_float_colon(self):
         """tests split_float_colon"""
