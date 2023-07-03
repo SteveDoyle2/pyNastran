@@ -44,7 +44,8 @@ class MonitorLoads:
                  label: np.ndarray,
                  cp: np.ndarray,
                  xyz: np.ndarray,
-                 coefficient: np.ndarray):
+                 coefficient: np.ndarray,
+                 cd: np.ndarray):
         self.name = name
         self.comp = comp
         self.group = classi
@@ -52,6 +53,7 @@ class MonitorLoads:
         self.cp = cp
         self.xyz = xyz
         self.coefficient = coefficient
+        self.cd = cd
 
     def __repr__(self) -> str:
         msg = f'MonitorLoads; n={len(self.name)}'
@@ -302,6 +304,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     xyzs = []
     cids = []
     all_coeffs = []
+    cds = []
     axis_to_index = {
         'CX': 0, 'CY': 1, 'CZ': 2,
         'CMX': 3, 'CMY': 4, 'CMZ': 5,}
@@ -329,14 +332,41 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         label = line.split('LABEL =')[1].strip()
 
         #'        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
-        line = f06_file.readline()
+        line = f06_file.readline().strip()
+        while ' =' in line or '= ' in line or '  ' in line:
+            line = line.replace(' =', '=').replace('= ', '=').replace('  ', ' ')
         i += 1
-        sline = [val.strip() for val in line.split('=')]
-        assert sline[0] == 'CID'
-        cid = int(sline[1][:-1])
-        xyz = [float(sline[2][:-1]),
-               float(sline[3][:-1]),
-               float(sline[4])]
+
+        sline = line.split(' ')
+        if len(sline) == 4:
+            # NX
+            assert 'CID' in sline[0], sline
+            cd = -1
+        else:
+            # TODO: doesn't support CD
+            assert len(sline) == 5, sline
+            # MSC
+            assert 'CP' in sline[0], sline
+            assert 'CD' in sline[4], sline
+            #['CP=100', 'X=0.00000E+00', 'Y=0.00000E+00', 'Z=0.00000E+00', 'CD=100']
+            sline_cd = sline[4].split('=')
+            assert sline_cd[0] == 'CD', sline
+            cd = int(sline_cd[1])
+
+        sline_cid_cd = sline[0].split('=')
+        sline_x = sline[1].split('=')
+        sline_y = sline[2].split('=')
+        sline_z = sline[3].split('=')
+        assert sline_x[0] == 'X', sline
+        assert sline_y[0] == 'Y', sline
+        assert sline_z[0] == 'Z', sline
+
+        cid = int(sline_cid_cd[1])
+        xyz = [
+            float(sline_x[1]),
+            float(sline_x[1]),
+            float(sline_x[1]),
+        ]
 
         unused_line0a = f06_file.readline()
         line0b = f06_file.readline().strip()
@@ -412,6 +442,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         #name_comps_classes_labels.append([name, comp, classi, label])
         cids.append(cid)
         xyzs.append(xyz)
+        cds.append(cd)
         all_coeffs.append(coeffs)
     all_coeffs_stacked = np.stack(all_coeffs, axis=0)
     nrows = len(names)
@@ -424,11 +455,12 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     cids_array = np.array(cids, dtype='int32')
     xyzs_array = np.array(xyzs, dtype='float64')
     all_coeffs_array = np.array(all_coeffs_stacked, dtype='float64')
+    cds_array = np.array(cds, dtype='int32')
 
     isubcase = int(subcase)
     trim_results.structural_monitor_loads[isubcase] = MonitorLoads(
         names_array, comps_array, classes_array, labels_array,
-        cids_array, xyzs_array, all_coeffs_array)
+        cids_array, xyzs_array, all_coeffs_array, cds_array)
     trim_results.controller_state[isubcase] = controller_state
     f06_file.seek(seek1)
     return line_end, iend
@@ -541,7 +573,7 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     ux = float(ux_str)
     assert Type in {'RIGID BODY', 'CONTROL SURFACE'}, Type
     assert trim_status in {'FIXED', 'FREE', 'LINKED'}, trim_status
-    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE'}, ux_unit
+    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE', 'RAD/S/S PER G'}, ux_unit
 
     return int_id, name, Type, trim_status, ux, ux_unit
 

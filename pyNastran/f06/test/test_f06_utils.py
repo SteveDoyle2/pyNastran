@@ -32,8 +32,8 @@ MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class TestF06Utils(unittest.TestCase):
-    def test_f06_trim(self):
-        """tests split_float_colon"""
+    def test_f06_trim_freedlm(self):
+        """tests read_f06_trim"""
         f06_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm.f06')
         trim_results = read_f06_trim(f06_filename,
                                      log=None, nlines_max=1_000_000, debug=None)
@@ -42,6 +42,28 @@ class TestF06Utils(unittest.TestCase):
         assert len(trim_results.controller_state.keys()) == 2
         assert len(trim_results.trim_variables.keys()) == 2
         assert len(trim_results.structural_monitor_loads.keys()) == 2
+
+    def test_f06_trim_aerobeam(self):
+        """tests read_f06_trim"""
+        f06_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.f06')
+        trim_results = read_f06_trim(f06_filename,
+                                     log=None, nlines_max=1_000_000, debug=None)
+        assert len(trim_results.aero_force.keys()) == 0
+        assert len(trim_results.aero_pressure.keys()) == 0
+        assert len(trim_results.controller_state.keys()) == 2
+        assert len(trim_results.trim_variables.keys()) == 2
+        assert len(trim_results.structural_monitor_loads.keys()) == 2
+
+    def test_f06_trim_cpmopt(self):
+        """tests read_f06_trim"""
+        f06_filename = os.path.join(MODEL_PATH, 'aero', 'cpmopt.f06')
+        trim_results = read_f06_trim(f06_filename,
+                                     log=None, nlines_max=1_000_000, debug=None)
+        assert len(trim_results.aero_force.keys()) == 0
+        assert len(trim_results.aero_pressure.keys()) == 0
+        assert len(trim_results.controller_state.keys()) == 4
+        assert len(trim_results.trim_variables.keys()) == 4
+        assert len(trim_results.structural_monitor_loads.keys()) == 4
 
     def test_split_float_colon(self):
         """tests split_float_colon"""
