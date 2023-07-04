@@ -22,33 +22,6 @@ from pyNastran.converters.tecplot.read_ascii import (
     read_zonetype,
 )
 
-def read_tecplot(tecplot_filename: PathLike,
-                 use_cols=None, dtype=None,
-                 filetype: str='guess',
-                 zones_to_exclude: Optional[list[int]] = None,
-                 zones_to_include: Optional[list[int]] = None,
-                 log: Optional[SimpleLogger]=None,
-                 debug: bool=False):
-    """loads a tecplot file
-
-    Parameters
-    ----------
-    zones_to_exclude : list[int]; default=None -> []
-        0-based list of zones to exlcude
-    zones_to_include : list[int]; default=None -> []
-        0-based list of zones to include (exclusive)
-    """
-    tecplot = Tecplot(log=log, debug=debug)
-    if use_cols:
-        tecplot.use_cols = use_cols
-        tecplot.dtype = dtype
-    tecplot.read_tecplot(tecplot_filename,
-                         filetype=filetype,
-                         zones_to_exclude=zones_to_exclude,
-                         zones_to_include=zones_to_include)
-    return tecplot
-
-
 class Tecplot(TecplotBinary):
     """
     Parses a binary/ASCII Tecplot 360 file.
@@ -122,6 +95,9 @@ class Tecplot(TecplotBinary):
         """
         filetype = filetype.lower()
         assert filetype in ['guess', 'ascii', 'binary'], filetype
+        if filetype == 'guess' and isinstance(tecplot_filename, StringIO):
+            filetype = 'ascii'
+
         if filetype == 'binary' or (filetype == 'guess' and is_binary_file(tecplot_filename)):
             self.read_tecplot_binary(
                 tecplot_filename,
@@ -389,6 +365,15 @@ class Tecplot(TecplotBinary):
             results.append(zonei.nodal_results)
         results_array = np.vstack(results)
         return results_array
+
+    def demote_elements(self) -> None:
+        for zone in self.zones:
+            zone.demote_elements()
+
+    def split_elements(self, ntri_nodes=1) -> None:
+        # type_limit: Iterable[str]
+        for zone in self.zones:
+            zone.split_elements(ntri_nodes=ntri_nodes)
 
     def read_table(self, tecplot_file: TextIO,
                    unused_iblock: int,
@@ -706,6 +691,33 @@ def _read_table_from_lines(lines: Iterable[str],
                    converters=None, skiprows=0,
                    usecols=use_cols_ints, unpack=False, ndmin=0)
     return A
+
+
+def read_tecplot(tecplot_filename: PathLike,
+                 use_cols=None, dtype=None,
+                 filetype: str='guess',
+                 zones_to_exclude: Optional[list[int]] = None,
+                 zones_to_include: Optional[list[int]] = None,
+                 log: Optional[SimpleLogger]=None,
+                 debug: bool=False) -> Tecplot:
+    """loads a tecplot file
+
+    Parameters
+    ----------
+    zones_to_exclude : list[int]; default=None -> []
+        0-based list of zones to exlcude
+    zones_to_include : list[int]; default=None -> []
+        0-based list of zones to include (exclusive)
+    """
+    tecplot = Tecplot(log=log, debug=debug)
+    if use_cols:
+        tecplot.use_cols = use_cols
+        tecplot.dtype = dtype
+    tecplot.read_tecplot(tecplot_filename,
+                         filetype=filetype,
+                         zones_to_exclude=zones_to_exclude,
+                         zones_to_include=zones_to_include)
+    return tecplot
 
 
 def main():  # pragma: no cover

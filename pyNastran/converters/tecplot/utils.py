@@ -32,7 +32,7 @@ def merge_tecplot_files(tecplot_filenames: list[str],
         model.write_tecplot(tecplot_filename_out)
     return model
 
-def merge_tecplot(argv: Optional[list[str]] = None) -> Tecplot:
+def merge_tecplot(argv: Optional[list[str]] = None, log=None) -> Tecplot:
     import sys
     if argv is None:
         argv = sys.argv[1:]
@@ -81,7 +81,7 @@ def merge_tecplot(argv: Optional[list[str]] = None) -> Tecplot:
           f'tecplot_filename_out={tecplot_filename_out}')
     model = merge_tecplot_files(
         tecplot_filenames,
-        tecplot_filename_out=None, log=None)
+        tecplot_filename_out=None, log=log)
 
     model.log.info(f'nzones_total = {model.nzones}')
     if is_binary:

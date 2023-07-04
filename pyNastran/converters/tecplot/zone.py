@@ -1,7 +1,7 @@
 from __future__ import annotations
 import copy
 from collections import defaultdict
-from typing import TextIO, Optional, Any # , TYPE_CHECKING
+from typing import TextIO, Optional, Any, Union # , TYPE_CHECKING
 
 import numpy as np
 from pyNastran.nptyping_interface import NDArrayN3int, NDArrayN4int # NDArrayN3float,
@@ -56,7 +56,8 @@ class CaseInsensitiveDictAlternates(dict):
             raise
         #log.info("GET %s['%s'] = %s" % str(dict.get(self, 'name_label')), str(key), str(val)))
         return val
-    def __setitem__(self, key: str, val: Union[int, float, str]) -> None:
+
+    def __setitem__(self, key: str, val: Union[int, float, str, list[str]]) -> None:
         #log.info("SET %s['%s'] = %s" % str(dict.get(self, 'name_label')), str(key), str(val)))
         key_upper = key.upper()
         key2 = self._key_map.get(key_upper, key_upper)
@@ -95,7 +96,8 @@ class Zone:
     @property
     def nxyz(self) -> int:
         nxyz = 0
-        for var in self.headers_dict['variables']:
+        variables: list[str] = self.headers_dict['variables']
+        for var in variables:
             if var.lower() in {'x', 'y', 'z'}:
                 nxyz += 1
         return nxyz
@@ -179,10 +181,10 @@ class Zone:
     def is_unstructured(self) -> bool:
         """are there unstructured elements"""
         is_unstructured: bool = (
-            len(self.tri_elements) or
-            len(self.quad_elements) or
-            len(self.tet_elements) or
-            len(self.hexa_elements)
+            len(self.tri_elements) > 0 or
+            len(self.quad_elements) > 0 or
+            len(self.tet_elements) > 0 or
+            len(self.hexa_elements) > 0
         )
         return is_unstructured
 
@@ -224,7 +226,9 @@ class Zone:
     def title(self) -> str:
         if 'TITLE' not in self.headers_dict:
             self.headers_dict['TITLE'] = 'tecplot geometry and solution file'
-        return self.headers_dict['TITLE']
+        title = self.headers_dict['TITLE']
+        assert isinstance(title, str), title
+        return title
     @title.setter
     def title(self, title: str) -> None:
         self.headers_dict['TITLE'] = title
@@ -248,7 +252,9 @@ class Zone:
     def datapacking(self) -> Optional[str]:
         """'POINT', 'BLOCK'"""
         try:
-            return self.headers_dict['DATAPACKING']
+            data_packing = self.headers_dict['DATAPACKING']
+            assert isinstance(data_packing, str), data_packing
+            return data_packing
         except KeyError:
             return None
 
@@ -277,12 +283,182 @@ class Zone:
             raise RuntimeError(zonetype)
         return zone_type_int
 
+    def split_elements(self, ntri_nodes: int=1) -> None:
+        """
+        Splits elements and linearly interpolates the data.
+
+        Supports:
+         - 2d/3d
+         - unused nodes
+
+        Falls apart if:
+         - ???
+
+            n=0; N=2         n=1;N=3;Ne=4  n=2;N=4;Ne=9=1+3+5
+              *                *3              *        1
+             / \              / \             / \     1
+            /   \            / C \           *---*      2
+           /     \    ->   6*-----*5        / \ / \   3
+          /       \        / \ D / \       *---*---*    3
+         /         \      / A \ / B \     / \ / \ / \ 5
+        *-----------*   1*-----*-----*2  *---*---*---*  4
+                               4
+
+        n  = [0, 1, 2,  3,  4,  5,  6,  7, 8,    9]  # number of intermediate nodes
+        N  = [2, 3, 4,  5,  6,  7,  8,  9, 10,  11]  # total number of nodes
+        Ne = [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]  # number of elements
+        Nn = [1, 3, 6, 10, 15, 21, 28, 36, 45,  55]  # number of nodes (ideally)
+
+        N = n + 2
+        Ne = (n+1)^2
+        n = Nn / (n + 1) * 2 - 2
+        Nn = (n + 1)(n + 2) // 2
+
+        Refinements
+        -----------
+        N =  [2, 3, 5,   9,   33]
+        n =  [0, 1, 3,   7,   31]
+        Ne = [1, 4, 16, 64, 1024]
+
+
+                        n=2                           n=5; N=7; Ne=36
+                          *                             *
+                         / \                           / \           1
+                        /   \                         *---*
+                       /     \                       / \ / \         3
+                      *-------*                     *---*---*
+                     / \     / \                   / \ / \ / \       5
+                    /   \   /   \                 *---*---*---*
+                   /     \ /     \               / \ / \ / \ / \     7
+                  *-------*-------*             *---*---*---*---*
+                 / \     / \     / \           / \ / \ / \ / \ / \   9
+                /   \   /   \   /   \         *---*---*---*---*---*
+               /     \ /     \ /     \       / \ / \ / \ / \ / \ / \ 11
+              *-------*-------*-------*     *---*---*---*---*---*---*
+
+        Using the n=2 (or more) method would create fewer duplicate nodes
+        N=1 is something like 4*n^2
+        nnodes0=4 nelements0=1; dt=0.00
+        nnodes1=7 nelements1=4; dt=0.00
+        nnodes2=19 nelements2=16; dt=0.00
+        nnodes3=67 nelements3=64; dt=0.00
+        nnodes4=259 nelements4=256; dt=0.00
+        nnodes5=1027 nelements5=1024; dt=0.00
+        nnodes6=4099 nelements6=4096; dt=0.00
+        nnodes7=16387 nelements7=16384; dt=0.00
+        nnodes8=65539 nelements8=65536; dt=0.02
+        nnodes9=262147 nelements9=262144; dt=0.05
+        nnodes10=1048579 nelements10=1048576; dt=0.12
+        nnodes11=4194307 nelements11=4194304; dt=0.57
+        nnodes12=16777219 nelements12=16777216; dt=2.16
+        """
+        zonetype = self.headers_dict['ZONETYPE']
+        if zonetype == 'FETRIANGLE':
+            assert ntri_nodes > 0, ntri_nodes
+            #ntri_nodes0 = ntri_nodes  # for debugging
+
+            # check for no unused nodes
+            #nnodes0 = self.zone_data.shape[0]
+            #unodes = np.unique(self.tri_elements.ravel())
+            #assert nnodes0 == len(unodes), 'run nodal_equivalence on the zone first'
+
+            import time
+            t0 = time.time()
+            # not super fast, but it's a lot more general
+            for irefine in range(ntri_nodes):
+                t1 = time.time()
+                nnodes0 = self.zone_data.shape[0]
+                nelements0 = self.tri_elements.shape[0]
+
+                assert self.tri_elements.min() == 0, self.tri_elements.min()
+                n1 = self.tri_elements[:, 0]
+                n2 = self.tri_elements[:, 1]
+                n3 = self.tri_elements[:, 2]
+
+                # we're lying a bit with the xyz1 name and
+                # working with all the result data
+                xyz1 = self.zone_data[n1, :]
+                xyz2 = self.zone_data[n2, :]
+                xyz3 = self.zone_data[n3, :]
+                #xyz = self.zone_data[:, :3]
+
+                # create nodes 456
+                #
+                # to simplify creating matched nodes, we'll
+                # create all the 4s, then 5s, and then 6s
+                #
+                # we're going to create a xyz4 that matches xyz5 or xyz6
+                # for the neighboring element to make stacking easier
+                # we waste some memory, but it's fine
+                assert self.tri_elements.min() == 0
+                n4 = np.arange(nnodes0, nnodes0 + nelements0)
+                n5 = n4 + nelements0
+                n6 = n5 + nelements0
+                xyz4 = (xyz1 + xyz2) / 2
+                xyz5 = (xyz2 + xyz3) / 2
+                xyz6 = (xyz3 + xyz1) / 2
+                self.zone_data = np.vstack([self.zone_data, xyz4, xyz5, xyz6])
+
+                # follow the pattern up above
+                tria = np.column_stack([n1, n4, n6])
+                trib = np.column_stack([n4, n2, n5])
+                tric = np.column_stack([n6, n5, n3])
+                trid = np.column_stack([n4, n5, n6])
+                self.tri_elements = np.vstack([tria, trib, tric, trid])
+                dt = time.time() - t1
+                self.log.debug(f'nnodes{irefine}={nnodes0} nelements{irefine}={nelements0}; dt={dt:.2f}')
+
+            dt = time.time() - t0
+            nnodes_final = self.zone_data.shape[0]
+            nelements_final = self.tri_elements.shape[0]
+            self.log.debug(f'nnodes_final={nnodes_final} nelements_final={nelements_final} dt={dt:.0f}')
+            self.log.debug('split triangles')
+            # TODO: this would be the place to do a nodal equivalence
+
+        elif zonetype in {'FEQUADRILATERAL', 'FETETRAHEDRON', 'FEBRICK'}:
+            # not supported
+            self.log.warning(f'splitting {zonetype} is not supported')
+            pass
+        else:  # pragma: no cover
+            raise RuntimeError(zonetype)
+
+    def demote_elements(self):
+        """
+        Tecplot is wasting memory, which is no big deal,
+        but mistyping elements makes some things more difficult
+         - accurate centroids
+         - splitting elements (and not creating mixed quad/tri meshes)
+        """
+        zonetype = self.headers_dict['ZONETYPE']
+        if zonetype in {'FETRIANGLE', 'FETETRAHEDRON'}:
+            # no demotion possible
+            pass
+        elif zonetype == 'FEQUADRILATERAL':
+            quads = self.quad_elements
+            #n1 = quads[:, 0]
+            #n2 = quads[:, 0]
+            n3 = quads[:, 0]
+            n4 = quads[:, 0]
+            itri = (n3 == n4)
+            demote_to_tris = itri.all()
+            if demote_to_tris:
+                zonetype = self.headers_dict['FETRIANGLE']
+                self.tri_elements = self.quad_elements[:, :3]
+                assert self.tri_elements.shape[1] == 3, self.tri_elements.shape
+                self.quad_elements = np.zeros((0, 4), dtype='int32')
+        elif zonetype == 'FEBRICK':
+            self.log.warning('demoting FEBRICK is not supported')
+        else:  # pragma: no cover
+            raise RuntimeError(zonetype)
+
     @property
     def zonetype(self) -> str:
         """FEBrick,  FETETRAHEDRON,  FETRIANGLE,  FEQUADRILATERAL"""
         #headers_dict['ZONETYPE'].upper() # FEBrick
         #try:
-        return self.headers_dict['ZONETYPE'].upper()
+        zonetype = self.headers_dict['ZONETYPE']
+        assert isinstance(zonetype, str), zonetype
+        return zonetype.upper()
         #except KeyError:
             #return None
 
@@ -311,7 +487,7 @@ class Zone:
         xyz_shape = str(self.xyz.shape)
         is3d = self.is_3d
         if 'I' in self.headers_dict:
-            msgi = self.repr_nijk()
+            msgi = repr_nijk(self.headers_dict)
         else:
             msgi = (
                 f'  datapacking = {self.datapacking!r}\n'
@@ -334,20 +510,6 @@ class Zone:
             #f'  dtype = {self.dtype}\n'
         )
         return msg
-
-    def repr_nijk(self) -> str:
-        ni = self.headers_dict['I']
-        if 'J' in self.headers_dict:
-            nj = self.headers_dict['J']
-            if 'K' in self.headers_dict:
-                nk = self.headers_dict['K']
-                msgi = f'  nI={ni} nJ={nj} nK={nk}\n'
-            else:
-                msgi = f'  nI={ni} nJ={nj}\n'
-        else:
-            assert 'K' not in self.headers_dict, list(self.headers_dict.keys())
-            msgi = f'  nI={ni}\n'
-        return msgi
 
     def write_unstructured_zone(self, tecplot_file: TextIO, ivars: list[int], is_points: bool,
                                 nnodes: int, nelements: int, zone_type: int, log: SimpleLogger,
@@ -610,7 +772,9 @@ class Zone:
 
     @property
     def variables(self) -> list[str]:
-        return self.headers_dict['variables']
+        variables = self.headers_dict['variables']
+        assert isinstance(variables, list), variables
+        return variables
 
     @variables.setter
     def variables(self, variables: list[str]) -> None:
@@ -630,7 +794,7 @@ class Zone:
 
     @property
     def is_3d(self) -> bool:
-        variables = self.headers_dict['VARIABLES']
+        variables: list[str] = self.variables
         is_x = 'X' in variables or 'x' in variables
         is_y = 'Y' in variables or 'y' in variables
         is_z = 'Z' in variables or 'z' in variables
@@ -639,7 +803,7 @@ class Zone:
 
     @property
     def is_2d(self) -> bool:
-        variables = self.headers_dict['VARIABLES']
+        variables: list[str] = self.variables
         is_x = 'X' in variables or 'x' in variables
         is_y = 'Y' in variables or 'y' in variables
         is_z = 'Z' in variables or 'z' in variables
@@ -655,6 +819,21 @@ class Zone:
         else:
             out = self.zone_data
         return out
+
+
+def repr_nijk(headers_dict: TecplotDict) -> str:
+    ni = headers_dict['I']
+    if 'J' in headers_dict:
+        nj = headers_dict['J']
+        if 'K' in headers_dict:
+            nk = headers_dict['K']
+            msgi = f'  nI={ni} nJ={nj} nK={nk}\n'
+        else:
+            msgi = f'  nI={ni} nJ={nj}\n'
+    else:
+        assert 'K' not in headers_dict, list(headers_dict.keys())
+        msgi = f'  nI={ni}\n'
+    return msgi
 
 def variables_exist(variables: list[str],
                     variables_to_check: list[str],

@@ -89,9 +89,9 @@ class TestTecplot(unittest.TestCase):
             os.path.join(MODEL_PATH, 'ascii/humanoid_tri.dat'),
         ]
         tecplot_filename_out = os.path.join(MODEL_PATH, 'junk.plt')
-        log = SimpleLogger(level='debug', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         args = tecplot_filenames + ['-b', '-o', tecplot_filename_out]
-        merge_tecplot(argv=args)
+        merge_tecplot(argv=args, log=log)
 
         args = tecplot_filenames + ['-v']
         with self.assertRaises(SystemExit):
@@ -155,6 +155,38 @@ class TestTecplot(unittest.TestCase):
             #read_tecplot(binary_plt, log=log)
             #model.write_tecplot(junk_plt, res_types=None, adjust_nids=True)
         #os.remove(junk_plt)
+
+    def test_tecplot_ctria3_split(self):
+        """CTRIA3 elements"""
+        log = SimpleLogger(level='debug')
+
+        lines = [
+            'TITLE     = "Solution mapped to surface triangulation"',
+            'VARIABLES = "x"',
+            '"y"',
+            '"z"',
+            '"Cp"',
+            'ZONE T="Surface"',
+            'Nodes=4, Elements=1, ZONETYPE=FETriangle',
+            'DATAPACKING=POINT',
+            '0. 0. 0. 1.',
+            '0. 1. 0. 2.',
+            '0. 0. 1. 3.',
+            '0. 1. 1. 4.',  # unused node
+            '1 2 3',
+        ]
+        tecplot_filename1 = StringIO()
+        tecplot_filename1.write('\n'.join(lines))
+        tecplot_filename1.seek(0)
+        tecplot_filename1 = os.path.join(MODEL_PATH, 'ascii', 'point_fetri_2d_02.dat')
+        #tecplot_filename1 = os.path.join(MODEL_PATH, 'ascii', 'humanoid_tri.dat')
+
+        tecplot_filename2 = os.path.join(MODEL_PATH, 'ascii', 'tria_split.plt')
+        tecplot = read_tecplot(tecplot_filename1, log=log)
+        #type_limit = ('tri')
+        tecplot.demote_elements()
+        tecplot.split_elements(ntri_nodes=3)
+        tecplot.write_tecplot_binary(tecplot_filename2)
 
     def test_tecplot_ctria3(self):
         """CTRIA3 elements"""
