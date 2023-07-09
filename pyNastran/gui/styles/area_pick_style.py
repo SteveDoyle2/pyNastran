@@ -19,7 +19,7 @@ import vtk
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from vtk.util.numpy_support import vtk_to_numpy
 from pyNastran.gui.utils.vtk.vtk_utils import (
-    create_unstructured_point_grid, numpy_to_vtk_points)
+    create_unstructured_point_grid, numpy_to_vtk_points, set_vtk_id_filter_name)
 from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui
 
 #class AreaPickStyle(vtk.vtkInteractorStyleRubberBandPick):
@@ -339,7 +339,8 @@ def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtk.vtkPolyData],
     if not is_nids:
         ids.PointIdsOff()
     #ids.FieldDataOn()
-    ids.SetIdsArrayName(idsname)
+
+    set_vtk_id_filter_name(ids, idsname)
     return ids
 
 def grid_ids_frustum_to_ugrid_ugrid_flipped(grid, ids, frustum):
