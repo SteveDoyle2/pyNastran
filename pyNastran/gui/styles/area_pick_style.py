@@ -12,7 +12,7 @@ http://www.vtk.org/Wiki/VTK/Examples/Cxx/Picking/HighlightSelection
 http://public.kitware.com/pipermail/vtkusers/2012-January/072046.html
 http://vtk.1045678.n5.nabble.com/Getting-the-original-cell-id-s-from-vtkExtractUnstructuredGrid-td1239667.html
 """
-from typing import Union
+from typing import Union, Callable, Optional
 import numpy as np
 import vtk
 #from vtk.util import numpy_support
@@ -42,8 +42,13 @@ from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui
 #class AreaPickStyle(vtk.vtkInteractorStyleDrawPolygon):  # not sure how to use this one...
 class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
     """Picks nodes & elements with a visible box widget"""
-    def __init__(self, parent=None, is_eids=True, is_nids=True, representation='wire',
-                 name=None, callback=None, cleanup=True):
+    def __init__(self, parent=None,
+                 is_eids: bool=True,
+                 is_nids: bool=True,
+                 representation: str='wire',
+                 name=None,
+                 callback: Optional[Callable]=None,
+                 cleanup: bool=True):
         """creates the AreaPickStyle instance"""
         # for vtk.vtkInteractorStyleRubberBandZoom
         self.AddObserver("LeftButtonPressEvent", self._left_button_press_event)
@@ -51,7 +56,7 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         self.AddObserver("RightButtonPressEvent", self.right_button_press_event)
         self.parent = parent
         self.area_pick_button = self.parent.actions['area_pick']
-        self.picker_points = []
+        self.picker_points: list[float] = []
         self.parent.area_picker.SetRenderer(self.parent.rend)
         self.is_eids = is_eids
         self.is_nids = is_nids
@@ -62,7 +67,7 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         self._pick_visible = False
         self.name = name
         assert name is not None
-        self.actors = []
+        self.actors: list[vtk.vtkActor] = []
 
     def _left_button_press_event(self, obj, event):
         """gets the first point"""
@@ -340,7 +345,10 @@ def get_ids_filter(grid: Union[vtkUnstructuredGrid, vtk.vtkPolyData],
         ids.PointIdsOff()
     #ids.FieldDataOn()
 
-    set_vtk_id_filter_name(ids, idsname)
+    if is_nids:
+        set_vtk_id_filter_name(ids, idsname, point_cell_type=0)
+    if is_eids:
+        set_vtk_id_filter_name(ids, idsname, point_cell_type=1)
     return ids
 
 def grid_ids_frustum_to_ugrid_ugrid_flipped(grid, ids, frustum):

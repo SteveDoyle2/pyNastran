@@ -502,10 +502,24 @@ def update_axis_text_size(axis: vtk.vtkAxes,
         text.SetWidth(coord_text_scale * width)
         text.SetHeight(coord_text_scale * height)
 
-def set_vtk_id_filter_name(ids: vtk.vtkIdFilter, name: str) -> None:
+def set_vtk_id_filter_name(ids: vtk.vtkIdFilter, name: str,
+                           point_cell_type: int) -> None:
+    """
+    Parameters
+    ----------
+    point_cell_type : int
+        0 : point
+        1 : cell
+
+    """
     try:
         if VTK_VERSION >= [9, 2]:
-            ids.SetPointIdsArrayName(name)
+            if point_cell_type == 0:
+                ids.SetPointIdsArrayName(name)
+            elif point_cell_type == 1:
+                ids.SetCellIdsArrayName(name)
+            else:
+                raise RuntimeError(point_cell_type)
         else:
             ids.SetIdsArrayName(name)
     except AttributeError:
