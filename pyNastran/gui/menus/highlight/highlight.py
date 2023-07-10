@@ -11,7 +11,12 @@ from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog) # QCheckBox
+
 import vtk
+from vtk import (
+    vtkActor, vtkActor2D, vtkLODActor, vtkRenderer, vtkPolyDataMapper,
+    vtkLabeledDataMapper, vtkCellCenters,
+    vtkIdFilter, vtkUnstructuredGridGeometryFilter, vtkVertexGlyphFilter)
 from vtk.util.numpy_support import vtk_to_numpy
 
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
@@ -82,7 +87,7 @@ class HighlightWindow(PyDialog):
             self._annotation_size = settings.annotation_size
         self._updated_window = False
 
-        self.actors = []
+        self.actors: list[vtkActor2D] = []
         self._default_font_size = data['font_size']
         self.model_name = data['model_name']
         assert len(self.model_name) > 0, self.model_name
@@ -332,7 +337,6 @@ class HighlightWindow(PyDialog):
             return False
         self.on_remove_actors()
 
-
         gui = self.parent()
         mouse_actions = gui.mouse_actions
         grid = mouse_actions.get_grid_selected(self.model_name)
@@ -349,61 +353,16 @@ class HighlightWindow(PyDialog):
         make_node_labels = True
 
         if make_labels:
-            actors = self._save_mark_actors(gui, make_node_labels, make_element_labels,
-                                            nnodes, nelements, actors)
+            rend = gui.rend
+            actors = create_mark_actors(
+                rend, make_node_labels, make_element_labels,
+                nnodes, nelements, actors, label_size=self._annotation_size)
 
         if actors:
             add_actors_to_gui(gui, actors, render=True)
             self.actors = actors
         gui.Render()
         return passed
-
-    def _save_mark_actors(self, gui, make_node_labels, make_element_labels,
-                          nnodes, nelements, actors):
-        """replace the actors with labels"""
-        iactor = 0
-        actors2 = []
-        if make_node_labels and nnodes:
-            mapper = actors[iactor].GetMapper()
-            mygrid = mapper.GetInput()
-
-            point_id_filter = get_ids_filter(
-                mygrid, idsname='Ids_points', is_nids=True, is_eids=False)
-            point_id_filter.SetFieldData(1)
-            point_id_filter.SetPointIds(0)
-            point_id_filter.FieldDataOn()
-
-            label_actor = create_node_labels(
-                point_id_filter, mygrid, gui.rend, label_size=self._annotation_size)
-            #actors.append(label_actor)
-            actors2.append(label_actor)
-            iactor += 1
-
-        if make_element_labels and nelements:
-            mapper = actors[iactor].GetMapper()
-            mygrid = mapper.GetInput()
-
-            element_id_filter = get_ids_filter(
-                mygrid, idsname='Ids_cells', is_nids=False, is_eids=True)
-            element_id_filter.SetFieldData(1)
-            element_id_filter.SetCellIds(0)
-            element_id_filter.FieldDataOn()
-
-            # Create labels for cells
-            cell_centers = vtk.vtkCellCenters()
-            cell_centers.SetInputConnection(element_id_filter.GetOutputPort())
-
-            cell_mapper = vtk.vtkLabeledDataMapper()
-            cell_mapper.SetInputConnection(cell_centers.GetOutputPort())
-            cell_mapper.SetLabelModeToLabelScalars()
-
-            label_actor = vtk.vtkActor2D()
-            label_actor.SetMapper(cell_mapper)
-
-            #actors.append(label_actor)
-            actors2.append(label_actor)
-            iactor += 1
-        return actors2
 
     def on_remove_actors(self):
         """removes multiple vtk actors"""
@@ -428,39 +387,105 @@ class HighlightWindow(PyDialog):
         self.close()
 
 
-def create_node_labels(point_id_filter: vtk.vtkIdFilter,
+def create_mark_actors(rend: vtkRenderer,
+                       make_node_labels: bool, make_element_labels: bool,
+                       nnodes: int, nelements: int,
+                       actors: list[vtkLODActor],
+                       label_size: float=10.0) -> list[vtkActor2D]:
+    """Replace the actors with labels
+
+    For one actor (e.g., the main model), you may want to show many node/element ids.
+    Thus, you'll make 1 label_actor per actor.
+    """
+    iactor = 0
+    actors2 = []
+    if make_node_labels and nnodes:
+        actor = actors[iactor]
+        label_actor = create_node_label_actor(actor, rend, label_size=label_size)
+        #actors.append(label_actor)
+        actors2.append(label_actor)
+        iactor += 1
+
+    if make_element_labels and nelements:
+        actor = actors[iactor]
+        label_actor = create_cell_label_actor(actor, rend, label_size=label_size)
+        #actors.append(label_actor)
+        actors2.append(label_actor)
+        iactor += 1
+    return actors2
+
+def create_cell_label_actor(actor: vtkLODActor, rend: vtkRenderer,
+                            label_size: float) -> vtkActor2D:
+    mapper = actor.GetMapper()
+    mygrid = mapper.GetInput()
+
+    element_id_filter = get_ids_filter(
+        mygrid, idsname='Ids_cells', is_nids=False, is_eids=True)
+    element_id_filter.SetFieldData(1)
+    element_id_filter.SetCellIds(0)
+    element_id_filter.FieldDataOn()
+
+    # Create labels for cells
+    cell_centers = vtkCellCenters()
+    cell_centers.SetInputConnection(element_id_filter.GetOutputPort())
+
+    cell_mapper = vtkLabeledDataMapper()
+    cell_mapper.SetInputConnection(cell_centers.GetOutputPort())
+    cell_mapper.SetLabelModeToLabelScalars()
+
+    label_actor = vtkActor2D()
+    label_actor.SetMapper(cell_mapper)
+    return label_actor
+
+
+def create_node_label_actor(actor: vtkLODActor, rend: vtkRenderer,
+                            label_size: float) -> vtkActor2D:
+    mapper = actor.GetMapper()
+    mygrid = mapper.GetInput()
+
+    point_id_filter = get_ids_filter(
+        mygrid, idsname='Ids_points', is_nids=True, is_eids=False)
+    point_id_filter.SetFieldData(1)
+    point_id_filter.SetPointIds(0)
+    point_id_filter.FieldDataOn()
+
+    label_actor = create_node_labels(
+        point_id_filter, mygrid, rend, label_size=label_size)
+    return label_actor
+
+def create_node_labels(point_id_filter: vtkIdFilter,
                        grid: vtkUnstructuredGrid,
-                       rend: vtk.vtkRenderer,
-                       label_size: float=10.0):
+                       rend: vtkRenderer,
+                       label_size: float=10.0) -> vtkActor2D:
     """creates the node labels"""
     # filter inner points, so only surface points will be available
-    geo = vtk.vtkUnstructuredGridGeometryFilter()
+    geo = vtkUnstructuredGridGeometryFilter()
     geo.SetInputData(grid)
 
     # points
-    vertex_filter = vtk.vtkVertexGlyphFilter()
+    vertex_filter = vtkVertexGlyphFilter()
     vertex_filter.SetInputConnection(geo.GetOutputPort())
     vertex_filter.Update()
 
-    points_mapper = vtk.vtkPolyDataMapper()
+    points_mapper = vtkPolyDataMapper()
     points_mapper.SetInputConnection(vertex_filter.GetOutputPort())
     points_mapper.ScalarVisibilityOn()
-    points_actor = vtk.vtkActor()
+    points_actor = vtkActor()
     points_actor.SetMapper(points_mapper)
     points_actor.GetProperty().SetPointSize(label_size)
 
     # point labels
-    label_mapper = vtk.vtkLabeledDataMapper()
+    label_mapper = vtkLabeledDataMapper()
     label_mapper.SetInputConnection(point_id_filter.GetOutputPort())
     label_mapper.SetLabelModeToLabelFieldData()
-    label_actor = vtk.vtkActor2D()
+    label_actor = vtkActor2D()
     label_actor.SetMapper(label_mapper)
     return label_actor
 
 def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
                               all_nodes=None, nodes=None, set_node_scalars: bool=True,
                               all_elements=None, elements=None, set_element_scalars: bool=True,
-                              add_actors: bool=False) -> list[vtk.vtkLODActor]:
+                              add_actors: bool=False) -> list[vtkLODActor]:
     """creates nodes & element highlighted objects"""
     actors = []
     nnodes = 0
@@ -500,11 +525,12 @@ def create_highlighted_actors(gui, grid: vtkUnstructuredGrid,
             element_ids_array = numpy_to_vtk(elements)
             ugrid.GetPointData().SetScalars(None)
             ugrid.GetCellData().SetScalars(element_ids_array)
-        actor = create_highlighted_actor(gui, ugrid, representation='wire', add_actor=add_actors)
+        actor = create_highlighted_actor(gui, ugrid, representation='wire',
+                                         add_actor=add_actors)
         actors.append(actor)
     return actors
 
-def check_float(cell):
+def check_float(cell) -> tuple[float, bool]:
     """validate the value is floatable"""
     text = cell.text()
     value = float(text)
