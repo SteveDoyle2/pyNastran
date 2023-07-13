@@ -12,6 +12,7 @@ import numpy as np
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk # vtk_to_numpy
 
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.gui.utils.vtk.base_utils import (
     vtkConstants, numpy_to_vtk, numpy_to_vtkIdTypeArray,
@@ -500,4 +501,28 @@ def update_axis_text_size(axis: vtk.vtkAxes,
     for text in texts:
         text.SetWidth(coord_text_scale * width)
         text.SetHeight(coord_text_scale * height)
+
+def set_vtk_id_filter_name(ids: vtk.vtkIdFilter, name: str,
+                           point_cell_type: int) -> None:
+    """
+    Parameters
+    ----------
+    point_cell_type : int
+        0 : point
+        1 : cell
+
+    """
+    try:
+        if VTK_VERSION >= [9, 2]:
+            if point_cell_type == 0:
+                ids.SetPointIdsArrayName(name)
+            elif point_cell_type == 1:
+                ids.SetCellIdsArrayName(name)
+            else:
+                raise RuntimeError(point_cell_type)
+        else:
+            ids.SetIdsArrayName(name)
+    except AttributeError:
+        print(f'  failed setting SetIdsArrayName to name {name!r}')
+    return
 

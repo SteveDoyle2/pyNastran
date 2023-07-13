@@ -263,9 +263,9 @@ class MarkActions:
         try:
             result_values = case[cell_ids]
         except IndexError:
-            msg = ('case[cell_id] is out of bounds; length=%s\n'
-                   'result_name=%r cell_id=%r case_key=%r\n' % (
-                       len(case), res_name, cell_ids, case_key))
+            msg = (
+                f'case[cell_id] is out of bounds; length={len(case)}\n'
+                f'result_name={res_name!r} cell_id={cell_ids} case_key={case_key}\n')
             raise IndexError(msg)
 
         return res_name, result_values
@@ -398,8 +398,8 @@ class MarkActions:
 
         """
         if icase not in self.gui.label_actors:
-            msg = 'icase=%r not in label_actors=[%s]' % (
-                icase, ', '.join(self.gui.label_actors))
+            names = ', '.join(self.gui.label_actors)
+            msg = f'icase={icase} not in label_actors=[{names}]'
             self.gui.log_error(msg)
             return
         slot = self.gui.label_actors[icase]

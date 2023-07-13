@@ -4,6 +4,7 @@ The highlight menu handles:
  - Preferences
 
 """
+from typing import Any
 import numpy as np
 
 from qtpy import QtGui
@@ -44,7 +45,7 @@ class HighlightWindow(PyDialog):
     |     Highlight Close      |
     +--------------------------+
     """
-    def __init__(self, data, menu_type, win_parent=None):
+    def __init__(self, data: dict[str, Any], menu_type: str, win_parent=None):
         """
         Saves the data members from data and
         performs type checks
