@@ -665,11 +665,11 @@ def _stack(zone: Zone,
         #print('**', len(zone_data_list), 'shape=', zone.zone_data.shape)
 
     if zone.is_3d:
-        zone.log.info('3d zone')
+        zone.log.debug('  3d zone')
         zone.xyz
         zone.nodal_results
     elif zone.is_2d:
-        zone.log.info('2d zone')
+        zone.log.debug('  2d zone')
         zone.xy
     else:
         zone.nodal_results
