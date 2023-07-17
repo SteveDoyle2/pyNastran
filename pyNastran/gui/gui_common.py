@@ -303,6 +303,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('modify_groups', 'Modify Groups...', '', None, 'Create/Edit/Delete Groups', self.on_set_modify_groups),
                 ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
                 ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
+                ('create_groups_by_model_group', 'Create Groups By Model Group', '', None, 'Create Groups', self.create_groups_by_model_group),
                 #('create_list', 'Create Lists through Booleans', '', None, 'Create List', self.create_list),
 
                 # logging
@@ -462,7 +463,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         ]
         if self.is_groups:
             menu_view += ['modify_groups', 'create_groups_by_property_id',
-                          'create_groups_by_visible_result']
+                          'create_groups_by_visible_result',
+                          'create_groups_by_model_group',]
 
         menu_view += [
             '', 'clipping', #'axis',

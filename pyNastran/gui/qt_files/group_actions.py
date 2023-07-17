@@ -3,7 +3,8 @@ import traceback
 import numpy as np
 
 from pyNastran.gui.menus.groups_modify.groups_modify import Group
-
+from pyNastran.bdf.bdf_interface.model_group import ModelGroup
+from pyNastran.bdf.utils import parse_patran_syntax
 
 class GroupActions:
     def __init__(self, gui):
@@ -41,7 +42,7 @@ class GroupActions:
                 raise
         return ngroups
 
-    def create_groups_by_property_id(self, nlimit=500):
+    def create_groups_by_property_id(self, nlimit: int=500):
         """
         Creates a group for each Property ID.
 
@@ -50,7 +51,7 @@ class GroupActions:
         self._create_groups_by_name('PropertyID', 'property', nlimit=nlimit)
         self.gui.log_command('create_groups_by_property_id()')
 
-    def _create_groups_by_name(self, name, prefix, nlimit=500):
+    def _create_groups_by_name(self, name: str, prefix: str, nlimit: int=500) -> int:
         """
         Helper method for `create_groups_by_visible_result` and `create_groups_by_property_id`
         """
@@ -85,4 +86,42 @@ class GroupActions:
             group.element_ids = eids[ids]
             self.gui.log_info('creating group=%r' % name)
             self.gui.groups[name] = group
+        return ngroups
+
+    def create_groups_by_model_group(self, model_groups: dict[int, ModelGroup]) -> int:
+        """
+        Uses the model_groups object
+        """
+        #eids = self.find_result_by_name('ElementID')
+        #elements_pound = eids.max()
+        try:
+            eids = self.gui.groups['main'].element_ids
+            elements_pound = self.gui.groups['main'].elements_pound
+        except Exception as error:
+            self.gui.log.error('Cannot create groups as there are no elements in the model')
+            self.gui.log.error(str(error))
+            if self.gui.IS_GUI_TESTING:
+                raise
+            return 0
+
+        #result = self.gui.find_result_by_name(name)
+        ngroups = 0
+        for name, group in model_groups.items():
+            if group.elements is None:
+                continue
+            elements_str = group.get_patran_syntax(group.elements)
+            elements = parse_patran_syntax(elements_str)
+
+            ids = np.searchsorted(eids, elements)
+            actual_eids = eids[ids]
+            assert np.all(actual_eids == elements)
+
+            element_str = ''
+            group = Group(
+                name, element_str, elements_pound,
+                editable=True)
+            group.element_ids = actual_eids
+            self.gui.log_info('creating group=%r' % name)
+            self.gui.groups[name] = group
+            ngroups += 1
         return ngroups

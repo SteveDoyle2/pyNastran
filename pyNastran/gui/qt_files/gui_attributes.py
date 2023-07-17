@@ -1541,13 +1541,18 @@ class GuiAttributes:
         """
         return self.group_actions.create_groups_by_visible_result(nlimit=nlimit)
 
-    def create_groups_by_property_id(self):
+    def create_groups_by_property_id(self) -> int:
         """
         Creates a group for each Property ID.
 
         As this is somewhat Nastran specific, create_groups_by_visible_result exists as well.
         """
         return self.group_actions.create_groups_by_property_id()
+
+    def create_groups_by_model_group(self) -> int:
+        if hasattr(self, 'model') and hasattr(self.model, 'model_groups'):
+            return self.group_actions.create_groups_by_model_group(self.model.model_groups)
+        return 0
 
     #---------------------------------------------------------------------------
     def update_camera(self, code) -> None:
