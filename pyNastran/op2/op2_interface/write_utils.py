@@ -64,7 +64,7 @@ def write_table_header(op2_file: BinaryIO, fascii: TextIO, table_name: str):
     table0_format = '<4i 8s i'
     struct_table = Struct(table0_format)
     op2_file.write(struct_table.pack(*table0))
-    fascii.write('%s header0 = %s\n' % (table_name, table0))
+    fascii.write('write_table_header: %s header0 = %s\n' % (table_name, table0))
 
 
 def to_column_bytes(data_list: list[np.ndarray], dtype_out: str,

@@ -290,10 +290,10 @@ class MarkActions:
 
         """
         actors = []
-        if eids and representation in ['wire', 'surface']:
+        if eids and representation in {'wire', 'surface'}:
             actor = self.highlight_elements(self, eids, model_name=model_name)
             actors.append(actor)
-        if nids and representation in ['points']:
+        if nids and representation == 'points':
             actor = self.highlight_nodes(self, nids, model_name=model_name)
             actors.append(actor)
         return actors

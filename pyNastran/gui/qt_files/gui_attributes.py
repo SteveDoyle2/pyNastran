@@ -1511,6 +1511,12 @@ class GuiAttributes:
         self.tool_actions.on_load_user_geom(csv_filename=csv_filename, name=name, color=color)
 
     @start_stop_performance_mode
+    def on_save_vtk(self, vtk_filename=None) -> bool:
+        is_failed = self.tool_actions.on_save_vtk(
+            vtk_filename=vtk_filename)
+        return is_failed
+
+    @start_stop_performance_mode
     def on_load_csv_points(self, csv_filename=None, name=None, color=None) -> bool:
         """
         Loads a User Points CSV File of the form:

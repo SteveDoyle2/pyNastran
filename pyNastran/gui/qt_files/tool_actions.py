@@ -15,6 +15,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.locale import func_str
 from pyNastran.gui import font_file
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
+from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, update_axis_text_size
 from pyNastran.gui.utils.load_results import load_user_geom
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
@@ -544,9 +545,42 @@ class ToolActions:
         #prop.SetPointSize(4)
 
     #---------------------------------------------------------------------------
+    def on_save_vtk(self, vtk_filename: Optional[str]=None) -> bool:
+        gui = self.gui
+        grid = gui.grid
+        if grid is None:
+            return
+
+        is_failed = True
+        if vtk_filename in {None, False}:
+            title = 'Select the VTK file name for export'
+            wildcard_delimited = 'VTK (*.vtu; *.vtk)'
+            default_dirname = os.getcwd()
+            vtk_filename, wildcard = save_file_dialog(
+                gui, title,
+                default_dirname, wildcard_delimited)
+            #assert wildcard == 'VTK (*.vtu; *.vtk)', wildcard 'VTK (*.vtu; *.vtk)'
+            if not vtk_filename:
+                return is_failed
+
+        if gui.format == 'nastran':
+            from pyNastran.converters.nastran.nastran_to_vtk import save_nastran_results
+            vtk_ugrid = save_nastran_results(gui)
+        else:
+            raise RuntimeError(gui.format)
+            #for case in gui.result_cases:
+
+        vtk_ugrid = vtk.vtkUnstructuredGrid()
+        writer = vtk.vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(vtk_filename)
+        writer.SetInputData(vtk_ugrid)
+        writer.Write()
+
+        return is_failed
+
     def on_load_csv_points(self, csv_filename: Optional[str]=None,
                            name: Optional[str]=None,
-                           color: Optional[list[float]]=None):
+                           color: Optional[list[float]]=None) -> bool:
         """
         Loads a User Points CSV File of the form:
 
@@ -572,7 +606,7 @@ class ToolActions:
         """
         is_failed = True
         gui = self.gui
-        if csv_filename in [None, False]:
+        if csv_filename in {None, False}:
             title = 'Load User Points'
             csv_filename = gui._create_load_file_dialog(
                 gui.wildcard_delimited, title)[1]

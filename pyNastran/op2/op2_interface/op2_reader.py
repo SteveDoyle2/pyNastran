@@ -5729,13 +5729,13 @@ class OP2Reader:
             month, day = day, month
         else:
             year += 2000
+        #self.log.debug(f'{month}/{day}/{year:d} zero={zero} one={one}')
         month, day, year = self._set_op2_date(month, day, year)
 
-        #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
         #if self.is_debug_file:
         if self.is_debug_file:
-            self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, '
-                                    'zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
+            self.binary_debug.write(f'  [subtable_name, month={month:d}, day={day:d}, year={year:d}, '
+                                    f'zero={zero:d}, one={one:d}]\n\n')
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one in [0, 1], one  # 0, 50
 

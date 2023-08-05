@@ -1,20 +1,22 @@
 #pylint: disable=C0301,C0111
+from __future__ import annotations
 import copy
 import warnings
 from itertools import count
 from struct import pack
-from typing import Union, Optional
+from typing import Union, TYPE_CHECKING
 import numpy as np
 
 from cpylog import SimpleLogger
 from pyNastran import is_release
-from pyNastran.utils import object_attributes, object_methods, object_stats
+from pyNastran.utils import object_attributes, object_methods, object_stats, simplify_object_keys
 from pyNastran.utils.numpy_utils import integer_types
 
-#from pyNastran.utils import list_print
 from pyNastran.op2.errors import OverwriteTableError
 from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_sort_method_from_table_name
 from pyNastran.op2.op2_interface.write_utils import write_table_header, export_to_hdf5
+if TYPE_CHECKING:
+    import pandas as pd
 Date = tuple[int, int, int]
 
 NULL_GRIDTYPE = {538976288, 1065353216}
@@ -179,8 +181,8 @@ class BaseScalarObject(Op2Codes):
         #assert isinstance(self.name, (str, bytes)), 'name=%s type=%s' % (self.name, type(self.name))
 
     def object_attributes(self, mode: str='public', keys_to_skip=None,
-                          filter_properties: bool=False):
-        keys_to_skip = _simplify_keys(keys_to_skip)
+                          filter_properties: bool=False) -> list[str]:
+        keys_to_skip = simplify_object_keys(keys_to_skip)
 
         my_keys_to_skip = [
             'object_methods', 'object_attributes', ', object_stats',
@@ -188,22 +190,23 @@ class BaseScalarObject(Op2Codes):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
                                  filter_properties=filter_properties)
 
-    def object_methods(self, mode: str='public', keys_to_skip=None):
-        keys_to_skip = _simplify_keys(keys_to_skip)
+    def object_methods(self, mode: str='public', keys_to_skip=None) -> list[str]:
+        keys_to_skip = simplify_object_keys(keys_to_skip)
 
         my_keys_to_skip = [
             'object_methods', 'object_attributes', ', object_stats',
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    def object_stats(self, mode: str='public', keys_to_skip=None):
-        keys_to_skip = _simplify_keys(keys_to_skip)
+    def object_stats(self, mode: str='public', keys_to_skip=None,
+                     filter_properties: bool=False) -> str:
+        keys_to_skip = simplify_object_keys(keys_to_skip)
 
         my_keys_to_skip = [
             'object_methods', 'object_attributes', ', object_stats',
         ]
         return object_stats(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
-                            filter_properties=False)
+                            filter_properties=filter_properties)
 
     def __eq__(self, table) -> bool:  # pragma: no cover
         #raise NotImplementedError(str(self.get_stats()))
@@ -259,13 +262,6 @@ class BaseScalarObject(Op2Codes):
         if not is_release:
             raise NotImplementedError(msg)
         return msg
-
-def _simplify_keys(keys_to_skip: Optional[list[str]]) -> list[str]:
-    if keys_to_skip is None:
-        keys_to_skip = []
-    elif isinstance(keys_to_skip, str):
-        keys_to_skip = [keys_to_skip]
-    return keys_to_skip
 
 
 class ScalarObject(BaseScalarObject):
@@ -348,8 +344,7 @@ class ScalarObject(BaseScalarObject):
             shape = [int(i) for i in self.data.shape]
             headers = self.get_headers()
             headers_str = str(', '.join(headers))
-            msg.append('%s[%s]; %s; [%s]\n' % (
-                class_name, self.isubcase, shape, headers_str))
+            msg.append(f'{class_name}[{self.isubcase}]; {shape}; [{headers_str}]\n')
         return msg
 
     def __eq__(self, table) -> bool:  # pragma: no cover
@@ -444,7 +439,7 @@ class ScalarObject(BaseScalarObject):
         return sort_method
 
     @property
-    def dataframe(self):
+    def dataframe(self) -> pd.DataFrame:
         """alternate way to get the dataframe"""
         return self.data_frame
 
@@ -485,7 +480,7 @@ class ScalarObject(BaseScalarObject):
                     dtypei = 'str'
                 else:
                     dtypei = type(vals_array)
-            msg += '%s%s = %s; dtype=%s\n' % (prefix, name, vals_array, dtypei)
+            msg += f'{prefix}{name} = {vals_array}; dtype={dtypei}\n'
         #print("***data_names =", self.data_names)
         return [msg]
 
@@ -1031,7 +1026,7 @@ def get_times_dtype(nonlinear_factor: Union[int, float], size: int,
         return dtype, idtype, fdtype
     return dtype, idtype, fdtype
 
-def get_complex_times_dtype(size: int) -> tuple[str, str, str]:
+def get_complex_times_dtype(size: int) -> tuple[str, str]:
     #assert isinstance()
     #dtype = 'float'
     #if isinstance(nonlinear_factor, integer_types):

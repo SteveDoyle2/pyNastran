@@ -15,6 +15,7 @@ MSC_LONG_VERSION = [
     b'XXXXXXXX20210', b'XXXXXXXX20211', b'XXXXXXXX20212', b'XXXXXXXX20214',
     b'XXXXXXXX20220', b'XXXXXXXX20221', b'XXXXXXXX20222',
     b'XXXXXXXX20230', b'XXXXXXXX20231', b'XXXXXXXX20232',  # not checked
+    b'XXXXXXXX20240', b'XXXXXXXX20241', b'XXXXXXXX20242',  # not checked
 ]
 
 OPTISTRUCT_VERSIONS = [
@@ -23,7 +24,10 @@ OPTISTRUCT_VERSIONS = [
     b'OS2018.1',
     b'OS2019.1', b'OS2019.2',
     b'OS2020', b'OS2020.1',
-    b'OS2021.1',
+    b'OS2021.1', b'OS2021.2',
+    b'OS2022.1', b'OS2022.2',
+    b'OS2023.1', b'OS2023.2',  # not checked
+    b'OS2024.1', b'OS2024.2',  # not checked
 ]
 AUTODESK_VERSIONS = [
     b'NE  0824',  # this means NEi Nastran...
@@ -38,6 +42,8 @@ def parse_nastran_version(data: bytes, version: bytes, encoding: bytes,
         #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
         #self.show_data(data[16:], types='ifsdqlILQ', endian=None)
         if data[:16].strip() in MSC_LONG_VERSION:
+            version2 = reshape_bytes_block(data)
+            version_str = version2.decode(encoding).strip()
             # 'XXXXXXXX20140   0   \x00\x00\x00\x00        '
             # 'XXXXXXXX20141   0   \x00\x00\x00\x00        '
             mode = 'msc'
