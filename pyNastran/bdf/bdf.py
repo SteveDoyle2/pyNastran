@@ -1621,9 +1621,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         name = group.name
                         if name in self.model_groups:
                             og_group = self.model_groups[name]
-                            print(og_group)
+                            #print(og_group)
                             og_group.union(group)
-                            print('->', og_group)
+                            #print('->', og_group)
                             del og_group
                             continue
                         self.model_groups[name] = group

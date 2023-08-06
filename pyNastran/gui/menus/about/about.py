@@ -11,7 +11,7 @@ with warnings.catch_warnings():  # avoid an imp module deprecation warning
 
 import numpy
 import scipy
-import vtk
+from pyNastran.gui.vtk_common_core import VTK_VERSION # import vtk
 import docopt
 import pyNastran
 
@@ -63,8 +63,6 @@ CREDITS = f"""pyNastran has been written by Steve Doyle since 2011.  This produc
   * Scipy scientific library, developed by many contributors.
 
   * Python, the programming language, written by Guido van Rossum and many contributors.
-
-  * VTK Python bindings for Qt5, by Riverbank Computing Limited.
 
 {QT}
 {PYGMENTS}
@@ -215,7 +213,7 @@ def get_packages() -> dict[str, str]:
         'pandas' : 'N/A',
         'imageio' : 'N/A',
         'PIL' : 'N/A',
-        'vtk' : vtk.VTK_VERSION,
+        'vtk' : VTK_VERSION,
         'qtpy' : qtpy.__version__,
         qt_name : PYQT_VERSION,
         'QScintilla2': QSCINTILLA_VERSION,

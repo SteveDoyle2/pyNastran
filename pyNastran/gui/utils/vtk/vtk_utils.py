@@ -14,10 +14,11 @@ from pyNastran.gui.vtk_common_core import vtkPoints, vtkMath, vtkUnsignedCharArr
 from pyNastran.gui.vtk_interface import vtkCellArray, vtkVertex
 from pyNastran.gui.vtk_util import numpy_to_vtk, vtk_to_numpy
 
-from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
+from pyNastran.gui.vtk_common_core import VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.gui.utils.vtk.base_utils import (
-    vtkConstants, numpy_to_vtk, numpy_to_vtkIdTypeArray,
+    numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk)
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
@@ -228,7 +229,7 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
         array_type=vtkUnsignedCharArray().GetDataType())
 
     vtk_cell_offsets = numpy_to_vtk(cell_offsets, deep=0,
-                                    array_type=vtkConstants.VTK_ID_TYPE)
+                                    array_type=VTK_ID_TYPE)
 
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
@@ -515,7 +516,7 @@ def set_vtk_id_filter_name(ids: vtkIdFilter, name: str,
 
     """
     try:
-        if VTK_VERSION >= [9, 2]:
+        if VTK_VERSION_SPLIT >= [9, 2]:
             if point_cell_type == 0:
                 ids.SetPointIdsArrayName(name)
             elif point_cell_type == 1:

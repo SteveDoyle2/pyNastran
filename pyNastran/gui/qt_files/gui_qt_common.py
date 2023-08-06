@@ -25,7 +25,8 @@ from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
-from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION
+#from pyNastran.gui.vtk_common_core import VTK_VERSION
+from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION_SPLIT
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 #from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
@@ -66,7 +67,7 @@ class GuiQtCommon(GuiAttributes):
         self._group_shown = {}
         self._names_storage = NamesStorage()
 
-        self.vtk_version = VTK_VERSION
+        self.vtk_version = VTK_VERSION_SPLIT
         #if not IS_TESTING or not pyNastran.is_pynastrangui_exe:  # pragma: no cover
             #print('vtk_version = %s' % (self.vtk_version))
         if self.vtk_version[0] < 7:  # TODO: should check for 7.1
@@ -1207,7 +1208,7 @@ class GuiQtCommon(GuiAttributes):
     def update_grid_by_icase_scale_phase(self,
                                          icase: int,
                                          scale: float,
-                                         phase: float=0.0) -> np.ndarray:
+                                         phase: float=0.0) -> None:
         """
         Updates to the deflection state defined by the cases
 
@@ -1885,7 +1886,7 @@ class GuiQtCommon(GuiAttributes):
 
             # The labeled data mapper will place labels at the points
             label_mapper = vtk.vtkLabeledDataMapper()
-            label_mapper.SetFieldDataName("Isovalues")
+            label_mapper.SetFieldDataName('Isovalues')
             label_mapper.SetInputData(label_poly_data)
 
             label_mapper.SetLabelModeToLabelScalars()

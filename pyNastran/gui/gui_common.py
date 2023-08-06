@@ -27,8 +27,8 @@ import pyNastran
 # vtk makes poor choices regarding the selection of a backend and has no way
 # to work around it
 #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
-if VTK_VERSION[0] >= 9:
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
+if VTK_VERSION_SPLIT[0] >= 9:
     from .qt_files.QVTKRenderWindowInteractor2 import QVTKRenderWindowInteractor
 else:
     from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -304,7 +304,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
                 # groups
-                ('modify_groups', 'Modify Groups...', '', None, 'Create/Edit/Delete Groups', self.on_set_modify_groups),
+                ('modify_groups', 'Modify Groups...', '', 'CTRL+G', 'Create/Edit/Delete Groups', self.on_set_modify_groups),
                 ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
                 ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
                 ('create_groups_by_model_group', 'Create Groups By Model Group', '', None, 'Create Groups', self.create_groups_by_model_group),

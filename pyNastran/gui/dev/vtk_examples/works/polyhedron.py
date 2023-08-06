@@ -1,5 +1,5 @@
 import vtk
-from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 
@@ -49,7 +49,7 @@ ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, faceId)
 if 1:
     ug = ugrid
     grid_mapper = vtk.vtkDataSetMapper()
-    vtk_version = int(VTK_VERSION[0])
+    vtk_version = int(VTK_VERSION_SPLIT[0])
     grid_mapper.SetInputData(ug)
 
 #-------------------------------------

@@ -7,8 +7,6 @@ from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 #import vtk
 from vtk import (
-    # base
-    VTK_FONT_FILE,
     #vtkmodules.vtkRenderingAnnotation
     vtkAxesActor,
     # vtkmodules.vtkFiltersHybrid
@@ -21,7 +19,7 @@ from vtk import (
     vtkAxesActor, vtkRenderLargeImage, vtkOrientationMarkerWidget,
     vtkXMLUnstructuredGridWriter,
 )
-from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_common_core import vtkPoints, VTK_FONT_FILE
 from pyNastran.gui.vtk_interface import vtkVertex, vtkLine, vtkTriangle, vtkQuad
 from pyNastran.gui.vtk_renering_core import (
     vtkDataSetMapper, vtkPolyDataMapper,
@@ -336,8 +334,8 @@ class ToolActions:
             fname, flt = getsavefilename(parent=gui, caption=title, basedir='',
                                          filters=file_types, selectedfilter=filt,
                                          options=None)
-            if fname in [None, '']:
-                return None, None
+            if fname in {None, ''}:
+                return '', ''
             #print("fname=%r" % fname)
             #print("flt=%r" % flt)
         else:
@@ -488,6 +486,7 @@ class ToolActions:
                 gui.wildcard_delimited + ';;STL (*.stl)', title)[1]
             if not csv_filename:
                 return
+        assert isinstance(csv_filename, str), csv_filename
 
         if color is None:
             # we mod the num_user_points so we don't go outside the range
@@ -589,7 +588,7 @@ class ToolActions:
         if gui.format == 'nastran':
             vtk_ugrid = save_nastran_results(gui)
         else:
-            used_titles = set()
+            used_titles: set[str] = set()
             point_data = vtk_ugrid.GetPointData()
             cell_data = vtk_ugrid.GetCellData()
             for case in gui.result_cases:
@@ -645,6 +644,8 @@ class ToolActions:
                 gui.wildcard_delimited, title)[1]
             if not csv_filename:
                 return is_failed
+        assert isinstance(csv_filename, str), csv_filename
+
         if color is None:
             # we mod the num_user_points so we don't go outside the range
             icolor = gui.num_user_points % len(gui.color_order)
@@ -657,8 +658,7 @@ class ToolActions:
         is_failed = self._add_user_points_from_csv(csv_filename, name, color)
         if not is_failed:
             gui.num_user_points += 1
-            gui.log_command('on_load_csv_points(%r, %r, %s)' % (
-                csv_filename, name, str(color)))
+            gui.log_command(f'on_load_csv_points({csv_filename!r}, {name!r}, {str(color)})')
         return is_failed
 
     def _add_user_points_from_csv(self, csv_points_filename: str, name: str,
@@ -800,20 +800,20 @@ class ToolActions:
                                opacity=opacity, representation=representation)
             self.gui.geometry_properties[name] = geom
 
-        color = geom.color_float
+        color_float: tuple[float, float, float] = geom.color_float
         opacity = geom.opacity
         point_size = geom.point_size
         representation = geom.representation
         line_width = geom.line_width
-        #print('color_2014[%s] = %s' % (name, str(color)))
-        assert isinstance(color[0], float), color
-        assert color[0] <= 1.0, color
+        #print('color_2014[%s] = %s' % (name, str(color_float)))
+        assert isinstance(color_float[0], float), color_float
+        assert color_float[0] <= 1.0, color_float
 
         prop = alt_geometry_actor.GetProperty()
         #prop.SetInterpolationToFlat()    # 0
         #prop.SetInterpolationToGouraud() # 1
         #prop.SetInterpolationToPhong()   # 2
-        prop.SetDiffuseColor(color)
+        prop.SetDiffuseColor(color_float)
         prop.SetOpacity(opacity)
         #prop.Update()
 

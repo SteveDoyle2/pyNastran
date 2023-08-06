@@ -41,7 +41,7 @@ from pyNastran.gui.vtk_renering_core import (
     vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor)
 
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
-from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
 
 
 # kills the program when you hit Cntl+C from the command line
@@ -141,7 +141,7 @@ def main():
     force_scalar_array = numpy_to_vtk(scalars, deep=1)
 
     grid_mapper = vtk.vtkDataSetMapper()
-    #vtk_version = int(VTK_VERSION[0])
+    #vtk_version = int(VTK_VERSION_SPLIT[0])
     grid_mapper.SetInputData(ug)
 
     if make_glyphs:

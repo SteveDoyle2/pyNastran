@@ -1,8 +1,12 @@
 """defines functions found in VTK that are overwritten for various reasons"""
 import sys
 import numpy as np
-import vtk
 from vtk import vtkIdTypeArray
+from pyNastran.gui.vtk_common_core import vtkIdTypeArray, vtkVersion, VTK_VERSION as vtk_version
+from pyNastran.gui.vtk_util import (
+    create_vtk_array, get_numpy_array_type,
+    get_vtk_array_type, numpy_to_vtkIdTypeArray, # numpy_to_vtk,
+)
 from vtk.util.numpy_support import (
     create_vtk_array, get_numpy_array_type,
     get_vtk_array_type, numpy_to_vtkIdTypeArray, # numpy_to_vtk,
@@ -10,22 +14,23 @@ from vtk.util.numpy_support import (
 
 
 IS_TESTING = 'test' in sys.argv[0]
-_VTK_VERSION = vtk.vtkVersion.GetVTKVersion()
-VTK_VERSION = [int(val) for val in _VTK_VERSION.split('.')]
-_VTK_ERROR_MESSAGE = f'VTK version={vtk.VTK_VERSION!r} is not supported (use vtk 7, 8, or 9)'
-if VTK_VERSION[0] < 7:
+_VTK_VERSION = vtkVersion.GetVTKVersion()
+VTK_VERSION_SPLIT = [int(val) for val in _VTK_VERSION.split('.')]
+_VTK_ERROR_MESSAGE = f'VTK version={vtk_version!r} is not supported (use vtk 7, 8, or 9)'
+if VTK_VERSION_SPLIT[0] < 7:
     raise NotImplementedError(_VTK_ERROR_MESSAGE)
-elif VTK_VERSION[0] in [7, 8, 9]:
+elif VTK_VERSION_SPLIT[0] in {7, 8, 9}:
     # tested in 7.1.1, 8.1.2, 9.0.0
-    vtkConstants = vtk
-#elif VTK_VERSION[0] == vtk_9?:
+    pass
+    #vtkConstants = vtk
+#elif VTK_VERSION_SPLIT[0] == vtk_9?:
     #vtkConstants = vtk.vtkConstants
 else:  # pragma: no cover
     raise NotImplementedError(_VTK_ERROR_MESSAGE)
 
 
 def numpy_to_vtk_idtype(ids):
-    #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+    #self.selection_node.GetProperties().Set(vtkSelectionNode.INVERSE(), 1)
     dtype = get_numpy_idtype_for_vtk()
     ids = np.asarray(ids, dtype=dtype)
     vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
@@ -134,4 +139,4 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):  # pragma: no cover
         result_array._numpy_reference = z
     return result_array
 
-vtk.util.numpy_support.numpy_to_vtk = numpy_to_vtk
+#vtk.util.numpy_support.numpy_to_vtk = numpy_to_vtk
