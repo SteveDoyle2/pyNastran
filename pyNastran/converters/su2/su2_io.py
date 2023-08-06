@@ -1,8 +1,7 @@
 """Defines the GUI IO file for SU2."""
 import numpy as np
 
-import vtk
-from vtk import vtkTriangle#, vtkQuad
+from pyNastran.gui.vtk_interface import vtkTriangle, vtkQuad
 
 from pyNastran.converters.su2.su2_reader import SU2Reader as SU2
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -112,7 +111,7 @@ class SU2_IO:
                     grid.InsertNextCell(5, elem.GetPointIds())
             elif etype == 9:
                 for eid in range(nsub_elements):
-                    elem = vtk.vtkQuad()
+                    elem = vtkQuad()
                     node_ids = elems[eid, :]
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])

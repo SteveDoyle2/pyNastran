@@ -2,6 +2,7 @@
 import sys
 import numpy as np
 import vtk
+from vtk import vtkIdTypeArray
 from vtk.util.numpy_support import (
     create_vtk_array, get_numpy_array_type,
     get_vtk_array_type, numpy_to_vtkIdTypeArray, # numpy_to_vtk,
@@ -32,7 +33,7 @@ def numpy_to_vtk_idtype(ids):
 
 def get_numpy_idtype_for_vtk():
     """This gets the numpy dtype that we need to use to make vtk not crash"""
-    isize = vtk.vtkIdTypeArray().GetDataTypeSize()
+    isize = vtkIdTypeArray().GetDataTypeSize()
     if isize == 4:
         dtype = 'int32' # TODO: can we include endian?
     elif isize == 8:

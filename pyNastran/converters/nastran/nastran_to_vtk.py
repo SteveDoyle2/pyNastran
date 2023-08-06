@@ -1,8 +1,7 @@
 """tests the NastranIO class"""
 import os
 
-import vtk
-from vtk import vtkPointData, vtkCellData
+from vtk import vtkPointData, vtkCellData, vtkFloatArray, vtkXMLUnstructuredGridWriter
 from cpylog import SimpleLogger
 
 import pyNastran
@@ -65,7 +64,7 @@ def save_nastran_results(gui: NastranGUI) -> vtkUnstructuredGrid:
                 continue
             assert isinstance(case, GuiResult), case
             vtk_array = case.save_vtk_result(used_titles)
-        _add_array(case.location, point_data, cell_data, vtk_array)
+        add_vtk_array(case.location, point_data, cell_data, vtk_array)
     return vtk_ugrid
 
 def _save_force_table_results(case: ForceTableResults,
@@ -85,7 +84,7 @@ def _save_force_table_results(case: ForceTableResults,
         titlei =  f'{title}_subcase={case.subcase_id}'
         check_title(title, used_titles)
         vtk_array.SetName(titlei)
-        _add_array(case.location, point_data, cell_data, vtk_array)
+        add_vtk_array(case.location, point_data, cell_data, vtk_array)
     elif dxyz.ndim == 3:
         for itime, title in enumerate(case.titles):
             header = case.headers[itime].replace(' = ', '=')
@@ -94,9 +93,9 @@ def _save_force_table_results(case: ForceTableResults,
             titlei =  f'{header}_subcase={case.subcase_id}'
             check_title(titlei, used_titles)
             vtk_array.SetName(titlei)
-            _add_array(case.location, point_data, cell_data, vtk_array)
+            add_vtk_array(case.location, point_data, cell_data, vtk_array)
     else:
-        log.warning(f'cannot add {str(case)}')
+        log.warning(f'cannot add {str(case)!r}')
 
 def _save_displacement_results(case: DisplacementResults,
                                key: int,
@@ -118,7 +117,7 @@ def _save_displacement_results(case: DisplacementResults,
         titlei =  f'{header}_subcase={case.subcase_id}'
         check_title(titlei, used_titles)
         vtk_array.SetName(titlei)
-        _add_array(case.location, point_data, cell_data, vtk_array)
+        add_vtk_array(case.location, point_data, cell_data, vtk_array)
 
 def _save_simple_table_results(case: SimpleTableResults,
                                key: int,
@@ -156,7 +155,7 @@ def _save_simple_table_results(case: SimpleTableResults,
     vtk_array.SetName(titlei)
 
     del name, itime, imethod, header, header2
-    _add_array(case.location, point_data, cell_data, vtk_array)
+    add_vtk_array(case.location, point_data, cell_data, vtk_array)
     #log.warning(f'skipping SimpleTableResults {case}')
 
 def _save_layered_table_results(case: LayeredTableResults,
@@ -164,7 +163,7 @@ def _save_layered_table_results(case: LayeredTableResults,
                                 index_name: tuple[int, tuple[int, int, str]],
                                 used_titles: set[str],
                                 point_data: vtkPointData, cell_data: vtkCellData,
-                                log: SimpleLogger) -> vtk.vtkFloatArray:
+                                log: SimpleLogger) -> vtkFloatArray:
     assert case.location == 'centroid', case
     #(1, (0, 0, 'Static')) = index_name
     name = index_name[1]
@@ -201,8 +200,8 @@ def nastran_to_vtk(op2_filename: str, vtk_filename: str) -> None:
     gui.load_nastran_results(op2_filename)
     vtk_ugrid = save_nastran_results(gui)
 
-    #root = vtk.vtkMultiBlockDataSet()
-    #coords_branch = vtk.vtkMultiBlockDataSet()
+    #root = vtkMultiBlockDataSet()
+    #coords_branch = vtkMultiBlockDataSet()
 
     #root.SetBlock(0, vtk_ugrid)
     #root.SetBlock(1, coords_branch)
@@ -210,14 +209,17 @@ def nastran_to_vtk(op2_filename: str, vtk_filename: str) -> None:
     #for coord_id, axes_actor in test.axes.items():
         #coords_branch.SetBlock(0, axes)
 
-    writer = vtk.vtkXMLUnstructuredGridWriter()
+    writer = vtkXMLUnstructuredGridWriter()
     writer.SetFileName(vtk_filename)
     writer.SetInputData(vtk_ugrid)
     writer.Write()
     #print('done')
 
 
-def _add_array(location: str, point_data, cell_data, vtk_array) -> None:
+def add_vtk_array(location: str,
+                  point_data: vtkPointData,
+                  cell_data: vtkCellData,
+                  vtk_array) -> None:
     if location == 'node':
         point_data.AddArray(vtk_array)
     else:

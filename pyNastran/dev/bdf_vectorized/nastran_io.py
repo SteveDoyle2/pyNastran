@@ -21,9 +21,10 @@ from numpy import nan as NaN
 from numpy.linalg import norm  # type: ignore
 
 import vtk
-from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
-                 vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
-                 vtkQuadraticWedge, vtkQuadraticHexahedron)
+from pyNastran.gui.vtk_interface import (
+    vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
+    vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
+    vtkQuadraticWedge, vtkQuadraticHexahedron)
 
 from pyNastran.dev.bdf_vectorized.bdf import BDF
     #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,

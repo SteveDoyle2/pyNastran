@@ -528,7 +528,7 @@ class GuiAttributes:
         grid = self.alt_grids[name]
         grid.SetPoints(points)
 
-        etype = 9  # vtk.vtkQuad().GetCellType()
+        etype = 9  # vtkQuad().GetCellType()
         create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
         if add:
@@ -1038,10 +1038,10 @@ class GuiAttributes:
         """resets the grids; sets up alt_grids"""
         if hasattr(self, 'main_grids') and name not in self.main_grids:
             grid = vtkUnstructuredGrid()
-            grid_mapper = vtk.vtkDataSetMapper()
+            grid_mapper = vtkDataSetMapper()
             grid_mapper.SetInputData(grid)
 
-            geom_actor = vtk.vtkLODActor()
+            geom_actor = vtkLODActor()
             geom_actor.DragableOff()
             geom_actor.SetMapper(grid_mapper)
             self.rend.AddActor(geom_actor)
@@ -1059,7 +1059,7 @@ class GuiAttributes:
             self.grid_mapper.SetScalarRange(scalar_range)
             self.grid_mapper.SetLookupTable(self.color_function)
 
-            self.edge_actor = vtk.vtkLODActor()
+            self.edge_actor = vtkLODActor()
             self.edge_actor.DragableOff()
             self.edge_mapper = vtkPolyDataMapper()
 

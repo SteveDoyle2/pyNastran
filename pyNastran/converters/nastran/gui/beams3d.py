@@ -5,10 +5,11 @@ from typing import Union, Optional, cast, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
-from vtk import vtkPoints, VTK_FLOAT, vtkIdList
 
+from pyNastran.gui.vtk_common_core import vtkPoints, VTK_FLOAT, vtkIdList
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, VTK_POLYHEDRON
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk
+
 from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 from pyNastran.bdf.cards.elements.beam_connectivity import (
     bar_setup, rod_setup, tube_setup,

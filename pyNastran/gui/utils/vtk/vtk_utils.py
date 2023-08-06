@@ -9,8 +9,10 @@ from collections import defaultdict
 from typing import Optional, TYPE_CHECKING
 
 import numpy as np
-import vtk
-from vtk.util.numpy_support import numpy_to_vtk # vtk_to_numpy
+from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter
+from pyNastran.gui.vtk_common_core import vtkPoints, vtkMath, vtkUnsignedCharArray, vtkIdTypeArray, VTK_FLOAT
+from pyNastran.gui.vtk_interface import vtkCellArray, vtkVertex
+from pyNastran.gui.vtk_util import numpy_to_vtk, vtk_to_numpy
 
 from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
@@ -118,7 +120,7 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     """common method to account for vtk endian quirks and efficiently adding points"""
     assert isinstance(nodes, np.ndarray), type(nodes)
     if points is None:
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         try:
             nnodes, ndim = nodes.shape
         except:
@@ -132,7 +134,7 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     points_array = numpy_to_vtk(
         num_array=nodes,
         deep=deep,
-        array_type=vtk.VTK_FLOAT,
+        array_type=VTK_FLOAT,
     )
     points.SetData(points_array)
     return points
@@ -207,7 +209,7 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
     assert len(cell_offsets) == nelements
 
     # Create the array of cells
-    vtk_cells = vtk.vtkCellArray()
+    vtk_cells = vtkCellArray()
 
     dtype = get_numpy_idtype_for_vtk()
 
@@ -223,7 +225,7 @@ def create_vtk_cells_of_constant_element_type(grid: vtkUnstructuredGrid,
     cell_types = np.full(nelements, etype, dtype='int8')
     vtk_cell_types = numpy_to_vtk(
         cell_types, deep=0,
-        array_type=vtk.vtkUnsignedCharArray().GetDataType())
+        array_type=vtkUnsignedCharArray().GetDataType())
 
     vtk_cell_offsets = numpy_to_vtk(cell_offsets, deep=0,
                                     array_type=vtkConstants.VTK_ID_TYPE)
@@ -286,26 +288,26 @@ def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
 
     # Create the array of cells
     cells_id_type = numpy_to_vtkIdTypeArray(elements_array.ravel(), deep=1)
-    vtk_cells = vtk.vtkCellArray()
+    vtk_cells = vtkCellArray()
     vtk_cells.SetCells(nelements, cells_id_type)
 
     # Cell types
     vtk_cell_types = numpy_to_vtk(
         cell_types_array, deep=0,
-        array_type=vtk.vtkUnsignedCharArray().GetDataType())
+        array_type=vtkUnsignedCharArray().GetDataType())
 
     vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=0,
                                     array_type=vtkConstants.VTK_ID_TYPE)
 
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
-def create_unstructured_point_grid(points: vtk.vtkPoints,
+def create_unstructured_point_grid(points: vtkPoints,
                                    npoints: int) -> vtkUnstructuredGrid:
     """creates a point grid"""
     ugrid = vtkUnstructuredGrid()
     ugrid.SetPoints(points)
 
-    cell_type_vertex = vtk.vtkVertex().GetCellType()
+    cell_type_vertex = vtkVertex().GetCellType()
     etypes = [cell_type_vertex]
     elements = [np.arange(npoints, dtype='int32').reshape(npoints, 1)]
     create_vtk_cells_of_constant_element_types(ugrid, elements, etypes)
@@ -322,10 +324,10 @@ def extract_selection_node_from_grid_to_ugrid(grid: vtkUnstructuredGrid,
     points or cells) and we create a reduced model.
 
     """
-    selection = vtk.vtkSelection()
+    selection = vtkSelection()
     selection.AddNode(selection_node)
 
-    extract_selection = vtk.vtkExtractSelection()
+    extract_selection = vtkExtractSelection()
     extract_selection.SetInputData(0, grid)
     extract_selection.SetInputData(1, selection)
     extract_selection.Update()
@@ -336,19 +338,19 @@ def extract_selection_node_from_grid_to_ugrid(grid: vtkUnstructuredGrid,
 
 def create_vtk_selection_node_by_point_ids(point_ids):
     id_type_array = _convert_ids_to_vtk_idtypearray(point_ids)
-    selection_node = vtk.vtkSelectionNode()
+    selection_node = vtkSelectionNode()
     #selection_node.SetContainingCellsOn()
     #selection_node.Initialize()
-    selection_node.SetFieldType(vtk.vtkSelectionNode.POINT)
-    selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+    selection_node.SetFieldType(vtkSelectionNode.POINT)
+    selection_node.SetContentType(vtkSelectionNode.INDICES)
     selection_node.SetSelectionList(id_type_array)
     return selection_node
 
 def create_vtk_selection_node_by_cell_ids(cell_ids):
     id_type_array = _convert_ids_to_vtk_idtypearray(cell_ids)
-    selection_node = vtk.vtkSelectionNode()
-    selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-    selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+    selection_node = vtkSelectionNode()
+    selection_node.SetFieldType(vtkSelectionNode.CELL)
+    selection_node.SetContentType(vtkSelectionNode.INDICES)
     selection_node.SetSelectionList(id_type_array)
     return selection_node
 
@@ -359,7 +361,7 @@ def _convert_ids_to_vtk_idtypearray(ids):
         #for idi in ids:
             #assert isinstance(idi, int), type(idi)
 
-    id_type_array = vtk.vtkIdTypeArray()
+    id_type_array = vtkIdTypeArray()
     id_type_array.SetNumberOfComponents(1)
     for idi in ids:
         id_type_array.InsertNextValue(idi)
@@ -370,7 +372,7 @@ def find_point_id_closest_to_xyz(grid: vtkUnstructuredGrid,
                                  node_xyz: np.ndarray) -> Optional[int]:
     cell = grid.GetCell(cell_id)
     if cell is None:
-        return
+        return None
     nnodes = cell.GetNumberOfPoints()
     points = cell.GetPoints()
 
@@ -380,7 +382,7 @@ def find_point_id_closest_to_xyz(grid: vtkUnstructuredGrid,
         #ValueError: expects 0 <= id && id < GetNumberOfPoints()
         return None
 
-    dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
+    dist_min = vtkMath.Distance2BetweenPoints(point0, node_xyz)
 
     imin = 0
     #point_min = point0
@@ -388,7 +390,7 @@ def find_point_id_closest_to_xyz(grid: vtkUnstructuredGrid,
         #point = array(points.GetPoint(ipoint), dtype='float32')
         #dist = norm(point - node_xyz)
         point = points.GetPoint(ipoint)
-        dist = vtk.vtkMath.Distance2BetweenPoints(point, node_xyz)
+        dist = vtkMath.Distance2BetweenPoints(point, node_xyz)
         if dist < dist_min:
             dist_min = dist
             imin = ipoint
@@ -434,7 +436,7 @@ def map_element_centroid_to_node_fringe_result(
         log.error('Expected centroidal results, but found none.  '
                   'The result has already been mapped.')
         return is_passed, failed_out
-    cell_results = vtk.util.numpy_support.vtk_to_numpy(vtk_cell_results)
+    cell_results = vtk_to_numpy(vtk_cell_results)
 
     icells = np.where(np.isfinite(cell_results))[0]
     if not len(icells):
@@ -458,7 +460,7 @@ def map_element_centroid_to_node_fringe_result(
     for point_id, res in out_results_node.items():
         meani = np.average(res)
         point_results[point_id] = meani
-    vtk_point_results = numpy_to_vtk(point_results, deep=0, array_type=vtk.VTK_FLOAT)
+    vtk_point_results = numpy_to_vtk(point_results, deep=0, array_type=VTK_FLOAT)
     vtk_point_results.SetName('name')
 
     #points.SetData(points_array)
@@ -484,7 +486,7 @@ def map_element_centroid_to_node_fringe_result(
     is_passed = True
     return is_passed, (imin, imax, min_value, max_value)
 
-def update_axis_text_size(axis: vtk.vtkAxes,
+def update_axis_text_size(axis: vtkAxes,
                           coord_text_scale: float,
                           width: float=1.0, height: float=0.25):
     """updates the coordinate system text size"""
@@ -502,7 +504,7 @@ def update_axis_text_size(axis: vtk.vtkAxes,
         text.SetWidth(coord_text_scale * width)
         text.SetHeight(coord_text_scale * height)
 
-def set_vtk_id_filter_name(ids: vtk.vtkIdFilter, name: str,
+def set_vtk_id_filter_name(ids: vtkIdFilter, name: str,
                            point_cell_type: int) -> None:
     """
     Parameters

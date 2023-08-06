@@ -3,7 +3,8 @@ import os
 from numpy import vstack, amax, amin, arange, ones, zeros, where
 
 #VTK_TRIANGLE = 5
-import vtk
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkVertex
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.aflr.surf.surf_reader import SurfReader, TagReader
@@ -84,11 +85,11 @@ class SurfIO:
             nfailed = len(ifailed)
             failed_grid = self.gui.alt_grids['failed_nodes']
             failed_grid.Allocate(nfailed, 1000)
-            points2 = vtk.vtkPoints()
+            points2 = vtkPoints()
             points2.SetNumberOfPoints(nfailed)
 
             for j, nid in enumerate(model.nodes_failed):
-                elem = vtk.vtkVertex()
+                elem = vtkVertex()
                 c = nodes[nid - 1, :]
                 self.gui.log.debug('%s %s' % (nid, c))
                 points2.InsertPoint(j, *c)

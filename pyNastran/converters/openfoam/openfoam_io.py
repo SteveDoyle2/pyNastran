@@ -9,9 +9,9 @@ import numpy as np
 from numpy import zeros, arange, where, unique, cross
 from numpy.linalg import norm  # type: ignore
 
-import vtk
 #VTK_TRIANGLE = 5
-from vtk import vtkTriangle, vtkQuad, vtkHexahedron
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkTriangle, vtkQuad, vtkHexahedron
 
 from pyNastran.converters.openfoam.block_mesh import BlockMesh
 from pyNastran.converters.openfoam.boundary_file import Boundary
@@ -184,7 +184,7 @@ class OpenFoamIO:
             bdf_file.write('MAT1,1,1.0e7,,0.3\n')
 
             if is_face_mesh:
-                points = vtk.vtkPoints()
+                points = vtkPoints()
                 points.SetNumberOfPoints(self.gui.nnodes)
 
                 unodes = unique(quads)

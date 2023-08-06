@@ -393,7 +393,7 @@ class Cart3dIO:
                     representation='surface')
 
             alt_grid = self.gui.alt_grids[name]
-            etype = 3  # vtk.vtkLine().GetCellType()
+            etype = 3  # vtkLine().GetCellType()
             elements2 = np.arange(0, npoints, dtype='int32').reshape(nfree_edges, 2)
             create_vtk_cells_of_constant_element_type(alt_grid, elements2, etype)
 

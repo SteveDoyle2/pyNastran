@@ -2,10 +2,30 @@
 from __future__ import annotations
 import os
 import traceback
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
-import vtk
+#import vtk
+from vtk import (
+    # base
+    VTK_FONT_FILE,
+    #vtkmodules.vtkRenderingAnnotation
+    vtkAxesActor,
+    # vtkmodules.vtkFiltersHybrid
+    vtkRenderLargeImage,
+    #vtkmodules.vtkIOImage
+    vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter,
+    #vtkmodules.vtkCommonTransforms
+    vtkTransform,
+    # ???
+    vtkAxesActor, vtkRenderLargeImage, vtkOrientationMarkerWidget,
+    vtkXMLUnstructuredGridWriter,
+)
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkVertex, vtkLine, vtkTriangle, vtkQuad
+from pyNastran.gui.vtk_renering_core import (
+    vtkDataSetMapper, vtkPolyDataMapper,
+    vtkCamera, vtkTextActor, vtkProp, vtkActor, vtkRenderer)
 
 from qtpy.compat import getsavefilename
 
@@ -14,6 +34,7 @@ from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.locale import func_str
 from pyNastran.gui import font_file
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, update_axis_text_size
@@ -65,8 +86,8 @@ class ToolActions:
         """creates the axes that sits in the corner"""
         if not self.gui.run_vtk:
             return
-        axes = vtk.vtkAxesActor()
-        corner_axis = vtk.vtkOrientationMarkerWidget()
+        axes = vtkAxesActor()
+        corner_axis = vtkOrientationMarkerWidget()
         corner_axis.SetOrientationMarker(axes)
         corner_axis.SetInteractor(self.vtk_interactor)
         corner_axis.SetEnabled(1)
@@ -114,7 +135,7 @@ class ToolActions:
             axes = self.gui.axes[coord_id]
             create_actor = False
         else:
-            axes = vtk.vtkAxesActor()
+            axes = vtkAxesActor()
             axes.DragableOff()
             axes.PickableOff()
 
@@ -141,7 +162,7 @@ class ToolActions:
                     label: str,
                     text_size: int=18):
         """creates the lower left text actors"""
-        text_actor = vtk.vtkTextActor()
+        text_actor = vtkTextActor()
 
         text_actor.SetInput(label)
         text_prop = text_actor.GetTextProperty()
@@ -253,7 +274,7 @@ class ToolActions:
 
         if not fname:
             return
-        render_large = vtk.vtkRenderLargeImage()
+        render_large = vtkRenderLargeImage()
         render_large.SetInput(self.rend)
 
         out = self._screenshot_setup(magnify, render_large)
@@ -261,17 +282,17 @@ class ToolActions:
 
         nam, ext = os.path.splitext(fname)
         ext = ext.lower()
-        for nam, exts, obj in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
-                               ("BMP", ['.bmp'], vtk.vtkBMPWriter),
-                               ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
-                               ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
+        for nam, exts, obj in (('PostScript', ['.ps'], vtkPostScriptWriter),
+                               ("BMP", ['.bmp'], vtkBMPWriter),
+                               ('JPG', ['.jpg', '.jpeg'], vtkJPEGWriter),
+                               ("TIFF", ['.tif', '.tiff'], vtkTIFFWriter)):
             if flt == nam:
                 fname = fname if ext in exts else fname + exts[0]
                 writer = obj()
                 break
         else:
             fname = fname if ext == '.png' else fname + '.png'
-            writer = vtk.vtkPNGWriter()
+            writer = vtkPNGWriter()
 
         writer.SetInputConnection(render_large.GetOutputPort())
         writer.SetFileName(fname)
@@ -328,11 +349,11 @@ class ToolActions:
         return fname, flt
 
     def _screenshot_setup(self, magnify: Optional[int],
-                          render_large: vtk.vtkvtkRenderLargeImage) -> tuple[
+                          render_large: vtkRenderLargeImage) -> tuple[
             dict[str, int], dict[str, int],
             dict[str, float], dict[str, float],
             dict[str, int],
-            vtk.vtkAxesActor, magnify: int]:
+            vtkAxesActor, int]:
         """helper method for ``on_take_screenshot``"""
         if magnify is None:
             magnify_min = 1
@@ -360,7 +381,7 @@ class ToolActions:
         line_widths0 = {}
         point_sizes0 = {}
         for key, geom_actor in self.gui.geometry_actors.items():
-            if isinstance(geom_actor, vtk.vtkActor):
+            if isinstance(geom_actor, vtkActor):
                 prop = geom_actor.GetProperty()
                 line_width0 = prop.GetLineWidth()
                 point_size0 = prop.GetPointSize()
@@ -371,7 +392,7 @@ class ToolActions:
                 prop.SetLineWidth(line_width)
                 prop.SetPointSize(point_size)
                 prop.Modified()
-            elif isinstance(geom_actor, vtk.vtkAxesActor):
+            elif isinstance(geom_actor, vtkAxesActor):
                 pass
             else:
                 raise NotImplementedError(geom_actor)
@@ -390,7 +411,7 @@ class ToolActions:
                              coord_scale0: dict[str, float],
                              coord_text_scale0: float,
                              linewidth0: int,
-                             axes_actor: vtk.vtkAxesActor):
+                             axes_actor: vtkAxesActor):
         """helper method for ``on_take_screenshot``"""
         self.settings.update_text_size(magnify=1.0)
         # show corner axes
@@ -398,12 +419,12 @@ class ToolActions:
 
         # set linewidth back
         for key, geom_actor in self.gui.geometry_actors.items():
-            if isinstance(geom_actor, vtk.vtkActor):
+            if isinstance(geom_actor, vtkActor):
                 prop = geom_actor.GetProperty()
                 prop.SetLineWidth(line_widths0[key])
                 prop.SetPointSize(point_sizes0[key])
                 prop.Modified()
-            elif isinstance(geom_actor, vtk.vtkAxesActor):
+            elif isinstance(geom_actor, vtkAxesActor):
                 pass
             else:
                 raise NotImplementedError(geom_actor)
@@ -546,12 +567,13 @@ class ToolActions:
 
     #---------------------------------------------------------------------------
     def on_save_vtk(self, vtk_filename: Optional[str]=None) -> bool:
+        is_failed = True
         gui = self.gui
         grid = gui.grid
+        log = gui.log
         if grid is None:
-            return
+            return is_failed
 
-        is_failed = True
         if vtk_filename in {None, False}:
             title = 'Select the VTK file name for export'
             wildcard_delimited = 'VTK (*.vtu; *.vtk)'
@@ -563,19 +585,30 @@ class ToolActions:
             if not vtk_filename:
                 return is_failed
 
+        from pyNastran.converters.nastran.nastran_to_vtk import save_nastran_results, add_vtk_array
         if gui.format == 'nastran':
-            from pyNastran.converters.nastran.nastran_to_vtk import save_nastran_results
             vtk_ugrid = save_nastran_results(gui)
         else:
-            raise RuntimeError(gui.format)
-            #for case in gui.result_cases:
+            used_titles = set()
+            point_data = vtk_ugrid.GetPointData()
+            cell_data = vtk_ugrid.GetCellData()
+            for case in gui.result_cases:
+                if case.is_complex:
+                    log.warning(f'skipping format={self.format!r}, case {str(case)!r} because it is complex')
+                    continue
+                if not isinstance(case, GuiResult):
+                    log.warning(f'skipping format={self.format!r}, case {str(case)!r} because it is not a GuiResult')
+                    continue
+                vtk_array = case.save_vtk_result(used_titles)
+                add_vtk_array(case.location, point_data, cell_data, vtk_array)
 
-        vtk_ugrid = vtk.vtkUnstructuredGrid()
-        writer = vtk.vtkXMLUnstructuredGridWriter()
+        vtk_ugrid = vtkUnstructuredGrid()
+        writer = vtkXMLUnstructuredGridWriter()
         writer.SetFileName(vtk_filename)
         writer.SetInputData(vtk_ugrid)
         writer.Write()
 
+        is_failed = False
         return is_failed
 
     def on_load_csv_points(self, csv_filename: Optional[str]=None,
@@ -710,12 +743,12 @@ class ToolActions:
         alt_grid.Allocate(npoints, 1000)
 
         # set points
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(npoints)
 
         for i, point in enumerate(user_points):
             points.InsertPoint(i, *point)
-            elem = vtk.vtkVertex()
+            elem = vtkVertex()
             elem.GetPointIds().SetId(0, i)
             alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
         alt_grid.SetPoints(points)
@@ -744,14 +777,14 @@ class ToolActions:
         has_geometry_actor = name in self.gui.geometry_actors
 
         is_pickable = self.gui.geometry_properties[name].is_pickable
-        quad_mapper = vtk.vtkDataSetMapper()
+        quad_mapper = vtkDataSetMapper()
 
         if has_geometry_actor:
             alt_geometry_actor = self.gui.geometry_actors[name]
             alt_geometry_actor.GetMapper().SetInputData(grid)
         else:
             quad_mapper.SetInputData(grid)
-            alt_geometry_actor = vtk.vtkActor()
+            alt_geometry_actor = vtkActor()
             if not is_pickable:
                 alt_geometry_actor.PickableOff()
                 alt_geometry_actor.DragableOff()
@@ -801,7 +834,7 @@ class ToolActions:
 
         if not has_geometry_actor:
             self.rend.AddActor(alt_geometry_actor)
-        vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
+        vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
         if geom.is_visible:
             alt_geometry_actor.VisibilityOn()
@@ -812,7 +845,7 @@ class ToolActions:
         alt_geometry_actor.Modified()
 
     #---------------------------------------------------------------------------
-    def GetCamera(self) -> vtk.vtkCamera:
+    def GetCamera(self) -> vtkCamera:
         return self.rend.GetActiveCamera()
 
     @property
@@ -820,7 +853,7 @@ class ToolActions:
         return self.gui.settings
 
     @property
-    def rend(self) -> vtk.vtkRenderer:
+    def rend(self) -> vtkRenderer:
         return self.gui.rend
 
     @property
@@ -837,20 +870,20 @@ def add_user_geometry(alt_grid: vtkUnstructuredGrid,
                       tris: np.ndarray,
                       quads: np.ndarray,
                       nelements: int, nbars: int,
-                      ntris: int, nquads: int) -> vtk.vtkPoints:
+                      ntris: int, nquads: int) -> vtkPoints:
     """helper method for ``_add_user_geometry``"""
     # set points
     points = numpy_to_vtk_points(xyz, dtype='<f')
 
     if nelements > 0:
         for i in range(nnodes):
-            elem = vtk.vtkVertex()
+            elem = vtkVertex()
             elem.GetPointIds().SetId(0, i)
             alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
     else:
         for i in range(nnodes):
-            elem = vtk.vtkVertex()
+            elem = vtkVertex()
             elem.GetPointIds().SetId(0, i)
             alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
@@ -858,7 +891,7 @@ def add_user_geometry(alt_grid: vtkUnstructuredGrid,
         for i, bar in enumerate(bars[:, 1:]):
             g1 = nid_map[bar[0]]
             g2 = nid_map[bar[1]]
-            elem = vtk.vtkLine()
+            elem = vtkLine()
             elem.GetPointIds().SetId(0, g1)
             elem.GetPointIds().SetId(1, g2)
             geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
@@ -868,7 +901,7 @@ def add_user_geometry(alt_grid: vtkUnstructuredGrid,
             g1 = nid_map[tri[0]]
             g2 = nid_map[tri[1]]
             g3 = nid_map[tri[2]]
-            elem = vtk.vtkTriangle()
+            elem = vtkTriangle()
             elem.GetPointIds().SetId(0, g1)
             elem.GetPointIds().SetId(1, g2)
             elem.GetPointIds().SetId(2, g3)
@@ -880,7 +913,7 @@ def add_user_geometry(alt_grid: vtkUnstructuredGrid,
             g2 = nid_map[quad[1]]
             g3 = nid_map[quad[2]]
             g4 = nid_map[quad[3]]
-            elem = vtk.vtkQuad()
+            elem = vtkQuad()
             point_ids = elem.GetPointIds()
             point_ids.SetId(0, g1)
             point_ids.SetId(1, g2)
@@ -894,14 +927,14 @@ def add_user_geometry(alt_grid: vtkUnstructuredGrid,
     return points
 
 
-def set_vtk_property_to_unicode(prop: vtk.vtkProp, font_filei: str) -> None:
+def set_vtk_property_to_unicode(prop: vtkProp, font_filei: str) -> None:
     prop.SetFontFile(font_filei)
-    prop.SetFontFamily(vtk.VTK_FONT_FILE)
+    prop.SetFontFamily(VTK_FONT_FILE)
 
 def make_vtk_transform(origin: Optional[np.ndarray],
-                       matrix_3x3: Optional[np.ndarray]) -> vtk.vtkTransform:
+                       matrix_3x3: Optional[np.ndarray]) -> vtkTransform:
     """makes a vtkTransform"""
-    transform = vtk.vtkTransform()
+    transform = vtkTransform()
     if origin is None and matrix_3x3 is None:
         pass
     elif origin is not None and matrix_3x3 is None:
@@ -936,8 +969,8 @@ def xform3_to_xform4(matrix_3x3: np.ndarray,
         xform[:3, 3] = origin
     return xform
 
-def _set_base_axes(axes: vtk.vtkAxesActor,
-                   transform: vtk.vtkTransform,
+def _set_base_axes(axes: vtkAxesActor,
+                   transform: vtkTransform,
                    coord_type: str, label: str,
                    coord_scale: float,
                    coord_text_scale: float,

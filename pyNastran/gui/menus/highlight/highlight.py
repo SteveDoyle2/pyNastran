@@ -12,13 +12,19 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog) # QCheckBox
 
-import vtk
 from vtk import (
-    vtkActor, vtkActor2D, vtkLODActor, vtkRenderer, vtkPolyDataMapper,
-    vtkLabeledDataMapper, vtkCellCenters,
-    vtkIdFilter, vtkUnstructuredGridGeometryFilter, vtkVertexGlyphFilter)
-from vtk.util.numpy_support import vtk_to_numpy
-
+    #vtkmodules.vtkRenderingLOD
+    vtkLODActor,
+    #vtkmodules.vtkRenderingLabel
+    vtkLabeledDataMapper,
+    #vtkmodules.vtkFiltersCore
+    vtkCellCenters, vtkIdFilter,
+    #vtkmodules.vtkFiltersGeometry
+    vtkUnstructuredGridGeometryFilter,
+    #vtkmodules.vtkFiltersGeneral
+    vtkVertexGlyphFilter)
+from pyNastran.gui.vtk_renering_core import vtkActor, vtkActor2D, vtkRenderer, vtkPolyDataMapper
+from pyNastran.gui.vtk_util import vtk_to_numpy
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
@@ -74,7 +80,7 @@ class HighlightWindow(PyDialog):
             self._point_size = 10
             self._label_size = 10.0
         else:
-            settings = gui.settings # type: Settings
+            settings: Settings = gui.settings
             self.highlight_color_float, self.highlight_color_int = check_color(
                 settings.highlight_color)
 
@@ -259,18 +265,18 @@ class HighlightWindow(PyDialog):
         self.highlight_opacity_edit.valueChanged.connect(self.on_highlight_opacity)
         self.show_button.clicked.connect(self.on_show)
 
-    def _set_connections_mark(self):
+    def _set_connections_mark(self) -> None:
         """creates the actions for the menu"""
         self.show_button.clicked.connect(self.on_show)
 
-    def _set_connections_end(self):
+    def _set_connections_end(self) -> None:
         """creates the actions for the menu"""
         self.nodes_edit.textChanged.connect(self.on_validate)
         self.elements_edit.textChanged.connect(self.on_validate)
         self.clear_button.clicked.connect(self.on_remove_actors)
         self.close_button.clicked.connect(self.on_close)
 
-    def on_font(self, value=None):
+    def on_font(self, value=None) -> None:
         """update the font for the current window"""
         if value is None:
             value = self.font_size_edit.value()
@@ -278,7 +284,7 @@ class HighlightWindow(PyDialog):
         font.setPointSize(value)
         self.setFont(font)
 
-    def on_highlight_color(self):
+    def on_highlight_color(self) -> None:
         """
         Choose a highlight color
 
@@ -294,7 +300,7 @@ class HighlightWindow(PyDialog):
             self.highlight_color_int = rgb_color_ints
             self.highlight_color_float = rgb_color_floats
 
-    def on_highlight_opacity(self, value=None):
+    def on_highlight_opacity(self, value=None) -> None:
         """
         update the highlight opacity
 
@@ -308,7 +314,7 @@ class HighlightWindow(PyDialog):
 
     #---------------------------------------------------------------------------
 
-    def on_validate(self):
+    def on_validate(self) -> bool:
         """makes sure that all attributes are valid before doing any actions"""
         unused_nodes, flag1 = check_patran_syntax(self.nodes_edit, pound=self._nodes_pound)
         unused_elements, flag2 = check_patran_syntax(self.elements_edit, pound=self._elements_pound)
@@ -317,7 +323,7 @@ class HighlightWindow(PyDialog):
             return True
         return False
 
-    def on_show(self):
+    def on_show(self) -> bool:
         """show the highlight"""
         passed = self.on_validate()
         if not passed or self.win_parent is None:
@@ -376,11 +382,11 @@ class HighlightWindow(PyDialog):
             gui.Render()
         self.actors = []
 
-    def closeEvent(self, unused_event):
+    def closeEvent(self, unused_event) -> None:
         """close the window"""
         self.on_close()
 
-    def on_close(self):
+    def on_close(self) -> None:
         """close the window"""
         self.on_remove_actors()
         self.out_data['close'] = True

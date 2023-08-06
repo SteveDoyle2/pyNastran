@@ -11,23 +11,19 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 from cpylog import SimpleLogger
 from cpylog.html_utils import str_to_html
 import numpy as np
-import vtk
+
 from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
-try:
-    from vtkmodules.vtkRenderingCore import vtkDataSetMapper, vtkCamera, vtkTextActor
-except:
-    from vtk import vtkDataSetMapper, vtkCamera, vtkTextActor
-
+from pyNastran.gui.vtk_renering_core import vtkDataSetMapper, vtkCamera, vtkTextActor
 try:
     from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
-except:
+except ImportError:
     from vtk import vtkAxesActor
 
 try:
     from vtkmodules.vtkRenderingLOD import vtkLODActor
-except:
-    from vtk import vtkAxesActor
+except ImportError:
+    from vtk import vtkLODActor
 
 import pyNastran
 from qtpy import QtCore, QtGui #, API
@@ -413,7 +409,7 @@ class MainWindow2(QMainWindow):
     def _fill_menubar(self) -> None:
         file_actions_list = [
             'load_geometry', 'load_results', '',
-            'load_custom_result', '',
+            'load_custom_result', 'save_vtk', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit', ]
 
         help = HelpActions(self)
@@ -498,6 +494,7 @@ class MainWindow2(QMainWindow):
             ('load_csv_user_points', 'Load CSV User Points...', 'user_points.png', None, 'Loads CSV points', self.on_load_csv_points),
             ('load_custom_result', 'Load Custom Results...', '', None, 'Loads a custom results file', self.on_load_custom_results),
 
+            ('save_vtk', 'Export VTK...', '', None, 'Export a VTK file', self.on_save_vtk),
             ('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
         ]
         view_tools = [
@@ -560,7 +557,7 @@ class MainWindow2(QMainWindow):
     def create_vtk_actors(self, create_rend: bool=True) -> None:
         """creates the vtk actors used by the GUI"""
         if create_rend:
-            self.rend = vtk.vtkRenderer()
+            self.rend = vtkRenderer()
 
     @property
     def grid_selected(self):
@@ -595,7 +592,7 @@ class MainWindow2(QMainWindow):
             grid_mapper = vtkDataSetMapper()
             grid_mapper.SetInputData(grid)
 
-            geometry_actor = vtk.vtkLODActor()
+            geometry_actor = vtkLODActor()
             geometry_actor.DragableOff()
             geometry_actor.SetMapper(grid_mapper)
             self.rend.AddActor(geometry_actor)
@@ -614,7 +611,7 @@ class MainWindow2(QMainWindow):
                 grid_mapper.SetScalarRange(scalar_range)
                 grid_mapper.SetLookupTable(self.color_function)
 
-            #self.edge_actor = vtk.vtkLODActor()
+            #self.edge_actor = vtkLODActor()
             #self.edge_actor.DragableOff()
             #self.edge_mapper = vtkPolyDataMapper()
 
@@ -641,6 +638,8 @@ class MainWindow2(QMainWindow):
         self.log.warning('on_load_user_geom')
     def on_load_csv_points(self):
         self.log.warning('on_load_csv_points')
+    def on_save_vtk(self):
+        self.log.warning('on_save_vtk')
     def on_load_custom_results(self):
         self.log.warning('on_load_custom_results')
 

@@ -4,9 +4,11 @@ import numpy as np
 import h5py
 import vtk
 import vtkmodules
+
 from vtk.numpy_interface import dataset_adapter as dsa
 from vtk.util.vtkAlgorithm import VTKPythonAlgorithmBase
-from vtk import vtkUnstructuredGrid, vtkPoints
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from pyNastran.gui.vtk_common_core import vtkPoints
 
 from pyNastran.dev.h5.read_h5 import pyNastranH5
 #from pyNastran.utils import object_methods, object_stats, object_attributes

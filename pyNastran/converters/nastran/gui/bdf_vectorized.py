@@ -1,6 +1,7 @@
 from io import StringIO
 import numpy as np
-import vtk
+from pyNastran.gui.vtk_interface import (
+    vtkVertex, vtkLine, vtkPyramid, vtkQuadraticPyramid)
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -60,16 +61,16 @@ def add_vectorized_elements(model, nelements: int, idtype: str, log):
         'dim' : dim_array,
     }
 
-    cell_type_point = vtk.vtkVertex().GetCellType()
-    cell_type_line = vtk.vtkLine().GetCellType()
+    cell_type_point = vtkVertex().GetCellType()
+    cell_type_line = vtkLine().GetCellType()
     cell_type_tri3 = 5
     cell_type_tri6 = 22
     cell_type_quad4 = 9
     cell_type_quad8 = 23
     cell_type_tetra4 = 10
     cell_type_tetra10 = 24
-    cell_type_pyram5 = vtk.vtkPyramid().GetCellType()
-    cell_type_pyram13 = vtk.vtkQuadraticPyramid().GetCellType()
+    cell_type_pyram5 = vtkPyramid().GetCellType()
+    cell_type_pyram13 = vtkQuadraticPyramid().GetCellType()
     cell_type_hexa8 = 12
     cell_type_hexa20 = 25
     cell_type_penta6 = 13

@@ -1,7 +1,7 @@
 from numpy import arange, amax, amin, zeros, hstack
 
-import vtk
-from vtk import vtkTriangle, vtkLine
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkLine, vtkTriangle
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.dev.openvsp.adb_reader import ADB_Reader
@@ -82,7 +82,7 @@ class ADB_IO:  # pragma: no cover
         grid = self.gui.grid
         grid.Allocate(self.gui.nelements, 1000)
 
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(self.gui.nnodes)
         #vectorReselt.SetNumberOfComponents(3)
         self.gui.nid_map = {}

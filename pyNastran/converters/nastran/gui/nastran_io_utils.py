@@ -2028,8 +2028,8 @@ def map_elements3_helper(model: BDF,
     cell_types_array = np.zeros(nelements, dtype=dtype)
     cell_offsets_array = np.zeros(nelements, dtype=dtype)
 
-    cell_type_point = 1 # vtk.vtkVertex().GetCellType()
-    cell_type_line = 3 # vtk.vtkLine().GetCellType()
+    cell_type_point = 1 # vtkVertex().GetCellType()
+    cell_type_line = 3 # vtkLine().GetCellType()
     cell_type_tri3 = 5 # vtkTriangle().GetCellType()
     cell_type_tri6 = 22 # vtkQuadraticTriangle().GetCellType()
     cell_type_quad4 = 9 # vtkQuad().GetCellType()
@@ -2037,17 +2037,17 @@ def map_elements3_helper(model: BDF,
     cell_type_tetra4 = 10 # vtkTetra().GetCellType()
     cell_type_tetra10 = 24 # vtkQuadraticTetra().GetCellType()
     cell_type_pyram5 = 14 #  vtkPyramid().GetCellType()
-    #cell_type_pyram13 = 27 # vtk.vtkQuadraticPyramid().GetCellType()
+    #cell_type_pyram13 = 27 # vtkQuadraticPyramid().GetCellType()
     cell_type_penta6 = 13 # vtkWedge().GetCellType()
     cell_type_penta15 = 26 #  vtkQuadraticWedge().GetCellType()
     cell_type_hexa8 = 12 # vtkHexahedron().GetCellType()
     cell_type_hexa20 = 25 #  vtkQuadraticHexahedron().GetCellType()
 
     # per gui/testing_methods.py/create_vtk_cells_of_constant_element_type
-    #1  = vtk.vtkVertex().GetCellType()
+    #1  = vtkVertex().GetCellType()
     #3  = vtkLine().GetCellType()
     #5  = vtkTriangle().GetCellType()
-    #9  = vtk.vtkQuad().GetCellType()
+    #9  = vtkQuad().GetCellType()
     #10 = vtkTetra().GetCellType()
     #vtkPenta().GetCellType()
     #vtkHexa().GetCellType()
@@ -2409,7 +2409,7 @@ def create_monpnt(gui: MainWindow,
                   model: BDF,
                   xyz_cid0: np.ndarray,
                   nid_cp_cd: np.ndarray):
-    cell_type_point = 1  # vtk.vtkVertex().GetCellType()
+    cell_type_point = 1  # vtkVertex().GetCellType()
 
     all_nids = nid_cp_cd[:, 0]
     log = model.log
