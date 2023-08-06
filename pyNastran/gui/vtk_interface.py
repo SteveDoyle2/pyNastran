@@ -1,10 +1,11 @@
 try:
     from vtkmodules.vtkCommonDataModel import (
-        vtkLine,
+        vtkVertex, vtkLine,
         vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
         vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
         vtkQuadraticWedge, vtkQuadraticHexahedron,
         vtkPyramid, vtkQuadraticPyramid,
+        vtkQuadraticEdge, vtkBiQuadraticQuad,
         vtkUnstructuredGrid, vtkMultiBlockDataSet,
         vtkSelectionNode, vtkCellArray,
         vtkPolyData,
@@ -13,11 +14,12 @@ try:
 
 except ImportError:
     from vtk import (
-        vtkLine,
+        vtkVertex, vtkLine,
         vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
         vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
         vtkQuadraticWedge, vtkQuadraticHexahedron,
         vtkPyramid, vtkQuadraticPyramid,
+        vtkQuadraticEdge, vtkBiQuadraticQuad,
         vtkUnstructuredGrid, vtkMultiBlockDataSet,
         vtkSelectionNode, vtkCellArray,
         vtkPolyData,
