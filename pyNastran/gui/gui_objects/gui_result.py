@@ -7,7 +7,6 @@ defines:
 from typing import Any, Optional
 import numpy as np
 from pyNastran.utils.numpy_utils import integer_float_types
-from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
               '|i1', # this is a boolean
@@ -702,6 +701,7 @@ class GuiResult(GuiResultCommon):
         if self.subcase_id > 0:
             titlei = f'{self.title}_subcase={self.subcase_id:d}'
 
+        from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
         vtk_array = numpy_to_vtk(self.scalar, deep=0, array_type=None)
 
         title_out = titlei

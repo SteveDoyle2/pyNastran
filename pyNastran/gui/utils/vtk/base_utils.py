@@ -1,7 +1,7 @@
 """defines functions found in VTK that are overwritten for various reasons"""
 import sys
 import numpy as np
-from vtk import vtkIdTypeArray
+
 from pyNastran.gui.vtk_common_core import vtkIdTypeArray, vtkVersion, VTK_VERSION as vtk_version
 from pyNastran.gui.vtk_util import (
     create_vtk_array, get_numpy_array_type,
