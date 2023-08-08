@@ -1255,14 +1255,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #print(obj.include_lines)
         self.active_filenames = []
         self.reject_lines = []
-        self.include_filenames = defaultdict(list)
+        include_filenames = defaultdict(list)
         for ifile, include_lines_filename_pairs in obj.include_lines.items():
             assert len(include_lines_filename_pairs) > 0, include_lines_filename_pairs
             for include_lines, bdf_filename2 in include_lines_filename_pairs:
                 #print(ifile, include_lines)
-                self.include_filenames[ifile].append(bdf_filename2)
+                include_filenames [ifile].append(bdf_filename2)
                 if not save_file_structure and not obj.read_includes:
                     self.reject_lines += include_lines
+
+        self.include_filenames: dict[int, list[str]] = dict(include_filenames)
         #print('-------------ssett (end)----------')
         self.active_filenames += obj.active_filenames
         self.active_filename = obj.active_filename
