@@ -10,7 +10,9 @@ from pyNastran.utils import object_attributes, object_methods, deprecated
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
 from pyNastran.bdf.cards.aero.zona import ZONA
+
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf_interface.model_group import ModelGroup
     from pyNastran.bdf import (
         # BDF,
         CaseControlDeck,
@@ -576,18 +578,18 @@ class BDFAttributes:
         # ----------------------------------------------------------------
         #: tables
         # TABLES1, ...
-        self.tables = {}  # type: dict[int, TABLES1]
+        self.tables: dict[int, TABLES1] = {}
 
         # TABLEDx
-        self.tables_d = {}  # type: dict[int, Union[TABLED1, TABLED2, TABLED3, TABLED4]]
+        self.tables_d: dict[int, Union[TABLED1, TABLED2, TABLED3, TABLED4]] = {}
 
         # TABLEMx
-        self.tables_m = {}  # type: dict[int, Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]]
+        self.tables_m: dict[int, Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]] = {}
 
         #: random_tables
         self.random_tables = {}  # type: dict[int, Any]
         #: TABDMP1
-        self.tables_sdamping = {}  # type: dict[int, TABDMP1]
+        self.tables_sdamping: dict[int, TABDMP1] = {}
 
         # ----------------------------------------------------------------
         #: EIGB, EIGR, EIGRL methods
@@ -597,29 +599,29 @@ class BDFAttributes:
 
         # ---------------------------- optimization --------------------------
         # optimization
-        self.dconadds = {}  # type: dict[int, DCONADD]
-        self.dconstrs = {}  # type: dict[int, DCONSTR]
-        self.desvars = {}  # type: dict[int, DESVAR]
-        self.topvar = {}  # type: dict[int, TOPVAR]
-        self.ddvals = {}  # type: dict[int, DDVAL]
-        self.dlinks = {}  # type: dict[int, DLINK]
-        self.dresps = {}  # type: dict[int, Union[DRESP1, DRESP2, DRESP3]]
+        self.dconadds: dict[int, DCONADD] = {}
+        self.dconstrs: dict[int, DCONSTR] = {}
+        self.desvars: dict[int, DESVAR] = {}
+        self.topvar: dict[int, TOPVAR] = {}
+        self.ddvals: dict[int, DDVAL] = {}
+        self.dlinks: dict[int, DLINK] = {}
+        self.dresps: dict[int, Union[DRESP1, DRESP2, DRESP3]] = {}
 
-        self.dtable = None  # type: Optional[DTABLE]
-        self.dequations = {}  # type: dict[int, DEQATN]
+        self.dtable: Optional[DTABLE] = None
+        self.dequations: dict[int, DEQATN] = {}
 
         #: stores DVPREL1, DVPREL2...might change to DVxRel
-        self.dvprels = {}  # type: dict[int, Union[DVPREL1, DVPREL2]]
-        self.dvmrels = {}  # type: dict[int, Union[DVMREL1, DVMREL2]]
-        self.dvcrels = {}  # type: dict[int, Union[DVCREL1, DVCREL2]]
-        self.dvgrids = {}  # type: dict[int, DVGRID]
-        self.doptprm = None  # type: Optional[DOPTPRM]
-        self.dscreen = {}  # type: dict[int, DSCREEN]
+        self.dvprels: dict[int, Union[DVPREL1, DVPREL2]] = {}
+        self.dvmrels: dict[int, Union[DVMREL1, DVMREL2]] = {}
+        self.dvcrels: dict[int, Union[DVCREL1, DVCREL2]] = {}
+        self.dvgrids: dict[int, DVGRID] = {}
+        self.doptprm: Optional[DOPTPRM] = None
+        self.dscreen: dict[int, DSCREEN] = {}
 
         # nx optimization
-        self.group = {}    # type: dict[int, GROUP]
-        self.dmncon = {}   # type: dict[int, DMNCON]
-        self.dvtrels = {}  # type: dict[int, Union[DVTREL1, DVTREL2]]
+        self.group : dict[int, GROUP]= {}
+        self.dmncon: dict[int, DMNCON] = {}
+        self.dvtrels: dict[int, Union[DVTREL1, DVTREL2]] = {}
 
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
@@ -765,12 +767,13 @@ class BDFAttributes:
         self.csuper = {}  # type: dict[int, CSUPER]
         self.csupext = {}  # type: dict[int, CSUPEXT]
 
-        self.bolt = {} # type: dict[int, BOLT]
-        self.boltseq = {} # type: dict[int, BOLTSEQ]
-        self.boltfor = {} # type: dict[int, BOLTFOR]
+        self.bolt: dict[int, BOLT] = {}
+        self.boltseq: dict[int, BOLTSEQ] = {}
+        self.boltfor: dict[int, BOLTFOR] = {}
         self.boltfrc = {}
         self.boltld = {}
         # ---------------------------------------------------------------------
+        self.model_groups: dict[int, ModelGroup] = {}
         self._type_to_id_map = defaultdict(list)  # type: dict[int, list[Any]]
         self._slot_to_type_map = {
             'params' : ['PARAM'],

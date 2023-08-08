@@ -323,7 +323,8 @@ class BDFInputPy:
                 _show_bad_file(self, bdf_filename, encoding=self.encoding)
         return lines
 
-    def lines_to_deck_lines(self, lines: list[str], make_ilines: bool=True) -> tuple[list[str], int]:
+    def lines_to_deck_lines(self, lines: list[str],
+                            make_ilines: bool=True) -> tuple[list[str], int]:
         """
         Merges the includes into the main deck.
 
@@ -374,6 +375,7 @@ class BDFInputPy:
                         include_lines, bdf_filename2, i, j, ifile, make_ilines=make_ilines)
                     ifile += 1
                 else:
+                    # remove the include lines
                     lines = lines[:i] + lines[j:]
                     if make_ilines:
                         ilines = np.vstack([
@@ -381,6 +383,9 @@ class BDFInputPy:
                             ilines[j:, :],
                         ])
                         #assert len(ilines[:, 1]) == len(np.unique(ilines[:, 1]))
+                    # we have to reprocess the line just in case there is
+                    # an include on the current line
+                    i -= 1
                     #self.include_lines[ifile].append(include_lines)
                     #self.reject_lines.append(write_include(bdf_filename2))
             i += 1

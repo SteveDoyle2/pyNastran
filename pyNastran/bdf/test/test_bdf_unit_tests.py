@@ -43,6 +43,26 @@ class Tester(unittest.TestCase):
 
 class TestBDFUnit(Tester):
 
+    def test_bdf_include5(self):
+        """verify we get 5 include files if they are one after the other"""
+        model = BDF()
+        unit_dir = bdf_filename = os.path.join(TEST_PATH, 'unit')
+        bdf_filename = os.path.join(unit_dir, 'include5.bdf')
+        model.read_bdf(bdf_filename, save_file_structure=False, read_includes=False)
+
+        #print(model.include_filenames)
+        file0_include_filenames = model.include_filenames[0]
+        assert len(model.include_filenames) == 1, model.include_filenames
+        assert len(file0_include_filenames) == 5, len(file0_include_filenames)
+        #out_filenames = {}
+        #for ifile, include_filenames in model.include_filenames.items():
+            #for include_filename in include_filenames:
+                #out_filenames[include_filename] = include_filename
+
+        #model.write_bdfs(out_filenames, relative_dirname=unit_dir, encoding=None,
+                         #size=8, is_double=False, enddata=None, close=True, is_windows=None)
+        x = 1
+
     def test_bdf_test(self):
         #log = SimpleLogger(level='warning', encoding='utf-8')
         filenames = [

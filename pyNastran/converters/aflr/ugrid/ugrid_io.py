@@ -3,8 +3,8 @@ import os
 from numpy import amax, amin, arange, ones, zeros, where, unique
 
 #VTK_TRIANGLE = 5
-import vtk
-#from vtk import vtkTriangle, vtkQuad
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkVertex
 
 from cpylog import SimpleLogger
 from pyNastran.converters.aflr.surf.surf_reader import TagReader
@@ -59,6 +59,7 @@ class UGRID_IO:
         plot : bool; default=True
             should the model be generated or should we wait until
             after the results are loaded
+
         """
         model_name = name
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
@@ -197,7 +198,7 @@ class UGRID_IO:
         # if nnodes == 0:
             # return
         nnodes = len(diff_node_ids)
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
         alt_grid = self.gui.alt_grids[name]
@@ -207,10 +208,10 @@ class UGRID_IO:
             points.InsertPoint(nid, *node)
 
             #if 1:
-            elem = vtk.vtkVertex()
+            elem = vtkVertex()
             elem.GetPointIds().SetId(0, nid)
             #else:
-                #elem = vtk.vtkSphere()
+                #elem = vtkSphere()
                 #sphere_size = self._get_sphere_size(dim_max)
                 #elem.SetRadius(sphere_size)
                 #elem.SetCenter(points.GetPoint(nid))

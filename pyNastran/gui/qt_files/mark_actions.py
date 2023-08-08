@@ -5,9 +5,11 @@ defines:
 """
 from typing import Optional, Any
 import numpy as np
-import vtk
+from vtk import vtkSelection, vtkExtractSelection
+from pyNastran.gui.vtk_renering_core import vtkBillboardTextActor3D
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.gui.vtk_common_core import vtkMath
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, create_unstructured_point_grid
 
 
@@ -70,7 +72,7 @@ class MarkActions:
         except ValueError:
             #ValueError: expects 0 <= id && id < GetNumberOfPoints()
             return None
-        dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
+        dist_min = vtkMath.Distance2BetweenPoints(point0, node_xyz)
 
         point_min = point0
         imin = 0
@@ -78,7 +80,7 @@ class MarkActions:
             #point = array(points.GetPoint(ipoint), dtype='float32')
             #dist = norm(point - node_xyz)
             point = points.GetPoint(ipoint)
-            dist = vtk.vtkMath.Distance2BetweenPoints(point, node_xyz)
+            dist = vtkMath.Distance2BetweenPoints(point, node_xyz)
             if dist < dist_min:
                 dist_min = dist
                 imin = ipoint
@@ -290,10 +292,10 @@ class MarkActions:
 
         """
         actors = []
-        if eids and representation in ['wire', 'surface']:
+        if eids and representation in {'wire', 'surface'}:
             actor = self.highlight_elements(self, eids, model_name=model_name)
             actors.append(actor)
-        if nids and representation in ['points']:
+        if nids and representation == 'points':
             actor = self.highlight_nodes(self, nids, model_name=model_name)
             actors.append(actor)
         return actors
@@ -364,10 +366,10 @@ class MarkActions:
             #- _highlight_picker_node
 
         """
-        selection = vtk.vtkSelection()
+        selection = vtkSelection()
         selection.AddNode(selection_node)
 
-        extract_selection = vtk.vtkExtractSelection()
+        extract_selection = vtkExtractSelection()
         extract_selection.SetInputData(0, grid)
         extract_selection.SetInputData(1, selection)
         extract_selection.Update()
@@ -500,7 +502,7 @@ def create_annotation(gui, text, x, y, z):
     #self.convert_units(icase, result_value, x, y, z)
 
     settings = gui.settings
-    text_actor = vtk.vtkBillboardTextActor3D()
+    text_actor = vtkBillboardTextActor3D()
     text_actor.SetPosition(x, y, z)
     text_actor.SetInput(str(text))
     text_actor.PickableOff()

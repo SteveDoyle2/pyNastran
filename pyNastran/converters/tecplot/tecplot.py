@@ -582,9 +582,10 @@ def _get_write_header(title: str,
     assert nzones >= 1, nzones
     for zone in zones:
         variables = zone.variables
-        is_x = 'X' in zone.headers_dict['VARIABLES']
-        is_y = 'Y' in zone.headers_dict['VARIABLES']
-        is_z = 'Z' in zone.headers_dict['VARIABLES']
+        headers = zone.headers_dict['VARIABLES']
+        is_x: bool = 'X' in headers
+        is_y: bool = 'Y' in headers
+        is_z: bool = 'Z' in headers
         res_types_all = []
         if is_x:
             res_types_all.append('X')

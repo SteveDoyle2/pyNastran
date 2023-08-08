@@ -27,6 +27,7 @@ from typing import Any, Optional, TYPE_CHECKING
 from cpylog import get_logger
 
 #from pyNastran.bdf import subcase
+from pyNastran.utils import object_attributes, object_methods, object_stats
 from pyNastran.bdf.bdf_interface.encoding import decode_lines
 from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.bdf_interface.subcase.cards import (
@@ -143,6 +144,18 @@ class CaseControlDeck:
         except Exception:
             self.log.error('Invalid Case Control Deck:\n' + '\n'.join(self.lines))
             raise
+
+    def object_methods(self, mode: str='public', keys_to_skip=None) -> list[str]:
+        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip)
+
+    def object_methods(self, mode: str='public', keys_to_skip=None,
+                       filter_properties: bool=False) -> list[str]:
+        return object_attributes(obj, mode=mode, keys_to_skip=keys_to_skip,
+                                 filter_properties=filter_properties)
+
+    def object_stats(self, mode: str='public', keys_to_skip=None, filter_properties: bool=False) -> str:
+        return object_stats(self, mode=mode, keys_to_skip=keys_to_skip,
+                            filter_properties=filter_properties)
 
     def load_hdf5_file(self, hdf5_file, encoding: str) -> None:
         """loads the case control deck section from a hdf5 file"""

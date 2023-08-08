@@ -49,6 +49,7 @@ from .cards.utils import wipe_empty_fields
 from .bdf_interface.assign_type import (integer,
                                         integer_or_string, string)
 
+from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 from .cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from .cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
@@ -1254,14 +1255,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #print(obj.include_lines)
         self.active_filenames = []
         self.reject_lines = []
-        self.include_filenames = defaultdict(list)
+        include_filenames = defaultdict(list)
         for ifile, include_lines_filename_pairs in obj.include_lines.items():
             assert len(include_lines_filename_pairs) > 0, include_lines_filename_pairs
             for include_lines, bdf_filename2 in include_lines_filename_pairs:
                 #print(ifile, include_lines)
-                self.include_filenames[ifile].append(bdf_filename2)
+                include_filenames [ifile].append(bdf_filename2)
                 if not save_file_structure and not obj.read_includes:
                     self.reject_lines += include_lines
+
+        self.include_filenames: dict[int, list[str]] = dict(include_filenames)
         #print('-------------ssett (end)----------')
         self.active_filenames += obj.active_filenames
         self.active_filename = obj.active_filename
@@ -1589,10 +1592,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
         cards_list = []  # type: list[Any]
-        cards_dict = defaultdict(list)  # type: dict[str, list[Any]]
+        cards_dict: dict[str, list[Any]] = defaultdict(list)
         dict_cards = ['BAROR', 'BEAMOR']
         #cards = defaultdict(list)
-        card_count = defaultdict(int)  # dict[str, int]
+        card_count: dict[str, int] = defaultdict(int)
         full_comment = ''
         card_lines = []
         old_ifile_iline = None
@@ -1611,6 +1614,24 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             comment = ''
             if '$' in line:
                 line, comment = line.split('$', 1)
+                strip_comment = comment.strip()
+                if strip_comment.lower().startswith('group:'):
+                    #'group: name="ULFuseCanardAtch MainFuseStruct Fixed Gridpoints"; nodes=1'
+                    strip_comment2 = strip_comment.split(':', 1)[1].strip()
+                    if ';' in strip_comment2:
+                        group = ModelGroup.create_from_line(strip_comment2)
+                        name = group.name
+                        if name in self.model_groups:
+                            og_group = self.model_groups[name]
+                            #print(og_group)
+                            og_group.union(group)
+                            #print('->', og_group)
+                            del og_group
+                            continue
+                        self.model_groups[name] = group
+                    else:
+                        self.log.warning(f'unknown group={strip_comment}')
+
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
@@ -5092,7 +5113,6 @@ def _get_coords_to_update(coords: dict[int, Union[CORD1R, CORD1C, CORD1S,
             #msg += str(cp)
         #raise RuntimeError(msg)
     return ncoords, cord1s_to_update_list, cord2s_to_update_list, nids_checked
-
 
 def map_version(fem: BDF, version: str):
     version_map = {

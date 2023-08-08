@@ -40,6 +40,7 @@ FORMAT_TO_EXTENSION = {
     'fast' : ['.fgrid'],
     'avl' : ['.avl'],
     'vrml' : ['.wrl'],
+    'vtk' : ['.vtk', '.vtu'],
     #'abaqus' : []
 
     # no duplicate extensions are allowed; use the explicit --format option
@@ -64,11 +65,11 @@ def determine_format(input_filename: str,
             'surf', 'lawgs', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen',
             'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
-            'avl',
+            'avl', 'vtk',
         ]
         if DEV:
             allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran', 'nastranv'])
-
+    print(f'allowed_formats = {allowed_formats}')
 
     ext = os.path.splitext(input_filename)[1].lower()
     extension_to_format = {val : key for key, value in FORMAT_TO_EXTENSION.items()
@@ -462,7 +463,7 @@ def _validate_format(input_formats: list[str]) -> None:
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
-        'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'avl',
+        'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'avl', 'vtk',
         None,  # I think None is for the null case
     ]
 
@@ -474,4 +475,4 @@ def _validate_format(input_formats: list[str]) -> None:
             allowed_formats.remove(None)
         #print('allowed_formats =', allowed_formats)
         fmts = ", ".join(allowed_formats)
-        assert input_format in allowed_formats, f'format={input_format} is not supported\nallowed_formats=[]{fmts}]'
+        assert input_format in allowed_formats, f'format={input_format} is not supported\nallowed_formats=[{fmts}]'

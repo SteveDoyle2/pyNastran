@@ -131,6 +131,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'monitor_points',
     ]
     skip_attrs = [
+        'model_groups',
         'active_filename', 'active_filenames', 'debug', # 'log',
         'reject_lines',
         'is_nx', 'is_msc', 'is_optistruct', 'is_zona', 'is_mystran', 'is_nasa95',
@@ -461,7 +462,7 @@ def _get_bdf_stats_loads(model: BDF) -> list[str]:
 
     else:
         for (lid, load_combinations) in sorted(model.load_combinations.items()):
-            groups_dict = {}  # type: dict[str, int]
+            groups_dict: dict[str, int] = {}
             for load_combination in load_combinations:
                 groups_dict[load_combination.type] = groups_dict.get(load_combination.type, 0) + 1
             added_messge = _get_added_message_from_dict(groups_dict)

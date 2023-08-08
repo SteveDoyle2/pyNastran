@@ -75,6 +75,9 @@ except ImportError:  # pragma: no cover
     raise
 
 
+from pyNastran.gui.gui_objects.vtk_io import VtkIO
+CLASS_MAP['vtk'] = VtkIO
+
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 #CLASS_MAP['nastran'] = NastranIO
 

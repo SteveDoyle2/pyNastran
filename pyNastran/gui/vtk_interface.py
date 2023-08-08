@@ -1,9 +1,12 @@
 try:
     from vtkmodules.vtkCommonDataModel import (
-        vtkLine,
-        vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
-        vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
-        vtkQuadraticWedge, vtkQuadraticHexahedron,
+        vtkVertex,
+        vtkLine, vtkQuadraticEdge,
+        vtkTriangle, vtkQuadraticTriangle,
+        vtkQuad, vtkQuadraticQuad, vtkBiQuadraticQuad,
+        vtkTetra, vtkQuadraticTetra,
+        vtkWedge, vtkQuadraticWedge,
+        vtkHexahedron,vtkQuadraticHexahedron,
         vtkPyramid, vtkQuadraticPyramid,
         vtkUnstructuredGrid, vtkMultiBlockDataSet,
         vtkSelectionNode, vtkCellArray,
@@ -12,11 +15,15 @@ try:
     )
 
 except ImportError:
+    print('error vtk_interface')
     from vtk import (
-        vtkLine,
-        vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
-        vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
-        vtkQuadraticWedge, vtkQuadraticHexahedron,
+        vtkVertex,
+        vtkLine, vtkQuadraticEdge,
+        vtkTriangle, vtkQuadraticTriangle,
+        vtkQuad, vtkQuadraticQuad, vtkBiQuadraticQuad,
+        vtkTetra, vtkQuadraticTetra,
+        vtkWedge, vtkQuadraticWedge,
+        vtkHexahedron,vtkQuadraticHexahedron,
         vtkPyramid, vtkQuadraticPyramid,
         vtkUnstructuredGrid, vtkMultiBlockDataSet,
         vtkSelectionNode, vtkCellArray,

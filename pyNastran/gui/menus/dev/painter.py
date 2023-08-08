@@ -114,7 +114,7 @@ class EditBoundaryConditions(QDialog):
         self.point_size_edit.setRange(1, 10)
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
-        if self.representation in ['wire', 'surface']:
+        if self.representation in {'wire', 'surface'}:
             self.point_size.setEnabled(False)
             self.point_size_edit.setEnabled(False)
 
@@ -162,7 +162,7 @@ class EditBoundaryConditions(QDialog):
         self.point_size_edit.setValue(point_size)
         if self.representation != representation:
             self.representation = representation
-
+            assert isinstance(representation, str), representation
             if self.representation == 'point':
                 self.point_size.setEnabled(True)
                 self.point_size_edit.setEnabled(True)
@@ -170,13 +170,13 @@ class EditBoundaryConditions(QDialog):
                 self.point_size.setEnabled(False)
                 self.point_size_edit.setEnabled(False)
 
-            if self.representation == ['wire']:
+            if self.representation == 'wire':
                 self.line_width.setEnabled(True)
                 self.line_width_edit.setEnabled(True)
             else:
                 self.line_width.setEnabled(False)
                 self.line_width_edit.setEnabled(False)
-            #if self.representation in ['wire', 'surface']:
+            #if self.representation in {'wire', 'surface'}:
 
         self.opacity_edit.setValue(opacity)
         self.checkbox_show.setChecked(is_visible)

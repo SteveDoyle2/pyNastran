@@ -1,9 +1,9 @@
 """Defines how the GUI reads Abaqus files"""
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 import numpy as np
 
-import vtk
+from pyNastran.gui.vtk_common_core import vtkPoints, VTK_FLOAT
 from pyNastran.gui.vtk_interface import (
     vtkLine, vtkTriangle, vtkQuad, vtkTetra, vtkHexahedron,
     vtkUnstructuredGrid)
@@ -12,8 +12,6 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 #from pyNastran.gui.qt_files.result import Result
 from pyNastran.converters.abaqus.abaqus import Abaqus, get_nodes_nnodes_nelements
-if TYPE_CHECKING:  # pragma: no cover
-    from vtk import vtkUnstructuredGrid
 
 
 class AbaqusIO:
@@ -65,10 +63,10 @@ class AbaqusIO:
         dim_max = (mmax - mmin).max()
         self.gui.create_global_axes(dim_max)
 
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(self.gui.nnodes)
 
-        data_type = vtk.VTK_FLOAT
+        data_type = VTK_FLOAT
         points_array = numpy_to_vtk(
             num_array=nodes,
             deep=True,
@@ -118,7 +116,7 @@ class AbaqusIO:
         """creates the result objects for abaqus"""
         #return [], {}, 0
         #nelements = elements.shape[0]
-        nnodes = nodes.shape[0]
+        #nnodes = nodes.shape[0]
 
         element_ids = np.arange(1, nelements + 1)
         #print(nodes)

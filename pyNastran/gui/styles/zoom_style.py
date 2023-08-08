@@ -1,11 +1,12 @@
 """defines the ZoomStyle class"""
-import vtk
+from vtk import vtkInteractorStyleRubberBandZoom
+from pyNastran.gui.vtk_renering_core import vtkCamera
 
 #left_button_down=self._zoom_picker,
 #left_button_up=self._zoom_picker,
 #right_button_down=self._zoom_reset,
 
-class ZoomStyle(vtk.vtkInteractorStyleRubberBandZoom):
+class ZoomStyle(vtkInteractorStyleRubberBandZoom):
     """Custom Rubber Band Zoom"""
     def __init__(self, parent=None):
         """creates the ZoomStyle instance"""
@@ -66,7 +67,7 @@ class ZoomStyle(vtk.vtkInteractorStyleRubberBandZoom):
             zoom_factor = min([aspect_ratio_x, aspect_ratio_y])
 
             #distance = camera.GetDistance()
-            #a = vtk.vtkCamera()
+            #a = vtkCamera()
 
 
               # +---------+ --- ymax

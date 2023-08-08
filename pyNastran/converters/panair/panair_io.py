@@ -4,8 +4,8 @@ import os
 import numpy as np
 from numpy import zeros, amax, amin, arange
 
-import vtk
-from vtk import vtkQuad
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkQuad
 
 from pyNastran.converters.panair.panair_grid import PanairGrid
 from pyNastran.converters.panair.agps import AGPS
@@ -59,7 +59,7 @@ class PanairIO:
         grid = self.gui.grid
         grid.Allocate(self.gui.nelements, 1000)
 
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(self.gui.nnodes)
 
         assert len(nodes) > 0

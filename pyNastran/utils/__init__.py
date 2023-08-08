@@ -232,6 +232,13 @@ def object_methods(obj: Any, mode: str='public',
     """
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
+def simplify_object_keys(keys_to_skip: Optional[list[str]]) -> list[str]:
+    if keys_to_skip is None:
+        keys_to_skip = []
+    elif isinstance(keys_to_skip, str):
+        keys_to_skip = [keys_to_skip]
+    return keys_to_skip
+
 def object_stats(obj: Any,
                  mode: str='public',
                  keys_to_skip: Optional[list[str]]=None,

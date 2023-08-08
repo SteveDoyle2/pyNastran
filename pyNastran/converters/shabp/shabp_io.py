@@ -5,8 +5,8 @@ import numpy as np
 from numpy import zeros, cross, amax, amin
 from numpy.linalg import norm  # type: ignore
 
-import vtk
-from vtk import vtkQuad
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkQuad
 
 from pyNastran.converters.shabp.shabp import read_shabp
 from pyNastran.converters.shabp.shabp_results import ShabpOut
@@ -53,7 +53,7 @@ class ShabpIO:
         grid = self.gui.grid
         grid.Allocate(nelements, 1000)
 
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
         assert len(nodes) > 0

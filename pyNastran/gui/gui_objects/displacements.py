@@ -136,6 +136,23 @@ class VectorTable(GuiResultCommon):
         self.min_values = deepcopy(self.default_mins)
         self.max_values = deepcopy(self.default_maxs)
 
+    def validate(self) -> None:
+        ntitles = len(self.titles)
+        nheaders = len(self.headers)
+        ndata_formats = len(self.data_formats)
+        nmin_values = len(self.min_values)
+        nmax_values = len(self.max_values)
+        assert ntitles > 0, self.titles
+        assert nheaders > 0, self.headers
+        assert ndata_formats == ntitles, self.data_formats
+        for title in self.titles:
+            assert isinstance(title, str), title
+        for header in self.headers:
+            assert isinstance(header, str), header
+        for data_format in self.data_formats:
+            assert isinstance(data_format, str), data_format
+        return
+
     # getters
     def get_location(self, i: int, unused_name: str) -> str:
         return self.location

@@ -10,7 +10,7 @@ from typing import Union, cast, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
-from vtk import vtkPoints, VTK_FLOAT
+from pyNastran.gui.vtk_common_core import vtkPoints, VTK_FLOAT
 from pyNastran.gui.vtk_interface import vtkHexahedron, vtkUnstructuredGrid, VTK_POLYHEDRON
 
 from cpylog import SimpleLogger

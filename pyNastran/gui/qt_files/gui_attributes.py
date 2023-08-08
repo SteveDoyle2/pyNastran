@@ -528,7 +528,7 @@ class GuiAttributes:
         grid = self.alt_grids[name]
         grid.SetPoints(points)
 
-        etype = 9  # vtk.vtkQuad().GetCellType()
+        etype = 9  # vtkQuad().GetCellType()
         create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
         if add:
@@ -1038,10 +1038,10 @@ class GuiAttributes:
         """resets the grids; sets up alt_grids"""
         if hasattr(self, 'main_grids') and name not in self.main_grids:
             grid = vtkUnstructuredGrid()
-            grid_mapper = vtk.vtkDataSetMapper()
+            grid_mapper = vtkDataSetMapper()
             grid_mapper.SetInputData(grid)
 
-            geom_actor = vtk.vtkLODActor()
+            geom_actor = vtkLODActor()
             geom_actor.DragableOff()
             geom_actor.SetMapper(grid_mapper)
             self.rend.AddActor(geom_actor)
@@ -1059,7 +1059,7 @@ class GuiAttributes:
             self.grid_mapper.SetScalarRange(scalar_range)
             self.grid_mapper.SetLookupTable(self.color_function)
 
-            self.edge_actor = vtk.vtkLODActor()
+            self.edge_actor = vtkLODActor()
             self.edge_actor.DragableOff()
             self.edge_mapper = vtkPolyDataMapper()
 
@@ -1511,6 +1511,12 @@ class GuiAttributes:
         self.tool_actions.on_load_user_geom(csv_filename=csv_filename, name=name, color=color)
 
     @start_stop_performance_mode
+    def on_save_vtk(self, vtk_filename=None) -> bool:
+        is_failed = self.tool_actions.on_save_vtk(
+            vtk_filename=vtk_filename)
+        return is_failed
+
+    @start_stop_performance_mode
     def on_load_csv_points(self, csv_filename=None, name=None, color=None) -> bool:
         """
         Loads a User Points CSV File of the form:
@@ -1541,13 +1547,18 @@ class GuiAttributes:
         """
         return self.group_actions.create_groups_by_visible_result(nlimit=nlimit)
 
-    def create_groups_by_property_id(self):
+    def create_groups_by_property_id(self) -> int:
         """
         Creates a group for each Property ID.
 
         As this is somewhat Nastran specific, create_groups_by_visible_result exists as well.
         """
         return self.group_actions.create_groups_by_property_id()
+
+    def create_groups_by_model_group(self) -> int:
+        if hasattr(self, 'model') and hasattr(self.model, 'model_groups'):
+            return self.group_actions.create_groups_by_model_group(self.model.model_groups)
+        return 0
 
     #---------------------------------------------------------------------------
     def update_camera(self, code) -> None:

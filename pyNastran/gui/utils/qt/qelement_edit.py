@@ -49,8 +49,8 @@ class QNodeElementEdit(QLineEdit):
         self.representation = representation
         self.pick_style = pick_style
         self.cleanup = cleanup
-        assert self.representation in ['wire', 'points', 'surface', 'points+wire', 'points+surface'], f'representation={representation!r}'
-        assert self.pick_style in ['area', 'single'], f'pick_style={pick_style!r}'
+        assert self.representation in {'wire', 'points', 'surface', 'points+wire', 'points+surface'}, f'representation={representation!r}'
+        assert self.pick_style in {'area', 'single'}, f'pick_style={pick_style!r}'
         if max_length != 32767:
             self.setMaxLength(max_length) # default is 32767
 

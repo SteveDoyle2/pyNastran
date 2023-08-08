@@ -186,6 +186,8 @@ class GridPointForceResult(GuiResultCommon):
     #def get_default_min_max(self, i: int, name: str):
         #return None, None
 
+    #def save_vtk_result(self, used_titles: set[str]) -> None:
+
     def __repr__(self) -> str:
         msg = '<GridPointForceResult>'
         return msg
@@ -694,7 +696,27 @@ class GuiResult(GuiResultCommon):
             #phase = self.phase
         #return self.xyz, xyz
 
-    def __repr__(self):
+    def save_vtk_result(self, used_titles: set[str]):
+        titlei = self.title
+        if self.subcase_id > 0:
+            titlei = f'{self.title}_subcase={self.subcase_id:d}'
+
+        from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
+        vtk_array = numpy_to_vtk(self.scalar, deep=0, array_type=None)
+
+        title_out = titlei
+        i = 1
+        while title_out in used_titles:
+            title_out = f'{titlei}_{i}'
+            i += 1
+
+        #if i != 1:
+            #log.warning(f'duplicate GuiResult {titlei} because it is already used -> {title_out}')
+        check_title(title_out, used_titles)
+        vtk_array.SetName(title_out)
+        return vtk_array
+
+    def __repr__(self) -> str:
         msg = 'GuiResult\n'
         msg += '    title=%r\n' % self.title
         msg += '    data_type=%r\n' % self.data_type
@@ -715,3 +737,8 @@ class GuiResultIDs(GuiResult):
             subcase_id, header, title, location, scalar,
             mask_value, nlabels, labelsize, ncolors, colormap, data_map,
             data_format, uname)
+
+
+def check_title(title: str, used_titles: set[str]) -> None:
+    assert title not in used_titles, title
+    used_titles.add(title)

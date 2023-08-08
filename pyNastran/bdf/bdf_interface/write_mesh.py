@@ -203,6 +203,7 @@ class WriteMesh(BDFAttributes):
             size, nodes_size, elements_size, loads_size)
 
         self._write_params(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_model_groups(bdf_file)
         self._write_nodes(bdf_file, nodes_size, is_double, is_long_ids=is_long_ids)
 
         if interspersed:
@@ -817,6 +818,14 @@ class WriteMesh(BDFAttributes):
             if is_big_materials:
                 for unused_mid, mat in sorted(self.big_materials.items()):
                     bdf_file.write(mat.write_card_16(is_double))
+
+    def _write_model_groups(self, bdf_file: Any):
+        if self.model_groups:
+            #bdf_file.write('$ MODELGROUPS\n')
+            for group in self.model_groups.values():
+                #bdf_file.write(f'$ {group}\n')
+                print(group)
+            x = 1
 
     def _write_nodes(self, bdf_file: Any, size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
