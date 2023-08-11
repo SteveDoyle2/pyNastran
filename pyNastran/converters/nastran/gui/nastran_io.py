@@ -58,6 +58,8 @@ from pyNastran.femutils.nan import (
     isgreater_int)
 from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
 
+
+from pyNastran.bdf.patran_utils.colon_syntax import _apply_colon_set
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                #CTRSHL,
@@ -355,7 +357,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
             #self.gui.eid_map = {}
             #self.gui.nid_map = {}
-
             self.gui.result_cases = {}
             self.gui.ncases = 0
 
@@ -1969,6 +1970,21 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 mpc_id, model, rigid_lines,
                 depname, indname, linename, idtype)
 
+        for grid_name, group in model.model_groups.items():
+            if len(group.nodes):
+                nids_colon = []
+                for groupi in group.nodes:
+                    colon_groupi = '%d:%d:%d' % groupi
+                    expanded_nids = _apply_colon_set(colon_groupi)
+                    nids_colon.extend(expanded_nids)
+                nids = np.unique(np.hstack(nids_colon))
+                msg = f', which is required by {grid_name!r}'
+                self.gui.create_alternate_vtk_grid(
+                    grid_name, color=RED_FLOAT, opacity=1.0, point_size=4,
+                    representation='point', is_visible=True)
+                self._add_nastran_nodes_to_grid(grid_name, nids, model, msg)
+                del nids, nids_colon
+
         geometry_names = spc_names + mpc_names + suport_names
         return geometry_names
 
@@ -2177,7 +2193,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             if line not in lines2:
                 lines2.append(line)
         lines = np.array(lines2, dtype=idtype)
-        dependent = (lines[:, 0])
+        dependent = lines[:, 0]
         independent = np.unique(lines[:, 1])
         self.dependents_nodes.update(dependent)
         unused_node_ids = np.unique(lines.ravel())
@@ -2194,18 +2210,21 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         mpc_names = [depname, indname, linename]
         return mpc_names
 
-    def _add_nastran_nodes_to_grid(self, name, node_ids, model, msg, store_msg=False):
+    def _add_nastran_nodes_to_grid(self, name: str, node_ids: list[int],
+                                   model: BDF, msg: str, store_msg: bool=False):
         """used to create MPC independent/dependent nodes"""
         nnodes = len(node_ids)
         stored_msg = []
         if nnodes == 0:
             msg = '0 nodes added for %r' % name
             out_msg = store_warning(model.log, store_msg, msg)
+            aa
             return out_msg
         self.gui.follower_nodes[name] = node_ids
 
         #numpy_to_vtk_points(nodes)
         points = vtkPoints()
+        print(name, 'nnodes', nnodes)
         points.SetNumberOfPoints(nnodes)
 
         j = 0

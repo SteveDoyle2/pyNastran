@@ -442,7 +442,7 @@ class Zone:
             itri = (n3 == n4)
             demote_to_tris = itri.all()
             if demote_to_tris:
-                zonetype = self.headers_dict['FETRIANGLE']
+                zonetype = self.headers_dict['ZONETYPE'] ='FETRIANGLE'
                 self.tri_elements = self.quad_elements[:, :3]
                 assert self.tri_elements.shape[1] == 3, self.tri_elements.shape
                 self.quad_elements = np.zeros((0, 4), dtype='int32')
