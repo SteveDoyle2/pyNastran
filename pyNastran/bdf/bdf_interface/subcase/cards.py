@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Union, Any
 from pyNastran.utils.numpy_utils import bytes_type
 from .subcase_base import CaseControlCard
 
@@ -15,7 +15,8 @@ from .sets import SET, SETMC
 def encode_str_list(strings: list[str], encoding: str) -> list[bytes]:
     return [stri.encode(encoding) for stri in strings]
 
-def encode_str_value_list(strings: list[int, float, str], encoding: str) -> list[int, float, bytes]:
+def encode_str_value_list(strings: list[Union[int, float, str]],
+                          encoding: str) -> list[Union[int, float, bytes]]:
     values_bytes = [stri.encode(encoding) if isinstance(stri, str) else stri
                     for stri in strings]
     return values_bytes
@@ -147,8 +148,8 @@ class ECHO(CaseControlCard):
 
         return cls(values)
 
-def _set_options_from_line(line: str, value: str, options: list[str]) -> None:
-    # ECHO = PUNCH,SORT(MAT1,PARAM)
+def _set_options_from_line(line: str, value: str, options: list[str]) -> list[str]:
+    """ECHO = PUNCH,SORT(MAT1,PARAM)"""
     is_comma = ',' in value
     is_paren = '(' in value
     if is_comma and is_paren:
@@ -231,16 +232,16 @@ class CheckCard(CaseControlCard):
 
     """
     type = 'CheckCard'
-    allowed_keys = set([])  # type: set[str]
+    allowed_keys: set[str] = set([])
 
     # key:(type, allowed_values)
-    allowed_values = {}  # type: dict[str, Union[float, str]]
+    allowed_values: dict[str, Union[float, str]] = {}
 
     # the allowed value for the key, options, value approach
-    allowed_strings = set([]) # type: set[str]
+    allowed_strings: set[str] = set([])
 
     # maps something like INIT to INITIAL
-    duplicate_names = {} # type: dict[Any, Any]
+    duplicate_names: dict[Any, Any] = {}
 
     # enables values as integers instead of just strings
     allow_ints = False
@@ -799,7 +800,8 @@ class EXTSEOUT(CaseControlCard):
                     'DAMP', 'DAMPING', 'K4DAMP',
                     'LOADS',
                     'DMIGOP2', 'DMIGPCH',
-                    'MATOP4', 'MATRIXOP4'}
+                    'MATOP4', 'MATRIXOP4',
+                    'MODACC'}
 
     def __init__(self, data):
         super(EXTSEOUT, self).__init__()

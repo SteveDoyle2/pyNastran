@@ -4,8 +4,9 @@ import sys
 import time
 from traceback import print_exc
 
+import numpy as np
 import pyNastran
-from pyNastran.op4.op4 import read_op4
+from pyNastran.op4.op4 import read_op4, Matrix, coo_matrix
 
 
 def run_lots_of_files(files, write_op4=True,
@@ -83,6 +84,15 @@ def run_op4(op4_filename, write_op4=True, debug=True,
                 #assert form == form2
                 #delta = matrix - matrix2
                 #assert np.array_equal(matrix, matrix2), 'delta=\n%s' % delta
+
+        for key, (form, matrix) in sorted(matrices.items()):
+            print(key, matrix.shape)
+            #if isinstance(matrix, np.ndarray):
+                #print(key, matrix.shape, matrix)
+            #elif isinstance(matrix, coo_matrix):
+                #print(key, matrix.shape, matrix.todense())
+            #else:
+                #print(key, matrix.shape)
 
         if write_op4:
             model = os.path.splitext(op4_filename)[0]

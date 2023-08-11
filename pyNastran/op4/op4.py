@@ -3,10 +3,10 @@ from __future__ import annotations
 import sys
 import os
 from struct import pack, unpack, Struct
-from typing import TextIO, Optional, Any, TYPE_CHECKING
+from typing import TextIO, BinaryIO, Optional, Union, Any, TYPE_CHECKING
 
 import numpy as np
-from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
+from numpy import float32, float64, complex64, complex128
 from scipy.sparse import coo_matrix  # type: ignore
 from cpylog import get_logger2
 
@@ -21,7 +21,7 @@ def read_op4(op4_filename: Optional[str]=None,
              matrix_names: Optional[list[str]]=None,
              precision: str='default',
              use_matrix_class: bool=False,
-             debug: bool=False, log=None):
+             debug: bool=False, log=None) -> dict[str, Any]:
     """
     Reads a NASTRAN OUTPUT4 file, and stores the
     matrices as the output arguments.  The number of
@@ -120,12 +120,12 @@ class OP4:
         #assert debug == True, debug
         self.log = get_logger2(log, debug)
         self._new = False
-        self.large = None
+        self.large = False
 
     def read_op4(self, op4_filename: Optional[str]=None,
                  matrix_names: Optional[list[str]]=None,
                  precision: str='default',
-                 use_matrix_class: bool=False):
+                 use_matrix_class: bool=False) -> dict[str, Any]:
         """See ``read_op4``"""
         if precision not in ('default', 'single', 'double'):
             msg = "precision=%r and must be 'single', 'double', or 'default'" % precision
@@ -161,22 +161,23 @@ class OP4:
     def read_op4_ascii(self, op4_filename: str,
                        matrix_names: Optional[list[str]]=None,
                        precision: str='default',
-                       use_matrix_class: bool=False) -> dict[str, Matrix]:
+                       use_matrix_class: bool=False) -> dict[str, Any]:
         """matrix_names must be a list or None, but basically the same"""
+        matrices = {}
+        name = 'dummyName'
         with open(op4_filename, 'r') as op4:
-            matrices = {}
-            name = 'dummyName'
             while name is not None:
                 name, amat = self._read_matrix_ascii(op4, matrix_names, precision)
-                if name is not None:
-                    if matrix_names is None or name in matrix_names:
-                        _save_matrix(matrices, name, amat,
-                                     use_matrix_class=use_matrix_class)
+                if name is None:
+                    break
+                if matrix_names is None or name in matrix_names:
+                    _save_matrix(matrices, name, amat,
+                                 use_matrix_class=use_matrix_class)
         return matrices
 
     def _read_matrix_ascii(self, op4: TextIO,
                            matrix_names: Optional[list[str]]=None,
-                           precision: str='default') -> tuple[str, Matrix]:
+                           precision: str='default') -> tuple[Optional[str], Any]:
         """Reads an ASCII matrix"""
         iline = 0
         line = op4.readline().rstrip()
@@ -184,16 +185,16 @@ class OP4:
         if line == '':
             op4.close()
             return None, None
-        ncols, nrows, form, matrix_type = line[0:32].split()
-        nrows = int(nrows)
+        ncols_str, nrows_str, form_str, matrix_type_str = line[0:32].split()
+        nrows = int(nrows_str)
 
         is_big_mat, nrows = get_big_mat_nrows(nrows)
         if self.debug:
             self.log.info('is_big_matrix = %s' % is_big_mat)
 
-        ncols = int(ncols)
-        form = int(form)
-        matrix_type = int(matrix_type)
+        ncols = int(ncols_str)
+        form = int(form_str)
+        matrix_type = int(matrix_type_str)
         dtype = get_dtype(matrix_type, precision)
 
         name = line[32:40].strip()
@@ -203,8 +204,8 @@ class OP4:
                 name, nrows, ncols, form, matrix_type))
         assert ncols > 0, 'ncols=%s' % ncols
         size = line[40:].strip()
-        line_size = size.split(',')[1].split('E')[1].split('.')[0]  # 3E23.16 to 23
-        line_size = int(line_size)
+        line_size_str = size.split(',')[1].split('E')[1].split('.')[0]  # 3E23.16 to 23
+        line_size = int(line_size_str)
 
         line = op4.readline().rstrip()
         iline += 1
@@ -307,8 +308,8 @@ class OP4:
         #if rows == []:  # NULL matrix
             #raise NotImplementedError()
 
-        rows = array(rows, dtype='int32') - 1
-        cols = array(cols, dtype='int32') - 1
+        rows = np.array(rows, dtype='int32') - 1
+        cols = np.array(cols, dtype='int32') - 1
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
         #print("type = %s %s" % (type(A),type(A.toarray())))
         #A = A.toarray()
@@ -396,8 +397,8 @@ class OP4:
             #raise NotImplementedError()
 
         cols = np.hstack(cols)
-        rows = array(rows, dtype='int32') - 1
-        cols = array(cols, dtype='int32') - 1
+        rows = np.array(rows, dtype='int32') - 1
+        cols = np.array(cols, dtype='int32') - 1
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
         #print("type = %s %s" % (type(A),type(A.toarray())))
         #A = A.toarray()
@@ -407,7 +408,7 @@ class OP4:
                                line_size, line, dtype, is_big_mat):
         """Reads a real dense ASCII matrix"""
         self.log.debug('_read_real_dense_ascii')
-        A = zeros((nrows, ncols), dtype=dtype)  # Initialize a real matrix
+        A = np.zeros((nrows, ncols), dtype=dtype)  # Initialize a real matrix
         nloops = 0
         was_broken = False
         while 1:
@@ -464,8 +465,9 @@ class OP4:
         iline += 1
         return A, iline
 
-    def _read_real_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype,
-                         is_sparse, is_big_mat):
+    def _read_real_ascii(self, op4: TextIO, iline: int, nrows: int, ncols: int,
+                         line_size: int, line: str, dtype: str,
+                         is_sparse: bool, is_big_mat: bool) -> tuple[np.ndarray, int]:
         """Reads a real ASCII matrix"""
         if is_sparse:
             if self._new:
@@ -542,8 +544,8 @@ class OP4:
                 sline = line.strip().split()
                 nloops += 1
 
-        rows = array(rows, dtype='int32') - 1
-        cols = array(cols, dtype='int32') - 1
+        rows = np.array(rows, dtype='int32') - 1
+        cols = np.array(cols, dtype='int32') - 1
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
         op4.readline()
         iline += 1
@@ -566,7 +568,7 @@ class OP4:
                                   line_size, line, dtype,
                                   is_big_mat):
         """Reads a dense complex ASCII matrix"""
-        A = zeros((nrows, ncols), dtype=dtype)  # Initialize a complex matrix
+        A = np.zeros((nrows, ncols), dtype=dtype)  # Initialize a complex matrix
 
         nloops = 0
         was_broken = False
@@ -642,7 +644,7 @@ class OP4:
             self.log.info('  IS=%s L=%s irow=%s' % (IS, L, irow))
         return irow, iline
 
-    def _get_irow_small_binary(self, op4: TextIO, data: bytes):
+    def _get_irow_small_binary(self, op4: BinaryIO, data: bytes) -> tuple[int, int]:
         """
         Returns
         -------
@@ -666,7 +668,9 @@ class OP4:
             assert L > 0, L
         return irow, L
 
-    def _get_irow_big_ascii(self, op4, iline: int, line, sline, irow: int):
+    def _get_irow_big_ascii(self, op4: TextIO, iline: int,
+                            line: str,
+                            sline: list[str], irow: int) -> tuple[int, int]:
         sline = line.strip().split()
         if len(sline) == 2:
             pass
@@ -674,13 +678,13 @@ class OP4:
             sline = op4.readline().strip().split()
             iline += 1
         assert len(sline) == 2, 'sline=%s len(sline)=%s' % (sline, len(sline))
-        (idummy, irow) = sline
-        irow = int(irow)
+        (idummy, irow_str) = sline
+        irow = int(irow_str)
         if self.debug:
             self.log.debug("idummy=%s irow=%s" % (idummy, irow))
         return irow, iline
 
-    def _get_irow_big_binary(self, op4: TextIO, data: bytes):
+    def _get_irow_big_binary(self, op4: BinaryIO, data: bytes) -> tuple[int, int]:
         """
         Returns
         -------
@@ -706,7 +710,7 @@ class OP4:
                        use_matrix_class=False):
         """matrix_names must be a list or None, but basically the same"""
         self.n = 0
-        matrices = {}
+        matrices: dict[str, Any] = {}
         name = 'dummyName'
 
         with open(op4_filename, mode='rb') as op4:
@@ -750,11 +754,11 @@ class OP4:
                 #
         return matrices
 
-    def read_start_marker(self, op4: TextIO):
+    def read_start_marker(self, op4: BinaryIO) -> tuple[int, int, int, int]:
         if self.debug:
             self.log.info('--------------------------------------')
         #self.show(op4, 60)
-        data = op4.read(4)
+        data: bytes = op4.read(4)
         self.n += 4
         record_length, = unpack(self._endian + 'i', data)
         #print('record_length =', record_length)
@@ -772,7 +776,8 @@ class OP4:
             raise NotImplementedError('record_length=%s' % record_length)
         return (a, icol, irow, nwords)
 
-    def _read_matrix_binary(self, op4: TextIO, precision: str, matrix_names) -> tuple[str, Matrix]:
+    def _read_matrix_binary(self, op4: BinaryIO, precision: str,
+                            matrix_names: list[str]) -> tuple[str, Matrix]:
         """Reads a binary matrix"""
         #self.show(f, 60)
         if self.debug:
@@ -870,12 +875,13 @@ class OP4:
         amat.data = A
         return name, amat
 
-    def _read_real_dense_binary(self, op4: TextIO, nrows, ncols, matrix_type, is_big_mat):
+    def _read_real_dense_binary(self, op4: BinaryIO, nrows: int, ncols: int,
+                                matrix_type: int, is_big_mat: bool) -> np.ndarray:
         if self.debug:
             self.log.info('_read_real_dense_binary')
         out = _get_matrix_info(matrix_type, self.log, debug=False)
         (nwords_per_value, _nbytes_per_value, data_format, dtype) = out
-        A = zeros((nrows, ncols), dtype=dtype)
+        A = np.zeros((nrows, ncols), dtype=dtype)
 
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
@@ -904,15 +910,17 @@ class OP4:
         self.n += 4
         return A
 
-
-    def _read_real_binary(self, op4: TextIO, nrows, ncols, matrix_type, is_sparse, is_big_mat):
+    def _read_real_binary(self, op4: BinaryIO, nrows: int, ncols: int,
+                          matrix_type: int, is_sparse: bool, is_big_mat: bool) -> np.ndarray:
         if is_sparse:
             A = self._read_real_sparse_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         else:
             A = self._read_real_dense_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         return A
 
-    def _read_real_sparse_binary(self, op4: TextIO, nrows, ncols, matrix_type, is_big_mat):
+    def _read_real_sparse_binary(self, op4: BinaryIO,
+                                 nrows: int, ncols: int, matrix_type: int,
+                                 is_big_mat: bool) -> coo_matrix:
         if self.debug:
             self.log.info('_read_real_sparse_binary')
         #self._show(op4, 200, types='ifsdq', endian=None)
@@ -920,9 +928,9 @@ class OP4:
         (nwords_per_value, nbytes_per_value, data_format, dtype) = out
         rows = []
         cols = []
-        entries = []
+        entries: list[float] = []
 
-        data = ''
+        data = b''
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
             #if record_length==0:
@@ -1023,7 +1031,7 @@ class OP4:
 
         return A
 
-    def _show(self, op4: TextIO, n, types='ifs', endian=None):
+    def _show(self, op4: BinaryIO, n, types: str='ifs', endian=None):
         """Shows binary data"""
         assert self.n == op4.tell()
         nints = n // 4
@@ -1032,7 +1040,7 @@ class OP4:
         op4.seek(self.n)
         return strings, ints, floats
 
-    def _show_data(self, data, types='ifs', endian=None):
+    def _show_data(self, data: bytes, types: str='ifs', endian=None):
         """
         Shows a data block as various types
 
@@ -1059,7 +1067,7 @@ class OP4:
         """
         return self._write_data(sys.stdout, data, types=types, endian=endian)
 
-    def _write_data(self, f, data, types='ifs', endian=None):
+    def _write_data(self, f, data: bytes, types: str='ifs', endian=None):
         """
         Useful function for seeing what's going on locally when debugging.
 
@@ -1137,14 +1145,15 @@ class OP4:
         f.seek(self.n)
         return self._write_data(fout, data, types=types)
 
-    def _read_complex_dense_binary(self, op4: TextIO, nrows, ncols, matrix_type, is_big_mat):
+    def _read_complex_dense_binary(self, op4: BinaryIO, nrows: int, ncols: int,
+                                   matrix_type: int, is_big_mat: bool) -> coo_matrix:
         """reads a dense complex binary matrix"""
         if self.debug:
             self.log.info('_read_complex_dense_binary')
         out = _get_matrix_info(matrix_type, self.log, debug=False)
         (nwords_per_value, nbytes_per_value, data_format, dtype) = out
 
-        A = zeros((nrows, ncols), dtype=dtype)
+        A = np.zeros((nrows, ncols), dtype=dtype)
         record_length = 0
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
@@ -1232,13 +1241,14 @@ class OP4:
                     self.log.info("record_length=%s nbytes_per_value=%s" % (
                         record_length, nbytes_per_value))
                     self.log.info(print_matrix(A))
-                    self.log.info("******** %s" % data)
+                    self.log.info("******** %r" % data)
 
         op4.read(4)
         self.n += 4
         return A
 
-    def _read_complex_binary(self, op4: TextIO, nrows, ncols, matrix_type, is_sparse, is_big_mat):
+    def _read_complex_binary(self, op4: BinaryIO, nrows: int, ncols: int,
+                             matrix_type: int, is_sparse: bool, is_big_mat: bool) -> coo_matrix:
         """Reads a complex binary matrix"""
         if is_sparse:
             A = self._read_complex_sparse_binary(op4, nrows, ncols, matrix_type, is_big_mat)
@@ -1246,7 +1256,8 @@ class OP4:
             A = self._read_complex_dense_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         return A
 
-    def _read_complex_sparse_binary(self, op4: TextIO, nrows, ncols, matrix_type, is_big_mat):
+    def _read_complex_sparse_binary(self, op4: BinaryIO, nrows: int, ncols: int,
+                                    matrix_type: int, is_big_mat: bool) -> coo_matrix:
         """Reads a sparse complex binary matrix"""
         if self.debug:
             self.log.info('_read_complex_sparse_binary')
@@ -1256,7 +1267,7 @@ class OP4:
         cols = []
         entries = []
         record_length = 0
-        data = ''
+        data = b''
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
             #if record_length == 0:
@@ -1357,7 +1368,7 @@ class OP4:
         self.n += 4
         return A
 
-    def get_markers_sparse(self, op4: TextIO, is_big_mat):
+    def get_markers_sparse(self, op4: BinaryIO, is_big_mat: bool) -> tuple[int, int, int]:
         if is_big_mat:
             (unused_a, icol, irow, nwords) = self.read_start_marker(op4)
             #irow = self._get_irow_big(op4)
@@ -1376,15 +1387,15 @@ class OP4:
             nwords -= 1
         return icol, irow, nwords
 
-    def get_markers_dense(self, op4: TextIO):
+    def get_markers_dense(self, op4: BinaryIO) -> tuple[int, int, int]:
         a, icol, irow, nwords = self.read_start_marker(op4)
         if self.debug:
             self.log.info("n=%s a=%s icol=%s irow=%s nwords=%s"% (
                 self.n, a, icol, irow, nwords))
         return icol, irow, nwords
 
-    def write_op4(self, op4_filename, matrices, name_order=None,
-                  precision='default', is_binary=True):
+    def write_op4(self, op4_filename: str, matrices, name_order=None,
+                  precision: str='default', is_binary: bool=True):
         """
         Writes the OP4
 
@@ -1430,51 +1441,59 @@ class OP4:
         #else:        op4_form = 2   # rectangular
 
         if isinstance(op4_filename, str):
-            with open(op4_filename, 'w') as op4:
-                self._write_op4_file(op4, name_order, is_binary, precision, matrices)
+            if is_binary:
+                with open(op4_filename, 'wb') as op4b:
+                    self._write_op4_file_binary(op4b, name_order, precision, matrices)
+            else:
+                with open(op4_filename, 'w') as op4:
+                    self._write_op4_file_ascii(op4, name_order, precision, matrices)
         else:
             op4 = op4_filename
-            self._write_op4_file(op4, name_order, is_binary, precision, matrices)
 
-    def _write_op4_file(self, op4: TextIO, name_order, is_binary, precision, matrices):
+            if is_binary:
+                self._write_op4_file_binary(op4, name_order, precision, matrices)
+            else:
+                self._write_op4_file_ascii(op4, name_order, precision, matrices)
+
+    def _write_op4_file_ascii(self, op4: TextIO, name_order, precision, matrices):
         """Helper method for OP4 writing"""
-        if name_order is None:
-            name_order = sorted(matrices.keys())
-        elif isinstance(name_order, str):
-            name_order = [name_order]
-        elif isinstance(name_order, bytes):
-            name_order = [name_order]
+        name_order_loop = _prepare_name_order(matrices, name_order)
 
         is_big_mat = False  ## .. todo:: hardcoded
-        for name in name_order:
-            try:
-                (form, matrix) = matrices[name]
-            except KeyError:
-                raise KeyError('key=%r is an invalid matrix; keys=%s' % (
-                    str(name), matrices.keys()))
-            if not form in (1, 2, 3, 6, 8, 9):
-                raise ValueError('form=%r and must be in [1, 2, 3, 6, 8, 9]' % form)
+        for name in name_order_loop:
+            form, matrix = _write_form_matrix_helper(matrices, name)
 
             if isinstance(matrix, coo_matrix):
                 #write_DMIG(f, name, matrix, form, precision='default')
-                if is_binary:
-                    raise NotImplementedError('sparse binary op4 writing not implemented')
-                else:
-                    _write_sparse_matrix_ascii(
-                        op4, name, matrix, form=form,
-                        precision=precision, is_big_mat=is_big_mat)
-            elif isinstance(matrix, ndarray):
-                if is_binary:
-                    self._write_dense_matrix_binary(
-                        op4, name, matrix, form=form, precision=precision)
-                else:
-                    self._write_dense_matrix_ascii(
-                        op4, name, matrix, form=form, precision=precision)
+                _write_sparse_matrix_ascii(
+                    op4, name, matrix, form=form,
+                    precision=precision, is_big_mat=is_big_mat)
+            elif isinstance(matrix, np.ndarray):
+                self._write_dense_matrix_ascii(
+                    op4, name, matrix, form=form, precision=precision)
             else:
                 msg = ('Matrix type=%r is not supported.  '
                        'types=[coo_matrix, ndarray]' % type(matrix))
                 raise NotImplementedError(msg)
 
+    def _write_op4_file_binary(self, op4: BinaryIO, name_order, precision, matrices):
+        """Helper method for OP4 writing"""
+        name_order_loop = _prepare_name_order(matrices, name_order)
+
+        is_big_mat = False  ## .. todo:: hardcoded
+        for name in name_order_loop:
+            form, matrix = _write_form_matrix_helper(matrices, name)
+
+            if isinstance(matrix, coo_matrix):
+                #write_DMIG(f, name, matrix, form, precision='default')
+                raise NotImplementedError('sparse binary op4 writing not implemented')
+            elif isinstance(matrix, np.ndarray):
+                self._write_dense_matrix_binary(
+                    op4, name, matrix, form=form, precision=precision)
+            else:
+                msg = ('Matrix type=%r is not supported.  '
+                       'types=[coo_matrix, ndarray]' % type(matrix))
+                raise NotImplementedError(msg)
 
     def __backup(self, name: str, matrix: np.ndarray, form: int=2, precision: str='default'):
         """
@@ -1533,7 +1552,7 @@ class OP4:
         assert isinstance(name, str), name
         assert isinstance(form, int), form
 
-    def _write_dense_matrix_binary(self, op4: TextIO, name, matrix, form=2,
+    def _write_dense_matrix_binary(self, op4: BinaryIO, name, matrix, form=2,
                                    precision='default', encoding='utf-8'):
         """
         24 bytes is the record length
@@ -1661,7 +1680,7 @@ class OP4:
         op4.write(msg)
 
 
-    def _determine_endian(self, op4: TextIO):
+    def _determine_endian(self, op4: BinaryIO) -> str:
         """Get the endian"""
         data = op4.read(8)
         (record_length_big, unused_dum_a) = unpack('>ii', data)
@@ -1694,7 +1713,7 @@ class OP4:
         op4.seek(0)
         return endian
 
-def _save_matrix(matrices, name: str, amat: Matrix, use_matrix_class: bool=False):
+def _save_matrix(matrices, name: str, amat: Matrix, use_matrix_class: bool=False) -> None:
     """save the matrix"""
     assert isinstance(name, str), type(name)
     if use_matrix_class:
@@ -1704,10 +1723,10 @@ def _save_matrix(matrices, name: str, amat: Matrix, use_matrix_class: bool=False
 
 def _save_matrix_new(matrices: dict[str, tuple[int, Matrix]],
                      name: str,
-                     amat: Matrix):
+                     amat: Matrix) -> None:
     if name in matrices:
         # there are duplicate matrices with the same name (e.g., the QHH)
-        amat0 = matrices[name]  # type: Matrix
+        amat0: Matrix = matrices[name]
         form0 = amat0.form
         data0 = amat0.data
 
@@ -1797,7 +1816,7 @@ def _write_sparse_matrix_ascii(op4, name, A, form: int=2, is_big_mat: bool=False
     #print("A.row = ", A.row)
     #print("A.col = ", A.col)
 
-    cols = {}
+    cols: dict[int, list[int]] = {}
     for j in A.col:
         cols[j] = []
     for i, jcol in enumerate(A.col):
@@ -2060,3 +2079,25 @@ def compress_column(col):
         packs.append(packi)
     #print("packs = ", packs)
     return packs
+
+def _prepare_name_order(matrices: dict[str, Any], name_order) -> list[str]:
+    """Helper method for OP4 writing"""
+    if name_order is None:
+        name_order = sorted(matrices.keys())
+    elif isinstance(name_order, str):
+        name_order = [name_order]
+    elif isinstance(name_order, bytes):
+        name_order = [name_order]
+    return name_order
+
+def _write_form_matrix_helper(matrices, name: str) -> tuple[int, Union[np.ndarray, coo_matrix]]:
+    """Helper method for OP4 writing"""
+    try:
+        (form, matrix) = matrices[name]
+    except KeyError:
+        raise KeyError('key=%r is an invalid matrix; keys=%s' % (
+            str(name), matrices.keys()))
+    if not form in (1, 2, 3, 6, 8, 9):
+        raise ValueError('form=%r and must be in [1, 2, 3, 6, 8, 9]' % form)
+    return form, matrix
+
