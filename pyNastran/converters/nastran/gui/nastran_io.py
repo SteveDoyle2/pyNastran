@@ -2218,13 +2218,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         if nnodes == 0:
             msg = '0 nodes added for %r' % name
             out_msg = store_warning(model.log, store_msg, msg)
-            aa
             return out_msg
         self.gui.follower_nodes[name] = node_ids
 
         #numpy_to_vtk_points(nodes)
         points = vtkPoints()
-        print(name, 'nnodes', nnodes)
+        #print(name, 'nnodes', nnodes)
         points.SetNumberOfPoints(nnodes)
 
         j = 0
