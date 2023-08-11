@@ -12,9 +12,9 @@ import numpy as np
 from pyNastran.utils import int_version
 try:
     import imageio
-    IMAGEIO_VERSION = int_version('imageio', imageio.__version__)
-    if IMAGEIO_VERSION >= [2, 16, 2]:
-        import imageio.v2 as imageio
+    #IMAGEIO_VERSION = int_version('imageio', imageio.__version__)
+    #if IMAGEIO_VERSION >= [2, 16, 2]:
+        #import imageio.v2 as imageio
     import PIL
     IS_IMAGEIO = True
 except ImportError:
@@ -22,7 +22,7 @@ except ImportError:
 
 from pyNastran import is_pynastrangui_exe
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.utils import remove_files
+from pyNastran.utils import remove_files, PathLike
 
 if is_pynastrangui_exe:  # pragma: no cover
     assert IS_IMAGEIO, 'imageio is not istalled for the exe'
@@ -396,7 +396,7 @@ def setup_animate_time(scale: float, time: float, fps: int,
     isteps = np.linspace(0, nfiles, num=nfiles, endpoint=True, dtype='int32')
     return icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, fps
 
-def get_analysis_time(time, onesided=True):
+def get_analysis_time(time: float, onesided: bool=True) -> float:
     """
     The analysis time is the time that needs to be simulated for the analysis.
 
@@ -496,7 +496,7 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
     return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2
 
 def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector,
-                   isteps, is_symmetric, endpoint):
+                   isteps, is_symmetric: bool, endpoint: bool):
     """
     Chop the frames in half at the middle frame
 
@@ -550,7 +550,8 @@ def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector,
         scales = scales[:i]
     return scales, phases, icases_fringe, icases_disp, icases_vector, isteps
 
-def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, isteps, onesided):
+def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, isteps,
+                   onesided: bool):
     """
     Drop the duplicate middle frame if we're onesided.  Only for the GUI.
 
@@ -594,7 +595,7 @@ def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, is
     #print('scales2     =%s n=%s, isteps2=%s' % (scales, len(scales), isteps))
     return scales, phases, icases_fringe, icases_disp, icases_vector, isteps
 
-def write_gif(gif_filename: str, png_filenames: list[str], time: float=2.0,
+def write_gif(gif_filename: PathLike, png_filenames: list[PathLike], time: float=2.0,
               onesided: bool=True, nrepeat: int=0,
               delete_images: bool=False, make_gif: bool=True) -> bool:
     """

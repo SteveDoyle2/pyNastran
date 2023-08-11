@@ -12,7 +12,7 @@ name: CI
 # │ │ ┌────────── day of the month (1 - 31)
 # │ │ │ ┌────────── month (1 - 12)
 # │ │ │ │ ┌────────── day of the week (0 - 6)
-# │ │ │ │ │                                  
+# │ │ │ │ │
 # │ │ │ │ │
 # │ │ │ │ │
 # * * * * *
@@ -69,7 +69,7 @@ jobs:
          experimental: [false]
          #include:
          # - python: '3.11-dev'
-         #   experimental: true         
+         #   experimental: true
          #include:
          #- node: 13
          #  os: ubuntu-18.04
@@ -151,44 +151,44 @@ jobs:
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          pip list
 
-        #mode: ['latest', 'latest_basic', 
+        #mode: ['latest', 'latest_basic',
         #       'latest_pyside2_gui', 'latest_pyside6_gui',
         #       'latest_pyqt5_gui', 'latest_pyqt6_gui',
         #       'old', 'old_basic',
         #       'old_pyside_gui', 'old_pyqt_gui']
         #
       - name: Install latest basic packages
-        if: ${{ matrix.mode == 'latest_basic'       || matrix.mode == 'latest' || 
-                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+        if: ${{ matrix.mode == 'latest_basic'       || matrix.mode == 'latest' ||
+                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
         run: |
           pip install numpy scipy
         #--no-binary  :all:
 
       - name: Install latest packages (pandas, matplotlib)
-        if: ${{ matrix.mode == 'latest' || 
-                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+        if: ${{ matrix.mode == 'latest' ||
+                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
         run: |
           pip install 'pandas>=1.0,<2.0' matplotlib
 
       - name: Install latest packages (h5py)
-        if: ${{  matrix.python-version != '3.11' && (matrix.mode == 'latest' || 
-                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+        if: ${{  matrix.python-version != '3.11' && (matrix.mode == 'latest' ||
+                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install h5py
 
       - name: Install latest packages (imageio, pillow)
         if: ${{ matrix.python-version != '3.11' && (
-                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
-          pip install imageio<3 pillow>5.2,!=7.1.0
+          pip install imageio pillow>5.2,!=7.1.0
 
       - name: Install latest packages (vtk)
         if: ${{ matrix.python-version != '3.11' && (
-                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' || 
+                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install vtk
@@ -251,13 +251,13 @@ jobs:
         # 3.11 - No matching distribution found for vtk
       - name: Run GUI
         if: ${{ matrix.python-version != '3.11' && (
-                 matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyside6_gui' || 
+                 matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests.py
          coverage run pyNastran/all_tests.py
-      
+
       - name: Upload coverage
         run: |
          codecov
