@@ -1001,8 +1001,7 @@ class EDOM(GeomCommon):
             cp_name_bytes = data[n+8*size:n+10*size]
             elem_type = reshape_bytes_block_size(elem_type_bytes, size=size)
             cp_name = reshape_bytes_block_size(cp_name_bytes, size=size)
-            assert fid == 0, (dvcrel_id, mid, mat_type_bytes, mp_name, pid, fid)
-            #print(dvmrel_id, mid, mat_type_bytes, mp_name, pid, fid)
+            assert fid == 0, (dvcrel_id, eid, elem_type, cp_name, fid)
 
             desvar_ids = ints[i0+10:i1:2]
             coeffs = floats[i0+11:i1:2]
@@ -1198,8 +1197,7 @@ class EDOM(GeomCommon):
             else:
                 asdf
             if mp_name_bytes == b'        ':
-                assert fid != 0
-                mpname_fid = fid
+                assert fid != 0, fid
             else:
                 assert fid == 0, f'fid={fid} mp_name_bytes={mp_name_bytes}'
 

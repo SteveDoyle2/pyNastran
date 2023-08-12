@@ -1,4 +1,5 @@
 """Defines the Matrix class"""
+from typing import Union, Optional
 from scipy.sparse import coo_matrix, csr_matrix  # type: ignore
 import numpy as np
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
@@ -16,13 +17,15 @@ class Matrix:
     data : varies
         dense : np.ndarray
         sparse : coo_matrix
-        data is initialized by setting the matrix.data attribute externally
+        data is generally initialized by setting the matrix.data attribute externally
     is_matpool : bool
         is this a matpool matrix?  A matpool has (grid, component) values
         similar to a DMIG.  A non-matpool matrix is similar to a DMI.
 
     """
-    def __init__(self, name: str, form: int, is_matpool: bool=False):
+    def __init__(self, name: str, form: int,
+                 data: Optional[Union[np.ndarray, coo_matrix]]=None,
+                 is_matpool: bool=False):
         """
         Initializes a Matrix
 
@@ -47,7 +50,7 @@ class Matrix:
 
         """
         self.name = name
-        self.data = None
+        self.data = data
         self.form = form
         self.is_matpool = is_matpool
 

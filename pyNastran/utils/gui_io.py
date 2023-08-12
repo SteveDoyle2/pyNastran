@@ -45,7 +45,7 @@ if _gui_mode == '':
 
 if _gui_mode == 'wx':
     pass
-elif _gui_mode in ['pyqt', 'pyside']:
+elif _gui_mode in {'pyqt', 'pyside'}:
     class QtDialog(QWidget):
         """Dummy GUI Object"""
         def __init__(self):
@@ -80,7 +80,7 @@ def radio_pullown_dialog(title: str, button_dict, nwide: int=3):  # pragma: no c
 def save_file_dialog(title: str, wx_wildcard: str, qt_wildcard: str,
                      dirname: str='') -> str:
     """
-    creates a save file dialog in wx or PyQt4/PySide
+    creates a save file dialog in wx or PyQt/PySide
     """
     fname = None
     if dirname == '':
@@ -98,7 +98,7 @@ def save_file_dialog(title: str, wx_wildcard: str, qt_wildcard: str,
             dirname = dlg.GetDirectory()
             fname = os.path.join(dirname, filename)
 
-    elif _gui_mode in ['pyqt', 'pyside']:
+    elif _gui_mode in {'pyqt', 'pyside'}:
         # checks if QApplication already exists
         app = QApplication.instance()
         if not app: # create QApplication if it doesnt exist
@@ -111,8 +111,8 @@ def save_file_dialog(title: str, wx_wildcard: str, qt_wildcard: str,
         app.exit()
         #print("fname =", fname)
     else:
-        msg = 'Could not import wx, PySide, or PyQt4.  ' \
-            'Please specify the file explicitly.'
+        msg = 'Could not import wx, PySide2/6, or PyQt5/6.  '\
+            f'Please specify the file explicitly.\ngui_mode={_gui_mode!r}'
         raise ImportError(msg)
     return fname
 
@@ -140,7 +140,7 @@ def load_file_dialog(title: str, wx_wildcard: str, qt_wildcard: str,
             dirname = dlg.GetDirectory()
             fname = os.path.join(dirname, filename)
 
-    elif _gui_mode in ['pyqt', 'pyside']:
+    elif _gui_mode in {'pyqt', 'pyside'}:
         # checks if QApplication already exists
         app = QApplication.instance()
         if not app: # create QApplication if it doesnt exist
@@ -157,7 +157,7 @@ def load_file_dialog(title: str, wx_wildcard: str, qt_wildcard: str,
         app.exit()
     else:
         msg = 'Could not import wx, PySide2/6, or PyQt5/6.  '\
-            'Please specify the file explicitly.' + '\ngui_mode=%r' % _gui_mode
+            f'Please specify the file explicitly.\ngui_mode={_gui_mode!r}'
         raise ImportError(msg)
     return fname, wildcard_level
 
