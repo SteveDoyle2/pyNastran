@@ -16,7 +16,6 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def read_matpool_dmig_4(op2: OP2, data: bytes,
                         unused_utable_name: str, debug: bool=False):
-    #return read_matpool_dmig(op2, data, utable_name, debug=debug)
     """
     ncols_gset is needed for form=9
     list of header values:
@@ -632,12 +631,12 @@ def read_matpool_dmig(op2: OP2, data: bytes,
         #nj2 = len(istart)  ## TODO: why is this wrong???
         # -------------------------------------------------
         log.info(f'extracting rows')
-        row_nids = []
-        row_dofs = []
-        col_nids = []
-        col_dofs = []
-        reals = []
-        imags = []
+        row_nids: list[np.ndarray] = []
+        row_dofs: list[np.ndarray] = []
+        col_nids: list[np.ndarray] = []
+        col_dofs: list[np.ndarray] = []
+        reals: list[np.ndarray] = []
+        imags: list[np.ndarray] = []
         log.debug(f'  dtype={dtype} fdtype={fdtype}')
         log.debug(f'  istart = {istart}')
         log.debug(f'  istop = {istop}')
@@ -1365,7 +1364,7 @@ def _cast_matrix_matpool(table_name: str,
         # matrix is symmetric, but is not stored as symmetric
         matrix_shape = 'rectangular'
 
-    m = Matrix(table_name, is_matpool=True, form=matrix_shape)
+    m = Matrix(table_name, form=matrix_shape)
     m.set_matpool_data(matrix,
                        col_nids_array, col_dofs_array,
                        row_nids_array, row_dofs_array)
@@ -1496,9 +1495,9 @@ def _get_dmig_kstop(ig: int, nvalues: int, istop: int, iminus1,
     kstart.pop()
     assert len(kstart) > 0, kstart
     assert len(kstop) > 0, kstop
-    kstart = np.array(kstart, dtype='int32')
-    kstop = np.array(kstop, dtype='int32')
-    return kstart, kstop
+    kstart_array = np.array(kstart, dtype='int32')
+    kstop_array = np.array(kstop, dtype='int32')
+    return kstart_array, kstop_array
 
 def get_dtype_fdtype_from_tout(op2: OP2, tout: int) -> tuple[str, str]:
     if tout == 1:
@@ -1603,10 +1602,10 @@ def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
     #njb = len(b_keys)
     #del b_keys
 
+    a_keys: set[str] = set()
     if make_matrix_symmetric:
         nid_comp_to_dof_indexa = {}
         nid_comp_to_dof_indexb = {}
-        a_keys = set()
         j = grids_comp_array_to_indexi(nid_comp_to_dof_indexa, a_keys, ai, j=0)
         nj_sym = grids_comp_array_to_indexi(nid_comp_to_dof_indexb, a_keys, bi, j=j)
 
@@ -1619,8 +1618,7 @@ def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
     else:
         nid_comp_to_dof_indexa = {}
         nid_comp_to_dof_indexb = {}
-        a_keys = set()
-        b_keys = set()
+        b_keys: set[str] = set()
         nja = grids_comp_array_to_indexi(nid_comp_to_dof_indexa, a_keys, ai, j=0)
         njb = grids_comp_array_to_indexi(nid_comp_to_dof_indexb, b_keys, bi, j=0)
         nja = len(nid_comp_to_dof_indexa)

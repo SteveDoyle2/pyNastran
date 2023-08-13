@@ -22,7 +22,7 @@ FORMAT_TO_EXTENSION = {
     # an extension should not be added to this list if it is shared with another type
     'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'],
     'h5nastran' : ['.h5'],
-    #'nastranv' : ['.bdf', '.ecd', '.nas',],
+    #'nastran2' : ['.bdf', '.ecd', '.nas',],
 
     'stl' : ['.stl'],
     'cart3d' : ['.tri', '.triq'],
@@ -68,7 +68,7 @@ def determine_format(input_filename: str,
             'avl', 'vtk',
         ]
         if DEV:
-            allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran', 'nastranv'])
+            allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran', 'nastran2'])
     print(f'allowed_formats = {allowed_formats}')
 
     ext = os.path.splitext(input_filename)[1].lower()
@@ -468,7 +468,7 @@ def _validate_format(input_formats: list[str]) -> None:
     ]
 
     if DEV:
-        allowed_formats += ['obj', 'h5nastran', 'nastranv']
+        allowed_formats += ['obj', 'h5nastran', 'nastran2']
 
     for input_format in input_formats:
         if None in allowed_formats:

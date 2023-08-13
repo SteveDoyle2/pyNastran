@@ -4368,6 +4368,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         except UnicodeEncodeError:
                             break
                     n = 20
+                    i = 0
                     i0 = len(lines) - n
                     for i, line in enumerate(lines[-n:-1]):
                         self.log.debug(f'Line {i0+i}: {line.strip()!r}')

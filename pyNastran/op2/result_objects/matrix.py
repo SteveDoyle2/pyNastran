@@ -23,9 +23,8 @@ class Matrix:
         similar to a DMIG.  A non-matpool matrix is similar to a DMI.
 
     """
-    def __init__(self, name: str, form: int,
-                 data: Optional[Union[np.ndarray, coo_matrix]]=None,
-                 is_matpool: bool=False):
+    def __init__(self, name: str, form: Union[int, str],
+                 data: Optional[Union[np.ndarray, coo_matrix]]=None):
         """
         Initializes a Matrix
 
@@ -51,10 +50,13 @@ class Matrix:
         """
         self.name = name
         self.data = data
-        self.form = form
-        self.is_matpool = is_matpool
+        if isinstance(form, int):
+            self.form = form
+        else:
+            self.form = form_to_int(form)
+        self.is_matpool = False
 
-        # only exist for is_matpool = True
+        # only exist for is_matpool = True; automatically set
         self.col_nid = None
         self.col_dof = None
         self.row_nid = None
@@ -65,14 +67,16 @@ class Matrix:
     def set_matpool_data(self, data: np.ndarray,
                          col_nid: np.ndarray, col_dof: np.ndarray,
                          row_nid: np.ndarray, row_dof: np.ndarray) -> None:
+        self.is_matpool = True
         self.data = data
         self.col_nid = col_nid
         self.col_dof = col_nid
         self.row_nid = row_nid
         self.row_dof = row_dof
 
+
     @property
-    def shape_str(self):
+    def shape_str(self) -> str:
         """gets the matrix description"""
         if self.form == 0:
             return 'N/A'
@@ -87,7 +91,7 @@ class Matrix:
         else:
             raise RuntimeError(f'form = {self.form!r}')
 
-    def export_to_hdf5(self, group, log):
+    def export_to_hdf5(self, group, log) -> None:
         """exports the object to HDF5 format"""
         export_to_hdf5(self, group, log)
 
@@ -106,7 +110,7 @@ class Matrix:
             raise NotImplementedError(type(matrix))
         self.data_frame = data_frame
 
-    def write(self, mat, print_full=True):
+    def write(self, mat, print_full: bool=True) -> None:
         """writes to the F06"""
         mat.write(np.compat.asbytes(str(self) + '\n'))
 
@@ -131,8 +135,8 @@ class Matrix:
             #print('WARNING: matrix type=%s does not support writing' % type(matrix))
         mat.write(np.compat.asbytes('\n\n'))
 
-    def object_attributes(self, mode='public', keys_to_skip=None,
-                          filter_properties=False):
+    def object_attributes(self, mode: str='public', keys_to_skip=None,
+                          filter_properties: bool=False):
         if keys_to_skip is None:
             keys_to_skip = []
 
@@ -140,7 +144,7 @@ class Matrix:
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
                                  filter_properties=filter_properties)
 
-    def object_methods(self, mode='public', keys_to_skip=None):
+    def object_methods(self, mode: str='public', keys_to_skip=None):
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []
@@ -148,7 +152,7 @@ class Matrix:
         my_keys_to_skip = ['object_methods', 'object_attributes',]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         header = f'Matrix[{self.name!r}];'
         if self.data is None:
             shape = 'data=None; '
@@ -164,6 +168,7 @@ class Matrix:
 
     @property
     def dtype_str(self) -> str:
+        assert isinstance(self.data, (np.ndarray, coo_matrix)), type(self.data)
         return self.data.dtype.name
 
     def to_gcj_gci_form(self):
@@ -205,7 +210,23 @@ class Matrix:
             GCi_out.append(GCi)
 
 
-    def write_to_bdf(self, dmig_type: str):
-        list_fields = [dmig_type, ]
-        pass
+    #def write_to_bdf(self, dmig_type: str):
+        #list_fields = [dmig_type, ]
+        #pass
+
+
+def form_to_int(form: str) -> int:
+    """gets the matrix description"""
+    assert isinstance(form, str), form
+    if form == 'N/A':
+        return 0
+    if form == 'square':
+        return 1
+    elif form == 'rectangular':
+        return 2
+    elif form == 'symmetric':
+        return 6
+    elif form == 'pseudo-identity':
+        return 9
+    raise RuntimeError(f'form = {form!r}')
 

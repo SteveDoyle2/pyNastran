@@ -1,15 +1,16 @@
 from pyNastran.dev.h5.h5_nastran2 import get_gui_nastran_ugrid
-from pyNastran.gui.gui_objects.gui_result import GuiResult
+#from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.qt_files.colors import (
-    RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
-    YELLOW_FLOAT, ORANGE_FLOAT)
+    #RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
+    #YELLOW_FLOAT,
+    ORANGE_FLOAT)
 
 class H5NastranIO():
     def __init__(self, gui):
         self.gui = gui
 
     def get_h5nastran_wildcard_geometry_results_functions(self):
-        data = ('VSPAero',
+        data = ('Nastran',
                 'H5Nastran (*.h5)', self.load_h5nastran_geometry,
                 None, None
                )
@@ -38,7 +39,7 @@ class H5NastranIO():
             self.gui._add_alt_actors(self.gui.alt_grids)
 
         model_name = name
-        self.gui.isubcase_name_map = {1: ['OpenVSP', '']}
+        self.gui.isubcase_name_map = {1: ['Nastran', '']}
         ID = 1
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids

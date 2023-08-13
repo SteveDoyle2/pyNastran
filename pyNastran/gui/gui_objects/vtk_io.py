@@ -12,8 +12,9 @@ from vtk import (
     #vtkUnstructuredGridReader,
     vtkXMLUnstructuredGridReader,
     vtkTypeFloat32Array)
-from pyNastran.gui.vtk_common_core import VTK_ID_TYPE
+from pyNastran.gui.vtk_common_core import vtkPoints, VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from pyNastran.gui.gui_objects.types import Cases, Form, Formi
 from pyNastran.gui.gui_objects.gui_result import GuiResult, INT_TYPES as INT_DTYPES, REAL_TYPES as REAL_DTYPES
 from pyNastran.gui.gui_objects.displacements import (
     DisplacementResults, ForceTableResults,
@@ -84,7 +85,7 @@ class VtkIO:
         geometry_form = []
         #ID = 1
         icase = 0
-        cases: dict[int, Results]= {}
+        cases: dict[int, Results] = {}
         subcase_id = 1
 
         if ext == '.vtu':
@@ -175,7 +176,7 @@ class VtkIO:
         if plot:
             self.gui._finish_results_io2(model_name, geometry_form, cases)
 
-    def clear_vtk(self):
+    def clear_vtk(self) -> None:
         pass
 
     #def _load_surf_results(self, openfoam_filename):
@@ -207,10 +208,10 @@ class VtkIO:
 
 def load_point_data(ugrid: vtkUnstructuredGrid,
                     icase: int, subcase_id: int,
-                    cases: dict[int, Any],
-                    geometry_form) -> tuple[int, np.ndarray, int, np.ndarray]:
-    vtk_points = ugrid.GetPoints()
-    point_data = ugrid.GetPointData()
+                    cases: Cases,
+                    geometry_form: Form) -> tuple[int, np.ndarray, int, np.ndarray]:
+    vtk_points: vtkPoints = ugrid.GetPoints()
+    point_data= ugrid.GetPointData()
 
     vtk_array_xyz: vtkTypeFloat32Array = vtk_points.GetData()
     xyz = vtk_to_numpy(vtk_array_xyz)
@@ -221,7 +222,7 @@ def load_point_data(ugrid: vtkUnstructuredGrid,
     nresults = point_data.GetNumberOfArrays()
     if nresults:
         form = []
-        point_form = ('Point Data', None, form)
+        point_form: Formi = ('Point Data', None, form)
         geometry_form.append(point_form)
 
     for i in range(nresults):

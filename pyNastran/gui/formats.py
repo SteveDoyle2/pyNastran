@@ -110,8 +110,8 @@ except ImportError:  # pragma: no cover
     pass
 
 try:
-    from pyNastran2.nastran_io2 import NastranV
-    CLASS_MAP['nastranv'] = NastranV
+    from pyNastran2.nastran_io2 import Nastran2
+    CLASS_MAP['nastran2'] = Nastran2
 except ImportError:  # pragma: no cover
     pass
 

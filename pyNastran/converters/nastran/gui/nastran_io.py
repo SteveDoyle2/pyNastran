@@ -193,7 +193,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         """gets the Nastran wildcard loader used in the file load menu"""
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
         combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.op2)'
-
         results_fmts = ['Nastran OP2 (*.op2)',]
         if IS_H5PY:
             results_fmts.append('pyNastran H5 (*.h5)')

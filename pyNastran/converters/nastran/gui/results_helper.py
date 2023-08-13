@@ -18,6 +18,7 @@ from pyNastran.op2.result_objects.stress_object import (
     get_plate_stress_strain, get_solid_stress_strain
 )
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
+from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict, KeysMap, Case, Cases
 
 from .geometry_helper import NastranGuiAttributes
 from .stress import (
