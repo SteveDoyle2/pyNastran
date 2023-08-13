@@ -138,7 +138,7 @@ class OP4:
 
         if self.debug:
             self.log.info("form=%s name=%s data_mat=\n%s" % (form, name, str(data_mat)))
-        amat = Matrix(name, form, data=data_mat, is_matpool=False)
+        amat = Matrix(name, form, data=data_mat)
         return name, amat
 
     def _read_real_sparse_ascii(self, op4: TextIO, iline: int, nrows: int, ncols: int,
@@ -765,7 +765,7 @@ class OP4:
         #f.read(4); self.n+=4
 
         assert self.n == op4.tell(), 'n=%s op4.tell=%s' % (self.n, op4.tell())
-        amat = Matrix(name, form, data=data_mat, is_matpool=False)
+        amat = Matrix(name, form, data=data_mat)
         return name, amat
 
     def _read_real_dense_binary(self, op4: BinaryIO, nrows: int, ncols: int,
