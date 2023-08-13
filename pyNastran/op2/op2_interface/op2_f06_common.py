@@ -133,11 +133,6 @@ class OP2_F06_Common:
     def cstm(self, cstm):
         self.op2_results.cstm = cstm
     @trmbd.setter
-    def trmbd(self, trmbd):
-        self.op2_results.trmbd = trmbd
-    @trmbu.setter
-    def trmbu(self, trmbu):
-        self.op2_results.trmbu = trmbu
 
     # ------------------------------------------------------------------
     # Strain Energy - Getter

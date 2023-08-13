@@ -1645,8 +1645,7 @@ class OP2Reader:
 
         self.read_3_markers([-2, 1, 0])
         data = self._read_record() # CSTM
-        # print(self.show_data(data, types='s'))
-        # assert len(data) == 8 * factor, len(data)
+        #assert len(data) == 8 * factor, len(data)
 
         self.read_3_markers([-3, 1, 0])
 
@@ -1667,7 +1666,8 @@ class OP2Reader:
             return
         nblocks = len(blocks)
 
-        assert(nblocks % 2 == 0)  # Should be even, first block is IDENT, second block is DATA
+        # Should be even, first block is IDENT, second block is DATA
+        assert(nblocks % 2 == 0)
 
         # Get time steps per subcase
         time_steps = {}  # {subcase_id: {t1, t2, ...}
@@ -1682,21 +1682,52 @@ class OP2Reader:
             time_step = identifiers_float[4]
 
             if subcase not in time_steps:
-                time_steps[subcase] = {time_step, }  # Set because time step can be repeated
+                # Set because time step can be repeated
+                time_steps[subcase] = {time_step, }
             else:
                 time_steps[subcase].add(time_step)
 
         # Create time step to tid mapper per subcase
         for subcase, tsteps in time_steps.items():
             tsteps = np.array(list(tsteps))
-            tstep_indices = np.argsort(tsteps)  # Sort because set does not retain ordering
+            # Sort because set does not retain ordering
+            tstep_indices = np.argsort(tsteps)
             time_steps[subcase] = tsteps[tstep_indices]
 
-            tstep_to_index_mapper = {time_steps[subcase][x]: x for x in range(0, time_steps[subcase].shape[0])}
+            ntimes = time_steps[subcase].shape[0]
+            tstep_to_index_mapper = {
+                time_steps[subcase][itime]: itime for itime in range(ntimes)}
 
-        trmbd = op2.trmbd
+        trmbd = op2.op2_results.trmbd
         # Read data
         #print('nblocks =', nblocks)
+
+        element_type_to_str_map = {
+            300: ('CHEXA', 8),
+            301: ('CPENTA', 6),
+            302: ('CTETRA', 4),
+            303: ('CPYRAM', 5),
+
+            312: ('CTRAX3', 3),
+            314: ('CTRAX6', 3),
+
+            313: ('CQUADX4', 4),
+            315: ('CQUADX8', 4),
+
+            320: ('CPLSTS3', 3),
+            322: ('PLSTS6', 3),
+
+            343: ('CTRIA6', 3),
+            344: ('CQUAD8', 4),
+
+            345: ('CTRIAR', 3),
+            346: ('CQUADR', 4),
+
+            347: ('CBAR', 2),
+            348: ('CBEAM', 2), # ???
+
+            363: ('CROD', 2),
+        }
         for i in range(0, nblocks, 2):
             identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
             identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
@@ -1720,61 +1751,8 @@ class OP2Reader:
             float_data = np.frombuffer(blocks[i+1], dtype=op2.fdtype8)
 
             #grids = int_data[:, np.array([1, 5, 9, 13, 17, 21])]
-            if element_type == 363:
-                element = 'CROD'
-                nnodes = 2
-            elif element_type == 347:
-                nnodes = 2  # ???
-                element = 'CBAR'
-            elif element_type == 348:
-                element = 'CBEAM'
-                nnodes = 2  # ???
-
-            elif element_type == 301:
-                element = 'CPENTA'
-                nnodes = 6
-                #grids = int_data[:, np.array([1, 5, 9, 13, 17, 21])]
-                #eulers_x = float_data[:, np.array([2, 6, 10, 14, 18, 22])]
-                #eulers_y = float_data[:, np.array([3, 7, 11, 15, 19, 23])]
-                #eulers_z = float_data[:, np.array([4, 8, 12, 16, 20, 24])]
-            elif element_type == 302:
-                element = 'CTETRA'
-                nnodes = 4
-                #grids = int_data[:, np.array([1, 5, 9, 13])]
-                #eulers_x = float_data[:, np.array([2, 6, 10, 14])]
-                #eulers_y = float_data[:, np.array([3, 7, 11, 15])]
-                #eulers_z = float_data[:, np.array([4, 8, 12, 16])]
-            elif element_type == 303:
-                element = 'CPYRAM'
-                nnodes = 5
-
-            elif element_type == 343:
-                element = 'CTRIA6'
-                nnodes = 3
-            elif element_type == 344:
-                element = 'CQUAD8'
-                nnodes = 4
-            elif element_type == 346:
-                element = 'CQUADR'
-                nnodes = 4
-
-            elif element_type == 300: # or eltype == 67:
-                element = 'CHEXA'
-                nnodes = 8
-
-            elif element_type == 345:
-                nnodes = 3
-                element = 'CTRIAR'
-            elif element_type == 346:
-                element = 'CQUADR'
-                nnodes = 4
-
-            elif element_type == 313:
-                element = 'CQUADX4'
-                nnodes = 4
-            elif element_type == 315:
-                element = 'CQUADX8'
-                nnodes = 4
+            if element_type in element_type_to_str_map:
+                element, nnodes = element_type_to_str_map[element_type]
 
             elif element_type == 316:
                 nnodes = 3
@@ -1798,12 +1776,12 @@ class OP2Reader:
             elif element_type == 323:
                 nnodes = 4
                 element = 'CPLSTS8'
-
             else:
                 #print(int_data[:20])
                 print(op2.code_information())
-                raise NotImplementedError(f"Element type {element_type} is not implemented.\n")
-            n_elements, int_data, float_data = reshape_trmbd(element, nnodes, int_data, float_data)
+                raise NotImplementedError(f"Element type {element_type:d} is not implemented.\n")
+            nelements, int_data, float_data = reshape_trmbd(
+                element, nnodes, int_data, float_data)
 
             eids = (int_data[:, 0] - op2.device_code) // 10
             #nelements = len(eids)
@@ -1821,11 +1799,12 @@ class OP2Reader:
                 trmbd.eulersz[subcase] = {}
             if element not in trmbd.eulersx[subcase]:
                 #isubcase = time_steps[subcase]
-                trmbd.eulersx[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, eulers_x.shape[1]])
-                trmbd.eulersy[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, eulers_y.shape[1]])
-                trmbd.eulersz[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, eulers_z.shape[1]])
+                ntimes = time_steps[subcase].shape[0]
+                trmbd.eulersx[subcase][element] = np.empty([ntimes, nelements, eulers_x.shape[1]])
+                trmbd.eulersy[subcase][element] = np.empty([ntimes, nelements, eulers_y.shape[1]])
+                trmbd.eulersz[subcase][element] = np.empty([ntimes, nelements, eulers_z.shape[1]])
             if element not in trmbd.nodes:
-                nodes = np.empty([n_elements, grids.shape[1] + 1], dtype='int32')
+                nodes = np.empty([nelements, grids.shape[1] + 1], dtype='int32')
                 nodes[:, 0] = eids
                 nodes[:, 1:] = grids
                 trmbd.nodes[element] = nodes
@@ -1966,13 +1945,45 @@ class OP2Reader:
             tstep_indices = np.argsort(tsteps)  # Sort because set does not retain ordering
             time_steps[subcase] = tsteps[tstep_indices]
 
-            tstep_to_index_mapper = {time_steps[subcase][x]: x for x in range(0, time_steps[subcase].shape[0])}
+            ntimes = time_steps[subcase].shape[0]
+            tstep_to_index_mapper = {
+                time_steps[subcase][itime]: itime for itime in range(ntimes)
+            }
 
         # Read data
         trmbu = op2.trmbu
+        element_type_to_str_map = {
+            300: 'CHEXA',
+            301: 'CPENTA',
+            302: 'CTETRA',
+            303: 'CPYRAM',
+
+            312: 'CTRAX3',
+            314: 'CTRAX6',
+
+            313: 'CQUADX4',
+            315: 'CQUADX8',
+
+            320: 'CPLSTS3',
+            322: 'CPLSTS6',
+
+            343: 'CTRIA6',
+            344: 'CQUAD8',
+
+            345: 'CTRIAR',
+            346: 'CQUADR',
+
+            347: 'CBAR',
+            348: 'CBEAM',
+
+            363: 'CROD',
+        }
+
         for i in range(0, nblocks, 2):
-            identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
-            identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
+            id_data = blocks[i]
+            eid_euler_data = blocks[i+1]
+            identifiers_int = np.frombuffer(id_data, dtype=op2.idtype8)
+            identifiers_float = np.frombuffer(id_data, dtype=op2.fdtype8)
 
             acode = identifiers_int[0]
             tcode = identifiers_int[1]
@@ -1990,58 +2001,22 @@ class OP2Reader:
             op2._set_approach_code(approach_code, tCode, int3, isubcase)
             #------------------------------------------------------------------------
 
-            int_data = np.frombuffer(blocks[i+1], dtype=op2.idtype8)
-            float_data = np.frombuffer(blocks[i+1], dtype=op2.fdtype8)
+            int_data = np.frombuffer(eid_euler_data, dtype=op2.idtype8)
+            float_data = np.frombuffer(eid_euler_data, dtype=op2.fdtype8)
             numwide = 4
-            if element_type == 301: # or eltype == 67:
-                element = 'CPENTA'
-            elif element_type == 302: # or eltype == 67:
-                element = 'CTETRA'
-            elif element_type == 303: # or eltype == 67:
-                element = 'CPYRAM'
-
-            elif element_type == 300: # or eltype == 67:
-                element = 'CHEXA'
-
-                numwide = 4
-                n_elements = int_data.shape[0] // numwide  # elid + 3 euler angles
-                #int_data = int_data.reshape(n_elements, numwide)
-                #float_data = float_data.reshape(n_elements, numwide)
-
-                #eids = (int_data[:, 0] - 2) // 10
-                # grids = int_data[:, np.array([1, 5, 9, 13, 17, 21, 25, 29])]
-
-                #eulers = float_data[:, np.array([1, 2, 3])]
-                # eulers_y = float_data[:, np.array([3, 7, 11, 15, 19, 23, 27, 31])]
-                # eulers_z = float_data[:, np.array([4, 8, 12, 16, 20, 24, 28, 32])]
-
-            elif element_type == 363:
-                numwide = 4
-                element = 'CROD'
-            elif element_type == 347:
-                numwide = 4
-                element = 'CBAR'
-            elif element_type == 348:
-                numwide = 4
-                element = 'CBEAM'
-
-            elif element_type == 345:
-                element = 'CTRIAR'
-                numwide = 4
-            elif element_type == 346:
-                element = 'CQUADR'
-                numwide = 4
-
-            elif element_type == 343:
-                element = 'CTRIA6'
-                numwide = 4
-            elif element_type == 344:
-                element = 'CQUAD8'
-                numwide = 4
+            numwide = 4
+            if element_type in element_type_to_str_map:
+                element = element_type_to_str_map[element_type]
 
             elif element_type == 316:
                 numwide = 4
                 element = 'CPLSTN3'
+            #elif element_type == 316:
+                #numwide = 4
+                #element = 'CPLSTS3'
+            #elif element_type == 318:
+                #nnodes = 6
+                #element = 'CPLSTS6'
             elif element_type == 317:
                 numwide = 4
                 element = 'CPLSTN4'
@@ -2050,34 +2025,22 @@ class OP2Reader:
             elif element_type == 319:
                 element = 'CPLSTN8'
 
-            #elif element_type == 316:
-                #numwide = 4
-                #element = 'CPLSTS3'
             elif element_type == 321:
                 numwide = 4
                 element = 'CPLSTS4'
-            #elif element_type == 318:
-                #nnodes = 6
-                #element = 'CPLSTS6'
             elif element_type == 323:
                 numwide = 4
                 element = 'CPLSTS8'
-
-            elif element_type == 313:
-                element = 'CQUADX4'
-                numwide = 4
-            elif element_type == 315:
-                element = 'CQUADX8'
-                numwide = 4
             else:
                 print(int_data[:10])
                 print(op2.code_information())
                 raise NotImplementedError(f"Element type {element_type} is not implemented.\n")
 
             assert numwide == 4, numwide
-            n_elements = int_data.shape[0] // numwide  # element_id + 3 euler angles
-            int_data = int_data.reshape(n_elements, numwide)
-            float_data = float_data.reshape(n_elements, numwide)
+            nelements = int_data.shape[0] // numwide  # element_id + 3 euler angles
+            assert int_data.shape[0] % numwide == 0, 'failed eid+3 euler'
+            int_data = int_data.reshape(nelements, numwide)
+            float_data = float_data.reshape(nelements, numwide)
 
             eids = (int_data[:, 0] - op2.device_code) // 10
             eulers = float_data[:, 1:]
@@ -2085,7 +2048,8 @@ class OP2Reader:
             if subcase not in trmbu.eulers:
                 trmbu.eulers[subcase] = {}
             if element not in trmbu.eulers[subcase]:
-                trmbu.eulers[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, 4])
+                ntimes = time_steps[subcase].shape[0]
+                trmbu.eulers[subcase][element] = np.empty([ntimes, nelements, 4])
 
             itime = tstep_to_index_mapper[time_step]
             trmbu.eulers[subcase][element][itime, :, 0] = eids
@@ -5253,9 +5217,11 @@ class OP2Reader:
         return data, ndatas
 
 
-    def read_matpool_result(self, code, op2, data, utable_name):
+    def read_matpool_result(self, code: tuple[int, int, int],
+                            op2: OP2, data: bytes, utable_name: str):
         if code == (114, 1, 120):
             self.log.debug(f'  code = {code}')
+            #raise NotImplementedError('read_matpool_dmig')
             try:
                 if self.size == 4:
                     read_matpool_dmig_4(op2, data, utable_name, debug=False)
@@ -5285,7 +5251,6 @@ class OP2Reader:
         elif code == (2014, 20, 243):
             # C:\NASA\m4\formats\git\examples\pyNastran_examples\demo_sort2_post_m2\hd15306.op2
             self.log.warning('  skipping MATPOOL-RADLST')
-
         elif code == (9614, 96, 0):
             # some axisymmetric matrix
             self._read_matpool_bndfl(op2, data, utable_name, debug=False)
@@ -5541,12 +5506,12 @@ class OP2Reader:
             markers.append(marker)
         return markers
 
-    def get_nmarkers(self, n: int, rewind=True, macro_rewind=False):
+    def get_nmarkers(self, n: int, rewind: bool=True, macro_rewind: bool=False):
         if self.size == 4:
             return self.get_nmarkers4(n, rewind=rewind, macro_rewind=macro_rewind)
         return self.get_nmarkers8(n, rewind=rewind, macro_rewind=macro_rewind)
 
-    def get_nmarkers4(self, n: int, rewind=True, macro_rewind=False):
+    def get_nmarkers4(self, n: int, rewind: bool=True, macro_rewind: bool=False):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
@@ -5584,7 +5549,7 @@ class OP2Reader:
                         i, macro_rewind or rewind))
         return markers
 
-    def get_nmarkers8(self, n: int, rewind=True, macro_rewind=False):
+    def get_nmarkers8(self, n: int, rewind: bool=True, macro_rewind: bool=False):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
@@ -5746,7 +5711,7 @@ class OP2Reader:
         return date
 
     #----------------------------------------------------------------------------------------
-    def _read_record(self, debug=True, macro_rewind=False) -> bytes:
+    def _read_record(self, debug: bool=True, macro_rewind: bool=False) -> bytes:
         """
         Reads a record.
 
@@ -5763,13 +5728,13 @@ class OP2Reader:
             return self._read_record_ndata4(debug=debug, macro_rewind=macro_rewind)[0]
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)[0]
 
-    def _read_record_ndata(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
+    def _read_record_ndata(self, debug: bool=True, macro_rewind: bool=False) -> tuple[bytes, int]:
         """reads a record and the length of the record"""
         if self.size == 4:
             return self._read_record_ndata4(debug=debug, macro_rewind=macro_rewind)
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)
 
-    def _read_record_ndata4(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
+    def _read_record_ndata4(self, debug: bool=True, macro_rewind: bool=False) -> tuple[bytes, int]:
         """reads a record and the length of the record for size=4"""
         op2 = self.op2
         marker0 = self.get_marker1_4(rewind=False, macro_rewind=macro_rewind)
@@ -5820,7 +5785,7 @@ class OP2Reader:
             record = b''.join(records)
         return record, nrecord
 
-    def _read_record_ndata8(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
+    def _read_record_ndata8(self, debug: bool=True, macro_rewind: bool=False) -> tuple[bytes, int]:
         """reads a record and the length of the record for size=8"""
         op2 = self.op2
         markers0 = self.get_nmarkers8(1, rewind=False, macro_rewind=macro_rewind)
@@ -6128,14 +6093,14 @@ class OP2Reader:
             op2.n += 8 + ndata
         return data_out
 
-    def read_3_markers(self, markers, macro_rewind=True) -> None:
+    def read_3_markers(self, markers, macro_rewind: bool=True) -> None:
         """Micro-optimizes ``read_markers`` for 3 markers."""
         if self.size == 4:
             self.read_3_markers4(markers, macro_rewind=macro_rewind)
         else:
             self.read_markers8(markers, macro_rewind=macro_rewind)
 
-    def read_3_markers4(self, markers, macro_rewind=True) -> None:
+    def read_3_markers4(self, markers, macro_rewind: bool=True) -> None:
         """
         Micro-optimizes ``read_markers`` for 3 markers.
 
@@ -6245,7 +6210,7 @@ class OP2Reader:
         return self.op2.binary_debug
 
     @property
-    def log(self):
+    def log(self) -> SimpleLogger:
         """interface to the op2 object"""
         return self.op2.log
 
@@ -6293,7 +6258,7 @@ class OP2Reader:
     #def log(self):
         #return self.op2.log
 
-    def _skip_table_helper(self, warn=True):
+    def _skip_table_helper(self, warn: bool=True) -> None:
         """
         Skips the majority of geometry/result tables as they follow a very standard format.
         Other tables don't follow this format.
@@ -6336,7 +6301,7 @@ class OP2Reader:
             markers = self.get_nmarkers(1, rewind=True)
         self.read_markers([0])
 
-    def _skip_record(self):
+    def _skip_record(self) -> None:
         """
         the skip version of ``_read_record``
 
@@ -6357,12 +6322,12 @@ class OP2Reader:
             markers1 = self.get_nmarkers(1, rewind=True)
         return record
 
-    def _skip_record_ndata(self, debug=True, macro_rewind=False):
+    def _skip_record_ndata(self, debug: bool=True, macro_rewind: bool=False) -> None:
         if self.size == 4:
             return self._skip_record_ndata4(debug=debug, macro_rewind=macro_rewind)
         return self._skip_record_ndata8(debug=debug, macro_rewind=macro_rewind)
 
-    def _skip_record_ndata4(self, debug=True, macro_rewind=False):
+    def _skip_record_ndata4(self, debug: bool=True, macro_rewind: bool=False) -> None:
         """the skip version of ``_read_record_ndata``"""
         op2 = self.op2
         marker0 = self.get_marker1_4(rewind=False, macro_rewind=macro_rewind)
@@ -6410,7 +6375,7 @@ class OP2Reader:
                     self.binary_debug.write(f'read_record - marker1 = [4, {marker1}, 4]\n')
         return record, nrecord
 
-    def _skip_record_ndata8(self, debug=True, macro_rewind=False):
+    def _skip_record_ndata8(self, debug: bool=True, macro_rewind: bool=False) -> None:
         """the skip version of ``_read_record_ndata``"""
         op2 = self.op2
         marker0 = self.get_marker1_8(rewind=False, macro_rewind=macro_rewind)
@@ -6442,7 +6407,7 @@ class OP2Reader:
                     self.binary_debug.write(f'read_record - marker1 = [8, {marker1}, 8]\n')
         return record, nrecord
 
-    def _get_record_length(self):
+    def _get_record_length(self) -> int:
         """
         The record length helps us figure out data block size, which is used
         to quickly size the arrays.  We just need a bit of meta data and can
@@ -6482,7 +6447,7 @@ class OP2Reader:
         self._goto(n0)
         return len_record
 
-    def _skip_block(self):
+    def _skip_block(self) -> None:
         """
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
@@ -7026,6 +6991,18 @@ class OP2Reader:
         #ifsdqlILQ
         return self._write_data(sys.stdout, data, types=types, endian=endian, force=force)
 
+    def show_ndata(self, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
+        return self._write_ndata(sys.stdout, n, types=types, force=force, endian=endian)
+
+    def _write_ndata(self, f, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
+        """Useful function for seeing what's going on locally when debugging."""
+        op2 = self.op2
+        nold = op2.n
+        data = op2.f.read(n)
+        op2.n = nold
+        op2.f.seek(op2.n)
+        return self._write_data(f, data, types=types, force=force, endian=endian)
+
     def _write_data(self, f, data: bytes, types: str='ifs',
                     endian: Optional[str]=None, force: bool=False):  # pragma: no cover
         """
@@ -7104,17 +7081,6 @@ class OP2Reader:
         f.write('\n')
         return strings, ints, floats
 
-    def show_ndata(self, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
-        return self._write_ndata(sys.stdout, n, types=types, force=force, endian=endian)
-
-    def _write_ndata(self, f, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
-        """Useful function for seeing what's going on locally when debugging."""
-        op2 = self.op2
-        nold = op2.n
-        data = op2.f.read(n)
-        op2.n = nold
-        op2.f.seek(op2.n)
-        return self._write_data(f, data, types=types, force=force, endian=endian)
 
 def eqexin_to_nid_dof_doftype(eqexin1, eqexin2) -> tuple[Any, Any, Any]:
     """assemble dof table"""
