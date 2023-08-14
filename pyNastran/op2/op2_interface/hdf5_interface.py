@@ -1488,7 +1488,7 @@ def _read_h5_matrix(h5_file, model, key,
             name = _cast_str(h5_matrix.get('name'), encoding)
             form = _cast(h5_matrix.get('form'))
             unused_is_matpool = _cast(h5_matrix.get('is_matpool'))
-            matrix_obj = Matrix(name, form, is_matpool=False)
+            matrix_obj = Matrix(name, form)
 
             #matrix = scipy.sparse.coo_matrix(
                 #(real_imag, (GCi, GCj)),
