@@ -40,9 +40,11 @@ Changes by Alex Tsui, Apr. 2015
 Changes by Fabian Wenzel, Jan. 2016
  Support for Python3
 """
-import vtk
+#import vtk
 from pyNastran.gui.qt_version import qt_int, qt_version
-from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkActor, vtkRenderWindow, vtkPolyDataMapper
+from pyNastran.gui.vtk_rendering_core import (
+    vtkRenderer, vtkActor, vtkRenderWindow, vtkPolyDataMapper,
+    vtkGenericRenderWindowInteractor)
 
 if qt_version == "pyqt5":
     from PyQt5.QtWidgets import QWidget, QSizePolicy, QApplication
@@ -225,7 +227,7 @@ class QVTKRenderWindowInteractor(QWidget):
         try:
             self._Iren = kw['iren']
         except KeyError:
-            self._Iren = vtk.vtkGenericRenderWindowInteractor()
+            self._Iren = vtkGenericRenderWindowInteractor()
             self._Iren.SetRenderWindow(self._RenderWindow)
 
         # do all the necessary qt setup
@@ -434,6 +436,7 @@ class QVTKRenderWindowInteractor(QWidget):
 
 def QVTKRenderWidgetConeExample():
     """A simple example that uses the QVTKRenderWindowInteractor class."""
+    from vtk import vtkConeSource
 
     # every QT app needs an app
     app = QApplication(['QVTKRenderWindowInteractor'])
@@ -448,7 +451,7 @@ def QVTKRenderWidgetConeExample():
     ren = vtkRenderer()
     widget.GetRenderWindow().AddRenderer(ren)
 
-    cone = vtk.vtkConeSource()
+    cone = vtkConeSource()
     cone.SetResolution(8)
 
     cone_mapper = vtkPolyDataMapper()

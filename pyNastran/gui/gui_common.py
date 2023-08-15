@@ -20,7 +20,7 @@ from vtk import (
     vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader,
 )
 from pyNastran.gui.vtk_common_core import vtkIdTypeArray
-from pyNastran.gui.vtk_renering_core import vtkRenderer
+from pyNastran.gui.vtk_rendering_core import vtkRenderer
 import pyNastran
 #print('qt_version = %r' % qt_version)
 

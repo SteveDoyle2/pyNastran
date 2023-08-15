@@ -9,7 +9,7 @@ import vtk
 from vtk.numpy_interface import dataset_adapter as dsa
 from vtk.util.vtkAlgorithm import VTKPythonAlgorithmBase
 from vtk import *
-from pyNastran.gui.vtk_renering_core import (
+from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
     vtkActor,
     vtkPolyDataMapper,

@@ -4,7 +4,7 @@ based on:
 """
 
 import vtk
-from pyNastran.gui.vtk_renering_core import (
+from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
     vtkActor, vtkCamera, vtkDataSetMapper)
 from pyNastran.gui.vtk_interface import vtkTriangle, vtkUnstructuredGrid

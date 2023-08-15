@@ -1,5 +1,5 @@
 import vtk
-from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow, vtkActor, vtkPolyDataMapper
+from pyNastran.gui.vtk_rendering_core import vtkRenderer, vtkRenderWindow, vtkActor, vtkPolyDataMapper
 
 class vtkTimerCallback:
     def __init__(self):

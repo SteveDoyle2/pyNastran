@@ -23,7 +23,7 @@ from vtk import (
     vtkUnstructuredGridGeometryFilter,
     #vtkmodules.vtkFiltersGeneral
     vtkVertexGlyphFilter)
-from pyNastran.gui.vtk_renering_core import vtkActor, vtkActor2D, vtkRenderer, vtkPolyDataMapper
+from pyNastran.gui.vtk_rendering_core import vtkActor, vtkActor2D, vtkRenderer, vtkPolyDataMapper
 from pyNastran.gui.vtk_util import vtk_to_numpy
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax, check_color

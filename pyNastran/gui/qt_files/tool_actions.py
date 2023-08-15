@@ -21,7 +21,7 @@ from vtk import (
 )
 from pyNastran.gui.vtk_common_core import vtkPoints, VTK_FONT_FILE
 from pyNastran.gui.vtk_interface import vtkVertex, vtkLine, vtkTriangle, vtkQuad
-from pyNastran.gui.vtk_renering_core import (
+from pyNastran.gui.vtk_rendering_core import (
     vtkDataSetMapper, vtkPolyDataMapper,
     vtkCamera, vtkTextActor, vtkProp, vtkActor, vtkRenderer)
 

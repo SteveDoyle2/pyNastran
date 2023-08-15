@@ -1,5 +1,5 @@
 import vtk
-from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow, vtkActor
+from pyNastran.gui.vtk_rendering_core import vtkRenderer, vtkRenderWindow, vtkActor
 
 class MyInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
 

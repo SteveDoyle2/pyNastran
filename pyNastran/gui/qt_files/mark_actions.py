@@ -6,7 +6,7 @@ defines:
 from typing import Optional, Any
 import numpy as np
 from vtk import vtkSelection, vtkExtractSelection
-from pyNastran.gui.vtk_renering_core import vtkBillboardTextActor3D
+from pyNastran.gui.vtk_rendering_core import vtkBillboardTextActor3D
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.vtk_common_core import vtkMath

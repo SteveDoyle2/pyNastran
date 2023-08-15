@@ -12,13 +12,9 @@ from cpylog import SimpleLogger
 from cpylog.html_utils import str_to_html
 import numpy as np
 
-from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
-from pyNastran.gui.vtk_renering_core import vtkDataSetMapper, vtkCamera, vtkTextActor
-try:
-    from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
-except ImportError:
-    from vtk import vtkAxesActor
+from pyNastran.gui.vtk_rendering_core import (
+    vtkRenderer, vtkRenderWindow, vtkDataSetMapper, vtkCamera, vtkTextActor)
 
 try:
     from vtkmodules.vtkRenderingLOD import vtkLODActor

@@ -6,7 +6,7 @@ import numpy as np
 import h5py
 import vtk
 
-from pyNastran.gui.vtk_renering_core import vtkDataSetMapper # , vtkPolyDataMapper
+from pyNastran.gui.vtk_rendering_core import vtkDataSetMapper # , vtkPolyDataMapper
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.dev.h5.fill_unstructured_grid import fill_paraview_vtk_unstructured_grid
 from pyNastran.dev.h5.h5_nastran2 import add_actor_to_renderer, pyNastranH5

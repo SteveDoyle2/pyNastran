@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import vtk
 
-from pyNastran.gui.vtk_renering_core import vtkActor
+from pyNastran.gui.vtk_rendering_core import vtkActor
 from pyNastran.gui.menus.edit_geometry_properties.manage_actors import EditGeometryProperties
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry

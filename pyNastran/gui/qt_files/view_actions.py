@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
 #import vtk
 from pyNastran.gui.vtk_common_core import vtkMath
-from pyNastran.gui.vtk_renering_core import vtkCamera
+from pyNastran.gui.vtk_rendering_core import vtkCamera
 
 #from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 if TYPE_CHECKING:  # pragma: no cover

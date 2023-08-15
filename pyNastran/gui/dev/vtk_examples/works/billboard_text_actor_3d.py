@@ -7,7 +7,7 @@ import random
 import vtk
 assert int(vtk.VTK_VERSION[0]) > 6, vtk.VTK_VERSION
 #assert vtk.VTK_VERSION > (7, 1, 0), vtk.VTK_VERSION
-from pyNastran.gui.vtk_renering_core import (
+from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
     vtkActor, vtkBillboardTextActor3D,
     vtkPolyDataMapper,

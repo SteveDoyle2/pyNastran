@@ -5,7 +5,7 @@ works in vtk 7; missing surface though
 
 import math
 import vtk
-from pyNastran.gui.vtk_renering_core import (
+from pyNastran.gui.vtk_rendering_core import (
     vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
     vtkActor, vtkBillboardTextActor3D,
     vtkPolyDataMapper,

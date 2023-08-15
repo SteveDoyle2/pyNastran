@@ -1,6 +1,6 @@
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor
+from pyNastran.gui.vtk_rendering_core import vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor
 
 class myInteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
     #def __init__(self, parent=None

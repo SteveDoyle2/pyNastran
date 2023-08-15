@@ -14,12 +14,11 @@ from pyNastran.gui.vtk_common_core import vtkPoints, vtkMath, vtkUnsignedCharArr
 from pyNastran.gui.vtk_interface import vtkCellArray, vtkVertex
 from pyNastran.gui.vtk_util import numpy_to_vtk, vtk_to_numpy
 
-from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
 from pyNastran.gui.vtk_common_core import VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkSelectionNode
 from pyNastran.gui.utils.vtk.base_utils import (
     numpy_to_vtk, numpy_to_vtkIdTypeArray,
-    get_numpy_idtype_for_vtk)
+    get_numpy_idtype_for_vtk, VTK_VERSION_SPLIT)
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
 # // Linear cells

@@ -18,7 +18,7 @@ import vtk
 
 #import pyNastran
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
-from pyNastran.gui.vtk_renering_core import vtkActor, vtkActor2D, vtkPolyDataMapper
+from pyNastran.gui.vtk_rendering_core import vtkActor, vtkActor2D, vtkPolyDataMapper
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 

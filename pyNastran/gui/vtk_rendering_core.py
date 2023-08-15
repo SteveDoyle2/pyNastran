@@ -6,6 +6,7 @@ try:
         vtkDataSetMapper, vtkPolyDataMapper,
         vtkProp,
     )
+    from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
 except ImportError:
     print('error vtk_rendering_core')
     from vtk import (
@@ -13,5 +14,6 @@ except ImportError:
         vtkActor, vtkActor2D, vtkTextActor, vtkBillboardTextActor3D,
         vtkCamera,
         vtkDataSetMapper, vtkPolyDataMapper,
-        vtkProp,
+        vtkProp, vtkGenericRenderWindowInteractor,
     )
+x = 1

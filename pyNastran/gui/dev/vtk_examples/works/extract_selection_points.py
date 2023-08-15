@@ -5,7 +5,7 @@ converted from:
 
 import vtk
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
-from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor
+from pyNastran.gui.vtk_rendering_core import vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor
 
 def main():
     point_source = vtk.vtkPointSource()

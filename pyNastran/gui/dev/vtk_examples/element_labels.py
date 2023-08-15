@@ -106,7 +106,7 @@ def main():
     #point_label_actor.SetMapper(point_label_mapper)
 
     # renderer
-    from pyNastran.gui.vtk_renering_core import vtkRenderer, vtkRenderWindow, vtkActor2D
+    from pyNastran.gui.vtk_rendering_core import vtkRenderer, vtkRenderWindow, vtkActor2D
     renderer = vtkRenderer()
     renderWindow = vtkRenderWindow()
     renderWindow.AddRenderer(renderer)

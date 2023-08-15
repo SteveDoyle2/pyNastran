@@ -20,7 +20,7 @@ except ImportError:
 
 import pyNastran
 from pyNastran import DEV
-from pyNastran.gui.vtk_renering_core import vtkPolyDataMapper
+from pyNastran.gui.vtk_rendering_core import vtkPolyDataMapper
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.gui_objects.settings import Settings
 
