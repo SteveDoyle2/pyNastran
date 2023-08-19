@@ -105,7 +105,8 @@ DENSE_MATRICES = [
 EXTSEOUT = [
     'KAA', 'MAA', 'BAA', 'K4XX', 'PA', 'GPXX', 'GDXX', 'RVAX',
     'VA', 'MUG1', 'MUG1O', 'MES1', 'MES1O', 'MEE1', 'MEE1O', 'MGPF',
-    'MGPFO', 'MEF1', 'MEF1O', 'MQG1', 'MQG1O', 'MQMG1', 'MQMG1O',
+    'MGPFO', 'MEF1O', 'MQG1', 'MQG1O', 'MQMG1', 'MQMG1O',
+    'MEF1',
 ]
 
 
@@ -125,7 +126,7 @@ class OP2Reader:
         # deck could crash.
         self._dump_deck = False
 
-        self.op2 = op2  # type: OP2
+        self.op2: OP2 = op2
 
         self.mapped_tables = {
             b'RST': (self.read_rst, 'restart file?'),
@@ -151,6 +152,7 @@ class OP2Reader:
             #b'MEFF' : self.read_meff,
             b'INTMOD' : (self.read_intmod, '???'),
             b'HISADD' : (self.read_hisadd, 'optimization history; op2_results.responses.convergence_data'),
+            #b'MEF1' : (self.read_extdb, 'external superlelement matrix'),
             b'EXTDB' : (self.read_extdb, 'external superlelements'),
             b'OMM2' : (self.read_omm2, 'max/min table'),
             b'STDISP' : (self.read_stdisp, 'aero-structural displacement?'),
@@ -210,6 +212,31 @@ class OP2Reader:
             b'EQEXINS' : (self.read_eqexin, 'internal/external ids (superelement)'),
 
             b'XSOP2DIR' : (self.read_xsop2dir, 'list of external superelement matrices?'),
+            b'TUG1': (self.read_tug1, 'table Displacement g-set sort 1'),
+            b'TEF1': (self.read_tug1, 'table element forces sort 1'),
+            b'TES1': (self.read_tug1, 'table stress sort 1'),
+            b'TEE1': (self.read_tug1, 'table strain energy sort 1'),
+            b'TQMG1': (self.read_tug1, 'table mpc forces sort 1'),
+
+            b'MEF1': (self.read_mef1, 'external superelement'),
+            b'MES1': (self.read_mef1, 'external superelement'),
+            b'MEE1': (self.read_mef1, 'external superelement'),
+            b'MEE1O': (self.read_mef1, 'external superelement'),
+            b'MES1O': (self.read_mef1, 'external superelement'),
+            b'MEF1O': (self.read_mef1, 'external superelement'),
+            b'MUG1B': (self.read_mef1, 'external superelement'),
+            b'MUG1OB': (self.read_mef1, 'external superelement'),
+            b'MKQG1': (self.read_mef1, 'external superelement'),
+
+            b'MMQMG1': (self.read_mef1, 'external superelement'),
+            b'MBQMG1': (self.read_mef1, 'external superelement'),
+            b'MKQMG1': (self.read_mef1, 'external superelement'),
+            b'MK4QMG1': (self.read_mef1, 'external superelement'),
+
+            b'MMQG1': (self.read_mef1, 'external superelement'),
+            b'MBQG1': (self.read_mef1, 'external superelement'),
+            b'MK4QG1': (self.read_mef1, 'external superelement'),
+
             #b'TEF1': (self._read_mef1, 'superelement matrix'),
             #b'MEF1': (self._read_mef1, 'superelement matrix'),
             #b'MUG1B': (self._read_mef1, 'superelement matrix'),
@@ -230,6 +257,7 @@ class OP2Reader:
             b'MKQG1' : 'external superelement',
             b'MATRV': 'external superelement',
             b'MUG1B': 'external superelement',
+            #b'MEF1': 'external superelement',
         }
         desc_map.update({key: values[1] for key, values in self.mapped_tables.items()})
         #desc_map = {key: values[1] for key, values in self.mapped_tables.items()}
@@ -2231,6 +2259,247 @@ class OP2Reader:
             itable -= 1
         stop_marker = self.get_marker1(rewind=False)
 
+    def read_tug1(self) -> None:
+        """TUG1: table UG1"""
+        op2 = self.op2
+        table_name = self._read_table_name(rewind=False)
+        op2.table_name = table_name
+        #self.log.debug('table_name = %r' % op2.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('_read_superelement - %s\n' % table_name)
+
+        #data = self._read_record()
+        #self.show_data(data, types='ifsqd', endian=None, force=False)
+        #self.show(data, types='ifsqd', endian=None, force=False)
+
+        self.read_markers([-1])
+        if self.read_mode == 1:
+            data0 = self._read_record()
+            out0 = Struct(b'7i').unpack(data0)
+            # (101, 240, 34, 32767, 0, 7, 0)
+            # (101, 184, 34, 32767, 0, 1004, 0)
+            #(101, 132, 18, 32767, 0, 7, 0)
+            aa, bb, ngrid, cc, dd, seven, ee = out0
+            #assert ngrid == 34, out
+            data_dict = {
+                -1: {
+                    'data': out0,
+                    '3_ngrid': ngrid,
+                },
+            }
+            analysis_code_expected = 0
+            if table_name == b'TUG1':
+                analysis_code_expected = 7
+                table_subname_expected = 'PHIP'
+            elif table_name == b'TES1':
+                analysis_code_expected = 5
+                table_subname_expected = 'TES'
+            elif table_name == b'TEF1':
+                analysis_code_expected = 4
+                table_subname_expected = 'TEF'
+            elif table_name == b'TEE1':
+                analysis_code_expected = 5
+                table_subname_expected = 'TEE'
+            elif table_name == b'TQMG1':
+                analysis_code_expected = 39
+                table_subname_expected = 'TQMP'
+            else:
+                raise NotImplementedError(op2.table_name)
+            assert seven in {7, 1004, 1005, 39}, f'seven={seven:d} out0={out0}'
+        else:
+            data = self._skip_record()
+
+        self.read_markers([-2, 1, 0])
+        if self.read_mode == 1:
+            data = self._read_record()
+            out = Struct('8s i 12s i').unpack(data)
+            #print(out)
+            table_subname, analysis_code, table_type, precision = out # TODO: verify
+            data_dict[-2] = {
+                'data': out,
+                '1_table_subname': table_subname,
+                '2_analysis_code': analysis_code,
+                '3_table_type': table_type,
+                '4_precision?': precision,
+            }
+            table_subname = table_subname.strip().decode(self._encoding)
+            table_type = table_type.strip().decode(self._encoding)
+            assert table_subname == table_subname_expected, table_subname # {'PHIP', 'TEF', 'TES', 'TEE', 'TQMP'}, table_subname
+            assert analysis_code == analysis_code_expected, out # in {7, 4, 5, 39}, out
+            assert table_type == 'REAL', table_type
+            assert precision == 1, precision
+            op2.log.info(f'table_name={op2.table_name} out0={out0} out={out}')
+        else:
+            data = self._skip_record()
+        #self.show_data(data, types='ifsq', endian=None, force=False)
+
+        itable = -3
+        self.read_markers([itable, 1, 0])
+        itable -= 1
+        marker = self.get_marker1(rewind=True)
+        while marker != 0:
+            if self.read_mode == 1:
+                data = self._read_record()
+                ints = np.frombuffer(data, dtype='int32')
+                if ints.max() > 500_000_000:
+                    assert table_name in {b'TES1', b'TEF1', b'TEE1'}, table_name
+                    strings = np.frombuffer(data, dtype='|S8')
+
+                    #self.show_data(data, types='ifsq', endian=None, force=False)
+                    #data2 = data.split()
+                    try:
+                        ints = np.array(strings, dtype='int32')
+                    except ValueError:
+                        ints = strings
+                else:
+                    assert table_name in {b'TUG1', b'TEF1', b'TES1', b'TEE1', b'TQMG1'}, table_name
+                if ints.dtype.name in {'int32'}:
+                    ints = ints.reshape(len(ints) // 2, 2)
+                #print(ints, ints.shape)
+                data_dict[itable+1] = {'data': ints}
+            else:
+                data = self._skip_record()
+
+            self.read_markers([itable, 1, 0])
+            itable -= 1
+            marker = self.get_marker1(rewind=True)
+            if marker == 0:
+                break
+
+            if self.read_mode == 1:
+                data = self._read_record()
+
+                #header = b'TYPE  IDCOMP ROW    TYPE  IDCOMP ROW    '
+                header = data[:40]
+                #print(header)
+                ints2 = np.frombuffer(data[40:], dtype='int32')
+                nints = len(ints2)
+                ints2 = ints2.reshape(nints//5, 5)
+                #print(ints2)
+                #print(ints2.shape)
+                data_dict[itable+1] = {'header': header, 'data': ints2}
+            else:
+                data = self._skip_record()
+
+            self.read_markers([itable, 1, 0])
+            itable -= 1
+            #self.show_data(data, types='ifsqd', endian=None, force=False)
+            marker = self.get_marker1(rewind=True)
+
+        self.read_markers([0])
+        if self.read_mode == 1:
+            table_name_str = table_name.decode(self._encoding)
+            op2.op2_results.superelement_tables[table_name_str] = data_dict
+        return
+
+
+    def read_mef1(self):
+        self._read_matrix_mat()
+        return
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        #self.log.debug('table_name = %r' % op2.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+        self.read_markers([-1])
+        data = self._read_record()
+        self.show_data(data, types='i', endian=None, force=False)
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        self.show_data(data, types='is', endian=None, force=False)
+
+        #self.show_data(data, types='ifs', endian=None, force=False)
+
+        #self.show(1000, types='ifsqd')
+
+        itable = -3
+        itable_next = -4
+
+        s12 = Struct(self._endian + b'i d')
+        s20 = Struct(self._endian + b'i dd')
+        while 1:
+            self.read_markers([itable, 1, ])
+            stop_marker = self.get_marker1(rewind=True)
+            if stop_marker == 0:
+                break
+            assert stop_marker == 1, stop_marker
+            stop_marker = self.get_marker1(rewind=False)
+            x = 1
+            while 1:
+                n = op2.n
+                data = self.read_block4()
+                block_value, = op2.struct_i.unpack(data)
+                if block_value == itable_next:
+                    op2.f.seek(n)
+                    op2.n = n
+                    break
+                data = self.read_block4()
+                ndata = len(data)
+                if ndata == 12:
+                    out = s12.unpack(data)
+                    print(block_value, out)
+                elif ndata == 20:
+                    out = s20.unpack(data)
+                    print(block_value, out)
+                else:
+                    out = np.frombuffer(data[4:], dtype='float64')
+                    print(block_value, out.tolist())
+                    #self.show_data(data, types='ifsqd', endian=None, force=False)
+                    #raise RuntimeError()
+                #self.show(100, types='ifsqd')
+            x = 1
+            itable -= 1
+            itable_next -= 1
+        stop_marker = self.get_marker1(rewind=False)
+        #self.show(1000, types='ifsqd', endian=None, force=False)
+
+        #for table=-3
+        ##ints = (
+        ##  4, 1, 4,
+        ##  4, 2, 4, 12, 4, 858993456, 1039588147, 12,
+        ##  4, 2, 4, 12, 6, 0, -1115684864, 12,
+        ##  4, 2, 4, 12, 10, 0, 1039138816, 12,
+        ##  4, 2, 4, 12, 12, 0, 1039138816, 12,
+        #   4, 2, 4, 12, 15, 0, -1109393408, 12,
+        #   4, 2, 4, 12, 18, 0, 1039663104, 12,
+        #   4, 2, 4, 12, 20, 0, 1039663104, 12,
+        #   4, 2, 4, 12, 23, 0, -1110441984, 12,
+        #   4, 2, 4, 12, 26, 0, 1039663104, 12,
+        #   4, 2, 4, 12, 28, -1717986904, -1109093991, 12,
+        #   4, 4, 4, 20, 30, 0, 1032323072, 0, -1109393408, 20,
+        #   4, 2, 4, 12, 34, 0, -1107820544, 12,
+        #   4, 2, 4, 12, 36, 1717986916, -1106434970, 12,
+        #   4, 2, 4, 12, 38, 0, 1032323072, 12,
+        #   4, 2, 4, 12, 42, 0, -1107034112, 12,
+        #   4, 2, 4, 12, 44, 858993460, -1106079181, 12,
+        #   4, 4, 4, 20, 46, 0, 1032323072, 0, 1038090240, 20,
+        #   4, 2, 4, 12, 50, 0, -1105920000, 12,
+        #   4, 2, 4, 12, 52, 1717986919, -1105264666, 12,
+        #   4, 2, 4, 12, 54, 0, 1032585216, 12,
+        #   4, 2, 4, 12, 58, 0, -1105297408, 12,
+        #   4, 2, 4, 12, 60, 0, -1105014208, 12,
+        #   4, 2, 4, 12, 62, 0, 1032060928, 12,
+        #   4, 2, 4, 12, 66, 0, -1104949248, 12,
+        #   4, 2, 4, 12, 68, -1717986918, -1104605303, 12,
+        #   4, 4, 4, 20, 70, 0, 1031995392, 0, 1038352384, 20,
+        #   4, 2, 4, 12, 74, -208725392, -1060776204, 12, 4, 2, 4, 12, 76, -1785409415, -1060783274, 12, 4, 4, 4, 20, 78, 1273831424, -1075489352, -82081896, -1057262893, 20, 4, 2, 4, 12, 82, -1785409368, -1060783274)
+
+        #ints = (
+        # 4, -4, 4,
+        # 4, 1, 4,
+        # 4, 1, 4,
+        # 4, 2, 4, 12, 1, 0, -1101004800, 12,
+        # 4, 2, 4, 12, 3, -858993472, 1045130444, 12,
+        # 4, 2, 4, 12, 5, 0, -1108344832, 12, 4, 2, 4, 12, 19, 858993456, 1047976755, 12, 4, 2, 4, 12, 21, 0, -1107296256, 12, 4, 4, 4, 20, 24, 0, -1118830592, 0, 1048051712, 20, 4, 2, 4, 12, 27, -1717986916, 1049062809, 12, 4, 2, 4, 12, 29, 0, -1107296256, 12, 4, 4, 4, 20, 32, 0, -1117782016, 0, 1049362432, 20, 4, 2, 4, 12, 35, 858993458, 1050055219, 12, 4, 2, 4, 12, 37, 0, -1106771968, 12, 4, 4, 4, 20, 40, 0, -1117519872, 0, 1050148864, 20, 4, 2, 4, 12, 43, -1717986918, 1050691865, 12, 4, 2, 4, 12, 45, 0, -1106771968, 12, 4, 4, 4, 20, 48, 0, -1116602368, 0, 1050705920, 20, 4, 2, 4, 12, 51, 0, 1051174016, 12, 4, 2, 4, 12, 53, 0, -1105985536, 12, 4, 4, 4, 20, 56, 0, -1116733440, 0, 1051099136, 20, 4, 2, 4, 12, 59, -858993460, 1051473612, 12, 4, 2, 4, 12, 61, 0, -1106247680, 12, 4, 4, 4, 20, 64, 0, 1034108928, 0, 1051574272, 20, 4, 2, 4, 12, 67, 0, 1052010048, 12, 4, 2, 4, 12, 69, 0, -1105985536, 12, 4, 4, 4, 20, 72, 0, 1036075008, -247389120, -1050902653, 20, 4, 2, 4, 12, 75, 125277002, -1051393547, 12, 4, 2, 4, 12, 77, -993396224, -1059642086, 12, 4, 4, 4, 20, 80, -1898174180, -1065569672, 125276976, -1051393547, 20, 4, 2, 4, 12, 83, -1556319668, -1053694050, 12, 4)
+
+        #data = self._read_record()
+        #self.show_data(data, types='ifsqd', endian=None, force=False)
+
+        #self.show(100, types='ifsqd')
+        #self.show_data(data, types='ifsqd', endian=None, force=False)
+
+
     def read_extdb(self):
         r"""
         fails if a streaming block:
@@ -2256,6 +2525,8 @@ class OP2Reader:
 
         https://help.hexagonmi.com/bundle/MSC_Nastran_2022.2/page/Nastran_Combined_Book/Superelements_User_s_Guide/superOTM/TOC.OUTPUT2.Files.xhtml
         """
+        otm_tables   = ['TUG1',          'TEF1', 'TES1']
+        otm_matrices = ['MUG1', 'MUG1B', 'MEF1', 'MES1']
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
@@ -4995,7 +5266,7 @@ class OP2Reader:
             niter += 1
         raise RuntimeError('this should never happen; n=%s' % niter_max)
 
-    def read_matrix(self, table_name):
+    def read_matrix(self, table_name: bytes) -> None:
         """
         General method for reading matrices and MATPOOL matrices
 
@@ -5227,8 +5498,6 @@ class OP2Reader:
                     read_matpool_dmig_4(op2, data, utable_name, debug=False)
                 else:
                     read_matpool_dmig_8(op2, data, utable_name, debug=False)
-            #try:
-                #read_matpool_dmig(op2, data, utable_name, debug=False)
             except Exception as excep:
                 self.log.error(str(excep))
                 self.log.warning('  skipping MATPOOL-DMIG')
@@ -5992,9 +6261,13 @@ class OP2Reader:
                         self.show(1000)
                         if last_table_name:
                             self.log.error(f'finished table_name = {last_table_name}')
-                        raise FatalError('There was a Nastran FATAL Error.  Check the F06.\n'
-                                         f'last table={op2.table_name!r}; post={op2.post} '
-                                         f'version={self.op2._nastran_format!r}')
+
+                        msg = ('There was a Nastran FATAL Error.  Check the F06.\n'
+                               f'last table={op2.table_name!r}; post={op2.post} '
+                               f'version={self.op2._nastran_format!r}')
+                        self.log.error(msg)
+                        if op2.stop_on_unclosed_file:
+                            raise FatalError(msg)
                 table_name = None
 
                 # we're done reading, so we're going to ignore the rewind
@@ -6599,8 +6872,8 @@ class OP2Reader:
                 self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 12:
-            subtable_name, unused_ten = unpack(self._endian + b'8si', data)  # type: tuple[bytes, int]
-            subtable_name = subtable_name.strip().decode(self._encoding)
+            subtable_name_bytes, unused_ten = unpack(self._endian + b'8si', data)
+            subtable_name = subtable_name_bytes.strip().decode(self._encoding)
             #assert ten == 10, self.show_data(data, types='ifs', endian=None)
             assert subtable_name in ['GPL', 'GPLS'], subtable_name
             if self.is_debug_file:

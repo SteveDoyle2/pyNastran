@@ -77,7 +77,17 @@ class OP2(OP2_Scalar, OP2Writer):
             {msc, nx}
 
         """
+        # Nastran closes the file properly 99.9% of the time, but when working
+        # with DMAP, it may not. Rather than fighting it, I've given it :)
+        #
+        # In general, this should be False because it does a pretty solid job
+        # of catching Fatal Errors (assuming you didn't fail on a GEOMCHECK).
+        self.stop_on_unclosed_file = True
+
+        # you can pass a few more tests if you add the OP2 table name (i.e., OUGV1)
+        # to the result key, but rarely do you want to do it
         self.use_table_name_in_code = False
+
         self.encoding = None
         self.mode = mode
         if mode is not None:
@@ -209,10 +219,7 @@ class OP2(OP2_Scalar, OP2Writer):
             skip_results_set = set(skip_results)
         del skip_results
 
-        skip_results_set.add('gpdt')
-        skip_results_set.add('bgpdt')
-        skip_results_set.add('eqexin')
-        skip_results_set.add('psds')
+        skip_results_set.update({'gpdt', 'bgpdt', 'eqexin', 'psds', 'superelement_tables'})
 
         if not self.read_mode == op2_model.read_mode:
             self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
@@ -665,7 +672,7 @@ class OP2(OP2_Scalar, OP2Writer):
                     #continue
 
         skip_pandas = ['params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds',
-                       'monitor1', 'monitor3']
+                       'monitor1', 'monitor3', 'superelement_tables']
         for result_type in result_types:
             if result_type in skip_pandas or result_type.startswith('responses.'):
                 #self.log.debug('skipping %s' % result_type)

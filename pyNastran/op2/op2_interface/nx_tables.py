@@ -460,6 +460,8 @@ NX_MATRIX_TABLES = [
 
     b'BHH', b'KHH',
     b'DSCM2',
+    b'MEF1', b'MUG1B',
+    b'MATK', b'MATM', b'MATV',
 ]  # type: list[bytes]
 
 NX_EXTRA_TABLES = [

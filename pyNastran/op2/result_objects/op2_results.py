@@ -74,6 +74,7 @@ class Results:
         self.cstm = CSTM()
         self.trmbd = TRMBD()
         self.trmbu = TRMBU()
+        self.superelement_tables = {}
 
     def _get_sum_objects_map(self):
         sum_objs = {
@@ -123,6 +124,7 @@ class Results:
         base_names = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
             'separation_initial', 'separation_final',
+            'superelement_tables',
         ]
         base_objs_map = {}
         for base_name in base_names:
@@ -136,6 +138,7 @@ class Results:
         base = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
             'separation_initial', 'separation_final',
+            'superelement_tables',
         ]
         sum_objs = self._get_sum_objects()
         for objs in sum_objs:
