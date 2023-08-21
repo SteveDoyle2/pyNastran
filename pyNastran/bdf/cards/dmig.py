@@ -314,8 +314,11 @@ class NastranMatrix(BaseCard):
         """hdf5 helper function"""
         self.finalize()
 
-    def __init__(self, name, matrix_form, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment='', finalize=True):
+    def __init__(self, name: str, matrix_form: int,
+                 tin: int, tout: int, polar: int, ncols: int,
+                 GCj: list[tuple[int, int]],
+                 GCi: list[tuple[int, int]],
+                 Real: list[float], Complex=None, comment: str='', finalize: bool=True):
         """
         Creates a NastranMatrix
 
@@ -369,16 +372,16 @@ class NastranMatrix(BaseCard):
 
         polar = _set_polar(polar)
 
-        if matrix_form not in [1, 2, 4, 5, 6, 8, 9]:
+        if matrix_form not in {1, 2, 4, 5, 6, 8, 9}:
             msg = (
-                'matrix_form=%r must be [1, 2, 4, 5, 6, 8, 9]\n'
+                f'matrix_form={matrix_form!r} must be [1, 2, 4, 5, 6, 8, 9]\n'
                 '  1: Square\n'
                 '  2: Rectangular\n'
                 #'  4: Lower Triangular\n'
                 #'  5: Upper Triangular\n'
                 '  6: Symmetric\n'
                 #'  8: Identity (m=nRows, n=m)\n'
-                '  9: Rectangular\n' % matrix_form)
+                '  9: Rectangular\n')
             raise ValueError(msg)
         self.name = name
 
@@ -403,8 +406,8 @@ class NastranMatrix(BaseCard):
         self.Real = Real
         if len(Complex) or self.is_complex:
             self.Complex = Complex
-            assert self.tin in [3, 4], 'tin=%r and must 3 or 4 to be complex' % self.tin
-            assert self.tout in [0, 3, 4], 'tin=%r and must 0, 3 or 4 to be complex' % self.tout
+            assert self.tin in [3, 4], f'tin={self.tin!r} and must 3 or 4 to be complex'
+            assert self.tout in [0, 3, 4], f'tin={self.tout!r} and must 0, 3 or 4 to be complex'
         assert isinstance(matrix_form, integer_types), 'matrix_form=%r type=%s' % (matrix_form, type(matrix_form))
         assert not isinstance(matrix_form, bool), 'matrix_form=%r type=%s' % (matrix_form, type(matrix_form))
         if finalize:
@@ -428,8 +431,8 @@ class NastranMatrix(BaseCard):
 
         matrix_form = integer(card, 3, 'ifo')
         tin = integer(card, 4, 'tin')
-        tout = integer_or_blank(card, 5, 'tout', 0)
-        polar = integer_or_blank(card, 6, 'polar', 0)
+        tout = integer_or_blank(card, 5, 'tout', default=0)
+        polar = integer_or_blank(card, 6, 'polar', default=0)
         if matrix_form == 1: # square
             ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form == 6: # symmetric
@@ -441,11 +444,11 @@ class NastranMatrix(BaseCard):
             #self.ncols = blank(card, 8, 'matrix_form=%s; ncol' % self.matrix_form)
 
             msg = (
-                '%s name=%r matrix_form=%r is not supported.  Valid forms:\n'
+                f'{cls.type} name={name!r} matrix_form={matrix_form!r} is not supported.  Valid forms:\n'
                 '  4=Lower Triangular\n'
                 '  5=Upper Triangular\n'
                 '  6=Symmetric\n'
-                '  8=Identity (m=nRows, n=m)\n' % (cls.type, name, matrix_form)
+                '  8=Identity (m=nRows, n=m)\n'
             )
             raise NotImplementedError(msg)
 
@@ -2893,7 +2896,7 @@ def _get_real_dtype(type_flag: int) -> str:
         raise RuntimeError(f'invalid option for matrix format {type_flag}')
     return dtype
 
-def dtype_to_tin_tout(myarray: np.ndarray):
+def dtype_to_tin_tout_str(myarray: np.ndarray) -> str:
     tin_real = myarray.real.dtype.itemsize
     tin_total = myarray.dtype.itemsize
     if tin_real == 8 and tin_total == 16:

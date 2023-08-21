@@ -1,14 +1,26 @@
 """Defines the Matrix class"""
-from typing import Union, Optional
-from scipy.sparse import coo_matrix, csr_matrix  # type: ignore
+from __future__ import annotations
+from typing import Callable, Union, Optional, Any, TYPE_CHECKING
+from itertools import count
+import scipy.sparse
+#from scipy.sparse import coo_matrix, csr_matrix  # type: ignore
 import numpy as np
+
+from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.cards.dmig import dtype_to_tin_tout_str
+from pyNastran.bdf.field_writer import print_card_8, print_card_16, print_card_double
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
 from pyNastran.utils import object_attributes, object_methods
+sparse_types = (scipy.sparse.coo_matrix, scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 
 class Matrix:
     """
-    Defines a Matrix object that's stored in op2.matrices
+    Defines a Matrix object that's stored in:
+     - op4.matrices
+     - op2.matrices
 
     Attributes
     ----------
@@ -24,7 +36,7 @@ class Matrix:
 
     """
     def __init__(self, name: str, form: Union[int, str],
-                 data: Optional[Union[np.ndarray, coo_matrix]]=None):
+                 data: Optional[Union[np.ndarray, scipy.sparse.coo_matrix]]=None):
         """
         Initializes a Matrix
 
@@ -36,7 +48,7 @@ class Matrix:
             the matrix type
         is_matpool : bool
             is this a matpool matrix?  A matpool has (grid, component) values
-        similar to a DMIG.  A non-matpool matrix is similar to a DMI.
+            similar to a DMIG.  A non-matpool matrix is similar to a DMI.
 
         +------+-----------------+
         | Form | Meaning         |
@@ -50,10 +62,11 @@ class Matrix:
         """
         self.name = name
         self.data = data
-        if isinstance(form, int):
-            self.form = form
+        if isinstance(form, integer_types):
+            pass
         else:
-            self.form = form_to_int(form)
+            form = form_to_int(form)
+        self.form: int = form
         self.is_matpool = False
 
         # only exist for is_matpool = True; automatically set
@@ -64,7 +77,8 @@ class Matrix:
         if not isinstance(name, str):
             raise TypeError(f'name={name!r} must be a string; type={type(name)}')
 
-    def set_matpool_data(self, data: np.ndarray,
+    def set_matpool_data(self,
+                         data: np.ndarray,
                          col_nid: np.ndarray, col_dof: np.ndarray,
                          row_nid: np.ndarray, row_dof: np.ndarray) -> None:
         self.is_matpool = True
@@ -74,6 +88,18 @@ class Matrix:
         self.row_nid = row_nid
         self.row_dof = row_dof
 
+    def symmetric_to_rectangular(self, log: SimpleLogger):
+        """enforce symmetry if necessary"""
+        if self.shape_str != 'symmetric':
+            return
+        if not isinstance(self.data, sparse_types):
+            return
+
+        matrix = sparse_symmetric_to_rectangular(self.data, log)
+        self.data = matrix
+
+        # matrix is symmetric, but is not stored as symmetric
+        self.matrix_shape = 'rectangular'
 
     @property
     def shape_str(self) -> str:
@@ -101,7 +127,7 @@ class Matrix:
         matrix = self.data
         if matrix is None:
             return
-        if isinstance(matrix, coo_matrix):
+        if isinstance(matrix, scipy.sparse.coo_matrix):
             data = {'row': matrix.row, 'col': matrix.col, 'data' : matrix.data}
             data_frame = pd.DataFrame(data=data).reindex(columns=['row', 'col', 'data'])
         elif isinstance(matrix, np.ndarray):
@@ -119,7 +145,7 @@ class Matrix:
             skip_msg = f'skipping {self.name!r} because data is None\n\n'
             mat.write(skip_msg.encode('ascii'))
             return
-        if isinstance(matrix, coo_matrix):
+        if isinstance(matrix, scipy.sparse.coo_matrix):
             if print_full:
                 for row, col, value in zip(matrix.row, matrix.col, matrix.data):
                     mat.write(np.compat.asbytes("(%d, %d) %s\n" % (row, col, value)))
@@ -164,28 +190,86 @@ class Matrix:
             dtype = '%s;' % self.data.dtype
         msg = '%-18s %-18s type=%-33s dtype=%-10s desc=%s' % (
             header, shape, class_name, dtype, self.shape_str)
-        if self.is_matpool:
-            msg += ' (matpool)'
         return msg
 
     @property
     def dtype_str(self) -> str:
-        assert isinstance(self.data, (np.ndarray, coo_matrix)), type(self.data)
+        assert isinstance(self.data, (np.ndarray, scipy.sparse.coo_matrix)), type(self.data)
         return self.data.dtype.name
+
+    @property
+    def GCi(self) -> np.ndarray:
+        return  self.GCi_GCj[0]
+
+    @property
+    def GCj(self) -> np.ndarray:
+        return self.GCi_GCj[1]
+
+    @property
+    def GCi_GCj(self) -> tuple[np.ndarray, np.ndarray]:
+        if isinstance(self.data, np.ndarray):
+            # same for real/imaginary
+            i, j = np.where(self.data != 0.)
+        elif isinstance(self.data, scipy.sparse.coo_matrix):
+            # same for real/imaginary
+            i = self.data.row
+            j = self.data.col
+        else:
+            raise TypeError(self.data)
+        return i, j
+
+    def data_i_j(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        if isinstance(self.data, np.ndarray):
+            i, j = np.where(self.data != 0.)
+            data = self.data[i, j]
+            #real = data.real[i, j]
+            #if is_complex:
+                #imag = data.imag[i, j]
+        elif isinstance(self.data, scipy.sparse.coo_matrix):
+            i = self.data.row
+            j = self.data.col
+            data = self.data.data
+            #real = data.real
+            #if is_complex:
+                #imag = data.imag
+        elif isinstance(self.data, sparse_types):
+            coo = self.data.tocoo(copy=False)
+            i = coo.row
+            j = coo.col
+            data = coo.data
+        else:
+            raise TypeError(self.data)
+        assert len(data) == len(i)
+        assert len(data) == len(j)
+        return data, i, j
+
+    @property
+    def Real(self) -> np.ndarray:
+        return self.data_i_j()[0].real
+
+    @property
+    def Complex(self) -> np.ndarray:
+        return self.data_i_j()[0].imag
 
     def to_gcj_gci_form(self):
         """once in matrix form, we need to transform to GCj, GCi, Real/Complex form"""
-        nrows, ncols = self.data.shape
+        assert isinstance(self.col_nid, np.ndarray), self.col_nid
+        assert isinstance(self.col_dof, np.ndarray), self.row_dof
+        assert isinstance(self.row_nid, np.ndarray), self.col_nid
+        assert isinstance(self.row_dof, np.ndarray), self.row_dof
+
+        data = self.data
+        nrows, ncols = data.shape
 
         # fix columns to consider
-        is_real = self.dtype_str in {'float32', 'float64'}
+        #is_real = self.dtype_str in {'float32', 'float64'}
 
-        sparse_csr = csr_matrix(self.data)
-        sparse_coo = sparse_csr.tocoo()  #  this should be the answer....
+        #sparse_csr = scipy.sparse.csr_matrix(self.data)
+        #sparse_coo = sparse_csr.tocoo()  #  this should be the answer....
 
 
-        max_cols = (np.abs(self.data.real) + np.abs(self.data.imag)).max(axis=1)
-        assert ncols == len(maxs)
+        max_cols = (np.abs(data.real) + np.abs(data.imag)).max(axis=1)
+        assert ncols == len(max_cols)
         jcols = np.where(max_cols > 0.)[0]
         GCj = []
 
@@ -210,12 +294,153 @@ class Matrix:
             print(f'GCi = {GCi}')
             GCj_out.append([gcj] * nrow)
             GCi_out.append(GCi)
+        GCi_out_array = np.array(GCi_out, dtype='int32')
+        GCj_out_array = np.array(GCi_out, dtype='int32')
+        return GCi_out_array, GCj_out_array
+
+    @property
+    def tin(self) -> int:
+        tin_str = dtype_to_tin_tout_str(self.data)
+        tin_str_to_tin = {
+            'float32': 1,
+            'float64': 2,
+            'complex64': 3,
+            'complex128': 4,
+        }
+        tin = tin_str_to_tin[tin_str]
+        return tin
+
+    @property
+    def is_real(self) -> bool:
+        """
+        1-Real, Single Precision
+        2=Real, Double Precision
+        3=Complex, Single
+        4=Complex, Double
+        """
+        return self.tin in {1, 2}
+
+    @property
+    def is_complex(self) -> bool:
+        return not self.is_real
+
+    @property
+    def is_sparse(self):
+        return scipy.sparse.issparse(self.data)
+    @property
+    def is_dense(self):
+        return not self.is_sparse
+
+    def to_sparse(self, sparse_type: str='coo') -> None:
+        if isinstance(self.data, np.ndarray):
+            dtype = self.data.dtype
+            data_array, i, j = self.data_i_j()
+            if sparse_type == 'coo':
+                data = scipy.sparse.coo_matrix(
+                    (data_array, (i, j)), shape=self.shape, dtype=dtype, copy=False)
+            elif sparse_type == 'csr':
+                data = scipy.sparse.csr_matrix(
+                    (data_array, (i, j)), shape=self.shape, dtype=dtype, copy=False)
+            elif sparse_type == 'csc':
+                data = scipy.sparse.csc_matrix(
+                    (data_array, (i, j)), shape=self.shape, dtype=dtype, copy=False)
+            else:
+                raise ValueError(f'sparse_type={sparse_type!r}; supports=[coo, csr, csc]')
+            self.data = data
+
+        elif isinstance(self.data, sparse_types):
+            self.data = self.data.todense()
+        else:
+            raise TypeError(self.data)
+
+    def to_dense(self) -> None:
+        if isinstance(self.data, np.ndarray):
+            pass
+        elif isinstance(self.data, sparse_types):
+            self.data = self.data.todense()
+        else:
+            raise TypeError(self.data)
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        return self.data.shape
+
+    def write_dmi(self, size: int=8) -> str:
+        """
+        DMI Notes:
+         - Additional Forms:
+           - 3 = Diagonal matrix (elements on the diagonal are stored in a column vector having m rows)
+           - 4 = Lower triangular factor
+           - 5 = Upper triangular factor
+           - 8 = Identity matrix (m = number of rows, n = m)
+         - The total number of DMIs and DTIs may not exceed 1000.
+         - For symmetric matrices, the entire matrix must be input.
+         - Form 7 matrices may not be defined on this entry.
+         - Form 3 matrices are converted to Form 6 matrices, which may be used by any module.
+         - The DMIG entry is more convenient for matrices with rows and columns that are
+           referenced by grid or scalar point degrees-of-freedom.
+        """
+        #if self.shape_str == 'symmetric':
+            #raise ValueError('call symmetric_to_rectangular before writing a DMI')
+        msg = '\n$' + '-' * 80
+        msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
+        nrows, ncols = self.shape
+
+        tin = self.tin
+        tout = tin
+
+        list_fields = ['DMI', self.name, 0, self.form, tin,
+                       tout, None, nrows, ncols]
+        msg += print_card_8(list_fields)
+
+        func_small: Callable[list[Any]] = print_card_8 if size == 8 else print_card_16
+        func: Callable[list[Any]] = func_small if tin in {1, 3} else print_card_double
+
+        if self.is_complex:
+            msg += _dmi_get_complex_fields(self, func)
+        else:
+            msg += _dmi_get_real_fields(self, func)
+        return msg
 
 
-    #def write_to_bdf(self, dmig_type: str):
-        #list_fields = [dmig_type, ]
-        #pass
+def sparse_symmetric_to_rectangular(matrix: sparse_types, log: SimpleLogger):
+    # get the upper and lower triangular matrices
+    upper_tri = scipy.sparse.triu(matrix)
+    lower_tri = scipy.sparse.tril(matrix)
 
+    # extracts a [1, 2, 3, ..., n] off the diagonal of the matrix
+    # and make it a diagonal matrix
+    diagi = scipy.sparse.diags(scipy.sparse.diagional(upper_tri))
+
+    # Check to see which triangle is populated.
+    # If they both are, make sure they're equal
+    # or average them and throw a warning
+    lnnz = (lower_tri - diagi).nnz
+    unnz = (upper_tri - diagi).nnz
+    assert isinstance(lnnz, int), type(lnnz)
+    assert isinstance(unnz, int), type(unnz)
+
+    # both upper and lower triangle are populated
+    if lnnz > 0 and unnz > 0:
+        upper_tri_t = upper_tri.T
+        if lower_tri == upper_tri_t:
+            matrix = upper_tri + upper_tri_t - diagi
+        else:
+            log.warning(
+                f'Matrix {self.name!r} marked as symmetric does not contain '
+                'symmetric data.  Data will be symmetrized by averaging.')
+            matrix = (matrix + matrix.T) / 2.
+    elif lnnz > 0:
+        #  lower triangle is populated
+        matrix = lower_tri + lower_tri.T - diagi
+    elif unnz > 0:
+        #  upper triangle is populated
+        matrix = upper_tri + upper_tri.T - diagi
+    else:
+        # matrix is diagonal (or null)
+        matrix = diagi
+    #data = matrix
+    return matrix
 
 def form_to_int(form: str) -> int:
     """gets the matrix description"""
@@ -232,3 +457,104 @@ def form_to_int(form: str) -> int:
         return 9
     raise RuntimeError(f'form = {form!r}')
 
+
+def _dmi_get_real_fields(dmi: Matrix, func: Callable[list[Any]]) -> str:
+    """writes a real DMI"""
+    msg = ''
+    name = dmi.name
+    #nrows = dmi.nrows
+    nrows = dmi.shape[0]
+    real_array, GCi, GCj = dmi.data_i_j()
+
+    uGCj = np.unique(GCj)
+    for gcj in uGCj:
+        i = np.where(gcj == GCj)[0]
+        gcis = GCi[i]
+        reals = real_array[i]
+
+        list_fields = ['DMI', name, gcj]
+        max_value = reals.max()
+
+        if len(i) == (reals != 0).sum():
+            # dense
+            list_fields.append(1)
+            list_fields.extend(reals)
+            msg += func(list_fields)
+            continue
+
+        if len(reals) == 1:
+            list_fields.extend([1, max_value])
+            msg += func(list_fields)
+            continue
+
+        if max_value == reals.min():
+            #DMI     WKK     1       1       1.0     THRU    112
+            list_fields.extend([1, max_value, 'THRU', nrows])
+            msg += func(list_fields)
+            continue
+
+        if len(i) == (reals != 0).sum():
+            # dense
+            list_fields.append(1)
+            list_fields.extend(reals)
+            msg += func(list_fields)
+            continue
+
+        isort = np.argsort(gcis)
+
+        # will always write the first one
+        gci_last = -1
+        for gci, real in zip(gcis[isort], reals[isort]):
+            if gci == gci_last + 1:
+                pass
+            else:
+                list_fields.append(gci)
+            list_fields.append(real)
+            gci_last = gci
+        msg += func(list_fields)
+    return msg
+
+def _dmi_get_complex_fields(dmi: Matrix, func: Callable[list[Any]]) -> str:
+    """writes a complex DMI"""
+    msg = ''
+    name = dmi.name
+    #nrows = dmi.nrows
+    data, GCi, GCj = dmi.data_i_j()
+    real_array = data.real
+    imag_array = data.imag
+
+    uGCj = np.unique(dmi.GCj)
+    for gcj in uGCj:
+        i = np.where(gcj == dmi.GCj)[0]
+        gcis = dmi.GCi[i]
+        reals = real_array[i]
+        complexs = imag_array[i]
+        isort = np.argsort(gcis)
+        list_fields = ['DMI', name, gcj]
+
+        #if reals.max() == 0. and reals.min() == 0. and complexs.max() == 0. and complexs.min() == 0.:
+            #continue
+
+        # will always write the first one
+        gci_last = -10
+        #print('gcis=%s \nreals=%s \ncomplexs=%s' % (
+            #gcis[isort], reals[isort], complexs[isort]))
+        if gcis.max() == gcis.min():
+            list_fields += [gcis[0]]
+            for reali, complexi in zip(reals, complexs):
+                list_fields.extend([reali, complexi])
+            msg += func(list_fields)
+        else:
+            #print(f'list_fields0 = {list_fields}')
+            for i, gci, reali, complexi in zip(count(), gcis[isort], reals[isort], complexs[isort]):
+                #print('B', gci, reali, complexi, gci_last)
+                if gci != gci_last + 1 and i != 0:
+                    pass
+                else:
+                    list_fields.append(gci)
+                list_fields.append(reali)
+                list_fields.append(complexi)
+                gci_last = gci
+            #print(f'list_fields = {list_fields}')
+            msg += func(list_fields)
+    return msg
