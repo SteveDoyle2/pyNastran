@@ -1910,8 +1910,7 @@ def _write_form_matrix_helper(matrices: dict[str, Matrix],
     try:
         mat_form = matrices[name]
     except KeyError:
-        raise KeyError('key=%r is an invalid matrix; keys=%s' % (
-            str(name), matrices.keys()))
+        raise KeyError(f'key={name!r} is an invalid matrix; keys={matrices.keys()}')
 
     if isinstance(mat_form, Matrix):
         form = mat_form.form
@@ -1919,8 +1918,8 @@ def _write_form_matrix_helper(matrices: dict[str, Matrix],
     else:
         (form, matrix) = mat_form
 
-    if not form in (1, 2, 3, 6, 8, 9):
-        raise ValueError('form=%r and must be in [1, 2, 3, 6, 8, 9]' % form)
+    if not form in {1, 2, 3, 6, 8, 9}:
+        raise ValueError(f'form={form!r} and must be in [1, 2, 3, 6, 8, 9]')
     return form, matrix
 
 def _write_data(f: TextIO, data: bytes, endian: str, types: str='ifs'):
