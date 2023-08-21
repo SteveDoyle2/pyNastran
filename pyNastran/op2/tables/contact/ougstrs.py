@@ -27,7 +27,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 
-class OSLIDE:
+class OUGSTRS:
     """
       TIME =  1.000000E+00
                                C O N T A C T     S L I D E     D I S T A N C E
@@ -316,7 +316,7 @@ class OSLIDE:
     def read_4(self, data: bytes, ndata: int):
         """reads table 4 (the results table)"""
         op2 = self.op2
-        assert op2.table_code == 74, op2.code_information()
+        assert op2.table_code == 1, op2.code_information()
         #if op2.read_mode == 1:
             #return ndata
         #self.show_data(data)
@@ -324,21 +324,17 @@ class OSLIDE:
         #assert op2.data_type == 1, op2.data_type
 
         #print('op2.analysis_code =', op2.analysis_code)
+        #print('op2.num_wide =', op2.num_wide)
         #op2.show_data(data, types='ifs', endian=None, force=False)
 
-        if op2.table_name == b'OSLIDEG1':
-            result_name = 'glue_contact_slide_distance'
-        elif op2.table_name == b'OSLIDE1':
-            result_name = 'contact_slide_distance'
-        else:
-            raise RuntimeError(op2.code_information())
+        result_name = 'contact_displacements'
         if op2._results.is_not_saved(result_name):
             return ndata
         op2._results._found_result(result_name)
         storage_obj = op2.get_result(result_name)
 
         #ndata = len(data)
-        if op2.num_wide == 7:
+        if op2.num_wide == 8:
             factor = op2.factor
             ntotal = 28 * factor
             nnodes = ndata // ntotal  # 8*4
@@ -347,15 +343,15 @@ class OSLIDE:
             if auto_return:
                 return ndata
 
-            assert op2.format_code == 2, op2.code_information
+            assert op2.format_code == 1, op2.code_information()
             ints = np.frombuffer(data, dtype=op2.idtype8)
             nfields = len(ints)
-            nrows = nfields // 7
-            assert nfields % 7 == 0
-            ints = ints.reshape(nrows, 7)
-            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nrows, 7)
+            nrows = nfields // 8
+            assert nfields % 8 == 0
+            ints = ints.reshape(nrows, 8)
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nrows, 8)
 
-            if op2.is_sort1 or op2.analysis_code in {1, 2, 3, 4, 7, 8, 9, 11, 12}:
+            if op2.is_sort1:# or op2.analysis_code in {1, 2, 3, 4, 7, 8, 9, 11, 12}:
                 # 1: static
                 # 2: modes
                 # 3: diff. stiff 0
@@ -366,11 +362,13 @@ class OSLIDE:
                 # 11: geometric nonlinear statics
                 # 12 contran
                 node_id = ints[:, 0] // 10
-                datai = floats[:, 1:]
+                gridtype = ints[:, 1]
+                datai = floats[:, 2:]
                 obj = op2.obj
                 if op2.analysis_code not in {1}:
                     obj._times[obj.itime] = obj.nonlinear_factor
                 obj.node_gridtype[:, 0] = node_id
+                obj.node_gridtype[:, 1] = gridtype
                 obj.data[obj.itime, :, :] = datai
             else:
                 # 5: freq

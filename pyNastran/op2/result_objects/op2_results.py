@@ -25,7 +25,13 @@ class Results:
 
         self.separation_initial = {}
         self.separation_final = {}
-        self.slide_contact = {}
+        self.contact_slide_distance = {}
+        self.glue_contact_slide_distance = {}
+        self.contact_stress = {}
+        self.contact_displacements = {}
+
+        # bolts
+        self.bolt_results = {}
 
         self.psds = PSDObjects()
         self.ato = AutoCorrelationObjects()
@@ -124,7 +130,8 @@ class Results:
         """gets only the objects that are do not contain sub-objects"""
         base_names = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
-            'separation_initial', 'separation_final', 'slide_contact',
+            'separation_initial', 'separation_final',
+            'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
             'superelement_tables',
         ]
         base_objs_map = {}
@@ -138,7 +145,9 @@ class Results:
         """combines all the table_types from all objects and sub-objects"""
         base = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
-            'separation_initial', 'separation_final', 'slide_contact',
+            'separation_initial', 'separation_final',
+            'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
+            'bolt_results',
             'superelement_tables',
         ]
         sum_objs = self._get_sum_objects()

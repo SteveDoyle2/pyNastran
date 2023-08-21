@@ -27,7 +27,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 
-class OSLIDE:
+class OFCON3D:
     """
       TIME =  1.000000E+00
                                C O N T A C T     S L I D E     D I S T A N C E
@@ -316,7 +316,7 @@ class OSLIDE:
     def read_4(self, data: bytes, ndata: int):
         """reads table 4 (the results table)"""
         op2 = self.op2
-        assert op2.table_code == 74, op2.code_information()
+        assert op2.table_code == 50, op2.code_information()
         #if op2.read_mode == 1:
             #return ndata
         #self.show_data(data)
@@ -324,14 +324,10 @@ class OSLIDE:
         #assert op2.data_type == 1, op2.data_type
 
         #print('op2.analysis_code =', op2.analysis_code)
+        #print('op2.num_wide =', op2.num_wide)
         #op2.show_data(data, types='ifs', endian=None, force=False)
 
-        if op2.table_name == b'OSLIDEG1':
-            result_name = 'glue_contact_slide_distance'
-        elif op2.table_name == b'OSLIDE1':
-            result_name = 'contact_slide_distance'
-        else:
-            raise RuntimeError(op2.code_information())
+        result_name = 'contact_stress'
         if op2._results.is_not_saved(result_name):
             return ndata
         op2._results._found_result(result_name)

@@ -27,13 +27,14 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 
-class OSLIDE:
+class OBOLT:
     """
-      TIME =  1.000000E+00
-                               C O N T A C T     S L I D E     D I S T A N C E
-                                         INCREMENTAL                                      TOTAL
-      POINT ID.   TYPE          T1             T2             T3             T1             T2             T3
-            57      G     -1.783432E-03   1.065814E-14   0.0           -1.783432E-03   1.065814E-14  -7.993606E-15
+         LOAD STEP =  1.00000E+00
+                                                             B O L T   R E S U L T S
+
+              BOLT ID =              100
+            ELEMENT ID    AXIAL FORCE    SHEAR FORCE-1    BENDING MOMENT-1    AXIAL PRELOAD STRAIN
+                 1        1.044593E+05    5.084193E+02      0.000000E+00          0.000000E+00
 
     #OUG : Output U in the global frame
 
@@ -98,65 +99,65 @@ class OSLIDE:
         ## thermal flag; 1 for heat transfer, 0 otherwise
         op2.thermal = op2.add_data_parameter(data, 'thermal', b'i', 23, False)
 
-        if op2.analysis_code == 1:   # statics / displacement / heat flux
-            # load set number
-            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
-            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
-            op2.setNullNonlinearFactor()
-        elif op2.analysis_code == 2:  # real eigenvalues
-            # mode number
-            op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
-            # eigenvalue
-            op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
-            # mode or cycle .. todo:: confused on the type - F1???
-            # float - C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mftank.op2
-            #op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # nope...
-            op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'f', 7, False) # radians
-            self.update_mode_cycle('mode_cycle')
-            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
-        #elif op2.analysis_code == 3: # differential stiffness
-            #op2.lsdvmn = self.get_values(data, b'i', 5) ## load set number
-            #op2.data_code['lsdvmn'] = op2.lsdvmn
-        #elif op2.analysis_code == 4: # differential stiffness
-            #op2.lsdvmn = self.get_values(data, b'i', 5) ## load set number
-        elif op2.analysis_code == 5:   # frequency
-            # frequency
-            op2.freq = op2.add_data_parameter(data, 'freq', b'f', 5)
-            op2.data_names = op2.apply_data_code_value('data_names', ['freq'])
-        elif op2.analysis_code == 6:  # transient
+        #if op2.analysis_code == 1:   # statics / displacement / heat flux
+            ## load set number
+            #op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
+            #op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
+            #op2.setNullNonlinearFactor()
+        #elif op2.analysis_code == 2:  # real eigenvalues
+            ## mode number
+            #op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
+            ## eigenvalue
+            #op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
+            ## mode or cycle .. todo:: confused on the type - F1???
+            ## float - C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mftank.op2
+            ##op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # nope...
+            #op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'f', 7, False) # radians
+            #self.update_mode_cycle('mode_cycle')
+            #op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
+        ##elif op2.analysis_code == 3: # differential stiffness
+            ##op2.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+            ##op2.data_code['lsdvmn'] = op2.lsdvmn
+        ##elif op2.analysis_code == 4: # differential stiffness
+            ##op2.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+        #elif op2.analysis_code == 5:   # frequency
+            ## frequency
+            #op2.freq = op2.add_data_parameter(data, 'freq', b'f', 5)
+            #op2.data_names = op2.apply_data_code_value('data_names', ['freq'])
+        if op2.analysis_code == 6:  # transient
             # time step
             op2.dt = op2.add_data_parameter(data, 'dt', b'f', 5)
             op2.data_names = op2.apply_data_code_value('data_names', ['dt'])
-        elif op2.analysis_code == 7:  # pre-buckling
-            # load set number
-            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
-        elif op2.analysis_code == 8:  # post-buckling
-            # load set number
-            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            # real eigenvalue
-            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
-            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
-        elif op2.analysis_code == 9:  # complex eigenvalues
-            # mode number
-            op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
-            # real eigenvalue
-            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
-            # imaginary eigenvalue
-            op2.eigi = op2.add_data_parameter(data, 'eigi', b'f', 7, False)
-            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
+        #elif op2.analysis_code == 7:  # pre-buckling
+            ## load set number
+            #op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
+        #elif op2.analysis_code == 8:  # post-buckling
+            ## load set number
+            #op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            ## real eigenvalue
+            #op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
+            #op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
+        #elif op2.analysis_code == 9:  # complex eigenvalues
+            ## mode number
+            #op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
+            ## real eigenvalue
+            #op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
+            ## imaginary eigenvalue
+            #op2.eigi = op2.add_data_parameter(data, 'eigi', b'f', 7, False)
+            #op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif op2.analysis_code == 10:  # nonlinear statics
             # load step
             op2.lftsfq = op2.add_data_parameter(data, 'lftsfq', b'f', 5)
             op2.data_names = op2.apply_data_code_value('data_names', ['lftsfq'])
-        elif op2.analysis_code == 11:  # old geometric nonlinear statics
-            # load set number
-            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
-        elif op2.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            # load set number
-            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
+        #elif op2.analysis_code == 11:  # old geometric nonlinear statics
+            ## load set number
+            #op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
+        #elif op2.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            ## load set number
+            #op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
         else:  # pragma: no cover
             op2.show_data(data)
             #op2._write_data(op2.binary_debug, data, types='ifs')
@@ -316,37 +317,49 @@ class OSLIDE:
     def read_4(self, data: bytes, ndata: int):
         """reads table 4 (the results table)"""
         op2 = self.op2
-        assert op2.table_code == 74, op2.code_information()
+        assert op2.table_code == 80, op2.code_information()
         #if op2.read_mode == 1:
             #return ndata
         #self.show_data(data)
         #print(f'data_type = {op2.data_type}')
         #assert op2.data_type == 1, op2.data_type
 
-        #print('op2.analysis_code =', op2.analysis_code)
         #op2.show_data(data, types='ifs', endian=None, force=False)
 
-        if op2.table_name == b'OSLIDEG1':
-            result_name = 'glue_contact_slide_distance'
-        elif op2.table_name == b'OSLIDE1':
-            result_name = 'contact_slide_distance'
-        else:
-            raise RuntimeError(op2.code_information())
+        result_name = 'bolt_results'
         if op2._results.is_not_saved(result_name):
             return ndata
         op2._results._found_result(result_name)
         storage_obj = op2.get_result(result_name)
 
+        #print('op2.analysis_code =', op2.analysis_code)
+        #print('op2.num_wide =', op2.num_wide)
+
+
         #ndata = len(data)
         if op2.num_wide == 7:
+            #NUMWDE = 7 3D solid element or 1D beam/bar element
+            #2 AX RS Axial force in bolt coordinate system
+            #3 SHR1 RS Shear force 1 in bolt coordinate system
+            #4 SHR2 RS Shear force 2 in bolt coordinate system
+            #5 BEN1 RS Bending moment 1 in bolt coordinate system
+            #6 BEN2 RS Bending moment 2 in bolt coordinate system
+            #7 STRN RS Bolt axial initial strain in bolt coordinate system
             factor = op2.factor
             ntotal = 28 * factor
             nnodes = ndata // ntotal  # 8*4
-            auto_return = op2._create_table_vector(
-                result_name, nnodes, storage_obj, RealDisplacementArray, is_cid=False)
-            if auto_return:
-                return ndata
 
+            load_obj = True
+            if load_obj:
+                auto_return = op2._create_table_vector(
+                    result_name, nnodes, storage_obj, RealDisplacementArray, is_cid=False)
+                if auto_return:
+                    return ndata
+            else:
+                if op2.read_mode == 1:
+                    return ndata
+
+            print(op2.code, op2.nonlinear_factor, nnodes)
             assert op2.format_code == 2, op2.code_information
             ints = np.frombuffer(data, dtype=op2.idtype8)
             nfields = len(ints)
@@ -365,13 +378,18 @@ class OSLIDE:
                 # 9: complex modes
                 # 11: geometric nonlinear statics
                 # 12 contran
-                node_id = ints[:, 0] // 10
+                element_id = ints[:, 0] // 10
                 datai = floats[:, 1:]
-                obj = op2.obj
-                if op2.analysis_code not in {1}:
+
+                if load_obj:
+                    obj = op2.obj
+                    #if op2.analysis_code not in {1}:
                     obj._times[obj.itime] = obj.nonlinear_factor
-                obj.node_gridtype[:, 0] = node_id
-                obj.data[obj.itime, :, :] = datai
+                    obj.node_gridtype[:, 0] = element_id
+                    obj.data[obj.itime, :, :] = datai
+                else:
+                    print(f'bolt_results eid={element_id}')
+                    print(datai)
             else:
                 # 5: freq
                 # 6: time step
@@ -382,6 +400,13 @@ class OSLIDE:
             #print(datai)
             #reals = floats[:, [0, 1, 2]]
             #imags = floats[:, [3, 4, 5]]
+        elif op2.num_wide == 5:
+            #NUMWDE = 5 2D plane stress elements
+            #2 AX RS Axial force in bolt coordinate system
+            #3 SHR1 RS Shear force 1 in bolt coordinate system
+            #4 BEN1 RS Bending moment 1 in bolt coordinate system
+            #5 STRN RS Bolt axial initial strain in bolt coordinate system
+            raise RuntimeError(op2.code_information())
         else:
             raise RuntimeError(op2.code_information())
         #raise NotImplementedError(op2.code_information())

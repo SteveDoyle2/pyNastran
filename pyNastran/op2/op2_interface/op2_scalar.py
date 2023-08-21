@@ -655,7 +655,14 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_oug = self._op2_readers.reader_oug
         reader_ougpk = self._op2_readers.reader_ougpk
         reader_otemp = self._op2_readers.reader_otemp
+
+        #  bolts
+        reader_obolt = self._op2_readers.reader_obolt
+
+        # contact
         reader_oslide = self._op2_readers.reader_oslide
+        reader_ougstrs = self._op2_readers.reader_ougstrs
+        reader_ofcon3d = self._op2_readers.reader_ofcon3d
 
         # oef
         reader_oef = self._op2_readers.reader_oef
@@ -1154,7 +1161,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             ## NX unsorted
             b'OES1G' : [self._table_passer, self._table_passer, 'NX 2019.2 Grid point stress or strain table and interpolated from the centroidal stress table/OES1M; SORT1'],
-            b'OBOLT1': [self._table_passer, self._table_passer, 'NX 2019.2 Bolt output'],
+            b'OBOLT1': [reader_obolt.read_sort1_3, reader_obolt.read_4, 'NX 2019.2 Bolt output'],
             b'OSTR1IN': [self._table_passer, self._table_passer, 'NX 2019.2 OES output table of initial strains at corner grids in the cid=0 frame'],
             b'OELAR': [self._table_passer, self._table_passer, 'NX 2019.2 Inactive element status and addition/removal time'],
             b'OJINT': [self._table_passer, self._table_passer, 'NX 2019.2 Table for J integral output'],
@@ -1239,15 +1246,15 @@ class OP2_Scalar(OP2Common, FortranFormat):
             # NX contact
             b'OSLIDE1': [reader_oslide.read_sort1_3, reader_oslide.read_4, 'NX 2019.2 Incremental and total slide/slip distance'],
             b'OCONST1' : [self._table_passer, self._table_passer, 'NX2019.2 Contact status in SORT1 format'],
-            b'OSLIDEG1' : [self._table_passer, self._table_passer, 'NX2019.2 Glue slide distance output'],
+            b'OSLIDEG1' : [reader_oslide.read_sort1_3, reader_oslide.read_4, 'NX2019.2 Glue slide distance output'],
             b'OBCKL' : [self._table_passer, self._table_passer, 'NX2019.2 Table of load factor vs. cumulative arc-length in SORT2 format'],
             #b'ASDFFFF' : [self._table_passer, self._table_passer, 'NX2019.2 ???'],
             #b'ASDFFFF' : [self._table_passer, self._table_passer, 'NX2019.2 ???'],
             #b'ASDFFFF' : [self._table_passer, self._table_passer, 'NX2019.2 ???'],
 
             ## MSC contact
-            b'OFCON3D0' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of Rigid/Flexible Body contact stresses; initial'],
-            b'OFCON3DD' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of Rigid/Flexible Body contact stresses; deformed'],
+            b'OFCON3D0' : [reader_ofcon3d.read_sort1_3, reader_ofcon3d.read_4, 'MSC 2020.0 Table of Rigid/Flexible Body contact stresses; initial'],
+            b'OFCON3DD' : [reader_ofcon3d.read_sort1_3, reader_ofcon3d.read_4, 'MSC 2020.0 Table of Rigid/Flexible Body contact stresses; deformed'],
 
             b'OBCNURB0' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of analytical contact surface spline; initial'],
             b'OBCNURBD' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of analytical contact surface spline; deformed'],
@@ -1257,7 +1264,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OFGCOND' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of Global Contact Output'],
             b'OFCRFMD' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of resultant force/moment for each CONTACT Pair; deformed'],
 
-            b'OUGSTRS0': [self._table_passer, self._table_passer, 'OUG-type table of geometry adjustment by initial stress-free contact'],
+            b'OUGSTRS0': [reader_ougstrs.read_sort1_3, reader_ougstrs.read_4, 'OUG-type table of geometry adjustment by initial stress-free contact'],
             #b'OFCON3D' : 'Table of initial contact status information'],
             #b'OCONTACT' : 'Table of contact pairs if BCONTAT=AUTO'],
         }
@@ -1848,7 +1855,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if self.table_name not in GEOM_TABLES and self.isubtable > -4:
             desc = self.op2_reader.desc_map[self.table_name]
             self.log.warning(f'    skipping {self.table_name_str:<8} ({desc})')
-            raise NotImplementedError(self.table_name)
+            #raise NotImplementedError((self.table_name, desc))
         if not is_release and self.isubtable > -4:
             if self.table_name in GEOM_TABLES and not self.make_geom:
                 pass

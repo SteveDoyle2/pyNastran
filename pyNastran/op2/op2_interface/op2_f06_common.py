@@ -62,7 +62,7 @@ class OP2_F06_Common:
         else:
             return hasattr(self, result_name)
 
-    def get_result(self, result_name):
+    def get_result(self, result_name: str) -> dict:
         """
         Getattr, but considers sub-objects
 
