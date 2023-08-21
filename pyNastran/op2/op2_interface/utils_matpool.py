@@ -129,11 +129,12 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
     # kstart : the start of the columns
     # kstop  : the end of the columns
     assert len(kstarts) > 0, kstarts
-    log.info(f'  outs = {outs}')
-    log.info(f'  istarts = {istarts}')
-    log.info(f'  istops  = {istops}')
-    log.info(f'  kstarts = {kstarts}')
-    log.info(f'  kstops  = {kstops}')
+    if debug:
+        log.info(f'  outs = {outs}')
+        log.info(f'  istarts = {istarts}')
+        log.info(f'  istops  = {istops}')
+        log.info(f'  kstarts = {kstarts}')
+        log.info(f'  kstops  = {kstops}')
     nmatrices = len(outs)
     for i, istart, istop, out, kstart, kstop in zip(count(), istarts, istops, outs, kstarts, kstops):
         # istop : the end of the matrix(s)
@@ -176,9 +177,10 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
 
         is_symmetric = matrix_shape == 6
         is_phase_flag = is_phase > 0
-        log.info(f'matrix_name={matrix_name} junk1={junk1} matrix_shape={matrix_shape} '
-                 f'tin={tin} ({in_dtype} {in_fdtype}) tout={tout} ({out_dtype} {out_fdtype}) \n    '
-                 f'is_phase={is_phase_flag} junk2={junk2} ncols_gset={ncols_gset}')
+        log.info(f'matrix_name={matrix_name} junk1={junk1} matrix_shape={matrix_shape}')
+        if debug:
+            log.info(f'  tin={tin} ({in_dtype} {in_fdtype}) tout={tout} ({out_dtype} {out_fdtype})')
+            log.info(f'  is_phase={is_phase_flag} junk2={junk2} ncols_gset={ncols_gset}')
 
         #if self.size == 4:
             #if tout == 1:  # float32
@@ -200,10 +202,11 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
         #self.show_data(data[kstart*4:kstop*4])
         #kfirst = ioffset
         #klast = kstop[-1]
-        log.info(f'{matrix_name_str}: kstart = {kstart}; n={len(kstart)}')
-        log.info(f'{matrix_name_str}: kstop  = {kstop}')
-        #----------------------------------------
-        log.info(f'{matrix_name_str}: casting floats')
+        if debug:
+            log.info(f'{matrix_name_str}: kstart = {kstart}; n={len(kstart)}')
+            log.info(f'{matrix_name_str}: kstop  = {kstop}')
+            #----------------------------------------
+            log.info(f'{matrix_name_str}: casting floats')
         #nheader = ioffset * 4
         #nend = istop * self.size
         #floats = get_floats_4(datai[nheader:nend], fdtype, op2, tout)
@@ -247,18 +250,19 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
 
         #nj2 = len(istart)  ## TODO: why is this wrong???
         # -------------------------------------------------
-        log.info(f'extracting rows')
         row_nids = []
         row_dofs = []
         col_nids = []
         col_dofs = []
         reals = []
         imags = []
-        log.debug(f'  dtype={dtype} fdtype={fdtype}')
-        log.debug(f'  istart = {istart}')
-        log.debug(f'  istop = {istop}')
-        log.debug(f'  kstart = {kstart}')
-        log.debug(f'  kstop = {kstop}')
+        if debug:
+            log.info(f'extracting rows')
+            log.debug(f'  dtype={dtype} fdtype={fdtype}')
+            log.debug(f'  istart = {istart}')
+            log.debug(f'  istop = {istop}')
+            log.debug(f'  kstart = {kstart}')
+            log.debug(f'  kstop = {kstop}')
 
         for col_nidi, col_dofi, istarti, istopi in zip(
                 col_nids_short, col_dofs_short, kstart, kstop):
@@ -397,6 +401,7 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
             matrix_shape, dtype, is_symmetric, log,
             apply_symmetry=op2.apply_symmetry)
         str(m)
+        log.info(f'created MATPOOL {matrix_name_str}')
         op2.matrices[matrix_name_str] = m
 
         if nmatrices > 1:
@@ -519,11 +524,12 @@ def read_matpool_dmig(op2: OP2, data: bytes,
     # kstart : the start of the columns
     # kstop  : the end of the columns
     assert len(kstarts) > 0, kstarts
-    log.info(f'  outs = {outs}')
-    log.info(f'  istarts = {istarts}')
-    log.info(f'  istops  = {istops}')
-    log.info(f'  kstarts = {kstarts}')
-    log.info(f'  kstops  = {kstops}')
+    if debug:
+        log.info(f'  outs = {outs}')
+        log.info(f'  istarts = {istarts}')
+        log.info(f'  istops  = {istops}')
+        log.info(f'  kstarts = {kstarts}')
+        log.info(f'  kstops  = {kstops}')
     nmatrices = len(outs)
     for i, istart, istop, out, kstart, kstop in zip(count(), istarts, istops, outs, kstarts, kstops):
         # istop : the end of the matrix(s)
@@ -568,21 +574,10 @@ def read_matpool_dmig(op2: OP2, data: bytes,
 
         is_symmetric = matrix_shape == 6
         is_phase_flag = is_phase > 0
-        log.info(f'matrix_name={matrix_name} junk1={junk1} matrix_shape={matrix_shape} '
-                 f'tin={tin} ({in_dtype} {in_fdtype}) tout={tout} ({out_dtype} {out_fdtype}) \n    '
-                 f'is_phase={is_phase_flag} junk2={junk2} ncols_gset={ncols_gset}')
-
-        #if self.size == 4:
-            #if tout == 1:  # float32
-                #nvalues = 3
-            #elif tout == 2:  # float64
-                #nvalues = 4
-            #elif tout == 3:  # complex64
-                #nvalues = 4
-            #elif tout == 4:  # complex128
-                #nvalues = 5
-            #else:
-                #raise NotImplementedError(tout)
+        log.info(f'matrix_name={matrix_name} junk1={junk1} matrix_shape={matrix_shape}')
+        if debug:
+            log.info(f'  tin={tin} ({in_dtype} {in_fdtype}) tout={tout} ({out_dtype} {out_fdtype})')
+            log.info(f'  is_phase={is_phase_flag} junk2={junk2} ncols_gset={ncols_gset}')
 
         #----------------------------------------
         #print(kstart, kstop)
@@ -637,11 +632,12 @@ def read_matpool_dmig(op2: OP2, data: bytes,
         col_dofs: list[np.ndarray] = []
         reals: list[np.ndarray] = []
         imags: list[np.ndarray] = []
-        log.debug(f'  dtype={dtype} fdtype={fdtype}')
-        log.debug(f'  istart = {istart}')
-        log.debug(f'  istop = {istop}')
-        log.debug(f'  kstart = {kstart}')
-        log.debug(f'  kstop = {kstop}')
+        if debug:
+            log.debug(f'  dtype={dtype} fdtype={fdtype}')
+            log.debug(f'  istart = {istart}')
+            log.debug(f'  istop = {istop}')
+            log.debug(f'  kstart = {kstart}')
+            log.debug(f'  kstop = {kstop}')
 
         for col_nidi, col_dofi, istarti, istopi in zip(
                 col_nids_short, col_dofs_short, kstart, kstop):
@@ -865,6 +861,7 @@ def read_matpool_dmig(op2: OP2, data: bytes,
             matrix_shape, dtype, is_symmetric, log,
             apply_symmetry=op2.apply_symmetry)
         str(m)
+        log.info(f'created MATPOOL {matrix_name_str}')
         op2.matrices[matrix_name_str] = m
 
         if nmatrices > 1:

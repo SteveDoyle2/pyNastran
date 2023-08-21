@@ -408,7 +408,7 @@ class Subcase:
             else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
-        elif table_name in ['OESRT']:
+        elif table_name in ['OESRT', 'OESRTN']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code in [25, 56, 89]:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
@@ -466,8 +466,8 @@ class Subcase:
             print(data_code)
             raise RuntimeError(data_code)
         log.error(str(data_code))
-        if USER_NAME == 'sdoyle': # or 'id' in msg:
-            raise RuntimeError(data_code)
+        #if USER_NAME == 'sdoyle': # or 'id' in msg:
+            #raise RuntimeError(data_code)
 
     def __contains__(self, param_name: str) -> bool:
         """

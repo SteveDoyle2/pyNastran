@@ -164,6 +164,8 @@ class Matrix:
             dtype = '%s;' % self.data.dtype
         msg = '%-18s %-18s type=%-33s dtype=%-10s desc=%s' % (
             header, shape, class_name, dtype, self.shape_str)
+        if self.is_matpool:
+            msg += ' (matpool)'
         return msg
 
     @property

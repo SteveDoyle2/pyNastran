@@ -24,7 +24,6 @@ Defines various tables that don't fit in other sections:
     - _read_pcompts(self)
 
   - Matrix
-    - _get_matrix_row_fmt_nterms_nfloats(self, nvalues, tout)
     - _skip_matrix_mat(self)
     - read_matrix(self, table_name)
     - _read_matpool_matrix(self)
@@ -39,6 +38,8 @@ Defines various tables that don't fit in other sections:
     - _skip_table_helper(self)
     - _print_month(self, month, day, year, zero, one)
     - read_results_table(self)
+  - functions
+    - _get_matrix_row_fmt_nterms_nfloats(nvalues, tout, endian)
 
 """
 from __future__ import annotations
@@ -237,9 +238,6 @@ class OP2Reader:
             b'MBQG1': (self.read_mef1, 'external superelement'),
             b'MK4QG1': (self.read_mef1, 'external superelement'),
 
-            #b'TEF1': (self._read_mef1, 'superelement matrix'),
-            #b'MEF1': (self._read_mef1, 'superelement matrix'),
-            #b'MUG1B': (self._read_mef1, 'superelement matrix'),
             b'MATPOOL' : (self._read_matrix_matpool, 'matrices'),
 
             b'OBC1': (self.read_obc1, 'Contact pressures and tractions at grid points'),
@@ -4899,38 +4897,6 @@ class OP2Reader:
 
         #self.show_data(data)
 
-    def _get_matrix_row_fmt_nterms_nfloats(self, nvalues, tout):
-        """
-        +------+---------------------------+
-        | Type | Meaning                   |
-        +------+---------------------------+
-        |  1   | Real, single precision    |
-        |  2   | Real, double precision    |
-        |  3   | Complex, single precision |
-        |  4   | Complex, double precision |
-        +------+---------------------------+
-
-        """
-        if tout == 1:
-            nfloats = nvalues
-            nterms = nvalues
-            fmt = self._endian + b'i %if' % nfloats
-        elif tout == 2:
-            nfloats = nvalues // 2
-            nterms = nvalues // 2
-            fmt = self._endian + b'i %id' % nfloats
-        elif tout == 3:
-            nfloats = nvalues
-            nterms = nvalues // 2
-            fmt = self._endian + b'i %if' % nfloats
-        elif tout == 4:
-            nfloats = nvalues // 2
-            nterms = nvalues // 4
-            fmt = self._endian + b'i %id' % nfloats
-        else:
-            raise RuntimeError('tout = %s' % tout)
-        return fmt, nfloats, nterms
-
     def _read_matrix_mat(self):
         """
         Reads a matrix in "standard" form.  The forms are::
@@ -5008,8 +4974,6 @@ class OP2Reader:
         #print('g =', g)
 
         utable_name = table_name.decode('utf-8')
-        m = Matrix(utable_name, form=form)
-        op2.matrices[utable_name] = m
 
         # matrix_num is a counter (101, 102, 103, ...)
         # 101 will be the first matrix 'A' (matrix_num=101),
@@ -5047,6 +5011,9 @@ class OP2Reader:
             log.warning(msg)
             raise RuntimeError(msg)
 
+        m = Matrix(utable_name, form=form)
+        op2.matrices[utable_name] = m
+
         #self.log.error('name=%r matrix_num=%s form=%s mrows=%s '
         #               'ncols=%s tout=%s nvalues=%s g=%s' % (
         #                   table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
@@ -5060,6 +5027,7 @@ class OP2Reader:
                           table_name, matrix_num, form, mrows, ncols,
                           tout, nvalues, g))
             raise RuntimeError('form=%s; allowed=%s' % (form, allowed_forms))
+
         if self.size == 4:
             log.debug('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s '
                       'nvalues=%s g=%s' % (
@@ -5113,8 +5081,8 @@ class OP2Reader:
 
                 while nvalues >= 0:
                     nvalues = self.get_marker1(rewind=False)
-                    fmt, unused_nfloats, nterms = self._get_matrix_row_fmt_nterms_nfloats(
-                        nvalues, tout)
+                    fmt, unused_nfloats, nterms = _get_matrix_row_fmt_nterms_nfloats(
+                        nvalues, tout, self._endian)
                     GCjj = [jj] * nterms
                     GCj += GCjj
 
@@ -5283,79 +5251,62 @@ class OP2Reader:
         # if we skip on read_mode=1, we don't get debugging
         # if we just use read_mode=2, some tests fail
         #
-        if self.read_mode != read_mode_to_read_matrix and not self.debug_file:
-            try:
-                self._skip_matrix_mat()  # doesn't work for matpools
-            except MemoryError:
-                raise
-            except(RuntimeError, AssertionError, ValueError):
-                self._goto(i)
-                self._skip_table(table_name)
-            return
-
-        try:
+        mat_type = self._check_matrix_type()
+        if mat_type == 'matrix':
             self._read_matrix_mat()
-        except MemoryError:
-            raise
-        except(RuntimeError, AssertionError, ValueError):
-            # read matpool matrix
-            self._goto(i)
-            try:
-                self._read_matrix_matpool()
-            except(RuntimeError, AssertionError, ValueError):
-                raise
-                #self._goto(i)
-                #self._skip_table(op2.table_name)
+        else:
+            self._read_matrix_matpool()
 
-    def _read_mef1(self):
+        return
+        #from traceback import format_exc
+        #if self.read_mode != read_mode_to_read_matrix and not self.debug_file:
+            #try:
+                #self._skip_matrix_mat()  # doesn't work for matpools
+            #except MemoryError:
+                #raise
+            #except(RuntimeError, AssertionError, ValueError):
+                #raise
+                #self._goto(i)
+                #self._skip_table(table_name)
+            #return
+
+        #try:
+        #    self._read_matrix_mat()
+        #    return
+        #except MemoryError:
+        #    raise
+        #except(RuntimeError, AssertionError, ValueError):
+        #    pass # self.log.error(str(format_exc()))
+
+        # read matpool matrix
+        #self._goto(i)
+        #try:
+        #    self._read_matrix_matpool()
+        #    return
+        #except(RuntimeError, AssertionError, ValueError):
+        #    self.log.error(str(format_exc()))
+
+        # I give up
+        #self._goto(i)
+        #self._skip_table(op2.table_name)
+
+    def _check_matrix_type(self):
         op2 = self.op2
+        i = op2.f.tell()
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         utable_name = table_name.decode('utf-8')
         #print(utable_name)
         self.read_markers([-1])
 
-        #(101, 15, 12, 2, 2, 4, 1333)
+        # (104, 32768, 0, 0, 0, 0, 0)
         data = self._read_record()
-        ints = unpack(self._endian + b'7i', data)
-        print(ints)
+        ints = np.frombuffer(data, dtype=op2.idtype8)
+        self._goto(i)
 
-        self.read_3_markers([-2, 1, 0])
-        data = self._read_record()
-        name, int1, int2 = unpack(self._endian + b'8s ii', data)
-        print(name, int1, int2)
-        #self.show_data(data, types='ifs', endian=None, force=False)
-
-        self.read_3_markers([-3, 1])
-        read_dofs(op2, size=4)
-        #data = self._read_record()
-        #(4, 2, 4, 12, 1, -901, -1074790401, 12,
-         #4, 2, 4, 12, 7, -901, -1074790401, 12)
-        #self.show_data(data, types='ifsqd', endian=None, force=False)
-        #self.show_data(data[4:], types='ifsqd', endian=None, force=False)
-
-        assert op2.f.tell() == op2.n
-
-        ni = -4
-        marker = 1
-        while marker != 0:
-            #print(f'ni = {ni}')
-            self.read_3_markers([ni, 1])
-            read_dofs(op2, size=4)
-            ni -= 1
-
-            marker = self.get_marker1(rewind=True, macro_rewind=False)
-            #if marker == 0:
-                #break
-        #print('marker =', marker)
-        marker = self.get_marker1(rewind=False, macro_rewind=False)
-        #self.read_3_markers([ni, 1])
-        #self.show_ndata(200, types='ifs')
-
-        #self.read_3_markers([-9, 1])
-        #read_dofs(op2, size=4)
-
-    # (104, 32768, 0, 0, 0, 0, 0)
-        #aaa
+        zeros = ints[2:]
+        if np.abs(zeros).sum() == 0:
+            return 'matpool'
+        return 'matrix'
 
     def _read_matrix_matpool(self):
         """
@@ -5387,7 +5338,6 @@ class OP2Reader:
         Record 13 - RADMTX(3014,30,244)
         """
         #print('-------------------------------------')
-
         op2 = self.op2
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         utable_name = table_name.decode('utf-8')
@@ -7935,3 +7885,37 @@ def reshape_trmbd(element_name: str, nnodes: int, int_data, float_data):
     int_data = int_data.reshape(n_elements, ndata_per_element)
     float_data = float_data.reshape(n_elements, ndata_per_element)
     return n_elements, int_data, float_data
+
+def _get_matrix_row_fmt_nterms_nfloats(nvalues: int, tout: int,
+                                       endian: bytes) -> tuple[bytes, int, int]:
+    """
+    +------+---------------------------+
+    | Type | Meaning                   |
+    +------+---------------------------+
+    |  1   | Real, single precision    |
+    |  2   | Real, double precision    |
+    |  3   | Complex, single precision |
+    |  4   | Complex, double precision |
+    +------+---------------------------+
+
+    """
+    if tout == 1:
+        nfloats = nvalues
+        nterms = nvalues
+        fmt = endian + b'i %if' % nfloats
+    elif tout == 2:
+        nfloats = nvalues // 2
+        nterms = nvalues // 2
+        fmt = endian + b'i %id' % nfloats
+    elif tout == 3:
+        nfloats = nvalues
+        nterms = nvalues // 2
+        fmt = endian + b'i %if' % nfloats
+    elif tout == 4:
+        nfloats = nvalues // 2
+        nterms = nvalues // 4
+        fmt = endian + b'i %id' % nfloats
+    else:
+        raise RuntimeError(f'tout = {tout}')
+    return fmt, nfloats, nterms
+
