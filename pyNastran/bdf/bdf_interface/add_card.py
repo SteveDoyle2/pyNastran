@@ -132,7 +132,7 @@ from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPR
 from pyNastran.bdf.cards.dmig import (
     DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI,
     DMIG_UACCEL, DTI, DTI_UNITS,
-    dtype_to_tin_tout, REVERSE_DMI_MAP)
+    dtype_to_tin_tout_str, REVERSE_DMI_MAP)
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                TEMPRB, QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -8543,10 +8543,10 @@ class AddCards:
         ..warning :: only supports square matrices for the moment
         """
         if tin is None:
-            tin = dtype_to_tin_tout(myarray)
+            tin = dtype_to_tin_tout_str(myarray)
 
         if tout is None:
-            tout = dtype_to_tin_tout(myarray)
+            tout = dtype_to_tin_tout_str(myarray)
 
         nrows, ncols = myarray.shape
 

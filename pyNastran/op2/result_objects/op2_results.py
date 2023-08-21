@@ -25,6 +25,7 @@ class Results:
 
         self.separation_initial = {}
         self.separation_final = {}
+        self.slide_contact = {}
 
         self.psds = PSDObjects()
         self.ato = AutoCorrelationObjects()
@@ -101,7 +102,7 @@ class Results:
         }
         return sum_objs
 
-    def _get_sum_objects(self):
+    def _get_sum_objects(self) -> list[Any]:
         sum_objs = [
             self.acoustic,
             self.responses,
@@ -123,7 +124,7 @@ class Results:
         """gets only the objects that are do not contain sub-objects"""
         base_names = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
-            'separation_initial', 'separation_final',
+            'separation_initial', 'separation_final', 'slide_contact',
             'superelement_tables',
         ]
         base_objs_map = {}
@@ -133,11 +134,11 @@ class Results:
                 base_objs_map[base_name] = obj
         return base_objs_map
 
-    def get_table_types(self):
+    def get_table_types(self) -> list[str]:
         """combines all the table_types from all objects and sub-objects"""
         base = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
-            'separation_initial', 'separation_final',
+            'separation_initial', 'separation_final', 'slide_contact',
             'superelement_tables',
         ]
         sum_objs = self._get_sum_objects()

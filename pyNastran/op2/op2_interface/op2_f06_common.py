@@ -1375,7 +1375,8 @@ def _get_op2_stats(model: OP2, short=False):
             assert isinstance(msgi, str), msgi
         raise
 
-def _get_op2_stats_short(model: OP2, table_types: list[str], log) -> list[str]:
+def _get_op2_stats_short(model: OP2, table_types: list[str],
+                         log: SimpleLogger) -> list[str]:
     """helper for get_op2_stats(...)"""
     msg = []
     handled_previously = ['params', 'grid_point_weight', 'psds']
@@ -1432,7 +1433,8 @@ def _get_op2_stats_short(model: OP2, table_types: list[str], log) -> list[str]:
                 #raise RuntimeError(msgi)
     return msg
 
-def _get_op2_results_stats_dict(obj: dict[Any, Any], table_type: str, short: bool) -> list[str]:
+def _get_op2_results_stats_dict(obj: dict[Any, Any],
+                                table_type: str, short: bool) -> list[str]:
     msg = []
     for key, obji in obj.items():
         if isinstance(obji, list):
@@ -1444,7 +1446,8 @@ def _get_op2_results_stats_dict(obj: dict[Any, Any], table_type: str, short: boo
             msg.extend(f'op2_results.{table_type}[{key}]: ' + stats)
     return msg
 
-def _get_op2_stats_full(model: OP2, table_types: list[str], log: SimpleLogger) -> list[str]:
+def _get_op2_stats_full(model: OP2, table_types: list[str],
+                        log: SimpleLogger) -> list[str]:
     """helper for get_op2_stats(...)"""
     msg = []
     handled_previously = ['params', 'grid_point_weight', 'psds']
@@ -1495,7 +1498,7 @@ def _get_op2_stats_full(model: OP2, table_types: list[str], log: SimpleLogger) -
             raise
     return msg
 
-def _write_params(params):
+def _write_params(params: dict[str, Any]):
     """helper for get_op2_stats(...)"""
     if not params:
         return []

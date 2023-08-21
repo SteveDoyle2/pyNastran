@@ -655,6 +655,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_oug = self._op2_readers.reader_oug
         reader_ougpk = self._op2_readers.reader_ougpk
         reader_otemp = self._op2_readers.reader_otemp
+        reader_oslide = self._op2_readers.reader_oslide
 
         # oef
         reader_oef = self._op2_readers.reader_oef
@@ -965,7 +966,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OUGV2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set displacements in nodal frame'],  # displacements in nodal frame
             b'ROUGV2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set relative U in CD frame'],  # relative OUG
             b'OUXY2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'h/d-set displacements'],  # Displacements in SORT2 format for h-set or d-set.
-            b'OUG1S'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'structural eigenvectors'],  # Displacements in SORT2 format for h-set or d-set.
+            b'OUG1S'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'structural eigenvectors'],  # Displacements in SORT2 format for h-set or d-set.
 
             #  scaled response spectra - ABS / NRL / SRSS
             b'OUPV1' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'ABS/NRL/SRSS displacement/velocity/acceleration'],    # displacement, velocity, acceleration
@@ -1236,7 +1237,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #OSMPF2E Table of structure mode participation factors by excitation frequencies.
 
             # NX contact
-            b'OSLIDE1': [self._table_passer, self._table_passer, 'NX 2019.2 Incremental and total slide/slip distance'],
+            b'OSLIDE1': [reader_oslide.read_sort1_3, reader_oslide.read_4, 'NX 2019.2 Incremental and total slide/slip distance'],
             b'OCONST1' : [self._table_passer, self._table_passer, 'NX2019.2 Contact status in SORT1 format'],
             b'OSLIDEG1' : [self._table_passer, self._table_passer, 'NX2019.2 Glue slide distance output'],
             b'OBCKL' : [self._table_passer, self._table_passer, 'NX2019.2 Table of load factor vs. cumulative arc-length in SORT2 format'],
@@ -1847,6 +1848,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if self.table_name not in GEOM_TABLES and self.isubtable > -4:
             desc = self.op2_reader.desc_map[self.table_name]
             self.log.warning(f'    skipping {self.table_name_str:<8} ({desc})')
+            raise NotImplementedError(self.table_name)
         if not is_release and self.isubtable > -4:
             if self.table_name in GEOM_TABLES and not self.make_geom:
                 pass
