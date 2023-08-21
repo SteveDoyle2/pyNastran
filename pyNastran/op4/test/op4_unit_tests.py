@@ -42,6 +42,7 @@ class TestOP4(unittest.TestCase):
                     #print(data.toarray())
                     assert isinstance(data, coo_matrix), type(data)
                     #print(data)
+                matrix.write_dmi()
 
     def test_op4_ascii(self):
         fnames = [
@@ -62,6 +63,7 @@ class TestOP4(unittest.TestCase):
                     pass
                     #print(data.toarray())
                     #print(data)
+                matrix.write_dmi()
 
     def test_eye10(self):
         """tests the EYE10 matrices"""
@@ -84,6 +86,7 @@ class TestOP4(unittest.TestCase):
             else: # real
                 eye_matrix = eye(10)
                 self.assertTrue(array_equal(mat, eye_matrix))
+            A.write_dmi()
 
     def test_eye5cd(self):
         """tests the EYE5CD matrices"""
@@ -106,6 +109,7 @@ class TestOP4(unittest.TestCase):
             else: # real
                 eye_matrix = -eye(5) + 1j * eye(5)
                 self.assertTrue(array_equal(mat, eye_matrix))
+            A.write_dmi()
 
     def test_null(self):
         """tests the NULL matrices"""
@@ -119,6 +123,7 @@ class TestOP4(unittest.TestCase):
             op4_filename = os.path.join(OP4_PATH, fname)
             matrices = read_op4(op4_filename, debug=False)
             amat = matrices['NULL']
+            amat.write_dmi()
             form = amat.form
             mat = amat.data
             self.assertEqual(form, 6)  # form=6 -> Symmetric

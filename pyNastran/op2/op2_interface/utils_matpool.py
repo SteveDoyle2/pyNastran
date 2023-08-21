@@ -1352,7 +1352,7 @@ def _cast_matrix_matpool(table_name: str,
             matrix = lower_tri + lower_tri.T - diagi
         elif unnz > 0:
             #  upper triangle is populated
-            matrix = upper_tri + upper_tri_t - diagi
+            matrix = upper_tri + upper_tri.T - diagi
         else:
             # matrix is diagonal (or null)
             matrix = diagi
@@ -1365,6 +1365,9 @@ def _cast_matrix_matpool(table_name: str,
     m.set_matpool_data(matrix,
                        col_nids_array, col_dofs_array,
                        row_nids_array, row_dofs_array)
+    #if make_matrix_symmetric:
+        #m.symmetric_to_rectangular()
+
     #m.form = matrix_shape
     #print(m)
     log.debug(str(m))
