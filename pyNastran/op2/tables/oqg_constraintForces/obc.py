@@ -10,20 +10,13 @@ This file defines the OUG Table, which contains:
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
-from pyNastran.op2.tables.oug.oug import get_shock_prefix_postfix
 from pyNastran.op2.tables.oqg_constraintForces.separation_distance import (
     SeparationDistanceArray)
-from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import (
-    RealSPCForcesArray, ComplexSPCForcesArray,)
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import (
-    RealMPCForcesArray, ComplexMPCForcesArray,)
-from pyNastran.op2.tables.oqg_constraintForces.oqg_contact_forces import RealContactForcesArray
-from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import (
-    RealTemperatureGradientAndFluxArray)
+#from pyNastran.op2.tables.oqg_constraintForces.oqg_contact_forces import RealContactForcesArray
 from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -192,7 +185,6 @@ class OBC:
                    #1.3970945689318426e-42, 1088602.75, 0.0, 0.0, 3369.947021484375,
                    #1.4111075535750908e-42, 1044905.9375, 0.0, 0.0, 15922.9609375)
         dt = op2.nonlinear_factor
-        from struct import Struct
         struct1 = Struct(mapfmt(op2._endian + b'i fff f', self.size))
 
         is_vectorized = False

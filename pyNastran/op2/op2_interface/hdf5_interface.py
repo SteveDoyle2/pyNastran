@@ -26,6 +26,7 @@ from pyNastran.op2.tables.oug.oug_accelerations import RealAccelerationArray, Co
 from pyNastran.op2.tables.oug.oug_eigenvectors import RealEigenvectorArray, ComplexEigenvectorArray
 from pyNastran.op2.tables.oug.oug_temperatures import RealTemperatureArray
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealThermalVelocityVectorArray
+from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
 
 
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
@@ -1053,6 +1054,7 @@ TABLE_OBJ_MAP = {
     'temperatures' : (RealTemperatureArray, ),
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),
     'thermal_load_vectors' : (RealTemperatureVectorArray, ),
+    'contact_tractions_and_pressure': (RealContactTractionAndPressureArray, ),
 }
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
