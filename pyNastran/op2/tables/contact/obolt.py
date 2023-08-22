@@ -401,12 +401,22 @@ class OBOLT:
             #reals = floats[:, [0, 1, 2]]
             #imags = floats[:, [3, 4, 5]]
         elif op2.num_wide == 5:
+            # B O L T   R E S U L T S
+            # BOLT ID =              100
+            # ELEMENT ID    AXIAL FORCE    SHEAR FORCE-1    BENDING MOMENT-1    AXIAL PRELOAD STRAIN
+            #    1        1.044593E+05    5.084193E+02      0.000000E+00          0.000000E+00
+
             #NUMWDE = 5 2D plane stress elements
             #2 AX RS Axial force in bolt coordinate system
             #3 SHR1 RS Shear force 1 in bolt coordinate system
             #4 BEN1 RS Bending moment 1 in bolt coordinate system
             #5 STRN RS Bolt axial initial strain in bolt coordinate system
-            raise RuntimeError(op2.code_information())
+            if data is None:
+                return ndata
+            ints = np.frombuffer(data, dtype=op2.idtype8)
+            nints = len(ints)
+            ints = ints.reshape(nints//5, 5)
+            floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nints//5, 5)
         else:
             raise RuntimeError(op2.code_information())
         #raise NotImplementedError(op2.code_information())
