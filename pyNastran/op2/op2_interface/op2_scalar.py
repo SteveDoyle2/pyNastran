@@ -649,6 +649,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_opg = self._op2_readers.reader_opg
         reader_opr = self._op2_readers.reader_opr
         reader_oqg = self._op2_readers.reader_oqg
+        reader_obc = self._op2_readers.reader_obc
         reader_ogs = self._op2_readers.reader_ogs
 
         # oug
@@ -1016,6 +1017,10 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OES1MX' : [self._table_passer, self._table_passer, 'extreme values of stress'],
 
             #=======================
+
+            b'OBC1': (reader_obc.read_sort1_3, reader_obc.read_4, 'Contact pressures and tractions at grid points'),
+            b'OBG1': (reader_obc.read_sort1_3, reader_obc.read_4, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
+
             # contact
             b'OQGCF1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'contact force at grid point'], # Contact force at grid point.
             b'OQGCF2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'contact force at grid point'], # Contact force at grid point.
@@ -1027,7 +1032,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OSPDSI2' : [self._nx_table_passer, self._table_passer, 'contact separation distance'], # Output contact separation distance results.
 
             #b'OBC1' : [self._read_obc1_3, self._read_obc1_4],
-            b'OBC1' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'],
+            b'OBC1' : [reader_obc.read_sort1_3, reader_obc.read_4, 'Contact pressures and tractions at grid points'],
             b'OBC2' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'], # Contact pressures and tractions at grid points.
 
             b'OCPSDF':   [self._table_passer, self._table_passer, 'Output table of cross-PSD functions'],

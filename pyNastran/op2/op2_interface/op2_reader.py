@@ -240,8 +240,8 @@ class OP2Reader:
 
             b'MATPOOL' : (self._read_matrix_matpool, 'matrices'),
 
-            b'OBC1': (self.read_obc1, 'Contact pressures and tractions at grid points'),
-            b'OBG1': (self.read_obc1, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
+            #b'OBC1': (self.read_obc1, 'Contact pressures and tractions at grid points'),
+            #b'OBG1': (self.read_obc1, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
             b'PTMIC' : (self._read_ptmic, 'property of VATV microphone points'),
 
             # OVG: Table of aeroelastic x-y plot data for V-g or V-f curves
@@ -2126,7 +2126,7 @@ class OP2Reader:
                 data = self._read_record() # 584
                 ndata = len(data)
                 #print('ndata A =', ndata)
-                op2._op2_readers.reader_oqg._read_obc1_3(data, ndata)
+                op2._op2_readers.reader_obc.read_sort1_3(data, ndata)
                 #print('---------------')
 
                 self.read_3_markers([itable, 1, 0])  # -4

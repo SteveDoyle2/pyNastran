@@ -445,7 +445,8 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         format_code = 1
         num_wide = self.num_wide
         acoustic_flag = self.acoustic_flag if hasattr(self, 'acoustic_flag') else 0
-        thermal = self.thermal
+        #thermal = self.thermal
+        thermal = 0
         title = b'%-128s' % self.title.encode('ascii')
         subtitle = b'%-128s' % self.subtitle.encode('ascii')  # missing superelement_adaptivity_index
         label = b'%-128s' % self.label.encode('ascii')
@@ -693,6 +694,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
             'OCRPG', 'OCRUG', 'OUG1',
             'OUGV1PAT',
             'RADCONS', 'RADEATC', 'RADEFFM',
+            'OBC1',
         ]
         assert self.table_name in allowed_tables, self.table_name
 
