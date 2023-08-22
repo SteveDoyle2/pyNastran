@@ -1494,7 +1494,9 @@ def _read_h5_matrix(h5_file, model, key,
                 #(real_imag, (GCi, GCj)),
                 #shape=(mrows, ncols), dtype=dtype)
 
-            skip_keys = ['name', 'form', 'is_matpool', 'shape_str', 'dtype_str']
+            #'is_matpool',
+            skip_keys = ['name', 'shape_str', 'dtype_str', 'Real', 'Complex', 'GCi', 'GCj', 'GCi_GCj',
+                         'is_real', 'is_complex', 'is_dense', 'is_sparse', 'shape', 'tin']
             for keyi in h5_matrix.keys():
                 if keyi in skip_keys:
                     continue
