@@ -567,6 +567,7 @@ class OP2Reader:
         # (101, 17, 0, 0, 0, 0, 0) # modes_elements_dmig.op2
         data = self._read_record()
         values = np.frombuffer(data, dtype=op2.idtype8)
+        self.log.debug(f'xsop2dir: header_values = {values}')
         ntables = values[1]
         #assert ntables == 7, values
 
@@ -583,7 +584,6 @@ class OP2Reader:
             struct_8s = Struct(self._endian + b'8s')
             struct_16s = Struct(self._endian + b'16s')
             for unused_i in range(ntables + 1):
-            #while marker != 0:
                 itable -= 1
                 data, ndata = self._read_record_ndata()
                 if ndata == 8:
@@ -601,7 +601,6 @@ class OP2Reader:
         else:
             struct_16s = Struct(self._endian + b'16s')
             for unused_i in range(ntables + 1):
-            #while marker != 0:
                 itable -= 1
                 data = self._read_record()
                 name = struct_16s.unpack(data)[0]
@@ -2522,11 +2521,88 @@ class OP2Reader:
         EXTDB     MUG1B     Displacement OTM matrix in basic coordinates system.
 
         https://help.hexagonmi.com/bundle/MSC_Nastran_2022.2/page/Nastran_Combined_Book/Superelements_User_s_Guide/superOTM/TOC.OUTPUT2.Files.xhtml
+
+        DB_name   op2_name  Description
+        XSOP2DIR  XSOP2DIR  Table of contents of the op2 file (always the first datablock to appear).
+        GEOM1X    GEOM1X    GRID point geometry.
+        GEOM2X    GEOM2X    SPOINTs.
+        GEOM4X    GEOM4X    ASET/ASET1 and QSET/QSET1 entries.
+
+        For AVL EXB output
+        EXTDB  LAMAAVP  Eigenvalue table for AVL POST.
+        EXTDB  MATAPH   Eigenvectors for AVL POST.
+        EXTDB  MATAEK   Diagonal matrix of eigenvalues for AVL POST.
+        EXTDB  MATAM0   Generalized mass for AVL POST.
+
+        For Adams MNF output
+        EXTDB  MATAKA   Boundary stiffness matrix in basic coordinates (Adams POST).
+        EXTDB  MATPH2   Eigenvectors in basic coordinates (Adams POST).
+        EXTDB  MATAMA   Boundary mass matrix in basic coordinates with WTMASS removed (Adams POST).
+        EXTDB  MATK     Boundary stiffness.
+        EXTDB  MATM     Boundary mass.
+        EXTDB  MATB     Boundary viscous damping.
+        EXTDB  MATK4    Boundary structural damping.
+        EXTDB  MATP     Boundary loads.
+        EXTDB  MATV     Boundary fluid-structure partitioning vector.
+        EXTDB  MATGP    Aerodynamic transformation matrix for loads.
+        EXTDB  MATGD    Aerodynamic transformation matrix for displacements.
+        EXTDB  MATRGA   Unit transformation from boundary to interior DOF.
+        EXTDB  MATVAFS  Fluid-structure partitioning vector.
+        EXTDB  MATA     Partitioned acoustic coupling.
+        EXTDB  MATRV    Residual vector partitioning vector.
+        EXTDB  MATPC    Access points.
+        EXTDB  MATKSM   Aerodynamic generalized stiffness.
+        EXTDB  MATMSM   Aerodynamic generalized mass.
+
+        For rotors
+        NAMELIST  NAMELIST  List of rotors.
+        MTRXNAME  MTRXNAME  Rotor matrices defined in NAMELIST.
+
+        #-----------------
+        DB_name  op2_name  Description
+        EXTDB  TUG1     Displacement OTM table.
+        EXTDB  MUG1     Displacement OTM matrix.
+        EXTDB  MUG1O    Displacement OTM for loaded interior DOF.
+        EXTDB  TQG1     SPCFORCE OTM table.
+        EXTDB  MKQG1    SPCFORCE stiffness contribution OTM.
+        EXTDB  MBQG1    SPCFORCE viscous damping contribution OTM.
+        EXTDB  MMQG1    SPCFORCE mass contribution OTM.
+        EXTDB  MK4QG1   SPCFORCE structural damping contribution OTM.
+        EXTDB  MKQG1O   SPCFORCE stiffness contribution OTM for loaded interior DOF.
+        EXTDB  TELAF1   Elastic element force OTM table.
+        EXTDB  MELAF1   Elastic element force OTM matrix.
+        EXTDB  TES1     Stress OTM table.
+        EXTDB  MES1     Stress OTM matrix.
+        EXTDB  MES1O    Stress OTM matrix for loaded interior DOF.
+        EXTDB  TEF1     Force OTM table.
+        EXTDB  MEF1     Force OTM matrix.
+        EXTDB  MEF1O    Force OTM matrix for loaded interior DOF.
+        EXTDB  MUG1B    Displacement OTM matrix in basic coordinates system.
+        EXTDB  MUG1OB   Displacement OTM matrix in basic coordinates system for loaded interior DOF.
+        EXTDB  TEE1     Strain OTM table.
+        EXTDB  MEE1     Strain OTM matrix.
+        EXTDB  MEE1O    Strain OTM matrix for loaded interior DOF.
+        EXTDB  TQMG1    MPCFORCE OTM table.
+        EXTDB  MKQMG1   MPCFORCE stiffness contribution OTM.
+        EXTDB  MBQMG1   MPCFORCE viscous damping contribution OTM.
+        EXTDB  MMQMG1   MPCFORCE mass contribution OTM.
+        EXTDB  MK4QMG1  MPCFORCE structural damping contribution OTM.
+        EXTDB  MKQMG1O  MPCFORCE stiffness contribution OTM for loaded interior DOF.
+
+        Some matrices are also named with pseudo-degree-of-freedom set names.
+        W – The set omitted after auto-omit (a-set combines x-set and w-set)
+        X – The set retained after auto-omit (complement of w-set)
+        J – Superelement interior degrees-of-freedom; for example, KJJ and PJ
+        H – Modal degrees-of-freedom; for example, PHDH, MHH, PHF and UHF
         """
-        otm_tables   = ['TUG1',          'TEF1', 'TES1']
-        otm_matrices = ['MUG1', 'MUG1B', 'MEF1', 'MES1']
+        # gotta read the tables at the beginning because we need to flag the tables?
+        read_mode = 1
+
+        #otm_tables   = ['TUG1',          'TEF1', 'TES1']
+        #otm_matrices = ['MUG1', 'MUG1B', 'MEF1', 'MES1']
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
         op2 = self.op2
+        log = op2.log
         op2.table_name = self._read_table_name(rewind=False)
         #self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
@@ -2534,7 +2610,9 @@ class OP2Reader:
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
-        unused_data = self._read_record()
+
+        #(101, 1, 0, 8, 0, 0, 0)
+        data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
@@ -2542,8 +2620,8 @@ class OP2Reader:
 
         self.read_3_markers([-2, 1, 0])
         marker = -3
-        if self.read_mode == 1 or op2.make_geom is False:
-            if self.read_mode == 1 and op2.make_geom is False:
+        if self.read_mode == read_mode or op2.make_geom is False:
+            if self.read_mode == read_mode and op2.make_geom is False:
                 self.log.warning('reading the EXTRN tables requires the read_op2_geom')
             data = self._skip_record()
             while 1:
@@ -2562,58 +2640,64 @@ class OP2Reader:
 
         # drop XSOP2DIR and PVT0
         iextdb = op2.table_count[b'EXTDB'] + 0
+
+        log.debug('-'*80)
         xsop2dir_name = self.xsop2dir_names[iextdb]
         if self.read_mode == 2:
             data, ndata = self._read_record_ndata()
+            #op2.show_data(data, types='ifsqd', endian=None, force=False)
+
             name = ''
             name1 = ''
-            name2 = ''
-            if self.size == 4:
-                if ndata == 8:
-                    #self.show_data(data, types='ifs', endian=None)
+            dtype_str = ''
+            nfields = ndata // self.size
+            assert ndata % self.size == 0
+
+            assert self.size in {4, 8}, self.size
+            if nfields == 2:
+                if self.size == 4:
                     name, = Struct(self._endian + b'8s').unpack(data)
                     name = name.decode('latin1').rstrip()
-                    self.log.info(f'A: name={name!r} -> {xsop2dir_name!r}')
-                    #print(name, 8)
-                elif ndata == 16:
-                    name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
-                    name = name.decode('latin1').rstrip()
-                    #name = name.decode(self._encoding)
-                    #print(name, int1, int2, 16)
-                    self.log.info(f'B: name={name!r} -> {xsop2dir_name!r} int1={int1} int2={int2}')
-                elif ndata == 28:
-                    #self.show_data(data)
-                    name1, int1, name2, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
-                    name1 = name1.decode('latin1').rstrip()
-                    name2 = name2.decode('latin1').rstrip()
-                    self.log.info(f'C DMI: name1={name1!r} -> {xsop2dir_name!r} int1={int1} name2={name2!r} int2={int2}')
-                    # m.add_dmi(name, form, tin, tout, nrows, ncols, GCj, GCi, Real, Complex=None, comment='')
-                    #print(name1, int1, name2, int2, 28)
                 else:
-                    self.show_data(data, types='ifs')
-                    raise NotImplementedError(ndata)
-
-            else:
-                if ndata == 16:
                     name, = Struct(self._endian + b'16s').unpack(data)
                     name = reshape_bytes_block(name).decode('latin1').strip()
-                    self.log.info(f'A: name={name!r} -> {xsop2dir_name}')
-                elif ndata == 32:
+                self.log.info(f'{marker} A: name={name!r} -> {xsop2dir_name!r}')
+                assert name in {'GEOM1', 'GEOM4', 'EXTDB'}, name
+            elif nfields == 4:
+                if self.size == 4:
+                    name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
+                    name = name.decode('latin1').rstrip()
+                else:
                     name, int1, int2 = Struct(self._endian + b'16s 2q').unpack(data)
                     name = reshape_bytes_block(name).decode('latin1').strip()
-                    self.log.info(f'B: name={name!r} -> {xsop2dir_name} int1={int1} int2={int2}')
-                elif ndata == 56:
-                    # (PHIP, 7, REAL, 1)
-                    #self.show_data(data, types='ifsdq')
-                    name1, int1, name2, int2 = Struct(self._endian + b'16s q 24s q').unpack(data)
-                    name1 = reshape_bytes_block(name1).decode('latin1').strip()
-                    name2 = reshape_bytes_block(name2).decode('latin1').strip()
-                    self.log.info(f'C: name1={name1!r} -> {xsop2dir_name} int1={int1} name2={name2!r} int2={int2}')
+                self.log.info(f'{marker}: B: name={name!r} -> {xsop2dir_name!r} int1={int1} int2={int2}')
+            elif nfields == 7:
+                # (PHIP, 7, REAL, 1)
+                if self.size == 4:
+                    name1, int1, dtype_bytes, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
+                    name1 = name1.decode('latin1').rstrip()
+                    dtype_str = dtype_bytes.decode('latin1').rstrip()
                 else:
-                    self.show_data(data, types='ifsdq')
-                    raise NotImplementedError(ndata)
+                    #self.show_data(data, types='ifsdq')
+                    name1, int1, dtype_bytes, int2 = Struct(self._endian + b'16s q 24s q').unpack(data)
+                    name1 = reshape_bytes_block(name1).decode('latin1').strip()
+                    dtype_str = reshape_bytes_block(dtype_bytes).decode('latin1').strip()
+
+                #DTI         TUG1       0
+                #            PHIP       ?       7    ?          ?    REAL       1  ENDREC
+                #DTI         TUG1       0     696     606   32767       0       7       0
+                #            PHIP   32767       7   32767   32767    REAL       1  ENDREC
+                op2.add_dti(xsop2dir_name, {0: ['?', '?', 32767, 0, int1, 0,
+                                                name1, 32767, int1, 32767, 32767, dtype_str, int2, 'ENDREC',]})
+                # m.add_dmi(name, form, tin, tout, nrows, ncols, GCj, GCi, Real, Complex=None, comment='')
+                #print(name1, int1, name2, int2, 28)
+
+                self.log.info(f'{marker}: C DTI: name1={name1!r} -> {xsop2dir_name!r} int1={int1} dtype_str={dtype_str!r} int2={int2}')
 
         #self.show(200)
+
+        ints_ = []
+        doubles_ = []
         while 1:
             #print('====================')
             #print(f'***reading {marker}')
@@ -2631,15 +2715,26 @@ class OP2Reader:
                 nfields1 = self.read_markers([1])
 
                 nfields_test = self.get_marker1(rewind=True)
-                while nfields_test > 0:
+
+                #out=(1, 1.0) nblock=16
+                #out=(2, 1.0) nblock=16
+                #...
+                #out=(606, 1.0) nblock=16
+                itest = 0
+                while nfields_test > 0:  # nfields_test == 1
                     nfields = self.get_marker1(rewind=False)
                     block = self._read_block()
                     nblock = len(block)
                     ndouble = (nblock - 4) // 8
-                    fmt = mapfmt(self._endian + b'i%dd' % (ndouble), self.size)
+                    fmt = mapfmt(self._endian + b'i%dd' % ndouble, self.size)
                     out = Struct(fmt).unpack(block)
-                    #print(out, nblock)
+                    #print(f'out={out}')
                     nfields_test = self.get_marker1(rewind=True)
+                    ints_.append(out[0])
+                    doubles_.append(out[1])
+                    itest += 1
+                #log.debug(f'itest={itest}')
+
                 #print('-------')
                 #print(f'end of marker={marker}')
                 marker -= 1
@@ -2648,6 +2743,14 @@ class OP2Reader:
             else:
                 raise RuntimeError('EXTDB error')
 
+            #if self.read_mode == 2:
+            if len(ints_):
+                ints = np.array(ints_, dtype='int32')
+                doubles = np.array(doubles_, dtype='float64')
+                print(len(ints), ints, doubles)
+                #del ints_, doubles_
+
+
             #op2.show_ndata(100)
             nfields = self.get_marker1(rewind=True)
             #print('nfields =', nfields)
@@ -2655,67 +2758,65 @@ class OP2Reader:
                 #if self.read_mode == 2:
                     #self.log.warning('breaking...')
                 #self.show(200)
+                #log.debug(f'ints={ints_} doubles={doubles_}')
                 break
+            #log.debug(f'ints={ints_} doubles={doubles_}')
             # ----------------------------------------------------------------------
 
             data, ndata = self._read_record_ndata()
             if self.read_mode == 2:
-                if name not in ['GEOM1', 'GEOM2', 'GEOM2X', 'IGEOM2X', 'GEOM4', 'EXTDB']:
-                    if ndata != 12:
-                        self.log.warning(f'--B; ndata={ndata}--')
+                #if name not in ['GEOM1', 'GEOM2', 'GEOM2X', 'IGEOM2X', 'GEOM4', 'EXTDB']:
+                    #if ndata != 12:
+                        #self.log.warning(f'--B; ndata={ndata}--')
+
+                if len(name):
+                    log.info(f'name = {name!r} size={self.size}')
+                nfields = ndata // self.size
+                assert ndata % self.size == 0
 
                 if self.size == 4:
-                    if ndata == 12:
-                        name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
-                        # b'\xff\xff\x00\x00' 65535 25535 12 ???
-                        #print(name, int1, int2, 12)
-                        #self.show_data(data)
-
-                    elif name == 'GEOM1':
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom1.geom1_map)
-                    elif name in ['GEOM2', 'GEOM2X', 'IGEOM2X']:
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom2.geom2_map)
-
-                    elif name == 'GEOM4':
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom4.geom4_map)
-
-                    elif name == 'EXTDB':
-                        _read_extdb_extdb(self, xsop2dir_name, data, self._endian, 'int32')
-                    elif name1 in ['TES', 'PHIP']:
-                        _read_extdb_phip(self, marker, data, self._endian, 'i', op2.idtype8)
-                    elif name1 in ['TQP', 'TEF']:
-                        _read_extdb_phip(self, marker, data, self._endian, 'i', op2.idtype8)
-                    else:
-                        raise NotImplementedError(f'EXTDB; name={name!r} name1={name1!r} name2={name2!r}')
+                    numpy_idtype = 'int32'
+                    struct_idtype = 'i'
                 else:
-                    if ndata == 24:
+                    numpy_idtype = 'int64'
+                    struct_idtype = 'q'
+
+                if nfields == 3:
+                    if self.size == 4:
+                        self.show_data(data, types='ifs', endian=None, force=False)
+                        name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
+                        raise RuntimeError(name, int1, int2)
+                        sss
+                    else:
                         ints = Struct(self._endian + b'3q').unpack(data)
                         assert ints == (65535, 65535, 65535), ints
-                    elif name == 'GEOM1':
-                        # _read_extdb_geom1(self, data, self._endian)
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom1.geom1_map)
-                    elif name in ['GEOM2', 'IGEOM2X']:
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom2.geom2_map)
-                    elif name == 'GEOM4':
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom4.geom4_map)
-
-                    elif name == 'EXTDB':
-                        _read_extdb_extdb(self, xsop2dir_name, data, self._endian, 'int64')
-                    elif name1 == 'PHIP':
-                        _read_extdb_phip(self, marker, data, self._endian, 'q', op2.idtype8)
-                    elif name1 == 'TES':
-                        _read_extdb_phip(self, marker, data, self._endian, 'q', op2.idtype8)
-
-                    else:
-                        self.log.warning(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
-                        raise RuntimeError(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
-                        #self.show_data(data, types='sqd')
+                elif name == 'GEOM1':
+                    _read_extdb_geomx(self, data, self._endian, op2.reader_geom1.geom1_map)
+                elif name in ['GEOM2', 'GEOM2X', 'IGEOM2X']:
+                    _read_extdb_geomx(self, data, self._endian, op2.reader_geom2.geom2_map)
+                elif name == 'GEOM4':
+                    _read_extdb_geomx(self, data, self._endian, op2.reader_geom4.geom4_map)
+                elif name == 'EXTDB':
+                    _read_extdb_extdb(self, xsop2dir_name, data, self._endian, numpy_idtype)
+                elif name1 == 'PHIP':
+                    _read_extdb_phip(self, xsop2dir_name, name1, marker, data, self._endian, struct_idtype, op2.idtype8)
+                elif name1 == 'TES':
+                    _read_extdb_phip(self, xsop2dir_name, name1, marker, data, self._endian, struct_idtype, op2.idtype8)
+                elif name1 == 'TEF':
+                    _read_extdb_phip(self, xsop2dir_name, name1, marker, data, self._endian, struct_idtype, op2.idtype8)
+                elif name1 == 'TQP':
+                    _read_extdb_phip(self, xsop2dir_name, name1, marker, data, self._endian, struct_idtype, op2.idtype8)
+                else:
+                    #self.show_data(data, types='sqd')
+                    self.log.warning(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
+                    raise RuntimeError(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
             marker -= 1
             #print('--------------------')
         unused_marker_end = self.get_marker1(rewind=False)
         #aa
         #if self.read_mode == 2:
             #self.log.warning('returning...')
+        log.debug('-'*80)
         return
 
     def read_descyc(self):
@@ -4210,16 +4311,16 @@ class OP2Reader:
                 # 4 VALS(NVAL) RS list of values
                 # Words 1–4 repeat for NCRV curves. For DATTYP≠1, NVAL and NCRV=0
 
-                dict_map = {
-                    1: 'RPM',
-                    2: 'eigenfreq',
-                    3: 'Lehr',
-                    4: 'real eig',
-                    5: 'imag eig',
-                    6: 'whirl_dir',
-                    7: 'converted_freq',
-                    8: 'whirl_code',
-                }
+                #dict_map = {
+                    #1: 'RPM',
+                    #2: 'eigenfreq',
+                    #3: 'Lehr',
+                    #4: 'real eig',
+                    #5: 'imag eig',
+                    #6: 'whirl_dir',
+                    #7: 'converted_freq',
+                    #8: 'whirl_code',
+                #}
                 i = 0
                 data_out = {}
                 while i < nints:

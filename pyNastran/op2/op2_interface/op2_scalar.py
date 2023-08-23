@@ -419,6 +419,8 @@ STR_PARAMS_1 = SATK_STR_PARAMS1 | {
     # TODO: add an option for custom PARAMs
     b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', b'DEBUG',
     b'AEDBX', b'AERO', b'AUTOSUP0', b'AXIOPT',
+
+    b'GPACAO',
 }
 def _check_unique_sets(*sets: list[set[str]]):
     """verifies that the sets are unique"""
@@ -1663,7 +1665,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             ndata2 = self._read_pvto_4_helper(data, ndata)
         except (NotImplementedError, AssertionError) as error:
             #raise  # only for testing
-            if 'dev' in __version__ and self.IS_TESTING or 1:
+            if 'dev' in __version__ and self.IS_TESTING:
                 raise  # only for testing
             self.log.error(str(error))
             log_exc(self.log)
@@ -1704,7 +1706,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #print('*i=%s nvalues=%s' % (i, nvalues))
             istart = i*xword
             #self.show_data(data[istart:istart+32], types='sqd')
-            #self.show_data(data[istart:istart+64], types='sqd')
+            #self.show_data(data[istart:istart+64], types='sifqd')
             if self.size == 4:
                 word = data[istart:(i+2)*xword].rstrip()
             elif self.size == 8:
