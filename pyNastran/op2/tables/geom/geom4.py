@@ -4,13 +4,13 @@ defines readers for BDF objects in the OP2 GEOM4/GEOM4S table
 #pylint: disable=C0111,C0103,C1801
 from __future__ import annotations
 from struct import unpack, Struct
-from typing import TYPE_CHECKING
+from typing import Union, Type, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBE2, RBE3, RROD
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1, USET, USET1, SEQSET1,
-    OMIT1, # SEQSET
+    OMIT, OMIT1, # SEQSET
 )
 from pyNastran.op2.errors import MixedVersionCard
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
@@ -198,7 +198,8 @@ class GEOM4(GeomCommon):
         """
         return self._read_xset1(data, n, 'ASET1', ASET1, self.op2._add_methods._add_aset_object)
 
-    def _read_xset(self, data, n, card_name, cls, add_method):
+    def _read_xset(self, data: bytes, n: int, card_name: str,
+                   cls: Type[Union[ASET, BSET, CSET, QSET, OMIT]], add_method) -> int:
         """common method for ASET, QSET; not USET
 
         Word Name Type Description
@@ -206,23 +207,22 @@ class GEOM4(GeomCommon):
         2  C I Component numbers
         """
         op2 = self.op2
-        struct_2i = Struct(op2._endian + b'2i')
-        #self.show_data(data, types='ifs')
-        ntotal = 8
-        nelements = (len(data) - n) // ntotal
-        for unused_i in range(nelements):
-            edata = data[n:n + ntotal]
-            out = struct_2i.unpack(edata)
+        ints = np.frombuffer(data, dtype=op2.idtype8)[3:]
+        assert len(ints) % 2 == 0, len(ints)
+        grids = ints[::2]
+        components = ints[1::2]
+        ncards = len(grids)
+        for out in zip(grids, components):
             if op2.is_debug_file:
                 op2.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
             #(id, component) = out
             set_obj = cls.add_op2_data(out)
             add_method(set_obj)
-            n += ntotal
-            op2.increase_card_count(card_name, 1)
-        return n
+        op2.increase_card_count(card_name, ncards)
+        return len(data)
 
-    def _read_xset1(self, data, n, card_name, cls, add_method, debug=False):
+    def _read_xset1(self, data: bytes, n: int, card_name: str,
+                    cls: Type[Union[ASET1, BSET1, CSET1, QSET1, OMIT1]], add_method, debug: bool=False):
         r"""
         common method for ASET1, QSET1; not USET1
 
@@ -287,7 +287,7 @@ class GEOM4(GeomCommon):
         op2.increase_card_count(card_name, nentries)
         return ndata
 
-    def _add_superset_card(self, cls, card_name, add_method, out):
+    def _add_superset_card(self, cls, card_name: str, add_method, out):
         """helper method for ``_read_superxset1``"""
         op2 = self.op2
         #print('out =', out)
@@ -311,7 +311,7 @@ class GEOM4(GeomCommon):
             #print('out[5:] =', out[5:])
             self._add_superset_card(cls, card_name, add_method, out[5:])
 
-    def _read_superxset1(self, data, n, card_name, cls, add_method, debug=False):
+    def _read_superxset1(self, data: bytes, n: int, card_name: str, cls, add_method, debug: bool=False):
         r"""
         common method for ASET1, QSET1; not USET1
 
@@ -494,7 +494,7 @@ class GEOM4(GeomCommon):
             #'RBAR', self.op2.reader_geom3._add_op2_rigid_element)
         return n
 
-    def _read_rbar_nx_28(self, card_obj, data: bytes, n: int) -> int:
+    def _read_rbar_nx_28(self, card_obj, data: bytes, n: int) -> tuple[int, list[RBAR]]:
         """
         RBAR(6601,66,292) - Record 22 - NX version
 
@@ -514,7 +514,7 @@ class GEOM4(GeomCommon):
         ntotal = 28 * self.factor
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
-        elems = []
+        elems: list[RBAR] = []
         s = Struct(mapfmt(op2._endian + b'7i', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 8*4
@@ -523,9 +523,9 @@ class GEOM4(GeomCommon):
                 op2.binary_debug.write('  RBAR NX=%s\n' % str(out))
             (eid, unused_ga, unused_gb, unused_cna, unused_cnb, unused_cma, unused_cmb) = out
             assert eid > 0, out
-            out = list(out)
-            out.append(0.)
-            elem = RBAR.add_op2_data(out)
+            out_list = list(out)
+            out_list.append(0.)
+            elem = RBAR.add_op2_data(out_list)
             elems.append(elem)
             #if op2.is_debug_file:
                 #op2.binary_debug.write('	eid	ga	gb	cna	cnb	cma	cmb	alpha\n')
@@ -534,7 +534,7 @@ class GEOM4(GeomCommon):
         #op2.to_nx(' because RBAR-NX was found')
         return n, elems
 
-    def _read_rbar_msc_32(self, card_obj, data: bytes, n: int) -> int:
+    def _read_rbar_msc_32(self, card_obj, data: bytes, n: int) -> tuple[int, list[RBAR]]:
         """RBAR(6601,66,292) - Record 22 - MSC version"""
         op2 = self.op2
         ntotal = 32 * self.factor  # 8*4
@@ -556,7 +556,7 @@ class GEOM4(GeomCommon):
         return n, elems
 
 
-    def _read_rbar_msc_36(self, card_obj, data: bytes, n: int) -> int:
+    def _read_rbar_msc_36(self, card_obj, data: bytes, n: int) -> tuple[int, list[RBAR]]:
         """RBAR(6601,66,292) - Record 22 - MSC version
 
         datai  = (392, 757, 758, 123456, 0,   0,   123456, 0,   0)
@@ -795,7 +795,35 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_secset1(self, data: bytes, n: int) -> int:
-        self.op2.log.info('geom skipping SECSET1 in GEOM4')
+        """
+        (1010, 10, 320,
+         103, 123456, 0, 1, 101, -1)
+
+        SECSET
+        Word Name Type Description
+        1 SEID I Superelement identification number
+        2 ID I Grid or scalar point identification number
+        3 C I Component numbers
+
+        Word Name Type Description
+        1 SEID I Superelement identification number
+        2 C    I Component numbers
+        3 THRUFLAG I Thru range flag
+        THRUFLAG=0 No
+           4 ID I Grid or scalar point identification number
+           Word 4 repeats until End of Record
+        THRUFLAG=1 Yes
+           4 ID1 I First grid or scalar point identification number
+           5 ID2 I Second grid or scalar point identification number
+        End THRUFLAG
+        """
+        op2 = self.op2
+        ints = np.frombuffer(data[12:], dtype=op2.idtype8)
+        i, cards = ints_to_secset1s(ints)
+        for (seid, comp, values) in cards:
+            #print('SECSET1', seid, comp, values)
+            op2.add_secset1(seid, values, comp)
+        assert len(ints) == i, f'nints={len(ints)} i={i}'
         return len(data)
 
     def _read_seqset(self, data: bytes, n: int) -> int:
@@ -882,7 +910,7 @@ class GEOM4(GeomCommon):
 
         """
         op2 = self.op2
-        log = op2.log
+        #log = op2.log
         #log.debug('read_spc_mpc')
         ntotal = 20 * self.factor
         nentries = (len(data) - n) // ntotal
@@ -1407,8 +1435,7 @@ class GEOM4(GeomCommon):
 
 
     def _read_omit(self, data: bytes, n: int) -> int:
-        self.op2.log.info('geom skipping OMIT in GEOM4')
-        return len(data)
+        return self._read_xset(data, n, 'OMIT', OMIT, self.op2._add_methods._add_omit_object)
 
     def _read_rtrplt(self, data: bytes, n: int) -> int:
         self.op2.log.info('geom skipping RTRPLT in GEOM4')
@@ -1700,11 +1727,11 @@ def get_minus_2_index(idata) -> int:
     return i[0]
 
 def fill_rbe3_wt_comp_gijs(i: int, j: int,
-                           idata, fdata) -> tuple[int, list[float], list[int], list[int]]:
+                           idata, fdata) -> tuple[int, list[float], list[int], list[list[int]]]:
     """helper for ``read_rbe3s_from_idata_fdata``"""
-    weights = []
-    comps = []
-    grids = []
+    weights: list[float] = []
+    comps: list[int] = []
+    grids: list[list[int]] = []
 
     i2 = i + get_minus_2_index(idata[i:j])
     #print('i=%s i2=%s' % (i, i2))
@@ -1772,7 +1799,7 @@ def fill_rbe3_wt_comp_gijs(i: int, j: int,
     assert len(weights) > 0, weights
     return i, weights, comps, grids
 
-def _read_spcadd_mpcadd(model, card_name: str, datai: bytes):
+def _read_spcadd_mpcadd(model: OP2Geom, card_name: str, datai: np.ndarray) -> None:
     """
     reads a SPCADD/MPCADD card
 
@@ -1855,3 +1882,37 @@ def check_component(component: int, msg: str) -> None:
         # 8 : C:\Users\sdoyle\Dropbox\move_tpl\beamp13.op2
         # 9 : C:\Users\sdoyle\Dropbox\move_tpl\ifcq11r.op2
         assert componenti in '0123456789', msg
+
+
+
+def ints_to_secset1s(ints: np.ndarray) -> tuple[int, list[tuple[int, int, list[int]]]]:
+    iword = 1
+    i = 0
+    cards = []
+    while i < len(ints):
+        #print(i, iword)
+        if iword == 1:
+            seid = ints[i]
+        elif iword == 2:
+            comp = ints[i]
+        elif iword == 3:
+            thru_flag = ints[i]
+        elif iword == 4:
+            if thru_flag == 0:
+                value = ints[i]
+                values = []
+                while value != -1:
+                    values.append(value)
+                    value = ints[i]
+                    i += 1
+                #print('SECSET1', seid, comp, thru_flag, values)
+                cards.append((seid, comp, values))
+                iword = 0
+            else:
+                raise NotImplementedError(f'SECSET1 thru_flag={thru_flag}')
+        else:
+            raise NotImplementedError(f'SECSET1 iword={iword}')
+        i += 1
+        iword += 1
+    i -= 1
+    return i, cards

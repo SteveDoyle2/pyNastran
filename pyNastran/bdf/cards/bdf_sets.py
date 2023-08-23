@@ -510,6 +510,7 @@ class ABQSet1(Set):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """[123456      0      1    101]"""
         components = str(data[0])
         thru_flag = data[1]
         if thru_flag == 0:
@@ -839,7 +840,7 @@ class BSET1(ABQSet1):
         ABQSet1.__init__(self, ids, components, comment)
 
 
-class CSET1(Set):
+class CSET1(ABQSet1):
     """
     Defines the degree of freedoms that will be free during a
     generalized dynamic reduction or component model synthesis
@@ -891,10 +892,6 @@ class CSET1(Set):
         self.ids_ref = None
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
-        raise RuntimeError(str(data))
-
-    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CSET1 card from ``BDF.add_card(...)``
@@ -920,30 +917,30 @@ class CSET1(Set):
             id_count += 1
         return CSET1(ids, components, comment=comment)
 
-    def cross_reference(self, model: BDF) -> None:
-        """
-        Cross links the card so referenced cards can be extracted directly
+    #def cross_reference(self, model: BDF) -> None:
+        #"""
+        #Cross links the card so referenced cards can be extracted directly
 
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
+        #Parameters
+        #----------
+        #model : BDF()
+            #the BDF object
 
-        """
-        msg = ', which is required by CSET1'
-        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        #"""
+        #msg = ', which is required by CSET1'
+        #self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def uncross_reference(self) -> None:
-        """Removes cross-reference links"""
-        self.ids = self.node_ids
-        self.ids_ref = None
+    #def uncross_reference(self) -> None:
+        #"""Removes cross-reference links"""
+        #self.ids = self.node_ids
+        #self.ids_ref = None
 
-    @property
-    def node_ids(self):
-        msg = ', which is required by CSET1'
-        if self.ids_ref is None:
-            return self.ids
-        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
+    #@property
+    #def node_ids(self):
+        #msg = ', which is required by CSET1'
+        #if self.ids_ref is None:
+            #return self.ids
+        #return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""

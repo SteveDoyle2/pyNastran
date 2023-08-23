@@ -25,6 +25,19 @@ SMALL_FIELD_PARAMS = [
 
 
 # per NX 11 QRG
+temperatures = ['', '-C', '-F', '-K', 'R']
+systems = [
+    ('N', 'M'), ('N', 'MM'), ('MN', 'MM'), ('CN', 'CM'), ('KGF', 'M'), ('KGF', 'MM'),
+    ('LBF', 'FT'), ('LBF', 'IN'), ('PDL', 'FT'),
+]
+unit_systems = ['']
+for system in systems:
+    force, length = system
+    for temperature in temperatures:
+        unit_system = f'{force}-{length}{temperature}'
+        unit_systems.append(unit_system)
+del temperatures, systems, system, temperature, force, length
+
 PARAMS = (
     # A
     ('ACSYM', 'YES', ['YES', 'NO']),
@@ -171,6 +184,9 @@ PARAMS = (
     ('KDIAG', -1.0),
     ('KGGCPCH', 0, [0, 1]),
     ('KGGLPCH', 0, [0, 1]),
+
+    ('OUGCORD', '', ['', 'GLOBAL']),
+    ('UNITSYS', '', unit_systems),
     # L
 )
 string_params = {}
@@ -209,7 +225,7 @@ STR_WORDS_1 = {
 
     'AUTOSPC', 'CDIF', 'EXTDROUT', 'OGEOM', 'OMID', 'PRTMAXIM', 'PRGPST',
     'POSTEXT', 'RESVEC', 'SUPAERO', 'SHLDAMP', 'ZROCMAS',
-    'ALTRED', 'OUGCORD', 'RSCON', 'RESVINER', 'MESH', 'SKINOUT', 'VUPENTA',
+    'ALTRED', 'RSCON', 'RESVINER', 'MESH', 'SKINOUT', 'VUPENTA',
     'DYNSEN', 'PRTGPL', 'PRTEQXIN', 'PRTGPDT', 'PRTCSTM', 'PRTBGPDT', 'PRTGPTT',
     'PRTMGG', 'PRTPG', 'FOLLOWK', 'DBCCONV', 'COMPMATT', 'ADB', 'HEATSTAT',
     'AUTOSPCR', 'CHECKOUT', 'EPSILONT', 'RMS', 'RESPATH', 'AUTOMSET', 'COMPMATT',
@@ -218,7 +234,7 @@ STR_WORDS_1 = {
     'SRCOMPS', 'SERST', 'PGRPST', 'CDPRT', 'CFDIAGP', 'CWDIAGP', 'ENFMOTN', 'RMSINT',
     'DEBUG', 'CHKOUT', 'DBALL', 'OIBULK', 'RMXTRAN', 'CDPCH', 'AUTOADJ', 'SEMAP',
     'SOFTEXIT', 'SM', 'RESFLEX', 'SENSUOO', 'OGEM', 'XBYMODE', 'STRESS', 'OPTION',
-    'AOTOSPC', 'ARBMAS', 'ARBMSS', 'OMACHPR', 'AUTOMPC', 'BSHDAMP', 'MDOF', 'ASCII4',
+    'AOTOSPC', 'ARBMAS', 'ARBMSS', 'OMACHPR', 'AUTOMPC', 'BSHDAMP', 'ASCII4',
     'SPCSTR', 'AUTOSPRT', 'PBRPROP', 'ELITASPC', 'SECOMB', 'CNTASET', 'WMODAL',
     'RESVALT', 'PRTRESLT', 'ITFPRNT', 'AMLS', 'PRGPOST', 'SDAMPUP', 'COLPHEXA',
     'ELEMITER', 'ROTSYNC', 'MECHFIX', 'CTYPE', 'SESDAMP', 'SYNCDAMP',
@@ -246,7 +262,7 @@ INT_WORDS_1 = {
     'MARCREVR', 'MARCRIGD', 'MARCRUN', 'MARCSETT', 'MARCSINC',
     'MARCSLHT', 'MARCSUMY', 'MARCT19', 'MARCTABL', 'MARCTNSF',
     'MARCTNSF', 'MARCTOL', 'MARCVERS', 'MATFILE', 'MATNL', 'MAXIT',
-    'MAXITER', 'MAXLINES', 'MESHG', 'METHCMRS', 'MODACC', 'MODTRK',
+    'MAXITER', 'MAXLINES', 'MESHG', 'METHCMRS', 'MDOF', 'MODACC', 'MODTRK',
     'MPCX', 'MPTDUMP', 'MRALIAS', 'MRFOLOW1', 'MRFOLOW3', 'MRFOLOW4',
     'MRORINTS', 'MROUTLAY', 'MRTIMING', 'NASPRT', 'NBRUPT', 'NEWSEQ',
     'NEWSET', 'NLAYERS', 'NLDISP', 'NLPACK', 'NLTOL', 'NMLOOP', 'NOAP',
@@ -357,27 +373,27 @@ class PARAM(BaseCard):
         n = 1
         value = None
         if key == 'ACOUT':
-            value = string_or_blank(card, 2, 'value', 'PEAK')
+            value = string_or_blank(card, 2, 'value', default='PEAK')
         elif key == 'ACOWEAK':
-            value = string_or_blank(card, 2, 'value', 'NO')
+            value = string_or_blank(card, 2, 'value', default='NO')
         elif key == 'ADJMETH':
-            value = integer_or_blank(card, 2, 'value', 0)
+            value = integer_or_blank(card, 2, 'value', default=0)
         elif key == 'ADPCON':
-            value = double_or_blank(card, 2, 'value', 1.0)
+            value = double_or_blank(card, 2, 'value', default=1.0)
         #elif key == 'ADMPOST':
-            #value = string_or_blank(card, 2, 'value', 0) ## TODO: 0 is not a string
+            #value = string_or_blank(card, 2, 'value', default=0) ## TODO: 0 is not a string
         elif key == 'ADSDISC':
-            value = double_or_blank(card, 2, 'value', 1e-8)
+            value = double_or_blank(card, 2, 'value', default=1e-8)
         elif key == 'AESMAXIT':
-            value = integer_or_blank(card, 2, 'value', 15)
+            value = integer_or_blank(card, 2, 'value', default=15)
         elif key == 'AESMETH':
             value = string_or_blank(card, 2, 'value', 'SELECT')
             assert value in ['SELECT', 'AUTO', 'DIRECT', 'RITZ', 'ITER'], 'value=%s' % value
         elif key == 'AESTOL':
-            value = double_or_blank(card, 2, 'value', 1e-10)
+            value = double_or_blank(card, 2, 'value', default=1e-10)
         elif key in ['ALPHA1FL', 'ALPHA2FL']:  # check alpha1/alpha1FL
-            value1 = double_or_blank(card, 2, 'value1', 0.0)
-            value2 = double_or_blank(card, 3, 'value2', 0.0)
+            value1 = double_or_blank(card, 2, 'value1', default=0.0)
+            value2 = double_or_blank(card, 3, 'value2', default=0.0)
             n = 2
         elif key == 'COMPMATT':
             #('COMPMATT', 'NO', ['YES', 'NO', 'NONSMEAR']), # MSC only: 'NONSMEAR'
@@ -389,9 +405,9 @@ class PARAM(BaseCard):
             assert value in {'YES', 'NO', 'NONSMEAR'}, 'value=%r' % value
 
         elif key == 'POST':
-            value = integer_or_blank(card, 2, 'value', 1)
+            value = integer_or_blank(card, 2, 'value', default=1)
         elif key == 'UNITSYS':
-            value = string(card, 2, 'value')
+            value = string_or_blank(card, 2, 'value', default='')
 
         #-------------------------------------------------------------
         # strings; has defaults
