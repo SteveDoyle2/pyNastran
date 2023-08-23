@@ -2638,6 +2638,8 @@ class OP2Reader:
                 data, ndata = self._read_record_ndata()
             return
 
+        struct_3i = Struct(mapfmt(self._endian + b'3i', self.size))
+
         # drop XSOP2DIR and PVT0
         iextdb = op2.table_count[b'EXTDB'] + 0
 
@@ -2662,7 +2664,7 @@ class OP2Reader:
                     name, = Struct(self._endian + b'16s').unpack(data)
                     name = reshape_bytes_block(name).decode('latin1').strip()
                 self.log.info(f'{marker} A: name={name!r} -> {xsop2dir_name!r}')
-                assert name in {'GEOM1', 'GEOM4', 'EXTDB'}, name
+                assert name in {'GEOM1', 'GEOM2', 'IGEOM2X', 'GEOM4', 'EXTDB'}, name
             elif nfields == 4:
                 if self.size == 4:
                     name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
@@ -2782,14 +2784,23 @@ class OP2Reader:
                     struct_idtype = 'q'
 
                 if nfields == 3:
-                    if self.size == 4:
-                        self.show_data(data, types='ifs', endian=None, force=False)
-                        name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
-                        raise RuntimeError(name, int1, int2)
-                        sss
+                    intsi = struct_3i.unpack(data)
+                    if intsi == (65535, 65535, 65535):
+                        name = ''
+                        int1 = 65535
+                        int2 = 65535
+                    elif intsi == (65535, 65535, 25535):
+                        name = ''
+                        int1 = 65535
+                        int2 = 25535
                     else:
-                        ints = Struct(self._endian + b'3q').unpack(data)
-                        assert ints == (65535, 65535, 65535), ints
+                        if self.size == 4:
+                            self.show_data(data, types='ifs', endian=None, force=False)
+                            name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
+                            raise RuntimeError(name, int1, int2)
+                        else:
+                            ints = Struct(self._endian + b'3q').unpack(data)
+                            assert ints == (65535, 65535, 65535), ints
                 elif name == 'GEOM1':
                     _read_extdb_geomx(self, data, self._endian, op2.reader_geom1.geom1_map)
                 elif name in ['GEOM2', 'GEOM2X', 'IGEOM2X']:

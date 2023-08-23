@@ -823,7 +823,7 @@ class GEOM4(GeomCommon):
         for (seid, comp, values) in cards:
             #print('SECSET1', seid, comp, values)
             op2.add_secset1(seid, values, comp)
-        assert len(ints) == i, f'nints={len(ints)} i={i}'
+        assert len(ints) >= i, f'nints={len(ints)} i={i}'
         return len(data)
 
     def _read_seqset(self, data: bytes, n: int) -> int:
@@ -1886,6 +1886,9 @@ def check_component(component: int, msg: str) -> None:
 
 
 def ints_to_secset1s(ints: np.ndarray) -> tuple[int, list[tuple[int, int, list[int]]]]:
+    """
+    [    61, 123456,      1, 610101, 610124]
+    """
     iword = 1
     i = 0
     cards = []
@@ -1908,6 +1911,12 @@ def ints_to_secset1s(ints: np.ndarray) -> tuple[int, list[tuple[int, int, list[i
                 #print('SECSET1', seid, comp, thru_flag, values)
                 cards.append((seid, comp, values))
                 iword = 0
+            elif thru_flag == 1:
+                value0 = ints[i]
+                value1 = ints[i+1]
+                i += 1
+                values = list(range(value0, value1+1, 1))
+                cards.append((seid, comp, values))
             else:
                 raise NotImplementedError(f'SECSET1 thru_flag={thru_flag}')
         else:
