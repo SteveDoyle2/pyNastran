@@ -735,7 +735,7 @@ def _h5_export_class(sub_group: Any, model: BDF, key: str, value: Any,
 #def _export_lists(h5_group, attr, name, values, encoding):
     #print(name, attr, values)
 
-def _export_list(h5_group, attr, name, values, encoding):
+def _export_list(h5_group, attr: str, name: str, values, encoding: str):
     """
     exports a list of:
      - constant type to a dataset

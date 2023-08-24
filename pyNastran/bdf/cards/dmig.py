@@ -185,7 +185,7 @@ class DTI(BaseCard):
         fields = []
         return DTI(name, fields, comment='')
 
-    def _finalize_hdf5(self, encoding):
+    def _finalize_hdf5(self, encoding: str) -> None:
         """hdf5 helper function"""
         keys, values = self.fields
 
@@ -199,7 +199,7 @@ class DTI(BaseCard):
         self.fields = {key : value for key, value in zip(keys, values_str)}
 
     @classmethod
-    def export_to_hdf5(cls, h5_file, model, encoding):
+    def export_to_hdf5(cls, h5_file, model: BDF, encoding: str):
         """exports the elements in a vectorized way"""
         from pyNastran.bdf.bdf_interface.hdf5_exporter import _export_list
         for name, dti in sorted(model.dti.items()):
@@ -221,16 +221,17 @@ class DTI(BaseCard):
                     #'temp_stress' : temp_stress
                 #}
             else:
+                h5_group = h5_file.create_group(str(name))
                 for irecord, fields in sorted(dti.fields.items()):
                     #h5_group = h5_file.create_group(str(irecord))
                     attr = 'irecord=%s' % irecord
                     namei = str(irecord)
                     values = fields
-                    _export_list(h5_file, attr, namei, values, encoding)
+                    _export_list(h5_group, attr, namei, values, encoding)
                     #print(h5_group)
                     #print(irecord, fields)
 
-    def __init__(self, name, fields, comment=''):
+    def __init__(self, name: str, fields: dict[int, list], comment=''):
         """
         Creates a DTI card
 
@@ -238,7 +239,7 @@ class DTI(BaseCard):
         ----------
         name : str
             UNITS
-        fields : list[varies]
+        fields : dict[int, list[Any]]
             the fields
         comment : str; default=''
             a comment for the card
@@ -270,7 +271,7 @@ class DTI(BaseCard):
         name = string(card, 1, 'name')
         assert name != 'UNITS', name
 
-        fields = []
+        #fields = []
         #field2 = card[2]
 
         list_fields = []
@@ -285,8 +286,8 @@ class DTI(BaseCard):
                 val = integer_double_string_or_blank(
                     card, i, 'T%i' % (i-1), default=None)
                 list_fields.append(val)
-        fields = {irecord: list_fields,}
-        return DTI(name, fields, comment=comment)
+        dict_fields = {irecord: list_fields,}
+        return DTI(name, dict_fields, comment=comment)
 
     def raw_fields(self):
         list_fields = []
@@ -304,6 +305,23 @@ class DTI(BaseCard):
             list_fields = ['DTI', self.name, irecord, ] + fields
             msg += print_card_8(list_fields)
         return msg
+
+    def __repr__(self) -> str:
+        """
+        Prints a card in the simplest way possible
+        (default values are left blank).
+
+        """
+        comment = self.comment
+        try:
+            return self.write_card(size=8)
+        except Exception:
+            try:
+                return self.write_card(size=16)
+            except Exception:
+                print('problem printing %s card' % self.type)
+                print("list_fields = ", list_fields)
+                raise
 
 
 class NastranMatrix(BaseCard):

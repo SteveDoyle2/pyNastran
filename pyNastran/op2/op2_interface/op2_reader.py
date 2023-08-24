@@ -2678,7 +2678,7 @@ class OP2Reader:
                 if self.size == 4:
                     name1, int1, dtype_bytes, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
                     name1 = name1.decode('latin1').rstrip()
-                    dtype_str = dtype_bytes.decode('latin1').rstrip()
+                    dtype_str = dtype_bytes.decode('latin1').strip()
                 else:
                     #self.show_data(data, types='ifsdq')
                     name1, int1, dtype_bytes, int2 = Struct(self._endian + b'16s q 24s q').unpack(data)
@@ -2689,8 +2689,11 @@ class OP2Reader:
                 #            PHIP       ?       7    ?          ?    REAL       1  ENDREC
                 #DTI         TUG1       0     696     606   32767       0       7       0
                 #            PHIP   32767       7   32767   32767    REAL       1  ENDREC
-                op2.add_dti(xsop2dir_name, {0: ['?', '?', 32767, 0, int1, 0,
-                                                name1, 32767, int1, 32767, 32767, dtype_str, int2, 'ENDREC',]})
+                dti = op2.add_dti(
+                    xsop2dir_name,
+                    {0: ['?', '?', 32767, 0, int1, 0,
+                         name1, 32767, int1, 32767, 32767, dtype_str, int2, 'ENDREC',]})
+                #print(dti)
                 # m.add_dmi(name, form, tin, tout, nrows, ncols, GCj, GCi, Real, Complex=None, comment='')
                 #print(name1, int1, name2, int2, 28)
 

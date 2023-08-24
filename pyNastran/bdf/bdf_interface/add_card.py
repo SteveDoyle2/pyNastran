@@ -8424,8 +8424,10 @@ class AddCards:
         self._add_methods._add_convection_property_object(prop)
         return prop
 
-    def add_pconvm(self, pconid, mid, coef, form=0, flag=0,
-                   expr=0.0, exppi=0.0, exppo=0.0, comment='') -> PCONVM:
+    def add_pconvm(self, pconid: int, mid: int, coef: float,
+                   form: int=0, flag: int=0,
+                   expr: float=0.0, exppi: float=0.0, exppo: float=0.0,
+                   comment: str='') -> PCONVM:
         """
         Creates a PCONVM card
 
@@ -8459,7 +8461,7 @@ class AddCards:
         self._add_methods._add_convection_property_object(prop)
         return prop
 
-    def add_dti(self, name, fields, comment='') -> Union[DTI, DTI_UNITS]:
+    def add_dti(self, name: str, fields: dict[int, list], comment='') -> Union[DTI, DTI_UNITS]:
         """Creates a DTI card"""
         if name == 'UNITS':
             dti = DTI_UNITS(name, fields, comment=comment)
@@ -8468,7 +8470,7 @@ class AddCards:
         self._add_methods._add_dti_object(dti)
         return dti
 
-    def add_dmig_uaccel(self, tin, ncol, load_sequences, comment='') -> DMIG_UACCEL:
+    def add_dmig_uaccel(self, tin: int, ncol: int, load_sequences, comment='') -> DMIG_UACCEL:
         """Creates a DMIG,UACCEL card"""
         dmig = DMIG_UACCEL(tin, ncol, load_sequences, comment=comment)
         self._add_methods._add_dmig_object(dmig)
