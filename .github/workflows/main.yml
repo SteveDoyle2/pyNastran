@@ -258,9 +258,13 @@ jobs:
          python pyNastran/all_tests.py
          coverage run pyNastran/all_tests.py
 
+      #- name: Upload coverage
+      #  run: |
+      #   codecov
       - name: Upload coverage
-        run: |
-         codecov
+        uses: codecov/codecov-action@v3
+        env:
+         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
 #--------------------------------------------------------------------------------------------------
 # https://docs.github.com/en/free-pro-team@latest/actions/guides/building-and-testing-python
