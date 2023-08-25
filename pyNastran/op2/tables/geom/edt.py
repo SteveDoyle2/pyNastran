@@ -17,6 +17,7 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.op2.errors import DoubleCardError
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
 from pyNastran.bdf.cards.elements.acoustic import ACMODL
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO
 from .utils import get_minus1_start_end
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
@@ -208,8 +209,25 @@ class EDT:
 
     def _read_mkaero2(self, data: bytes, n: int) -> int:
         mkaero2x
+
     def _read_csschd(self, data: bytes, n: int) -> int:
-        csschd
+        """
+        (6401, 64, 307,
+         10, 510, 10, 20, 30,
+         20, 510, 100, 20, 300)
+
+        csschd	10	510	10	20	30
+        csschd	20	510	100	20	300
+        """
+        ints = np.frombuffer(data[n:], dtype=self.op2.idtype8)
+        nints = len(ints)
+        assert nints % 5 == 0
+        ints = ints.reshape(nints//5, 5)
+        for intsi in ints:
+            sid, aesid, lschd, lalpha, lmach = intsi
+            self.op2.add_csschd(sid, aesid, lschd, lalpha=lalpha, lmach=lmach)
+        return len(data)
+
     def _read_diverg(self, data: bytes, n: int) -> int:
         """
         Record – DIVERG(2702,27,387)
@@ -556,8 +574,10 @@ class EDT:
         struct = Struct(op2._endian + b'i 3f 2i')
         out = struct.unpack(data[n:])
         acsid, velocity, cref, rho_ref, sym_xz, sym_xy = out
-        op2.add_aero(velocity, cref, rho_ref,
-                     acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
+        aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
+        op2._add_methods._add_aero_object(aero, allow_overwrites=True)
+        #op2.add_aero(velocity, cref, rho_ref,
+                     #acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
         n = 36
         return n
 

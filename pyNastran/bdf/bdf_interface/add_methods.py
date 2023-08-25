@@ -1114,10 +1114,14 @@ class AddMethods:
             self.model.delays[key] = delay
             self.model._type_to_id_map[delay.type].append(key)
 
-    def _add_aero_object(self, aero: AERO) -> None:
+    def _add_aero_object(self, aero: AERO, allow_overwrites: bool=False) -> None:
         """adds an AERO object"""
-        # only one AERO card allowed
-        assert self.model.aero is None, '\naero=\n%s old=\n%s' % (aero, self.model.aero)
+        if allow_overwrites and self.model.aero is not None:
+            if aero != self.model.aero:
+                raise RuntimeError(f'AERO:\nold=\n{self.model.aero}new=\n{aero}')
+        else:
+            # only one AERO card allowed
+            assert self.model.aero is None, '\naero=\n%s old=\n%s' % (aero, self.model.aero)
         self.model.aero = aero
         #self.model._type_to_id_map[aero.type].append(key)
 

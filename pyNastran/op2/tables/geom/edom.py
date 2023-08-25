@@ -2208,8 +2208,8 @@ class EDOM(GeomCommon):
         ncards = (len(data) - n) // ntotal
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
-            desvar_id, blabel, xinit, xlb, xub, delx, ddval = structi.unpack(edata)
-            label = blabel.decode('ascii')
+            desvar_id, label_bytes, xinit, xlb, xub, delx, ddval = structi.unpack(edata)
+            label = reshape_bytes_block_size(label_bytes, size=self.size)
             if delx == 0:
                 delx = None
             if ddval == 0:
