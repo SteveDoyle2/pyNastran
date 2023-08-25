@@ -3,7 +3,7 @@ import struct
 import unittest
 import numpy as np
 from pyNastran.op2.op2_geom import OP2Geom
-from pyNastran.op2.tables.geom.geom4 import read_rbe3s_from_idata_fdata
+from pyNastran.op2.tables.geom.geom4 import read_rbe3s_from_idata_fdata, ints_to_secset1s
 
 class TestOP2GeomUnit(unittest.TestCase):
     """lots of small OP2-Geom tests"""
@@ -262,6 +262,12 @@ class TestOP2GeomUnit(unittest.TestCase):
         data_bytes = struct.pack(fmt1, *data)
         op2.reader_geom1._read_extrn(data_bytes, 12)
 
+    def test_ints_to_secset1s(self):
+        ints_to_secset1s('SECSET1', [61,  123456,    1, 610101, 610124])
+        ints_to_secset1s('SECSET1', [100,    123,    0,     41,     42,  -1,
+                                     200,    123,    0,     35,     36,  -1])
+        ints_to_secset1s('SECSET1', [ 1, 123456,    1,   1001,   1006,
+                                      1, 123456,    0,   1066,     -1])
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

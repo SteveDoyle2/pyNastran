@@ -179,6 +179,7 @@ class GEOM4(GeomCommon):
         """
         self.op2.show_data(data[n:], types='qds')
         dd
+        return len(data)
 
     def _read_aset(self, data: bytes, n: int) -> int:
         """ASET(5561,76,215) - Record 1"""
@@ -246,39 +247,13 @@ class GEOM4(GeomCommon):
          3, 0, 3001, 3002, -1]
         """
         op2 = self.op2
-        def break_by_thru_type(data):
-            """helper for ``read_xset1``"""
-            i = 0
-            packs = []
-            while i < len(data):
-                #print('data[i:] = ', data[i:])
-                if data[i+1] == 1:
-                    pack = data[i:i+4]
-                    #print('pack1 = %s' % pack)
-                    packs.append(pack)
-                    i += 4
-                    continue
-
-                i1 = i
-                i += 3
-                while data[i] != -1:
-                    i += 1
-                #print('pack2', data[i1:i])
-                pack = data[i1:i]
-                packs.append(pack)
-
-                # get rid of the trailing -1
-                i += 1
-            return packs
-
         ndata = len(data)
         out = np.frombuffer(data[n:], op2.idtype8).copy()
 
         #print(out)
         #izero = np.where(out == -1)[0]
         nentries = 0
-
-        packs = break_by_thru_type(out)
+        packs = xset1_break_by_thru_type(out)
         for pack in packs:
             card = cls.add_op2_data(pack)
             add_method(card)
@@ -783,14 +758,23 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_sebset(self, data: bytes, n: int) -> int:
+        #asdf
         self.op2.log.info('geom skipping SEBSET in GEOM4')
         return len(data)
 
     def _read_sebset1(self, data: bytes, n: int) -> int:
-        self.op2.log.info('geom skipping SEBSET1 in GEOM4')
+        #asdf
+        #self.op2.log.info('geom skipping SEBSET1 in GEOM4')
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        i, cards = ints_to_secset1s('SEBSET1', ints)
+        for (seid, comp, values) in cards:
+            #print('SEBSET1', seid, comp, values)
+            op2.add_sebset1(seid, values, comp)
         return len(data)
 
     def _read_secset(self, data: bytes, n: int) -> int:
+        #asdf
         self.op2.log.info('geom skipping SECSET in GEOM4')
         return len(data)
 
@@ -818,16 +802,16 @@ class GEOM4(GeomCommon):
         End THRUFLAG
         """
         op2 = self.op2
-        ints = np.frombuffer(data[12:], dtype=op2.idtype8)
-        i, cards = ints_to_secset1s(ints)
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
+        i, cards = ints_to_secset1s('SECSET1', ints)
         for (seid, comp, values) in cards:
             #print('SECSET1', seid, comp, values)
             op2.add_secset1(seid, values, comp)
-        assert len(ints) >= i, f'nints={len(ints)} i={i}'
         return len(data)
 
     def _read_seqset(self, data: bytes, n: int) -> int:
         """SEQSET(1110,11,321) - Record 40"""
+        #asdf
         self.op2.log.info('geom skipping SEQSET in GEOM4')
         return len(data)
         #return self._read_xset(data, n, 'SEQSET', SEQSET, self.add_SEQSET)
@@ -867,10 +851,12 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_seuset(self, data: bytes, n: int) -> int:
+        #asdf
         self.op2.log.info('geom skipping SEUSET in GEOM4')
         return len(data)
 
     def _read_seuset1(self, data: bytes, n: int) -> int:
+        #asdf
         self.op2.log.info('geom skipping SEUSET1 in GEOM4')
         return len(data)
 
@@ -1290,7 +1276,7 @@ class GEOM4(GeomCommon):
 
         i = 0
         nsuports = 0
-        suport = []
+        suport: list[int] = []
         while i < len(out):
             if out[i] == -1:
                 assert out[i+1] == -1, out
@@ -1885,15 +1871,21 @@ def check_component(component: int, msg: str) -> None:
 
 
 
-def ints_to_secset1s(ints: np.ndarray) -> tuple[int, list[tuple[int, int, list[int]]]]:
+def ints_to_secset1s(card_name: str, ints: np.ndarray) -> tuple[int, list[tuple[int, int, list[int]]]]:
     """
-    [    61, 123456,      1, 610101, 610124]
+    [61,  123456,    1, 610101, 610124]
+    [100,    123,    0,     41,     42,  -1,
+     200,    123,    0,     35,     36,  -1]
+     [ 1, 123456,    1,   1001,   1006,
+       1, 123456,    0,   1066,     -1]
+
     """
     iword = 1
     i = 0
     cards = []
     while i < len(ints):
-        #print(i, iword)
+        #print(i, iword, ints[i])
+
         if iword == 1:
             seid = ints[i]
         elif iword == 2:
@@ -1906,9 +1898,10 @@ def ints_to_secset1s(ints: np.ndarray) -> tuple[int, list[tuple[int, int, list[i
                 values = []
                 while value != -1:
                     values.append(value)
-                    value = ints[i]
                     i += 1
+                    value = ints[i]
                 #print('SECSET1', seid, comp, thru_flag, values)
+                #print('A', (seid, comp, values))
                 cards.append((seid, comp, values))
                 iword = 0
             elif thru_flag == 1:
@@ -1916,12 +1909,40 @@ def ints_to_secset1s(ints: np.ndarray) -> tuple[int, list[tuple[int, int, list[i
                 value1 = ints[i+1]
                 i += 1
                 values = list(range(value0, value1+1, 1))
+                #print('B', (seid, comp, values))
                 cards.append((seid, comp, values))
+                iword = 0
             else:
-                raise NotImplementedError(f'SECSET1 thru_flag={thru_flag}')
+                raise NotImplementedError(f'{card_name} thru_flag={thru_flag}')
         else:
-            raise NotImplementedError(f'SECSET1 iword={iword}')
+            raise NotImplementedError(f'{card_name} iword={iword}')
         i += 1
         iword += 1
     i -= 1
+    assert len(ints) >= i, f'nints={len(ints)} i={i}'
     return i, cards
+
+def xset1_break_by_thru_type(data: np.ndarray) -> list[np.ndarray]:
+    """helper for ``read_xset1``"""
+    i = 0
+    packs = []
+    while i < len(data):
+        #print('data[i:] = ', data[i:])
+        if data[i+1] == 1:
+            pack = data[i:i+4]
+            #print('pack1 = %s' % pack)
+            packs.append(pack)
+            i += 4
+            continue
+
+        i1 = i
+        i += 3
+        while data[i] != -1:
+            i += 1
+        #print('pack2', data[i1:i])
+        pack = data[i1:i]
+        packs.append(pack)
+
+        # get rid of the trailing -1
+        i += 1
+    return packs
