@@ -134,6 +134,35 @@ class TestSuperelements(unittest.TestCase):
         #TODO: enable this...fix error
         #save_load_deck(model, run_test_bdf=False, run_save_load_hdf5=False)
 
+    def test_super_sets(self):
+        model = BDF(debug=False, log=None, mode='msc')
+        model.add_aset([1, 2, 3], '456', comment='aset')
+        model.add_aset1([1, 2, 3], '123', comment='aset1')
+
+        model.add_bset([3, 4], '456', comment='bset')
+        model.add_bset1([3, 4], '123', comment='bset1')
+
+        model.add_cset([5, 6], '456', comment='cset')
+        model.add_cset1([5, 6], '123', comment='cset1')
+
+        #model.add_omit([7, 8], '456', comment='aset')
+        model.add_omit1([7, 8], '123', comment='omit1')
+
+        model.add_sebset(103, [5, 6], '456', comment='sebset')
+        model.add_sebset1(103, [5, 6], '123', comment='sebset1')
+        model.add_secset(103, [5, 6], '456', comment='secset')
+        model.add_secset1(103, [5, 6], '123', comment='secset1')
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(4, [0., 0., 0.])
+        model.add_grid(5, [0., 0., 0.])
+        model.add_grid(6, [0., 0., 0.])
+        model.add_grid(7, [0., 0., 0.])
+        model.add_grid(8, [0., 0., 0.])
+        save_load_deck(model)
+
 def create_superelement(debug=False):
     """creates a simple bar model"""
     super = BDF(debug=debug)

@@ -1889,6 +1889,39 @@ class DYNAMICS(GeomCommon):
         ints    = (4, 9, 10, 'FREQ    ', 20,
                    may be floats
                    0, 0, 0, 0, 0, 0, 0, 0)
+
+        ROTORID : int
+            Identification number of rotor. (Integer > 0; Required).
+        GRIDA/GRIDB : int
+            Positive rotor spin direction is defined from GRIDA to GRIDB.
+        SPDUNIT : str
+            Specifies whether the spin rates are given in terms of
+             - RPM (revolutions/minute)
+             - FREQ: frequency (revolutions(cycles)/sec).
+        SPTID : int
+            Rotor spin rate.
+        SPDOUT : int
+            EPOINT to output the rotor speed vs. time. Output will be in SPDUNITs
+        GR : float; default=0.0
+            Rotor structural damping factor.
+        ALPHAR1 : float; default=0.0
+            Scale factor applied to the rotor mass matrix for Rayleigh damping.
+        ALPHAR2 : float; default=0.0
+            Scale factor applied to the rotor stiffness matrix for Rayleigh damping.
+        ROTRSEID : int; default=0
+            Identification number of the superelement in which the rotor specified in the
+            ROTORID field is defined.
+        WR3R : float; default=0.0
+            Specifies “average” excitation frequency for calculation of rotor damping and
+            circulation terms for rotor structural damping specified through GR field.
+        RSPINT ROTORID GRIDA   GRIDB   SPDUNT SPTID SPDOUT ROTSEID
+               GR      ALPHAR1 ALPHAR2 WR3R   WR4R  WRHR
+        RSPINT 4       9       10      RPM    2
+               0.1     1.0E-2  1.0E-6
+        #RSPINT,4,9,10,RPM,2,
+        #,0.1,1.0E-2,1.0E-6
+        floats=['0.1', '0.01', '1e-06']
+
         """
         op2 = self.op2
         #strings = (b'\xf9*\x00\x00n\x00\x00\x006\x01\x00\x00\x05\x00\x00\x00y\xe6\x00\x00~\xe6\x00\x00\x00\x00\x00\x00RPM     \xa0\x0f\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x89\r\x01\x00\x97\r\x01\x00\x00\x00\x00\x00RPM     \xf8*\x00\x00\x00\x00\x00\x00',)
@@ -1904,7 +1937,7 @@ class DYNAMICS(GeomCommon):
         # MSC
         # C:\NASA\m4\formats\git\examples\move_tpl\nltrot99.op2
         ntotal = 56 * self.factor # 4*14
-        struc = Struct(op2._endian + b'3i 8s i 8i')  # per QRG
+        struc = Struct(op2._endian + b'3i 8s i   2i 3f 3i')  # per QRG
         assert self.size == 4, f'RSPINT size={self.size}'
         #op2.show_data(data[n:], types='ifs')
         ndatai = len(data) - n
@@ -1916,15 +1949,17 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+ntotal]
             n += ntotal
             out = struc.unpack(edata)
-            # rid, grida, gridb, gr, unit, table_id = out
-            rid, grida, gridb, speed_unit_bytes, table_id, *zero = out
+            #op2.show_data(edata[24:], types='ifs')
+            (rid, grida, gridb, speed_unit_bytes, table_id, spd_out, zero,
+             gr, alpha_r1, alpha_r2, wr3r, wr4r, wrhr) = out
+            assert zero == 0, zero #  (SPDOUT, ROTSEID)
             speed_unit = speed_unit_bytes.decode('latin1').rstrip()
-            #print('RSPINT', rid, grida, gridb, speed_unit, table_id)
-            #op2.log.debug(f'RSPINT: rid={rid} nids=[{grida}, {gridb}] gr={gr} unit={unit!r} table_id={table_id} zero={zero}')
-            assert zero == [0, 0, 0, 0, 0, 0, 0, 0], zero
+            #print('RSPINT', rid, grida, gridb, speed_unit, table_id, zero)
+            op2.log.debug(f'RSPINT: rid={rid} nids=[{grida}, {gridb}] gr={gr:g} speed_unit={speed_unit!r} '
+                          f'table_id={table_id} spd_out={spd_out} alpha_r=[{alpha_r1:g}, {alpha_r2:g}], '
+                          f'wr=[{wr3r:g}, {wr4r:g}, {wrhr:g}]')
             if op2.is_debug_file:
                 op2.binary_debug.write('  RSPINT=%s\n' % str(out))
-            gr = 0.0
             op2.add_rspint(rid, grida, gridb, gr, speed_unit, table_id)
             rspint = None
             rspints.append(rspint)

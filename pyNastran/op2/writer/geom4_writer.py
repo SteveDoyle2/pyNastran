@@ -20,6 +20,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
     # return if no supported cards are found
     skip_cards = {
         #'SUPORT', 'SUPORT1', # suport
+        'SEBSET1',
 
         # spcs
         'GMSPC',
@@ -28,7 +29,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
         'RROD', 'RSSCON',
 
         # sets
-        'CSET1',
+        #'CSET1',
         'USET', 'USET1',
     }
     # not defined in DMAP
@@ -38,7 +39,9 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
 
         # sets
         'ASET', 'BSET', 'CSET', 'QSET', 'OMIT',
-        'ASET1', 'BSET1', 'QSET1', 'OMIT1',
+        'ASET1', 'BSET1', 'CSET1', 'QSET1', 'OMIT1',
+        'SECSET1',
+
         # rigid
         'RBAR', 'RBE1', 'RBE2', 'RBE3',
         # constraints
@@ -119,6 +122,20 @@ def _build_loads_by_type(model: Union[BDF, OP2Geom]) -> dict[str, Any]:
         assert not isinstance(omit, int), model.omits
         loads_by_type[omit.type].append(omit)
 
+    #--------------------------------------------------------
+    for bset in model.se_bsets:
+        assert not isinstance(bset, int), model.se_bsets
+        loads_by_type[bset.type].append(bset)
+    for cset in model.se_csets:
+        assert not isinstance(cset, int), model.se_csets
+        loads_by_type[cset.type].append(cset)
+    for qset in model.se_qsets:
+        assert not isinstance(qset, int), model.se_qsets
+        loads_by_type[qset.type].append(qset)
+    for unused_name, usets in model.se_usets.items():
+        for uset in usets:
+            loads_by_type[uset.type].append(uset)
+    #--------------------------------------------------------
     for suport in model.suport:
         loads_by_type[suport.type].append(suport)
     for unused_idi, suport in model.suport1:
@@ -145,12 +162,15 @@ def write_card(op2_file, op2_ascii, card_type: str, cards, endian: bytes,
                log, nastran_format: str='nx') -> int:
     ncards = len(cards)
     #log.debug(f'GEOM4: writing {card_type}')
-    if card_type in ['ASET1', 'BSET1', 'CSET1', 'QSET1', 'OMIT1']:
+    if card_type in {'ASET1', 'BSET1', 'CSET1', 'QSET1', 'OMIT1'}:
         nbytes = _write_xset1(card_type, cards, ncards, op2_file, op2_ascii,
                               endian)
-    elif card_type in ['ASET', 'BSET', 'CSET', 'OMIT', 'QSET']:
+    elif card_type in {'ASET', 'BSET', 'CSET', 'OMIT', 'QSET'}:
         nbytes = _write_xset(card_type, cards, ncards, op2_file, op2_ascii,
                              endian)
+    elif card_type in {'SEBSET1', 'SECSET1', 'SEQSET1'}:
+        nbytes = _write_sexset1(card_type, cards, ncards, op2_file, op2_ascii,
+                                endian)
     elif card_type == 'SUPORT':
         nbytes = _write_suport(card_type, cards, ncards, op2_file, op2_ascii,
                                endian)
@@ -181,7 +201,7 @@ def write_card(op2_file, op2_ascii, card_type: str, cards, endian: bytes,
         nbytes = _write_spc1(card_type, cards, ncards, op2_file, op2_ascii,
                              endian)
 
-    elif card_type in ['SPCADD', 'MPCADD']:
+    elif card_type in {'SPCADD', 'MPCADD'}:
         nbytes = _write_spcadd(card_type, cards, ncards, op2_file, op2_ascii,
                                endian)
     elif card_type == 'SPC':
@@ -567,7 +587,7 @@ def _write_xset1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     2 THRUFLAG I Thru range flag
     THRUFLAG=0 No
       3 ID I Grid or scalar point identification number
-      Word 3 repeats until End of Record
+      Word 3 repeats until End of Record (-1)
     THRUFLAG=1 Yes
       3 ID1 I First grid or scalar point identification number
       4 ID2 I Second grid or scalar point identification number
@@ -599,9 +619,60 @@ def _write_xset1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
             data += [int(set_obj.components), 1, min_node, max_node]
             fmt += b'4i'
         else:
+            nodes.append(-1)
             data += [int(set_obj.components), 0, ] + nodes
             nnodes = len(nodes)
             fmt += b'%ii' % (nnodes + 2)
+
+    nfields = len(data)
+    nbytes = write_header_nvalues(card_type, nfields, key, op2_file, op2_ascii)
+
+    op2_file.write(pack(fmt, *data))
+    del data, fmt
+    return nbytes
+
+def _write_sexset1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
+                   endian: bytes) -> int:
+    """
+    Word Name Type Description
+    SEID
+    1 C        I Component numbers
+    2 THRUFLAG I Thru range flag
+    THRUFLAG=0 No
+      3 ID I Grid or scalar point identification number
+      Word 3 repeats until End of Record (-1)
+    THRUFLAG=1 Yes
+      3 ID1 I First grid or scalar point identification number
+      4 ID2 I Second grid or scalar point identification number
+    End THRUFLAG
+
+    """
+    #if card_type == 'SEBSET1':
+        #key = (210, 2, 312)
+    if card_type == 'SECSET1':
+        key = (1010, 10, 320)
+    elif card_type == 'SEQSET1':
+        key = (1210, 12, 322)
+    else:  # pragma: no cover
+        raise NotImplementedError(card_type)
+
+    data = []  # type: list[int]
+    fmt = endian
+    for set_obj in cards:
+        seid = set_obj.seid
+        nodes = set_obj.node_ids
+        singles, doubles = collapse_thru_packs(nodes)
+        nsingles = len(singles)
+        ndoubles = len(doubles)
+        if nsingles == 0 and ndoubles == 1:
+            min_node, unused_thru, max_node = doubles[0]
+            data += [seid, int(set_obj.components), 1, min_node, max_node]
+            fmt += b'5i'
+        else:
+            nodes.append(-1)
+            data += [seid, int(set_obj.components), 0, ] + nodes
+            nnodes = len(nodes)
+            fmt += b'%ii' % (nnodes + 3)
 
     nfields = len(data)
     nbytes = write_header_nvalues(card_type, nfields, key, op2_file, op2_ascii)

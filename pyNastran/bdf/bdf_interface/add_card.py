@@ -5937,7 +5937,7 @@ class AddCards:
         #self._add_omit_object(omit)
         #return omit
 
-    def add_omit1(self, ids, components, comment='') -> Union[OMIT, OMIT1]:
+    def add_omit1(self, ids: list[int], components: str, comment='') -> Union[OMIT, OMIT1]:
         """
         Creates an OMIT1 card, which defines the degree of freedoms that
         will be excluded (o-set) from the analysis set (a-set).

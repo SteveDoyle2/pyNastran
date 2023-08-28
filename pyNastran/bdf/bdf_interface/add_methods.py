@@ -1273,20 +1273,30 @@ class AddMethods:
         self.model.csschds[key] = csschd
         self.model._type_to_id_map[csschd.type].append(key)
 
-    def _add_caero_object(self, caero: Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5]) -> None:
+    def _add_caero_object(self, caero: Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5],
+                          allow_overwrites: bool=False) -> None:
         """adds an CAERO1/CAERO2/CAERO3/CAERO4/CAERO5 object"""
         key = caero.eid
-        assert key not in self.model.caeros, '\nkey=%s; caero=\n%r old_caero=\n%r' % (
-            key, caero, self.model.caeros[key])
         assert key > 0
-        self.model.caeros[key] = caero
+        if key in self.model.caeros:
+            if allow_overwrites:
+                caero_old = self.model.caeros[key]
+                if caero == caero_old:
+                    assert key not in self.model.caeros, '\nkey=%s; caero=\n%r old_caero=\n%r' % (
+                        key, caero, self.model.caeros[key])
+            else:
+                assert key not in self.model.caeros, '\nkey=%s; caero=\n%r old_caero=\n%r' % (
+                    key, caero, self.model.caeros[key])
+            self.model.caeros[key] = caero
         self.model._type_to_id_map[caero.type].append(key)
 
-    def _add_paero_object(self, paero: Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]) -> None:
+    def _add_paero_object(self, paero: Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5],
+                          allow_overwrites: bool=False) -> None:
         """adds an PAERO1/PAERO2/PAERO3/PAERO4/PAERO5 object"""
         key = paero.pid
-        assert key not in self.model.paeros, '\npaero=\n%r old_paero=\n%r' % (
-            paero, self.model.paeros[key])
+        if not allow_overwrites:
+            assert key not in self.model.paeros, '\npaero=\n%r old_paero=\n%r' % (
+                paero, self.model.paeros[key])
         assert key > 0, 'paero.pid = %r' % (key)
         self.model.paeros[key] = paero
         self.model._type_to_id_map[paero.type].append(key)
@@ -1298,10 +1308,12 @@ class AddMethods:
         self.model.monitor_points.append(monitor_point)
         self.model._type_to_id_map[monitor_point.type].append(len(self.model.monitor_points) - 1)
 
-    def _add_spline_object(self, spline: Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5]) -> None:
+    def _add_spline_object(self, spline: Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5],
+                           allow_overwrites: bool=False) -> None:
         """adds an SPLINE1/SPLINE2/SPLINE3/SPLINE4/SPLINE5 object"""
         key = spline.eid
-        assert spline.eid not in self.model.splines, f'\nspline:\n{spline}\nold_spline:\n{self.model.splines[key]}'
+        if not allow_overwrites:
+            assert key not in self.model.splines, f'\nspline:\n{spline}\nold_spline:\n{self.model.splines[key]}'
         assert spline.eid > 0, spline
         self.model.splines[key] = spline
         self.model._type_to_id_map[spline.type].append(key)
@@ -1332,10 +1344,11 @@ class AddMethods:
         self.model.divergs[key] = diverg
         self.model._type_to_id_map[diverg.type].append(key)
 
-    def _add_flutter_object(self, flutter: FLUTTER) -> None:
+    def _add_flutter_object(self, flutter: FLUTTER, allow_overwrites: bool=False) -> None:
         """adds an FLUTTER object"""
         key = flutter.sid
-        assert key not in self.model.flutters, 'FLUTTER=%s old=\n%snew=\n%s' % (key, self.model.flutters[key], flutter)
+        if not allow_overwrites:
+            assert key not in self.model.flutters, 'FLUTTER=%s old=\n%snew=\n%s' % (key, self.model.flutters[key], flutter)
         assert key > 0
         self.model.flutters[key] = flutter
         self.model._type_to_id_map[flutter.type].append(key)

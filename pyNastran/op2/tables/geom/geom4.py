@@ -666,8 +666,17 @@ class GEOM4(GeomCommon):
          #10, 456, 0, 10, -1,
          #20, 456, 0, 11, -1]
         ints = np.frombuffer(data[n:], op2.idtype).copy()
+
+        #i, cards = ints_to_secset1s('RELEASE', ints)
+        #for (seid, comp, values) in cards:
+            ##print('SECSET1', seid, comp, values)
+            #assert len(values) > 0, 'seid=%s comp=%s thru_flag=%s values=%s' % (seid, comp, thru_flag, values)
+            #fields = ['RELEASE', seid, comp] + values
+            #op2.reject_lines.append(print_card_16(fields))
+
         nfields = len(ints)
         i = 0
+        cards = []
         while i < nfields:
             seid = ints[i]
             comp = ints[i + 1]
@@ -681,11 +690,15 @@ class GEOM4(GeomCommon):
                     values.append(value)
                     value = ints[i]
                     i += 1
-                assert len(values) > 0, 'seid=%s comp=%s thru_flag=%s values=%s' % (seid, comp, thru_flag, values)
-                fields = ['RELEASE', seid, comp] + values
-                op2.reject_lines.append(print_card_16(fields))
+                cards.append((seid, comp, values))
+            elif thru_flag == -1:
+                cards.append((seid, comp, ['ALL']))
             else:
                 raise NotImplementedError(thru_flag)
+
+        for (seid, comp, values) in cards:
+            fields = ['RELEASE', seid, comp] + values
+            op2.reject_lines.append(print_card_16(fields))
         return len(data)
 
     def _read_rpnom(self, data: bytes, n: int) -> int:
