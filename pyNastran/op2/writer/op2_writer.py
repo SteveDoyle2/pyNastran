@@ -226,6 +226,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OQMG1',
         # contact/glue forces
         'OQGCF1', 'OQGGF1',
+        'OBC1',
         # load vectors
         'OPG1', 'BOPG1', 'OPGV1', 'OPNL1',
 

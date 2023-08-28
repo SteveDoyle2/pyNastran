@@ -30,7 +30,7 @@ defines various methods to access high level BDF data:
 from __future__ import annotations
 from copy import deepcopy
 from collections import defaultdict
-from typing import Optional, Union, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -331,7 +331,7 @@ class GetCard(GetMethods):
 
     def get_cards_by_card_types(self, card_types: list[str],
                                 reset_type_to_slot_map: bool=False,
-                                stop_on_missing_card: bool=False) -> None:
+                                stop_on_missing_card: bool=False) -> dict[str, Any]:
         """
         Parameters
         ----------

@@ -105,6 +105,8 @@ class LoadActions(BaseGui):
                     load_function2 = getattr(cls, function_name2)
                     has_results = load_function2(infile_name, name=name, plot=plot)
                 else:
+                    #  nastran
+                    assert 'nastran' in geometry_format2
                     has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
 
                 dt = time_module.time() - time0

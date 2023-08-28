@@ -583,7 +583,8 @@ class AELINK(BaseCard):
             raise RuntimeError(f'dependent_label={self.dependent_label} is an AESURF and AEPARM\n{self}\n'
                                f'aesurf={list(model.aesurf.keys())} aeparam={list(model.aeparams.keys())}')
         elif is_aesurf:
-            self.dependent_label_ref = model.AESurf(self.dependent_label, msg='dependent_label={self.dependent_label!r}; '+ msg)
+            self.dependent_label_ref = model.AESurf(self.dependent_label,
+                                                    msg='dependent_label={self.dependent_label!r}; '+ msg)
         elif is_aeparam:
             self.dependent_label_ref = model.AEParam(self.dependent_label, msg=msg)
         else:
@@ -6425,7 +6426,7 @@ def get_caero_points(model: BDF,
     num_prev = 0
     ncaeros_sub = 0
     if model.caeros:
-        caero_points = []
+        caero_points_list = []
         for unused_eid, caero in sorted(model.caeros.items()):
             if caero.type in ('CAERO1', 'CAERO4', 'CAERO5', 'CAERO7'):
                 box_ids = caero.box_ids
@@ -6437,7 +6438,7 @@ def get_caero_points(model: BDF,
 
                 ncaeros_sub += 1
                 pointsi, elementsi = caero.panel_points_elements()
-                caero_points.append(pointsi)
+                caero_points_list.append(pointsi)
 
                 for i, box_id in enumerate(caero.box_ids.flat):
                     box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
@@ -6447,7 +6448,7 @@ def get_caero_points(model: BDF,
             else:
                 print('caero\n%s' % caero)
         if ncaeros_sub:
-            caero_points = np.vstack(caero_points)
+            caero_points = np.vstack(caero_points_list)
         has_caero = True
 
     if ncaeros_sub == 0:
@@ -6481,7 +6482,8 @@ def get_caero_subpanel_grid(model: BDF) -> tuple[np.ndarray, np.ndarray]:
         elements_array = np.vstack(elements)
     return points_array, elements_array
 
-def build_caero_paneling(model: BDF, create_secondary_actors: bool=True) -> tuple[str, list[str], Any]:
+def build_caero_paneling(model: BDF,
+                         create_secondary_actors: bool=True) -> tuple[str, list[str], Any]:
     """
     Creates the CAERO panel inputs including:
      - caero

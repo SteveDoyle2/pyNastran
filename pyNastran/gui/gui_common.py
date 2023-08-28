@@ -2,30 +2,33 @@
 # pylint: disable=W0201,C0301
 import os.path
 from math import ceil
-from collections import OrderedDict
 from typing import Optional, Callable, Any
 
 import numpy as np
 from cpylog import SimpleLogger
 
 from pyNastran.gui.qt_version import qt_int, qt_version
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar, QMenu, QToolButton)
 
-import vtk
-
-
+from vtk import (
+    vtkImageActor, vtkSelectionNode, vtkSelection, vtkExtractSelection,
+    vtkJPEGReader, vtkPNGReader, vtkTIFFReader, vtkBMPReader,
+)
+from pyNastran.gui.vtk_common_core import vtkIdTypeArray
+from pyNastran.gui.vtk_rendering_core import vtkRenderer
 import pyNastran
 #print('qt_version = %r' % qt_version)
 
 # vtk makes poor choices regarding the selection of a backend and has no way
 # to work around it
 #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
-if VTK_VERSION[0] >= 9:
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
+if VTK_VERSION_SPLIT[0] >= 9:
     from .qt_files.QVTKRenderWindowInteractor2 import QVTKRenderWindowInteractor
 else:
     from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -61,6 +64,8 @@ except ImportError:
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.formats import CLASS_MAP
 
+Tool = tuple[str, str, str, Optional[str], str, Callable]
+BANNED_SHORTCUTS = {}
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
 class GuiCommon(QMainWindow, GuiVTKCommon):
@@ -189,8 +194,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if self.run_vtk:
             self.build_vtk_frame()
 
-        #compassRepresentation = vtk.vtkCompassRepresentation()
-        #compassWidget = vtk.vtkCompassWidget()
+        #compassRepresentation = vtkCompassRepresentation()
+        #compassWidget = vtkCompassWidget()
         #compassWidget.SetInteractor(self.vtk_interactor)
         #compassWidget.SetRepresentation(compassRepresentation)
         #compassWidget.EnabledOn()
@@ -249,6 +254,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 'rotation_center' : False,
                 'measure_distance' : False,
                 'probe_result' : False,
+                'probe_result_all' : False,
                 'highlight_cell' : False,
                 'highlight_node' : False,
                 'area_pick' : False,
@@ -258,7 +264,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if tools is None:
             file_tools = [
-
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent),
 
                 ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
@@ -268,6 +273,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('load_csv_user_points', 'Load CSV User Points...', 'user_points.png', None, 'Loads CSV points', self.on_load_csv_points),
                 ('load_custom_result', 'Load Custom Results...', '', None, 'Loads a custom results file', self.on_load_custom_results),
 
+                ('save_vtk', 'Export VTK...', '', None, 'Export a VTK file', self.on_save_vtk),
                 ('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
             ]
 
@@ -298,9 +304,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
                 # groups
-                ('modify_groups', 'Modify Groups...', '', None, 'Create/Edit/Delete Groups', self.on_set_modify_groups),
+                ('modify_groups', 'Modify Groups...', '', 'CTRL+G', 'Create/Edit/Delete Groups', self.on_set_modify_groups),
                 ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
                 ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
+                ('create_groups_by_model_group', 'Create Groups By Model Group', '', None, 'Create Groups', self.create_groups_by_model_group),
                 #('create_list', 'Create Lists through Booleans', '', None, 'Create List', self.create_list),
 
                 # logging
@@ -359,8 +366,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('measure_distance', 'Measure Distance', 'measure_distance.png', None, 'Measure the distance between two nodes', self.mouse_actions.on_measure_distance),
                 ('highlight_cell', 'Highlight Cell', '', None, 'Highlight a single cell', self.mouse_actions.on_highlight_cell),
                 ('highlight_node', 'Highlight Node', '', None, 'Highlight a single node', self.mouse_actions.on_highlight_node),
+
+                # name, gui_name, png, shortcut, desc, func
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.mouse_actions.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result),
+
+                ('probe_result_all', 'Probe All', '', None, 'Probe results for all cases', self.mouse_actions.on_probe_result_all),
+                ('quick_probe_result_all', 'Quick Probe All', '', 'a', 'Probe all cases', self.mouse_actions.on_quick_probe_result_all),
+
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.mouse_actions.on_zoom),
 
                 # font size
@@ -385,14 +398,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('min', 'Min', '', None, 'Show/Hide Min Label', self.show_hide_min_actor),
                 ('max', 'Max', '', None, 'Show/Hide Max Label', self.show_hide_max_actor),
             ]
-        self.tools = tools
-        self.checkables = checkables
+        self.tools: list[Tool] = tools
+        self.checkables: dict[str, bool] = checkables
 
     def keyPressEvent(self, qkey_event):
         #print('qkey_event =', qkey_event.key())
         super(GuiCommon, self).keyPressEvent(qkey_event)
 
-    def _create_menu_bar(self, menu_bar_order: Optional[list[str]]=None):
+    def _create_menu_bar(self, menu_bar_order: Optional[list[str]]=None) -> None:
         self.menu_bar_oder = menu_bar_order
         if menu_bar_order is None:
             menu_bar_order = ['menu_file', 'menu_view', 'menu_window', 'menu_help']
@@ -416,7 +429,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.menu_hidden = self.menubar.addMenu('&Hidden')
         self.menu_hidden.menuAction().setVisible(False)
 
-    def _create_menu_items(self, actions=None, create_menu_bar=True, menu_bar_order=None):
+    def _create_menu_items(self, actions=None,
+                           create_menu_bar: bool=True,
+                           menu_bar_order=None) -> dict[str, tuple[QMenu, tuple[str, ...]]]:
         if actions is None:
             actions = self.actions
 
@@ -452,7 +467,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         ]
         if self.is_groups:
             menu_view += ['modify_groups', 'create_groups_by_property_id',
-                          'create_groups_by_visible_result']
+                          'create_groups_by_visible_result',
+                          'create_groups_by_model_group',]
 
         menu_view += [
             '', 'clipping', #'axis',
@@ -469,7 +485,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         menu_file = [
             'load_geometry', 'load_results', '',
-            'load_custom_result', '',
+            'load_custom_result', 'save_vtk', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
         toolbar_tools = [
             'reload', 'load_geometry', 'load_results',
@@ -477,7 +493,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             'left_view', 'right_view',
             'magnify', 'shrink', 'zoom',
             'rotate_clockwise', 'rotate_cclockwise',
-            'rotation_center', 'measure_distance', 'probe_result',
+            'rotation_center', 'measure_distance',
+            'probe_result', 'probe_result_all',
             #'highlight_cell', 'highlight_node',
             'area_pick', 'highlight_nodes_elements', 'mark_nodes_elements',
             'wireframe', 'surface', 'edges']
@@ -486,9 +503,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             '', # 'exit'
         ]
         hidden_tools = ('cycle_results', 'rcycle_results',
-                        'font_size_increase', 'font_size_decrease', 'highlight')
+                        'font_size_increase', 'font_size_decrease', 'highlight',
+                        'quick_probe_result_all')
 
-        menu_items = OrderedDict()
+        menu_items = {}
         if create_menu_bar:
             menu_items['file'] = (self.menu_file, menu_file)
             menu_items['view'] = (self.menu_view, menu_view)
@@ -578,7 +596,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #origin, vx, vy, vz, x_limits, y_limits = self._fit_plane(points)
 
         ## We create a 100 by 100 point plane to sample
-        #splane = vtk.vtkPlaneSource()
+        #splane = vtkPlaneSource()
         #plane = splane.GetOutput()
 
         #dx = max(x_limits) - min(x_limits)
@@ -600,7 +618,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #splane.SetPoint2(origin + dy * vy)
 
         #actor = vtk.vtkLODActor()
-        #mapper = vtk.vtkPolyDataMapper()
+        #mapper = vtkPolyDataMapper()
         ##mapper.InterpolateScalarsBeforeMappingOn()
         ##mapper.UseLookupTableScalarRangeOn()
 
@@ -620,7 +638,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #y_limits = [0., 1.]
         #return origin, vx, vy, vz, x_limits, y_limits
 
-    def _prepare_actions(self, icon_path: str, tools, checkables=None):
+    def _prepare_actions(self, icon_path: str,
+                         tools: list[Tool],
+                         checkables: Optional[dict[str, bool]]=None):
         """
         Prepare actions that will  be used in application in a way
         that's independent of the  menus & toolbar
@@ -635,16 +655,21 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.actions['reswidget'].setStatusTip('Show/Hide results selection')
         return self.actions
 
-    def _prepare_actions_helper(self, icon_path: str, tools, actions, checkables=None):
+    def _prepare_actions_helper(self, icon_path: str,
+                                tools: list[Tool],
+                                actions,
+                                checkables: Optional[dict[str, bool]]=None):
         """
         Prepare actions that will  be used in application in a way
         that's independent of the  menus & toolbar
         """
         if checkables is None:
-            checkables = []
+            checkables = {}
 
+        used_shortcuts = {}
         for tool in tools:
             (name, txt, icon, shortcut, tip, func) = tool
+            #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
             if name in actions:
                 self.log_error('trying to create a duplicate action %r' % name)
                 continue
@@ -665,8 +690,20 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 actions[name] = QAction(ico, txt, self)
 
             if shortcut:
+                #print(f'Tool name={name!r} txt={txt!r} shortcut={shortcut!r}')
+                if shortcut in BANNED_SHORTCUTS:
+                    raise RuntimeError(f'tool name={name!r} has a shortcut='
+                                       f'{shortcut!r} that is banned.  '
+                                       'Pick a different letter')
+                if shortcut in used_shortcuts:
+                    raise RuntimeError(f'tool name={name!r} has a shortcut='
+                                       f'{shortcut!r} that is already used.  '
+                                       'Pick a different letter.  '
+                                       f'Used={used_shortcuts[shortcut]}')
+                used_shortcuts[shortcut] = shortcut
                 actions[name].setShortcut(shortcut)
                 #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)
+
             if tip:
                 actions[name].setStatusTip(tip)
             if func:
@@ -790,11 +827,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if not os.path.exists(image_filename):
             return
 
-        #image_reader = vtk.vtkJPEGReader()
-        #image_reader = vtk.vtkPNGReader()
-        #image_reader = vtk.vtkTIFFReader()
-        #image_reader = vtk.vtkBMPReader()
-        #image_reader = vtk.vtkPostScriptReader()  # doesn't exist?
+        #image_reader = vtkJPEGReader()
+        #image_reader = vtkPNGReader()
+        #image_reader = vtkTIFFReader()
+        #image_reader = vtkBMPReader()
+        #image_reader = vtkPostScriptReader()  # doesn't exist?
 
         has_background_image = self._active_background_image is not None
         self._active_background_image = image_filename
@@ -817,10 +854,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             return
 
         # Create an image actor to display the image
-        self.image_actor = vtk.vtkImageActor()
+        self.image_actor = vtkImageActor()
         self.image_actor.SetInputData(image_data)
 
-        self.background_rend = vtk.vtkRenderer()
+        self.background_rend = vtkRenderer()
         self.background_rend.SetLayer(0)
         self.background_rend.InteractiveOff()
         self.background_rend.AddActor(self.image_actor)
@@ -890,7 +927,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
 
         if nframes == 2:
-            rend = vtk.vtkRenderer()
+            rend = vtkRenderer()
             rend.SetViewport(*frame2)
             self.vtk_interactor.GetRenderWindow().AddRenderer(rend)
 
@@ -1079,10 +1116,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         else:  # pragma: no cover
             # doesn't work
             self.selection.RemoveAllNodes()
-            self.selection_node = vtk.vtkSelectionNode()
-            self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-            self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
-            #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+            self.selection_node = vtkSelectionNode()
+            self.selection_node.SetFieldType(vtkSelectionNode.CELL)
+            self.selection_node.SetContentType(vtkSelectionNode.INDICES)
+            #self.selection_node.GetProperties().Set(vtkSelectionNode.INVERSE(), 1)
             self.selection.AddNode(self.selection_node)
             self.selection_node.SetSelectionList(ids)
 
@@ -1098,12 +1135,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if flip_flag:
             self.selection.RemoveAllNodes()
-            self.selection_node = vtk.vtkSelectionNode()
-            self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-            self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+            self.selection_node = vtkSelectionNode()
+            self.selection_node.SetFieldType(vtkSelectionNode.CELL)
+            self.selection_node.SetContentType(vtkSelectionNode.INDICES)
             self.selection_node.SetSelectionList(ids)
 
-            self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+            self.selection_node.GetProperties().Set(vtkSelectionNode.INVERSE(), 1)
             self.selection.AddNode(self.selection_node)
         else:
             self.selection_node.SetSelectionList(ids)
@@ -1118,9 +1155,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         ids.Modified()
 
         self.selection.RemoveAllNodes()
-        self.selection_node = vtk.vtkSelectionNode()
-        self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-        self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        self.selection_node = vtkSelectionNode()
+        self.selection_node.SetFieldType(vtkSelectionNode.CELL)
+        self.selection_node.SetContentType(vtkSelectionNode.INDICES)
         self.selection_node.SetSelectionList(ids)
         self.selection_node.Modified()
         self.selection.Modified()
@@ -1146,9 +1183,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if flip_flag:
             self.selection.RemoveAllNodes()
-            self.selection_node = vtk.vtkSelectionNode()
-            self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-            self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+            self.selection_node = vtkSelectionNode()
+            self.selection_node.SetFieldType(vtkSelectionNode.CELL)
+            self.selection_node.SetContentType(vtkSelectionNode.INDICES)
             self.selection_node.SetSelectionList(ids)
 
             self.selection.AddNode(self.selection_node)
@@ -1167,13 +1204,13 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if flip_flag:
             self.selection.RemoveAllNodes()
-            self.selection_node = vtk.vtkSelectionNode()
-            self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-            self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+            self.selection_node = vtkSelectionNode()
+            self.selection_node.SetFieldType(vtkSelectionNode.CELL)
+            self.selection_node.SetContentType(vtkSelectionNode.INDICES)
             self.selection_node.SetSelectionList(ids)
 
             if not show_flag:
-                self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+                self.selection_node.GetProperties().Set(vtkSelectionNode.INVERSE(), 1)
             self.selection.AddNode(self.selection_node)
         else:
             self.selection_node.SetSelectionList(ids)
@@ -1261,33 +1298,33 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         self.grid feeds in the geometry
         """
-        ids = vtk.vtkIdTypeArray()
+        ids = vtkIdTypeArray()
         ids.SetNumberOfComponents(1)
 
         # the "selection_node" is really a "selection_element_ids"
         # furthermore, it's an inverse model, so adding elements
         # hides more elements
-        self.selection_node = vtk.vtkSelectionNode()
-        self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-        self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
-        self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)  # added
+        self.selection_node = vtkSelectionNode()
+        self.selection_node.SetFieldType(vtkSelectionNode.CELL)
+        self.selection_node.SetContentType(vtkSelectionNode.INDICES)
+        self.selection_node.GetProperties().Set(vtkSelectionNode.INVERSE(), 1)  # added
         self.selection_node.SetSelectionList(ids)
 
-        self.selection = vtk.vtkSelection()
+        self.selection = vtkSelection()
         self.selection.AddNode(self.selection_node)
 
-        self.extract_selection = vtk.vtkExtractSelection()
+        self.extract_selection = vtkExtractSelection()
         self.extract_selection.SetInputData(0, self.grid)
         self.extract_selection.SetInputData(1, self.selection)
         self.extract_selection.Update()
 
         # In selection
         if create_grid_selected:
-            self.grid_selected = vtk.vtkUnstructuredGrid()
+            self.grid_selected = vtkUnstructuredGrid()
             self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
 
         #if 0:
-        self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+        self.selection_node.GetProperties().Set(vtkSelectionNode.INVERSE(), 1)
         self.extract_selection.Update()
 
     def start_logging(self):
@@ -2049,11 +2086,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.turn_text_on()
         self._set_results(form, cases)
         # assert len(cases) > 0, cases
-        # if isinstance(cases, OrderedDict):
-            # self.case_keys = cases.keys()
-        # else:
-            # self.case_keys = sorted(cases.keys())
-            # assert isinstance(cases, dict), type(cases)
+        # self.case_keys = cases.keys()
+        # self.case_keys = sorted(cases.keys())
+        assert isinstance(cases, dict), type(cases)
 
         self.on_update_geometry_properties(self.geometry_properties, write_log=False)
         # self.result_cases = cases
@@ -2254,15 +2289,15 @@ def get_image_reader(image_filename: str):
         raise NotImplementedError(msg)
 
     if fmt in ['.jpg', '.jpeg']:
-        image_reader = vtk.vtkJPEGReader()
+        image_reader = vtkJPEGReader()
     elif fmt == '.png':
-        image_reader = vtk.vtkPNGReader()
+        image_reader = vtkPNGReader()
     elif fmt in ['.tif', '.tiff']:
-        image_reader = vtk.vtkTIFFReader()
+        image_reader = vtkTIFFReader()
     elif fmt == '.bmp':
-        image_reader = vtk.vtkBMPReader()
+        image_reader = vtkBMPReader()
     #elif fmt == '.ps': # doesn't exist?
-        #self.image_reader = vtk.vtkPostScriptReader()
+        #self.image_reader = vtkPostScriptReader()
     else:
         raise NotImplementedError(f'invalid image type={fmt!r}; filename={image_filename!r}')
     return image_reader

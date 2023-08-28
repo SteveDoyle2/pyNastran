@@ -49,7 +49,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, double_or_blank,
     integer_or_blank, integer_or_string,
-    parse_components, components_or_blank as fcomponents_or_blank,
+    parse_components, parse_components_or_blank, components_or_blank as fcomponents_or_blank,
     fields, string, integer_string_or_blank,
 )
 if TYPE_CHECKING:  # pragma: no cover
@@ -143,7 +143,7 @@ class ABCQSet(Set):
         for n in range(nterms):
             i = n * 2 + 1
             idi = integer(card, i, 'ID' + str(n))
-            component = parse_components(card, i + 1, 'component' + str(n))
+            component = parse_components_or_blank(card, i + 1, 'component' + str(n))
             ids.append(idi)
             components.append(component)
         return cls(ids, components, comment=comment)
@@ -173,11 +173,12 @@ class ABCQSet(Set):
         self.ids_ref = None
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         if self.ids_ref is None:
             return self.ids
         msg = ', which is required by %s' % self.type
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        nids = _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        return nids
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -243,7 +244,7 @@ class SuperABCQSet(Set):
         for n in range(nterms):
             i = n * 2 + 2
             idi = integer(card, i, 'ID' + str(n))
-            component = parse_components(card, i + 1, 'component' + str(n))
+            component = parse_components_or_blank(card, i + 1, 'component' + str(n))
             ids.append(idi)
             components.append(component)
         return cls(seid, ids, components, comment=comment)
@@ -509,6 +510,7 @@ class ABQSet1(Set):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        """[123456      0      1    101]"""
         components = str(data[0])
         thru_flag = data[1]
         if thru_flag == 0:
@@ -564,7 +566,7 @@ class ABQSet1(Set):
         return self.comment + print_card_8(list_fields)
 
 
-class SuperABQSet1(Set):
+class SuperABCQSet1(Set):
     """
     Generic Class SEBSET1, SEQSET1 cards inherit from.
 
@@ -580,7 +582,7 @@ class SuperABQSet1(Set):
     | SEBSET1  | SEID |  C  | ID1  | THRU | ID2 |     |     |     |
     +----------+------+-----+------+------+-----+-----+-----+-----+
     """
-    type = 'SuperABQSet1'
+    type = 'SuperABCQSet1'
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         if isinstance(self.ids, np.ndarray):
@@ -618,7 +620,7 @@ class SuperABQSet1(Set):
         ids = []
         i = 1
         for ifield in range(3, nfields):
-            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
+            idi = integer_string_or_blank(card, ifield, 'ID%d' % i)
             if idi:
                 i += 1
                 ids.append(idi)
@@ -838,7 +840,7 @@ class BSET1(ABQSet1):
         ABQSet1.__init__(self, ids, components, comment)
 
 
-class CSET1(Set):
+class CSET1(ABQSet1):
     """
     Defines the degree of freedoms that will be free during a
     generalized dynamic reduction or component model synthesis
@@ -890,10 +892,6 @@ class CSET1(Set):
         self.ids_ref = None
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
-        raise RuntimeError(str(data))
-
-    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CSET1 card from ``BDF.add_card(...)``
@@ -919,30 +917,30 @@ class CSET1(Set):
             id_count += 1
         return CSET1(ids, components, comment=comment)
 
-    def cross_reference(self, model: BDF) -> None:
-        """
-        Cross links the card so referenced cards can be extracted directly
+    #def cross_reference(self, model: BDF) -> None:
+        #"""
+        #Cross links the card so referenced cards can be extracted directly
 
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
+        #Parameters
+        #----------
+        #model : BDF()
+            #the BDF object
 
-        """
-        msg = ', which is required by CSET1'
-        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        #"""
+        #msg = ', which is required by CSET1'
+        #self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def uncross_reference(self) -> None:
-        """Removes cross-reference links"""
-        self.ids = self.node_ids
-        self.ids_ref = None
+    #def uncross_reference(self) -> None:
+        #"""Removes cross-reference links"""
+        #self.ids = self.node_ids
+        #self.ids_ref = None
 
-    @property
-    def node_ids(self):
-        msg = ', which is required by CSET1'
-        if self.ids_ref is None:
-            return self.ids
-        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
+    #@property
+    #def node_ids(self):
+        #msg = ', which is required by CSET1'
+        #if self.ids_ref is None:
+            #return self.ids
+        #return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -1042,7 +1040,7 @@ class SET1(Set):
         #:  Unique identification number. (Integer > 0)
         self.sid = sid
 
-        #:  List of structural grid point or element identification numbers.
+        #:  list of structural grid point or element identification numbers.
         #:  (Integer > 0 or 'THRU'; for the 'THRU' option, ID1 < ID2 or 'SKIN';
         #:  in field 3)
         self.ids = expand_thru(ids, set_fields=False, sort_fields=False)
@@ -1254,7 +1252,7 @@ class SET2(Set):
                  sp1: float, sp2: float,
                  ch1: float, ch2: float,
                  zmax: float=0.0, zmin: float=0.0,
-                 comment: str='') -> SET2:
+                 comment: str='') -> None:
         """
         Creates a SET2 card, which sefines a list of structural
         grid points in terms of aerodynamic macro elements.
@@ -1332,7 +1330,7 @@ class SET2(Set):
         return ['SET2', self.sid, self.macro, self.sp1, self.sp2,
                 self.ch1, self.ch2, self.zmax, self.zmin]
 
-    def cross_reference_set(self, model, xref_type: str, msg=''):
+    def cross_reference_set(self, model, xref_type: Optional[str], msg=''):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1354,7 +1352,7 @@ class SET2(Set):
     def get_ids(self):
         return []
 
-    def safe_cross_reference(self, model: BDF, xref_type: str, msg=''):
+    def safe_cross_reference(self, model: BDF, xref_type: Optional[str], msg=''):
         msg = f', which is required by SET2 sid={self.sid}{msg}'
         if xref_type == 'MACRO':
             self.macro_ref = model.CAero(self.macro, msg=msg)
@@ -1669,7 +1667,7 @@ class SEBSET(SuperABCQSet):
     def __init__(self, seid, ids, components, comment=''):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
 
-class SEBSET1(SuperABQSet1):
+class SEBSET1(SuperABCQSet1):
     """
     Defines boundary degrees-of-freedom to be fixed (b-set) during
     generalized dynamic reduction or component mode synthesis
@@ -1697,7 +1695,7 @@ class SEBSET1(SuperABQSet1):
         return SEBSET1(seid, ids, components, comment='')
 
     def __init__(self, seid, ids, components, comment=''):
-        SuperABQSet1.__init__(self, seid, ids, components, comment)
+        SuperABCQSet1.__init__(self, seid, ids, components, comment)
 
 
 class SECSET(SuperABCQSet):
@@ -1714,7 +1712,7 @@ class SECSET(SuperABCQSet):
     def __init__(self, seid, ids, components, comment=''):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
 
-class SECSET1(SuperABQSet1):
+class SECSET1(SuperABCQSet1):
     """
     Defines SECSET1
 
@@ -1740,7 +1738,7 @@ class SECSET1(SuperABQSet1):
         return SECSET1(seid, ids, components, comment='')
 
     def __init__(self, seid, ids, components, comment=''):
-        SuperABQSet1.__init__(self, seid, ids, components, comment)
+        SuperABCQSet1.__init__(self, seid, ids, components, comment)
 
 
 class SEQSET(SuperABCQSet):
@@ -1757,7 +1755,7 @@ class SEQSET(SuperABCQSet):
     def __init__(self, seid, ids, components, comment=''):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
 
-class SEQSET1(SuperABQSet1):
+class SEQSET1(SuperABCQSet1):
     type = 'SEQSET1'
     _properties = ['node_ids']
 
@@ -1769,7 +1767,7 @@ class SEQSET1(SuperABQSet1):
         return SEQSET1(seid, ids, components, comment='')
 
     def __init__(self, seid, ids, components, comment=''):
-        SuperABQSet1.__init__(self, seid, ids, components, comment)
+        SuperABCQSet1.__init__(self, seid, ids, components, comment)
 
 
 class SEQSEP(SetSuper):  # not integrated...is this an SESET ???

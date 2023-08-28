@@ -174,7 +174,7 @@ class Subcase:
         #if 'TITLE' in
         #print(data_code)
         #print(f'table_name={table_name!r} type={type(table_name)}')
-        options = []
+        options: list[Any] = []
         if data_code['title']:
             self.add('TITLE', data_code['title'], [], 'STRING-type')
         if data_code['subtitle']:
@@ -408,7 +408,7 @@ class Subcase:
             else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
-        elif table_name in ['OESRT']:
+        elif table_name in ['OESRT', 'OESRTN']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code in [25, 56, 89]:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
@@ -466,8 +466,8 @@ class Subcase:
             print(data_code)
             raise RuntimeError(data_code)
         log.error(str(data_code))
-        if USER_NAME == 'sdoyle': # or 'id' in msg:
-            raise RuntimeError(data_code)
+        #if USER_NAME == 'sdoyle': # or 'id' in msg:
+            #raise RuntimeError(data_code)
 
     def __contains__(self, param_name: str) -> bool:
         """
@@ -492,7 +492,7 @@ class Subcase:
             return True
         return False
 
-    def has_parameter(self, *param_names) -> list[bool]:
+    def has_parameter(self, *param_names: list[str]) -> list[bool]:
         """
         Checks to see if one or more parameter names are in the subcase.
 
@@ -575,7 +575,78 @@ class Subcase:
             else:
                 raise NotImplementedError(key)
 
-    def get_parameter(self, param_name: str, msg: str='', obj: bool=False) -> tuple[Union[int, str], list[Any]]:
+    def get_int_parameter(self, param_name: str, msg: str='',
+                          obj: bool=False) -> tuple[int, list[Any]]:
+        """
+        Gets the [value, options] for a subcase.
+
+        Parameters
+        ----------
+        param_name : str
+            the case control parameters to get
+        obj : bool; default=False
+            should the object be returned
+
+        Returns
+        -------
+        value : int
+            the value of the parameter
+            1 in LOAD = 1
+        options : list[varies]
+            the values in parentheses
+            ['PLOT', 'PRINT'] in STRESS(PLOT,PRINT) = ALL???
+
+        .. code-block:: python
+
+           model = BDF()
+           model.read_bdf(bdf_filename)
+           case_control = model.case_control_deck
+           subcase1 = case_control.subcases[1]
+           value, options = subcase1.get_int_parameter('LOAD')
+
+        """
+        value, options = self.get_parameter(param_name, msg=msg, obj=obj)
+        if not isinstance(value, integer_types):
+            raise TypeError('{param_name!r} = {value!r} and is not an integer')
+        return value, options
+
+    def get_str_parameter(self, param_name: str, msg: str='',
+                          obj: bool=False) -> tuple[str, list[Any]]:
+        """
+        Gets the [value, options] for a subcase.
+
+        Parameters
+        ----------
+        param_name : str
+            the case control parameters to get
+        obj : bool; default=False
+            should the object be returned
+
+        Returns
+        -------
+        value : str
+            the value of the parameter
+            'ALL' in STRESS(PLOT,PRINT) = ALL
+        options : list[varies]
+            the values in parentheses
+            ['PLOT', 'PRINT'] in STRESS(PLOT,PRINT) = ALL
+
+        .. code-block:: python
+
+           model = BDF()
+           model.read_bdf(bdf_filename)
+           case_control = model.case_control_deck
+           subcase1 = case_control.subcases[1]
+           value, options = subcase1.get_str_parameter('STRESS')
+
+        """
+        value, options = self.get_parameter(param_name, msg=msg, obj=obj)
+        if not isinstance(value, str):
+            raise TypeError(f'{param_name!r} = {value!r} and is not a str')
+        return value, options
+
+    def get_parameter(self, param_name: str, msg: str='',
+                      obj: bool=False) -> tuple[Union[int, str], list[Any]]:
         """
         Gets the [value, options] for a subcase.
 
@@ -601,7 +672,7 @@ class Subcase:
            model.read_bdf(bdf_filename)
            case_control = model.case_control_deck
            subcase1 = case_control.subcases[1]
-           value, options = subcase1['LOAD']
+           value, options = subcase1.get_parameter('LOAD')
 
         """
         param_name = update_param_name(param_name)
@@ -615,7 +686,7 @@ class Subcase:
             return value.value, options
         return value, options
 
-    def _validate_param_type(self, param_type) -> None:
+    def _validate_param_type(self, param_type: str) -> None:
         """checks to see if a valid parmater type is selected"""
         if param_type not in self.allowed_param_types:
             msg = (
@@ -633,7 +704,7 @@ class Subcase:
             )
             raise TypeError(msg)
 
-    def add(self, key: str, value: Any, options: list[Any], param_type: str):
+    def add(self, key: str, value: Any, options: list[Any], param_type: str) -> None:
         self._validate_param_type(param_type)
         self._add_data(key, value, options, param_type)
 
@@ -649,7 +720,7 @@ class Subcase:
         #assert isinstance(value, integer_types), f'value={value!r} and is not an integer'
         #self.add(key, value, [], 'STRESS-type')
 
-    def add_integer_type(self, key: str, value: int):
+    def add_integer_type(self, key: str, value: int) -> None:
         """
         Simple way to add something of the form:
             SPC = 1
@@ -661,7 +732,8 @@ class Subcase:
         assert isinstance(value, integer_types), f'value={value!r} and is not an integer'
         self.add(key, value, [], 'STRESS-type')
 
-    def add_result_type(self, key: str, value: Union[int, str], options: list[str]):
+    def add_result_type(self, key: str, value: Union[int, str],
+                        options: list[str]) -> None:
         """
         Simple way to add something of the form:
             DISP(PLOT) = ALL
@@ -675,12 +747,12 @@ class Subcase:
         assert isinstance(value, (str, integer_types)), f'value={value!r} and is not an string/integer'
         self.add(key, value, options, 'STRESS-type')
 
-    def update(self, key, value, options, param_type):
+    def update(self, key: str, value, options, param_type: str) -> None:
         self._validate_param_type(param_type)
         assert key in self.params, f'key={key!r} is not in isubcase={self.id}'
         self._add_data(key, value, options, param_type)
 
-    def add_set_from_values(self, set_id: int, values: list[int]):
+    def add_set_from_values(self, set_id: int, values: list[int]) -> None:
         """
         Simple way to add SET cards
 
@@ -700,7 +772,8 @@ class Subcase:
         assert isinstance(values, list), values
         self.params[key] = [values, set_id, param_type]
 
-    def _add_data(self, key: str, value: Any, options: list[Any], param_type: str):
+    def _add_data(self, key: str, value: Any, options: list[Any],
+                  param_type: str) -> None:
         """
         Adds the data to the subcase  in the KEY(OPTIONS)=VALUE style.
 
@@ -730,7 +803,8 @@ class Subcase:
             (key, value, options) = self._simplify_data(key, value, options, param_type)
             self.params[key] = [value, options, param_type]
 
-    def _simplify_data(self, key: str, value: Any, options: list[Any], param_type: str):
+    def _simplify_data(self, key: str, value: Any, options: list[Any],
+                       param_type: str) -> tuple[str, Any, Any]:
         if param_type == 'SET-type':
             (key, values2, options, param_type) = _simplify_set(key, value, options, param_type)
             return (key, values2, options)
@@ -762,7 +836,7 @@ class Subcase:
             #else: pass
         return key, value, options
 
-    def get_op2_data(self, sol, solmap_to_value):
+    def get_op2_data(self, sol, solmap_to_value) -> None:
         self.sol = sol
         label = 'SUBCASE %s' % (self.id)
         op2_params = {
@@ -983,7 +1057,7 @@ class Subcase:
         #if 'DLOAD' in self.params:  # ???
             #pass
 
-    def finish_subcase(self):
+    def finish_subcase(self) -> None:
         """
         Removes the subcase parameter from the subcase to avoid printing
         it in a funny spot
@@ -992,7 +1066,7 @@ class Subcase:
             del self.params['SUBCASE']
         #print "self.params %s = %s" %(self.id,self.params)
 
-    def write_subcase(self, subcase0):
+    def write_subcase(self, subcase0: Subcase) -> str:
         """
         Internal method to print a subcase
 
@@ -1034,7 +1108,7 @@ class Subcase:
 
         return msg
 
-    def subcase_sorted(self, lst):
+    def subcase_sorted(self, lst: list[str]) -> list[str]:
         """
         Does a "smart" sort on the keys such that SET cards increment in
         numerical order.  Also puts the sets first.
@@ -1092,7 +1166,7 @@ class Subcase:
         list_b = set_list + list_before + list_after
         return list_b
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Prints out EVERY entry in the subcase.  Skips parameters already in
         the global subcase.
@@ -1120,7 +1194,8 @@ def _update_analysis_value(value: str) -> str:
         value = 'FLUTTER'
     return value
 
-def _simplify_set(key: str, value: Any, options: list[Any], param_type: str) -> tuple[int, str, list[str], str]:
+def _simplify_set(key: str, value: Any, options: list[Any],
+                  param_type: str) -> tuple[int, str, list[str], str]:
     """
     Parameters
     ----------
@@ -1252,7 +1327,7 @@ def update_param_name(param_name: str) -> str:
     #print '*param_name = ',param_name
     return param_name
 
-def get_analysis_code(sol):
+def get_analysis_code(sol: int) -> int:
     """
     Maps the solution number to the OP2 analysis code.
 
@@ -1326,7 +1401,7 @@ def get_device_code(options: Any, unused_value: Any) -> int:
     #    device_code=1  # PRINT
     return device_code
 
-def get_table_code(sol, table_name, unused_options):
+def get_table_code(sol: int, table_name: str, unused_options) -> int:
     """
     Gets the table code of a given parameter.  For example, the
     DISPLACMENT(PLOT,POST)=ALL makes an OUGV1 table and stores the
@@ -1528,7 +1603,7 @@ def get_table_code(sol, table_name, unused_options):
     table_code = tables[key]
     return table_code
 
-def get_sort_code(options, unused_value):
+def get_sort_code(options: list[str], unused_value) -> int:
     """
     Gets the sort code of a given set of options and value
 
@@ -1548,7 +1623,7 @@ def get_sort_code(options, unused_value):
         sort_code += 4
     return sort_code
 
-def get_format_code(options: Any, unused_value: Any) -> int:
+def get_format_code(options: list[str], unused_value: Any) -> int:
     """
     Gets the format code that will be used by the op2 based on
     the options.

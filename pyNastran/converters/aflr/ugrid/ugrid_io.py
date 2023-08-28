@@ -1,12 +1,12 @@
 import os
-from collections import OrderedDict
 
 from numpy import amax, amin, arange, ones, zeros, where, unique
 
 #VTK_TRIANGLE = 5
-import vtk
-#from vtk import vtkTriangle, vtkQuad
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkVertex
 
+from cpylog import SimpleLogger
 from pyNastran.converters.aflr.surf.surf_reader import TagReader
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
@@ -15,7 +15,6 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
 from pyNastran.gui.qt_files.colors import RED_FLOAT
-
 
 class UGRID_IO:
     def __init__(self, gui):
@@ -60,6 +59,7 @@ class UGRID_IO:
         plot : bool; default=True
             should the model be generated or should we wait until
             after the results are loaded
+
         """
         model_name = name
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
@@ -173,7 +173,7 @@ class UGRID_IO:
         self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['AFLR UGRID Surface', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         if hasattr(model, 'pids'):
@@ -198,7 +198,7 @@ class UGRID_IO:
         # if nnodes == 0:
             # return
         nnodes = len(diff_node_ids)
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
         alt_grid = self.gui.alt_grids[name]
@@ -208,10 +208,10 @@ class UGRID_IO:
             points.InsertPoint(nid, *node)
 
             #if 1:
-            elem = vtk.vtkVertex()
+            elem = vtkVertex()
             elem.GetPointIds().SetId(0, nid)
             #else:
-                #elem = vtk.vtkSphere()
+                #elem = vtkSphere()
                 #sphere_size = self._get_sphere_size(dim_max)
                 #elem.SetRadius(sphere_size)
                 #elem.SetCenter(points.GetPoint(nid))
@@ -444,10 +444,10 @@ class UGRID_IO:
         results_form = []
         if len(results_form):
             form.append(('Results', None, results_form))
-        self.gui.log.info(form)
+        self.gui.log.info(str(form))
         return form, cases, nids, eids
 
-def get_ugrid_model(ugrid_filename, read_solids, log):
+def get_ugrid_model(ugrid_filename: str, read_solids: bool, log: SimpleLogger):
     """helper method for UGRID_IO"""
     if read_solids or is_binary_file(ugrid_filename):
         model = UGRID(log=log, debug=True, read_solids=read_solids)

@@ -1,9 +1,8 @@
 """Defines the GUI IO file for LaWGS."""
-from collections import OrderedDict
+import numpy as np
 
-import vtk
-from vtk import vtkQuad
-from numpy import array, arange, cross
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkQuad
 from pyNastran.converters.lawgs.wgs_reader import read_lawgs
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
@@ -36,8 +35,8 @@ class LaWGS_IO:
         self.gui.nnodes = len(nodes)
         self.gui.nelements = len(elements)
 
-        nodes = array(nodes, dtype='float32')
-        elements = array(elements, dtype='int32')
+        nodes = np.array(nodes, dtype='float32')
+        elements = np.array(elements, dtype='int32')
 
         #print("nNodes = ",self.nnodes)
         #print("nElements = ", self.nelements)
@@ -45,7 +44,7 @@ class LaWGS_IO:
         grid = self.gui.grid
         grid.Allocate(self.gui.nelements, 1000)
 
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(self.gui.nnodes)
         self.gui.nid_map = {}
 
@@ -73,7 +72,7 @@ class LaWGS_IO:
         #self.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['LaWGS', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         #print("nElements = %s" % nElements)
@@ -84,9 +83,9 @@ class LaWGS_IO:
         self.gui._finish_results_io2(model_name, form, cases)
 
     def _fill_lawgs_case(self, cases, ID, nodes, elements, regions):
-        eids = arange(1, len(elements) + 1, dtype='int32')
-        nids = arange(1, len(nodes) + 1, dtype='int32')
-        regions = array(regions, dtype='int32')
+        eids = np.arange(1, len(elements) + 1, dtype='int32')
+        nids = np.arange(1, len(nodes) + 1, dtype='int32')
+        regions = np.array(regions, dtype='int32')
 
         icase = 0
         geometry_form = [
@@ -115,7 +114,7 @@ class LaWGS_IO:
 
         a = nodes[elements[:, 2], :] - nodes[elements[:, 0], :]
         b = nodes[elements[:, 3], :] - nodes[elements[:, 1], :]
-        normals = cross(a, b, axis=1)
+        normals = np.cross(a, b, axis=1)
 
         assert normals.shape[0] == neids, normals.shape
         assert normals.shape[1] == 3, normals.shape

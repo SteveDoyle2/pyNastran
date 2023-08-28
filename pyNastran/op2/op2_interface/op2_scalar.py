@@ -419,6 +419,8 @@ STR_PARAMS_1 = SATK_STR_PARAMS1 | {
     # TODO: add an option for custom PARAMs
     b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', b'DEBUG',
     b'AEDBX', b'AERO', b'AUTOSUP0', b'AXIOPT',
+
+    b'GPACAO',
 }
 def _check_unique_sets(*sets: list[set[str]]):
     """verifies that the sets are unique"""
@@ -649,12 +651,21 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_opg = self._op2_readers.reader_opg
         reader_opr = self._op2_readers.reader_opr
         reader_oqg = self._op2_readers.reader_oqg
+        reader_obc = self._op2_readers.reader_obc
         reader_ogs = self._op2_readers.reader_ogs
 
         # oug
         reader_oug = self._op2_readers.reader_oug
         reader_ougpk = self._op2_readers.reader_ougpk
         reader_otemp = self._op2_readers.reader_otemp
+
+        #  bolts
+        reader_obolt = self._op2_readers.reader_obolt
+
+        # contact
+        reader_oslide = self._op2_readers.reader_oslide
+        reader_ougstrs = self._op2_readers.reader_ougstrs
+        reader_ofcon3d = self._op2_readers.reader_ofcon3d
 
         # oef
         reader_oef = self._op2_readers.reader_oef
@@ -965,7 +976,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OUGV2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set displacements in nodal frame'],  # displacements in nodal frame
             b'ROUGV2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'g-set relative U in CD frame'],  # relative OUG
             b'OUXY2'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'h/d-set displacements'],  # Displacements in SORT2 format for h-set or d-set.
-            b'OUG1S'   : [reader_oug._read_oug2_3, reader_oug._read_oug_4, 'structural eigenvectors'],  # Displacements in SORT2 format for h-set or d-set.
+            b'OUG1S'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'structural eigenvectors'],  # Displacements in SORT2 format for h-set or d-set.
 
             #  scaled response spectra - ABS / NRL / SRSS
             b'OUPV1' : [reader_oug._read_oug1_3, reader_oug._read_oug_4, 'ABS/NRL/SRSS displacement/velocity/acceleration'],    # displacement, velocity, acceleration
@@ -1008,6 +1019,10 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OES1MX' : [self._table_passer, self._table_passer, 'extreme values of stress'],
 
             #=======================
+
+            b'OBC1': (reader_obc.read_sort1_3, reader_obc.read_4, 'Contact pressures and tractions at grid points'),
+            b'OBG1': (reader_obc.read_sort1_3, reader_obc.read_4, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
+
             # contact
             b'OQGCF1' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'contact force at grid point'], # Contact force at grid point.
             b'OQGCF2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'contact force at grid point'], # Contact force at grid point.
@@ -1019,7 +1034,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OSPDSI2' : [self._nx_table_passer, self._table_passer, 'contact separation distance'], # Output contact separation distance results.
 
             #b'OBC1' : [self._read_obc1_3, self._read_obc1_4],
-            b'OBC1' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'],
+            b'OBC1' : [reader_obc.read_sort1_3, reader_obc.read_4, 'Contact pressures and tractions at grid points'],
             b'OBC2' : [self._nx_table_passer, self._table_passer, 'Contact pressures and tractions at grid points'], # Contact pressures and tractions at grid points.
 
             b'OCPSDF':   [self._table_passer, self._table_passer, 'Output table of cross-PSD functions'],
@@ -1153,7 +1168,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             ## NX unsorted
             b'OES1G' : [self._table_passer, self._table_passer, 'NX 2019.2 Grid point stress or strain table and interpolated from the centroidal stress table/OES1M; SORT1'],
-            b'OBOLT1': [self._table_passer, self._table_passer, 'NX 2019.2 Bolt output'],
+            b'OBOLT1': [reader_obolt.read_sort1_3, reader_obolt.read_4, 'NX 2019.2 Bolt output'],
             b'OSTR1IN': [self._table_passer, self._table_passer, 'NX 2019.2 OES output table of initial strains at corner grids in the cid=0 frame'],
             b'OELAR': [self._table_passer, self._table_passer, 'NX 2019.2 Inactive element status and addition/removal time'],
             b'OJINT': [self._table_passer, self._table_passer, 'NX 2019.2 Table for J integral output'],
@@ -1236,17 +1251,17 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #OSMPF2E Table of structure mode participation factors by excitation frequencies.
 
             # NX contact
-            b'OSLIDE1': [self._table_passer, self._table_passer, 'NX 2019.2 Incremental and total slide/slip distance'],
+            b'OSLIDE1': [reader_oslide.read_sort1_3, reader_oslide.read_4, 'NX 2019.2 Incremental and total slide/slip distance'],
             b'OCONST1' : [self._table_passer, self._table_passer, 'NX2019.2 Contact status in SORT1 format'],
-            b'OSLIDEG1' : [self._table_passer, self._table_passer, 'NX2019.2 Glue slide distance output'],
+            b'OSLIDEG1' : [reader_oslide.read_sort1_3, reader_oslide.read_4, 'NX2019.2 Glue slide distance output'],
             b'OBCKL' : [self._table_passer, self._table_passer, 'NX2019.2 Table of load factor vs. cumulative arc-length in SORT2 format'],
             #b'ASDFFFF' : [self._table_passer, self._table_passer, 'NX2019.2 ???'],
             #b'ASDFFFF' : [self._table_passer, self._table_passer, 'NX2019.2 ???'],
             #b'ASDFFFF' : [self._table_passer, self._table_passer, 'NX2019.2 ???'],
 
             ## MSC contact
-            b'OFCON3D0' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of Rigid/Flexible Body contact stresses; initial'],
-            b'OFCON3DD' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of Rigid/Flexible Body contact stresses; deformed'],
+            b'OFCON3D0' : [reader_ofcon3d.read_sort1_3, reader_ofcon3d.read_4, 'MSC 2020.0 Table of Rigid/Flexible Body contact stresses; initial'],
+            b'OFCON3DD' : [reader_ofcon3d.read_sort1_3, reader_ofcon3d.read_4, 'MSC 2020.0 Table of Rigid/Flexible Body contact stresses; deformed'],
 
             b'OBCNURB0' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of analytical contact surface spline; initial'],
             b'OBCNURBD' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of analytical contact surface spline; deformed'],
@@ -1256,7 +1271,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OFGCOND' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of Global Contact Output'],
             b'OFCRFMD' : [self._table_passer, self._table_passer, 'MSC 2020.0 Table of resultant force/moment for each CONTACT Pair; deformed'],
 
-            b'OUGSTRS0': [self._table_passer, self._table_passer, 'OUG-type table of geometry adjustment by initial stress-free contact'],
+            b'OUGSTRS0': [reader_ougstrs.read_sort1_3, reader_ougstrs.read_4, 'OUG-type table of geometry adjustment by initial stress-free contact'],
             #b'OFCON3D' : 'Table of initial contact status information'],
             #b'OCONTACT' : 'Table of contact pairs if BCONTAT=AUTO'],
         }
@@ -1650,7 +1665,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             ndata2 = self._read_pvto_4_helper(data, ndata)
         except (NotImplementedError, AssertionError) as error:
             #raise  # only for testing
-            if 'dev' in __version__ and self.IS_TESTING or 1:
+            if 'dev' in __version__ and self.IS_TESTING:
                 raise  # only for testing
             self.log.error(str(error))
             log_exc(self.log)
@@ -1691,7 +1706,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #print('*i=%s nvalues=%s' % (i, nvalues))
             istart = i*xword
             #self.show_data(data[istart:istart+32], types='sqd')
-            #self.show_data(data[istart:istart+64], types='sqd')
+            #self.show_data(data[istart:istart+64], types='sifqd')
             if self.size == 4:
                 word = data[istart:(i+2)*xword].rstrip()
             elif self.size == 8:
@@ -1847,6 +1862,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if self.table_name not in GEOM_TABLES and self.isubtable > -4:
             desc = self.op2_reader.desc_map[self.table_name]
             self.log.warning(f'    skipping {self.table_name_str:<8} ({desc})')
+            #raise NotImplementedError((self.table_name, desc))
         if not is_release and self.isubtable > -4:
             if self.table_name in GEOM_TABLES and not self.make_geom:
                 pass

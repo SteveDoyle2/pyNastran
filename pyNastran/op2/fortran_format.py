@@ -21,9 +21,15 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
+from pyNastran.op2.tables.oqg_constraintForces.obc import OBC
 from pyNastran.op2.tables.oug.oug import OUG
 from pyNastran.op2.tables.oug.otemp import OTEMP
 from pyNastran.op2.tables.oug.ougpk import OUGPK
+
+from pyNastran.op2.tables.contact.oslide import OSLIDE
+from pyNastran.op2.tables.contact.obolt import OBOLT
+from pyNastran.op2.tables.contact.ofcon3d import OFCON3D
+from pyNastran.op2.tables.contact.ougstrs import OUGSTRS
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.onmd import ONMD
@@ -43,6 +49,7 @@ class Op2Tables:
         self.reader_oes = OES(op2)
         self.reader_opg = OPG(op2)
         self.reader_oqg = OQG(op2)
+        self.reader_obc = OBC(op2)
         self.reader_opr = OPR(op2)
         self.reader_ogs = OGS(op2)
         self.reader_onr = ONR(op2)
@@ -52,6 +59,13 @@ class Op2Tables:
         self.reader_oug = OUG(op2)
         self.reader_otemp = OTEMP(op2)  # Siemens
         self.reader_ougpk = OUGPK(op2)  # STK
+
+        # bolt
+        self.reader_obolt = OBOLT(op2) # NX 2019.2 Bolt output
+        # contact
+        self.reader_oslide = OSLIDE(op2) # Incremental and total slide output for contact/glue
+        self.reader_ofcon3d = OFCON3D(op2)
+        self.reader_ougstrs = OUGSTRS(op2)
 
         #  OEF - element force, heat flux
         self.reader_oef = OEF(op2)

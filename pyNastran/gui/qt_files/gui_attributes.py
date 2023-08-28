@@ -5,8 +5,7 @@ and is inherited from many GUI classes
 import os
 import sys
 import traceback
-from collections import OrderedDict
-from typing import List, Dict, Any, Optional
+from typing import Callable, Optional, Any
 
 import numpy as np
 import vtk
@@ -21,6 +20,8 @@ except ImportError:
 
 import pyNastran
 from pyNastran import DEV
+from pyNastran.gui.vtk_rendering_core import vtkPolyDataMapper
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.gui.gui_objects.settings import Settings
 
 from pyNastran.gui.qt_files.tool_actions import ToolActions
@@ -209,11 +210,11 @@ class GuiAttributes:
         self.tools = []
         self.checkables = []
         self.actions = {}
-        self.modules = OrderedDict()
+        self.modules = {}
 
         # actor_slots
         self.text_actors = {}
-        self.geometry_actors = OrderedDict()
+        self.geometry_actors = {}
         self.alt_grids = {} #additional grids
 
         # coords
@@ -317,7 +318,7 @@ class GuiAttributes:
     def label_scale(self) -> float:
         return self.model_data.label_scale
     @property
-    def label_scale(self, label_scale: float):
+    def label_scale(self, label_scale: float) -> None:
         self.model_data.label_scale = label_scale
 
     @property
@@ -328,12 +329,12 @@ class GuiAttributes:
         self.model_data.result_cases = result_cases
 
     @property
-    def performance_mode(self):
+    def performance_mode(self) -> bool:
         """get the performance mode"""
         return self._performance_mode
 
     @performance_mode.setter
-    def performance_mode(self, performance_mode):
+    def performance_mode(self, performance_mode: bool) -> None:
         """
         Set the performance mode.  If performance mode flips
         to False, we dump the log buffer.
@@ -370,7 +371,8 @@ class GuiAttributes:
 
     #-------------------------------------------------------------------
     # deprecated attributes
-    def deprecated(self, old_name: str, new_name: str, deprecated_version: Optional[list[int]]) -> None:
+    def deprecated(self, old_name: str, new_name: str,
+                   deprecated_version: Optional[list[int]]) -> None:
         """
         Throws a deprecation message and crashes if past a specific version.
 
@@ -388,7 +390,7 @@ class GuiAttributes:
 
     #-------------------------------------------------------------------
     # geom
-    def clear_actor(self, actor_name):
+    def clear_actor(self, actor_name: str) -> None:
         if actor_name in self.gui.alt_grids:
             del self.alt_grids[actor_name]
         if actor_name in self.geometry_actors:
@@ -481,8 +483,8 @@ class GuiAttributes:
         self.eid_maps[self.name] = eid_map
 
     #-------------------------------------------------------------------
-    def set_point_grid(self, name, nodes, elements, color,
-                       point_size=5, opacity=1., add=True):
+    def set_point_grid(self, name: str, nodes, elements, color,
+                       point_size: int=5, opacity: int=1., add: bool=True) -> None:
         """Makes a POINT grid"""
         self.create_alternate_vtk_grid(name, color=color, point_size=point_size,
                                        opacity=opacity, representation='point')
@@ -526,7 +528,7 @@ class GuiAttributes:
         grid = self.alt_grids[name]
         grid.SetPoints(points)
 
-        etype = 9  # vtk.vtkQuad().GetCellType()
+        etype = 9  # vtkQuad().GetCellType()
         create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
         if add:
@@ -552,7 +554,7 @@ class GuiAttributes:
             grid = grids_dict[name]
             self.tool_actions._add_alt_geometry(grid, name)
 
-    def _remove_alt_actors(self, names=None):
+    def _remove_alt_actors(self, names=None) -> None:
         if names is None:
             names = list(self.geometry_actors.keys())
             names.remove('main')
@@ -574,11 +576,11 @@ class GuiAttributes:
         scale = self.settings.dim_max * 0.25
         return scale
 
-    def set_script_path(self, script_path):
+    def set_script_path(self, script_path: str) -> None:
         """Sets the path to the custom script directory"""
         self._script_path = script_path
 
-    def set_icon_path(self, icon_path):
+    def set_icon_path(self, icon_path: str) -> None:
         """Sets the path to the icon directory where custom icons are found"""
         self._icon_path = icon_path
 
@@ -607,7 +609,7 @@ class GuiAttributes:
         data2 = [(method, None, [])]
         self.res_widget.update_methods(data2)
 
-    def _remove_old_geometry(self, geom_filename):
+    def _remove_old_geometry(self, geom_filename: str) -> bool:
         skip_reading = False
         if self.dev:
             return skip_reading
@@ -625,7 +627,7 @@ class GuiAttributes:
             self.turn_text_off()
             self.grid.Reset()
 
-            self.model_data.result_cases = OrderedDict()
+            self.model_data.result_cases = {}
             self.ncases = 0
             for param in params_to_delete:
                 if hasattr(self, param):  # TODO: is this correct???
@@ -647,7 +649,7 @@ class GuiAttributes:
         return wildcard_level, fname
 
     @start_stop_performance_mode
-    def on_run_script(self, python_file=False):
+    def on_run_script(self, python_file=False) -> bool:
         """pulldown for running a python script"""
         is_passed = False
         if python_file in [None, False]:
@@ -676,7 +678,7 @@ class GuiAttributes:
         print('self.on_run_script(%r)' % python_file)
         return is_passed
 
-    def _execute_python_code(self, txt, show_msg=True):
+    def _execute_python_code(self, txt: str, show_msg: bool=True) -> bool:
         """executes python code"""
         is_passed = False
         if len(txt) == 0:
@@ -703,7 +705,7 @@ class GuiAttributes:
         return is_passed
 
     #---------------------------------------------------------------------------
-    def reset_labels(self, reset_minus1=True):
+    def reset_labels(self, reset_minus1: bool=True) -> bool:
         """
         Wipe all labels and regenerate the key slots based on the case keys.
         This is used when changing the model.
@@ -732,7 +734,7 @@ class GuiAttributes:
         #print(self.label_actors)
         #print(self.label_ids)
 
-    def _remove_labels(self):
+    def _remove_labels(self) -> None:
         """
         Remove all labels from the current result case.
         This happens when the user explicitly selects the clear label button.
@@ -751,7 +753,7 @@ class GuiAttributes:
             self.label_actors[icase] = []
             self.label_ids[icase] = set()
 
-    def clear_labels(self):
+    def clear_labels(self) -> None:
         """This clears out all labels from all result cases."""
         if len(self.label_actors) == 0:
             self.log.warning('No actors to clear')
@@ -794,24 +796,24 @@ class GuiAttributes:
         self.clipping_obj.on_update_clipping(min_clip=min_clip, max_clip=max_clip)
 
         #---------------------------------------------------------------------------
-    def hide_legend(self):
+    def hide_legend(self) -> None:
         """hides the legend"""
         self.scalar_bar.VisibilityOff()
         #self.scalar_bar.is_shown = False
         self.legend_obj.hide_legend()
 
-    def show_legend(self):
+    def show_legend(self) -> None:
         """shows the legend"""
         self.scalar_bar.VisibilityOn()
         #self.scalar_bar.is_shown = True
         self.legend_obj.show_legend()
 
-    def clear_legend(self):
+    def clear_legend(self) -> None:
         """clears the legend"""
         self._is_fringe = False
         self.legend_obj.clear_legend()
 
-    def _set_legend_fringe(self, is_fringe):
+    def _set_legend_fringe(self, is_fringe) -> None:
         self._is_fringe = is_fringe
         self.legend_obj._set_legend_fringe(is_fringe)
 
@@ -822,7 +824,7 @@ class GuiAttributes:
                          data_format='%.0f',
                          is_low_to_high=True, is_discrete=True, is_horizontal=True,
                          nlabels=None, labelsize=None, ncolors=None, colormap=None,
-                         is_shown=True, render=True):
+                         is_shown=True, render=True) -> None:
         """
         Updates the legend/model
 
@@ -847,7 +849,7 @@ class GuiAttributes:
                           data_format,
                           nlabels=None, labelsize=None,
                           ncolors=None, colormap=None,
-                          is_shown=True):
+                          is_shown=True) -> None:
         """
         Updates the Scalar Bar
 
@@ -885,7 +887,7 @@ class GuiAttributes:
                                is_horizontal=self.legend_obj.is_horizontal_scalar_bar,
                                is_shown=is_shown)
 
-    def on_update_scalar_bar(self, title, min_value, max_value, data_format):
+    def on_update_scalar_bar(self, title, min_value, max_value, data_format) -> None:
         self.title = str(title)
         self.min_value = float(min_value)
         self.max_value = float(max_value)
@@ -904,7 +906,7 @@ class GuiAttributes:
     #---------------------------------------------------------------------------
     def create_coordinate_system(self, coord_id: int, dim_max: float, label: str='',
                                  origin=None, matrix_3x3=None,
-                                 coord_type: str='xyz'):
+                                 coord_type: str='xyz') -> None:
         """
         Creates a coordinate system
 
@@ -933,24 +935,24 @@ class GuiAttributes:
             origin=origin, matrix_3x3=matrix_3x3,
             coord_type=coord_type)
 
-    def create_global_axes(self, dim_max: float):
+    def create_global_axes(self, dim_max: float) -> None:
         """creates the global axis"""
         cid = 0
         self.tool_actions.create_coordinate_system(
             cid, dim_max, label='', origin=None, matrix_3x3=None, coord_type='xyz')
 
-    def create_corner_axis(self):
+    def create_corner_axis(self) -> None:
         """creates the axes that sits in the corner"""
         self.tool_actions.create_corner_axis()
 
-    def get_corner_axis_visiblity(self):
+    def get_corner_axis_visiblity(self) -> bool:
         """gets the visibility of the corner axis"""
         corner_axis = self.corner_axis
         axes_actor = corner_axis.GetOrientationMarker()
         is_visible = axes_actor.GetVisibility()
         return is_visible
 
-    def set_corner_axis_visiblity(self, is_visible, render=True):
+    def set_corner_axis_visiblity(self, is_visible, render=True) -> None:
         """sets the visibility of the corner axis"""
         corner_axis = self.corner_axis
         axes_actor = corner_axis.GetOrientationMarker()
@@ -958,7 +960,7 @@ class GuiAttributes:
         if render:
             self.Render()
 
-    def update_axes_length(self, dim_max):
+    def update_axes_length(self, dim_max) -> None:
         """
         sets the driving dimension for:
           - picking?
@@ -969,7 +971,7 @@ class GuiAttributes:
         dim = self.settings.dim_max * self.settings.coord_scale
         self.on_set_axes_length(dim)
 
-    def on_set_axes_length(self, dim=None):
+    def on_set_axes_length(self, dim=None) -> None:
         """
         scale coordinate system based on model length
         """
@@ -980,16 +982,16 @@ class GuiAttributes:
 
     #---------------------------------------------------------------------------
     @property
-    def window_title(self):
+    def window_title(self) -> str:
         return self.getWindowTitle()
 
     @window_title.setter
-    def window_title(self, msg):
+    def window_title(self, msg) -> None:
         #msg2 = "%s - "  % self.base_window_title
         #msg2 += msg
         self.setWindowTitle(msg)
 
-    def build_fmts(self, fmt_order: list[str], stop_on_failure: bool=False):
+    def build_fmts(self, fmt_order: list[str], stop_on_failure: bool=False) -> None:
         """populates the formats that will be supported"""
         fmts = []
         #assert 'h5nastran' in fmt_order
@@ -1029,17 +1031,17 @@ class GuiAttributes:
     def model(self):
         return self.models[self.name]
     @model.setter
-    def model(self, model):
+    def model(self, model) -> None:
         self.models[self.name] = model
 
-    def _reset_model(self, name: str):
+    def _reset_model(self, name: str) -> None:
         """resets the grids; sets up alt_grids"""
         if hasattr(self, 'main_grids') and name not in self.main_grids:
-            grid = vtk.vtkUnstructuredGrid()
-            grid_mapper = vtk.vtkDataSetMapper()
+            grid = vtkUnstructuredGrid()
+            grid_mapper = vtkDataSetMapper()
             grid_mapper.SetInputData(grid)
 
-            geom_actor = vtk.vtkLODActor()
+            geom_actor = vtkLODActor()
             geom_actor.DragableOff()
             geom_actor.SetMapper(grid_mapper)
             self.rend.AddActor(geom_actor)
@@ -1057,9 +1059,9 @@ class GuiAttributes:
             self.grid_mapper.SetScalarRange(scalar_range)
             self.grid_mapper.SetLookupTable(self.color_function)
 
-            self.edge_actor = vtk.vtkLODActor()
+            self.edge_actor = vtkLODActor()
             self.edge_actor.DragableOff()
-            self.edge_mapper = vtk.vtkPolyDataMapper()
+            self.edge_mapper = vtkPolyDataMapper()
 
             # create the edges
             self.get_edges()
@@ -1076,7 +1078,7 @@ class GuiAttributes:
     #---------------------------------------------------------------------------
     @start_stop_performance_mode
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
-                         plot=True, raise_error=False):
+                         plot=True, raise_error=False) -> None:
         """
         Loads a baseline geometry
 
@@ -1099,7 +1101,7 @@ class GuiAttributes:
             name=name, plot=plot, raise_error=raise_error)
 
     @start_stop_performance_mode
-    def on_load_results(self, out_filename=None):
+    def on_load_results(self, out_filename=None) -> None:
         """
         Loads a results file.  Must have called on_load_geometry first.
 
@@ -1111,18 +1113,20 @@ class GuiAttributes:
         self.load_actions.on_load_results(out_filename=out_filename)
 
     @start_stop_performance_mode
-    def on_load_custom_results(self, out_filename=None, restype=None, stop_on_failure: bool=False):
+    def on_load_custom_results(self,
+                               out_filename=None, restype=None,
+                               stop_on_failure: bool=False) -> None:
         """will be a more generalized results reader"""
         self.load_actions.on_load_custom_results(
             out_filename=out_filename, restype=restype, stop_on_failure=stop_on_failure)
 
     @start_stop_performance_mode
-    def load_patran_nod(self, nod_filename):
+    def load_patran_nod(self, nod_filename) -> None:
         """reads a Patran formatted *.nod file"""
         self.load_actions.load_patran_nod(nod_filename)
 
     @start_stop_performance_mode
-    def load_batch_inputs(self, inputs):
+    def load_batch_inputs(self, inputs) -> None:
         print('load_batch_inputs', inputs)
         geom_script = inputs['geomscript']
         if geom_script is not None:
@@ -1208,15 +1212,15 @@ class GuiAttributes:
         self.vtk_interactor.Modified()
 
     #---------------------------------------------------------------------------
-    def on_increase_font_size(self):
+    def on_increase_font_size(self) -> None:
         """used by the hidden_tools for Ctrl +"""
         self.on_set_font_size(self.settings.font_size + 1)
 
-    def on_decrease_font_size(self):
+    def on_decrease_font_size(self) -> None:
         """used by the hidden_tools for Ctrl -"""
         self.on_set_font_size(self.settings.font_size - 1)
 
-    def on_set_font_size(self, font_size: int, show_command: bool=True):
+    def on_set_font_size(self, font_size: int, show_command: bool=True) -> bool:
         """changes the font size"""
         is_failed = True
         if not isinstance(font_size, int):
@@ -1253,12 +1257,11 @@ class GuiAttributes:
             self.shear_moment_torque_obj.set_font_size(font_size)
         self.edit_geometry_properties_obj.set_font_size(font_size)
 
-
         #self.menu_scripts.setFont(font)
         self.log_command('settings.on_set_font_size(%s)' % font_size)
         return False
 
-    def make_cutting_plane(self, data):
+    def make_cutting_plane(self, data) -> None:
         model_name = data['model_name']
         unused_model = self.models[model_name]
         cid_p1, p1 = data['p1']
@@ -1269,16 +1272,20 @@ class GuiAttributes:
         unused_zaxis_xyz = self.model.coords[cid_zaxis].transform_node_to_global(zaxis)
 
     #---------------------------------------------------------------------------
-    def get_result_by_xyz_cell_id(self, node_xyz, cell_id: int):
+    def get_result_by_xyz_cell_id(self, node_xyz: np.ndarray,
+                                  cell_id: int,
+                                  icase: Optional[int]=None) -> tuple[str, Any, int, np.ndarray]:
         """won't handle multiple cell_ids/node_xyz"""
-        out = self.mark_actions.get_result_by_xyz_cell_id(node_xyz, cell_id)
+        out = self.mark_actions.get_result_by_xyz_cell_id(node_xyz, cell_id, icase=icase)
         if out is None:
             print('attrs.get_result_by_xyz_cell_id bug')
             return None
         result_name, result_values, node_id, xyz = out
         return result_name, result_values, node_id, xyz
 
-    def get_result_by_cell_id(self, cell_id: int, world_position, icase=None):
+    def get_result_by_cell_id(self, cell_id: int,
+                              world_position: np.ndarray,
+                              icase: Optional[int]=None) -> tuple[str, Any, np.ndarray]:
         """should handle multiple cell_ids"""
         res_name, result_values, xyz = self.mark_actions.get_result_by_cell_id(
             cell_id, world_position, icase=icase)
@@ -1286,7 +1293,7 @@ class GuiAttributes:
 
     def mark_elements(self, eids: list[int],
                       stop_on_failure: bool=False,
-                      show_command: bool=True):
+                      show_command: bool=True) -> None:
         """mark the elements by the ElementID"""
         icase_result = 1 # ElementID
         icase_to_apply = self.icase
@@ -1310,7 +1317,7 @@ class GuiAttributes:
                                         icase_result: int,
                                         icase_to_apply: int,
                                         stop_on_failure: bool=False,
-                                        show_command: bool=False):
+                                        show_command: bool=False) -> None:
         """
         Marks a series of elements with custom text labels
 
@@ -1347,7 +1354,7 @@ class GuiAttributes:
     #def mark_min_elements(self, neids, show_command: bool=True):
         #"""mark the elements by the top/btm x elements"""
 
-    def mark_nodes(self, nids, icase, text):
+    def mark_nodes(self, nids, icase, text) -> None:
         """
         Marks a series of nodes with custom text labels
 
@@ -1369,7 +1376,7 @@ class GuiAttributes:
         """
         self.mark_actions.mark_nodes(nids, icase, text)
 
-    def create_annotation(self, text, x, y, z):
+    def create_annotation(self, text, x, y, z) -> None:
         """
         Creates the actual annotation
 
@@ -1391,13 +1398,13 @@ class GuiAttributes:
         return annotation
 
     #---------------------------------------------------------------------------
-    def on_update_geometry_properties_window(self, geometry_properties):
+    def on_update_geometry_properties_window(self, geometry_properties) -> None:
         """updates the EditGeometryProperties window"""
         self.edit_geometry_properties_obj.on_update_geometry_properties_window(
             geometry_properties)
 
     @start_stop_performance_mode
-    def on_update_geometry_properties(self, out_data, name=None, write_log=True):
+    def on_update_geometry_properties(self, out_data, name=None, write_log=True) -> None:
         """
         Applies the changed properties to the different actors if
         something changed.
@@ -1411,7 +1418,7 @@ class GuiAttributes:
             out_data, name=name, write_log=write_log)
 
     @start_stop_performance_mode
-    def on_update_geometry_properties_override_dialog(self, geometry_properties):
+    def on_update_geometry_properties_override_dialog(self, geometry_properties) -> None:
         """
         Update the goemetry properties and overwrite the options in the
         edit geometry properties dialog if it is open.
@@ -1428,7 +1435,7 @@ class GuiAttributes:
     #---------------------------------------------------------------------------
     def update_text_actors(self, subcase_id, subtitle,
                            imin, min_value,
-                           imax, max_value, label, location):
+                           imax, max_value, label, location) -> None:
         """
         Updates the text actors in the lower left
 
@@ -1441,25 +1448,25 @@ class GuiAttributes:
                                              imin, min_value,
                                              imax, max_value, label, location)
 
-    def create_text(self, position, label, text_size=18):
+    def create_text(self, position, label, text_size=18) -> None:
         """creates the lower left text actors"""
         self.tool_actions.create_text(position, label, text_size=text_size)
 
-    def turn_text_off(self):
+    def turn_text_off(self) -> None:
         """turns all the text actors off"""
         self.tool_actions.turn_text_off()
 
-    def turn_text_on(self):
+    def turn_text_on(self) -> None:
         """turns all the text actors on"""
         self.tool_actions.turn_text_on()
 
     @start_stop_performance_mode
-    def export_case_data(self, icases=None):
+    def export_case_data(self, icases=None) -> None:
         """exports CSVs of the requested cases"""
         self.tool_actions.export_case_data(icases=icases)
 
     @start_stop_performance_mode
-    def on_load_user_geom(self, csv_filename=None, name=None, color=None):
+    def on_load_user_geom(self, csv_filename=None, name=None, color=None) -> None:
         """
         Loads a User Geometry CSV File of the form:
 
@@ -1504,7 +1511,13 @@ class GuiAttributes:
         self.tool_actions.on_load_user_geom(csv_filename=csv_filename, name=name, color=color)
 
     @start_stop_performance_mode
-    def on_load_csv_points(self, csv_filename=None, name=None, color=None):
+    def on_save_vtk(self, vtk_filename=None) -> bool:
+        is_failed = self.tool_actions.on_save_vtk(
+            vtk_filename=vtk_filename)
+        return is_failed
+
+    @start_stop_performance_mode
+    def on_load_csv_points(self, csv_filename=None, name=None, color=None) -> bool:
         """
         Loads a User Points CSV File of the form:
 
@@ -1526,7 +1539,7 @@ class GuiAttributes:
         return is_failed
 
     #---------------------------------------------------------------------------
-    def create_groups_by_visible_result(self, nlimit=50):
+    def create_groups_by_visible_result(self, nlimit: int=50):
         """
         Creates group by the active result
 
@@ -1534,7 +1547,7 @@ class GuiAttributes:
         """
         return self.group_actions.create_groups_by_visible_result(nlimit=nlimit)
 
-    def create_groups_by_property_id(self):
+    def create_groups_by_property_id(self) -> int:
         """
         Creates a group for each Property ID.
 
@@ -1542,27 +1555,32 @@ class GuiAttributes:
         """
         return self.group_actions.create_groups_by_property_id()
 
+    def create_groups_by_model_group(self) -> int:
+        if hasattr(self, 'model') and hasattr(self.model, 'model_groups'):
+            return self.group_actions.create_groups_by_model_group(self.model.model_groups)
+        return 0
+
     #---------------------------------------------------------------------------
-    def update_camera(self, code):
+    def update_camera(self, code) -> None:
         self.view_actions.update_camera(code)
 
-    def _update_camera(self, camera=None):
+    def _update_camera(self, camera=None) -> None:
         self.view_actions._update_camera(camera)
 
-    def on_pan_left(self, event):
+    def on_pan_left(self, event) -> None:
         self.view_actions.on_pan_left(event)
 
-    def on_pan_right(self, event):
+    def on_pan_right(self, event) -> None:
         self.view_actions.on_pan_right(event)
 
-    def on_pan_up(self, event):
+    def on_pan_up(self, event) -> None:
         self.view_actions.on_pan_up(event)
 
-    def on_pan_down(self, event):
+    def on_pan_down(self, event) -> None:
         self.view_actions.on_pan_down(event)
 
     #------------------------------
-    def rotate(self, rotate_deg, render=True):
+    def rotate(self, rotate_deg, render: bool=True):
         """rotates the camera by a specified amount"""
         self.view_actions.rotate(rotate_deg, render=render)
 
@@ -1737,13 +1755,13 @@ class GuiAttributes:
 
 class ModelData:
     def __init__(self, parent: GuiAttributes):
-        self.geometry_properties = OrderedDict()
+        self.geometry_properties = {}
 
         self.groups = {}
         self.group_active = 'main'
 
         self.follower_nodes = {}
-        self.follower_functions = {}
+        self.follower_functions: dict[str, Callable] = {}
 
         self.label_actors = {-1 : []}
         self.label_ids = {}

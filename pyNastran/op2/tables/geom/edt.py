@@ -8,15 +8,16 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.cards.aero.aero import (
     #AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
-    #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-    #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    CAERO1, # CAERO2, CAERO3, CAERO4, CAERO5,
+    PAERO1, # PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3, MONDSP1,
-    #SPLINE1, SPLINE2, SPLINE3,
+    SPLINE1, SPLINE2, # SPLINE3,
     SPLINE4, SPLINE5)
 
 from pyNastran.op2.errors import DoubleCardError
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
 from pyNastran.bdf.cards.elements.acoustic import ACMODL
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLUTTER
 from .utils import get_minus1_start_end
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
@@ -208,8 +209,25 @@ class EDT:
 
     def _read_mkaero2(self, data: bytes, n: int) -> int:
         mkaero2x
+
     def _read_csschd(self, data: bytes, n: int) -> int:
-        csschd
+        """
+        (6401, 64, 307,
+         10, 510, 10, 20, 30,
+         20, 510, 100, 20, 300)
+
+        csschd	10	510	10	20	30
+        csschd	20	510	100	20	300
+        """
+        ints = np.frombuffer(data[n:], dtype=self.op2.idtype8)
+        nints = len(ints)
+        assert nints % 5 == 0
+        ints = ints.reshape(nints//5, 5)
+        for intsi in ints:
+            sid, aesid, lschd, lalpha, lmach = intsi
+            self.op2.add_csschd(sid, aesid, lschd, lalpha=lalpha, lmach=lmach)
+        return len(data)
+
     def _read_diverg(self, data: bytes, n: int) -> int:
         """
         Record – DIVERG(2702,27,387)
@@ -556,8 +574,10 @@ class EDT:
         struct = Struct(op2._endian + b'i 3f 2i')
         out = struct.unpack(data[n:])
         acsid, velocity, cref, rho_ref, sym_xz, sym_xy = out
-        op2.add_aero(velocity, cref, rho_ref,
-                     acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
+        aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
+        op2._add_methods._add_aero_object(aero, allow_overwrites=True)
+        #op2.add_aero(velocity, cref, rho_ref,
+                     #acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
         n = 36
         return n
 
@@ -712,6 +732,7 @@ class EDT:
 
         """
         op2 = self.op2
+        add_methods = op2._add_methods
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -721,12 +742,19 @@ class EDT:
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             eid, pid, cp, nspan, nchord, lspan, lchord, igid, x1, y1, z1, x12, x4, y4, z4, x43 = out
-            op2.add_caero1(eid, pid, igid,
-                           [x1, y1, z1], x12,
-                           [x4, y4, z4], x43,
-                           cp=cp,
-                           nspan=nspan, lspan=lspan,
-                           nchord=nchord, lchord=lchord)
+            caero = CAERO1(
+                eid, pid, igid,
+                [x1, y1, z1], x12,
+                [x4, y4, z4], x43, cp=cp,
+                nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                comment='')
+            add_methods._add_caero_object(caero, allow_overwrites=True)
+            #op2.add_caero1(eid, pid, igid,
+                           #[x1, y1, z1], x12,
+                           #[x4, y4, z4], x43,
+                           #cp=cp,
+                           #nspan=nspan, lspan=lspan,
+                           #nchord=nchord, lchord=lchord)
             n += ntotal
         return n
 
@@ -939,7 +967,9 @@ class EDT:
             for body in [b1, b2, b3, b4, b5, b6, empty]:
                 if body != 0:
                     caero_body_ids.append(body)
-            paero1 = op2.add_paero1(pid, caero_body_ids=caero_body_ids)
+            paero1 = PAERO1(pid, caero_body_ids=caero_body_ids, comment='')
+            op2._add_methods._add_paero_object(paero1, allow_overwrites=True)
+            #paero1 = op2.add_paero1(pid, caero_body_ids=caero_body_ids)
             str(paero1)
             #if caero_body_ids:
                 #self.log.warning(str(paero1))
@@ -1247,9 +1277,9 @@ class EDT:
             search_unit = reshape_bytes_block_size(search_unit_bytes, self.size)
             #ctype = reshape_bytes_block_size(ctype_bytes, self.size)
 
-            assert inter in ['IDENT', 'DIFF'], inter
+            assert inter in {'IDENT', 'DIFF'}, inter
             #assert ctype in ['STRONG', 'WEAK', 'WEAKINT', 'WEAKEXT'], ctype
-            assert method in ['CP', ''], method
+            assert method in {'CP', 'BW', ''}, method
             #assert area_op in [0, 1], area_op
             #If CTYPE = STRONG
             #If CTYPE = WEAK
@@ -1562,10 +1592,16 @@ class EDT:
                 #nelements = None
             #if melements == 0:
                 #melements = None
-            spline1 = op2.add_spline1(eid, caero, box1, box2, setg,
-                                       dz=dz, method=method,
-                                       usage=usage, nelements=nelements,
-                                       melements=melements)
+
+            spline1 = SPLINE1(eid, caero, box1, box2, setg,
+                              dz=dz, method=method,
+                            usage=usage, nelements=nelements,
+                            melements=melements)
+            op2._add_methods._add_spline_object(spline1, allow_overwrites=True)
+            #spline1 = op2.add_spline1(eid, caero, box1, box2, setg,
+                                       #dz=dz, method=method,
+                                       #usage=usage, nelements=nelements,
+                                       #melements=melements)
             str(spline1)
             n += ntotal
         #op2.to_nx()
@@ -1604,12 +1640,20 @@ class EDT:
             out = structi.unpack(edata)
             eid, caero, id1, id2, setg, dz, dtor, cid, dthx, dthy, usage_bytes = out
             usage = usage_bytes.rstrip().decode('latin1')
-            spline2 = op2.add_spline2(
+            spline2 = SPLINE2(
                 eid, caero,
                 id1, id2, setg,
                 dz=dz, dtor=dtor, cid=cid,
                 dthx=dthx, dthy=dthy,
                 usage=usage)
+            op2._add_methods._add_spline_object(spline2, allow_overwrites=True)
+
+            #spline2 = op2.add_spline2(
+                #eid, caero,
+                #id1, id2, setg,
+                #dz=dz, dtor=dtor, cid=cid,
+                #dthx=dthx, dthy=dthy,
+                #usage=usage)
             str(spline2)
             n += ntotal
         #n = self._read_spline2_nx(data, n)
@@ -2052,11 +2096,16 @@ class EDT:
             6: 'MS',
             #7: 'MSA',?
             8: 'A', # A = L = P
+
             16: 'D',
+
             24: 'DP',
             26: 'SDP',
             28: 'MAD',
             30: 'SMAD',
+
+            # 32: C?
+            62: 'SMADC',
         }
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
@@ -2285,13 +2334,22 @@ class EDT:
                     #op2.log.debug(f'FLUTTER: 9: fmax={fmax}; 10: epsilon={epsilon:g}')
             method = method_bytes.rstrip().decode('ascii')
             imethod = imethod_bytes.rstrip().decode('ascii')
-            op2.add_flutter(sid, method,
-                            density, mach, reduced_freq_velocity,
-                            imethod=imethod, # 'L'
-                            nvalue=nvalue,
-                            epsilon=epsilon,
-                            omax=fmax,
-                            validate=True)
+            flutter = FLUTTER(
+                sid, method,
+                density, mach, reduced_freq_velocity,
+                imethod=imethod, # 'L'
+                nvalue=nvalue,
+                epsilon=epsilon,
+                omax=fmax,
+                validate=True)
+            op2._add_methods._add_flutter_object(flutter, allow_overwrites=True)
+            #op2.add_flutter(sid, method,
+                            #density, mach, reduced_freq_velocity,
+                            #imethod=imethod, # 'L'
+                            #nvalue=nvalue,
+                            #epsilon=epsilon,
+                            #omax=fmax,
+                            #validate=True)
         return len(data)
         #ntotal = 12 # 4 * 8
         #ndatai = len(data) - n

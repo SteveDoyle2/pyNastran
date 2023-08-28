@@ -24,7 +24,6 @@ Defines various tables that don't fit in other sections:
     - _read_pcompts(self)
 
   - Matrix
-    - _get_matrix_row_fmt_nterms_nfloats(self, nvalues, tout)
     - _skip_matrix_mat(self)
     - read_matrix(self, table_name)
     - _read_matpool_matrix(self)
@@ -39,6 +38,8 @@ Defines various tables that don't fit in other sections:
     - _skip_table_helper(self)
     - _print_month(self, month, day, year, zero, one)
     - read_results_table(self)
+  - functions
+    - _get_matrix_row_fmt_nterms_nfloats(nvalues, tout, endian)
 
 """
 from __future__ import annotations
@@ -105,7 +106,8 @@ DENSE_MATRICES = [
 EXTSEOUT = [
     'KAA', 'MAA', 'BAA', 'K4XX', 'PA', 'GPXX', 'GDXX', 'RVAX',
     'VA', 'MUG1', 'MUG1O', 'MES1', 'MES1O', 'MEE1', 'MEE1O', 'MGPF',
-    'MGPFO', 'MEF1', 'MEF1O', 'MQG1', 'MQG1O', 'MQMG1', 'MQMG1O',
+    'MGPFO', 'MEF1O', 'MQG1', 'MQG1O', 'MQMG1', 'MQMG1O',
+    'MEF1',
 ]
 
 
@@ -125,7 +127,7 @@ class OP2Reader:
         # deck could crash.
         self._dump_deck = False
 
-        self.op2 = op2  # type: OP2
+        self.op2: OP2 = op2
 
         self.mapped_tables = {
             b'RST': (self.read_rst, 'restart file?'),
@@ -151,6 +153,7 @@ class OP2Reader:
             #b'MEFF' : self.read_meff,
             b'INTMOD' : (self.read_intmod, '???'),
             b'HISADD' : (self.read_hisadd, 'optimization history; op2_results.responses.convergence_data'),
+            #b'MEF1' : (self.read_extdb, 'external superlelement matrix'),
             b'EXTDB' : (self.read_extdb, 'external superlelements'),
             b'OMM2' : (self.read_omm2, 'max/min table'),
             b'STDISP' : (self.read_stdisp, 'aero-structural displacement?'),
@@ -198,8 +201,8 @@ class OP2Reader:
             # coordinate system transformation matrices
             b'CSTM' : (self.read_cstm, 'coordinate transforms'),
             b'CSTMS' : (self.read_cstm, 'coordinate transforms (superelement)'),
-            #b'TRMBD': self.read_trmbd,
-            #b'TRMBU': self.read_trmbu,
+            b'TRMBD': (self.read_trmbd, 'euler angles for transforming from material to (deformed) basic csys'),
+            b'TRMBU': (self.read_trmbu, 'euler angles for transforming from material to (undeformed) basic csys'),
 
             b'R1TABRG': (self.read_r1tabrg, 'DRESP1 optimization table'),
             # Qualifier info table???
@@ -210,13 +213,35 @@ class OP2Reader:
             b'EQEXINS' : (self.read_eqexin, 'internal/external ids (superelement)'),
 
             b'XSOP2DIR' : (self.read_xsop2dir, 'list of external superelement matrices?'),
-            #b'TEF1': (self._read_mef1, 'superelement matrix'),
-            #b'MEF1': (self._read_mef1, 'superelement matrix'),
-            #b'MUG1B': (self._read_mef1, 'superelement matrix'),
+            b'TUG1': (self.read_tug1, 'table Displacement g-set sort 1'),
+            b'TEF1': (self.read_tug1, 'table element forces sort 1'),
+            b'TES1': (self.read_tug1, 'table stress sort 1'),
+            b'TEE1': (self.read_tug1, 'table strain energy sort 1'),
+            b'TQMG1': (self.read_tug1, 'table mpc forces sort 1'),
+
+            b'MEF1': (self.read_mef1, 'external superelement'),
+            b'MES1': (self.read_mef1, 'external superelement'),
+            b'MEE1': (self.read_mef1, 'external superelement'),
+            b'MEE1O': (self.read_mef1, 'external superelement'),
+            b'MES1O': (self.read_mef1, 'external superelement'),
+            b'MEF1O': (self.read_mef1, 'external superelement'),
+            b'MUG1B': (self.read_mef1, 'external superelement'),
+            b'MUG1OB': (self.read_mef1, 'external superelement'),
+            b'MKQG1': (self.read_mef1, 'external superelement'),
+
+            b'MMQMG1': (self.read_mef1, 'external superelement'),
+            b'MBQMG1': (self.read_mef1, 'external superelement'),
+            b'MKQMG1': (self.read_mef1, 'external superelement'),
+            b'MK4QMG1': (self.read_mef1, 'external superelement'),
+
+            b'MMQG1': (self.read_mef1, 'external superelement'),
+            b'MBQG1': (self.read_mef1, 'external superelement'),
+            b'MK4QG1': (self.read_mef1, 'external superelement'),
+
             b'MATPOOL' : (self._read_matrix_matpool, 'matrices'),
 
-            b'OBC1': (self.read_obc1, 'Contact pressures and tractions at grid points'),
-            b'OBG1': (self.read_obc1, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
+            #b'OBC1': (self.read_obc1, 'Contact pressures and tractions at grid points'),
+            #b'OBG1': (self.read_obc1, 'Glue normal and tangential tractions at grid point in cid=0 frame'),
             b'PTMIC' : (self._read_ptmic, 'property of VATV microphone points'),
 
             # OVG: Table of aeroelastic x-y plot data for V-g or V-f curves
@@ -230,6 +255,7 @@ class OP2Reader:
             b'MKQG1' : 'external superelement',
             b'MATRV': 'external superelement',
             b'MUG1B': 'external superelement',
+            #b'MEF1': 'external superelement',
         }
         desc_map.update({key: values[1] for key, values in self.mapped_tables.items()})
         #desc_map = {key: values[1] for key, values in self.mapped_tables.items()}
@@ -243,6 +269,7 @@ class OP2Reader:
           4, 2, 4, 8, 1482184792, 1482184792, 8, 4, -1, 4, 4, 0, 4, 4, 2, 4, 8, 1297040711, 538976305, 8, 4, -1
           """
         #try:
+        version_str = ''
         op2 = self.op2
         markers = self.get_nmarkers(1, rewind=True)
         #except Exception:
@@ -308,7 +335,7 @@ class OP2Reader:
             #print('version = %r' % version_str)
 
             if macro_version == 'nastran':
-                mode = parse_nastran_version(
+                mode, version_str = parse_nastran_version(
                     data, version, self._encoding, self.op2.log)
                 # don't uncomment this...it breaks tests
                 #op2._nastran_format = mode
@@ -349,7 +376,7 @@ class OP2Reader:
             self.log.warning("No mode was set, assuming 'msc'")
             mode = 'msc'
         if self.read_mode == 1:
-            self.log.debug(f'mode = {mode!r}')
+            self.log.debug(f'mode={mode!r} version={version_str!r}')
         self.op2.set_mode(mode)
         self.op2.set_table_type()
 
@@ -540,6 +567,7 @@ class OP2Reader:
         # (101, 17, 0, 0, 0, 0, 0) # modes_elements_dmig.op2
         data = self._read_record()
         values = np.frombuffer(data, dtype=op2.idtype8)
+        self.log.debug(f'xsop2dir: header_values = {values}')
         ntables = values[1]
         #assert ntables == 7, values
 
@@ -556,7 +584,6 @@ class OP2Reader:
             struct_8s = Struct(self._endian + b'8s')
             struct_16s = Struct(self._endian + b'16s')
             for unused_i in range(ntables + 1):
-            #while marker != 0:
                 itable -= 1
                 data, ndata = self._read_record_ndata()
                 if ndata == 8:
@@ -574,7 +601,6 @@ class OP2Reader:
         else:
             struct_16s = Struct(self._endian + b'16s')
             for unused_i in range(ntables + 1):
-            #while marker != 0:
                 itable -= 1
                 data = self._read_record()
                 name = struct_16s.unpack(data)[0]
@@ -1528,8 +1554,98 @@ class OP2Reader:
 
     def read_trmbd(self):
         """
-        Reads the TRMBD table, which defines the transform from material (deformed) to basic.
+        Reads the TRMBD table
+
+        Table of Euler Angles for transformation from material to basic coordinate system in the deformed configuration
+
+        Record - HEADER
+        +------+---------+-------+---------------------------------+
+        | Word | Name    | Type  | Description                     |
+        +======+=========+=======+=================================+
+        |  1   | NAME(2) | CHAR4 | Data block name                 |
+        +------+---------+-------+---------------------------------+
+        |  3   | WORD    | I     | No Def or Month, Year, One, One |
+        +------+---------+-------+---------------------------------+
+
+        Record IDENT
+        +------+------------+-------+---------------------------------------------------+
+        | Word | Name       | Type  | Description                                       |
+        +======+============+=======+===================================================+
+        |  1   | ACODE(C)   | I     | Device code + 10*Approach code = 60 + iand        |
+        |      |            |       | (print, plot)                                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  2   | TCODE      | I     | Table code                                        |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | ELTYPE(C)  | I     | Element type number                               |
+        +------+------------+-------+---------------------------------------------------+
+        |  4   | SUBCASE    | I     | Subcase number                                    |
+        +------+------------+-------+---------------------------------------------------+
+        | TCODE,1 = 1       | Sort 1                                                    |
+        +------+------------+-------+---------------------------------------------------+
+        | ACODE,4 = 02      | Real eigenvalues                                          |
+        +------+------------+-------+---------------------------------------------------+
+        | 5    | UNDEF(5)   | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | ACODE,4 = 06      | Transient                                                 |
+        +------+------------+-------+---------------------------------------------------+
+        | 5    | TIME       | RS    | Current time step                                 |
+        +------+------------+-------+---------------------------------------------------+
+        | 6    | UNDEF(4)   | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | ACODE,4 = 10      | Nonlinear statics                                         |
+        +------+------------+-------+---------------------------------------------------+
+        | 5    | LFTSFQ     | RS    | Load step for SOL401 arc-length only              |
+        +------+------------+-------+---------------------------------------------------+
+        | 6    | TIME       | RS    | Time for SOL401 arc-length only                   |
+        +------+------------+-------+---------------------------------------------------+
+        | 7    | AL_TOTAL   | RS    | Accumulated arc-length for SOL401 arc-length only |
+        +------+------------+-------+---------------------------------------------------+
+        | 8    | UNDEF(2)   | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | End ACODE,4       |       |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | TCODE,1 = 02      | Sort 2                                                    |
+        +------+------------+-------+---------------------------------------------------+
+        | End TCODE,1       |       |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | 10   | NUMWDE     | I     | Number of words per entry in DATA record          |
+        +------+------------+-------+---------------------------------------------------+
+        | 11   | UNDEF(40)  | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
+        | 51   | TITLE(32)  | CHAR4 | Title character string (TITLE)                    |
+        +------+------------+-------+---------------------------------------------------+
+        | 83   | SUBTITL(32)| CHAR4 | Subtitle character string (SUBTITLE)              |
+        +------+------------+-------+---------------------------------------------------+
+        | 115  | LABEL(32)  | CHAR4 | LABEL character string (LABEL)                    |
+        +------+------------+-------+---------------------------------------------------+
+
+        Record DATA
+        +------+------------+-------+---------------------------------------------------+
+        | Word | Name       | Type  | Description                                       |
+        +======+============+=======+===================================================+
+        |  1   | ELID       | I     | Element ID * 10 + device code                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  2   | GRID       | I     | External grid ID                                  |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AX         | RS    | Euler angle X                                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AY         | RS    | Euler angle Y                                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AZ         | RS    | Euler angle Z                                     |
+        +------+------------+-------+---------------------------------------------------+
+        | Words 2 thru 5 repeat for each end of corner grid point                       |
+        | (for example, 8 grids for CHEXA, 6 grids for XPENTA, 2 grids for CBAR,        |
+        | 4 grids for CQUADX4                                                           |
+        +------+------------+-------+---------------------------------------------------+
+
+        Record TRAILER
+        +------+------------+-------+---------------------------------------------------+
+        | Word | Name       | Type  | Description                                       |
+        +======+============+=======+===================================================+
+        |  1   | UNDEF(6)   | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
         """
+
         op2 = self.op2
         is_geometry = op2.is_geometry
         unused_table_name = self._read_table_name(rewind=False)
@@ -1554,8 +1670,7 @@ class OP2Reader:
 
         self.read_3_markers([-2, 1, 0])
         data = self._read_record() # CSTM
-        # print(self.show_data(data, types='s'))
-        # assert len(data) == 8 * factor, len(data)
+        #assert len(data) == 8 * factor, len(data)
 
         self.read_3_markers([-3, 1, 0])
 
@@ -1576,7 +1691,8 @@ class OP2Reader:
             return
         nblocks = len(blocks)
 
-        assert(nblocks % 2 == 0)  # Should be even, first block is IDENT, second block is DATA
+        # Should be even, first block is IDENT, second block is DATA
+        assert(nblocks % 2 == 0)
 
         # Get time steps per subcase
         time_steps = {}  # {subcase_id: {t1, t2, ...}
@@ -1591,18 +1707,52 @@ class OP2Reader:
             time_step = identifiers_float[4]
 
             if subcase not in time_steps:
+                # Set because time step can be repeated
                 time_steps[subcase] = {time_step, }
             else:
                 time_steps[subcase].add(time_step)
 
         # Create time step to tid mapper per subcase
         for subcase, tsteps in time_steps.items():
-            time_steps[subcase] = np.array(list(tsteps))  # convert set to numpy array
-            tstep_to_index_mapper = {time_steps[subcase][x]: x for x in range(0, time_steps[subcase].shape[0])}
+            tsteps = np.array(list(tsteps))
+            # Sort because set does not retain ordering
+            tstep_indices = np.argsort(tsteps)
+            time_steps[subcase] = tsteps[tstep_indices]
 
-        trmbd = op2.trmbd
+            ntimes = time_steps[subcase].shape[0]
+            tstep_to_index_mapper = {
+                time_steps[subcase][itime]: itime for itime in range(ntimes)}
+
+        trmbd = op2.op2_results.trmbd
         # Read data
         #print('nblocks =', nblocks)
+
+        element_type_to_str_map = {
+            300: ('CHEXA', 8),
+            301: ('CPENTA', 6),
+            302: ('CTETRA', 4),
+            303: ('CPYRAM', 5),
+
+            312: ('CTRAX3', 3),
+            314: ('CTRAX6', 3),
+
+            313: ('CQUADX4', 4),
+            315: ('CQUADX8', 4),
+
+            320: ('CPLSTS3', 3),
+            322: ('PLSTS6', 3),
+
+            343: ('CTRIA6', 3),
+            344: ('CQUAD8', 4),
+
+            345: ('CTRIAR', 3),
+            346: ('CQUADR', 4),
+
+            347: ('CBAR', 2),
+            348: ('CBEAM', 2), # ???
+
+            363: ('CROD', 2),
+        }
         for i in range(0, nblocks, 2):
             identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
             identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
@@ -1626,61 +1776,8 @@ class OP2Reader:
             float_data = np.frombuffer(blocks[i+1], dtype=op2.fdtype8)
 
             #grids = int_data[:, np.array([1, 5, 9, 13, 17, 21])]
-            if element_type == 363:
-                element = 'CROD'
-                nnodes = 2
-            elif element_type == 347:
-                nnodes = 2  # ???
-                element = 'CBAR'
-            elif element_type == 348:
-                element = 'CBEAM'
-                nnodes = 2  # ???
-
-            elif element_type == 301:
-                element = 'CPENTA'
-                nnodes = 6
-                #grids = int_data[:, np.array([1, 5, 9, 13, 17, 21])]
-                #eulers_x = float_data[:, np.array([2, 6, 10, 14, 18, 22])]
-                #eulers_y = float_data[:, np.array([3, 7, 11, 15, 19, 23])]
-                #eulers_z = float_data[:, np.array([4, 8, 12, 16, 20, 24])]
-            elif element_type == 302:
-                element = 'CTETRA'
-                nnodes = 4
-                #grids = int_data[:, np.array([1, 5, 9, 13])]
-                #eulers_x = float_data[:, np.array([2, 6, 10, 14])]
-                #eulers_y = float_data[:, np.array([3, 7, 11, 15])]
-                #eulers_z = float_data[:, np.array([4, 8, 12, 16])]
-            elif element_type == 303:
-                element = 'CPYRAM'
-                nnodes = 5
-
-            elif element_type == 343:
-                element = 'CTRIA6'
-                nnodes = 3
-            elif element_type == 344:
-                element = 'CQUAD8'
-                nnodes = 4
-            elif element_type == 346:
-                element = 'CQUADR'
-                nnodes = 4
-
-            elif element_type == 300: # or eltype == 67:
-                element = 'CHEXA8'
-                nnodes = 8
-
-            elif element_type == 345:
-                nnodes = 3
-                element = 'CTRIAR'
-            elif element_type == 346:
-                element = 'CQUADR'
-                nnodes = 4
-
-            elif element_type == 313:
-                element = 'CQUADX4'
-                nnodes = 4
-            elif element_type == 315:
-                element = 'CQUADX8'
-                nnodes = 4
+            if element_type in element_type_to_str_map:
+                element, nnodes = element_type_to_str_map[element_type]
 
             elif element_type == 316:
                 nnodes = 3
@@ -1704,12 +1801,12 @@ class OP2Reader:
             elif element_type == 323:
                 nnodes = 4
                 element = 'CPLSTS8'
-
             else:
                 #print(int_data[:20])
                 print(op2.code_information())
-                raise NotImplementedError(f"Element type {element_type} is not implemented.\n")
-            n_elements, int_data, float_data = reshape_trmbd(element, nnodes, int_data, float_data)
+                raise NotImplementedError(f"Element type {element_type:d} is not implemented.\n")
+            nelements, int_data, float_data = reshape_trmbd(
+                element, nnodes, int_data, float_data)
 
             eids = (int_data[:, 0] - op2.device_code) // 10
             #nelements = len(eids)
@@ -1727,13 +1824,15 @@ class OP2Reader:
                 trmbd.eulersz[subcase] = {}
             if element not in trmbd.eulersx[subcase]:
                 #isubcase = time_steps[subcase]
-                trmbd.eulersx[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, eulers_x.shape[1]])
-                trmbd.eulersy[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, eulers_y.shape[1]])
-                trmbd.eulersz[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, eulers_z.shape[1]])
+                ntimes = time_steps[subcase].shape[0]
+                trmbd.eulersx[subcase][element] = np.empty([ntimes, nelements, eulers_x.shape[1]])
+                trmbd.eulersy[subcase][element] = np.empty([ntimes, nelements, eulers_y.shape[1]])
+                trmbd.eulersz[subcase][element] = np.empty([ntimes, nelements, eulers_z.shape[1]])
             if element not in trmbd.nodes:
-                nodes = np.empty([n_elements, grids.shape[1] + 1], dtype='int32')
+                nodes = np.empty([nelements, grids.shape[1] + 1], dtype='int32')
                 nodes[:, 0] = eids
                 nodes[:, 1:] = grids
+                trmbd.nodes[element] = nodes
 
             itime = tstep_to_index_mapper[time_step]
             trmbd.eulersx[subcase][element][itime, :, :] = eulers_x
@@ -1744,7 +1843,67 @@ class OP2Reader:
 
     def read_trmbu(self):
         """
-        Reads the TRMBU table, which defines the transform from material (undeformed) to basic.
+        Reads the TRMBU table
+
+        Table of Euler Angles for transformation from material to basic coordinate system
+        in the undeformed configuration
+
+        Record - HEADER
+        +------+---------+-------+---------------------------------+
+        | Word | Name    | Type  | Description                     |
+        +======+=========+=======+=================================+
+        |  1   | NAME(2) | CHAR4 | Data block name                 |
+        +------+---------+-------+---------------------------------+
+        |  3   | WORD    | I     | No Def or Month, Year, One, One |
+        +------+---------+-------+---------------------------------+
+
+        Record IDENT
+        +---------+------------+-------+---------------------------------------------------+
+        | Word    | Name       | Type  | Description                                       |
+        +=========+============+=======+===================================================+
+        |  1      | ACODE      | I     | Device code + 10*Approach code = 60 + iand        |
+        |         |            |       | (print, plot)                                     |
+        +---------+------------+-------+---------------------------------------------------+
+        |  2      | TCODE      | I     | Table code                                        |
+        +---------+------------+-------+---------------------------------------------------+
+        |  3      | ELTYPE(C)  | I     | Element type number                               |
+        +---------+------------+-------+---------------------------------------------------+
+        |  4      | SUBCASE    | I     | Subcase number                                    |
+        +---------+------------+-------+---------------------------------------------------+
+        | 5       | TIME       | RS    | Time Step                                         |
+        +---------+------------+-------+---------------------------------------------------+
+        | 6-9     | UNDEF(4)   | None  |                                                   |
+        +---------+------------+-------+---------------------------------------------------+
+        | 10      | NUMWDE     | I     | Number of words per entry in DATA record          |
+        +---------+------------+-------+---------------------------------------------------+
+        | 11-50   | UNDEF(40)  | None  |                                                   |
+        +---------+------------+-------+---------------------------------------------------+
+        | 51-82   | TITLE(32)  | CHAR4 | Title character string (TITLE)                    |
+        +---------+------------+-------+---------------------------------------------------+
+        | 83-114  | SUBTITL(32)| CHAR4 | Subtitle character string (SUBTITLE)              |
+        +---------+------------+-------+---------------------------------------------------+
+        | 115-146 | LABEL(32)  | CHAR4 | LABEL character string (LABEL)                    |
+        +---------+------------+-------+---------------------------------------------------+
+
+        Record DATA
+        +------+------------+-------+---------------------------------------------------+
+        | Word | Name       | Type  | Description                                       |
+        +======+============+=======+===================================================+
+        |  1   | EID        | I     | Element ID * 10 + device code                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AX         | RS    | Euler angle X                                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AY         | RS    | Euler angle Y                                     |
+        +------+------------+-------+---------------------------------------------------+
+        |  3   | AZ         | RS    | Euler angle Z                                     |
+        +------+------------+-------+---------------------------------------------------+
+
+        Record TRAILER
+        +------+------------+-------+---------------------------------------------------+
+        | Word | Name       | Type  | Description                                       |
+        +======+============+=======+===================================================+
+        |  1   | UNDEF(6)   | None  |                                                   |
+        +------+------------+-------+---------------------------------------------------+
         """
         op2 = self.op2
         #is_geometry = op2.is_geometry
@@ -1801,20 +1960,55 @@ class OP2Reader:
             time_step = identifiers_float[4]
 
             if subcase not in time_steps:
-                time_steps[subcase] = {time_step, }
+                time_steps[subcase] = {time_step, }  # Set because time step can be repeated
             else:
                 time_steps[subcase].add(time_step)
 
         # Create time step to tid mapper per subcase
         for subcase, tsteps in time_steps.items():
-            time_steps[subcase] = np.array(list(tsteps))  # convert set to numpy array
-            tstep_to_index_mapper = {time_steps[subcase][x]: x for x in range(0, time_steps[subcase].shape[0])}
+            tsteps = np.array(list(tsteps))
+            tstep_indices = np.argsort(tsteps)  # Sort because set does not retain ordering
+            time_steps[subcase] = tsteps[tstep_indices]
+
+            ntimes = time_steps[subcase].shape[0]
+            tstep_to_index_mapper = {
+                time_steps[subcase][itime]: itime for itime in range(ntimes)
+            }
 
         # Read data
         trmbu = op2.trmbu
+        element_type_to_str_map = {
+            300: 'CHEXA',
+            301: 'CPENTA',
+            302: 'CTETRA',
+            303: 'CPYRAM',
+
+            312: 'CTRAX3',
+            314: 'CTRAX6',
+
+            313: 'CQUADX4',
+            315: 'CQUADX8',
+
+            320: 'CPLSTS3',
+            322: 'CPLSTS6',
+
+            343: 'CTRIA6',
+            344: 'CQUAD8',
+
+            345: 'CTRIAR',
+            346: 'CQUADR',
+
+            347: 'CBAR',
+            348: 'CBEAM',
+
+            363: 'CROD',
+        }
+
         for i in range(0, nblocks, 2):
-            identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
-            identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
+            id_data = blocks[i]
+            eid_euler_data = blocks[i+1]
+            identifiers_int = np.frombuffer(id_data, dtype=op2.idtype8)
+            identifiers_float = np.frombuffer(id_data, dtype=op2.fdtype8)
 
             acode = identifiers_int[0]
             tcode = identifiers_int[1]
@@ -1832,58 +2026,22 @@ class OP2Reader:
             op2._set_approach_code(approach_code, tCode, int3, isubcase)
             #------------------------------------------------------------------------
 
-            int_data = np.frombuffer(blocks[i+1], dtype=op2.idtype8)
-            float_data = np.frombuffer(blocks[i+1], dtype=op2.fdtype8)
+            int_data = np.frombuffer(eid_euler_data, dtype=op2.idtype8)
+            float_data = np.frombuffer(eid_euler_data, dtype=op2.fdtype8)
             numwide = 4
-            if element_type == 301: # or eltype == 67:
-                element = 'CPENTA'
-            elif element_type == 302: # or eltype == 67:
-                element = 'CTETRA'
-            elif element_type == 303: # or eltype == 67:
-                element = 'CPYRAM'
-
-            elif element_type == 300: # or eltype == 67:
-                element = 'CHEXA8'
-
-                numwide = 4
-                n_elements = int_data.shape[0] // numwide  # elid + 3 euler angles
-                #int_data = int_data.reshape(n_elements, numwide)
-                #float_data = float_data.reshape(n_elements, numwide)
-
-                #eids = (int_data[:, 0] - 2) // 10
-                # grids = int_data[:, np.array([1, 5, 9, 13, 17, 21, 25, 29])]
-
-                #eulers = float_data[:, np.array([1, 2, 3])]
-                # eulers_y = float_data[:, np.array([3, 7, 11, 15, 19, 23, 27, 31])]
-                # eulers_z = float_data[:, np.array([4, 8, 12, 16, 20, 24, 28, 32])]
-
-            elif element_type == 363:
-                numwide = 4
-                element = 'CROD'
-            elif element_type == 347:
-                numwide = 4
-                element = 'CBAR'
-            elif element_type == 348:
-                numwide = 4
-                element = 'CBEAM'
-
-            elif element_type == 345:
-                element = 'CTRIAR'
-                numwide = 4
-            elif element_type == 346:
-                element = 'CQUADR'
-                numwide = 4
-
-            elif element_type == 343:
-                element = 'CTRIA6'
-                numwide = 4
-            elif element_type == 344:
-                element = 'CQUAD8'
-                numwide = 4
+            numwide = 4
+            if element_type in element_type_to_str_map:
+                element = element_type_to_str_map[element_type]
 
             elif element_type == 316:
                 numwide = 4
                 element = 'CPLSTN3'
+            #elif element_type == 316:
+                #numwide = 4
+                #element = 'CPLSTS3'
+            #elif element_type == 318:
+                #nnodes = 6
+                #element = 'CPLSTS6'
             elif element_type == 317:
                 numwide = 4
                 element = 'CPLSTN4'
@@ -1892,43 +2050,31 @@ class OP2Reader:
             elif element_type == 319:
                 element = 'CPLSTN8'
 
-            #elif element_type == 316:
-                #numwide = 4
-                #element = 'CPLSTS3'
             elif element_type == 321:
                 numwide = 4
                 element = 'CPLSTS4'
-            #elif element_type == 318:
-                #nnodes = 6
-                #element = 'CPLSTS6'
             elif element_type == 323:
                 numwide = 4
                 element = 'CPLSTS8'
-
-            elif element_type == 313:
-                element = 'CQUADX4'
-                numwide = 4
-            elif element_type == 315:
-                element = 'CQUADX8'
-                numwide = 4
             else:
                 print(int_data[:10])
                 print(op2.code_information())
                 raise NotImplementedError(f"Element type {element_type} is not implemented.\n")
 
             assert numwide == 4, numwide
-            n_elements = int_data.shape[0] // numwide  # element_id + 3 euler angles
-            int_data = int_data.reshape(n_elements, numwide)
-            float_data = float_data.reshape(n_elements, numwide)
+            nelements = int_data.shape[0] // numwide  # element_id + 3 euler angles
+            assert int_data.shape[0] % numwide == 0, 'failed eid+3 euler'
+            int_data = int_data.reshape(nelements, numwide)
+            float_data = float_data.reshape(nelements, numwide)
 
             eids = (int_data[:, 0] - op2.device_code) // 10
             eulers = float_data[:, 1:]
 
-            trmbu = op2.trmbu
             if subcase not in trmbu.eulers:
                 trmbu.eulers[subcase] = {}
             if element not in trmbu.eulers[subcase]:
-                trmbu.eulers[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, 4])
+                ntimes = time_steps[subcase].shape[0]
+                trmbu.eulers[subcase][element] = np.empty([ntimes, nelements, 4])
 
             itime = tstep_to_index_mapper[time_step]
             trmbu.eulers[subcase][element][itime, :, 0] = eids
@@ -1979,7 +2125,7 @@ class OP2Reader:
                 data = self._read_record() # 584
                 ndata = len(data)
                 #print('ndata A =', ndata)
-                op2._op2_readers.reader_oqg._read_obc1_3(data, ndata)
+                op2._op2_readers.reader_obc.read_sort1_3(data, ndata)
                 #print('---------------')
 
                 self.read_3_markers([itable, 1, 0])  # -4
@@ -2110,6 +2256,247 @@ class OP2Reader:
             itable -= 1
         stop_marker = self.get_marker1(rewind=False)
 
+    def read_tug1(self) -> None:
+        """TUG1: table UG1"""
+        op2 = self.op2
+        table_name = self._read_table_name(rewind=False)
+        op2.table_name = table_name
+        #self.log.debug('table_name = %r' % op2.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('_read_superelement - %s\n' % table_name)
+
+        #data = self._read_record()
+        #self.show_data(data, types='ifsqd', endian=None, force=False)
+        #self.show(data, types='ifsqd', endian=None, force=False)
+
+        self.read_markers([-1])
+        if self.read_mode == 1:
+            data0 = self._read_record()
+            out0 = Struct(b'7i').unpack(data0)
+            # (101, 240, 34, 32767, 0, 7, 0)
+            # (101, 184, 34, 32767, 0, 1004, 0)
+            #(101, 132, 18, 32767, 0, 7, 0)
+            aa, bb, ngrid, cc, dd, seven, ee = out0
+            #assert ngrid == 34, out
+            data_dict = {
+                -1: {
+                    'data': out0,
+                    '3_ngrid': ngrid,
+                },
+            }
+            analysis_code_expected = 0
+            if table_name == b'TUG1':
+                analysis_code_expected = 7
+                table_subname_expected = 'PHIP'
+            elif table_name == b'TES1':
+                analysis_code_expected = 5
+                table_subname_expected = 'TES'
+            elif table_name == b'TEF1':
+                analysis_code_expected = 4
+                table_subname_expected = 'TEF'
+            elif table_name == b'TEE1':
+                analysis_code_expected = 5
+                table_subname_expected = 'TEE'
+            elif table_name == b'TQMG1':
+                analysis_code_expected = 39
+                table_subname_expected = 'TQMP'
+            else:
+                raise NotImplementedError(op2.table_name)
+            assert seven in {7, 1004, 1005, 39}, f'seven={seven:d} out0={out0}'
+        else:
+            data = self._skip_record()
+
+        self.read_markers([-2, 1, 0])
+        if self.read_mode == 1:
+            data = self._read_record()
+            out = Struct('8s i 12s i').unpack(data)
+            #print(out)
+            table_subname, analysis_code, table_type, precision = out # TODO: verify
+            data_dict[-2] = {
+                'data': out,
+                '1_table_subname': table_subname,
+                '2_analysis_code': analysis_code,
+                '3_table_type': table_type,
+                '4_precision?': precision,
+            }
+            table_subname = table_subname.strip().decode(self._encoding)
+            table_type = table_type.strip().decode(self._encoding)
+            assert table_subname == table_subname_expected, table_subname # {'PHIP', 'TEF', 'TES', 'TEE', 'TQMP'}, table_subname
+            assert analysis_code == analysis_code_expected, out # in {7, 4, 5, 39}, out
+            assert table_type == 'REAL', table_type
+            assert precision == 1, precision
+            op2.log.info(f'table_name={op2.table_name} out0={out0} out={out}')
+        else:
+            data = self._skip_record()
+        #self.show_data(data, types='ifsq', endian=None, force=False)
+
+        itable = -3
+        self.read_markers([itable, 1, 0])
+        itable -= 1
+        marker = self.get_marker1(rewind=True)
+        while marker != 0:
+            if self.read_mode == 1:
+                data = self._read_record()
+                ints = np.frombuffer(data, dtype='int32')
+                if ints.max() > 500_000_000:
+                    assert table_name in {b'TES1', b'TEF1', b'TEE1'}, table_name
+                    strings = np.frombuffer(data, dtype='|S8')
+
+                    #self.show_data(data, types='ifsq', endian=None, force=False)
+                    #data2 = data.split()
+                    try:
+                        ints = np.array(strings, dtype='int32')
+                    except ValueError:
+                        ints = strings
+                else:
+                    assert table_name in {b'TUG1', b'TEF1', b'TES1', b'TEE1', b'TQMG1'}, table_name
+                if ints.dtype.name in {'int32'}:
+                    ints = ints.reshape(len(ints) // 2, 2)
+                #print(ints, ints.shape)
+                data_dict[itable+1] = {'data': ints}
+            else:
+                data = self._skip_record()
+
+            self.read_markers([itable, 1, 0])
+            itable -= 1
+            marker = self.get_marker1(rewind=True)
+            if marker == 0:
+                break
+
+            if self.read_mode == 1:
+                data = self._read_record()
+
+                #header = b'TYPE  IDCOMP ROW    TYPE  IDCOMP ROW    '
+                header = data[:40]
+                #print(header)
+                ints2 = np.frombuffer(data[40:], dtype='int32')
+                nints = len(ints2)
+                ints2 = ints2.reshape(nints//5, 5)
+                #print(ints2)
+                #print(ints2.shape)
+                data_dict[itable+1] = {'header': header, 'data': ints2}
+            else:
+                data = self._skip_record()
+
+            self.read_markers([itable, 1, 0])
+            itable -= 1
+            #self.show_data(data, types='ifsqd', endian=None, force=False)
+            marker = self.get_marker1(rewind=True)
+
+        self.read_markers([0])
+        if self.read_mode == 1:
+            table_name_str = table_name.decode(self._encoding)
+            op2.op2_results.superelement_tables[table_name_str] = data_dict
+        return
+
+
+    def read_mef1(self):
+        self._read_matrix_mat()
+        return
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        #self.log.debug('table_name = %r' % op2.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+        self.read_markers([-1])
+        data = self._read_record()
+        self.show_data(data, types='i', endian=None, force=False)
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        self.show_data(data, types='is', endian=None, force=False)
+
+        #self.show_data(data, types='ifs', endian=None, force=False)
+
+        #self.show(1000, types='ifsqd')
+
+        itable = -3
+        itable_next = -4
+
+        s12 = Struct(self._endian + b'i d')
+        s20 = Struct(self._endian + b'i dd')
+        while 1:
+            self.read_markers([itable, 1, ])
+            stop_marker = self.get_marker1(rewind=True)
+            if stop_marker == 0:
+                break
+            assert stop_marker == 1, stop_marker
+            stop_marker = self.get_marker1(rewind=False)
+            x = 1
+            while 1:
+                n = op2.n
+                data = self.read_block4()
+                block_value, = op2.struct_i.unpack(data)
+                if block_value == itable_next:
+                    op2.f.seek(n)
+                    op2.n = n
+                    break
+                data = self.read_block4()
+                ndata = len(data)
+                if ndata == 12:
+                    out = s12.unpack(data)
+                    print(block_value, out)
+                elif ndata == 20:
+                    out = s20.unpack(data)
+                    print(block_value, out)
+                else:
+                    out = np.frombuffer(data[4:], dtype='float64')
+                    print(block_value, out.tolist())
+                    #self.show_data(data, types='ifsqd', endian=None, force=False)
+                    #raise RuntimeError()
+                #self.show(100, types='ifsqd')
+            x = 1
+            itable -= 1
+            itable_next -= 1
+        stop_marker = self.get_marker1(rewind=False)
+        #self.show(1000, types='ifsqd', endian=None, force=False)
+
+        #for table=-3
+        ##ints = (
+        ##  4, 1, 4,
+        ##  4, 2, 4, 12, 4, 858993456, 1039588147, 12,
+        ##  4, 2, 4, 12, 6, 0, -1115684864, 12,
+        ##  4, 2, 4, 12, 10, 0, 1039138816, 12,
+        ##  4, 2, 4, 12, 12, 0, 1039138816, 12,
+        #   4, 2, 4, 12, 15, 0, -1109393408, 12,
+        #   4, 2, 4, 12, 18, 0, 1039663104, 12,
+        #   4, 2, 4, 12, 20, 0, 1039663104, 12,
+        #   4, 2, 4, 12, 23, 0, -1110441984, 12,
+        #   4, 2, 4, 12, 26, 0, 1039663104, 12,
+        #   4, 2, 4, 12, 28, -1717986904, -1109093991, 12,
+        #   4, 4, 4, 20, 30, 0, 1032323072, 0, -1109393408, 20,
+        #   4, 2, 4, 12, 34, 0, -1107820544, 12,
+        #   4, 2, 4, 12, 36, 1717986916, -1106434970, 12,
+        #   4, 2, 4, 12, 38, 0, 1032323072, 12,
+        #   4, 2, 4, 12, 42, 0, -1107034112, 12,
+        #   4, 2, 4, 12, 44, 858993460, -1106079181, 12,
+        #   4, 4, 4, 20, 46, 0, 1032323072, 0, 1038090240, 20,
+        #   4, 2, 4, 12, 50, 0, -1105920000, 12,
+        #   4, 2, 4, 12, 52, 1717986919, -1105264666, 12,
+        #   4, 2, 4, 12, 54, 0, 1032585216, 12,
+        #   4, 2, 4, 12, 58, 0, -1105297408, 12,
+        #   4, 2, 4, 12, 60, 0, -1105014208, 12,
+        #   4, 2, 4, 12, 62, 0, 1032060928, 12,
+        #   4, 2, 4, 12, 66, 0, -1104949248, 12,
+        #   4, 2, 4, 12, 68, -1717986918, -1104605303, 12,
+        #   4, 4, 4, 20, 70, 0, 1031995392, 0, 1038352384, 20,
+        #   4, 2, 4, 12, 74, -208725392, -1060776204, 12, 4, 2, 4, 12, 76, -1785409415, -1060783274, 12, 4, 4, 4, 20, 78, 1273831424, -1075489352, -82081896, -1057262893, 20, 4, 2, 4, 12, 82, -1785409368, -1060783274)
+
+        #ints = (
+        # 4, -4, 4,
+        # 4, 1, 4,
+        # 4, 1, 4,
+        # 4, 2, 4, 12, 1, 0, -1101004800, 12,
+        # 4, 2, 4, 12, 3, -858993472, 1045130444, 12,
+        # 4, 2, 4, 12, 5, 0, -1108344832, 12, 4, 2, 4, 12, 19, 858993456, 1047976755, 12, 4, 2, 4, 12, 21, 0, -1107296256, 12, 4, 4, 4, 20, 24, 0, -1118830592, 0, 1048051712, 20, 4, 2, 4, 12, 27, -1717986916, 1049062809, 12, 4, 2, 4, 12, 29, 0, -1107296256, 12, 4, 4, 4, 20, 32, 0, -1117782016, 0, 1049362432, 20, 4, 2, 4, 12, 35, 858993458, 1050055219, 12, 4, 2, 4, 12, 37, 0, -1106771968, 12, 4, 4, 4, 20, 40, 0, -1117519872, 0, 1050148864, 20, 4, 2, 4, 12, 43, -1717986918, 1050691865, 12, 4, 2, 4, 12, 45, 0, -1106771968, 12, 4, 4, 4, 20, 48, 0, -1116602368, 0, 1050705920, 20, 4, 2, 4, 12, 51, 0, 1051174016, 12, 4, 2, 4, 12, 53, 0, -1105985536, 12, 4, 4, 4, 20, 56, 0, -1116733440, 0, 1051099136, 20, 4, 2, 4, 12, 59, -858993460, 1051473612, 12, 4, 2, 4, 12, 61, 0, -1106247680, 12, 4, 4, 4, 20, 64, 0, 1034108928, 0, 1051574272, 20, 4, 2, 4, 12, 67, 0, 1052010048, 12, 4, 2, 4, 12, 69, 0, -1105985536, 12, 4, 4, 4, 20, 72, 0, 1036075008, -247389120, -1050902653, 20, 4, 2, 4, 12, 75, 125277002, -1051393547, 12, 4, 2, 4, 12, 77, -993396224, -1059642086, 12, 4, 4, 4, 20, 80, -1898174180, -1065569672, 125276976, -1051393547, 20, 4, 2, 4, 12, 83, -1556319668, -1053694050, 12, 4)
+
+        #data = self._read_record()
+        #self.show_data(data, types='ifsqd', endian=None, force=False)
+
+        #self.show(100, types='ifsqd')
+        #self.show_data(data, types='ifsqd', endian=None, force=False)
+
+
     def read_extdb(self):
         r"""
         fails if a streaming block:
@@ -2134,9 +2521,88 @@ class OP2Reader:
         EXTDB     MUG1B     Displacement OTM matrix in basic coordinates system.
 
         https://help.hexagonmi.com/bundle/MSC_Nastran_2022.2/page/Nastran_Combined_Book/Superelements_User_s_Guide/superOTM/TOC.OUTPUT2.Files.xhtml
+
+        DB_name   op2_name  Description
+        XSOP2DIR  XSOP2DIR  Table of contents of the op2 file (always the first datablock to appear).
+        GEOM1X    GEOM1X    GRID point geometry.
+        GEOM2X    GEOM2X    SPOINTs.
+        GEOM4X    GEOM4X    ASET/ASET1 and QSET/QSET1 entries.
+
+        For AVL EXB output
+        EXTDB  LAMAAVP  Eigenvalue table for AVL POST.
+        EXTDB  MATAPH   Eigenvectors for AVL POST.
+        EXTDB  MATAEK   Diagonal matrix of eigenvalues for AVL POST.
+        EXTDB  MATAM0   Generalized mass for AVL POST.
+
+        For Adams MNF output
+        EXTDB  MATAKA   Boundary stiffness matrix in basic coordinates (Adams POST).
+        EXTDB  MATPH2   Eigenvectors in basic coordinates (Adams POST).
+        EXTDB  MATAMA   Boundary mass matrix in basic coordinates with WTMASS removed (Adams POST).
+        EXTDB  MATK     Boundary stiffness.
+        EXTDB  MATM     Boundary mass.
+        EXTDB  MATB     Boundary viscous damping.
+        EXTDB  MATK4    Boundary structural damping.
+        EXTDB  MATP     Boundary loads.
+        EXTDB  MATV     Boundary fluid-structure partitioning vector.
+        EXTDB  MATGP    Aerodynamic transformation matrix for loads.
+        EXTDB  MATGD    Aerodynamic transformation matrix for displacements.
+        EXTDB  MATRGA   Unit transformation from boundary to interior DOF.
+        EXTDB  MATVAFS  Fluid-structure partitioning vector.
+        EXTDB  MATA     Partitioned acoustic coupling.
+        EXTDB  MATRV    Residual vector partitioning vector.
+        EXTDB  MATPC    Access points.
+        EXTDB  MATKSM   Aerodynamic generalized stiffness.
+        EXTDB  MATMSM   Aerodynamic generalized mass.
+
+        For rotors
+        NAMELIST  NAMELIST  List of rotors.
+        MTRXNAME  MTRXNAME  Rotor matrices defined in NAMELIST.
+
+        #-----------------
+        DB_name  op2_name  Description
+        EXTDB  TUG1     Displacement OTM table.
+        EXTDB  MUG1     Displacement OTM matrix.
+        EXTDB  MUG1O    Displacement OTM for loaded interior DOF.
+        EXTDB  TQG1     SPCFORCE OTM table.
+        EXTDB  MKQG1    SPCFORCE stiffness contribution OTM.
+        EXTDB  MBQG1    SPCFORCE viscous damping contribution OTM.
+        EXTDB  MMQG1    SPCFORCE mass contribution OTM.
+        EXTDB  MK4QG1   SPCFORCE structural damping contribution OTM.
+        EXTDB  MKQG1O   SPCFORCE stiffness contribution OTM for loaded interior DOF.
+        EXTDB  TELAF1   Elastic element force OTM table.
+        EXTDB  MELAF1   Elastic element force OTM matrix.
+        EXTDB  TES1     Stress OTM table.
+        EXTDB  MES1     Stress OTM matrix.
+        EXTDB  MES1O    Stress OTM matrix for loaded interior DOF.
+        EXTDB  TEF1     Force OTM table.
+        EXTDB  MEF1     Force OTM matrix.
+        EXTDB  MEF1O    Force OTM matrix for loaded interior DOF.
+        EXTDB  MUG1B    Displacement OTM matrix in basic coordinates system.
+        EXTDB  MUG1OB   Displacement OTM matrix in basic coordinates system for loaded interior DOF.
+        EXTDB  TEE1     Strain OTM table.
+        EXTDB  MEE1     Strain OTM matrix.
+        EXTDB  MEE1O    Strain OTM matrix for loaded interior DOF.
+        EXTDB  TQMG1    MPCFORCE OTM table.
+        EXTDB  MKQMG1   MPCFORCE stiffness contribution OTM.
+        EXTDB  MBQMG1   MPCFORCE viscous damping contribution OTM.
+        EXTDB  MMQMG1   MPCFORCE mass contribution OTM.
+        EXTDB  MK4QMG1  MPCFORCE structural damping contribution OTM.
+        EXTDB  MKQMG1O  MPCFORCE stiffness contribution OTM for loaded interior DOF.
+
+        Some matrices are also named with pseudo-degree-of-freedom set names.
+        W – The set omitted after auto-omit (a-set combines x-set and w-set)
+        X – The set retained after auto-omit (complement of w-set)
+        J – Superelement interior degrees-of-freedom; for example, KJJ and PJ
+        H – Modal degrees-of-freedom; for example, PHDH, MHH, PHF and UHF
         """
+        # gotta read the tables at the beginning because we need to flag the tables?
+        read_mode = 1
+
+        #otm_tables   = ['TUG1',          'TEF1', 'TES1']
+        #otm_matrices = ['MUG1', 'MUG1B', 'MEF1', 'MES1']
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
         op2 = self.op2
+        log = op2.log
         op2.table_name = self._read_table_name(rewind=False)
         #self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
@@ -2144,7 +2610,9 @@ class OP2Reader:
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
-        unused_data = self._read_record()
+
+        #(101, 1, 0, 8, 0, 0, 0)
+        data = self._read_record()
 
         markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
@@ -2152,8 +2620,8 @@ class OP2Reader:
 
         self.read_3_markers([-2, 1, 0])
         marker = -3
-        if self.read_mode == 1 or op2.make_geom is False:
-            if self.read_mode == 1 and op2.make_geom is False:
+        if self.read_mode == read_mode or op2.make_geom is False:
+            if self.read_mode == read_mode and op2.make_geom is False:
                 self.log.warning('reading the EXTRN tables requires the read_op2_geom')
             data = self._skip_record()
             while 1:
@@ -2170,60 +2638,71 @@ class OP2Reader:
                 data, ndata = self._read_record_ndata()
             return
 
+        struct_3i = Struct(mapfmt(self._endian + b'3i', self.size))
+
         # drop XSOP2DIR and PVT0
         iextdb = op2.table_count[b'EXTDB'] + 0
+
+        log.debug('-'*80)
         xsop2dir_name = self.xsop2dir_names[iextdb]
         if self.read_mode == 2:
             data, ndata = self._read_record_ndata()
+            #op2.show_data(data, types='ifsqd', endian=None, force=False)
+
             name = ''
             name1 = ''
-            name2 = ''
-            if self.size == 4:
-                if ndata == 8:
-                    #self.show_data(data, types='ifs', endian=None)
+            dtype_str = ''
+            nfields = ndata // self.size
+            assert ndata % self.size == 0
+
+            assert self.size in {4, 8}, self.size
+            if nfields == 2:
+                if self.size == 4:
                     name, = Struct(self._endian + b'8s').unpack(data)
                     name = name.decode('latin1').rstrip()
-                    self.log.info(f'A: name={name!r} -> {xsop2dir_name!r}')
-                    #print(name, 8)
-                elif ndata == 16:
-                    name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
-                    name = name.decode('latin1').rstrip()
-                    #name = name.decode(self._encoding)
-                    #print(name, int1, int2, 16)
-                    self.log.info(f'B: name={name!r} -> {xsop2dir_name!r} int1={int1} int2={int2}')
-                elif ndata == 28:
-                    #self.show_data(data)
-                    name1, int1, name2, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
-                    name1 = name1.decode('latin1').rstrip()
-                    name2 = name2.decode('latin1').rstrip()
-                    self.log.info(f'C DMI: name1={name1!r} -> {xsop2dir_name!r} int1={int1} name2={name2!r} int2={int2}')
-                    # m.add_dmi(name, form, tin, tout, nrows, ncols, GCj, GCi, Real, Complex=None, comment='')
-                    #print(name1, int1, name2, int2, 28)
                 else:
-                    self.show_data(data, types='ifs')
-                    raise NotImplementedError(ndata)
-
-            else:
-                if ndata == 16:
                     name, = Struct(self._endian + b'16s').unpack(data)
                     name = reshape_bytes_block(name).decode('latin1').strip()
-                    self.log.info(f'A: name={name!r} -> {xsop2dir_name}')
-                elif ndata == 32:
+                self.log.info(f'{marker} A: name={name!r} -> {xsop2dir_name!r}')
+                assert name in {'GEOM1', 'GEOM2', 'IGEOM2X', 'GEOM4', 'EXTDB'}, name
+            elif nfields == 4:
+                if self.size == 4:
+                    name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
+                    name = name.decode('latin1').rstrip()
+                else:
                     name, int1, int2 = Struct(self._endian + b'16s 2q').unpack(data)
                     name = reshape_bytes_block(name).decode('latin1').strip()
-                    self.log.info(f'B: name={name!r} -> {xsop2dir_name} int1={int1} int2={int2}')
-                elif ndata == 56:
-                    # (PHIP, 7, REAL, 1)
-                    #self.show_data(data, types='ifsdq')
-                    name1, int1, name2, int2 = Struct(self._endian + b'16s q 24s q').unpack(data)
-                    name1 = reshape_bytes_block(name1).decode('latin1').strip()
-                    name2 = reshape_bytes_block(name2).decode('latin1').strip()
-                    self.log.info(f'C: name1={name1!r} -> {xsop2dir_name} int1={int1} name2={name2!r} int2={int2}')
+                self.log.info(f'{marker}: B: name={name!r} -> {xsop2dir_name!r} int1={int1} int2={int2}')
+            elif nfields == 7:
+                # (PHIP, 7, REAL, 1)
+                if self.size == 4:
+                    name1, int1, dtype_bytes, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
+                    name1 = name1.decode('latin1').rstrip()
+                    dtype_str = dtype_bytes.decode('latin1').strip()
                 else:
-                    self.show_data(data, types='ifsdq')
-                    raise NotImplementedError(ndata)
+                    #self.show_data(data, types='ifsdq')
+                    name1, int1, dtype_bytes, int2 = Struct(self._endian + b'16s q 24s q').unpack(data)
+                    name1 = reshape_bytes_block(name1).decode('latin1').strip()
+                    dtype_str = reshape_bytes_block(dtype_bytes).decode('latin1').strip()
+
+                #DTI         TUG1       0
+                #            PHIP       ?       7    ?          ?    REAL       1  ENDREC
+                #DTI         TUG1       0     696     606   32767       0       7       0
+                #            PHIP   32767       7   32767   32767    REAL       1  ENDREC
+                dti = op2.add_dti(
+                    xsop2dir_name,
+                    {0: ['?', '?', 32767, 0, int1, 0,
+                         name1, 32767, int1, 32767, 32767, dtype_str, int2, 'ENDREC',]})
+                #print(dti)
+                # m.add_dmi(name, form, tin, tout, nrows, ncols, GCj, GCi, Real, Complex=None, comment='')
+                #print(name1, int1, name2, int2, 28)
+
+                self.log.info(f'{marker}: C DTI: name1={name1!r} -> {xsop2dir_name!r} int1={int1} dtype_str={dtype_str!r} int2={int2}')
 
         #self.show(200)
+
+        ints_ = []
+        doubles_ = []
         while 1:
             #print('====================')
             #print(f'***reading {marker}')
@@ -2241,15 +2720,26 @@ class OP2Reader:
                 nfields1 = self.read_markers([1])
 
                 nfields_test = self.get_marker1(rewind=True)
-                while nfields_test > 0:
+
+                #out=(1, 1.0) nblock=16
+                #out=(2, 1.0) nblock=16
+                #...
+                #out=(606, 1.0) nblock=16
+                itest = 0
+                while nfields_test > 0:  # nfields_test == 1
                     nfields = self.get_marker1(rewind=False)
                     block = self._read_block()
                     nblock = len(block)
                     ndouble = (nblock - 4) // 8
-                    fmt = mapfmt(self._endian + b'i%dd' % (ndouble), self.size)
+                    fmt = mapfmt(self._endian + b'i%dd' % ndouble, self.size)
                     out = Struct(fmt).unpack(block)
-                    #print(out, nblock)
+                    #print(f'out={out}')
                     nfields_test = self.get_marker1(rewind=True)
+                    ints_.append(out[0])
+                    doubles_.append(out[1])
+                    itest += 1
+                #log.debug(f'itest={itest}')
+
                 #print('-------')
                 #print(f'end of marker={marker}')
                 marker -= 1
@@ -2258,6 +2748,14 @@ class OP2Reader:
             else:
                 raise RuntimeError('EXTDB error')
 
+            #if self.read_mode == 2:
+            if len(ints_):
+                ints = np.array(ints_, dtype='int32')
+                doubles = np.array(doubles_, dtype='float64')
+                print(len(ints), ints, doubles)
+                #del ints_, doubles_
+
+
             #op2.show_ndata(100)
             nfields = self.get_marker1(rewind=True)
             #print('nfields =', nfields)
@@ -2265,67 +2763,74 @@ class OP2Reader:
                 #if self.read_mode == 2:
                     #self.log.warning('breaking...')
                 #self.show(200)
+                #log.debug(f'ints={ints_} doubles={doubles_}')
                 break
+            #log.debug(f'ints={ints_} doubles={doubles_}')
             # ----------------------------------------------------------------------
 
             data, ndata = self._read_record_ndata()
             if self.read_mode == 2:
-                if name not in ['GEOM1', 'GEOM2', 'GEOM2X', 'IGEOM2X', 'GEOM4', 'EXTDB']:
-                    if ndata != 12:
-                        self.log.warning(f'--B; ndata={ndata}--')
+                #if name not in ['GEOM1', 'GEOM2', 'GEOM2X', 'IGEOM2X', 'GEOM4', 'EXTDB']:
+                    #if ndata != 12:
+                        #self.log.warning(f'--B; ndata={ndata}--')
+
+                if len(name):
+                    log.info(f'name = {name!r} size={self.size}')
+                nfields = ndata // self.size
+                assert ndata % self.size == 0
 
                 if self.size == 4:
-                    if ndata == 12:
-                        name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
-                        # b'\xff\xff\x00\x00' 65535 25535 12 ???
-                        #print(name, int1, int2, 12)
-                        #self.show_data(data)
-
-                    elif name == 'GEOM1':
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom1.geom1_map)
-                    elif name in ['GEOM2', 'GEOM2X', 'IGEOM2X']:
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom2.geom2_map)
-
-                    elif name == 'GEOM4':
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom4.geom4_map)
-
-                    elif name == 'EXTDB':
-                        _read_extdb_extdb(self, xsop2dir_name, data, self._endian, 'int32')
-                    elif name1 in ['TES', 'PHIP']:
-                        _read_extdb_phip(self, marker, data, self._endian, 'i', op2.idtype8)
-                    elif name1 in ['TQP', 'TEF']:
-                        _read_extdb_phip(self, marker, data, self._endian, 'i', op2.idtype8)
-                    else:
-                        raise NotImplementedError(f'EXTDB; name={name!r} name1={name1!r} name2={name2!r}')
+                    numpy_idtype = 'int32'
+                    struct_idtype = 'i'
                 else:
-                    if ndata == 24:
-                        ints = Struct(self._endian + b'3q').unpack(data)
-                        assert ints == (65535, 65535, 65535), ints
-                    elif name == 'GEOM1':
-                        # _read_extdb_geom1(self, data, self._endian)
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom1.geom1_map)
-                    elif name in ['GEOM2', 'IGEOM2X']:
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom2.geom2_map)
-                    elif name == 'GEOM4':
-                        _read_extdb_geomx(self, data, self._endian, op2.reader_geom4.geom4_map)
+                    numpy_idtype = 'int64'
+                    struct_idtype = 'q'
 
-                    elif name == 'EXTDB':
-                        _read_extdb_extdb(self, xsop2dir_name, data, self._endian, 'int64')
-                    elif name1 == 'PHIP':
-                        _read_extdb_phip(self, marker, data, self._endian, 'q', op2.idtype8)
-                    elif name1 == 'TES':
-                        _read_extdb_phip(self, marker, data, self._endian, 'q', op2.idtype8)
-
+                if nfields == 3:
+                    intsi = struct_3i.unpack(data)
+                    if intsi == (65535, 65535, 65535):
+                        name = ''
+                        int1 = 65535
+                        int2 = 65535
+                    elif intsi == (65535, 65535, 25535):
+                        name = ''
+                        int1 = 65535
+                        int2 = 25535
                     else:
-                        self.log.warning(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
-                        raise RuntimeError(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
-                        #self.show_data(data, types='sqd')
+                        if self.size == 4:
+                            self.show_data(data, types='ifs', endian=None, force=False)
+                            name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
+                            raise RuntimeError(name, int1, int2)
+                        else:
+                            ints = Struct(self._endian + b'3q').unpack(data)
+                            assert ints == (65535, 65535, 65535), ints
+                elif name == 'GEOM1':
+                    _read_extdb_geomx(self, data, self._endian, op2.reader_geom1.geom1_map)
+                elif name in ['GEOM2', 'GEOM2X', 'IGEOM2X']:
+                    _read_extdb_geomx(self, data, self._endian, op2.reader_geom2.geom2_map)
+                elif name == 'GEOM4':
+                    _read_extdb_geomx(self, data, self._endian, op2.reader_geom4.geom4_map)
+                elif name == 'EXTDB':
+                    _read_extdb_extdb(self, xsop2dir_name, data, self._endian, numpy_idtype)
+                elif name1 == 'PHIP':
+                    _read_extdb_phip(self, xsop2dir_name, name1, marker, data, self._endian, struct_idtype, op2.idtype8)
+                elif name1 == 'TES':
+                    _read_extdb_phip(self, xsop2dir_name, name1, marker, data, self._endian, struct_idtype, op2.idtype8)
+                elif name1 == 'TEF':
+                    _read_extdb_phip(self, xsop2dir_name, name1, marker, data, self._endian, struct_idtype, op2.idtype8)
+                elif name1 == 'TQP':
+                    _read_extdb_phip(self, xsop2dir_name, name1, marker, data, self._endian, struct_idtype, op2.idtype8)
+                else:
+                    #self.show_data(data, types='sqd')
+                    self.log.warning(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
+                    raise RuntimeError(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
             marker -= 1
             #print('--------------------')
         unused_marker_end = self.get_marker1(rewind=False)
         #aa
         #if self.read_mode == 2:
             #self.log.warning('returning...')
+        log.debug('-'*80)
         return
 
     def read_descyc(self):
@@ -3820,16 +4325,16 @@ class OP2Reader:
                 # 4 VALS(NVAL) RS list of values
                 # Words 1–4 repeat for NCRV curves. For DATTYP≠1, NVAL and NCRV=0
 
-                dict_map = {
-                    1: 'RPM',
-                    2: 'eigenfreq',
-                    3: 'Lehr',
-                    4: 'real eig',
-                    5: 'imag eig',
-                    6: 'whirl_dir',
-                    7: 'converted_freq',
-                    8: 'whirl_code',
-                }
+                #dict_map = {
+                    #1: 'RPM',
+                    #2: 'eigenfreq',
+                    #3: 'Lehr',
+                    #4: 'real eig',
+                    #5: 'imag eig',
+                    #6: 'whirl_dir',
+                    #7: 'converted_freq',
+                    #8: 'whirl_code',
+                #}
                 i = 0
                 data_out = {}
                 while i < nints:
@@ -4507,38 +5012,6 @@ class OP2Reader:
 
         #self.show_data(data)
 
-    def _get_matrix_row_fmt_nterms_nfloats(self, nvalues, tout):
-        """
-        +------+---------------------------+
-        | Type | Meaning                   |
-        +------+---------------------------+
-        |  1   | Real, single precision    |
-        |  2   | Real, double precision    |
-        |  3   | Complex, single precision |
-        |  4   | Complex, double precision |
-        +------+---------------------------+
-
-        """
-        if tout == 1:
-            nfloats = nvalues
-            nterms = nvalues
-            fmt = self._endian + b'i %if' % nfloats
-        elif tout == 2:
-            nfloats = nvalues // 2
-            nterms = nvalues // 2
-            fmt = self._endian + b'i %id' % nfloats
-        elif tout == 3:
-            nfloats = nvalues
-            nterms = nvalues // 2
-            fmt = self._endian + b'i %if' % nfloats
-        elif tout == 4:
-            nfloats = nvalues // 2
-            nterms = nvalues // 4
-            fmt = self._endian + b'i %id' % nfloats
-        else:
-            raise RuntimeError('tout = %s' % tout)
-        return fmt, nfloats, nterms
-
     def _read_matrix_mat(self):
         """
         Reads a matrix in "standard" form.  The forms are::
@@ -4616,8 +5089,6 @@ class OP2Reader:
         #print('g =', g)
 
         utable_name = table_name.decode('utf-8')
-        m = Matrix(utable_name, form=form)
-        op2.matrices[utable_name] = m
 
         # matrix_num is a counter (101, 102, 103, ...)
         # 101 will be the first matrix 'A' (matrix_num=101),
@@ -4655,6 +5126,9 @@ class OP2Reader:
             log.warning(msg)
             raise RuntimeError(msg)
 
+        m = Matrix(utable_name, form=form)
+        op2.matrices[utable_name] = m
+
         #self.log.error('name=%r matrix_num=%s form=%s mrows=%s '
         #               'ncols=%s tout=%s nvalues=%s g=%s' % (
         #                   table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
@@ -4668,6 +5142,7 @@ class OP2Reader:
                           table_name, matrix_num, form, mrows, ncols,
                           tout, nvalues, g))
             raise RuntimeError('form=%s; allowed=%s' % (form, allowed_forms))
+
         if self.size == 4:
             log.debug('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s '
                       'nvalues=%s g=%s' % (
@@ -4721,8 +5196,8 @@ class OP2Reader:
 
                 while nvalues >= 0:
                     nvalues = self.get_marker1(rewind=False)
-                    fmt, unused_nfloats, nterms = self._get_matrix_row_fmt_nterms_nfloats(
-                        nvalues, tout)
+                    fmt, unused_nfloats, nterms = _get_matrix_row_fmt_nterms_nfloats(
+                        nvalues, tout, self._endian)
                     GCjj = [jj] * nterms
                     GCj += GCjj
 
@@ -4874,7 +5349,7 @@ class OP2Reader:
             niter += 1
         raise RuntimeError('this should never happen; n=%s' % niter_max)
 
-    def read_matrix(self, table_name):
+    def read_matrix(self, table_name: bytes) -> None:
         """
         General method for reading matrices and MATPOOL matrices
 
@@ -4891,79 +5366,62 @@ class OP2Reader:
         # if we skip on read_mode=1, we don't get debugging
         # if we just use read_mode=2, some tests fail
         #
-        if self.read_mode != read_mode_to_read_matrix and not self.debug_file:
-            try:
-                self._skip_matrix_mat()  # doesn't work for matpools
-            except MemoryError:
-                raise
-            except(RuntimeError, AssertionError, ValueError):
-                self._goto(i)
-                self._skip_table(table_name)
-            return
-
-        try:
+        mat_type = self._check_matrix_type()
+        if mat_type == 'matrix':
             self._read_matrix_mat()
-        except MemoryError:
-            raise
-        except(RuntimeError, AssertionError, ValueError):
-            # read matpool matrix
-            self._goto(i)
-            try:
-                self._read_matrix_matpool()
-            except(RuntimeError, AssertionError, ValueError):
-                raise
-                #self._goto(i)
-                #self._skip_table(op2.table_name)
+        else:
+            self._read_matrix_matpool()
 
-    def _read_mef1(self):
+        return
+        #from traceback import format_exc
+        #if self.read_mode != read_mode_to_read_matrix and not self.debug_file:
+            #try:
+                #self._skip_matrix_mat()  # doesn't work for matpools
+            #except MemoryError:
+                #raise
+            #except(RuntimeError, AssertionError, ValueError):
+                #raise
+                #self._goto(i)
+                #self._skip_table(table_name)
+            #return
+
+        #try:
+        #    self._read_matrix_mat()
+        #    return
+        #except MemoryError:
+        #    raise
+        #except(RuntimeError, AssertionError, ValueError):
+        #    pass # self.log.error(str(format_exc()))
+
+        # read matpool matrix
+        #self._goto(i)
+        #try:
+        #    self._read_matrix_matpool()
+        #    return
+        #except(RuntimeError, AssertionError, ValueError):
+        #    self.log.error(str(format_exc()))
+
+        # I give up
+        #self._goto(i)
+        #self._skip_table(op2.table_name)
+
+    def _check_matrix_type(self):
         op2 = self.op2
+        i = op2.f.tell()
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         utable_name = table_name.decode('utf-8')
         #print(utable_name)
         self.read_markers([-1])
 
-        #(101, 15, 12, 2, 2, 4, 1333)
+        # (104, 32768, 0, 0, 0, 0, 0)
         data = self._read_record()
-        ints = unpack(self._endian + b'7i', data)
-        print(ints)
+        ints = np.frombuffer(data, dtype=op2.idtype8)
+        self._goto(i)
 
-        self.read_3_markers([-2, 1, 0])
-        data = self._read_record()
-        name, int1, int2 = unpack(self._endian + b'8s ii', data)
-        print(name, int1, int2)
-        #self.show_data(data, types='ifs', endian=None, force=False)
-
-        self.read_3_markers([-3, 1])
-        read_dofs(op2, size=4)
-        #data = self._read_record()
-        #(4, 2, 4, 12, 1, -901, -1074790401, 12,
-         #4, 2, 4, 12, 7, -901, -1074790401, 12)
-        #self.show_data(data, types='ifsqd', endian=None, force=False)
-        #self.show_data(data[4:], types='ifsqd', endian=None, force=False)
-
-        assert op2.f.tell() == op2.n
-
-        ni = -4
-        marker = 1
-        while marker != 0:
-            #print(f'ni = {ni}')
-            self.read_3_markers([ni, 1])
-            read_dofs(op2, size=4)
-            ni -= 1
-
-            marker = self.get_marker1(rewind=True, macro_rewind=False)
-            #if marker == 0:
-                #break
-        #print('marker =', marker)
-        marker = self.get_marker1(rewind=False, macro_rewind=False)
-        #self.read_3_markers([ni, 1])
-        #self.show_ndata(200, types='ifs')
-
-        #self.read_3_markers([-9, 1])
-        #read_dofs(op2, size=4)
-
-    # (104, 32768, 0, 0, 0, 0, 0)
-        #aaa
+        zeros = ints[2:]
+        if np.abs(zeros).sum() == 0:
+            return 'matpool'
+        return 'matrix'
 
     def _read_matrix_matpool(self):
         """
@@ -4995,7 +5453,6 @@ class OP2Reader:
         Record 13 - RADMTX(3014,30,244)
         """
         #print('-------------------------------------')
-
         op2 = self.op2
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         utable_name = table_name.decode('utf-8')
@@ -5096,16 +5553,16 @@ class OP2Reader:
         return data, ndatas
 
 
-    def read_matpool_result(self, code, op2, data, utable_name):
+    def read_matpool_result(self, code: tuple[int, int, int],
+                            op2: OP2, data: bytes, utable_name: str):
         if code == (114, 1, 120):
             self.log.debug(f'  code = {code}')
+            #raise NotImplementedError('read_matpool_dmig')
             try:
                 if self.size == 4:
                     read_matpool_dmig_4(op2, data, utable_name, debug=False)
                 else:
                     read_matpool_dmig_8(op2, data, utable_name, debug=False)
-            #try:
-                #read_matpool_dmig(op2, data, utable_name, debug=False)
             except Exception as excep:
                 self.log.error(str(excep))
                 self.log.warning('  skipping MATPOOL-DMIG')
@@ -5128,7 +5585,6 @@ class OP2Reader:
         elif code == (2014, 20, 243):
             # C:\NASA\m4\formats\git\examples\pyNastran_examples\demo_sort2_post_m2\hd15306.op2
             self.log.warning('  skipping MATPOOL-RADLST')
-
         elif code == (9614, 96, 0):
             # some axisymmetric matrix
             self._read_matpool_bndfl(op2, data, utable_name, debug=False)
@@ -5384,12 +5840,12 @@ class OP2Reader:
             markers.append(marker)
         return markers
 
-    def get_nmarkers(self, n: int, rewind=True, macro_rewind=False):
+    def get_nmarkers(self, n: int, rewind: bool=True, macro_rewind: bool=False):
         if self.size == 4:
             return self.get_nmarkers4(n, rewind=rewind, macro_rewind=macro_rewind)
         return self.get_nmarkers8(n, rewind=rewind, macro_rewind=macro_rewind)
 
-    def get_nmarkers4(self, n: int, rewind=True, macro_rewind=False):
+    def get_nmarkers4(self, n: int, rewind: bool=True, macro_rewind: bool=False):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
@@ -5427,7 +5883,7 @@ class OP2Reader:
                         i, macro_rewind or rewind))
         return markers
 
-    def get_nmarkers8(self, n: int, rewind=True, macro_rewind=False):
+    def get_nmarkers8(self, n: int, rewind: bool=True, macro_rewind: bool=False):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
@@ -5572,13 +6028,13 @@ class OP2Reader:
             month, day = day, month
         else:
             year += 2000
+        #self.log.debug(f'{month}/{day}/{year:d} zero={zero} one={one}')
         month, day, year = self._set_op2_date(month, day, year)
 
-        #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
         #if self.is_debug_file:
         if self.is_debug_file:
-            self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, '
-                                    'zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
+            self.binary_debug.write(f'  [subtable_name, month={month:d}, day={day:d}, year={year:d}, '
+                                    f'zero={zero:d}, one={one:d}]\n\n')
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one in [0, 1], one  # 0, 50
 
@@ -5589,7 +6045,7 @@ class OP2Reader:
         return date
 
     #----------------------------------------------------------------------------------------
-    def _read_record(self, debug=True, macro_rewind=False) -> bytes:
+    def _read_record(self, debug: bool=True, macro_rewind: bool=False) -> bytes:
         """
         Reads a record.
 
@@ -5606,13 +6062,13 @@ class OP2Reader:
             return self._read_record_ndata4(debug=debug, macro_rewind=macro_rewind)[0]
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)[0]
 
-    def _read_record_ndata(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
+    def _read_record_ndata(self, debug: bool=True, macro_rewind: bool=False) -> tuple[bytes, int]:
         """reads a record and the length of the record"""
         if self.size == 4:
             return self._read_record_ndata4(debug=debug, macro_rewind=macro_rewind)
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)
 
-    def _read_record_ndata4(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
+    def _read_record_ndata4(self, debug: bool=True, macro_rewind: bool=False) -> tuple[bytes, int]:
         """reads a record and the length of the record for size=4"""
         op2 = self.op2
         marker0 = self.get_marker1_4(rewind=False, macro_rewind=macro_rewind)
@@ -5663,7 +6119,7 @@ class OP2Reader:
             record = b''.join(records)
         return record, nrecord
 
-    def _read_record_ndata8(self, debug=True, macro_rewind=False) -> tuple[bytes, int]:
+    def _read_record_ndata8(self, debug: bool=True, macro_rewind: bool=False) -> tuple[bytes, int]:
         """reads a record and the length of the record for size=8"""
         op2 = self.op2
         markers0 = self.get_nmarkers8(1, rewind=False, macro_rewind=macro_rewind)
@@ -5870,9 +6326,13 @@ class OP2Reader:
                         self.show(1000)
                         if last_table_name:
                             self.log.error(f'finished table_name = {last_table_name}')
-                        raise FatalError('There was a Nastran FATAL Error.  Check the F06.\n'
-                                         f'last table={op2.table_name!r}; post={op2.post} '
-                                         f'version={self.op2._nastran_format!r}')
+
+                        msg = ('There was a Nastran FATAL Error.  Check the F06.\n'
+                               f'last table={op2.table_name!r}; post={op2.post} '
+                               f'version={self.op2._nastran_format!r}')
+                        self.log.error(msg)
+                        if op2.stop_on_unclosed_file:
+                            raise FatalError(msg)
                 table_name = None
 
                 # we're done reading, so we're going to ignore the rewind
@@ -5971,14 +6431,14 @@ class OP2Reader:
             op2.n += 8 + ndata
         return data_out
 
-    def read_3_markers(self, markers, macro_rewind=True) -> None:
+    def read_3_markers(self, markers, macro_rewind: bool=True) -> None:
         """Micro-optimizes ``read_markers`` for 3 markers."""
         if self.size == 4:
             self.read_3_markers4(markers, macro_rewind=macro_rewind)
         else:
             self.read_markers8(markers, macro_rewind=macro_rewind)
 
-    def read_3_markers4(self, markers, macro_rewind=True) -> None:
+    def read_3_markers4(self, markers, macro_rewind: bool=True) -> None:
         """
         Micro-optimizes ``read_markers`` for 3 markers.
 
@@ -6088,7 +6548,7 @@ class OP2Reader:
         return self.op2.binary_debug
 
     @property
-    def log(self):
+    def log(self) -> SimpleLogger:
         """interface to the op2 object"""
         return self.op2.log
 
@@ -6136,7 +6596,7 @@ class OP2Reader:
     #def log(self):
         #return self.op2.log
 
-    def _skip_table_helper(self, warn=True):
+    def _skip_table_helper(self, warn: bool=True) -> None:
         """
         Skips the majority of geometry/result tables as they follow a very standard format.
         Other tables don't follow this format.
@@ -6179,7 +6639,7 @@ class OP2Reader:
             markers = self.get_nmarkers(1, rewind=True)
         self.read_markers([0])
 
-    def _skip_record(self):
+    def _skip_record(self) -> None:
         """
         the skip version of ``_read_record``
 
@@ -6200,12 +6660,12 @@ class OP2Reader:
             markers1 = self.get_nmarkers(1, rewind=True)
         return record
 
-    def _skip_record_ndata(self, debug=True, macro_rewind=False):
+    def _skip_record_ndata(self, debug: bool=True, macro_rewind: bool=False) -> None:
         if self.size == 4:
             return self._skip_record_ndata4(debug=debug, macro_rewind=macro_rewind)
         return self._skip_record_ndata8(debug=debug, macro_rewind=macro_rewind)
 
-    def _skip_record_ndata4(self, debug=True, macro_rewind=False):
+    def _skip_record_ndata4(self, debug: bool=True, macro_rewind: bool=False) -> None:
         """the skip version of ``_read_record_ndata``"""
         op2 = self.op2
         marker0 = self.get_marker1_4(rewind=False, macro_rewind=macro_rewind)
@@ -6253,7 +6713,7 @@ class OP2Reader:
                     self.binary_debug.write(f'read_record - marker1 = [4, {marker1}, 4]\n')
         return record, nrecord
 
-    def _skip_record_ndata8(self, debug=True, macro_rewind=False):
+    def _skip_record_ndata8(self, debug: bool=True, macro_rewind: bool=False) -> None:
         """the skip version of ``_read_record_ndata``"""
         op2 = self.op2
         marker0 = self.get_marker1_8(rewind=False, macro_rewind=macro_rewind)
@@ -6285,7 +6745,7 @@ class OP2Reader:
                     self.binary_debug.write(f'read_record - marker1 = [8, {marker1}, 8]\n')
         return record, nrecord
 
-    def _get_record_length(self):
+    def _get_record_length(self) -> int:
         """
         The record length helps us figure out data block size, which is used
         to quickly size the arrays.  We just need a bit of meta data and can
@@ -6325,7 +6785,7 @@ class OP2Reader:
         self._goto(n0)
         return len_record
 
-    def _skip_block(self):
+    def _skip_block(self) -> None:
         """
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
@@ -6477,8 +6937,8 @@ class OP2Reader:
                 self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
                 self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 12:
-            subtable_name, unused_ten = unpack(self._endian + b'8si', data)  # type: tuple[bytes, int]
-            subtable_name = subtable_name.strip().decode(self._encoding)
+            subtable_name_bytes, unused_ten = unpack(self._endian + b'8si', data)
+            subtable_name = subtable_name_bytes.strip().decode(self._encoding)
             #assert ten == 10, self.show_data(data, types='ifs', endian=None)
             assert subtable_name in ['GPL', 'GPLS'], subtable_name
             if self.is_debug_file:
@@ -6869,6 +7329,18 @@ class OP2Reader:
         #ifsdqlILQ
         return self._write_data(sys.stdout, data, types=types, endian=endian, force=force)
 
+    def show_ndata(self, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
+        return self._write_ndata(sys.stdout, n, types=types, force=force, endian=endian)
+
+    def _write_ndata(self, f, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
+        """Useful function for seeing what's going on locally when debugging."""
+        op2 = self.op2
+        nold = op2.n
+        data = op2.f.read(n)
+        op2.n = nold
+        op2.f.seek(op2.n)
+        return self._write_data(f, data, types=types, force=force, endian=endian)
+
     def _write_data(self, f, data: bytes, types: str='ifs',
                     endian: Optional[str]=None, force: bool=False):  # pragma: no cover
         """
@@ -6947,17 +7419,6 @@ class OP2Reader:
         f.write('\n')
         return strings, ints, floats
 
-    def show_ndata(self, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
-        return self._write_ndata(sys.stdout, n, types=types, force=force, endian=endian)
-
-    def _write_ndata(self, f, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
-        """Useful function for seeing what's going on locally when debugging."""
-        op2 = self.op2
-        nold = op2.n
-        data = op2.f.read(n)
-        op2.n = nold
-        op2.f.seek(op2.n)
-        return self._write_data(f, data, types=types, force=force, endian=endian)
 
 def eqexin_to_nid_dof_doftype(eqexin1, eqexin2) -> tuple[Any, Any, Any]:
     """assemble dof table"""
@@ -7539,3 +8000,37 @@ def reshape_trmbd(element_name: str, nnodes: int, int_data, float_data):
     int_data = int_data.reshape(n_elements, ndata_per_element)
     float_data = float_data.reshape(n_elements, ndata_per_element)
     return n_elements, int_data, float_data
+
+def _get_matrix_row_fmt_nterms_nfloats(nvalues: int, tout: int,
+                                       endian: bytes) -> tuple[bytes, int, int]:
+    """
+    +------+---------------------------+
+    | Type | Meaning                   |
+    +------+---------------------------+
+    |  1   | Real, single precision    |
+    |  2   | Real, double precision    |
+    |  3   | Complex, single precision |
+    |  4   | Complex, double precision |
+    +------+---------------------------+
+
+    """
+    if tout == 1:
+        nfloats = nvalues
+        nterms = nvalues
+        fmt = endian + b'i %if' % nfloats
+    elif tout == 2:
+        nfloats = nvalues // 2
+        nterms = nvalues // 2
+        fmt = endian + b'i %id' % nfloats
+    elif tout == 3:
+        nfloats = nvalues
+        nterms = nvalues // 2
+        fmt = endian + b'i %if' % nfloats
+    elif tout == 4:
+        nfloats = nvalues // 2
+        nterms = nvalues // 4
+        fmt = endian + b'i %id' % nfloats
+    else:
+        raise RuntimeError(f'tout = {tout}')
+    return fmt, nfloats, nterms
+

@@ -49,6 +49,7 @@ from .cards.utils import wipe_empty_fields
 from .bdf_interface.assign_type import (integer,
                                         integer_or_string, string)
 
+from pyNastran.bdf.bdf_interface.model_group import ModelGroup
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 from .cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from .cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
@@ -65,6 +66,7 @@ from .cards.elements.solid import (
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
 from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+from .cards.bolt import BOLT, BOLTLD, BOLTFOR, BOLTSEQ, BOLTFRC, BOLT_MSC
 
 from .cards.axisymmetric.axisymmetric import (
     AXIF, RINGFL,
@@ -101,7 +103,8 @@ from .cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
 from .cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                 MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                 GMSPC)
-from .cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
+from .cards.coordinate_systems import (MATCID,
+                                       CORD1R, CORD1C, CORD1S,
                                        CORD2R, CORD2C, CORD2S, #CORD3G,
                                        transform_coords_vectorized,
                                        CORDx)
@@ -124,7 +127,7 @@ from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                               MATG, MATHE, MATHP, MATEV,
                               CREEP, EQUIV, NXSTRAT)
 from .cards.material_deps import (
-    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
+    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1, MATDMG)
 
 from .cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from .cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
@@ -318,8 +321,11 @@ MISSING_CARDS = {
     'MPHEAT', 'NLHEAT', 'MCHSTAT', 'MINSTAT',
     'MHEATSHL', 'MTHERM',
 
-    ## bolts
-    'MBOLT', 'MBOLTUS', 'BOLT', 'BOLTFRC', 'BOLTFOR',
+    ## nx bolts
+    'BOLT', 'BOLTFRC', 'BOLTFOR', 'BOLTLD', 'BOLTSEQ',
+
+    ## msc bolts?
+    'MBOLT', 'MBOLTUS', # 'BOLT'
 
     ## uds
     'PORUDS', 'YLDUDS', 'SHRUDS', 'FAILUDS', 'COMPUDS',
@@ -359,7 +365,7 @@ MISSING_CARDS = {
     'MATDT01', 'MATDIGI', 'MATUSR', 'MATTC',
     'MATORT', 'MATTORT', 'MATTHE', 'MATPLCY',
     'MATSMA', 'MAT8A', 'MATTEP',
-    'MATPOR', 'MATDMG',
+    'MATPOR', # 'MATDMG',
     'MAT2F', 'MAT8F',
 
     ## loads
@@ -677,6 +683,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## Material dependence - MATT1/MATT2/etc.
             'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
             'MATS1', #'MATS3', 'MATS8',
+            'MATDMG',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
 
@@ -751,6 +758,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## coords
             'CORD1R', 'CORD1C', 'CORD1S',
             'CORD2R', 'CORD2C', 'CORD2S',
+
+            'MATCID',
 
             # temperature cards
             'TEMP', 'TEMPD', 'TEMPB3', 'TEMPAX',
@@ -890,6 +899,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # cyclic
             'CYJOIN', 'CYAX',
 
+            # bolt nx
+            'BOLT', 'BOLTSEQ', 'BOLTLD', 'BOLTFOR',
+
             # other
             'INCLUDE',  # '='
             'ENDDATA',
@@ -1023,6 +1035,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         if unxref:
             self.uncross_reference()
+        self.log.info(f'saving BDF obj {obj_filename}')
         with open(obj_filename, 'wb') as obj_file:
             dump(self, obj_file)
 
@@ -1034,6 +1047,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #del self.case_control_deck
         #self.uncross_reference()
         #import types
+        self.log.info(f'loading  BDF obj {obj_filename}')
         with open(obj_filename, 'rb') as obj_file:
             obj = load(obj_file)
 
@@ -1052,7 +1066,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
             'wtmass',
         ]
-        for key in object_attributes(self, mode='all', keys_to_skip=keys_to_skip):
+        attrs = object_attributes(self, mode='all', keys_to_skip=keys_to_skip)
+        for key in attrs:
             if key.startswith('__') and key.endswith('__'):
                 continue
 
@@ -1063,8 +1078,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             try:
                 setattr(self, key, val)
             except AttributeError:  # pragma: no cover
-                raise AttributeError('key=%r val=%s\nupdate ~line 860 of bdf.py and '
-                                     'add the new key (%s)' % (key, val, key))
+                raise AttributeError(f'key={key!r} val={val}\nupdate ~line 1050 of bdf.py and '
+                                     f'add the new key ({key})')
 
         self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
         #self.log.debug('done loading!')
@@ -1240,14 +1255,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #print(obj.include_lines)
         self.active_filenames = []
         self.reject_lines = []
-        self.include_filenames = defaultdict(list)
+        include_filenames = defaultdict(list)
         for ifile, include_lines_filename_pairs in obj.include_lines.items():
             assert len(include_lines_filename_pairs) > 0, include_lines_filename_pairs
             for include_lines, bdf_filename2 in include_lines_filename_pairs:
                 #print(ifile, include_lines)
-                self.include_filenames[ifile].append(bdf_filename2)
+                include_filenames [ifile].append(bdf_filename2)
                 if not save_file_structure and not obj.read_includes:
                     self.reject_lines += include_lines
+
+        self.include_filenames: dict[int, list[str]] = dict(include_filenames)
         #print('-------------ssett (end)----------')
         self.active_filenames += obj.active_filenames
         self.active_filename = obj.active_filename
@@ -1575,10 +1592,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
         cards_list = []  # type: list[Any]
-        cards_dict = defaultdict(list)  # type: dict[str, list[Any]]
+        cards_dict: dict[str, list[Any]] = defaultdict(list)
         dict_cards = ['BAROR', 'BEAMOR']
         #cards = defaultdict(list)
-        card_count = defaultdict(int)  # dict[str, int]
+        card_count: dict[str, int] = defaultdict(int)
         full_comment = ''
         card_lines = []
         old_ifile_iline = None
@@ -1597,6 +1614,24 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             comment = ''
             if '$' in line:
                 line, comment = line.split('$', 1)
+                strip_comment = comment.strip()
+                if strip_comment.lower().startswith('group:'):
+                    #'group: name="ULFuseCanardAtch MainFuseStruct Fixed Gridpoints"; nodes=1'
+                    strip_comment2 = strip_comment.split(':', 1)[1].strip()
+                    if ';' in strip_comment2:
+                        group = ModelGroup.create_from_line(strip_comment2)
+                        name = group.name
+                        if name in self.model_groups:
+                            og_group = self.model_groups[name]
+                            #print(og_group)
+                            og_group.union(group)
+                            #print('->', og_group)
+                            del og_group
+                            continue
+                        self.model_groups[name] = group
+                    else:
+                        self.log.warning(f'unknown group={strip_comment}')
+
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
@@ -2093,9 +2128,17 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BGSET' : (BGSET, add_methods._add_bgset_object),
             'BCBODY' : (BCBODY, add_methods._add_bcbody_object),
 
-            # 'BOLT', 'BOLTFOR'
-            'BOLT' : (Crash, None),
-            'BOLTFOR' : (Crash, None),
+            # 'BOLT', 'BOLTFOR', 'BOLTFRC', 'BOLTLD', 'BOLTSEQ'
+            'BOLTFOR' : (BOLTFOR, add_methods._add_boltfor_object),
+            'BOLTSEQ' : (BOLTSEQ, add_methods._add_boltseq_object),
+            #'BOLTFRC' : (BOLTFRC, add_methods._add_boltfrc_object),
+            #'BOLTLD' : (BOLTLD, add_methods._add_boltld_object),
+            'BOLTFRC': (Crash, None),
+            'BOLTLD': (Crash, None),
+
+            # msc bolts
+            # 'BOUTPUT',
+            'BOUTPUT': (Crash, None),
 
             #'CBEAR', 'PBEAR', 'ROTORB',
             'CBEAR' : (Crash, None),
@@ -2145,6 +2188,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CORD2R' : (CORD2R, add_methods._add_coord_object),
             'CORD2C' : (CORD2C, add_methods._add_coord_object),
             'CORD2S' : (CORD2S, add_methods._add_coord_object),
+
+            'MATCID' : (MATCID, add_methods._add_matcid_object),
 
             # parametric
             'PSET' : (PSET, add_methods._add_pset),
@@ -2315,6 +2360,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MATT5' : (MATT5, add_methods._add_material_dependence_object),
             'MATT8' : (MATT8, add_methods._add_material_dependence_object),
             'MATT9' : (MATT9, add_methods._add_material_dependence_object),
+
+            'MATDMG': (MATDMG, add_methods._add_material_dependence_object),
+
             'NXSTRAT' : (NXSTRAT, add_methods._add_nxstrat_object),
 
             # hasn't been verified, links up to MAT1, MAT2, MAT9 w/ same MID
@@ -2535,11 +2583,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BCTPARA' : (BCTPARA, add_methods._add_bctpara_object),
             'BSURF' : (BSURF, add_methods._add_bsurf_object),
             'BSURFS' : (BSURFS, add_methods._add_bsurfs_object),
-            # 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
-            'BOUTPUT': (Crash, None),
-            'BOLT': (Crash, None),
-            'BOLTFOR': (Crash, None),
-            'BOLTFRC': (Crash, None),
 
             'RADCAV' : (RADCAV, add_methods._add_radcav_object), #
             #'RADLST' : (RADLST, add_methods._add_radcav_object), # TestOP2.test_bdf_op2_thermal_02
@@ -2598,6 +2641,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         }
 
         self._card_parser_prepare = {
+            'BOLT': self._prepare_bolt,
+
             'PLOTEL': self._prepare_plotel,
             'CBAR' : self._prepare_cbar,
             'CBEAM' : self._prepare_cbeam,
@@ -2704,6 +2749,23 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #if ' ' in card_name:
                 #_check_for_spaces(card_name, card_lines, comment, self.log)
             self.log.info('    rejecting card_name = %s' % card_name)
+
+    def _prepare_bolt(self, card: list[str], card_obj: BDFCard, comment: str='') -> list[BOLT | BOLT_MSC]:
+        """adds a BOLT"""
+        card_obj.card = [value.upper() if isinstance(value, str) else value
+                         for value in card_obj.card]
+        if 'TOP' in card_obj.card or 'BOTTOM' in card_obj.card:
+            self.set_as_msc()
+        else:
+            self.set_as_nx()
+
+        if self.is_nx:
+            bolt = BOLT.add_card(card_obj, comment=comment)
+        else:
+            bolt = BOLT_MSC.add_card(card_obj, comment=comment)
+
+        self._add_methods._add_bolt_object(bolt)
+        return bolt
 
     def _prepare_plotel(self, unused_card: list[str], card_obj: BDFCard, comment='') -> list[PLOTEL]:
         """adds a PLOTEL"""
@@ -4306,6 +4368,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         except UnicodeEncodeError:
                             break
                     n = 20
+                    i = 0
                     i0 = len(lines) - n
                     for i, line in enumerate(lines[-n:-1]):
                         self.log.debug(f'Line {i0+i}: {line.strip()!r}')
@@ -5051,7 +5114,6 @@ def _get_coords_to_update(coords: dict[int, Union[CORD1R, CORD1C, CORD1S,
             #msg += str(cp)
         #raise RuntimeError(msg)
     return ncoords, cord1s_to_update_list, cord2s_to_update_list, nids_checked
-
 
 def map_version(fem: BDF, version: str):
     version_map = {

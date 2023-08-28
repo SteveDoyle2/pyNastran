@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from typing import Tuple, List, Dict, Set, Callable, Any, TYPE_CHECKING
+from typing import Callable, Any, TYPE_CHECKING
 
 from qtpy import QtGui
 from qtpy.QtWidgets import QAction, QToolBar, QMenu
@@ -13,9 +13,9 @@ def build_actions(self: QMainWindow,
                   base_actions: dict[str, QAction],
                   icon_path: str,
                   tools_list: list[tuple[str, str, str, str, str, Callable[Any]]],
-                  checkables_set: Set[str],
+                  checkables_set: set[str],
                   log: SimpleLogger) -> dict[str, Any]:
-    checkables = {}
+    checkables: dict[str, bool] = {}
 
     actions = base_actions
     for tool in tools_list:
@@ -57,9 +57,10 @@ def build_actions(self: QMainWindow,
 def fill_menus(self: QMainWindow,
                menus_list: list[tuple[str, str, list[str]]],
                actions: dict[str, QAction],
-               allow_missing_actions: bool=False) -> None:
+               allow_missing_actions: bool=False) -> dict[str, QToolBar | QMenu]:
     assert len(self.actions) > 0, self.actions
-    menus = {}
+
+    menus: dict[str, QToolBar | QMenu] = {}
     for name, header, actions_to_add in menus_list:
         for i, item in enumerate(menus_list):
             if item != '':

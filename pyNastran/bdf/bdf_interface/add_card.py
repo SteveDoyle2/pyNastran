@@ -13,6 +13,7 @@ from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
+from pyNastran.bdf.cards.bolt import BOLT, BOLTSEQ, BOLTFOR, BOLTLD, BOLTFRC
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
@@ -65,7 +66,8 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, S
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
-                                                    CORD2R, CORD2C, CORD2S, CORD3G)
+                                                    CORD2R, CORD2C, CORD2S, CORD3G,
+                                                    MATCID,)
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
@@ -83,7 +85,7 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MATG, MATHE, MATHP, CREEP, MATEV,
                                            EQUIV, NXSTRAT)
 from pyNastran.bdf.cards.material_deps import (
-    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
+    MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1, MATDMG)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
@@ -130,7 +132,7 @@ from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPR
 from pyNastran.bdf.cards.dmig import (
     DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI,
     DMIG_UACCEL, DTI, DTI_UNITS,
-    dtype_to_tin_tout, REVERSE_DMI_MAP)
+    dtype_to_tin_tout_str, REVERSE_DMI_MAP)
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                TEMPRB, QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -177,9 +179,12 @@ CARD_MAP = {
     'BGADD' : BGADD,
     'BGSET' : BGSET,
 
-    #'BOLT', 'BOLTFOR'
-    #'BOLT' : Crash, None),
-    #'BOLTFOR' : Crash, None),
+    # nx bolt
+    'BOLT' : BOLT,
+    'BOLTFOR' : BOLTFOR,
+    'BOLTFRC' : BOLTFRC,
+    'BOLTLD' : BOLTLD,
+    'BOLTSEQ' : BOLTSEQ,
 
     #'CBEAR', 'PBEAR', 'ROTORB',
     #'CBEAR' : Crash, None),
@@ -236,6 +241,8 @@ CARD_MAP = {
     'CORD2R' : CORD2R,
     'CORD2C' : CORD2C,
     'CORD2S' : CORD2S,
+
+    'MATCID': MATCID,
 
     # msgmesh
     #'GMCORD' : GMCORD,
@@ -417,6 +424,8 @@ CARD_MAP = {
     'MAT5' : MAT5,
 
     'MATS1' : MATS1,
+    'MATDMG': MATDMG,
+
     #'MATS3' : MATS3,
     #'MATS8' : MATS8,
     'MATT1' : MATT1,
@@ -872,6 +881,73 @@ class AddCards:
         point = POINT(nid, xyz, cp=cp, comment=comment)
         self._add_methods._add_point_object(point)
         return point
+
+    def add_matcid(self, cid: int, form: int,
+                   eids = None,
+                   start: Optional[int] = None, thru: Optional[int] = None, by: Optional[int] = None,
+                   comment: str='') -> MATCID:
+        """
+        Creates the MATCID card, which defines the Material Coordinate System for Solid Elements
+
+        -Overrides the material coordinate system for CHEXA, CPENTA, CTETRA, and CPYRAM solid elements when the elements
+        reference a PSOLID property.
+
+        -Overrides the material coordinate system for CHEXA and CPENTA solid elements when
+        the elements reference a PCOMPS property.
+
+        -Overrides the material coordinate system for CHEXCZ and CPENTCZ solid elements.
+
+        Parameters
+        ----------
+        cid : int
+            coordinate system id
+        form: int
+            integer indicating the format alternative (for reference, see the 4 different formats below)
+        eids : array[int, ...]
+            Array of element identification numbers
+        start: int
+            used in format alternative 2 and 3, indicates starting eID
+        thru : int
+            used in format alternative 2 and 3
+        by : int
+            used in format alternative 3
+        comment : str; default=''
+            a comment for the card
+
+        Format (alternative 1):
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+            +========+=======+========+=======+=======+======+======+======+======+
+            | MATCID |  CID  | EID1   | EID2  | EID3  | EID4 | EID5 | EID6 | EID7 |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |        | EID8  | EID9   | -etc- |       |      |      |      |      |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+
+        Format (alternative 2):
+            +--------+-------+--------+--------+------+------+------+------+------+
+            |   1    |   2   |    3   |   4    |  5   |  6   |  7   |   8  |  9   |
+            +========+=======+========+========+======+======+======+======+======+
+            | MATCID |  CID  | EID1   | "THRU" | EID2 |      |      |      |      |
+            +--------+-------+--------+--------+------+------+------+------+------+
+
+        Format (alternative 3):
+            +--------+-------+--------+--------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |   7   |   8  |  9   |
+            +========+=======+========+========+=======+======+======+======+======+
+            | MATCID |  CID  | EID1   | "THRU" | EID2  | "BY" |  N   |      |      |
+            +--------+-------+--------+--------+-------+------+------+------+------+
+
+        Format (alternative 4):
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+            +========+=======+========+=======+=======+======+======+======+======+
+            | MATCID |  CID  | "ALL"  |       |       |      |      |      |      |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+        """
+
+        matcid = MATCID(cid, form, eids, start, thru, by, comment=comment)
+        self._add_methods._add_matcid_object(matcid)
+        return matcid
 
     def add_cord2r(self, cid: int,
                    origin: Optional[Union[list[float], NDArray3float]],
@@ -3781,6 +3857,19 @@ class AddCards:
         self._add_methods._add_material_dependence_object(mat)
         return mat
 
+    def add_matdmg(self, mid, ppf_model, y012, yc12, ys12, ys22, y11limt, y11limc,
+                   ksit=None, ksic=None, b2=None, b3=None, a=None, litk=None, bigk=None, expn=None,
+                   tau=None, adel=None, plyuni=None, tid=None, hbar=None, dmax=None, pe=None,
+                   user=None, r01=None, ds=None, gic=None, giic=None, giiic=None,
+                   comment='') -> MATDMG:
+        """Creates a MATDMG card"""
+
+        mat = MATDMG(mid, ppf_model, y012, yc12, ys12, ys22, y11limt, y11limc, ksit, ksic,
+                      b2, b3, a, litk, bigk, expn, tau, adel, plyuni, tid, hbar, dmax, pe,
+                      user, r01, ds, gic, giic, giiic, comment=comment)
+        self._add_methods._add_material_dependence_object(mat)
+        return mat
+
     def add_matt1(self, mid, e_table=None, g_table=None, nu_table=None, rho_table=None,
                   a_table=None, ge_table=None, st_table=None, sc_table=None, ss_table=None,
                   comment='') -> MATT1:
@@ -5848,7 +5937,7 @@ class AddCards:
         #self._add_omit_object(omit)
         #return omit
 
-    def add_omit1(self, ids, components, comment='') -> Union[OMIT, OMIT1]:
+    def add_omit1(self, ids: list[int], components: str, comment='') -> Union[OMIT, OMIT1]:
         """
         Creates an OMIT1 card, which defines the degree of freedoms that
         will be excluded (o-set) from the analysis set (a-set).
@@ -7446,13 +7535,18 @@ class AddCards:
         self._add_methods._add_dmncon_object(dmncon)
         return dmncon
     # ------------------------------------------
-    def add_modtrak(self) -> MODTRAK:
-        modtrak = MODTRAK()
+    def add_modtrak(self, sid, low_range, high_range, mt_filter, comment: str='') -> MODTRAK:
+        modtrak = MODTRAK(sid, low_range, high_range, mt_filter, comment=comment)
         self._add_methods._add_modtrak_object(modtrak)
         return modtrak
 
-    def add_mondsp1(self, name, label, axes, aecomp_name, xyz,
-                          cp=0, cd=None, ind_dof='123', comment='') -> MONDSP1:
+    def add_mondsp1(self, name: str, label: str,
+                    axes: str,
+                    aecomp_name: str,
+                    xyz: np.ndarray,
+                    cp: int=0, cd=None,
+                    ind_dof: str='123',
+                    comment: str='') -> MONDSP1:
         """
         Creates a MONDSP1 card
 
@@ -8330,8 +8424,10 @@ class AddCards:
         self._add_methods._add_convection_property_object(prop)
         return prop
 
-    def add_pconvm(self, pconid, mid, coef, form=0, flag=0,
-                   expr=0.0, exppi=0.0, exppo=0.0, comment='') -> PCONVM:
+    def add_pconvm(self, pconid: int, mid: int, coef: float,
+                   form: int=0, flag: int=0,
+                   expr: float=0.0, exppi: float=0.0, exppo: float=0.0,
+                   comment: str='') -> PCONVM:
         """
         Creates a PCONVM card
 
@@ -8365,7 +8461,7 @@ class AddCards:
         self._add_methods._add_convection_property_object(prop)
         return prop
 
-    def add_dti(self, name, fields, comment='') -> Union[DTI, DTI_UNITS]:
+    def add_dti(self, name: str, fields: dict[int, list], comment='') -> Union[DTI, DTI_UNITS]:
         """Creates a DTI card"""
         if name == 'UNITS':
             dti = DTI_UNITS(name, fields, comment=comment)
@@ -8374,7 +8470,7 @@ class AddCards:
         self._add_methods._add_dti_object(dti)
         return dti
 
-    def add_dmig_uaccel(self, tin, ncol, load_sequences, comment='') -> DMIG_UACCEL:
+    def add_dmig_uaccel(self, tin: int, ncol: int, load_sequences, comment='') -> DMIG_UACCEL:
         """Creates a DMIG,UACCEL card"""
         dmig = DMIG_UACCEL(tin, ncol, load_sequences, comment=comment)
         self._add_methods._add_dmig_object(dmig)
@@ -8449,10 +8545,10 @@ class AddCards:
         ..warning :: only supports square matrices for the moment
         """
         if tin is None:
-            tin = dtype_to_tin_tout(myarray)
+            tin = dtype_to_tin_tout_str(myarray)
 
         if tout is None:
-            tout = dtype_to_tin_tout(myarray)
+            tout = dtype_to_tin_tout_str(myarray)
 
         nrows, ncols = myarray.shape
 
@@ -8842,6 +8938,37 @@ class AddCards:
                         comment=comment)
         self._add_methods._add_acoustic_property_object(pacabs)
         return pacabs
+
+    def add_bolt_msc(self):
+        asdf
+    def add_bolt_nx(self, bolt_id: int,
+                    element_type: int,
+                    eids: Optional[list]=None,  # element_type=1
+                    nids: Optional[list]=None,  # element_type=2
+                    csid=None,  # element_type=2
+                    idir=None,  # element_type=2
+                    comment: str='') -> BOLT:
+        bolt = BOLT(bolt_id, element_type,
+                    eids=eids, nids=nids,
+                    csid=csid, idir=idir, comment=comment)
+        self._add_methods._add_bolt_object(bolt)
+        return bolt
+
+    def add_boltseq_nx(self, sid: int,
+                       s_nos: list[int],
+                       b_ids: list[int],
+                       n_incs: Optional[list[int]]=None,
+                       comment: str='') -> BOLT:
+        bolt = BOLTSEQ(sid, s_nos, b_ids, n_incs=n_incs, comment=comment)
+        self._add_methods._add_boltseq_object(bolt)
+        return bolt
+
+    def add_boltfor_nx(self, sid: int, load_value: float, bolt_ids: list[int],
+                       comment: str='') -> BOLTFOR:
+        boltfor = BOLTFOR(sid, load_value, bolt_ids, comment=comment)
+        self._add_methods._add_boltfor_object(boltfor)
+        return boltfor
+    #def add_boltld_nx(self, ) -> BOLTLD:
 
 def add_beam_stress_strain_constraints(model, pid: int, label: str,
                                        response_type: str, static_stress_constraints,

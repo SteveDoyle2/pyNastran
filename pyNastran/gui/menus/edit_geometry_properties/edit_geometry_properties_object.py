@@ -2,14 +2,20 @@
 defines:
  - EditGeometryPropertiesObject
 """
+from __future__ import annotations
 from copy import deepcopy
+from typing import TYPE_CHECKING
+
 import numpy as np
 import vtk
+
+from pyNastran.gui.vtk_rendering_core import vtkActor
 from pyNastran.gui.menus.edit_geometry_properties.manage_actors import EditGeometryProperties
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.base_gui import BaseGui
-
+if TYPE_CHECKING:
+    from pyNastran.gui.gui import MainWindow
 
 # EDIT ACTOR PROPERTIES
 class EditGeometryPropertiesObject(BaseGui):
@@ -159,7 +165,7 @@ class EditGeometryPropertiesObject(BaseGui):
             return
 
         actor = self.gui.geometry_actors[namei]
-        if isinstance(actor, vtk.vtkActor):
+        if isinstance(actor, vtkActor):
             alt_prop = self.gui.geometry_properties[namei]
             label_actors = alt_prop.label_actors
             lines += self._update_geometry_properties_actor(namei, group, actor, label_actors)
@@ -287,8 +293,7 @@ class EditGeometryPropertiesObject(BaseGui):
             prop.Modified()
         return lines
 
-
-    def set_bar_scale(self, name, bar_scale):
+    def set_bar_scale(self, name: str, bar_scale: float) -> None:
         """
         Sets the bar scale
 
@@ -303,12 +308,13 @@ class EditGeometryPropertiesObject(BaseGui):
         if bar_scale <= 0.0:
             return
         assert bar_scale > 0.0, 'bar_scale=%r' % bar_scale
+        gui: MainWindow = self.gui
 
         # bar_y : (nbars, 6) float ndarray
         #     the xyz coordinates for (node1, node2) of the y/z axis of the bar
         #     xyz1 is the centroid
         #     xyz2 is the end point of the axis with a length_xyz with a bar_scale of 1.0
-        bar_y = self.gui.bar_lines[name]
+        bar_y = gui.bar_lines[name]
 
         #dy = c - yaxis
         #dz = c - zaxis
@@ -321,14 +327,14 @@ class EditGeometryPropertiesObject(BaseGui):
         length_xyz = np.linalg.norm(dxyz, axis=1)
         izero = np.where(length_xyz == 0.0)[0]
         if len(izero):
-            bad_eids = self.gui.bar_eids[name][izero]
-            self.gui.log.error('The following elements have zero length...%s' % bad_eids)
+            bad_eids = gui.bar_eids[name][izero]
+            gui.log.error('The following elements have zero length...%s' % bad_eids)
 
         # v = dxyz / length_xyz *  bar_scale
         # xyz2 = xyz1 + v
 
         nnodes = len(length_xyz)
-        grid = self.gui.alt_grids[name]
+        grid = gui.alt_grids[name]
         points = grid.GetPoints()
         for i in range(nnodes):
             #unused_point = points.GetPoint(2*i+1)

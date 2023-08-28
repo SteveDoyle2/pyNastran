@@ -1,9 +1,8 @@
 """Defines the GUI IO file for Fast."""
 import os
-from collections import OrderedDict
 
 import numpy as np
-from vtk import vtkTriangle, vtkTetra
+from pyNastran.gui.vtk_interface import vtkTriangle, vtkTetra
 
 from pyNastran.converters.fast.fgrid_reader import read_fgrid
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
@@ -107,7 +106,7 @@ class FastIO:
         # regions/loads
         self.gui.scalar_bar_actor.Modified()
 
-        cases = OrderedDict()
+        cases = {}
         #cases = self.result_cases
         form = []
         node_ids, element_ids = self._fill_fast_results(

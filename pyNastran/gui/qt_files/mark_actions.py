@@ -3,10 +3,13 @@ defines:
  - MarkActions
 
 """
+from typing import Optional, Any
 import numpy as np
-import vtk
+from vtk import vtkSelection, vtkExtractSelection
+from pyNastran.gui.vtk_rendering_core import vtkBillboardTextActor3D
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.gui.vtk_common_core import vtkMath
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, create_unstructured_point_grid
 
 
@@ -20,7 +23,7 @@ class MarkActions:
     def log(self):
         return self.gui.log
 
-    def create_annotation(self, text, x, y, z):
+    def create_annotation(self, text: str, x, y, z):
         """
         Creates the actual annotation and appends it to slot
 
@@ -40,9 +43,13 @@ class MarkActions:
         annotation = create_annotation(self.gui, text, x, y, z)
         return annotation
 
-    def get_result_by_xyz_cell_id(self, node_xyz, cell_id: int):
+    def get_result_by_xyz_cell_id(self, node_xyz: np.ndarray,
+                                  cell_id: int,
+                                  icase: Optional[int]=None):
         """won't handle multiple cell_ids/node_xyz"""
-        case_key = self.gui.case_keys[self.gui.icase_fringe]
+        if icase is None:
+            icase = self.gui.icase_fringe
+        case_key = self.gui.case_keys[icase]
         result_name = self.gui.result_name
 
         grid = self.gui.grid_selected
@@ -65,7 +72,7 @@ class MarkActions:
         except ValueError:
             #ValueError: expects 0 <= id && id < GetNumberOfPoints()
             return None
-        dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
+        dist_min = vtkMath.Distance2BetweenPoints(point0, node_xyz)
 
         point_min = point0
         imin = 0
@@ -73,7 +80,7 @@ class MarkActions:
             #point = array(points.GetPoint(ipoint), dtype='float32')
             #dist = norm(point - node_xyz)
             point = points.GetPoint(ipoint)
-            dist = vtk.vtkMath.Distance2BetweenPoints(point, node_xyz)
+            dist = vtkMath.Distance2BetweenPoints(point, node_xyz)
             if dist < dist_min:
                 dist_min = dist
                 imin = ipoint
@@ -158,7 +165,9 @@ class MarkActions:
                 eids, icase_result, icase_to_apply))
         self.gui.vtk_interactor.Render()
 
-    def get_result_by_cell_id(self, cell_id, world_position, icase=None):
+    def get_result_by_cell_id(self, cell_id: int,
+                              world_position: np.ndarray,
+                              icase: Optional[int]=None) -> tuple[str, Any, np.ndarray]:
         """should handle multiple cell_ids"""
         if icase is None:
             icase = self.gui.icase_fringe
@@ -242,7 +251,7 @@ class MarkActions:
             raise NotImplementedError(msg)
         return res_name, result_values, xyz
 
-    def get_result_by_cell_ids(self, cell_ids, icase=None):
+    def get_result_by_cell_ids(self, cell_ids, icase: Optional[int]=None):
         """should handle multiple cell_ids"""
         if icase is None:
             icase = self.gui.icase_fringe
@@ -256,18 +265,18 @@ class MarkActions:
         try:
             result_values = case[cell_ids]
         except IndexError:
-            msg = ('case[cell_id] is out of bounds; length=%s\n'
-                   'result_name=%r cell_id=%r case_key=%r\n' % (
-                       len(case), res_name, cell_ids, case_key))
+            msg = (
+                f'case[cell_id] is out of bounds; length={len(case)}\n'
+                f'result_name={res_name!r} cell_id={cell_ids} case_key={case_key}\n')
             raise IndexError(msg)
 
         return res_name, result_values
 
     def highlight_nodes_elements(self, nids=None, eids=None,
-                                 representation='wire',
+                                 representation: str='wire',
                                  model_name=None,
                                  #callback=self.on_focus_callback,
-                                 force=True):
+                                 force: bool=True):
         """
         Highlights a series of nodes/elements
 
@@ -283,15 +292,15 @@ class MarkActions:
 
         """
         actors = []
-        if eids and representation in ['wire', 'surface']:
+        if eids and representation in {'wire', 'surface'}:
             actor = self.highlight_elements(self, eids, model_name=model_name)
             actors.append(actor)
-        if nids and representation in ['points']:
+        if nids and representation == 'points':
             actor = self.highlight_nodes(self, nids, model_name=model_name)
             actors.append(actor)
         return actors
 
-    def highlight_nodes(self, nids, model_name='', add_actor=True):
+    def highlight_nodes(self, nids, model_name: str='', add_actor: bool=True):
         """
         Highlights a series of nodes
 
@@ -317,7 +326,7 @@ class MarkActions:
         self.gui.vtk_interactor.Render()
         return actor
 
-    def highlight_elements(self, eids, model_name='', add_actor=True):
+    def highlight_elements(self, eids, model_name: str='', add_actor: bool=True):
         """
         Highlights a series of elements
 
@@ -349,17 +358,18 @@ class MarkActions:
         #return actor
 
     def _highlight_picker_by_selection_node(self, grid, selection_node,
-                                            representation='surface', add_actor=True):
+                                            representation: str='surface',
+                                            add_actor: bool=True):
         """
         helper method for:
             - _highlight_picker_cell
             #- _highlight_picker_node
 
         """
-        selection = vtk.vtkSelection()
+        selection = vtkSelection()
         selection.AddNode(selection_node)
 
-        extract_selection = vtk.vtkExtractSelection()
+        extract_selection = vtkExtractSelection()
         extract_selection.SetInputData(0, grid)
         extract_selection.SetInputData(1, selection)
         extract_selection.Update()
@@ -369,7 +379,7 @@ class MarkActions:
             ugrid, representation=representation, add_actor=add_actor)
         return actor
 
-    def mark_nodes(self, nids, icase, text):
+    def mark_nodes(self, nids: list[int], icase: int, text: str) -> None:
         """
         Marks a series of nodes with custom text labels
 
@@ -390,8 +400,8 @@ class MarkActions:
 
         """
         if icase not in self.gui.label_actors:
-            msg = 'icase=%r not in label_actors=[%s]' % (
-                icase, ', '.join(self.gui.label_actors))
+            names = ', '.join(self.gui.label_actors)
+            msg = f'icase={icase} not in label_actors=[{names}]'
             self.gui.log_error(msg)
             return
         slot = self.gui.label_actors[icase]
@@ -492,7 +502,7 @@ def create_annotation(gui, text, x, y, z):
     #self.convert_units(icase, result_value, x, y, z)
 
     settings = gui.settings
-    text_actor = vtk.vtkBillboardTextActor3D()
+    text_actor = vtkBillboardTextActor3D()
     text_actor.SetPosition(x, y, z)
     text_actor.SetInput(str(text))
     text_actor.PickableOff()

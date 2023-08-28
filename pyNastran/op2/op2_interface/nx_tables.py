@@ -12,6 +12,8 @@ NX_VERSIONS = [
     '2020.0', '2020.1', '2020.2',
     '2021.0', '2021.1', '2021.2',
     '2022.0', '2022.1', '2022.2',
+    '2023.0', '2023.1', '2023.2',  #  not checked
+    '2024.0', '2024.1', '2024.2',  #  not checked
 ]
 
 NX_ELEMENTS = {
@@ -458,6 +460,8 @@ NX_MATRIX_TABLES = [
 
     b'BHH', b'KHH',
     b'DSCM2',
+    b'MEF1', b'MUG1B',
+    b'MATK', b'MATM', b'MATV',
 ]  # type: list[bytes]
 
 NX_EXTRA_TABLES = [

@@ -1,6 +1,5 @@
 # pylint: disable=C0103,C0111,E1101
 import os
-from collections import OrderedDict
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -17,14 +16,15 @@ from collections import OrderedDict
 #VTK_HEXAHEDRON = 12
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
-from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, array
+from numpy import zeros, abs, mean, nan_to_num, amax, amin, array
 from numpy import nan as NaN
 from numpy.linalg import norm  # type: ignore
 
 import vtk
-from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
-                 vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
-                 vtkQuadraticWedge, vtkQuadraticHexahedron)
+from pyNastran.gui.vtk_interface import (
+    vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
+    vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
+    vtkQuadraticWedge, vtkQuadraticHexahedron)
 
 from pyNastran.dev.bdf_vectorized.bdf import BDF
     #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -45,7 +45,8 @@ class NastranIO(NastranIO_xref):
         self.is_sub_panels = False
         self.save_data = False
 
-    def load_nastran_geometry(self, bdf_filename, dirname, name='main'):
+    def load_nastran_geometry(self, bdf_filename: str, dirname: str,
+                              name: str='main') -> None:
         self.eid_map = {}
         self.nid_map = {}
         if bdf_filename is None or bdf_filename == '':
@@ -54,7 +55,7 @@ class NastranIO(NastranIO_xref):
             self.turn_text_off()
             self.grid.Reset()
 
-            self.result_cases = OrderedDict()
+            self.result_cases = {}
             self.ncases = 0
         for i in ('case_keys', 'icase', 'isubcase_name_map'):
             if hasattr(self, i):
@@ -171,7 +172,7 @@ class NastranIO(NastranIO_xref):
                         #if None in node_ids:
                             #nsprings += 1
 
-        points2.SetNumberOfPoints(nCAerosPoints * 4 + nCONM2 + nsprings)
+        points2.SetNumberOfPoints(ncaeros_points * 4 + nconm2 + nsprings)
         for (eid, element) in sorted(model.caeros.items()):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
                 if self.is_sub_panels:
@@ -732,7 +733,7 @@ class NastranIO(NastranIO_xref):
         self.grid2.Update()
         self.log_info("updated grid")
 
-        cases = OrderedDict()
+        cases = {}
 
         if 0:
             nelements = len(model.elements)
@@ -986,7 +987,7 @@ class NastranIO(NastranIO_xref):
             #print("nodeID=%s t=%s" % (nodeID, translation))
         #self.isubcase_name_map[self.isubcase] = [Subtitle, Label]
 
-        cases = OrderedDict()
+        cases = {}
         subcase_ids = model.isubcase_name_map.keys()
         self.isubcase_name_map = model.isubcase_name_map
 

@@ -9,7 +9,7 @@ Defines:
 from __future__ import annotations
 from itertools import count
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import cast, Optional, Union, Any, TYPE_CHECKING
 
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore
@@ -21,7 +21,8 @@ from pyNastran.utils.mathematics import integrate_positive_unit_line
 CHECK_MASS = False  # should additional checks be done
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, NSM1, CQUAD4, CBAR, CBEAM, CROD, CONROD, CTRIA3
+    Element = Union[CQUAD4, CBAR, CBEAM, CROD, CONROD, CTRIA3]
 
 NO_MASS = {
     # has mass
@@ -131,9 +132,12 @@ def transform_inertia(mass: float, xyz_cg: np.ndarray,
     return I_new
 
 def _mass_properties_elements_init(model: BDF,
-                                   element_ids: Union[int, list[int]],
-                                   mass_ids: Union[int, list[int]]):
-    """helper method"""
+                                   element_ids: int | list[int],
+                                   mass_ids: int | list[int]) -> tuple[list[int], list[int],
+                                                                       list[int], list[int]]:
+    """helper method
+
+    Returns element_ids, elements, mass_ids, masses"""
     # if neither element_id nor mass_ids are specified, use everything
     if isinstance(element_ids, integer_types):
         element_ids = [element_ids]
@@ -213,7 +217,8 @@ def mass_properties(model: BDF,
     mass, cg, I = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I)
     return mass, cg, I
 
-def _update_reference_point(model: BDF, reference_point: np.ndarray,
+def _update_reference_point(model: BDF,
+                            reference_point: np.ndarray,
                             inertia_reference: str='cg') -> tuple[np.ndarray, bool]:
     """helper method for handling reference point"""
     inertia_reference = inertia_reference.lower()
@@ -258,14 +263,16 @@ def mass_properties_no_xref(model, element_ids=None, mass_ids=None,
     mass, cg, I = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I)
     return mass, cg, I
 
-def _mass_properties(model, elements, masses, reference_point, is_cg):
+def _mass_properties(model: BDF, elements: list[Element], masses: list[int],
+                     reference_point: np.ndarray,
+                     is_cg: bool) -> tuple[float, np.ndarray, np.ndarray]:
     """helper method for ``mass_properties``"""
     mass = 0.
     cg = array([0., 0., 0.])
     inertia = array([0., 0., 0., 0., 0., 0., ])
     no_mass = NO_MASS
     mass_inertia = {'CONM2'}
-    for pack in [elements, masses]:
+    for pack in (elements, masses):
         for element in pack:
             if element.type == 'CBEAM':
                 mass = _get_cbeam_mass_no_nsm(model, element, mass, cg, inertia, reference_point)
@@ -316,7 +323,9 @@ def _mass_properties(model, elements, masses, reference_point, is_cg):
         inertia = transform_inertia(mass, cg, xyz_ref, xyz_ref2, inertia)
     return mass, cg, inertia
 
-def _mass_properties_no_xref(model, elements, masses, reference_point, is_cg):  # pragma: no cover
+def _mass_properties_no_xref(model: BDF, elements: list[int], masses: list[int],
+                             reference_point: np.ndarray, is_cg: bool,
+                             ) -> tuple[float, np.ndarray, np.ndarray]:  # pragma: no cover
     """
     Calculates mass properties in the global system about the
     reference point.
@@ -395,7 +404,7 @@ def _mass_properties_no_xref(model, elements, masses, reference_point, is_cg):  
 def _increment_inertia(centroid: np.ndarray, reference_point: np.ndarray,
                        m: float, mass: float,
                        cg: np.ndarray,
-                       inertia: list[float]) -> float:
+                       inertia: np.ndarray) -> float:
     """helper method"""
     if m == 0.:
         return mass
@@ -413,10 +422,10 @@ def _increment_inertia(centroid: np.ndarray, reference_point: np.ndarray,
     cg += m * centroid
     return mass
 
-def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
+def mass_properties_nsm(model: BDF, element_ids=None, mass_ids=None, nsm_id=None,
                         reference_point=None,
-                        sym_axis=None, scale=None, inertia_reference='cg',
-                        xyz_cid0_dict=None, debug=False):
+                        sym_axis=None, scale=None, inertia_reference: str='cg',
+                        xyz_cid0_dict=None, debug: bool=False) -> tuple[float, np.ndarray, np.ndarray]:
     """
     Calculates mass properties in the global system about the
     reference point.  Considers NSM, NSM1, NSML, NSML1, and WTMASS.
@@ -506,13 +515,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     reference_point, is_cg = _update_reference_point(
         model, reference_point, inertia_reference)
 
-    if xyz_cid0_dict is None:
-        xyz = {}
-        for nid, node in model.nodes.items():
-            xyz[nid] = node.get_position()
-    else:
-        xyz = xyz_cid0_dict
-
+    xyz = _get_xyz_cid0_dict(model, xyz_cid0_dict)
     element_ids, unused_elements, mass_ids, unused_masses = _mass_properties_elements_init(
         model, element_ids, mass_ids)
 
@@ -536,18 +539,19 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
         #cg += m * centroid
         #return mass
 
-    etypes_skipped = set()
+    etypes_skipped: set[str] = set()
     #eid_areas = defaultdict(list)
-    area_eids_pids = defaultdict(list)
-    areas = defaultdict(list)
-    nsm_centroids_area = defaultdict(list)
+    area_eids_pids: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    nsm_centroids_area: dict[str, list[np.ndarray]] = defaultdict(list)
+    areas: dict[str, list[float]] = defaultdict(list)
 
-    length_eids_pids = defaultdict(list)
-    nsm_centroids_length = defaultdict(list)
-    lengths = defaultdict(list)
+    length_eids_pids: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    nsm_centroids_length: dict[str, list[np.ndarray]] = defaultdict(list)
+    lengths: dict[str, list[float]] = defaultdict(list)
 
     no_mass = NO_MASS
-    for etype, eids in model._type_to_id_map.items():
+    type_to_id_map = cast(dict[str, list[int]], model._type_to_id_map)
+    for etype, eids in type_to_id_map.items():
         #assert isinstance(eids, list), f'etype={etype} eids={eids} type={type(eids)}'
         if etype in no_mass or len(eids) == 0:
             continue
@@ -584,28 +588,57 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     mass, cg, inertia = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia)
     return mass, cg, inertia
 
+def _get_xyz_cid0_dict(model: BDF,
+                       xyz_cid0_dict: Optional[dict[int, np.ndarray]],
+                       ) -> dict[int, np.ndarray]:
+    """gets the nodal positions as a dictionary"""
+    if xyz_cid0_dict is None:
+        xyz = {}
+        for nid, node in model.nodes.items():
+            xyz[nid] = node.get_position()
+    else:
+        xyz = xyz_cid0_dict
+    return xyz
 
-def get_sub_eids(all_eids, eids, etype):
+def _get_nid_xyzcid0(model: BDF) -> tuple[np.ndarray, np.ndarray]:
+    out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
+    nid_cp_cd, xyz_cid0, unused_xyz_cp, unused_icd_transform, unused_icp_transform = out
+
+    all_nids = nid_cp_cd[:, 0]
+    return all_nids, xyz_cid0
+
+def get_sub_eids(all_eids: np.ndarray,
+                 eids: list[int],
+                 etype: str) -> np.ndarray:
     """supports limiting the element/mass ids"""
-    eids = np.array(eids)
-    ieids = np.searchsorted(all_eids, eids)
+    eids_ = np.array(eids)
+    ieids = np.searchsorted(all_eids, eids_)
     try:
-        eids2 = eids[all_eids[ieids] == eids]
+        eids2 = eids_[all_eids[ieids] == eids_]
     except IndexError:
-        print(etype, all_eids, ieids, eids)
+        print(etype, all_eids, ieids, eids_)
         raise
     return eids2
 
-def _get_mass_nsm(model, element_ids, mass_ids,
-                  all_eids, all_mass_ids, etypes_skipped,
-                  etype, eids, xyz,
-                  length_eids_pids, nsm_centroids_length, lengths,
-                  area_eids_pids, nsm_centroids_area, areas,
-                  mass, cg, I, reference_point):
+def _get_mass_nsm(model: BDF,
+                  element_ids: list[int], mass_ids: list[int],
+                  all_eids: np.ndarray, all_mass_ids: np.ndarray, etypes_skipped: set[str],
+                  etype: str, eids: list[int], xyz: dict[int, np.ndarray],
+                  #length
+                  length_eids_pids: dict[str, list[tuple[int, int]]],
+                  nsm_centroids_length: dict[str, list[np.ndarray]],
+                  lengths: dict[str, list[float]],
+                  #area
+                  area_eids_pids: dict[str, list[tuple[int, int]]],
+                  nsm_centroids_area: dict[str, list[np.ndarray]],
+                  areas: dict[str, list[float]],
+                  #other
+                  mass: float, cg: np.ndarray, I: np.ndarray,
+                  reference_point: np.ndarray) -> tuple[float, np.ndarray, np.ndarray]:
     """helper method for ``mass_properties_nsm``"""
-    element_ids = set(element_ids)
-    mass_ids = set(mass_ids)
-    if etype in ['CROD', 'CONROD']:
+    element_ids_set = set(element_ids)
+    mass_ids_set = set(mass_ids)
+    if etype in {'CROD', 'CONROD'}:
         eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
@@ -629,7 +662,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             #if massi != elem.Mass():  # pragma: no cover
                 #msg = 'mass_new=%s mass_old=%s\n%s' % (massi, elem.Mass(), str(elem))
                 #raise RuntimeError(msg)
-            if eid in element_ids:
+            if eid in element_ids_set:
                 mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     elif etype == 'CTUBE':
         eids2 = get_sub_eids(all_eids, eids, etype)
@@ -648,46 +681,29 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             #if massi != elem.Mass():  # pragma: no cover
                 #msg = 'mass_new=%s mass_old=%s\n%s' % (massi, elem.Mass(), str(elem))
                 #raise RuntimeError(msg)
-            if eid in element_ids:
+            if eid in element_ids_set:
                 mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     elif etype == 'CBAR':
-        eids2 = get_sub_eids(all_eids, eids, etype)
-        for eid in eids2:
-            elem = model.elements[eid]
-            pid = elem.pid
-            n1, n2 = elem.node_ids
-            centroid = (xyz[n1] + xyz[n2]) / 2.
-            length = norm(xyz[n2] - xyz[n1])
-            mpl = elem.pid_ref.MassPerLength()
-            length_eids_pids['PBAR'].append((eid, pid))
-            lengths['PBAR'].append(length)
-            nsm_centroids_length['PBAR'].append(centroid)
-            #nsm = property_nsms[nsm_id]['PBAR'][pid] + element_nsms[nsm_id][eid]
-            #m = (mpl + nsm) * length
-            massi = mpl * length
-            #if massi != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
-                #msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
-                #msg += 'centroid_new=%s centroid_old=%s\n%s' % (
-                    #str(centroid), str(elem.Centroid()), str(elem))
-                #raise RuntimeError(msg)
-            if eid in element_ids:
-                mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
-
-    elif etype == 'CBEAM':
-        mass = _get_cbeam_mass(
-            model, xyz, element_ids, all_eids,
+        mass = _get_cbar_mass(
+            model, xyz, element_ids_set, all_eids,
             length_eids_pids, lengths, nsm_centroids_length,
             eids, mass, cg, I, reference_point)
 
-    elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR']:
+    elif etype == 'CBEAM':
+        mass = _get_cbeam_mass(
+            model, xyz, element_ids_set, all_eids,
+            length_eids_pids, lengths, nsm_centroids_length,
+            eids, mass, cg, I, reference_point)
+
+    elif etype in {'CTRIA3', 'CTRIA6', 'CTRIAR'}:
         mass = _get_tri_mass(
-            model, xyz, element_ids, all_eids,
+            model, xyz, element_ids_set, all_eids,
             area_eids_pids, areas, nsm_centroids_area,
             eids, mass, cg, I, reference_point)
 
-    elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR']:
+    elif etype in {'CQUAD4', 'CQUAD8', 'CQUADR'}:
         mass = _get_quad_mass(
-            model, xyz, element_ids, all_eids,
+            model, xyz, element_ids_set, all_eids,
             area_eids_pids, areas, nsm_centroids_area,
             eids, mass, cg, I, reference_point)
 
@@ -716,51 +732,32 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
                 raise RuntimeError(msg)
-            if eid in element_ids:
+            if eid in element_ids_set:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CSHEAR':
-        eids2 = get_sub_eids(all_eids, eids, etype)
-        for eid in eids2:
-            elem = model.elements[eid]
-            n1, n2, n3, n4 = elem.node_ids
-            prop = elem.pid_ref
-            pid = elem.pid
-            centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
-            area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
-            mpa = prop.MassPerArea()
+        mass = _get_cshear_mass(
+            model, xyz, element_ids_set, all_eids,
+            area_eids_pids, areas, nsm_centroids_area,
+            eids, mass, cg, I, reference_point, etype)
 
-            area_eids_pids['PSHEAR'].append((eid, pid))
-            areas['PSHEAR'].append(area)
-            nsm_centroids_area['PSHEAR'].append(centroid)
-
-            #nsm = property_nsms[nsm_id]['PSHEAR'][pid] + element_nsms[nsm_id][eid]
-            #m = area * (mpa + nsm)
-            m = area * mpa
-            #if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
-                #msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
-                #msg += 'centroid_new=%s centroid_old=%s\n%s' % (
-                    #str(centroid), str(elem.Centroid()), str(elem))
-                #raise RuntimeError(msg)
-            if eid in element_ids:
-                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     elif etype == 'CONM2':
         eids2 = get_sub_eids(all_mass_ids, eids, etype)
         for eid in eids2:
             elem = model.masses[eid]
             centroid, m, dI = elem.centroid_mass_inertia()
             di_list = [dI[0][0], dI[1][1], dI[2][2], dI[0][1], dI[0][2], dI[1][2]]
-            if eid in mass_ids:
+            if eid in mass_ids_set:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
                 I = [i1 + di for i1, di in zip(I, di_list)]
 
-    elif etype in ['CONM1', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
+    elif etype in {'CONM1', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'}:
         eids2 = get_sub_eids(all_mass_ids, eids, etype)
         for eid in eids2:
             elem = model.masses[eid]
             m = elem.Mass()
             centroid = elem.Centroid()
-            if eid in mass_ids:
+            if eid in mass_ids_set:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     elif etype == 'CTETRA':
         eids2 = get_sub_eids(all_eids, eids, etype)
@@ -776,7 +773,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                 #msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     #str(centroid), str(elem.Centroid()), str(elem))
                 #raise RuntimeError(msg)
-            if eid in element_ids:
+            if eid in element_ids_set:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CPYRAM':
@@ -804,7 +801,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                 raise RuntimeError(msg)
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
                 #elem.eid, 'CPYRAM', m, elem.Rho(), volume))
-            if eid in element_ids:
+            if eid in element_ids_set:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CPENTA':
@@ -826,7 +823,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                 #raise RuntimeError(msg)
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
                 #elem.eid, 'CPENTA', m, elem.Rho(), volume))
-            if eid in element_ids:
+            if eid in element_ids_set:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype in ['CHEXA', 'CHEXA1', 'CHEXA2']:
@@ -853,7 +850,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             #print('*area1=%s area2=%s length=%s' % (area1, area2, norm(centroid1 - centroid2)))
             #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (
                 #elem.eid, 'CHEXA', m, elem.Rho(), volume))
-            if eid in element_ids:
+            if eid in element_ids_set:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CBEND':
@@ -864,22 +861,22 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             elem = model.elements[eid]
             m = elem.Mass()
             centroid = elem.Centroid()
-            if eid in element_ids:
+            if eid in element_ids_set:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
-    elif etype in ['CQUADX']:
+    elif etype == 'CQUADX':
         pass
-    elif etype in ['CTRIAX', 'CTRIAX6']:
+    elif etype in {'CTRIAX', 'CTRIAX6'}:
         mass = _mass_catch_all(model, etype, etypes_skipped,
-                               element_ids, all_eids, eids,
+                               element_ids_set, all_eids, eids,
                                mass, cg, I, reference_point)
-    elif etype in ['CSUPER', 'CSUPEXT']:
+    elif etype in {'CSUPER', 'CSUPEXT'}:
         pass
     elif etype.startswith('C'):
         model.log.warning('etype=%r should be explicit' % etype)
         #raise RuntimeError('etype=%r should be explicit' % etype) ## TODO: this is temporary
         mass = _mass_catch_all(model, etype, etypes_skipped,
-                               element_ids, all_eids, eids,
+                               element_ids_set, all_eids, eids,
                                mass, cg, I, reference_point)
 
     #property_nsms[nsm_id][nsm.nsm_type][nsm_idi]
@@ -895,9 +892,10 @@ def _get_mass_nsm(model, element_ids, mass_ids,
         #areas['PSHELL'].append(area)
     return mass, cg, I
 
-def _mass_catch_all(model, etype, etypes_skipped,
-                    element_ids, all_eids, eids,
-                    mass, cg, I, reference_point):
+def _mass_catch_all(model: BDF, etype: str, etypes_skipped: set[str],
+                    element_ids: set[int], all_eids: np.ndarray, eids: list[int],
+                    mass: float, cg: np.ndarray, I: np.ndarray,
+                    reference_point: np.ndarray) -> float:
     """helper method for ``get_mass_new``"""
     eids2 = get_sub_eids(all_eids, eids, etype)
     for eid in eids2:
@@ -919,6 +917,36 @@ def _mass_catch_all(model, etype, etypes_skipped,
         elif etype not in etypes_skipped:
             model.log.info('elem.type=%s doesnt have mass' % elem.type)
             etypes_skipped.add(etype)
+    return mass
+
+def _get_cbar_mass(model: BDF, xyz: dict[int, np.ndarray],
+                   element_ids_set: set[int], all_eids: np.ndarray,
+                   length_eids_pids, lengths, nsm_centroids_length,
+                   eids: list[int],
+                   mass: float, cg: np.ndarray, I: np.ndarray,
+                   reference_point) -> float:
+    """helper method for ``get_mass_new``"""
+    eids2 = get_sub_eids(all_eids, eids, 'CBAR')
+    for eid in eids2:
+        elem = model.elements[eid]
+        pid = elem.pid
+        n1, n2 = elem.node_ids
+        centroid = (xyz[n1] + xyz[n2]) / 2.
+        length: float = norm(xyz[n2] - xyz[n1])
+        mpl = elem.pid_ref.MassPerLength()
+        length_eids_pids['PBAR'].append((eid, pid))
+        lengths['PBAR'].append(length)
+        nsm_centroids_length['PBAR'].append(centroid)
+        #nsm = property_nsms[nsm_id]['PBAR'][pid] + element_nsms[nsm_id][eid]
+        #m = (mpl + nsm) * length
+        massi = mpl * length
+        #if massi != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+            #msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
+            #msg += 'centroid_new=%s centroid_old=%s\n%s' % (
+                #str(centroid), str(elem.Centroid()), str(elem))
+            #raise RuntimeError(msg)
+        if eid in element_ids_set:
+            mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     return mass
 
 def _get_cbeam_mass(model, xyz, element_ids, all_eids,
@@ -1126,9 +1154,16 @@ def _get_cbeam_mass_no_nsm(model, elem, mass, cg, inertia, reference_point):
     cg += m * centroid + nsm * nsm_centroid
     return mass
 
-def _get_tri_mass(model, xyz, element_ids, all_eids,
-                  area_eids_pids, areas, nsm_centroids_area,
-                  eids, mass, cg, inertia, reference_point):
+def _get_tri_mass(model: BDF,
+                  xyz: dict[int, np.ndarray],
+                  element_ids: set[int], all_eids: np.ndarray,
+                  #area
+                  area_eids_pids: dict[str, list[tuple[int, int]]],
+                  areas: dict[str, list[float]],
+                  nsm_centroids_area: dict[str, list[np.ndarray]],
+                  #other
+                  eids: list[int], mass: float, cg: np.ndarray, inertia: np.ndarray,
+                  reference_point: np.ndarray) -> float:
     """helper method for ``get_mass_new``"""
     eids2 = get_sub_eids(all_eids, eids, 'tri')
     for eid in eids2:
@@ -1137,7 +1172,7 @@ def _get_tri_mass(model, xyz, element_ids, all_eids,
         prop = elem.pid_ref
         pid = elem.pid
         centroid = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
-        area = 0.5 * norm(cross(xyz[n1] - xyz[n2], xyz[n1] - xyz[n3]))
+        area: float = 0.5 * norm(cross(xyz[n1] - xyz[n2], xyz[n1] - xyz[n3]))
         #areas_prop[pid] += area
         if prop.type == 'PSHELL':
             tflag = elem.tflag
@@ -1194,9 +1229,14 @@ def _get_tri_mass(model, xyz, element_ids, all_eids,
             mass = _increment_inertia(centroid, reference_point, massi, mass, cg, inertia)
     return mass
 
-def _get_quad_mass(model, xyz, element_ids, all_eids,
-                   area_eids_pids, areas, nsm_centroids_area,
-                   eids, mass, cg, inertia, reference_point):
+def _get_quad_mass(model: BDF, xyz: dict[int, np.ndarray], element_ids: set[int], all_eids: np.ndarray,
+                   #area
+                   area_eids_pids: dict[str, list[tuple[int, int]]],
+                   areas: dict[str, list[float]],
+                   nsm_centroids_area: dict[str, list[np.ndarray]],
+                   #other
+                   eids: list[int], mass: float, cg: np.ndarray, inertia: np.ndarray,
+                   reference_point: np.ndarray) -> float:
     """helper method for ``get_mass_new``"""
     eids2 = get_sub_eids(all_eids, eids, 'quad')
     for eid in eids2:
@@ -1205,7 +1245,9 @@ def _get_quad_mass(model, xyz, element_ids, all_eids,
         prop = elem.pid_ref
         pid = prop.pid
         centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
-        area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
+        x31 = xyz[n3] - xyz[n1]
+        x42 = xyz[n4] - xyz[n2]
+        area: float = 0.5 * norm(cross(x31, x42))
 
         if prop.type == 'PSHELL':
             tflag = elem.tflag
@@ -1275,8 +1317,50 @@ def _get_quad_mass(model, xyz, element_ids, all_eids,
             mass = _increment_inertia(centroid, reference_point, m, mass, cg, inertia)
     return mass
 
-def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
-                     length_eids_pids, lengths, nsm_centroids_length):
+def _get_cshear_mass(model: BDF,
+                     xyz: dict[int, np.ndarray],
+                     element_ids_set: set[int],
+                     all_eids: np.ndarray,
+                     area_eids_pids, areas, nsm_centroids_area,
+                     eids: list[int],
+                     mass: float, cg: np.ndarray, I: np.ndarray,
+                     reference_point: np.ndarray,
+                     etype: str) -> float:
+    """helper method for ``get_mass_new``"""
+    eids2 = get_sub_eids(all_eids, eids, etype)
+    for eid in eids2:
+        elem = model.elements[eid]
+        n1, n2, n3, n4 = elem.node_ids
+        prop = elem.pid_ref
+        pid = elem.pid
+        centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
+        area: float = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
+        mpa = prop.MassPerArea()
+
+        area_eids_pids['PSHEAR'].append((eid, pid))
+        areas['PSHEAR'].append(area)
+        nsm_centroids_area['PSHEAR'].append(centroid)
+
+        #nsm = property_nsms[nsm_id]['PSHEAR'][pid] + element_nsms[nsm_id][eid]
+        #m = area * (mpa + nsm)
+        m = area * mpa
+        #if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+            #msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
+            #msg += 'centroid_new=%s centroid_old=%s\n%s' % (
+                #str(centroid), str(elem.Centroid()), str(elem))
+            #raise RuntimeError(msg)
+        if eid in element_ids_set:
+            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+    return mass
+
+def _setup_apply_nsm(area_eids_pids: dict[str, np.ndarray],
+                     areas: dict[str, np.ndarray],
+                     nsm_centroids_area: dict[str, np.ndarray],
+                     length_eids_pids: dict[str, np.ndarray],
+                     lengths: dict[str, np.ndarray],
+                     nsm_centroids_length: dict[str, np.ndarray]) -> tuple[
+                         #all_eids_pids, area_length, is_area_array, nsm_centroids
+                         np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Sets up the non-structural mass processing
 
@@ -1307,10 +1391,24 @@ def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
         the centroids for the elements
 
     """
-    nsm_centroids = []
-    all_eids_pids = []
-    area_length = []
-    is_area = []
+    #area_eids_pids: dict[int, np.ndarray],
+                     #areas: dict[int, np.ndarray],
+                     #nsm_centroids_area: np.ndarray,
+                     #length_eids_pids: dict[int, np.ndarray],
+                     #lengths: dict[int, np.ndarray],
+                     #nsm_centroids_length: dict[int, np.ndarray]) -> tuple[
+    assert isinstance(area_eids_pids, dict), type(area_eids_pids)
+    assert isinstance(areas, dict), type(area_eids_pids)
+    assert isinstance(nsm_centroids_area, dict), type(nsm_centroids_area)
+
+    assert isinstance(length_eids_pids, dict), type(length_eids_pids)
+    assert isinstance(lengths, dict), type(lengths)
+    assert isinstance(nsm_centroids_length, dict), type(nsm_centroids_length)
+
+    nsm_centroids_list = []
+    all_eids_pids_list: list[tuple[int, int]] = []
+    area_length_list = []
+    is_area_list = []
     #is_data = False
     #print(areas)
     for ptype, eids_pids in area_eids_pids.items():
@@ -1318,12 +1416,12 @@ def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
         area_eids_pids[ptype] = np.array(eids_pids, dtype='int32')
         areas[ptype] = areasi
         assert len(areasi) > 0, areas
-        all_eids_pids += eids_pids
+        all_eids_pids_list += eids_pids
         nsm_centroidsi = np.array(nsm_centroids_area[ptype])
-        nsm_centroids.append(nsm_centroidsi)
+        nsm_centroids_list.append(nsm_centroidsi)
         assert len(eids_pids) == len(nsm_centroids_area[ptype]), ptype
-        area_length.append(areasi)
-        is_area += [True] * len(areasi)
+        area_length_list.append(areasi)
+        is_area_list += [True] * len(areasi)
         #is_data = True
         nsm_centroids_area[ptype] = nsm_centroidsi
 
@@ -1332,32 +1430,41 @@ def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
         length_eids_pids[ptype] = np.array(eids_pids, dtype='int32')
         lengths[ptype] = lengthsi
         assert len(lengthsi) > 0, lengthsi
-        all_eids_pids += eids_pids
+        all_eids_pids_list += eids_pids
         nsm_centroidsi = np.array(nsm_centroids_length[ptype])
-        nsm_centroids.append(nsm_centroidsi)
+        nsm_centroids_list.append(nsm_centroidsi)
         assert len(eids_pids) == len(nsm_centroids_length[ptype]), ptype
-        area_length.append(lengthsi)
-        is_area += [False] * len(lengthsi)
+        area_length_list.append(lengthsi)
+        is_area_list += [False] * len(lengthsi)
         #is_data = True
         nsm_centroids_length[ptype] = nsm_centroidsi
 
-    all_eids_pids = np.array(all_eids_pids, dtype='int32')
-    nelements = len(is_area)
+    all_eids_pids = np.array(all_eids_pids_list, dtype='int32')
+    nelements = len(is_area_list)
     if nelements == 0:
+        all_eids_pids = np.zeros((0, 2), dtype='int32')
+        area_length = np.zeros((0, 2), dtype='float64')
+        is_area = np.array([], dtype='bool')
+        nsm_centroids = np.zeros((0, 4), dtype='float64')
         return all_eids_pids, area_length, is_area, nsm_centroids
 
     isort = np.argsort(all_eids_pids[:, 0])
     all_eids_pids = all_eids_pids[isort, :]
-    area_length = np.hstack(area_length)[isort]
+    area_length = np.hstack(area_length_list)[isort]
 
-    is_area_array = np.array(is_area, dtype='bool')[isort]
-    nsm_centroids = np.vstack(nsm_centroids)[isort]
-    return all_eids_pids, area_length, is_area_array, nsm_centroids
+    is_area = np.array(is_area_list, dtype='bool')[isort]
+    nsm_centroids = np.vstack(nsm_centroids_list)[isort]
+    return all_eids_pids, area_length, is_area, nsm_centroids
 
-def _combine_prop_weighted_area_length_simple(model, eids, area, centroids,
-                                              nsm_value, reference_point, mass, cg, I,
-                                              is_area, divide_by_sum,
-                                              debug=True):
+def _combine_prop_weighted_area_length_simple(model: BDF,
+                                              eids: np.ndarray,
+                                              area: np.ndarray,
+                                              centroids: np.ndarray,
+                                              nsm_value: np.ndarray,
+                                              reference_point: np.ndarray,
+                                              mass, cg, I,
+                                              is_area: bool, divide_by_sum: bool,
+                                              debug: bool=True) -> float:
     """
     Calculates the contribution of NSM/NSML/NSM1 cards on mass properties.
     Area/Length are abstracted, so if you have a shell element, the area_sum
@@ -1413,8 +1520,16 @@ def _combine_prop_weighted_area_length_simple(model, eids, area, centroids,
     return mass
 
 def _combine_prop_weighted_area_length(
-        model, areas_ipids, nsm_centroidsi, is_area, area_sum,
-        nsm_value, reference_point, mass, cg, I, debug=True):
+        model: BDF,
+        areas_ipids: list[tuple[np.ndarray, np.ndarray]],
+        nsm_centroidsi: np.ndarray,
+        is_area: bool, area_sum: float,
+        nsm_value: float,
+        reference_point: np.ndarray,
+        mass: float,
+        cg: np.ndarray,
+        I: np.ndarray,
+        debug: bool=True):
     """
     Calculates the contribution of NSML cards on mass properties.
     Area/Length are abstracted, so if you have a shell element, the area_sum
@@ -1447,11 +1562,21 @@ def _combine_prop_weighted_area_length(
             mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     return mass
 
-def _apply_nsm(model, nsm_id,
-               unused_model_eids, unused_model_pids,
-               area_eids_pids, areas, nsm_centroids_area,
-               length_eids_pids, lengths, nsm_centroids_length,
-               mass, cg, I, reference_point, debug=False):
+def _apply_nsm(model: BDF, nsm_id: int,
+               unused_model_eids: np.ndarray,
+               unused_model_pids: np.ndarray,
+               # area
+               area_eids_pids: dict[str, np.ndarray],
+               areas: dict[str, np.ndarray],
+               nsm_centroids_area: dict[str, np.ndarray],
+               # length
+               length_eids_pids: dict[str, np.ndarray],
+               lengths: dict[str, np.ndarray],
+               nsm_centroids_length: dict[str, np.ndarray],
+               #
+               mass: float, cg: np.ndarray, I: np.ndarray,
+               reference_point: np.ndarray,
+               debug: bool=False) -> float:
     """
     Applies NSM cards to the mass, cg, and inertia.
 
@@ -1510,7 +1635,8 @@ def _apply_nsm(model, nsm_id,
 
     #print(length_eids_pids)
     #print(lengths)
-    nsms = model.get_reduced_nsms(nsm_id, consider_nsmadd=True, stop_on_failure=True)
+    nsms = model.get_reduced_nsms(nsm_id, consider_nsmadd=True,
+                                  stop_on_failure=True)
     if debug:  # pragma: no cover
         for nsm in nsms:
             model.log.debug(nsm.rstrip())
@@ -1560,6 +1686,8 @@ def _apply_nsm(model, nsm_id,
     #is_area = is_area[isort]
 
     assert isinstance(is_area_array, np.ndarray), type(is_area_array)
+    type_to_id_map = cast(dict[str, list[int]], model._type_to_id_map)
+
     for nsm in nsms:
         nsm_value = nsm.value
         nsm_type = nsm_type_map[nsm.nsm_type]
@@ -1586,7 +1714,7 @@ def _apply_nsm(model, nsm_id,
             elif nsm_type in ['ELEMENT', 'CONROD']:
                 if len(nsm.ids) == 1 and nsm.ids[0] == 'ALL':
                     if nsm_type == 'CONROD':
-                        nsm_ids = model._type_to_id_map[nsm_type]
+                        nsm_ids = type_to_id_map[nsm_type]
                     else:
                         nsm_ids = list(model.elements.keys())
                 else:
@@ -1699,7 +1827,7 @@ def _apply_nsm(model, nsm_id,
             elif nsm_type in ['ELEMENT', 'CONROD']:
                 if len(nsm.ids) == 1 and nsm.ids[0] == 'ALL':
                     if nsm_type == 'CONROD':
-                        nsm_ids = model._type_to_id_map[nsm_type]
+                        nsm_ids = type_to_id_map[nsm_type]
                     else:
                         nsm_ids = list(model.elements.keys())
                 else:
@@ -1734,9 +1862,11 @@ def _apply_nsm(model, nsm_id,
     return mass
 
 def _get_nsml1_prop(
-        model, nsm, nsm_type, nsm_value,
+        model: BDF, nsm, nsm_type: str, nsm_value: float,
         area_eids_pids, areas, nsm_centroids_area,
-        mass, cg, I, reference_point, is_area=True, debug=True):
+        mass, cg, I, reference_point,
+        is_area: bool=True, debug: bool=True) -> float:
+    """Gets the mass of a property"""
     if is_area:
         word = 'area'
         key_map = {
@@ -1763,8 +1893,9 @@ def _get_nsml1_prop(
     #all_eids = eids_pids[:, 0]
     all_pids = eids_pids[:, 1]
     if len(nsm.ids) == 1 and nsm.ids[0] == 'ALL':
-        ids = np.hstack([model._type_to_id_map[key]
-                         for key in keys if key in model._type_to_id_map])
+        type_to_id_map = cast(dict[str, list[int]], model._type_to_id_map)
+        ids = np.hstack([type_to_id_map[key]
+                         for key in keys if key in type_to_id_map])
     else:
         assert 'ALL' not in nsm.ids, str(nsm)
         ids = np.array(nsm.ids, dtype='int32')
@@ -1805,9 +1936,12 @@ def _get_nsml1_prop(
         debug=debug)
     return mass
 
-def _nsm1_element(model, nsm, nsm_ids, all_eids_pids, area_length, nsm_centroids,
-                  mass, cg, I, reference_point, is_area_array,
-                  divide_by_sum, debug=False):
+def _nsm1_element(model: BDF, nsm: NSM1,
+                  nsm_ids: list[int],
+                  all_eids_pids, area_length, nsm_centroids,
+                  mass: float, cg: np.ndarray, I: np.ndarray,
+                  reference_point: np.ndarray, is_area_array: np.ndarray,
+                  divide_by_sum: bool, debug: bool=False):
     """calculates the mass of an NSM1 element"""
     nsm_value = nsm.value
     #model.log.warning('  *skipping NSM1/ELEMENT\n%s' % str(nsm))
@@ -1849,8 +1983,8 @@ def _nsm1_element(model, nsm, nsm_ids, all_eids_pids, area_length, nsm_centroids
         return mass
 
     if debug:  # pragma: no cover
-        model.log.debug('  isort_2 =' % isort)
-        model.log.debug('  eids[isort] =' % eids[isort])
+        model.log.debug('  isort_2 = %s' % isort)
+        model.log.debug('  eids[isort] = %s' % eids[isort])
 
     assert len(eids) == len(area_length), 'len(eids)=%s len(area_length)=%s' % (len(eids), len(area_length))
     assert len(eids) == len(is_area_array), 'len(eids)=%s len(area_length)=%s' % (len(eids), len(is_area_array))
@@ -2002,10 +2136,10 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
     return (mass, cg, inertia)
 
 #-------------------------------------------------------------------------------
-def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=None,
+def mass_properties_breakdown(model: BDF, element_ids=None, mass_ids=None, nsm_id=None,
                               reference_point=None,
                               sym_axis=None, scale=None, inertia_reference='cg',
-                              xyz_cid0_dict=None, debug=False):
+                              debug=False):
     """Gets an incomplete breakdown the mass properties on a per element basis"""
     reference_point, is_cg = _update_reference_point(
         model, reference_point, inertia_reference)
@@ -2013,13 +2147,14 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
     #mass, cg, inertia
     #[Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
-    out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
-    nid_cp_cd, xyz_cid0, xyz_cp, unused_icd_transform, unused_icp_transform = out
-    del xyz_cp
+    all_nids, xyz_cid0 = _get_nid_xyzcid0(model)
+
     xyz_mean = xyz_cid0.mean(axis=0)
     assert len(xyz_mean) == 3, xyz_mean.shape
-    reference_point = np.array([xyz_mean[0], 0., 0.], dtype='float64')
-    all_nids = nid_cp_cd[:, 0]
+    if 0:
+        reference_point = np.array([xyz_mean[0], 0., 0.], dtype='float64')
+    else:
+        reference_point = xyz_mean
 
     ncoords = len(model.coords)
     cids = np.zeros(ncoords, dtype='int32')
@@ -2103,7 +2238,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         eids_dict[etype].append(eid)
 
     nmasses = len(model.masses)
-    eids_mass = []
+    eids_mass_list = []
     # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
     data_mass = np.zeros((nmasses, 12), dtype='float64')
     ieid = 0
@@ -2113,7 +2248,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             continue
 
         if etype in ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
-            eids_mass.append(eid)
+            eids_mass_list.append(eid)
             m = elem.Mass()
             centroid = elem.Centroid()
             data_mass[ieid, [0, 1, 2]] = [m, m, 0.]
@@ -2121,28 +2256,25 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             ieid += 1
         else:
             skipped_etypes.add(etype)
-    if len(eids_mass):
-        eids_mass = np.hstack(eids_mass)
+
+    if len(eids_mass_list):
+        eids_mass = np.hstack(eids_mass_list)
+        del eids_mass
+    #else:
+        #eids_mass = np.zeros(0, dtype='float64')
 
     if skipped_etypes:
         model.log.warning('skipping mass_properties_breakdown for %s' % skipped_etypes)
-    #---------------------------------------------------------------------------
-    all_eids = []
-    for eids in eids_dict.values():
-        all_eids.append(eids)
-    if len(all_eids):
-        all_eids = np.hstack(all_eids)
-        all_eids.sort()
+    #-------------------------------------------------------------
+    # --------------
+    all_eids = hstack_dict_values(eids_dict)
+
     nelements = len(all_eids)
     if nelements + nmasses == 0:
         return 0., [0., 0., 0], [0., 0., 0., 0., 0., 0.], None, None, None
 
-    all_mids = []
-    for mids in mids_dict.values():
-        all_mids.append(mids)
-    if len(all_mids):
-        all_mids = np.hstack(all_mids)
-        all_mids.sort()
+    all_mids = hstack_dict_values(mids_dict)
+    del all_mids
 
     dicts = _breakdown_property_dicts(model)
     (pids_per_length_dict, mass_per_length_dict, nsm_per_length_dict,
@@ -2476,6 +2608,19 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         plot_inertia(total_mass, cg, inertia)
     return total_mass_overall, cg_overall, inertia_overall, mass, cg, inertia
 
+def hstack_dict_values(adict: dict[Any, list[int]]) -> np.ndarray:
+    a_list = []
+    for values in adict.values():
+        a_list.append(values)
+
+    if len(a_list):
+        myarray = np.hstack(a_list)
+        myarray.sort()
+    else:
+        myarray = np.zeros(0, dtype='int32')
+    return myarray
+
+
 def _breakdown_tri(xyz_cid0, nids, nelementsi, etype,
                    all_nids,
                    pids_dict, pids_per_area_dict,
@@ -2773,7 +2918,9 @@ def _breakdown_cpyram(xyz_cid0, nids, nelementsi, etype,
     #e2 = None
     return centroid, mass, nsm
 
-def plot_inertia(total_mass, cg, inertia):  # pragma: no cover
+def plot_inertia(total_mass: np.ndarray,
+                 cg: np.ndarray,
+                 inertia: np.ndarray) -> None:  # pragma: no cover
     ycg = cg[:, 1]
     ixx = inertia[:, 0]
     iyy = inertia[:, 1]
@@ -2812,8 +2959,20 @@ def plot_inertia(total_mass, cg, inertia):  # pragma: no cover
     fig.savefig('moi vs span.png')
     #plt.show()
 
-def _breakdown_property_dicts(model):
+def _breakdown_property_dicts(model: BDF) -> tuple[dict[str, list[int]],
+                                                   dict[str, list[int]],
+                                                   dict[str, list[int]],
+                                                   dict[str, list[int]],
+                                                   dict[str, list[int]],
+                                                   dict[str, list[int]],
+                                                   dict[str, list[int]],
+                                                   dict[str, list[int]],
+                                                   dict[str, list[int]],]:
     """helper method"""
+
+    #pids_per_length_dict, mass_per_length_dict, nsm_per_length_dict,
+    #pids_per_area_dict, mass_per_area_dict, nsm_per_area_dict, thickness_dict,
+    #pids_per_volume_dict, mass_per_volume_dict
     pids_per_length_dict = defaultdict(list)
     mass_per_length_dict = defaultdict(list)
     nsm_per_length_dict = defaultdict(list)
@@ -3023,7 +3182,7 @@ def _breakdown_property_dicts(model):
             nsm_per_area_dict['shell'].append(prop.nsm)
             thickness_dict['shell'].append(thickness)
 
-        elif ptype in ['PSOLID', 'PIHEX']:
+        elif ptype in {'PSOLID', 'PIHEX'}:
             pids_per_volume_dict[ptype].append(pid)
             mid_ref = prop.mid_ref
             rho = mid_ref.rho
@@ -3051,7 +3210,12 @@ def _breakdown_property_dicts(model):
     )
     return dicts
 
-def _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelements):
+def _bar_axes(all_nids: np.ndarray,
+              xyz_cid0: np.ndarray,
+              g0: np.ndarray,
+              offt: np.ndarray,
+              x: np.ndarray,
+              nelements: int) -> np.ndarray:
     ix = np.where(g0 == -1)[0]
     ig0 = np.where(g0 != -1)[0]
 

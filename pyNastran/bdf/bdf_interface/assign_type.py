@@ -95,6 +95,63 @@ def parse_components(card: BDFCard, ifield: int, fieldname: str) -> str:
             raise SyntaxError(msg)
     return svalue3
 
+def parse_components_or_blank(card: BDFCard, ifield: int, fieldname: str) -> str:
+    """
+    Parameters
+    ----------
+    card : BDFCard()
+        BDF card as a list
+    ifield : int
+        field number
+    fieldname : str
+        name of field
+
+    Returns
+    -------
+    components : str
+        a string of the dofs '0' or '123456' (not all are required)
+
+    """
+    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(ifield, int), type(ifield)
+    assert isinstance(fieldname, str), type(fieldname)
+    svalue = card.field(ifield)
+    if isinstance(svalue, integer_types):
+        pass
+    elif svalue is None:
+        return '0'
+    elif '.' in svalue:
+        dtype = _get_dtype(svalue)
+        msg = ('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
+               'card=%s' % (fieldname, svalue, ifield, dtype, card))
+        raise SyntaxError(msg)
+
+    try:
+        value = int(svalue)
+    except ValueError:
+        dtype = _get_dtype(svalue)
+        msg = ('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
+               'card=%s' % (fieldname, svalue, ifield, dtype, card))
+        raise SyntaxError(msg)
+    if value > 0 and isinstance(svalue, str):
+        if '0' in svalue:
+            value2 = str(svalue).replace('0', '')
+            msg = ('%s = %r (field #%s) on card must contain 0 or %s (not both).\n'
+                   'card=%s' % (fieldname, svalue, ifield, value2, card))
+            raise SyntaxError(msg)
+    svalue2 = str(value)
+    svalue3 = ''.join(sorted(svalue2))
+    for i, component in enumerate(svalue3):
+        if component not in '0123456':
+            msg = ('%s = %r (field #%s) on card contains an invalid component %r.\n'
+                   'card=%s' % (fieldname, svalue, ifield, component, card))
+            raise SyntaxError(msg)
+        if component in svalue3[i + 1:]:
+            msg = ('%s = %r (field #%s) on card must not contain duplicate entries.\n'
+                   'card=%s' % (fieldname, svalue, ifield, card))
+            raise SyntaxError(msg)
+    return svalue3
+
 def components_or_blank(card: BDFCard,
                         ifield: int,
                         fieldname: str,
@@ -275,7 +332,8 @@ def modal_components(card: BDFCard, ifield: int, fieldname: str) -> int:
                           'card=%s' % (fieldname, value, ifield, card))
     return value
 
-def modal_components_or_blank(card: BDFCard, ifield: int, fieldname: str, default: any=None) -> int:
+def modal_components_or_blank(card: BDFCard, ifield: int, fieldname: str,
+                              default: int) -> int:
     """
     Gets the modal components (allows a -1 value); used by TIC
 

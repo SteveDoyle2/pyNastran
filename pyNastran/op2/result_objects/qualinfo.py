@@ -49,6 +49,7 @@ class QualInfo:
                  BMETH=0,
                  NLOOP=0,
                  STATSUB=0,
+                 PVALID=0,
                  ):
         # ints
         self.AUXMID = AUXMID
@@ -91,6 +92,7 @@ class QualInfo:
         self.STEPID = STEPID
         self.RGYRO = RGYRO
         self.SSTEPID = SSTEPID
+        self.PVALID = PVALID
 
     @classmethod
     def from_str(self, db_key: int, qual_str: str, log):
@@ -128,5 +130,5 @@ class QualInfo:
             log.debug(f'{db_key: 7d} {qual_str}')
             data_dict = _parse(slines, debug=True)
             log.error(str(exception))
-            #raise
+            raise
         return qual_info

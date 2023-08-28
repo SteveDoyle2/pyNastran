@@ -2,73 +2,90 @@
 from __future__ import annotations
 import os
 import traceback
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
-import vtk
+#import vtk
+from vtk import (
+    #vtkmodules.vtkRenderingAnnotation
+    vtkAxesActor,
+    # vtkmodules.vtkFiltersHybrid
+    vtkRenderLargeImage,
+    #vtkmodules.vtkIOImage
+    vtkPostScriptWriter, vtkBMPWriter, vtkJPEGWriter, vtkTIFFWriter, vtkPNGWriter,
+    #vtkmodules.vtkCommonTransforms
+    vtkTransform,
+    # ???
+    vtkAxesActor, vtkRenderLargeImage, vtkOrientationMarkerWidget,
+    vtkXMLUnstructuredGridWriter,
+)
+from pyNastran.gui.vtk_common_core import vtkPoints, VTK_FONT_FILE
+from pyNastran.gui.vtk_interface import vtkVertex, vtkLine, vtkTriangle, vtkQuad
+from pyNastran.gui.vtk_rendering_core import (
+    vtkDataSetMapper, vtkPolyDataMapper,
+    vtkCamera, vtkTextActor, vtkProp, vtkActor, vtkRenderer)
 
 from qtpy.compat import getsavefilename
 
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.locale import func_str
 from pyNastran.gui import font_file
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
+from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, update_axis_text_size
 from pyNastran.gui.utils.load_results import load_user_geom
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.femutils.io import loadtxt_nice
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.gui import MainWindow
     from pyNastran.gui.gui_objects.settings import Settings
 
 
 class ToolActions:
-    def __init__(self, gui):
+    def __init__(self, gui: MainWindow):
         self.gui = gui
         self.itext = 0
 
     #---------------------------------------------------------------------------
     def export_case_data(self, icases: Optional[list[int]]=None) -> None:
         """exports CSVs of the requested cases"""
+        gui = self.gui
         if icases is None:
-            icases = self.gui.result_cases.keys()
+            icases = gui.result_cases.keys()
         elif isinstance(icases, integer_types):
             icases = [icases]
 
         for icase in icases:
-            (obj, (i, name)) = self.gui.result_cases[icase]
+            (obj, (i, name)) = gui.result_cases[icase]
             subcase_id = obj.subcase_id
             location = obj.get_location(i, name)
 
             case = obj.get_result(i, name)
             if case is None:
                 continue # normals
-            subtitle, label = self.gui.get_subtitle_label(subcase_id)
+            subtitle, label = gui.get_subtitle_label(subcase_id)
             label2 = obj.get_header(i, name)
             data_format = obj.get_data_format(i, name)
             unused_vector_size = obj.get_vector_size(i, name)
             print(subtitle, label, label2, location, name)
 
-            word, eids_nids = self.gui.get_mapping_for_location(location)
+            word, eids_nids = gui.get_mapping_for_location(location)
+            unused_fname = _export_case(name, eids_nids, case, icase,
+                                        word, label2, data_format)
 
-            # fixing cast int data
-            header = '%s(%%i),%s(%s)' % (word, label2, data_format)
-            if 'i' in data_format and isinstance(case.dtype, np.floating):
-                header = '%s(%%i),%s' % (word, label2)
-
-            fname = '%s_%s.csv' % (icase, _remove_invalid_filename_characters(name))
-            out_data = np.column_stack([eids_nids, case])
-            np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
         if icases:
-            self.gui.log_command(f'self.export_case_data(icases={icases})')
+            gui.log_command(f'self.export_case_data(icases={icases})')
 
     #---------------------------------------------------------------------------
     def create_corner_axis(self) -> None:
         """creates the axes that sits in the corner"""
         if not self.gui.run_vtk:
             return
-        axes = vtk.vtkAxesActor()
-        corner_axis = vtk.vtkOrientationMarkerWidget()
+        axes = vtkAxesActor()
+        corner_axis = vtkOrientationMarkerWidget()
         corner_axis.SetOrientationMarker(axes)
         corner_axis.SetInteractor(self.vtk_interactor)
         corner_axis.SetEnabled(1)
@@ -116,7 +133,7 @@ class ToolActions:
             axes = self.gui.axes[coord_id]
             create_actor = False
         else:
-            axes = vtk.vtkAxesActor()
+            axes = vtkAxesActor()
             axes.DragableOff()
             axes.PickableOff()
 
@@ -143,7 +160,7 @@ class ToolActions:
                     label: str,
                     text_size: int=18):
         """creates the lower left text actors"""
-        text_actor = vtk.vtkTextActor()
+        text_actor = vtkTextActor()
 
         text_actor.SetInput(label)
         text_prop = text_actor.GetTextProperty()
@@ -173,12 +190,13 @@ class ToolActions:
         Label: SUBCASE 1; Static
 
         """
+        gui = self.gui
         if location == 'node':
-            nodes = self.gui.node_ids
+            nodes = gui.node_ids
             min_msgi = f'Node: %d' % nodes[imin]
             max_msgi = f'Node: %d' % nodes[imax]
         elif location == 'centroid':
-            elements = self.gui.element_ids
+            elements = gui.element_ids
             min_msgi = f'Element: %d' % elements[imin]
             max_msgi = f'Element: %d' % elements[imax]
         else:
@@ -214,12 +232,12 @@ class ToolActions:
 
         ntext = len(texts)
         for itext, text in enumerate(texts):
-            self.gui.text_actors[itext].SetInput(text)
+            gui.text_actors[itext].SetInput(text)
 
         if ntext == 4:  # label
-            self.gui.text_actors[3].VisibilityOn()
+            gui.text_actors[3].VisibilityOn()
         else:
-            self.gui.text_actors[3].VisibilityOff()
+            gui.text_actors[3].VisibilityOff()
 
     def turn_text_off(self) -> None:
         """turns all the text actors off"""
@@ -254,7 +272,7 @@ class ToolActions:
 
         if not fname:
             return
-        render_large = vtk.vtkRenderLargeImage()
+        render_large = vtkRenderLargeImage()
         render_large.SetInput(self.rend)
 
         out = self._screenshot_setup(magnify, render_large)
@@ -262,17 +280,17 @@ class ToolActions:
 
         nam, ext = os.path.splitext(fname)
         ext = ext.lower()
-        for nam, exts, obj in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
-                               ("BMP", ['.bmp'], vtk.vtkBMPWriter),
-                               ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
-                               ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
+        for nam, exts, obj in (('PostScript', ['.ps'], vtkPostScriptWriter),
+                               ("BMP", ['.bmp'], vtkBMPWriter),
+                               ('JPG', ['.jpg', '.jpeg'], vtkJPEGWriter),
+                               ("TIFF", ['.tif', '.tiff'], vtkTIFFWriter)):
             if flt == nam:
                 fname = fname if ext in exts else fname + exts[0]
                 writer = obj()
                 break
         else:
             fname = fname if ext == '.png' else fname + '.png'
-            writer = vtk.vtkPNGWriter()
+            writer = vtkPNGWriter()
 
         writer.SetInputConnection(render_large.GetOutputPort())
         writer.SetFileName(fname)
@@ -291,17 +309,18 @@ class ToolActions:
             default_filename = ''
 
             title = ''
-            if self.gui.title is not None:
+            gui = self.gui
+            if gui.title is not None:
                 title = self.gui.title
 
-            if self.gui.out_filename is None:
+            if gui.out_filename is None:
                 default_filename = ''
                 if self.gui.infile_name is not None:
-                    base, ext = os.path.splitext(os.path.basename(self.gui.infile_name))
-                    default_filename = self.gui.infile_name
+                    base, ext = os.path.splitext(os.path.basename(gui.infile_name))
+                    default_filename = gui.infile_name
                     default_filename = base + '.png'
             else:
-                base, ext = os.path.splitext(os.path.basename(self.gui.out_filename))
+                base, ext = os.path.splitext(os.path.basename(gui.out_filename))
                 default_filename = title + '_' + base + '.png'
 
             file_types = (
@@ -312,11 +331,11 @@ class ToolActions:
                 'PostScript Document *.ps (*.ps)')
 
             title = 'Choose a filename and type'
-            fname, flt = getsavefilename(parent=self.gui, caption=title, basedir='',
+            fname, flt = getsavefilename(parent=gui, caption=title, basedir='',
                                          filters=file_types, selectedfilter=filt,
                                          options=None)
-            if fname in [None, '']:
-                return None, None
+            if fname in {None, ''}:
+                return '', ''
             #print("fname=%r" % fname)
             #print("flt=%r" % flt)
         else:
@@ -327,11 +346,12 @@ class ToolActions:
                 flt = 'png'
         return fname, flt
 
-    def _screenshot_setup(self, magnify: Optional[int], render_large: vtk.vtkvtkRenderLargeImage) -> tuple[
+    def _screenshot_setup(self, magnify: Optional[int],
+                          render_large: vtkRenderLargeImage) -> tuple[
             dict[str, int], dict[str, int],
             dict[str, float], dict[str, float],
             dict[str, int],
-            vtk.vtkAxesActor, magnify: int]:
+            vtkAxesActor, int]:
         """helper method for ``on_take_screenshot``"""
         if magnify is None:
             magnify_min = 1
@@ -359,7 +379,7 @@ class ToolActions:
         line_widths0 = {}
         point_sizes0 = {}
         for key, geom_actor in self.gui.geometry_actors.items():
-            if isinstance(geom_actor, vtk.vtkActor):
+            if isinstance(geom_actor, vtkActor):
                 prop = geom_actor.GetProperty()
                 line_width0 = prop.GetLineWidth()
                 point_size0 = prop.GetPointSize()
@@ -370,7 +390,7 @@ class ToolActions:
                 prop.SetLineWidth(line_width)
                 prop.SetPointSize(point_size)
                 prop.Modified()
-            elif isinstance(geom_actor, vtk.vtkAxesActor):
+            elif isinstance(geom_actor, vtkAxesActor):
                 pass
             else:
                 raise NotImplementedError(geom_actor)
@@ -378,14 +398,18 @@ class ToolActions:
         # hide corner axis
         axes_actor = self.gui.corner_axis.GetOrientationMarker()
         axes_actor.SetVisibility(False)
-        return line_widths0, point_sizes0, coord_scale0, coord_text_scale0, linewidth0, axes_actor, magnify
+        out = (
+            line_widths0, point_sizes0, coord_scale0, coord_text_scale0,
+            linewidth0, axes_actor, magnify,
+        )
+        return out
 
     def _screenshot_teardown(self, line_widths0: dict[str, int],
                              point_sizes0: dict[str, int],
                              coord_scale0: dict[str, float],
                              coord_text_scale0: float,
                              linewidth0: int,
-                             axes_actor: vtk.vtkAxesActor):
+                             axes_actor: vtkAxesActor):
         """helper method for ``on_take_screenshot``"""
         self.settings.update_text_size(magnify=1.0)
         # show corner axes
@@ -393,12 +417,12 @@ class ToolActions:
 
         # set linewidth back
         for key, geom_actor in self.gui.geometry_actors.items():
-            if isinstance(geom_actor, vtk.vtkActor):
+            if isinstance(geom_actor, vtkActor):
                 prop = geom_actor.GetProperty()
                 prop.SetLineWidth(line_widths0[key])
                 prop.SetPointSize(point_sizes0[key])
                 prop.Modified()
-            elif isinstance(geom_actor, vtk.vtkAxesActor):
+            elif isinstance(geom_actor, vtkAxesActor):
                 pass
             else:
                 raise NotImplementedError(geom_actor)
@@ -455,25 +479,29 @@ class ToolActions:
             RGB values as 0.0 <= rgb <= 1.0
 
         """
+        gui = self.gui
         if csv_filename in [None, False]:
             title = 'Load User Geometry'
-            csv_filename = self.gui._create_load_file_dialog(
-                self.gui.wildcard_delimited + ';;STL (*.stl)', title)[1]
+            csv_filename = gui._create_load_file_dialog(
+                gui.wildcard_delimited + ';;STL (*.stl)', title)[1]
             if not csv_filename:
                 return
+        assert isinstance(csv_filename, str), csv_filename
 
         if color is None:
             # we mod the num_user_points so we don't go outside the range
-            icolor = self.gui.num_user_points % len(self.gui.color_order)
-            color = self.gui.color_order[icolor]
+            icolor = gui.num_user_points % len(gui.color_order)
+            color = gui.color_order[icolor]
         if name is None:
             name = os.path.basename(csv_filename).rsplit('.', 1)[0]
 
         self._add_user_geometry(csv_filename, name, color)
-        self.gui.log_command('on_load_user_geom(%r, %r, %s)' % (
+        gui.log_command('on_load_user_geom(%r, %r, %s)' % (
             csv_filename, name, str(color)))
 
-    def _add_user_geometry(self, csv_filename: str, name: str, color: list[float]) -> None:
+    def _add_user_geometry(self, csv_filename: str,
+                           name: str,
+                           color: list[float]) -> None:
         """
         helper method for ``on_load_user_geom``
 
@@ -490,8 +518,8 @@ class ToolActions:
         point_name = name + '_point'
         geom_name = name + '_geom'
 
-        grid_ids, xyz, bars, tris, quads = load_user_geom(csv_filename, self.gui.log,
-                                                          encoding='latin1')
+        grid_ids, xyz, bars, tris, quads = load_user_geom(
+            csv_filename, self.gui.log, encoding='latin1')
         nbars = len(bars)
         ntris = len(tris)
         nquads = len(quads)
@@ -537,9 +565,54 @@ class ToolActions:
         #prop.SetPointSize(4)
 
     #---------------------------------------------------------------------------
+    def on_save_vtk(self, vtk_filename: Optional[str]=None) -> bool:
+        is_failed = True
+        gui = self.gui
+        grid = gui.grid
+        log = gui.log
+        if grid is None:
+            return is_failed
+
+        if vtk_filename in {None, False}:
+            title = 'Select the VTK file name for export'
+            wildcard_delimited = 'VTK (*.vtu; *.vtk)'
+            default_dirname = os.getcwd()
+            vtk_filename, wildcard = save_file_dialog(
+                gui, title,
+                default_dirname, wildcard_delimited)
+            #assert wildcard == 'VTK (*.vtu; *.vtk)', wildcard 'VTK (*.vtu; *.vtk)'
+            if not vtk_filename:
+                return is_failed
+
+        from pyNastran.converters.nastran.nastran_to_vtk import save_nastran_results, add_vtk_array
+        if gui.format == 'nastran':
+            vtk_ugrid = save_nastran_results(gui)
+        else:
+            used_titles: set[str] = set()
+            point_data = vtk_ugrid.GetPointData()
+            cell_data = vtk_ugrid.GetCellData()
+            for case in gui.result_cases:
+                if case.is_complex:
+                    log.warning(f'skipping format={self.format!r}, case {str(case)!r} because it is complex')
+                    continue
+                if not isinstance(case, GuiResult):
+                    log.warning(f'skipping format={self.format!r}, case {str(case)!r} because it is not a GuiResult')
+                    continue
+                vtk_array = case.save_vtk_result(used_titles)
+                add_vtk_array(case.location, point_data, cell_data, vtk_array)
+
+        vtk_ugrid = vtkUnstructuredGrid()
+        writer = vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(vtk_filename)
+        writer.SetInputData(vtk_ugrid)
+        writer.Write()
+
+        is_failed = False
+        return is_failed
+
     def on_load_csv_points(self, csv_filename: Optional[str]=None,
                            name: Optional[str]=None,
-                           color: Optional[list[float]]=None):
+                           color: Optional[list[float]]=None) -> bool:
         """
         Loads a User Points CSV File of the form:
 
@@ -564,26 +637,28 @@ class ToolActions:
 
         """
         is_failed = True
-        if csv_filename in [None, False]:
+        gui = self.gui
+        if csv_filename in {None, False}:
             title = 'Load User Points'
-            csv_filename = self.gui._create_load_file_dialog(
-                self.gui.wildcard_delimited, title)[1]
+            csv_filename = gui._create_load_file_dialog(
+                gui.wildcard_delimited, title)[1]
             if not csv_filename:
                 return is_failed
+        assert isinstance(csv_filename, str), csv_filename
+
         if color is None:
             # we mod the num_user_points so we don't go outside the range
-            icolor = self.gui.num_user_points % len(self.gui.color_order)
-            color = self.gui.color_order[icolor]
+            icolor = gui.num_user_points % len(gui.color_order)
+            color = gui.color_order[icolor]
         if name is None:
             sline = os.path.basename(csv_filename).rsplit('.', 1)
             name = sline[0]
-        name = _get_unique_name(self.gui.geometry_actors, name)
+        name = _get_unique_name(gui.geometry_actors, name)
 
         is_failed = self._add_user_points_from_csv(csv_filename, name, color)
         if not is_failed:
-            self.gui.num_user_points += 1
-            self.gui.log_command('on_load_csv_points(%r, %r, %s)' % (
-                csv_filename, name, str(color)))
+            gui.num_user_points += 1
+            gui.log_command(f'on_load_csv_points({csv_filename!r}, {name!r}, {str(color)})')
         return is_failed
 
     def _add_user_points_from_csv(self, csv_points_filename: str, name: str,
@@ -668,12 +743,12 @@ class ToolActions:
         alt_grid.Allocate(npoints, 1000)
 
         # set points
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(npoints)
 
         for i, point in enumerate(user_points):
             points.InsertPoint(i, *point)
-            elem = vtk.vtkVertex()
+            elem = vtkVertex()
             elem.GetPointIds().SetId(0, i)
             alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
         alt_grid.SetPoints(points)
@@ -692,7 +767,7 @@ class ToolActions:
         prop.SetPointSize(point_size)
 
     #---------------------------------------------------------------------------
-    def _add_alt_geometry(self, grid: vtk.vtkUnstructuredGrid,
+    def _add_alt_geometry(self, grid: vtkUnstructuredGrid,
                           name: str,
                           color: Optional[list[float]]=None,
                           line_width: Optional[int]=None,
@@ -702,14 +777,14 @@ class ToolActions:
         has_geometry_actor = name in self.gui.geometry_actors
 
         is_pickable = self.gui.geometry_properties[name].is_pickable
-        quad_mapper = vtk.vtkDataSetMapper()
+        quad_mapper = vtkDataSetMapper()
 
         if has_geometry_actor:
             alt_geometry_actor = self.gui.geometry_actors[name]
             alt_geometry_actor.GetMapper().SetInputData(grid)
         else:
             quad_mapper.SetInputData(grid)
-            alt_geometry_actor = vtk.vtkActor()
+            alt_geometry_actor = vtkActor()
             if not is_pickable:
                 alt_geometry_actor.PickableOff()
                 alt_geometry_actor.DragableOff()
@@ -725,20 +800,20 @@ class ToolActions:
                                opacity=opacity, representation=representation)
             self.gui.geometry_properties[name] = geom
 
-        color = geom.color_float
+        color_float: tuple[float, float, float] = geom.color_float
         opacity = geom.opacity
         point_size = geom.point_size
         representation = geom.representation
         line_width = geom.line_width
-        #print('color_2014[%s] = %s' % (name, str(color)))
-        assert isinstance(color[0], float), color
-        assert color[0] <= 1.0, color
+        #print('color_2014[%s] = %s' % (name, str(color_float)))
+        assert isinstance(color_float[0], float), color_float
+        assert color_float[0] <= 1.0, color_float
 
         prop = alt_geometry_actor.GetProperty()
         #prop.SetInterpolationToFlat()    # 0
         #prop.SetInterpolationToGouraud() # 1
         #prop.SetInterpolationToPhong()   # 2
-        prop.SetDiffuseColor(color)
+        prop.SetDiffuseColor(color_float)
         prop.SetOpacity(opacity)
         #prop.Update()
 
@@ -759,7 +834,7 @@ class ToolActions:
 
         if not has_geometry_actor:
             self.rend.AddActor(alt_geometry_actor)
-        vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
+        vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
         if geom.is_visible:
             alt_geometry_actor.VisibilityOn()
@@ -770,7 +845,7 @@ class ToolActions:
         alt_geometry_actor.Modified()
 
     #---------------------------------------------------------------------------
-    def GetCamera(self) -> vtk.vtkCamera:
+    def GetCamera(self) -> vtkCamera:
         return self.rend.GetActiveCamera()
 
     @property
@@ -778,7 +853,7 @@ class ToolActions:
         return self.gui.settings
 
     @property
-    def rend(self) -> vtk.vtkRenderer:
+    def rend(self) -> vtkRenderer:
         return self.gui.rend
 
     @property
@@ -786,8 +861,8 @@ class ToolActions:
         return self.gui.vtk_interactor
 
 
-def add_user_geometry(alt_grid: vtk.vtkUnstructuredGrid,
-                      geom_grid: vtk.vtkUnstructuredGrid,
+def add_user_geometry(alt_grid: vtkUnstructuredGrid,
+                      geom_grid: vtkUnstructuredGrid,
                       xyz: np.ndarray,
                       nid_map: dict[int, int],
                       nnodes: int,
@@ -795,20 +870,20 @@ def add_user_geometry(alt_grid: vtk.vtkUnstructuredGrid,
                       tris: np.ndarray,
                       quads: np.ndarray,
                       nelements: int, nbars: int,
-                      ntris: int, nquads: int) -> vtk.vtkPoints:
+                      ntris: int, nquads: int) -> vtkPoints:
     """helper method for ``_add_user_geometry``"""
     # set points
     points = numpy_to_vtk_points(xyz, dtype='<f')
 
     if nelements > 0:
         for i in range(nnodes):
-            elem = vtk.vtkVertex()
+            elem = vtkVertex()
             elem.GetPointIds().SetId(0, i)
             alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
     else:
         for i in range(nnodes):
-            elem = vtk.vtkVertex()
+            elem = vtkVertex()
             elem.GetPointIds().SetId(0, i)
             alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
@@ -816,7 +891,7 @@ def add_user_geometry(alt_grid: vtk.vtkUnstructuredGrid,
         for i, bar in enumerate(bars[:, 1:]):
             g1 = nid_map[bar[0]]
             g2 = nid_map[bar[1]]
-            elem = vtk.vtkLine()
+            elem = vtkLine()
             elem.GetPointIds().SetId(0, g1)
             elem.GetPointIds().SetId(1, g2)
             geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
@@ -826,7 +901,7 @@ def add_user_geometry(alt_grid: vtk.vtkUnstructuredGrid,
             g1 = nid_map[tri[0]]
             g2 = nid_map[tri[1]]
             g3 = nid_map[tri[2]]
-            elem = vtk.vtkTriangle()
+            elem = vtkTriangle()
             elem.GetPointIds().SetId(0, g1)
             elem.GetPointIds().SetId(1, g2)
             elem.GetPointIds().SetId(2, g3)
@@ -838,7 +913,7 @@ def add_user_geometry(alt_grid: vtk.vtkUnstructuredGrid,
             g2 = nid_map[quad[1]]
             g3 = nid_map[quad[2]]
             g4 = nid_map[quad[3]]
-            elem = vtk.vtkQuad()
+            elem = vtkQuad()
             point_ids = elem.GetPointIds()
             point_ids.SetId(0, g1)
             point_ids.SetId(1, g2)
@@ -852,34 +927,55 @@ def add_user_geometry(alt_grid: vtk.vtkUnstructuredGrid,
     return points
 
 
-def set_vtk_property_to_unicode(prop: vtk.vtkProp, font_filei: str) -> None:
+def set_vtk_property_to_unicode(prop: vtkProp, font_filei: str) -> None:
     prop.SetFontFile(font_filei)
-    prop.SetFontFamily(vtk.VTK_FONT_FILE)
+    prop.SetFontFamily(VTK_FONT_FILE)
 
 def make_vtk_transform(origin: Optional[np.ndarray],
-                       matrix_3x3: Optional[np.ndarray]) -> vtk.vtkTransform:
+                       matrix_3x3: Optional[np.ndarray]) -> vtkTransform:
     """makes a vtkTransform"""
-    transform = vtk.vtkTransform()
+    transform = vtkTransform()
     if origin is None and matrix_3x3 is None:
         pass
     elif origin is not None and matrix_3x3 is None:
         #print('origin%s = %s' % (label, str(origin)))
         transform.Translate(*origin)
     elif matrix_3x3 is not None:  # origin can be None
-        xform = np.eye(4, dtype='float32')
-        xform[:3, :3] = matrix_3x3
-        if origin is not None:
-            xform[:3, 3] = origin
+        xform = xform3_to_xform4(matrix_3x3, origin)
         transform.SetMatrix(xform.ravel())
     else:
         raise RuntimeError('unexpected coordinate system')
     return transform
 
+def xform3_to_xform4(matrix_3x3: np.ndarray,
+                     origin: Optional[np.ndarray]) -> np.ndarray:
+    """
+    creates a 4x4 transform
+            [[xform_3x3] [origin]]
+    xform = [[0        ]    1    ]
 
-def _set_base_axes(axes: vtk.vtkAxesActor,
-                   transform: vtk.vtkTransform,
+    Parameters
+    ----------
+    origin : (3, ) float ndarray/list/tuple
+        the origin
+    matrix_3x3 : (3, 3) float ndarray
+        a standard Nastran-style coordinate system
+
+    https://www.brainvoyager.com/bv/doc/UsersGuide/CoordsAndTransforms/SpatialTransformationMatrices.html
+    """
+    xform = np.eye(4, dtype='float32')
+    xform[:3, :3] = matrix_3x3
+    if origin is not None:
+        xform[:3, 3] = origin
+    return xform
+
+def _set_base_axes(axes: vtkAxesActor,
+                   transform: vtkTransform,
                    coord_type: str, label: str,
-                   coord_scale: float, coord_text_scale: float, linewidth: int) -> None:
+                   coord_scale: float,
+                   coord_text_scale: float,
+                   linewidth: int) -> None:
+    """sets the names of the axes"""
     #axes.GetLength() # pi
     #axes.GetNormalizedShaftLength() # (0.8, 0.8, 0.8)
     #axes.GetNormalizedTipLength() # (0.2, 0.2, 0.2)
@@ -948,6 +1044,25 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
     yaxis.SetLineWidth(linewidth)
     zaxis.SetLineWidth(linewidth)
 
+
+def _export_case(name: str,
+                 eids_nids: np.ndarray,
+                 case: np.ndarray,
+                 icase: int,
+                 word: str, label2: str, data_format: str) -> str:
+    """
+    Writes a csv of a gui result in a form that you can load back in.
+    """
+    # fixing cast int data
+    header = '%s(%%i),%s(%s)' % (word, label2, data_format)
+    if 'i' in data_format and isinstance(case.dtype, np.floating):
+        header = '%s(%%i),%s' % (word, label2)
+
+    fname = '%s_%s.csv' % (icase, _remove_invalid_filename_characters(name))
+    out_data = np.column_stack([eids_nids, case])
+    np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
+    return fname
+
 def _remove_invalid_filename_characters(basename: str) -> str:
     """
     Helper method for exporting cases of 12*I/t^3.csv,
@@ -990,7 +1105,8 @@ def get_delimiter_from_filename(csv_filename: str) -> Optional[str]:
         delimiter = None
     return delimiter
 
-def _get_unique_name(geometry_actors: dict[str, Any], name: str) -> str:
+def _get_unique_name(geometry_actors: dict[str, Any],
+                     name: str) -> str:
     """
     Duplicate names in a dictionary are not allowed,
     so append a number to the name if it's invalid

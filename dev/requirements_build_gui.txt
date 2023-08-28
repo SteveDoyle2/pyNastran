@@ -5,6 +5,9 @@ docopt==0.6.2
 vtk==9.0.1
 pillow>=3.1.1
 pywin32           # installs a DLL (I forget which)
-setuptools==19.2  # note that 19.3-19.6.2 don't work; it'll cause:
-#                 # ImportError: The 'packaging' package is required; normally this is bundled with this package so if you get this warning
+
+# from many moons ago
+# note that 19.3-19.6.2 don't work; it'll cause:
+# ImportError: The 'packaging' package is required; normally this is bundled with this package so if you get this warning
+setuptools>=50.3.1 # earliest version released after for python 3.9.0
 #numpydoc

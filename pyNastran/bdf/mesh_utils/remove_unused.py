@@ -134,6 +134,8 @@ def remove_unused(bdf_filename: str,
         'FEEDGE', 'FEFACE',
         # contact
         'BGSET',
+        # nx bolts
+        'BOLT', 'BOLTFOR', 'BOLTLD', 'BOLTSEQ', 'BOLTFRC',
     }
     set_types_simple = [
         'SET1',  # handled elsewhere (e.g,. by SPLINEx)

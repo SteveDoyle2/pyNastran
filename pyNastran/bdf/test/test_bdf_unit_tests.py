@@ -1,6 +1,7 @@
 import os
 import unittest
 from io import StringIO
+import numpy as np
 from numpy import allclose, array
 from cpylog import SimpleLogger
 
@@ -10,15 +11,18 @@ from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.write_path import write_include, _split_path
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
+from pyNastran.bdf.mesh_utils.forces_moments import get_forces_moments_array
 from pyNastran.bdf.test.test_bdf import run_bdf, compare, run_lots_of_files, main as test_bdf
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+GUI_MODEL_DIRNAME = os.path.join(PKG_PATH, 'converters', 'nastran', 'models')
 
 class Tester(unittest.TestCase):
 
-    def run_bdf(self, folder, bdf_filename, xref=False, size=8,
+    def run_bdf(self, folder: str, bdf_filename: str,
+                xref=False, size=8,
                 mesh_form='combined', dynamic_vars=None, debug=False, quiet=True,
                 run_extract_bodies=True,
                 run_skin_solids=True, save_file_structure=False,
@@ -37,7 +41,32 @@ class Tester(unittest.TestCase):
                        log=log)
 
 
-class TestBDF(Tester):
+class TestBDFUnit(Tester):
+
+    def test_bdf_include5(self):
+        """verify we get 5 include files if they are one after the other"""
+        model = BDF(debug=False)
+        unit_dir = bdf_filename = os.path.join(TEST_PATH, 'unit')
+        bdf_filename = os.path.join(unit_dir, 'include5.bdf')
+        #bdf_filename_out = os.path.join(unit_dir, 'include5_out.bdf')
+        model.read_bdf(bdf_filename, save_file_structure=False, read_includes=False)
+
+        #print(model.include_filenames)
+        file0_include_filenames = model.include_filenames[0]
+        assert len(model.include_filenames) == 1, model.include_filenames
+        assert len(file0_include_filenames) == 5, len(file0_include_filenames)
+        #out_filenames = {}
+        #for ifile, include_filenames in model.include_filenames.items():
+            #for include_filename in include_filenames:
+                #out_filenames[include_filename] = include_filename
+
+        #model.write_bdfs(out_filenames, relative_dirname=unit_dir, encoding=None,
+                         #size=8, is_double=False, enddata=None, close=True, is_windows=None)
+        #model.write_bdf(bdf_filename_out, encoding=None, size=8,
+                        #nodes_size=None, elements_size=None, loads_size=None,
+                        #is_double=False, interspersed=False, enddata=None,
+                        #write_header=True, close=True)
+        x = 1
 
     def test_bdf_test(self):
         #log = SimpleLogger(level='warning', encoding='utf-8')
@@ -50,6 +79,169 @@ class TestBDF(Tester):
                           sum_load=True, dev=True, crash_cards=None, pickle_obj=True,
                           write_hdf5=True, quiet=True)
 
+    def test_forces_moments_ctria3(self):
+        bdf_filename = os.path.join(GUI_MODEL_DIRNAME, 'ctria3_pload_pload2_pload4.bdf')
+        model = read_bdf(bdf_filename, debug=False)
+
+        nnodes = 8
+        nid_map = {1: 0, 2: 1, 3: 2, 4: 3,
+                   5: 4, 6: 5, 7: 6, 8: 7, }
+        normals = np.array([
+            [0., 0., 1.],
+            [0., 0., 1.],
+            [0., 0., 1.],
+            [0., 0., 1.],
+            [0., 0., 1.],
+            [0., 0., 1.],
+        ])
+        eid_map = {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5,}
+        p0 = [0., 0., 0.]
+
+        #-------------------------------
+        # 3 load cases that are all the same (other than the card type)
+        expected_pressures = [2., 2., 1., 1., 0., 0.]
+        #expected_moments = []
+        #expected_spcd = []
+
+        # way harder to prove than the cquad4 version...we're kinda relying on the
+        # PLOAD vs. PLOAD2 vs. PLOAD4 comparison
+        expected_forces = array([
+            [0., 0., 0.6666667 ],
+            [0., 0., 0.6666667 ],
+            [0., 0., 0.16666667],
+            [0., 0., 0.        ],
+            [0., 0., 0.33333334],
+            [0., 0., 0.8333334 ],
+            [0., 0., 0.33333334],
+            [0., 0., 0.        ]], dtype='float32')
+        #-------------------------------
+        #  PLOAD
+        load_case_id = 10000
+        dependents_nodes = set()
+        is_loads, out = get_forces_moments_array(
+            model, p0, load_case_id,
+            eid_map, nnodes, normals, dependents_nodes, nid_map,
+            include_grav=False, fdtype='float32')
+        assert is_loads
+        assert len(out) == 4, out
+        centroidal_pressures, forces, moments, spcd = out
+        assert np.allclose(centroidal_pressures, [0., 0., 0., 0., 0., 0.])
+        assert np.allclose(expected_forces, forces)
+
+        #-------------------------------
+        #  PLOAD2
+        load_case_id = 10002
+        dependents_nodes = set()
+        is_loads, out = get_forces_moments_array(
+            model, p0, load_case_id,
+            eid_map, nnodes, normals, dependents_nodes, nid_map,
+            include_grav=False, fdtype='float32')
+        centroidal_pressures, forces, moments, spcd = out
+        assert np.allclose(expected_pressures, centroidal_pressures)
+        assert np.allclose(expected_forces, forces)
+
+        #-------------------------------
+        #  PLOAD2
+        load_case_id = 10002
+        dependents_nodes = set()
+        is_loads, out = get_forces_moments_array(
+            model, p0, load_case_id,
+            eid_map, nnodes, normals, dependents_nodes, nid_map,
+            include_grav=False, fdtype='float32')
+        centroidal_pressures, forces, moments, spcd = out
+        assert np.allclose(expected_pressures, centroidal_pressures)
+        assert np.allclose(expected_forces, forces)
+        #-------------------------------
+        #  PLOAD4
+        load_case_id = 10004
+        dependents_nodes = set()
+        is_loads, out = get_forces_moments_array(
+            model, p0, load_case_id,
+            eid_map, nnodes, normals, dependents_nodes, nid_map,
+            include_grav=False, fdtype='float32')
+        centroidal_pressures, forces, moments, spcd = out
+        assert np.allclose(expected_pressures, centroidal_pressures)
+        assert np.allclose(expected_forces, forces)
+        x = 1
+
+    def test_forces_moments_cquad4(self):
+        bdf_filename = os.path.join(GUI_MODEL_DIRNAME, 'cquad4_pload_pload2_pload4.bdf')
+        model = read_bdf(bdf_filename, debug=False)
+
+        nnodes = 8
+        nid_map = {1: 0, 2: 1, 3: 2, 4: 3,
+                   5: 4, 6: 5, 7: 6, 8: 7, }
+        normals = np.array([
+            [0., 0., 1.],
+            [0., 0., 1.],
+            [0., 0., 1.],
+        ])
+        eid_map = {1: 0, 2: 1, 3: 2}
+        p0 = [0., 0., 0.]
+
+        #-------------------------------
+        # 3 load cases that are all the same (other than the card type)
+        expected_pressures = [2., 1., 0.]
+        #expected_moments = []
+        #expected_spcd = []
+        expected_forces = array([
+            [0.  , 0.  , 0.5 ],
+            [0.  , 0.  , 0.75],
+            [0.  , 0.  , 0.25],
+            [0.  , 0.  , 0.  ],
+            [0.  , 0.  , 0.5 ],
+            [0.  , 0.  , 0.75],
+            [0.  , 0.  , 0.25],
+            [0.  , 0.  , 0.  ]], dtype='float32')
+        #-------------------------------
+        #  PLOAD
+        load_case_id = 10000
+        dependents_nodes = set()
+        is_loads, out = get_forces_moments_array(
+            model, p0, load_case_id,
+            eid_map, nnodes, normals, dependents_nodes, nid_map,
+            include_grav=False, fdtype='float32')
+        assert is_loads
+        assert len(out) == 4, out
+        centroidal_pressures, forces, moments, spcd = out
+        assert np.allclose(centroidal_pressures, [0., 0., 0.])
+        assert np.allclose(expected_forces, forces)
+
+        #-------------------------------
+        #  PLOAD2
+        load_case_id = 10002
+        dependents_nodes = set()
+        is_loads, out = get_forces_moments_array(
+            model, p0, load_case_id,
+            eid_map, nnodes, normals, dependents_nodes, nid_map,
+            include_grav=False, fdtype='float32')
+        centroidal_pressures, forces, moments, spcd = out
+        assert np.allclose(expected_pressures, centroidal_pressures)
+        assert np.allclose(expected_forces, forces)
+
+        #-------------------------------
+        #  PLOAD2
+        load_case_id = 10002
+        dependents_nodes = set()
+        is_loads, out = get_forces_moments_array(
+            model, p0, load_case_id,
+            eid_map, nnodes, normals, dependents_nodes, nid_map,
+            include_grav=False, fdtype='float32')
+        centroidal_pressures, forces, moments, spcd = out
+        assert np.allclose(expected_pressures, centroidal_pressures)
+        assert np.allclose(expected_forces, forces)
+        #-------------------------------
+        #  PLOAD4
+        load_case_id = 10004
+        dependents_nodes = set()
+        is_loads, out = get_forces_moments_array(
+            model, p0, load_case_id,
+            eid_map, nnodes, normals, dependents_nodes, nid_map,
+            include_grav=False, fdtype='float32')
+        centroidal_pressures, forces, moments, spcd = out
+        assert np.allclose(expected_pressures, centroidal_pressures)
+        assert np.allclose(expected_forces, forces)
+        x = 1
 
     def test_write_path(self):
         include_name = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'

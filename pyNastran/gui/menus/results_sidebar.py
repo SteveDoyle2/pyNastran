@@ -1,5 +1,5 @@
 import sys
-from typing import List, Dict, Union, Any
+from typing import Union, Any
 
 # kills the program when you hit Cntl+C from the command line
 import signal
@@ -343,7 +343,8 @@ class Sidebar(QWidget):
         i = 0
         return self.result_case_windows[i]
 
-    def setup_layout(self, data, choices, clear_data=True, init=True):
+    def setup_layout(self, data, choices,
+                     clear_data: bool=True, init: bool=True) -> None:
         """creates the sidebar visual layout"""
         #if not init:
             #self.frameGeometry().

@@ -1,7 +1,6 @@
 """
 Simple pure python utilities used by the GUI
 """
-from typing import List
 
 
 def find_next_value_in_sorted_list(lst: list[int], old: int, new: int):

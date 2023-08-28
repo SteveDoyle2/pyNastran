@@ -4,10 +4,9 @@ defines:
 
 """
 import os
-from collections import OrderedDict
 
 import numpy as np
-import vtk
+from pyNastran.gui.vtk_interface import vtkVertex
 
 from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -68,12 +67,12 @@ class BEdge_IO:
         #print('dim_max =', dim_max)
         #self.update_axes_length(dim_max)
 
-        etype = 1  # vtk.vtkVertex().GetCellType()
+        etype = 1  # vtkVertex().GetCellType()
         #elements = np.arange(0, len(nodes), dtype='int32')
         #assert len(elements) == len(nodes)
         #create_vtk_cells_of_constant_element_type(alt_grid, elements, etype)
         for inode, unused_node in enumerate(nodes):
-            elem = vtk.vtkVertex()
+            elem = vtkVertex()
             elem.GetPointIds().SetId(0, inode)
             alt_grid.InsertNextCell(etype, elem.GetPointIds())
 
@@ -93,7 +92,7 @@ class BEdge_IO:
         self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['AFLR BEDGE', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         self.gui._add_alt_actors(self.gui.alt_grids)

@@ -1,8 +1,6 @@
-from collections import OrderedDict
-
 from numpy import arange, mean, amax, amin, array
 
-from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
+from pyNastran.gui.vtk_interface import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -33,7 +31,7 @@ class AvusIO:
             self.gui.turn_text_off()
             self.gui.grid.Reset()
 
-            self.gui.result_cases = OrderedDict()
+            self.gui.result_cases = {}
             self.gui.ncases = 0
             try:
                 del self.gui.case_keys
@@ -83,7 +81,7 @@ class AvusIO:
         else:
             note = ''
         self.gui.isubcase_name_map = {1: ['Avus%s' % note, '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         form, cases, node_ids, element_ids = self._fill_avus_case(cases, ID, model, is_surface)

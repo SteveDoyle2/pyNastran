@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.op2.op2_interface.utils import mapfmt
 
 if TYPE_CHECKING:  # pragma: no cover
-    from cpylog import SimpleLogger
+    #from cpylog import SimpleLogger
     from pyNastran.op2.op2 import OP2
 
 
@@ -225,16 +225,42 @@ def _read_extdb_geomx(self, data: bytes, endian: bytes, function_map):
     return
 
 
-def _read_extdb_phip(self, marker: int,
+def _read_extdb_phip(self, xsop2dir_name: str, name1: str,
+                     marker: int,
                      data: bytes, endian: bytes,
                      int_type: str, idtype: str):
+    """
+    Parameters
+    -----------
+    xsop2dir_name : str
+        TUG1
+    name1 : str
+        PHIP
+    name2 : str
+        REAL
+    """
     #   ints    = (1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0,
     #              10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0, 16, 0, 17, 0, 18, 0, 19, 0,
     #              20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0, 26, 0, 27, 0, 28, 0)
+    log = self.log
+    log.info(f'    {marker}: xsop2dir_name={xsop2dir_name} name1={name1!r}')
     factor = self.factor
+    op2: OP2 = self.op2
     if marker == -3:
-        self.log.warning('showing for marker=-3')
-        self.show_data(data, types=int_type)
+        log.debug('     showing for marker=-3')
+        #self.show_data(data, types=int_type)
+        ints = np.frombuffer(data, dtype=op2.idtype8)
+        floats = np.frombuffer(data, dtype=op2.fdtype8)
+        values = ints.tolist()
+        for i in range(1, len(ints), 2):
+            values[i] = floats[i]
+        values.append('ENDREC')
+        #print(values)
+        fields = {
+            1: values,
+        }
+        op2.add_dti(xsop2dir_name, fields)
+
     elif marker == -4:
         #data = (
         #    'TYPE  IDCOMP ROW    TYPE  IDCOMP ROW',
@@ -247,14 +273,22 @@ def _read_extdb_phip(self, marker: int,
         #    2, 100002, 6, 1021, 0,
         #    2, 100003, 6, 1027, 0,
         #    2, 100004, 6, 1033, 0)
-        word = data[:40*factor].decode('latin1')
-        print(f'word = {word!r}')
-        self.log.info(f'itable = {marker}')
+        header = data[:40*factor].decode('latin1')
+        log.debug(f'  header = {header!r}')
+        #log.debug(f'  itable = {marker}')
 
         ints = np.frombuffer(data[40*factor:], dtype=idtype)
         nints = len(ints)
         ints2 = ints.reshape(nints//5, 5).copy()
-        print(ints2)
+        ints3 = ints2[:, :4]
+        assert np.abs(ints2[:, 4]).sum() == 0, ints2
+        #print(ints3)
+        split_header = header.strip().split()
+        fields = {
+            2: ['', '', '', '', '', '',] + split_header + ints3.ravel().tolist(),
+        }
+        fields[2].append('ENDREC')
+        self.op2.add_dti(xsop2dir_name, fields)
     elif marker == -5:
         # 33      1       -2.500002.500000
         # 33      2       -2.500002.500000
@@ -411,7 +445,7 @@ def _read_extdb_phip(self, marker: int,
                 break
             print(out)
     elif marker == -5:
-        self.log.warning('showing for marker=-5')
+        log.warning('  showing for marker=-5')
         self.show_data(data, types='ifs', force=True)
         aaa
     return

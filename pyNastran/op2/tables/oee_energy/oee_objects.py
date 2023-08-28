@@ -36,7 +36,7 @@ class RealStrainEnergyArray(BaseElement):
         self.nelements = 0  # result specific
         self.itime = None
         self.itotal2 = 0
-        #self.element_name_count = OrderedDict()
+        #self.element_name_count = {}
         self.dt_temp = None
 
         #if is_sort1:
@@ -735,7 +735,7 @@ class ComplexStrainEnergyArray(BaseElement):
         self.nelements = 0  # result specific
         self.itime = None
         self.itotal2 = 0
-        #self.element_name_count = OrderedDict()
+        #self.element_name_count = {}
         self.dt_temp = None
 
         if not is_sort1:

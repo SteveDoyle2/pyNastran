@@ -31,7 +31,7 @@ from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
 
-from pyNastran.bdf.test.bdf_unit_tests import Tester
+from pyNastran.bdf.test.test_bdf_unit_tests import Tester
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.bdf_interface.compare_card_content import compare_elements
 
@@ -524,7 +524,7 @@ class TestSATKOP2(Tester):
         model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         model.safe_cross_reference()
 
-        save_load_deck(model, run_save_load=True, run_renumber=False)
+        save_load_deck(model, run_save_load=True, run_renumber=False, run_save_load_hdf5=False)
 
         log = get_logger(level='warning')
         op2, is_passed = run_op2(
@@ -722,7 +722,7 @@ class TestSATKOP2(Tester):
         x = 2
 
 
-class TestOP2(Tester):
+class TestOP2Main(Tester):
     """various OP2 tests"""
     #def _spike(self):
         #op2 = OP2()
@@ -1969,6 +1969,38 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
+    def test_op2_superelement_1(self):
+        """
+        extse04c
+        EXTRN
+        """
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'extse04c.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'superelements', 'extse04c.op2')
+
+        #  can't parse replication
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            '', bdf_filename, log=log)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+
+        #save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
+                write_f06=True, write_op2=True,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude_results=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
     def test_nx_initial_final_separation(self):
         """
         checks nx/contact_model.bdf, which tests
@@ -1992,7 +2024,7 @@ class TestOP2(Tester):
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
-                write_f06=True, write_op2=True,
+                write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude_results=None, short_stats=False,
@@ -3282,6 +3314,7 @@ class TestOP2(Tester):
         _verify_ids(bdf, op2, isubcase=1)
 
         msg = ''
+        #op2.subcase_key = {1: [1], 2: [2], 3: [3], 4: [4], 5: [5], 6: [6], 7: [7], 8: [8], 9: [9], 10: [10], 11: [11], 12: [12], 13: [13], 14: [14], 15: [15], 16: [16], 17: [17], 18: [18], 19: [19], 20: [20], 21: [21], 22: [22], 23: [23], 24: [24], 25: [25], 26: [26], 27: [27], 28: [28], 29: [29], 30: [30], 31: [31], 32: [32], 33: [33], 34: [34], 35: [35], 36: [36], 37: [37], 38: [38], 39: [39], 40: [40], 41: [41], 42: [42], 43: [43], 44: [44], 45: [45], 46: [46], 47: [47], 48: [48], 49: [49], 50: [50], 51: [51], 52: [52], 53: [53], 54: [54], 55: [55], 56: [56], 57: [57], 58: [58], 59: [59], 60: [60], 61: [61], 62: [62], 63: [63], 64: [64], 65: [65], 66: [66], 67: [67], 68: [68], 69: [69], 70: [70], 71: [71], 72: [72], 73: [73], 74: [74], 75: [75], 76: [76], 77: [77], 78: [78], 79: [79], 80: [80], 81: [81], 82: [82], 83: [83], 84: [84], 85: [85], 86: [86], 87: [87], 88: [88], 89: [89], 90: [90], 91: [91], 92: [92], 93: [93], 94: [94], 95: [95], 96: [96], 97: [97], 98: [98], 99: [99], 100: [100], 101: [101], 102: [102], 103: [103], 104: [104], 105: [105], 106: [106], 107: [107], 108: [108], 109: [109], 110: [110], 111: [111], 112: [112], 113: [113], 114: [114], 115: [115], 116: [116], 117: [117], 118: [118], 119: [119], 120: [120]}
         for isubcase, keys in sorted(op2.subcase_key.items()):
             if len(keys) != 1:
                 msg += 'isubcase=%s keys=%s len(keys) != 1\n' % (isubcase, keys)

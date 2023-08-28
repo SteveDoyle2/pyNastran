@@ -26,6 +26,7 @@ from pyNastran.op2.tables.oug.oug_accelerations import RealAccelerationArray, Co
 from pyNastran.op2.tables.oug.oug_eigenvectors import RealEigenvectorArray, ComplexEigenvectorArray
 from pyNastran.op2.tables.oug.oug_temperatures import RealTemperatureArray
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealThermalVelocityVectorArray
+from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
 
 
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
@@ -1053,6 +1054,7 @@ TABLE_OBJ_MAP = {
     'temperatures' : (RealTemperatureArray, ),
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),
     'thermal_load_vectors' : (RealTemperatureVectorArray, ),
+    'contact_tractions_and_pressure': (RealContactTractionAndPressureArray, ),
 }
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
@@ -1488,13 +1490,15 @@ def _read_h5_matrix(h5_file, model, key,
             name = _cast_str(h5_matrix.get('name'), encoding)
             form = _cast(h5_matrix.get('form'))
             unused_is_matpool = _cast(h5_matrix.get('is_matpool'))
-            matrix_obj = Matrix(name, form, is_matpool=False)
+            matrix_obj = Matrix(name, form)
 
             #matrix = scipy.sparse.coo_matrix(
                 #(real_imag, (GCi, GCj)),
                 #shape=(mrows, ncols), dtype=dtype)
 
-            skip_keys = ['name', 'form', 'is_matpool', 'shape_str', 'dtype_str']
+            #'is_matpool',
+            skip_keys = ['name', 'shape_str', 'dtype_str', 'Real', 'Complex', 'GCi', 'GCj', 'GCi_GCj',
+                         'is_real', 'is_complex', 'is_dense', 'is_sparse', 'shape', 'tin']
             for keyi in h5_matrix.keys():
                 if keyi in skip_keys:
                     continue

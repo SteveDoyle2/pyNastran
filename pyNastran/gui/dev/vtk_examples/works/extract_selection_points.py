@@ -4,6 +4,8 @@ converted from:
 """
 
 import vtk
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from pyNastran.gui.vtk_rendering_core import vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor
 
 def main():
     point_source = vtk.vtkPointSource()
@@ -54,7 +56,7 @@ def main():
     extract_selection.Update()
 
     # In selection
-    selected = vtk.vtkUnstructuredGrid()
+    selected = vtkUnstructuredGrid()
     selected.ShallowCopy(extract_selection.GetOutput())
 
     print("There are %s points in the selection" % selected.GetNumberOfPoints())
@@ -65,7 +67,7 @@ def main():
     selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
     extract_selection.Update()
 
-    not_selected = vtk.vtkUnstructuredGrid()
+    not_selected = vtkUnstructuredGrid()
     not_selected.ShallowCopy(extract_selection.GetOutput())
 
     print("There are %s points NOT in the selection" % not_selected.GetNumberOfPoints())
@@ -89,16 +91,16 @@ def main():
         not_selected_mapper.SetInputConnection(not_selected.GetProducerPort())
     else:
         not_selected_mapper.SetInputData(not_selected)
-    not_selected_actor = vtk.vtkActor()
+    not_selected_actor = vtkActor()
     not_selected_actor.SetMapper(not_selected_mapper)
 
 
     # There will be one render window
-    render_window = vtk.vtkRenderWindow()
+    render_window = vtkRenderWindow()
     render_window.SetSize(900, 300)
 
     # And one interactor
-    interactor = vtk.vtkRenderWindowInteractor()
+    interactor = vtkRenderWindowInteractor()
     interactor.SetRenderWindow(render_window)
 
     # Define viewport ranges

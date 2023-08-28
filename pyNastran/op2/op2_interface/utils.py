@@ -85,8 +85,8 @@ def build_obj(obj):
             obj.build()
         except (KeyboardInterrupt, SystemError, NameError, SyntaxError, AttributeError, MemoryError, TypeError, AssertionError):  # pragma: no cover
             raise
-        except Exception as e:
-            raise RuntimeError(str(obj)) from e
+        #except Exception as e:
+            #raise RuntimeError(str(obj)) from e
         obj.is_built = True
 
 def apply_mag_phase(floats: Any, is_magnitude_phase: bool,

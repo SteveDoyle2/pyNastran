@@ -4,7 +4,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import List, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 #import matplotlib
 #matplotlib.use('Qt5Agg')
 #from pyNastran.gui.matplotlib_backend import  matplotlib_backend
@@ -120,14 +120,23 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     # SI has consistent in_units/out_units.
     in_units = 'si'
     if data['--in_units']:
-        in_units = data['IN'].lower()
+        if 'IN' in data:
+            in_units = data['IN']
+        else:
+            in_units = data['--in_units']
+    in_units = in_units.lower()
     assert in_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'in_units=%r' % in_units
 
     # The default used to be SI, but it's really weird when I'm working in
     # English units and my output is in SI
     out_units = in_units
     if data['--out_units']:
-        out_units = data['OUT'].lower()
+        if 'OUT' in data:
+            out_units = data['OUT']
+        else:
+            out_units = data['--out_units']
+    out_units = out_units.lower()
+
     assert out_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'out_units=%r' % out_units
 
     plot_type = 'tas'

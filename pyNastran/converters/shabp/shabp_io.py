@@ -1,12 +1,12 @@
 """Defines the GUI IO file for S/HABP."""
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 import numpy as np
 from numpy import zeros, cross, amax, amin
 from numpy.linalg import norm  # type: ignore
 
-import vtk
-from vtk import vtkQuad
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkQuad
 
 from pyNastran.converters.shabp.shabp import read_shabp
 from pyNastran.converters.shabp.shabp_results import ShabpOut
@@ -53,7 +53,7 @@ class ShabpIO:
         grid = self.gui.grid
         grid.Allocate(nelements, 1000)
 
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
         assert len(nodes) > 0
@@ -82,7 +82,7 @@ class ShabpIO:
         self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['S/HABP', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         self.gui.log.debug("nNodes=%i nElements=%i" % (

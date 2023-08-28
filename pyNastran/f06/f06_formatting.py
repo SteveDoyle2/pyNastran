@@ -1,4 +1,3 @@
-from typing import List
 import numpy as np
 from pyNastran.utils import object_attributes
 
@@ -154,7 +153,7 @@ def _eigenvalue_header(obj, header, itime: int, ntimes: int, dt):
     return header
 
 
-def get_key0_compare(adict):
+def get_key0_compare(adict: dict):
     """Gets the "first" key in a dictionary
 
     The entry is kind of irrelevant.
@@ -163,7 +162,7 @@ def get_key0_compare(adict):
     return keys[0]
 
 
-def get_key0(adict):
+def get_key0(adict: dict):
     """Gets the "first" key in a dictionary
 
     The entry is kind of irrelevant.

@@ -4,7 +4,7 @@ SOL 145 plotter
 
 kfreq = ωc/(2V)
 """
-from typing import  List, Dict, Optional, Union, cast
+from typing import Optional, Union, cast
 import numpy as np
 #import PySide
 try:

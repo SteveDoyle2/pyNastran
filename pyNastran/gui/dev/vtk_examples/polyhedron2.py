@@ -1,5 +1,5 @@
 import numpy as np
-
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 def box_faces(n1, n2):
     """
@@ -424,7 +424,7 @@ def hollow_box_faces(n1, n2):
 
 import vtk
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
-from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
 
 
 # Create polyhedron (cube)
@@ -475,7 +475,7 @@ def faces_to_element_facelist(faces):
     return face_idlist
 
 face_idlist = faces_to_element_facelist(faceList)
-ugrid = vtk.vtkUnstructuredGrid()
+ugrid = vtkUnstructuredGrid()
 ugrid.SetPoints(points)
 ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, faceId)
 
@@ -483,7 +483,7 @@ ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, faceId)
 if 1:
     ug = ugrid
     grid_mapper = vtk.vtkDataSetMapper()
-    vtk_version = int(VTK_VERSION[0])
+    vtk_version = int(VTK_VERSION_SPLIT[0])
     grid_mapper.SetInputData(ug)
 
 #-------------------------------------

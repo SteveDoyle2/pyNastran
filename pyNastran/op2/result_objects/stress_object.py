@@ -1,6 +1,5 @@
 from __future__ import annotations
 import sys
-from collections import OrderedDict
 from typing import Union, Any, TYPE_CHECKING
 
 import numpy as np
@@ -25,7 +24,7 @@ class StressObject:
         #print('--StressObject--')
         self.model = model
         self.vm_word = None
-        self.header_dict = OrderedDict()  # type: dict[Any, str]
+        self.header_dict = {}  # type: dict[Any, str]
         self.keys_map = {}  # type: dict[str, str]
         self.composite_ieids = {}  # type: dict[str, str]
         self.is_stress = is_stress

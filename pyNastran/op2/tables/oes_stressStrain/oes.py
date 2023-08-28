@@ -400,7 +400,7 @@ class OES(OP2Common2):
             #op2.binary_debug.write('  element_name = %r\n' % op2.element_name)
         #print "element_name =", op2.element_name
         assert isinstance(op2.format_code, int), op2.format_code
-        assert op2.is_stress is True, op2.code_information()
+        #assert op2.is_stress is True, op2.code_information()
         op2.data_code['is_stress_flag'] = True
         op2.data_code['is_strain_flag'] = False
 
@@ -5338,6 +5338,11 @@ class OES(OP2Common2):
         sort_method = op2.sort_method
         element_name_type = f'{op2.element_name}-{op2.element_type}'
         #print(op2.code_information())
+
+        #if result_type == 0 and op2.num_wide == numwide_real and op2._nastran_format == 'optistruct' and op2.element_type == 75:  # real
+            #could be a quad or tri
+            #x = 1
+
         if result_type == 0 and op2.num_wide == numwide_real:  # real
             ntotal = 4 * (2 + 17 * nnodes_all) * self.factor
             nelements = ndata // ntotal
@@ -5720,6 +5725,9 @@ class OES(OP2Common2):
             obj = op2.obj
             n = oes_cquad4_random_vm_57(op2, data, op2.obj, nelements, ntotal, nnodes,
                                         dt)
+        elif result_type == 1 and op2.table_name in [b'OESPSD1'] and op2.element_type == 82 and op2.num_wide == 47: # QUADR
+            msg = op2.code_information()
+            return op2._not_implemented_or_skip(data, ndata, msg), None, None
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal
@@ -6015,7 +6023,7 @@ class OES(OP2Common2):
                                                dt, is_magnitude_phase)
             return nelements * ntotal, None, None
 
-        elif table_name_bytes == b'OESRT':
+        elif table_name_bytes in {b'OESRT', b'OESRTN'}:
             n, nelements, ntotal = self._oes_shells_composite_oesrt(
                 result_name, slot,
                 result_type, sort_method, obj_vector_strength,
@@ -7372,8 +7380,8 @@ class OES(OP2Common2):
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal
 
-    def _oes_cbar_100(self, data, ndata, dt, is_magnitude_phase,
-                      result_type, prefix, postfix):
+    def _oes_cbar_100(self, data: bytes, ndata: int, dt, is_magnitude_phase: bool,
+                      result_type: str, prefix: str, postfix: str):
         """
         reads stress/strain for element type:
          - 100 : BARS
@@ -7430,6 +7438,10 @@ class OES(OP2Common2):
                 obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()
             else:
                 n = oes_cbar100_real_10(op2, data, obj, nelements, ntotal, dt)
+
+        elif result_type == 1 and op2.num_wide == 16:  # complex
+            msg = op2.code_information()
+            return op2._not_implemented_or_skip(data, ndata, msg), None, None
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal

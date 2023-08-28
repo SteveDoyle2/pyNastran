@@ -14,6 +14,8 @@ MSC_LONG_VERSION = [
     b'XXXXXXXX20200', b'XXXXXXXX20201', b'XXXXXXXX20202',
     b'XXXXXXXX20210', b'XXXXXXXX20211', b'XXXXXXXX20212', b'XXXXXXXX20214',
     b'XXXXXXXX20220', b'XXXXXXXX20221', b'XXXXXXXX20222',
+    b'XXXXXXXX20230', b'XXXXXXXX20231', b'XXXXXXXX20232',  # not checked
+    b'XXXXXXXX20240', b'XXXXXXXX20241', b'XXXXXXXX20242',  # not checked
 ]
 
 OPTISTRUCT_VERSIONS = [
@@ -22,7 +24,10 @@ OPTISTRUCT_VERSIONS = [
     b'OS2018.1',
     b'OS2019.1', b'OS2019.2',
     b'OS2020', b'OS2020.1',
-    b'OS2021.1',
+    b'OS2021.1', b'OS2021.2',
+    b'OS2022.1', b'OS2022.2',
+    b'OS2023.1', b'OS2023.2',  # not checked
+    b'OS2024.1', b'OS2024.2',  # not checked
 ]
 AUTODESK_VERSIONS = [
     b'NE  0824',  # this means NEi Nastran...
@@ -30,12 +35,15 @@ AUTODESK_VERSIONS = [
 
 
 def parse_nastran_version(data: bytes, version: bytes, encoding: bytes,
-                           log: SimpleLogger) -> str:
+                           log: SimpleLogger) -> tuple[str, str]:
     """parses a Nastran version string"""
+    version_str = ''
     if len(data) == 32:
         #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
         #self.show_data(data[16:], types='ifsdqlILQ', endian=None)
         if data[:16].strip() in MSC_LONG_VERSION:
+            version2 = reshape_bytes_block(data)
+            version_str = version2.decode(encoding).strip()
             # 'XXXXXXXX20140   0   \x00\x00\x00\x00        '
             # 'XXXXXXXX20141   0   \x00\x00\x00\x00        '
             mode = 'msc'
@@ -43,14 +51,15 @@ def parse_nastran_version(data: bytes, version: bytes, encoding: bytes,
             raise NotImplementedError(f'check={data[:16].strip()} data={data!r}; '
                                       f'len(data)={len(data)}')
     elif len(data) == 8:
-        mode = _parse_nastran_version_8(data, version, encoding, log)
+        mode, version_str = _parse_nastran_version_8(data, version, encoding, log)
     elif len(data) == 16:
-        mode = _parse_nastran_version_16(data, version, encoding, log)
+        mode, version_str = _parse_nastran_version_16(data, version, encoding, log)
     else:
         raise NotImplementedError(f'version={version!r}; n={len(data)}')
-    return mode
+    return mode, version_str
 
-def _parse_nastran_version_16(data: bytes, version: bytes, encoding: str, log) -> str:
+def _parse_nastran_version_16(data: bytes, version: bytes, encoding: str,
+                              log) -> tuple[str, str]:
     """parses an 8 character version string"""
     version2 = reshape_bytes_block(version)
     if version2[:2] == b'NX':
@@ -61,10 +70,12 @@ def _parse_nastran_version_16(data: bytes, version: bytes, encoding: str, log) -
             raise RuntimeError(f'unknown version={version_str}')
     else:
         raise RuntimeError(f'unknown version={version}')
-    return mode
+    return mode, version_str
 
-def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) -> str:
+def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str,
+                             log) -> tuple[str, str]:
     """parses an 8 character version string"""
+    version_str = version.strip().decode(encoding)
     if version.startswith(b'NX'):
         mode = 'nx'
         version_str = version[2:].strip().decode(encoding)
@@ -104,4 +115,4 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) ->
         mode = 'nasa95'
     else:
         raise RuntimeError(f'unknown version={version!r}')
-    return mode
+    return mode, version_str

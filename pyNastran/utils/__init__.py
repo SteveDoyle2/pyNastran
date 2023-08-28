@@ -15,8 +15,10 @@ import inspect
 import warnings
 from pathlib import PurePath
 from abc import abstractmethod
-from typing import List, Optional, Union, Any
+from typing import Optional, Union, Any
 import pyNastran
+
+PathLike = Union[str, PurePath]
 
 
 def ipython_info() -> Optional[str]:
@@ -26,7 +28,7 @@ def ipython_info() -> Optional[str]:
     except NameError:
         return None
 
-def is_file_obj(filename: str) -> bool:
+def is_file_obj(filename: PathLike) -> bool:
     """does this object behave like a file object?"""
     return (
         (hasattr(filename, 'read') and hasattr(filename, 'write'))
@@ -52,7 +54,7 @@ def is_file_obj(filename: str) -> bool:
                 #print('key=%r is dropped?' % key)
     #return dict_out
 
-def remove_files(filenames):
+def remove_files(filenames: list[PathLike]) -> None:
     """remvoes a series of files; quietly continues if the file can't be removed"""
     for filename in filenames:
         try:
@@ -60,7 +62,7 @@ def remove_files(filenames):
         except OSError:
             pass
 
-def is_binary_file(filename: Union[str, PurePath]) -> bool:
+def is_binary_file(filename: PathLike) -> bool:
     """
     Return true if the given filename is binary.
 
@@ -90,7 +92,7 @@ def is_binary_file(filename: Union[str, PurePath]) -> bool:
     return False
 
 
-def check_path(filename: str, name: str='file') -> None:
+def check_path(filename: PathLike, name: str='file') -> None:
     """checks that the file exists"""
     try:
         exists = os.path.exists(filename)
@@ -101,7 +103,7 @@ def check_path(filename: str, name: str='file') -> None:
         msg = 'cannot find %s=%r\n%s' % (name, filename, print_bad_path(filename))
         raise FileNotFoundError(msg)
 
-def print_bad_path(path: str) -> str:
+def print_bad_path(path: PathLike) -> str:
     """
     Prints information about the existence (access possibility) of the parts
     of the given path. Useful for debugging when the path to a given file
@@ -151,7 +153,11 @@ def _filename(filename: str) -> str:
         return '\\\\?\\' + filename
     return filename
 
-def __object_attr(obj, mode, keys_to_skip, attr_type, filter_properties: bool=False):
+def __object_attr(obj: Any,
+                  mode: str,
+                  keys_to_skip: list[str],
+                  attr_type: str,
+                  filter_properties: bool=False) -> list[str]:
     """list object attributes of a given type"""
     #print('keys_to_skip=%s' % keys_to_skip)
     keys_to_skip = [] if keys_to_skip is None else keys_to_skip
@@ -225,6 +231,13 @@ def object_methods(obj: Any, mode: str='public',
 
     """
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
+
+def simplify_object_keys(keys_to_skip: Optional[list[str]]) -> list[str]:
+    if keys_to_skip is None:
+        keys_to_skip = []
+    elif isinstance(keys_to_skip, str):
+        keys_to_skip = [keys_to_skip]
+    return keys_to_skip
 
 def object_stats(obj: Any,
                  mode: str='public',

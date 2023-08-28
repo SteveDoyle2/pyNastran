@@ -1,8 +1,7 @@
-from collections import OrderedDict
 from numpy import arange, amax, amin, zeros, hstack
 
-import vtk
-from vtk import vtkTriangle, vtkLine
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkLine, vtkTriangle
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.dev.openvsp.adb_reader import ADB_Reader
@@ -30,7 +29,7 @@ class ADB_IO:  # pragma: no cover
             self.gui.turn_text_off()
             self.gui.grid.Reset()
 
-            self.gui.result_cases = OrderedDict()
+            self.gui.result_cases = {}
             self.gui.ncases = 0
             try:
                 del self.gui.case_keys
@@ -83,7 +82,7 @@ class ADB_IO:  # pragma: no cover
         grid = self.gui.grid
         grid.Allocate(self.gui.nelements, 1000)
 
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(self.gui.nnodes)
         #vectorReselt.SetNumberOfComponents(3)
         self.gui.nid_map = {}
@@ -147,7 +146,7 @@ class ADB_IO:  # pragma: no cover
         beta = model.betas[0]
         note = ':  Mach=%.2f, alpha=%.1f, beta=%.1f' % (mach, alpha, beta)
         self.gui.isubcase_name_map = {1: ['OpenVSP%s' % note, '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         form, cases = self._fill_adb_case(cases, ID, model, plot_wakes)

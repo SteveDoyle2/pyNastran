@@ -583,7 +583,10 @@ class OEF:
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(op2._endian + op2._analysis_code_fmt + b'8s6f')
+                if op2.size == 4:
+                    s = Struct(op2._endian + op2._analysis_code_fmt + b'8s6f')
+                else:
+                    s = Struct(op2._endian + op2._analysis_code_fmt + b'16s6d')
                 add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -884,7 +887,7 @@ class OEF:
                 obj.itotal = ielement2
                 obj.ielement = ielement2
             else:
-                s1 = Struct(op2._endian + op2._analysis_code_fmt + b'fif')
+                s1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'fif', op2.size))
                 add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
                 for unused_i in range(nelements):
                     edata = data[n:n+16]
@@ -2538,7 +2541,7 @@ class OEF:
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(op2._endian + op2._analysis_code_fmt + b' i6fi6f')
+                s = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b' i6fi6f', op2.size))
                 add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -3348,7 +3351,7 @@ def oef_cbush_imag_13(self, data: bytes,
     """
     op2 = self
     n = 0
-    s = Struct(op2._endian + op2._analysis_code_fmt + b'12f')
+    s = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'12f', op2.size))
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
@@ -3406,7 +3409,7 @@ def oef_cvisc_imag_5(self, data: bytes,
                      is_magnitude_phase: bool) -> int:
     op2 = self
     n = 0
-    s = Struct(op2._endian + op2._analysis_code_fmt + b'4f')  # 5
+    s = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'4f', op2.size))  # 5
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+20]
@@ -3741,7 +3744,7 @@ def oef_cconeax_real_7(self, data: bytes,
                        nelements: int, ntotal: int, dt: Any) -> int:
     op2 = self
     n = 0
-    s = Struct(op2._endian + op2._analysis_code_fmt + b'6f')
+    s = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'6f', op2.size))
     add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]

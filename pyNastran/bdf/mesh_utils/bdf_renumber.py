@@ -64,7 +64,7 @@ def bdf_renumber(bdf_filename: Union[str, BDF, StringIO],
     model : BDF()
         a renumbered BDF object corresponding to bdf_filename_out
     mapper : dict[bdf_attribute] : old_id_to_new_id_dict
-        List of mapper dictionaries of original ids to merged
+        list of mapper dictionaries of original ids to merged
         bdf_attribute : str
             a BDF attribute (e.g., 'nodes', 'elements')
         old_id_to_new_id_dict : dict[id_old] : id_new

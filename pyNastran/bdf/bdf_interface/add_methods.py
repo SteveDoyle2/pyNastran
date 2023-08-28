@@ -9,6 +9,7 @@ if TYPE_CHECKING:  # pragma: no cover
         TOPVAR, MPCAX, CORD3G,
         SESUPORT, SEUSET, SEUSET1,
     )
+    from pyNastran.bdf.cards.bolt import BOLT, BOLTFOR, BOLTSEQ, BOLTLD
     from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
     from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
     from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
@@ -57,6 +58,7 @@ if TYPE_CHECKING:  # pragma: no cover
                                                  GMSPC)
     from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                         CORD2R, CORD2C, CORD2S, #CORD3G,
+                                                        MATCID,
                                                         )
     from pyNastran.bdf.cards.deqatn import DEQATN
     from pyNastran.bdf.cards.dynamic import (
@@ -75,6 +77,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                                MAT8, MAT9, MAT10, MAT11, MAT3D,
                                                MATG, MATHE, MATHP, CREEP, EQUIV,
+                                               MATDMG,
                                                NXSTRAT)
     from pyNastran.bdf.cards.material_deps import (
         MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
@@ -795,13 +798,14 @@ class AddMethods:
             self.model._type_to_id_map[material.type].append(key)
 
     def _add_material_dependence_object(self, material: Union[MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9,
-                                                              MATS1], # MATS3, MATS8
+                                                              MATS1, MATDMG], # MATS3, MATS8
                                         allow_overwrites: bool=False) -> None:
         """
         adds the following objects:
             MATS1, MATS3, MATS8,
             MATT1, MATT2, MATT3,
-            MATT4, MATT5, MATT8, MATT9
+            MATT4, MATT5, MATT8, MATT9,
+            MATDMG
         """
         Type = material.type
         key = material.mid
@@ -817,6 +821,7 @@ class AddMethods:
             'MATT5' : self.model.MATT5,
             'MATT8' : self.model.MATT8,
             'MATT9' : self.model.MATT9,
+            'MATDMG': self.model.MATDMG,
         }
         slot = mapper[Type]
         if key in slot and not allow_overwrites:
@@ -859,6 +864,18 @@ class AddMethods:
         else:
             self.model.coords[key] = coord
             self.model._type_to_id_map[coord.type].append(key)
+
+    def _add_matcid_object(self, matcid: Union[MATCID]) -> None:
+        """adds a MATCID object"""
+        key = matcid.cid
+        assert matcid.cid > -1, 'cid=%s coord=\n%s' % (key, matcid)
+
+        # Multiple MATCIDs can share the same CID
+        if key in self.model.MATCID:
+            self.model.MATCID[key].append(matcid)
+        else:
+            self.model.MATCID[key] = [matcid]
+            self.model._type_to_id_map[matcid.type].append(key)
 
     def _add_load_combination_object(self, load: Union[LOAD, CLOAD]) -> None:
         """adds a load object to a load case"""
@@ -1097,10 +1114,14 @@ class AddMethods:
             self.model.delays[key] = delay
             self.model._type_to_id_map[delay.type].append(key)
 
-    def _add_aero_object(self, aero: AERO) -> None:
+    def _add_aero_object(self, aero: AERO, allow_overwrites: bool=False) -> None:
         """adds an AERO object"""
-        # only one AERO card allowed
-        assert self.model.aero is None, '\naero=\n%s old=\n%s' % (aero, self.model.aero)
+        if allow_overwrites and self.model.aero is not None:
+            if aero != self.model.aero:
+                raise RuntimeError(f'AERO:\nold=\n{self.model.aero}new=\n{aero}')
+        else:
+            # only one AERO card allowed
+            assert self.model.aero is None, '\naero=\n%s old=\n%s' % (aero, self.model.aero)
         self.model.aero = aero
         #self.model._type_to_id_map[aero.type].append(key)
 
@@ -1252,20 +1273,30 @@ class AddMethods:
         self.model.csschds[key] = csschd
         self.model._type_to_id_map[csschd.type].append(key)
 
-    def _add_caero_object(self, caero: Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5]) -> None:
+    def _add_caero_object(self, caero: Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5],
+                          allow_overwrites: bool=False) -> None:
         """adds an CAERO1/CAERO2/CAERO3/CAERO4/CAERO5 object"""
         key = caero.eid
-        assert key not in self.model.caeros, '\nkey=%s; caero=\n%r old_caero=\n%r' % (
-            key, caero, self.model.caeros[key])
         assert key > 0
+        if key in self.model.caeros:
+            if allow_overwrites:
+                caero_old = self.model.caeros[key]
+                if caero == caero_old:
+                    assert key not in self.model.caeros, '\nkey=%s; caero=\n%r old_caero=\n%r' % (
+                        key, caero, self.model.caeros[key])
+            else:
+                assert key not in self.model.caeros, '\nkey=%s; caero=\n%r old_caero=\n%r' % (
+                    key, caero, self.model.caeros[key])
         self.model.caeros[key] = caero
         self.model._type_to_id_map[caero.type].append(key)
 
-    def _add_paero_object(self, paero: Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]) -> None:
+    def _add_paero_object(self, paero: Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5],
+                          allow_overwrites: bool=False) -> None:
         """adds an PAERO1/PAERO2/PAERO3/PAERO4/PAERO5 object"""
         key = paero.pid
-        assert key not in self.model.paeros, '\npaero=\n%r old_paero=\n%r' % (
-            paero, self.model.paeros[key])
+        if not allow_overwrites:
+            assert key not in self.model.paeros, '\npaero=\n%r old_paero=\n%r' % (
+                paero, self.model.paeros[key])
         assert key > 0, 'paero.pid = %r' % (key)
         self.model.paeros[key] = paero
         self.model._type_to_id_map[paero.type].append(key)
@@ -1277,10 +1308,12 @@ class AddMethods:
         self.model.monitor_points.append(monitor_point)
         self.model._type_to_id_map[monitor_point.type].append(len(self.model.monitor_points) - 1)
 
-    def _add_spline_object(self, spline: Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5]) -> None:
+    def _add_spline_object(self, spline: Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5],
+                           allow_overwrites: bool=False) -> None:
         """adds an SPLINE1/SPLINE2/SPLINE3/SPLINE4/SPLINE5 object"""
         key = spline.eid
-        assert spline.eid not in self.model.splines, f'\nspline:\n{spline}\nold_spline:\n{self.model.splines[key]}'
+        if not allow_overwrites:
+            assert key not in self.model.splines, f'\nspline:\n{spline}\nold_spline:\n{self.model.splines[key]}'
         assert spline.eid > 0, spline
         self.model.splines[key] = spline
         self.model._type_to_id_map[spline.type].append(key)
@@ -1311,10 +1344,11 @@ class AddMethods:
         self.model.divergs[key] = diverg
         self.model._type_to_id_map[diverg.type].append(key)
 
-    def _add_flutter_object(self, flutter: FLUTTER) -> None:
+    def _add_flutter_object(self, flutter: FLUTTER, allow_overwrites: bool=False) -> None:
         """adds an FLUTTER object"""
         key = flutter.sid
-        assert key not in self.model.flutters, 'FLUTTER=%s old=\n%snew=\n%s' % (key, self.model.flutters[key], flutter)
+        if not allow_overwrites:
+            assert key not in self.model.flutters, 'FLUTTER=%s old=\n%snew=\n%s' % (key, self.model.flutters[key], flutter)
         assert key > 0
         self.model.flutters[key] = flutter
         self.model._type_to_id_map[flutter.type].append(key)
@@ -1744,3 +1778,30 @@ class AddMethods:
             self.model._type_to_id_map[edge.type].append(key)
 
     #---------------------------------------------------------------------------
+    # nx bolts
+    def _add_bolt_object(self, bolt: BOLT, allow_overwrites: bool=False) -> None:
+        key = bolt.bolt_id
+        if key in self.model.bolt and not allow_overwrites:
+            if not bolt == self.model.bolt[key]:
+                raise RuntimeError(f'bolt is duplicated\n{bolt}\nold:\n{self.model.bolt[key]}')
+        else:
+            self.model.bolt[bolt.bolt_id] = bolt
+            self.model._type_to_id_map[bolt.type].append(key)
+
+    def _add_boltseq_object(self, boltseq: BOLTSEQ, allow_overwrites: bool=False) -> None:
+        key = boltseq.sid
+        if key in self.model.boltseq and not allow_overwrites:
+            if not boltseq == self.model.boltseq[key]:
+                raise RuntimeError(f'boltseq is duplicated\n{boltseq}\nold:\n{self.model.boltseq[key]}')
+        else:
+            self.model.boltseq[boltseq.sid] = boltseq
+            self.model._type_to_id_map[boltseq.type].append(key)
+
+    def _add_boltfor_object(self, boltfor: BOLTFOR, allow_overwrites: bool=False) -> None:
+        key = boltfor.sid
+        if key in self.model.boltfor and not allow_overwrites:
+            if not boltfor == self.model.boltfor[key]:
+                raise RuntimeError(f'boltfor is duplicated\n{boltfor}\nold:\n{self.model.boltfor[key]}')
+        else:
+            self.model.boltfor[boltfor.sid] = boltfor
+            self.model._type_to_id_map[boltfor.type].append(key)

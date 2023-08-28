@@ -1,8 +1,7 @@
-from collections import OrderedDict
 import numpy as np
 
-import vtk
-from vtk import vtkQuad, vtkLine
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkQuad, vtkLine
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.avl.avl import read_avl
@@ -51,7 +50,7 @@ class AVL_IO:
         grid = self.gui.grid
         grid.Allocate(self.gui.nelements, 1000)
 
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(self.gui.nnodes)
         #vectorReselt.SetNumberOfComponents(3)
         self.gui.nid_map = {}
@@ -98,7 +97,7 @@ class AVL_IO:
 
         note = ''
         self.gui.isubcase_name_map = {1: ['AVL%s' % note, '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         form, cases, node_ids, element_ids = self._fill_avl_case(

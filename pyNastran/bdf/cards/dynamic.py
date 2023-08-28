@@ -1031,7 +1031,7 @@ class NLPARM(BaseCard):
         ls_tol : float; default=0.5
             ???
         max_bisect : int; default=5
-            ???
+            max number of bisections
         max_r : float; default=20.
             ???
         rtol_b : float; default=20.
@@ -1074,7 +1074,7 @@ class NLPARM(BaseCard):
         self.max_r = max_r
         self.rtol_b = rtol_b
 
-    def validate(self):
+    def validate(self) -> None:
         # line 1
         assert self.nlparm_id > 0, self.get_stats()
         assert self.ninc is None or self.ninc >= 0, self.get_stats()  #  is this >0 or >= 0?
@@ -1097,7 +1097,8 @@ class NLPARM(BaseCard):
         assert 0.01 < self.ls_tol < 0.9, self.get_stats()
 
         # line 3
-        assert -10 <= self.max_bisect <= 10, self.get_stats()
+        # [-10, 10] is the official limit, but is not limited by that; 100 is insane...
+        assert -100 <= self.max_bisect <= 100, self.get_stats()
         assert 1.0 <= self.max_r <= 40.0, self.get_stats()
         assert self.rtol_b > 0.0, self.get_stats()
 
@@ -2592,7 +2593,7 @@ class TIC(BaseCard):
         """
         sid = integer(card, 1, 'sid')
         nid = integer(card, 2, 'G')
-        comp = modal_components_or_blank(card, 3, 'C', '0')
+        comp = modal_components_or_blank(card, 3, 'C', default=0)
         u0 = double_or_blank(card, 4, 'U0', 0.)
         v0 = double_or_blank(card, 5, 'V0', 0.)
         return TIC(sid, nid, comp, u0=u0, v0=v0, comment=comment)

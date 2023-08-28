@@ -13,6 +13,7 @@ from pyNastran.op2.result_objects.op2_results import Results
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
+    from cpylog import SimpleLogger
 
 
 class OP2_F06_Common:
@@ -61,7 +62,7 @@ class OP2_F06_Common:
         else:
             return hasattr(self, result_name)
 
-    def get_result(self, result_name):
+    def get_result(self, result_name: str) -> dict:
         """
         Getattr, but considers sub-objects
 
@@ -115,15 +116,24 @@ class OP2_F06_Common:
         """allows for simple OP2 vectorization"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
-    #@property
-    #def cstm(self):
-        #return self.op2_results.cstm
-    #@property
-    #def trmbd(self):
-        #return self.op2_results.trmbd
-    #@property
-    #def trmbu(self):
-        #return self.op2_results.trmbu
+    # ------------------------------------------------------------------
+    # Coordinate transformation - Getter
+    @property
+    def cstm(self):
+        return self.op2_results.cstm
+    @property
+    def trmbd(self):
+        return self.op2_results.trmbd
+    @property
+    def trmbu(self):
+        return self.op2_results.trmbu
+
+    # ------------------------------------------------------------------
+    # Coordinate transformation - Setter
+    @cstm.setter
+    def cstm(self, cstm):
+        self.op2_results.cstm = cstm
+    @trmbd.setter
 
     # ------------------------------------------------------------------
     # Strain Energy - Getter
@@ -699,8 +709,8 @@ class OP2_F06_Common:
     def cpyram_stress(self, cpyram_stress):
         self.op2_results.stress.cpyram_stress = cpyram_stress
 
-    @chexa_stress.setter
-    def chexa_composite_stress(self):
+    @chexa_composite_stress.setter
+    def chexa_composite_stress(self, chexa_composite_stress):
         self.op2_results.stress.chexa_composite_stress = chexa_composite_stress
     @cpenta_composite_stress.setter
     def cpenta_composite_stress(self, cpenta_composite_stress):
@@ -1365,7 +1375,8 @@ def _get_op2_stats(model: OP2, short=False):
             assert isinstance(msgi, str), msgi
         raise
 
-def _get_op2_stats_short(model: OP2, table_types: list[str], log) -> list[str]:
+def _get_op2_stats_short(model: OP2, table_types: list[str],
+                         log: SimpleLogger) -> list[str]:
     """helper for get_op2_stats(...)"""
     msg = []
     handled_previously = ['params', 'grid_point_weight', 'psds']
@@ -1388,6 +1399,11 @@ def _get_op2_stats_short(model: OP2, table_types: list[str], log) -> list[str]:
         # # and not table_type.startswith('responses.')
         table_type_print = 'op2_results.' + table_type if '.' in table_type else table_type
         table = model.get_result(table_type)
+        if table_type == 'superelement_tables':
+            for key in table:
+                msg.append(f'{table_type_print}[{key}]\n')
+            continue
+
         try:
             sorted_tables = sorted(table.items(), key=_compare)
         except AttributeError:
@@ -1417,7 +1433,8 @@ def _get_op2_stats_short(model: OP2, table_types: list[str], log) -> list[str]:
                 #raise RuntimeError(msgi)
     return msg
 
-def _get_op2_results_stats_dict(obj: dict[Any, Any], table_type: str, short: bool) -> msg:
+def _get_op2_results_stats_dict(obj: dict[Any, Any],
+                                table_type: str, short: bool) -> list[str]:
     msg = []
     for key, obji in obj.items():
         if isinstance(obji, list):
@@ -1429,7 +1446,8 @@ def _get_op2_results_stats_dict(obj: dict[Any, Any], table_type: str, short: boo
             msg.extend(f'op2_results.{table_type}[{key}]: ' + stats)
     return msg
 
-def _get_op2_stats_full(model: OP2, table_types: list[str], log):
+def _get_op2_stats_full(model: OP2, table_types: list[str],
+                        log: SimpleLogger) -> list[str]:
     """helper for get_op2_stats(...)"""
     msg = []
     handled_previously = ['params', 'grid_point_weight', 'psds']
@@ -1450,6 +1468,11 @@ def _get_op2_stats_full(model: OP2, table_types: list[str], log):
             continue
 
         table_type_print = 'op2_results.' + table_type if '.' in table_type else table_type
+        if table_type == 'superelement_tables':
+            for key in table:
+                msg.append(f'{table_type_print}[{key}]\n')
+            continue
+
         try:
             for isubcase, subcase in sorted(table.items(), key=_compare):
                 class_name = subcase.__class__.__name__
@@ -1462,7 +1485,7 @@ def _get_op2_stats_full(model: OP2, table_types: list[str], log):
                         msg.append(msgi)
                         raise
                     else:
-                        msg.append('%s[%s]\n' % (table_type_print, isubcase))
+                        msg.append(f'{table_type_print}[{isubcase}]\n')
                         msg.extend(stats)
                         msg.append('\n')
                 else:
@@ -1475,7 +1498,7 @@ def _get_op2_stats_full(model: OP2, table_types: list[str], log):
             raise
     return msg
 
-def _write_params(params):
+def _write_params(params: dict[str, Any]):
     """helper for get_op2_stats(...)"""
     if not params:
         return []

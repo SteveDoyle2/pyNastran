@@ -1,9 +1,7 @@
 """Defines the GUI IO file for OBJ."""
-from collections import OrderedDict
-
 import numpy as np
-import vtk
 
+from pyNastran.gui.vtk_interface import vtkTriangle, vtkQuad
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.converters.dev.obj.obj import read_obj
@@ -33,7 +31,7 @@ class ObjIO:
             self.gui.turn_text_off()
             self.gui.grid.Reset()
 
-            self.gui.result_cases = OrderedDict()
+            self.gui.result_cases = {}
             self.gui.ncases = 0
             try:
                 del self.gui.case_keys
@@ -100,14 +98,14 @@ class ObjIO:
 
         tri_etype = 5 # vtkTriangle().GetCellType()
         #self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
-        quad_etype = 9 # vtk.vtkQuad().GetCellType()
+        quad_etype = 9 # vtkQuad().GetCellType()
 
         all_tris = [tri_faces for tri_faces in model.tri_faces.values()]
         all_quads = [quad_faces for quad_faces in model.quad_faces.values()]
         if len(all_tris):
             tris = np.vstack(all_tris)
             for eid, element in enumerate(tris):
-                elem = vtk.vtkTriangle()
+                elem = vtkTriangle()
                 elem.GetPointIds().SetId(0, element[0])
                 elem.GetPointIds().SetId(1, element[1])
                 elem.GetPointIds().SetId(2, element[2])
@@ -115,7 +113,7 @@ class ObjIO:
         if len(all_quads):
             quads = np.vstack(all_quads)
             for eid, element in enumerate(quads):
-                elem = vtk.vtkQuad()
+                elem = vtkQuad()
                 elem.GetPointIds().SetId(0, element[0])
                 elem.GetPointIds().SetId(1, element[1])
                 elem.GetPointIds().SetId(2, element[2])
@@ -128,7 +126,7 @@ class ObjIO:
         self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['OBJ', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
         form, cases, icase, node_ids, element_ids = self._fill_obj_geometry_objects(
             cases, ID, nodes, nelements, model)

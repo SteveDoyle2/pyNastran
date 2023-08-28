@@ -629,8 +629,8 @@ class CPYRAM13v(SolidElement):
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
             nodes2 = ['' if node is None else '%8i' % node for node in nodes[5:].tolist()]
             data = [eid, pid] + nodes[:5].tolist() + nodes2
-            msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8s\n'
-                   '        %8s%8s%8s%8s%8s%8s%s' % tuple(data))
+            msgi = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8s\n'
+                    '        %8s%8s%8s%8s%8s%8s%s' % tuple(data))
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
         return msg

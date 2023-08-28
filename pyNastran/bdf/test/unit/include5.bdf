@@ -1,0 +1,10 @@
+SOL 101
+CEND
+BEGIN BULK
+$Includes
+INCLUDE 'include1.dat'
+INCLUDE 'myfolder/include2.dat'
+INCLUDE 'include3.dat'
+INCLUDE 'include4.dat'
+INCLUDE 'include5.dat'
+ENDDATA

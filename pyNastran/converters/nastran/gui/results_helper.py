@@ -3,7 +3,7 @@
 from __future__ import annotations
 import os
 from collections import defaultdict
-from typing import Union, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -18,6 +18,7 @@ from pyNastran.op2.result_objects.stress_object import (
     get_plate_stress_strain, get_solid_stress_strain
 )
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
+from pyNastran.gui.gui_objects.types import Form, FormDict, HeaderDict, KeysMap, Case, Cases
 
 from .geometry_helper import NastranGuiAttributes
 from .stress import (
@@ -28,19 +29,30 @@ from .stress import (
 from .force import get_spring_force, get_bar_force, get_plate_force
 
 if TYPE_CHECKING: # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.op2 import OP2
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     #from pyNastran.op2.result_objects.design_response import Desvars
 
 GuiResults = Union[GuiResult, GuiResultIDs, GridPointForceResult]
 
+Form = tuple[str, Optional[int], Any]
+FormDict = dict[tuple[Any, Any], Form]
+HeaderDict = dict[tuple[Any, Any], str]
+KeysMap = dict[str, Any]
+Case = tuple[GuiResult, tuple[int, str]]
+Cases = dict[int, Case]
+
 class NastranGuiResults(NastranGuiAttributes):
     """Defines OP2 specific methods NastranIO"""
     def __init__(self):
         super(NastranGuiResults, self).__init__()
 
-    def _fill_grid_point_forces(self, cases, model, key, icase,
-                                form_dict, header_dict, keys_map):
+    def _fill_grid_point_forces(self, cases: Cases,
+                                model: OP2, key, icase: int,
+                                form_dict: FormDict,
+                                header_dict: HeaderDict,
+                                keys_map: KeysMap):
         if key not in model.grid_point_forces:
             return icase
         grid_point_forces = model.grid_point_forces[key]
@@ -57,7 +69,7 @@ class NastranGuiResults(NastranGuiAttributes):
         itime = 0
 
         cases[icase] = (nastran_res, (itime, 'Grid Point Forces'))
-        formii = ('Grid Point Forces', icase, [])
+        formii: Form = ('Grid Point Forces', icase, [])
         form_dict[(key, itime)].append(formii)
 
         dt = case._times[itime]
@@ -69,8 +81,10 @@ class NastranGuiResults(NastranGuiAttributes):
         icase += 1
         return icase
 
-    def _fill_op2_oug_oqg(self, cases, model: OP2, key, icase: int,
-                          form_dict, header_dict, keys_map, log) -> int:
+    def _fill_op2_oug_oqg(self, cases: Cases, model: OP2, key, icase: int,
+                          form_dict: FormDict,
+                          header_dict: HeaderDict,
+                          keys_map: KeysMap, log) -> int:
         """
         loads nodal results vector results (e.g., displacements/temperatures)
         """
@@ -98,15 +112,20 @@ class NastranGuiResults(NastranGuiAttributes):
             nnodes, log)
         return icase
 
-    def _fill_op2_gpstress(self, cases, model: OP2,
-                           times, key, icase: int,
-                           form_dict, header_dict, keys_map) -> int:
+    def _fill_op2_gpstress(self, cases: Cases,
+                           model: OP2,
+                           times: np.ndarray, key, icase: int,
+                           form_dict: FormDict,
+                           header_dict: HeaderDict,
+                           keys_map: KeysMap) -> int:
         """Creates the time accurate grid point stress objects"""
         if key in model.grid_point_stress_discontinuities:
             case = model.grid_point_stress_discontinuities[key]
+            del case
             self.log.warning('skipping grid_point_stress_discontinuities')
         if key in model.grid_point_stresses_volume_principal:
             case = model.grid_point_stresses_volume_principal[key]
+            del case
             self.log.warning('skipping grid_point_stresses_volume_principal')
 
         icase = _fill_op2_grid_point_surface_stresses(
@@ -122,9 +141,11 @@ class NastranGuiResults(NastranGuiAttributes):
             form_dict, header_dict, keys_map)
         return icase
 
-    def _fill_op2_centroidal_strain_energy(self, cases: dict[int, GuiResults], model: OP2,
-                                                times, key, icase: int,
-                                                form_dict, header_dict, keys_map) -> int:
+    def _fill_op2_centroidal_strain_energy(self, cases: Cases, model: OP2,
+                                           times: np.ndarray, key, icase: int,
+                                           form_dict: FormDict,
+                                           header_dict: HeaderDict,
+                                           keys_map: KeysMap) -> int:
         """Creates the time accurate strain energy objects"""
         case = None
 
@@ -273,8 +294,10 @@ class NastranGuiResults(NastranGuiAttributes):
                     icase += 1
         return icase
 
-    def _create_op2_time_centroidal_force_arrays(self, model, nelements, key, itime,
-                                                 header_dict, keys_map):
+    def _create_op2_time_centroidal_force_arrays(self, model: OP2, nelements: int,
+                                                 key, itime,
+                                                 header_dict: HeaderDict,
+                                                 keys_map: KeysMap):
         """
         creates the following force outputs:
          - fx, fy, fz, mx, my, mz
@@ -444,7 +467,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 raise NotImplementedError(case)
         return found_force, fx, fy, fz, rx, ry, rz, is_element_on
 
-    def _fill_op2_time_centroidal_force(self, cases, model: OP2,
+    def _fill_op2_time_centroidal_force(self, cases: Cases, model: OP2,
                                         key: tuple[Any, int], icase: int, itime: int,
                                         form_dict: dict[Any, Any],
                                         #form_dict: dict[tuple[Any, int], Any],
@@ -576,18 +599,20 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase += 6
         return icase
 
-    def save_filtered_forces(self, key, itime, icase, is_element_on, subcase_id, cases, form_dict):
+    def save_filtered_forces(self, key, itime: int, icase: int,
+                             is_element_on: bool, subcase_id: int,
+                             cases: Cases, form_dict: FormDict):
         ioff = np.where(is_element_on == 0)[0]
         num_off = len(ioff)
 
         eids_off = []
         for eid in self.element_ids[ioff]:
             element = self.model.elements[eid]
-            if element.type not in ['CTRIA3', 'CQUAD4', 'CHEXA', 'CPENTA', 'CTETRA',
+            if element.type not in {'CTRIA3', 'CQUAD4', 'CHEXA', 'CPENTA', 'CTETRA',
                                     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CSHEAR',
                                     'CQUADR', 'CTRIAR', 'CQUAD8', 'CTRIA6', 'CVISC',
                                     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CTUBE',
-                                    'CONROD', 'CROD']:
+                                    'CONROD', 'CROD'}:
                 eids_off.append(eid)
         for eid in eids_off[:20]:
             element = self.model.elements[eid]
@@ -606,11 +631,12 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
 
-    def _fill_op2_time_centroidal_composite_stress(self, cases, model, key, icase: int, itime: int,
-                                                   form_dict: dict[Any, Any],
-                                                   header_dict: dict[Any, Any],
-                                                   keys_map: dict[Any, Any],
-                                                   is_stress: int=True) -> int:
+    def _fill_op2_time_centroidal_composite_stress(self, cases: Cases, model: OP2,
+                                                   key, icase: int, itime: int,
+                                                   form_dict: FormDict,
+                                                   header_dict: HeaderDict,
+                                                   keys_map: KeysMap,
+                                                   is_stress: bool=True) -> int:
         nelements = self.nelements
         #oxx = np.full(nelements, np.nan, dtype='float32')
         #oyy = np.full(nelements, np.nan, dtype='float32')
@@ -655,18 +681,22 @@ class NastranGuiResults(NastranGuiAttributes):
             icase += 1
         return icase
 
-    def _fill_op2_centroidal_stress(self, cases, model, times, key, icase_old,
-                                    form_dict, header_dict, keys_map) -> int:
+    def _fill_op2_centroidal_stress(self, cases: Cases, model: OP2,
+                                    times: np.ndarray, key, icase_old: int,
+                                    form_dict: FormDict,
+                                    header_dict: HeaderDict,
+                                    keys_map: KeysMap) -> int:
         """Creates the time accurate stress objects"""
         icase = icase_old
         log = model.log
-        nastran_settings = self.settings.nastran_settings  # type:  NastranSettings
+        nastran_settings: NastranSettings = self.settings.nastran_settings
         if nastran_settings.stress:
             for itime, unused_dt in enumerate(times):
                 # shell stress
                 try:
                     icase = self._fill_op2_time_centroidal_stress(
-                        cases, model, key, icase_old, itime, form_dict, header_dict, keys_map,
+                        cases, model, key, icase_old, itime,
+                        form_dict, header_dict, keys_map,
                         is_stress=True)
                 except IndexError:
                     self.log.error('problem getting stress...')
@@ -721,13 +751,14 @@ class NastranGuiResults(NastranGuiAttributes):
         icase = get_spring_stress_strains(
             eids, cases, model, times, key, icase,
             form_dict, header_dict, keys_map, is_stress=True)
-
         return icase
 
 
-    def _fill_op2_centroidal_force(self, cases, model: OP2,
-                                   times, key, icase: int,
-                                   force_dict, header_dict, keys_map) -> int:
+    def _fill_op2_centroidal_force(self, cases: Cases, model: OP2,
+                                   times: np.ndarray, key, icase: int,
+                                   form_dict: FormDict,
+                                   header_dict: HeaderDict,
+                                   keys_map: KeysMap) -> int:
         """Creates the time accurate force objects"""
         nastran_settings = self.settings.nastran_settings  # type: NastranSettings
         if nastran_settings.force:
@@ -735,7 +766,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 try:
                     icase = self._fill_op2_time_centroidal_force(
                         cases, model, key, icase, itime,
-                        force_dict, header_dict, keys_map)
+                        form_dict, header_dict, keys_map)
                 except IndexError:
                     self.log.error('problem getting force...')
                     break
@@ -744,7 +775,7 @@ class NastranGuiResults(NastranGuiAttributes):
         if nastran_settings.bar_force:
             icase = get_bar_force(
                 eids, cases, model, times, key, icase,
-                force_dict, header_dict, keys_map)
+                form_dict, header_dict, keys_map)
 
         if nastran_settings.beam_force:
             #icase = get_beam_force(
@@ -756,18 +787,12 @@ class NastranGuiResults(NastranGuiAttributes):
         if nastran_settings.plate_force:
             icase = get_plate_force(
                 eids, cases, model, times, key, icase,
-                force_dict, header_dict, keys_map)
-            #if key in model.ctria3_force or key in model.cquad4_force:
-                #model.log.warning('skipping nastran plate force')
+                form_dict, header_dict, keys_map)
 
         if nastran_settings.spring_force:
             icase = get_spring_force(
                 eids, cases, model, times, key, icase,
-                force_dict, header_dict, keys_map)
-            #if any([key in force for force in
-                    #[model.celas1_force, model.celas2_force,
-                     #model.celas3_force, model.celas4_force]]):
-                #model.log.warning('skipping nastran spring force')
+                form_dict, header_dict, keys_map)
 
         if nastran_settings.cbush_force:
             if key in model.cbush_force:
@@ -781,8 +806,11 @@ class NastranGuiResults(NastranGuiAttributes):
 
         return icase
 
-    def _fill_op2_centroidal_strain(self, cases, model: OP2, times, key, icase: int,
-                                    form_dict, header_dict, keys_map) -> int:
+    def _fill_op2_centroidal_strain(self, cases: Cases, model: OP2,
+                                    times: np.ndarray, key, icase: int,
+                                    form_dict: FormDict,
+                                    header_dict: HeaderDict,
+                                    keys_map: KeysMap) -> int:
         """Creates the time accurate strain objects"""
         log = self.log
         nastran_settings = self.settings.nastran_settings  # type: NastranSettings
@@ -845,14 +873,16 @@ class NastranGuiResults(NastranGuiAttributes):
 
         return icase
 
-    def _fill_op2_time_centroidal_stress(self, cases, model: OP2,
+    def _fill_op2_time_centroidal_stress(self, cases: Cases, model: OP2,
                                          key, icase: int, itime: int,
-                                         form_dict: dict[Any, Any],
-                                         header_dict: dict[Any, Any],
-                                         keys_map: dict[Any, Any],
-                                         is_stress=True) -> int:
+                                         form_dict: FormDict,
+                                         header_dict: HeaderDict,
+                                         keys_map: KeysMap,
+                                         is_stress: bool=True) -> int:
         """Creates the time accurate stress objects"""
         log = model.log
+        log_error = self.log_error
+
         #new_cases = True
         #assert isinstance(subcase_id, int), type(subcase_id)
         assert isinstance(icase, int), icase
@@ -978,16 +1008,16 @@ class NastranGuiResults(NastranGuiAttributes):
             #print('vm_word is None')
             return icase
 
-        form0 = (word, None, [])
+        form0: Form = (word, None, [])
         unused_formis = form0[2]
         subcase_id = key[2]
         header = header_dict[(key, itime)]
-        formi = []
+        formi: list[Form] = []
         form_dict[(key, itime)].append(('Combined ' + word, None, formi))
 
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
-                print_empty_elements(self.model, eids, is_element_on, self.log_error)
+                print_empty_elements(self.model, eids, is_element_on, log_error)
 
                 is_element_on = np.isfinite(oxx)
                 is_element_on = is_element_on.astype('|i1')
@@ -1074,7 +1104,7 @@ class NastranGuiResults(NastranGuiAttributes):
         #, case, header, form0
         return icase
 
-def fill_responses(cases, model: OP2, icase):
+def fill_responses(cases: Cases, model: OP2, icase: int) -> tuple[int, list[Form]]:
     """adds the optimization responses"""
     form_optimization = []
     #fractional_mass_response = model.op2_results.responses.fractional_mass_response
@@ -1120,10 +1150,14 @@ def fill_responses(cases, model: OP2, icase):
         #desvars.dunno = np.zeros(ndesvars, dtype='float32')
     return icase, form_optimization
 
-def _fill_nastran_displacements(cases, model: OP2, key, icase: int,
-                                form_dict, header_dict, keys_map,
-                                xyz_cid0,
-                                nnodes: int, node_ids, log, dim_max: float=1.0,
+
+def _fill_nastran_displacements(cases: Cases, model: OP2, key, icase: int,
+                                form_dict: FormDict,
+                                header_dict: HeaderDict,
+                                keys_map: KeysMap,
+                                xyz_cid0: np.ndarray,
+                                nnodes: int, node_ids: np.ndarray,
+                                log, dim_max: float=1.0,
                                 prefix: str='') -> int:
     """
     loads the nodal displacements/velocity/acceleration/eigenvector/spc/mpc forces
@@ -1177,12 +1211,13 @@ def _fill_nastran_displacements(cases, model: OP2, key, icase: int,
     return icase
 
 def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offset,
-                                   cases, model: OP2, key, icase: int,
-                                   form_dict: dict[tuple[Any, Any], str],
-                                   header_dict: dict[tuple[Any, Any], str],
-                                   keys_map: dict[str, Any],
-                                   xyz_cid0,
-                                   nnodes: int, node_ids, log, dim_max: float=1.0) -> int:
+                                   cases: Cases, model: OP2, key, icase: int,
+                                   form_dict: FormDict,
+                                   header_dict: HeaderDict,
+                                   keys_map: KeysMap,
+                                   xyz_cid0: np.ndarray,
+                                   nnodes: int, node_ids: np.ndarray,
+                                   log, dim_max: float=1.0) -> int:
     """helper for ``_fill_nastran_displacements`` to unindent the code a bit"""
     if t123_offset == 0:
         title1 = name + ' T_XYZ'
@@ -1246,7 +1281,7 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
             titles.append(title1)
             headers.append(f'{title1}: {header}')
             cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
-            formii = (title1, icase, [])
+            formii: Form = (title1, icase, [])
             form_dict[(key, itime)].append(formii)
             icase += 1
 
@@ -1280,8 +1315,11 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
         nastran_res.save_defaults()
     return icase
 
-def _fill_nastran_temperatures(cases, model: OP2, key, icase: int,
-                               form_dict, header_dict, keys_map, nnodes: int, log) -> int:
+def _fill_nastran_temperatures(cases: Cases, model: OP2, key, icase: int,
+                               form_dict: FormDict,
+                               header_dict: HeaderDict,
+                               keys_map: KeysMap,
+                               nnodes: int, log) -> int:
     """loads the nodal temperatures"""
     #nids = self.node_ids
     temperature_like = [
@@ -1320,7 +1358,9 @@ def _fill_nastran_temperatures(cases, model: OP2, key, icase: int,
             icase += 1
     return icase
 
-def print_empty_elements(model, element_ids, is_element_on, log_error):
+def print_empty_elements(model: BDF,
+                         element_ids: np.ndarray,
+                         is_element_on: bool, log_error):
     """prints the first 20 elements that aren't supportedas part of the stress results"""
     ioff = np.where(is_element_on == 0)[0]
     eids_off = []
@@ -1338,7 +1378,7 @@ def print_empty_elements(model, element_ids, is_element_on, log_error):
     print('-----------------------------------')
 
 
-def _get_t123_tnorm(case, nids, nnodes: int, t123_offset: int=0):
+def _get_t123_tnorm(case, nids: np.ndarray, nnodes: int, t123_offset: int=0):
     """
     helper method for _fill_op2_oug_oqg
 
@@ -1371,17 +1411,21 @@ def _get_t123_tnorm(case, nids, nnodes: int, t123_offset: int=0):
     ndata = t1.shape[0]
     if nnodes != ndata:
         #print('nnodes=%s ndata=%s' % (nnodes, ndata))
-        nidsi = case.node_gridtype[:, 0]
+        nids_in_disp = case.node_gridtype[:, 0]
         #assert len(nidsi) == nnodes, 'nidsi=%s nnodes=%s' % (nidsi, nnodes)
-        j = np.searchsorted(nids, nidsi)  # searching for nidsi
+        j = np.searchsorted(nids, nids_in_disp)  # searching for nidsi
 
         try:
-            if not np.allclose(nids[j], nidsi):
-                msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
+            if not np.allclose(nids[j], nids_in_disp):
+                msg = 'nids[j]=%s nids_in_disp=%s' % (nids[j], nids_in_disp)
                 raise RuntimeError(msg)
         except IndexError:
-            msg = 'node_ids = %s\n' % list(nids)
-            msg += 'nidsi in disp = %s\n' % list(nidsi)
+            msg = 'node_ids to find = %s\n' % list(nids)
+            msg += 'nids_in_disp = %s\n' % list(nids_in_disp)
+            extra = np.setdiff1d(nids, nids_in_disp)
+            missing = np.setdiff1d(nids_in_disp, nids)
+            msg += f'missing in BDF / extra in results = {missing}\n'
+            msg += f'extra in BDF / missing in results = {extra}\n'
             raise IndexError(msg)
 
     # (itime, nnodes, xyz)
@@ -1429,7 +1473,7 @@ def _get_t123_tnorm(case, nids, nnodes: int, t123_offset: int=0):
     return t123, tnorm, ntimes
 
 
-def _get_times(model, key):
+def _get_times(model: OP2, key: str) -> tuple[bool, bool, bool, np.ndarray]:
     """
     Get the times/frequencies/eigenvalues/loadsteps used on a given
     subcase
@@ -1494,7 +1538,7 @@ def get_tnorm_abs_max(case, t123, tnorm, itime):
         raise NotImplementedError(f'analysis_code={case.analysis_code}\ncase:\n{case}')
     return tnorm_abs_max
 
-def read_des_filename(des_filename):
+def read_des_filename(des_filename: str) -> dict[str, np.ndarray]:
     """
     DESIGN CYCLE :    30
     1
@@ -1667,7 +1711,9 @@ def _get_stress_times(model: OP2, isubcase: int) -> tuple[bool, bool, bool, Any]
 
 def _fill_op2_grid_point_surface_stresses(eids_all, cases, model: OP2,
                                           times, key, icase: int,
-                                          form_dict, header_dict, keys_map) -> int:
+                                          form_dict: FormDict,
+                                          header_dict: HeaderDict,
+                                          keys_map: KeysMap) -> int:
     if key not in model.grid_point_surface_stresses:
         return icase
 
@@ -1752,7 +1798,7 @@ def _fill_op2_grid_point_surface_stresses(eids_all, cases, model: OP2,
         ovm[i2] = case.data[itime, i2, 7]
 
         headers = ['nx', 'ny', 'txy', 'majorP', 'minorP', 'tmax', 'ovm']
-        form = [('Surface Stresses', None, [])]
+        form: list[Form] = [('Surface Stresses', None, [])]
         formi = form[0][2]
         form_dict[(key, itime)] = form
 
@@ -1767,7 +1813,9 @@ def _fill_op2_grid_point_surface_stresses(eids_all, cases, model: OP2,
 
 def _fill_op2_grid_point_stresses_volume_direct(nids, cases, model: OP2,
                                                 times, key, icase: int,
-                                                form_dict, header_dict, keys_map) -> int:
+                                                form_dict: FormDict,
+                                                header_dict: HeaderDict,
+                                                keys_map: KeysMap) -> int:
     if key not in model.grid_point_stresses_volume_direct:
         return icase
 
@@ -1812,7 +1860,7 @@ def _fill_op2_grid_point_stresses_volume_direct(nids, cases, model: OP2,
         ovm[i] = case.data[itime, :, 7]
 
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'ovm']
-        form = [('Volume Direct', None, [])]
+        form: list[Form] = [('Volume Direct', None, [])]
         formi = form[0][2]
         form_dict[(key, itime)] = form
 

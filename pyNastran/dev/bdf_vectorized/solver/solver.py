@@ -17,7 +17,8 @@ from scipy.sparse import dok_matrix  # type: ignore
 from cpylog import get_logger2
 
 # pyNastran
-from pyNastran.bdf.bdf_interface.dev.matrices import make_gpwg
+import pyNastran.bdf.bdf_interface.dev.matrices
+from pyNastran.bdf.bdf_interface.dev.mass import make_gpwg
 from pyNastran.dev.bdf_vectorized.solver.utils import (
     reverse_dict, partition_dense_symmetric, partition_dense_vector, remove_dofs)
 #from pyNastran.f06.f06_writer import sorted_bulk_data_header

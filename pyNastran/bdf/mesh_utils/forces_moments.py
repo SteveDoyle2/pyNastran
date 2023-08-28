@@ -22,13 +22,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def get_forces_moments_array(model: BDF,
-                             p0,
+                             p0: np.ndarray,
                              load_case_id: int,
-                             eid_map,
+                             eid_map: dict[int, int],
                              nnodes: int,
-                             normals,
+                             normals: np.ndarray,
                              dependents_nodes,
-                             nid_map=None,
+                             nid_map: Optional[dict[int, int]]=None,
                              include_grav: bool=False,
                              fdtype: str='float32') -> tuple[bool,
                                                              tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
@@ -41,10 +41,10 @@ def get_forces_moments_array(model: BDF,
         the reference location
     load_case_id : int
         the load id
-    nid_map : ???
-        ???
+    nid_map : dict[int nid : int index]
+        mapping of node id to node index (e.g., forces)
     eid_map : dict[int eid : int index]
-        ???
+        mapping of element id to array index (e.g., normals)
     nnodes : int
         the number of nodes in nid_map
     normals : (nelements, 3) float ndarray
@@ -148,13 +148,13 @@ def get_forces_moments_array(model: BDF,
                 xyz2 = nodes[n2].get_position()
                 xyz3 = nodes[n3].get_position()
                 xyz4 = nodes[n4].get_position()
-                normal_area = np.cross(xyz3 - xyz1, xyz4 - xyz2)  # TODO: not validated
+                normal_area = 0.5 * np.cross(xyz3 - xyz1, xyz4 - xyz2)
             elif nnodes == 3:
                 n1, n2, n3 = load.nodes
                 xyz1 = nodes[n1].get_position()
                 xyz2 = nodes[n2].get_position()
                 xyz3 = nodes[n3].get_position()
-                normal_area = np.cross(xyz2 - xyz1, xyz3 - xyz1)  # TODO: not validated
+                normal_area = 0.5 * np.cross(xyz2 - xyz1, xyz3 - xyz1)
             else:
                 debugs_list.append(f'    case={load_case_id:d} nnodes={nnodes:d} loadtype={load.type!r} not supported')
                 continue
@@ -177,6 +177,7 @@ def get_forces_moments_array(model: BDF,
                     forcei = pressure * normal * area / nnodes
                     # r = elem.Centroid() - p0
                     # m = cross(r, f)
+                    centroidal_pressures[ie] += pressure
                     for nid in node_ids:
                         if nid in dependents_nodes:
                             fail_nids.add(nid)
@@ -185,7 +186,6 @@ def get_forces_moments_array(model: BDF,
                                 warnings_list.append(f'    nid={nid} is a dependent node and has a '
                                                      f'PLOAD2 applied\n{load}')
                         forces[nid_map[nid]] += forcei
-                    forces += forcei
                     # F += f
                     # M += m
                 else:
@@ -245,8 +245,9 @@ def get_forces_moments_array(model: BDF,
 
 
 def _get_forces_moments_pload4(model: BDF,
-                               nid_map, eid_map,
-                               normals,
+                               nid_map: dict[int, int],
+                               eid_map: dict[int, int],
+                               normals: np.ndarray,
                                load: PLOAD4,
                                dependents_nodes,
                                nodal_pressures: np.ndarray,
@@ -266,7 +267,8 @@ def _get_forces_moments_pload4(model: BDF,
             # Nastran is NOT OK with missing element ids
             eids_missing.append(elem)
             continue
-        ie = eid_map[elem.eid]
+        eid = elem.eid
+        ie = eid_map[eid]
         normal = normals[ie, :]
         # pressures[eids.index(elem.eid)] += p
         if elem.type in {'CTRIA3', 'CTRIA6', 'CTRIAR'}:
@@ -306,6 +308,7 @@ def _get_forces_moments_pload4(model: BDF,
                     print('normal = ', normal)
                     print('forces[i, :] = ', forces[i, :])
                     raise
+            centroidal_pressures[ie] += pressure
             #nface = 3
         elif elem.type in {'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR'}:
             area = elem.get_area()
@@ -331,6 +334,7 @@ def _get_forces_moments_pload4(model: BDF,
 
             pressures = load.pressures[:nface]
             pressure = scale * _mean_pressure_on_pload4(pressures, load, elem)
+            centroidal_pressures[ie] += pressure
 
             forcei = pressure * area * normal / nface
 
@@ -596,7 +600,10 @@ def get_load_arrays(model: BDF, subcase_id: int,
                     normals,
                     nid_map=None,
                     stop_on_failure: bool=True,
-                    fdtype: str='float32'):
+                    fdtype: str='float32') -> tuple[
+                        #centroidal_pressures, forces, moments, spcd
+                        np.ndarray, np.ndarray, np.ndarray, np.ndarray
+                    ]:
     """
     Gets the following load arrays
 

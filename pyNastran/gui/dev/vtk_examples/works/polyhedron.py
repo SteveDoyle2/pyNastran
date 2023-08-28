@@ -1,5 +1,6 @@
 import vtk
-from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 
 # Create polyhedron (cube)
@@ -21,7 +22,7 @@ points.InsertNextPoint( 1.0, 1.0, 1.0)
 points.InsertNextPoint(-1.0, 1.0, 1.0)
 
 
-# List of pointIds that make up the face
+# list of pointIds that make up the face
 
 faceList = [
     [0, 3, 2, 1],
@@ -40,7 +41,7 @@ for face in faceList: # Loop over all the faces
     [faceId.InsertNextId(i) for i in face] # Insert the pointIds for the face
 
 
-ugrid = vtk.vtkUnstructuredGrid()
+ugrid = vtkUnstructuredGrid()
 ugrid.SetPoints(points)
 ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, faceId)
 
@@ -48,7 +49,7 @@ ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, faceId)
 if 1:
     ug = ugrid
     grid_mapper = vtk.vtkDataSetMapper()
-    vtk_version = int(VTK_VERSION[0])
+    vtk_version = int(VTK_VERSION_SPLIT[0])
     grid_mapper.SetInputData(ug)
 
 #-------------------------------------

@@ -235,6 +235,8 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
 
     """
     assert build_pandas in [True, False]
+    assert debug in [True, False]
+    assert quiet in [True, False]
 
     if read_bdf is None:
         read_bdf = write_bdf
@@ -259,6 +261,9 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             subcases = [int(i) for i in subcases.split(' ')]
         else:
             subcases = [int(subcases)]
+
+    if quiet:
+        debug = False
 
     debug_file = None
     model = os.path.splitext(op2_filename)[0]
@@ -667,7 +672,7 @@ def get_test_op2_data(argv) -> dict[str, str]:
     nasa95 = '|--nasa95' if is_dev else ''
     version = f'[--nx|--optistruct|--autodesk{nasa95}]'
     options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
-    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5]'
+    options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [[-x <arg>]... | [-i <arg>]...] {version} [--safe] [--post POST] [--load_hdf5] [--debug]'
     if is_dev:
         line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
     else:
@@ -701,6 +706,7 @@ def get_test_op2_data(argv) -> dict[str, str]:
         "                         Real/Imaginary (still stores Real/Imag); [default: False]\n"
         "  --load_hdf5            Load as HDF5 (default=False)\n"
         "  -p, --pandas           Enables pandas dataframe building; [default: False]\n"
+        "  --debug                Sets the debug flag [default: False]\n"
     )
     if is_dev:
         msg += "  --nocombine            Disables case combination\n"
@@ -844,7 +850,7 @@ def main(argv=None, show_args: bool=True) -> None:
             subcases=data['subcase'],
             include_results=data['include'],
             exclude_results=data['exclude'],
-            debug=not data['quiet'],
+            debug=data['debug'],
             binary_debug=data['binarydebug'],
             is_sort2=data['is_sort2'],
             compare=not data['disablecompare'],
@@ -880,7 +886,7 @@ def main(argv=None, show_args: bool=True) -> None:
             include_results=data['include'],
             exclude_results=data['exclude'],
             short_stats=data['short_stats'],
-            debug=not data['quiet'],
+            debug=data['debug'],
             binary_debug=data['binarydebug'],
             is_sort2=data['is_sort2'],
             compare=not data['disablecompare'],
