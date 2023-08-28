@@ -20,7 +20,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
     # return if no supported cards are found
     skip_cards = {
         #'SUPORT', 'SUPORT1', # suport
-        'SEBSET1',
+        'SECSET', 'SEBSET1',
 
         # spcs
         'GMSPC',

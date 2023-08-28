@@ -1287,7 +1287,7 @@ class AddMethods:
             else:
                 assert key not in self.model.caeros, '\nkey=%s; caero=\n%r old_caero=\n%r' % (
                     key, caero, self.model.caeros[key])
-            self.model.caeros[key] = caero
+        self.model.caeros[key] = caero
         self.model._type_to_id_map[caero.type].append(key)
 
     def _add_paero_object(self, paero: Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5],

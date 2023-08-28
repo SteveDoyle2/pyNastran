@@ -92,6 +92,7 @@ class TestSets(unittest.TestCase):
         set2 = bdf.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
         caero = bdf.add_caero4(10, 10, [.0, .0, .0], 1., [.0, 1., .0], 1.)
         spline2 = bdf.add_spline2(10, 10, 10, 11, 110)
+        bdf.pop_parse_errors()
 
         spline2.cross_reference(bdf)
 
