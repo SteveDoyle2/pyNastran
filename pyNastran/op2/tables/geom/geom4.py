@@ -107,6 +107,7 @@ class GEOM4(GeomCommon):
             (1010, 10, 320): ['SECSET1', self._read_secset1],  # record
             (910,   9, 319): ['SECSET', self._read_secset],  # record
             (710,   7, 317): ['SEBSET', self._read_sebset],  # record
+            (810,   8, 318): ['SEBSET1', self._read_sebset1],  # record
 
             (1810, 18, 334): ['SEUSET', self._read_seuset],  # record
             (1910, 19, 335): ['SEUSET1', self._read_seuset1],  # record
