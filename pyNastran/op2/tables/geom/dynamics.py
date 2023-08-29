@@ -123,22 +123,28 @@ class DYNAMICS(GeomCommon):
         CAMPBLL,15,SPEED,22,RPM
         ints    = (15, 1, 22, RPM, 0, 0, 0, 0, 0)
         floats  = (15, 1, 22, RPM, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+                  (15, 1, 22, 'FREQ    ', 1, 0.85, 0, 0, 1)
         """
         op2 = self.op2
         assert self.size == 4, f'CAMPBLL size={self.size}'
         ntotal = 40 * self.factor
         nentries = (len(data) - n) // ntotal
         op2.increase_card_count('CAMPBLL', nentries)
-        struc = Struct(op2._endian + b'3i 8s 5i')
+        struc = Struct(op2._endian + b'3i 8s if 3i')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             #(sid,p,c,a) = out
+            #op2.show_data(edata, types='ifs')
             campbell_id, variable_param, ddval, cambell_type, modtrak, corr_threshold, switch, num_modes, print_flag = out
             #print(campbell_id, variable_param, ddval, cambell_type, modtrak, corr_threshold, switch, num_modes)
-            check = (modtrak, corr_threshold, switch, num_modes, print_flag)
-            assert check == (0, 0, 0, 0, 0), check
+            assert isinstance(corr_threshold, float), corr_threshold
+            check = (switch, num_modes)
+            assert check == (0, 0), check
             assert variable_param == 1, 'variable_param=1 (speed?)'
+            assert modtrak in {0, 1}, modtrak
+            assert print_flag in {0, 1}, print_flag
 
             # darea = DAREA.add_op2_data(data=out)
             # op2._add_methods._add_darea_object(darea)
@@ -1109,7 +1115,7 @@ class DYNAMICS(GeomCommon):
         op2 = self.op2
 
         ntotal = 128 * self.factor # 4*32
-        struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f 8s8s 8i')
+        struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f 8s8s 8f')
 
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -1121,11 +1127,14 @@ class DYNAMICS(GeomCommon):
             (sid, ga, gb, plane, bdia, blen, bclr, soln,
              visco, pvapco, nport,
              pres1, theta1, pres2, theat2, npnt,
-             offset1, offset2, word1, word2, *blank) = out
-            assert word1 == b'        ', word1
-            assert word2 == b'        ', word2
-            assert max(blank) == 0, blank
-            assert min(blank) == 0, blank
+             offset1, offset2, word1_bytes, word2_bytes, *floats) = out
+            word1 = word1_bytes.decode('latin1').rstrip()
+            word2 = word2_bytes.decode('latin1').rstrip()
+            #op2.show_data(edata1, types='ifs')
+            #print(out)
+            assert word1 in {'', 'TESTNLR'}, word1
+            assert word2 in {'', 'NLRSFDA', 'NLRSFD'}, word2
+            assert min(floats) >= 0, floats
             #print('blank', blank)
             #print('*other =', other)
             plane = plane.rstrip().decode('latin1')

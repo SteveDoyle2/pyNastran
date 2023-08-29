@@ -49,7 +49,6 @@ class Op2Tables:
         self.reader_oes = OES(op2)
         self.reader_opg = OPG(op2)
         self.reader_oqg = OQG(op2)
-        self.reader_obc = OBC(op2)
         self.reader_opr = OPR(op2)
         self.reader_ogs = OGS(op2)
         self.reader_onr = ONR(op2)
@@ -63,6 +62,7 @@ class Op2Tables:
         # bolt
         self.reader_obolt = OBOLT(op2) # NX 2019.2 Bolt output
         # contact
+        self.reader_obc = OBC(op2)
         self.reader_oslide = OSLIDE(op2) # Incremental and total slide output for contact/glue
         self.reader_ofcon3d = OFCON3D(op2)
         self.reader_ougstrs = OUGSTRS(op2)

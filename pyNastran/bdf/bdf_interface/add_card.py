@@ -6015,7 +6015,7 @@ class AddCards:
         """.. seealso:: ``add_uset``"""
         return self.add_uset(name, ids, components, comment=comment)
 
-    def add_sebset(self, seid, ids, components, comment='') -> Union[SEBSET, SEBSET1]:
+    def add_sebset(self, seid: int, ids: list[int], components, comment='') -> Union[SEBSET, SEBSET1]:
         """Creates an SEBSET/SEBSET1 card"""
         if isinstance(components, integer_string_types):
             sebset = SEBSET1(seid, ids, components, comment=comment)
@@ -6024,11 +6024,13 @@ class AddCards:
         self._add_methods._add_sebset_object(sebset)
         return sebset
 
-    def add_sebset1(self, seid, ids, components, comment='') -> Union[SEBSET, SEBSET1]:
+    def add_sebset1(self, seid: int, ids: list[int],
+                    components, comment='') -> Union[SEBSET, SEBSET1]:
         """.. seealso:: ``add_secset``"""
         return self.add_sebset(seid, ids, components, comment=comment)
 
-    def add_secset(self, seid, ids, components, comment='') -> Union[SECSET, SECSET1]:
+    def add_secset(self, seid: int, ids: list[int],
+                   components, comment='') -> Union[SECSET, SECSET1]:
         """Creates an SECSET/SECSET1 card"""
         if isinstance(components, integer_string_types):
             secset = SECSET1(seid, ids, components, comment=comment)
@@ -6037,11 +6039,13 @@ class AddCards:
         self._add_methods._add_secset_object(secset)
         return secset
 
-    def add_secset1(self, seid, ids, components, comment='') -> Union[SECSET, SECSET1]:
+    def add_secset1(self, seid: int, ids: list[int],
+                    components, comment='') -> Union[SECSET, SECSET1]:
         """.. seealso:: ``add_secset``"""
         return self.add_secset(seid, ids, components, comment=comment)
 
-    def add_seqset(self, seid, ids, components, comment='') -> Union[SEQSET, SEQSET1]:
+    def add_seqset(self, seid: int, ids: list[int],
+                   components, comment='') -> Union[SEQSET, SEQSET1]:
         """Creates an SEQSET card"""
         if isinstance(components, integer_string_types):
             seqset = SEQSET1(seid, ids, components, comment=comment)

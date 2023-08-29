@@ -651,7 +651,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_opg = self._op2_readers.reader_opg
         reader_opr = self._op2_readers.reader_opr
         reader_oqg = self._op2_readers.reader_oqg
-        reader_obc = self._op2_readers.reader_obc
         reader_ogs = self._op2_readers.reader_ogs
 
         # oug
@@ -663,6 +662,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_obolt = self._op2_readers.reader_obolt
 
         # contact
+        reader_obc = self._op2_readers.reader_obc
         reader_oslide = self._op2_readers.reader_oslide
         reader_ougstrs = self._op2_readers.reader_ougstrs
         reader_ofcon3d = self._op2_readers.reader_ofcon3d
