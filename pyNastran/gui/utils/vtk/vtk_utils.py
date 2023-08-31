@@ -9,8 +9,14 @@ from collections import defaultdict
 from typing import Optional, TYPE_CHECKING
 
 import numpy as np
-from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter
-from pyNastran.gui.vtk_common_core import vtkPoints, vtkMath, vtkUnsignedCharArray, vtkIdTypeArray, VTK_FLOAT
+from vtk import vtkSelectionNode, vtkExtractSelection, vtkSelection, vtkAxes, vtkIdFilter, VTK_ID_TYPE
+#from vtkmodules.vtkCommonDataModel import vtkSelectionNode, vtkSelection
+#from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
+#from vtkmodules.vtkFiltersGeneral import vtkAxes
+#from vtkmodules.vtkFiltersCore import vtkIdFilter
+#from vtkmodules.util.vtkConstants import VTK_ID_TYPE
+from pyNastran.gui.vtk_common_core import (
+    vtkPoints, vtkMath, vtkUnsignedCharArray, vtkIdTypeArray, VTK_FLOAT)
 from pyNastran.gui.vtk_interface import vtkCellArray, vtkVertex
 from pyNastran.gui.vtk_util import numpy_to_vtk, vtk_to_numpy
 
@@ -297,7 +303,7 @@ def create_vtk_cells_of_constant_element_types(grid: vtkUnstructuredGrid,
         array_type=vtkUnsignedCharArray().GetDataType())
 
     vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=0,
-                                    array_type=vtkConstants.VTK_ID_TYPE)
+                                    array_type=VTK_ID_TYPE)
 
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
@@ -415,7 +421,7 @@ def map_element_centroid_to_node_fringe_result(
     energy, this will map properly.
     """
     is_passed = False
-    failed_out = (None, None, None, None)
+    failed_out = (0, 0, 0.0, 0.0)
     if location == 'node':
         log.error('Not a centroidal result.')
         return is_passed, failed_out
