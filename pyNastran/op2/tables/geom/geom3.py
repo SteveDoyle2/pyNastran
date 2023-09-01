@@ -104,8 +104,8 @@ class GEOM3:
             (7002, 85, 254): ['BOLTFOR', self._read_fake],  # record
             (7701, 77, 619): ['DTEMP', self._read_fake],  # record
             (5215, 52, 154): ['PRESAX', self._read_fake],  # record
-            (7401, 74, 601): ['ACCEL', self._read_fake],  # record
-            (7501, 75, 602): ['ACCEL1', self._read_fake],  # record
+            (7401, 74, 601): ['ACCEL', self._read_accel],  # record
+            (7501, 75, 602): ['ACCEL1', self._read_accel1],  # record
             (17600, 176, 627): ['RFORCE2', self._read_fake],  # record
             #(7002, 85, 254): ['BOLTFOR', self._read_fake],  # record
             #(7002, 85, 254): ['BOLTFOR', self._read_fake],  # record

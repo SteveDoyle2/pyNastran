@@ -185,7 +185,6 @@ class OBC:
                    #1.3970945689318426e-42, 1088602.75, 0.0, 0.0, 3369.947021484375,
                    #1.4111075535750908e-42, 1044905.9375, 0.0, 0.0, 15922.9609375)
         dt = op2.nonlinear_factor
-        struct1 = Struct(mapfmt(op2._endian + b'i fff f', self.size))
 
         is_vectorized = False
         if op2.use_vector and is_vectorized:
@@ -209,17 +208,18 @@ class OBC:
             obj.itotal = itotal2
         else:
             n = 0
+            struct1 = Struct(mapfmt(op2._endian + b'i fff f', self.size))
             for unused_i in range(nnodes):
                 edata = data[n:n+ntotal]
                 nid_device, pressure, s1, s2, s3 = struct1.unpack(edata)
-                unused_nid = nid_device // 10
+                nid = nid_device // 10
                 #out2 = [nid, pressure, s1, s2, s3]
                 #obj.add_sort1(nid, pressure, s1, s2, s3)
-                #print(out2)
+                #print(nid, pressure, s1, s2, s3)
                 n += ntotal
             #self.show_data(data)
 
         #if self._table4_count == 0:
-            #self.log.warning('no output for "Contact Pressure and Tractions"')
+        op2.log.warning(f'{op2.table_name} no output for "Contact Pressure and Tractions"; ndata={ndata}')
         #self._table4_count += 1
         return ndata

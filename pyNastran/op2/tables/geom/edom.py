@@ -12,7 +12,6 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, 
 from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
 from .utils import get_minus1_start_end
 
-#if TYPE_CHECKING:  # pragma: no cover
 from pyNastran.bdf.cards.optimization import DVPREL1, DVPREL2, DVMREL2, DCONSTR
 from pyNastran.op2.errors import DoubleCardError
 DSCREEN_INT_TO_RTYPE = {
@@ -54,18 +53,18 @@ FLAG_TO_RESP_NX = {
     15 : 'CEIG',
     17 : 'Compliance',
     19 : 'ERP',
-    20: 'FRDISP',
-    21: 'FRVELO',
-    22: 'FRACCL',
-    23: 'FRSPCF',
-    24: 'FRSTRE',
-    25: 'FRFORC',
-    26: 'RMSDISP',
-    27: 'RMSVELO',
-    28: 'RMSACCL',
-    29: 'PSDDISP',
-    30: 'PSDVELO',
-    31: 'PSDACCL',
+    20 : 'FRDISP',
+    21 : 'FRVELO',
+    22 : 'FRACCL',
+    23 : 'FRSPCF',
+    24 : 'FRSTRE',
+    25 : 'FRFORC',
+    26 : 'RMSDISP',
+    27 : 'RMSVELO',
+    28 : 'RMSACCL',
+    29 : 'PSDDISP',
+    30 : 'PSDVELO',
+    31 : 'PSDACCL',
 
     60 : 'TDISP',
     61 : 'TVELO',
@@ -610,14 +609,17 @@ class EDOM(GeomCommon):
                 rtype = DSCREEN_INT_TO_RTYPE[rtype_int]
             elif rtype_int == 7:  # STRAIN/FORCE/EQUA?
                 # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mereiglc.op2
-                #DSCREEN,DISP,-1000.0,20
-                #DSCREEN,STRESS,-1000.0,20
-                #DSCREEN,STRAIN,-1000.0,20
-                #DSCREEN,FORCE,-1000.0,20
-                #DSCREEN,EQUA,-1000.0,20
-                #DSCREEN,EIGN,-1000.0
-                #DSCREEN,LAMA,-1000.0
-
+                #DSCREEN,DISP,-1000.0,20       -> 5
+                #DSCREEN,STRESS,-1000.0,20     -> 20
+                #DSCREEN,STRAIN,-1000.0,20     -> ?
+                #DSCREEN,FORCE,-1000.0,20      -> ?
+                #DSCREEN,EQUA,-1000.0,20       -> ?
+                #DSCREEN,EIGN,-1000.0          -> 4
+                #DSCREEN,LAMA,-1000.0          -> 3
+                #STRESS = 20 ??? seems like an odd choice
+                #EQUA   = 7, 8, 91  (probably 91)
+                #FORCE  = 7, 8, 91
+                #STRAIN = 7, 8, 91
                 rtype = 'STRAIN?'
                 msg += f'rtype_int={rtype_int}? trs={trs} nstr={nstr}\n'
                 continue
@@ -639,11 +641,11 @@ class EDOM(GeomCommon):
                 msg += f'rtype_int={rtype_int}? trs={trs} nstr={nstr}\n'
                 continue
                 #raise NotImplementedError(f'rtype_int={rtype_int}? trs={trs} nstr={nstr}')
-            #op2.log.info(f'rtype_int={rtype_int} trs={trs} nstr={nstr}')
+            op2.log.info(f'rtype={rtype} rtype_int={rtype_int} trs={trs} nstr={nstr}')
             dscreen = op2.add_dscreen(rtype, trs=trs, nstr=nstr)
             dscreen.validate()
             str(dscreen)
-            #print(dscreen.rstrip())
+            op2.log.info(dscreen.rstrip())
         assert n == len(data), f'n={n} ndata={len(data)}'
         if msg:
             msg2 = 'Error reading DSCREEN\n' + msg
