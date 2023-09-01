@@ -1008,11 +1008,17 @@ class GEOM2:
         #print(mapfmt(op2._endian + b'6i3f3i6f', self.size))
         s1 = Struct(mapfmt(op2._endian + b'6i3f3i6f', self.size))
         s3 = Struct(mapfmt(op2._endian + b'12i6f', self.size))
+
+        list_warnings = []
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
+            # 23
             fe, = struct_i.unpack(edata[fe1:fe2])
             # per DMAP: F = FE bit-wise AND with 3
             f = fe & 3
+            #f = fe
+            #while f > 3:
+                #f &= 3
             if f == 0:  # basic cid
                 out = s1.unpack(edata)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
@@ -1053,7 +1059,19 @@ class GEOM2:
                     data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                                [f, g0]]
             else:
-                raise RuntimeError(f'invalid f value...f={f!r}')
+                out = s1.unpack(edata)
+                (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
+                 pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+
+                out = s3.unpack(edata)
+                (eid, pid, ga, gb, sa, sb, g0, xxa, xxb, fe,
+                 pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                #op2.show_data(data, types='ifsdq')
+                #if g0 == 0:
+
+                list_warnings.append(f'CBEAM: invalid f={f} value (fe={fe}) -> f=1...eid={eid} pid={pid} '
+                                     f'nodes=[{ga},{gb}] x=[{x1},{x2},{x3}]; g0={g0} xx=[{xxa},{xxb}]')
+                f = 1
             #print(f'eid={eid} fe={fe} f={f}')
             if op2.is_debug_file:
                 op2.binary_debug.write('  CBEAM eid=%s f=%s fe=%s %s\n' % (
@@ -1069,6 +1087,8 @@ class GEOM2:
 
             self.add_op2_element(elem)
             n += ntotal
+        if len(list_warnings):
+            op2.log.warning('\n'.join(list_warnings))
         op2.card_count['CBEAM'] = nelements
         return n
 
