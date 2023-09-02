@@ -555,8 +555,8 @@ class Writer():
         # solid
         bdf_file.write(model.psolid.write(size=8))
         bdf_file.write(model.plsolid.write(size=8))
-        #bdf_file.write(model.pcomps.write(size=8))
-        #bdf_file.write(model.pcompls.write(size=8))
+        bdf_file.write(model.pcomps.write(size=8))
+        bdf_file.write(model.pcompls.write(size=8))
 
 
     def _write_materials(self, bdf_file: Any, size: int=8, is_double: bool=False,
@@ -570,7 +570,8 @@ class Writer():
                         #self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
                         #self.MATT8 or self.MATT9 or self.nxstrats or is_big_materials)
         structural_materials = [
-            model.mat1, model.mat2, model.mat8, model.mat9, # model.mat10, model.mat11,
+            model.mat1, model.mat2, model.mat3,
+            model.mat8, model.mat9, model.mat10, model.mat11,
             #model.mat10c, model.matort,
             #model.mathe, model.mathp,  # hyperelastic
         ]
@@ -585,8 +586,8 @@ class Writer():
             #bdf_file.write(model.mat3.write(size=8))
             bdf_file.write(model.mat8.write(size=8))
             bdf_file.write(model.mat9.write(size=8))
-            #bdf_file.write(model.mat10.write(size=8))
-            #bdf_file.write(model.mat11.write(size=8))
+            bdf_file.write(model.mat10.write(size=8))
+            bdf_file.write(model.mat11.write(size=8))
             #bdf_file.write(model.mat10c.write(size=8))
             #bdf_file.write(model.matort.write(size=8))
             #bdf_file.write(model.mathe.write(size=8))

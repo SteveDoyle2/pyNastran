@@ -2542,8 +2542,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CPYRAM' : partial(self._prepare_card, self.cpyram),
             'PSOLID': partial(self._prepare_card, self.psolid),
             'PLSOLID': partial(self._prepare_card, self.plsolid),
-            #'PCOMPS': partial(self._prepare_card, self.pcomps),
-            #'PCOMPLS': partial(self._prepare_card, self.pcompls),
+            'PCOMPS': partial(self._prepare_card, self.pcomps),
+            'PCOMPLS': partial(self._prepare_card, self.pcompls),
 
             #'CHACAB' : partial(self._prepare_card, self.chacab),
             #'CHACBR' : partial(self._prepare_card, self.chacbr),
@@ -2631,8 +2631,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             ## there is no MAT6 or MAT7
             'MAT8' : partial(self._prepare_card, self.mat8),
             'MAT9' : partial(self._prepare_card, self.mat9),
-            #'MAT10' : partial(self._prepare_card, self.mat10),
-            #'MAT11' : partial(self._prepare_card, self.mat11),
+            'MAT10' : partial(self._prepare_card, self.mat10),
+            'MAT11' : partial(self._prepare_card, self.mat11),
             #'MAT10C' : partial(self._prepare_card, self.mat10c),
             #'MATORT' : partial(self._prepare_card, self.matort),
 

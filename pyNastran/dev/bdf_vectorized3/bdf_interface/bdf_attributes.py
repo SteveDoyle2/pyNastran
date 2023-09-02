@@ -33,7 +33,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
 #)
 from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     CTETRA, CHEXA, CPENTA, CPYRAM,
-    PSOLID, PLSOLID, # PCOMPS, PCOMPLS,
+    PSOLID, PLSOLID, PCOMPS, PCOMPLS,
     #CHACAB, CHACBR,
 )
 #from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
@@ -69,7 +69,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import (
 from pyNastran.dev.bdf_vectorized3.cards.materials import (
     MAT1,
     MAT2, # MAT3, MAT4, MAT5,
-    MAT8, MAT9, # MAT10, MAT11,
+    MAT8, MAT9, MAT10, MAT11,
     #MAT10C, MATORT, MATHE, MATHP,
 )
 
@@ -92,11 +92,11 @@ from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
     #get_static_loads_by_subcase_id,
     #get_reduced_static_load,
     #sum_forces_moments)
-#from .breakdowns import (
-    #get_mass_breakdown, get_length_breakdown,
-    #get_area_breakdown, get_volume_breakdown,
-    #NO_LENGTH, NO_AREA, NO_VOLUME, NO_MASS,
-#)
+from .breakdowns import (
+    get_mass_breakdown, get_length_breakdown,
+    get_area_breakdown, get_volume_breakdown,
+    NO_LENGTH, NO_AREA, NO_VOLUME, NO_MASS,
+)
 
 
 if TYPE_CHECKING:
@@ -320,8 +320,8 @@ class BDFAttributes:
         self.cpyram = CPYRAM(self)
         self.psolid = PSOLID(self)
         self.plsolid = PLSOLID(self)
-        #self.pcomps = PCOMPS(self)
-        #self.pcompls = PCOMPLS(self)
+        self.pcomps = PCOMPS(self)
+        self.pcompls = PCOMPLS(self)
         #self.solid_properties = []
 
         # mass
@@ -420,8 +420,8 @@ class BDFAttributes:
         #self.mat5 = MAT5(self)
         self.mat8 = MAT8(self)
         self.mat9 = MAT9(self)
-        #self.mat10 = MAT10(self)
-        #self.mat11 = MAT11(self)
+        self.mat10 = MAT10(self)
+        self.mat11 = MAT11(self)
         #self.mat10c = MAT10C(self)
         #self.matort = MATORT(self)
         #self.mathe = MATHE(self)
@@ -648,7 +648,7 @@ class BDFAttributes:
     @property
     def solid_properties(self) -> list[Any]:
         properties = [
-            self.psolid, # self.plsolid, self.pcomps, self.pcompls,
+            self.psolid, self.plsolid, self.pcomps, self.pcompls,
         ]
         return properties
 

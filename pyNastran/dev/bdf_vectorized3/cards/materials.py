@@ -1101,3 +1101,334 @@ class MAT9(Material):
                            + A + [tref, ge])
             lines.append(print_card_8(list_fields))
         return ''.join(lines)
+
+
+class MAT10(Material):
+    """
+    Defines material properties for fluid elements in coupled fluid-structural
+    analysis.
+
+    +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+    |   1   |  2  |    3     |    4    |  5  |   6    |     7     |  8  |  9  |
+    +=======+=====+==========+=========+=====+========+===========+=====+=====+
+    | MAT10 | MID |   BULK   |   RHO   |  C  |   GE   |   ALPHA   |     |     |
+    +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+
+    per MSC 2016
+
+    +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+    |   1   |  2  |    3     |    4    |  5  |   6    |     7     |  8  |  9  |
+    +=======+=====+==========+=========+=====+========+===========+=====+=====+
+    | MAT10 | MID |   BULK   |   RHO   |  C  |   GE   |   GAMMA   |     |     |
+    +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+    |       |     | TID_BULK | TID_RHO |     | TID_GE | TID_GAMMA |     |     |
+    +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+
+    per NX 10
+
+    ..note :: alpha is called gamma
+
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.is_alpha = True
+
+    def add_card(self, card: BDFCard, comment: str=''):
+        mid = integer(card, 1, 'mid')
+        bulk = double_or_blank(card, 2, 'bulk')
+        rho = double_or_blank(card, 3, 'rho', default=0.0)
+        c = double_or_blank(card, 4, 'c', default=np.nan)
+        ge = double_or_blank(card, 5, 'ge', default=0.0)
+
+        alpha_gamma = double_or_blank(card, 6, 'gamma', default=np.nan)
+        tid_bulk = integer_or_blank(card, 10, 'tid_bulk', default=0)
+        tid_rho = integer_or_blank(card, 11, 'tid_rho', default=0)
+        tid_ge = integer_or_blank(card, 13, 'tid_ge', default=0)
+        tid_gamma = integer_or_blank(card, 14, 'tid_gamma', default=0)
+        assert len(card) <= 15, f'len(MAT10 card) = {len(card):d}\ncard={card}'
+        self.cards.append((mid, bulk, rho, c, ge, alpha_gamma,
+                           tid_bulk, tid_rho, tid_ge, tid_gamma, comment))
+        self.n += 1
+
+    def parse_cards(self):
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+        material_id = np.zeros(ncards, dtype='int32')
+        bulk = np.zeros(ncards, dtype='float64')
+        c  = np.zeros(ncards, dtype='float64')
+        rho = np.zeros(ncards, dtype='float64')
+        alpha_gamma = np.zeros(ncards, dtype='float64')
+        ge = np.zeros(ncards, dtype='float64')
+        table_id_bulk = np.zeros(ncards, dtype='int32')
+        table_id_rho = np.zeros(ncards, dtype='int32')
+        table_id_ge = np.zeros(ncards, dtype='int32')
+        table_id_gamma = np.zeros(ncards, dtype='int32')
+
+        for icard, card in enumerate(self.cards):
+            (mid, bulki, rhoi, ci, gei, alpha_gammai,
+             tid_bulk, tid_rho, tid_ge, tid_gamma, comment) = card
+            material_id[icard] = mid
+            bulk[icard] = bulki
+            c[icard] = ci
+            rho[icard] = rhoi
+            ge[icard] = gei
+            alpha_gamma[icard] = alpha_gammai
+            table_id_bulk[icard] = tid_bulk
+            table_id_rho[icard] = tid_rho
+            table_id_ge[icard] = tid_ge
+            table_id_gamma[icard] = tid_gamma
+
+        is_alpha = self.model.is_msc
+        self._save(material_id, bulk, rho, c, ge, alpha_gamma,
+                   table_id_bulk, table_id_rho, table_id_ge, table_id_gamma,
+                   is_alpha=is_alpha)
+        self.sort()
+        self.cards = []
+
+    def _save(self, material_id, bulk, rho, c, ge, alpha_gamma,
+              table_id_bulk, table_id_rho, table_id_ge, table_id_gamma,
+              is_alpha: bool):
+        """is_alpha=True for MSC otherwise False"""
+        self.material_id = material_id
+        self.bulk = bulk
+        self.rho = rho
+        self.c = c
+        self.ge = ge
+        self.alpha_gamma = alpha_gamma
+        self.is_alpha = is_alpha
+
+        self.table_id_bulk = table_id_bulk
+        self.table_id_rho = table_id_rho
+        self.table_id_ge = table_id_ge
+        self.table_id_gamma = table_id_gamma
+        self.n = len(material_id)
+
+    #def _save_msc(self, material_id, bulk, rho, c, ge, alpha):
+        #nmaterial = len(material_id)
+        #self.material_id = material_id
+        #self.bulk = bulk
+        #self.rho = rho
+        #self.c = c
+        #self.ge = ge
+        #if alpha is None:
+            #alpha = np.zeros(nmaterial, dtype=bulk.dtype)
+        #self.alpha_gamma = alpha
+        #self.is_alpha = True
+        #self.n = nmaterial
+        #assert material_id.min() >= 1, material_id
+
+    def _save_msc(self, material_id, bulk, rho, c, ge, alpha):
+        nmaterials = len(material_id)
+        self.material_id = material_id
+        self.bulk = bulk
+        self.rho = rho
+        self.c = c
+        self.ge = ge
+        if alpha is None:
+            alpha = np.zeros(nmaterials, dtype=bulk.dtype)
+        self.alpha_gamma = alpha
+        self.is_alpha = True
+        self.n = nmaterials
+        assert alpha is not None
+
+        self.table_id_bulk = np.zeros(nmaterials, dtype=material_id.dtype)
+        self.table_id_rho = np.zeros(nmaterials, dtype=material_id.dtype)
+        self.table_id_ge = np.zeros(nmaterials, dtype=material_id.dtype)
+        self.table_id_gamma = np.zeros(nmaterials, dtype=material_id.dtype)
+
+    def __apply_slice__(self, mat: MAT10, i: np.ndarray) -> None:
+        mat.n = len(i)
+        mat.material_id = self.material_id[i]
+        mat.bulk = self.bulk[i]
+        mat.c = self.c[i]
+        mat.rho = self.rho[i]
+        mat.ge = self.ge[i]
+        mat.alpha_gamma = self.alpha_gamma[i]
+        mat.table_id_bulk = self.table_id_bulk[i]
+        mat.table_id_rho = self.table_id_rho[i]
+        mat.table_id_ge = self.table_id_ge[i]
+        mat.table_id_gamma = self.table_id_gamma[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    def write(self, size: int=8) -> str:
+        if len(self.material_id) == 0:
+            return ''
+        lines = []
+        material_ids = array_str(self.material_id)
+        for mid, bulk, rho, c, ge, gamma, \
+            table_bulk, table_rho, table_ge, table_gamma in zip_longest(
+                material_ids, self.bulk, self.rho, self.c, self.ge, self.alpha_gamma,
+                self.table_id_bulk, self.table_id_rho, self.table_id_ge, self.table_id_gamma):
+
+            rho = set_blank_if_default(rho, 0.)
+            list_fields = [
+                'MAT10', mid, bulk, rho, c, ge, gamma,
+                None, None, None,
+                table_bulk, table_rho, None, table_ge, table_gamma
+            ]
+            lines.append(print_card_8(list_fields))
+        return ''.join(lines)
+
+
+class MAT11(Material):
+    """
+    Defines the material properties for a 3D orthotropic material for
+    isoparametric solid elements.
+
+    +-------+-----+-----+-----+----+------+------+------+-----+
+    |   1   |  2  |  3  |  4  |  5 |   6  |  7   |  8   |  9  |
+    +=======+=====+=====+=====+====+======+======+======+=====+
+    | MAT11 | MID |  E1 | E2  | E3 | NU12 | NU13 | NU23 | G12 |
+    +-------+-----+-----+-----+----+------+------+------+-----+
+    |       | G13 | G23 | RHO | A1 |  A2  |  A3  | TREF | GE  |
+    +-------+-----+-----+-----+----+------+------+------+-----+
+
+    """
+    def add_card(self, card: BDFCard, comment: str=''):
+        mid = integer(card, 1, 'mid')
+        e1 = double(card, 2, 'E1')
+        e2 = double(card, 3, 'E2')
+        e3 = double(card, 4, 'E3')
+
+        nu12 = double(card, 5, 'nu12')
+        nu13 = double(card, 6, 'nu13')
+        nu23 = double(card, 7, 'nu23')
+
+        g12 = double(card, 8, 'g12')
+        g13 = double(card, 9, 'g13')
+        g23 = double(card, 10, 'g23')
+
+        rho = double_or_blank(card, 11, 'rho', default=0.0)
+        a1 = double_or_blank(card, 12, 'a1', default=0.0)
+        a2 = double_or_blank(card, 13, 'a2', default=0.0)
+        a3 = double_or_blank(card, 14, 'a3', default=0.0)
+
+        tref = double_or_blank(card, 15, 'tref', default=0.0)
+        ge = double_or_blank(card, 16, 'ge', default=0.0)
+        assert len(card) <= 17, f'len(MAT11 card) = {len(card):d}\ncard={card}'
+        self.cards.append((mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
+                           rho, a1, a2, a3, tref, ge, comment))
+        self.n += 1
+
+    def parse_cards(self):
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+
+        self.material_id = np.zeros(ncards, dtype='int32')
+
+        self.bulk = np.zeros(ncards, dtype='float64')
+
+        self.e1 = np.zeros(ncards, dtype='float64')
+        self.e2 = np.zeros(ncards, dtype='float64')
+        self.e3 = np.zeros(ncards, dtype='float64')
+
+        self.nu12 = np.zeros(ncards, dtype='float64')
+        self.nu13 = np.zeros(ncards, dtype='float64')
+        self.nu23 = np.zeros(ncards, dtype='float64')
+
+        self.g12 = np.zeros(ncards, dtype='float64')
+        self.g13 = np.zeros(ncards, dtype='float64')
+        self.g23 = np.zeros(ncards, dtype='float64')
+
+        self.alpha1 = np.zeros(ncards, dtype='float64')
+        self.alpha2 = np.zeros(ncards, dtype='float64')
+        self.alpha3 = np.zeros(ncards, dtype='float64')
+
+        self.tref = np.zeros(ncards, dtype='float64')
+        self.ge = np.zeros(ncards, dtype='float64')
+        self.rho = np.zeros(ncards, dtype='float64')
+
+        self.ge = np.zeros(ncards, dtype='float64')
+
+        for i, card in enumerate(self.cards):
+            (mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, a1, a2, a3, tref, ge, comment) = card
+            self.material_id[i] = mid
+            self.e1[i] = e1
+            self.e2[i] = e2
+            self.e3[i] = e3
+
+            self.nu12[i] = nu12
+            self.nu13[i] = nu13
+            self.nu23[i] = nu23
+
+            self.g12[i] = g12
+            self.g13[i] = g13
+            self.g23[i] = g23
+
+            self.alpha1[i] = a1
+            self.alpha2[i] = a2
+            self.alpha3[i] = a3
+            self.tref[i] = tref
+            self.ge[i] = ge
+        self.sort()
+        self.cards = []
+
+    def __apply_slice__(self, mat: MAT11, i: np.ndarray) -> None:
+        mat.n = len(i)
+        mat.material_id = self.material_id[i]
+
+        mat.e1 = self.e1[i]
+        mat.e2 = self.e2[i]
+        mat.e3 = self.e3[i]
+
+        mat.nu12 = self.nu12[i]
+        mat.nu13 = self.nu13[i]
+        mat.nu23 = self.nu23[i]
+
+        mat.g12 = self.g12[i]
+        mat.g13 = self.g13[i]
+        mat.g23 = self.g23[i]
+
+        mat.alpha1 = self.alpha1[i]
+        mat.alpha2 = self.alpha2[i]
+        mat.alpha3 = self.alpha3[i]
+        mat.tref = self.tref[i]
+        mat.ge = self.ge[i]
+
+        #mat.bulk = self.bulk[i]
+        #mat.c = self.c[i]
+        #mat.rho = self.rho[i]
+        #mat.ge = self.ge[i]
+        #mat.gamma = self.gamma[i]
+        #mat.table_id_bulk = self.table_id_bulk[i]
+        #mat.table_id_rho = self.table_id_rho[i]
+        #mat.table_id_ge = self.table_id_ge[i]
+        #mat.table_id_gamma = self.table_id_gamma[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    def write(self, size: int=8) -> str:
+        if len(self.material_id) == 0:
+            return ''
+        lines = []
+        material_ids = array_str(self.material_id)
+        for mid, e1, e2, e3, nu12, nu13, nu23, \
+            g12, g13, g23, rho, a1, a2, a3, tref, ge in zip_longest(material_ids, self.e1, self.e2, self.e3,
+                                                                    self.nu12, self.nu13, self.nu23,
+                                                                    self.g12, self.g13, self.g23, self.rho,
+                                                                    self.alpha1, self.alpha2, self.alpha3, self.tref, self.ge):
+
+            a1 = set_blank_if_default(a1, 0.0)
+            a2 = set_blank_if_default(a2, 0.0)
+            a3 = set_blank_if_default(a3, 0.0)
+
+            tref = set_blank_if_default(tref, 0.0)
+            rho = set_blank_if_default(rho, 0.0)
+            ge = set_blank_if_default(ge, 0.0)
+
+            list_fields = ['MAT11', mid, e1, e2, e3, nu12,
+                           nu13, nu23, g12, g13, g23, rho, a1,
+                           a2, a3, tref, ge]
+            lines.append(print_card_8(list_fields))
+        return ''.join(lines)
+
+
