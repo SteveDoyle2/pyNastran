@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Set, Optional, Any
 
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, SPOINT, GRDSET # , POINT
-#from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
-#from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
+from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
+from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
 #from pyNastran.dev.bdf_vectorized3.cards.elements.bush import CBUSH, PBUSH, PBUSHT, CBUSH1D, PBUSH1D, CBUSH2D, PBUSH2D
 #from pyNastran.dev.bdf_vectorized3.cards.elements.fast import CFAST, PFAST
 #from pyNastran.dev.bdf_vectorized3.cards.elements.genel import GENEL
@@ -224,13 +224,13 @@ class BDFAttributes:
         #self.pgap = PGAP(self)
 
         # rod
-        #self.crod = CROD(self)
-        #self.prod = PROD(self)
-        #self.conrod = CONROD(self)
+        self.crod = CROD(self)
+        self.prod = PROD(self)
+        self.conrod = CONROD(self)
 
         # tube
-        #self.ctube = CTUBE(self)
-        #self.ptube = PTUBE(self)
+        self.ctube = CTUBE(self)
+        self.ptube = PTUBE(self)
 
         # bush
         #self.cbush = CBUSH(self)
@@ -249,12 +249,12 @@ class BDFAttributes:
         # genel
         #self.genel = GENEL(self)
 
-        #self.baror = None
-        #self.cbar = CBAR(self)
-        #self.cbarao = CBARAO(self)
-        #self.pbar = PBAR(self)
-        #self.pbarl = PBARL(self)
-        #self.pbrsect = PBRSECT(self)
+        self.baror = None
+        self.cbar = CBAR(self)
+        self.cbarao = CBARAO(self)
+        self.pbar = PBAR(self)
+        self.pbarl = PBARL(self)
+        self.pbrsect = PBRSECT(self)
         #self.bar_properties = [self.pbar, self.pbarl, self.pbrsect]
 
         #self.beamor = None
@@ -608,8 +608,8 @@ class BDFAttributes:
             #self.cvisc, self.cgap,
             #self.cbush, self.cbush1d, # self.cbush2d,
             #self.cfast,
-            #self.crod, self.conrod, self.ctube,
-            #self.cbar,
+            self.crod, self.conrod, self.ctube,
+            self.cbar,
             #self.cbeam,
             #self.cshear,
             #self.caabsf, # acoustic shells
@@ -626,7 +626,7 @@ class BDFAttributes:
     @property
     def bar_properties(self) -> list[Any]:
         properties = [
-            #self.pbar, self.pbarl, self.pbrsect,
+            self.pbar, self.pbarl, self.pbrsect,
         ]
         return properties
 
@@ -661,7 +661,7 @@ class BDFAttributes:
             #self.pbush1d, # self.pbush2d,
             #self.pfast,
             #self.pvisc, self.pgap,
-            #self.prod, self.ptube,
+            self.prod, self.ptube,
             ] + self.bar_properties + self.beam_properties + [
             #self.pshear,
         ] + self.shell_properties + self.solid_properties + [
@@ -861,7 +861,7 @@ class BDFAttributes:
             self.coord,
             #self.snorm,
             #self.suport, # self.suport1,
-            #self.cbarao,
+            self.cbarao,
         ] + self.spcs + self.mpcs + self.elements + self.rigid_elements + \
         self.properties + self.materials + self.optimization + self.loads + self.dynamic_loads + \
         self.plot_elements + self.thermal_elements + self.thermal_boundary_conditions + self.sets + \

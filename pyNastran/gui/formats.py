@@ -115,6 +115,11 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
+try:
+    from pyNastran.dev.bdf_vectorized3.nastran_io3 import Nastran3
+    CLASS_MAP['nastran3'] = Nastran3
+except ImportError:  # pragma: no cover
+    pass
 
 if DEV:
     try:

@@ -30,7 +30,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     """the interface to ``f06 plot_145`` on the command line"""
     import sys
     import os
-    from docopt import docopt
+    from docopt import docopt, __version__ as docopt_version
     import pyNastran
     from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
     if argv is None:
@@ -94,6 +94,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
+    assert docopt_version >= '0.9.0', docopt_version
     data = docopt(msg, version=ver, argv=argv[1:])
     f06_filename = data['F06_FILENAME']
     if f06_filename.lower().endswith(('.bdf', '.op2')):

@@ -624,8 +624,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
             #'CFAST',
 
-            #'CBAR', 'CBARAO', 'BAROR',
-            #'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND', 'BEAMOR',
+            'CBAR', 'CBARAO', 'BAROR',
+            'CROD', 'CTUBE',
+            'CBEAM', 'CBEAM3', 'CONROD', 'CBEND', 'BEAMOR',
             'CTRIA3', 'CTRIA6', 'CTRIAR',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
             #'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
@@ -656,7 +657,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
             #'PBUSH', 'PBUSH1D',
             #'PDAMP', 'PDAMP5',
-            #'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', 'PBEND',
+            'PROD', 'PBAR', 'PBARL', 'PTUBE',
+            # 'PBEAM', 'PBCOMP', 'PBRSECT', 'PBEND',
             #'PBEAML', 'PBMSECT', # not fully supported
             #'PBEAM3',  # v1.3
 
@@ -2462,20 +2464,20 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'NSML1' : partial(self._prepare_card, self.nsml1),
 
             # rod
-            #'CONROD' : partial(self._prepare_card, self.conrod),
-            #'CROD' : partial(self._prepare_card, self.crod),
-            #'PROD' : partial(self._prepare_card, self.prod),
+            'CONROD' : partial(self._prepare_card, self.conrod),
+            'CROD' : partial(self._prepare_card, self.crod),
+            'PROD' : partial(self._prepare_card, self.prod),
 
             # tube
-            #'CTUBE' : partial(self._prepare_card, self.ctube),
-            #'PTUBE' : partial(self._prepare_card, self.ptube),
+            'CTUBE' : partial(self._prepare_card, self.ctube),
+            'PTUBE' : partial(self._prepare_card, self.ptube),
 
             # bar
-            #'CBAR': partial(self._prepare_card, self.cbar),
-            #'PBAR': partial(self._prepare_card, self.pbar),
-            #'PBARL': partial(self._prepare_card, self.pbarl),
-            #'PBRSECT': partial(self._prepare_card, self.pbrsect),
-            #'CBARAO' : partial(self._prepare_card, self.cbarao),
+            'CBAR': partial(self._prepare_card, self.cbar),
+            'PBAR': partial(self._prepare_card, self.pbar),
+            'PBARL': partial(self._prepare_card, self.pbarl),
+            'PBRSECT': partial(self._prepare_card, self.pbrsect),
+            'CBARAO' : partial(self._prepare_card, self.cbarao),
 
             # beam
             #'CBEAM': partial(self._prepare_card, self.cbeam),

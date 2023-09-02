@@ -236,5 +236,13 @@ class TestF06Utils(unittest.TestCase):
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 
+    def test_cmd_line_plot_flutter_no_input(self):
+        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
+        argv = ['f06', 'plot_145', f06_filename, '--eas',
+                '--out_units', 'english_in']
+        cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
+        cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

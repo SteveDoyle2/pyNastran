@@ -22,6 +22,7 @@ EXCLUDE_WORDS = [
     'pyNastran.dev',
     'pyNastran.dev.xdb',
     'pyNastran.dev.bdf_vectorized', 'pyNastran.dev.bdf_vectorized.cards',
+    'pyNastran.dev.bdf_vectorized3', 'pyNastran.dev.op2_vectorized3',
 ]
 
 
@@ -204,8 +205,8 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
         #_add_nptyping(all_reqs, install_requires)
 
     if bdist:
-        all_reqs['docopt-ng'] = '>= 0.8.1'
-        install_requires.append('docopt-ng >= 0.8.1')  # 0.8.1 used
+        all_reqs['docopt-ng'] = '>= 0.9.0'
+        install_requires.append('docopt-ng >= 0.9.0')  # 0.9.0 used
     else:
         _add_docopt(all_reqs, install_requires)
 
@@ -235,13 +236,13 @@ def _add_docopt(all_reqs, install_requires):
         import docopt
         iver = int_version('docopt', docopt.__version__)
         all_reqs['docopt-ng'] = str_version(iver)
-        if iver < [0, 8, 1]:
+        if iver < [0, 9, 0]:
             print(f'docopt.__version__ = {docopt.__version__!r} < {required_version_str!r}')
             all_reqs['docopt-ng'] = f'>= {required_version_str}'
             install_requires.append(f'docopt-ng >= {required_version_str}')
     except ImportError:
         all_reqs['docopt-ng'] = f'>= {required_version_str}'
-        install_requires.append(f'docopt-ng >= {required_version_str}')  # 0.8.1 used
+        install_requires.append(f'docopt-ng >= {required_version_str}')  # 0.9.0 used
 
 def _add_numpy(version_check, required_version,
                all_reqs, install_requires):

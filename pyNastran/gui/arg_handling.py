@@ -68,7 +68,7 @@ def determine_format(input_filename: str,
             'avl', 'vtk',
         ]
         if DEV:
-            allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran', 'nastran2'])
+            allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran', 'nastran2', 'nastran3'])
     print(f'allowed_formats = {allowed_formats}')
 
     ext = os.path.splitext(input_filename)[1].lower()
@@ -468,7 +468,7 @@ def _validate_format(input_formats: list[str]) -> None:
     ]
 
     if DEV:
-        allowed_formats += ['obj', 'h5nastran', 'nastran2']
+        allowed_formats += ['obj', 'h5nastran', 'nastran2', 'nastran3']
 
     for input_format in input_formats:
         if None in allowed_formats:

@@ -161,7 +161,7 @@ class Writer():
 
         if model.run_testing_checks:
             model.quality()
-            model.spcadd.get_reduced_spcs()
+            #model.spcadd.get_reduced_spcs()
 
         self._write_params(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_nodes(bdf_file, nodes_size, is_double, is_long_ids=is_long_ids)
@@ -397,13 +397,13 @@ class Writer():
         #bdf_file.write(model.cfast.write(size=8))
 
         # rod
-        #bdf_file.write(model.crod.write(size=8))
-        #bdf_file.write(model.conrod.write(size=8))
-        #bdf_file.write(model.ctube.write(size=8))
+        bdf_file.write(model.crod.write(size=8))
+        bdf_file.write(model.conrod.write(size=8))
+        bdf_file.write(model.ctube.write(size=8))
 
         # bar/beam/shear
-        #bdf_file.write(model.cbar.write(size=8))
-        #bdf_file.write(model.cbarao.write(size=8))
+        bdf_file.write(model.cbar.write(size=8))
+        bdf_file.write(model.cbarao.write(size=8))
         #bdf_file.write(model.cbeam.write(size=8))
         #bdf_file.write(model.cshear.write(size=8))
 
@@ -526,13 +526,13 @@ class Writer():
         #bdf_file.write(model.pfast.write(size=8))
 
         # rod
-        #bdf_file.write(model.prod.write(size=8))
-        #bdf_file.write(model.ptube.write(size=8))
+        bdf_file.write(model.prod.write(size=8))
+        bdf_file.write(model.ptube.write(size=8))
 
         # bar
-        #bdf_file.write(model.pbar.write(size=8))
-        #bdf_file.write(model.pbarl.write(size=8))
-        #bdf_file.write(model.pbrsect.write(size=8))
+        bdf_file.write(model.pbar.write(size=8))
+        bdf_file.write(model.pbarl.write(size=8))
+        bdf_file.write(model.pbrsect.write(size=8))
 
         # beam
         #bdf_file.write(model.pbeam.write(size=8))
