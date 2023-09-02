@@ -3,7 +3,13 @@
 
 import sys
 import os
+try:
+    import tables
+    IS_TABLES = True
+except ImportError:
+    IS_TABLES = False
 import pyNastran
+
 pkg_path = pyNastran.__path__[0]
 
 # , 'py_to_rst.py'
@@ -17,7 +23,6 @@ from notebook_to_markdown import create_rst_from_ipython_notebooks
 #bdf
 from pyNastran.bdf.test.all_tests import *
 from pyNastran.dev.bdf_vectorized2.bdfv_unit_tests import *
-from pyNastran.dev.bdf_vectorized3.test.bdfv_unit_tests import *
 
 #op2
 from pyNastran.op2.test.all_tests import *
@@ -44,6 +49,9 @@ from pyNastran.gui.test.all_tests_no_gui import *
 
 try:
     from pyNastran.dev.solver.test_springs import *
+    if IS_TABLES:
+        from pyNastran.dev.bdf_vectorized3.test.bdfv_unit_tests import *
+        from pyNastran.dev.bdf_vectorized3.test.test_numpy_utils import *
 except ImportError:  # pragma: no cover
     pass
 
