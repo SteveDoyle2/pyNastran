@@ -177,7 +177,7 @@ jobs:
                  matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
-          pip install h5py
+          pip install h5py tables
 
       - name: Install latest packages (imageio, pillow)
         if: ${{ matrix.python-version != '3.11' && (
