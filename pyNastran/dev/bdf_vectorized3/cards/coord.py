@@ -447,7 +447,7 @@ class COORD(VectorizedBaseCard):
     #def add_cord2s(self, card: BDFCard, comment: str='') -> int:
         #return self._add_cord2('S', card, comment)
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncoords1 = len(self.cards1)
@@ -881,7 +881,7 @@ class COORD(VectorizedBaseCard):
             unresolved_cids.remove(cid)
         return nresolved
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.coord_id) == 0:
             return ''
 

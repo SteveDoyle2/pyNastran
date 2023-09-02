@@ -531,7 +531,6 @@ class TestSolids(unittest.TestCase):
 
         # -------------------
 
-
         end_checks(model)
         save_load_deck(model)
 
@@ -562,8 +561,8 @@ class TestSolids(unittest.TestCase):
         model.setup()
         elem2 = model.Element(eid)[0]
         elem2.write(size=8)
-        #elem2.write_card(size=16)
-        #elem2.write_card_16(is_double=False)
+        elem2.write(size=16)
+        elem2.write_16(is_double=False)
         end_checks(model)
         save_load_deck(model)
 

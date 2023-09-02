@@ -200,7 +200,7 @@ class CBAR(Element):
         elem.wb = self.wb[i, :]
         elem.n = len(i)
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -275,7 +275,7 @@ class CBAR(Element):
         self.wa = wa
         self.wb = wb
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
 
@@ -425,7 +425,7 @@ class PBAR(Property):
                            e1, e2, f1, f2, k1, k2, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         A = double_or_blank(card, 3, 'A', default=0.0)
@@ -463,8 +463,9 @@ class PBAR(Property):
         self.cards.append((pid, mid, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
                            e1, e2, f1, f2, k1, k2, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -669,7 +670,7 @@ class PBAR(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
         lines = []
@@ -845,7 +846,7 @@ class PBARL(Property):
         self.cards.append((pid, mid, group, bar_type, dim, nsm, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         group = string_or_blank(card, 3, 'group', default='MSCBML0')
@@ -895,8 +896,9 @@ class PBARL(Property):
         assert len(card) <= 17, f'len(CBAR card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, group, bar_type, dim, nsm, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1107,7 +1109,7 @@ class PBRSECT(Property):
         self.n += 1
         #return PBRSECT(pid, mid, form, options, comment=comment)
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1152,7 +1154,7 @@ class PBRSECT(Property):
         self.sort()
         self.cards = []
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         return ''
 
 
@@ -1269,7 +1271,7 @@ class CBARAO(Element):
         elem.nstation = self.nstation[i]
         elem.n = len(i)
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1304,7 +1306,7 @@ class CBARAO(Element):
         istation = make_idim(self.n, self.nstation)
         return istation
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:

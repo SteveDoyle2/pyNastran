@@ -358,7 +358,7 @@ class Writer():
             bdf_file.write('$NODES\n')
             #if self.grdset:
                 #bdf_file.write(self.grdset.write_card(size))
-            bdf_file.write(model.grid.write(size=8))
+            bdf_file.write(model.grid.write(size=size, is_double=is_double))
         #if model.point.n:
             #bdf_file.write('$ POINTS\n')
             #bdf_file.write(model.point.write(size=8))
@@ -570,7 +570,7 @@ class Writer():
                         #self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
                         #self.MATT8 or self.MATT9 or self.nxstrats or is_big_materials)
         structural_materials = [
-            model.mat1, model.mat2, model.mat3,
+            model.mat1, model.mat2, # model.mat3,
             model.mat8, model.mat9, model.mat10, model.mat11,
             #model.mat10c, model.matort,
             #model.mathe, model.mathp,  # hyperelastic

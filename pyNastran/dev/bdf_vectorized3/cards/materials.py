@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import zip_longest
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
@@ -157,7 +157,7 @@ class MAT1(Material):
                            mcsid, comment))
         self.n += 1
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -246,7 +246,7 @@ class MAT1(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
 
@@ -315,7 +315,7 @@ class MAT2(Material):
             a1: Optional[float]=None, a2: Optional[float]=None, a3: Optional[float]=None,
             tref: float=0., ge: float=0.,
             St: Optional[float]=None, Sc: Optional[float]=None, Ss: Optional[float]=None,
-            mcsid: Optional[int]=None, comment: str='') -> MAT2:
+            mcsid: Optional[int]=None, comment: str='') -> int:
         """Creates an MAT2 card"""
         if a1 is None:
             a1 = np.nan
@@ -338,6 +338,7 @@ class MAT2(Material):
                            [a1, a2, a3], tref, ge, St, Sc, Ss,
                            mcsid, ge_matrix, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str=''):
         mid = integer(card, 1, 'mid')
@@ -377,7 +378,7 @@ class MAT2(Material):
                            [a1, a2, a3], tref, ge, St, Sc, Ss, mcsid, ge_matrix, comment))
         self.n += 1
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -517,7 +518,7 @@ class MAT2(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
 
@@ -619,7 +620,7 @@ class MAT8(Material):
             rho: float=0., a1: float=0., a2: float=0., tref: float=0.,
             xt: float=0., xc: float=None, yt: float=0., yc: float=None,
             s: float=0., ge: float=0., f12: float=0., strn: float=0.,
-            comment: str='') -> MAT8:
+            comment: str='') -> int:
         """Creates a MAT8 card"""
         xc = xc if xc is not None else xt
         yc = yc if yc is not None else yt
@@ -645,6 +646,7 @@ class MAT8(Material):
         self.cards.append((mid, e11, e22, nu12, g12, g1z, g2z, rho, [a1, a2], tref,
                            xt, xc, yt, yc, s, ge, f12, strn, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str=''):
         mid = integer(card, 1, 'mid')
@@ -673,7 +675,7 @@ class MAT8(Material):
                            xt, xc, yt, yc, s, ge, f12, strn, comment))
         self.n += 1
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -792,7 +794,7 @@ class MAT8(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
         lines = []
@@ -867,7 +869,7 @@ class MAT9(Material):
                            G55, G56, G66, rho, A, tref, ge, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         G11 = double_or_blank(card, 2, 'G11', default=0.0)
         G12 = double_or_blank(card, 3, 'G12', default=0.0)
@@ -906,8 +908,9 @@ class MAT9(Material):
                            G44, G45, G46,
                            G55, G56, G66, rho, alpha, tref, ge, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1067,7 +1070,7 @@ class MAT9(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
         lines = []
@@ -1150,7 +1153,7 @@ class MAT10(Material):
                            tid_bulk, tid_rho, tid_ge, tid_gamma, comment))
         self.n += 1
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1255,7 +1258,7 @@ class MAT10(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
         lines = []
@@ -1315,7 +1318,7 @@ class MAT11(Material):
                            rho, a1, a2, a3, tref, ge, comment))
         self.n += 1
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1406,7 +1409,7 @@ class MAT11(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
         lines = []

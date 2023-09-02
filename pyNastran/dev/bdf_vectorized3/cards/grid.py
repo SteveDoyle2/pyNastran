@@ -1,10 +1,11 @@
 from __future__ import annotations
 from itertools import zip_longest
 from collections import defaultdict
-from typing import Any, TYPE_CHECKING
+from typing import Callable, Any, TYPE_CHECKING
 import numpy as np
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8 # , print_field_8
+from pyNastran.bdf.field_writer_16 import print_scientific_16 # , print_field_16 # print_card_16,
+from pyNastran.bdf.field_writer_double import print_scientific_double
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.nodes import compress_xpoints
 from pyNastran.utils.numpy_utils import integer_types
@@ -63,8 +64,9 @@ class XPOINT(VectorizedBaseCard):
             ids.append(field)
         self.cards.append((ids, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -93,7 +95,7 @@ class XPOINT(VectorizedBaseCard):
         if not np.array_equal(uarg, iarg):
             self.ids = self.ids[iarg]
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         lines = []
         if size == 8:
             print_card = print_card_8
@@ -291,8 +293,9 @@ class GRID(VectorizedBaseCard):
             assert len(card) >= 2, f'len(GRID card) = {len(card):d}\ncard={card}'
         self.cards.append((nid, xyz, cp, cd, ps, seid, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -395,7 +398,7 @@ class GRID(VectorizedBaseCard):
         #self.cards = []
 
     def has_ps(self) -> bool:
-        return self.n and self.ps.max() > 0
+        return self.n > 0 and self.ps.max() > 0
 
     #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
         #inid = self._node_index(node_id)
@@ -470,11 +473,13 @@ class GRID(VectorizedBaseCard):
         coord_basic = self.cp.max() == 0 and self.cp.min() == 0 and self.cd.max() == 0 and self.cd.min() == 0
         return coord_basic
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.node_id) == 0:
             return ''
         if size == 8:
             msg = self.write_8()
+        elif is_double:
+            msg = self.write_double()
         else:
             msg = self.write_16()
         return msg
@@ -529,47 +534,10 @@ class GRID(VectorizedBaseCard):
         return coord_basic, extra_basic, is_basic
 
     def write_16(self) -> str:
-        coord_basic, extra_basic, is_basic = self._write_flags()
-        lines = []
-        node_id = array_str(self.node_id, size=16)
-        if is_basic:
-            for nid, xyz in zip_longest(node_id, self.xyz):
-                msg = ('GRID*   %16s                %16s%16s\n'
-                       '*       %16s\n' % (
-                           nid,
-                           print_scientific_16(xyz[0]),
-                           print_scientific_16(xyz[1]),
-                           print_scientific_16(xyz[2])))
-                lines.append(msg)
-        elif coord_basic: # cp=cd=0
-            cps = array_default_int(self.cp, size=16, default=0)
-            cds = array_default_int(self.cd, size=16, default=0)
-            for nid, cp, cd, xyz in zip_longest(node_id, cps, cds, self.xyz):
-                msg = ('GRID*   %16s%16s%16s%16s\n'
-                       '*       %16s%16s\n' % (
-                           nid,
-                           cp,
-                           print_scientific_16(xyz[0]),
-                           print_scientific_16(xyz[1]),
-                           print_scientific_16(xyz[2]),
-                           cd))
-                lines.append(msg)
-        else:
-            cps = array_default_int(self.cp, size=16, default=0)
-            cds = array_default_int(self.cd, size=16, default=0)
-            pss = array_default_int(self.ps, size=16, default=0)
-            seids = array_default_int(self.seid, size=16, default=0)
-            for nid, cp, cd, xyz, ps, seid in zip_longest(node_id, cps, cds, self.xyz, pss, seids):
-                msg = ('GRID*   %16s%16s%16s%16s\n'
-                       '*       %16s%16s%16s%16s\n' % (
-                           nid,
-                           cp,
-                           print_scientific_16(xyz[0]),
-                           print_scientific_16(xyz[1]),
-                           print_scientific_16(xyz[2]),
-                           cd, ps, seid))
-                lines.append(msg)
-        return ''.join(lines)
+        return _write_grid_large(self, print_scientific_16)
+
+    def write_double(self) -> str:
+        return _write_grid_large(self, print_scientific_double)
 
     def is_equal_by_index(self, inode1, inode2) -> bool:
         is_equal = True
@@ -649,7 +617,7 @@ class GRID(VectorizedBaseCard):
             # we need to filter nodes
             msg = f'len(self.node_id)={len(self.node_id)} != len(unid)={len(unid)}'
             print(msg)
-            x = 1
+            #x = 1
 
         #self.remove_duplicates(inplace=False)
         self._is_sorted = True
@@ -751,3 +719,47 @@ class GRID(VectorizedBaseCard):
         assert not np.any(np.isnan(xyz_cid0))
         assert xyz_cid0.shape[0] > 0, xyz_cid0.shape
         return xyz_cid0
+
+
+def _write_grid_large(grid: GRID, function: Callable[float]) -> str:
+    coord_basic, extra_basic, is_basic = grid._write_flags()
+    lines = []
+    node_id = array_str(grid.node_id, size=16)
+    if is_basic:
+        for nid, xyz in zip_longest(node_id, grid.xyz):
+            msg = ('GRID*   %16s                %16s%16s\n'
+                   '*       %16s\n' % (
+                       nid,
+                       print_scientific_16(xyz[0]),
+                       print_scientific_16(xyz[1]),
+                       print_scientific_16(xyz[2])))
+            lines.append(msg)
+    elif coord_basic: # cp=cd=0
+        cps = array_default_int(grid.cp, size=16, default=0)
+        cds = array_default_int(grid.cd, size=16, default=0)
+        for nid, cp, cd, xyz in zip_longest(node_id, cps, cds, grid.xyz):
+            msg = ('GRID*   %16s%16s%16s%16s\n'
+                   '*       %16s%16s\n' % (
+                       nid,
+                       cp,
+                       print_scientific_16(xyz[0]),
+                       print_scientific_16(xyz[1]),
+                       print_scientific_16(xyz[2]),
+                       cd))
+            lines.append(msg)
+    else:
+        cps = array_default_int(grid.cp, size=16, default=0)
+        cds = array_default_int(grid.cd, size=16, default=0)
+        pss = array_default_int(grid.ps, size=16, default=0)
+        seids = array_default_int(grid.seid, size=16, default=0)
+        for nid, cp, cd, xyz, ps, seid in zip_longest(node_id, cps, cds, grid.xyz, pss, seids):
+            msg = ('GRID*   %16s%16s%16s%16s\n'
+                   '*       %16s%16s%16s%16s\n' % (
+                       nid,
+                       cp,
+                       print_scientific_16(xyz[0]),
+                       print_scientific_16(xyz[1]),
+                       print_scientific_16(xyz[2]),
+                       cd, ps, seid))
+            lines.append(msg)
+    return ''.join(lines)

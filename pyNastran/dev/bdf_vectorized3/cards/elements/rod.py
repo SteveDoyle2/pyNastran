@@ -86,7 +86,7 @@ class CONROD(Element):
         elem.c = self.c[i]
         elem.nsm = self.nsm[i]
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -144,7 +144,7 @@ class CONROD(Element):
                    node=(nid, self.nodes),
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -215,7 +215,7 @@ class CROD(Element):
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -256,7 +256,7 @@ class CROD(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -330,7 +330,7 @@ class PROD(Property):
         prop.c = self.c[i]
         prop.nsm = self.nsm[i]
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -374,7 +374,7 @@ class PROD(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
         lines = []
@@ -444,7 +444,7 @@ class CTUBE(Element):
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -489,7 +489,7 @@ class CTUBE(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -631,7 +631,7 @@ class PTUBE(Property):
         elem.t = self.t[i]
         elem.nsm = self.nsm[i]
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -669,7 +669,7 @@ class PTUBE(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
         lines = []

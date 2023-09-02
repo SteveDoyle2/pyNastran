@@ -83,7 +83,7 @@ class Load0(Load):
         self.cards.append((sid, node, cid, mag, xyz, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', default=0)
@@ -94,6 +94,7 @@ class Load0(Load):
         assert len(card) <= 8, 'len(%s card) = %d\ncard=%s' % (self.type, len(card), card)
         self.cards.append((sid, node, cid, mag, xyz, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -146,7 +147,7 @@ class Load0(Load):
                    node=(nid, self.node_id), filter_node0=False,
                    coord=(cid, self.coord_id))
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         lines = []
@@ -171,7 +172,7 @@ class Load1(Load):
         self.mag = np.array([], dtype='float64')
         #self.xyz = np.zeros((0, 3), dtype='float64')
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -180,6 +181,7 @@ class Load1(Load):
         assert len(card) == 6, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
         self.cards.append((sid, node, mag, [g1, g2], comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -211,7 +213,7 @@ class Load1(Load):
         self.nodes = nodes
         self.n = nloads
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         lines = []
@@ -233,7 +235,7 @@ class Load2(Load):
         self.mag = np.array([], dtype='float64')
         #self.xyz = np.zeros((0, 3), dtype='float64')
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -244,6 +246,7 @@ class Load2(Load):
         assert len(card) == 8, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
         self.cards.append((sid, node, mag, [g1, g2, g3, g4], comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -275,7 +278,7 @@ class Load2(Load):
         self.nodes = nodes
         self.n = nloads
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         lines = []
@@ -614,7 +617,7 @@ class LOAD(Load):
         self.cards.append((sid, scale, scale_factors, load_ids, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         scale = double(card, 2, 'scale')
 
@@ -632,6 +635,7 @@ class LOAD(Load):
         assert len(card) > 3, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
         self.cards.append((sid, scale, scale_factors, load_ids, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self) -> None:
         if self.n == 0:

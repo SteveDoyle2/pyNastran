@@ -49,7 +49,7 @@ class PLOAD(Load):
     """
     _id_name = 'load_id'
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         pressure = double(card, 2, 'pressure')
         nodes = [integer(card, 3, 'n1'),
@@ -59,8 +59,9 @@ class PLOAD(Load):
         assert len(card) <= 7, f'len(PLOAD card) = {len(card):d}\ncard={card}'
         self.cards.append((sid, pressure, nodes, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -92,7 +93,7 @@ class PLOAD(Load):
         load.pressure = self.pressure[i]
         load.node_id = self.node_id[i, :]
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
 
@@ -208,7 +209,7 @@ class PLOAD1(Load):
         self.cards.append((sid, eid, load_type, scale, [x1, x2], [p1, p2], comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
         load_type = string(card, 3, 'Type ("%s")' % '",  "'.join(self.valid_types))
@@ -220,8 +221,9 @@ class PLOAD1(Load):
         assert len(card) <= 9, f'len(PLOAD1 card) = {len(card):d}\ncard={card}'
         self.cards.append((sid, eid, load_type, scale, [x1, x2], [p1, p2], comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -267,7 +269,7 @@ class PLOAD1(Load):
         load.x = self.x[i, :]
         load.pressure = self.pressure[i, :]
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         print_card = print_card_8
@@ -435,7 +437,7 @@ class PLOAD1(Load):
         # projected length of the element.
 
         #normal[i_lookup, :] = normali[i_all, :]
-        x = 1
+        #x = 1
 
 
         # convert to per length; get rid of fractional
@@ -547,7 +549,7 @@ class PLOAD2(Load):
         #self.__apply_slice__(load, i)
         #return load
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         pressure = double(card, 2, 'p')
 
@@ -561,8 +563,9 @@ class PLOAD2(Load):
             assert len(eids) <= 6, f'A maximum of 6 eids may be on the PLOAD2; n={len(eids)}\ncard={card}'
         self.cards.append((sid, pressure, eids, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -622,7 +625,7 @@ class PLOAD2(Load):
     def is_small_field(self):
         return max(self.load_id.max(), self.element_ids.max()) < 99_999_999
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         if size == 8 and self.is_small_field:
@@ -754,7 +757,7 @@ class PLOAD4(Load):
                            cid, nvector, surf_or_line, line_load_dir, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
         p1 = double_or_blank(card, 3, 'p1', default=0.0)
@@ -796,8 +799,9 @@ class PLOAD4(Load):
         self.cards.append((sid, eid, pressures, eids, g1, g34,
                            cid, [n1, n2, n3], surf_or_line, line_load_dir, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)

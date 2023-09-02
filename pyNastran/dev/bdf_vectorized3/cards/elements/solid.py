@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
@@ -13,10 +13,13 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check, find_missing
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, searchsorted_filter, make_idim, hslice_by_idim
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, make_idim, hslice_by_idim # searchsorted_filter,
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_str, array_default_int
-from .shell import tri_quality_xyz, quad_quality_xyz
 from .utils import get_density_from_material, get_density_from_property, basic_mass_material_id
+
+from .solid_quality import chexa_quality, tetra_quality, penta_quality, pyram_quality, Quality
+from .solid_utils import chexa_centroid
+from .solid_volume import volume_ctetra, volume_cpenta, volume_cpyram, volume_chexa
 
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -28,6 +31,7 @@ class SolidElement(Element):
         super().__init__(model)
         self.nnode = 0
         self.nnode_base = 0
+        self.nodes: np.ndarray = np.array([[]], dtype='int32')
         self.property_id: np.ndarray = np.array([], dtype='int32')
 
     def __apply_slice__(self, elem: SolidElement, i: np.ndarray) -> None:
@@ -113,6 +117,12 @@ class SolidElement(Element):
         self.sort()
         self.cards = []
 
+    def write_8(self) -> str:
+        return self.write(size=8, is_double=False)
+
+    def write_16(self, is_double: bool=False) -> str:
+        return self.write(size=16, is_double=False)
+
 
 class CTETRA(SolidElement):
     def __init__(self, model: BDF):
@@ -121,7 +131,7 @@ class CTETRA(SolidElement):
         self.nnode = 10
         self.nnode_base = 4
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer(card, 3, 'nid1'),
@@ -137,8 +147,9 @@ class CTETRA(SolidElement):
         assert len(card) <= 13, f'len(CTETRA card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -168,7 +179,7 @@ class CTETRA(SolidElement):
         assert midside_nodes.shape[1] == 6, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -229,156 +240,13 @@ class CTETRA(SolidElement):
         inode, umissing = find_missing(nid, self.nodes, 'nodes')
         if len(umissing):
             missing['node_id'] = umissing
-        x = 1
+        #x = 1
 
-    def quality(self):
-        grid = self.model.grid
-        nodes = self.base_nodes
-
-        xyz = grid.xyz_cid0()
-        nid = grid.node_id
-        inode = np.searchsorted(nid, nodes)
-        actual_nodes = nid[inode]
-        assert np.array_equal(actual_nodes, nodes)
-        faces = [
-            [0, 1, 2],
-            [0, 1, 3],
-            [1, 2, 3],
-            [2, 0, 3],
-        ]
-        nelements = inode.shape[0]
-        area = np.full(nelements, np.nan, dtype='float64')
-        taper_ratio = np.full((nelements, 4), np.nan, dtype='float64')
-        area_ratio = np.full((nelements, 4), np.nan, dtype='float64')
-        max_skew = np.full((nelements, 4), np.nan, dtype='float64')
-        aspect_ratio = np.full((nelements, 4), np.nan, dtype='float64')
-        min_theta = np.full((nelements, 4), np.nan, dtype='float64')
-        max_theta = np.full((nelements, 4), np.nan, dtype='float64')
-        dideal_theta = np.full((nelements, 4), np.nan, dtype='float64')
-        min_edge_length = np.full((nelements, 4), np.nan, dtype='float64')
-        max_warp = np.full((nelements, 4), np.nan, dtype='float64')
-        for i, face in enumerate(faces):
-            #if len(face) == 3:
-            qualityi = tri_quality_xyz(xyz, inode[:, face])
-            (areai, taper_ratioi, area_ratioi, max_skewi, aspect_ratioi,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi) = qualityi
-            taper_ratio[:, i] = taper_ratioi
-            area_ratio[:, i] = area_ratioi
-            max_skew[:, i] = max_skewi
-            aspect_ratio[:, i] = aspect_ratioi
-            min_theta[:, i] = min_thetai
-            max_theta[:, i] = max_thetai
-            dideal_theta[:, i] = dideal_thetai
-            min_edge_length[:, i] = min_edge_lengthi
-            max_warp[:, i] = max_warpi
-
-        taper_ratio = np.max(taper_ratio, axis=1)
-        area_ratio = np.max(area_ratio, axis=1)
-        max_skew = np.max(max_skew, axis=1)
-        aspect_ratio = np.max(aspect_ratio, axis=1)
-        min_theta = np.min(min_theta, axis=1)
-        max_theta = np.max(max_theta, axis=1)
-        dideal_theta = np.max(dideal_theta, axis=1)
-        min_edge_length = np.max(min_edge_length, axis=1)
-        max_warp = np.max(max_warp, axis=1)
-        assert len(taper_ratio) == nelements
-
-        out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
-               min_theta, max_theta, dideal_theta, min_edge_length, max_warp)
+    def quality(self) -> Quality:
+        out = tetra_quality(self)
         return out
 
-
-def volume_ctetra(n1: np.ndarray, n2: np.ndarray,
-                  n3: np.ndarray, n4: np.ndarray) -> np.ndarray:
-    #volume = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
-    n14 = n1 - n4
-    n24 = n2 - n4
-    n34 = n3 - n4
-    n234 = np.cross(n24, n34, axis=1)
-
-    # dot product
-    volume = np.einsum("ij, ij->i", n14, n234) / -6.
-    return volume
-
-def volume_cpyram(n1: np.ndarray, n2: np.ndarray,
-                  n3: np.ndarray, n4: np.ndarray,
-                  n5: np.ndarray) -> np.ndarray:
-    vpyramid1 = volume_ctetra(n1, n2, n3, n5)
-    vpyramid2 = volume_ctetra(n1, n3, n4, n5)
-    volume = vpyramid1 + vpyramid2
-    return volume
-
-def volume_cpenta(n1: np.ndarray, n2: np.ndarray,
-                  n3: np.ndarray, n4: np.ndarray,
-                  n5: np.ndarray, n6: np.ndarray) -> np.ndarray:
-    nelement = n1.shape[0]
-    length1 = np.linalg.norm(n1 - n4, axis=1)
-    length2 = np.linalg.norm(n2 - n5, axis=1)
-    length3 = np.linalg.norm(n3 - n6, axis=1)
-    assert len(length1) == nelement
-    avg_length = (length1 + length2 + length3) / 3
-
-    #c1 = (n1 + n2 + n3) / 3.
-    #c2 = (n4 + n5 + n6) / 3.
-    #avg_length = np.linalg.norm(c1-c2, axis=1)
-    #assert len(avg_length) == nelements
-
-    a1 = np.cross(n2-n1, n3-n1, axis=1)
-    a2 = np.cross(n5-n4, n6-n4, axis=1)
-    assert a1.shape == (nelement, 3)
-
-    # need to divide A1 and A2 by 0.5
-    # additional 0.5 factor for the average area
-    a_avg = 0.25 * (np.linalg.norm(a1, axis=1) + np.linalg.norm(a2, axis=1))
-    assert len(a_avg) == nelement
-    #vpyramid1 = volume4_array(n1, n2, n3, n4)
-    v_triangular_prism = avg_length * a_avg
-    assert len(v_triangular_prism) == nelement
-    return v_triangular_prism
-
-def volume_chexa(n1: np.ndarray, n2: np.ndarray,
-                 n3: np.ndarray, n4: np.ndarray,
-                 n5: np.ndarray, n6: np.ndarray,
-                 n7: np.ndarray, n8: np.ndarray) -> np.ndarray:
-    nelement = n1.shape[0]
-    #vpyramid1 = volume4_array(n1, n2, n3, n5)
-    #vpyramid2 = volume4_array(n1, n3, n4, n5)
-    #vpyramid = vpyramid1 + vpyramid2
-
-    # https://www.osti.gov/servlets/purl/632793/
-    #volume = (
-        #det3(x7 - x0, x1 - x0, x3 - x5) +
-        #det3(x7 - x0, x4 - x0, x5 - x6) +
-        #det3(x7 - x0, x2 - x0, x6 - x3)
-    #) / 6.
-    #  swap points
-    # x2 / x3
-    # x6 / x7
-    def det3(a, b, c):
-        stack = np.dstack([a, b, c])
-        assert stack.shape == (nelement, 3, 3)
-        return np.linalg.det(stack)
-    #volume = (
-        #det3(x6 - x0, x1 - x0, x2 - x5) +
-        #det3(x6 - x0, x4 - x0, x5 - x7) +
-        #det3(x6 - x0, x3 - x0, x7 - x2)
-    #) / 6.
-    # add 1
-    n71 = n7 - n1
-    v1 = det3(n71, n2 - n1, n3 - n6)
-    v2 = det3(n71, n5 - n1, n6 - n8)
-    v3 = det3(n71, n4 - n1, n8 - n3)
-    assert len(v1) == nelement
-    #volume = (
-        #det3(n71, n2 - n1, n3 - n6) +
-        #det3(n71, n5 - n1, n6 - n8) +
-        #det3(n71, n4 - n1, n8 - n3)
-    #) / 6.
-    volume = (v1 + v2 + v3) / 6.
-    return volume
-
-CTETRA_FACE_MAPPER = {
-
+CTETRA_FACE_MAPPER: dict[tuple[int, int], tuple[int, int, int]] = {
 }
 CPENTA_FACE_MAPPER = {
     # tri faces
@@ -447,13 +315,21 @@ CHEXA_FACE_MAPPER = {
 }
 
 class CPENTA(SolidElement):
+    r"""
+    +--------+-----+-----+----+----+----+----+----+----+
+    |    1   |  2  |  3  |  4 |  5 |  6 |  7 |  8 |  9 |
+    +========+=====+=====+====+====+====+====+====+====+
+    | CPENTA | EID | PID | G1 | G2 | G3 | G4 | G5 | G6 |
+    +--------+-----+-----+----+----+----+----+----+----+
+
+    """
     def __init__(self, model: BDF):
         super().__init__(model)
         self.nodes = np.zeros((0, 15), dtype='int32')
         self.nnode = 15
         self.nnode_base = 6
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -476,8 +352,9 @@ class CPENTA(SolidElement):
         assert len(card) <= 18, f'len(CPENTA card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -507,23 +384,40 @@ class CPENTA(SolidElement):
         assert midside_nodes.shape[1] == 9, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
-        if size == 8:
-            print_card = print_card_8
+        print_card = get_print_card_8_16(size)
 
         lines = []
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
         assert base_nodes.min() > 0, (base_nodes.min(), base_nodes.max())
 
+        element_ids = array_str(self.element_id, size=size)
+        property_ids = array_str(self.property_id, size=size)
+        #card_name = 'CPENTA' if size == 8 else 'CPENTA*'
         if midside_nodes.shape[1] == 0:
-            for eid, pid, nodes in zip(self.element_id, self.property_id, base_nodes):
-                msg = print_card(['CPENTA', eid, pid] + nodes.tolist())
-                lines.append(msg)
+            base_nodes_str = array_str(base_nodes, size=size)
+            #if size == 8:
+            for eid, pid, nodes in zip(element_ids, property_ids, base_nodes_str):
+                #msg1 = (
+                    #f'{card_name:<8s}{eid:>8s}{pid:>8s}{nodes[0]:>8s}'
+                    #f'{nodes[1]:>8s}{nodes[2]:>8s}{nodes[3]:>8s}{nodes[4]:>8s}{nodes[5]:>8s}\n')
+                msg2 = print_card(['CPENTA', eid, pid] + nodes.tolist())
+                #assert msg1 == msg2
+                lines.append(msg2)
+            #else:
+                #for eid, pid, nodes in zip(element_ids, property_ids, base_nodes_str):
+                    #msg1 = (
+                        #f'{card_name:<8s}{eid:>16s}{pid:>16s}{nodes[0]:>16s}{nodes[1]:>16s}\n'
+                        #f'{"*":<8s}{nodes[2]:>16s}{nodes[3]:>16s}{nodes[4]:>16s}{nodes[5]:>16s}\n')
+                    #msg2 = print_card(['CPENTA', eid, pid] + nodes.tolist())
+                    #assert msg1 == msg2
+                    #lines.append(msg2)
         else:
-            for eid, pid, nodes in zip(self.element_id, self.property_id, self.nodes):
+            midside_nodes_str = array_default_int(midside_nodes, default=0, size=size)
+            for eid, pid, nodes in zip(element_ids, property_ids, midside_nodes_str):
                 msg = print_card(['CPENTA', eid, pid] + nodes.tolist())
                 lines.append(msg)
         return ''.join(lines)
@@ -562,6 +456,10 @@ class CPENTA(SolidElement):
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
 
+    def quality(self) -> Quality:
+        out = penta_quality(self)
+        return out
+
 
 class CPYRAM(SolidElement):
     def __init__(self, model: BDF):
@@ -570,7 +468,7 @@ class CPYRAM(SolidElement):
         self.nnode = 13
         self.nnode_base = 5
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -589,8 +487,9 @@ class CPYRAM(SolidElement):
         assert len(card) <= 16, f'len(CPYRAM13 1card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -619,7 +518,7 @@ class CPYRAM(SolidElement):
         assert midside_nodes.shape[1] == 8, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -676,6 +575,10 @@ class CPYRAM(SolidElement):
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
 
+    def quality(self) -> Quality:
+        out = pyram_quality(self)
+        return out
+
 
 class CHEXA(SolidElement):
     def __init__(self, model: BDF):
@@ -684,7 +587,7 @@ class CHEXA(SolidElement):
         self.nnode_base = 8
         self.nnode = 20
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -708,8 +611,9 @@ class CHEXA(SolidElement):
         assert len(card) <= 23, f'len(CHEXA20 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -738,7 +642,7 @@ class CHEXA(SolidElement):
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -782,7 +686,7 @@ class CHEXA(SolidElement):
         volume = volume_chexa(n1, n2, n3, n4, n5, n6, n7, n8)
         return volume
 
-    def quality(self):
+    def quality(self) -> Quality:
         out = chexa_quality(self)
         return out
 
@@ -819,7 +723,9 @@ class PSOLID(Property):
         prop.fctn = self.fctn[i]
 
     def add(self, pid: int, mid: int, cordm: int=0,
-            integ: int=None, stress: str='', isop: str='',
+            integ: Optional[str|int]=None,
+            stress: Optional[str]='',
+            isop: Optional[str]='',
             fctn: str='SMECH', comment='') -> None:
         if integ is None:
             integ = ''
@@ -830,7 +736,7 @@ class PSOLID(Property):
         self.cards.append((pid, mid, cordm, integ, stress, isop, fctn, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         cordm = integer_or_blank(card, 3, 'cordm', default=0)
@@ -842,8 +748,9 @@ class PSOLID(Property):
 
         self.cards.append((pid, mid, cordm, integ, stress, isop, fctn, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -923,7 +830,7 @@ class PSOLID(Property):
                    coord=(cid, self.coord_id),
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
 
@@ -980,12 +887,6 @@ class PLSOLID(Property):
         super().__init__(model)
         self.material_id = np.array([], dtype='int32')
 
-    #def slice_card_by_property_id(self, property_id: np.ndarray) -> PLSOLID:
-        #"""uses a node_ids to extract PLSOLIDs"""
-        #iprop = self.index(property_id)
-        #prop = self.slice_card_by_index(iprop)
-        #return prop
-
     def __apply_slice__(self, prop: PLSOLID, i: np.ndarray) -> None:
         prop.n = len(i)
         prop.property_id = self.property_id[i]
@@ -996,7 +897,7 @@ class PLSOLID(Property):
         self.cards.append((pid, mid, stress_strain, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PLSOLID card from ``BDF.add_card(...)``
 
@@ -1013,8 +914,9 @@ class PLSOLID(Property):
         assert len(card) <= 4, f'len(PLSOLID card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, stress_strain, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1042,7 +944,7 @@ class PLSOLID(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
         if size == 8:
@@ -1132,8 +1034,13 @@ class PCOMPS(Property):
 
         prop.nply = self.nply[i]
 
-    def add(self, pid, global_ply_ids, mids, thicknesses, thetas,
-            cordm=0, psdir=13, sb=None, nb=None, tref=0.0, ge=0.0,
+    def add(self, pid: int,
+            global_ply_ids: list[int],
+            mids: list[int],
+            thicknesses: list[float],
+            thetas: list[float],
+            cordm: int=0, psdir: int=13,
+            sb=None, nb=None, tref: float=0.0, ge: float=0.0,
             failure_theories=None, interlaminar_failure_theories=None,
             souts=None, comment='') -> None:
         nb = nb if nb is not None else np.nan
@@ -1152,7 +1059,7 @@ class PCOMPS(Property):
                            failure_theories, interlaminar_failure_theories, souts))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PCOMPS card from ``BDF.add_card(...)``
 
@@ -1206,8 +1113,9 @@ class PCOMPS(Property):
                            global_ply_ids, mids, thicknesses, thetas,
                            failure_theories, interlaminar_failure_theories, souts))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1295,7 +1203,7 @@ class PCOMPS(Property):
     def iply(self) -> np.ndarray:
         return make_idim(self.n, self.nply)
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
         if size == 8:
@@ -1391,7 +1299,7 @@ class PCOMPLS(Property):
 
         #prop.nply = self.nply[i]
 
-    def add_card(self, card: BDFCard, comment=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PCOMPLS card from ``BDF.add_card(...)``
 
@@ -1492,8 +1400,9 @@ class PCOMPLS(Property):
                            c8, c20,
                            comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1519,8 +1428,8 @@ class PCOMPLS(Property):
         #all_interlaminar_failure_theories = []
         #all_souts = []
 
-        c8 = []
-        c20 = []
+        c8_list = []
+        c20_list = []
         for icard, card in enumerate(self.cards):
             (pid, global_ply_idi, midi, thicknessi, thetai,
              directi, cordmi, sbi, analysisi,
@@ -1533,8 +1442,8 @@ class PCOMPLS(Property):
             direct[icard] = directi
             print('8:', c8i)
             print('20:', c20i)
-            c8.extend(c8i)
-            c20.extend(c20i)
+            c8_list.extend(c8i)
+            c20_list.extend(c20i)
             #self.nb[icard] = nb
             #self.tref[icard] = tref
             #self.ge[icard] = ge
@@ -1552,8 +1461,8 @@ class PCOMPLS(Property):
         material_id = np.array(all_mids, dtype='int32')
         thickness = np.array(all_thicknesses, dtype='float64')
         theta = np.array(all_thetas, dtype='float64')
-        c8 = np.array(c8, dtype='|U8')
-        c20 = np.array(c20, dtype='|U8')
+        c8 = np.array(c8_list, dtype='|U8')
+        c20 = np.array(c20_list, dtype='|U8')
         #failure_theory = np.array(all_failure_theories, dtype='|U8')
         #interlaminar_failure_theory = np.array(all_interlaminar_failure_theories, dtype='|U8')
 
@@ -1593,7 +1502,7 @@ class PCOMPLS(Property):
     def iply(self) -> np.ndarray:
         return make_idim(self.n, self.nply)
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
         if size == 8:
@@ -1652,7 +1561,7 @@ class CHACBR(SolidElement):
         self.nnode_base = 8
         self.nnode = 20
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -1676,8 +1585,9 @@ class CHACBR(SolidElement):
         assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1706,7 +1616,7 @@ class CHACBR(SolidElement):
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -1763,90 +1673,6 @@ class CHACBR(SolidElement):
         out = chexa_quality(self)
         return out
 
-def chexa_centroid(self) -> np.ndarray:
-    xyz = self.model.grid.xyz_cid0()
-    nid = self.model.grid.node_id
-    nodes = self.base_nodes
-    #nelement = nodes.shape[0]
-
-    inode = np.searchsorted(nid, nodes)
-    n1 = xyz[inode[:, 0], :]
-    n2 = xyz[inode[:, 1], :]
-    n3 = xyz[inode[:, 2], :]
-    n4 = xyz[inode[:, 3], :]
-    n5 = xyz[inode[:, 4], :]
-    n6 = xyz[inode[:, 5], :]
-    n7 = xyz[inode[:, 6], :]
-    n8 = xyz[inode[:, 7], :]
-    centroid = (n1 + n2 + n3 + n4 + n5 + n6 + n7 + n8) / 8
-    return centroid
-
-def chexa_quality(self):
-    grid = self.model.grid
-    nodes = self.base_nodes
-
-    xyz = grid.xyz_cid0()
-    nid = grid.node_id
-    inode = np.searchsorted(nid, nodes)
-    actual_nodes = nid[inode]
-    assert np.array_equal(actual_nodes, nodes)
-
-    faces = [
-        [0, 1, 2, 3],  # 1, 2, 3, 4 # inward
-        [0, 1, 5, 4],  # 1, 2, 6, 5
-        [1, 2, 6, 5],  # 2, 3, 7, 6
-        [2, 3, 7, 6],  # 3, 4, 8, 7
-        [3, 0, 4, 7],  # 4, 1, 5, 8
-        [4, 5, 6, 7],  # 5, 6, 7, 8
-    ]
-    nelements = inode.shape[0]
-    area = np.full(nelements, np.nan, dtype='float64')
-    taper_ratio = np.full((nelements, 6), np.nan, dtype='float64')
-    area_ratio = np.full((nelements, 6), np.nan, dtype='float64')
-    max_skew = np.full((nelements, 6), np.nan, dtype='float64')
-    aspect_ratio = np.full((nelements, 6), np.nan, dtype='float64')
-    min_theta = np.full((nelements, 6), np.nan, dtype='float64')
-    max_theta = np.full((nelements, 6), np.nan, dtype='float64')
-    dideal_theta = np.full((nelements, 6), np.nan, dtype='float64')
-    min_edge_length = np.full((nelements, 6), np.nan, dtype='float64')
-    max_warp = np.full((nelements, 6), np.nan, dtype='float64')
-    for i, face in enumerate(faces):
-        #if len(face) == 3:
-        in1 = inode[:, face[0]]
-        in2 = inode[:, face[1]]
-        in3 = inode[:, face[2]]
-        in4 = inode[:, face[3]]
-        n1 = xyz[in1, :]
-        n2 = xyz[in2, :]
-        n3 = xyz[in3, :]
-        n4 = xyz[in4, :]
-        qualityi = quad_quality_xyz(n1, n2, n3, n4)
-        (areai, taper_ratioi, area_ratioi, max_skewi, aspect_ratioi,
-         min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warpi) = qualityi
-        taper_ratio[:, i] = taper_ratioi
-        area_ratio[:, i] = area_ratioi
-        max_skew[:, i] = max_skewi
-        aspect_ratio[:, i] = aspect_ratioi
-        min_theta[:, i] = min_thetai
-        max_theta[:, i] = max_thetai
-        dideal_theta[:, i] = dideal_thetai
-        min_edge_length[:, i] = min_edge_lengthi
-        max_warp[:, i] = max_warpi
-
-    taper_ratio = np.max(taper_ratio, axis=1)
-    area_ratio = np.max(area_ratio, axis=1)
-    max_skew = np.max(max_skew, axis=1)
-    aspect_ratio = np.max(aspect_ratio, axis=1)
-    min_theta = np.min(min_theta, axis=1)
-    max_theta = np.max(max_theta, axis=1)
-    dideal_theta = np.max(dideal_theta, axis=1)
-    min_edge_length = np.max(min_edge_length, axis=1)
-    max_warp = np.max(max_warp, axis=1)
-    assert len(taper_ratio) == nelements
-
-    out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
-           min_theta, max_theta, dideal_theta, min_edge_length, max_warp)
-    return out
 
 class CHACAB(SolidElement):
     def __init__(self, model: BDF):
@@ -1855,7 +1681,7 @@ class CHACAB(SolidElement):
         self.nnode_base = 8
         self.nnode = 20
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [
@@ -1879,8 +1705,9 @@ class CHACAB(SolidElement):
         assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1909,7 +1736,7 @@ class CHACAB(SolidElement):
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -1965,3 +1792,10 @@ class CHACAB(SolidElement):
     def quality(self):
         out = chexa_quality(self)
         return out
+
+def get_print_card_8_16(size: int) -> Callable[list[Any]]:
+    if size == 8:
+        print_card = print_card_8
+    else:
+        print_card = print_card_16
+    return print_card

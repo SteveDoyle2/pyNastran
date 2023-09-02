@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import abstractmethod
-from typing import TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 #from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
@@ -11,7 +11,7 @@ import numpy as np
 #from pyNastran.dev.bdf_vectorized3.cards.shell_elements import CQUAD4, CTRIA3, PSHELL, PCOMP, PCOMPG
 #from pyNastran.dev.bdf_vectorized3.cards.solid_elements import CTETRA, CHEXA, CPENTA, CPYRAM
 #from pyNastran.dev.bdf_vectorized3.cards.static_loads import PLOAD4, FORCE
-from pyNastran.utils import object_attributes, object_methods, object_stats
+from pyNastran.utils import object_stats # object_attributes, object_methods,
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -33,7 +33,7 @@ def make_idim(n: int, ndim: np.ndarray) -> np.ndarray:
     assert idim.ndim == 2, idim
     return idim
 
-def hslice_by_idim(i: np.ndarray, idim: np.ndarray, elements: np.ndarray) -> list[np.ndarray]:
+def hslice_by_idim(i: np.ndarray, idim: np.ndarray, elements: np.ndarray) -> np.ndarray:
     elements2 = []
     assert len(i) > 0, i
     for ii in i:
@@ -44,7 +44,7 @@ def hslice_by_idim(i: np.ndarray, idim: np.ndarray, elements: np.ndarray) -> lis
         elements2.append(eids)
     return np.hstack(elements2)
 
-def vslice_by_idim(i: np.ndarray, idim: np.ndarray, elements: np.ndarray) -> list[np.ndarray]:
+def vslice_by_idim(i: np.ndarray, idim: np.ndarray, elements: np.ndarray) -> np.ndarray:
     elements2 = []
     for ii in i:
         idim0, idim1 = idim[ii]
@@ -62,7 +62,7 @@ def searchsorted_filter_(all_ids, lookup_ids, msg: str='') -> np.ndarray:
 def searchsorted_filter(all_ids: np.ndarray,
                         lookup_ids: np.ndarray,
                         msg: str='',
-                        debug: bool=False) -> np.ndarray:
+                        debug: bool=False) -> tuple[np.ndarray, np.ndarray]:
     """finds the index (like searchsorted) and filters out the incorrect ids"""
     if not np.array_equal(np.unique(all_ids), all_ids):
         raise RuntimeError(f'{msg}={all_ids} is unsorted')
@@ -90,16 +90,16 @@ def searchsorted_filter(all_ids: np.ndarray,
     expected2 = lookup_ids[i_lookup2]
     actual2 = all_ids[i_all2]
     assert np.array_equal(expected2, actual2)
-    if debug:
-        x = 2
+    #if debug:
+        #x = 2
     return i_lookup2, i_all2
 
 
 class VectorizedBaseCard:
     def __init__(self, model: BDF):
         self.model = model
-        self.cards = []
-        self.comment = {}
+        self.cards: list[tuple] = []
+        self.comment: dict[int, str] = {}
         self.n = 0
         self.debug = False
         self.id = np.array([], dtype='int32')
@@ -171,9 +171,9 @@ class VectorizedBaseCard:
                 if len(iarg) == len(uarg):
                     # if the lengths are the same, we can use dumb sorting
                     jarg = iarg
-                else:
+                #else:
                     # we need to filter terms
-                    x = 1
+                    #x = 1
 
                     # inplace
                     #self.__apply_slice__(card, i)
@@ -232,7 +232,7 @@ class VectorizedBaseCard:
             assume the parent array (e.g., elem.element_id is sorted)
 
         """
-        assert self.n > 0, card
+        assert self.n > 0, self
         self_ids = self._ids
         i = np.atleast_1d(np.asarray(i, dtype=self_ids.dtype))
         i.sort()
@@ -304,6 +304,10 @@ class VectorizedBaseCard:
         #...
         raise NotImplementedError(f'{self.type}: add __apply_slice__')
 
+    def write(self, size: int=8, is_double: bool=False) -> str:
+        #...
+        raise NotImplementedError(f'{self.type}: add write')
+
     def get_stats(self,
                   mode: str='public',
                   keys_to_skip: Optional[list[str]]=None,
@@ -313,6 +317,7 @@ class VectorizedBaseCard:
         return object_stats(self, mode=mode,
                             keys_to_skip=keys_to_skip,
                             filter_properties=filter_properties)
+
 
 class Element(VectorizedBaseCard):
     _id_name = 'element_id'
