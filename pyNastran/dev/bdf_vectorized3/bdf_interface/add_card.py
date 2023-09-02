@@ -7,8 +7,9 @@ import numpy as np
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.add_methods import AddMethods
 from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttributes
-#from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR
+from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR
 
+from pyNastran.bdf.cards.dmig import DMIG, DMIG_UACCEL, DMI, DMIJ, DMIJI, DMIK, DMIAX, DTI, DTI_UNITS
 from pyNastran.bdf.cards.methods import EIGRL
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
@@ -25,9 +26,9 @@ from pyNastran.bdf.cards.params import MDLPRM, PARAM
 from pyNastran.dev.bdf_vectorized3.bdf import DTI_UNITS
 if TYPE_CHECKING:
     from pyNastran.nptyping_interface import NDArray3float, NDArray66float
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF, PARAM
+    from pyNastran.dev.bdf_vectorized3.bdf import PARAM # BDF,
     from pyNastran.dev.bdf_vectorized3.cards.grid import GRID
-    from pyNastran.dev.bdf_vectorized3.cards.coord import CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+    from pyNastran.dev.bdf_vectorized3.cards.coord import COORD # CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
     from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2, LOADSET
     from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import PLOAD, PLOAD1, PLOAD2, PLOAD4 # , PLOADX1
     #from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
@@ -876,7 +877,7 @@ class Add1dElements(BDFAttributes):
         prop = self.ptube.add(pid, mid, OD1, t=t, nsm=nsm, OD2=OD2, comment=comment)
         return self.ptube
 
-    def add_baror(self, pid, is_g0, g0, x, offt='GGG', comment: str='') -> BAROR:
+    def add_baror(self, pid: int, is_g0, g0, x, offt: str='GGG', comment: str='') -> BAROR:
         baror = BAROR(pid, g0, x, offt=offt, comment=comment)
         assert self.baror is None
         self.baror = baror

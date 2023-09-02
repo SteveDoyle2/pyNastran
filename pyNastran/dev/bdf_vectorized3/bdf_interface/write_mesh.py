@@ -481,8 +481,9 @@ class Writer():
         model = self.model
         all_masses = (
             model.conm1, model.conm2,
-            model.pmass,
-            model.cmass1, model.cmass2, model.cmass3, model.cmass4)
+            #model.pmass,
+            #model.cmass1, model.cmass2, model.cmass3, model.cmass4,
+        )
         masses = [mass for mass in all_masses if mass.n > 0]
         if len(masses) == 0:
             return
@@ -491,9 +492,8 @@ class Writer():
         for mass in masses:
             bdf_file.write(mass.write(size=8))
 
-        #bdf_file.write(model.conm1.write(size=8))
-        #bdf_file.write(model.conm2.write(size=8))
-
+        #bdf_file.write(model.conm1.write(size=size))
+        #bdf_file.write(model.conm2.write(size=size))
         #bdf_file.write(model.pmass.write(size=8))
         #bdf_file.write(model.cmass1.write(size=8))
         #bdf_file.write(model.cmass2.write(size=8))

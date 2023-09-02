@@ -38,8 +38,8 @@ class COORD(VectorizedBaseCard):
     _id_name = 'coord_id'
     def __init__(self, model: BDF):
         super().__init__(model)
-        self.cards1 = []
-        self.cards2 = []
+        self.cards1: list = []
+        self.cards2: list = []
         self.coord_type = np.array(['R'], dtype='|U1')
         self.icoord = np.array([2], dtype='int8')
         self.is_resolved = np.array([True], dtype='bool')
@@ -309,20 +309,23 @@ class COORD(VectorizedBaseCard):
         self.__apply_slice__(coord, i)
         return coord
 
-    def add_cord1r(self, cid: int, g1: int, g2: int, g3: int, comment: str=''):
+    def add_cord1r(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> int:
         cardi = (1, 'R', cid), (g1, g2, g3), comment
-        coord = self.cards1.append(cardi)
+        self.cards1.append(cardi)
         self.n += 1
+        return self.n
 
-    def add_cord1c(self, cid: int, g1: int, g2: int, g3: int, comment: str=''):
+    def add_cord1c(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> int:
         cardi = (1, 'C', cid), (g1, g2, g3), comment
-        coord = self.cards1.append(cardi)
+        self.cards1.append(cardi)
         self.n += 1
+        return self.n
 
-    def add_cord1s(self, cid: int, g1: int, g2: int, g3: int, comment: str=''):
+    def add_cord1s(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> int:
         cardi = (1, 'S', cid), (g1, g2, g3), comment
-        coord = self.cards1.append(cardi)
+        self.cards1.append(cardi)
         self.n += 1
+        return self.n
 
     def add_cord1r_bdf(self, card: BDFCard, icard: int, comment: str='') -> int:
         ncoord = icard * 5
@@ -361,10 +364,10 @@ class COORD(VectorizedBaseCard):
         return self.n
 
     def add_cord2r(self, cid: int,
-                   origin: list[float],
-                   zaxis: list[float],
-                   xzplane: list[float],
-                   rid: int=0, setup: bool=True, comment: str='') -> CORD2R:
+                   origin: np.ndarray | list[float],
+                   zaxis: np.ndarray | list[float],
+                   xzplane: np.ndarray | list[float],
+                   rid: int=0, setup: bool=True, comment: str='') -> int:
         """
         Creates the CORD2R card, which defines a rectangular coordinate
         system using 3 vectors.
@@ -390,26 +393,29 @@ class COORD(VectorizedBaseCard):
         cardi = (2, 'R', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
+        return self.n
 
     def add_cord2c(self, cid: int,
-                   origin: list[float],
-                   zaxis: list[float],
-                   xzplane: list[float],
-                   rid: int=0, setup: bool=True, comment: str=''):
+                   origin: np.ndarray | list[float],
+                   zaxis: np.ndarray | list[float],
+                   xzplane: np.ndarray | list[float],
+                   rid: int=0, setup: bool=True, comment: str='') -> int:
         origin, zaxis, xzplane = _default_cord2_axes(origin, zaxis, xzplane)
         cardi = (2, 'C', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
+        return self.n
 
     def add_cord2s(self, cid: int,
-                   origin: list[float],
-                   zaxis: list[float],
-                   xzplane: list[float],
-                   rid: int=0, setup: bool=True, comment: str=''):
+                   origin: np.ndarray | list[float],
+                   zaxis: np.ndarray | list[float],
+                   xzplane: np.ndarray | list[float],
+                   rid: int=0, setup: bool=True, comment: str='') -> int:
         origin, zaxis, xzplane = _default_cord2_axes(origin, zaxis, xzplane)
         cardi = (2, 'S', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
+        return self.n
 
     #def _add_cord2(self, coordtype: str, card: BDFCard, comment: str='') -> int:
         #assert isinstance(coordtype, str), coordtype
@@ -1011,7 +1017,7 @@ class COORD(VectorizedBaseCard):
             #xyz_cid0 = xyz_cidr @ beta + origin
 
         xyz_cid0 += origin
-        nnodes = xyz_cidr.shape[0]
+        #nnodes = xyz_cidr.shape[0]
 
         xyz_cid0_new = xyz_cidr @ beta + origin
         for xyz, xyz_new in zip(xyz_cid0, xyz_cid0_new):
@@ -1108,9 +1114,9 @@ def transform_spherical_to_rectangular(rtp: np.ndarray) -> np.ndarray:
     xyz = np.array([x, y, z], dtype=rtp.dtype)
     return xyz
 
-def _parse_cord1x(card: BDFCard) -> tuple[int, int, int, int]:
-    cid = integer(card, 1, 'cid')
-    return cid, grid_origin, grid_zaxis, grid_xzplane
+#def _parse_cord1x(card: BDFCard) -> tuple[int, int, int, int]:
+    #cid = integer(card, 1, 'cid')
+    #return cid, grid_origin, grid_zaxis, grid_xzplane
 
 def _parse_cord2x(card: BDFCard,
                   card_type: str) -> tuple[int, int,
@@ -1138,9 +1144,11 @@ def _parse_cord2x(card: BDFCard,
     assert len(card) <= 12, f'len({card_type} card) = {len(card):d}\ncard={card}'
     return cid, rid, origin, zaxis, xzplane
 
-def _default_cord2_axes(origin: np.ndarray,
-                        zaxis: np.ndarray,
-                        xzplane: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _default_cord2_axes(origin: np.ndarray | list[float],
+                        zaxis: np.ndarray | list[float],
+                        xzplane: np.ndarray | list[float]) -> tuple[np.ndarray | list[float],
+                                                                    np.ndarray | list[float],
+                                                                    np.ndarray | list[float]]:
     if origin is None:
         origin = np.array([0., 0., 0.], dtype='float64')
     if zaxis is None:

@@ -36,7 +36,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     PSOLID, PLSOLID, PCOMPS, PCOMPLS,
     #CHACAB, CHACBR,
 )
-#from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
+from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
 #from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
 #from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
 #from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import CHBDYE, CHBDYP, CHBDYG, CONV, PCONV, CONVM, PCONVM, PHBDY
@@ -330,8 +330,8 @@ class BDFAttributes:
         #self.cmass2 = CMASS2(self)
         #self.cmass3 = CMASS3(self)
         #self.cmass4 = CMASS4(self)
-        #self.conm1 = CONM1(self)
-        #self.conm2 = CONM2(self)
+        self.conm1 = CONM1(self)
+        self.conm2 = CONM2(self)
 
         # nonstructural mass
         #self.nsmadd = NSMADD(self)
@@ -615,8 +615,7 @@ class BDFAttributes:
             #self.caabsf, # acoustic shells
             #self.genel,
         ] + self.shell_elements + self.solid_elements + axisymmetric_elements + [
-            #self.conm1,
-            #self.conm2,
+            self.conm1, self.conm2,
             #self.cmass1, self.cmass2, self.cmass3, #self.cmass4,
             #self.cplsts3, self.cplsts4, self.cplsts6, self.cplsts8,
             #self.cplstn3, self.cplstn4, self.cplstn6, self.cplstn8,

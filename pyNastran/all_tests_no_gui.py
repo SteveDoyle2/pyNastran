@@ -50,8 +50,7 @@ from pyNastran.gui.test.all_tests_no_gui import *
 try:
     from pyNastran.dev.solver.test_springs import *
     if IS_TABLES:
-        from pyNastran.dev.bdf_vectorized3.test.bdfv_unit_tests import *
-        from pyNastran.dev.bdf_vectorized3.test.test_numpy_utils import *
+        from pyNastran.dev.bdf_vectorized3.test.all_tests import *
 except ImportError:  # pragma: no cover
     pass
 

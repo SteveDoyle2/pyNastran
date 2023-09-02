@@ -2452,8 +2452,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CMASS2' : partial(self._prepare_card, self.cmass2),
             #'CMASS3' : partial(self._prepare_card, self.cmass3),
             #'CMASS4' : partial(self._prepare_card, self.cmass4),
-            #'CONM1' : partial(self._prepare_card, self.conm1),
-            #'CONM2' : partial(self._prepare_card, self.conm2),
+            'CONM1' : partial(self._prepare_card, self.conm1),
+            'CONM2' : partial(self._prepare_card, self.conm2),
 
             # nonstructural mass
             #'NSMADD' : partial(self._prepare_card, self.nsmadd),

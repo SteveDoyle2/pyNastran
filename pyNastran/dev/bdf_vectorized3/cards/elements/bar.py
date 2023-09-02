@@ -8,7 +8,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_f
 from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, string,
+    integer, double, string, integer_or_double,
     integer_or_blank, double_or_blank, string_or_blank,
     integer_double_or_blank, integer_string_or_blank,
     blank)
@@ -96,6 +96,12 @@ class BAROR(BaseCard):
         """
         list_fields = ['BAROR', None, None] + self.x.tolist() + [self.offt]
         return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 def init_x_g0(card: BDFCard, eid: int):
@@ -333,6 +339,32 @@ class CBAR(Element):
         length = self.length()
         mass = mass_per_length * length
         return mass
+
+    def mass_breakdown(self) -> np.ndarray:
+        """
+        [L, rho, A, nsm, mpl, mass]
+        """
+        pid = self.property_id
+        rho = np.full(len(pid), np.nan, dtype='float64')
+        area = np.full(len(pid), np.nan, dtype='float64')
+        nsm = np.full(len(pid), np.nan, dtype='float64')
+        mass_per_length = np.full(len(pid), np.nan, dtype='float64')
+        for prop in self.allowed_properties:
+            i_lookup, i_all = searchsorted_filter(prop.property_id, pid, msg='')
+            if len(i_lookup) == 0:
+                continue
+
+            # we're at least using some properties
+            breakdowni = prop.mass_per_length_breakdown() # [rho, A, nsm, mpl]
+
+            rho[i_lookup] = breakdowni[i_all, 0]
+            area[i_lookup] = breakdowni[i_all, 1]
+            nsm[i_lookup] = breakdowni[i_all, 2]
+            mass_per_length[i_lookup] = breakdowni[i_all, 3]
+        length = self.length()
+        mass = mass_per_length * length
+        breakdown = np.column_stack([length, rho, area, nsm, mass_per_length, mass])
+        return breakdown
 
     def area(self) -> np.ndarray:
         pid = self.property_id
@@ -1023,6 +1055,22 @@ class PBARL(Property):
 
         assert len(mass_per_length) == nproperties
         return mass_per_length
+
+    def mass_per_length_breakdown(self) -> np.ndarray:
+        """[rho, A, nsm, mpl]"""
+        assert isinstance(self.ndim, np.ndarray), self.ndim
+        nsm = self.nsm
+        rho = get_density_from_material(self.material_id, self.allowed_materials)
+        if rho.max() == 0. and rho.min() == 0. and nsm.max() == 0. and nsm.min() == 0.:
+            return np.zeros(len(rho), dtype=rho.dtype)
+
+        nproperties = len(self.property_id)
+        area = self.area()
+        mass_per_length = rho * area + nsm
+
+        assert len(mass_per_length) == nproperties
+        breakdown = np.column_stack([rho, area, nsm, mass_per_length])
+        return breakdown
 
     def area(self) -> np.ndarray:
         nproperties = len(self.property_id)
