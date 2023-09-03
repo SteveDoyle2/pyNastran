@@ -4,6 +4,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import searchsorted_filter
 
 def get_density_from_property(property_id: np.ndarray,
                               allowed_properties: list[Any]) -> np.ndarray:
+    assert len(allowed_properties) > 0, allowed_properties
     nproperties = len(property_id)
     rho = np.full(nproperties, np.nan, dtype='float64')
     for prop in allowed_properties:
@@ -18,6 +19,7 @@ def get_density_from_property(property_id: np.ndarray,
 
 def get_density_from_material(material_id: np.ndarray, allowed_materials: list[Any],
                               debug: bool=False) -> np.ndarray:
+    assert len(allowed_materials) > 0, allowed_materials
     nmaterials = len(material_id)
     if nmaterials == 0:
         raise RuntimeError(f'material_id={material_id}')
@@ -61,7 +63,9 @@ def get_density_from_material(material_id: np.ndarray, allowed_materials: list[A
             #  mids=[1 1 1 1 2 2 1 1 1 1]
     return rho
 
-def get_mass_from_property(property_id: np.ndarray, allowed_properties: list[Any]) -> np.ndarray:
+def get_mass_from_property(property_id: np.ndarray,
+                           allowed_properties: list[Any]) -> np.ndarray:
+    assert len(allowed_properties) > 0, allowed_properties
     nproperties = len(property_id)
 
     mass = np.full(nproperties, np.nan, dtype='float64')
@@ -79,8 +83,10 @@ def get_mass_from_property(property_id: np.ndarray, allowed_properties: list[Any
         mass[i_lookup] = prop_mass[i_all]
     return mass
 
-def basic_mass_material_id(property_id, allowed_properties: list[Any], msg: str='') -> np.ndarray:
+def basic_mass_material_id(property_id: np.ndarray,
+                           allowed_properties: list[Any], msg: str='') -> np.ndarray:
     """Intended for elements that can only have a single material id"""
+    assert len(allowed_properties) > 0, allowed_properties
     material_id = np.full(len(property_id), np.nan, dtype='float64')
     for prop in allowed_properties:
         i_lookup, i_all = searchsorted_filter(prop.property_id, property_id, msg=msg)
@@ -94,9 +100,10 @@ def expanded_mass_material_id(element_id: np.ndarray,
                               allowed_properties: list[Any],
                               msg: str='') -> tuple[np.ndarray, np.ndarray]:
     """Intended for elements that can have multiple material ids (e.g., PCOMP)"""
-    element_ids = []
-    property_ids = []
-    material_ids = []
+    assert len(allowed_properties) > 0, allowed_properties
+    element_ids_list = []
+    property_ids_list = []
+    material_ids_list = []
 
     for prop in allowed_properties:
         i_lookup, i_all = searchsorted_filter(prop.property_id, property_id, msg=msg)
@@ -120,12 +127,12 @@ def expanded_mass_material_id(element_id: np.ndarray,
             )
             material_idi = mass_midi
 
-        element_ids.append(element_idi)
-        property_ids.append(property_idi)
-        material_ids.append(material_idi)
-        x = 1
+        element_ids_list.append(element_idi)
+        property_ids_list.append(property_idi)
+        material_ids_list.append(material_idi)
+        #x = 1
 
-    element_id = np.hstack(element_ids)
-    property_id = np.hstack(property_ids)
-    material_id = np.hstack(material_ids)
+    element_id = np.hstack(element_ids_list)
+    property_id = np.hstack(property_ids_list)
+    material_id = np.hstack(material_ids_list)
     return element_id, property_id, material_id

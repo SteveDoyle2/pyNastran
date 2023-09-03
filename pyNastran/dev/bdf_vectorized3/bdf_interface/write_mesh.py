@@ -4,6 +4,7 @@ from io import StringIO
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttributes
 from pyNastran.bdf.bdf_interface.write_mesh import _output_helper, _fix_sizes
+from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
@@ -214,8 +215,8 @@ class Writer():
             is this double precision
 
         """
-        model = self.model
-        #self._write_dmigs(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        #model = self.model
+        self._write_dmigs(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_loads(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_dynamic(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -306,7 +307,7 @@ class Writer():
         model = self.model
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if model.params or model.dti or model.mdlprm:
-            bdf_file.write('$PARAMS\n')  # type: list[str]
+            bdf_file.write('$PARAMS\n')
             for unused_name, dti in sorted(model.dti.items()):
                 bdf_file.write(dti.write_card(size=size, is_double=is_double))
 
@@ -321,10 +322,10 @@ class Writer():
         model = self.model
         if model.spoint.n:
             bdf_file.write('$SPOINTS\n')
-            bdf_file.write(model.spoint.write(size=8))
+            bdf_file.write(model.spoint.write(size=size))
         #if model.epoint.n:
             #bdf_file.write('$EPOINTS\n')
-            #bdf_file.write(model.epoint.write(size=8))
+            #bdf_file.write(model.epoint.write(size=size))
         #if self.points:
             #bdf_file.write('$POINTS\n')
             #for unused_point_id, point in sorted(self.points.items()):
@@ -352,16 +353,15 @@ class Writer():
                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the GRID-type cards"""
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        size = 8
         model = self.model
         if model.grid.n:
             bdf_file.write('$NODES\n')
             #if self.grdset:
                 #bdf_file.write(self.grdset.write_card(size))
-            bdf_file.write(model.grid.write(size=size, is_double=is_double))
+            model.grid.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         #if model.point.n:
             #bdf_file.write('$ POINTS\n')
-            #bdf_file.write(model.point.write(size=8))
+            #bdf_file.write(model.point.write(size=size))
 
     def _write_elements(self, bdf_file: Any, size: int=8, is_double: bool=False,
                         is_long_ids: Optional[bool]=None) -> None:
@@ -370,109 +370,109 @@ class Writer():
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
 
         # plot
-        #bdf_file.write(model.plotel.write(size=8))
+        #bdf_file.write(model.plotel.write(size=size))
 
         # celas
-        #bdf_file.write(model.celas1.write(size=8))
-        #bdf_file.write(model.celas2.write(size=8))
-        #bdf_file.write(model.celas3.write(size=8))
-        #bdf_file.write(model.celas4.write(size=8))
+        #bdf_file.write(model.celas1.write(size=size))
+        #bdf_file.write(model.celas2.write(size=size))
+        #bdf_file.write(model.celas3.write(size=size))
+        #bdf_file.write(model.celas4.write(size=size))
 
         # cdamp
-        #bdf_file.write(model.cdamp1.write(size=8))
-        #bdf_file.write(model.cdamp2.write(size=8))
-        #bdf_file.write(model.cdamp3.write(size=8))
-        #bdf_file.write(model.cdamp4.write(size=8))
-        #bdf_file.write(model.cdamp5.write(size=8))
+        #bdf_file.write(model.cdamp1.write(size=size))
+        #bdf_file.write(model.cdamp2.write(size=size))
+        #bdf_file.write(model.cdamp3.write(size=size))
+        #bdf_file.write(model.cdamp4.write(size=size))
+        #bdf_file.write(model.cdamp5.write(size=size))
 
-        #bdf_file.write(model.cvisc.write(size=8))
-        #bdf_file.write(model.cgap.write(size=8))
+        #bdf_file.write(model.cvisc.write(size=size))
+        #bdf_file.write(model.cgap.write(size=size))
 
         # bush
-        #bdf_file.write(model.cbush.write(size=8))
-        #bdf_file.write(model.cbush1d.write(size=8))
-        #bdf_file.write(model.cbush2d.write(size=8))
+        #bdf_file.write(model.cbush.write(size=size))
+        #bdf_file.write(model.cbush1d.write(size=size))
+        #bdf_file.write(model.cbush2d.write(size=size))
 
         # fast
-        #bdf_file.write(model.cfast.write(size=8))
+        #bdf_file.write(model.cfast.write(size=size))
 
         # rod
-        bdf_file.write(model.crod.write(size=8))
-        bdf_file.write(model.conrod.write(size=8))
-        bdf_file.write(model.ctube.write(size=8))
+        bdf_file.write(model.crod.write(size=size))
+        bdf_file.write(model.conrod.write(size=size))
+        bdf_file.write(model.ctube.write(size=size))
 
         # bar/beam/shear
-        bdf_file.write(model.cbar.write(size=8))
-        bdf_file.write(model.cbarao.write(size=8))
-        #bdf_file.write(model.cbeam.write(size=8))
-        #bdf_file.write(model.cshear.write(size=8))
+        bdf_file.write(model.cbar.write(size=size))
+        bdf_file.write(model.cbarao.write(size=size))
+        #bdf_file.write(model.cbeam.write(size=size))
+        #bdf_file.write(model.cshear.write(size=size))
 
         # shells
         #all_shells = (mo
-        bdf_file.write(model.ctria3.write(size=8))
-        bdf_file.write(model.cquad4.write(size=8))
-        bdf_file.write(model.ctria6.write(size=8))
-        bdf_file.write(model.cquad8.write(size=8))
-        bdf_file.write(model.ctriar.write(size=8))
-        bdf_file.write(model.cquadr.write(size=8))
-        bdf_file.write(model.cquad.write(size=8))
-        #bdf_file.write(model.snorm.write(size=8))
+        model.ctria3.write_file(bdf_file, size=size)
+        model.cquad4.write_file(bdf_file, size=size)
+        model.ctria6.write_file(bdf_file, size=size)
+        model.cquad8.write_file(bdf_file, size=size)
+        model.ctriar.write_file(bdf_file, size=size)
+        model.cquadr.write_file(bdf_file, size=size)
+        model.cquad.write_file(bdf_file, size=size)
+        #bdf_file.write(model.snorm.write(size=size))
 
         # axisymmetric shells
-        #bdf_file.write(model.ctriax.write(size=8))
-        #bdf_file.write(model.ctriax6.write(size=8))
-        #bdf_file.write(model.cquadx.write(size=8))
-        #bdf_file.write(model.cquadx4.write(size=8))
-        #bdf_file.write(model.cquadx8.write(size=8))
-        #bdf_file.write(model.ctrax3.write(size=8))
-        #bdf_file.write(model.ctrax6.write(size=8))
+        #bdf_file.write(model.ctriax.write(size=size))
+        #bdf_file.write(model.ctriax6.write(size=size))
+        #bdf_file.write(model.cquadx.write(size=size))
+        #bdf_file.write(model.cquadx4.write(size=size))
+        #bdf_file.write(model.cquadx8.write(size=size))
+        #bdf_file.write(model.ctrax3.write(size=size))
+        #bdf_file.write(model.ctrax6.write(size=size))
 
         # plate stress
-        #bdf_file.write(model.cplsts3.write(size=8))
-        #bdf_file.write(model.cplsts4.write(size=8))
-        #bdf_file.write(model.cplsts6.write(size=8))
-        #bdf_file.write(model.cplsts8.write(size=8))
+        #bdf_file.write(model.cplsts3.write(size=size))
+        #bdf_file.write(model.cplsts4.write(size=size))
+        #bdf_file.write(model.cplsts6.write(size=size))
+        #bdf_file.write(model.cplsts8.write(size=size))
 
         # plate strain
-        #bdf_file.write(model.cplstn3.write(size=8))
-        #bdf_file.write(model.cplstn4.write(size=8))
-        #bdf_file.write(model.cplstn6.write(size=8))
-        #bdf_file.write(model.cplstn8.write(size=8))
+        #bdf_file.write(model.cplstn3.write(size=size))
+        #bdf_file.write(model.cplstn4.write(size=size))
+        #bdf_file.write(model.cplstn6.write(size=size))
+        #bdf_file.write(model.cplstn8.write(size=size))
 
         # solids
-        bdf_file.write(model.ctetra.write(size=8))
-        bdf_file.write(model.cpenta.write(size=8))
-        bdf_file.write(model.chexa.write(size=8))
-        bdf_file.write(model.cpyram.write(size=8))
+        model.ctetra.write_file(bdf_file, size=size)
+        model.cpenta.write_file(bdf_file, size=size)
+        model.chexa.write_file(bdf_file, size=size)
+        model.cpyram.write_file(bdf_file, size=size)
 
         # acoustic solids
-        #bdf_file.write(model.chacab.write(size=8))
-        #bdf_file.write(model.chacbr.write(size=8))
+        #bdf_file.write(model.chacab.write(size=size))
+        #bdf_file.write(model.chacbr.write(size=size))
 
         # other
-        #bdf_file.write(model.genel.write(size=8))
+        #bdf_file.write(model.genel.write(size=size))
 
     def _write_rigid_elements(self, bdf_file: Any, size: int=8, is_double: bool=False,
                               is_long_ids: Optional[bool]=None) -> None:
         """Writes the rigid elements in a sorted order"""
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         model = self.model
-        bdf_file.write(model.rrod.write(size=8))
-        bdf_file.write(model.rbar.write(size=8))
-        bdf_file.write(model.rbe1.write(size=8))
-        bdf_file.write(model.rbe2.write(size=8))
-        bdf_file.write(model.rbe3.write(size=8))
+        bdf_file.write(model.rrod.write(size=size))
+        bdf_file.write(model.rbar.write(size=size))
+        bdf_file.write(model.rbe1.write(size=size))
+        bdf_file.write(model.rbe2.write(size=size))
+        bdf_file.write(model.rbe3.write(size=size))
 
     def _write_nonstructural_mass(self, bdf_file: Any, size: int=8, is_double: bool=False,
                                   is_long_ids: Optional[bool]=None) -> None:
         """Writes the rigid elements in a sorted order"""
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         model = self.model
-        bdf_file.write(model.nsmadd.write(size=8))
-        bdf_file.write(model.nsm.write(size=8))
-        bdf_file.write(model.nsm1.write(size=8))
-        bdf_file.write(model.nsml.write(size=8))
-        bdf_file.write(model.nsml1.write(size=8))
+        bdf_file.write(model.nsmadd.write(size=size))
+        bdf_file.write(model.nsm.write(size=size))
+        bdf_file.write(model.nsm1.write(size=size))
+        bdf_file.write(model.nsml.write(size=size))
+        bdf_file.write(model.nsml1.write(size=size))
 
 
     def _write_masses(self, bdf_file: Any, size: int=8, is_double: bool=False,
@@ -490,15 +490,15 @@ class Writer():
 
         bdf_file.write('$MASSES\n')
         for mass in masses:
-            bdf_file.write(mass.write(size=8))
+            bdf_file.write(mass.write(size=size))
 
         #bdf_file.write(model.conm1.write(size=size))
         #bdf_file.write(model.conm2.write(size=size))
-        #bdf_file.write(model.pmass.write(size=8))
-        #bdf_file.write(model.cmass1.write(size=8))
-        #bdf_file.write(model.cmass2.write(size=8))
-        #bdf_file.write(model.cmass3.write(size=8))
-        #bdf_file.write(model.cmass4.write(size=8))
+        #bdf_file.write(model.pmass.write(size=size))
+        #bdf_file.write(model.cmass1.write(size=size))
+        #bdf_file.write(model.cmass2.write(size=size))
+        #bdf_file.write(model.cmass3.write(size=size))
+        #bdf_file.write(model.cmass4.write(size=size))
         return
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
 
@@ -509,57 +509,57 @@ class Writer():
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
 
         # spring/damp
-        #bdf_file.write(model.pelas.write(size=8))
-        #bdf_file.write(model.pelast.write(size=8))
-        #bdf_file.write(model.pdamp.write(size=8))
-        #bdf_file.write(model.pdampt.write(size=8))
-        #bdf_file.write(model.pvisc.write(size=8))
-        #bdf_file.write(model.pgap.write(size=8))
+        #bdf_file.write(model.pelas.write(size=size))
+        #bdf_file.write(model.pelast.write(size=size))
+        #bdf_file.write(model.pdamp.write(size=size))
+        #bdf_file.write(model.pdampt.write(size=size))
+        #bdf_file.write(model.pvisc.write(size=size))
+        #bdf_file.write(model.pgap.write(size=size))
 
         # bush
-        #bdf_file.write(model.pbush.write(size=8))
-        #bdf_file.write(model.pbusht.write(size=8))
-        #bdf_file.write(model.pbush1d.write(size=8))
-        #bdf_file.write(model.pbush2d.write(size=8))
+        #bdf_file.write(model.pbush.write(size=size))
+        #bdf_file.write(model.pbusht.write(size=size))
+        #bdf_file.write(model.pbush1d.write(size=size))
+        #bdf_file.write(model.pbush2d.write(size=size))
 
         # fast
-        #bdf_file.write(model.pfast.write(size=8))
+        #bdf_file.write(model.pfast.write(size=size))
 
         # rod
-        bdf_file.write(model.prod.write(size=8))
-        bdf_file.write(model.ptube.write(size=8))
+        bdf_file.write(model.prod.write(size=size))
+        bdf_file.write(model.ptube.write(size=size))
 
         # bar
-        bdf_file.write(model.pbar.write(size=8))
-        bdf_file.write(model.pbarl.write(size=8))
-        bdf_file.write(model.pbrsect.write(size=8))
+        bdf_file.write(model.pbar.write(size=size))
+        bdf_file.write(model.pbarl.write(size=size))
+        bdf_file.write(model.pbrsect.write(size=size))
 
         # beam
-        #bdf_file.write(model.pbeam.write(size=8))
-        #bdf_file.write(model.pbeaml.write(size=8))
-        #bdf_file.write(model.pbcomp.write(size=8))
+        #bdf_file.write(model.pbeam.write(size=size))
+        #bdf_file.write(model.pbeaml.write(size=size))
+        #bdf_file.write(model.pbcomp.write(size=size))
 
         # shear
-        #bdf_file.write(model.pshear.write(size=8))
+        #bdf_file.write(model.pshear.write(size=size))
 
         # shell
-        bdf_file.write(model.pshell.write(size=8))
-        bdf_file.write(model.pcomp.write(size=8))
-        bdf_file.write(model.pcompg.write(size=8))
+        model.pshell.write_file(bdf_file, size=size)
+        model.pcomp.write_file(bdf_file, size=size)
+        model.pcompg.write_file(bdf_file, size=size)
 
         # planar shells
-        #bdf_file.write(model.plplane.write(size=8))
-        #bdf_file.write(model.pplane.write(size=8))
-        #bdf_file.write(model.pshln2.write(size=8))
+        model.plplane.write_file(bdf_file, size=size)
+        model.pplane.write_file(bdf_file, size=size)
+        #bdf_file.write(model.pshln2.write(size=size))
 
         # solid
-        bdf_file.write(model.psolid.write(size=8))
-        bdf_file.write(model.plsolid.write(size=8))
-        bdf_file.write(model.pcomps.write(size=8))
-        bdf_file.write(model.pcompls.write(size=8))
+        model.psolid.write_file(bdf_file, size=size)
+        model.plsolid.write_file(bdf_file, size=size)
+        model.pcomps.write_file(bdf_file, size=size)
+        model.pcompls.write_file(bdf_file, size=size)
 
 
-    def _write_materials(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_materials(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                          is_long_ids: Optional[bool]=None) -> None:
         """Writes the materials in a sorted order"""
         model = self.model
@@ -581,22 +581,22 @@ class Writer():
         is_thermal_materials = any([mat.n for mat in thermal_materials])
         if is_materials:
             bdf_file.write('$MATERIALS\n')
-            bdf_file.write(model.mat1.write(size=8))
-            bdf_file.write(model.mat2.write(size=8))
-            #bdf_file.write(model.mat3.write(size=8))
-            bdf_file.write(model.mat8.write(size=8))
-            bdf_file.write(model.mat9.write(size=8))
-            bdf_file.write(model.mat10.write(size=8))
-            bdf_file.write(model.mat11.write(size=8))
-            #bdf_file.write(model.mat10c.write(size=8))
-            #bdf_file.write(model.matort.write(size=8))
-            #bdf_file.write(model.mathe.write(size=8))
-            #bdf_file.write(model.mathp.write(size=8))
+            bdf_file.write(model.mat1.write(size=size))
+            bdf_file.write(model.mat2.write(size=size))
+            #bdf_file.write(model.mat3.write(size=size))
+            bdf_file.write(model.mat8.write(size=size))
+            bdf_file.write(model.mat9.write(size=size))
+            bdf_file.write(model.mat10.write(size=size))
+            bdf_file.write(model.mat11.write(size=size))
+            #bdf_file.write(model.mat10c.write(size=size))
+            #bdf_file.write(model.matort.write(size=size))
+            #bdf_file.write(model.mathe.write(size=size))
+            #bdf_file.write(model.mathp.write(size=size))
 
         if is_thermal_materials:
             bdf_file.write('$THERMAL_MATERIALS\n')
-            bdf_file.write(model.mat4.write(size=8))
-            bdf_file.write(model.mat5.write(size=8))
+            bdf_file.write(model.mat4.write(size=size))
+            bdf_file.write(model.mat5.write(size=size))
 
             #for (unused_mid, material) in sorted(self.materials.items()):
                 #bdf_file.write(material.write_card(size, is_double))
@@ -637,12 +637,12 @@ class Writer():
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the SETx cards sorted by ID"""
         model = self.model
-        bdf_file.write(model.set1.write(size=8))
-        bdf_file.write(model.set2.write(size=8))  #  faked
-        bdf_file.write(model.set3.write(size=8))
+        bdf_file.write(model.set1.write(size=size))
+        bdf_file.write(model.set2.write(size=size))  #  faked
+        bdf_file.write(model.set3.write(size=size))
 
-        bdf_file.write(model.uset.write(size=8))
-        bdf_file.write(model.uset1.write(size=8))
+        bdf_file.write(model.uset.write(size=size))
+        bdf_file.write(model.uset1.write(size=size))
 
     def _write_superelements(self, bdf_file: Any, size: int=8, is_double: bool=False,
                              is_long_ids: Optional[bool]=None) -> None:
@@ -753,32 +753,32 @@ class Writer():
         """Writes the flutter cards"""
         model = self.model
 
-        bdf_file.write(model.paero1.write(size=8))
-        bdf_file.write(model.paero2.write(size=8))
-        bdf_file.write(model.paero3.write(size=8))
-        bdf_file.write(model.paero4.write(size=8))
-        bdf_file.write(model.paero5.write(size=8))
+        bdf_file.write(model.paero1.write(size=size))
+        bdf_file.write(model.paero2.write(size=size))
+        bdf_file.write(model.paero3.write(size=size))
+        bdf_file.write(model.paero4.write(size=size))
+        bdf_file.write(model.paero5.write(size=size))
 
-        bdf_file.write(model.caero1.write(size=8))
-        bdf_file.write(model.caero2.write(size=8))
-        bdf_file.write(model.caero3.write(size=8))
-        bdf_file.write(model.caero4.write(size=8))
-        bdf_file.write(model.caero5.write(size=8))
-        bdf_file.write(model.caero7.write(size=8))  # zona
+        bdf_file.write(model.caero1.write(size=size))
+        bdf_file.write(model.caero2.write(size=size))
+        bdf_file.write(model.caero3.write(size=size))
+        bdf_file.write(model.caero4.write(size=size))
+        bdf_file.write(model.caero5.write(size=size))
+        bdf_file.write(model.caero7.write(size=size))  # zona
 
-        bdf_file.write(model.spline1.write(size=8))
-        bdf_file.write(model.spline2.write(size=8))
-        bdf_file.write(model.spline3.write(size=8))
-        bdf_file.write(model.spline4.write(size=8))
-        bdf_file.write(model.spline5.write(size=8))
-        #bdf_file.write(model.spline6.write(size=8))
+        bdf_file.write(model.spline1.write(size=size))
+        bdf_file.write(model.spline2.write(size=size))
+        bdf_file.write(model.spline3.write(size=size))
+        bdf_file.write(model.spline4.write(size=size))
+        bdf_file.write(model.spline5.write(size=size))
+        #bdf_file.write(model.spline6.write(size=size))
 
-        bdf_file.write(model.aesurf.write(size=8))
-        bdf_file.write(model.aecomp.write(size=8))  # helper for AECOMP
-        bdf_file.write(model.aecompl.write(size=8))  # helper for AECOMPL
-        bdf_file.write(model.aelist.write(size=8))  # aero boxes for AESURF
-        bdf_file.write(model.flfact.write(size=8))  # Mach, vel, rho for FLUTTER
-        #bdf_file.write(model.aefact.write(size=8))  #
+        bdf_file.write(model.aesurf.write(size=size))
+        bdf_file.write(model.aecomp.write(size=size))  # helper for AECOMP
+        bdf_file.write(model.aecompl.write(size=size))  # helper for AECOMPL
+        bdf_file.write(model.aelist.write(size=size))  # aero boxes for AESURF
+        bdf_file.write(model.flfact.write(size=size))  # Mach, vel, rho for FLUTTER
+        #bdf_file.write(model.aefact.write(size=size))  #
 
         if (write_aero_in_flutter and model.aero) or model.flutters or model.mkaeros:
             bdf_file.write('$FLUTTER\n')
@@ -799,7 +799,7 @@ class Writer():
             if write_aero_in_gust:
                 for (unused_id, aero) in sorted(model.aero.items()):
                     bdf_file.write(aero.write_card(size, is_double))
-            bdf_file.write(model.gust.write(size=8))
+            bdf_file.write(model.gust.write(size=size))
 
     def _write_loads(self, bdf_file: Any, size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
@@ -809,61 +809,61 @@ class Writer():
         #if self.load_combinations or self.loads or self.tempds or self.cyjoin:
         if any(load.n for load in model.loads):
             bdf_file.write('$LOADS\n')
-            bdf_file.write(model.load.write(size=8))
-            #bdf_file.write(model.grav.write(size=8))
-            #bdf_file.write(model.accel.write(size=8))
-            #bdf_file.write(model.accel1.write(size=8))
+            bdf_file.write(model.load.write(size=size))
+            #bdf_file.write(model.grav.write(size=size))
+            #bdf_file.write(model.accel.write(size=size))
+            #bdf_file.write(model.accel1.write(size=size))
 
-            bdf_file.write(model.force.write(size=8))
-            bdf_file.write(model.force1.write(size=8))
-            bdf_file.write(model.force2.write(size=8))
-            bdf_file.write(model.moment.write(size=8))
-            bdf_file.write(model.moment1.write(size=8))
-            bdf_file.write(model.moment2.write(size=8))
-            bdf_file.write(model.pload.write(size=8))
-            bdf_file.write(model.pload1.write(size=8))
-            bdf_file.write(model.pload2.write(size=8))
-            bdf_file.write(model.pload4.write(size=8))
-            #bdf_file.write(model.sload.write(size=8))
-            #bdf_file.write(model.tempd.write(size=8))  # default temp
-            #bdf_file.write(model.temp.write(size=8))
-            #bdf_file.write(model.spcd.write(size=8))
-            #bdf_file.write(model.deform.write(size=8))
+            bdf_file.write(model.force.write(size=size))
+            bdf_file.write(model.force1.write(size=size))
+            bdf_file.write(model.force2.write(size=size))
+            bdf_file.write(model.moment.write(size=size))
+            bdf_file.write(model.moment1.write(size=size))
+            bdf_file.write(model.moment2.write(size=size))
+            bdf_file.write(model.pload.write(size=size))
+            bdf_file.write(model.pload1.write(size=size))
+            bdf_file.write(model.pload2.write(size=size))
+            bdf_file.write(model.pload4.write(size=size))
+            #bdf_file.write(model.sload.write(size=size))
+            #bdf_file.write(model.tempd.write(size=size))  # default temp
+            #bdf_file.write(model.temp.write(size=size))
+            #bdf_file.write(model.spcd.write(size=size))
+            #bdf_file.write(model.deform.write(size=size))
 
             # axisymmetric loads
-            #bdf_file.write(model.ploadx1.write(size=8))
+            #bdf_file.write(model.ploadx1.write(size=size))
 
             # thermal loads
-            #bdf_file.write(model.dtemp.write(size=8))  # has nodes
-            #bdf_file.write(model.qhbdy.write(size=8))
-            #bdf_file.write(model.qbdy1.write(size=8))
-            #bdf_file.write(model.qbdy2.write(size=8))
-            #bdf_file.write(model.qbdy3.write(size=8))
-            #bdf_file.write(model.qvol.write(size=8))
-            #bdf_file.write(model.qvect.write(size=8))
+            #bdf_file.write(model.dtemp.write(size=size))  # has nodes
+            #bdf_file.write(model.qhbdy.write(size=size))
+            #bdf_file.write(model.qbdy1.write(size=size))
+            #bdf_file.write(model.qbdy2.write(size=size))
+            #bdf_file.write(model.qbdy3.write(size=size))
+            #bdf_file.write(model.qvol.write(size=size))
+            #bdf_file.write(model.qvect.write(size=size))
 
             # static load sequence
-            #bdf_file.write(model.lseq.write(size=8))
+            #bdf_file.write(model.lseq.write(size=size))
 
             # rotational forces - static
-            #bdf_file.write(model.rforce.write(size=8))
-            #bdf_file.write(model.rforce1.write(size=8))
+            #bdf_file.write(model.rforce.write(size=size))
+            #bdf_file.write(model.rforce1.write(size=size))
 
         if any(card.n for card in model.dynamic_cards):
-            bdf_file.write(model.tic.write(size=8))
-            bdf_file.write(model.dphase.write(size=8))
-            bdf_file.write(model.delay.write(size=8))
+            bdf_file.write(model.tic.write(size=size))
+            bdf_file.write(model.dphase.write(size=size))
+            bdf_file.write(model.delay.write(size=size))
 
         if any(load.n for load in model.dynamic_loads):
-            bdf_file.write(model.dload.write(size=8))
-            bdf_file.write(model.darea.write(size=8))
-            bdf_file.write(model.tload1.write(size=8))
-            bdf_file.write(model.tload2.write(size=8))
-            bdf_file.write(model.rload1.write(size=8))
-            bdf_file.write(model.rload2.write(size=8))
+            bdf_file.write(model.dload.write(size=size))
+            bdf_file.write(model.darea.write(size=size))
+            bdf_file.write(model.tload1.write(size=size))
+            bdf_file.write(model.tload2.write(size=size))
+            bdf_file.write(model.rload1.write(size=size))
+            bdf_file.write(model.rload2.write(size=size))
 
             # random loads
-            bdf_file.write(model.randps.write(size=8))
+            bdf_file.write(model.randps.write(size=size))
 
             #for (key, load_combinations) in sorted(self.load_combinations.items()):
                 #for load_combination in load_combinations:
@@ -926,15 +926,15 @@ class Writer():
         model = self.model
         if any((card.n for card in model.spcs)):
             bdf_file.write('$SPCs\n')
-            bdf_file.write(model.spcadd.write(size=8))
-            bdf_file.write(model.spc.write(size=8))
-            bdf_file.write(model.spc1.write(size=8))
+            bdf_file.write(model.spcadd.write(size=size))
+            bdf_file.write(model.spc.write(size=size))
+            bdf_file.write(model.spc1.write(size=size))
 
         if any((card.n for card in model.mpcs)):
             bdf_file.write('$MPCs\n')
-            bdf_file.write(model.mpcadd.write(size=8))
-            bdf_file.write(model.mpc.write(size=8))
-            #bdf_file.write(model.mpcax.write(size=8))
+            bdf_file.write(model.mpcadd.write(size=size))
+            bdf_file.write(model.mpc.write(size=size))
+            #bdf_file.write(model.mpcax.write(size=size))
 
         if len(model.suport) or len(model.suport1):
             bdf_file.write('$CONSTRAINTS\n')
@@ -998,7 +998,7 @@ class Writer():
         model = self.model
         if model.coord.coord_id.max() > 0:
             bdf_file.write('$COORDS\n')
-            bdf_file.write(model.coord.write(size=8))
+            bdf_file.write(model.coord.write(size=size))
         return
 
     def _write_dynamic(self, bdf_file: Any, size: int=8, is_double: bool=False,
@@ -1071,22 +1071,22 @@ class Writer():
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the optimization cards sorted by ID"""
         model = self.model
-        bdf_file.write(model.desvar.write(size=8))
-        bdf_file.write(model.dlink.write(size=8))
-        bdf_file.write(model.dvgrid.write(size=8))
+        bdf_file.write(model.desvar.write(size=size))
+        bdf_file.write(model.dlink.write(size=size))
+        bdf_file.write(model.dvgrid.write(size=size))
 
-        bdf_file.write(model.dresp1.write(size=8))
-        bdf_file.write(model.dresp2.write(size=8))  # poorly supported
-        bdf_file.write(model.dconstr.write(size=8))
-        #bdf_file.write(model.dconadd.write(size=8))
+        bdf_file.write(model.dresp1.write(size=size))
+        bdf_file.write(model.dresp2.write(size=size))  # poorly supported
+        bdf_file.write(model.dconstr.write(size=size))
+        #bdf_file.write(model.dconadd.write(size=size))
 
-        bdf_file.write(model.dvcrel1.write(size=8))  # not supported
-        bdf_file.write(model.dvcrel2.write(size=8))  # not supported
+        bdf_file.write(model.dvcrel1.write(size=size))  # not supported
+        bdf_file.write(model.dvcrel2.write(size=size))  # not supported
 
-        bdf_file.write(model.dvprel1.write(size=8))
-        bdf_file.write(model.dvprel2.write(size=8))
+        bdf_file.write(model.dvprel1.write(size=size))
+        bdf_file.write(model.dvprel2.write(size=size))
 
-        bdf_file.write(model.dvmrel1.write(size=8))  # not supported
-        bdf_file.write(model.dvmrel2.write(size=8))  # not supported
+        bdf_file.write(model.dvmrel1.write(size=size))  # not supported
+        bdf_file.write(model.dvmrel2.write(size=size))  # not supported
         if model.doptprm is not None:
             bdf_file.write(model.doptprm.write_card(size, is_double))

@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import Optional, Any, TYPE_CHECKING
+from typing import TextIO, Optional, Any, TYPE_CHECKING
 import numpy as np
-from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
+#from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
+#from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.elements.solid import volume4
@@ -13,7 +13,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check, find_missing
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, make_idim, hslice_by_idim # searchsorted_filter,
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, make_idim, hslice_by_idim, get_print_card_8_16 # searchsorted_filter,
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_str, array_default_int
 from .utils import get_density_from_material, get_density_from_property, basic_mass_material_id
 
@@ -57,6 +57,15 @@ class SolidElement(Element):
         model = self.model
         allowed_properties = [model.psolid, model.plsolid, model.pcomps, model.pcompls]
         return [prop for prop in allowed_properties if prop.n > 0]
+
+    def mass_breakdown(self) -> np.ndarray:
+        """[rho, volume, mass]"""
+        #material_id = get_material_from_property(self.property_id, self.allowed_properties)
+        rho = get_density_from_property(self.property_id, self.allowed_properties)
+        volume = self.volume()
+        mass = rho * volume
+        breakdown = np.column_stack([rho, volume, mass])
+        return breakdown
 
     def mass(self) -> np.ndarray:
         #material_id = get_material_from_property(self.property_id, self.allowed_properties)
@@ -117,11 +126,11 @@ class SolidElement(Element):
         self.sort()
         self.cards = []
 
-    def write_8(self) -> str:
-        return self.write(size=8, is_double=False)
+    #def write_8(self) -> str:
+        #return self.write(size=8, is_double=False)
 
-    def write_16(self, is_double: bool=False) -> str:
-        return self.write(size=16, is_double=False)
+    #def write_16(self, is_double: bool=False) -> str:
+        #return self.write(size=16, is_double=False)
 
 
 class CTETRA(SolidElement):
@@ -179,13 +188,16 @@ class CTETRA(SolidElement):
         assert midside_nodes.shape[1] == 6, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+            return
 
-        lines = []
+        max_int = max(self.element_id.max(),
+                      self.property_id.max(),
+                      self.nodes.max())
+        print_card = get_print_card(size, max_int)
+
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
         assert base_nodes.min() > 0, (base_nodes.min(), base_nodes.max())
@@ -193,12 +205,12 @@ class CTETRA(SolidElement):
         if midside_nodes.shape[1] == 0:
             for eid, pid, nodes in zip(self.element_id, self.property_id, base_nodes):
                 msg = print_card(['CTETRA', eid, pid] + nodes.tolist())
-                lines.append(msg)
+                bdf_file.write(msg)
         else:
             for eid, pid, nodes in zip(self.element_id, self.property_id, self.nodes):
                 msg = print_card(['CTETRA', eid, pid] + nodes.tolist())
-                lines.append(msg)
-        return ''.join(lines)
+                bdf_file.write(msg)
+        return
 
     def volume(self) -> np.ndarray:
         xyz = self.model.grid.xyz_cid0()
@@ -384,12 +396,15 @@ class CPENTA(SolidElement):
         assert midside_nodes.shape[1] == 9, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        print_card = get_print_card_8_16(size)
+            return
+        max_int = max(self.element_id.max(),
+                      self.property_id.max(),
+                      self.nodes.max())
+        print_card = get_print_card(size, max_int)
 
-        lines = []
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
         assert base_nodes.min() > 0, (base_nodes.min(), base_nodes.max())
@@ -406,7 +421,7 @@ class CPENTA(SolidElement):
                     #f'{nodes[1]:>8s}{nodes[2]:>8s}{nodes[3]:>8s}{nodes[4]:>8s}{nodes[5]:>8s}\n')
                 msg2 = print_card(['CPENTA', eid, pid] + nodes.tolist())
                 #assert msg1 == msg2
-                lines.append(msg2)
+                bdf_file.write(msg2)
             #else:
                 #for eid, pid, nodes in zip(element_ids, property_ids, base_nodes_str):
                     #msg1 = (
@@ -419,8 +434,8 @@ class CPENTA(SolidElement):
             midside_nodes_str = array_default_int(midside_nodes, default=0, size=size)
             for eid, pid, nodes in zip(element_ids, property_ids, midside_nodes_str):
                 msg = print_card(['CPENTA', eid, pid] + nodes.tolist())
-                lines.append(msg)
-        return ''.join(lines)
+                bdf_file.write(msg)
+        return
 
     def volume(self):
         xyz = self.model.grid.xyz_cid0()
@@ -518,15 +533,15 @@ class CPYRAM(SolidElement):
         assert midside_nodes.shape[1] == 8, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
+            return
+        max_int = max(self.element_id.max(),
+                      self.property_id.max(),
+                      self.nodes.max())
+        print_card = get_print_card(size, max_int)
 
-        lines = []
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
         assert midside_nodes.shape[1] in [0, 8], midside_nodes.shape
@@ -535,12 +550,12 @@ class CPYRAM(SolidElement):
         if midside_nodes.shape[1] == 0:
             for eid, pid, nodes in zip(self.element_id, self.property_id, base_nodes):
                 msg = print_card(['CPYRAM', eid, pid] + nodes.tolist())
-                lines.append(msg)
+                bdf_file.write(msg)
         else:
             for eid, pid, nodes in zip(self.element_id, self.property_id, self.nodes):
                 msg = print_card(['CPYRAM', eid, pid] + nodes.tolist())
-                lines.append(msg)
-        return ''.join(lines)
+                bdf_file.write(msg)
+        return
 
     def volume(self):
         xyz = self.model.grid.xyz_cid0()
@@ -642,12 +657,16 @@ class CHEXA(SolidElement):
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIO,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
-        lines = []
+            return
+        max_int = max(self.element_id.max(),
+                      self.property_id.max(),
+                      self.nodes.max())
+        print_card = get_print_card(size, max_int)
+
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
         assert base_nodes.min() > 0, (base_nodes.min(), base_nodes.max())
@@ -655,12 +674,12 @@ class CHEXA(SolidElement):
         if midside_nodes.shape[1] == 0:
             for eid, pid, nodes in zip(self.element_id, self.property_id, base_nodes):
                 msg = print_card(['CHEXA', eid, pid] + nodes.tolist())
-                lines.append(msg)
+                bdf_file.write(msg)
         else:
             for eid, pid, nodes in zip(self.element_id, self.property_id, self.nodes):
                 msg = print_card(['CHEXA', eid, pid] + nodes.tolist())
-                lines.append(msg)
-        return ''.join(lines)
+                bdf_file.write(msg)
+        return
 
     def centroid(self) -> np.ndarray:
         centroid = chexa_centroid(self)
@@ -803,6 +822,8 @@ class PSOLID(Property):
         self.cards = []
 
     def _save(self, property_id, material_id, coord_id, integ, stress, isop, fctn):
+        if len(self.property_id) != 0:
+            raise NotImplementedError()
         nproperties = len(property_id)
         self.property_id = property_id
         self.material_id = material_id
@@ -830,9 +851,11 @@ class PSOLID(Property):
                    coord=(cid, self.coord_id),
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIO,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
+            return
 
         max_int = max(
             self.property_id.max(),
@@ -840,7 +863,6 @@ class PSOLID(Property):
             self.coord_id.max())
         print_card = get_print_card(size, max_int)
 
-        lines = []
         #property_id = array_str(self.property_id, size=size)
         #property_id = array_str(self.property_id, size=size)
         for pid, mid, cordm, integ, stress, isop, fctn in zip(self.property_id, self.material_id, self.coord_id,
@@ -848,8 +870,8 @@ class PSOLID(Property):
             cordm = set_blank_if_default(cordm, 0)
             fctn = set_blank_if_default(fctn, 'SMECH')
             fields = ['PSOLID', pid, mid, cordm, integ, stress, isop, fctn]
-            lines.append(print_card(fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(fields))
+        return
 
     @property
     def allowed_materials(self) -> list[Any]:
@@ -944,20 +966,20 @@ class PLSOLID(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIO,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         stress_strains = array_default_str(self.stress_strain, default='GRID', size=size)
         for pid, mid, stress_strain in zip(property_ids, material_ids, stress_strains):
             fields = ['PLSOLID', pid, mid, stress_strain]
-            lines.append(print_card(fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(fields))
+        return
 
     @property
     def all_materials(self) -> list[Any]:
@@ -1180,7 +1202,8 @@ class PCOMPS(Property):
     def _save(self, property_id, global_ply_id, material_id, thickness, theta, nply,
               failure_theory, interlaminar_failure_theory, sout,
               sb, nb, psdir, tref, ge, coord_id):
-        assert len(self.property_id) == 0, self.property_id
+        if len(self.property_id) != 0:
+            raise NotImplementedError()
         self.property_id = property_id
         self.global_ply_id = global_ply_id
         self.material_id = material_id
@@ -1203,13 +1226,13 @@ class PCOMPS(Property):
     def iply(self) -> np.ndarray:
         return make_idim(self.n, self.nply)
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIO,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         for pid, mid, cordm, psdir, sb, nb, tref, ge, iply in zip(self.property_id, self.material_id, self.coord_id,
                                                                   self.psdir, self.sb, self.nb, self.tref, self.ge, self.iply):
             iply0, iply1 = iply
@@ -1229,8 +1252,8 @@ class PCOMPS(Property):
                                                            interlaminar_failure_theories,
                                                            souts):
                 list_fields += [glply, mid, t, theta, ft, ift, sout, None]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def allowed_materials(self) -> list[Any]:
@@ -1481,7 +1504,8 @@ class PCOMPLS(Property):
               theta, thickness, coord_id,
               c8, c20,
               direct, analysis, sb):
-        assert len(self.property_id) == 0, property_id
+        if len(self.property_id) != 0:
+            raise NotImplementedError()
         self.property_id = property_id
         self.material_id = material_id
         self.global_ply_id = global_ply_id
@@ -1502,13 +1526,13 @@ class PCOMPLS(Property):
     def iply(self) -> np.ndarray:
         return make_idim(self.n, self.nply)
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIO,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         for pid, mid, cordm, direct, analysis, sb, iply in zip(self.property_id, self.material_id, self.coord_id,
                                                                self.direct, self.analysis, self.sb, self.iply):
             iply0, iply1 = iply
@@ -1532,8 +1556,8 @@ class PCOMPLS(Property):
             for glply, mid, t, theta in zip(global_ply_ids,
                                             mids, thicknesses, thetas):
                 list_fields += [glply, mid, t, theta, None, None, None, None]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def allowed_materials(self) -> list[Any]:
@@ -1616,12 +1640,13 @@ class CHACBR(SolidElement):
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIO,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
+
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
         assert base_nodes.min() > 0, (base_nodes.min(), base_nodes.max())
@@ -1629,12 +1654,11 @@ class CHACBR(SolidElement):
         if midside_nodes.shape[1] == 0:
             for eid, pid, nodes in zip(self.element_id, self.property_id, base_nodes):
                 msg = print_card(['CHACBR', eid, pid] + nodes.tolist())
-                lines.append(msg)
+                bdf_file.write(msg)
         else:
             for eid, pid, nodes in zip(self.element_id, self.property_id, self.nodes):
                 msg = print_card(['CHACBR', eid, pid] + nodes.tolist())
-                lines.append(msg)
-        return ''.join(lines)
+        return
 
     def centroid(self) -> np.ndarray:
         centroid = chexa_centroid(self)
@@ -1736,12 +1760,13 @@ class CHACAB(SolidElement):
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIO,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
+
         base_nodes = self.base_nodes
         midside_nodes = self.midside_nodes
         assert base_nodes.min() > 0, (base_nodes.min(), base_nodes.max())
@@ -1749,12 +1774,12 @@ class CHACAB(SolidElement):
         if midside_nodes.shape[1] == 0:
             for eid, pid, nodes in zip(self.element_id, self.property_id, base_nodes):
                 msg = print_card(['CHACAB', eid, pid] + nodes.tolist())
-                lines.append(msg)
+                bdf_file.write(msg)
         else:
             for eid, pid, nodes in zip(self.element_id, self.property_id, self.nodes):
                 msg = print_card(['CHACAB', eid, pid] + nodes.tolist())
-                lines.append(msg)
-        return ''.join(lines)
+                bdf_file.write(msg)
+        return
 
     def centroid(self) -> np.ndarray:
         centroid = chexa_centroid(self)
@@ -1792,10 +1817,3 @@ class CHACAB(SolidElement):
     def quality(self):
         out = chexa_quality(self)
         return out
-
-def get_print_card_8_16(size: int) -> Callable[list[Any]]:
-    if size == 8:
-        print_card = print_card_8
-    else:
-        print_card = print_card_16
-    return print_card

@@ -4,8 +4,8 @@ from itertools import count, zip_longest
 from typing import Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
-from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
+from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
+from pyNastran.bdf.field_writer_16 import print_field_16, print_card_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, # string, # double,
@@ -15,11 +15,15 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.bdf.cards.properties.shell import map_failure_theory_int
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, hslice_by_idim, make_idim, searchsorted_filter
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, get_print_card
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, Property, get_print_card_8_16,
+    hslice_by_idim, make_idim, searchsorted_filter)
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_default_int, get_print_card,
+    print_card_8_comment, print_card_16_comment)
 from .utils import get_density_from_material, get_density_from_property, expanded_mass_material_id
 
-from .shell_coords import element_coordinate_system, material_coordinate_system, rotate_by_thetad
+from .shell_coords import element_coordinate_system, material_coordinate_system
 from .shell_utils import (
     tri_area, tri_area_centroid_normal, tri_centroid,
     quad_area, quad_area_centroid_normal, quad_centroid)
@@ -31,8 +35,9 @@ NUMPY_FLOATS = {'float32', 'float64'}
 
 
 if TYPE_CHECKING:
-    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.bdf.cards.materials import MAT1, MAT8
     #from pyNastran.dev.bdf_vectorized3.cards.grid import GRID
 
@@ -165,6 +170,8 @@ class PSHELL(Property):
         self.cards = []
 
     def _save(self, property_id, material_id, t, twelveIt3, tst, nsm, z) -> None:
+        if len(self.property_id) != 0:
+            raise NotImplementedError()
         self.property_id = property_id
         self.material_id = material_id
         self.t = t
@@ -227,14 +234,15 @@ class PSHELL(Property):
                    missing,
                    material_id=(mids, material_ids))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
+            return
 
         max_int = max(self.property_id.max(), self.material_id.max())
         print_card = get_print_card(size, max_int)
 
-        lines = []
         for pid, mids, t, twelveIt3, tst, nsm, z in zip_longest(self.property_id, self.material_id, self.t,
                                                                 self.twelveIt3, self.tst, self.nsm, self.z):
             mid1, mid2, mid3, mid4 = mids
@@ -260,8 +268,8 @@ class PSHELL(Property):
             list_fields = ['PSHELL', pid, mid1b, t, mid2b,
                            twelveIt3, mid3b, tst, nsm, z1b, z2b, mid4b]
             msg = print_card(list_fields)
-            lines.append(msg)
-        return ''.join(lines)
+            bdf_file.write(msg)
+        return
 
     @property
     def allowed_materials(self) -> list[Any]:
@@ -480,6 +488,10 @@ class PLPLANE(Property):
      #- CQUAD, CQUAD4, CQUAD8, CQUADX, CTRIA3, CTRIA6, CTRIAX (MSC)
      #- CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8 entries (NX 10)
 
+    NX:
+    PLPLANE can be referenced by CQUAD, CQUAD4, CQUAD8, CTRIA3, and
+    CTRIA6 entries in solutions 106 and 129. The CQUAD4, CQUAD8, CTRIA3,
+    and CTRIA6 entries are treated as hyperelastic plane strain elements.
     """
     def __init__(self, model: BDF):
         super().__init__(model)
@@ -489,59 +501,13 @@ class PLPLANE(Property):
         self.stress_strain_output_location = np.array([], dtype='|U4')
         self.thickness = np.array([], dtype='float64')
 
-    #def add(self, pid: int, mid1: int=None, t: float=None,
-            #mid2: int=None, twelveIt3: float=1.0,
-            #mid3: int=None, tst: float=0.833333, nsm: float=0.0,
-            #z1: float=None, z2: float=None, mid4: int=None,
-            #comment: str='') -> PSHELL:
-        #"""
-        #Creates a PSHELL card
-
-        #Parameters
-        #----------
-        #pid : int
-            #property id
-        #mid1 : int; default=None
-            #defines membrane material
-            #defines element density (unless blank)
-        #mid2 : int; default=None
-            #defines bending material
-            #defines element density if mid1=None
-        #mid3 : int; default=None
-            #defines transverse shear material
-        #mid4 : int; default=None
-            #defines membrane-bending coupling material
-        #twelveIt3 : float; default=1.0
-            #Bending moment of inertia ratio, 12I/T^3. Ratio of the actual
-            #bending moment inertia of the shell, I, to the bending
-            #moment of inertia of a homogeneous shell, T^3/12. The default
-            #value is for a homogeneous shell.
-        #nsm : float; default=0.0
-            #non-structural mass per unit area
-        #z1 / z2 : float; default=None
-            #fiber distance location 1/2 for stress/strain calculations
-            #z1 default : -t/2 if thickness is defined
-            #z2 default : t/2 if thickness is defined
-        #comment : str; default=''
-            #a comment for the card
-
-        #"""
-        #if z1 is None and t is not None:
-            #z1 = -t / 2.
-        #if z2 is None and t is not None:
-            #z2 = t / 2.
-        #t = np.nan if t is None else t
-
-        #self.cards.append((pid, mid1, t,
-                           #mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4,
-                           #comment))
-        #self.n += 1
-
-    def add(self, pid, mid, cid=0, stress_strain_output_location='GRID', thickness=np.nan,
-            comment=''):
+    def add(self, pid: int, mid: int, cid: int=0,
+            stress_strain_output_location: str='GRID', thickness: float=np.nan,
+            comment: str='') -> int:
         """Creates a PLPLANE card"""
         self.cards.append((pid, mid, cid, stress_strain_output_location, thickness, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -571,7 +537,7 @@ class PLPLANE(Property):
         assert len(card) <= 6, f'len(PLPLANE card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, cid, stress_strain_output_location, thickness, comment))
         self.n += 1
-        #return self.n
+        return self.n
 
     def parse_cards(self) -> None:
         assert self.n >= 0, self.n
@@ -605,10 +571,22 @@ class PLPLANE(Property):
         prop.stress_strain_output_location = self.stress_strain_output_location[i]
         prop.thickness = self.thickness[i]
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    #def write_file_8(self, bdf_file: TextIOLike,
+    #               write_card_header: bool=False) -> None:
+    #    self.write_file(bdf_file, size=8, is_double=False,
+    #                    write_card_header=write_card_header)
+#
+#    def write_file_16(self, bdf_file: TextIOLike,
+#                      is_double=False, write_card_header: bool=False) -> None:
+#        self.write_file(bdf_file, size=16, is_double=is_double,
+#                        write_card_header=write_card_header)
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
         pids = array_str(self.property_id, size=size)
         mids = array_str(self.material_id, size=size)
         cids = array_str(self.coord_id, size=size)
@@ -620,8 +598,8 @@ class PLPLANE(Property):
                 self.stress_strain_output_location[inan]):
                 list_fields = ['PLPLANE', pid, mid, cid,
                                stress_strain_output_location]
-                msg = print_card_8(list_fields)
-                lines.append(msg)
+                msg = print_card(list_fields)
+                bdf_file.write(msg)
 
         not_nan = ~inan
         if np.any(not_nan):
@@ -631,10 +609,9 @@ class PLPLANE(Property):
                 self.thickness[not_nan]):
                 list_fields = ['PLPLANE', pid, mid, cid,
                                stress_strain_output_location, t]
-                msg = print_card_8(list_fields)
-                lines.append(msg)
-
-        return ''.join(lines)
+                msg = print_card(list_fields)
+                bdf_file.write(msg)
+        return
 
     @property
     def allowed_materials(self) -> list[Any]:
@@ -706,7 +683,7 @@ class ShellElement(Element):
         model = self.model
         all_props = [
             model.pshell, model.pcomp,
-            model.pcompg, # model.plplane
+            model.pcompg, model.plplane,
             ]  # shells
         return all_props
 
@@ -963,6 +940,27 @@ class ShellElement(Element):
             self.property_id, self.allowed_properties)
         return total_thickness
 
+    def mass_breakdown(self) -> np.ndarray:
+        """
+        [area, nsm, rho, t, mass_per_area, mass]
+        TODO: doesn't consider differential thickness
+        """
+        nelement = len(self.element_id)
+        assert nelement > 0, nelement
+        mass_per_area_breakdown = shell_mass_per_area_breakdown(
+            self.model, self.tflag, self.T,
+            self.property_id, self.allowed_properties)
+        assert len(mass_per_area_breakdown) == nelement, mass_per_area_breakdown
+
+        mass_per_area = mass_per_area_breakdown[:, -1]
+        area = self.area()
+        mass = mass_per_area * area
+
+        _check_shell_mass(self, mass, area)
+        breakdown = np.column_stack([area, mass_per_area_breakdown, mass])
+        assert breakdown.shape[1] == 6, breakdown.shape
+        return breakdown
+
     def mass(self) -> np.ndarray:
         """TODO: doesn't consider differential thickness"""
         mass_per_area = self.mass_per_area()
@@ -1060,6 +1058,15 @@ class ShellElement(Element):
             geom_check(self,
                        missing,
                        node=(nid, midside_nodes), filter_node0=True)
+
+    def write_file(self, file_obj: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if size == 8:
+            self.write_file_8(file_obj, write_card_header=write_card_header)
+        else:
+            self.write_file_16(file_obj, is_double=is_double, write_card_header=write_card_header)
+        return
 
 
 def _check_shell_mass(element: ShellElement, mass: np.ndarray, area=np.ndarray):
@@ -1179,12 +1186,13 @@ def shell_mass_per_area(model: BDF,
         if len(iall) == 0:
             continue
 
-        if prop.type != 'PSHELL':
+        if prop.type in {'PCOMP', 'PLPLANE'}:
             mass_per_areai = prop.mass_per_area()
             mass_per_areai_all = mass_per_areai[iall]
             mass_per_area[ilookup] = mass_per_areai_all
             continue
 
+        assert prop.type == 'PSHELL', prop.type
         nsm, rho, ti = prop.nsm_rho_thickness()
         nsm_all = nsm[iall]
         rho_all = rho[iall]
@@ -1240,7 +1248,116 @@ def shell_mass_per_area(model: BDF,
     return mass_per_area
 
 
+def shell_mass_per_area_breakdown(model: BDF,
+                                  tflag: np.ndarray,
+                                  T: np.ndarray,
+                                  property_id: np.ndarray,
+                                  allowed_properties: list[Any]) -> np.ndarray:
+    """
+    PCOMP:    [nsm, nan, nan, mass_per_area]
+    PLPLANE:  [nan, nan, nan, mass_per_area]
+    PSHELL:   [nsm, rho, t,   mass_per_area]
+    """
+    nelement = len(property_id)
+    assert nelement > 0, property_id
+    mass_per_area_breakdown = np.full((nelement, 4), np.nan, dtype='float64')
+    assert len(allowed_properties) > 0, allowed_properties
+
+    for prop in allowed_properties:
+        ilookup, iall = searchsorted_filter(prop.property_id, property_id)
+        if len(iall) == 0:
+            continue
+
+        if prop.type in {'PCOMP', 'PLPLANE'}:
+            if prop.type == 'PCOMP':
+                breakdowni = prop.mass_per_area_breakdown() # nsm, mass_per_area
+                assert breakdowni.shape[1] == 2, breakdowni.shape
+                mass_per_area_breakdown[ilookup, 0] = breakdowni[iall, 0]
+                mass_per_area_breakdown[ilookup, 3] = breakdowni[iall, 1]
+            elif prop.type == 'PLPLANE':
+                mass_per_areai = prop.mass_per_area()
+                mass_per_areai_all = mass_per_areai[iall]
+                mass_per_area_breakdown[ilookup, 3] = mass_per_areai_all
+            else:  ## pragma: no cover
+                raise RuntimeError(prop.type)
+            #mass_per_area_breakdown[ilookup, 0] = 0.
+            #mass_per_area_breakdown[ilookup, 1] = 0.
+            #mass_per_area_breakdown[ilookup, 2] = 0.
+            continue
+
+        assert prop.type == 'PSHELL', prop.type
+        nsm, rho, ti = prop.nsm_rho_thickness()
+        nsm_all = nsm[iall]
+        rho_all = rho[iall]
+        ti_all = ti[iall]
+        mass_per_areai_all = nsm_all + rho_all * ti_all
+        mass_per_area_breakdown[ilookup, 0] = mass_per_areai_all
+        mass_per_area_breakdown[ilookup, 1] = rho_all
+        mass_per_area_breakdown[ilookup, 2] = ti_all
+        mass_per_area_breakdown[ilookup, 3] = mass_per_areai_all
+
+        inan = np.isnan(ti_all)
+        if not np.any(inan):
+            continue
+
+        #print('inan', inan)
+        tflag_nan = tflag[ilookup]
+        t_nan = T[ilookup, :]
+        #print('tflag_nan', tflag_nan)
+        #print('t_nan', t_nan)
+
+        i0 = (tflag_nan == 0)
+        i1 = ~i0
+        if i0.sum():
+            mean_thickness = t_nan[i0, :].mean(axis=1)
+            ti_all[i0] = mean_thickness
+        if i1.sum():
+            scale = t_nan[i1, :].mean(axis=1)
+            ti_all[i1] *= scale
+            raise RuntimeError('tflag=1')
+        #log.error(ti_all)
+        # tflag=0: Thickness of element at grid points G1 through G4
+        # TFLAG=1:Tthickness becomes a product of Ti and the thickness
+        # on the PSHELL card. Ti is ignored for hyperelastic elements.
+        # See Remark 6. (Real > 0.0 or blank. See Remark 4 for the default.)
+        inan = np.isnan(ti_all)
+        if np.any(inan):
+            msg = (
+                f'tflag={tflag_nan[inan]}\n'
+                f'T={ti_all[inan, :]}')
+            model.log.error(msg)
+            raise RuntimeError(msg)
+
+        mass_per_area_all = nsm_all + rho_all * ti_all
+        #nsm_all = nsm[iall]
+        #rho_all = rho[iall]
+        #ti_all = ti[iall]
+        mass_per_area_breakdown[ilookup, 0] = nsm_all
+        mass_per_area_breakdown[ilookup, 1] = rho_all
+        mass_per_area_breakdown[ilookup, 2] = ti_all
+        mass_per_area_breakdown[ilookup, 3] = mass_per_area_all
+
+        inan = np.isnan(ti_all)
+        if np.any(inan):
+            msg = f'Thickness has nan\nt={ti_all}'
+            model.log.error(msg)
+            raise RuntimeError(msg)
+    assert nelement > 0, nelement
+    assert len(mass_per_area_breakdown) == nelement, mass_per_area_breakdown
+    return mass_per_area_breakdown
+
+
 class CTRIA3(ShellElement):
+    """
+    +--------+-------+-------+----+----+----+------------+---------+
+    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |
+    +========+=======+=======+=====+===+====+============+=========+
+    | CTRIA3 |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |
+    +--------+-------+-------+----+----+----+------------+---------+
+    |        |       | TFLAG | T1 | T2 | T3 |            |         |
+    +--------+-------+-------+----+----+----+------------+---------+
+
+    """
     def __init__(self, model: BDF):
         super().__init__(model)
         self.property_id = np.array([], dtype='int32')
@@ -1371,16 +1488,28 @@ class CTRIA3(ShellElement):
         element.T = self.T[i, :]
         element.n = len(self.element_id)
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def card_headers(self, size: int=8) -> list[str]:
+        theta_mcid = 'th_mcid' if size == 8 else 'theta_mcid'
+        headers = [
+            'CTRIA3', 'eid', 'pid', 'node1', 'node2', 'node3',
+            theta_mcid, 'zoffset', 'blank', 'blank', 'tflag', 'T1', 'T2', 'T3',
+        ]
+        return headers
+
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        lines = []
+            return
+
+        size = 8
+        headers = self.card_headers()
+        if write_card_header:
+            bdf_file.write(print_card_8_comment(headers))
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes_ = array_str(self.nodes, size=size)
         for eid, pid, nodes, theta, mcid, zoffset, tflag, T in zip_longest(element_id, property_id, nodes_, self.theta,
                                                                            self.mcid, self.zoffset, self.tflag, self.T):
-
             row1 = [eid, pid] + nodes.tolist()
             T1, T2, T3 = T
             if np.isnan(theta):
@@ -1405,8 +1534,53 @@ class CTRIA3(ShellElement):
                 row2 = [print_field_8(field) for field in row2_data]
                 msg = ('CTRIA3  %8s%8s%8s%8s%8s%8s%8s\n'
                        '                %8s%8s%8s%8s\n' % tuple(row1 + row2)).rstrip(' \n') + '\n'
-            lines.append(msg)
-        return ''.join(lines)
+            bdf_file.write(msg)
+        return
+
+    def write_file_16(self, bdf_file: TextIOLike,
+                      is_double: bool=False,
+                      write_card_header: bool=False) -> None:
+        if len(self.element_id) == 0:
+            return ''
+        size = 16
+        element_id = array_str(self.element_id, size=size)
+        property_id = array_str(self.property_id, size=size)
+        nodes_ = array_str(self.nodes, size=size)
+        headers = self.card_headers(size=size)
+        if write_card_header:
+            bdf_file.write(print_card_16_comment(headers))
+        for eid, pid, nodes, theta, mcid, zoffset, tflag, T in zip_longest(
+            element_id, property_id, nodes_, self.theta,
+            self.mcid, self.zoffset, self.tflag, self.T):
+
+            row1 = [eid, pid] + nodes.tolist()
+            T1, T2, T3 = T
+            if np.isnan(theta):
+                theta_mcid = '%8d' % mcid
+            else:
+                theta_mcid = print_field_8(theta)
+
+            row2_data0 = [theta_mcid, zoffset,  # actually part of line 1
+                         tflag, T1, T2, T3]
+            if row2_data0 == [0.0, 0.0, 0, 1.0, 1.0, 1.0]:
+                msg = (
+                    'CTRIA3* %16s%16s%16s%16s\n'
+                    '*       %16s\n') % tuple(row1)
+            else:
+                zoffset = set_blank_if_default(zoffset, 0.0)
+                tflag = set_blank_if_default(tflag, 0)
+                #theta_mcid = self._get_theta_mcid_repr()
+
+                T1 = set_blank_if_default(T1, 1.0)
+                T2 = set_blank_if_default(T2, 1.0)
+                T3 = set_blank_if_default(T3, 1.0)
+
+                row2_data = [theta_mcid, zoffset, tflag, T1, T2, T3]
+                row2 = [print_field_8(field) for field in row2_data]
+                msg = ('CTRIA3  %8s%8s%8s%8s%8s%8s%8s\n'
+                       '                %8s%8s%8s%8s\n' % tuple(row1 + row2)).rstrip(' \n') + '\n'
+            bdf_file.write(msg)
+        return
 
     def area(self):
         return tri_area(self.model.grid, self.nodes)
@@ -1621,18 +1795,30 @@ class CTRIAR(ShellElement):
         self.zoffset = zoffset
         self.T = T
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file_8(self, bdf_file: TextIOLike,
+                   write_card_header: bool=False) -> None:
+        self.write_file(bdf_file, size=8, is_double=False,
+                        write_card_header=write_card_header)
+
+    def write_file_16(self, bdf_file: TextIOLike,
+                      is_double=False, write_card_header: bool=False) -> None:
+        self.write_file(bdf_file, size=16, is_double=is_double,
+                        write_card_header=write_card_header)
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
+            return
         assert self.nodes.shape[1] == 3, self.nodes.shape
-        lines = []
-        print_card = print_card_8
+        print_card = get_print_card_8_16(size)
 
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
-        for eid, pid, nodes, theta, mcid, zoffset, tflag, T in zip_longest(element_ids, property_ids, nodes, self.theta,
-                                                                           self.mcid, self.zoffset, self.tflag, self.T):
+        for eid, pid, nodes, theta, mcid, zoffset, tflag, T in zip_longest(
+                element_ids, property_ids, nodes, self.theta,
+                self.mcid, self.zoffset, self.tflag, self.T):
             if np.all(np.isnan(T)):
                 T1 = T2 = T3 = None
             else:
@@ -1648,9 +1834,10 @@ class CTRIAR(ShellElement):
             #| CTRIAR |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |
             #|        |       | TFLAG | T1 | T2 | T3 |            |         |
             #+--------+-------+-------+----+----+----+------------+---------+
-            list_fields = ['CTRIAR', eid, pid] + nodes.tolist() + [theta_mcid, zoffset, None, None, tflag, T1, T2, T3]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            list_fields = ['CTRIAR', eid, pid] + nodes.tolist() + [
+                theta_mcid, zoffset, None, None, tflag, T1, T2, T3]
+            bdf_file.write(print_card(list_fields))
+        return
 
     def area(self):
         return tri_area(self.model.grid, self.nodes)
@@ -1693,6 +1880,16 @@ class CTRIAR(ShellElement):
 
 
 class CQUAD4(ShellElement):
+    """
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |   1    |   2   |   3   |  4 |  5 |  6 | 7  |     8      |    9    |
+    +========+=======+=======+=====+===+====+====+============+=========+
+    | CQUAD4 |  EID  |  PID  | N1 | N2 | N3 | N4 | THETA/MCID | ZOFFSET |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |        |       | TFLAG | T1 | T2 | T3 | T4 |            |         |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+
+    """
     def __init__(self, model: BDF):
         super().__init__(model)
         self.property_id = np.array([], dtype='int32')
@@ -1803,10 +2000,8 @@ class CQUAD4(ShellElement):
         super().check_types()
         assert self.T.dtype.name in NUMPY_FLOATS, self.T.dtype.name
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        lines = []
+    def _setup_write(self, size: int=8) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                 np.ndarray, np.ndarray, np.ndarray]:
         self.check_types()
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -1819,41 +2014,46 @@ class CQUAD4(ShellElement):
         no_zoffset = np.all(np.isnan(self.zoffset))
         no_mcid = np.all(mcids == '')
         #CQUAD4    307517     105  247597  262585  262586  247591      -1     0.0
+        return element_id, property_id, remove_tflag, no_zoffset, mcids, no_mcid
+
+    def card_headers(self, size: int=8) -> list[str]:
+        theta_mcid = 'th_mcid' if size == 8 else 'theta_mcid'
+        headers = ['CQUAD4', 'eid', 'pid', 'node1', 'node2', 'node3', 'node4',
+                   theta_mcid, 'zoffset', 'blank', 'tflag', 'T1', 'T2', 'T3', 'T4']
+        return headers
+
+    def write_file_8(self, bdf_file: TextIOLike,
+                     write_card_header: bool=False) -> None:
+        if len(self.element_id) == 0:
+            return
+
+        headers = self.card_headers()
+        if write_card_header:
+            bdf_file.write(print_card_8_comment(headers))
+        element_id, property_id, remove_tflag, no_zoffset, mcids, no_mcid = self._setup_write()
         if remove_tflag:
             if no_zoffset and no_mcid:
                 for eid, pid, nodes in zip_longest(element_id, property_id, self.nodes):
                     data = [eid, pid] + nodes.tolist()
-                    if size == 8:
-                        msg = 'CQUAD4  %8s%8s%8d%8d%8d%8d\n' % tuple(data)
-                    else:
-                        msg = print_card_16(data)
-                    lines.append(msg)
+                    msg = 'CQUAD4  %8s%8s%8d%8d%8d%8d\n' % tuple(data)
+                    bdf_file.write(msg)
             elif no_zoffset:
                 for eid, pid, nodes, theta, mcid in zip(element_id, property_id, self.nodes, self.theta, mcids):
                     data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], mcid]
-                    if size == 8:
-                        msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s'  % tuple(data)).rstrip(' ') + '\n'
-                    else:
-                        msg = print_card_16(data)
-                    lines.append(msg)
+                    msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s'  % tuple(data)).rstrip(' ') + '\n'
+                    bdf_file.write(msg)
             elif no_mcid:
                 for eid, pid, nodes, theta, zoffset in zip(element_id, property_id, self.nodes, self.theta, self.zoffset):
                     zoffset = '' if np.isnan(zoffset) else zoffset
-                    data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], '', zoffset]
-                    if size == 8:
-                        msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s%8s'  % tuple(data)).rstrip(' ') + '\n'
-                    else:
-                        msg = print_card_16(data)
-                    lines.append(msg)
+                    data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], '', print_field_8(zoffset)]
+                    msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s%8s'  % tuple(data)).rstrip(' ') + '\n'
+                    bdf_file.write(msg)
             else:
                 for eid, pid, nodes, theta, mcid, zoffset in zip(element_id, property_id, self.nodes, self.theta, mcids, self.zoffset):
                     zoffset = '' if np.isnan(zoffset) else zoffset
-                    data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], mcid, zoffset]
-                    if size == 8:
-                        msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s%8s'  % tuple(data)).rstrip(' ') + '\n'
-                    else:
-                        msg = print_card_16(data)
-                    lines.append(msg)
+                    data = [eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], mcid, print_field_8(zoffset)]
+                    msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s%8s'  % tuple(data)).rstrip(' ') + '\n'
+                    bdf_file.write(msg)
         else:
             for eid, pid, nodes, theta, mcid, zoffset, tflag, T in zip(element_id, property_id, self.nodes, self.theta,
                                                                        mcids, self.zoffset, self.tflag, self.T):
@@ -1881,31 +2081,88 @@ class CQUAD4(ShellElement):
 
                     row2_data = [theta_mcid, zoffset,
                                  tflag, T1, T2, T3, T4]
-                    if size == 8:
-                        row2 = [print_field_8(field) for field in row2_data]
-                        data = [eid, pid] + nodes.tolist() + row2
-                        msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s%8s\n'
-                               '                %8s%8s%8s%8s%8s\n' % tuple(data)).rstrip('\n ') + '\n'
-                        #return self.comment + msg.rstrip('\n ') + '\n'
+                    row2 = [print_field_8(field) for field in row2_data]
+                    data = [eid, pid] + nodes.tolist() + row2
+                    msg = ('CQUAD4  %8s%8s%8d%8d%8d%8d%8s%8s\n'
+                           '                %8s%8s%8s%8s%8s\n' % tuple(data)).rstrip('\n ') + '\n'
+                    #return self.comment + msg.rstrip('\n ') + '\n'
+                bdf_file.write(msg)
+        return
+
+    def write_file_16(self, bdf_file: TextIOLike,
+                      is_double: bool=False,
+                      write_card_header: bool=False) -> None:
+        if len(self.element_id) == 0:
+            return
+        print_card = print_card_16
+        headers = self.card_headers(size=16)
+        if write_card_header:
+            bdf_file.write(print_card_16_comment(headers))
+        element_id, property_id, remove_tflag, no_zoffset, mcids, no_mcid = self._setup_write()
+        if remove_tflag:
+            if no_zoffset and no_mcid:
+                for eid, pid, nodes in zip_longest(element_id, property_id, self.nodes):
+                    data = ['CQUAD4', eid, pid] + nodes.tolist()
+                    bdf_file.write(print_card(data))
+            elif no_zoffset:
+                for eid, pid, nodes, theta, mcid in zip(element_id, property_id, self.nodes, self.theta, mcids):
+                    data = ['CQUAD4', eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], mcid]
+                    bdf_file.write(print_card(data))
+            elif no_mcid:
+                for eid, pid, nodes, theta, zoffset in zip(element_id, property_id, self.nodes, self.theta, self.zoffset):
+                    zoffset_str = '' if np.isnan(zoffset) else print_field_16(zoffset)
+                    data = ['CQUAD4', eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], '', zoffset]
+                    bdf_file.write(print_card(data))
+            else:
+                for eid, pid, nodes, theta, mcid, zoffset in zip(element_id, property_id, self.nodes, self.theta, mcids, self.zoffset):
+                    zoffset_str = '' if np.isnan(zoffset) else print_field_16(zoffset)
+                    data = ['CQUAD4', eid, pid, nodes[0], nodes[1], nodes[2], nodes[3], mcid, zoffset_str]
+                    bdf_file.write(print_card(data))
+        else:
+            for eid, pid, nodes, theta, mcid, zoffset, tflag, T in zip(element_id, property_id, self.nodes, self.theta,
+                                                                       mcids, self.zoffset, self.tflag, self.T):
+                #zoffset = '' if np.isnan(zoffset) else zoffset
+                T1, T2, T3, T4 = T
+                if np.isnan(theta):
+                    theta_mcid = '%8s' % mcid
+                else:
+                    theta_mcid = print_field_8(theta)
+
+                row2_data = [theta_mcid, zoffset,  # actually part of line 1
+                             tflag, T1, T2, T3, T4]
+                if row2_data == [0.0, 0.0, 0, 1.0, 1.0, 1.0, 1.0]:
+                    data = [eid, pid] + nodes.tolist()
+                    msg = ('CQUAD4* %16s%16s%16d%16d\n'
+                           '*       %16d%16d\n' % tuple(data))
+                    #return self.comment + msg
+                else:
+                    #theta_mcid = self._get_theta_mcid_repr()
+                    zoffset = set_blank_if_default(zoffset, 0.0)
+                    tflag = set_blank_if_default(tflag, 0)
+                    T1 = set_blank_if_default(T1, 1.0)
+                    T2 = set_blank_if_default(T2, 1.0)
+                    T3 = set_blank_if_default(T3, 1.0)
+                    T4 = set_blank_if_default(T4, 1.0)
+
+                    row2_data = [theta_mcid, zoffset,
+                                 tflag, T1, T2, T3, T4]
+                    row2 = [print_field_16(field) for field in row2_data]
+                    is_stripped = [field.strip() == '' for field in row2]
+                    if all(is_stripped[2:]): # tflag, t1234 are blank
+                        data = [eid, pid] + nodes.tolist() + row2[:2]
+                        msg = ('CQUAD4* %16s%16s%16d%16d\n'
+                               '*       %16d%16d%16s%16s\n'
+                               % tuple(data))
                     else:
-                        row2 = [print_field_16(field) for field in row2_data]
-                        is_stripped = [field.strip() == '' for field in row2]
-                        if all(is_stripped[2:]): # tflag, t1234 are blank
-                            data = [eid, pid] + nodes.tolist() + row2[:2]
-                            msg = ('CQUAD4* %16s%16s%16d%16d\n'
-                                   '*       %16d%16d%16s%16s\n'
-                                   % tuple(data))
-                        else:
-                            data = [eid, pid] + nodes.tolist() + row2
-                            msg = ('CQUAD4* %16d%16d%16d%16d\n'
-                                   '*       %16d%16d%16s%16s\n'
-                                   '*                     %16s%16s%16s\n'
-                                   '*       %16s%16s\n'
-                                   % tuple(data)).rstrip('*\n ') + '\n'
-                            #return self.comment + msg.rstrip('*\n ') + '\n'
-                    pass # return self.comment + msg
-                lines.append(msg)
-        return ''.join(lines)
+                        data = [eid, pid] + nodes.tolist() + row2
+                        msg = ('CQUAD4* %16d%16d%16d%16d\n'
+                               '*       %16d%16d%16s%16s\n'
+                               '*                     %16s%16s%16s\n'
+                               '*       %16s%16s\n'
+                               % tuple(data)).rstrip('*\n ') + '\n'
+                    #return self.comment + msg.rstrip('*\n ') + '\n'
+                bdf_file.write(msg)
+        return
 
     def area(self) -> np.ndarray:
         area = quad_area(self.model.grid, self.nodes)
@@ -2116,11 +2373,12 @@ class CQUADR(ShellElement):
         _save_quad(self, element_id, property_id, nodes,
                    zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
-            return ''
-        print_card = print_card_8
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
 
         #remove_tflag = (
             #np.all(self.tflag == 0) and
@@ -2130,8 +2388,9 @@ class CQUADR(ShellElement):
         #no_zoffset = np.all(np.isnan(self.zoffset))
         #no_mcid = np.all(mcids == '')
         #CQUAD4    307517     105  247597  262585  262586  247591      -1     0.0
-        for eid, pid, nodes, theta, mcid, zoffset, tflag, T in zip_longest(self.element_id, self.property_id, self.nodes.tolist(), self.theta,
-                                                                           mcids, self.zoffset, self.tflag, self.T):
+        for eid, pid, nodes, theta, mcid, zoffset, tflag, T in zip_longest(
+                self.element_id, self.property_id, self.nodes.tolist(), self.theta,
+                mcids, self.zoffset, self.tflag, self.T):
             zoffset = '' if np.isnan(zoffset) else zoffset
             if np.isnan(theta):
                 theta_mcid = '%8s' % mcid
@@ -2139,14 +2398,14 @@ class CQUADR(ShellElement):
                 theta_mcid = print_field_8(theta)
 
             if np.all(np.isnan(T)):
-                T1 = T2 = T3 = T4 = None # , None, None, None
+                T1 = T2 = T3 = T4 = '' # , None, None, None
             else:
                 T1, T2, T3, T4 = T
 
             list_fields = (['CQUADR', eid, pid] + nodes +
                            [theta_mcid, zoffset, None, tflag, T1, T2, T3, T4])
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def area(self) -> np.ndarray:
         area = quad_area(self.model.grid, self.nodes)
@@ -2361,6 +2620,8 @@ class CTRIA6(ShellElement):
     def _save(self, element_id, property_id, nodes,
               zoffset=None, theta=None, mcid=None,
               tflag=None, T=None):
+        if len(self.element_id) != 0:
+            raise NotImplementedError()
         assert element_id.min() >= 0, element_id
         assert property_id.min() >= 0, property_id
         assert nodes.min() >= 0, nodes
@@ -2388,11 +2649,12 @@ class CTRIA6(ShellElement):
         self.T = T
         self.n = nelements
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        print_card = print_card_8
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
         #remove_tflag = (
             #np.all(self.tflag == 0) and
             #np.all(np.isnan(self.T))
@@ -2421,8 +2683,8 @@ class CTRIA6(ShellElement):
             nodes2 = [None if node == 0 else node for node in nodes]
             list_fields = (['CTRIA6', eid, pid] + nodes2 +
                        [theta_mcid, zoffset, T1, T2, T3, tflag])
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def area(self):
         return tri_area(self.model.grid, self.base_nodes)
@@ -2670,6 +2932,8 @@ class CQUAD8(ShellElement):
     def _save(self, element_id, property_id, nodes,
               zoffset=None, theta=None, mcid=None,
               tflag=None, T=None):
+        if len(self.element_id) != 0:
+            raise NotImplementedError()
         assert element_id.min() >= 0, element_id
         assert property_id.min() >= 0, property_id
         assert nodes.min() >= 0, nodes
@@ -2697,11 +2961,12 @@ class CQUAD8(ShellElement):
         self.T = T
         self.n = nelements
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        print_card = print_card_8
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
         #remove_tflag = (
             #np.all(self.tflag == 0) and
             #np.all(np.isnan(self.T))
@@ -2731,8 +2996,8 @@ class CQUAD8(ShellElement):
             nodes2 = [None if node == 0 else node for node in nodes]
             list_fields = ['CQUAD8', eid, pid] + nodes2 + [
                 T1, T2, T3, T4, theta_mcid, zoffset, tflag]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def area(self) -> np.ndarray:
         area = quad_area(self.model.grid, self.base_nodes)
@@ -2881,10 +3146,11 @@ class CQUAD(ShellElement):
         self.sort()
         self.cards = []
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
-            return ''
-        lines = []
+            return
 
         element_id = array_str(self.element_id, size=size)
         mcids = array_default_int(self.mcid, default=-1, size=size)
@@ -2900,8 +3166,8 @@ class CQUAD(ShellElement):
             data = [eid, pid] + nodes[:4].tolist() + nodes2 + [theta_mcid]
             msg = ('CQUAD   %8s%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
                    '        %8s%8s%8s%8s\n' % tuple(data))
-            lines.append(msg)
-        return ''.join(lines)
+            bdf_file.write(msg)
+        return
 
     def area(self) -> np.ndarray:
         area = quad_area(self.model.grid, self.base_nodes)
@@ -3123,6 +3389,25 @@ class CompositeProperty(Property):
         #mids = pcard.material_id
         #assert np.allclose(mpa, 0.220467), f'mass/area={mpa}\n{pcard.write()}\nmids={mids}'
         return mass_per_area
+
+    def mass_per_area_breakdown(self) -> np.ndarray:
+        """[nsm, mass_per_area]"""
+        nproperties = len(self.property_id)
+        thickness = self.thickness
+        symmetry_scale = self.symmetry_scale_factor
+        nsm = self.nsm
+        ilayers = self.ilayer
+
+        rho = get_density_from_material(self.material_id, self.allowed_materials, debug=False)
+        rho_t = rho * thickness
+        mass_per_area = nsm.copy()
+
+        for i, scale, ilayer in zip(count(), symmetry_scale, ilayers):
+            idim0, idim1 = ilayer
+            mass_per_area[i] += scale * rho_t[idim0:idim1].sum()
+        assert len(mass_per_area) == nproperties
+        mass_per_area_breakdown = np.column_stack([nsm, mass_per_area])
+        return mass_per_area_breakdown
 
     def total_thickness(self) -> np.ndarray:
         nproperties = len(self.property_id)
@@ -3548,10 +3833,12 @@ class PCOMP(CompositeProperty):
     def sb(self, sb):
         self.shear_bonding = sb
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
         assert self.failure_theory.dtype.name == 'str256', self.failure_theory.dtype.name
         for pid, nsm, shear_bonding, failure_theory, ge, tref, lam, z0, \
             nlayer, ilayer in zip_longest(self.property_id, self.nsm, self.shear_bonding,
@@ -3583,8 +3870,29 @@ class PCOMP(CompositeProperty):
                 str_sout = set_blank_if_default(sout, 'NO')
                 list_fields += [mid, t, theta, str_sout]
 
-            lines.append(print_card_8(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
+
+    def get_z_locations(self):
+        nproperties = len(self.property_id)
+        nplies = self.nplies_total
+        nlayers_max = nplies.max() + 1
+        shape = (nproperties, nlayers_max)
+
+        z_locations = np.full(shape, np.nan, dtype='float64')
+        for iprop, lam, z0, (ilayer0, ilayer1) in zip(count(), self.lam, self.z0, self.ilayer):
+            if lam == '':
+                thicknesses = self.thickness[ilayer0:ilayer1]
+                csum = np.cumsum(thicknesses)
+                nlayers = len(thicknesses)
+
+                z0 = z0 + np.hstack([0., csum[:-1]])
+                z1 = z0 + thicknesses
+                z_locations[iprop, :nlayers] = z0
+                z_locations[iprop, nlayers] = z1[-1]
+            else:
+                raise NotImplementedError(lam)
+        return z_locations
 
     def get_individual_ABD_matrices(
             self, theta_offset: float=0.) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -3890,10 +4198,12 @@ class PCOMPG(CompositeProperty):
         self.sort()
         self.cards = []
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
         property_id = array_str(self.property_id, size=size)
         for pid, nsm, sb, failure_theory, ge, tref, lam, z0, \
             ilayer in zip_longest(property_id, self.nsm, self.shear_bonding,
@@ -3923,8 +4233,8 @@ class PCOMPG(CompositeProperty):
                 str_sout = set_blank_if_default(sout, 'NO')
                 list_fields += [global_id, mid, t, theta, str_sout, None, None, None]
 
-            lines.append(print_card_8(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 def get_2d_plate_transform(theta: np.ndarray) -> np.ndarray:
     """theta must be in radians"""

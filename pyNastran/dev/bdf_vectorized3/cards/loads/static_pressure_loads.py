@@ -80,7 +80,8 @@ class PLOAD(Load):
         self.cards = []
 
     def _save(self, load_id, pressure, node_id):
-        assert len(self.load_id) == 0, self.load_id
+        if len(self.load_id) != 0:
+            raise NotImplementedError()
         nloads = len(load_id)
         self.load_id = load_id
         self.pressure = pressure
@@ -93,7 +94,7 @@ class PLOAD(Load):
         load.pressure = self.pressure[i]
         load.node_id = self.node_id[i, :]
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
 
@@ -249,7 +250,8 @@ class PLOAD1(Load):
         self.cards = []
 
     def _save(self, load_id, element_id, load_type, scale, x, pressure):
-        assert len(self.load_id) == 0, self.load_id
+        if len(self.load_id) != 0:
+            raise NotImplementedError()
         nloads = len(load_id)
         self.load_id = load_id
         self.element_id = element_id
@@ -269,7 +271,7 @@ class PLOAD1(Load):
         load.x = self.x[i, :]
         load.pressure = self.pressure[i, :]
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         print_card = print_card_8
@@ -625,7 +627,7 @@ class PLOAD2(Load):
     def is_small_field(self):
         return max(self.load_id.max(), self.element_ids.max()) < 99_999_999
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         if size == 8 and self.is_small_field:
@@ -840,7 +842,8 @@ class PLOAD4(Load):
 
     def _save(self, load_id, element_ids, coord_id, pressure, nodes_g1_g34,
               surf_or_line, line_load_dir, nvector, nelement):
-        #assert len(self.load_id) == 0, self.load_id
+        if len(self.load_id) != 0:
+            raise NotImplementedError()
         nloads = len(load_id)
         self.load_id = load_id
         self.element_ids = element_ids
@@ -886,7 +889,7 @@ class PLOAD4(Load):
     def idim(self) -> np.ndarray:
         return make_idim(self.n, self.nelement)
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         lines = []

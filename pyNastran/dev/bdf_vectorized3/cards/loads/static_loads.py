@@ -120,7 +120,7 @@ class Load0(Load):
         self.cards = []
 
     def _save(self, load_id, node_id, coord_id, mag, xyz):
-        if len(self.load_id) == 0:
+        if len(self.load_id) != 0:
             load_id = np.hstack([self.load_id, load_id])
             node_id = np.hstack([self.node_id, node_id])
             coord_id = np.hstack([self.coord_id, coord_id])
@@ -147,7 +147,7 @@ class Load0(Load):
                    node=(nid, self.node_id), filter_node0=False,
                    coord=(cid, self.coord_id))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         lines = []
@@ -205,7 +205,8 @@ class Load1(Load):
         self.cards = []
 
     def _save(self, load_id, node_id, mag, nodes):
-        assert len(self.load_id) == 0, self.load_id
+        if len(self.load_id) != 0:
+            raise NotImplementedError()
         nloads = len(load_id)
         self.load_id = load_id
         self.node_id = node_id
@@ -213,7 +214,7 @@ class Load1(Load):
         self.nodes = nodes
         self.n = nloads
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         lines = []
@@ -270,7 +271,8 @@ class Load2(Load):
         self.cards = []
 
     def _save(self, load_id, node_id, mag, nodes):
-        assert len(self.load_id) == 0, self.load_id
+        if len(self.load_id) != 0:
+            raise NotImplementedError()
         nloads = len(load_id)
         self.load_id = load_id
         self.node_id = node_id
@@ -278,7 +280,7 @@ class Load2(Load):
         self.nodes = nodes
         self.n = nloads
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         lines = []
@@ -668,7 +670,7 @@ class LOAD(Load):
     def iload(self) -> np.ndarray:
         return make_idim(self.n, self.nloads)
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.load_id) == 0:
             return ''
         #get_reduced_loads(self, filter_zero_scale_factors=False)

@@ -7,7 +7,7 @@ cycler>=0.10
 
 # extra modules for docs
 alabaster>=0.7.10
-sphinx>=1.9.0,<3.0
+sphinx>=1.9.0 #,<3.0
 sphinx_rtd_theme>=0.1.9
 numpydoc>=0.8.0
 pygments>=2.1.0

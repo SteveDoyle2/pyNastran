@@ -18,7 +18,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO
 #from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
     CQUAD4, CTRIA3, CQUAD8, CTRIA6, CTRIAR, CQUADR, CQUAD, PSHELL, PCOMP, PCOMPG,
-    #PLPLANE, SNORM, PSHLN1, PSHLN2,
+    PLPLANE, # SNORM, PSHLN1, PSHLN2,
     #CAABSF, # acoustic shells
 )
 #from pyNastran.dev.bdf_vectorized3.cards.elements.shell_axi import (
@@ -26,11 +26,11 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
     #CQUADX, CQUADX4, CQUADX8,
     #CTRAX3, CTRAX6)
 
-#from pyNastran.dev.bdf_vectorized3.cards.elements.plate_stress_strain import (
-    #PPLANE,
+from pyNastran.dev.bdf_vectorized3.cards.elements.plate_stress_strain import (
+    PPLANE,
     #CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
     #CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
-#)
+)
 from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     CTETRA, CHEXA, CPENTA, CPYRAM,
     PSOLID, PLSOLID, PCOMPS, PCOMPLS,
@@ -283,8 +283,8 @@ class BDFAttributes:
         #self.shell_properties = [self.pshell, self.pcomp, self.pcompg]
 
         # planar shells
-        #self.plplane = PLPLANE(self)
-        #self.pplane = PPLANE(self)
+        self.plplane = PLPLANE(self)
+        self.pplane = PPLANE(self)
 
         # plane stress
         # what are the properties?
@@ -640,7 +640,7 @@ class BDFAttributes:
     def shell_properties(self) -> list[Any]:
         properties = [
             self.pshell, self.pcomp, self.pcompg,
-            #self.plplane, self.pplane, self.pshln1, self.pshln2,
+            self.plplane, self.pplane, # self.pshln1, self.pshln2,
         ]
         return properties
 
@@ -678,7 +678,7 @@ class BDFAttributes:
         materials = [
             self.mat1, self.mat2,
             # self.mat3,
-            self.mat8, self.mat9, #self.mat10, self.mat11,
+            self.mat8, self.mat9, self.mat10, self.mat11,
             #self.mat10c, self.matort,
         ]
         return materials
@@ -935,6 +935,8 @@ class BDFAttributes:
     @property
     def spline_ids(self) -> np.ndarray:
         list_spline_ids = [caero.spline_id for caero in self.aero_splines]
+        if len(list_spline_ids) == 0:
+            return np.array([], dtype='int32')
         spline_ids = np.hstack(list_spline_ids)
         uspline_ids = np.unique(spline_ids)
         if len(spline_ids) != len(uspline_ids):
@@ -949,6 +951,8 @@ class BDFAttributes:
     @property
     def caero_ids(self) -> np.ndarray:
         list_caero_ids = [caero.element_id for caero in self.aero_elements]
+        if len(list_caero_ids) == 0:
+            return np.array([], dtype='int32')
         caero_ids = np.hstack(list_caero_ids)
         ucaero_ids = np.unique(caero_ids)
         if len(caero_ids) != len(ucaero_ids):

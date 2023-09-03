@@ -201,7 +201,7 @@ class MAT1(Material):
     def _save(self, material_id, E, G, nu,
               rho, alpha, tref, ge,
               Ss, St, Sc, mcsid):
-        if len(self.material_id) > 0:
+        if len(self.material_id):
             material_id = np.hstack([self.material_id, material_id])
             E = np.hstack([self.E, E])
             G = np.hstack([self.G, G])
@@ -246,7 +246,7 @@ class MAT1(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
 
@@ -433,6 +433,8 @@ class MAT2(Material):
     def _save(self, material_id, G11, G12, G13, G22, G23, G33,
               rho, alpha, tref, ge, Ss, St, Sc,
               mcsid, ge_matrix):
+        if len(self.material_id) != 0:
+            raise NotImplementedError()
         #print('calling MAT2 save')
         nmaterial = len(material_id)
         assert nmaterial > 0, nmaterial
@@ -518,7 +520,7 @@ class MAT2(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
 
@@ -732,6 +734,8 @@ class MAT8(Material):
     def _save(self, material_id, E11, E22, G12, G13, G23, nu12,
               rho, alpha, tref, ge,
               Xt, Xc, Yt, Yc, S, f12, strn):
+        if len(self.material_id) != 0:
+            raise NotImplementedError()
         nmaterials = len(material_id)
         self.material_id = material_id
         self.E11 = E11
@@ -791,10 +795,36 @@ class MAT8(Material):
     def a2(self, a2: np.ndarray) -> None:
         self.alpha[:, 1] = a2
 
+    @property
+    def nu21(self):
+        """
+        ν12*E2 = ν21*E1
+        per QRG for MAT8
+        """
+        nu21 = self.nu12 * self.E22 / self.E11
+        return nu21
+
+    def s33(self):
+        """
+        ei2 = [
+            [    1 / e1, -nu21 / e2,      0.],
+            [-nu21 / e2,     1 / e2,      0.],
+            [        0.,         0., 1 / g12],
+        http://web.mit.edu/16.20/homepage/3_Constitutive/Constitutive_files/module_3_with_solutions.pdf
+        ]
+        """
+        nmaterial = len(self.material_id)
+        s33 = np.zeros((nmaterial, 3, 3), dtype='float64')
+        s33[:, 0, 0] = 1 / self.E11
+        s33[:, 1, 1] = 1 / self.E22
+        s33[:, 1, 0] = s33[:, 0, 1] = -self.nu21 / self.E22
+        s33[:, 2, 2] = 1 / self.G12
+        return s33
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
         lines = []
@@ -999,6 +1029,8 @@ class MAT9(Material):
               G44, G45, G46,
               G55, G56,
               G66, rho, alpha, tref, ge, ge_list):
+        if len(self.material_id) != 0:
+            raise NotImplementedError()
         nmaterials = len(material_id)
         self.material_id = material_id
         self.G11 = G11
@@ -1070,7 +1102,7 @@ class MAT9(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
         lines = []
@@ -1195,6 +1227,8 @@ class MAT10(Material):
               table_id_bulk, table_id_rho, table_id_ge, table_id_gamma,
               is_alpha: bool):
         """is_alpha=True for MSC otherwise False"""
+        if len(self.material_id) != 0:
+            raise NotImplementedError()
         self.material_id = material_id
         self.bulk = bulk
         self.rho = rho
@@ -1258,7 +1292,7 @@ class MAT10(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
         lines = []
@@ -1409,7 +1443,7 @@ class MAT11(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.material_id) == 0:
             return ''
         lines = []

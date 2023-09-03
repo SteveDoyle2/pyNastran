@@ -1,9 +1,10 @@
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Optional, Any, TYPE_CHECKING
+from io import StringIO
+from typing import Callable, Optional, Any, TYPE_CHECKING
 import numpy as np
-#from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_field_8
-#from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
+from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
+from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 #from pyNastran.bdf.bdf_interface.assign_type import (
     #integer, integer_or_blank, double_or_blank, components_or_blank)
@@ -13,6 +14,7 @@ import numpy as np
 #from pyNastran.dev.bdf_vectorized3.cards.static_loads import PLOAD4, FORCE
 from pyNastran.utils import object_stats # object_attributes, object_methods,
 if TYPE_CHECKING:
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
@@ -95,6 +97,7 @@ def searchsorted_filter(all_ids: np.ndarray,
     return i_lookup2, i_all2
 
 
+#DOUBLE_CARDS = {'GRID', 'DMIG', 'DMIK', 'DMIJ', 'DMIJI', 'DMIAX'}
 class VectorizedBaseCard:
     def __init__(self, model: BDF):
         self.model = model
@@ -121,7 +124,7 @@ class VectorizedBaseCard:
         return self.__class__.__name__
 
     def rstrip(self) -> str:
-        msg = self.write(size=8)
+        msg = self.write(size=8, write_card_header=False)
         return msg.rstrip()
 
     def __repr__(self) -> str:
@@ -304,9 +307,68 @@ class VectorizedBaseCard:
         #...
         raise NotImplementedError(f'{self.type}: add __apply_slice__')
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
-        #...
-        raise NotImplementedError(f'{self.type}: add write')
+    #def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+        ##...
+        #raise NotImplementedError(f'{self.type}: add write')
+
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+        """write typically exists and is probably overwritten; otherwise write_file is used"""
+        stringio = StringIO()
+        self.write_file(stringio, size=size, is_double=is_double, write_card_header=write_card_header)
+        #if size == 8:
+            #return self.write_8()
+        #else:
+            #return self.write_16(is_double=is_double)
+        msg = stringio.getvalue()
+        return msg
+
+    def write_8(self, is_double: bool=False, write_card_header: bool=False) -> str:
+        """write is the base function"""
+        #stringio = StringIO()
+        msg = self.write(size=8, is_double=is_double, write_card_header=write_card_header)
+        #if hasattr(self, 'write_file_8'):
+        #    self.write_file_8(stringio, is_double=is_double, write_card_header=write_card_header)
+        #else:
+        #    self.write_file(stringio, size=8, is_double=is_double, write_card_header=write_card_header)
+        #msg = stringio.getvalue()
+        return msg
+
+    def write_16(self, is_double: bool=False, write_card_header: bool=False) -> str:
+        """write is the base function"""
+        #stringio = StringIO()
+        msg = self.write(size=16, is_double=is_double, write_card_header=write_card_header)
+        #if hasattr(self, 'write_file_16'):
+        #    self.write_file_16(stringio, is_double=is_double, write_card_header=write_card_header)
+        #else:
+        #    self.write_file(stringio, size=8, is_double=is_double, write_card_header=write_card_header)
+        #msg = stringio.getvalue()
+        return msg
+
+    #def write_file_8(self, file_obj: TextIOLike,
+    #                  is_double: bool=False,
+    #                  write_card_header: bool=False) -> None:
+    #    if not hasattr(self, 'write_file'):
+    #        raise NotImplementedError(f'{self.type}: add write_file')
+    #    self.write_file(file_obj, size=8, write_card_header=write_card_header)
+
+    #def write_file_16(self, file_obj: TextIOLike,
+    #                  is_double: bool=False,
+    #                  write_card_header: bool=False) -> None:
+    #    if not hasattr(self, 'write_file'):
+    #        raise NotImplementedError(f'{self.type}: add write_file')
+        self.write_file(file_obj, size=16, is_double=is_double, write_card_header=write_card_header)
+
+    def write_file(self, file_obj: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if not hasattr(self, 'write_file_8'):
+            raise NotImplementedError(f'{self.type}: add write_file')
+
+        if size == 8:
+            self.write_file_8(file_obj, write_card_header=write_card_header)
+        else:
+            self.write_file_16(file_obj, is_double=is_double, write_card_header=write_card_header)
+        return
 
     def get_stats(self,
                   mode: str='public',
@@ -377,3 +439,11 @@ class Material(VectorizedBaseCard):
     def __apply_slice__(self, mat, i: np.ndarray) -> None:
         #...
         raise NotImplementedError(f'{self.type}: add __apply_slice__')
+
+
+def get_print_card_8_16(size: int) -> Callable[list]:
+    if size == 8:
+        print_card = print_card_8
+    else:
+        print_card = print_card_16
+    return print_card

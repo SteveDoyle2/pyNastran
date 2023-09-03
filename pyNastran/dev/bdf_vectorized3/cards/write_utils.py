@@ -4,6 +4,22 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 
 MAX_8_CHAR_INT = 99_999_999
 
+def print_card_8_comment(fields: list[str]) -> str:
+    msg = '$%-7s' % fields[0]
+    for i, word in enumerate(fields[1:]):
+        msg += '%8s' % word
+        if i > 0 and i % 8 == 0:
+            msg += '\n$       '
+    return msg.rstrip('$ \n') + '\n'
+
+def print_card_16_comment(fields: list[str]) -> str:
+    msg = '$%-7s' % fields[0]
+    for i, word in enumerate(fields[1:]):
+        msg += '%16s' % word
+        if i > 0 and i % 4 == 0:
+            msg += '\n$       '
+    return msg.rstrip('$ \n') + '\n'
+
 def get_print_card(size: int, max_int: int):
     if size == 16 or max_int > MAX_8_CHAR_INT:
         print_card = print_card_16

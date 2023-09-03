@@ -281,7 +281,7 @@ class CBAR(Element):
         self.wa = wa
         self.wb = wb
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
 
@@ -702,7 +702,7 @@ class PBAR(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
         lines = []
@@ -797,10 +797,10 @@ class PBARL(Property):
         #'I', 'CHAN', 'T', 'CHAN1', 'T1', 'CHAN2', 'T2', 'L' and 'BOX1'.
         'L' : 4,
     }  # for GROUP="MSCBML0"
-    #def __init__(self, model: BDF):
-        #super().__init__()
+    def __init__(self, model: BDF):
+        super().__init__(model)
         #self.model = model
-        #self.property_id = np.array([], dtype='int32')
+        self.ndim = np.array([], dtype='int32')
 
     def slice_card_by_property_id(self, property_id: np.ndarray) -> PBARL:
         """uses a node_ids to extract PBARLs"""
@@ -963,7 +963,7 @@ class PBARL(Property):
         assert isinstance(self.ndim, np.ndarray), self.ndim
 
     def _save(self, property_id, material_id, ndim, Type, group, nsm, dims) -> None:
-        if len(self.property_id) > 0:
+        if len(self.property_id):
             property_id = np.hstack([self.property_id, property_id])
             material_id = np.hstack([self.material_id, material_id])
             ndim = np.hstack([self.ndim, ndim])
@@ -999,7 +999,7 @@ class PBARL(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
         if size == 8:
@@ -1202,7 +1202,7 @@ class PBRSECT(Property):
         self.sort()
         self.cards = []
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         return ''
 
 
@@ -1343,18 +1343,19 @@ class CBARAO(Element):
         self.cards = []
 
     def _save(self, element_id, scale, nstation, station) -> None:
-        assert len(self.element_id) == 0
+        if len(self.element_id) != 0:
+            raise NotImplementedError()
         self.element_id = cast_int_array(element_id)
         self.scale = scale
         self.nstation = nstation
-        self.station = cast_int_array(station)
+        self.station = np.array(station, dtype=self.model.fdtype)
 
     @property
     def istation(self) -> np.ndarray:
         istation = make_idim(self.n, self.nstation)
         return istation
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -1365,7 +1366,7 @@ class CBARAO(Element):
 
         for eid, scale, (istation0, istation1) in zip(element_ids, self.scale, self.istation):
             station = self.station[istation0:istation1]
-            list_fields = ['CBARAO', eid, self.scale] + station
+            list_fields = ['CBARAO', eid, self.scale] + station.tolist()
             print(list_fields)
             lines.append(print_card(list_fields))
         return ''.join(lines)

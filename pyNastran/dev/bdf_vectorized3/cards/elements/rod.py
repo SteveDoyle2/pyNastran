@@ -120,8 +120,9 @@ class CONROD(Element):
         self._save(element_id, material_id, nodes, A, J, c, nsm)
         self.cards = []
 
-
     def _save(self, element_id, material_id, nodes, A, J, c, nsm):
+        if len(self.element_id) != 0:
+            raise NotImplementedError()
         nelements = len(element_id)
         self.element_id = element_id
         self.material_id = material_id
@@ -144,7 +145,7 @@ class CONROD(Element):
                    node=(nid, self.nodes),
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -240,6 +241,8 @@ class CROD(Element):
         self.cards = []
 
     def _save(self, element_id, property_id, nodes):
+        if len(self.element_id) != 0:
+            raise NotImplementedError()
         nelements = len(element_id)
         self.element_id = element_id
         self.property_id = property_id
@@ -256,7 +259,7 @@ class CROD(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -340,7 +343,6 @@ class PROD(Property):
         material_id = np.zeros(ncards, dtype='int32')
         A = np.zeros(ncards, dtype='float64')
         J = np.zeros(ncards, dtype='float64')
-
         c = np.zeros(ncards, dtype='float64')
         nsm = np.zeros(ncards, dtype='float64')
 
@@ -350,13 +352,14 @@ class PROD(Property):
             material_id[icard] = mid
             A[icard] = Ai
             J[icard] = j
-
             c[icard] = ci
             nsm[icard] = nsmi
         self._save(property_id, material_id, A, J, c, nsm)
         self.cards = []
 
     def _save(self, property_id, material_id, A, J, c, nsm):
+        if len(self.property_id) != 0:
+            raise NotImplementedError()
         nproperties = len(property_id)
         self.property_id = property_id
         self.material_id = material_id
@@ -374,7 +377,7 @@ class PROD(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
         lines = []
@@ -473,6 +476,8 @@ class CTUBE(Element):
         self.cards = []
 
     def _save(self, element_id, property_id, nodes):
+        if len(self.element_id):
+            raise NotImplementedError()
         nelements = len(element_id)
         self.element_id = element_id
         self.property_id = property_id
@@ -489,7 +494,7 @@ class CTUBE(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         if size == 8:
@@ -655,6 +660,8 @@ class PTUBE(Property):
         self.cards = []
 
     def _save(self, property_id, material_id, diameter, t, nsm):
+        if len(self.property_id):
+            raise NotImplementedError()
         self.property_id = property_id
         self.material_id = material_id
         self.diameter = diameter
@@ -669,7 +676,7 @@ class PTUBE(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.property_id) == 0:
             return ''
         lines = []

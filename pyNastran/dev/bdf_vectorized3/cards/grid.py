@@ -1,4 +1,5 @@
 from __future__ import annotations
+from io import StringIO
 from itertools import zip_longest
 from collections import defaultdict
 from typing import Callable, Any, TYPE_CHECKING
@@ -95,7 +96,7 @@ class XPOINT(VectorizedBaseCard):
         if not np.array_equal(uarg, iarg):
             self.ids = self.ids[iarg]
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         lines = []
         if size == 8:
             print_card = print_card_8
@@ -473,20 +474,28 @@ class GRID(VectorizedBaseCard):
         coord_basic = self.cp.max() == 0 and self.cp.min() == 0 and self.cd.max() == 0 and self.cd.min() == 0
         return coord_basic
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+        if len(self.node_id) == 0:
+            return ''
+        stringio = StringIO()
+        self.write_file(stringio, size=size, is_double=is_double, write_card_header=write_card_header)
+        msg = stringio.getvalue()
+        return msg
+
+    def write_file(self, file_obj: TextIO, size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> str:
         if len(self.node_id) == 0:
             return ''
         if size == 8:
-            msg = self.write_8()
+            msg = self.write_file_8(file_obj, write_card_header=write_card_header)
         elif is_double:
-            msg = self.write_double()
+            msg = self.write_file_double(file_obj, write_card_header=write_card_header)
         else:
-            msg = self.write_16()
+            msg = self.write_file_16(file_obj, write_card_header=write_card_header)
         return msg
 
-    def write_8(self):
+    def write_file_8(self, file_obj, write_card_header: bool=False) -> None:
         coord_basic, extra_basic, is_basic = self._write_flags()
-        lines = []
         node_id = array_str(self.node_id, size=8)
         if is_basic:
             cps = ''
@@ -497,7 +506,7 @@ class GRID(VectorizedBaseCard):
                     print_float_8(xyz[0]),
                     print_float_8(xyz[1]),
                     print_float_8(xyz[2]))
-                lines.append(msg)
+                file_obj.write(msg)
         elif coord_basic: # cp=cd=0
             cps = array_default_int(self.cp, size=8, default=0)
             cds = array_default_int(self.cd, size=8, default=0)
@@ -510,7 +519,7 @@ class GRID(VectorizedBaseCard):
                     print_float_8(xyz[1]),
                     print_float_8(xyz[2]),
                     cd)
-                lines.append(msg)
+                file_obj.write(msg)
         else:
             cps = array_default_int(self.cp, size=8, default=0)
             cds = array_default_int(self.cd, size=8, default=0)
@@ -524,8 +533,8 @@ class GRID(VectorizedBaseCard):
                     print_float_8(xyz[1]),
                     print_float_8(xyz[2]),
                     cd, ps, seid)
-                lines.append(msg)
-        return ''.join(lines)
+                file_obj.write(msg)
+        return
 
     def _write_flags(self):
         coord_basic = self._coord_basic
@@ -533,11 +542,11 @@ class GRID(VectorizedBaseCard):
         is_basic = coord_basic and extra_basic
         return coord_basic, extra_basic, is_basic
 
-    def write_16(self) -> str:
-        return _write_grid_large(self, print_scientific_16)
+    def write_file_16(self, file_obj: TextIO, write_card_header: bool=False) -> None:
+        return _write_grid_large(self, file_obj, print_scientific_16, write_card_header=write_card_header)
 
-    def write_double(self) -> str:
-        return _write_grid_large(self, print_scientific_double)
+    def write_file_double(self, file_obj: TextIO, write_card_header: bool=False) -> None:
+        return _write_grid_large(self, file_obj, print_scientific_double, write_card_header=write_card_header)
 
     def is_equal_by_index(self, inode1, inode2) -> bool:
         is_equal = True
@@ -721,9 +730,9 @@ class GRID(VectorizedBaseCard):
         return xyz_cid0
 
 
-def _write_grid_large(grid: GRID, function: Callable[float]) -> str:
+def _write_grid_large(grid: GRID, file_obj: TextIO, function: Callable[float],
+                      write_card_header: bool=False) -> None:
     coord_basic, extra_basic, is_basic = grid._write_flags()
-    lines = []
     node_id = array_str(grid.node_id, size=16)
     if is_basic:
         for nid, xyz in zip_longest(node_id, grid.xyz):
@@ -733,7 +742,7 @@ def _write_grid_large(grid: GRID, function: Callable[float]) -> str:
                        print_scientific_16(xyz[0]),
                        print_scientific_16(xyz[1]),
                        print_scientific_16(xyz[2])))
-            lines.append(msg)
+            file_obj.write(msg)
     elif coord_basic: # cp=cd=0
         cps = array_default_int(grid.cp, size=16, default=0)
         cds = array_default_int(grid.cd, size=16, default=0)
@@ -746,7 +755,7 @@ def _write_grid_large(grid: GRID, function: Callable[float]) -> str:
                        print_scientific_16(xyz[1]),
                        print_scientific_16(xyz[2]),
                        cd))
-            lines.append(msg)
+            file_obj.write(msg)
     else:
         cps = array_default_int(grid.cp, size=16, default=0)
         cds = array_default_int(grid.cd, size=16, default=0)
@@ -761,5 +770,5 @@ def _write_grid_large(grid: GRID, function: Callable[float]) -> str:
                        print_scientific_16(xyz[1]),
                        print_scientific_16(xyz[2]),
                        cd, ps, seid))
-            lines.append(msg)
-    return ''.join(lines)
+            file_obj.write(msg)
+    return

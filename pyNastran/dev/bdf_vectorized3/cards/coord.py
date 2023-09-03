@@ -887,7 +887,8 @@ class COORD(VectorizedBaseCard):
             unresolved_cids.remove(cid)
         return nresolved
 
-    def write(self, size: int=8, is_double: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> str:
         if len(self.coord_id) == 0:
             return ''
 

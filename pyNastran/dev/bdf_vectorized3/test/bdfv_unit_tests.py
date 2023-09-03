@@ -24,6 +24,7 @@ class TestBdfVectorized3(unittest.TestCase):
             encoding=None, log=None, debug=None, mode='msc')
 
         area, mass = get_compare_model_vectorized(model, modelv)
+        modelv.cquad4.mass_breakdown()
 
         area_ctria3 = modelv.ctria3.area().sum()
         area_cquad4 = modelv.cquad4.area().sum()
@@ -42,6 +43,7 @@ class TestBdfVectorized3(unittest.TestCase):
         mass_cquad4 = modelv.cquad4.mass().sum()
         assert np.allclose(mass_ctria3, 318.61913895889063), mass_ctria3
         assert np.allclose(mass_cquad4, 98307.632265389750), mass_cquad4
+        modelv.write_bdf(bdf_filename_out, size=16)
         modelv.write_bdf(bdf_filename_out)
 
 def get_compare_model_vectorized(model, modelv):

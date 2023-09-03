@@ -87,7 +87,7 @@ class CONM1(Element):
             self._mass[icard, :, :] = m
         self.cards = []
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         lines = []
@@ -202,6 +202,8 @@ class CONM2(Element):
         self.cards = []
 
     def _save(self, element_id, mass, coord_id, node_id, xyz_offset, inertia):
+        if len(self.element_id):
+            raise RuntimeError()
         self.element_id = cast_int_array(element_id)
         self._mass = mass
         self.coord_id = coord_id
@@ -210,7 +212,7 @@ class CONM2(Element):
         #I11, I21, I22, I31, I32, I33 = I
         self.inertia = inertia
 
-    def write(self, size: int=8) -> str:
+    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         lines = []
