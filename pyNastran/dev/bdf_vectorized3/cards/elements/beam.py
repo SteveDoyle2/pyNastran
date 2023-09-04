@@ -4,8 +4,8 @@ from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import zip_strict, integer_types, float_types
-from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
+#from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
+#from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -17,7 +17,8 @@ from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I
 from pyNastran.utils.mathematics import integrate_positive_unit_line # integrate_unit_line,
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, make_idim, hslice_by_idim, searchsorted_filter # vslice_by_idim,
+    Element, Property, make_idim, hslice_by_idim, searchsorted_filter, # vslice_by_idim,
+    get_print_card_8_16
 )
 from .rod import line_pid_mass_per_length, line_length, line_vector_length, line_centroid
 from .bar import apply_bar_default, init_x_g0
@@ -1441,8 +1442,7 @@ class PBEAML(Property):
         if len(self.property_id) == 0:
             return ''
         lines = []
-        if size == 8:
-            print_card = print_card_8
+        print_card = get_print_card_8_16(size)
 
         assert len(self.property_id) == len(self.material_id)
         assert len(self.property_id) == len(self.ndim)

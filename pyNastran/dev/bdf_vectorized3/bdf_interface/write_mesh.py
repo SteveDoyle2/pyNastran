@@ -956,6 +956,7 @@ class Writer():
             bdf_file.write(model.mpc.write(size=size))
             #bdf_file.write(model.mpcax.write(size=size))
 
+        return
         if len(model.suport) or len(model.suport1):
             bdf_file.write('$CONSTRAINTS\n')
             bdf_file.write(model.suport.write(size, is_double))
