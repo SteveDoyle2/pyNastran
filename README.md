@@ -61,7 +61,7 @@ The biggest new features are:
  - improved op2 support
 
 Programmatics:
- - Supports Python 3.7 - 3.10
+ - Supports Python 3.7 - 3.10 (later versions of Python requires downloading from github)
  - GUI is compatible with PyQt5/6 and PySide2/6 and VTK 7-10
  - improved testing of old versions of packages
  - updated nptyping requirements
