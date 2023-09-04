@@ -7,10 +7,6 @@ from pyNastran.gui.vtk_util import (
     create_vtk_array, get_numpy_array_type,
     get_vtk_array_type, numpy_to_vtkIdTypeArray, # numpy_to_vtk,
 )
-from vtk.util.numpy_support import (
-    create_vtk_array, get_numpy_array_type,
-    get_vtk_array_type, numpy_to_vtkIdTypeArray, # numpy_to_vtk,
-)
 
 
 IS_TESTING = 'test' in sys.argv[0]
