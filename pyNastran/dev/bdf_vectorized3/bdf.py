@@ -712,7 +712,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## loads
             'LOAD', # 'CLOAD', 'LSEQ', 'LOADCYN', 'LOADCYH',
-            #'SLOAD',
+            'SLOAD',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
             #'GRAV', 'ACCEL', 'ACCEL1',
@@ -1049,8 +1049,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'npoints', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros', 'nid_map',
-            'is_bdf_vectorized', 'type_slot_str',
-            #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
+            'type_slot_str',
+            #'dmig', 'dmij', 'dmik', 'dmiji', 'dti', 'dmi',
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
@@ -2565,7 +2565,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'GRAV' : partial(self._prepare_card, self.grav),
             #'ACCEL' : partial(self._prepare_card, self.accel),
             #'ACCEL1' : partial(self._prepare_card, self.accel1),
-            #'SLOAD': partial(self._prepare_card, self.sload),
+            'SLOAD': partial(self._prepare_card, self.sload),
             #'TEMP': partial(self._prepare_card, self.temp),
             #'TEMPD': partial(self._prepare_card, self.tempd),
             #'DTEMP': partial(self._prepare_card, self.dtemp),
@@ -2643,9 +2643,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'MPC': partial(self._prepare_card, self.mpc),
             #'MPCADD' : partial(self._prepare_card, self.mpcadd),
 
-            #'SPC': partial(self._prepare_card, self.spc),
-            #'SPC1': partial(self._prepare_card, self.spc1),
-            #'SPCADD' : partial(self._prepare_card, self.spcadd),
+            'SPC': partial(self._prepare_card, self.spc),
+            'SPC1': partial(self._prepare_card, self.spc1),
+            'SPCADD' : partial(self._prepare_card, self.spcadd),
             #'SUPORT' : partial(self._prepare_card, self.suport),
 
             # aero
@@ -3476,7 +3476,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         epoints = None
         nrings = len(self.ringaxs)
         nspoints = self.spoint.n
-        nepoints = self.epoint.n
+        nepoints = 0
+        #nepoints = self.epoint.n
         if nspoints:
             spoints = list(self.spoint.ids)
         if nepoints:
@@ -3571,8 +3572,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = self.get_displacement_index_xyz_cp_cd(
             fdtype=fdtype, idtype=idtype, sort_ids=True)
         nids = nid_cp_cd[:, 0]
-        xyz_cid = self.transform_xyzcp_to_xyz_cid(xyz_cp, nids, icp_transform,
-                                                  cid=cid, in_place=False, atol=1e-6)
+        if cid == 0:
+            xyz_cid = self.grid.xyz_cid0()
+        else:
+            xyz_cid = self.transform_xyzcp_to_xyz_cid(xyz_cp, nids, icp_transform,
+                                                      cid=cid, in_place=False, atol=1e-6)
         return nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp: np.ndarray,

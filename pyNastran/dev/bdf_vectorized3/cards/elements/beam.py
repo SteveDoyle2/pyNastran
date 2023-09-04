@@ -681,6 +681,7 @@ class PBEAM(Property):
                     msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxbi, j, i, ji)
                     raise ValueError(msg)
 
+        assert nsm is not None, nsm
         self.cards.append((pid, mid,
                            xxb, so, area, j, i1, i2, i12, nsm,
                            c1, c2, d1, d2, e1, e2, f1, f2,
@@ -746,6 +747,27 @@ class PBEAM(Property):
              m1ai, m2ai, m1bi, m2bi,
              n1ai, n2ai, n1bi, n2bi,
              comment) = card
+            nstations = len(areai)
+            if nsmi is None:
+                nsmi = np.zeros(nstations)
+            if c1i is None:
+                c1i = np.zeros(nstations)
+            if c2i is None:
+                c2i = np.zeros(nstations)
+            if d1i is None:
+                d1i = np.zeros(nstations)
+            if d2i is None:
+                d2i = np.zeros(nstations)
+            if e1i is None:
+                e1i = np.zeros(nstations)
+            if e2i is None:
+                e2i = np.zeros(nstations)
+            if f1i is None:
+                f1i = np.zeros(nstations)
+            if f2i is None:
+                f2i = np.zeros(nstations)
+            #if nsmi is None:
+                #nsmi = np.zeros(nstations)
 
             nstationi = len(xxbi)
             property_id[icard] = pid
@@ -1102,6 +1124,22 @@ class PBEAM(Property):
             areas[i] = areasi
         assert len(areas) == nproperties
         return areas
+
+    def to_old_card(self) -> list[Any]:
+        from pyNastran.bdf.bdf import BDF
+        model = BDF()
+        card_name = self.type
+        cards = []
+        dicti = model.properties
+        for icard in range(self.n):
+            card_obj = self.slice_card_by_index(icard)
+            card_lines = card_obj.write(size=16).split('\n')
+            bdf_card = model.add_card(card_lines, card_name, comment='',
+                                      ifile=None, is_list=False, has_none=False)
+            eid = self.property_id[icard]
+            card = dicti[eid]
+            cards.append(card)
+        return cards
 
 
 class PBEAML(Property):

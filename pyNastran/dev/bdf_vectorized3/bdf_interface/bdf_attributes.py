@@ -48,7 +48,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
 #from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import SET1, SET2, SET3, USET, USET1
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
-    LOAD, # SLOAD,
+    LOAD, SLOAD,
     FORCE, FORCE1, FORCE2,
     MOMENT, MOMENT1, MOMENT2,
     #TEMP, TEMPD, DTEMP, DTEMP,
@@ -59,7 +59,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import (
     PLOAD, PLOAD1, PLOAD2, PLOAD4, # PLOADX1,
 )
-#from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
+from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
 
 #from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
     #LSEQ,
@@ -78,7 +78,7 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
-#from pyNastran.dev.bdf_vectorized3.cards.constraints import SPC, SPC1, SPCADD, MPC, MPCADD
+from pyNastran.dev.bdf_vectorized3.cards.constraints import SPC, SPC1, SPCADD # , MPC, MPCADD
 #from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
     #RBAR, RBAR1, RROD, RBE1, RBE2, RBE3, RSSCON)
 #from pyNastran.dev.bdf_vectorized3.cards.aero.aero import (
@@ -92,10 +92,10 @@ from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
     #DESVAR, DLINK, DVGRID,
     #DRESP1, DRESP2, DCONSTR, DVPREL1,
     #DVPREL2, DVMREL1, DVMREL2, DVCREL1, DVCREL2)
-#from .loads_summation import (
-    #get_static_loads_by_subcase_id,
-    #get_reduced_static_load,
-    #sum_forces_moments)
+from .loads_summation import (
+    get_static_loads_by_subcase_id,
+    get_reduced_static_load,
+    sum_forces_moments)
 from .breakdowns import (
     get_mass_breakdown, get_length_breakdown,
     get_area_breakdown, get_volume_breakdown,
@@ -363,7 +363,7 @@ class BDFAttributes:
 
         # loads
         self.load = LOAD(self)
-        #self.sload = SLOAD(self)
+        self.sload = SLOAD(self)
         self.force = FORCE(self)
         self.force1 = FORCE1(self)
         self.force2 = FORCE2(self)
@@ -431,9 +431,9 @@ class BDFAttributes:
         #self.mathe = MATHE(self)
         #self.mathp = MATHP(self)
 
-        #self.spc = SPC(self)
-        #self.spc1 = SPC1(self)
-        #self.spcadd = SPCADD(self)
+        self.spc = SPC(self)
+        self.spc1 = SPC1(self)
+        self.spcadd = SPCADD(self)
         #self.mpc = MPC(self)
         #self.mpcadd = MPCADD(self)
 
@@ -658,7 +658,7 @@ class BDFAttributes:
     @property
     def properties(self) -> list[Any]:
         properties = [
-            #self.pelas, self.pelast,
+            self.pelas, self.pelast,
             #self.pdamp, self.pdampt,
             #self.pbush, self.pbusht,
             #self.pbush1d, # self.pbush2d,
@@ -666,7 +666,7 @@ class BDFAttributes:
             #self.pvisc, self.pgap,
             self.prod, self.ptube,
             ] + self.bar_properties + self.beam_properties + [
-            #self.pshear,
+            self.pshear,
         ] + self.shell_properties + self.solid_properties + [
             #self.pmass,
         ]
@@ -720,7 +720,7 @@ class BDFAttributes:
             self.moment, self.moment1, self.moment2,
             self.pload, self.pload1, self.pload2, self.pload4,
             #self.grav, self.accel, self.accel1,
-            #self.sload,
+            self.sload,
             #self.temp, self.tempd,
             #self.dtemp, # has nodes
             #self.qhbdy, self.qbdy1, self.qbdy2, self.qbdy3, self.qvol, self.qvect,
@@ -844,7 +844,7 @@ class BDFAttributes:
     @property
     def spcs(self):
         return [
-            #self.spc, self.spc1, self.spcadd,
+            self.spc, self.spc1, self.spcadd,
         ]
     @property
     def mpcs(self):

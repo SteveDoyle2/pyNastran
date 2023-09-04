@@ -3,7 +3,7 @@ import copy
 from datetime import date
 from collections import defaultdict
 from itertools import count
-from typing import Set, Union, Any
+from typing import Union, Any
 
 import numpy as np
 import scipy as sp

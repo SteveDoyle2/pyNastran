@@ -204,7 +204,27 @@ class CROD(Element):
     | CROD | EID | PID | N1 | N2 |
     +------+-----+-----+----+----+
     """
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add(self, eid: int, pid: int, nodes: list[int], comment: str='') -> int:
+        """
+        Creates a CROD card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PROD)
+        nids : list[int, int]
+            node ids
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, pid, nodes, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
         nodes = [integer(card, 3, 'n1'),
@@ -212,6 +232,7 @@ class CROD(Element):
         assert len(card) == 5, 'len(CROD card) = %i\ncard=%s' % (len(card), str(card))
         self.cards.append((eid, pid, nodes, comment))
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, elem: CROD, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
@@ -316,7 +337,34 @@ class PROD(Property):
     | PROD |  1  |  2  | 2.0 | 3.0 | 0.5 | 1.0 |
     +------+-----+-----+-----+-----+-----+-----+
     """
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add(self, pid: int, mid: int, A: float,
+            j: float=0., c: float=0., nsm: float=0., comment: str='') -> int:
+        """
+        Creates a PROD card
+
+        Parameters
+        ----------
+        pid : int
+           property id
+        mid : int
+           material id
+        A : float
+           area
+        J : float; default=0.
+           polar moment of inertia
+        c : float; default=0.
+           stress factor
+        nsm : float; default=0.
+           nonstructural mass per unit length
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((pid, mid, A, j, c, nsm, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         A = double(card, 3, 'A')
@@ -326,6 +374,7 @@ class PROD(Property):
         assert len(card) <= 7, f'len(PROD card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, A, j, c, nsm, comment))
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, prop: PROD, i: np.ndarray) -> None:  # ignore[override]
         prop.property_id = self.property_id[i]
@@ -334,6 +383,7 @@ class PROD(Property):
         prop.J = self.J[i]
         prop.c = self.c[i]
         prop.nsm = self.nsm[i]
+        prop.n = len(i)
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -641,6 +691,8 @@ class PTUBE(Property):
         elem.diameter = self.diameter[i, :]
         elem.t = self.t[i]
         elem.nsm = self.nsm[i]
+        elem.material_id = self.material_id[i]
+        elem.n = len(i)
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -717,12 +769,37 @@ class PTUBE(Property):
         if self.diameter.ndim == 1:
             return self._areai(self.diameter)
 
-        Dout1 = self.diameter[:, 0]
-        Dout2 = self.diameter[:, 1]
+        diameter = self.diameter.copy()
+        Dout1 = diameter[:, 0]
+        Dout2 = diameter[:, 1]
+        inan = np.isnan(Dout2)
+        Dout2[inan] = Dout1[inan]
+
         if np.array_equal(Dout1, Dout2):
             return self._areai(Dout1)
         A = (self._areai(Dout1) + self._areai(Dout2)) / 2.
         return A
+
+    def J(self) -> np.ndarray:
+        #if self.diameter.ndim == 1:
+            #return self._areai(self.diameter)
+
+        diameter = self.diameter.copy()
+        Dout1 = diameter[:, 0]
+        Dout2 = diameter[:, 1]
+        inan = np.isnan(Dout2)
+        Dout2[inan] = Dout1[inan]
+
+        if np.array_equal(Dout1, Dout2):
+            return self._polar(Dout1)
+        # J = pi / 16 * (Do^4 - di^4) / Do
+        Din1 = Dout1 - 2 * self.t
+        Din2 = Dout2 - 2 * self.t
+        J1 = np.pi / 16 * (Dout1**4 - Din1**4) / Dout1
+        J2 = np.pi / 16 * (Dout2**4 - Din2**4) / Dout2
+        #A = (self._areai(Dout1) + self._areai(Dout2)) / 2.
+        J = (J1 + J2) / 2
+        return J
 
     def _areai(self, Dout: np.ndarray) -> np.ndarray:
         """Gets the Area of Section 1/2 of the CTUBE."""

@@ -28,6 +28,29 @@ class CELAS1(Element):
     | CELAS1 | EID | PID | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
     """
+    def add(self, eid: int, pid: int, nids: list[int],
+            c1: int=0, c2: int=0, comment: str='') -> int:
+        """
+        Creates a CELAS1 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PELAS)
+        nids : list[int, int]
+            node ids
+        c1 / c2 : int; default=0
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, pid, nids, c1, c2, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
@@ -124,6 +147,34 @@ class CELAS2(Element):
     | CELAS2 | EID |  K  | G1 | C1 | G2 | C2 | GE | S  |
     +--------+-----+-----+----+----+----+----+----+----+
     """
+    def add(self, eid: int, k: float, nids: list[int],
+            c1: int=0, c2: int=0, ge: float=0., s: float=0., comment: str='') -> int:
+        """
+        Creates a CELAS2 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        k : float
+            spring stiffness
+        nids : list[int, int]
+            SPOINT ids
+            node ids
+        c1 / c2 : int; default=0
+            DOF for nid1 / nid2
+        ge : int; default=0.0
+            damping coefficient
+        s : float; default=0.0
+            stress coefficient
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, k, nids, c1, c2, ge, s, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
@@ -209,6 +260,26 @@ class CELAS3(Element):
     | CELAS3 | EID | PID | S1 | S2 |
     +--------+-----+-----+----+----+
     """
+    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+        """
+        Creates a CELAS3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PELAS)
+        nids : list[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, pid, nids[0], nids[1], comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
@@ -287,6 +358,26 @@ class CELAS4(Element):
     | CELAS4 | EID |  K  | S1 | S2 |
     +--------+-----+-----+----+----+
     """
+    def add(self, eid: int, k: float, nids: list[int], comment: str='') -> int:
+        """
+        Creates a CELAS4 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        k : float
+            spring stiffness
+        nids : list[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, k, nids[0], nids[1], comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
@@ -350,6 +441,29 @@ class PELAS(Property):
     Specifies the stiffness, damping coefficient, and stress coefficient of a
     scalar elastic (spring) element (CELAS1 or CELAS3 entry).
     """
+    def add(self, pid: int, k: float, ge: float=0., s: float=0.,
+            comment: str='') -> int:
+        """
+        Creates a PELAS card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        k : float
+            spring stiffness
+        ge : int; default=0.0
+            damping coefficient
+        s : float; default=0.0
+            stress coefficient
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((pid, k, ge, s, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         k = double(card, 2, 'k')
@@ -401,6 +515,13 @@ class PELAS(Property):
         self.ge = ge
         self.s = s
         self.n = nproperties
+
+    def __apply_slice__(self, prop: PELAS, i: np.ndarray) -> None:  # ignore[override]
+        prop.property_id = self.property_id[i]
+        prop.k = self.k[i]
+        prop.ge = self.ge[i]
+        prop.s = self.s[i]
+        prop.n = len(i)
 
     def validate(self) -> None:
         return

@@ -232,7 +232,7 @@ class Writer():
 
         #self._write_thermal(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_thermal_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_constraints(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_constraints(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_optimization(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_tables(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_sets(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -842,7 +842,7 @@ class Writer():
             bdf_file.write(model.pload1.write(size=size))
             bdf_file.write(model.pload2.write(size=size))
             bdf_file.write(model.pload4.write(size=size))
-            #bdf_file.write(model.sload.write(size=size))
+            model.sload.write_file(bdf_file, size=size)
             #bdf_file.write(model.tempd.write(size=size))  # default temp
             #bdf_file.write(model.temp.write(size=size))
             #bdf_file.write(model.spcd.write(size=size))

@@ -23,8 +23,9 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hs
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 
 if TYPE_CHECKING:
-    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from .dynamic_loads import LOADSET
 
 
@@ -120,7 +121,7 @@ class Load0(Load):
         self.cards = []
 
     def _save(self, load_id, node_id, coord_id, mag, xyz):
-        if len(self.load_id) != 0:
+        if len(self.load_id) == 0:
             load_id = np.hstack([self.load_id, load_id])
             node_id = np.hstack([self.node_id, node_id])
             coord_id = np.hstack([self.coord_id, coord_id])
@@ -356,6 +357,7 @@ class FORCE(Load0):
                     moment[icoord, :] = moment_r @ beta
                 else:
                     raise NotImplementedError(f'coord={cid} not supported\n{coord_card.write()}')
+        assert force_moment.shape == (len(self), 6), force_moment.shape
         return force_moment
 
 class MOMENT(Load0):
@@ -839,3 +841,144 @@ def get_reduced_loads(load: Union[LOAD, LSEQ],
         if load_id not in reduced_loads:
             reduced_loads[load_id] = [(1., loads)]
     return reduced_loads
+
+
+class SLOAD(Load):
+    """
+    Static Scalar Load
+    Defines concentrated static loads on scalar or grid points.
+
+    +-------+-----+----+-----+----+------+----+-------+
+    |   1   |  2  | 3  |  4  |  5 |  6   |  7 |   8   |
+    +=======+=====+====+=====+====+======+====+=======+
+    | SLOAD | SID | S1 | F1  | S2 |  F2  | S3 |   F3  |
+    +-------+-----+----+-----+----+------+----+-------+
+    | SLOAD | 16  | 2  | 5.9 | 17 | -6.3 | 14 | -2.93 |
+    +-------+-----+----+-----+----+------+----+-------+
+
+    .. note:: Can be used in statics OR dynamics.
+
+    If Si refers to a grid point, the load is applied to component T1 of the
+    displacement coordinate system (see the CD field on the GRID entry).
+    """
+    #def slice_card_by_index(self, i: np.ndarray) -> SLOAD:
+        #"""uses a node_index to extract PBARs"""
+        #i = np.atleast_1d(np.asarray(i, dtype=self.load_id.dtype))
+        #i.sort()
+        #assert len(self.load_id) > 0, self.load_id
+        #load = SLOAD(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
+
+    def __apply_slice__(self, load: SLOAD, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.nodes = self.nodes
+        load.mags = self.mags
+
+    def add(self, sid: int, nodes: list[int], mags: list[float], comment: str=''):
+        """
+        Creates an SLOAD (GRID/SPOINT load)
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        nids : int; list[int]
+            the GRID/SPOINT ids
+        mags : float; list[float]
+            the load magnitude
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
+        if isinstance(mags, float_types):
+            mags = [mags]
+        assert len(nodes) == len(mags)
+        self.cards.append((sid, nodes, mags, comment))
+        self.n += 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> None:
+        sid = integer(card, 1, 'sid')
+
+        nfields = len(card) - 2
+        ngroups = nfields // 2
+        if nfields % 2 == 1:
+            ngroups += 1
+            msg = 'Missing last magnitude on SLOAD card=%s' % card.fields()
+            raise RuntimeError(msg)
+
+        nodes = []
+        mags = []
+        for i in range(ngroups):
+            j = 2 * i + 2
+            nodes.append(integer(card, j, f'nid{i:d}'))
+            mags.append(double(card, j + 1, f'mag{i:d}'))
+        self.cards.append((sid, nodes, mags, comment))
+        self.n += 1
+
+    def parse_cards(self) -> None:
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+
+        assert ncards > 0, ncards
+        all_sids = []
+        all_nodes = []
+        all_mags = []
+        for icard, card in enumerate(self.cards):
+            sid, nodesi, magsi, comment = card
+            #nloadsi = len(nodesi)
+            sids = [sid] * len(nodesi)
+            all_sids.extend(sids)
+            all_nodes.extend(nodesi)
+            all_mags.extend(magsi)
+
+        load_id = np.array(all_sids, dtype='int32')
+        nodes = np.array(all_nodes, dtype='int32')
+        mags = np.array(all_mags, dtype='float64')
+        self._save(load_id, nodes, mags)
+        self.sort()
+        self.cards = []
+
+    def _save(self, load_id, nodes, mags):
+        if len(self.load_id) != 0:
+            load_id = np.hstack([self.load_id, load_id])
+            nodes = np.hstack([self.nodes, nodes])
+            mags = np.hstack([self.mags, mags])
+
+        nloads = len(load_id)
+        self.load_id = load_id
+        self.nodes = nodes
+        self.mags = mags
+        self.n = nloads
+
+    def sum_forces_moments(self) -> np.ndarray:
+        #spoint = self.model.spoint
+        #xyz_cid0 = grid.xyz_cid0()
+        #nid = spoint.spoint_id
+
+        nloads = len(self.load_id)
+        force_moment = np.zeros((nloads, 6), dtype='float64')
+        force = force_moment[:, :3]
+        #moment = force_moment[:, 3:]
+        uload_id = np.unique(self.load_id)
+        assert len(uload_id) == 1, uload_id
+        force[:, 0] = self.mags
+        return force_moment
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.load_id) == 0:
+            return
+        print_card = print_card_8
+        load_ids = array_str(self.load_id, size=size)
+        for sid, node, mag in zip(load_ids, self.nodes, self.mags):
+            list_fields = ['SLOAD', sid, node, mag]
+            bdf_file.write(print_card(list_fields))
+        return

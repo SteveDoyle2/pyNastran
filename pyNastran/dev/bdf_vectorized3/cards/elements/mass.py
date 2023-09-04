@@ -145,7 +145,36 @@ class CONM2(Element):
 
     """
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add(self, eid: int, nid: int, mass: float, cid: int=0,
+            X: Optional[list[float]]=None, I: Optional[list[float]]=None,
+            comment: str='') -> int:
+        """
+        Creates a CONM2 card
+
+        Parameters
+        ----------
+        eid : int
+           element id
+        nid : int
+           node id
+        mass : float
+           the mass of the CONM2
+        cid : int; default=0
+           coordinate frame of the offset (-1=absolute coordinates)
+        X : (3, ) list[float]; default=None -> [0., 0., 0.]
+            xyz offset vector relative to nid
+        I : (6, ) list[float]; default=None -> [0., 0., 0., 0., 0., 0.]
+            mass moment of inertia matrix about the CG
+            I11, I21, I22, I31, I32, I33 = I
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, nid, cid, mass, X, I, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
         cid = integer_or_blank(card, 3, 'cid', default=0)
@@ -168,6 +197,7 @@ class CONM2(Element):
         assert len(card) <= 15, f'len(CONM2 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, nid, cid, mass, X, I, comment))
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, elem: CONM2, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
@@ -196,8 +226,10 @@ class CONM2(Element):
             node_id.append(nid)
             coord_id[icard] = cid
             mass[icard] = massi
-            xyz_offset[icard, :] = X
-            inertia[icard, :] = I
+            if X is not None:
+                xyz_offset[icard, :] = X
+            if I is not None:
+                inertia[icard, :] = I
         self._save(element_id, mass, coord_id, node_id, xyz_offset, inertia)
         self.sort()
         self.cards = []

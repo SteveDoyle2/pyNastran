@@ -236,7 +236,7 @@ class AddCoords(BDFAttributes):
 
 class Add0dElements(BDFAttributes):
     def add_pelas(self, pid: int, k: float, ge: float=0., s: float=0.,
-                  comment: str='') -> PELAS:
+                  comment: str='') -> int:
         """
         Creates a PELAS card
 
@@ -254,8 +254,7 @@ class Add0dElements(BDFAttributes):
             a comment for the card
 
         """
-        prop = PELAS(pid, k, ge, s, comment=comment)
-        self._add_methods._add_property_object(prop)
+        prop = self.pelas.add(pid, k, ge, s, comment=comment)
         return prop
 
     def add_celas1(self, eid: int, pid: int, nids: list[int],
@@ -307,7 +306,7 @@ class Add0dElements(BDFAttributes):
         elem = self.celas2.add(eid, k, nids, c1=c1, c2=c2, ge=ge, s=s, comment=comment)
         return self.celas2
 
-    def add_celas3(self, eid: int, pid: int, nids: list[int], comment: str='') -> CELAS3:
+    def add_celas3(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CELAS3 card
 
@@ -324,9 +323,9 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.celas3.add(eid, pid, nids, comment=comment)
-        return self.celas3
+        return elem
 
-    def add_celas4(self, eid: int, k: float, nids: list[int], comment: str='') -> CELAS4:
+    def add_celas4(self, eid: int, k: float, nids: list[int], comment: str='') -> int:
         """
         Creates a CELAS4 card
 
@@ -760,7 +759,7 @@ class Add0dElements(BDFAttributes):
 class Add1dElements(BDFAttributes):
     def add_conrod(self, eid: int, mid: int, nids: list[int],
                    A: float=0.0, j: float=0.0, c: float=0.0, nsm: float=0.0,
-                   comment: str='') -> CONROD:
+                   comment: str='') -> int:
         """
         Creates a CONROD card
 
@@ -785,9 +784,9 @@ class Add1dElements(BDFAttributes):
 
         """
         elem = self.conrod.add(eid, mid, nids, A=A, j=j, c=c, nsm=nsm, comment=comment)
-        return self.conrod
+        return elem
 
-    def add_crod(self, eid: int, pid: int, nids: list[int], comment: str='') -> CROD:
+    def add_crod(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CROD card
 
@@ -804,10 +803,10 @@ class Add1dElements(BDFAttributes):
 
         """
         elem = self.crod.add(eid, pid, nids, comment=comment)
-        return self.crod
+        return elem
 
     def add_prod(self, pid: int, mid: int, A: float,
-                 j: float=0., c: float=0., nsm: float=0., comment: str='') -> PROD:
+                 j: float=0., c: float=0., nsm: float=0., comment: str='') -> int:
         """
         Creates a PROD card
 
@@ -830,9 +829,9 @@ class Add1dElements(BDFAttributes):
 
         """
         prop = self.prod.add(pid, mid, A, j=j, c=c, nsm=nsm, comment=comment)
-        return self.prod
+        return prop
 
-    def add_ctube(self, eid: int, pid: int, nids: list[int], comment: str='') -> CTUBE:
+    def add_ctube(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CTUBE card
 
@@ -852,7 +851,7 @@ class Add1dElements(BDFAttributes):
         return elem
 
     def add_ptube(self, pid: int, mid: int, OD1: float, t: Optional[float]=None,
-                  nsm: float=0., OD2: Optional[float]=None, comment: str='') -> PTUBE:
+                  nsm: float=0., OD2: Optional[float]=None, comment: str='') -> int:
         """
         Adds a PTUBE card
 
@@ -4114,8 +4113,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        mass_obj = CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
-        self._add_methods._add_mass_object(mass_obj)
+        mass_obj = self.conm2.add(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
         return mass_obj
 
     def add_nsm(self, sid: int, nsm_type: str, pid_eid: int, value: float,
