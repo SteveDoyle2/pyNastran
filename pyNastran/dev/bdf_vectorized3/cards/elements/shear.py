@@ -33,7 +33,7 @@ class CSHEAR(Element):
     +--------+-------+-------+----+----+----+----+
 
     """
-    def add(self, eid: int, pid: int, nids: list[int], comment: str=''):
+    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CSHEAR card
 
@@ -51,13 +51,14 @@ class CSHEAR(Element):
         """
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
+        return self.n
 
     def __init__(self, model: BDF):
         super().__init__(model)
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
@@ -66,6 +67,7 @@ class CSHEAR(Element):
                 integer(card, 6, 'n4'),]
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         assert self.n >= 0, self.n
@@ -174,7 +176,7 @@ class PSHEAR(Property):
         self.f2 = np.array([], dtype='float64')
 
     def add(self, pid: int, mid: int, t: float, nsm: float=0.,
-            f1: float=0., f2: float=0., comment: str=''):
+            f1: float=0., f2: float=0., comment: str='') -> int:
         """
         Creates a PSHEAR card
 
@@ -205,8 +207,9 @@ class PSHEAR(Property):
         #self.n += 1
         self.cards.append((pid, mid, t, nsm, f1, f2, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         t = double(card, 3, 't')
@@ -216,6 +219,7 @@ class PSHEAR(Property):
         assert len(card) <= 7, f'len(PSHEAR card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, t, nsm, f1, f2, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         assert self.n >= 0, self.n

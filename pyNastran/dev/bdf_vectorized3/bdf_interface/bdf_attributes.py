@@ -17,9 +17,13 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, 
 #from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM, PBEAM, PBEAML, PBCOMP # , PBMSECT
 from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
-    CQUAD4, CTRIA3, CQUAD8, CTRIA6, CTRIAR, CQUADR, CQUAD, PSHELL, PCOMP, PCOMPG,
-    PLPLANE, # SNORM, PSHLN1, PSHLN2,
+    CQUAD4, CTRIA3, CQUAD8, CTRIA6, CTRIAR, CQUADR, CQUAD,
+    # SNORM,
     #CAABSF, # acoustic shells
+)
+from pyNastran.dev.bdf_vectorized3.cards.elements.shell_properties import (
+    PSHELL, PCOMP, PCOMPG,
+    PLPLANE, # PSHLN1, PSHLN2,
 )
 #from pyNastran.dev.bdf_vectorized3.cards.elements.shell_axi import (
     #CTRIAX, CTRIAX6,

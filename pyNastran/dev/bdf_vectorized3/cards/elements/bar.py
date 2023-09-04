@@ -147,10 +147,11 @@ class CBAR(Element):
             x: Optional[list[float]], g0: Optional[int],
             offt: str='GGG', pa: int=0, pb: int=0,
             wa: Optional[list[float]]=None, wb: Optional[list[float]]=None,
-            comment: str='', validate: bool=False):
+            comment: str='', validate: bool=False) -> int:
         assert x is None or g0 is None, f'pid={pid} x={x} g0={g0}'
         self.cards.append((eid, pid, nids, x, g0, offt, pa, pb, wa, wb, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str=''):
         PROPERTY_ID_DEFAULT = 0
@@ -452,10 +453,11 @@ class PBAR(Property):
                 d1: float=0., d2: float=0.,
                 e1: float=0., e2: float=0.,
                 f1: float=0., f2: float=0.,
-                k1: float=1.e8, k2: float=1.e8, comment: str='') -> None:
+                k1: float=1.e8, k2: float=1.e8, comment: str='') -> int:
         self.cards.append((pid, mid, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
                            e1, e2, f1, f2, k1, k2, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -858,7 +860,7 @@ class PBARL(Property):
         self.write()
 
     def add(self, pid: int, mid: int, bar_type: str, dim: list[float],
-            group: str='MSCBML0', nsm: float=0., comment: str='') -> None:
+            group: str='MSCBML0', nsm: float=0., comment: str='') -> int:
         if isinstance(dim, integer_types):
             dim = [float(dim)]
         elif isinstance(dim, float_types):
@@ -877,6 +879,7 @@ class PBARL(Property):
 
         self.cards.append((pid, mid, group, bar_type, dim, nsm, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -1243,7 +1246,7 @@ class CBARAO(Element):
         #self.cards.append((eid, pid, nids, x, g0, offt, pa, pb, wa, wb, comment))
         #self.n += 1
 
-    def add(self, eid: int, scale: str, x: list[float], comment: str='') -> CBARAO:
+    def add(self, eid: int, scale: str, x: list[float], comment: str='') -> int:
         """
         Creates a CBARAO card, which defines additional output locations
         for the CBAR card.
@@ -1274,8 +1277,9 @@ class CBARAO(Element):
         """
         self.cards.append((eid, scale, x, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CBARAO card from ``BDF.add_card(...)``
 
@@ -1310,6 +1314,7 @@ class CBARAO(Element):
         assert len(card) <= 9, f'len(CBARAO card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, scale, x, comment))
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, elem: CBARAO, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]

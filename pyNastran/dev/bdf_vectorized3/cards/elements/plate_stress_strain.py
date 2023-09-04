@@ -4,8 +4,8 @@ from itertools import zip_longest
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
-from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
+#from pyNastran.bdf.field_writer_8 import print_field_8 # print_card_8,
+#from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, # string, # double,
@@ -17,15 +17,16 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property # , hslice_by_idim, make_idim, searchsorted_filter
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, get_print_card_8_16 # , hslice_by_idim, make_idim, searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from .utils import get_density_from_material
 from .shell import (
     tri_centroid, tri_area, # tri_area_centroid_normal, tri_quality_xyz, tri_quality_nodes,
     quad_area, quad_centroid, # quad_area_centroid_normal, quad_quality_nodes,
     shell_thickness, shell_mass_per_area,
-    nonlinear_thickness,
 )
+from .shell_properties import nonlinear_thickness
+
 #from pyNastran2.utils import hstack_msg
 
 if TYPE_CHECKING:
@@ -241,6 +242,7 @@ class CPLSTS3(PlateStressElement):
         if len(self.element_id) == 0:
             return ''
         lines = []
+        print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
@@ -249,7 +251,7 @@ class CPLSTS3(PlateStressElement):
             element_id, property_id, nodes, self.theta, self.tflag, self.T):
             list_fields = ['CPLSTS3', eid, pid, n1, n2, n3, None, theta, None,
                             None, None, None, tflag, t1, t2, t3]
-            lines.append(print_card_8(list_fields))
+            lines.append(print_card(list_fields))
         return ''.join(lines)
 
 
@@ -378,6 +380,7 @@ class CPLSTS4(PlateStressElement):
         if len(self.element_id) == 0:
             return ''
         lines = []
+        print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
@@ -385,7 +388,7 @@ class CPLSTS4(PlateStressElement):
             element_id, property_id, nodes, self.theta, self.tflag, self.T):
             list_fields = ['CPLSTS4', eid, pid, n1, n2, n3, n4, theta,
                             None, None, None, None, tflag, t1, t2, t3, t4]
-            lines.append(print_card_8(list_fields))
+            lines.append(print_card(list_fields))
         return ''.join(lines)
 
 class PPLANE(Property):
@@ -447,9 +450,10 @@ class PPLANE(Property):
         #self.n += 1
 
     def add(self, pid: int, mid: int, t: float=0.0, nsm: float=0.0,
-            formulation_option: int=0, comment: str='') -> PPLANE:
+            formulation_option: int=0, comment: str='') -> int:
         self.cards.append((pid, mid, t, nsm, formulation_option, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -474,7 +478,7 @@ class PPLANE(Property):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         assert self.n >= 0, self.n
         if len(self.cards) == 0:
             return
@@ -520,13 +524,14 @@ class PPLANE(Property):
         if len(self.property_id) == 0:
             return
 
+        print_card = get_print_card_8_16(size)
         pids = array_str(self.property_id, size=size)
         mids = array_str(self.material_id, size=size)
 
         for pid, mid, thickness, nsm, formulation_option in zip_longest(
             pids, mids, self.thickness, self.nsm, self.formulation_option):
             list_fields = ['PPLANE', pid, mid, thickness, nsm, formulation_option]
-            msg = print_card_8(list_fields)
+            msg = print_card(list_fields)
             bdf_file.write(msg)
         return
 
@@ -666,13 +671,14 @@ class CPLSTN3(PlateStrainElement):
         super().__init__(model)
         self.nodes = np.zeros((0, 3), dtype='int32')
 
-    def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0, comment: str='') -> int:
+    def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
+            comment: str='') -> int:
         """Creates a CPLSTN3 card"""
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CPLSTS3 card from ``BDF.add_card(...)``
 
@@ -697,6 +703,7 @@ class CPLSTN3(PlateStrainElement):
         theta = double_or_blank(card, 6, 'theta', default=0.0)
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         assert self.n >= 0, self.n
@@ -767,13 +774,14 @@ class CPLSTN3(PlateStrainElement):
         if len(self.element_id) == 0:
             return ''
         lines = []
+        print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
         for eid, pid, (n1, n2, n3), theta in zip_longest(
             element_id, property_id, nodes, self.theta):
             list_fields = ['CPLSTN3', eid, pid, n1, n2, n3, theta]
-            lines.append(print_card_8(list_fields))
+            lines.append(print_card(list_fields))
         return ''.join(lines)
 
 class CPLSTN4(PlateStrainElement):
@@ -790,13 +798,14 @@ class CPLSTN4(PlateStrainElement):
         super().__init__(model)
         self.nodes = np.zeros((0, 4), dtype='int32')
 
-    def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0, comment: str='') -> int:
+    def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
+            comment: str='') -> int:
         """Creates a CPLSTN4 card"""
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CPLSTS4 card from ``BDF.add_card(...)``
 
@@ -823,6 +832,7 @@ class CPLSTN4(PlateStrainElement):
         assert len(card) <= 8, f'len(CPLSTS4 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         assert self.n >= 0, self.n
@@ -881,13 +891,14 @@ class CPLSTN4(PlateStrainElement):
         if len(self.element_id) == 0:
             return ''
         lines = []
+        print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
         for eid, pid, (n1, n2, n3, n4), theta in zip_longest(
             element_id, property_id, nodes, self.theta):
             list_fields = ['CPLSTN4', eid, pid, n1, n2, n3, n4, theta]
-            lines.append(print_card_8(list_fields))
+            lines.append(print_card(list_fields))
         return ''.join(lines)
 
 
@@ -913,7 +924,7 @@ class CPLSTN6(PlateStrainElement):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CPLSTN6 card from ``BDF.add_card(...)``
 
@@ -941,6 +952,7 @@ class CPLSTN6(PlateStrainElement):
         theta = double_or_blank(card, 9, 'theta', default=0.0)
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         assert self.n >= 0, self.n
@@ -1000,6 +1012,7 @@ class CPLSTN6(PlateStrainElement):
         if len(self.element_id) == 0:
             return ''
         lines = []
+        print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
@@ -1007,7 +1020,7 @@ class CPLSTN6(PlateStrainElement):
             element_id, property_id, nodes, self.theta):
             list_fields = ['CPLSTN6', eid, pid, n1, n2, n3, n4, n5, n6,
                            theta]
-            lines.append(print_card_8(list_fields))
+            lines.append(print_card(list_fields))
         return ''.join(lines)
 
 
@@ -1033,7 +1046,7 @@ class CPLSTN8(PlateStrainElement):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CPLSTN8 card from ``BDF.add_card(...)``
 
@@ -1063,6 +1076,7 @@ class CPLSTN8(PlateStrainElement):
         theta = double_or_blank(card, 11, 'theta', default=0.0)
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         assert self.n >= 0, self.n
@@ -1120,6 +1134,7 @@ class CPLSTN8(PlateStrainElement):
         if len(self.element_id) == 0:
             return ''
         lines = []
+        print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
@@ -1127,7 +1142,7 @@ class CPLSTN8(PlateStrainElement):
             element_id, property_id, nodes, self.theta):
             list_fields = ['CPLSTN8', eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
                            theta]
-            lines.append(print_card_8(list_fields))
+            lines.append(print_card(list_fields))
         return ''.join(lines)
 
 
@@ -1157,7 +1172,7 @@ class CPLSTS6(PlateStrainElement):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CPLSTS6 card from ``BDF.add_card(...)``
 
@@ -1198,6 +1213,7 @@ class CPLSTS6(PlateStrainElement):
             thickness = np.full(6, np.nan, dtype='float64')
         self.cards.append((eid, pid, nids, theta, tflag, thickness, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         assert self.n >= 0, self.n
@@ -1262,8 +1278,7 @@ class CPLSTS6(PlateStrainElement):
     def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
-        if size == 8:
-            print_card = print_card_8
+        print_card = get_print_card_8_16(size)
         lines = []
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -1414,8 +1429,7 @@ class CPLSTS8(PlateStrainElement):
     def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
-        if size == 8:
-            print_card = print_card_8
+        print_card = get_print_card_8_16(size)
         lines = []
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)

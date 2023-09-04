@@ -98,7 +98,7 @@ def basic_mass_material_id(property_id: np.ndarray,
 def expanded_mass_material_id(element_id: np.ndarray,
                               property_id: np.ndarray,
                               allowed_properties: list[Any],
-                              msg: str='') -> tuple[np.ndarray, np.ndarray]:
+                              msg: str='') -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Intended for elements that can have multiple material ids (e.g., PCOMP)"""
     assert len(allowed_properties) > 0, allowed_properties
     element_ids_list = []

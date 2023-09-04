@@ -37,7 +37,7 @@ class CONROD(Element):
 
     def add(self, eid: int, mid: int, nodes: list[int],
             A: float=0.0, j: float=0.0, c: float=0.0, nsm: float=0.0,
-            comment: str='') -> CONROD:
+            comment: str='') -> int:
         """
         Creates a CONROD card
 
@@ -63,8 +63,9 @@ class CONROD(Element):
         """
         self.cards.append((eid, nodes, mid, A, j, c, nsm, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         nodes = [integer(card, 2, 'n1'),
                  integer(card, 3, 'n2')]
@@ -76,6 +77,7 @@ class CONROD(Element):
         assert len(card) <= 9, 'len(CONROD card) = %i\ncard=%s' % (len(card), str(card))
         self.cards.append((eid, nodes, mid, A, j, c, nsm, comment))
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, elem: CONROD, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
@@ -414,7 +416,7 @@ class CTUBE(Element):
     | CTUBE | EID | PID | N1 | N2 |
     +-------+-----+-----+----+----+
     """
-    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> None:
+    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CTUBE card
 
@@ -432,8 +434,9 @@ class CTUBE(Element):
         """
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
@@ -441,6 +444,7 @@ class CTUBE(Element):
         assert len(card) == 5, 'len(CTUBE card) = %i\ncard=%s' % (len(card), str(card))
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, elem: CTUBE, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
@@ -594,7 +598,7 @@ class PTUBE(Property):
     +-------+------+-----+------+------+------+-----+
     """
     def add(self, pid: int, mid: int, OD1: float, t: Optional[float]=None,
-            nsm: float=0., OD2: Optional[float]=None, comment: str='') -> PTUBE:
+            nsm: float=0., OD2: Optional[float]=None, comment: str='') -> int:
         """
         Adds a PTUBE card
 
@@ -618,8 +622,9 @@ class PTUBE(Property):
         """
         self.cards.append((pid, mid, OD1, OD2, t, nsm, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         OD1 = double(card, 3, 'OD1')
@@ -629,6 +634,7 @@ class PTUBE(Property):
         assert len(card) <= 7, f'len(PTUBE card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, OD1, OD2, t, nsm, comment))
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, elem: PTUBE, i: np.ndarray) -> None:
         elem.property_id = self.property_id[i]

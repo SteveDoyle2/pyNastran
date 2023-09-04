@@ -49,11 +49,12 @@ class XPOINT(VectorizedBaseCard):
         super().__init__(model)
         self.ids = np.array([], dtype='int32')
 
-    def add(self, ids: np.ndarray, comment: str=''):
+    def add(self, ids: np.ndarray, comment: str='') -> int:
         if isinstance(ids, integer_types):
             ids = [ids]
         self.cards.append((ids, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -251,11 +252,12 @@ class GRID(VectorizedBaseCard):
 
     def add(self, nid: int, xyz: np.ndarray,
             cp: int=0, cd: int=0,
-            ps: int=0, seid: int=0, comment: str=''):
+            ps: int=0, seid: int=0, comment: str='') -> int:
         ps = 0 if ps == '' else ps
         assert isinstance(ps, int), ps
         self.cards.append((nid, xyz, cp, cd, ps, seid, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
