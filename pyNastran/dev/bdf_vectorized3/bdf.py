@@ -644,8 +644,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PBUSH', 'PBUSH1D',
             #'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PTUBE',
-            # 'PBEAM', 'PBCOMP', 'PBRSECT', 'PBEND',
-            #'PBEAML', 'PBMSECT', # not fully supported
+            'PBEAM', 'PBEAML', 'PBCOMP', # 'PBRSECT', 'PBEND',
+            # 'PBMSECT', # not fully supported
             #'PBEAM3',  # v1.3
 
             'PSHELL', 'PCOMP', 'PCOMPG',
@@ -2466,10 +2466,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CBARAO' : partial(self._prepare_card, self.cbarao),
 
             # beam
-            #'CBEAM': partial(self._prepare_card, self.cbeam),
-            #'PBEAM': partial(self._prepare_card, self.pbeam),
-            #'PBEAML': partial(self._prepare_card, self.pbeaml),
-            #'PBCOMP' : partial(self._prepare_card, self.pbcomp),
+            'CBEAM': partial(self._prepare_card, self.cbeam),
+            'PBEAM': partial(self._prepare_card, self.pbeam),
+            'PBEAML': partial(self._prepare_card, self.pbeaml),
+            'PBCOMP' : partial(self._prepare_card, self.pbcomp),
             #'PBMSECT' : (PBMSECT, add_methods._add_property_object),
             #'POINT' : partial(self._prepare_card, self.point),
 

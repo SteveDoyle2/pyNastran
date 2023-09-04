@@ -220,7 +220,7 @@ class CPLSTS3(PlateStressElement):
         assert T.shape == (nelements, 3), T.shape
         self.n = nelements
 
-    def __apply_slice__(self, element: CPLSTS3, i: np.ndarray) -> None:
+    def __apply_slice__(self, element: CPLSTS3, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -358,7 +358,7 @@ class CPLSTS4(PlateStressElement):
         self.T = T
         self.n = nelements
 
-    def __apply_slice__(self, element: CPLSTS4, i: np.ndarray) -> None:
+    def __apply_slice__(self, element: CPLSTS4, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -500,7 +500,7 @@ class PPLANE(Property):
         self.sort()
         self.cards = []
 
-    def __apply_slice__(self, prop: PPLANE, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PPLANE, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
@@ -584,7 +584,7 @@ class PlateStrainElement(Element):
         super().__init__(model)
         self.property_id = np.array([], dtype='int32')
 
-    def __apply_slice__(self, element: PlateStrainElement, i: np.ndarray) -> None:
+    def __apply_slice__(self, element: PlateStrainElement, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -887,7 +887,8 @@ class CPLSTN4(PlateStrainElement):
             i = slice(len(self.element_id))
         self.nodes[i, :] = self.nodes[i, [1, 0, 3, 2]]
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> str:
         if len(self.element_id) == 0:
             return ''
         lines = []

@@ -597,7 +597,7 @@ class CTRIA3(ShellElement):
         self.zoffset = zoffset
         self.T = T
 
-    def __apply_slice__(self, element: CTRIA3, i: np.ndarray) -> None:
+    def __apply_slice__(self, element: CTRIA3, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -843,7 +843,7 @@ class CTRIAR(ShellElement):
         self.cards.append(card)
         self.n += 1
 
-    def __apply_slice__(self, element: CTRIAR, i: np.ndarray) -> None:
+    def __apply_slice__(self, element: CTRIAR, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -1104,7 +1104,7 @@ class CQUAD4(ShellElement):
         _save_quad(self, element_id, property_id, nodes,
                    zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
 
-    def __apply_slice__(self, element: CQUAD4, i: np.ndarray) -> None:
+    def __apply_slice__(self, element: CQUAD4, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -1370,7 +1370,7 @@ class CQUADR(ShellElement):
         self.tflag = np.array([], dtype='int32')
         self.T = np.zeros((0, 4), dtype='float64')
 
-    def __apply_slice__(self, element: CQUADR, i: np.ndarray) -> None:
+    def __apply_slice__(self, element: CQUADR, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -1687,7 +1687,7 @@ class CTRIA6(ShellElement):
         self.cards.append(card)
         self.n += 1
 
-    def __apply_slice__(self, element: CTRIA6, i: np.ndarray) -> None:
+    def __apply_slice__(self, element: CTRIA6, i: np.ndarray) -> None:  # ignore[override]
         assert element.type == 'CTRIA6'
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
@@ -1973,7 +1973,7 @@ class CQUAD8(ShellElement):
         self.cards.append(card)
         self.n += 1
 
-    def __apply_slice__(self, element: CQUAD8, i: np.ndarray) -> None:
+    def __apply_slice__(self, element: CQUAD8, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]
@@ -2219,7 +2219,7 @@ class CQUAD(ShellElement):
         self.theta = np.hstack([self.theta, theta])
         self.n += 1
 
-    def __apply_slice__(self, element: CQUAD, i: np.ndarray) -> None:
+    def __apply_slice__(self, element: CQUAD, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
         element.property_id = self.property_id[i]
         element.nodes = self.nodes[i, :]

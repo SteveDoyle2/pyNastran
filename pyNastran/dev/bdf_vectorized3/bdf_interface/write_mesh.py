@@ -411,7 +411,7 @@ class Writer():
         # bar/beam/shear
         bdf_file.write(model.cbar.write(size=size))
         bdf_file.write(model.cbarao.write(size=size))
-        #bdf_file.write(model.cbeam.write(size=size))
+        bdf_file.write(model.cbeam.write(size=size))
         model.cshear.write_file(bdf_file, size=size)
 
         # shells
@@ -546,12 +546,12 @@ class Writer():
         bdf_file.write(model.pbrsect.write(size=size))
 
         # beam
-        #bdf_file.write(model.pbeam.write(size=size))
-        #bdf_file.write(model.pbeaml.write(size=size))
-        #bdf_file.write(model.pbcomp.write(size=size))
+        bdf_file.write(model.pbeam.write(size=size))
+        bdf_file.write(model.pbeaml.write(size=size))
+        bdf_file.write(model.pbcomp.write(size=size))
 
         # shear
-        #bdf_file.write(model.pshear.write(size=size))
+        bdf_file.write(model.pshear.write(size=size))
 
         # shell
         model.pshell.write_file(bdf_file, size=size)

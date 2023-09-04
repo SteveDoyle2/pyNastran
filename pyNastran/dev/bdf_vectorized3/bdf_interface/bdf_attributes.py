@@ -14,7 +14,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, 
 #from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
     #CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5,
     #PDAMP, PDAMPT, CVISC, PVISC, CGAP, PGAP)
-#from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM, PBEAM, PBEAML, PBCOMP # , PBMSECT
+from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM, PBEAM, PBEAML, PBCOMP # , PBMSECT
 from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
     CQUAD4, CTRIA3, CQUAD8, CTRIA6, CTRIAR, CQUADR, CQUAD,
@@ -261,11 +261,11 @@ class BDFAttributes:
         self.pbrsect = PBRSECT(self)
         #self.bar_properties = [self.pbar, self.pbarl, self.pbrsect]
 
-        #self.beamor = None
-        #self.cbeam = CBEAM(self)
-        #self.pbeam = PBEAM(self)
-        #self.pbeaml = PBEAML(self)
-        #self.pbcomp = PBCOMP(self)
+        self.beamor = None
+        self.cbeam = CBEAM(self)
+        self.pbeam = PBEAM(self)
+        self.pbeaml = PBEAML(self)
+        self.pbcomp = PBCOMP(self)
         #self.beam_properties = [self.pbeaml]
 
         self.cshear = CSHEAR(self)
@@ -614,7 +614,7 @@ class BDFAttributes:
             #self.cfast,
             self.crod, self.conrod, self.ctube,
             self.cbar,
-            #self.cbeam,
+            self.cbeam,
             self.cshear,
             #self.caabsf, # acoustic shells
             #self.genel,
@@ -636,7 +636,7 @@ class BDFAttributes:
     @property
     def beam_properties(self) -> list[Any]:
         properties = [
-            #self.pbeam, self.pbeaml, self.pbcomp,
+            self.pbeam, self.pbeaml, self.pbcomp,
         ]
         return properties
 

@@ -1618,7 +1618,7 @@ class PLPLANE(Property):
         self.sort()
         self.cards = []
 
-    def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]

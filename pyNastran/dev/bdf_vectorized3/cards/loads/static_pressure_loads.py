@@ -27,7 +27,7 @@ from .static_loads import Load
 
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from .dynamic_loads import LOADSET
 
 

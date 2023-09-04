@@ -732,7 +732,7 @@ class PSOLID(Property):
         prop = self.slice_card_by_index(iprop)
         return prop
 
-    def __apply_slice__(self, prop: PSOLID, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PSOLID, i: np.ndarray) -> None:  # ignore[override]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.coord_id = self.coord_id[i]
@@ -909,7 +909,7 @@ class PLSOLID(Property):
         super().__init__(model)
         self.material_id = np.array([], dtype='int32')
 
-    def __apply_slice__(self, prop: PLSOLID, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PLSOLID, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
@@ -1023,7 +1023,7 @@ class PCOMPS(Property):
         prop = self.slice_card_by_index(iprop)
         return prop
 
-    def __apply_slice__(self, prop: PCOMPS, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PCOMPS, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
         prop.property_id = self.property_id[i]
         #prop.material_id = self.material_id[i]

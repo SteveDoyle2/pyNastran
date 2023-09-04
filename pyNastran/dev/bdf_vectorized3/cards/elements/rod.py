@@ -79,7 +79,7 @@ class CONROD(Element):
         self.n += 1
         return self.n
 
-    def __apply_slice__(self, elem: CONROD, i: np.ndarray) -> None:
+    def __apply_slice__(self, elem: CONROD, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
         elem.material_id = self.material_id[i]
         elem.nodes = self.nodes[i, :]
@@ -213,7 +213,7 @@ class CROD(Element):
         self.cards.append((eid, pid, nodes, comment))
         self.n += 1
 
-    def __apply_slice__(self, elem: CROD, i: np.ndarray) -> None:
+    def __apply_slice__(self, elem: CROD, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -327,7 +327,7 @@ class PROD(Property):
         self.cards.append((pid, mid, A, j, c, nsm, comment))
         self.n += 1
 
-    def __apply_slice__(self, prop: PROD, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PROD, i: np.ndarray) -> None:  # ignore[override]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         prop.A = self.A[i]
@@ -446,7 +446,7 @@ class CTUBE(Element):
         self.n += 1
         return self.n
 
-    def __apply_slice__(self, elem: CTUBE, i: np.ndarray) -> None:
+    def __apply_slice__(self, elem: CTUBE, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -636,7 +636,7 @@ class PTUBE(Property):
         self.n += 1
         return self.n
 
-    def __apply_slice__(self, elem: PTUBE, i: np.ndarray) -> None:
+    def __apply_slice__(self, elem: PTUBE, i: np.ndarray) -> None:  # ignore[override]
         elem.property_id = self.property_id[i]
         elem.diameter = self.diameter[i, :]
         elem.t = self.t[i]

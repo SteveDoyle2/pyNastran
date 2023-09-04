@@ -463,7 +463,7 @@ class MOMENT1(Load1):
         self.__apply_slice__(load, i)
         return load
 
-    def __apply_slice__(self, load: MOMENT1, i: np.ndarray) -> None:
+    def __apply_slice__(self, load: MOMENT1, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
         load.node_id = self.node_id[i]
@@ -502,7 +502,7 @@ class FORCE2(Load2):
         self.__apply_slice__(load, i)
         return load
 
-    def __apply_slice__(self, load: FORCE2, i: np.ndarray) -> None:
+    def __apply_slice__(self, load: FORCE2, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
         load.node_id = self.node_id[i]
@@ -551,7 +551,7 @@ class MOMENT2(Load2):
         self.__apply_slice__(load, i)
         return load
 
-    def __apply_slice__(self, load: MOMENT2, i: np.ndarray) -> None:
+    def __apply_slice__(self, load: MOMENT2, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
         load.node_id = self.node_id[i]
