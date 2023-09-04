@@ -351,23 +351,23 @@ class VectorizedBaseCard:
     #        raise NotImplementedError(f'{self.type}: add write_file')
     #    self.write_file(file_obj, size=8, write_card_header=write_card_header)
 
-    #def write_file_16(self, file_obj: TextIOLike,
+    #def write_file_16(self, bdf_file: TextIOLike,
     #                  is_double: bool=False,
     #                  write_card_header: bool=False) -> None:
     #    if not hasattr(self, 'write_file'):
     #        raise NotImplementedError(f'{self.type}: add write_file')
-        self.write_file(file_obj, size=16, is_double=is_double, write_card_header=write_card_header)
+        #self.write_file(bdf_file, size=16, is_double=is_double, write_card_header=write_card_header)
 
-    def write_file(self, file_obj: TextIOLike,
+    def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         if not hasattr(self, 'write_file_8'):
             raise NotImplementedError(f'{self.type}: add write_file')
 
         if size == 8:
-            self.write_file_8(file_obj, write_card_header=write_card_header)
+            self.write_file_8(bdf_file, write_card_header=write_card_header)
         else:
-            self.write_file_16(file_obj, is_double=is_double, write_card_header=write_card_header)
+            self.write_file_16(bdf_file, is_double=is_double, write_card_header=write_card_header)
         return
 
     def get_stats(self,

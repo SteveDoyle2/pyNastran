@@ -1,11 +1,12 @@
 from __future__ import annotations
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, TYPE_CHECKING
 from io import StringIO
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttributes
 from pyNastran.bdf.bdf_interface.write_mesh import _output_helper, _fix_sizes
 from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 if TYPE_CHECKING:
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
@@ -94,7 +95,7 @@ class WriteMesh(BDFAttributes):
                 #bdf_file.write(suport.write_card(size, is_double))
         #self._write_common(bdf_file, size=size, is_double=False, is_long_ids=None)
 
-    def write_bulk_data(self, bdf_file,
+    def write_bulk_data(self, bdf_file: TextIOLike,
                         size: int=8, is_double: bool=False,
                         interspersed: bool=False,
                         enddata: Optional[bool]=None, close: bool=True,
@@ -184,7 +185,8 @@ class Writer():
         if close:
             bdf_file.close()
 
-    def _write_header(self, bdf_file: Any, encoding: str, write_header: bool=True) -> None:
+    def _write_header(self, bdf_file: TextIOLike,
+                      encoding: str, write_header: bool=True) -> None:
         """Writes the executive and case control decks."""
         self._set_punch()
 
@@ -200,7 +202,8 @@ class Writer():
             self._write_executive_control_deck(bdf_file)
             self._write_case_control_deck(bdf_file)
 
-    def _write_common(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_common(self, bdf_file: TextIOLike,
+                      size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
         """
         Write the common outputs so none get missed...
@@ -257,7 +260,7 @@ class Writer():
                 write_aero_in_flutter = True
         return write_aero_in_flutter, write_aero_in_gust
 
-    def _write_executive_control_deck(self, bdf_file: Any) -> None:
+    def _write_executive_control_deck(self, bdf_file: TextIOLike) -> None:
         """Writes the executive control deck."""
         msg = ''
         model = self.model
@@ -278,7 +281,7 @@ class Writer():
                 msg += line + '\n'
             bdf_file.write(msg)
 
-    def _write_case_control_deck(self, bdf_file: Any) -> None:
+    def _write_case_control_deck(self, bdf_file: TextIOLike) -> None:
         """Writes the Case Control Deck."""
         model = self.model
         case_control_deck = model.case_control_deck
@@ -301,7 +304,8 @@ class Writer():
             else:
                 model.punch = True
 
-    def _write_params(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_params(self, bdf_file: TextIOLike,
+                      size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the PARAM cards"""
         model = self.model
@@ -316,7 +320,8 @@ class Writer():
             if model.mdlprm:
                 bdf_file.write(model.mdlprm.write_card(size, is_double))
 
-    def _write_nodes(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_nodes(self, bdf_file: TextIOLike,
+                     size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the NODE-type cards"""
         model = self.model
@@ -349,7 +354,8 @@ class Writer():
         #if self.seqgp:
             #bdf_file.write(self.seqgp.write_card(size, is_double))
 
-    def _write_grids(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_grids(self, bdf_file: TextIOLike,
+                     size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the GRID-type cards"""
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
@@ -363,7 +369,8 @@ class Writer():
             #bdf_file.write('$ POINTS\n')
             #bdf_file.write(model.point.write(size=size))
 
-    def _write_elements(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_elements(self, bdf_file: TextIOLike,
+                        size: int=8, is_double: bool=False,
                         is_long_ids: Optional[bool]=None) -> None:
         """Writes the elements in a sorted order"""
         model = self.model
@@ -373,10 +380,10 @@ class Writer():
         #bdf_file.write(model.plotel.write(size=size))
 
         # celas
-        #bdf_file.write(model.celas1.write(size=size))
-        #bdf_file.write(model.celas2.write(size=size))
-        #bdf_file.write(model.celas3.write(size=size))
-        #bdf_file.write(model.celas4.write(size=size))
+        model.celas1.write_file(bdf_file, size=size)
+        model.celas2.write_file(bdf_file, size=size)
+        model.celas3.write_file(bdf_file, size=size)
+        model.celas4.write_file(bdf_file, size=size)
 
         # cdamp
         #bdf_file.write(model.cdamp1.write(size=size))
@@ -405,7 +412,7 @@ class Writer():
         bdf_file.write(model.cbar.write(size=size))
         bdf_file.write(model.cbarao.write(size=size))
         #bdf_file.write(model.cbeam.write(size=size))
-        #bdf_file.write(model.cshear.write(size=size))
+        model.cshear.write_file(bdf_file, size=size)
 
         # shells
         #all_shells = (mo
@@ -452,7 +459,8 @@ class Writer():
         # other
         #bdf_file.write(model.genel.write(size=size))
 
-    def _write_rigid_elements(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_rigid_elements(self, bdf_file: TextIOLike,
+                              size: int=8, is_double: bool=False,
                               is_long_ids: Optional[bool]=None) -> None:
         """Writes the rigid elements in a sorted order"""
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
@@ -463,7 +471,8 @@ class Writer():
         bdf_file.write(model.rbe2.write(size=size))
         bdf_file.write(model.rbe3.write(size=size))
 
-    def _write_nonstructural_mass(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_nonstructural_mass(self, bdf_file: TextIOLike,
+                                  size: int=8, is_double: bool=False,
                                   is_long_ids: Optional[bool]=None) -> None:
         """Writes the rigid elements in a sorted order"""
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
@@ -475,7 +484,8 @@ class Writer():
         bdf_file.write(model.nsml1.write(size=size))
 
 
-    def _write_masses(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_masses(self, bdf_file: TextIOLike,
+                      size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the mass cards sorted by ID"""
         model = self.model
@@ -502,15 +512,16 @@ class Writer():
         return
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
 
-    def _write_properties(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_properties(self, bdf_file: TextIOLike,
+                          size: int=8, is_double: bool=False,
                           is_long_ids: Optional[bool]=None) -> None:
         """Writes the properties in a sorted order"""
         model = self.model
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
 
         # spring/damp
-        #bdf_file.write(model.pelas.write(size=size))
-        #bdf_file.write(model.pelast.write(size=size))
+        model.pelas.write_file(bdf_file, size=size)
+        model.pelast.write_file(bdf_file, size=size)
         #bdf_file.write(model.pdamp.write(size=size))
         #bdf_file.write(model.pdampt.write(size=size))
         #bdf_file.write(model.pvisc.write(size=size))
@@ -633,7 +644,7 @@ class Writer():
                 #for unused_mid, mat in sorted(self.big_materials.items()):
                     #bdf_file.write(mat.write_card_16(is_double))
 
-    def _write_sets(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_sets(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the SETx cards sorted by ID"""
         model = self.model
@@ -644,7 +655,7 @@ class Writer():
         bdf_file.write(model.uset.write(size=size))
         bdf_file.write(model.uset1.write(size=size))
 
-    def _write_superelements(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_superelements(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                              is_long_ids: Optional[bool]=None) -> None:
         """
         Writes the Superelement cards
@@ -656,11 +667,11 @@ class Writer():
 
         """
         pass
-    def _write_tables(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_tables(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the TABLEx cards sorted by ID"""
         pass
-    def _write_thermal(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_thermal(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the thermal cards"""
         model = self.model
@@ -684,12 +695,14 @@ class Writer():
             bdf_file.write(model.radm.write(size=size))
 
 
-    def _write_thermal_materials(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_thermal_materials(self, bdf_file: TextIOLike,
+                                 size: int=8, is_double: bool=False,
                                  is_long_ids: Optional[bool]=None) -> None:
         """Writes the thermal materials in a sorted order"""
         pass
 
-    def _write_aero(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_aero(self, bdf_file: TextIOLike,
+                    size: int=8, is_double: bool=False,
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the aero cards"""
         model = self.model
@@ -709,7 +722,8 @@ class Writer():
         return
         self.zona.write_bdf(bdf_file, size=8, is_double=False)
 
-    def _write_aero_control(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_aero_control(self, bdf_file: TextIOLike,
+                            size: int=8, is_double: bool=False,
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the aero control surface cards"""
         model = self.model
@@ -727,7 +741,8 @@ class Writer():
             bdf_file.write(model.aefact.write(size=size))
             bdf_file.write(model.aelink.write(size=size))
 
-    def _write_static_aero(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_static_aero(self, bdf_file: TextIOLike,
+                           size: int=8, is_double: bool=False,
                            is_long_ids: Optional[bool]=None) -> None:
         """Writes the static aero cards"""
         model = self.model
@@ -747,7 +762,8 @@ class Writer():
                 bdf_file.write(diverg.write_card(size, is_double))
 
 
-    def _write_flutter(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_flutter(self, bdf_file: TextIOLike,
+                       size: int=8, is_double: bool=False,
                        write_aero_in_flutter: bool=True,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the flutter cards"""
@@ -789,7 +805,8 @@ class Writer():
             for mkaero in model.mkaeros:
                 bdf_file.write(mkaero.write_card(size, is_double))
 
-    def _write_gust(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_gust(self, bdf_file: TextIOLike,
+                    size: int=8, is_double: bool=False,
                     write_aero_in_gust: bool=True,
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the gust cards"""
@@ -801,7 +818,8 @@ class Writer():
                     bdf_file.write(aero.write_card(size, is_double))
             bdf_file.write(model.gust.write(size=size))
 
-    def _write_loads(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_loads(self, bdf_file: TextIOLike,
+                     size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the load cards sorted by ID"""
         model = self.model
@@ -896,7 +914,8 @@ class Writer():
                 #bdf_file.write(cyjoin.write_card(size, is_double))
         self._write_dloads(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
 
-    def _write_dloads(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_dloads(self, bdf_file: TextIOLike,
+                      size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the dload cards sorted by ID"""
         return
@@ -919,7 +938,8 @@ class Writer():
                         print(f'failed printing load...type={load.type} key={key!r}')
                         raise
 
-    def _write_constraints(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_constraints(self, bdf_file: TextIOLike,
+                           size: int=8, is_double: bool=False,
                            is_long_ids: Optional[bool]=None) -> None:
         """Writes the constraint cards sorted by ID"""
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
@@ -950,7 +970,8 @@ class Writer():
                 for spc in spcoffs:
                     bdf_file.write(str(spc))
 
-    def _write_contact(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_contact(self, bdf_file: TextIOLike,
+                       size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the contact cards sorted by ID"""
         return
@@ -991,7 +1012,8 @@ class Writer():
             for (unused_id, bgset) in sorted(self.bgsets.items()):
                 bdf_file.write(bgset.write_card(size, is_double))
 
-    def _write_coords(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_coords(self, bdf_file: TextIOLike,
+                      size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the coordinate cards in a sorted order"""
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
@@ -1001,7 +1023,8 @@ class Writer():
             bdf_file.write(model.coord.write(size=size))
         return
 
-    def _write_dynamic(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_dynamic(self, bdf_file: TextIOLike,
+                       size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the dynamic cards sorted by ID"""
         model = self.model
@@ -1042,7 +1065,8 @@ class Writer():
                 #for transfer_function in tfs:
                     #bdf_file.write(transfer_function.write_card(size, is_double))
 
-    def _write_dmigs(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_dmigs(self, bdf_file: TextIOLike,
+                     size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
         """
         Writes the DMIG cards
@@ -1067,7 +1091,8 @@ class Writer():
         for (unused_name, dmiax) in sorted(model.dmiax.items()):
             bdf_file.write(dmiax.write_card(size, is_double))
 
-    def _write_optimization(self, bdf_file: Any, size: int=8, is_double: bool=False,
+    def _write_optimization(self, bdf_file: TextIOLike,
+                            size: int=8, is_double: bool=False,
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the optimization cards sorted by ID"""
         model = self.model

@@ -10,12 +10,12 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO
 #from pyNastran.dev.bdf_vectorized3.cards.elements.bush import CBUSH, PBUSH, PBUSHT, CBUSH1D, PBUSH1D, CBUSH2D, PBUSH2D
 #from pyNastran.dev.bdf_vectorized3.cards.elements.fast import CFAST, PFAST
 #from pyNastran.dev.bdf_vectorized3.cards.elements.genel import GENEL
-#from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, CELAS3, CELAS4, PELAS, PELAST
+from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, CELAS3, CELAS4, PELAS, PELAST
 #from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
     #CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5,
     #PDAMP, PDAMPT, CVISC, PVISC, CGAP, PGAP)
 #from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM, PBEAM, PBEAML, PBCOMP # , PBMSECT
-#from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
+from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
     CQUAD4, CTRIA3, CQUAD8, CTRIA6, CTRIAR, CQUADR, CQUAD, PSHELL, PCOMP, PCOMPG,
     PLPLANE, # SNORM, PSHLN1, PSHLN2,
@@ -157,12 +157,12 @@ class BDFAttributes:
         #self.plotel = PLOTEL(self)
 
         # spring
-        #self.celas1 = CELAS1(self)
-        #self.celas2 = CELAS2(self)
-        #self.celas3 = CELAS3(self)
-        #self.celas4 = CELAS4(self)
-        #self.pelas = PELAS(self)
-        #self.pelast = PELAST(self)
+        self.celas1 = CELAS1(self)
+        self.celas2 = CELAS2(self)
+        self.celas3 = CELAS3(self)
+        self.celas4 = CELAS4(self)
+        self.pelas = PELAS(self)
+        self.pelast = PELAST(self)
 
         # damper
         #self.cdamp1 = CDAMP1(self)
@@ -264,8 +264,8 @@ class BDFAttributes:
         #self.pbcomp = PBCOMP(self)
         #self.beam_properties = [self.pbeaml]
 
-        #self.cshear = CSHEAR(self)
-        #self.pshear = PSHEAR(self)
+        self.cshear = CSHEAR(self)
+        self.pshear = PSHEAR(self)
 
         #self.snorm = SNORM(self)
         self.ctria3 = CTRIA3(self)
@@ -567,7 +567,7 @@ class BDFAttributes:
     @property
     def spring_elements(self) -> list[Any]:
         elements = [
-            #self.celas1, self.celas2, self.celas3, self.celas4,
+            self.celas1, self.celas2, self.celas3, self.celas4,
         ]
         return elements
 
@@ -611,7 +611,7 @@ class BDFAttributes:
             self.crod, self.conrod, self.ctube,
             self.cbar,
             #self.cbeam,
-            #self.cshear,
+            self.cshear,
             #self.caabsf, # acoustic shells
             #self.genel,
         ] + self.shell_elements + self.solid_elements + axisymmetric_elements + [

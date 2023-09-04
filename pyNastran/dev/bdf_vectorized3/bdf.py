@@ -56,12 +56,9 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import 
 
 #from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 #from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
-#from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
+#from pyNastran.bdf.cards.properties.solid import PIHEX
 #from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
 #from pyNastran.bdf.cards.msgmesh import CGEN
-
-#from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
-#from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 #from pyNastran.bdf.cards.elements.solid import (
     #CTETRA, CPYRAM, CPENTA, CHEXA,
@@ -73,18 +70,10 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import 
     #AXIF, RINGFL,
     #AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, )
 #from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1, FORCEAX, PRESAX, TEMPAX
-#from pyNastran.bdf.cards.elements.axisymmetric_shells import (
-    #CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
-#from pyNastran.bdf.cards.elements.shell import (
-    #CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
-    #CTRIA3, CTRIA6, CTRIAR,
-    #CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
-    #CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
-    #SNORM,)
 #from pyNastran.bdf.cards.elements.shell_nasa95 import (
     #CTRSHL, CQUAD1, PQUAD1)
 
-#from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PTRSHL
+#from .cards.properties.shell import PTRSHL
 #from .cards.elements.acoustic import (
     #CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
 #from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
@@ -92,14 +81,12 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import 
 #from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                     #CDAMP5)
 #from .cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
-#from .cards.elements.rods import CROD, CONROD, CTUBE
-#from .cards.elements.bars import CBAR, BAROR, CBARAO, CBEAM3, CBEND
+#from .cards.elements.bars import CBEAM3, CBEND
 #from .cards.elements.beam import CBEAM, BEAMOR
-#from .cards.properties.rods import PROD, PTUBE
-#from .cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
+#from .cards.properties.bars import PBRSECT, PBEND, PBEAM3
 #from .cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 ## CMASS5
-#from .cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
+#from .cards.elements.mass import CMASS1, CMASS2, CMASS3, CMASS4
 #from .cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                              MPC, MPCADD, SUPORT1, SESUP,
@@ -118,14 +105,12 @@ from pyNastran.bdf.cards.dynamic import (
 #from .cards.loads.loads import (
     #LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
 #from .cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
-#from .cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
-                                       #FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                       #PLOAD, PLOAD1, PLOAD2, PLOAD4)
+#from .cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1)
 
 #from .cards.loads.random_loads import RANDPS, RANDT1
 
-#from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
-                              #MAT8, MAT9, MAT10, MAT11, MAT3D,
+#from .cards.materials import (MAT3, MAT4, MAT5,
+                              #MAT9, MAT3D,
                               #MATG, MATHE, MATHP, MATEV,
                               #CREEP, EQUIV, NXSTRAT)
 #from .cards.material_deps import (
@@ -617,7 +602,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## elements
             # springs
-            #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', # 'CELAS5',
+            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', # 'CELAS5',
             # bushings
             #'CBUSH', 'CBUSH1D', 'CBUSH2D',
             # dampers
@@ -654,7 +639,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## properties
             #'PMASS',
-            #'PELAS', 'PGAP', 'PFAST',
+            'PELAS', # 'PGAP', 'PFAST',
             'PLPLANE', 'PPLANE',
             #'PBUSH', 'PBUSH1D',
             #'PDAMP', 'PDAMP5',
@@ -681,7 +666,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PDAMPT',
 
             ## pelast
-            #'PELAST',
+            'PELAST',
 
             ## pbusht
             #'PBUSHT',
@@ -957,72 +942,72 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         attrs = self.object_attributes(mode='both', keys_to_skip=None)
         return attrs
 
-    def export_hdf5_filename(self, hdf5_filename: str) -> None:
-        """
-        Converts the BDF objects into hdf5 object
+    #def export_hdf5_filename(self, hdf5_filename: str) -> None:
+        #"""
+        #Converts the BDF objects into hdf5 object
 
-        Parameters
-        ----------
-        hdf5_filename : str
-            the path to the hdf5 file
+        #Parameters
+        #----------
+        #hdf5_filename : str
+            #the path to the hdf5 file
 
-        TODO: doesn't support:
-          - BucklingEigenvalues
+        #TODO: doesn't support:
+          #- BucklingEigenvalues
 
-        """
-        import h5py
-        try:
-            with h5py.File(hdf5_filename, 'w') as hdf5_file:
-                #self.log.info('starting export_hdf5_file of %r' % hdf5_filename)
-                self.export_hdf5_file(hdf5_file)
-        except OSError:
-            self.log.error(f'failed to export {hdf5_filename!r}')
-            raise
+        #"""
+        #import h5py
+        #try:
+            #with h5py.File(hdf5_filename, 'w') as hdf5_file:
+                ##self.log.info('starting export_hdf5_file of %r' % hdf5_filename)
+                #self.export_hdf5_file(hdf5_file)
+        #except OSError:
+            #self.log.error(f'failed to export {hdf5_filename!r}')
+            #raise
 
-    def export_hdf5_file(self, hdf5_file, exporter=None) -> None:
-        """
-        Converts the BDF objects into hdf5 object
+    #def export_hdf5_file(self, hdf5_file, exporter=None) -> None:
+        #"""
+        #Converts the BDF objects into hdf5 object
 
-        Parameters
-        ----------
-        hdf5_file : H5File()
-            an h5py object
-        exporter : HDF5Exporter; default=None
-            unused
+        #Parameters
+        #----------
+        #hdf5_file : H5File()
+            #an h5py object
+        #exporter : HDF5Exporter; default=None
+            #unused
 
-        """
-        from pyNastran.bdf.bdf_interface.hdf5_exporter import export_bdf_to_hdf5_file
-        export_bdf_to_hdf5_file(hdf5_file, self)
+        #"""
+        #from pyNastran.bdf.bdf_interface.hdf5_exporter import export_bdf_to_hdf5_file
+        #export_bdf_to_hdf5_file(hdf5_file, self)
 
-    def load_hdf5_filename(self, hdf5_filename: str) -> None:
-        """
-        Loads a BDF object from an hdf5 filename
+    #def load_hdf5_filename(self, hdf5_filename: str) -> None:
+        #"""
+        #Loads a BDF object from an hdf5 filename
 
-        Parameters
-        ----------
-        hdf5_filename : str
-            the path to the hdf5 file
+        #Parameters
+        #----------
+        #hdf5_filename : str
+            #the path to the hdf5 file
 
-        """
-        import h5py
-        with h5py.File(hdf5_filename, 'r') as hdf5_file:
-            #self.log.info('starting load_hdf5_file of %r' % hdf5_filename)
-            self.load_hdf5_file(hdf5_file)
+        #"""
+        #import h5py
+        #with h5py.File(hdf5_filename, 'r') as hdf5_file:
+            ##self.log.info('starting load_hdf5_file of %r' % hdf5_filename)
+            #self.load_hdf5_file(hdf5_file)
 
-    def load_hdf5_file(self, h5_file) -> None:
-        """
-        Loads a BDF object from an hdf5 object
+    #def load_hdf5_file(self, h5_file) -> None:
+        #"""
+        #Loads a BDF object from an hdf5 object
 
-        Parameters
-        ----------
-        hdf5_file : H5File()
-            an h5py object
-        exporter : HDF5Exporter; default=None
-            unused
+        #Parameters
+        #----------
+        #hdf5_file : H5File()
+            #an h5py object
+        #exporter : HDF5Exporter; default=None
+            #unused
 
-        """
-        from pyNastran.bdf.bdf_interface.hdf5_loader import load_bdf_from_hdf5_file
-        load_bdf_from_hdf5_file(h5_file, self)
+        #"""
+        #from pyNastran.bdf.bdf_interface.hdf5_loader import load_bdf_from_hdf5_file
+        #load_bdf_from_hdf5_file(h5_file, self)
 
     def saves(self, unxref: bool=True) -> str:
         """Saves a pickled string"""
@@ -2406,12 +2391,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'USET1': partial(self._prepare_card, self.uset1),
 
             # spring
-            #'CELAS1' : partial(self._prepare_card, self.celas1),
-            #'CELAS2' : partial(self._prepare_card, self.celas2),
-            #'CELAS3' : partial(self._prepare_card, self.celas3),
-            #'CELAS4' : partial(self._prepare_card, self.celas4),
-            #'PELAS' : partial(self._prepare_card, self.pelas),
-            #'PELAST' : partial(self._prepare_card, self.pelast),
+            'CELAS1' : partial(self._prepare_card, self.celas1),
+            'CELAS2' : partial(self._prepare_card, self.celas2),
+            'CELAS3' : partial(self._prepare_card, self.celas3),
+            'CELAS4' : partial(self._prepare_card, self.celas4),
+            'PELAS' : partial(self._prepare_card, self.pelas),
+            'PELAST' : partial(self._prepare_card, self.pelast),
 
             # spring
             #'CDAMP1' : partial(self._prepare_card, self.cdamp1),
@@ -2489,8 +2474,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'POINT' : partial(self._prepare_card, self.point),
 
             # shear
-            #'CSHEAR': partial(self._prepare_card, self.cshear),
-            #'PSHEAR': partial(self._prepare_card, self.pshear),
+            'CSHEAR': partial(self._prepare_card, self.cshear),
+            'PSHEAR': partial(self._prepare_card, self.pshear),
 
             # shells
             #'SNORM': partial(self._prepare_card, self.snorm),

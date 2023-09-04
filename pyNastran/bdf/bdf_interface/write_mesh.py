@@ -825,7 +825,7 @@ class WriteMesh(BDFAttributes):
             for group in self.model_groups.values():
                 #bdf_file.write(f'$ {group}\n')
                 print(group)
-            x = 1
+            #x = 1
 
     def _write_nodes(self, bdf_file: Any, size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
@@ -1280,7 +1280,7 @@ class WriteMesh(BDFAttributes):
 def _fix_sizes(size: int,
                nodes_size: Optional[int],
                elements_size: Optional[int],
-               loads_size: Optional[int]) -> tuple[int, int]:
+               loads_size: Optional[int]) -> tuple[int, int, int, int]:
     if nodes_size is None:
         nodes_size = size
     if elements_size is None:
