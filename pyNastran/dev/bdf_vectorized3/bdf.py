@@ -785,8 +785,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5',
 
             # direct matrix input cards
-            #'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', 'DTI',
-            #'DMIAX',
+            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', 'DTI',
+            'DMIAX',
 
             # optimization cards
             #'DEQATN', 'DTABLE',
@@ -2724,12 +2724,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CORD3G' : self._prepare_CORD3G,
 
             #'DTI' : self._prepare_dti,
-            #'DMIG' : self._prepare_dmig,
-            #'DMIAX' : self._prepare_dmiax,
-            #'DMI' : self._prepare_dmi,
-            #'DMIJ' : self._prepare_dmij,
-            #'DMIK' : self._prepare_dmik,
-            #'DMIJI' : self._prepare_dmiji,
+            'DMIG' : self._prepare_dmig,
+            'DMIAX' : self._prepare_dmiax,
+            'DMI' : self._prepare_dmi,
+            'DMIJ' : self._prepare_dmij,
+            'DMIK' : self._prepare_dmik,
+            'DMIJI' : self._prepare_dmiji,
             #'RINGFL' : self._prepare_ringfl,
 
             #'DEQATN' : self._prepare_dequatn,
