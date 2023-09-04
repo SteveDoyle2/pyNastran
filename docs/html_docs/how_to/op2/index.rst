@@ -2,6 +2,7 @@
 How To: OP2
 ###########
 
-table_of_contents
-code_organization
-read_write
+.. toctree::
+   table_of_contents
+   code_organization
+   read_write
