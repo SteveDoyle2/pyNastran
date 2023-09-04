@@ -191,7 +191,7 @@ class PSHELL(Property):
         self.z = z
         self.n = len(property_id)
 
-    def __apply_slice__(self, prop: PSHELL, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PSHELL, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i, :]
@@ -497,9 +497,9 @@ class CompositeProperty(Property):
         i = np.argsort(self.property_id)
         self.__apply_slice__(self, i)
 
-    @abstractmethod
-    def __apply_slice__(self, prop: Any, i: np.ndarray) -> None:  # pragma: no cover
-        raise NotImplementedError(f'{self.type}: __apply_slice__')
+    #@abstractmethod
+    #def __apply_slice__(self, prop: Any, i: np.ndarray) -> None:  # pragma: no cover
+        #raise NotImplementedError(f'{self.type}: __apply_slice__')
     @abstractmethod
     def slice_card_by_property_id(self, property_id: np.ndarray):  # pragma: no cover
         raise NotImplementedError(f'{self.type}: slice_card_by_property_id')
@@ -1065,7 +1065,7 @@ class PCOMP(CompositeProperty):
         prop = self.slice_card_by_index(iprop)
         return prop
 
-    def __apply_slice__(self, prop: PCOMP, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PCOMP, i: np.ndarray) -> None:  # ignore[override]
         assert self.nlayer.sum() == len(self.thickness)
         prop.property_id = self.property_id[i]
         prop.z0 = self.z0[i]
@@ -1324,7 +1324,7 @@ class PCOMPG(CompositeProperty):
         self.n += 1
         return self.n
 
-    def __apply_slice__(self, prop: PCOMPG, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PCOMPG, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
         prop.property_id = self.property_id[i]
         prop.z0 = self.z0[i]

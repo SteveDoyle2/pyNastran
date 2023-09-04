@@ -194,7 +194,7 @@ class CBAR(Element):
         self.cards.append((eid, pid, [ga, gb], x, g0, offt, pa, pb, wa, wb, comment))
         self.n += 1
 
-    def __apply_slice__(self, elem: CBAR, i: np.ndarray) -> None:
+    def __apply_slice__(self, elem: CBAR, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
@@ -579,7 +579,7 @@ class PBAR(Property):
         self.k = k
         self.nsm = nsm
 
-    def __apply_slice__(self, prop: PBAR, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PBAR, i: np.ndarray) -> None:  # ignore[override]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
         #self.Type = np.full(ncards, '', dtype='|U8')
@@ -841,7 +841,7 @@ class PBARL(Property):
         #if not isinstance(self.group, str):
             #raise TypeError('Invalid group; pid=%s group=%r' % (self.pid, self.group))
 
-    def __apply_slice__(self, prop: PBARL, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PBARL, i: np.ndarray) -> None:  # ignore[override]
         self.write()
         assert self.ndim.sum() == len(self.dims)
         prop.n = len(i)

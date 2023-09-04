@@ -6,11 +6,12 @@ import numpy as np
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, integer_or_blank, double_or_blank, string_or_blank)
+    integer, double, integer_or_blank, double_or_blank, # string_or_blank,
+)
 from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, get_print_card_8_16
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str # , array_default_int
 
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -231,7 +232,7 @@ class MAT1(Material):
         self.Sc = Sc
         self.mcsid = mcsid
 
-    def __apply_slice__(self, mat: MAT1, i: np.ndarray) -> None:
+    def __apply_slice__(self, mat: MAT1, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
         mat.material_id = self.material_id[i]
         mat.E = self.E[i]
@@ -501,7 +502,7 @@ class MAT2(Material):
         #print(self.Sc.dtype.name)
         #print(self.mcsid.dtype.name)
 
-    def __apply_slice__(self, mat: MAT2, i: np.ndarray) -> None:
+    def __apply_slice__(self, mat: MAT2, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
         mat.material_id = self.material_id[i]
         mat.G11 = self.G11[i]
@@ -624,7 +625,7 @@ class MAT8(Material):
     def add(self, mid: int, e11: float, e22: float, nu12: float,
             g12: float=0.0, g1z: float=1e8, g2z: float=1e8,
             rho: float=0., a1: float=0., a2: float=0., tref: float=0.,
-            xt: float=0., xc: float=None, yt: float=0., yc: float=None,
+            xt: float=0., xc: float=Optional[None], yt: float=0., yc: float=Optional[None],
             s: float=0., ge: float=0., f12: float=0., strn: float=0.,
             comment: str='') -> int:
         """Creates a MAT8 card"""
@@ -763,7 +764,7 @@ class MAT8(Material):
         self.strn = strn
         self.n = nmaterials
 
-    def __apply_slice__(self, mat: MAT8, i: np.ndarray) -> None:
+    def __apply_slice__(self, mat: MAT8, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
         mat.material_id = self.material_id[i]
         mat.E11 = self.E11[i]
@@ -1075,7 +1076,7 @@ class MAT9(Material):
         self.ge_list = ge_list
         self.n = nmaterials
 
-    def __apply_slice__(self, mat: MAT9, i: np.ndarray) -> None:
+    def __apply_slice__(self, mat: MAT9, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
         mat.material_id = self.material_id[i]
         mat.G11 = self.G11[i]
@@ -1285,7 +1286,7 @@ class MAT10(Material):
         self.table_id_ge = np.zeros(nmaterials, dtype=material_id.dtype)
         self.table_id_gamma = np.zeros(nmaterials, dtype=material_id.dtype)
 
-    def __apply_slice__(self, mat: MAT10, i: np.ndarray) -> None:
+    def __apply_slice__(self, mat: MAT10, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
         mat.material_id = self.material_id[i]
         mat.bulk = self.bulk[i]

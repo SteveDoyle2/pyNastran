@@ -34,7 +34,7 @@ class SolidElement(Element):
         self.nodes: np.ndarray = np.array([[]], dtype='int32')
         self.property_id: np.ndarray = np.array([], dtype='int32')
 
-    def __apply_slice__(self, elem: SolidElement, i: np.ndarray) -> None:
+    def __apply_slice__(self, elem: SolidElement, i: np.ndarray) -> None:  # ignore[override]
         elem.n = len(i)
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]

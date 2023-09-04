@@ -436,7 +436,7 @@ class Material(VectorizedBaseCard):
         return self.rho
 
     @abstractmethod
-    def __apply_slice__(self, mat, i: np.ndarray) -> None:
+    def __apply_slice__(self, mat, i: np.ndarray) -> None:  # ignore[override]
         #...
         raise NotImplementedError(f'{self.type}: add __apply_slice__')
 

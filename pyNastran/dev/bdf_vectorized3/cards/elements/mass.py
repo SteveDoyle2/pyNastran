@@ -6,7 +6,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, integer_or_blank, double_or_blank,
+    integer, # double,
+    integer_or_blank, double_or_blank,
 )
 from pyNastran.dev.bdf_vectorized3.cards.base_card import Element
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
@@ -168,7 +169,7 @@ class CONM2(Element):
         self.cards.append((eid, nid, cid, mass, X, I, comment))
         self.n += 1
 
-    def __apply_slice__(self, elem: CONM2, i: np.ndarray):
+    def __apply_slice__(self, elem: CONM2, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
         elem._mass = self._mass[i]
         elem.coord_id = self.coord_id[i]

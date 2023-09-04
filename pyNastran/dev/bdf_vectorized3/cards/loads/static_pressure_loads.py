@@ -88,7 +88,7 @@ class PLOAD(Load):
         self.node_id = node_id
         self.n = nloads
 
-    def __apply_slice__(self, load: PLOAD, i: np.ndarray) -> None:
+    def __apply_slice__(self, load: PLOAD, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
         load.pressure = self.pressure[i]
@@ -262,7 +262,7 @@ class PLOAD1(Load):
         self.n = nloads
 
 
-    def __apply_slice__(self, load: PLOAD1, i: np.ndarray) -> None:
+    def __apply_slice__(self, load: PLOAD1, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
         load.element_id = self.element_id[i]
@@ -602,7 +602,7 @@ class PLOAD2(Load):
         self.n = nloads
 
 
-    def __apply_slice__(self, load: PLOAD2, i: np.ndarray) -> None:
+    def __apply_slice__(self, load: PLOAD2, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
         load.pressure = self.pressure[i]
@@ -865,7 +865,7 @@ class PLOAD4(Load):
         self.n = nloads
 
 
-    def __apply_slice__(self, load: PLOAD4, i: np.ndarray) -> None:
+    def __apply_slice__(self, load: PLOAD4, i: np.ndarray) -> None:  # ignore[override]
         nloads = len(self.load_id)
         assert self.nvector.shape == (nloads, 3), self.nvector.shape
         load.n = len(i)
