@@ -606,7 +606,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RINGAX', 'POINTAX',
 
             ## masses
-            #'CONM1', 'CONM2',
+            'CONM1', 'CONM2',
             #'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
 
             ## nsms
@@ -654,7 +654,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## properties
             #'PMASS',
-            #'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
+            #'PELAS', 'PGAP', 'PFAST',
+            'PLPLANE', 'PPLANE',
             #'PBUSH', 'PBUSH1D',
             #'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PTUBE',
@@ -692,7 +693,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MAT1', 'MAT2',
             #'MAT3',
             'MAT8', 'MAT9',
-            #'MAT10', 'MAT11', 'MAT3D',
+            'MAT10', 'MAT11', # 'MAT3D',
             #'MATG', 'MATHE', 'MATHP', 'MATEV', 'MATORT', 'MAT10C',
 
             ## Material dependence - MATT1/MATT2/etc.
@@ -2507,10 +2508,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PSHLN2' : partial(self._prepare_card, self.pshln2),
 
             # planar shells
-            #'PLPLANE': partial(self._prepare_card, self.plplane),
+            'PLPLANE': partial(self._prepare_card, self.plplane),
 
             # plate stress
-            #'PPLANE' : partial(self._prepare_card, self.pplane),
+            'PPLANE' : partial(self._prepare_card, self.pplane),
             #'CPLSTS3' : partial(self._prepare_card, self.cplsts3),
             #'CPLSTS4' : partial(self._prepare_card, self.cplsts4),
             #'CPLSTS6' : partial(self._prepare_card, self.cplsts6),
