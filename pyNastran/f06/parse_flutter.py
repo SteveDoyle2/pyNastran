@@ -262,6 +262,11 @@ def _get_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[Union[st
 
     if isinstance(units, str):
         units = units.lower()
+        # https://www.dynasupport.com/howtos/general/consistent-units
+        # mm, Mg, s / si_ton
+        # mm, Mg, s
+        #units = {'velocity' : 'mm/s', 'density' : 'Mg/mm^3',
+                 #'altitude' : 'm', 'dynamic_pressure' : 'MPa', 'eas':'m/s'}
         if units == 'si':
             units = {'velocity' : 'm/s', 'density' : 'kg/m^3',
                      'altitude' : 'm', 'dynamic_pressure' : 'Pa', 'eas':'m/s'}

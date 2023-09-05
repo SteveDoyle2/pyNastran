@@ -251,7 +251,7 @@ class MainWindow(GuiCommon, NastranIO):
         try:
             urllib.request.urlopen(url)
         except (urllib.error.HTTPError, urllib.error.URLError):
-            url = pyNastran.__docs_rtd__
+            return
         self._openbrowswer(url)
 
     def open_issue(self):
