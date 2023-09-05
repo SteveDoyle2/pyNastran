@@ -16,7 +16,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_default_str, array_str, array_default_int
-from pyNastran2.utils import cast_int_array
+from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
