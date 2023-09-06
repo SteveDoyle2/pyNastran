@@ -4,8 +4,8 @@ from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import zip_strict, integer_types, float_types
-#from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
-#from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
+from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
+from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -1025,6 +1025,13 @@ class PBEAM(Property):
             f2_ = self.f2[istation0:istation1]
             assert nstation > 0
 
+            write_so = True
+            if len(xxb_) == 2 and xxb_[0] == 0. and xxb_[1] == 1.0:
+                is_same = all([value[0] == value[1] for value in (
+                    A_, j_, i1_, i2_, i12_, nsm_,
+                    c1_, c2_, d1_, d2_, e1_, e2_, f1_, f2_)])
+                write_so = not is_same
+
             # still need to save these
             #nsia = nsib = 0.
             #cwa = cwb = 0.
@@ -1035,26 +1042,28 @@ class PBEAM(Property):
             #n1a = n1b = 0.
             #n2a = n2b = 0.
             list_fields = ['PBEAM', pid, mid]
+
             i = 0
             for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1,
                  f2) in zip_longest(so_, xxb_, A_, i1_, i2_, i12_,
                             j_, nsm_, c1_, c2_, d1_, d2_,
                             e1_, e2_, f1_, f2_):
-                i1 = set_blank_if_default(i1, 0.0)
-                i2 = set_blank_if_default(i2, 0.0)
-                i12 = set_blank_if_default(i12, 0.0)
-                j = set_blank_if_default(j, 0.0)
+                if not self.write_default_fields:
+                    i1 = set_blank_if_default(i1, 0.0)
+                    i2 = set_blank_if_default(i2, 0.0)
+                    i12 = set_blank_if_default(i12, 0.0)
+                    j = set_blank_if_default(j, 0.0)
 
-                nsm = set_blank_if_default(nsm, 0.0)
-                c1 = set_blank_if_default(c1, 0.0)
-                d1 = set_blank_if_default(d1, 0.0)
-                e1 = set_blank_if_default(e1, 0.0)
-                f1 = set_blank_if_default(f1, 0.0)
+                    nsm = set_blank_if_default(nsm, 0.0)
+                    c1 = set_blank_if_default(c1, 0.0)
+                    d1 = set_blank_if_default(d1, 0.0)
+                    e1 = set_blank_if_default(e1, 0.0)
+                    f1 = set_blank_if_default(f1, 0.0)
 
-                c2 = set_blank_if_default(c2, 0.0)
-                d2 = set_blank_if_default(d2, 0.0)
-                e2 = set_blank_if_default(e2, 0.0)
-                f2 = set_blank_if_default(f2, 0.0)
+                    c2 = set_blank_if_default(c2, 0.0)
+                    d2 = set_blank_if_default(d2, 0.0)
+                    e2 = set_blank_if_default(e2, 0.0)
+                    f2 = set_blank_if_default(f2, 0.0)
 
                 if i == 0:  # the first 2 fields aren't written
                     list_fields += [A, i1, i2, i12, j, nsm,
@@ -1069,38 +1078,41 @@ class PBEAM(Property):
                         list_fields += ['YESA', xxb, A, i1, i2, i12, j, nsm]
                     else:
                         raise RuntimeError('so=%r type(so)=%s' % (so, type(so)))
-
                 i += 1
-            k1 = set_blank_if_default(k1, 1.0)
-            k2 = set_blank_if_default(k2, 1.0)
+                if not write_so:
+                    break
 
-            s1 = set_blank_if_default(s1, 0.0)
-            s2 = set_blank_if_default(s2, 0.0)
-            #k1 = self.k1
-            #k2 = self.k2
-            #s1 = self.s1
-            #s2 = self.s2
-            nsib = set_blank_if_default(nsib, nsia)
-            nsia = set_blank_if_default(nsia, 0.0)
+            if not self.write_default_fields:
+                k1 = set_blank_if_default(k1, 1.0)
+                k2 = set_blank_if_default(k2, 1.0)
 
-            cwb = set_blank_if_default(cwb, cwa)
-            cwa = set_blank_if_default(cwa, 0.0)
+                s1 = set_blank_if_default(s1, 0.0)
+                s2 = set_blank_if_default(s2, 0.0)
+                #k1 = self.k1
+                #k2 = self.k2
+                #s1 = self.s1
+                #s2 = self.s2
+                nsib = set_blank_if_default(nsib, nsia)
+                nsia = set_blank_if_default(nsia, 0.0)
 
-            #m1a = self.m1a
-            #m2a = self.m2a
-            #m1b = self.m1b
-            #m2b = self.m2b
-            # Point A/B
-            # Directions 1/2
-            m1b = set_blank_if_default(m1b, m1a)
-            m2b = set_blank_if_default(m2b, m2a)
-            m1a = set_blank_if_default(m1a, 0.0)
-            m2a = set_blank_if_default(m2a, 0.0)
+                cwb = set_blank_if_default(cwb, cwa)
+                cwa = set_blank_if_default(cwa, 0.0)
 
-            n1b = set_blank_if_default(n1b, n1a)
-            n2b = set_blank_if_default(n2b, n2b)
-            n1a = set_blank_if_default(n1a, 0.0)
-            n2a = set_blank_if_default(n2a, 0.0)
+                #m1a = self.m1a
+                #m2a = self.m2a
+                #m1b = self.m1b
+                #m2b = self.m2b
+                # Point A/B
+                # Directions 1/2
+                m1b = set_blank_if_default(m1b, m1a)
+                m2b = set_blank_if_default(m2b, m2a)
+                m1a = set_blank_if_default(m1a, 0.0)
+                m2a = set_blank_if_default(m2a, 0.0)
+
+                n1b = set_blank_if_default(n1b, n1a)
+                n2b = set_blank_if_default(n2b, n2b)
+                n1a = set_blank_if_default(n1a, 0.0)
+                n2a = set_blank_if_default(n2a, 0.0)
 
             footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                       m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]

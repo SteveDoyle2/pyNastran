@@ -105,6 +105,7 @@ class VectorizedBaseCard:
         self.comment: dict[int, str] = {}
         self.n = 0
         self.debug = False
+        self.write_default_fields = True
         self.id = np.array([], dtype='int32')
 
     def __len__(self) -> int:
