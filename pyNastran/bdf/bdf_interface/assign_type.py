@@ -492,6 +492,57 @@ def double(card: BDFCard, ifield: int, fieldname: str, end: str='') -> float:
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return value
 
+def double_from_str(svalue: str) -> float:
+    """
+    Casts a value to a double
+
+    Parameters
+    ----------
+    card : BDFCard()
+        BDF card as a list
+    ifield : int
+        field number
+    fieldname : str
+        name of field
+
+    Returns
+    -------
+    value : float
+        the value from the desired field
+
+    """
+    try:
+        # 1.0, 1.0E+3, 1.0E-3
+        value = float(svalue)
+    except TypeError:
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
+                          'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
+    except ValueError:
+        # 1D+3, 1D-3, 1-3
+        try:
+            svalue = svalue.upper()
+            if 'D' in svalue:
+                # 1.0D+3, 1.0D-3
+                svalue2 = svalue.replace('D', 'E')
+                return float(svalue2)
+
+            # 1.0+3, 1.0-3
+            sign = ''
+            if svalue[0] in ('+', '-'):
+                sign = svalue[0]
+                svalue = svalue[1:]
+            if '+' in svalue:
+                svalue = sign + svalue.replace('+', 'E+')
+            elif '-' in svalue:
+                svalue = sign + svalue.replace('-', 'E-')
+
+            value = float(svalue)
+        except ValueError:
+            dtype = _get_dtype(svalue)
+            raise SyntaxError(f'field = {svalue} on card must be a float (not {dtype}).')
+    return value
+
 def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
                     default: Optional[float]=None,
                     end: str='') -> float:

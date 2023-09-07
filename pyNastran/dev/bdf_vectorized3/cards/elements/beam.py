@@ -29,7 +29,9 @@ from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from ..materials import MAT1
 
 
 class BEAMOR(BaseCard):
@@ -104,15 +106,16 @@ class CBEAM(Element):
             offt: str='GGG', bit=None,
             pa: int=0, pb: int=0,
             wa=None, wb=None,
-            sa: int=0, sb: int=0, comment: str='') -> None:
+            sa: int=0, sb: int=0, comment: str='') -> int:
         if wa is None:
             wa = [0., 0., 0.]
         if wb is None:
             wb = [0., 0., 0.]
         self.cards.append((eid, pid, nids, g0, x, offt, [pa, pb], wa, wb, sa, sb, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         PROPERTY_ID_DEFAULT = 0
         OFFT_DEFAULT = ''
         eid = integer(card, 1, 'eid')
@@ -141,6 +144,7 @@ class CBEAM(Element):
         assert len(card) <= 19, f'len(CBEAM card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, [ga, gb], g0, x, offt, [pa, pb], wa, wb, sa, sb, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         if self.n == 0:
@@ -226,12 +230,12 @@ class CBEAM(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
-    def write(self, size: int=8, is_double: bool=False,
-              write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
+            return
 
-        lines = []
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
         nodes_ = array_str(self.nodes, size=size)
@@ -260,8 +264,8 @@ class CBEAM(Element):
 
             list_fields = ['CBEAM', eid, pid, n1, n2,
                            x1, x2, x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
-            lines.append(print_card_8(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card_8(list_fields))
+        return
 
     @property
     def all_properties(self):
@@ -950,11 +954,11 @@ class PBEAM(Property):
                    material_id=(mids, self.material_id))
 
     @property
-    def all_materials(self) -> list[Any]:
+    def all_materials(self) -> list[MAT1]:
         return [self.model.mat1]
 
     @property
-    def allowed_materials(self) -> list[Any]:
+    def allowed_materials(self) -> list[MAT1]:
         all_materials = self.all_materials
         materials = [mat for mat in all_materials if mat.n > 0]
         assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.materials}'
@@ -981,16 +985,17 @@ class PBEAM(Property):
         return mass_per_length
 
     @property
-    def is_small_field(self):
+    def is_small_field(self) -> bool:
         return max(self.property_id.max(),
                    self.material_id.max(),
                    self.s1.max(), self.s2.max()) < 99_999_999
 
-    def write(self, size: int=8, is_double: bool=False,
-              write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        lines = []
+            return
+
         if size == 8 and self.is_small_field:
             print_card = print_card_8
         else:
@@ -1118,8 +1123,8 @@ class PBEAM(Property):
                       m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
             if footer != [None] * len(footer):
                 list_fields += footer
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def istation(self) -> np.ndarray:
@@ -1147,8 +1152,9 @@ class PBEAM(Property):
         for icard in range(self.n):
             card_obj = self.slice_card_by_index(icard)
             card_lines = card_obj.write(size=16).split('\n')
-            bdf_card = model.add_card(card_lines, card_name, comment='',
-                                      ifile=None, is_list=False, has_none=False)
+            unused_bdf_card = model.add_card(
+                card_lines, card_name, comment='',
+                ifile=None, is_list=False, has_none=False)
             eid = self.property_id[icard]
             card = dicti[eid]
             cards.append(card)
@@ -1211,7 +1217,7 @@ class PBEAML(Property):
 
     def add(self, pid: int, mid: int, beam_type: str,
             xxb, dims, so=None, nsm=None,
-            group: str='MSCBML0', comment: str='') -> None:
+            group: str='MSCBML0', comment: str='') -> int:
         nxxb = len(xxb)
         if so is None:
             so = ['YES'] * nxxb
@@ -1225,8 +1231,9 @@ class PBEAML(Property):
         ndim = self.valid_types[beam_type]
         self.cards.append((pid, mid, beam_type, group, xxb, so, nsm, ndim, dims, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         group = string_or_blank(card, 3, 'group', default='MSCBML0')
@@ -1236,17 +1243,17 @@ class PBEAML(Property):
         ndim = self.valid_types[beam_type]
 
         #: dimension list
-        dims = []
-        dim = []
+        dims: list[list[float]] = []
+        dim: list[float] = []
 
         #: Section position
-        xxb = [0.]
+        xxb: list[float] = [0.]
 
         #: Output flag
-        so = ['YES']  # station 0
+        so: list[str] = ['YES']  # station 0
 
         #: non-structural mass :math:`nsm`
-        nsm = []
+        nsm: list[float] = []
 
         ioffset = 9
         n = 0
@@ -1314,8 +1321,9 @@ class PBEAML(Property):
         assert len(card) > 5, card
         self.cards.append((pid, mid, beam_type, group, xxb, so, nsm, ndim, dims, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1361,6 +1369,8 @@ class PBEAML(Property):
             group[icard] = groupi
             Type[icard] = beam_type
             ndim[icard] = ndimi
+            #assert nstationi >= 2, f'pid={pid} mid={mid} beam_type={beam_type!r} xxb={xxbi} dims={dims}'
+            print(f'pid={pid} mid={mid} beam_type={beam_type!r} xxb={xxbi} dims={dims}')
 
             idim[icard, :] = [idim0, idim1]
             istation[icard, :] = [istation0, istation1]
@@ -1374,8 +1384,12 @@ class PBEAML(Property):
         so = np.array(all_so, dtype='|U4')
         nsm = np.array(all_nsm, dtype='float64')
         #ndim_total = self.ndim.sum()
-        self._save(property_id, material_id, idim, ndim, istation, nstation, Type, group,
-                   xxb, dims, so, nsm)
+        self._save(
+            property_id, material_id,
+            idim, ndim,
+            istation, nstation,
+            Type, group,
+            xxb, dims, so, nsm)
         nstation_total = self.nstation.sum()
         self.sort()
 
@@ -1385,8 +1399,13 @@ class PBEAML(Property):
         assert len(self.nsm) == nstation_total
         self.cards = []
 
-    def _save(self, property_id, material_id, idim, ndim, istation, nstation, Type, group,
-              xxb, dims, so, nsm):
+    def _save(self, property_id: np.ndarray, material_id: np.ndarray,
+              idim: np.ndarray, ndim: np.ndarray,
+              istation: np.ndarray, nstation: np.ndarray,
+              Type: np.ndarray,
+              group: np.ndarray,
+              xxb: np.ndarray, dims: np.ndarray,
+              so: np.ndarray, nsm: np.ndarray):
         self.property_id = property_id
         self.material_id = material_id
 
@@ -1398,7 +1417,8 @@ class PBEAML(Property):
 
         assert istation.ndim == 2, istation.shape
         assert istation.min() == 0, istation
-        assert nstation.min() >= 2, nstation
+        #assert nstation.min() >= 2, nstation
+        assert nstation.min() >= 1, nstation
         self.istation = istation
         self.nstation = nstation
 
@@ -1449,11 +1469,11 @@ class PBEAML(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False,
-              write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        lines = []
+            return
         print_card = get_print_card_8_16(size)
 
         assert len(self.property_id) == len(self.material_id)
@@ -1499,9 +1519,8 @@ class PBEAML(Property):
                         list_fields += dimi.tolist() + [nsmi]
                     else:
                         list_fields += [soi, xxbi] + dimi.tolist() + [nsmi]
-            lines.append(print_card(list_fields))
-        assert len(lines) > 0, lines
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def area(self) -> np.ndarray:
         nproperties = len(self.property_id)
@@ -1520,22 +1539,53 @@ class PBEAML(Property):
             #A, I1, I2, I12 = A_I1_I2_I12(prop, beam_type, dim)
             areasi = []
             for dim in dims:
-                areai = _bar_areaL('PBEAML', beam_type, dim, self)
-                areasi.append(areai)
+                area_i1_i2_i12 = _bar_areaL('PBEAML', beam_type, dim, self)
+                areasi.append(area_i1_i2_i12[0])
+            if len(xxb) == 1:
+                areaii = areasi[i]
+                xxb = [0., 1.]
+                areasi = [areaii, areaii]
             A = integrate_positive_unit_line(xxb, areasi)
             area[i] = A
         return area
+
+    def nsm_func(self) -> np.ndarray:
+        nproperties = len(self.property_id)
+        nsm = np.zeros(nproperties, dtype='float64')
+        for i, beam_type, ndim, idim, nstation, istation in zip(count(), self.Type,
+                                                                self.ndim, self.idim,
+                                                                self.nstation, self.istation,):
+            #idim0, idim1 = idim
+            istation0, istation1 = istation
+            xxb = self.xxb[istation0:istation1]
+            nsms = self.nsm[istation0:istation1]
+            #so = self.so[istation0:istation1]
+            #dims = self.dims[idim0 : idim1].reshape(nstation, ndim)
+
+            #prop = pbarl(self.property_id[i], self.material_id[i], beam_type, dim)
+            #A, I1, I2, I12 = A_I1_I2_I12(prop, beam_type, dim)
+            #areasi = []
+            #for dim in dims:
+                #area_i1_i2_i12 = _bar_areaL('PBEAML', beam_type, dim, self)
+                #areasi.append(area_i1_i2_i12[0])
+            if len(xxb) == 1:
+                nsmi = nsms[i]
+                xxb = [0., 1.]
+                nsms = [nsmi, nsmi]
+            nsmi = integrate_positive_unit_line(xxb, nsms)
+            nsm[i] = nsmi
+        return nsm
 
     def rho(self) -> np.ndarray:
         rho = get_density_from_material(self.material_id, self.allowed_materials)
         return rho
 
     @property
-    def all_materials(self) -> list[Any]:
+    def all_materials(self) -> list[MAT1]:
         return [self.model.mat1]
 
     @property
-    def allowed_materials(self) -> list[Any]:
+    def allowed_materials(self) -> list[MAT1]:
         all_materials = self.all_materials
         materials = [mat for mat in all_materials if mat.n > 0]
         assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.materials}'
@@ -1545,7 +1595,7 @@ class PBEAML(Property):
         #nproperties = len(self.property_id)
         rho = get_density_from_material(self.material_id, self.allowed_materials)
         A = self.area()
-        nsm = 0.
+        nsm = self.nsm_func()
         return rho * A + nsm
 
 
@@ -1592,7 +1642,7 @@ class PBCOMP(Property):
             k1: float=1.0, k2: float=1.0,
             m1: float=0.0, m2: float=0.0,
             n1: float=0.0, n2: float=0.0,
-            symopt: int=0, comment: str='') -> PBCOMP:
+            symopt: int=0, comment: str='') -> int:
         """
         Creates a PBCOMP card
 
@@ -1638,8 +1688,9 @@ class PBCOMP(Property):
                            k1, k2, m1, m2, n1, n2,
                            symopt, y, z, c, mids, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         area = double_or_blank(card, 3, 'Area', default=0.0)
@@ -1685,8 +1736,9 @@ class PBCOMP(Property):
                            k1, k2, m1, m2, n1, n2,
                            symopt, y, z, c, mids, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         if self.n == 0:
             return
         ncards = len(self.cards)
@@ -1829,15 +1881,12 @@ class PBCOMP(Property):
         idim = make_idim(self.n, self.nstation)
         return idim
 
-    def write(self, size: int=8):
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        lines = []
-        if size == 8:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
-
+            return
+        print_card = get_print_card_8_16(size)
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -1875,8 +1924,8 @@ class PBCOMP(Property):
                 ci = set_blank_if_default(ci, 0.0)
                 list_fields += [yi, zi, ci, mid, None, None, None, None]
             #assert len(y) > 0, list_fields
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def istation(self) -> np.ndarray:
