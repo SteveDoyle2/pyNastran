@@ -11,15 +11,17 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     components_or_blank)
-from pyNastran.bdf.field_writer_8 import print_card_8
+#from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.dev.bdf_vectorized3.cards.base_card import get_print_card_8_16
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_default_str, array_str, array_default_int
-from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
+from pyNastran.dev.bdf_vectorized3.utils import cast_int_array, print_card_8
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
@@ -147,12 +149,12 @@ class SPC(VectorizedBaseCard):
         self.enforced = enforced
         self.n = nspcs
 
-    def write(self, size: int=8) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.spc_id) == 0:
-            return ''
-        lines = []
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
         spc_str = array_str(self.spc_id, size=size)
         node_str = array_str(self.node_id, size=size)
@@ -162,12 +164,12 @@ class SPC(VectorizedBaseCard):
         if no_enforced:
             for spc_id, node_id, components in zip(spc_str, node_str, components_str):
                 msg = 'SPC     %8s%8s%8s\n' % (spc_id, node_id, components)
-                lines.append(msg)
+                bdf_file.write(msg)
         else:
             for spc_id, node_id, components, enforced in zip(spc_str, node_str, components_str, self.enforced):
                 list_fields = ['SPC', spc_id, node_id, components, enforced]
-                lines.append(print_card(list_fields))
-        return ''.join(lines)
+                bdf_file.write(print_card(list_fields))
+        return
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -291,12 +293,12 @@ class SPC1(VectorizedBaseCard):
     def inode(self) -> np.ndarray:
         return make_idim(self.n, self.nnodes)
 
-    def write(self, size: int=8) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.spc_id) == 0:
-            return ''
-        lines = []
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
         spc_str = array_str(self.spc_id, size=size)
         #node_str = array_str(self.node_id, size=size)
@@ -307,8 +309,8 @@ class SPC1(VectorizedBaseCard):
             nodes = self.node_id[inode0 : inode1].tolist()
             assert len(nodes) > 0, nodes
             list_fields = ['SPC1', spc_id, components] + nodes
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -413,12 +415,12 @@ class MPC(VectorizedBaseCard):
         #assert len(self.mpc_id) == len(self.coefficients)
         self.cards = []
 
-    def write(self, size: int=8) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.mpc_id) == 0:
-            return ''
-        lines = []
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
         mpc_str = array_str(self.mpc_id, size=size)
         node_str = array_str(self.node_id, size=size)
@@ -436,8 +438,8 @@ class MPC(VectorizedBaseCard):
                 if i % 2 == 1 and i > 0:
                     list_fields.append(None)
                     list_fields.append(None)
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -560,10 +562,13 @@ class SPCADD(ADD):
     def nspcs(self):
         return self.nsids
 
-    def write(self, size: int=8) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool = False,
+                   write_card_header: bool=False) -> None:
         if len(self.spc_id) == 0:
-            return ''
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
+
         spc_ids = array_str(self.spc_ids, size=size)
         for spc_id, idim in zip(self.spc_id, self.idim):
             idim0, idim1 = idim
@@ -571,13 +576,13 @@ class SPCADD(ADD):
             spc_idsi = spc_ids[idim0:idim1].tolist()
             assert len(spc_idsi) > 0, self.idim
             list_fields = ['SPCADD', spc_id] + spc_idsi
-            lines.append(print_card_8(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def get_spcs_by_spc_id(self) -> dict[int, SPCs]:
         model = self.model
         """"""
-        uspc_ids = np.unique(self.spc_id)
+        #uspc_ids = np.unique(self.spc_id)
         spc_by_spc_id = defaultdict(list)
         #for spc_id in uspc_ids:
             #spc_by_spc_id[spc_id] = []
@@ -593,7 +598,7 @@ class SPCADD(ADD):
                     continue
                 spci = spc.slice_card_by_index(i)
                 spc_by_spc_id[uspc_id].append(spci)
-        return spc_by_spc_id
+        return dict(spc_by_spc_id)
 
     def get_reduced_spcs(self,
                          #resolve_load_card: bool=False,
@@ -653,22 +658,23 @@ class MPCADD(ADD):
     def is_small_field(self):
         return max(self.mpc_id.max(), self.mpc_ids.max()) < 99_999_999
 
-    def write(self, size: int=8) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> str:
         if len(self.mpc_id) == 0:
-            return ''
+            return
         if size == 8 and self.is_small_field:
             print_card = print_card_8
         else:
             print_card = print_card_16
         #self.get_reduced_spcs()
-        lines = []
         mpc_ids = array_str(self.mpc_ids, size=size)
         for mpc_id, idim in zip(self.mpc_id, self.idim):
             idim0, idim1 = idim
             mpc_idsi = mpc_ids[idim0:idim1].tolist()
             list_fields = ['MPCADD', mpc_id] + mpc_idsi
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         mpc_id = np.unique(self.model.mpc.mpc_id)

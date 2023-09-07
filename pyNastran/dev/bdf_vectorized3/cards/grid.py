@@ -580,9 +580,9 @@ class GRID(VectorizedBaseCard):
         uids_sorted = np.unique(ids_sorted)
 
         if not np.array_equal(uarg, iarg):
-            print(iarg.tolist())
-            print('->  ', ids_sorted.tolist())
-            print('--> ', uids_sorted.tolist())
+            #print(iarg.tolist())
+            #print('->  ', ids_sorted.tolist())
+            #print('--> ', uids_sorted.tolist())
             assert (iarg - uarg).sum() == 0, (iarg - uarg).sum()
             #if len(iarg) == len(uarg):
                 ## if the lengths are the same, we can use dumb sorting

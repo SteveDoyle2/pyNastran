@@ -239,7 +239,7 @@ class Writer():
         #self._write_superelements(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_contact(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_parametric(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_rejects(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_rejects(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         #if self.acmodl:
@@ -459,6 +459,55 @@ class Writer():
         # other
         #bdf_file.write(model.genel.write(size=size))
 
+    def _write_rejects(self, bdf_file: TextIOLike,
+                       size: int=8, is_double: bool=False,
+                       is_long_ids: Optional[bool]=None) -> None:
+        """
+        Writes the rejected (processed) cards and the rejected unprocessed
+        cardlines
+
+        """
+        from pyNastran.bdf.field_writer import print_card_8, print_card_16
+        if size == 8:
+            print_func = print_card_8
+        else:
+            print_func = print_card_16
+
+        model = self.model
+        if model.reject_cards:
+            bdf_file.write('$REJECT_CARDS\n')
+            for reject_card in model.reject_cards:
+                try:
+                    bdf_file.write(print_func(reject_card))
+                except RuntimeError:
+                    if len(reject_card) > 0:
+                        line0 = reject_card[0].upper()
+                        if line0.startswith('ADAPT'):
+                            for line in reject_card:
+                                assert isinstance(line, str), line
+                                bdf_file.write(line+'\n')
+                            continue
+                    for field in reject_card:
+                        if field is not None and '=' in field:
+                            raise SyntaxError('cannot reject equal signed '
+                                              'cards\ncard=%s\n' % reject_card)
+                    raise
+
+        if model.reject_lines:
+            bdf_file.write('$REJECT_LINES\n')
+            for reject_lines in model.reject_lines:
+                if isinstance(reject_lines, (list, tuple)):
+                    for reject in reject_lines:
+                        reject2 = reject.rstrip()
+                        if reject2:
+                            bdf_file.write('%s\n' % reject2)
+                elif isinstance(reject_lines, str):
+                    reject2 = reject_lines.rstrip()
+                    if reject2:
+                        bdf_file.write('%s\n' % reject2)
+                else:
+                    raise TypeError(reject_lines)
+
     def _write_rigid_elements(self, bdf_file: TextIOLike,
                               size: int=8, is_double: bool=False,
                               is_long_ids: Optional[bool]=None) -> None:
@@ -482,7 +531,6 @@ class Writer():
         bdf_file.write(model.nsm1.write(size=size))
         bdf_file.write(model.nsml.write(size=size))
         bdf_file.write(model.nsml1.write(size=size))
-
 
     def _write_masses(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False,

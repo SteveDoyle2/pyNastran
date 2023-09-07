@@ -14,7 +14,7 @@ plus_log_dict = {
     6 : "%7.0f.",
 }
 
-def get_float_format(value):
+def get_float_format(value: float):
     #value = 1000000.
     #value = 100000.0
     #value = 123456.78
@@ -22,6 +22,32 @@ def get_float_format(value):
     if value == 0.0:
         #print('block 0')
         return ' 0.0    '
+    if value < 0.:
+        abs_value = abs(value)
+        # sign, decimal, 1
+        if abs_value > 999_995:
+            #print('A')
+            # -123_456.
+            field = print_scientific_8(value)
+            return field
+        elif abs_value < 5e-7:
+            #print('B')
+            field = print_scientific_8(value)
+            return field
+        elif abs_value < 1.:
+            #print('C')
+            field = f'{abs_value:7.6f}'
+            field2 = '-' + field[1:]
+            return field2
+
+        magnitude = int(math.floor(math.log10(abs_value)))
+        format_string = "-%7." + str(5 - magnitude) + "f"
+        field = format_string % abs_value
+        #print('D', value, magnitude, field, len(field))
+        #if value < -99_995:
+        #if value < 0.1:
+            # -0.1 to -1.0
+        return field
     if value < 5e-8:
         field = print_scientific_8(value)
         #print('scientific 1;', field)
@@ -165,6 +191,18 @@ def main(get_optimal_short_form_float):
     #get_optimal_short_form_float = get_field_zach
     #get_optimal_short_form_float = print_float_8
     #get_optimal_short_form_float = get_float_format
+
+    value=-0.8732806594999999 #; field_old='-.873281' field_new='-8.733-1'
+    s = get_optimal_short_form_float(value)
+    value=-0.6862676525499999 #; field_old='-.686268' field_new='-6.863-1'
+    s = get_optimal_short_form_float(value)
+    value=-0.647050147 #; field_old=' -.64705' field_new='-6.471-1'
+    s = get_optimal_short_form_float(value)
+    value=-0.9526646215 #; field_old='-.952665' field_new='-9.527-1'
+    s = get_optimal_short_form_float(value)
+    value=-0.6291313619 #; field_old='-.629131' field_new='-6.291-1'
+    s = get_optimal_short_form_float(value)
+
     x = 2e-11
     s = get_optimal_short_form_float(x)
     x = 12e-11
@@ -275,7 +313,11 @@ def main_zach():
 def main_new():
     main(get_float_format)
 
-if __name__ == '__main__':
+def run():
+    value = -0.8732806594999999
+    out = get_float_format(value)
+    print(value, out, len(out))
+    return
     import timeit
 
     #main(get_field_zach)
@@ -289,7 +331,7 @@ if __name__ == '__main__':
     #2000000 loops, best of 5: 158 nsec per loop
     #2000000 loops, best of 5: 152 nsec per loop
     #2000000 loops, best of 5: 152 nsec per loop
-    num = 100_000
+    num = 10
 
     print('OG:')
     print(timeit.timeit('main_og()', number=num, setup="from __main__ import main_og"))
@@ -306,3 +348,6 @@ if __name__ == '__main__':
     x = 1
     #main()
 
+
+if __name__ == '__main__':
+    run()

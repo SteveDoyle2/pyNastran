@@ -694,7 +694,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'MAT4', 'MAT5',
 
             ## spcs
-            #'SPC', 'SPCADD', 'SPC1', 'SPCAX', 'SPCOFF', 'SPCOFF1',
+            'SPC', 'SPCADD', 'SPC1', #'SPCAX', 'SPCOFF', 'SPCOFF1',
 
             ## mpcs
             #'MPC', 'MPCADD',

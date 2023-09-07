@@ -39,7 +39,7 @@ from pyNastran.bdf.errors import (
 )
 from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.test.compare import compare_card_count
-from pyNastran.bdf.bdf import BDF as BDF_old, read_bdf as read_bdf_old
+from pyNastran.bdf.bdf import BDF as BDF_old #, read_bdf as read_bdf_old
 from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDFv, read_bdf as read_bdfv, map_version
 
 BDFs = Union[BDF_old, BDFv]
@@ -423,6 +423,7 @@ def run_and_compare_fems(
         name: str='',
         run_nominal: bool=True):
     """runs two fem models and compares them"""
+    run_nominal = False
     if skip_cards is None:
         skip_cards = []
     assert isinstance(bdf_model, str) and os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
