@@ -101,6 +101,20 @@ class BEAMOR(BaseCard):
         return self.comment + print_card_16(card)
 
 class CBEAM(Element):
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.property_id: np.array = np.array([], dtype='int32')
+        self.nodes: np.array = np.zeros((0, 2), dtype='int32')
+        self.offt: np.array = np.array([], dtype='|U3')
+        self.g0: np.array = np.array([], dtype='int32')
+        self.x: np.array = np.zeros((0, 3), dtype='float64')
+        self.pa: np.array = np.array([], dtype='int32')
+        self.pb: np.array = np.array([], dtype='int32')
+        self.wa: np.array = np.zeros((0, 3), dtype='float64')
+        self.wb: np.array = np.zeros((0, 3), dtype='float64')
+        self.sa: np.array = np.zeros([], dtype='int32')
+        self.sb: np.array = np.zeros([], dtype='int32')
+
     def add(self, eid: int, pid: int, nids: list[int],
             x: Optional[list[float]], g0: Optional[int],
             offt: str='GGG', bit=None,
@@ -172,7 +186,7 @@ class CBEAM(Element):
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-            if g0i is None:
+            if g0i is None or g0i == -1:
                 x[icard, :] = xi
             else:
                 g0[icard] = g0i
@@ -241,8 +255,8 @@ class CBEAM(Element):
         nodes_ = array_str(self.nodes, size=size)
         pas = array_default_int(self.pa, default=0, size=size)
         pbs = array_default_int(self.pb, default=0, size=size)
-        for eid, pid, nodes, g0, x, offt, pa, pb, wa, wb in zip_longest(element_ids, property_ids, nodes_,
-                                                                        self.g0, self.x, self.offt,
+        for eid, pid, nodes, g0, x, is_g0, offt, pa, pb, wa, wb in zip_longest(element_ids, property_ids, nodes_,
+                                                                        self.g0, self.x, self.is_g0, self.offt,
                                                                         pas, pbs, self.wa, self.wb):
             n1, n2 = nodes
             w1a = set_blank_if_default(wa[0], default=0.0)
@@ -252,7 +266,8 @@ class CBEAM(Element):
             w1b = set_blank_if_default(wb[0], default=0.0)
             w2b = set_blank_if_default(wb[1], default=0.0)
             w3b = set_blank_if_default(wb[2], default=0.0)
-            if g0 == -1:
+
+            if is_g0:
                 x1, x2, x3 = x # self.get_x_g0_defaults()
             else:
                 x1 = g0
@@ -268,7 +283,15 @@ class CBEAM(Element):
         return
 
     @property
-    def all_properties(self):
+    def is_x(self) -> np.ndarray:
+        return self.g0 == -1
+
+    @property
+    def is_g0(self) -> np.ndarray:
+        return ~self.is_x
+
+    @property
+    def all_properties(self) -> list[Union[PBEAM, PBEAML, PBCOMP]]:
         model = self.model
         return [model.pbeam, model.pbeaml, model.pbcomp]
 
@@ -305,8 +328,328 @@ class CBEAM(Element):
         centroid = line_centroid(self.model, self.nodes)
         return centroid
 
+    def get_bar_vector(self, xyz1: np.ndarray) -> np.ndarray:
+        #if self.g0:
+            #v = xyz[self.g0] - xyz[self.Ga()]
+        #else:
+            #v = self.x
+
+        # get the vector v, which defines the projection on to the elemental
+        # coordinate frame
+        is_g0 = self.is_g0
+        is_x = self.is_x
+        v = np.full(self.x.shape, np.nan, dtype=self.x.dtype)
+        if np.any(is_g0):
+            grid_g0 = self.model.grid.slice_card_by_node_id(self.g0)
+            n0 = grid_g0.xyz_cid0()
+            v = n0 - xyz1
+
+        grid = self.model.grid
+        # get the cd frames for the nodes
+
+        #n1 = self.nodes[:, 0]
+        #in1 = np.searchsorted(grid.node_id, n1)
+        #assert np.array_equal(grid.node_id[in1], n1)
+        #cd = grid.cd[in1]
+
+        # get the cd frames for nodes A/B (1/2)
+        inode = np.searchsorted(grid.node_id, self.nodes)
+        assert np.array_equal(grid.node_id[inode], self.nodes)
+        cd = grid.cd[inode]
+        cd1 = cd[:, 0]
+
+        if np.any(is_x):
+            if cd1.max() > 0:
+                v = cd1_ref.transform_node_to_global(elem.x)
+                cd1_ref = model.Coord(cd1)
+                cd2_ref = model.Coord(cd2)
+            else:
+                v[is_x, :] = self.x[is_x, :]
+        return v, cd
+
+    def split_offt_vector(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        neids = len(self.element_id)
+        offt_vector = np.full(neids, '', dtype='|U1')
+        offt_end_a = np.full(neids, '', dtype='|U1')
+        offt_end_b = np.full(neids, '', dtype='|U1')
+        for i, (offt_vectori, offt_end_ai, offt_end_bi) in enumerate(self.offt):
+            offt_vector[i] = offt_vectori
+            offt_end_a[i] = offt_end_ai
+            offt_end_b[i] = offt_end_bi
+        return offt_vector, offt_end_a, offt_end_b
+
     def center_of_mass(self) -> np.ndarray:
-        return self.centroid()
+        log = self.model.log
+        neids = len(self.element_id)
+        grid = self.model.grid
+        xyz = grid.xyz_cid0()
+        nid = grid.node_id
+        inode = np.searchsorted(nid, self.nodes)
+        assert np.array_equal(nid[inode], self.nodes)
+        in1 = inode[:, 0]
+        in2 = inode[:, 1]
+        xyz1 = xyz[in1, :]
+        xyz2 = xyz[in2, :]
+        centroid = (xyz1 + xyz2) / 2.
+        assert centroid.shape[0] == self.nodes.shape[0]
+
+        i = xyz2 - xyz1
+        ihat_norm = np.linalg.norm(i, axis=1)
+        assert len(ihat_norm) == neids
+        if min(ihat_norm) == 0.:
+            msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
+            log.error(msg)
+            raise ValueError(msg)
+        i_offset = i / ihat_norm[:, np.newaxis]
+
+        #log.info(f'x =\n{self.x}')
+        #log.info(f'g0   = {self.g0}')
+        v, cd = self.get_bar_vector(xyz1)
+        cd1 = cd[:, 0]
+        cd2 = cd[:, 1]
+
+        offt_vector, offt_end_a, offt_end_b = self.split_offt_vector()
+        is_rotate_v = (offt_vector == 'G')
+        is_rotate_wa = (offt_end_a == 'G')
+        is_rotate_wb = (offt_end_b == 'G')
+
+        #--------------------------------------------------------------------------
+        # rotate v
+        #log.info(f'offt = {self.offt}')
+        #log.info(f'v0 =\n{v}')
+        #log.info(f'cd =\n{cd}')
+        if np.any(is_rotate_v):
+            # end A
+            # global - cid != 0
+            cd1_vector = cd1[is_rotate_v]
+            icd1_vector = (cd1_vector != 0)
+            if np.any(icd1_vector):
+                v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
+            del cd1_vector, icd1_vector
+        elif offt_vector == 'B':
+            # basic - cid = 0
+            pass
+        else:
+            msg = f'offt_vector={offt_vector!r} is not supported; offt={elem.offt}'
+            log.error(msg)
+            raise RuntimeError(msg)
+
+        #--------------------------------------------------------------------------
+        # determine the bar vectors
+        #log.info(f'v =\n{v}')
+        #log.info(f'ihat =\n{i_offset}')
+        ihat = i_offset
+        vnorm = np.linalg.norm(v, axis=1)
+        vhat = v / vnorm[:, np.newaxis] # j
+        z = np.cross(ihat, vhat) # k
+        norm_z = np.linalg.norm(z, axis=1)
+        assert len(norm_z) == neids
+
+        zhat = z / norm_z[:, np.newaxis]
+        yhat = np.cross(zhat, ihat) # j
+        norm_i = np.linalg.norm(ihat, axis=1)
+        norm_yhat = np.linalg.norm(yhat, axis=1)
+        xform_offset = np.dstack([ihat, yhat, zhat]) # 3x3 unit matrix
+        #del ihat, yhat, zhat, norm_z, norm_yhat
+        del norm_i, norm_z, norm_yhat
+        xform = xform_offset
+        #--------------------------------------------------------------------------
+        # rotate wa
+        # wa defines the offset at end A
+        wa = self.wa.copy()  # we're going to be inplace hacking it, so copy :)
+        if np.any(is_rotate_wa):
+            cd1_vector = cd1[is_rotate_v]
+            icd1_vector = (cd1_vector != 0)
+            if np.any(icd1_vector):
+                wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
+            del cd1_vector, icd1_vector
+        elif offt_end_a == 'B':
+            pass
+        elif offt_end_a == 'O':
+            # rotate point wa from the local frame to the global frame
+            wa = wa @ xform_offset
+            #ia = n1 + wa
+        else:
+            msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, self.offt)
+            log.error(msg)
+            raise NotImplementedError(msg)
+            #return v, None, None, xform_offset
+
+        #--------------------------------------------------------------------------
+        # rotate wb
+        # wb defines the offset at end B
+        wb = self.wb.copy()  # we're going to be inplace hacking it, so copy :)
+        if np.any(is_rotate_wb):
+            cd2_vector = cd2[is_rotate_wb]
+            icd2_vector = (cd2_vector != 0)
+            if np.any(icd2_vector):
+                # MasterModelTaxi
+                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+            del cd2_vector, icd2_vector
+        elif offt_end_b == 'B':
+            pass
+        elif offt_end_b == 'O':
+            # rotate point wb from the local frame to the global frame
+            wb = wb @ xform_offset
+            #ib = n2 + wb
+        else:
+            msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, self.offt)
+            log.error(msg)
+            raise RuntimeError(msg)
+            #return v, wa, None, xform_offset
+
+        #ihat = xform[0, :]
+        #yhat = xform[1, :]
+        #zhat = xform[2, :]
+        #wa, wb, _ihat, jhat, khat = out
+
+        # we finally have the nodal coordaintes!!!! :)
+        p1 = xyz1 + wa
+        p2 = xyz2 + wb
+        # ----------------------------------
+        # now some mass properties :(
+        jhat = yhat
+        khat = zhat
+
+        mass_per_length = np.full(neids, np.nan, dtype='float64')
+        nsm_per_length = np.full(neids, np.nan, dtype='float64')
+        nsm_centroid = np.full((neids, 3), np.nan, dtype='float64')
+
+        log.debug(f'property_id = {self.property_id}')
+        for prop in self.allowed_properties:
+            pids_common = np.union1d(prop.property_id, self.property_id)
+            #ind = prop.property_id[ipid]
+            if len(pids_common) == 0:
+                log.debug(f'  skipping {prop.type}; pids={prop.property_id}')
+                continue
+
+            ipid = np.searchsorted(prop.property_id, self.property_id)
+            ipid = ipid[ipid < len(prop.property_id)]
+            if len(ipid) == 0:
+                log.warning(f'skipping {prop.type}; pids={prop.property_id}')
+                continue
+            is_valid = (prop.property_id[ipid] == self.property_id)
+            ipid = ipid[is_valid]
+
+            prop2 = prop.slice_card_by_property_id(pids_common)
+            log.info(f'running...{prop.type}: pids={prop.property_id}')
+            if prop.type == 'PBEAM':
+                #ipid = prop.index(self.property_id)
+                #ipid = np.array([pid for pid in self.property_id
+                                 #if pid in pids_common])
+                #ipid = prop.index(pids_common, assume_sorted=True,
+                                  #inverse=False)
+                #ipidrev = prop.index(pids_common, assume_sorted=True,
+                                     #inverse=True)
+                #prop2 = prop.slice_card_by_id(ipid)
+                m1a = prop2.m1a
+                m1b = prop2.m1b
+                m2a = prop2.m2a
+                m2b = prop2.m2b
+                rho = prop2.rho()
+
+                # we don't call the MassPerLength method so we can put the NSM centroid
+                # on a different axis (the PBEAM is weird)
+                mass_per_lengths_, nsm_per_lengths_ = prop2.rhoarea_nsm()
+
+                #ipidrev2 = np.zeros(neids, )
+                for jpid, pid, mpl, nsmpl in zip(count(), pids_common,
+                                                 mass_per_lengths_, nsm_per_lengths_):
+                    iipid = np.where(self.property_id == pid)[0]
+                    if len(iipid) == 0:
+                        log.warning(f'  skipping {prop.type}; pid={pid}')
+                        continue
+                    #ipidrev2.append(_pid)
+
+                    nsm_n1 = (p1[iipid, :] + jhat[iipid, :] * m1a[jpid] + khat[iipid, :] * m2a[jpid])
+                    nsm_n2 = (p2[iipid, :] + jhat[iipid, :] * m1b[jpid] + khat[iipid, :] * m2b[jpid])
+                    #print("nsm_per_length=%s" % nsm_per_length)
+                    #print("nsm_n1=%s" % nsm_n1)
+                    #print("nsm_n2=%s" % nsm_n2)
+                    nsm_centroid[iipid] = (nsm_n1 + nsm_n2) / 2.
+                    mass_per_length[iipid] = mpl
+                    nsm_per_length[iipid] = nsmpl
+                    #nsm_centroid[iipid] = 0.
+                x = 1
+
+                #if nsm != 0.:
+                    #p1_nsm = p1 + prop.ma
+                    #p2_nsm = p2 + prop.mb
+            elif prop.type == 'PBEAML':
+                prop2 = prop.slice_card_by_property_id(pids_common)
+                mass_per_lengths_ = prop2.mass_per_length()
+                for jpid, pid, mpl in zip(count(), pids_common, mass_per_lengths_):
+                    iipid = np.where(self.property_id == pid)[0]
+                    if len(iipid) == 0:
+                        log.warning(f'  skipping {prop.type}; pid={pid}')
+                        continue
+                    mass_per_length[iipid] = mpl
+
+                    #mass_per_length = prop.MassPerLength() # includes simplified nsm
+                    nsm_centroid[iipid, :] = (p1 + p2) / 2.
+
+                    # mass_per_length already includes nsm
+                    nsm_per_length[iipid] = 0.
+
+                #print('mass_per_lengths=%s nsm_per_lengths=%s' % (
+                    #mass_per_lengths, nsm_per_lengths))
+                #print('mass_per_length=%s nsm_per_length=%s' % (
+                    #mass_per_length, nsm_per_length))
+            elif prop.type == 'PBCOMP':
+                prop2 = prop.slice_card_by_property_id(pids_common)
+                mass_per_lengths_ = prop2.mass_per_length()
+                m1s = prop2.m1
+                m2s = prop2.m2
+                for jpid, pid, mpl, m1, m2 in zip(count(), pids_common,
+                                                  mass_per_lengths_, m1s, m2s):
+                    iipid = np.where(self.property_id == pid)[0]
+                    if len(iipid) == 0:
+                        log.warning(f'  skipping {prop.type}; pid={pid}')
+                        continue
+                    mass_per_length[iipid] = mpl
+
+                    # already accounted for in mass_per_length
+                    nsm_per_length[iipid] = 0.0
+
+                    nsm_n1 = (p1[iipid, :] + jhat[iipid, :] * m1 + khat[jpid, :] * m2)
+                    nsm_n2 = (p2[iipid, :] + jhat[iipid, :] * m1 + khat[jpid, :] * m2)
+                    nsm_centroid[iipid, :] = (nsm_n1 + nsm_n2) / 2.
+                x = 1
+            #elif prop.type == 'PBMSECT':
+                #continue
+                #mass_per_length = prop.MassPerLength()
+                #m = mass_per_length * length
+                #nsm = prop.nsm
+            elif prop.type == 'PBMSECT':
+                raise RuntimeError(prop)
+                #mass_per_length = 0.  ## TODO: fix me
+                #nsm_per_length = prop.nsm
+                #nsm_centroid = (p1 + p2) / 2.
+            else:
+                raise NotImplementedError(prop.type)
+
+            assert isinstance(mass_per_length, np.ndarray), mass_per_length
+            assert isinstance(nsm_per_length, np.ndarray), nsm_per_length
+            assert nsm_centroid.shape == (self.n, 3), nsm_centroid.shape
+
+        assert not np.isnan(nsm_centroid.max()), nsm_centroid
+        assert not np.isnan(mass_per_length.max()), mass_per_length
+        assert not np.isnan(nsm_per_length.max()), nsm_per_length
+        total_mass = mass_per_length + nsm_per_length
+
+        assert centroid.shape == (self.n, 3), centroid.shape
+        if total_mass == 0.0:
+            return centroid
+
+        center_of_mass = (centroid * mass_per_length + nsm_centroid * nsm_per_length) / total_mass
+        assert not np.isnan(center_of_mass.max()), center_of_mass
+        assert mass_per_length.shape == (self.n, ), mass_per_length.shape
+        assert nsm_per_length.shape == (self.n, ), nsm_per_length.shape
+        assert total_mass.shape == (self.n, ), total_mass.shape
+        assert nsm_centroid.shape == (self.n, 3), nsm_centroid.shape
+        assert center_of_mass.shape == (self.n, 3), center_of_mass.shape
+        return center_of_mass
+        #return self.centroid()
 
     def area(self) -> np.ndarray:
         pid = self.property_id
@@ -341,9 +684,14 @@ class CBEAM(Element):
         L = self.length()
         return A * L
 
+    @property
     def is_offt(self) -> np.ndarray:
         is_offt = (self.g0 == -1)
         return is_offt
+
+    @property
+    def is_bit(self) -> np.ndarray:
+        return not self.is_offt
 
 class PBEAM(Property):
     """
@@ -774,6 +1122,26 @@ class PBEAM(Property):
             #if nsmi is None:
                 #nsmi = np.zeros(nstations)
 
+            if m1ai is None:
+                m1ai = 0.0
+            if m2ai is None:
+                m2ai = 0.0
+
+            if m1bi is None:
+                m1bi = m1ai
+            if m2bi is None:
+                m2bi = m2ai
+
+            if n1ai is None:
+                n1ai = 0.0
+            if n2ai is None:
+                n2ai = 0.0
+
+            if n1bi is None:
+                n1bi = n1ai
+            if n2bi is None:
+                n2bi = n2ai
+
             nstationi = len(xxbi)
             property_id[icard] = pid
             material_id[icard] = mid
@@ -870,7 +1238,7 @@ class PBEAM(Property):
         self.I1 = I1
         self.I2 = I2
         self.I12 = I12
-        self.nsm = nsm
+        self._nsm = nsm
 
         self.c1 = c1
         self.c2 = c2
@@ -931,7 +1299,7 @@ class PBEAM(Property):
         prop.I1 = hslice_by_idim(i, istation, self.I1)
         prop.I2 = hslice_by_idim(i, istation, self.I2)
         prop.I12 = hslice_by_idim(i, istation, self.I12)
-        prop.nsm = hslice_by_idim(i, istation, self.nsm)
+        prop._nsm = hslice_by_idim(i, istation, self._nsm)
 
         prop.c1 = hslice_by_idim(i, istation, self.c1)
         prop.c2 = hslice_by_idim(i, istation, self.c2)
@@ -964,25 +1332,57 @@ class PBEAM(Property):
         assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.materials}'
         return materials
 
+    def rho(self) -> np.ndarray:
+        rho = get_density_from_material(self.material_id, self.allowed_materials)
+        return rho
+
     def mass_per_length(self) -> np.ndarray:
         nproperties = len(self.property_id)
-        rho = get_density_from_material(self.material_id, self.allowed_materials)
-        if rho.max() == 0. and rho.min() == 0. and self.nsm.max() == 0. and self.nsm.min() == 0.:
-            return np.zeros(nproperties, dtype=rho.dtype)
-
+        rho = self.rho()
         mass_per_length = np.zeros(nproperties, dtype='float64')
+        if rho.max() == 0. and rho.min() == 0. and self._nsm.max() == 0. and self._nsm.min() == 0.:
+            return mass_per_length
+
         for i, rhoi, istation in zip(count(), rho, self.istation):
             istation0, istation1 = istation
             assert istation1 > istation0
             xxb = self.xxb[istation0:istation1]
             area = self.A[istation0:istation1]
-            nsm = self.nsm[istation0:istation1]
+            nsm = self._nsm[istation0:istation1]
             mass_per_lengths = rhoi * area + nsm
             mass_per_lengthi = integrate_positive_unit_line(xxb, mass_per_lengths)
             mass_per_length[i] = mass_per_lengthi
 
         assert len(mass_per_length) == nproperties
         return mass_per_length
+
+    def rhoarea_nsm(self) -> np.ndarray:
+        nproperties = len(self.property_id)
+        rho = self.rho()
+
+        nsm_per_length = np.zeros(nproperties, dtype='float64')
+        rho_area = np.zeros(nproperties, dtype='float64')
+        if rho.max() == 0. and rho.min() == 0. and self._nsm.max() == 0. and self._nsm.min() == 0.:
+            return rho_area, nsm_per_length
+
+        #assert len(rho) == len(self.A)
+        assert len(rho) == len(nsm_per_length)
+        for i, istation in zip(count(), self.istation):
+            istation0, istation1 = istation
+            assert istation1 > istation0
+            areai = self.A[istation0:istation1]
+            xxbi = self.xxb[istation0:istation1]
+            nsmi = self._nsm[istation0:istation1]
+            nsm_per_length[i] = integrate_positive_unit_line(xxbi, nsmi)
+
+            rho_areas = rho[i] * areai # + nsmi
+            #mass_per_lengths = rho[i] * areai + nsmi
+            rho_area[i] = integrate_positive_unit_line(xxbi, rho_areas)
+            #mass_per_length[i] = integrate_positive_unit_line(xxbi, mass_per_lengths)
+            #rho_area[i] = mass_per_lengthi
+
+        assert len(nsm_per_length) == nproperties
+        return rho_area, nsm_per_length
 
     @property
     def is_small_field(self) -> bool:
@@ -1019,7 +1419,7 @@ class PBEAM(Property):
             i1_ = self.I1[istation0:istation1]
             i2_ = self.I2[istation0:istation1]
             i12_ = self.I12[istation0:istation1]
-            nsm_ = self.nsm[istation0:istation1]
+            nsm_ = self._nsm[istation0:istation1]
             c1_ = self.c1[istation0:istation1]
             c2_ = self.c2[istation0:istation1]
             d1_ = self.d1[istation0:istation1]
@@ -1196,14 +1596,14 @@ class PBEAML(Property):
         #idim = self.idim
         self.Type = np.array([], dtype='|U8')
         self.group = np.array([], dtype='|U8')
-        self.nsm = np.array([], dtype='float64')
+        self._nsm = np.array([], dtype='float64')
 
         self.dims = np.zeros([], dtype='float64')
 
-        self.idim = np.zeros((0, 2), dtype='int32')  # for all properties
+        #self.idim = np.zeros((0, 2), dtype='int32')  # for all properties
         self.ndim = np.array([], dtype='int32')
 
-        self.istation = np.zeros((0, 2), dtype='int32')
+        #self.istation = np.zeros((0, 2), dtype='int32')
         self.nstation = np.array([], dtype='int32')
         #self.ndim =
 
@@ -1216,9 +1616,11 @@ class PBEAML(Property):
         return prop
 
     def add(self, pid: int, mid: int, beam_type: str,
-            xxb, dims, so=None, nsm=None,
+            xxb: list[float], dims: list[list[float]],
+            so=None, nsm=None,
             group: str='MSCBML0', comment: str='') -> int:
         nxxb = len(xxb)
+        self.model.log.info(f'pid={pid} so0={so} beam_type={beam_type!r} dims={dims} nsm0={nsm} xxb={xxb}')
         if so is None:
             so = ['YES'] * nxxb
         elif isinstance(so, str):
@@ -1229,6 +1631,11 @@ class PBEAML(Property):
         elif isinstance(nsm, float_types):
             nsm = [nsm] * nxxb
         ndim = self.valid_types[beam_type]
+
+        nstation = len(xxb)
+        self.model.log.info(f'  nstation={nstation} ndim={ndim}')
+        assert nstation == len(dims), f'pid={pid} nstation={nstation} dims={dims}'
+        assert nstation == len(nsm), f'pid={pid} nstation={nstation} nsm={nsm}'
         self.cards.append((pid, mid, beam_type, group, xxb, so, nsm, ndim, dims, comment))
         self.n += 1
         return self.n
@@ -1319,6 +1726,9 @@ class PBEAML(Property):
             n += 1
             ioffset += 1
         assert len(card) > 5, card
+
+        nstationi = len(xxb)
+        assert nstationi == len(nsm), f'pid={pid} nstation={nstationi} nsm={nsm}'
         self.cards.append((pid, mid, beam_type, group, xxb, so, nsm, ndim, dims, comment))
         self.n += 1
         return self.n
@@ -1333,10 +1743,10 @@ class PBEAML(Property):
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
 
-        idim = np.zeros((ncards, 2), dtype='int32')  # for all properties
+        #idim = np.zeros((ncards, 2), dtype='int32')  # for all properties
         ndim = np.zeros(ncards, dtype='int32')
 
-        istation = np.zeros((ncards, 2), dtype='int32')  # for all properties
+        #istation = np.zeros((ncards, 2), dtype='int32')  # for all properties
         nstation = np.zeros(ncards, dtype='int32')
 
         Type = np.full(ncards, '', dtype='|U8')
@@ -1348,21 +1758,22 @@ class PBEAML(Property):
         all_so = []
         all_nsm = []
 
-        idim0 = 0
-        istation0 = 0
+        #idim0 = 0
+        #istation0 = 0
         for icard, card in enumerate(self.cards):
             (pid, mid, beam_type, groupi, xxbi, soi, nsmi, ndimi, dims, comment) = card
 
             nstationi = len(xxbi)
             all_xxb.extend(xxbi)
             for dim in dims:
+                _bar_areaL('PBEAML', beam_type, dim, self)
                 all_dims.extend(dim)
             all_so.extend(soi)
             all_nsm.extend(nsmi)
             #station.extend(xxbi)
 
-            idim1 = idim0 + ndimi * nstationi
-            istation1 = istation0 + nstationi
+            #idim1 = idim0 + ndimi * nstationi
+            #istation1 = istation0 + nstationi
             nstation[icard] = nstationi
             property_id[icard] = pid
             material_id[icard] = mid
@@ -1370,14 +1781,14 @@ class PBEAML(Property):
             Type[icard] = beam_type
             ndim[icard] = ndimi
             #assert nstationi >= 2, f'pid={pid} mid={mid} beam_type={beam_type!r} xxb={xxbi} dims={dims}'
-            print(f'pid={pid} mid={mid} beam_type={beam_type!r} xxb={xxbi} dims={dims}')
-
-            idim[icard, :] = [idim0, idim1]
-            istation[icard, :] = [istation0, istation1]
+            #print(f'pid={pid} mid={mid} beam_type={beam_type!r} xxb={xxbi} dims={dims} nsm={nsmi}')
+            assert nstationi == len(nsmi), f'pid={pid} nstation={nstationi} nsmi={nsmi}'
+            #idim[icard, :] = [idim0, idim1]
+            #istation[icard, :] = [istation0, istation1]
 
             #self.nsm[icard] = nsm
-            idim0 = idim1
-            istation0 = istation1
+            #idim0 = idim1
+            #istation0 = istation1
 
         xxb = np.array(all_xxb, dtype='float64')
         dims = np.array(all_dims, dtype='float64')
@@ -1386,8 +1797,8 @@ class PBEAML(Property):
         #ndim_total = self.ndim.sum()
         self._save(
             property_id, material_id,
-            idim, ndim,
-            istation, nstation,
+            ndim,
+            nstation,
             Type, group,
             xxb, dims, so, nsm)
         nstation_total = self.nstation.sum()
@@ -1396,12 +1807,34 @@ class PBEAML(Property):
         assert self.xxb.shape[0] == nstation_total
         #assert len(self.dims) == ndim_total
         assert len(self.so) == nstation_total
-        assert len(self.nsm) == nstation_total
+        assert len(self._nsm) == nstation_total, f'nsm={self._nsm}; nstations_total={nstation_total}'
         self.cards = []
 
+    @property
+    def istation(self) -> np.ndarray:
+        nprops = len(self.property_id)
+        istation = np.zeros((nprops, 2), dtype='int32')
+        csum = np.cumsum(self.nstation)
+        istation[:, 0] = np.hstack([0, csum[:-1]])
+        istation[:, 1] = csum
+        return istation
+
+    @property
+    def idim(self) -> np.ndarray:
+        nprops = len(self.property_id)
+        idim = np.zeros((nprops, 2), dtype='int32')
+        csum = np.cumsum(self.ndim * self.nstation)
+        idim[:, 0] = np.hstack([0, csum[:-1]])
+        idim[:, 1] = csum
+        return idim
+
+    #@property
+    #def idim(self) -> np.ndarray:
+        #return make_idim(self.n, self.ndim)
+
     def _save(self, property_id: np.ndarray, material_id: np.ndarray,
-              idim: np.ndarray, ndim: np.ndarray,
-              istation: np.ndarray, nstation: np.ndarray,
+              ndim: np.ndarray,
+              nstation: np.ndarray,
               Type: np.ndarray,
               group: np.ndarray,
               xxb: np.ndarray, dims: np.ndarray,
@@ -1409,27 +1842,24 @@ class PBEAML(Property):
         self.property_id = property_id
         self.material_id = material_id
 
-        assert idim.ndim == 2, idim.shape
-        assert idim.min() == 0, idim
         assert ndim.min() >= 1, idim
-        self.idim = idim
         self.ndim = ndim
 
-        assert istation.ndim == 2, istation.shape
-        assert istation.min() == 0, istation
+        #assert istation.ndim == 2, istation.shape
+        #assert istation.min() == 0, istation
         #assert nstation.min() >= 2, nstation
         assert nstation.min() >= 1, nstation
-        self.istation = istation
+        #self.istation = istation
         self.nstation = nstation
 
         self.Type = Type
         self.group = group
 
-        self.nsm = nsm
+        self._nsm = nsm
         self.xxb = xxb
         self.dims = dims
         self.so = so
-        self.nsm = nsm
+        self._nsm = nsm
 
     def __apply_slice__(self, prop: PBEAML, i: np.ndarray) -> None:
         prop.n = len(i)
@@ -1439,27 +1869,30 @@ class PBEAML(Property):
         #self.istation = hslice_by_idim(i, idim, elements)
         prop.Type = self.Type[i]
         prop.group = self.group[i]
-        prop.nsm = self.nsm[i]
+        #prop._nsm = self._nsm[i]
 
         idim = self.idim
         istation = self.istation
         prop.dims = hslice_by_idim(i, idim, self.dims)
         prop.xxb = hslice_by_idim(i, istation, self.xxb)
+        prop._nsm = hslice_by_idim(i, istation, self._nsm)
 
         #self.idim = np.zeros((ncards, 2), dtype='int32')  # for all properties
-        prop.idim = self.idim[i, :]
+        #prop.idim = self.idim[i, :]
         prop.ndim = self.ndim[i]
 
         #self.istation = istation
-        prop.istation = self.istation[i, :]
+        #prop.istation = self.istation[i, :]
         prop.nstation = self.nstation[i]
 
         prop.so = self.so[i]
-        prop.nsm = self.nsm[i]
+        prop.n = len(i)
 
-    #@property
-    #def idim(self) -> np.ndarray:
-        #return make_idim(self.n, self.ndim)
+        nproperties = len(prop.property_id)
+        nstations = prop.nstation.sum()
+        assert len(prop.xxb) == nstations
+        assert len(prop.group) == nproperties
+        assert len(prop._nsm) == nstations
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
@@ -1491,7 +1924,7 @@ class PBEAML(Property):
             idim0, idim1 = idim
             istation0, istation1 = istation
             xxb = self.xxb[istation0:istation1]
-            nsm = self.nsm[istation0:istation1]
+            nsm = self._nsm[istation0:istation1]
             so = self.so[istation0:istation1]
             dims = self.dims[idim0 : idim1].reshape(nstation, ndim)
 
@@ -1525,15 +1958,17 @@ class PBEAML(Property):
     def area(self) -> np.ndarray:
         nproperties = len(self.property_id)
         area = np.zeros(nproperties, dtype='float64')
-        for i, beam_type, ndim, idim, nstation, istation in zip(count(), self.Type,
-                                                                self.ndim, self.idim,
-                                                                self.nstation, self.istation,):
+        for i, pid, beam_type, ndim, idim, nstation, istation in zip(count(), self.property_id, self.Type,
+                                                                     self.ndim, self.idim,
+                                                                     self.nstation, self.istation,):
             idim0, idim1 = idim
             istation0, istation1 = istation
             xxb = self.xxb[istation0:istation1]
             #nsm = self.nsm[istation0:istation1]
             #so = self.so[istation0:istation1]
             dims = self.dims[idim0 : idim1].reshape(nstation, ndim)
+            dims_str = str(dims).replace('\n', '')
+            self.model.log.info(f'pid={pid} beam_type={beam_type!r} dims={dims_str} idim0={idim0} idim1={idim1}')
 
             #prop = pbarl(self.property_id[i], self.material_id[i], beam_type, dim)
             #A, I1, I2, I12 = A_I1_I2_I12(prop, beam_type, dim)
@@ -1542,14 +1977,18 @@ class PBEAML(Property):
                 area_i1_i2_i12 = _bar_areaL('PBEAML', beam_type, dim, self)
                 areasi.append(area_i1_i2_i12[0])
             if len(xxb) == 1:
-                areaii = areasi[i]
+                areaii = areasi[0]
                 xxb = [0., 1.]
                 areasi = [areaii, areaii]
             A = integrate_positive_unit_line(xxb, areasi)
             area[i] = A
         return area
 
-    def nsm_func(self) -> np.ndarray:
+    def rho(self) -> np.ndarray:
+        rho = get_density_from_material(self.material_id, self.allowed_materials)
+        return rho
+
+    def nsm(self) -> np.ndarray:
         nproperties = len(self.property_id)
         nsm = np.zeros(nproperties, dtype='float64')
         for i, beam_type, ndim, idim, nstation, istation in zip(count(), self.Type,
@@ -1558,7 +1997,7 @@ class PBEAML(Property):
             #idim0, idim1 = idim
             istation0, istation1 = istation
             xxb = self.xxb[istation0:istation1]
-            nsms = self.nsm[istation0:istation1]
+            nsms = self._nsm[istation0:istation1]
             #so = self.so[istation0:istation1]
             #dims = self.dims[idim0 : idim1].reshape(nstation, ndim)
 
@@ -1568,8 +2007,10 @@ class PBEAML(Property):
             #for dim in dims:
                 #area_i1_i2_i12 = _bar_areaL('PBEAML', beam_type, dim, self)
                 #areasi.append(area_i1_i2_i12[0])
+
+            assert len(xxb) == len(nsms)
             if len(xxb) == 1:
-                nsmi = nsms[i]
+                nsmi = nsms[0]
                 xxb = [0., 1.]
                 nsms = [nsmi, nsmi]
             nsmi = integrate_positive_unit_line(xxb, nsms)
@@ -1591,11 +2032,10 @@ class PBEAML(Property):
         assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.materials}'
         return materials
 
-    def mass_per_length(self):
-        #nproperties = len(self.property_id)
+    def mass_per_length(self) -> np.ndarray:
         rho = get_density_from_material(self.material_id, self.allowed_materials)
         A = self.area()
-        nsm = self.nsm_func()
+        nsm = self.nsm()
         return rho * A + nsm
 
 
@@ -1815,32 +2255,23 @@ class PBCOMP(Property):
         self.sort()
 
     def __apply_slice__(self, prop: PBCOMP, i: np.ndarray) -> None:
-        self.property_id = self.property_id[i]
-        self.material_id = self.material_id[i]
+        prop.property_id = self.property_id[i]
+        prop.material_id = self.material_id[i]
 
-        self.Type = self.Type[i]
-        self.group = self.group[i]
-        self.k = self.k[i, :]
-        self.m1 = self.m1[i]
-        self.m2 = self.m2[i]
-        self.n1 = self.n1[i]
-        self.n2 = self.n2[i]
+        prop.k = self.k[i, :]
+        prop.m1 = self.m1[i]
+        prop.m2 = self.m2[i]
+        prop.n1 = self.n1[i]
+        prop.n2 = self.n2[i]
+        prop.nsm = self.nsm[i]
 
         istation = self.istation
-        self.y = hslice_by_idim(i, istation, self.y)
-        self.z = hslice_by_idim(i, istation, self.z)
-        self.c = hslice_by_idim(i, istation, self.c)
-        self.material_ids = hslice_by_idim(i, istation, self.material_ids)
-
-        self.c1 = hslice_by_idim(i, istation, self.c1)
-        self.c2 = hslice_by_idim(i, istation, self.c2)
-        self.d1 = hslice_by_idim(i, istation, self.d1)
-        self.d2 = hslice_by_idim(i, istation, self.d2)
-        self.e1 = hslice_by_idim(i, istation, self.e1)
-        self.e2 = hslice_by_idim(i, istation, self.e2)
-        self.f1 = hslice_by_idim(i, istation, self.f1)
-        self.f2 = hslice_by_idim(i, istation, self.f2)
-        self.nstation = self.nstation[i, :]
+        prop.y = hslice_by_idim(i, istation, self.y)
+        prop.z = hslice_by_idim(i, istation, self.z)
+        prop.c = hslice_by_idim(i, istation, self.c)
+        prop.material_ids = hslice_by_idim(i, istation, self.material_ids)
+        prop.nstation = self.nstation[i]
+        prop.n = len(i)
 
     @property
     def all_materials(self) -> list[Any]:
@@ -1895,23 +2326,23 @@ class PBCOMP(Property):
             property_ids, material_ids, self._area, self.i1, self.i2, self.i12, self.j, self.nsm,
             self.k, self.m1, self.m2, self.n1, self.n2, self.symopt, self.istation):
 
-            area = set_blank_if_default(A, 0.0)
-            j = set_blank_if_default(j, 0.0)
-            i1 = set_blank_if_default(i1, 0.0)
-            i2 = set_blank_if_default(i2, 0.0)
-            i12 = set_blank_if_default(i12, 0.0)
-            nsm = set_blank_if_default(nsm, 0.0)
+            area = set_blank_if_default(A, default=0.0)
+            j = set_blank_if_default(j, default=0.0)
+            i1 = set_blank_if_default(i1, default=0.0)
+            i2 = set_blank_if_default(i2, default=0.0)
+            i12 = set_blank_if_default(i12, default=0.0)
+            nsm = set_blank_if_default(nsm, default=0.0)
 
-            k1 = set_blank_if_default(k1, 1.0)
-            k2 = set_blank_if_default(k2, 1.0)
+            k1 = set_blank_if_default(k1, default=1.0)
+            k2 = set_blank_if_default(k2, default=1.0)
 
-            m1 = set_blank_if_default(m1, 0.0)
-            m2 = set_blank_if_default(m2, 0.0)
+            m1 = set_blank_if_default(m1, default=0.0)
+            m2 = set_blank_if_default(m2, default=0.0)
 
-            n1 = set_blank_if_default(n1, 0.0)
-            n2 = set_blank_if_default(n2, 0.0)
+            n1 = set_blank_if_default(n1, default=0.0)
+            n2 = set_blank_if_default(n2, default=0.0)
 
-            symopt = set_blank_if_default(symopt, 0)
+            symopt = set_blank_if_default(symopt, default=0)
 
             list_fields = ['PBCOMP', pid, mid, area, i1, i2, i12, j,
                            nsm, k1, k2, m1, m2, n1, n2, symopt, None]
@@ -1921,7 +2352,7 @@ class PBCOMP(Property):
             c = self.c[istation0:istation1]
             mids = self.material_ids[istation0:istation1]
             for (yi, zi, ci, mid) in zip_longest(y, z, c, mids):
-                ci = set_blank_if_default(ci, 0.0)
+                ci = set_blank_if_default(ci, default=0.0)
                 list_fields += [yi, zi, ci, mid, None, None, None, None]
             #assert len(y) > 0, list_fields
             bdf_file.write(print_card(list_fields))

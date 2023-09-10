@@ -113,7 +113,7 @@ def init_x_g0(card: BDFCard, eid: int):
         g0 = field5
         x = [np.nan, np.nan, np.nan]
     elif isinstance(field5, float):
-        g0 = 0
+        g0 = -1
         x = np.array([field5,
                       double_or_blank(card, 6, 'x2', default=np.nan),
                       double_or_blank(card, 7, 'x3', default=np.nan)], dtype='float64')

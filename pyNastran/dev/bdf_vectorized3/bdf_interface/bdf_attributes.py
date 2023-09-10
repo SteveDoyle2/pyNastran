@@ -1267,7 +1267,7 @@ class BDFAttributes:
         log = self.log
         element_ids_all = []
         inertias = []
-        mass = 0.
+        total_mass = 0.
         mass_cg = np.zeros(3, dtype='float64')
         for card in self.elements:
             if card.n == 0 or card.type in NO_MASS:
@@ -1280,8 +1280,16 @@ class BDFAttributes:
             #inertiai = card.inertia()
             massi = card.mass()
             massi_sum = massi.sum()
-            centroid = card.centroid()
-            mass += massi_sum
+            assert massi.shape == (card.n, ), massi.shape
+
+            if hasattr(card, 'center_of_mass'):
+                centroid = card.center_of_mass()
+                assert centroid.shape == (card.n, 3), centroid.shape
+            else:
+                centroid = card.centroid()
+                assert centroid.shape == (card.n, 3), centroid.shape
+
+            total_mass += massi_sum
             if np.any(np.isnan(centroid)):
                 log.error(f'{card.type} has nan centroid; centroid={centroid}')
                 raise RuntimeError(f'{card.type} has nan centroid; centroid={centroid}')
@@ -1291,13 +1299,13 @@ class BDFAttributes:
             mass_cg += mass_centroid.sum(axis=0)
             inertias.append((massi, centroid))
 
-        if mass == 0.:
+        if total_mass == 0.:
             cg = np.full(3, np.nan, dtype='float64')
             inertia = np.full(6, np.nan, dtype='float64')
             log.error('no elements with mass...inertia is nan')
-            return mass, cg, inertia
+            return total_mass, cg, inertia
 
-        cg = mass_cg / mass
+        cg = mass_cg / total_mass
         Ixx = 0.
         Iyy = 0.
         Izz = 0.
@@ -1318,16 +1326,16 @@ class BDFAttributes:
 
         #if fem1.wtmass != 1.0:
             #print('weight = %s' % (mass1 / fem1.wtmass))
-        log.debug(f'mass = {mass}')
+        log.debug(f'mass = {total_mass}')
         log.debug(f'cg   = {cg}')
         #print('Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
         log.debug(f'Ixx={Ixx:g} Iyy={Iyy:g} Izz={Izz:g}\nIxy={Ixy:g} Ixz={Ixz:g} Iyz={Iyz:g}')
         #if element_id is None:
-        return mass, cg, inertia
+        return total_mass, cg, inertia
 
     def inertia(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
-        mass moment of inertia
+        [mass, cg, mass moment of inertia]
         """
         log = self.log
         element_ids_all = []
@@ -1361,6 +1369,7 @@ class BDFAttributes:
         mass = np.hstack(masses)
         centroid = np.vstack(centroids)
         abs_mass = np.abs(mass).sum()
+        neids = len(element_id)
         #if abs_mass == 0.:
             #assert len(element_id) > 0, element_id
             #cg = np.full(3, np.nan, dtype='float64')
@@ -1368,8 +1377,13 @@ class BDFAttributes:
             #log.error('no elements with mass...inertia is nan')
             #return element_id, abs_mass, cg, inertia
         mass_cg = mass[:, None] * centroid
-        cg = mass_cg.sum(axis=0) / mass.sum()
-        assert len(cg) == 3, cg
+        imass = (mass != 0)
+        cg = np.zeros(centroid.shape, dtype=centroid.dtype)
+        cg[imass] = mass_cg[imass, :] / mass
+
+        #cg = mass_cg.sum(axis=0) / mass.sum()
+        #assert len(cg) == 3, cg
+        assert cg.shape == (neids, 3), cg.shape
 
         dxyz = centroid - cg
         dx = dxyz[:, 0]

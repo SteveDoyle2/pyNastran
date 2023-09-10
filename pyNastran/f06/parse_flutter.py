@@ -288,8 +288,8 @@ def _get_units(units: Optional[Union[str, dict[str, str]]]) -> Optional[Union[st
 
 
 def plot_flutter_f06(f06_filename: str,
-                     f06_units: dict[str, str]=None,
-                     out_units: dict[str, str]=None,
+                     f06_units: Optional[dict[str, str]]=None,
+                     out_units: Optional[dict[str, str]]=None,
                      make_alt: bool=False,
                      plot_type: str='tas',
                      modes: Optional[list[int]]=None,
@@ -308,7 +308,6 @@ def plot_flutter_f06(f06_filename: str,
                      export_zona_filename: Optional[str]=None,
                      export_veas_filename: Optional[str]=None,
                      export_f06_filename: Optional[str]=None,
-                     export_csv_filename: Optional[str]=None,
                      vg_filename: Optional[str]=None,
                      vg_vf_filename: Optional[str]=None,
                      root_locus_filename: Optional[str]=None,
@@ -400,7 +399,6 @@ def plot_flutter_f06(f06_filename: str,
                            export_zona_filename=export_zona_filename,
                            export_veas_filename=export_veas_filename,
                            export_f06_filename=export_f06_filename,
-                           export_csv_filename=export_csv_filename,
                            vg_filename=vg_filename,
                            vg_vf_filename=vg_vf_filename,
                            root_locus_filename=root_locus_filename,
@@ -427,7 +425,6 @@ def make_flutter_plots(modes: list[int], flutters: dict[int, FlutterResponse],
                        export_zona_filename: Optional[str]=None,
                        export_veas_filename: Optional[str]=None,
                        export_f06_filename: Optional[str]=None,
-                       export_csv_filename: Optional[str]=None,
                        vg_filename: Optional[str]=None,
                        vg_vf_filename: Optional[str]=None,
                        root_locus_filename: Optional[str]=None,
@@ -456,7 +453,7 @@ def make_flutter_plots(modes: list[int], flutters: dict[int, FlutterResponse],
     for subcase, flutter in sorted(flutters.items()):
         if subcase not in subcases_set:
             continue
-        flutter = cast(FlutterResponse, flutter)  # type: FlutterResponse
+        flutter = cast(FlutterResponse, flutter)
         _make_flutter_subcase_plot(
             modes, flutter, subcase, xlim, ylim_damping, ylim_freq, ylim_kfreq,
             plot_type, plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
@@ -475,8 +472,6 @@ def make_flutter_plots(modes: list[int], flutters: dict[int, FlutterResponse],
             flutter.export_to_veas(export_veas_filename, modes=modes)
         if export_f06_filename:
             flutter.export_to_f06(export_f06_filename, modes=modes)
-        #if export_csv_filename:
-            #flutter.export_to_csv(export_csv_filename % subcase, modes=modes)
 
     if show:
         plt.show()
@@ -485,7 +480,7 @@ def make_flutter_plots(modes: list[int], flutters: dict[int, FlutterResponse],
 
 def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                xlim, ylim_damping, ylim_freq, ylim_kfreq,
-                               plot_type,
+                               plot_type: str,
                                plot_vg: bool,
                                plot_vg_vf: bool,
                                plot_root_locus: bool,
@@ -503,14 +498,14 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                log: SimpleLogger=None):
         #_remove_neutrinos(flutter, log)
         if plot_vg:
-            filenamei = None if vg_filename is None else vg_filename % subcase
+            filenamei = None if vg_filename is None else (vg_filename % subcase)
             flutter.plot_vg(modes=modes,
                             plot_type=plot_type,
                             xlim=xlim, ylim_damping=ylim_damping,
                             #vd_limit=vd_limit,
                             png_filename=filenamei, show=False, clear=clear, close=close)
         if plot_vg_vf:
-            filenamei = None if vg_vf_filename is None else vg_vf_filename % subcase
+            filenamei = None if vg_vf_filename is None else (vg_vf_filename % subcase)
             flutter.plot_vg_vf(modes=modes,
                                plot_type=plot_type,
                                xlim=xlim,
@@ -520,7 +515,7 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                legend=legend,
                                png_filename=filenamei, show=False, clear=clear, close=close)
         if plot_root_locus:
-            filenamei = None if root_locus_filename is None else root_locus_filename % subcase
+            filenamei = None if root_locus_filename is None else (root_locus_filename % subcase)
             flutter.plot_root_locus(modes=modes,
                                     fig=None, axes=None,
                                     xlim=None, ylim=None,
@@ -529,7 +524,7 @@ def _make_flutter_subcase_plot(modes, flutter: FlutterResponse, subcase: int,
                                     show=False, close=close)
 
         if plot_kfreq_damping:
-            filenamei = None if kfreq_damping_filename is None else kfreq_damping_filename % subcase
+            filenamei = None if kfreq_damping_filename is None else (kfreq_damping_filename % subcase)
             flutter.plot_kfreq_damping(modes=modes,
                                        plot_type=plot_type,
                                        ylim_damping=ylim_damping,
@@ -592,7 +587,7 @@ def _remove_neutrinos(flutter: FlutterResponse, log: SimpleLogger):
 
 def _find_modes_to_keep(flutter: FlutterResponse,
                         log: SimpleLogger,
-                        tol: float=1e-8) -> np.ndarray:
+                        tol: float=1e-8) -> tuple[np.ndarray, np.ndarray]:
     """
     FlutterResponse:
         subcase= 1

@@ -597,7 +597,7 @@ class CBEAM(LineElement):
         #x = self.get_orientation_vector()
         return (ga + gb) / 2.
 
-    def get_orientation_vector(self, xyz):
+    def get_orientation_vector(self, xyz: np.ndarray):
         """
         Element offsets are defined in a Cartesian system located at the
         connecting grid point. The components of the offsets are always

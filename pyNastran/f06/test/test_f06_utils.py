@@ -27,6 +27,7 @@ from pyNastran.f06.utils import (split_float_colons, split_int_colon,
 from pyNastran.f06.parse_flutter import plot_flutter_f06, make_flutter_plots
 from pyNastran.f06.parse_trim import read_f06_trim
 
+DIRNAME = os.path.dirname(__file__)
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
@@ -221,6 +222,23 @@ class TestF06Utils(unittest.TestCase):
                                #export_zona_filename=export_zona_filename,
                                #export_veas_filename=export_veas_filename,
                                #export_f06_filename=export_f06_filename,
+                               #vg_filename=vg_filename,
+                               #vg_vf_filename=vg_vf_filename,
+                               #root_locus_filename=root_locus_filename,
+                               #kfreq_damping_filename=kfreq_damping_filename,
+                               show=False, clear=True, close=True)
+
+            export_zona_filename = os.path.join(DIRNAME, 'zona_%i.f06')
+            export_veas_filename = os.path.join(DIRNAME, 'flutter_%i.veas')
+            export_f06_filename = os.path.join(DIRNAME, 'flutter_%i.f06')
+            make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
+                               plot_type,
+                               plot_vg=True, plot_vg_vf=True,
+                               plot_root_locus=True, plot_kfreq_damping=True,
+                               nopoints=True, noline=False,
+                               export_zona_filename=export_zona_filename,
+                               export_veas_filename=export_veas_filename,
+                               export_f06_filename=export_f06_filename,
                                #vg_filename=vg_filename,
                                #vg_vf_filename=vg_vf_filename,
                                #root_locus_filename=root_locus_filename,

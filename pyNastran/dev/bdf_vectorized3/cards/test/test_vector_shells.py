@@ -767,11 +767,11 @@ class TestShells(unittest.TestCase):
         eid = 6
         pid = 13
         nids = [1, 2, 3]
-        ctriar = model.add_ctriar(eid, pid, nids, comment='ctriar')
+        ctriar_id = model.add_ctriar(eid, pid, nids, comment='ctriar')
 
         eid = 8
         nids = [1, 2, 3, 4]
-        cquadr = model.add_cquadr(eid, pid, nids, comment='cquadr')
+        cquadr_id = model.add_cquadr(eid, pid, nids, comment='cquadr')
         #cquadr.raw_fields()
 
         mid = 42
@@ -781,6 +781,9 @@ class TestShells(unittest.TestCase):
         nu12 = 0.3
         model.add_mat8(mid, e11, e22, nu12, rho=10.)
         model.setup()
+
+        ctriar = model.ctriar
+        cquadr = model.cquadr
 
         #ctriar.raw_fields()
         ctriar.write(size=8)

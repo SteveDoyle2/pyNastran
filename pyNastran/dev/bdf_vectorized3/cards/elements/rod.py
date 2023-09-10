@@ -337,6 +337,14 @@ class PROD(Property):
     | PROD |  1  |  2  | 2.0 | 3.0 | 0.5 | 1.0 |
     +------+-----+-----+-----+-----+-----+-----+
     """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.material_id: np.ndarray = np.array([], dtype='int32')
+        self.A: np.ndarray = np.array([], dtype='float64')
+        self.J: np.ndarray = np.array([], dtype='float64')
+        self.c: np.ndarray = np.array([], dtype='float64')
+        self.nsm: np.ndarray = np.array([], dtype='float64')
+
     def add(self, pid: int, mid: int, A: float,
             j: float=0., c: float=0., nsm: float=0., comment: str='') -> int:
         """

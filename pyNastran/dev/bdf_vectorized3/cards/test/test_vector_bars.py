@@ -227,14 +227,14 @@ class TestBars(unittest.TestCase):
         dim = 42
         nsm = 0.5
         with self.assertRaises(KeyError): # bar_type
-            pbarl = model.add_pbarl(pid, mid, bar_type, dim, group=group, nsm=nsm, comment='comment')
+            pbarl_id = model.add_pbarl(pid, mid, bar_type, dim, group=group, nsm=nsm, comment='comment')
 
         bar_type = 'TUBE'
         with self.assertRaises(ValueError): # len(dim) = 1; not 2=
-            pbarl = model.add_pbarl(pid, mid, bar_type, dim, group=group, nsm=nsm, comment='comment')
+            pbarl_id = model.add_pbarl(pid, mid, bar_type, dim, group=group, nsm=nsm, comment='comment')
 
         dim = [1., 2.]
-        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group=group, nsm=nsm, comment='comment')
+        pbarl_id = model.add_pbarl(pid, mid, bar_type, dim, group=group, nsm=nsm, comment='comment')
 
         E = 3.0e7
         G = None
@@ -257,6 +257,7 @@ class TestBars(unittest.TestCase):
             #pbarl.validate()
         #pbarl.group = 'MSCBML0'
 
+        pbarl = model.pbarl
         pbarl.dims = np.array([2.2, 1.1])
 
         pbarl.validate()
@@ -290,8 +291,9 @@ class TestBars(unittest.TestCase):
         eid = 42
         x = None
         g0 = None
-        cbar = model.add_cbar(eid, pid, [nid1, nid2], x, g0, offt='GGG',
-                              pa=0, pb=0, wa=None, wb=None, comment='')
+        cbar_id = model.add_cbar(eid, pid, [nid1, nid2], x, g0, offt='GGG',
+                                 pa=0, pb=0, wa=None, wb=None, comment='')
+        cbar = model.cbar
         #with self.assertRaises(ValueError):
         cbar.validate()
         cbar.x = [0., 1., 2.]
@@ -511,7 +513,8 @@ class TestBars(unittest.TestCase):
         E = 1.0
         G = None
         nu = 0.3
-        mat1 = model.add_mat1(mid, E, G, nu)
+        mat1_id = model.add_mat1(mid, E, G, nu)
+        mat1 = model.mat1
 
         #----------------
         card_lines = [
@@ -541,13 +544,15 @@ class TestBars(unittest.TestCase):
         mid = 1
         bar_type = 'BAR'
         dim = [1., 2.]  # area = 2.0
-        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=1.,
-                                comment='')
+        pbarl_id = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=1.,
+                                   comment='')
+        pbarl = model.pbarl
 
         E = 1.0
         G = None
         nu = 0.3
-        mat1 = model.add_mat1(mid, E, G, nu)
+        mat1_id = model.add_mat1(mid, E, G, nu)
+        mat1 = model.mat1
 
         #----------------
         card_lines = [
@@ -802,8 +807,9 @@ class TestBars(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
+        pbarl = model.pbarl
         for bar_type, dims, areai, i1 in shape_dims_area:
-            pbarl = model.add_pbarl(pid, mid, bar_type, dims, group=group, nsm=nsm, comment='comment')
+            pbarl_id = model.add_pbarl(pid, mid, bar_type, dims, group=group, nsm=nsm, comment='comment')
             model.setup()
             pbarl.validate()
             model.setup()

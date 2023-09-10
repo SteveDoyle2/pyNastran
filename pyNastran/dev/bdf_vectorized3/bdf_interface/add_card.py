@@ -1,5 +1,6 @@
 from __future__ import annotations
 import sys
+from itertools import count
 from collections import defaultdict
 from typing import Union, Optional, Any, cast, TYPE_CHECKING
 
@@ -27,19 +28,19 @@ from pyNastran.dev.bdf_vectorized3.bdf import DTI_UNITS
 if TYPE_CHECKING:
     from pyNastran.nptyping_interface import NDArray3float, NDArray66float
     from pyNastran.dev.bdf_vectorized3.bdf import PARAM # BDF,
-    from pyNastran.dev.bdf_vectorized3.cards.grid import GRID
+    #from pyNastran.dev.bdf_vectorized3.cards.grid import GRID
     from pyNastran.dev.bdf_vectorized3.cards.coord import COORD # CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
-    from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2, LOADSET
-    from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import PLOAD, PLOAD1, PLOAD2, PLOAD4 # , PLOADX1
+    #from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2, LOADSET
+    #from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import PLOAD, PLOAD1, PLOAD2, PLOAD4 # , PLOADX1
     #from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
         #DAREA, DELAY, DLOAD, DPHASE, LSEQ, QVECT, RANDPS,
         #TIC, RLOAD1, RLOAD2, TLOAD1, TLOAD2)
     #from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
     #from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL
     #from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
-    from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
-        CTRIA3, CTRIA6, CTRIAR,
-        CQUAD4, CQUAD8, CQUAD, CQUADR)
+    #from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
+        #CTRIA3, CTRIA6, CTRIAR,
+        #CQUAD4, CQUAD8, CQUAD, CQUADR)
     #from pyNastran.dev.bdf_vectorized3.cards.elements.shell_axi import (
         #CTRIAX, CTRIAX6,
         #CQUADX, CQUADX4, CQUADX8)
@@ -56,8 +57,8 @@ if TYPE_CHECKING:
     #from pyNastran.dev.bdf_vectorized3.cards.elements.damper import CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5, PDAMP, PDAMPT, CGAP, CVISC, PGAP, PVISC
     #from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSM, NSM1, NSML, NSML1, NSMADD
     #from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, CTUBE, CONROD, PROD, PTUBE
-    from pyNastran.dev.bdf_vectorized3.cards.elements.solid import CTETRA, CPYRAM, CPENTA, CHEXA, PSOLID, PLSOLID # , PCOMPS, PCOMPLS
-    from pyNastran.dev.bdf_vectorized3.cards.materials import MAT1, MAT2, MAT8, MAT9 # MAT3, MAT4, MAT5, , MAT10, MAT10C, MAT11
+    #from pyNastran.dev.bdf_vectorized3.cards.elements.solid import CTETRA, CPYRAM, CPENTA, CHEXA, PSOLID, PLSOLID # , PCOMPS, PCOMPLS
+    #from pyNastran.dev.bdf_vectorized3.cards.materials import MAT1, MAT2, MAT8, MAT9 # MAT3, MAT4, MAT5, , MAT10, MAT10C, MAT11
 
 
 class AddCoords(BDFAttributes):
@@ -65,7 +66,7 @@ class AddCoords(BDFAttributes):
                    origin: Optional[Union[list[float], NDArray3float]],
                    zaxis: Optional[Union[list[float], NDArray3float]],
                    xzplane: Optional[Union[list[float], NDArray3float]],
-                   rid: int=0, setup: bool=True, comment: str='') -> CORD2R:
+                   rid: int=0, setup: bool=True, comment: str='') -> int:
         """
         Creates the CORD2R card, which defines a rectangular coordinate
         system using 3 vectors.
@@ -95,7 +96,7 @@ class AddCoords(BDFAttributes):
                    origin: Optional[Union[list[float], NDArray3float]],
                    zaxis: Optional[Union[list[float], NDArray3float]],
                    xzplane: Optional[Union[list[float], NDArray3float]],
-                   rid: int=0, setup: bool=True, comment: str='') -> CORD2C:
+                   rid: int=0, setup: bool=True, comment: str='') -> int:
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
         system using 3 vectors.
@@ -126,7 +127,7 @@ class AddCoords(BDFAttributes):
                    origin: Optional[Union[list[float], NDArray3float]],
                    zaxis: Optional[Union[list[float], NDArray3float]],
                    xzplane: Optional[Union[list[float], NDArray3float]],
-                   rid: int=0, setup: bool=True, comment: str='') -> CORD2S:
+                   rid: int=0, setup: bool=True, comment: str='') -> int:
         """
         Creates the CORD2C card, which defines a spherical coordinate
         system using 3 vectors.
@@ -153,7 +154,7 @@ class AddCoords(BDFAttributes):
             setup=setup, comment=comment)
         return coord
 
-    def add_cord1r(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> CORD1R:
+    def add_cord1r(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> int:
         """
         Creates the CORD1R card, which defines a rectangular coordinate
         system using 3 GRID points.
@@ -175,7 +176,7 @@ class AddCoords(BDFAttributes):
         coord = self.coord.add_cord1r(cid, g1, g2, g3, comment=comment)
         return coord
 
-    def add_cord1c(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> CORD1C:
+    def add_cord1c(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> int:
         """
         Creates the CORD1C card, which defines a cylindrical coordinate
         system using 3 GRID points.
@@ -197,7 +198,7 @@ class AddCoords(BDFAttributes):
         coord = self.coord.add_cord1c(cid, g1, g2, g3, comment=comment)
         return coord
 
-    def add_cord1s(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> CORD1S:
+    def add_cord1s(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> int:
         """
         Creates the CORD1S card, which defines a spherical coordinate
         system using 3 GRID points.
@@ -258,7 +259,7 @@ class Add0dElements(BDFAttributes):
         return prop
 
     def add_celas1(self, eid: int, pid: int, nids: list[int],
-                   c1: int=0, c2: int=0, comment: str='') -> CELAS1:
+                   c1: int=0, c2: int=0, comment: str='') -> int:
         """
         Creates a CELAS1 card
 
@@ -277,10 +278,10 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.celas1.add(eid, pid, nids, c1, c2, comment=comment)
-        return self.celas1
+        return elem
 
     def add_celas2(self, eid: int, k: float, nids: list[int],
-                   c1: int=0, c2: int=0, ge: float=0., s: float=0., comment: str='') -> CELAS2:
+                   c1: int=0, c2: int=0, ge: float=0., s: float=0., comment: str='') -> int:
         """
         Creates a CELAS2 card
 
@@ -304,7 +305,7 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.celas2.add(eid, k, nids, c1=c1, c2=c2, ge=ge, s=s, comment=comment)
-        return self.celas2
+        return elem
 
     def add_celas3(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
@@ -342,10 +343,10 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.celas4.add(eid, k, nids, comment=comment)
-        return self.celas4
+        return elem
 
     def add_cdamp1(self, eid: int, pid: int, nids: list[int], c1: int=0, c2: int=0,
-                   comment: str='') -> CDAMP1:
+                   comment: str='') -> int:
         """
         Creates a CDAMP1 card
 
@@ -364,10 +365,10 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.cdamp1.add(eid, pid, nids, c1=c1, c2=c2, comment=comment)
-        return self.cdamp1
+        return elem
 
     def add_cdamp2(self, eid: int, b: float, nids: list[int],
-                   c1: int=0, c2: int=0, comment: str='') -> CDAMP2:
+                   c1: int=0, c2: int=0, comment: str='') -> int:
         """
         Creates a CDAMP2 card
 
@@ -387,9 +388,9 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.cdamp2.add(eid, b, nids, c1=c1, c2=c2, comment=comment)
-        return self.cdamp2
+        return elem
 
-    def add_cdamp3(self, eid: int, pid: int, nids: list[int], comment: str='') -> CDAMP3:
+    def add_cdamp3(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CDAMP3 card
 
@@ -406,9 +407,9 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.cdamp3.add(eid, pid, nids, comment=comment)
-        return self.cdamp3
+        return elem
 
-    def add_cdamp4(self, eid: int, b: float, nids: list[int], comment: str='') -> CDAMP4:
+    def add_cdamp4(self, eid: int, b: float, nids: list[int], comment: str='') -> int:
         """
         Creates a CDAMP4 card
 
@@ -425,9 +426,9 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.cdamp4.add(eid, b, nids, comment=comment)
-        return self.cdamp4
+        return elem
 
-    def add_cdamp5(self, eid: int, pid: int, nids: list[int], comment: str='') -> CDAMP5:
+    def add_cdamp5(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CDAMP5 card
 
@@ -443,27 +444,27 @@ class Add0dElements(BDFAttributes):
             a comment for the card
 
         """
-        elem = CDAMP5(eid, pid, nids, comment=comment)
+        elem = self.cdamp5.add(eid, pid, nids, comment=comment)
         self._add_methods._add_element_object(elem)
         return elem
 
-    def add_pdamp(self, pid: int, b: float, comment: str='') -> PDAMP:
+    def add_pdamp(self, pid: int, b: float, comment: str='') -> int:
         """Creates a PDAMP card"""
         prop = self.pdamp.add(pid, b, comment=comment)
-        return self.pdamp
+        return prop
 
-    def add_pdampt(self, pid: int, tbid: int, comment: str='') -> PDAMPT:
+    def add_pdampt(self, pid: int, tbid: int, comment: str='') -> int:
         """Creates a PDAMPT card"""
         prop = self.pdampt.add(pid, tbid, comment=comment)
-        return self.pdampt
+        return prop
 
-    def add_pdamp5(self, pid: int, mid: int, b: float, comment: str='') -> PDAMP5:
+    def add_pdamp5(self, pid: int, mid: int, b: float, comment: str='') -> int:
         """Creates a PDAMP5 card"""
-        prop = PDAMP5(pid, mid, b, comment=comment)
+        prop = self.pdamp5(pid, mid, b, comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_cvisc(self, eid: int, pid: int, nids: list[int], comment: str='') -> CVISC:
+    def add_cvisc(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CVISC card
 
@@ -482,7 +483,7 @@ class Add0dElements(BDFAttributes):
         elem = self.cvisc.add(eid, pid, nids, comment=comment)
         return elem
 
-    def add_pvisc(self, pid: int, ce: float, cr: float, comment: str='') -> PVISC:
+    def add_pvisc(self, pid: int, ce: float, cr: float, comment: str='') -> int:
         """
         Creates a PVISC card
 
@@ -499,11 +500,11 @@ class Add0dElements(BDFAttributes):
 
         """
         prop = self.pvisc.add(pid, ce, cr, comment=comment)
-        return self.pvisc
+        return prop
 
     def add_cgap(self, eid: int, pid: int, nids: list[int],
                  x: Optional[list[int]], g0: Optional[int],
-                 cid: Optional[int]=None, comment: str='') -> CGAP:
+                 cid: Optional[int]=None, comment: str='') -> int:
         """
         Creates a CGAP card
 
@@ -530,13 +531,13 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.cgap.add(eid, pid, nids, x, g0, cid=cid, comment=comment)
-        return self.cgap
+        return elem
 
     def add_pgap(self, pid: int, u0: float=0., f0: float=0.,
                  ka: float=1.e8, kb: Optional[float]=None, mu1: float=0.,
                  kt: Optional[float]=None, mu2: Optional[float]=None,
                  tmax: float=0., mar: float=100., trmin: float=0.001,
-                 comment: str='') -> PGAP:
+                 comment: str='') -> int:
         """
         Defines the properties of the gap element (CGAP entry).
 
@@ -578,18 +579,18 @@ class Add0dElements(BDFAttributes):
         """
         prop = self.pgap.add(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                              comment=comment)
-        return self.pgap
+        return prop
 
     def add_cfast(self, eid: int, pid: int, Type: str, ida: int, idb: int,
                   gs=None, ga=None, gb=None,
-                  xs=None, ys=None, zs=None, comment: str='') -> CFAST:
+                  xs=None, ys=None, zs=None, comment: str='') -> int:
         """Creates a CFAST card"""
         elem = self.cfast.add(eid, pid, Type, ida, idb, gs=gs, ga=ga, gb=gb,
                               xs=xs, ys=ys, zs=zs, comment=comment)
-        return self.cfast
+        return elem
 
     def add_pfast(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
-                  kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment='') -> PFAST:
+                  kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment='') -> int:
         """
         Creates a PAST card
 
@@ -615,13 +616,14 @@ class Add0dElements(BDFAttributes):
             a comment for the card
 
         """
-        prop = PFAST(pid, d, kt1, kt2, kt3, mcid=mcid, mflag=mflag,
-                     kr1=kr1, kr2=kr2, kr3=kr3, mass=mass, ge=ge, comment=comment)
+        prop = self.pfast.add(pid, d, kt1, kt2, kt3, mcid=mcid, mflag=mflag,
+                              kr1=kr1, kr2=kr2, kr3=kr3, mass=mass, ge=ge,
+                              comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
 
     def add_cbush(self, eid: int, pid: int, nids, x: Optional[list[float]], g0: Optional[int], cid=None,
-                  s: float=0.5, ocid: int=-1, si: Optional[list[float]]=None, comment='') -> CBUSH:
+                  s: float=0.5, ocid: int=-1, si: Optional[list[float]]=None, comment='') -> int:
         """
         Creates a CBUSH card
 
@@ -661,12 +663,12 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.cbush.add(eid, pid, nids, x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
-        return self.cbush
+        return elem
 
     def add_pbush(self, pid: int, k: list[float], b: list[float], ge: list[float],
                   rcv: Optional[list[float]]=None, mass: Optional[float]=None,
                   alpha: float=0., tref: float=0., coincident_length=None,
-                  comment: str='') -> PBUSH:
+                  comment: str='') -> int:
         """
         Creates a PBUSH card, which defines a property for a PBUSH
 
@@ -695,30 +697,30 @@ class Add0dElements(BDFAttributes):
 
         """
         prop = self.pbush.add(pid, k, b, ge, rcv=rcv, mass=mass, comment=comment)
-        return self.pbush
+        return prop
 
     def add_cbush1d(self, eid: int, pid: int, nids: list[int], cid: Optional[int]=None,
-                    comment: str='') -> CBUSH1D:
+                    comment: str='') -> int:
         """Creates a CBUSH1D card"""
         elem = self.cbush1d.add(eid, pid, nids, cid=cid, comment=comment)
-        return self.cbush1d
+        return elem
 
     def add_cbush2d(self, eid: int, pid: int, nids: list[int], cid: int=0,
-                    plane: str='XY', sptid: Optional[int]=None, comment: str='') -> CBUSH2D:
+                    plane: str='XY', sptid: Optional[int]=None, comment: str='') -> int:
         """Creates a CBUSH2D card"""
         elem = self.cbush2d.add(eid, pid, nids, cid=cid, plane=plane, sptid=sptid, comment=comment)
-        return self.cbush2d
+        return elem
 
     def add_pbush1d(self, pid: int,
                     k: float=0., c: float=0., m: float=0.,
                     sa: float=0., se: float=0., optional_vars=None,
-                    comment: str='') -> PBUSH1D:
+                    comment: str='') -> int:
         """Creates a PBUSH1D card"""
         prop = self.pbush1d.add(pid, k=k, c=c, m=m, sa=sa, se=se,
                                 optional_vars=optional_vars, comment=comment)
-        return self.pbush1d
+        return prop
 
-    #def add_pbush2d(self, pid, k, c, m, sa, se, optional_vars, comment='') -> PBUSH2D:
+    #def add_pbush2d(self, pid, k, c, m, sa, se, optional_vars, comment='') -> int:
         #"""
         #Creates a PBUSH2D card
         #"""
@@ -727,13 +729,13 @@ class Add0dElements(BDFAttributes):
         #return prop
 
     def add_pbusht(self, pid: int, k_tables: list[int], b_tables: list[int],
-                   ge_tables: list[int], kn_tables: list[int], comment: str='') -> PBUSHT:
+                   ge_tables: list[int], kn_tables: list[int], comment: str='') -> int:
         """Creates a PBUSHT card"""
         prop = self.pbusht.add(pid, k_tables, b_tables, ge_tables, kn_tables,
                                comment=comment)
-        return self.pbusht
+        return prop
 
-    def add_pelast(self, pid: int, tkid: int=0, tgeid: int=0, tknid: int=0, comment: str='') -> PELAST:
+    def add_pelast(self, pid: int, tkid: int=0, tgeid: int=0, tknid: int=0, comment: str='') -> int:
         """
         Creates a PELAST card
 
@@ -751,7 +753,7 @@ class Add0dElements(BDFAttributes):
             a comment for the card
 
         """
-        prop = PELAST(pid, tkid, tgeid, tknid, comment=comment)
+        prop = self.pelast.add(pid, tkid, tgeid, tknid, comment=comment)
         self._add_methods._add_pelast_object(prop)
         return prop
 
@@ -874,7 +876,7 @@ class Add1dElements(BDFAttributes):
 
         """
         prop = self.ptube.add(pid, mid, OD1, t=t, nsm=nsm, OD2=OD2, comment=comment)
-        return self.ptube
+        return prop
 
     def add_baror(self, pid: int, is_g0, g0, x, offt: str='GGG', comment: str='') -> BAROR:
         baror = BAROR(pid, g0, x, offt=offt, comment=comment)
@@ -918,7 +920,7 @@ class Add1dElements(BDFAttributes):
                  x: Optional[list[float]], g0: Optional[int],
                  offt: str='GGG', pa: int=0, pb: int=0,
                  wa: Optional[list[float]]=None, wb: Optional[list[float]]=None,
-                 comment: str='', validate: bool=False) -> CBAR:
+                 comment: str='', validate: bool=False) -> int:
         """
         Adds a CBAR card
 
@@ -953,7 +955,7 @@ class Add1dElements(BDFAttributes):
                 assert nid in self.nodes, f'nid={nid!r} does not exist'
         elem = self.cbar.add(eid, pid, nids, x, g0, offt=offt, pa=pa, pb=pb,
                              wa=wa, wb=wb, comment=comment)
-        return self.cbar
+        return elem
 
     #def add_pbarl_dvprel1(self, pid: int, mid: int,
                           #Type: str, dim: list[float], dim_constraints: list[Any],
@@ -1009,7 +1011,7 @@ class Add1dElements(BDFAttributes):
                  d1: float=0., d2: float=0.,
                  e1: float=0., e2: float=0.,
                  f1: float=0., f2: float=0.,
-                 k1: float=1.e8, k2: float=1.e8, comment: str='') -> PBAR:
+                 k1: float=1.e8, k2: float=1.e8, comment: str='') -> int:
         """
         Creates a PBAR card
 
@@ -1039,10 +1041,10 @@ class Add1dElements(BDFAttributes):
         prop = self.pbar.add(pid, mid, A=A, i1=i1, i2=i2, i12=i12, j=j, nsm=nsm,
                              c1=c1, c2=c2, d1=d1, d2=d2, e1=e1, e2=e2,
                              f1=f1, f2=f2, k1=k1, k2=k2, comment=comment)
-        return self.pbar
+        return prop
 
     def add_pbarl(self, pid: int, mid: int, bar_type: str, dim: list[float],
-                  group: str='MSCBML0', nsm: float=0., comment: str='') -> PBARL:
+                  group: str='MSCBML0', nsm: float=0., comment: str='') -> int:
         """
         Creates a PBARL card, which defines A, I1, I2, I12, and J using
         dimensions rather than explicit values.
@@ -1082,14 +1084,14 @@ class Add1dElements(BDFAttributes):
         """
         prop = self.pbarl.add(pid, mid, bar_type, dim,
                               group=group, nsm=nsm, comment=comment)
-        return self.pbarl
+        return prop
 
     def add_cbeam(self, eid: int, pid: int, nids: list[int],
                   x: Optional[list[float]], g0: Optional[int],
                   offt: str='GGG', bit=None,
                   pa: int=0, pb: int=0,
                   wa=None, wb=None,
-                  sa: int=0, sb: int=0, comment: str='') -> CBEAM:
+                  sa: int=0, sb: int=0, comment: str='') -> int:
         """
         Adds a CBEAM card
 
@@ -1136,7 +1138,7 @@ class Add1dElements(BDFAttributes):
         """
         elem = self.cbeam.add(eid, pid, nids, x, g0, offt=offt, bit=bit,
                               pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
-        return self.cbeam
+        return elem
 
     def add_pbeam(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                   c1=None, c2=None, d1=None, d2=None,
@@ -1145,7 +1147,7 @@ class Add1dElements(BDFAttributes):
                   nsia=0., nsib=None, cwa=0., cwb=None,
                   m1a=0., m2a=0., m1b=None, m2b=None,
                   n1a=0., n2a=0., n1b=None, n2b=None,
-                  comment='') -> PBEAM:
+                  comment='') -> int:
         """
         .. todo:: fix 0th entry of self.so, self.xxb
 
@@ -1200,12 +1202,12 @@ class Add1dElements(BDFAttributes):
                               nsia=nsia, nsib=nsib, cwa=cwa, cwb=cwb,
                               m1a=m1a, m2a=m2a, m1b=m1b, m2b=m2b,
                               n1a=n1a, n2a=n2a, n1b=n1b, n2b=n2b, comment=comment)
-        return self.pbeam
+        return prop
 
     def add_pbcomp(self, pid, mid, y, z, c, mids,
                    area=0.0, i1=0.0, i2=0.0, i12=0.0, j=0.0, nsm=0.0,
                    k1=1.0, k2=1.0, m1=0.0, m2=0.0, n1=0.0, n2=0.0,
-                   symopt=0, comment='') -> PBCOMP:
+                   symopt=0, comment='') -> int:
         """
         Creates a PBCOMP card
 
@@ -1250,15 +1252,15 @@ class Add1dElements(BDFAttributes):
                                area, i1, i2, i12, j, nsm,
                                k1, k2, m1, m2, n1, n2,
                                symopt, comment=comment)
-        return self.pbcomp
+        return prop
 
-    def add_pbmsect(self, pid, mid, form, options, comment='') -> PBMSECT:
+    def add_pbmsect(self, pid, mid, form, options, comment='') -> int:
         """Creates a PBMSECT card"""
         prop = PBMSECT(pid, mid, form, options, comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_pbrsect(self, pid, mid, form, options, comment='') -> PBRSECT:
+    def add_pbrsect(self, pid, mid, form, options, comment='') -> int:
         """Creates a PBRSECT card"""
         prop = PBRSECT(pid, mid, form, options, comment=comment)
         self._add_methods._add_property_object(prop)
@@ -1266,7 +1268,7 @@ class Add1dElements(BDFAttributes):
 
     def add_pbeam3(self, pid, mid, A, iz, iy, iyz=0., j=None, nsm=0.,
                    cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0.,
-                   comment='') -> PBEAM3:
+                   comment='') -> int:
         """Creates a PBEAM3 card"""
         prop = PBEAM3(pid, mid, A, iz, iy, iyz=iyz, j=j, nsm=nsm,
                       cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
@@ -1276,7 +1278,7 @@ class Add1dElements(BDFAttributes):
 
     def add_pbeaml(self, pid: int, mid: int, beam_type: str,
                    xxb, dims, so=None, nsm=None,
-                   group: str='MSCBML0', comment: str='') -> PBEAML:
+                   group: str='MSCBML0', comment: str='') -> int:
         """
         Creates a PBEAML card
 
@@ -1308,7 +1310,7 @@ class Add1dElements(BDFAttributes):
         """
         prop = self.pbeaml.add(pid, mid, beam_type, xxb, dims,
                                group=group, so=so, nsm=nsm, comment=comment)
-        return self.pbeaml
+        return prop
 
     def add_pbeaml_dvprel1(self, pid: int, mid: int, beam_type: str,
                            xxb, dims, dim_constraints,
@@ -1373,7 +1375,7 @@ class Add1dElements(BDFAttributes):
                     t_min_max = [t_min, t_max]
                     dim_min_max = t_min_max
                     xinit = t_init
-                x = 1
+                #x = 1
             else:
                 xinit = dim
 
@@ -1426,7 +1428,7 @@ class Add1dElements(BDFAttributes):
 
         return pbeaml, desvars, dvprels
 
-    def add_cbend(self, eid, pid, nids, g0, x, geom, comment='') -> CBEND:
+    def add_cbend(self, eid, pid, nids, g0, x, geom, comment='') -> int:
         """Creates a CBEND card"""
         elem = CBEND(eid, pid, nids, g0, x, geom, comment=comment)
         self._add_methods._add_element_object(elem)
@@ -1435,7 +1437,7 @@ class Add1dElements(BDFAttributes):
     def add_pbend(self, pid, mid, beam_type, A, i1, i2, j,
                   c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
                   nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b,
-                  comment='') -> PBEND:
+                  comment='') -> int:
         """Creates a PBEND card"""
         prop = PBEND(pid, mid, beam_type, A, i1, i2, j,
                      c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
@@ -1445,7 +1447,7 @@ class Add1dElements(BDFAttributes):
         return prop
 
     def add_cbeam3(self, eid, pid, nids, x, g0, wa, wb, wc, tw, s,
-                   comment='') -> CBEAM3:
+                   comment='') -> int:
         """Creates a CBEAM3 card"""
         elem = CBEAM3(eid, pid, nids, x, g0, wa, wb, wc, tw, s,
                       comment=comment)
@@ -1454,7 +1456,7 @@ class Add1dElements(BDFAttributes):
 
 
 class Add2dElements(BDFAttributes):
-    def add_cshear(self, eid: int, pid: int, nids: list[int], comment: str='') -> CSHEAR:
+    def add_cshear(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CSHEAR card
 
@@ -1471,10 +1473,10 @@ class Add2dElements(BDFAttributes):
 
         """
         elem = self.cshear.add(eid, pid, nids, comment=comment)
-        return self.cshear
+        return elem
 
     def add_pshear(self, pid: int, mid: int, t: float, nsm: float=0.,
-                   f1: float=0., f2: float=0., comment: str='') -> PSHEAR:
+                   f1: float=0., f2: float=0., comment: str='') -> int:
         """
         Creates a PSHEAR card
 
@@ -1497,12 +1499,12 @@ class Add2dElements(BDFAttributes):
 
         """
         prop = self.pshear.add(pid, mid, t, nsm=nsm, f1=f1, f2=f2, comment=comment)
-        return self.pshear
+        return prop
 
     def add_ctria3(self, eid: int, pid: int, nids: list[int],
                    zoffset: float=0., theta_mcid: float=0.0,
                    tflag: int=0, T1=None, T2=None, T3=None,
-                   comment: str='') -> CTRIA3:
+                   comment: str='') -> int:
         """
         Creates a CTRIA3 card
 
@@ -1535,12 +1537,12 @@ class Add2dElements(BDFAttributes):
         elem = self.ctria3.add(
             eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
             tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
-        return self.ctria3
+        return elem
 
     def add_cquad4(self, eid: int, pid: int, nids: list[int],
                    theta_mcid: Union[int, float]=0.0, zoffset: float=None,
                    tflag: int=0, T1=None, T2=None, T3=None, T4=None,
-                   comment='') -> CQUAD4:
+                   comment='') -> int:
         """
         Creates a CQUAD4 card
 
@@ -1573,11 +1575,11 @@ class Add2dElements(BDFAttributes):
         elem = self.cquad4.add(
             eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
             tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
-        return self.cquad4
+        return elem
 
     def add_ctria6(self, eid: int, pid: int, nids: list[int],
                    theta_mcid: float=0., zoffset: float=0.,
-                   tflag: int=0, T1=None, T2=None, T3=None, comment: str='') -> CTRIA6:
+                   tflag: int=0, T1=None, T2=None, T3=None, comment: str='') -> int:
         """
         Creates a CTRIA6 card
 
@@ -1610,11 +1612,11 @@ class Add2dElements(BDFAttributes):
         elem = self.ctria6.add(
             eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
             tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
-        return self.ctria6
+        return elem
 
     def add_cquad8(self, eid: int, pid: int, nids: list[int],
                    theta_mcid: Union[int, float]=0., zoffset: float=0.,
-                   tflag: int=0, T1=None, T2=None, T3=None, T4=None, comment: str='') -> CQUAD8:
+                   tflag: int=0, T1=None, T2=None, T3=None, T4=None, comment: str='') -> int:
         """
         Creates a CQUAD8 card
 
@@ -1647,10 +1649,10 @@ class Add2dElements(BDFAttributes):
         elem = self.cquad8.add(
             eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
             tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
-        return self.cquad8
+        return elem
 
     def add_cquad(self, eid: int, pid: int, nids: list[int],
-                  theta_mcid: Union[int, float]=0., comment: str='') -> CQUAD:
+                  theta_mcid: Union[int, float]=0., comment: str='') -> int:
         """
         Creates a CQUAD card
 
@@ -1710,11 +1712,11 @@ class Add2dElements(BDFAttributes):
         elem = self.ctriar.add(
             eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
             tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
-        return self.ctriar
+        return elem
 
     def add_cquadr(self, eid: int, pid: int, nids: list[int],
                    theta_mcid: Union[int, float]=0.0, zoffset: float=0., tflag: int=0,
-                   T1=None, T2=None, T3=None, T4=None, comment: str='') -> CQUADR:
+                   T1=None, T2=None, T3=None, T4=None, comment: str='') -> int:
         """
         Creates a CQUADR card
 
@@ -1747,17 +1749,17 @@ class Add2dElements(BDFAttributes):
         elem = self.cquadr.add(
             eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
             tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
-        return self.cquadr
+        return elem
 
-    def add_snorm(self, nid: int, normal: list[float], cid: int=0, comment: str='') -> SNORM:
+    def add_snorm(self, nid: int, normal: list[float], cid: int=0, comment: str='') -> int:
         snorm = self.snorm.add(nid, normal, cid=cid, comment=comment)
-        return self.snorm
+        return snorm
 
     def add_pshell(self, pid: int, mid1: int=None, t: float=None,
                    mid2: int=None, twelveIt3: float=1.0,
                    mid3: int=None, tst: float=0.833333, nsm: float=0.0,
                    z1: float=None, z2: float=None, mid4: int=None,
-                   comment: str='') -> PSHELL:
+                   comment: str='') -> int:
         """
         Creates a PSHELL card
 
@@ -1794,11 +1796,11 @@ class Add2dElements(BDFAttributes):
                                mid3=mid3, tst=tst, nsm=nsm,
                                z1=z1, z2=z2, mid4=mid4,
                                comment=comment)
-        return self.pshell
+        return prop
 
     def add_pcomp(self, pid, mids, thicknesses, thetas=None, souts=None,
                   nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None,
-                  z0=None, comment='') -> PCOMP:
+                  z0=None, comment='') -> int:
         """
         Creates a PCOMP card
 
@@ -1840,11 +1842,11 @@ class Add2dElements(BDFAttributes):
         prop = self.pcomp.add(pid, mids, thicknesses, thetas, souts,
                               nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam,
                               z0=z0, comment=comment)
-        return self.pcomp
+        return prop
 
     def add_pcompg(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
                    nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None,
-                   comment: str='') -> PCOMPG:
+                   comment: str='') -> int:
         """
         Creates a PCOMPG card
 
@@ -1889,12 +1891,12 @@ class Add2dElements(BDFAttributes):
             pid, global_ply_ids, mids, thicknesses, thetas=thetas, souts=souts,
             nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam, z0=z0,
             comment=comment)
-        return self.pcompg
+        return prop
 
 
 class Add3dElements(BDFAttributes):
     def add_ctetra(self, eid: int, pid: int, nids: list[int],
-                   comment: str='') -> CTETRA:
+                   comment: str='') -> int:
         """
         Creates a CTETRA4/CTETRA10
 
@@ -1910,10 +1912,10 @@ class Add3dElements(BDFAttributes):
             a comment for the card
 
         """
-        self.ctetra.add(eid, pid, nids, comment=comment)
-        return self.ctetra
+        elem = self.ctetra.add(eid, pid, nids, comment=comment)
+        return elem
 
-    def add_cpyram(self, eid: int, pid: int, nids: list[int], comment: str='') -> CPYRAM:
+    def add_cpyram(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CPYRAM5/CPYRAM13
 
@@ -1929,10 +1931,10 @@ class Add3dElements(BDFAttributes):
             a comment for the card
 
         """
-        self.cpyram.add(eid, pid, nids, comment=comment)
-        return self.cpyram
+        elem = self.cpyram.add(eid, pid, nids, comment=comment)
+        return elem
 
-    def add_cpenta(self, eid: int, pid: int, nids: list[int], comment: str='') -> CPENTA:
+    def add_cpenta(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CPENTA6/CPENTA15
 
@@ -1948,11 +1950,11 @@ class Add3dElements(BDFAttributes):
             a comment for the card
 
         """
-        self.cpenta.add(eid, pid, nids, comment=comment)
-        return self.cpenta
+        elem = self.cpenta.add(eid, pid, nids, comment=comment)
+        return elem
 
     def add_chexa(self, eid: int, pid: int,
-                  nids: list[int], comment: str='') -> CHEXA:
+                  nids: list[int], comment: str='') -> int:
         """
         Creates a CHEXA8/CHEXA20
 
@@ -1968,12 +1970,12 @@ class Add3dElements(BDFAttributes):
             a comment for the card
 
         """
-        self.chexa.add(eid, pid, nids, comment=comment)
-        return self.chexa
+        elem = self.chexa.add(eid, pid, nids, comment=comment)
+        return elem
 
     def add_psolid(self, pid: int, mid: int, cordm: int=0,
                    integ: int=None, stress: str=None, isop=None,
-                   fctn: str='SMECH', comment='') -> PSOLID:
+                   fctn: str='SMECH', comment='') -> int:
         """
         Creates a PSOLID card
 
@@ -2007,10 +2009,10 @@ class Add3dElements(BDFAttributes):
         prop = self.psolid.add(
             pid, mid, cordm=cordm, integ=integ, stress=stress, isop=isop,
             fctn=fctn, comment=comment)
-        return self.psolid
+        return prop
 
     def add_plsolid(self, pid: int, mid: int, stress_strain: str='GRID',
-                    ge: float=0., comment: str='') -> PLSOLID:
+                    ge: float=0., comment: str='') -> int:
         """
         Creates a PLSOLID card
 
@@ -2031,7 +2033,7 @@ class Add3dElements(BDFAttributes):
         """
         prop = self.plsolid.add(pid, mid, stress_strain=stress_strain,
                                 ge=ge, comment=comment)
-        return self.plsolid
+        return prop
 
 
 class AddAero(BDFAttributes):
@@ -2099,7 +2101,7 @@ class AddAero(BDFAttributes):
                    p4: NDArray3float, x43: float,
                    cp: int=0,
                    nspan: int=0, lspan: int=0,
-                   nchord: int=0, lchord: int=0, comment: str='') -> CAERO1:
+                   nchord: int=0, lchord: int=0, comment: str='') -> int:
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
         (e.g., wing/tail).
@@ -2142,13 +2144,13 @@ class AddAero(BDFAttributes):
             eid, pid, igroup, p1, x12, p4, x43, cp=cp,
             nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
             comment=comment)
-        return self.caero1
+        return caero
 
     def add_caero2(self, eid: int, pid: int, igroup: int,
                    p1: list[float], x12: float,
                    cp: int=0,
                    nsb: int=0, nint: int=0,
-                   lsb: int=0, lint: int=0, comment: str='') -> CAERO2:
+                   lsb: int=0, lint: int=0, comment: str='') -> int:
         """
         Defines a CAERO2 card, which defines a slender body
         (e.g., fuselage/wingtip tank).
@@ -2181,22 +2183,22 @@ class AddAero(BDFAttributes):
         """
         caero = self.caero2.add(eid, pid, igroup, p1, x12, cp=cp, nsb=nsb, nint=nint, lsb=lsb,
                                 lint=lint, comment=comment)
-        return self.caero2
+        return caero
 
     def add_caero3(self, eid: int, pid: int,
                    p1: np.ndarray, x12: float,
                    p4: np.ndarray, x43: float,
-                   cp: int=0, list_w: int=0, list_c1=None, list_c2=None, comment='') -> CAERO3:
+                   cp: int=0, list_w: int=0, list_c1=None, list_c2=None, comment='') -> int:
         """Creates a CAERO3 card"""
         caero = self.caero3.add(
             eid, pid, p1, x12, p4, x43,
             cp=cp, list_w=list_w, list_c1=list_c1, list_c2=list_c2, comment=comment)
-        return self.caero3
+        return caero
 
     def add_caero4(self, eid: int, pid: int,
                    p1: np.ndarray, x12: float,
                    p4: np.ndarray, x43: float,
-                   cp: int=0, nspan: int=0, lspan: int=0, comment: str='') -> CAERO4:
+                   cp: int=0, nspan: int=0, lspan: int=0, comment: str='') -> int:
         """
         Defines a CAERO4 card, which defines a strip theory surface.
 
@@ -2231,7 +2233,7 @@ class AddAero(BDFAttributes):
         caero = self.caero4.add(
             eid, pid, p1, x12, p4, x43,
             cp=cp, nspan=nspan, lspan=lspan, comment=comment)
-        return self.caero4
+        return caero
 
     def add_caero5(self, eid: int, pid: int,
                    p1: list[float], x12: float,
@@ -2239,12 +2241,12 @@ class AddAero(BDFAttributes):
                    cp: int=0,
                    nspan: int=0, lspan: int=0,
                    ntheory: int=0,
-                   nthick: int=0, comment: str='') -> CAERO5:
+                   nthick: int=0, comment: str='') -> int:
         """Creates a CAERO5 card"""
         caero = self.caero5.add(
             eid, pid, p1, x12, p4, x43, cp=cp, nspan=nspan, lspan=lspan,
             ntheory=ntheory, nthick=nthick, comment=comment)
-        return self.caero5
+        return caero
 
     def add_caero7(self, eid: int, label: str,
                    p1: np.ndarray, x12: float,
@@ -2252,15 +2254,15 @@ class AddAero(BDFAttributes):
                    cp: int=0,
                    nspan: int=0, lspan: int=0,
                    nchord: int=0,
-                   p_airfoil: int=0, ztaic: int=0, comment: str='') -> CAERO7:
+                   p_airfoil: int=0, ztaic: int=0, comment: str='') -> int:
         caero = self.caero7.add(
             eid, label, p1, x12, p4, x43,
             cp=cp, nspan=nspan,
             nchord=nchord, lspan=lspan,
             p_airfoil=p_airfoil, ztaic=ztaic, comment='')
-        return self.caero7
+        return caero
 
-    def add_paero1(self, pid: int, caero_body_ids: Optional[list[int]]=None, comment='') -> PAERO1:
+    def add_paero1(self, pid: int, caero_body_ids: Optional[list[int]]=None, comment: str='') -> int:
         """
         Creates a PAERO1 card, which defines associated bodies for the
         panels in the Doublet-Lattice method.
@@ -2276,14 +2278,14 @@ class AddAero(BDFAttributes):
 
         """
         paero = self.paero1.add(pid, caero_body_ids=caero_body_ids, comment=comment)
-        return self.paero1
+        return paero
 
     def add_paero2(self, pid: int, orient: str, width: float, AR: float,
                    thi: list[int], thn: list[int],
                    lrsb: Optional[int]=None,
                    lrib: Optional[int]=None,
                    lth: Optional[int]=None,
-                   comment: str='') -> PAERO2:
+                   comment: str='') -> int:
         """
         Creates a PAERO2 card, which defines additional cross-sectional
         properties for the CAERO2 geometry.
@@ -2322,10 +2324,10 @@ class AddAero(BDFAttributes):
         paero = self.paero2.add(
             pid, orient, width, AR, thi, thn, lrsb=lrsb, lrib=lrib,
             lth=lth, comment=comment)
-        return self.paero2
+        return paero
 
     def add_paero3(self, pid: int, nbox: int, ncontrol_surfaces: int,
-                   x: list[float], y: list[float], comment: str='') -> PAERO3:
+                   x: list[float], y: list[float], comment: str='') -> int:
         """
         Creates a PAERO3 card, which defines the number of Mach boxes
         in the flow direction and the location of cranks and control
@@ -2349,12 +2351,12 @@ class AddAero(BDFAttributes):
         """
         paero = self.paero3.add(
             pid, nbox, ncontrol_surfaces, x, y, comment=comment)
-        return self.paero3
+        return paero
 
     def add_paero4(self, pid: int,
                    docs: list[float], caocs: list[float], gapocs: list[float],
                    cla: int=0, lcla: int=0,
-                   circ: int=0, lcirc: int=0, comment: str='') -> PAERO4:
+                   circ: int=0, lcirc: int=0, comment: str='') -> int:
         """
         Parameters
         ----------
@@ -2393,13 +2395,13 @@ class AddAero(BDFAttributes):
         paero = self.paero4.add(
             pid, docs, caocs, gapocs, cla=cla, lcla=lcla,
             circ=circ, lcirc=lcirc, comment=comment)
-        return self.paero4
+        return paero
 
     def add_paero5(self, pid: int, caoci: list[float],
                    nalpha: int=0, lalpha: int=0,
                    nxis: int=0, lxis: int=0,
                    ntaus: int=0, ltaus: int=0,
-                   comment='') -> PAERO5:
+                   comment: str='') -> int:
         """Creates a PAERO5 card"""
         paero = self.paero5.add(
             pid, caoci, nalpha=nalpha, lalpha=lalpha, nxis=nxis, lxis=lxis,
@@ -2409,7 +2411,7 @@ class AddAero(BDFAttributes):
     def add_spline1(self, eid: int, caero: int, box1: int, box2: int, setg: int,
                     dz: float=0., method: str='IPS',
                     usage: str='BOTH', nelements: int=10,
-                    melements: int=10, comment: str='') -> SPLINE1:
+                    melements: int=10, comment: str='') -> int:
         """
         Creates a SPLINE1, which defines a surface spline.
 
@@ -2452,7 +2454,7 @@ class AddAero(BDFAttributes):
             eid, caero, box1, box2, setg, dz=dz, method=method,
             usage=usage, nelements=nelements, melements=melements,
             comment=comment)
-        return self.spline1
+        return spline
 
     def add_spline2(self, eid: int, caero: int,
                     box1: int, box2: int, setg: int,
@@ -2460,7 +2462,7 @@ class AddAero(BDFAttributes):
                     cid: int=0,
                     dthx: float=0.0, dthy: float=0.0,
                     usage: str='BOTH',
-                    comment: str='') -> SPLINE2:
+                    comment: str='') -> int:
         """
         Creates a SPLINE2 card, which defines a beam spline.
 
@@ -2502,14 +2504,14 @@ class AddAero(BDFAttributes):
         spline = self.spline2.add(
             eid, caero, box1, box2, setg, dz=dz, dtor=dtor, cid=cid,
             dthx=dthx, dthy=dthy, usage=usage, comment=comment)
-        return self.spline2
+        return spline
 
     def add_spline3(self, eid: int, caero: int, box_id: int,
                     components: int,
                     nodes: list[int],
                     displacement_components: list[int],
                     coeffs: list[float],
-                    usage: str='BOTH', comment: str='') -> SPLINE3:
+                    usage: str='BOTH', comment: str='') -> int:
         """
         Creates a SPLINE3 card, which is useful for control surface
         constraints.
@@ -2556,14 +2558,14 @@ class AddAero(BDFAttributes):
             eid, caero, box_id, components, nodes,
             displacement_components, coeffs, usage=usage,
             comment=comment)
-        return self.spline3
+        return spline
 
     def add_spline4(self, eid: int, caero: int, aelist: int, setg: int,
                     dz: float=0., method: str='IPS', usage: str='BOTH',
                     nelements: int=10, melements: int=10,
                     ftype: Optional[str]='WF2',
                     rcore: Optional[float]=None,
-                    comment: str='') -> SPLINE4:
+                    comment: str='') -> int:
         """
         Creates a SPLINE4 card, which defines a curved Infinite Plate,
         Thin Plate, or Finite Plate Spline.
@@ -2603,18 +2605,18 @@ class AddAero(BDFAttributes):
         spline = self.spline4.add(
             eid, caero, aelist, setg, dz, method, usage,
             nelements, melements, ftype=ftype, rcore=rcore, comment=comment)
-        return self.spline4
+        return spline
 
     def add_spline5(self, eid: int, caero: int, aelist: int, setg: int, thx, thy,
                     dz: float=0.0, dtor: float=1.0, cid: int=0,
                     usage: str='BOTH', method: str='BEAM',
-                    ftype: str='WF2', rcore=None, comment: str='') -> SPLINE5:
+                    ftype: str='WF2', rcore=None, comment: str='') -> int:
         """Creates a SPLINE5 card"""
         assert isinstance(cid, int), cid
-        self.spline5.add(
+        spline = self.spline5.add(
             eid, caero, aelist, setg, thx, thy, dz=dz, dtor=dtor, cid=cid,
             usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
-        return self.spline5
+        return spline
 
     def add_trim(self, sid: int, mach: float, q: float,
                  labels: list[str], uxs: list[float], aeqr: float=1.0,
@@ -2881,7 +2883,7 @@ class AddAero(BDFAttributes):
 
     def add_aelink(self, aelink_id: int, label: str,
                    independent_labels: list[str], linking_coefficients: list[float],
-                   comment: str='') -> AELINK:
+                   comment: str='') -> int:
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
@@ -2902,9 +2904,9 @@ class AddAero(BDFAttributes):
         """
         aelink = self.aelink.add(aelink_id, label, independent_labels,
                                  linking_coefficients, comment=comment)
-        return self.aelink
+        return aelink
 
-    def add_aelist(self, sid: int, elements: list[int], comment: str='') -> AELIST:
+    def add_aelist(self, sid: int, elements: list[int], comment: str='') -> int:
         """
         Creates an AELIST card, which defines the aero boxes for
         an AESURF/SPLINEx.
@@ -2920,9 +2922,9 @@ class AddAero(BDFAttributes):
 
         """
         aelist = self.aelist.add(sid, elements, comment=comment)
-        return self.aelist
+        return aelist
 
-    def add_aefact(self, sid: int, fractions: list[float], comment: str='') -> AEFACT:
+    def add_aefact(self, sid: int, fractions: list[float], comment: str='') -> int:
         """
         Creates an AEFACT card, which is used by the CAEROx / PAEROx card
         to adjust the spacing of the sub-paneleing (and grid point
@@ -2939,9 +2941,9 @@ class AddAero(BDFAttributes):
 
         """
         aefact = self.aefact.add(sid, fractions, comment=comment)
-        return self.aefact
+        return aefact
 
-    def add_diverg(self, sid: int, nroots: int, machs: list[float], comment: str='') -> DIVERG:
+    def add_diverg(self, sid: int, nroots: int, machs: list[float], comment: str='') -> int:
         """
         Creates an DIVERG card, which is used in divergence
         analysis (SOL 144).
@@ -2959,11 +2961,11 @@ class AddAero(BDFAttributes):
 
         """
         diverg = self.diverg.add(sid, nroots, machs, comment=comment)
-        return self.diverg
+        return diverg
 
     def add_csschd(self, sid: int, aesurf_id: int,
                    lschd: int, lalpha: int=None, lmach: int=None,  # aefact
-                   comment: str='') -> CSSCHD:
+                   comment: str='') -> int:
         """
         Creates an CSSCHD card, which defines a specified control surface
         deflection as a function of Mach and alpha (used in SOL 144/146).
@@ -2986,7 +2988,7 @@ class AddAero(BDFAttributes):
         """
         csschd = self.csschd.add(sid, aesurf_id, lschd, lalpha=lalpha, lmach=lmach,
                                  comment=comment)
-        return self.csschd
+        return csschd
 
     def add_aesurf(self, aesid: int, label: str,
                    cid1: int, aelist_id1: int,
@@ -2996,7 +2998,7 @@ class AddAero(BDFAttributes):
                    pllim: float=-np.pi/2., pulim: float=np.pi/2.,
                    hmllim=None, hmulim=None, # hinge moment lower/upper limits
                    tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
-                   comment='') -> AESURF:
+                   comment: str='') -> int:
         """
         Creates an AESURF card, which defines a control surface
 
@@ -3036,7 +3038,7 @@ class AddAero(BDFAttributes):
                                  pllim=pllim, pulim=pulim,
                                  hmllim=hmllim, hmulim=hmulim,
                                  tqllim=tqllim, tqulim=tqulim, comment=comment)
-        return self.aesurf
+        return aesurf
 
     def add_aesurfs(self, aesurfs_id: int, label: str,
                     list1: int, list2: int, comment: str='') -> AESURFS:
@@ -3116,7 +3118,7 @@ class AddOptimization(BDFAttributes):
     def add_desvar(self, desvar_id: int, label: str, xinit: float,
                    xlb: float=-1e20, xub: float=1e20,
                    delx=None, ddval: Optional[int]=None,
-                   comment: str='') -> DESVAR:
+                   comment: str='') -> int:
         """
         Creates a DESVAR card
 
@@ -3147,10 +3149,10 @@ class AddOptimization(BDFAttributes):
         """
         desvar = self.desvar.add(desvar_id, label, xinit, xlb, xub, delx=delx,
                                  ddval=ddval, comment=comment)
-        return self.desvar
+        return desvar
 
     def add_topvar(self, opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2,
-                   power=3.0) -> TOPVAR:
+                   power=3.0) -> int:
         """adds a TOPVAR"""
         topvar = TOPVAR(opt_id, label, ptype, xinit, pid, xlb=xlb, delxv=delxv, power=power)
         self._add_methods._add_topvar_object(topvar)
@@ -3824,7 +3826,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
     # -----------------------------------------------------------------------------------
     def add_grid(self, nid: int, xyz: Union[None, list[float], NDArray3float],
-                 cp: int=0, cd: int=0, ps: int=0, seid: int=0, comment: str='') -> GRID:
+                 cp: int=0, cd: int=0, ps: int=0, seid: int=0, comment: str='') -> int:
         """
         Creates the GRID card
 
@@ -3848,8 +3850,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        self.grid.add(nid, xyz, cp=cp, cd=cd, ps=ps, seid=seid, comment=comment)
-        return self.grid
+        grid = self.grid.add(nid, xyz, cp=cp, cd=cd, ps=ps, seid=seid, comment=comment)
+        return grid
 
     def add_grdset(self, cp: int, cd: int, ps: str, seid: int, comment: str='') -> GRDSET:
         """
@@ -3924,7 +3926,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         epoint = self.epoint.add(ids, comment=comment)
         return epoint
 
-    def add_point(self, nid: int, xyz: Any, cp: int=0, comment: str='') -> POINT:
+    def add_point(self, nid: int, xyz: Any, cp: int=0, comment: str='') -> int:
         """
         Creates the POINT card
 
@@ -4041,7 +4043,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_param_object(param)
         return param
 
-    def add_plotel(self, eid: int, nodes: list[int], comment: str='') -> PLOTEL:
+    def add_plotel(self, eid: int, nodes: list[int], comment: str='') -> int:
         """
         Adds a PLOTEL card
 
@@ -4058,7 +4060,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         elem = self.plotel.add(eid, nodes, comment=comment)
         return elem
 
-    def add_conm1(self, eid: int, nid: int, mass_matrix: NDArray66float, cid=0, comment='') -> CONM1:
+    def add_conm1(self, eid: int, nid: int, mass_matrix: NDArray66float, cid=0, comment='') -> int:
         """
         Creates a CONM1 card
 
@@ -4090,7 +4092,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
     def add_conm2(self, eid: int, nid: int, mass: float, cid: int=0,
                   X: Optional[list[float]]=None, I: Optional[list[float]]=None,
-                  comment: str='') -> CONM2:
+                  comment: str='') -> int:
         """
         Creates a CONM2 card
 
@@ -4266,7 +4268,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         nsmadd = self.nsmadd.add(sid, sets, comment=comment)
         return nsmadd
 
-    def add_pmass(self, pid: int, mass: float, comment: str='') -> PMASS:
+    def add_pmass(self, pid: int, mass: float, comment: str='') -> int:
         """
         Creates an PMASS card, which defines a mass applied to a single DOF
 
@@ -4284,7 +4286,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return prop
 
     def add_cmass1(self, eid: int, pid: int, nids: list[int],
-                   c1: int=0, c2: int=0, comment: str='') -> CMASS1:
+                   c1: int=0, c2: int=0, comment: str='') -> int:
         """
         Creates a CMASS1 card
 
@@ -4306,7 +4308,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return mass_obj
 
     def add_cmass2(self, eid: int, mass: float, nids: list[int],
-                   c1: int, c2: int, comment: str='') -> CMASS2:
+                   c1: int, c2: int, comment: str='') -> int:
         """
         Creates a CMASS2 card
 
@@ -4327,7 +4329,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         mass_obj = self.cmass2.add(eid, mass, nids, c1, c2, comment=comment)
         return mass_obj
 
-    def add_cmass3(self, eid: int, pid: int, nids: list[int], comment: str='') -> CMASS3:
+    def add_cmass3(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
         """
         Creates a CMASS3 card
 
@@ -4346,7 +4348,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         mass = self.cmass3.add(eid, pid, nids, comment=comment)
         return mass
 
-    def add_cmass4(self, eid: int, mass: float, nids: list[int], comment: str='') -> CMASS4:
+    def add_cmass4(self, eid: int, mass: float, nids: list[int], comment: str='') -> int:
         """
         Creates a CMASS4 card
 
@@ -4368,125 +4370,128 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
     def add_pcomps(self, pid, global_ply_ids, mids, thicknesses, thetas,
                    cordm=0, psdir=13, sb=None, nb=None, tref=0.0, ge=0.0,
                    failure_theories=None, interlaminar_failure_theories=None,
-                   souts=None, comment='') -> PCOMPS:
+                   souts=None, comment='') -> int:
         """Creates a PCOMPS card"""
         prop = self.pcomps.add(
             pid, global_ply_ids, mids, thicknesses, thetas,
             cordm, psdir, sb, nb, tref, ge,
             failure_theories, interlaminar_failure_theories, souts,
             comment=comment)
-        return self.pcomps
+        return prop
 
     def add_plplane(self, pid, mid, cid=0, stress_strain_output_location='GRID',
-                    comment='') -> PLPLANE:
+                    comment='') -> int:
         """Creates a PLPLANE card"""
         prop = self.plplane.add(
             pid, mid, cid=cid,
             stress_strain_output_location=stress_strain_output_location,
             comment=comment)
-        return self.plplane
+        return prop
 
     def add_pplane(self, pid: int, mid: int, t: float=0.0, nsm: float=0.0,
-                   formulation_option: int=0, comment: str='') -> PPLANE:
+                   formulation_option: int=0, comment: str='') -> int:
         """Creates a PPLANE card"""
         prop = self.pplane.add(
             pid, mid, t=t, nsm=nsm,
             formulation_option=formulation_option, comment=comment)
-        return self.pplane
+        return prop
 
-    def add_cplstn3(self, eid: int, pid: int, nids: list[int], theta: float=0.0, comment: str='') -> CPLSTN3:
+    def add_cplstn3(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
+                    comment: str='') -> int:
         """Creates a CPLSTN4 card"""
         elem = self.cplstn3.add(eid, pid, nids, theta=theta, comment=comment)
-        return self.cplstn3
+        return elem
 
-    def add_cplstn4(self, eid: int, pid: int, nids: list[int], theta: float=0.0, comment: str='') -> CPLSTN4:
+    def add_cplstn4(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
+                    comment: str='') -> int:
         """Creates a CPLSTN4 card"""
         elem = self.cplstn4.add(eid, pid, nids, theta=theta, comment=comment)
-        return self.cplstn4
+        return elem
 
     def add_cplstn6(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-                    comment: str='') -> CPLSTN6:
+                    comment: str='') -> int:
         """Creates a CPLSTN6 card"""
         elem = self.cplstn6.add(eid, pid, nids, theta=theta, comment=comment)
-        return self.cplstn6
+        return elem
 
     def add_cplstn8(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-                    comment: str='') -> CPLSTN8:
+                    comment: str='') -> int:
         """Creates a CPLSTN8 card"""
         elem = self.cplstn8.add(eid, pid, nids, theta=theta, comment=comment)
-        return self.cplstn8
+        return elem
 
     def add_cplsts3(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-                    tflag=0, T1=None, T2=None, T3=None, comment='') -> CPLSTS3:
+                    tflag=0, T1=None, T2=None, T3=None, comment='') -> int:
         """Creates a CPLSTS3 card"""
         elem = self.cplsts3.add(
             eid, pid, nids, theta=theta,
             tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
-        return self.cplsts3
+        return elem
 
     def add_cplsts4(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
-                    tflag=0, T1=None, T2=None, T3=None, T4=None, comment='') -> CPLSTS4:
+                    tflag=0, T1=None, T2=None, T3=None, T4=None,
+                    comment: str='') -> int:
         """Creates a CPLSTS4 card"""
         elem = self.cplsts4.add(
             eid, pid, nids, theta=theta,
             tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
-        return self.cplsts4
+        return elem
 
     def add_cplsts6(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
                     tflag=0, thickness=None,
-                    comment: str='') -> CPLSTS6:
+                    comment: str='') -> int:
         """Creates a CPLSTS6 card"""
         elem = self.cplsts6.add(eid, pid, nids, theta=theta,
                                 tflag=tflag, thickness=thickness,
                                 comment=comment)
-        return self.cplsts6
+        return elem
 
     def add_cplsts8(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
                     tflag: int=0,
-                    thickness=None, comment: str='') -> CPLSTS8:
+                    thickness=None, comment: str='') -> int:
         """Creates a CPLSTS8 card"""
         elem = self.cplsts8.add(eid, pid, nids, theta=theta,
                                 tflag=tflag, thickness=thickness,
                                 comment=comment)
-        return self.cplsts8
+        return elem
 
-    def add_crac2d(self, eid, pid, nids, comment='') -> CRAC2D:
+    def add_crac2d(self, eid, pid, nids, comment: str='') -> int:
         """Creates a PRAC2D card"""
         elem = CRAC2D(eid, pid, nids, comment=comment)
         self._add_methods._add_element_object(elem)
         return elem
 
     def add_prac2d(self, pid, mid, thick, iplane, nsm=0., gamma=0.5, phi=180.,
-                   comment='') -> PRAC2D:
+                   comment='') -> int:
         """Creates a PRAC2D card"""
         prop = PRAC2D(pid, mid, thick, iplane, nsm=nsm, gamma=gamma, phi=phi,
                       comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_crac3d(self, eid, pid, nids, comment='') -> CRAC3D:
+    def add_crac3d(self, eid, pid, nids, comment: str='') -> int:
         """Creates a CRAC3D card"""
         elem = CRAC3D(eid, pid, nids, comment=comment)
         self._add_methods._add_element_object(elem)
         return elem
 
-    def add_prac3d(self, pid, mid, gamma=0.5, phi=180., comment='') -> PRAC3D:
+    def add_prac3d(self, pid, mid, gamma=0.5, phi=180., comment: str='') -> int:
         """Creates a PRAC3D card"""
         prop = PRAC3D(pid, mid, gamma=gamma, phi=phi, comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_genel_stiffness(self, eid, ul, ud, k, s=None) -> GENEL:
+    def add_genel_stiffness(self, eid, ul, ud, k, s=None) -> int:
         """creates a GENEL card using the stiffness (K) approach"""
         assert k is not None
         genel = self.genel.add(eid, ul, ud, k, None, s)
-        return self.genel
+        return genel
 
-    def add_genel_flexibility(self, eid, ul, ud, z, s=None) -> GENEL:
+    def add_genel_flexibility(self, eid, ul, ud, z, s=None) -> int:
         """creates a GENEL card using the flexiblity (Z) approach"""
         assert z is not None
         genel = self.genel.add(eid, ul, ud, None, z, s)
-        return self.genel
+        return genel
 
     #def add_axic(self, nharmonics, comment='') -> AXIC:
         #"""Creates a AXIC card"""
@@ -4534,45 +4539,45 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         forceax = self.forceax.add(sid, ring_id, hid, scale, f_rtz, comment=comment)
         return self.forceax
 
-    def add_ctrax3(self, eid, pid, nids, theta=0., comment='') -> CTRAX3:
+    def add_ctrax3(self, eid, pid, nids, theta=0., comment='') -> int:
         """Creates a CTRAX3 card"""
         elem = self.ctrax3.add(eid, pid, nids, theta=theta, comment=comment)
-        return self.ctrax3
+        return elem
 
-    def add_ctrax6(self, eid, pid, nids, theta=0., comment='') -> CTRAX6:
+    def add_ctrax6(self, eid, pid, nids, theta=0., comment='') -> int:
         """Creates a CTRAX6 card"""
         elem = self.ctrax6.add(eid, pid, nids, theta=theta, comment=comment)
-        return self.ctrax6
+        return elem
 
     def add_ctriax(self, eid: int, pid: int, nids: list[int],
-                   theta_mcid: int|float=0., comment: str='') -> CTRIAX:
+                   theta_mcid: int|float=0., comment: str='') -> int:
         """Creates a CTRIAX card"""
         elem = self.ctriax.add(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
         return self.ctriax
 
     def add_ctriax6(self, eid: int, mid: int, nids: list[int], theta: float=0.,
-                    comment: str='') -> CTRIAX:
+                    comment: str='') -> int:
         """Creates a CTRIAX6 card"""
         elem = self.ctriax6.add(eid, mid, nids, theta=theta, comment=comment)
-        return self.ctriax6
+        return elem
 
     def add_cquadx(self, eid: int, pid: int, nids: list[int],
-                   theta_mcid: Union[int, float]=0., comment: str='') -> CQUADX:
+                   theta_mcid: Union[int, float]=0., comment: str='') -> int:
         """Creates a CQUADX card"""
         elem = self.cquadx.add(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
-        return self.cquadx
+        return elem
 
     def add_cquadx4(self, eid: int, pid: int, nids: list[int],
-                    theta: float=0., comment: str='') -> CQUADX4:
+                    theta: float=0., comment: str='') -> int:
         """Creates a CQUADX4 card"""
         elem = self.cquadx4.add(eid, pid, nids, theta=theta, comment=comment)
-        return self.cquadx4
+        return elem
 
     def add_cquadx8(self, eid: int, pid: int, nids: list[int],
-                    theta: float=0., comment: str='') -> CQUADX8:
+                    theta: float=0., comment: str='') -> int:
         """Creates a CQUADX8 card"""
         elem = self.cquadx8.add(eid, pid, nids, theta=theta, comment=comment)
-        return self.cquadx8
+        return elem
 
     #def add_cihex1(self, eid, pid, nids, comment='') -> CIHEX1:
         #"""see CHEXA"""
@@ -4603,7 +4608,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         #return prop
 
     def add_creep(self, mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
-                  a, b, c, d, e, f, g, comment='') -> CREEP:
+                  a, b, c, d, e, f, g, comment='') -> int:
         """Creates a CREEP card"""
         mat = CREEP(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
                     a, b, c, d, e, f, g, comment=comment)
@@ -4611,7 +4616,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return mat
 
     def add_mat1(self, mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
-                 Sc=0.0, Ss=0.0, mcsid=0, comment='') -> MAT1:
+                 Sc=0.0, Ss=0.0, mcsid=0, comment='') -> int:
         """
         Creates a MAT1 card
 
@@ -4646,46 +4651,46 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         """
         mat = self.mat1.add(mid, E, G, nu, rho=rho, alpha=a, tref=tref, ge=ge, St=St,
                             Sc=Sc, Ss=Ss, mcsid=mcsid, comment=comment)
-        return self.mat1
+        return mat
 
     def add_mat2(self, mid: float, G11: float, G12: float, G13: float,
                  G22: float, G23: float, G33: float, rho: float=0.,
                  a1: Optional[float]=None, a2: Optional[float]=None, a3: Optional[float]=None,
                  tref: float=0., ge: float=0.,
                  St: Optional[float]=None, Sc: Optional[float]=None, Ss: Optional[float]=None,
-                 mcsid: Optional[int]=None, comment: str='') -> MAT2:
+                 mcsid: Optional[int]=None, comment: str='') -> int:
         """Creates an MAT2 card"""
         mat = self.mat2.add(mid, G11, G12, G13, G22, G23, G33,
                             rho, a1, a2, a3,
                             tref=tref, ge=ge, St=St, Sc=Sc,
                             Ss=Ss, mcsid=mcsid, comment=comment)
-        return self.mat2
+        return mat
 
     def add_mat3(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0, gzx=None,
                  ax=0., ath=0., az=0., tref=0., ge=0.,
-                 comment='') -> MAT3:
+                 comment='') -> int:
         """Creates a MAT3 card"""
         mat = self.mat3.add(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=rho, gzx=gzx,
                             ax=ax, ath=ath, az=az, tref=tref, ge=ge,
                             comment=comment)
-        return self.mat3
+        return mat
 
     def add_mat4(self, mid, k, cp=0.0, rho=1.0, H=None, mu=None, hgen=1.0,
                  ref_enthalpy=None, tch=None, tdelta=None,
-                 qlat=None, comment='') -> MAT4:
+                 qlat=None, comment='') -> int:
         """Creates a MAT4 card"""
         mat = self.mat4.add(mid, k, cp=cp, rho=rho, H=H, mu=mu, hgen=hgen,
                             ref_enthalpy=ref_enthalpy, tch=tch, tdelta=tdelta,
                             qlat=qlat, comment=comment)
-        return self.mat4
+        return mat
 
     def add_mat5(self, mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0., kzz=0., cp=0.,
-                 rho=1., hgen=1., comment='') -> MAT5:
+                 rho=1., hgen=1., comment='') -> int:
         """Creates a MAT5 card"""
         mat = self.mat5.add(mid, kxx=kxx, kxy=kxy, kxz=kxz, kyy=kyy,
                             kyz=kyz, kzz=kzz, cp=cp,
                             rho=rho, hgen=hgen, comment=comment)
-        return self.mat5
+        return mat
 
     def add_mat8(self, mid: int, e11: float, e22: float, nu12: float,
                  g12: float=0.0, g1z: float=1e8, g2z: float=1e8,
@@ -4697,7 +4702,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         mat = self.mat8.add(mid, e11, e22, nu12, g12, g1z, g2z, rho=rho, a1=a1, a2=a2,
                             tref=tref, xt=Xt, xc=Xc, yt=Yt, yc=Yc,
                             s=S, ge=ge, f12=F12, strn=strn, comment=comment)
-        return self.mat8
+        return mat
 
     def add_mat9(self, mid: int,
                  G11=0., G12=0., G13=0., G14=0., G15=0., G16=0.,
@@ -4705,17 +4710,17 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                  G33=0., G34=0., G35=0., G36=0.,
                  G44=0., G45=0., G46=0.,
                  G55=0., G56=0., G66=0.,
-                 rho=0., A=None, tref=0., ge=0., comment='') -> MAT9:
+                 rho=0., A=None, tref=0., ge=0., comment='') -> mat:
         """Creates a MAT9 card"""
         mat = self.mat9.add(mid, G11, G12, G13, G14, G15, G16,
                             G22, G23, G24, G25, G26,
                             G33, G34, G35, G36, G44, G45, G46, G55,
                             G56, G66, rho, A, tref, ge, comment=comment)
-        return self.mat9
+        return mat
 
     def add_mat10(self, mid, bulk, rho, c, ge=0.0, gamma=None,
                   table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
-                  comment='') -> MAT10:
+                  comment='') -> int:
         """
         Creates a MAT10 card
 
@@ -4754,17 +4759,17 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                              table_bulk=table_bulk, table_rho=table_rho,
                              table_ge=table_ge, table_gamma=table_gamma,
                              comment=comment)
-        return self.mat10
+        return mat
 
     def add_mat11(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
-                  a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='') -> MAT11:
+                  a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='') -> int:
         """Creates a MAT11 card"""
         mat = self.mat11.add(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
                              a1=a1, a2=a2, a3=a3, tref=tref, ge=ge, comment=comment)
-        return self.mat11
+        return mat
 
     def add_mat3d(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
-                  comment='') -> MAT3D:
+                  comment='') -> int:
         """
         This is a VABS specific card that is almost identical to the MAT11.
         """
@@ -4775,7 +4780,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
     def add_matg(self, mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap=0.,
                  tab_yprs=None, tab_epl=None,
-                 tab_gpl=None, tab_gap=None, comment='') -> MATG:
+                 tab_gpl=None, tab_gap=None, comment='') -> int:
         """Creates a MATG card"""
         mat = MATG(mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap=gap,
                    tab_yprs=tab_yprs, tab_epl=tab_epl,
@@ -4785,7 +4790,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
     def add_mathe(self, mid, model, bulk, mus, alphas, betas,
                   mooney, sussbat, aboyce, gent,
-                  rho=0., texp=0., tref=0., ge=0., comment='') -> MATHE:
+                  rho=0., texp=0., tref=0., ge=0., comment='') -> int:
         """Creates a MATHE card"""
         mat = MATHE(mid, model, bulk, mus, alphas, betas,
                     mooney, sussbat, aboyce, gent,
