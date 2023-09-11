@@ -9,6 +9,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, # double,
     integer_or_blank, double_or_blank,
 )
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import Element
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check

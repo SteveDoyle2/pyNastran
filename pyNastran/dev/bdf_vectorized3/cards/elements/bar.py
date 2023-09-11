@@ -12,13 +12,13 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_blank, double_or_blank, string_or_blank,
     integer_double_or_blank, integer_string_or_blank,
     blank)
-from pyNastran.bdf.cards.elements.bars import init_x_g0, set_blank_if_default
+from pyNastran.bdf.cards.elements.bars import set_blank_if_default # init_x_g0,
 from pyNastran.bdf.cards.properties.bars import _bar_areaL, to_fields, get_beam_sections, parse_pbrsect_options
 # PBARL as pbarl, A_I1_I2_I12
 
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, make_idim, hslice_by_idim, searchsorted_filter
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, make_idim, hslice_by_idim, searchsorted_filter, get_print_card_8_16
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import line_mid_mass_per_length, line_length, line_vector_length, line_centroid
 from pyNastran.dev.bdf_vectorized3.cards.elements.utils import get_density_from_material, basic_mass_material_id
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, array_default_str
@@ -26,6 +26,7 @@ from pyNastran.dev.bdf_vectorized3.utils import hstack_msg, cast_int_array
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     #from pyNastran.dev.bdf_vectorized3.cards.elements.beam import BEAMOR, CBEAM
 
 
@@ -282,11 +283,13 @@ class CBAR(Element):
         self.wa = wa
         self.wb = wb
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
+            return
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
@@ -314,8 +317,8 @@ class CBAR(Element):
 
             list_fields = ['CBAR', eid, pid, n1, n2,
                            x1, x2, x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
-            lines.append(print_card_8(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def allowed_properties(self):
@@ -481,8 +484,10 @@ class PBAR(Property):
         i12 = double_or_blank(card, 19, 'I12', default=0.0)
 
         if A == 0.0:
-            k1 = blank(card, 17, 'K1')
-            k2 = blank(card, 18, 'K2')
+            blank(card, 17, 'K1')
+            blank(card, 18, 'K2')
+            k1 = np.nan
+            k2 = np.nan
         elif i12 != 0.0:
             # K1 / K2 are ignored
             k1 = np.nan
@@ -704,12 +709,12 @@ class PBAR(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        lines = []
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
@@ -748,8 +753,8 @@ class PBAR(Property):
 
             list_fields = ['PBAR', pid, mid, A, i1, i2, j, nsm,
                            None, c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, i12]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def all_materials(self) -> list[Any]:
@@ -802,7 +807,12 @@ class PBARL(Property):
     def __init__(self, model: BDF):
         super().__init__(model)
         #self.model = model
+        self.material_id = np.array([], dtype='int32')
         self.ndim = np.array([], dtype='int32')
+        self.Type = np.array([], dtype='|U8')
+        self.group = np.array([], dtype='|U8')
+        self.nsm = np.array([], dtype='float64')
+        self.dims = np.array([], dtype='float64')
 
     def slice_card_by_property_id(self, property_id: np.ndarray) -> PBARL:
         """uses a node_ids to extract PBARLs"""
@@ -1002,16 +1012,13 @@ class PBARL(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
-        else:
-            print_card = print_card_16
-
+            return
+        print_card = get_print_card_8_16(size)
         assert isinstance(self.ndim, np.ndarray), self.ndim
-        lines = []
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         groups = array_default_str(self.group, default='MSCBML0', size=size)
@@ -1026,8 +1033,8 @@ class PBARL(Property):
             assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
             list_fields = ['PBARL', pid, mid, group, beam_type, None,
                            None, None, None] + dim + [nsm]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def idim(self) -> np.ndarray:
@@ -1205,8 +1212,13 @@ class PBRSECT(Property):
         self.sort()
         self.cards = []
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        return ''
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if self.n == 0:
+            return
+        #raise RuntimeError('PBRSECT')
+        #return ''
 
 
 class CBARAO(Element):
@@ -1360,21 +1372,21 @@ class CBARAO(Element):
         istation = make_idim(self.n, self.nstation)
         return istation
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         element_ids = array_str(self.element_id, size=size)
 
         for eid, scale, (istation0, istation1) in zip(element_ids, self.scale, self.istation):
             station = self.station[istation0:istation1]
             list_fields = ['CBARAO', eid, self.scale] + station.tolist()
-            print(list_fields)
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            #print(list_fields)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def allowed_properties(self):

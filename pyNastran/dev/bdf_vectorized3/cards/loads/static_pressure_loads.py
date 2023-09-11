@@ -21,12 +21,15 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     CHEXA, CHEXA_FACE_MAPPER,
     CPYRAM
 )
-from pyNastran.dev.bdf_vectorized3.cards.base_card import hslice_by_idim, make_idim, searchsorted_filter
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
+from pyNastran.dev.bdf_vectorized3.cards.base_card import hslice_by_idim, make_idim, searchsorted_filter, get_print_card_8_16
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from .static_loads import Load
 
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    from pyNastran.dev.bdf_vectorized3.bdf.types import TextIOLike
     #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from .dynamic_loads import LOADSET
 
@@ -94,19 +97,21 @@ class PLOAD(Load):
         load.pressure = self.pressure[i]
         load.node_id = self.node_id[i, :]
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.load_id) == 0:
-            return ''
+            return
+        #print_card = get_print_card_8_16(size)
 
-        lines = []
         load_ids = array_default_int(self.load_id, size=size)
         node_ids = array_default_int(self.node_id, default=0, size=size)
         for load_id, pressure, nodes in zip(load_ids, self.pressure, node_ids):
             #list_fields = ['PLOAD', load_id, pressure] + nodes
             msg = 'PLOAD   %8s%8s%8s%8s%8s%8s\n' % (load_id, print_float_8(pressure),
                                                     nodes[0], nodes[1], nodes[2], nodes[3])
-            lines.append(msg)
-        return ''.join(lines)
+            bdf_file.write(msg)
+        return
 
     def sum_forces_moments(self):
         nloads = len(self.load_id)
@@ -271,11 +276,12 @@ class PLOAD1(Load):
         load.x = self.x[i, :]
         load.pressure = self.pressure[i, :]
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> str:
         if len(self.load_id) == 0:
-            return ''
-        print_card = print_card_8
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
         load_ids = array_str(self.load_id, size=size)
         element_ids = array_str(self.element_id, size=size)
         for sid, eid, load_type, scale, x, pressure in zip(load_ids, element_ids, self.load_type,
@@ -284,8 +290,8 @@ class PLOAD1(Load):
             p1, p2 = pressure
             list_fields = ['PLOAD1', sid, eid, load_type, scale,
                            x1, p1, x2, p2]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def line_elements(self) -> list[Any]:
@@ -627,15 +633,17 @@ class PLOAD2(Load):
     def is_small_field(self):
         return max(self.load_id.max(), self.element_ids.max()) < 99_999_999
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.load_id) == 0:
-            return ''
+            return
+        #print_card = get_print_card_8_16(size)
         if size == 8 and self.is_small_field:
             print_card = print_card_8
         else:
             print_card = print_card_16
 
-        lines = []
         for load_id, pressure, idim in zip(self.load_id, self.pressure, self.idim):
             idim0, idim1 = idim
             eids = self.element_ids[idim0:idim1]
@@ -652,8 +660,8 @@ class PLOAD2(Load):
                     raise RuntimeError(msg)
                 #list_fields += eids
                 list_fields += [eids[0], 'THRU', eids[-1]]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def sum_forces_moments(self) -> np.darray:
         #log = self.model.log
@@ -864,6 +872,41 @@ class PLOAD4(Load):
         self.nelement = nelement
         self.n = nloads
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+
+        shell_elements = self.shell_elements
+
+        is_solid = self.is_solid
+        is_shell = self.is_shell
+        if np.any(is_shell):
+            eids_shell = hstack_msg([elem.element_id for elem in shell_elements],
+                                    msg=f'no shell elements for {self.type}')
+            eids_shell.sort()
+            shell_element_ids = np.hstack([self.element_ids[idim0:idim1]
+                                           for is_solidi, (idim0, idim1) in zip(is_shell, self.ielement)])
+            geom_check(self,
+                       missing,
+                       element_id=(eids_shell, shell_element_ids))
+
+        if np.any(is_solid):
+            solid_elements = self.solid_elements
+            eids_solid = hstack_msg([elem.element_id for elem in solid_elements],
+                                    msg=f'no solid elements for {self.type}')
+            eids_solid.sort()
+            solid_element_ids = np.hstack([self.element_ids[idim0:idim1]
+                                           for is_solidi, (idim0, idim1) in zip(is_solid, self.ielement)])
+            solid_nodes = self.nodes_g1_g34[is_solid, :]
+            solid_element_ids = np.array([]),
+            geom_check(self,
+                       missing,
+                       node=(nid, solid_nodes),
+                       element_id=(eids_solid, solid_element_ids),)
+        #pids.sort()
+        # shells
+        self.nodes_g1_g34
+        shell_elements
+
 
     def __apply_slice__(self, load: PLOAD4, i: np.ndarray) -> None:  # ignore[override]
         nloads = len(self.load_id)
@@ -876,7 +919,7 @@ class PLOAD4(Load):
         if len(i) == 0:
             load.element_ids = load.element_ids[i]
         else:
-            load.element_ids = hslice_by_idim(i, self.idim, self.element_ids)
+            load.element_ids = hslice_by_idim(i, self.ielement, self.element_ids)
         load.surf_or_line = self.surf_or_line[i]
         load.line_load_dir = self.line_load_dir[i]
         load.nvector = self.nvector[i, :]
@@ -886,20 +929,22 @@ class PLOAD4(Load):
         assert load.nvector.shape == (nloads, 3), load.nvector.shape
 
     @property
-    def idim(self) -> np.ndarray:
+    def ielement(self) -> np.ndarray:
         return make_idim(self.n, self.nelement)
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> str:
         if len(self.load_id) == 0:
-            return ''
-        lines = []
+            return
+        print_card = get_print_card_8_16(size)
         assert self.nvector is not None
         for load_id, cid, pressures, g1_g34, nvector, \
-            surf_or_line, line_load_dir, idim in zip(self.load_id, self.coord_id, self.pressure,
-                                                     self.nodes_g1_g34, self.nvector,
-                                                     self.surf_or_line, self.line_load_dir,
-                                                     self.idim):
-            idim0, idim1 = idim
+            surf_or_line, line_load_dir, ielement in zip(self.load_id, self.coord_id, self.pressure,
+                                                         self.nodes_g1_g34, self.nvector,
+                                                         self.surf_or_line, self.line_load_dir,
+                                                         self.ielement):
+            idim0, idim1 = ielement
             eids = self.element_ids[idim0:idim1]
             eid = eids[0]
             p1 = pressures[0]
@@ -947,8 +992,8 @@ class PLOAD4(Load):
             list_fields.append(surf_or_line)
             if surf_or_line == 'LINE':
                 list_fields.append(line_load_dir)
-            lines.append(print_card_8(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def shell_elements(self) -> list[Any]:
@@ -974,6 +1019,18 @@ class PLOAD4(Load):
             applied_pressure[inan, j] = pressure[inan, 0]
         return applied_pressure
 
+    @property
+    def is_shell(self) -> np.ndarray:
+        nloads = len(self.load_id)
+        min_nid = self.nodes_g1_g34.min(axis=1)
+        assert len(min_nid) == nloads, min_nid.shape
+        is_shell = (min_nid == -1)
+        return is_shell
+
+    @property
+    def is_solid(self) -> np.ndarray:
+        return ~self.is_shell
+
     def area_centroid_normal_pressure(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """gets the area, centroid, normal, and pressure"""
         log = self.model.log
@@ -994,9 +1051,7 @@ class PLOAD4(Load):
         #xyz_cid0 = grid.xyz_cid0()
         #nid = grid.node_id
 
-        min_nid = self.nodes_g1_g34.min(axis=1)
-        assert len(min_nid) == nloads, min_nid.shape
-        is_shell_ = (min_nid == -1)
+        is_shell_ = self.is_shell
         is_solid_ = ~is_shell_
 
         # nvector defined in coord_id
@@ -1031,7 +1086,6 @@ class PLOAD4(Load):
         applied_pressure = self.applied_pressure
         #applied_pressure2 = applied_pressure.mean(axis=1)
         load_pressure = applied_pressure[ithru_result, :]
-
 
         if np.all(is_shell_) and 0:
             for card in self.shell_elements:

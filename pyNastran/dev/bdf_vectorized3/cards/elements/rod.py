@@ -2,7 +2,7 @@ from __future__ import annotations
 from itertools import zip_longest
 from typing import Any, TYPE_CHECKING
 import numpy as np
-from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
+#from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, searchsorted_filter
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, searchsorted_filter, get_print_card_8_16
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -19,8 +19,10 @@ from pyNastran.dev.bdf_vectorized3.utils import hstack_msg, cast_int_array
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
+    from pyNastran.dev.bdf_vectorized3.cards.materials import MAT1, MAT4, MAT5
 
-def rod_materials(model: BDF) -> list[Any]:
+def rod_materials(model: BDF) -> list[MAT1 | MAT4 | MAT5]:
     if model.is_thermal:
         return [model.mat4, model.mat5]
     return [model.mat1]
@@ -147,13 +149,13 @@ class CONROD(Element):
                    node=(nid, self.nodes),
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         for eid, mid, nodes, A, j, c, nsm in zip_longest(self.element_id, self.material_id, self.nodes,
                                                          self.A, self.J, self.c, self.nsm):
             n1, n2 = nodes
@@ -161,11 +163,11 @@ class CONROD(Element):
             c = set_blank_if_default(c, 0.0)
             nsm = set_blank_if_default(nsm, 0.0)
             list_fields = ['CONROD', eid, n1, n2, mid, A, j, c, nsm]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
-    def allowed_materials(self):
+    def allowed_materials(self) -> list[MAT1]:
         return [prop for prop in rod_materials(self.model) if prop.n > 0]
 
     def mass(self) -> np.ndarray:
@@ -282,18 +284,18 @@ class CROD(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         for eid, pid, nodes in zip_longest(self.element_id, self.property_id, self.nodes):
             n1, n2 = nodes
             list_fields = ['CROD', eid, pid, n1, n2]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def allowed_properties(self):
@@ -437,12 +439,12 @@ class PROD(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        lines = []
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
         for pid, mid, A, j, nsm, c in zip_longest(self.property_id, self.material_id,
                                                   self.A, self.J, self.nsm, self.c):
@@ -450,9 +452,8 @@ class PROD(Property):
             c = set_blank_if_default(c, 0.0)
             nsm = set_blank_if_default(nsm, 0.0)
             list_fields = ['PROD', pid, mid, A, j, c, nsm]
-
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def allowed_materials(self) -> list[Any]:
@@ -556,18 +557,18 @@ class CTUBE(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         for eid, pid, nodes in zip_longest(self.element_id, self.property_id, self.nodes):
             n1, n2 = nodes
             list_fields = ['CTUBE', eid, pid, n1, n2]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def all_properties(self):
@@ -742,12 +743,12 @@ class PTUBE(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.property_id) == 0:
-            return ''
-        lines = []
-        if size == 8:
-            print_card = print_card_8
+            return
+        print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)
         material_id = array_str(self.material_id, size=size)
@@ -759,7 +760,7 @@ class PTUBE(Property):
                 nsm = set_blank_if_default(nsm, 0.0)
                 list_fields = ['PTUBE', pid, mid, OD1, ts, nsm]
 
-                lines.append(print_card(list_fields))
+                bdf_file.write(print_card(list_fields))
         else:
             assert self.diameter.ndim == 2, self.diameter.shape
             for pid, mid, diameter, t, nsm in zip_longest(property_id, material_id,
@@ -770,8 +771,8 @@ class PTUBE(Property):
                 OD2s = set_blank_if_default(OD2, OD1)
                 list_fields = ['PTUBE', pid, mid, OD1, ts, nsm, OD2s]
 
-                lines.append(print_card(list_fields))
-        return ''.join(lines)
+                bdf_file.write(print_card(list_fields))
+        return
 
     def area(self) -> np.ndarray:
         if self.diameter.ndim == 1:

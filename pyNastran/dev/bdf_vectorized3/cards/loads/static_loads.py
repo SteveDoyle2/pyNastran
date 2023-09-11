@@ -5,7 +5,7 @@ import numpy as np
 
 from pyNastran.bdf.cards.base_card import expand_thru_by
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default, print_card_8, print_float_8 # , print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
+#from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string,
@@ -19,7 +19,7 @@ from pyNastran.utils.numpy_utils import (
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.coord import transform_spherical_to_rectangular
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim # , searchsorted_filter
+from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim, get_print_card_8_16 # , searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 
 if TYPE_CHECKING:
@@ -148,10 +148,12 @@ class Load0(Load):
                    node=(nid, self.node_id), filter_node0=False,
                    coord=(cid, self.coord_id))
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.load_id) == 0:
-            return ''
-        lines = []
+            return
+        #print_card = get_print_card_8_16(size)
         card_class = self.type
         if size == 8:
             for sid, nid, cid, mag, xyz in zip(self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
@@ -160,10 +162,10 @@ class Load0(Load):
                     card_class, sid, nid,
                     cids, print_float_8(mag), print_float_8(xyz[0]),
                     print_float_8(xyz[1]), print_float_8(xyz[2]))
-                lines.append(msg)
+                bdf_file.write(msg)
         else:
             raise RuntimeError(size)
-        return ''.join(lines)
+        return
 
 class Load1(Load):
     def __init__(self, model: BDF):
@@ -215,19 +217,20 @@ class Load1(Load):
         self.nodes = nodes
         self.n = nloads
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.load_id) == 0:
-            return ''
-        lines = []
+            return
         card_class = self.type
         if size == 8:
             for sid, nid, mag, nodes in zip(self.load_id, self.node_id, self.mag, self.nodes):
                 msg = '%-8s%8d%8d%8s%8s%8s\n' % (
                     card_class, sid, nid, print_float_8(mag), nodes[0], nodes[1])
-                lines.append(msg)
+                bdf_file.write(msg)
         else:
             raise RuntimeError(size)
-        return ''.join(lines)
+        return
 
 class Load2(Load):
     def __init__(self, model: BDF):
@@ -281,10 +284,11 @@ class Load2(Load):
         self.nodes = nodes
         self.n = nloads
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.load_id) == 0:
-            return ''
-        lines = []
+            return
         card_class = self.type
         load_ids = array_str(self.load_id, size=size)
         node_id_ = array_str(self.node_id, size=size)
@@ -293,10 +297,10 @@ class Load2(Load):
             for sid, nid, mag, nodes in zip(load_ids, node_id_, self.mag, node_ids_):
                 msg = '%-8s%8s%8s%8s%8s%8s%8s%8s\n' % (
                     card_class, sid, nid, print_float_8(mag), nodes[0], nodes[2], nodes[1], nodes[3])
-                lines.append(msg)
+                bdf_file.write(msg)
         else:
             raise RuntimeError(size)
-        return ''.join(lines)
+        return
 
 class FORCE(Load0):
     def slice_card_by_index(self, i: np.ndarray) -> FORCE:
@@ -672,11 +676,13 @@ class LOAD(Load):
     def iload(self) -> np.ndarray:
         return make_idim(self.n, self.nloads)
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.load_id) == 0:
-            return ''
+            return
         #get_reduced_loads(self, filter_zero_scale_factors=False)
-        lines = []
+        print_card = get_print_card_8_16(size)
 
         for sid, scale, iload in zip(self.load_id, self.scale, self.iload):
             iload0, iload1 = iload
@@ -693,10 +699,10 @@ class LOAD(Load):
                 #msg += print_card_8(list_fields)
                 #msg += str(self.get_stats())
                 #raise IndexError(msg)
-            lines.append(print_card_8(list_fields))
+            bdf_file.write(print_card(list_fields))
         #else:
             #raise RuntimeError(size)
-        return ''.join(lines)
+        return
 
 
     #def get_loads_by_load_id(self) -> dict[int, Loads]:
@@ -976,7 +982,7 @@ class SLOAD(Load):
                    write_card_header: bool=False) -> None:
         if len(self.load_id) == 0:
             return
-        print_card = print_card_8
+        print_card = get_print_card_8_16(size)
         load_ids = array_str(self.load_id, size=size)
         for sid, node, mag in zip(load_ids, self.nodes, self.mags):
             list_fields = ['SLOAD', sid, node, mag]

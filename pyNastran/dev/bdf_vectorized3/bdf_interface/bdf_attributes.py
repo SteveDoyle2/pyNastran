@@ -41,7 +41,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     #CHACAB, CHACBR,
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
-#from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
+from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
 #from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
 #from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import CHBDYE, CHBDYP, CHBDYG, CONV, PCONV, CONVM, PCONVM, PHBDY
 #from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL
@@ -329,11 +329,11 @@ class BDFAttributes:
         #self.solid_properties = []
 
         # mass
-        #self.pmass = PMASS(self)
-        #self.cmass1 = CMASS1(self)
-        #self.cmass2 = CMASS2(self)
-        #self.cmass3 = CMASS3(self)
-        #self.cmass4 = CMASS4(self)
+        self.pmass = PMASS(self)
+        self.cmass1 = CMASS1(self)
+        self.cmass2 = CMASS2(self)
+        self.cmass3 = CMASS3(self)
+        self.cmass4 = CMASS4(self)
         self.conm1 = CONM1(self)
         self.conm2 = CONM2(self)
 
@@ -620,7 +620,7 @@ class BDFAttributes:
             #self.genel,
         ] + self.shell_elements + self.solid_elements + axisymmetric_elements + [
             self.conm1, self.conm2,
-            #self.cmass1, self.cmass2, self.cmass3, #self.cmass4,
+            self.cmass1, self.cmass2, self.cmass3, self.cmass4,
             #self.cplsts3, self.cplsts4, self.cplsts6, self.cplsts8,
             #self.cplstn3, self.cplstn4, self.cplstn6, self.cplstn8,
         ] + acoustic_elements
@@ -668,7 +668,7 @@ class BDFAttributes:
             ] + self.bar_properties + self.beam_properties + [
             self.pshear,
         ] + self.shell_properties + self.solid_properties + [
-            #self.pmass,
+            self.pmass,
         ]
         return properties
 
@@ -1378,8 +1378,8 @@ class BDFAttributes:
             #return element_id, abs_mass, cg, inertia
         mass_cg = mass[:, None] * centroid
         imass = (mass != 0)
-        cg = np.zeros(centroid.shape, dtype=centroid.dtype)
-        cg[imass] = mass_cg[imass, :] / mass
+        cg = np.full(centroid.shape, np.nan, dtype=centroid.dtype)
+        cg[imass] = mass_cg[imass, :] / mass[imass, np.newaxis]
 
         #cg = mass_cg.sum(axis=0) / mass.sum()
         #assert len(cg) == 3, cg

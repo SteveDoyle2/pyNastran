@@ -1319,6 +1319,8 @@ class MAT10(Material):
                 None, None, None,
                 table_bulk, table_rho, None, table_ge, table_gamma
             ]
+            list_fields = ['' if isinstance(value, float) and np.isnan(value) else value
+                           for value in list_fields]
             lines.append(print_card(list_fields))
         return ''.join(lines)
 

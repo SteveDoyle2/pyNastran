@@ -253,6 +253,7 @@ class VectorizedBaseCard:
 
     def index(self, ids: np.ndarray,
               assume_sorted: bool=True,
+              check_index: bool=True,
               inverse: bool=False) -> np.ndarray:
         """
         Parameters
@@ -261,6 +262,8 @@ class VectorizedBaseCard:
             the node/element/property/material/etc. ids
         assume_sorted: bool; default=True
             assume the parent array (e.g., elem.element_id is sorted)
+        check_index: bool; default=True
+            validate the lookup
         inverse: bool; default=False
             False: get the indices for the ids
             True: get the inverse indices for the ids
@@ -289,6 +292,10 @@ class VectorizedBaseCard:
             return None # np.arange(len(ids), dtype='int32')
         ids = np.atleast_1d(np.asarray(ids, dtype=self_ids.dtype))
         ielem = np.searchsorted(self_ids, ids)
+        if check_index:
+            actual_ids = self_ids[ielem]
+            if not np.array_equal(actual_ids, ids):
+                raise KeyError(f'{self.type}: expected_{self._id_name}={ids}; actual_{self._id_name}={actual_ids}')
         if inverse:
             i = np.arange(len(self_ids), dtype=self_ids.dtype)
             index = np.setdiff1d(i, ielem)

@@ -17,7 +17,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
+from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, get_print_card_8_16
 
 from pyNastran.femutils.coord_transforms import (
     xyz_to_rtz_array,
@@ -29,6 +29,7 @@ from pyNastran.femutils.coord_transforms import (
 
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
@@ -97,16 +98,16 @@ class XPOINT(VectorizedBaseCard):
         if not np.array_equal(uarg, iarg):
             self.ids = self.ids[iarg]
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        lines = []
-        if size == 8:
-            print_card = print_card_8
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
         #node_id = array_str(self.node_id, size=8)
         lists_fields = compress_xpoints(self.type, self.ids)
         for fields in lists_fields:
             msg = print_card(fields)
-            lines.append(msg)
-        return ''.join(lines)
+            bdf_file.write(msg)
+        return
 
 class SPOINT(XPOINT):
     _id_name = 'spoint_id'
@@ -484,17 +485,18 @@ class GRID(VectorizedBaseCard):
         msg = stringio.getvalue()
         return msg
 
-    def write_file(self, file_obj: TextIO, size: int=8, is_double: bool=False,
+    def write_file(self, file_obj: TextIOLike,
+                   size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> str:
         if len(self.node_id) == 0:
-            return ''
+            return
         if size == 8:
-            msg = self.write_file_8(file_obj, write_card_header=write_card_header)
+            self.write_file_8(file_obj, write_card_header=write_card_header)
         elif is_double:
-            msg = self.write_file_double(file_obj, write_card_header=write_card_header)
+            self.write_file_double(file_obj, write_card_header=write_card_header)
         else:
-            msg = self.write_file_16(file_obj, write_card_header=write_card_header)
-        return msg
+            self.write_file_16(file_obj, write_card_header=write_card_header)
+        return
 
     def write_file_8(self, file_obj, write_card_header: bool=False) -> None:
         coord_basic, extra_basic, is_basic = self._write_flags()
@@ -544,10 +546,12 @@ class GRID(VectorizedBaseCard):
         is_basic = coord_basic and extra_basic
         return coord_basic, extra_basic, is_basic
 
-    def write_file_16(self, file_obj: TextIO, write_card_header: bool=False) -> None:
+    def write_file_16(self, file_obj: TextIOLike,
+                      write_card_header: bool=False) -> None:
         return _write_grid_large(self, file_obj, print_scientific_16, write_card_header=write_card_header)
 
-    def write_file_double(self, file_obj: TextIO, write_card_header: bool=False) -> None:
+    def write_file_double(self, file_obj: TextIOLike,
+                          write_card_header: bool=False) -> None:
         return _write_grid_large(self, file_obj, print_scientific_double, write_card_header=write_card_header)
 
     def is_equal_by_index(self, inode1, inode2) -> bool:
@@ -732,7 +736,8 @@ class GRID(VectorizedBaseCard):
         return xyz_cid0
 
 
-def _write_grid_large(grid: GRID, file_obj: TextIO, function: Callable[float],
+def _write_grid_large(grid: GRID, file_obj: TextIOLike,
+                      function: Callable[float],
                       write_card_header: bool=False) -> None:
     coord_basic, extra_basic, is_basic = grid._write_flags()
     node_id = array_str(grid.node_id, size=16)

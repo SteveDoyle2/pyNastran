@@ -392,12 +392,13 @@ def shell_mass_per_area(model: BDF,
         if len(iall) == 0:
             continue
 
-        if prop.type in {'PCOMP', 'PLPLANE'}:
+        if prop.type in {'PCOMP', 'PCOMPG', 'PLPLANE'}:
             mass_per_areai = prop.mass_per_area()
             mass_per_areai_all = mass_per_areai[iall]
             mass_per_area[ilookup] = mass_per_areai_all
             continue
 
+        # differential thickness
         assert prop.type == 'PSHELL', prop.type
         nsm, rho, ti = prop.nsm_rho_thickness()
         nsm_all = nsm[iall]

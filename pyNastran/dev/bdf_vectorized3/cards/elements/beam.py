@@ -249,6 +249,7 @@ class CBEAM(Element):
                    write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
             return
+        print_card = get_print_card_8_16(size)
 
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
@@ -279,7 +280,7 @@ class CBEAM(Element):
 
             list_fields = ['CBEAM', eid, pid, n1, n2,
                            x1, x2, x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
-            bdf_file.write(print_card_8(list_fields))
+            bdf_file.write(print_card(list_fields))
         return
 
     @property
@@ -2208,8 +2209,6 @@ class PBCOMP(Property):
 
         self.nstation = np.zeros(ncards, dtype='int32')
 
-        #self.Type = np.full(ncards, '', dtype='|U8')
-        #self.group = np.full(ncards, '', dtype='|U8')
         self.k1 = np.zeros(ncards, dtype='float64')
         self.k2 = np.zeros(ncards, dtype='float64')
 
@@ -2273,12 +2272,27 @@ class PBCOMP(Property):
         prop.nstation = self.nstation[i]
         prop.n = len(i)
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        materials = self.allowed_materials
+        mids = hstack_msg([mat.material_id for mat in materials],
+                          msg=f'no materials for {self.type}; {self.all_materials}')
+        #mids2 = hstack_msg([prop.material_ids for mat in materials],
+                           #msg=f'no materials for {self.type}; {self.all_materials}')
+        #material_ids = np.hstack([mids, mids2])
+        mids.sort()
+        geom_check(self,
+                   missing,
+                   material_id=(mids, self.material_id))
+        geom_check(self,
+                   missing,
+                   material_id=(mids, self.material_ids.ravel()))
+
     @property
-    def all_materials(self) -> list[Any]:
+    def all_materials(self) -> list[MAT1]:
         return [self.model.mat1]
 
     @property
-    def allowed_materials(self) -> list[Any]:
+    def allowed_materials(self) -> list[MAT1]:
         all_materials = self.all_materials
         materials = [mat for mat in all_materials if mat.n > 0]
         assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.materials}'

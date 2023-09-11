@@ -189,10 +189,10 @@ class TestModels(unittest.TestCase):
         test_bdf(args, show_args=False)
         run_nastran_gui(bdf_filename)
 
-    #def test_contact_1(self):
-        #bdf_filename = MODEL_PATH / 'contact' / 'contact.bdf'
-        #args = ['test_bdf', str(bdf_filename), '--quiet']
-        #test_bdf(args, show_args=False)
+    def test_contact_1(self):
+        bdf_filename = MODEL_PATH / 'contact' / 'contact.bdf'
+        args = ['test_bdf', str(bdf_filename), '--quiet']
+        test_bdf(args, show_args=False)
     def test_contact_2(self):
         bdf_filename = MODEL_PATH / 'contact' / '2bars_shell_s-contact.dat'
         args = ['test_bdf', str(bdf_filename), '--quiet']
@@ -202,42 +202,43 @@ class TestModels(unittest.TestCase):
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
 
-    def _test_elements1(self):
+    def test_elements1(self):
         bdf_filename = MODEL_PATH / 'elements' / 'static_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'static_elements.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-        run_nastran_gui(h5_filename)
-    def _test_elements2(self):
+        run_nastran_gui(bdf_filename)
+        #run_nastran_gui(h5_filename)
+    def test_elements2(self):
         bdf_filename = MODEL_PATH / 'elements' / 'modes_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-        run_nastran_gui(h5_filename)
+        #run_nastran_gui(h5_filename)
     def _test_elements3(self):
         bdf_filename = MODEL_PATH / 'elements' / 'time_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
         run_nastran_gui(h5_filename)
-    def _test_elements4(self):
+    def test_elements4(self):
         bdf_filename = MODEL_PATH / 'elements' / 'freq_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-        run_nastran_gui(h5_filename)
-    def _test_elements5(self):
+        #run_nastran_gui(h5_filename)
+    def test_elements5(self):
         bdf_filename = MODEL_PATH / 'elements' / 'freq_elements2.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements2.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-        run_nastran_gui(h5_filename)
-    def _test_elements6(self):
+        #run_nastran_gui(h5_filename)
+    def test_elements6(self):
         bdf_filename = MODEL_PATH / 'elements' / 'loadstep_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'loadstep_elements.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-        run_nastran_gui(h5_filename)
+        #run_nastran_gui(h5_filename)
     def _test_elements7(self):
         bdf_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
@@ -306,7 +307,7 @@ class TestModels(unittest.TestCase):
         args = ['test_bdf', str(bdf_filename)]
         test_bdf(args, show_args=False)
 
-    def _test_other_3(self):
+    def test_other_3(self):
         # missing GRID card
         #bdf_filename = MODEL_PATH / 'other' / 'ofprand1.bdf'
         #args = ['test_bdf', str(bdf_filename)]
@@ -317,25 +318,25 @@ class TestModels(unittest.TestCase):
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
-        bdf_filename = MODEL_PATH / 'other' / 'ac10901a.bdf'
-        args = ['test_bdf', str(bdf_filename), '--skip_nominal']
-        test_bdf(args, show_args=False)
+        #bdf_filename = MODEL_PATH / 'other' / 'ac10901a.bdf'
+        #args = ['test_bdf', str(bdf_filename), '--skip_nominal']
+        #test_bdf(args, show_args=False)
 
         #bdf_filename = MODEL_PATH / 'other' / 'v10111.bdf'
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
-        ##bdf_filename = MODEL_PATH / 'other' / 'ar29sadl.bdf'
-        ##args = ['test_bdf', str(bdf_filename)]
-        ##test_bdf(args, show_args=False)
+        #bdf_filename = MODEL_PATH / 'other' / 'ar29sadl.bdf'
+        #args = ['test_bdf', str(bdf_filename)]
+        #test_bdf(args, show_args=False)
 
-        ##bdf_filename = MODEL_PATH / 'other' / 'randvar2.bdf'
-        ##args = ['test_bdf', str(bdf_filename)]
-        ##test_bdf(args, show_args=False)
+        bdf_filename = MODEL_PATH / 'other' / 'randvar2.bdf'
+        args = ['test_bdf', str(bdf_filename)]
+        #test_bdf(args, show_args=False)
 
         bdf_filename = MODEL_PATH / 'other' / 'v12902.bdf'
         args = ['test_bdf', str(bdf_filename)]
-        test_bdf(args, show_args=False)
+        #test_bdf(args, show_args=False)
 
         #bdf_filename = MODEL_PATH / 'other' / 'mne7a.bdf'
         #args = ['test_bdf', str(bdf_filename)]
@@ -390,7 +391,7 @@ class TestModels(unittest.TestCase):
 
         bdf_filename = MODEL_PATH / 'other' / 'see101ta.bdf'
         args = ['test_bdf', str(bdf_filename)]
-        test_bdf(args, show_args=False)
+        #test_bdf(args, show_args=False)
 
         # CGEN model - no nodes
         #bdf_filename = MODEL_PATH / 'other' / 'gpst17.bdf'
@@ -419,7 +420,7 @@ class TestModels(unittest.TestCase):
 
         bdf_filename = MODEL_PATH / 'other' / 'trncomp12.bdf'
         args = ['test_bdf', str(bdf_filename)]
-        test_bdf(args, show_args=False)
+        #test_bdf(args, show_args=False)
 
         # EGRID/SPCG
         #bdf_filename = MODEL_PATH / 'other' / 'tr1091x.bdf'
@@ -452,7 +453,7 @@ class TestModels(unittest.TestCase):
         # missing properties
         bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.bdf'
         args = ['test_bdf', str(bdf_filename)]
-        test_bdf(args, show_args=False)
+        #test_bdf(args, show_args=False)
 
 
 if __name__ == '__main__':

@@ -52,7 +52,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.coordinate_systems import transform_coords_vectorized
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import read_h5_geometry
 #from .bdf.cards.elements.bar import BAROR
-#from .bdf.cards.elements.beam import BEAMOR
+from .cards.elements.beam import BEAMOR
 
 #from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 #from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
@@ -117,7 +117,7 @@ from pyNastran.bdf.cards.dynamic import (
     #MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
-#from .bdf.cards.grid import GRDSET
+from .cards.grid import GRDSET
 #from pyNastran.bdf.cards.nodes import GRDSET # GRID, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
 from pyNastran.bdf.cards.aero.aero import (
     #AESURF,
@@ -592,7 +592,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## masses
             'CONM1', 'CONM2',
-            #'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+            'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
 
             ## nsms
             #'NSM', 'NSM1', 'NSML', 'NSML1',
@@ -638,7 +638,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PLOTEL',
 
             ## properties
-            #'PMASS',
+            'PMASS',
             'PELAS', # 'PGAP', 'PFAST',
             'PLPLANE', 'PPLANE',
             #'PBUSH', 'PBUSH1D',
@@ -2433,11 +2433,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'GENEL' : partial(self._prepare_card, self.genel),
 
             # mass
-            #'PMASS' : partial(self._prepare_card, self.pmass),
-            #'CMASS1' : partial(self._prepare_card, self.cmass1),
-            #'CMASS2' : partial(self._prepare_card, self.cmass2),
-            #'CMASS3' : partial(self._prepare_card, self.cmass3),
-            #'CMASS4' : partial(self._prepare_card, self.cmass4),
+            'PMASS' : partial(self._prepare_card, self.pmass),
+            'CMASS1' : partial(self._prepare_card, self.cmass1),
+            'CMASS2' : partial(self._prepare_card, self.cmass2),
+            'CMASS3' : partial(self._prepare_card, self.cmass3),
+            'CMASS4' : partial(self._prepare_card, self.cmass4),
             'CONM1' : partial(self._prepare_card, self.conm1),
             'CONM2' : partial(self._prepare_card, self.conm2),
 
@@ -2740,7 +2740,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # GRDSET-will be last card to update from _card_parser_prepare
             'GRDSET' : self._prepare_grdset,
             #'BAROR' : self._prepare_baror,
-            #'BEAMOR' : self._prepare_beamor,
+            'BEAMOR' : self._prepare_beamor,
             #'BDYOR': self._prepare_bdyor,
 
             #'BCTSET' : self._prepare_bctset,
@@ -3382,7 +3382,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 #self.log.error(str(card_obj))
                 #raise
         else:
-            print(card_obj)
+            self.log.warning(f'rejecting {card_obj}')
             #raise RuntimeError(card_obj)
             self.reject_cards.append(card_obj)
 

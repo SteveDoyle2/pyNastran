@@ -327,7 +327,7 @@ class Writer():
         model = self.model
         if model.spoint.n:
             bdf_file.write('$SPOINTS\n')
-            bdf_file.write(model.spoint.write(size=size))
+            model.spoint.write_file(bdf_file, size=size, is_double=is_double)
         #if model.epoint.n:
             #bdf_file.write('$EPOINTS\n')
             #bdf_file.write(model.epoint.write(size=size))
@@ -380,10 +380,10 @@ class Writer():
         #bdf_file.write(model.plotel.write(size=size))
 
         # celas
-        model.celas1.write_file(bdf_file, size=size)
-        model.celas2.write_file(bdf_file, size=size)
-        model.celas3.write_file(bdf_file, size=size)
-        model.celas4.write_file(bdf_file, size=size)
+        model.celas1.write_file(bdf_file, size=size, is_double=is_double)
+        model.celas2.write_file(bdf_file, size=size, is_double=is_double)
+        model.celas3.write_file(bdf_file, size=size, is_double=is_double)
+        model.celas4.write_file(bdf_file, size=size, is_double=is_double)
 
         # cdamp
         #bdf_file.write(model.cdamp1.write(size=size))
@@ -404,26 +404,26 @@ class Writer():
         #bdf_file.write(model.cfast.write(size=size))
 
         # rod
-        bdf_file.write(model.crod.write(size=size))
-        bdf_file.write(model.conrod.write(size=size))
-        bdf_file.write(model.ctube.write(size=size))
+        model.crod.write_file(bdf_file, size=size, is_double=is_double)
+        model.conrod.write_file(bdf_file, size=size, is_double=is_double)
+        model.ctube.write_file(bdf_file, size=size, is_double=is_double)
 
         # bar/beam/shear
-        bdf_file.write(model.cbar.write(size=size))
-        bdf_file.write(model.cbarao.write(size=size))
-        bdf_file.write(model.cbeam.write(size=size))
-        model.cshear.write_file(bdf_file, size=size)
+        model.cbar.write_file(bdf_file, size=size, is_double=is_double)
+        model.cbarao.write_file(bdf_file, size=size, is_double=is_double)
+        model.cbeam.write_file(bdf_file, size=size, is_double=is_double)
+        model.cshear.write_file(bdf_file, size=size, is_double=is_double)
 
         # shells
         #all_shells = (mo
-        model.ctria3.write_file(bdf_file, size=size)
-        model.cquad4.write_file(bdf_file, size=size)
-        model.ctria6.write_file(bdf_file, size=size)
-        model.cquad8.write_file(bdf_file, size=size)
-        model.ctriar.write_file(bdf_file, size=size)
-        model.cquadr.write_file(bdf_file, size=size)
-        model.cquad.write_file(bdf_file, size=size)
-        #bdf_file.write(model.snorm.write(size=size))
+        model.ctria3.write_file(bdf_file, size=size, is_double=is_double)
+        model.cquad4.write_file(bdf_file, size=size, is_double=is_double)
+        model.ctria6.write_file(bdf_file, size=size, is_double=is_double)
+        model.cquad8.write_file(bdf_file, size=size, is_double=is_double)
+        model.ctriar.write_file(bdf_file, size=size, is_double=is_double)
+        model.cquadr.write_file(bdf_file, size=size, is_double=is_double)
+        model.cquad.write_file(bdf_file, size=size, is_double=is_double)
+        #bdf_file.write(model.snorm.write(size=size), is_double=is_double)
 
         # axisymmetric shells
         #bdf_file.write(model.ctriax.write(size=size))
@@ -447,10 +447,10 @@ class Writer():
         #bdf_file.write(model.cplstn8.write(size=size))
 
         # solids
-        model.ctetra.write_file(bdf_file, size=size)
-        model.cpenta.write_file(bdf_file, size=size)
-        model.chexa.write_file(bdf_file, size=size)
-        model.cpyram.write_file(bdf_file, size=size)
+        model.ctetra.write_file(bdf_file, size=size, is_double=is_double)
+        model.cpenta.write_file(bdf_file, size=size, is_double=is_double)
+        model.chexa.write_file(bdf_file, size=size, is_double=is_double)
+        model.cpyram.write_file(bdf_file, size=size, is_double=is_double)
 
         # acoustic solids
         #bdf_file.write(model.chacab.write(size=size))
@@ -539,8 +539,8 @@ class Writer():
         model = self.model
         all_masses = (
             model.conm1, model.conm2,
-            #model.pmass,
-            #model.cmass1, model.cmass2, model.cmass3, model.cmass4,
+            model.pmass,
+            model.cmass1, model.cmass2, model.cmass3, model.cmass4,
         )
         masses = [mass for mass in all_masses if mass.n > 0]
         if len(masses) == 0:
@@ -585,26 +585,26 @@ class Writer():
         #bdf_file.write(model.pfast.write(size=size))
 
         # rod
-        bdf_file.write(model.prod.write(size=size))
-        bdf_file.write(model.ptube.write(size=size))
+        model.prod.write_file(bdf_file, size=size, is_double=is_double)
+        model.ptube.write_file(bdf_file, size=size, is_double=is_double)
 
         # bar
-        bdf_file.write(model.pbar.write(size=size))
-        bdf_file.write(model.pbarl.write(size=size))
-        bdf_file.write(model.pbrsect.write(size=size))
+        model.pbar.write_file(bdf_file, size=size, is_double=is_double)
+        model.pbarl.write_file(bdf_file, size=size, is_double=is_double)
+        model.pbrsect.write_file(bdf_file, size=size, is_double=is_double)
 
         # beam
-        bdf_file.write(model.pbeam.write(size=size))
-        bdf_file.write(model.pbeaml.write(size=size))
-        bdf_file.write(model.pbcomp.write(size=size))
+        model.pbeam.write_file(bdf_file, size=size, is_double=is_double)
+        model.pbeaml.write_file(bdf_file, size=size, is_double=is_double)
+        model.pbcomp.write_file(bdf_file, size=size, is_double=is_double)
 
         # shear
-        bdf_file.write(model.pshear.write(size=size))
+        model.pshear.write_file(bdf_file, size=size, is_double=is_double)
 
         # shell
-        model.pshell.write_file(bdf_file, size=size)
-        model.pcomp.write_file(bdf_file, size=size)
-        model.pcompg.write_file(bdf_file, size=size)
+        model.pshell.write_file(bdf_file, size=size, is_double=is_double)
+        model.pcomp.write_file(bdf_file, size=size, is_double=is_double)
+        model.pcompg.write_file(bdf_file, size=size, is_double=is_double)
 
         # planar shells
         model.plplane.write_file(bdf_file, size=size)
@@ -880,17 +880,17 @@ class Writer():
             #bdf_file.write(model.accel.write(size=size))
             #bdf_file.write(model.accel1.write(size=size))
 
-            bdf_file.write(model.force.write(size=size))
-            bdf_file.write(model.force1.write(size=size))
-            bdf_file.write(model.force2.write(size=size))
-            bdf_file.write(model.moment.write(size=size))
-            bdf_file.write(model.moment1.write(size=size))
-            bdf_file.write(model.moment2.write(size=size))
-            bdf_file.write(model.pload.write(size=size))
-            bdf_file.write(model.pload1.write(size=size))
-            bdf_file.write(model.pload2.write(size=size))
-            bdf_file.write(model.pload4.write(size=size))
-            model.sload.write_file(bdf_file, size=size)
+            model.force.write_file(bdf_file, size=size, is_double=is_double)
+            model.force1.write_file(bdf_file, size=size, is_double=is_double)
+            model.force2.write_file(bdf_file, size=size, is_double=is_double)
+            model.moment.write_file(bdf_file, size=size, is_double=is_double)
+            model.moment1.write_file(bdf_file, size=size, is_double=is_double)
+            model.moment2.write_file(bdf_file, size=size, is_double=is_double)
+            model.pload.write_file(bdf_file, size=size, is_double=is_double)
+            model.pload1.write_file(bdf_file, size=size, is_double=is_double)
+            model.pload2.write_file(bdf_file, size=size, is_double=is_double)
+            model.pload4.write_file(bdf_file, size=size, is_double=is_double)
+            model.sload.write_file(bdf_file, size=size, is_double=is_double)
             #bdf_file.write(model.tempd.write(size=size))  # default temp
             #bdf_file.write(model.temp.write(size=size))
             #bdf_file.write(model.spcd.write(size=size))

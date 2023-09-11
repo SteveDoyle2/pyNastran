@@ -412,8 +412,8 @@ class CPENTA(SolidElement):
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
         #card_name = 'CPENTA' if size == 8 else 'CPENTA*'
+        base_nodes_str = array_str(base_nodes, size=size)
         if midside_nodes.shape[1] == 0:
-            base_nodes_str = array_str(base_nodes, size=size)
             #if size == 8:
             for eid, pid, nodes in zip(element_ids, property_ids, base_nodes_str):
                 #msg1 = (
@@ -431,8 +431,9 @@ class CPENTA(SolidElement):
                     #assert msg1 == msg2
                     #lines.append(msg2)
         else:
-            midside_nodes_str = array_default_int(midside_nodes, default=0, size=size)
-            for eid, pid, nodes in zip(element_ids, property_ids, midside_nodes_str):
+            #midside_nodes_str = array_default_int(midside_nodes, default=0, size=size)
+            nodes_str = array_default_int(self.nodes, default=0, size=size)
+            for eid, pid, nodes in zip(element_ids, property_ids, nodes_str):
                 msg = print_card(['CPENTA', eid, pid] + nodes.tolist())
                 bdf_file.write(msg)
         return
