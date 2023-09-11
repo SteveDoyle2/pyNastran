@@ -595,10 +595,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
 
             ## nsms
-            #'NSM', 'NSM1', 'NSML', 'NSML1',
+            'NSM', 'NSM1', 'NSML', 'NSML1',
 
             ## nsmadds
-            #'NSMADD',
+            'NSMADD',
 
             ## elements
             # springs
@@ -2442,12 +2442,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CONM2' : partial(self._prepare_card, self.conm2),
 
             # nonstructural mass
-            #'NSMADD' : partial(self._prepare_card, self.nsmadd),
-            #'NSM' : partial(self._prepare_card, self.nsm),
-            #'NSM1' : partial(self._prepare_card, self.nsm1),
+            'NSMADD' : partial(self._prepare_card, self.nsmadd),
+            'NSM' : partial(self._prepare_card, self.nsm),
+            'NSM1' : partial(self._prepare_card, self.nsm1),
             # lumped
-            #'NSML' : partial(self._prepare_card, self.nsml),
-            #'NSML1' : partial(self._prepare_card, self.nsml1),
+            'NSML' : partial(self._prepare_card, self.nsml),
+            'NSML1' : partial(self._prepare_card, self.nsml1),
 
             # rod
             'CONROD' : partial(self._prepare_card, self.conrod),

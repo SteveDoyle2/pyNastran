@@ -3,6 +3,7 @@ from collections import defaultdict
 import numpy as np
 from typing import TYPE_CHECKING, Set, Optional, Any
 
+from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, SPOINT, GRDSET # , POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
@@ -42,7 +43,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
 from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
-#from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
+from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
 #from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import CHBDYE, CHBDYP, CHBDYG, CONV, PCONV, CONVM, PCONVM, PHBDY
 #from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL
 #from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import SET1, SET2, SET3, USET, USET1
@@ -338,12 +339,12 @@ class BDFAttributes:
         self.conm2 = CONM2(self)
 
         # nonstructural mass
-        #self.nsmadd = NSMADD(self)
-        #self.nsm = NSM(self)
-        #self.nsm1 = NSM1(self)
+        self.nsmadd = NSMADD(self)
+        self.nsm = NSM(self)
+        self.nsm1 = NSM1(self)
         # lumped
-        #self.nsml = NSML(self)
-        #self.nsml1 = NSML1(self)
+        self.nsml = NSML(self)
+        self.nsml1 = NSML1(self)
 
         # thermal
         #self.bdyor = None
@@ -508,21 +509,21 @@ class BDFAttributes:
         # ----------------------------------------------------------------
         # matrices
         #: direct matrix input - DMIG
-        self.dmi = {}    # type: dict[str, Any]
-        self.dmig = {}   # type: dict[str, Any]
-        self.dmij = {}   # type: dict[str, Any]
-        self.dmiji = {}  # type: dict[str, Any]
-        self.dmik = {}   # type: dict[str, Any]
-        self.dmiax = {}  # type: dict[str, Any]
-        self.dti = {}    # type: dict[str, Any]
+        self.dmi: dict[str, DMI]= {}
+        self.dmig: dict[str, DMIG | DMIG_UACCEL] = {}
+        self.dmij: dict[str, DMIJ] = {}
+        self.dmiji: dict[str, DMIJI] = {}
+        self.dmik: dict[str, DMIK] = {}
+        self.dmiax: dict[str, DMIAX] = {}
+        self.dti: dict[str, DMI] = {}
         self._dmig_temp = defaultdict(list)  # type: dict[str, list[str]]
         # ----------------------------------------
         self.suport1 = {}
         #self.suport = []
         #self.suport = SUPORT(self)
 
-        self.system_command_lines = []
-        self.executive_control_lines = []
+        self.system_command_lines: list[str] = []
+        self.executive_control_lines: list[str] = []
         self.superelement_models = {}
 
         #origin = np.array([0., 0., 0.])
@@ -534,7 +535,6 @@ class BDFAttributes:
         ## old style
         self.ringaxs = {}
         self.gridb = {}
-        self.dti = {}
         self.mdlprm = None
 
         # optimization
@@ -764,8 +764,8 @@ class BDFAttributes:
     def nonstructural_mass_cards(self) -> list[Any]:
         cards = [
             #self.nsmadd,
-            #self.nsm, self.nsm1,
-            #self.nsml, self.nsml1, # lumped
+            self.nsm, self.nsm1,
+            self.nsml, self.nsml1, # lumped
         ]
         return cards
 
@@ -1622,7 +1622,7 @@ def _get_duplicate_cards(properties: list[Any],
         if card.n == 0:
             continue
         common_ids = np.intersect1d(ids, count_where)
-        log = card.model.log
+        #log = card.model.log
         #log.info(f'processing {card.type!r}; common_ids={common_ids}')
         if len(common_ids):
             #index = card.index(common_ids)
