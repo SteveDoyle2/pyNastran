@@ -516,8 +516,7 @@ def double_from_str(svalue: str) -> float:
         value = float(svalue)
     except TypeError:
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
-                          'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
+        raise SyntaxError(f'field = {svalue} on card must be a float (not {dtype}).')
     except ValueError:
         # 1D+3, 1D-3, 1-3
         try:
@@ -838,7 +837,7 @@ def integer_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[int, 
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
-
+    raise RuntimeError(f'unhandled integer_or_string; value={svalue}')
 
 def integer_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     """

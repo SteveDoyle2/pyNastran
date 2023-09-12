@@ -210,7 +210,6 @@ class SPC1(VectorizedBaseCard):
         self.__apply_slice__(spc, i)
         return spc
 
-
     def slice_card_by_index(self, i: np.ndarray) -> SPC1:
         spc = SPC1(self.model)
         self.__apply_slice__(spc, i)
@@ -468,14 +467,15 @@ class ADD(VectorizedBaseCard):
         self.sids = np.array([], dtype='int32')
         self.nsids = np.array([], dtype='int32')
 
-    def add(self, sid, sets, comment='') -> ADD:
+    def add(self, sid: int, sets, comment: str='') -> int:
         """Creates an MPCADD card"""
         if isinstance(sets, integer_types):
             sets = [sets]
         self.cards.append((sid, sets, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'conid')
         sets = np.unique(card.fields(2)).tolist()
         nset_cards = len(sets)
@@ -483,6 +483,7 @@ class ADD(VectorizedBaseCard):
 
         self.cards.append((sid, sets, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -518,6 +519,7 @@ class ADD(VectorizedBaseCard):
         self.sid = sid
         self.sids = sids
         self.nsids = nsids
+        assert nsids.min() > 0, nsids
         self.n = nsid
 
     @property

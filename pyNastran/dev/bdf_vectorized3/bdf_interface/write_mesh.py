@@ -176,7 +176,7 @@ class Writer():
 
         # split out for write_bdf_symmetric
         #self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_nonstructural_mass(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_nonstructural_mass(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         self._write_common(bdf_file, loads_size, is_double, is_long_ids=is_long_ids)
@@ -526,11 +526,11 @@ class Writer():
         """Writes the rigid elements in a sorted order"""
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         model = self.model
-        bdf_file.write(model.nsmadd.write(size=size))
-        bdf_file.write(model.nsm.write(size=size))
-        bdf_file.write(model.nsm1.write(size=size))
-        bdf_file.write(model.nsml.write(size=size))
-        bdf_file.write(model.nsml1.write(size=size))
+        model.nsmadd.write_file(bdf_file, size=size, is_double=is_double)
+        model.nsm.write_file(bdf_file, size=size, is_double=is_double)
+        model.nsm1.write_file(bdf_file, size=size, is_double=is_double)
+        model.nsml.write_file(bdf_file, size=size, is_double=is_double)
+        model.nsml1.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_masses(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False,

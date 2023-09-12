@@ -11,8 +11,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank)
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
-from pyNastran2.bdf.cards.base_card import Element, Property
-from pyNastran2.bdf.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from .utils import get_mass_from_property

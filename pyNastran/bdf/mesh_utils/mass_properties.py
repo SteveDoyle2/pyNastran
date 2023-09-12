@@ -1273,7 +1273,8 @@ def _get_quad_mass(model: BDF, xyz: dict[int, np.ndarray], element_ids: set[int]
             #mass_per_area = model.nsm + rho * model.t
 
             #areas_prop[pid] += area
-            mpa = prop.nsm + prop.Rho() * t
+            rho = prop.Rho()
+            mpa = prop.nsm + rho * t
             #mpa = elem.pid_ref.MassPerArea()
             #m = mpa * area
         elif prop.type in ['PCOMP', 'PCOMPG']:

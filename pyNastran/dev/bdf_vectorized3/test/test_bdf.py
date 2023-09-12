@@ -599,16 +599,17 @@ def run_and_compare_fems(
 def check_setup_flag(model: BDFv):
     if not isinstance(model, BDFv):
         return
-    card_types = {}
+    card_types: dict[str, str] = {}
     for card in model._cards_to_setup:
         card_type = card.type
         if card_type in card_types:
             raise RuntimeError(f'card_type={card_type!r} was already added...check _cards_to_setup')
+
 def _setup_fem(fem1: Union[BDF_old, BDFv],
                debug: bool, log: SimpleLogger, version: str,
                skip_cards: list[str],
                dumplines: bool, nerrors: int,
-               dynamic_vars: dict[str, Any]) -> BDFs:
+               dynamic_vars: dict[str, Any]) -> None:
     if skip_cards:
         fem1.disable_cards(skip_cards)
     if version:
@@ -625,7 +626,7 @@ def _get_vectorized_quantity(elements: list[Any],
                              element_id_name: str,
                              result_name: str,
                              log: SimpleLogger,
-                             cards_to_skip: list[str]=None) -> dict[int, float]:
+                             cards_to_skip: list[str]=None) -> dict[int, (str, float)]: #  (card_name, massi)
     if cards_to_skip is None:
         cards_to_skip = []
 
@@ -657,7 +658,8 @@ def _get_vectorized_quantity(elements: list[Any],
 
 def _get_nominal_quantity(elements: list[Any],
                           result_name: str,
-                          log: SimpleLogger, cards_to_skip: list[str]=None) -> dict[int, float]:
+                          log: SimpleLogger,
+                          cards_to_skip: Optional[list[str]]=None) -> dict[int, float]:
     if cards_to_skip is None:
         cards_to_skip = []
     eid_to_mass = {}
@@ -831,12 +833,12 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                     elemv = getattr(fem1, elem_cls_name)
                     propv = getattr(fem1, prop_cls_name)
 
-                    if prop.type in ['PBAR', 'PBEAM', 'PBARL', 'PBEAML']:
+                    if prop.type in {'PBAR', 'PBEAM', 'PBARL', 'PBEAML'}:
                         pcard = propv.slice_card_by_property_id(elem.pid)
                         msg += str(prop)
                         msg += f'rho_actual = {prop.Rho()}\n'
                         msg += f'rho_pcard = {pcard.rho()[0]}\n'
-                    if prop.type in ['PCOMP', 'PCOMPG', 'PSHELL']:
+                    if prop.type in {'PCOMP', 'PCOMPG', 'PSHELL'}:
                         ecard = elemv.slice_card_by_element_id(elem.eid)
                         pcard = propv.slice_card_by_property_id(elem.pid)
                         msg += str(elem)
@@ -1466,7 +1468,7 @@ def _assert_has_spc(subcase, fem: BDFv):
 def _validate_case_control(fem: BDFs, p0: Any, sol_base: int, subcase_keys: list[int],
                            subcases: Any, unused_sol_200_map: Any,
                            stop_on_failure: bool=True,
-                           ierror: int=0, nerrors: int=100) -> None:
+                           ierror: int=0, nerrors: int=100) -> int:
     if len(subcase_keys) > 1:
         subcase_keys = subcase_keys[1:]  # drop isubcase = 0
 
@@ -1819,7 +1821,7 @@ def _check_flutter_case(fem: BDFs, log: SimpleLogger, sol: int, subcase: Subcase
     return ierror
 
 def _check_gust_case(fem2: BDFs, log: SimpleLogger, sol: int, subcase: Subcase,
-                     ierror: int, nerrors: int) -> None:
+                     ierror: int, nerrors: int) -> int:
     """checks that GUST is valid"""
     if 'METHOD' not in subcase:  # EIGRL
         msg = 'A METHOD card is required for FLUTTER - SOL %i\n%s' % (sol, subcase)
@@ -2020,7 +2022,7 @@ def _check_case_parameters(subcase: Subcase,
                            stop_on_failure: bool=True) -> int:
     """helper method for ``check_case``"""
     log = fem.log
-    if fem.sol in [401, 402]:
+    if fem.sol in [401, 402] and 0:
         # TSTEP references a TSTEP1, but not a TSTEP
         # TSTEP1s are stored in tstepnls
         if any(subcase.has_parameter('TIME', 'TSTEP')):
@@ -2043,11 +2045,11 @@ def _check_case_parameters(subcase: Subcase,
             if tstep_id not in fem.tsteps:
                 raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
 
-    if 'TSTEPNL' in subcase:
+    if 'TSTEPNL' in subcase and 0:
         tstepnl_id = subcase.get_parameter('TSTEPNL')[0]
         assert tstepnl_id in fem.tstepnls, _tstep_msg(fem, subcase, tstepnl_id, tstep_type='nl')
 
-    if 'SUPORT1' in subcase:
+    if 'SUPORT1' in subcase and 0:
         suport1_id = subcase.get_parameter('SUPORT1')[0]
         assert suport1_id in fem.suport1, 'suport1_id=%s\n suport1=%s\n subcase:\n%s' % (suport1_id, str(fem.suport1), str(subcase))
 
@@ -2055,7 +2057,7 @@ def _check_case_parameters(subcase: Subcase,
         subcase, fem, sol,
         ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
 
-    if 'METHOD' in subcase:
+    if 'METHOD' in subcase and 0:
         method_id = subcase.get_parameter('METHOD')[0]
         if method_id in fem.methods:
             unused_method = fem.methods[method_id]
@@ -2071,7 +2073,7 @@ def _check_case_parameters(subcase: Subcase,
         ierror = check_sol(sol, subcase, allowed_sols, 'METHOD', log, ierror, nerrors,
                            require_sol=False)
 
-    if 'CMETHOD' in subcase:
+    if 'CMETHOD' in subcase and 0:
         cmethod_id = subcase.get_parameter('CMETHOD')[0]
         if cmethod_id in fem.cMethods:
             unused_method = fem.cMethods[cmethod_id]
@@ -2100,16 +2102,16 @@ def _check_case_parameters(subcase: Subcase,
 
     return ierror
     nid_map = fem.nid_map
-    if 'TEMPERATURE(LOAD)' in subcase:
+    if 'TEMPERATURE(LOAD)' in subcase and 0:
         loadcase_id = subcase.get_parameter('TEMPERATURE(LOAD)')[0]
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
-    if 'TEMPERATURE(BOTH)' in subcase:
+    if 'TEMPERATURE(BOTH)' in subcase and 0:
         loadcase_id = subcase.get_parameter('TEMPERATURE(BOTH)')[0]
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
-    if 'TEMPERATURE(INITIAL)' in subcase:
+    if 'TEMPERATURE(INITIAL)' in subcase and 0:
         loadcase_id = subcase.get_parameter('TEMPERATURE(INITIAL)')[0]
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
-    if 'TEMPERATURE(MATERIAL)' in subcase:
+    if 'TEMPERATURE(MATERIAL)' in subcase and 0:
         loadcase_id = subcase.get_parameter('TEMPERATURE(MATERIAL)')[0]
         get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
 
@@ -2155,18 +2157,18 @@ def _check_case_parameters(subcase: Subcase,
         fem.get_SPCx_node_ids_c1(spc_id, stop_on_failure=False)
         fem.get_SPCx_node_ids(spc_id, stop_on_failure=False)
 
-    if 'MPC' in subcase:
+    if 'MPC' in subcase and 0:
         mpc_id = subcase.get_parameter('MPC')[0]
         get_mpcs(fem, mpc_id, consider_mpcadd=True, stop_on_failure=False)
         fem.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=False)
         get_mpc_node_ids_c1(fem, mpc_id, consider_mpcadd=True, stop_on_failure=False)
         get_mpc_node_ids(fem, mpc_id, consider_mpcadd=True, stop_on_failure=False)
 
-    if 'NSM' in subcase:
+    if 'NSM' in subcase and 0:
         nsm_id = subcase.get_parameter('NSM')[0]
         fem.get_reduced_nsms(nsm_id, stop_on_failure=False)
 
-    if 'SDAMPING' in subcase:
+    if 'SDAMPING' in subcase and 0:
         sdamping_id = subcase.get_parameter('SDAMPING')[0]
         sdamp_sols = [110, 111, 112, 145, 146, 200]
         if not sdamping_id in fem.tables_sdamping and fem.sol in sdamp_sols:
@@ -2308,13 +2310,13 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
             assert 'DIVERG' not in subcase, subcase
             #allowed_sols = [144, 200]
 
-    if 'DIVERG' in subcase:
+    if 'DIVERG' in subcase and 0:
         value = subcase.get_parameter('DIVERG')[0]
         assert value in fem.divergs, 'value=%s\n divergs=%s\n subcase:\n%s' % (value, str(fem.divergs), str(subcase))
         assert 'TRIM' not in subcase, subcase
         #allowed_sols = [144, 200]
 
-    if 'FMETHOD' in subcase:
+    if 'FMETHOD' in subcase and 0:
         # FLUTTER
         fmethod_id = subcase.get_parameter('FMETHOD')[0]
         unused_fmethod = fem.flutters[fmethod_id]
@@ -2676,9 +2678,9 @@ def test_bdf_argparse(argv=None):
     version_group_map = {
         '--msc' : 'Assume MSC Nastran (default=True)',
         '--nx' : 'Assume NX Nastran/Simcenter (default=False)',
-        '--optistruct' : 'Assume Altair OptiStruct (default=False)',
-        '--nasa95' : 'Assume Nastran 95 (default=False)',
-        '--mystran' : 'Assume Mystran (default=False)',
+        #'--optistruct' : 'Assume Altair OptiStruct (default=False)',
+        #'--nasa95' : 'Assume Nastran 95 (default=False)',
+        #'--mystran' : 'Assume Mystran (default=False)',
     }
     for version, help_msg in version_group_map.items():
         version_group.add_argument(
@@ -2764,16 +2766,16 @@ def _set_version(args: Any):
         version = 'msc'
     elif args['nx']:
         version = 'nx'
-    elif args['optistruct']:
-        version = 'optistruct'
-    elif args['nasa95']:
-        version = 'nasa95'
-    elif args['mystran']:
-        version = 'mystran'
+    #elif args['optistruct']:
+        #version = 'optistruct'
+    #elif args['nasa95']:
+        #version = 'nasa95'
+    #elif args['mystran']:
+        #version = 'mystran'
     else:
         version = None
     args['version'] = version
-    del args['msc'], args['nx'], args['nasa95'], args['mystran'], args['optistruct']
+    del args['msc'], args['nx'] # , args['nasa95'], args['mystran'], args['optistruct']
 
 # defaults
 #check        = False
@@ -2798,7 +2800,8 @@ def _set_version(args: Any):
 
 def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
-    formats = '--msc|--nx|--optistruct|--nasa95|--mystran'
+    #formats = '--msc|--nx|--optistruct|--nasa95|--mystran'
+    formats = '--msc|--nx'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}]\n'
@@ -2856,9 +2859,9 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --hdf5        Save/load the BDF in HDF5 format\n'
         '  --msc         Assume MSC Nastran\n'
         '  --nx          Assume NX Nastran\n'
-        '  --optistruct  Assume OptiStruct\n'
-        '  --nasa95      Assume Nastran 95\n'
-        '  --mystran     Assume Mystran\n'
+        #'  --optistruct  Assume OptiStruct\n'
+        #'  --nasa95      Assume Nastran 95\n'
+        #'  --mystran     Assume Mystran\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'

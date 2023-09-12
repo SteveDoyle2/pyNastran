@@ -763,7 +763,7 @@ class BDFAttributes:
     @property
     def nonstructural_mass_cards(self) -> list[Any]:
         cards = [
-            #self.nsmadd,
+            self.nsmadd,
             self.nsm, self.nsm1,
             self.nsml, self.nsml1, # lumped
         ]
@@ -854,7 +854,7 @@ class BDFAttributes:
     @property
     def nsms(self):
         return [
-            #self.nsm, self.nsm1, self.nsml, self.nsml1, self.nsmadd,
+            self.nsm, self.nsm1, self.nsml, self.nsml1, self.nsmadd,
         ]
 
     @property

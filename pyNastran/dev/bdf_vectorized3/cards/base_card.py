@@ -238,10 +238,13 @@ class VectorizedBaseCard:
         """
         assert self.n > 0, self
         self_ids = self._ids
+        assert len(self_ids), self_ids
         i = np.atleast_1d(np.asarray(i, dtype=self_ids.dtype))
         i.sort()
         imax = i[-1]
         imax_allowable = len(self_ids) - 1
+        #if imax_allowable == -1:
+            #imax_allowable = 0
         if imax > imax_allowable:
             raise RuntimeError(f'imax_allowable={imax_allowable}; ids={self_ids}; len(i)={imax}')
         cls = self.__class__

@@ -28,7 +28,7 @@ from pyNastran.femutils.utils import hstack0
 if TYPE_CHECKING:
     from pyNastran.dev.op2_vectorized3.bdf import BDF
     from pyNastran.dev.op2_vectorized3.bdf_interface.bdf_attributes import AECOMP, AECOMPL, SET1
-    #from pyNastran2.op2.op2_geom import OP2Geom
+    #from pyNastran.dev.op2_vectorized3.op2_geom import OP2Geom
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.dev.op2_vectorized3.bdf_interface.bdf_attributes import RBE2, RBE3 #, GRID
 

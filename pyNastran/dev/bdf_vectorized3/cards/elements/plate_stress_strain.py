@@ -27,7 +27,7 @@ from .shell import (
 )
 from .shell_properties import nonlinear_thickness
 
-#from pyNastran2.utils import hstack_msg
+#from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
 if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike

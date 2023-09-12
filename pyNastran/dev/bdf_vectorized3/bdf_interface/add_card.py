@@ -4151,14 +4151,16 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         assert isinstance(value, list), value
         assert len(pid_eid) == len(value), 'len(pid_eid)=%s len(value)=%s' % (len(pid_eid), len(value))
 
-        nsms = []
-        for pid_eidi, valuei in zip(pid_eid, value):
-            nsm = NSM(sid, nsm_type, pid_eidi, valuei, comment=comment)
-            self._add_methods._add_nsm_object(nsm)
-            nsms.append(nsm)
-        return nsms
+        #nsms = []
+        nsm = self.nsm.add(sid, nsm_type, pid_eid, value, comment=comment)
+        #for pid_eidi, valuei in zip(pid_eid, value):
+            #nsm = NSM(sid, nsm_type, pid_eidi, valuei, comment=comment)
+            #self._add_methods._add_nsm_object(nsm)
+            #nsms.append(nsm)
+        return nsm
 
-    def add_nsm1(self, sid: int, nsm_type: str, value: float, ids: list[int], comment: str='') -> NSM1:
+    def add_nsm1(self, sid: int, nsm_type: str, value: float, ids: list[int],
+                 comment: str='') -> int:
         """
         Creates an NSM1 card
 
@@ -4186,7 +4188,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return nsm
 
     def add_nsml(self, sid: int, nsm_type: str, pid_eid: int, value: float,
-                 comment: str='') -> NSML:
+                 comment: str='') -> int:
         """
         Creates an NSML card, which defines lumped non-structural mass
 
@@ -4218,14 +4220,15 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         assert isinstance(value, list), value
         assert len(pid_eid) == len(value), 'len(pid_eid)=%s len(value)=%s' % (len(pid_eid), len(value))
 
-        nsms = []
-        for pid_eidi, valuei in zip(pid_eid, value):
-            nsm = self.nsml.add(sid, nsm_type, pid_eidi, valuei, comment=comment)
-            nsms.append(nsm)
-        return nsms
+        nsm = self.nsml.add(sid, nsm_type, pid_eid, value, comment=comment)
+        #nsms = []
+        #for pid_eidi, valuei in zip(pid_eid, value):
+            #nsm = self.nsml.add(sid, nsm_type, pid_eidi, valuei, comment=comment)
+            #nsms.append(nsm)
+        return nsm
 
     def add_nsml1(self, sid: int, nsm_type: str, value: float, ids: list[int],
-                  comment: str='') -> NSML1:
+                  comment: str='') -> int:
         """
         Creates an NSML1 card, which defines lumped non-structural mass
 
@@ -4251,7 +4254,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         nsm = self.nsml1.add(sid, nsm_type, value, ids, comment=comment)
         return nsm
 
-    def add_nsmadd(self, sid: int, sets: list[int], comment: str='') -> NSMADD:
+    def add_nsmadd(self, sid: int, sets: list[int], comment: str='') -> int:
         """
         Creates an NSMADD card, which sum NSM sets
 
