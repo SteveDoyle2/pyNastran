@@ -63,7 +63,7 @@ class TestNsm(unittest.TestCase):
         model.add_mat1(mid, E, G, nu, rho=0.0)
 
         # TODO: these are correct barring incorrect formulas
-        model.add_nsm1(1000, 'PSHELL', 1.0, pid_pshell, comment='nsm1') # correct; 1.5
+        model.add_nsm1(1000, 'PSHELL', 1.0, pid_pshell, comment='nsm1') # correct; 1.5; area=1.5 for PSHELL
         model.add_nsm1(1001, 'ELEMENT', 1.0, eid_quad) # correct; 1.0
         model.add_nsm1(1002, 'ELEMENT', 1.0, [eid_quad, eid_tri]) # correct; 1.5
         model.add_nsm1(1003, 'ELEMENT', 1.0, [eid_pbeaml]) # correct; 1.0
