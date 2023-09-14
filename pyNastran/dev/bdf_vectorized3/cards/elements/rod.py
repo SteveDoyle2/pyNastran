@@ -89,6 +89,7 @@ class CONROD(Element):
         elem.J = self.J[i]
         elem.c = self.c[i]
         elem.nsm = self.nsm[i]
+        elem.n = len(i)
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -240,6 +241,7 @@ class CROD(Element):
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
+        elem.n = len(i)
 
     def parse_cards(self) -> None:
         if self.n == 0:

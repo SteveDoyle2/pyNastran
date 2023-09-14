@@ -158,6 +158,10 @@ class NSMi(VectorizedBaseCard):
         self.value = value
         self.nvalue = nvalue
 
+    @property
+    def ivalue(self) -> np.ndarray:
+        return make_idim(self.n, self.nvalue)
+
     def __apply_slice__(self, nsm: NSMi, i: np.ndarray) -> None:
         nsm.nsm_id = self.nsm_id[i]
         nsm.nsm_type = self.nsm_type[i]
@@ -219,6 +223,7 @@ class NSM1i(VectorizedBaseCard):
         self.nsm_id = np.array([], dtype='int32')
         self.nsm_type = np.array([], dtype='|U7')
         self.pid_eid = np.array([], dtype='int32')
+        self.npid_eid = np.array([], dtype='int32')
         self.value = np.array([], dtype='int32')
 
     def add(self, sid: int, nsm_type: str, value: float, ids: list[int],
@@ -289,9 +294,16 @@ class NSM1i(VectorizedBaseCard):
     def __apply_slice__(self, elem: NSMi, i: np.ndarray) -> None:
         elem.nsm_id = self.nsm_id[i]
         elem.nsm_type = self.nsm_type[i]
-        elem.pid_eid = self.pid_eid[i]
         elem.value = self.value[i]
+
+        ielement = self.ielement # [i, :]
+        elem.pid_eid = hslice_by_idim(i, ielement, self.pid_eid)
+        elem.npid_eid = self.npid_eid[i]
         elem.n = len(i)
+
+    @property
+    def ielement(self) -> np.ndarray:
+        return make_idim(self.n, self.npid_eid)
 
     def parse_cards(self) -> None:
         assert self.n >= 0, self.n
@@ -507,7 +519,7 @@ class NSMADD(ADD):
                 i = np.where(unsm_id == nsm.nsm_id)[0]
                 if len(i) == 0:
                     continue
-                print(nsm.type, unsm_id, nsm.nsm_id, i)
+                #print(nsm.type, unsm_id, nsm.nsm_id, i)
                 self._ids
                 nsmi = nsm.slice_card_by_index(i)
                 nsm_by_nsm_id[unsm_id].append(nsmi)
