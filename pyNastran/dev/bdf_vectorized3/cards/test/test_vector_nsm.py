@@ -1,6 +1,8 @@
 """defines various shell element tests"""
 import os
 import unittest
+from typing import Any
+
 from cpylog import SimpleLogger
 
 import numpy as np
@@ -30,45 +32,30 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
     print('nsm_id', nsm_id)
     for nsm in nsms:
         #shell_pid_values = []
+        _elements = []
         if nsm.type == 'NSM1':
             #nsm_id : array([1000])
             #nsm_type : array(['PSHELL'], dtype='<U6')
             #pid_eid : array([10])
             #value  : array([1.])
             #utypes = np.unique(nsm.nsm_type)
-            _elements = []
             for nsm_type, (ielement0, ielement1) in zip(nsm.nsm_type, nsm.ielement):
                 pid_eid = nsm.pid_eid[ielement0:ielement1]
                 if nsm_type in {'PSHELL', 'PCOMP'}:
-                    pid = pid_eid
-                    if pid[0] == -1:
-                        cards = model.shell_elements
-                    else:
-                        cards = [card for card in model.shell_elements
-                                 if card.n > 0 and pid in card.property_id]
+                    cards = get_cards_by_property_id(pid_eid, model.shell_elements)
                     if len(cards) == 0:
                         continue
-                    shell_pids.append((nsm_type, cards, 'smear', pid_eid, nsm.value))
+                    shell_pids.append((nsm_type, cards, 'per', pid_eid, nsm.value))
                 elif nsm_type == 'PBARL':
-                    pid = pid_eid
-                    if pid[0] == -1:
-                        cards = [model.cbar]
-                    else:
-                        cards = [card for card in [model.cbar]
-                                 if card.n > 0 and pid in card.property_id]
+                    cards = get_cards_by_property_id(pid_eid, [model.cbar])
                     if len(cards) == 0:
                         continue
-                    bar_pids.append((nsm_type, cards, 'smear', pid_eid, nsm.value))
+                    bar_pids.append((nsm_type, cards, 'per', pid_eid, nsm.value))
                 elif nsm_type == 'PBEAML':
-                    pid = pid_eid
-                    if pid[0] == -1:
-                        cards = [model.cbeam]
-                    else:
-                        cards = [card for card in [model.cbeam]
-                                 if card.n > 0 and pid in card.property_id]
+                    cards = get_cards_by_property_id(pid_eid, [model.cbeam])
                     if len(cards) == 0:
                         continue
-                    beam_pids.append((nsm_type, cards, 'smear', pid_eid, nsm.value))
+                    beam_pids.append((nsm_type, cards, 'per', pid_eid, nsm.value))
                 elif nsm_type == 'PROD':
                     pid = pid_eid
                     if pid[0] == -1:
@@ -78,17 +65,12 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
                                  if card.n > 0 and pid in card.property_id]
                     if len(cards) == 0:
                         continue
-                    rod_pids.append((nsm_type, cards, 'smear', pid_eid, nsm.value))
+                    rod_pids.append((nsm_type, cards, 'per', pid_eid, nsm.value))
                 elif nsm_type == 'CONROD':
-                    pid = pid_eid
-                    if pid[0] == -1:
-                        cards = [model.conrod]
-                    else:
-                        cards = [card for card in [model.conrod]
-                                 if card.n > 0 and pid in card.element_id]
+                    cards = get_cards_by_element_id(pid_eid, [model.conrod])
                     if len(cards) == 0:
                         continue
-                    conrod_eids.append((nsm_type, cards, 'smear', pid_eid, nsm.value))
+                    conrod_eids.append((nsm_type, cards, 'per', pid_eid, nsm.value))
                 elif nsm_type == 'ELEMENT':
                     _elements.append(pid_eid)
                 else:
@@ -97,9 +79,10 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
                 element = np.hstack(_elements, dtype=nsm.pid_eid.dtype)
                 ones = np.ones(len(element), dtype=nsm.value.dtype)
                 element_value = ones * nsm.value
-                elements_flag.append('per')
+                elements_flag.append('smear')
                 elements.append(element)
                 element_values.append(element_value)
+                del _elements
         elif nsm.type == 'NSML':
         #assert len(nsm.nvalue) == 1
         #assert nsm.nvalue.max() == 1
@@ -110,9 +93,10 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
 
             for nsm_type in nsm.nsm_type:
                 if nsm_type in {'PSHELL', 'PCOMP'}:
-                    cards = [card for card in model.shell_elements
-                             if card.n > 0 and pid in card.property_id]
-                    shell_pids.append((nsm_type, cards, 'per', nsm.pid_eid, nsm.value))
+                    cards = get_cards_by_property_id(pid_eid, model.shell_elements)
+                    if len(cards) == 0:
+                        continue
+                    shell_pids.append((nsm_type, cards, 'smear', nsm.pid_eid, nsm.value))
                 else:
                     raise RuntimeError(nsm_type)
         elif nsm.type == 'NSML1':
@@ -126,13 +110,24 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
             #assert len(nsm.nvalue) == 1
             #assert nsm.nvalue.max() == 1
             for nsm_type in nsm.nsm_type:
+                pid_eid = nsm.pid_eid
                 if nsm_type in {'PSHELL', 'PCOMP'}:
-                    pid = nsm.pid_eid
-                    cards = [card for card in model.shell_elements
-                             if card.n > 0 and pid in card.property_id]
-                    shell_pids.append((nsm_type, cards, 'smear', pid, nsm.value))
+                    cards = get_cards_by_property_id(pid_eid, model.shell_elements)
+                    if len(cards) == 0:
+                        continue
+                    shell_pids.append((nsm_type, cards, 'smear', pid_eid, nsm.value))
+                elif nsm_type == 'ELEMENT':
+                    _elements.append(pid_eid)
                 else:
                     asdf
+            if len(_elements):
+                element = np.hstack(_elements, dtype=nsm.pid_eid.dtype)
+                ones = np.ones(len(element), dtype=nsm.value.dtype)
+                element_value = ones * nsm.value
+                elements_flag.append('per')
+                elements.append(element)
+                element_values.append(element_value)
+                del _elements
         else:
             print(nsm.get_stats())
             model.log.warning(f'skipping {nsm.type}')
@@ -217,7 +212,7 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
         card_types = area_length_type[:, 1]
         if card_types.min() != card_types.max():
             raise RuntimeError(f'mixed type cards (e.g., shell/bar/beam in nsm={nsm_id}')
-        if flag == 'per':
+        if flag == 'smear':
             massi = area_length_type[:, 0] * value
         else:
             area_total = area_length_type[:, 0].sum()
@@ -233,8 +228,9 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
     _apply_conrod_mass(conrod_eids, mass_list, centroid_list)
 
     for pid_type, cards, flag, pid, value in shell_pids:
-        if flag == 'smear':
-            total_area = 0.
+        print(pid_type, cards, flag, pid, value)
+        if flag == 'per':
+            #total_area = 0.
             for card1 in cards:
                 if pid[0] == -1:
                     card2 = card1
@@ -242,16 +238,16 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
                     ipid = np.where(card1.property_id == pid)[0]
                     card2 = card1.slice_card_by_index(ipid)
                 area = card2.area()
-                total_area += area.sum()
+                #total_area += area.sum()
                 centroid = card2.centroid()
                 massi = area * value
                 mass_list.append(massi)
                 centroid_list.append(centroid)
                 del area, card2, centroid, massi
-            print(f'total_area = {total_area}')
+            #print(f'total_area = {total_area}')
             x = 1
         else:
-            assert flag == 'per', flag
+            assert flag == 'smear', flag
             total_area = 0.
             for card1 in cards:
                 if pid[0] == -1:
@@ -284,9 +280,25 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
     #assert np.allclose(mass_total, 8.), mass_total
     return mass_total, centroid, inertia
 
+def get_cards_by_element_id(eid: np.ndarray, elements: list[Any]) -> list[Any]:
+    if eid[0] == -1:
+        cards = [card for card in elements if card.n > 0]
+    else:
+        cards = [card for card in elements
+                 if card.n > 0 and eid in card.element_id]
+    return cards
+
+def get_cards_by_property_id(pid: np.ndarray, elements: list[Any]) -> list[Any]:
+    if pid[0] == -1:
+        cards = [card for card in elements if card.n > 0]
+    else:
+        cards = [card for card in elements
+                 if card.n > 0 and pid in card.property_id]
+    return cards
+
 def _apply_bar_mass(bar_pids, mass_list, centroid_list):
     for pid_type, cards, flag, pid, value in bar_pids:
-        if flag == 'smear':
+        if flag == 'per':
             total_length = 0.
             for card1 in cards:
                 if pid[0] == -1:
@@ -306,13 +318,13 @@ def _apply_bar_mass(bar_pids, mass_list, centroid_list):
             print(f'total_length = {total_length}')
             x = 1
         else:
-            assert flag == 'per', flag
+            assert flag == 'smear', flag
             asdf
 
 
 def _apply_conrod_mass(conrod_eids, mass_list, centroid_list):
     for eid_type, cards, flag, eid, value in conrod_eids:
-        if flag == 'smear':
+        if flag == 'per':
             total_length = 0.
             for card1 in cards:
                 if eid[0] == -1:
@@ -332,7 +344,7 @@ def _apply_conrod_mass(conrod_eids, mass_list, centroid_list):
             print(f'total_length = {total_length}')
             x = 1
         else:
-            assert flag == 'per', flag
+            assert flag == 'smear', flag
             asdf
 
 
@@ -356,10 +368,16 @@ class TestNsm(unittest.TestCase):
         model.add_pshell(pid_pshell, mid1=mid, t=0.1) #, nsm=None)
         model.add_mat1(mid, E, G, nu, rho=0.0)
         model.add_nsm1(1002, 'ELEMENT', 1.0, [eid_quad, eid_tri]) # correct; 1.5
+        model.add_nsml1(2000, 'PSHELL', 1.0, pid_pshell, comment='nsml1') # correct; 1.0
+        model.add_nsml1(2006, 'PSHELL', 1.0, 'ALL') # correct; 1.0
 
         model.setup()
-        mass1, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=1002, debug=False)
-        assert np.allclose(mass1, 1.5), mass1
+        #mass1, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=1002, debug=False)
+        #assert np.allclose(mass1, 1.5), mass1
+        #mass1, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=2000, debug=False)
+        #assert np.allclose(mass1, 1.0), mass1
+        mass1, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=2006, debug=False)
+        assert np.allclose(mass1, 1.0), mass1
 
     def test_nsm_cquad4(self):
         eid_quad = 1
