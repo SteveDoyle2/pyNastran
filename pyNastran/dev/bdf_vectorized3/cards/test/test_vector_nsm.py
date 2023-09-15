@@ -84,22 +84,53 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
                 element_values.append(element_value)
                 del _elements
         elif nsm.type == 'NSML':
-        #assert len(nsm.nvalue) == 1
-        #assert nsm.nvalue.max() == 1
-        #for nsm_type, (ivalue0, invalue1) in zip(nsm.nsm_type, nsm.invalue):
-            #if nsm_type in {'PSHELL', 'PCOMP'}:
-                #cards = model.shell_elements
-                #shell_pids.append((nsm_type, cards, nsm.pid_eid, nsm.value))
-
+            #ivalue : array([[0, 1]])
+            #nsm_id : array([4000])
+            #nsm_type : array(['PSHELL'], dtype='<U7')
+            #nvalue : array([1])
+            #pid_eid : array([10])
+            #value  : array([1.])
             for nsm_type in nsm.nsm_type:
                 if nsm_type in {'PSHELL', 'PCOMP'}:
-                    cards = get_cards_by_property_id(pid_eid, model.shell_elements)
+                    cards = get_cards_by_property_id(nsm.pid_eid, model.shell_elements)
                     if len(cards) == 0:
                         continue
                     shell_pids.append((nsm_type, cards, 'smear', nsm.pid_eid, nsm.value))
+                elif nsm_type in {'PBARL'}:
+                    cards = get_cards_by_property_id(nsm.pid_eid, [model.cbar])
+                    if len(cards) == 0:
+                        continue
+                    bar_pids.append((nsm_type, cards, 'smear', nsm.pid_eid, nsm.value))
+                elif nsm_type in {'PBEAML'}:
+                    cards = get_cards_by_property_id(nsm.pid_eid, [model.cbeam])
+                    if len(cards) == 0:
+                        continue
+                    beam_pids.append((nsm_type, cards, 'smear', nsm.pid_eid, nsm.value))
+                elif nsm_type in {'PROD'}:
+                    cards = get_cards_by_property_id(nsm.pid_eid, [model.crod])
+                    if len(cards) == 0:
+                        continue
+                    rod_pids.append((nsm_type, cards, 'smear', nsm.pid_eid, nsm.value))
+                elif nsm_type in {'CONROD'}:
+                    cards = get_cards_by_element_id(nsm.pid_eid, [model.conrod])
+                    if len(cards) == 0:
+                        continue
+                    conrod_eids.append((nsm_type, cards, 'smear', nsm.pid_eid, nsm.value))
+                elif nsm_type == 'ELEMENT':
+                    _elements.append(nsm.pid_eid)
                 else:
                     raise RuntimeError(nsm_type)
+            if len(_elements):
+                element = np.hstack(_elements, dtype=nsm.pid_eid.dtype)
+                ones = np.ones(len(element), dtype=nsm.value.dtype)
+                element_value = ones * nsm.value
+                elements_flag.append('smear')
+                elements.append(element)
+                element_values.append(element_value)
+                del _elements
+
         elif nsm.type == 'NSML1':
+            distribution_type = 'smear'
             #ivalue : array([[0, 1]])
             #nsm_id : array([4000])
             #nsm_type : array(['PSHELL'], dtype='<U7')
@@ -115,14 +146,84 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
                     cards = get_cards_by_property_id(pid_eid, model.shell_elements)
                     if len(cards) == 0:
                         continue
-                    shell_pids.append((nsm_type, cards, 'smear', pid_eid, nsm.value))
+                    shell_pids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
+                elif nsm_type == 'PBARL':
+                    cards = get_cards_by_property_id(pid_eid, [model.cbar])
+                    if len(cards) == 0:
+                        continue
+                    bar_pids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
+                elif nsm_type == 'PBEAML':
+                    cards = get_cards_by_property_id(pid_eid, [model.cbeam])
+                    if len(cards) == 0:
+                        continue
+                    beam_pids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
+                elif nsm_type == 'PROD':
+                    cards = get_cards_by_property_id(pid_eid, [model.crod])
+                    if len(cards) == 0:
+                        continue
+                    rod_pids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
+                elif nsm_type == 'CONROD':
+                    cards = get_cards_by_element_id(pid_eid, [model.conrod])
+                    if len(cards) == 0:
+                        continue
+                    conrod_eids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
+
                 elif nsm_type == 'ELEMENT':
                     _elements.append(pid_eid)
                 else:
-                    asdf
+                    raise NotImplementedError(nsm_type)
             if len(_elements):
                 element = np.hstack(_elements, dtype=nsm.pid_eid.dtype)
                 ones = np.ones(len(element), dtype=nsm.value.dtype)
+                element_value = ones * nsm.value
+                elements_flag.append('per')
+                elements.append(element)
+                element_values.append(element_value)
+                del _elements
+        elif nsm.type == 'NSM':
+            #nsm_id : array([3000])
+            #nsm_type : array(['PSHELL'], dtype='<U7')
+            #ivalue : array([[0, 1]])
+            #nvalue : array([1])
+            #pid_eid : array([10])
+            #value  : array([1.])
+            distribution_type = 'per'
+            for nsm_type, (ivalue0, ivalue1) in zip(nsm.nsm_type, nsm.ivalue):
+                pid_eid = nsm.pid_eid
+                values = nsm.value[ivalue0 : ivalue1]
+                assert len(values) == 1, values
+                if nsm_type == 'PSHELL':
+                    cards = get_cards_by_property_id(pid_eid, model.shell_elements)
+                    if len(cards) == 0:
+                        continue
+                    shell_pids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
+                elif nsm_type == 'PBARL':
+                    cards = get_cards_by_property_id(pid_eid, [model.cbar])
+                    if len(cards) == 0:
+                        continue
+                    bar_pids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
+                elif nsm_type == 'PBEAML':
+                    cards = get_cards_by_property_id(pid_eid, [model.cbeam])
+                    if len(cards) == 0:
+                        continue
+                    beam_pids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
+                elif nsm_type == 'PROD':
+                    cards = get_cards_by_property_id(pid_eid, [model.crod])
+                    if len(cards) == 0:
+                        continue
+                    rod_pids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
+                elif nsm_type == 'CONROD':
+                    cards = get_cards_by_element_id(pid_eid, [model.conrod])
+                    if len(cards) == 0:
+                        continue
+                    conrod_eids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
+                elif nsm_type == 'ELEMENT':
+                    _elements.append(pid_eid)
+                else:
+                    raise NotImplementedError(nsm_type)
+            if len(_elements):
+                element = np.hstack(_elements, dtype=pid_eid.dtype)
+                ones = np.ones(len(element), dtype=values.dtype)
                 element_value = ones * nsm.value
                 elements_flag.append('per')
                 elements.append(element)
@@ -299,7 +400,28 @@ def get_cards_by_property_id(pid: np.ndarray, elements: list[Any]) -> list[Any]:
 def _apply_bar_mass(bar_pids, mass_list, centroid_list):
     for pid_type, cards, flag, pid, value in bar_pids:
         if flag == 'per':
+            #total_length = 0.
+            for card1 in cards:
+                if pid[0] == -1:
+                    card2 = card1
+                else:
+                    assert len(pid) == 1
+                    ipid = np.where(card1.property_id == pid)[0]
+                    print(f'  card1.type={card1.type} property_id={card1.property_id} pid={pid}')
+                    card2 = card1.slice_card_by_index(ipid)
+                length = card2.length()
+                #total_length += length.sum()
+                centroid = card2.centroid()
+                massi = length * value
+                mass_list.append(massi)
+                centroid_list.append(centroid)
+                del length, card2, centroid, massi
+            #print(f'total_length = {total_length}')
+            x = 1
+        else:
+            assert flag == 'smear', flag
             total_length = 0.
+            card_lengths = []
             for card1 in cards:
                 if pid[0] == -1:
                     card2 = card1
@@ -310,22 +432,41 @@ def _apply_bar_mass(bar_pids, mass_list, centroid_list):
                     card2 = card1.slice_card_by_index(ipid)
                 length = card2.length()
                 total_length += length.sum()
+                card_lengths.append((card2, length))
+
+            for card2, length in card_lengths:
                 centroid = card2.centroid()
-                massi = length * value
+                massi = length / total_length * value
                 mass_list.append(massi)
                 centroid_list.append(centroid)
                 del length, card2, centroid, massi
             print(f'total_length = {total_length}')
-            x = 1
-        else:
-            assert flag == 'smear', flag
-            asdf
 
 
 def _apply_conrod_mass(conrod_eids, mass_list, centroid_list):
     for eid_type, cards, flag, eid, value in conrod_eids:
         if flag == 'per':
+            #total_length = 0.
+            for card1 in cards:
+                if eid[0] == -1:
+                    card2 = card1
+                else:
+                    assert len(eid) == 1
+                    ieid = np.where(card1.element_id == eid)[0]
+                    print(f'  card1.type={card1.type} element_id={card1.element_id} eid={eid}')
+                    card2 = card1.slice_card_by_index(ieid)
+                length = card2.length()
+                #total_length += length.sum()
+                centroid = card2.centroid()
+                massi = length * value
+                mass_list.append(massi)
+                centroid_list.append(centroid)
+                del length, card2, centroid, massi
+            #print(f'total_length = {total_length}')
+            x = 1
+        else:
             total_length = 0.
+            card_lengths = []
             for card1 in cards:
                 if eid[0] == -1:
                     card2 = card1
@@ -336,16 +477,15 @@ def _apply_conrod_mass(conrod_eids, mass_list, centroid_list):
                     card2 = card1.slice_card_by_index(ieid)
                 length = card2.length()
                 total_length += length.sum()
+                card_lengths.append((card2, length))
+
+            for card2, length in card_lengths:
                 centroid = card2.centroid()
                 massi = length * value
                 mass_list.append(massi)
                 centroid_list.append(centroid)
                 del length, card2, centroid, massi
             print(f'total_length = {total_length}')
-            x = 1
-        else:
-            assert flag == 'smear', flag
-            asdf
 
 
 class TestNsm(unittest.TestCase):
@@ -556,25 +696,25 @@ class TestNsm(unittest.TestCase):
             #print('----------------------------------------------')
 
         model2 = save_load_deck(model, run_test_bdf=False)
-        model2.reset_rslot_map()
+        #model2.reset_rslot_map()
         #print(model2._type_to_slot_map)
-        model2.elements = {}
+        #model2.elements = {}
 
-        type_to_id_map = {}
-        for card_type, ids in model2._type_to_id_map.items():
-            if card_type in ['CQUAD4', 'CTRIA3', 'CBEAM', 'CONROD', 'CBAR', 'CROD']:
-                pass
-            elif card_type in ['NSM', 'NSM1', 'NSML', 'NSML1', 'MAT1',
-                               'PBARL', 'PBEAM', 'PSHELL', 'PCOMP', 'PROD', 'PBEAML', 'GRID']:
-                type_to_id_map[card_type] = ids
-            else:
-                raise NotImplementedError(str((card_type, ids)))
-        model2._type_to_id_map = type_to_id_map
+        #type_to_id_map = {}
+        #for card_type, ids in model2._type_to_id_map.items():
+            #if card_type in ['CQUAD4', 'CTRIA3', 'CBEAM', 'CONROD', 'CBAR', 'CROD']:
+                #pass
+            #elif card_type in ['NSM', 'NSM1', 'NSML', 'NSML1', 'MAT1',
+                               #'PBARL', 'PBEAM', 'PSHELL', 'PCOMP', 'PROD', 'PBEAML', 'GRID']:
+                #type_to_id_map[card_type] = ids
+            #else:
+                #raise NotImplementedError(str((card_type, ids)))
+        #model2._type_to_id_map = type_to_id_map
 
         model2.log = SimpleLogger(level='error')
 
         # don't crash on the null case
-        for nsm_id in sorted(model2.nsms):
+        for nsm_id in nsm_ids:
             mass, unused_cg, unused_I = mass_properties_nsm(model2, nsm_id=nsm_id, debug=False)
             self.assertEqual(mass, 0.0)
             #print('mass[%s] = %s' % (nsm_id, mass))
