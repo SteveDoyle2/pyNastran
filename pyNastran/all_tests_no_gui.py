@@ -8,6 +8,13 @@ try:
     IS_TABLES = True
 except ImportError:
     IS_TABLES = False
+
+try:
+    import vtk
+    IS_VTK = True
+except ImportError:
+    IS_VTK = False
+
 import pyNastran
 
 pkg_path = pyNastran.__path__[0]
@@ -49,10 +56,10 @@ from pyNastran.gui.test.all_tests_no_gui import *
 
 try:
     from pyNastran.dev.solver.test_springs import *
-    if IS_TABLES:
-        from pyNastran.dev.bdf_vectorized3.test.all_tests import *
 except ImportError:  # pragma: no cover
     pass
+if IS_TABLES and IS_VTK:
+    from pyNastran.dev.bdf_vectorized3.test.all_tests import *
 
 
 if __name__ == "__main__":  # pragma: no cover
