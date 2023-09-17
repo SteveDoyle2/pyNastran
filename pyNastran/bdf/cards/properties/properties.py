@@ -61,8 +61,11 @@ class PFAST(Property):
         return PFAST(pid, d, kt1, kt2, kt3,
                      mcid=-1, mflag=0, kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment='')
 
-    def __init__(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
-                 kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment=''):
+    def __init__(self, pid: int, d: int,
+                 kt1: float, kt2: float, kt3: float,
+                 mcid: int=-1, mflag: int=0,
+                 kr1: float=0., kr2: float=0., kr3: float=0.,
+                 mass: float=0., ge: float=0., comment: str='') -> PFAST:
         """
         Creates a PFAST card
 

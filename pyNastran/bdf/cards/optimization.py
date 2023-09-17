@@ -1503,6 +1503,12 @@ def validate_dresp1(label: str, property_type: str, response_type: str,
             raise RuntimeError(msg)
 
     if response_type == 'FLUTTER':
+        #ATT1 = Identification number of a SET1 entry that specifies a set of modes.
+        #ATT2 = Identification number of an FLFACT entry that specifies a list of densities.
+        #ATT3 = Identification number of an FLFACT entry that specifies a list of Mach numbers.
+        #ATT4 = Identification number of an FLFACT entry that specifies a list of velocities.
+        #If the flutter analysis is type PKNL, it is necessary to put PKNL in the PTYPE
+        #field of this entry.
         assert property_type in [None, 'PKNL', 'PK'], msg
         assert atta is None, msg
         assert attb is None, msg
@@ -1527,7 +1533,7 @@ def validate_dresp1(label: str, property_type: str, response_type: str,
         assert isinstance(attb, integer_types), msg
         assert attb > 0, msg
         assert len(atti) > 0, msg
-    elif response_type in ['CSTRAIN', 'CSTRESS']:
+    elif response_type in {'CSTRAIN', 'CSTRESS'}:
         # attb is the lamina number
         if attb is None:
             attb = 1
@@ -1542,7 +1548,7 @@ def validate_dresp1(label: str, property_type: str, response_type: str,
         assert attb > 0, msg # lamina id
         assert len(atti) > 0, msg # pid/eids
 
-    elif response_type in ['STRESS', 'STRAIN']:
+    elif response_type in {'STRESS', 'STRAIN'}:
         _validate_dresp1_stress_strain(property_type, response_type, atta, attb, atti)
     elif response_type == 'FORCE':
         _validate_dresp1_force(property_type, response_type, atta, attb, atti)
@@ -1655,7 +1661,7 @@ def _validate_dresp_property_none(label: str,
         assert attb in ['ALPHA', 'OMEGA'], msg
         assert len(atti) == 0, msg
 
-    elif response_type in ['EIGN', 'LAMA']: # EIGEN as well?
+    elif response_type in {'EIGN', 'LAMA'}: # EIGEN as well?
         assert isinstance(atta, integer_types), msg
         assert atta > 0, msg
         # LAMA:
@@ -1684,6 +1690,17 @@ def _validate_dresp_property_none(label: str,
         assert atta > 0, msg
         assert attb is None, msg
         assert len(atti) == 1, msg
+    elif response_type == 'CMPLNCE': # compliance
+        assert atta is None, msg
+        assert attb is None, msg
+        assert len(atti) == 0, msg
+    elif response_type == 'DWEIGHT':
+        #DRESP1 label=DWEIGHT ptype=None rtype=DWEIGHT atta=None attb=None atti=[]
+        assert atta is None, msg
+        assert attb is None, msg
+        assert len(atti) == 0, msg
+    elif response_type in {'STRESS', 'STRAIN', 'FORCE', 'CFAILURE'}:
+        raise RuntimeError(f'response_type={response_type!r} and property_type must not be None...{msg}')
     else:
         raise RuntimeError(msg)
     return atta, attb, atti
@@ -1918,6 +1935,10 @@ class DRESP1(OptConstraint):
         self.label = label
 
         # DISP, VONMISES, 14
+        response_type_dict = {
+            'compliance': 'CMPLNCE',
+        }
+        response_type = response_type_dict.get(response_type.lower(), response_type)
         self.response_type = response_type
 
         # PSHELL, PCOMP, PBAR, etc.
@@ -2110,7 +2131,8 @@ class DRESP1(OptConstraint):
             self.atti_ref = model.Properties(self.atti, msg=msg)
         elif self.response_type in ['FRSTRE']:
             self.atti_ref = model.Properties(self.atti, msg=msg)
-        elif self.response_type in {'WEIGHT', 'STABDER', 'CEIG', 'EIGN', 'FREQ'}:
+        elif self.response_type in {'WEIGHT', 'STABDER', 'CEIG', 'EIGN', 'FREQ', 'CMPLNCE'}:
+            # nothing
             pass
         elif self.response_type == 'FLUTTER':
             # TODO: SOL-200; add check that FLFACT values exist in the FLFACT card
@@ -2149,9 +2171,11 @@ class DRESP1(OptConstraint):
             #self.atta = component
             eids = [eid for eid in self.atti if eid is not None]
             self.atti_ref = model.Elements(eids, msg=msg)
-        elif  self.response_type == 'ABSTRESS':
+        elif self.response_type == 'ABSTRESS':
             # atta - Arbitrary Beam Stress Item Code
             self.atti_ref = model.Properties(self.atti, msg=msg)
+        elif self.response_type == 'DWEIGHT':
+            pass
         else:
             msg = 'response_type=%r ptype=%r\n' % (self.response_type, self.property_type)
             msg += str(self)
@@ -2225,9 +2249,11 @@ class DRESP1(OptConstraint):
             #self.atta = component
             eids = [eid for eid in self.atti if eid is not None]
             self.atti_ref = model.Elements(eids, msg=msg)
-        elif  self.response_type == 'ABSTRESS':
+        elif self.response_type == 'ABSTRESS':
             # atta - Arbitrary Beam Stress Item Code
             self.atti_ref = model.Properties(self.atti, msg=msg)
+        elif self.response_type in {'CMPLNCE', 'DWEIGHT'}:
+            pass
         else:
             msg = 'response_type=%r ptype=%r\n' % (self.response_type, self.property_type)
             msg += str(self)
@@ -2311,10 +2337,12 @@ class DRESP1(OptConstraint):
             assert self.property_type == 'PANEL', msg
             # atta=None attb=3000.0 atti=[555]
             data = self.atti
-        elif  self.response_type == 'ABSTRESS':
+        elif self.response_type == 'ABSTRESS':
             ## atta - Arbitrary Beam Stress Item Code
             #ids = [idi for idi in self.atti if idi is not None]
             data = self._properties()
+        elif self.response_type in {'CMPLANCE'}:
+            asdf
         else:
             msg = 'response_type=%r property_type=%r atta=%r attb=%r atti=%r\n' % (
                 self.response_type, self.property_type, self.atta, self.attb, self.atti)

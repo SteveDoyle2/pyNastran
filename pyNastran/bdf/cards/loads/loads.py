@@ -336,7 +336,11 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         sid = data[0]
         excite_id = data[1]
         lid = data[2]
+        if lid == 0:
+            lid = None
         tid = data[3]
+        if tid == 0:
+            tid = None
         return LSEQ(sid, excite_id, lid, tid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:

@@ -421,6 +421,9 @@ STR_PARAMS_1 = SATK_STR_PARAMS1 | {
     b'AEDBX', b'AERO', b'AUTOSUP0', b'AXIOPT',
 
     b'GPACAO',
+
+    # vbaop2_test
+    b'STABFEM',
 }
 def _check_unique_sets(*sets: list[set[str]]):
     """verifies that the sets are unique"""

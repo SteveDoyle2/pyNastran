@@ -577,7 +577,7 @@ class EDOM(GeomCommon):
             n += ntotal
             dconstrs.append(dconstr)
         assert n == len(data), f'n={n} ndata={len(data)}'
-        op2.to_msc('; DCONSTR-32 found')
+        #op2.to_msc('; DCONSTR-32 found')
         return n, dconstrs
 
     def _read_dscreen(self, data: bytes, n: int) -> int:
@@ -1342,18 +1342,6 @@ class EDOM(GeomCommon):
           8 ATTA I Response attribute
           9 ATTB I Response attribute
           10 MONE I Entry is -1
-        FLAG = 17 Compliance
-          5 UNDEF(2) None
-          7 UNDEF I Reserved for SEID for compliance DRESP1
-          8 UNDEF(2) None
-          10 MONE I Entry is -1
-        FLAG = 19 ERP
-          5 UNDEF(2) None
-          7 REGION I Region identifier
-          8 ATTA   I Response attribute
-          9 ATTB   I Frequency or real code for character input, or -1=spawn)
-          10 ATTi  I Panel SET3 IDs
-          Word 10 repeats until -1 occurs
         FLAG = 20 FRDISP
           5 UNDEF(2) None
           7 REGION I Region identifier for constraint screening
@@ -1503,8 +1491,10 @@ class EDOM(GeomCommon):
             flag_to_resp = FLAG_TO_RESP_NX
 
         #self.show_data(data[n:], types='qds')
-        ints = np.frombuffer(data[n:], op2.idtype8).copy()
-        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
+        datan = data[n:]
+        #strings = np.frombuffer(datan, '|S4').copy()
+        ints = np.frombuffer(datan, op2.idtype8).copy()
+        floats = np.frombuffer(datan, op2.fdtype8).copy()
         #print(ints.tolist())
         istart, iend = get_minus1_start_end(ints)
         #if self.size == 4:
@@ -1536,6 +1526,7 @@ class EDOM(GeomCommon):
                 #ddd
             return attb
 
+        #is_nx = True
         size = self.size
         idresps_to_skip = set()
         for (idresp, i0, i1) in zip(count(), istart, iend):
@@ -1563,14 +1554,25 @@ class EDOM(GeomCommon):
                 # WEIGHT
                 # 5 UNDEF(2) None
                 # 7 REGION I Region identifier for constraint screening
-                # 8 ATTA   I Response attribute (-10 for DWEIGHT which is the topology optimization design weight
+                # 8 ATTA   I Response attribute
+                #   -10 for DWEIGHT which is the topology optimization design weight
                 # 9 ATTB   I Response attribute
                 # 10 MONE  I Entry is -1
+                #
+                #
+                #ints    = (13, 'WGT     ', 1, '        ', 0,   -10, -9999, -1)
+                #floats  = (13, 'WGT     ', 1, '        ', 0.0, nan, nan, nan)
+                #DRESP1, 13, WGT, DWEIGHT
+
                 region, atta, attb = ints[i0+6:i0+9]
                 property_type = None
                 #response_type = 'WEIGHT'
-                assert atta == 33, atta
+                if atta == -10:
+                    atta = 'DWEIGHT'
+                else:
+                    assert atta == 33, atta
                 assert attb == -9999, attb
+
                 atta = None
                 attb = None
                 atti = None
@@ -1691,10 +1693,16 @@ class EDOM(GeomCommon):
                 #   7 UNDEF I Reserved for SEID for compliance DRESP1
                 #   8 UNDEF(2) None
                 #   10 MONE I Entry is -1
+                #
+                # DRESP1, 12, CMPL1, CMPLNCE
                 property_type = None
                 region, atta, attb = ints[i0+6:i0+9]
+                #print('ints:', ints[i0:i0+10])
+                #print('floats:', floats[i0:i0+10])
+                #print('strings:', strings[i0:i0+10])
                 atti = None
                 #print(17, region, atta, attb)
+
             elif flag == 19 and is_nx: # ERP
                 # FLAG = 19 ERP
                 #   5 UNDEF(2) None
@@ -1897,7 +1905,7 @@ class EDOM(GeomCommon):
                 print('floats =', floats)
                 continue
             else:
-                raise NotImplementedError(flag)
+                raise NotImplementedError((flag, is_nx))
 
             #print(response_type)
             if property_type == '':

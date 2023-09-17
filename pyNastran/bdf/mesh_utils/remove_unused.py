@@ -920,6 +920,8 @@ def _store_dresp1(model: BDF, ids, nids_used, pids_used, dresps_used):
             elif dresp.response_type in ['FLUTTER', 'TRIM', 'DIVERG']:
                 # flutter_id / trim_id
                 pass
+            elif dresp.response_type in {'CMPLNCE', 'DWEIGHT'}:
+                pass
             else:
                 msg = (
                     str(dresp) + 'region=%r property_type=%r response_type=%r '

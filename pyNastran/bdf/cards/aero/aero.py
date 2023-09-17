@@ -1620,12 +1620,9 @@ class CAERO1(BaseCard):
             msg += 'p1=%s and must be a numpy array\n' % (self.p1)
             is_failed = True
 
-        if self.x12 <= 0.:
-            msg += 'X12=%s and must be greater than or equal to 0\n' % (self.x12)
+        if self.x12 <= 0. and self.x43 <= 0.:
+            msg += f'X12={self.x12} and X43={self.x43}; one must be greater than or equal to 0\n'
             is_failed = True
-        #if self.x43 <= 0.:
-            #msg += 'X43=%s and must be greater than or equal to 0\n' % (self.x43)
-            #is_failed = True
 
         if self.nspan == 0 and self.lspan == 0:
             msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (
@@ -5913,15 +5910,27 @@ class SPLINE4(Spline):
     aeroelastic problems on general aerodynamic geometries using either the
     Infinite Plate, Thin Plate or Finite Plate splining method.
 
-    +---------+-------+-------+--------+-----+------+----+------+-------+
-    |    1    |   2   |   3   |    4   |  5  |   6  |  7 |   8  |   9   |
-    +=========+=======+=======+========+=====+======+====+======+=======+
-    | SPLINE4 |  EID  | CAERO | AELIST |     | SETG | DZ | METH | USAGE |
-    +---------+-------+-------+--------+-----+------+----+------+-------+
-    |         | NELEM | MELEM |        |     |      |    |      |       |
-    +---------+-------+-------+--------+-----+------+----+------+-------+
-    | SPLINE4 |   3   | 111   |   115  |     |  14  | 0. | IPS  |       |
-    +---------+-------+-------+--------+-----+------+----+------+-------+
+    NX
+    +---------+-------+-------+--------+-------+------+----+------+-------+
+    |    1    |   2   |   3   |    4   |   5   |   6  |  7 |   8  |   9   |
+    +=========+=======+=======+========+=======+======+====+======+=======+
+    | SPLINE4 |  EID  | CAERO | AELIST |       | SETG | DZ | METH | USAGE |
+    +---------+-------+-------+--------+-------+------+----+------+-------+
+    |         | NELEM | MELEM |        |       |      |    |      |       |
+    +---------+-------+-------+--------+-------+------+----+------+-------+
+    | SPLINE4 |   3   | 111   |   115  |       |  14  | 0. | IPS  |       |
+    +---------+-------+-------+--------+-------+------+----+------+-------+
+
+    MSC
+    +---------+-------+-------+--------+-------+------+----+------+-------+
+    |    1    |   2   |   3   |    4   |   5   |   6  |  7 |   8  |   9   |
+    +=========+=======+=======+========+=======+======+====+======+=======+
+    | SPLINE4 |  EID  | CAERO | AELIST |       | SETG | DZ | METH | USAGE |
+    +---------+-------+-------+--------+-------+------+----+------+-------+
+    |         | NELEM | MELEM | FTYPE  | RCORE |      |    |      |       |
+    +---------+-------+-------+--------+-------+------+----+------+-------+
+    | SPLINE4 |   3   | 111   |   115  |       |  14  | 0. | IPS  |       |
+    +---------+-------+-------+--------+-------+------+----+------+-------+
 
     """
     type = 'SPLINE4'
@@ -5948,7 +5957,7 @@ class SPLINE4(Spline):
     def __init__(self, eid: int, caero: int, aelist: int, setg: int,
                  dz: float, method: str, usage: str,
                  nelements: int, melements: int,
-                 ftype: Optional[int]=None, rcore: Optional[float]=None,
+                 ftype: Optional[str]=None, rcore: Optional[float]=None,
                  comment: str=''):
         """
         Creates a SPLINE4 card, which defines a curved Infinite Plate,
@@ -5982,7 +5991,7 @@ class SPLINE4(Spline):
         nelements / melements : int; default=10
             The number of FE elements along the local spline x/y-axis if
             using the FPS option
-        ftype: int; default=None
+        ftype: str; default=None
             MSC only
         rcore : float; default=None
             MSC only
@@ -6013,7 +6022,7 @@ class SPLINE4(Spline):
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'uasge = %s' % self.usage
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a SPLINE4 card from ``BDF.add_card(...)``
 
@@ -6035,7 +6044,7 @@ class SPLINE4(Spline):
         usage = string_or_blank(card, 8, 'usage', default='BOTH')
         nelements = integer_or_blank(card, 9, 'nelements', default=10)
         melements = integer_or_blank(card, 10, 'melements', default=10)
-        ftype = string_or_blank(card, 11, 'ftype', 'WF2')
+        ftype = string_or_blank(card, 11, 'ftype', default='WF2')
         rcore = double_or_blank(card, 12, 'rcore')
         assert len(card) <= 13, f'len(SPLINE4 card = {len(card):d}\ncard={card}'
         return SPLINE4(eid, caero, aelist, setg, dz, method, usage,

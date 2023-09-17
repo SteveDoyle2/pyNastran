@@ -873,6 +873,12 @@ class GEOM2:
                 x = None
             else:
                 raise NotImplementedError(flag)
+
+            assert ga > 0, (ga, gb, gc)
+            assert gb > 0, (ga, gb, gc)
+            assert gc >= 0, (ga, gb, gc)
+            if gc == 0:
+                gc = None
             #print(eid, pid, ga, gb, gc, sa, sb, sc, g0, sum(other))
             #print(other)
             assert sum(other) == 0, other # self.show_data(datai, types='if')

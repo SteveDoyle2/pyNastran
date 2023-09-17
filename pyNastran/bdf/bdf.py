@@ -158,7 +158,7 @@ from .cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
     OMIT, OMIT1,
-    SET1, SET3,
+    SET1, SET2, SET3,
     SEBSET, SECSET, SEQSET, # SEUSET
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
     SESET, #SEQSEP
@@ -804,7 +804,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'DVTREL1', 'GROUP', 'DMNCON',
 
             # sets
-            'SET1', 'SET3',  ## sets
+            'SET1', 'SET2', 'SET3',  ## sets
             'ASET', 'ASET1',  ## asets
             'OMIT', 'OMIT1',  ## omits
             'BSET', 'BSET1',  ## bsets
@@ -2608,6 +2608,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'OMIT1' : (OMIT1, add_methods._add_omit_object),
 
             'SET1' : (SET1, add_methods._add_set_object),
+            'SET2' : (SET2, add_methods._add_set_object),
             'SET3' : (SET3, add_methods._add_set_object),
 
             # radset
