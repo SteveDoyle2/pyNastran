@@ -14,6 +14,7 @@ from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_bars import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_coords import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import TestShells
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_solids import *
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_nsm import *
 
 if __name__ == '__main__':
     unittest.main()

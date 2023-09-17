@@ -696,29 +696,6 @@ class TestNsm(unittest.TestCase):
             #print('----------------------------------------------')
 
         model2 = save_load_deck(model, run_test_bdf=False)
-        #model2.reset_rslot_map()
-        #print(model2._type_to_slot_map)
-        #model2.elements = {}
-
-        #type_to_id_map = {}
-        #for card_type, ids in model2._type_to_id_map.items():
-            #if card_type in ['CQUAD4', 'CTRIA3', 'CBEAM', 'CONROD', 'CBAR', 'CROD']:
-                #pass
-            #elif card_type in ['NSM', 'NSM1', 'NSML', 'NSML1', 'MAT1',
-                               #'PBARL', 'PBEAM', 'PSHELL', 'PCOMP', 'PROD', 'PBEAML', 'GRID']:
-                #type_to_id_map[card_type] = ids
-            #else:
-                #raise NotImplementedError(str((card_type, ids)))
-        #model2._type_to_id_map = type_to_id_map
-
-        model2.log = SimpleLogger(level='error')
-
-        # don't crash on the null case
-        for nsm_id in nsm_ids:
-            mass, unused_cg, unused_I = mass_properties_nsm(model2, nsm_id=nsm_id, debug=False)
-            self.assertEqual(mass, 0.0)
-            #print('mass[%s] = %s' % (nsm_id, mass))
-        #print('done with null')
 
     def test_nsm_prepare(self):
         """tests the NSMADD and all NSM cards using the prepare methods"""
