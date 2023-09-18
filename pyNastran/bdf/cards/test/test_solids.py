@@ -303,7 +303,7 @@ class TestSolids(unittest.TestCase):
         model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
-        save_load_deck(model)
+        save_load_deck(model, run_mass_properties=False)  # no PCOMPS support
 
     def test_solids_ctetra4_mat9(self):
         """tests a CTETRA4"""
@@ -515,7 +515,7 @@ class TestSolids(unittest.TestCase):
 
     def test_solids_cpenta(self):
         """tests a CPENTA6"""
-        model = BDF(debug=False)
+        model = BDF(debug=None)
         eid = 10
         pid = 20
         mid = 30
@@ -601,7 +601,7 @@ class TestSolids(unittest.TestCase):
         end_checks(model)
         elem = model.elements[eid]
         assert elem.Mass() > 0, elem.Mass()
-        save_load_deck(model, run_mass_properties=False)
+        save_load_deck(model)
 
     def check_solid(self, model, eid, etype, pid, ptype, mid, mtype, nsm, rho, volume):
         """checks that various solid methods work"""
