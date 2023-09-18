@@ -240,7 +240,7 @@ class CBUSH(Element):
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
-                          msg=f'no visc properties for {self.type}')
+                          msg=f'no bush properties for {self.type}')
         pids.sort()
         geom_check(self,
                    missing,

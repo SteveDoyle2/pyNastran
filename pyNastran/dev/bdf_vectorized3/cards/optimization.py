@@ -73,16 +73,6 @@ class DESVAR(VectorizedBaseCard):
             a comment for the card
 
         """
-        #self.desvar_id = np.hstack([self.desvar_id, desvar_id])
-        #self.label = np.hstack([self.label, label])
-        #self.xinit = np.hstack([self.xinit, xinit])
-        #self.xlb = np.hstack([self.xlb, xlb])
-        #self.xub = np.hstack([self.xub, xub])
-
-        #delx = delx if delx is not None else np.nan
-        #ddval = ddval if ddval is not None else np.nan
-        #self.delx = np.hstack([self.delx, delx])
-        #self.ddval = np.hstack([self.ddval, ddval])
         self.cards.append((desvar_id, label, xinit, xlb, xub, delx, ddval, comment))
         self.n += 1
         return self.n
@@ -106,31 +96,32 @@ class DESVAR(VectorizedBaseCard):
             return
         ncards = len(self.cards)
         assert ncards > 0, ncards
-        self.desvar_id = np.zeros(ncards, dtype='int32')
+
+        desvar_id = np.zeros(ncards, dtype='int32')
         #: user-defined name for printing purposes
-        self.label = np.zeros(ncards, dtype='|U8')
-        self.xinit = np.zeros(ncards, dtype='float64')
-        self.xlb = np.zeros(ncards, dtype='float64')
-        self.xub = np.zeros(ncards, dtype='float64')
-        self.delx = np.zeros(ncards, dtype='float64')
-        self.ddval = np.zeros(ncards, dtype='int32')
+        label = np.zeros(ncards, dtype='|U8')
+        xinit = np.zeros(ncards, dtype='float64')
+        xlb = np.zeros(ncards, dtype='float64')
+        xub = np.zeros(ncards, dtype='float64')
+        delx = np.zeros(ncards, dtype='float64')
+        ddval = np.zeros(ncards, dtype='int32')
         for icard, card in enumerate(self.cards):
-            desvar_id, label, xinit, xlb, xub, delx, ddval, comment = card
-            self.desvar_id[icard] = desvar_id
-            self.label[icard] = label
-            self.xinit[icard] = xinit
-            self.xlb[icard] = xlb
-            self.xub[icard] = xub
-            self.delx[icard] = delx
-            assert isinstance(ddval, int), ddval
-            self.ddval[icard] = ddval
+            desvar_idi, labeli, xiniti, xlbi, xubi, delxi, ddvali, comment = card
+            desvar_id[icard] = desvar_idi
+            label[icard] = labeli
+            xinit[icard] = xiniti
+            xlb[icard] = xlbi
+            xub[icard] = xubi
+            delx[icard] = delxi
+            assert isinstance(ddvali, int), ddvali
+            ddval[icard] = ddvali
 
         if self.model.apply_clip_to_desvar_range:
-            i = self.xinit < xlb
-            self.xinit[i] = xlb
+            i = (xinit < xlb)
+            xinit[i] = xlb[i]
 
-            i = self.xinit > xub
-            self.xinit[i] = xub
+            i = (xinit > xub)
+            xinit[i] = xub[i]
 
         #self.label = label
         ##xinit = np.clip(xinit, xlb, xub)
@@ -148,6 +139,19 @@ class DESVAR(VectorizedBaseCard):
         #self.ddval = ddval
         #self.ddval_ref = None
         ##assert ' ' not in label.rstrip(), self.get_stats()
+
+        self._save(desvar_id, label, xinit, xlb, xub, delx, ddval)
+        self.cards = []
+
+    def _save(self, desvar_id, label, xinit, xlb, xub, delx, ddval):
+        assert len(self.desvar_id) == 0
+        self.desvar_id = desvar_id
+        self.label = label
+        self.xinit = xinit
+        self.xlb = xlb
+        self.xub = xub
+        self.delx = delx
+        self.ddval = ddval
 
     def index(self, desvar_id: np.ndarray) -> np.ndarray:
         assert len(self.desvar_id) > 0, self.desvar_id

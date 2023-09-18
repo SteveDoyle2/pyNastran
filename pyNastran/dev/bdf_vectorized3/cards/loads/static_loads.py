@@ -35,6 +35,9 @@ class Load(VectorizedBaseCard):
         super().__init__(model)
         self.load_id = np.array([], dtype='int32')
 
+    def _geom_check(self) -> None:
+        pass
+
     def slice_card_by_load_id(self, load_id: np.ndarray) -> Load0:
         assert len(self.load_id) > 0, self
         card_class = self.__class__

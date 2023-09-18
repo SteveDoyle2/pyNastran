@@ -604,9 +604,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # springs
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', # 'CELAS5',
             # bushings
-            #'CBUSH', 'CBUSH1D', 'CBUSH2D',
+            'CBUSH', 'CBUSH1D', # 'CBUSH2D',
             # dampers
-            #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
             #'CFAST',
 
             'CBAR', 'CBARAO', 'BAROR',
@@ -639,10 +639,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## properties
             'PMASS',
-            'PELAS', # 'PGAP', 'PFAST',
+            'PELAS', 'PGAP', # 'PFAST',
             'PLPLANE', 'PPLANE',
-            #'PBUSH', 'PBUSH1D',
-            #'PDAMP', 'PDAMP5',
+            'PBUSH', 'PBUSH1D',
+            'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PTUBE',
             'PBEAM', 'PBEAML', 'PBCOMP', # 'PBRSECT', 'PBEND',
             # 'PBMSECT', # not fully supported
