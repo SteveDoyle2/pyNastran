@@ -1116,7 +1116,7 @@ def check_subcase_dmig_matrices(fem: BDF, subcase: Subcase) -> None:
     # stiffness matrices
     check_subcase_dmig_matrix(fem, subcase, 'K2GG')
     # stiffness matrices, which are not included in normal modes
-    check_subcase_dmig_matrix(fem, subcase, 'K2PP')
+    check_subcase_dmig_matrix(fem, subcase, 'K2PP', is_real=False)
     # structural damping matrices
     check_subcase_dmig_matrix(fem, subcase, 'K42GG')
 
@@ -1129,7 +1129,8 @@ def check_subcase_dmig_matrices(fem: BDF, subcase: Subcase) -> None:
 
 def check_subcase_dmig_matrix(fem: BDF,
                               subcase: Subcase,
-                              matrix_name: str) -> None:
+                              matrix_name: str,
+                              is_real: bool=True) -> None:
     """
     K2GG=KDMIG1, KDMIG2, KDMIG3
     K2GG=1.25*KDMIG1, 1.0*KDMIG2, 0.75*KDMIG3
@@ -1139,11 +1140,16 @@ def check_subcase_dmig_matrix(fem: BDF,
 
     #([(1.0, 'MCB')], [(1.0, 'MCB')])
     scale_names: list[tuple[float, str]] = subcase.get_parameter(matrix_name)[0]
-    #print(f'{matrix_name} (scale,names) = {scale_names}')
+    print(f'{matrix_name} (scale,names) = {scale_names}')
 
-    #print(f'{matrix_name}_name')
-    for scale, name in scale_names:
-        dmig = fem.dmigs[name]
+    print(f'{matrix_name}_name')
+    if is_real:
+        for scale, name in scale_names:
+            dmig = fem.dmigs[name]
+    else:
+        for scale1, scale2, name in scale_names:
+            dmig = fem.dmigs[name]
+
     del dmig
 
 def check_case(sol: int,
