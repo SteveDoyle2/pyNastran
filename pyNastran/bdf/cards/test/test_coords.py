@@ -1020,6 +1020,140 @@ class TestCoords(unittest.TestCase):
         make_monpnt1s_from_cids(model, nids, cids, cid_to_inids)
         #model.write_bdf('spike.bdf')
 
+    def test_matcid(self):
+        """
+        Tests whether the correct card format is specified, and whether the fields are correctly read and assigned
+        to the MATCID card.
+
+        Format (alternative 1):
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+            +========+=======+========+=======+=======+======+======+======+======+
+            | MATCID |  CID  | EID1   | EID2  | EID3  | EID4 | EID5 | EID6 | EID7 |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |        | EID8  | EID9   | -etc- |       |      |      |      |      |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+
+        Format (alternative 2):
+            +--------+-------+--------+--------+------+------+------+------+------+
+            |   1    |   2   |    3   |   4    |  5   |  6   |  7   |   8  |  9   |
+            +========+=======+========+========+======+======+======+======+======+
+            | MATCID |  CID  | EID1   | "THRU" | EID2 |      |      |      |      |
+            +--------+-------+--------+--------+------+------+------+------+------+
+
+        Format (alternative 3):
+            +--------+-------+--------+--------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |   7   |   8  |  9   |
+            +========+=======+========+========+=======+======+======+======+======+
+            | MATCID |  CID  | EID1   | "THRU" | EID2  | "BY" |  N   |      |      |
+            +--------+-------+--------+--------+-------+------+------+------+------+
+
+        Format (alternative 4):
+            +--------+-------+--------+-------+-------+------+------+------+------+
+            |   1    |   2   |    3   |  4    |  5    |  6   |  7   |   8  |  9   |
+            +========+=======+========+=======+=======+======+======+======+======+
+            | MATCID |  CID  | "ALL"  |       |       |      |      |      |      |
+            +--------+-------+--------+-------+-------+------+------+------+------+
+        """
+
+        mid = 2
+        pid = 4
+
+        cids = [7, 8, 9, 10]
+
+        cards = [
+            ['GRID', 11, 0, 0., 0., 0., 0],
+            ['GRID', 12, 0, 1., 0., 0., 0],
+            ['GRID', 13, 0, 1., 1., 0., 0],
+            ['GRID', 14, 0, 0., 1., 0., 0],
+
+            ['GRID', 15, 0, 0., 0., 2., 0],
+            ['GRID', 16, 0, 1., 0., 2., 0],
+            ['GRID', 17, 0, 1., 1., 2., 0],
+            ['GRID', 18, 0, 0., 1., 2., 0],
+
+            ['CHEXA', 7, pid, 11, 12, 13, 14, 15, 16, 17, 18],
+            ['CHEXA', 8, pid, 12, 13, 14, 15, 16, 17, 18, 11],
+            ['CHEXA', 9, pid, 13, 14, 15, 16, 17, 18, 11, 12],
+            ['CHEXA', 10, pid, 14, 15, 16, 17, 18, 11, 12, 13],
+
+            ['CHEXA', 11, pid, 15, 16, 17, 18, 11, 12, 13, 14],
+            ['CHEXA', 12, pid, 16, 17, 18, 11, 12, 13, 14, 15],
+            ['CHEXA', 13, pid, 17, 18, 11, 12, 13, 14, 15, 16],
+            ['CHEXA', 14, pid, 18, 11, 12, 13, 14, 15, 16, 17],
+
+            ['PSOLID', pid, mid, 0],
+
+            ['MAT1', mid, 1.0, 2.0, 3.0, 0.1],
+
+            ['CORD2R', cids[0], None, 1.135, 0.089237, -0.0676, 0.135, 0.089237, -0.0676,
+             1.135, 0.089237, 0.9324],
+            ['CORD2R', cids[1], None, 1.135, 0.089237, -0.0676, 0.135, 0.089237, -0.0676,
+             1.135, 0.089237, 0.9324],
+            ['CORD2R', cids[2], None, 1.135, 0.089237, -0.0676, 0.135, 0.089237, -0.0676,
+             1.135, 0.089237, 0.9324],
+            ['CORD2R', cids[3], None, 1.135, 0.089237, -0.0676, 0.135, 0.089237, -0.0676,
+             1.135, 0.089237, 0.9324],
+
+            # MATCID Variants
+            ['MATCID', cids[0], 7, 8, 9, 10, 11, 12, 13, 14],  # Manual
+            ['MATCID', cids[1], 7, 'THRU', 14],  # Using 'THRU'
+            ['MATCID', cids[2], 7, 'THRU', 14, 'BY', 1],  # Using 'BY'
+            ['MATCID', cids[3], 'ALL'],  # Using 'ALL'
+            ]
+
+        model = BDF(debug=False)
+        for fields in cards:
+            model.add_card(fields, fields[0], is_list=True)
+        model.cross_reference()
+
+        # Assert all CIDs in MATCID
+        for cid in cids:
+            self.assertIn(cid, model.MATCID)
+
+        # Assert 4 CIDs in MATCID
+        self.assertEqual(len(list(model.MATCID.keys())), 4)
+
+        # Assert elements in MATCIDs
+        for cid, matcids in model.MATCID.items():
+            self.assertEqual(len(matcids), 1)
+            matcid = matcids[0]
+            self.assertEqual(matcid.Cid(), cid)
+
+            self.assertIn(matcid.form, [1, 2, 3, 4])
+
+            if matcid.form == 1:
+                self.assertEqual(matcid.Cid(), 7)
+                self.assertTrue((matcid.eids == np.array([7, 8, 9, 10, 11, 12, 13, 14], dtype=int)).all())
+                self.assertIsNone(matcid.start)
+                self.assertIsNone(matcid.thru)
+                self.assertIsNone(matcid.by)
+
+            elif matcid.form == 2:
+                self.assertEqual(matcid.Cid(), 8)
+                self.assertEqual(matcid.start, 7)
+                self.assertEqual(matcid.thru, 14)
+
+                self.assertIsNone(matcid.eids)
+                self.assertIsNone(matcid.by)
+
+            elif matcid.form == 3:
+                self.assertEqual(matcid.Cid(), 9)
+                self.assertEqual(matcid.start, 7)
+                self.assertEqual(matcid.thru, 14)
+                self.assertEqual(matcid.by, 1)
+
+                self.assertIsNone(matcid.eids)
+
+            else:  # matcid == 4
+                self.assertEqual(matcid.Cid(), 10)
+
+                self.assertIsNone(matcid.eids)
+                self.assertIsNone(matcid.start)
+                self.assertIsNone(matcid.thru)
+                self.assertIsNone(matcid.by)
+
+        
 def make_tri(model):
     model.add_grid(1, [0., 0., 0.])
     model.add_grid(3, [0., 0., 1.])

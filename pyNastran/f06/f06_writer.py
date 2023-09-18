@@ -10,7 +10,7 @@ import getpass
 from datetime import date
 from collections import defaultdict
 from traceback import print_exc
-from typing import Optional, List, Dict, Union, cast, TYPE_CHECKING
+from typing import Union, Optional, cast, TYPE_CHECKING
 
 import numpy as np
 
@@ -60,7 +60,7 @@ def make_f06_header() -> str:
         spaces + '/*                                                                      */\n',
         spaces + '/*              A Python reader/editor/writer for the various           */\n',
         spaces + '/*                        NASTRAN file formats.                         */\n',
-        spaces + '/*                       Copyright (C) 2011-2020                        */\n',
+        spaces + '/*                       Copyright (C) 2011-2023                        */\n',
         spaces + '/*                             Steven Doyle                             */\n',
         spaces + '/*                                                                      */\n',
         spaces + '/*    This program is free software; you can redistribute it and/or     */\n',
@@ -213,14 +213,16 @@ class F06Writer(OP2_F06_Common):
     def clear_results(self) -> None:
         self._results.clear()
 
-    def add_results(self, results: Union[str, list[str]]) -> None:
+    def _add_results(self, results: Union[str, list[str]]) -> None:
+        """supports catch all classes...don't call this..."""
         if isinstance(results, str):
             results = [results]
         all_results = self.get_all_results()
         for result in results:
             result = str(result)
             if result not in all_results:
-                raise RuntimeError('%r is not a valid result to remove; all_results=%s' % (result, all_results))
+                all_results_str = get_all_results_string(all_results)
+                raise RuntimeError(f'all_results={all_results_str}\n{result!r} is not a valid result to remove')
             if result == 'stress':
                 stress_results = []
                 for result in all_results:
@@ -248,7 +250,8 @@ class F06Writer(OP2_F06_Common):
 
     def set_results(self, results: Union[str, list[str]]) -> None:
         self.clear_results()
-        self.add_results(results)
+        results = self._results.add(results)
+        self._add_results(results)
 
     def remove_results(self, results: Union[str, list[str]]) -> None:
         self._results.remove(results)
@@ -540,7 +543,7 @@ class F06Writer(OP2_F06_Common):
 
         """
         log = self.log
-        is_failed = False
+        #is_failed = False
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
 
@@ -745,3 +748,30 @@ def check_element_node(obj):
     if eids.min() <= 0:
         print(''.join(obj.get_stats()))
         raise RuntimeError(f'{obj.element_name}-{obj.element_type}: {eids}')
+
+def get_all_results_string(all_results: list[str]) -> str:
+    dict_results = defaultdict(list)
+    for res in all_results:
+        if '.' in res:
+            sres = res.split('.')
+            assert len(sres) == 2, res
+            key, value = sres
+            #print(key, value)
+            dict_results[key].append(value)
+        else:
+            #print(res)
+            dict_results[res] = [res] # .append(res)
+
+    msg = ':\n'
+    for key, value in sorted(dict_results.items()):
+        if len(value) == 1:
+            if key == value[0]:
+                msg += f' - {key}\n'
+            else:
+                msg += f' - {key}.{value[0]}\n'
+        else:
+            msg += f' - {key}:\n'
+            print(f'key={key} value={value}')
+            for valuei in value:
+                msg += f'   - {valuei}\n'
+    return msg

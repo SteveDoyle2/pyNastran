@@ -4,6 +4,7 @@ converted from:
 """
 
 import vtk
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 def main():
     sphere_source = vtk.vtkSphereSource()
@@ -40,7 +41,7 @@ def main():
     extract_selection.Update()
 
     # In selection
-    grid_selected = vtk.vtkUnstructuredGrid()
+    grid_selected = vtkUnstructuredGrid()
     grid_selected.ShallowCopy(extract_selection.GetOutput())
 
     print("There are %s points in the selection" % grid_selected.GetNumberOfPoints())
@@ -51,7 +52,7 @@ def main():
     selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
     extract_selection.Update()
 
-    not_selected = vtk.vtkUnstructuredGrid()
+    not_selected = vtkUnstructuredGrid()
     not_selected.ShallowCopy(extract_selection.GetOutput())
 
     print("There are %s points NOT in the selection" % not_selected.GetNumberOfPoints())

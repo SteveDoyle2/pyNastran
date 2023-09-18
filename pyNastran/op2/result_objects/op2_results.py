@@ -25,6 +25,13 @@ class Results:
 
         self.separation_initial = {}
         self.separation_final = {}
+        self.contact_slide_distance = {}
+        self.glue_contact_slide_distance = {}
+        self.contact_stress = {}
+        self.contact_displacements = {}
+
+        # bolts
+        self.bolt_results = {}
 
         self.psds = PSDObjects()
         self.ato = AutoCorrelationObjects()
@@ -74,6 +81,7 @@ class Results:
         self.cstm = CSTM()
         self.trmbd = TRMBD()
         self.trmbu = TRMBU()
+        self.superelement_tables = {}
 
     def _get_sum_objects_map(self):
         sum_objs = {
@@ -100,7 +108,7 @@ class Results:
         }
         return sum_objs
 
-    def _get_sum_objects(self):
+    def _get_sum_objects(self) -> list[Any]:
         sum_objs = [
             self.acoustic,
             self.responses,
@@ -123,6 +131,8 @@ class Results:
         base_names = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
             'separation_initial', 'separation_final',
+            'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
+            'superelement_tables',
         ]
         base_objs_map = {}
         for base_name in base_names:
@@ -131,11 +141,14 @@ class Results:
                 base_objs_map[base_name] = obj
         return base_objs_map
 
-    def get_table_types(self):
+    def get_table_types(self) -> list[str]:
         """combines all the table_types from all objects and sub-objects"""
         base = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
             'separation_initial', 'separation_final',
+            'contact_slide_distance', 'glue_contact_slide_distance', 'contact_displacements',
+            'bolt_results',
+            'superelement_tables',
         ]
         sum_objs = self._get_sum_objects()
         for objs in sum_objs:

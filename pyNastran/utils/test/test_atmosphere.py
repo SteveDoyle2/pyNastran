@@ -139,6 +139,11 @@ class TestConvert(unittest.TestCase):
         assert np.allclose(convert_density(1., 'slug/ft^3', 'kg/m^3'), 515.379)
         assert np.allclose(convert_density(1., 'kg/m^3', 'slug/ft^3'), 1 / 515.379)
 
+        assert np.allclose(convert_density(1., 'g/cm^3', 'kg/m^3'), 1000.), 'actual=%g expected=%g' % (convert_density(1., 'g/cm^3', 'kg/m^3'), 1000.)
+        assert np.allclose(convert_density(1., 'kg/m^3', 'g/cm^3'), 1 / 1000.), 'actual=%g expected=%g' % (convert_density(1., 'kg/m^3', 'g/cm^3'), 1 / 1000.)
+
+        assert np.allclose(convert_density(1., 'g/cm^3', 'slug/ft^3'), 1.94032)
+        assert np.allclose(convert_density(1., 'slug/ft^3', 'g/cm^3'), 1 / 1.94032), 'actual=%g expected=%g' % (convert_density(1., 'slug/ft^3', 'g/cm^3'), 1 / 1.94032)
 
 class TestAtm(unittest.TestCase):
     """various atmosphere tests"""

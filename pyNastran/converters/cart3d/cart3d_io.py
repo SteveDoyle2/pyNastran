@@ -1,6 +1,5 @@
 """Defines the GUI IO file for Cart3d."""
 import os
-from collections import OrderedDict
 import collections
 
 from numpy import arange, mean, vstack, unique, where, sqrt
@@ -49,7 +48,7 @@ class Cart3dIO:
             self.gui.turn_text_off()
             self.gui.grid.Reset()
 
-            self.gui.result_cases = OrderedDict()
+            self.gui.result_cases = {}
             self.gui.ncases = 0
             try:
                 del self.gui.case_keys
@@ -139,7 +138,7 @@ class Cart3dIO:
         else:
             note = ''
         self.gui.isubcase_name_map = {1: ['Cart3d%s' % note, '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         icase = self.gui.get_new_icase()
@@ -394,7 +393,7 @@ class Cart3dIO:
                     representation='surface')
 
             alt_grid = self.gui.alt_grids[name]
-            etype = 3  # vtk.vtkLine().GetCellType()
+            etype = 3  # vtkLine().GetCellType()
             elements2 = np.arange(0, npoints, dtype='int32').reshape(nfree_edges, 2)
             create_vtk_cells_of_constant_element_type(alt_grid, elements2, etype)
 
@@ -475,7 +474,7 @@ def _fill_cart3d_geometry_objects(cases, unused_id, nodes, elements, regions, mo
     #node_res = GuiResult(subcase_id, header=result_name, title=result_name,
                          #location='node', scalar=node_normal)
 
-    cases = OrderedDict()
+    cases = {}
     cases[icase + 0] = (cart3d_geo, (0, 'NodeID'))
     cases[icase + 1] = (cart3d_geo, (0, 'ElementID'))
     cases[icase + 2] = (cart3d_geo, (0, 'Region'))

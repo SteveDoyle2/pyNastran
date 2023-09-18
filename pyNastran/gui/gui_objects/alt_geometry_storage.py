@@ -1,3 +1,4 @@
+from typing import Union
 from copy import deepcopy
 
 class AltGeometry:
@@ -13,9 +14,13 @@ class AltGeometry:
                   self.is_pickable, self.label_actors))
         return msg
 
-    def __init__(self, parent, name, color=None, line_width=1, opacity=0.0,
-                 point_size=1, bar_scale=1.0, representation='main', display=None, is_visible=True,
-                 is_pickable=False, label_actors=None):
+    def __init__(self, parent, name: str, color=None, line_width: int=1,
+                 opacity: float=0.0,
+                 point_size: int=1,
+                 bar_scale: float=1.0,
+                 representation: str='main', display=None,
+                 is_visible: bool=True,
+                 is_pickable: bool=False, label_actors=None):
         """
         Creates an AltGeometry object
 
@@ -150,13 +155,14 @@ class AltGeometry:
         self._opacity = 1.0 - transparency
 
     @property
-    def color(self):
+    def color(self) -> tuple[int, int, int]:
         if self._color is None:
             return (255, 0, 0)  # the default color; red
         return self._color
 
     @color.setter
-    def color(self, color):
+    def color(self, color: Union[tuple[int, int, int],
+                                 tuple[float, float, float]]) -> None:
         assert len(color) == 3, color
         if isinstance(color[0], int):
             assert isinstance(color[0], int), color[0]
@@ -170,17 +176,19 @@ class AltGeometry:
             self._color = (int(color[0] * 255), int(color[1] * 255), int(color[2] * 255))
 
     @property
-    def color_float(self):
+    def color_float(self) -> tuple[float, float, float]:
         return tuple([i/255. for i in self._color])
 
-    def set_color(self, color, mode='rgb'):
+    def set_color(self, color: Union[tuple[int, int, int],
+                                     tuple[float, float, float]],
+                  mode: str='rgb') -> None:
         assert mode == 'rgb', 'mode=%r' % mode
         self.color = color
         assert len(color) == 3, color
         #self.mode = 'rgb'
 
     @property
-    def representation(self):
+    def representation(self) -> str:
         """
         Gets the representation
 
@@ -197,7 +205,7 @@ class AltGeometry:
         return self._representation
 
     @representation.setter
-    def representation(self, representation):
+    def representation(self, representation: str) -> None:
         """Sets the representation"""
         if representation not in self.representations:
             msg = 'representation=%r is invalid\nrepresentations=%r' % (

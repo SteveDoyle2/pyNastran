@@ -31,6 +31,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
     """
     card_dict_groups = [
         'params', 'nodes', 'spoints', 'epoints', 'points', 'gridb',
+        'coords',
 
         'elements', 'ao_element_flags', 'normals', 'rigid_elements', 'plotels',
 
@@ -40,9 +41,10 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'materials', 'creep_materials', 'hyperelastic_materials',
         'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
         'MATS1', 'MATS3', 'MATS8', 'MATT8',
-        'coords', 'mpcs',
+        'MATCID', 'MATDMG',
 
         # axisysmmetric
+        'ringaxs', 'ringfl',
 
         # dynamic cards
         'dareas', 'delays', 'dphases', 'nlparms', 'nlpcis',
@@ -100,8 +102,9 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'se_sets', 'se_usets', 'release',
 
         # ???
-        'dscreen', 'dti', 'nxstrats', 'radcavs', 'radmtx', 'ringaxs', 'ringfl',
+        'dscreen', 'dti', 'nxstrats', 'radcavs', 'radmtx',
         'tempds', 'spcoffs',
+        'mpcs',
 
         # cyclic
         'cyjoin',
@@ -128,6 +131,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'monitor_points',
     ]
     skip_attrs = [
+        'model_groups',
         'active_filename', 'active_filenames', 'debug', # 'log',
         'reject_lines',
         'is_nx', 'is_msc', 'is_optistruct', 'is_zona', 'is_mystran', 'is_nasa95',
@@ -177,6 +181,10 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'moment', 'moment1', 'moment2', 'pload', 'pload1', 'pload2', 'pload4',
         'sload', 'spcd',
         'temp', 'tempd',
+
+        # ----
+        #new
+        'bolt', 'boltld', 'boltfor', 'boltseq', 'boltfrc',
 
     ] + list_attrs + card_dict_groups + scalar_attrs
     missed_attrs = []
@@ -454,7 +462,7 @@ def _get_bdf_stats_loads(model: BDF) -> list[str]:
 
     else:
         for (lid, load_combinations) in sorted(model.load_combinations.items()):
-            groups_dict = {}  # type: dict[str, int]
+            groups_dict: dict[str, int] = {}
             for load_combination in load_combinations:
                 groups_dict[load_combination.type] = groups_dict.get(load_combination.type, 0) + 1
             added_messge = _get_added_message_from_dict(groups_dict)

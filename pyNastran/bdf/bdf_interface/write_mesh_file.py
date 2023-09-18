@@ -72,6 +72,7 @@ class WriteMeshs(WriteMesh):
                 Windows is different.
             None : Check the platform
         """
+        assert isinstance(out_filenames, dict), out_filenames
         #is_long_ids = False
 
         if self.is_bdf_vectorized:  # pragma: no cover
@@ -761,7 +762,8 @@ def write_bdfs_list(bdf_files, cards, size, is_double, is_long_ids):
         for card in cards:
             bdf_files[card.ifile].write_card(size, is_double)
 
-def _map_filenames_to_ifile_filname_dict(out_filenames, active_filenames):
+def _map_filenames_to_ifile_filname_dict(out_filenames: dict[str, str],
+                                         active_filenames: list[str]) -> dict[int, str]:
     """
     Converts a old_filename->new_filename dict to a
     ifile->new_filename dict.
@@ -772,9 +774,12 @@ def _map_filenames_to_ifile_filname_dict(out_filenames, active_filenames):
     unused_out_filename0 = None
     for filename, new_filename in out_filenames.items():
         assert isinstance(filename, str), 'filename=%r' % filename
+        assert isinstance(new_filename, str), 'new_filename=%r' % new_filename
         #print('filename = %r' % filename)
         abs_filename = os.path.abspath(filename)
         #print('abs_filename = %r' % abs_filename)
+        if abs_filename not in active_filenames_abspath:
+            continue
         ifile = active_filenames_abspath.index(abs_filename)
         #print('ifile = %r' % ifile)
         #print('new_filename = %r' % new_filename)

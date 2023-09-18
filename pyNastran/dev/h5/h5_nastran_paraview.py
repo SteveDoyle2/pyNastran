@@ -6,6 +6,8 @@ import numpy as np
 import h5py
 import vtk
 
+from pyNastran.gui.vtk_rendering_core import vtkDataSetMapper # , vtkPolyDataMapper
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 from pyNastran.dev.h5.fill_unstructured_grid import fill_paraview_vtk_unstructured_grid
 from pyNastran.dev.h5.h5_nastran2 import add_actor_to_renderer, pyNastranH5
 from pyNastran.dev.h5.vtk_request_subset import vtkRequestSubset
@@ -14,7 +16,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 def fill_paraview_vtk_unstructured_grid_results(model: pyNastranH5,
-                                                vtk_ugrid: vtk.vtkUnstructuredGrid,
+                                                vtk_ugrid: vtkUnstructuredGrid,
                                                 eids: np.ndarray) -> None:
     point_data = vtk_ugrid.GetPointData()
     cell_data = vtk_ugrid.GetCellData()
@@ -49,7 +51,7 @@ def get_paraview_nastran_ugrid(hdf5_filename: str,
                                subcases=None,  # default=None -> all
                                modes=None, # default=None -> all
                                results=None, # default=None -> all,
-                      ) -> tuple[BDF, vtk.vtkUnstructuredGrid]:
+                      ) -> tuple[BDF, vtkUnstructuredGrid]:
     #subcases = [1, 2]
     #modes = range(1, 10)
     #results = ['eigenvectors', 'displacement', 'stress', 'strain']
@@ -62,7 +64,7 @@ def get_paraview_nastran_ugrid(hdf5_filename: str,
     geom_model = model.geom_model
     geom_model.log.info(geom_model.card_count)
 
-    ugrid_main = vtk.vtkUnstructuredGrid()
+    ugrid_main = vtkUnstructuredGrid()
     alt_grids = {
         'main' : ugrid_main,
     }
@@ -125,13 +127,13 @@ def run_vtk(hdf5_filename: str, scale: float):
     warp.Update()
 
     #warp = ugrid
-    grid_mapper = vtk.vtkDataSetMapper()
+    grid_mapper = vtkDataSetMapper()
     if 0:
         grid_mapper.SetInputData(ugrid)
     else:
         grid_mapper.SetInputData(warp.GetOutput())
 
-    #grid_mapper = vtk.vtkPolyDataMapper()
+    #grid_mapper = vtkPolyDataMapper()
     #grid_mapper.SetInputConnection(ugrid.GetOutputPort())
 
     actor = vtk.vtkLODActor()

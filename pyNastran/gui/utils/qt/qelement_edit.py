@@ -14,9 +14,10 @@ from pyNastran.bdf.utils import write_patran_syntax_dict
 
 class QNodeElementEdit(QLineEdit):
     """creates a QLineEdit that can pick node/element ids"""
-    def __init__(self, win_parent, name, parent=None, is_eids=True, is_nids=True,
-                 representation='wire', pick_style='area',
-                 max_length=32767, cleanup=True, *args, **kwargs):
+    def __init__(self, win_parent, name: str, parent=None,
+                 is_eids: bool=True, is_nids: bool=True,
+                 representation: str='wire', pick_style: str='area',
+                 max_length: int=32767, cleanup: bool=True, *args, **kwargs):
         """
         A node/element picker
 
@@ -48,8 +49,8 @@ class QNodeElementEdit(QLineEdit):
         self.representation = representation
         self.pick_style = pick_style
         self.cleanup = cleanup
-        assert self.representation in ['wire', 'points', 'surface', 'points+wire', 'points+surface'], f'representation={representation!r}'
-        assert self.pick_style in ['area', 'single'], f'pick_style={pick_style!r}'
+        assert self.representation in {'wire', 'points', 'surface', 'points+wire', 'points+surface'}, f'representation={representation!r}'
+        assert self.pick_style in {'area', 'single'}, f'pick_style={pick_style!r}'
         if max_length != 32767:
             self.setMaxLength(max_length) # default is 32767
 
@@ -106,8 +107,9 @@ class QNodeElementEdit(QLineEdit):
 
 class QElementEdit(QNodeElementEdit):
     """creates a QLineEdit that can pick element ids"""
-    def __init__(self, win_parent, name, parent=None, pick_style='area', tab_to_next=False,
-                 cleanup=True, max_length=32767, *args, **kwargs):
+    def __init__(self, win_parent, name: str, parent=None,
+                 pick_style: str='area', tab_to_next: bool=False,
+                 cleanup: bool=True, max_length: int=32767, *args, **kwargs):
         """
         An element picker
 
@@ -134,7 +136,7 @@ class QElementEdit(QNodeElementEdit):
                                            representation='wire', pick_style=pick_style,
                                            max_length=max_length, cleanup=cleanup, *args, **kwargs)
 
-    def on_focus_callback(self, eids, nids, name):
+    def on_focus_callback(self, eids, nids, name: str) -> None:
         """the callback method for ``on_focus``"""
         if eids is None:
             return
@@ -151,8 +153,9 @@ class QElementEdit(QNodeElementEdit):
 
 class QNodeEdit(QNodeElementEdit):
     """creates a QLineEdit that can pick node ids"""
-    def __init__(self, win_parent, name, parent=None, pick_style='area', tab_to_next=False,
-                 max_length=32767, cleanup=True, *args, **kwargs):
+    def __init__(self, win_parent, name: str, parent=None,
+                 pick_style: str='area', tab_to_next: bool=False,
+                 max_length: int=32767, cleanup: bool=True, *args, **kwargs):
         """
         A node picker
 
@@ -176,7 +179,7 @@ class QNodeEdit(QNodeElementEdit):
                                         representation='points', pick_style=pick_style,
                                         cleanup=cleanup, max_length=max_length, *args, **kwargs)
 
-    def on_focus_callback(self, eids, nids, name):
+    def on_focus_callback(self, eids, nids, name: str) -> None:
         """the callback method for ``on_focus``"""
         if nids is None:
             return

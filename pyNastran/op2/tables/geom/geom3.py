@@ -104,8 +104,8 @@ class GEOM3:
             (7002, 85, 254): ['BOLTFOR', self._read_fake],  # record
             (7701, 77, 619): ['DTEMP', self._read_fake],  # record
             (5215, 52, 154): ['PRESAX', self._read_fake],  # record
-            (7401, 74, 601): ['ACCEL', self._read_fake],  # record
-            (7501, 75, 602): ['ACCEL1', self._read_fake],  # record
+            (7401, 74, 601): ['ACCEL', self._read_accel],  # record
+            (7501, 75, 602): ['ACCEL1', self._read_accel1],  # record
             (17600, 176, 627): ['RFORCE2', self._read_fake],  # record
             #(7002, 85, 254): ['BOLTFOR', self._read_fake],  # record
             #(7002, 85, 254): ['BOLTFOR', self._read_fake],  # record
@@ -444,12 +444,16 @@ class GEOM3:
         return len(data)
 
     def _read_lseq(self, data: bytes, n: int) -> int:
+        """
+        LSEQ    2000    101     1101
+        [2000,  101, 1101,    0,    0]
+        """
         op2 = self.op2
         ntotal = 20 * self.factor  # 5*4
-        struct_5i = Struct(op2._endian + b'5i')
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         nentries = (len(data) - n) // ntotal
-        for unused_i in range(nentries):
-            out = struct_5i.unpack(data[n:n + ntotal])
+        ints = ints.reshape(nentries, 5)
+        for out in ints:
             #(sid, darea, load_id, temperature_id, undef) = out
             if op2.is_debug_file:
                 op2.binary_debug.write('  LSEQ=%s\n' % str(out))
@@ -977,10 +981,11 @@ class GEOM3:
         op2 = self.op2
         ntotal = 12 * self.factor  # 3*4
         nentries = (len(data) - n) // ntotal
-        struc = Struct(op2._endian + b'2i f')
-        for unused_i in range(nentries):
-            edata = data[n:n + ntotal]
-            out = struc.unpack(edata)
+        ints = np.frombuffer(data[n:], dtype=self.op2.idtype8).reshape(nentries, 3)[:, [0, 1]]
+        floats = np.frombuffer(data[n:], dtype=self.op2.fdtype8).reshape(nentries, 3)[:, 2]
+        for intsi, floati in zip(ints, floats):
+            out = intsi.tolist()
+            out.append(floati)
             if op2.is_debug_file:
                 op2.binary_debug.write('  SLOAD=%s\n' % str(out))
             #(sid, nid, scale_factor) = out

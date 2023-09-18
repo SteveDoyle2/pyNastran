@@ -1,9 +1,8 @@
-from collections import OrderedDict
-import vtk
-from vtk import vtkQuad
-
 from numpy import zeros, array, cross
 from numpy.linalg import norm  # type: ignore
+
+from pyNastran.gui.vtk_common_core import vtkPoints
+from pyNastran.gui.vtk_interface import vtkQuad
 
 from pyNastran.converters.dev.plot3d.plot3d import Plot3d
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -52,7 +51,7 @@ class Plot3d_io:  # pragma: no cover
 
         self.grid.Allocate(self.nelements, 1000)
 
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         points.SetNumberOfPoints(self.nnodes)
 
         nid = 0
@@ -117,7 +116,7 @@ class Plot3d_io:  # pragma: no cover
         self.gui.scalar_bar_actor.Modified()
 
         self.gui.isubcase_name_map = {1: ['Plot3d', '']}
-        cases = OrderedDict()
+        cases = {}
         ID = 1
 
         #cases = self._fill_stl_case(cases, ID, elements)

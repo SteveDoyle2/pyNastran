@@ -27,16 +27,44 @@ from pyNastran.f06.utils import (split_float_colons, split_int_colon,
 from pyNastran.f06.parse_flutter import plot_flutter_f06, make_flutter_plots
 from pyNastran.f06.parse_trim import read_f06_trim
 
+DIRNAME = os.path.dirname(__file__)
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class TestF06Utils(unittest.TestCase):
-    def _test_f06_trim(self):
-        """tests split_float_colon"""
+    def test_f06_trim_freedlm(self):
+        """tests read_f06_trim"""
         f06_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm.f06')
-        _trim_results = read_f06_trim(f06_filename,
-                                     log=None, nlines_max=1_000_000, debug=False)
+        trim_results = read_f06_trim(f06_filename,
+                                     log=None, nlines_max=1_000_000, debug=None)
+        assert len(trim_results.aero_force.keys()) == 2
+        assert len(trim_results.aero_pressure.keys()) == 2
+        assert len(trim_results.controller_state.keys()) == 2
+        assert len(trim_results.trim_variables.keys()) == 2
+        assert len(trim_results.structural_monitor_loads.keys()) == 2
+
+    def test_f06_trim_aerobeam(self):
+        """tests read_f06_trim"""
+        f06_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.f06')
+        trim_results = read_f06_trim(f06_filename,
+                                     log=None, nlines_max=1_000_000, debug=None)
+        assert len(trim_results.aero_force.keys()) == 0
+        assert len(trim_results.aero_pressure.keys()) == 0
+        assert len(trim_results.controller_state.keys()) == 2
+        assert len(trim_results.trim_variables.keys()) == 2
+        assert len(trim_results.structural_monitor_loads.keys()) == 2
+
+    #def test_f06_trim_cpmopt(self):
+        #"""tests read_f06_trim"""
+        #f06_filename = os.path.join(MODEL_PATH, 'aero', 'cpmopt.f06')
+        #trim_results = read_f06_trim(f06_filename,
+                                     #log=None, nlines_max=1_000_000, debug=None)
+        #assert len(trim_results.aero_force.keys()) == 0
+        #assert len(trim_results.aero_pressure.keys()) == 0
+        #assert len(trim_results.controller_state.keys()) == 4
+        #assert len(trim_results.trim_variables.keys()) == 4
+        #assert len(trim_results.structural_monitor_loads.keys()) == 4
 
     def test_split_float_colon(self):
         """tests split_float_colon"""
@@ -200,12 +228,37 @@ class TestF06Utils(unittest.TestCase):
                                #kfreq_damping_filename=kfreq_damping_filename,
                                show=False, clear=True, close=True)
 
+            export_zona_filename = os.path.join(DIRNAME, 'zona_%i.f06')
+            export_veas_filename = os.path.join(DIRNAME, 'flutter_%i.veas')
+            export_f06_filename = os.path.join(DIRNAME, 'flutter_%i.f06')
+            make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
+                               plot_type,
+                               plot_vg=True, plot_vg_vf=True,
+                               plot_root_locus=True, plot_kfreq_damping=True,
+                               nopoints=True, noline=False,
+                               export_zona_filename=export_zona_filename,
+                               export_veas_filename=export_veas_filename,
+                               export_f06_filename=export_f06_filename,
+                               #vg_filename=vg_filename,
+                               #vg_vf_filename=vg_vf_filename,
+                               #root_locus_filename=root_locus_filename,
+                               #kfreq_damping_filename=kfreq_damping_filename,
+                               show=False, clear=True, close=True)
+
     def test_cmd_line_plot_flutter(self):
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
         argv = ['f06', 'plot_145', f06_filename, '--eas',
                 '--in_units', 'si', '--out_units', 'english_in',
                 '--modes', '1:', '--ylimdamp', '-.3:']
+        cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
+        cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
+
+    def test_cmd_line_plot_flutter_no_input(self):
+        log = get_logger2(log=None, debug=None, encoding='utf-8')
+        f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
+        argv = ['f06', 'plot_145', f06_filename, '--eas',
+                '--out_units', 'english_in']
         cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
         cmd_line_f06(argv=argv, plot=IS_MATPLOTLIB, show=False, log=log)
 

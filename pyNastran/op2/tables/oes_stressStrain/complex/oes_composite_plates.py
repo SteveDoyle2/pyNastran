@@ -78,7 +78,7 @@ class ComplexLayeredCompositesArray(OES_Object):
         self.itotal = 0
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
-        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        idtype, cfdtype = get_complex_times_dtype(self.size)
 
         if self.is_sort1:
             ntimes = self.ntimes
@@ -93,7 +93,7 @@ class ComplexLayeredCompositesArray(OES_Object):
             #print(f'  SORT2: ntimes={ntimes} nlayers={nlayers} {self.element_name}-{self.element_type}')
         #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         #self.ntotal = self.nelements * nnodes
 
         # the number is messed up because of the offset for the element's properties
@@ -134,6 +134,7 @@ class ComplexLayeredCompositesArray(OES_Object):
     def add_sort1(self, dt, eid, ply_id,
                   o1a, o2a, t12a, o1za, o2za,
                   o1b, o2b, t12b, o1zb, e2zb, ovm):
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
@@ -145,6 +146,7 @@ class ComplexLayeredCompositesArray(OES_Object):
         self.itotal += 1
 
     def add_sort1_real(self, dt, eid, ply_id, oxx, oyy, txy, txz, tyz, angle, omax, omin, max_shear) -> None:
+        assert self.sort_method == 1, self
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -159,7 +161,7 @@ class ComplexLayeredCompositesArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -278,7 +280,6 @@ class ComplexLayeredCompositesArray(OES_Object):
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
-
 
 
 class ComplexLayeredCompositeStressArray(ComplexLayeredCompositesArray, StressObject):

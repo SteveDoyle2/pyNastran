@@ -19,9 +19,8 @@ There are flags that let you disable one or more features.
 
 Tested on:
 ==========
-Python 2.7.12, VTK 5.10.1
-Python 2.7.13, VTK 6.3.0
-Python 2.7.13, VTK 7.1.0
+Python 3.9, VTK 9.1
+Python 3.10
 
 Adapted from:
 =============
@@ -35,8 +34,14 @@ http://www.vtk.org/Wiki/VTK/Examples/Python/Visualization/ClampGlyphSizes
 """
 import numpy as np
 import vtk
+from pyNastran.gui.vtk_interface import (
+    vtkTetra, vtkHexahedron,
+    vtkUnstructuredGrid, vtkCellArray)
+from pyNastran.gui.vtk_rendering_core import (
+    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor)
+
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
-from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION_SPLIT
 
 
 # kills the program when you hit Cntl+C from the command line
@@ -79,19 +84,19 @@ def mixed_type_unstructured_grid():
     cell_offsets = np.array([0, 5], dtype='int32')
 
     # add one element_type for each element
-    tetra_type = vtk.vtkTetra().GetCellType() # VTK_TETRA == 10
-    hex_type = vtk.vtkHexahedron().GetCellType() # VTK_HEXAHEDRON == 12
+    tetra_type = vtkTetra().GetCellType() # VTK_TETRA == 10
+    hex_type = vtkHexahedron().GetCellType() # VTK_HEXAHEDRON == 12
     cell_types = np.array([tetra_type, hex_type], dtype='int32')
 
     # Create the array of cells
-    vtk_cells = vtk.vtkCellArray()
+    vtk_cells = vtkCellArray()
     vtk_cells_id_type = numpy_to_vtkIdTypeArray(cells, deep=1)
 
     # ncells = 2
     vtk_cells.SetCells(2, vtk_cells_id_type)
 
     # Now create the unstructured grid
-    ug = vtk.vtkUnstructuredGrid()
+    ug = vtkUnstructuredGrid()
 
     points_data = numpy_to_vtk(pts, deep=1)
 
@@ -136,7 +141,7 @@ def main():
     force_scalar_array = numpy_to_vtk(scalars, deep=1)
 
     grid_mapper = vtk.vtkDataSetMapper()
-    #vtk_version = int(VTK_VERSION[0])
+    #vtk_version = int(VTK_VERSION_SPLIT[0])
     grid_mapper.SetInputData(ug)
 
     if make_glyphs:
@@ -221,12 +226,12 @@ def main():
         ug.GetPointData().SetVectors(forces_array)
         if not apply_color_to_glyph:
             glyph_mapper.ScalarVisibilityOff()
-    geom_actor = vtk.vtkActor()
+    geom_actor = vtkActor()
     geom_actor.SetMapper(grid_mapper)
 
 
     # Setup renderer
-    renderer = vtk.vtkRenderer()
+    renderer = vtkRenderer()
     renderer.AddActor(geom_actor)
     if make_glyphs:
         renderer.AddActor(arrow_actor)
@@ -234,15 +239,15 @@ def main():
     renderer.SetBackground(0.7, 0.8, 1.0)
 
     # Setup render window
-    renderWindow = vtk.vtkRenderWindow()
+    renderWindow = vtkRenderWindow()
     renderWindow.AddRenderer(renderer)
 
     # Setup render window
-    renderWindow = vtk.vtkRenderWindow()
+    renderWindow = vtkRenderWindow()
     renderWindow.AddRenderer(renderer)
 
     # Setup render window interactor
-    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+    renderWindowInteractor = vtkRenderWindowInteractor()
     style = vtk.vtkInteractorStyleImage()
 
     # Render and start interaction

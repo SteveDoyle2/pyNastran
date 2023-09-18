@@ -8,12 +8,11 @@ CLASSIFIERS = [
     'Natural Language :: English',
     'Intended Audience :: Science/Research',
     'License :: OSI Approved :: BSD License',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
 ]
 
-PYTHON_REQUIRES = '>=3.8'
+PYTHON_REQUIRES = '>=3.10'
 
 EXCLUDE_WORDS = [
     'pyNastran.f06.dev',
@@ -23,6 +22,7 @@ EXCLUDE_WORDS = [
     'pyNastran.dev',
     'pyNastran.dev.xdb',
     'pyNastran.dev.bdf_vectorized', 'pyNastran.dev.bdf_vectorized.cards',
+    'pyNastran.dev.bdf_vectorized3', 'pyNastran.dev.op2_vectorized3',
 ]
 
 
@@ -69,10 +69,9 @@ MAX_VERSION = '3.10'
 def check_python_version() -> None:
     """verifies the python version"""
     imajor, minor1, minor2 = sys.version_info[:3]
-    if sys.version_info < (3, 8, 0):  # 3.9.4 used
-        sys.exit('Upgrade your Python to 3.8+; version=(%s.%s.%s)' % (
+    if sys.version_info < (3, 9, 0):  # 3.9.4 used
+        sys.exit('Upgrade your Python to 3.9+; version=(%s.%s.%s)' % (
             imajor, minor1, minor2))
-
 
 def int_version(name: str, version: str) -> List[int]:
     """splits the version into a tuple of integers"""
@@ -206,8 +205,8 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
         #_add_nptyping(all_reqs, install_requires)
 
     if bdist:
-        all_reqs['docopt-ng'] = '>= 0.8.1'
-        install_requires.append('docopt-ng >= 0.8.1')  # 0.8.1 used
+        all_reqs['docopt-ng'] = '>= 0.9.0'
+        install_requires.append('docopt-ng >= 0.9.0')  # 0.9.0 used
     else:
         _add_docopt(all_reqs, install_requires)
 
@@ -237,13 +236,13 @@ def _add_docopt(all_reqs, install_requires):
         import docopt
         iver = int_version('docopt', docopt.__version__)
         all_reqs['docopt-ng'] = str_version(iver)
-        if iver < [0, 8, 1]:
+        if iver < [0, 9, 0]:
             print(f'docopt.__version__ = {docopt.__version__!r} < {required_version_str!r}')
             all_reqs['docopt-ng'] = f'>= {required_version_str}'
             install_requires.append(f'docopt-ng >= {required_version_str}')
     except ImportError:
         all_reqs['docopt-ng'] = f'>= {required_version_str}'
-        install_requires.append(f'docopt-ng >= {required_version_str}')  # 0.8.1 used
+        install_requires.append(f'docopt-ng >= {required_version_str}')  # 0.9.0 used
 
 def _add_numpy(version_check, required_version,
                all_reqs, install_requires):

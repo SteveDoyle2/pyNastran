@@ -35,7 +35,7 @@ class TestRods(unittest.TestCase):
         nid2 = 3
         mid = 5
         A = 27.0
-        lines = ['conrod,%i, %i, %i, %i, %f' % (eid, nid1, nid2, mid, A)]
+        lines = [f'conrod,{eid:d}, {nid1:d}, {nid2:d}, {mid:d}, {A:f}']
         model.add_card(lines, 'CONROD', is_list=False)
 
         size = 8

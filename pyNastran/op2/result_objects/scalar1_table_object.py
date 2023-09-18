@@ -10,7 +10,7 @@ import numpy as np
 from numpy import zeros, searchsorted, float32
 from numpy import allclose, asarray
 
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import ScalarObject, set_as_sort1
 #from pyNastran.op2.result_objects.table_object import append_sort1_sort2
 from pyNastran.f06.f06_formatting import write_float_13e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
@@ -20,10 +20,6 @@ float_types = (float, np.float32)
 integer_types = (int, np.int32)
 
 
-SORT2_TABLE_NAME_MAP = {
-    #'OUGV2' : 'OUGV1',
-    #'OPG2' : 'OPG1',
-}
 class ScalarTableArray(ScalarObject):  # displacement style table
     def __init__(self, data_code, unused_is_sort1, isubcase, unused_dt):
         self.nonlinear_factor = np.nan
@@ -281,34 +277,11 @@ class ScalarTableArray(ScalarObject):  # displacement style table
 
     def set_as_sort1(self):
         """changes the table into SORT1"""
-        #if not self.table_name != 'OQMRMS1':
-            #return
-        if self.is_sort1:
-            return
-        #print('table_name=%r' % self.table_name)
-        try:
-            analysis_method = self.analysis_method
-        except AttributeError:
-            print(self.code_information())
-            raise
-        #print(self.get_stats())
-        #print(self.node_gridtype)
-        #print(self.data.shape)
-        self.sort_method = 1
-        self.sort_bits[1] = 0
-        bit0, bit1, bit2 = self.sort_bits
-        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
-        self.sort_code = bit0 + 2*bit1 + 4*bit2
-        #print(self.code_information())
-        assert self.is_sort1
-        if analysis_method != 'N/A':
-            self.data_names[0] = analysis_method
-            #print(self.table_name_str, analysis_method, self._times)
-            setattr(self, self.analysis_method + 's', self._times)
-        del self.analysis_method
+        set_as_sort1(self)
 
     def add_sort1(self, dt, node_id, v1):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert isinstance(node_id, int) and node_id > 0, 'dt=%s node_id=%s' % (dt, node_id)
         # itotal - the node number
         # itime - the time/frequency step
@@ -321,6 +294,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
 
     def add_sort2(self, dt, node_id, v1):
         """unvectorized method for adding SORT2 transient data"""
+        assert self.is_sort2, self
         # itotal - the time/frequency step
         # itime - the node number
         self._times[self.itotal] = dt

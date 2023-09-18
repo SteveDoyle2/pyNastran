@@ -1,24 +1,29 @@
 from __future__ import annotations
 from itertools import count
-from collections import OrderedDict
 import numpy as np
 import h5py
 import vtk
 import vtkmodules
+
 from vtk.numpy_interface import dataset_adapter as dsa
 from vtk.util.vtkAlgorithm import VTKPythonAlgorithmBase
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from pyNastran.gui.vtk_common_core import vtkPoints
+
 from pyNastran.dev.h5.read_h5 import pyNastranH5
-from pyNastran.utils import object_methods, object_stats, object_attributes
+#from pyNastran.utils import object_methods, object_stats, object_attributes
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from typing import Set
+from pyNastran.bdf.bdf import BDF
 
 
-def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
+def numpy_to_vtk_points(nodes: np.ndarray,
+                        points: vtkPoints=None,
+                        dtype: str='<f', deep: int=1):
     """common method to account for vtk endian quirks and efficiently adding points"""
     assert isinstance(nodes, np.ndarray), type(nodes)
     if points is None:
-        points = vtk.vtkPoints()
+        points = vtkPoints()
         nnodes, ndim = nodes.shape
         assert ndim == 3, nodes.shape
         points.SetNumberOfPoints(nnodes)
@@ -35,12 +40,12 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     return points
 
 
-def fill_vtk_unstructured_grid_aero(geom_model) -> vtk.vtkUnstructuredGrid:
-    grid_aero = vtk.vtkUnstructuredGrid()
+def fill_vtk_unstructured_grid_aero(geom_model) -> vtkUnstructuredGrid:
+    grid_aero = vtkUnstructuredGrid()
     #grid_aero = vtk.vtk.vtkStructuredGrid()
 
 def fill_gui_vtk_unstructured_grid(geom_model: BDF,
-                                   vtk_ugrid: vtk.vtkUnstructuredGrid,
+                                   vtk_ugrid: vtkUnstructuredGrid,
                                    add_property: bool=True,
                                    add_material: bool=True) -> np.ndarray:
     nodes = geom_model._nodes
@@ -61,7 +66,7 @@ def fill_gui_vtk_unstructured_grid(geom_model: BDF,
     #point_data = vtk_ugrid.GetPointData()
 
     iresult = 0
-    cases = OrderedDict()
+    cases = {}
     form, iresult = _fill_gui_geometry_arrays(
         geom_model, vtk_ugrid,
         node_ids, eids, pids, iresult, cases,
@@ -70,7 +75,7 @@ def fill_gui_vtk_unstructured_grid(geom_model: BDF,
     return node_ids, eids, form, cases
 
 def fill_paraview_vtk_unstructured_grid(geom_model: BDF,
-                                        vtk_ugrid: vtk.vtkUnstructuredGrid,
+                                        vtk_ugrid: vtkUnstructuredGrid,
                                         add_property: bool=True,
                                         add_material: bool=True) -> np.ndarray:
     #cell_type_point = 1 # vtk.vtkVertex().GetCellType()
@@ -113,7 +118,7 @@ def fill_paraview_vtk_unstructured_grid(geom_model: BDF,
     return eids
 
 def _fill_gui_geometry_arrays(geom_model: BDF,
-                              vtk_ugrid: vtk.vtkUnstructuredGrid,
+                              vtk_ugrid: vtkUnstructuredGrid,
                               nids: np.ndarray,
                               eids: np.ndarray,
                               pids: np.ndarray,
@@ -298,14 +303,20 @@ def _get_material_arrays(geom_model: BDF,
         thickness_pcomp = np.empty([])
         material_ids_pcomp = np.empty([])
 
-    return psolid_mids, pshell_mids, thickness_pshell, thickness_pcomp, material_ids_pcomp, is_solid, is_pshell, is_pcomp
+    out = (
+        psolid_mids, pshell_mids,
+        thickness_pshell, thickness_pcomp,
+        material_ids_pcomp,
+        is_solid, is_pshell, is_pcomp,
+    )
+    return out
 
 def _fill_paraview_geometry_arrays(geom_model: BDF,
-                                   vtk_ugrid: vtk.vtkUnstructuredGrid,
+                                   vtk_ugrid: vtkUnstructuredGrid,
                                    eids: np.ndarray,
                                    pids: np.ndarray,
                                    add_property: bool=True,
-                                   add_material: bool=True):
+                                   add_material: bool=True) -> None:
     nelements = len(eids)
     cell_data = vtk_ugrid.GetCellData()
     eid_array = numpy_to_vtk(eids, deep=0, array_type=None)
@@ -480,7 +491,7 @@ def _load_elements(geom_model: BDF, node_ids: np.ndarray, idtype: str='int32'):
     print('missing_types = ', missing_types)
     return etype_nids, cell_offsets_array, cell_types_array, eids, pids
 
-def _elements_to_vtk(vtk_ugrid: vtk.vtkUnstructuredGrid,
+def _elements_to_vtk(vtk_ugrid: vtkUnstructuredGrid,
                      etype_nids: np.ndarray,
                      cell_offsets_array: np.ndarray,
                      cell_types_array: np.ndarray):
@@ -499,10 +510,10 @@ def _elements_to_vtk(vtk_ugrid: vtk.vtkUnstructuredGrid,
     vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=deep,
                                     array_type=vtk.VTK_ID_TYPE)
 
-    #grid = vtk.vtkUnstructuredGrid()
+    #grid = vtkUnstructuredGrid()
     vtk_ugrid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
-def get_number_of_elements(etypes: Set[str], geom_model: BDF) -> int:
+def get_number_of_elements(etypes: set[str], geom_model: BDF) -> int:
     nelements = 0
     for card_type, nelementsi in geom_model.card_count.items():
         if card_type in etypes:

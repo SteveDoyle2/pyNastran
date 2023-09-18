@@ -695,7 +695,7 @@ class FlutterResponse:
         return symbols, colors
 
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None,
-                   plot_type='tas',
+                   plot_type: str='tas',
                    clear=False, close=False, legend=True,
                    xlim=None, ylim_damping=None, ylim_freq=None,
                    vd_limit=None, damping_limit=None,

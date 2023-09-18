@@ -155,6 +155,7 @@ def pierce_shell_model(bdf_filename: Union[BDF, str], xyz_points: Any,
     #print(results)
     #print(iresults)
 
+    nan3 = np.full(3, np.nan, dtype='float64') # was None
     direction = np.array([0., 0., 1.])
     ipoints = []
     eids_pierce = []
@@ -165,7 +166,7 @@ def pierce_shell_model(bdf_filename: Union[BDF, str], xyz_points: Any,
         if not eidsi:
             ipoints.append(i)
             eids_pierce.append(None)
-            xyz_pierces_max.append(None)
+            xyz_pierces_max.append(nan3)
             node_ids.append(None)
             model.log.warning('skipping %s because it failed tolerancing (tol=%s)' % (xyz_point, tol))
             continue
@@ -204,7 +205,7 @@ def pierce_shell_model(bdf_filename: Union[BDF, str], xyz_points: Any,
         if len(zpiercesi) == 0:
             ipoints.append(i)
             eids_pierce.append(None)
-            xyz_pierces_max.append(None)
+            xyz_pierces_max.append(nan3)
             node_ids.append(None)
             model.log.warning('skipping %s because no pierces found (tol=%s)' % (xyz_point, tol))
             continue

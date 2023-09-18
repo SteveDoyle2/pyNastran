@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from cpylog import get_logger2
 
 
@@ -147,7 +146,7 @@ class InputCntlReader:
 
     def _read_sections(self, lines: list[str]) -> dict[str, str, list[str]]:
         name = 'Header'
-        sections = OrderedDict()
+        sections = {}
         comment = ''
         data = []
         for line in lines:

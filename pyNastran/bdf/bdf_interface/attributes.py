@@ -10,7 +10,9 @@ from pyNastran.utils import object_attributes, object_methods, deprecated
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
 from pyNastran.bdf.cards.aero.zona import ZONA
+
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf_interface.model_group import ModelGroup
     from pyNastran.bdf import (
         # BDF,
         CaseControlDeck,
@@ -75,10 +77,17 @@ if TYPE_CHECKING:  # pragma: no cover
         # superelements
         SEBULK, SENQSET, SENQSET1, SEBNDRY, RELEASE, SELOC, SEMPLN, SETREE,
         SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,
+
+        MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATDMG,
+        NXSTRAT,
+        PMASS, #CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5,
+        NSMADD,
+
+
     )
     #Coord = Union[CORD1R, CORD1C, CORD1S,
     #              CORD2R, CORD2C, CORD2S]
-    from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
+    from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIAX
     from pyNastran.bdf.subcase import Subcase
 
 BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'nasa95', 'mystran'}
@@ -235,7 +244,7 @@ class BDFAttributes:
         """
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []  # type: list[str]
+        my_keys_to_skip: list[str] = []
 
         my_keys_to_skip = [
             #'case_control_deck',
@@ -260,8 +269,8 @@ class BDFAttributes:
         self.__init_attributes()
 
         self.nodes = {}
-        self.loads = {}  # type: dict[int, list[Any]]
-        self.load_combinations = {}  # type: dict[int, list[Any]]
+        self.loads: dict[int, list[Any]] = {}
+        self.load_combinations: dict[int, list[Any]] = {}
 
     def reset_errors(self) -> None:
         """removes the errors from the model"""
@@ -287,13 +296,13 @@ class BDFAttributes:
         self.force_echo_off = True
 
         #: list of Nastran SYSTEM commands
-        self.system_command_lines = []  # type: list[str]
+        self.system_command_lines: list[str] = []
 
         #: list of execive control deck lines
-        self.executive_control_lines = []  # type: list[str]
+        self.executive_control_lines: list[str] = []
 
         #: list of case control deck lines
-        self.case_control_lines = []  # type: list[str]
+        self.case_control_lines: list[str] = []
 
         # dictionary of BDFs
         self.superelement_models = {}
@@ -379,16 +388,16 @@ class BDFAttributes:
         self._nparse_errors = 0
         self._stop_on_parsing_error = True
         self._stop_on_duplicate_error = True
-        self._stored_parse_errors = []  # type: list[str]
+        self._stored_parse_errors: list[str] = []
 
-        self._duplicate_nodes = []  # type: list[str]
-        self._duplicate_elements = []  # type: list[str]
-        self._duplicate_properties = []  # type: list[str]
-        self._duplicate_materials = []  # type: list[str]
-        self._duplicate_masses = []  # type: list[str]
-        self._duplicate_thermal_materials = []  # type: list[str]
-        self._duplicate_coords = []  # type: list[str]
-        self.values_to_skip = {}  # type: dict[str, list[int]]
+        self._duplicate_nodes: list[str] = []
+        self._duplicate_elements: list[str] = []
+        self._duplicate_properties: list[str] = []
+        self._duplicate_materials: list[str] = []
+        self._duplicate_masses: list[str] = []
+        self._duplicate_thermal_materials: list[str] = []
+        self._duplicate_coords: list[str] = []
+        self.values_to_skip: dict[str, list[int]] = {}
 
         # ------------------------ structural defaults -----------------------
         #: the analysis type
@@ -396,90 +405,91 @@ class BDFAttributes:
         #: used in solution 600, method
         self.sol_method = None
         #: the line with SOL on it, marks ???
-        self.sol_iline = None  # type : Optional[int]
-        self.case_control_deck = None  # type: Optional[CaseControlDeck]
+        self.sol_iline: Optional[int] = None
+        self.case_control_deck: Optional[CaseControlDeck] = None
 
         #: store the PARAM cards
-        self.params = {}    # type: dict[str, PARAM]
+        self.params: dict[str, PARAM] = {}
         self.mdlprm = None  # type: MDLPRM
         # ------------------------------- nodes -------------------------------
         # main structural block
         #: stores POINT cards
-        self.points = {}  # type: dict[int, POINT]
+        self.points: dict[int, POINT] = {}
         #self.grids = {}
 
-        self.spoints = {}  # type: dict[int, SPOINT]
-        self.epoints = {}  # type: dict[int, EPOINT]
+        self.spoints: dict[int, SPOINT] = {}
+        self.epoints: dict[int, EPOINT] = {}
 
         #: stores GRIDSET card
-        self.grdset = None  # type: Optional[GRDSET]
+        self.grdset: Optional[GRDSET] = None
 
         #: stores SEQGP cards
-        self.seqgp = None  # type: Optional[SEQGP]
+        self.seqgp: Optional[SEQGP] = None
 
         ## stores RINGAX
-        self.ringaxs = {}  # type: dict[int, RINGAX]
+        self.ringaxs: dict[int, RINGAX] = {}
 
         ## stores GRIDB
-        self.gridb = {}  # type: dict[int, GRIDB]
+        self.gridb: dict[int, GRIDB] = {}
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
-        self.elements = {}  # type: dict[int, Any]
+        self.elements: dict[int, Any] = {}
 
         #: stores CBARAO, CBEAMAO
-        self.ao_element_flags = {}  # type: dict[int, Any]
+        self.ao_element_flags: dict[int, Any] = {}
         #: stores BAROR
-        self.baror = None  # type: Optional[BAROR]
+        self.baror: Optional[BAROR] = None
         #: stores BEAMOR
-        self.beamor = None  # type: Optional[BEAMOR]
+        self.beamor: Optional[BEAMOR] = None
         #: stores SNORM
-        self.normals = {}  # type: dict[int, SNORM]
+        self.normals: dict[int, SNORM] = {}
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements = {}  # type: dict[int, Any]
         #: stores PLOTELs
         self.plotels = {}  # type: Optional[PLOTEL]
 
-        #: stores CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
-        self.masses = {}  # type: dict[int, Any]
+        #: stores CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5
+        self.masses: dict[int, Any] = {}
         #: stores PMASS
-        self.properties_mass = {}  # type: dict[int, Any]
+        self.properties_mass: dict[int, PMASS] = {}
 
         #: stores NSM, NSM1, NSML, NSML1
-        self.nsms = {}  # type: dict[int, list[Any]]
+        self.nsms: dict[int, list[Any]] = {}
         #: stores NSMADD
-        self.nsmadds = {}  # type: dict[int, list[Any]]
+        self.nsmadds: dict[int, list[NSMADD]] = {}
 
         #: stores LOTS of properties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
-        self.properties = {}  # type: dict[int, Any]
+        self.properties: dict[int, Any] = {}
 
         #: stores MAT1, MAT2, MAT3, MAT8, MAT10, MAT11
-        self.materials = {}  # type: dict[int, Any]
+        self.materials: dict[int, Any] = {}
 
         #: defines the MAT4, MAT5
-        self.thermal_materials = {}  # type: dict[int, Any]
+        self.thermal_materials: dict[int, Any] = {}
 
         #: defines the MATHE, MATHP
-        self.hyperelastic_materials = {}  # type: dict[int, Any]
+        self.hyperelastic_materials: dict[int, Any] = {}
 
         #: stores MATSx
-        self.MATS1 = {}  # type: dict[int, Any]
-        self.MATS3 = {}  # type: dict[int, Any]
-        self.MATS8 = {}  # type: dict[int, Any]
+        self.MATS1: dict[int, Any] = {}
+        self.MATS3: dict[int, Any] = {}
+        self.MATS8: dict[int, Any] = {}
 
         #: stores MATTx
-        self.MATT1 = {}  # type: dict[int, Any]
-        self.MATT2 = {}  # type: dict[int, Any]
-        self.MATT3 = {}  # type: dict[int, Any]
-        self.MATT4 = {}  # type: dict[int, Any]
-        self.MATT5 = {}  # type: dict[int, Any]
-        self.MATT8 = {}  # type: dict[int, Any]
-        self.MATT9 = {}  # type: dict[int, Any]
-        self.nxstrats = {}  # type: dict[int, Any]
+        self.MATT1: dict[int, MATT1] = {}
+        self.MATT2: dict[int, MATT2] = {}
+        self.MATT3: dict[int, MATT3] = {}
+        self.MATT4: dict[int, MATT4] = {}
+        self.MATT5: dict[int, MATT5] = {}
+        self.MATT8: dict[int, MATT8] = {}
+        self.MATT9: dict[int, MATT9] = {}
+        self.MATDMG: dict[int, MATDMG] = {}
+        self.nxstrats: dict[int, NXSTRAT] = {}
 
         #: stores the CREEP card
-        self.creep_materials = {}  # type: dict[int, Any]
+        self.creep_materials: dict[int, Any] = {}
 
         self.tics = {}  # type: Optional[Any]
 
@@ -498,6 +508,7 @@ class BDFAttributes:
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
         self.coords = {0 : coord}   # type: dict[int, Any]
+        self.MATCID = {}
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
@@ -529,13 +540,13 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
-        self.dmi = {}  # type: dict[str, DMI]
-        self.dmig = {}  # type: dict[str, DMIG]
-        self.dmij = {}  # type: dict[str, DMIJ]
-        self.dmiji = {}  # type: dict[str, DMIJI]
-        self.dmik = {}  # type: dict[str, DMIK]
-        self.dmiax = {}  # type: dict[str, DMIAX]
-        self.dti = {}  # type: dict[str, Any]
+        self.dmi: dict[str, DMI] = {}
+        self.dmig: dict[str, DMIG] = {}
+        self.dmij: dict[str, DMIJ] = {}
+        self.dmiji: dict[str, DMIJI] = {}
+        self.dmik: dict[str, DMIK] = {}
+        self.dmiax: dict[str, DMIAX] = {}
+        self.dti: dict[str, Any] = {}
         self._dmig_temp = defaultdict(list)  # type: dict[str, list[str]]
 
         # ----------------------------------------------------------------
@@ -567,18 +578,18 @@ class BDFAttributes:
         # ----------------------------------------------------------------
         #: tables
         # TABLES1, ...
-        self.tables = {}  # type: dict[int, TABLES1]
+        self.tables: dict[int, TABLES1] = {}
 
         # TABLEDx
-        self.tables_d = {}  # type: dict[int, Union[TABLED1, TABLED2, TABLED3, TABLED4]]
+        self.tables_d: dict[int, Union[TABLED1, TABLED2, TABLED3, TABLED4]] = {}
 
         # TABLEMx
-        self.tables_m = {}  # type: dict[int, Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]]
+        self.tables_m: dict[int, Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]] = {}
 
         #: random_tables
         self.random_tables = {}  # type: dict[int, Any]
         #: TABDMP1
-        self.tables_sdamping = {}  # type: dict[int, TABDMP1]
+        self.tables_sdamping: dict[int, TABDMP1] = {}
 
         # ----------------------------------------------------------------
         #: EIGB, EIGR, EIGRL methods
@@ -588,29 +599,29 @@ class BDFAttributes:
 
         # ---------------------------- optimization --------------------------
         # optimization
-        self.dconadds = {}  # type: dict[int, DCONADD]
-        self.dconstrs = {}  # type: dict[int, DCONSTR]
-        self.desvars = {}  # type: dict[int, DESVAR]
-        self.topvar = {}  # type: dict[int, TOPVAR]
-        self.ddvals = {}  # type: dict[int, DDVAL]
-        self.dlinks = {}  # type: dict[int, DLINK]
-        self.dresps = {}  # type: dict[int, Union[DRESP1, DRESP2, DRESP3]]
+        self.dconadds: dict[int, DCONADD] = {}
+        self.dconstrs: dict[int, DCONSTR] = {}
+        self.desvars: dict[int, DESVAR] = {}
+        self.topvar: dict[int, TOPVAR] = {}
+        self.ddvals: dict[int, DDVAL] = {}
+        self.dlinks: dict[int, DLINK] = {}
+        self.dresps: dict[int, Union[DRESP1, DRESP2, DRESP3]] = {}
 
-        self.dtable = None  # type: Optional[DTABLE]
-        self.dequations = {}  # type: dict[int, DEQATN]
+        self.dtable: Optional[DTABLE] = None
+        self.dequations: dict[int, DEQATN] = {}
 
         #: stores DVPREL1, DVPREL2...might change to DVxRel
-        self.dvprels = {}  # type: dict[int, Union[DVPREL1, DVPREL2]]
-        self.dvmrels = {}  # type: dict[int, Union[DVMREL1, DVMREL2]]
-        self.dvcrels = {}  # type: dict[int, Union[DVCREL1, DVCREL2]]
-        self.dvgrids = {}  # type: dict[int, DVGRID]
-        self.doptprm = None  # type: Optional[DOPTPRM]
-        self.dscreen = {}  # type: dict[int, DSCREEN]
+        self.dvprels: dict[int, Union[DVPREL1, DVPREL2]] = {}
+        self.dvmrels: dict[int, Union[DVMREL1, DVMREL2]] = {}
+        self.dvcrels: dict[int, Union[DVCREL1, DVCREL2]] = {}
+        self.dvgrids: dict[int, DVGRID] = {}
+        self.doptprm: Optional[DOPTPRM] = None
+        self.dscreen: dict[int, DSCREEN] = {}
 
         # nx optimization
-        self.group = {}    # type: dict[int, GROUP]
-        self.dmncon = {}   # type: dict[int, DMNCON]
-        self.dvtrels = {}  # type: dict[int, Union[DVTREL1, DVTREL2]]
+        self.group : dict[int, GROUP]= {}
+        self.dmncon: dict[int, DMNCON] = {}
+        self.dvtrels: dict[int, Union[DVTREL1, DVTREL2]] = {}
 
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
@@ -756,7 +767,13 @@ class BDFAttributes:
         self.csuper = {}  # type: dict[int, CSUPER]
         self.csupext = {}  # type: dict[int, CSUPEXT]
 
+        self.bolt: dict[int, BOLT] = {}
+        self.boltseq: dict[int, BOLTSEQ] = {}
+        self.boltfor: dict[int, BOLTFOR] = {}
+        self.boltfrc = {}
+        self.boltld = {}
         # ---------------------------------------------------------------------
+        self.model_groups: dict[int, ModelGroup] = {}
         self._type_to_id_map = defaultdict(list)  # type: dict[int, list[Any]]
         self._slot_to_type_map = {
             'params' : ['PARAM'],
@@ -850,6 +867,7 @@ class BDFAttributes:
             'MATT8' : ['MATT8'],
             'MATT9' : ['MATT9'],
             'MATS1' : ['MATS1'],
+            'MATDMG': ['MATDMG'],
             'MATS3' : ['MATS3'],
             'MATS8' : ['MATS8'],
             'nxstrats' : ['NXSTRAT'],
@@ -942,6 +960,7 @@ class BDFAttributes:
             'coords' : ['CORD1R', 'CORD1C', 'CORD1S',
                         'CORD2R', 'CORD2C', 'CORD2S',
                         'GMCORD', 'ACOORD', 'CORD3G'],
+            'matcid': ['MATCID'],
 
             # temperature cards
             'tempds' : ['TEMPD'],
@@ -1063,6 +1082,12 @@ class BDFAttributes:
             'views' : ['VIEW'],
             'view3ds' : ['VIEW3D'],
 
+            # nx bolts
+            'bolt': ['BOLT'],
+            'boltld': ['BOLTLD'],
+            'boltfor': ['BOLTFOR'],
+            'boltfrc': ['BOLTFRC'],
+            'boltseq': ['BOLTSEQ'],
             ## other
             #'INCLUDE',  # '='
             #'ENDDATA',

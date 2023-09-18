@@ -41,14 +41,14 @@ def get_element_centroids(model: BDF,
                           idtype: str='int32',
                           fdtype: str='float32') -> tuple[NDArrayNint, NDArray3float]:
     """gets the element ids and their centroids"""
-    eids = []
-    element_centroids_cid0 = []
+    eids_list = []
+    element_centroids_cid0_list = []
     springs = {
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
         'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
     }
     for eid, elem in sorted(model.elements.items()):
-        eids.append(eid)
+        eids_list.append(eid)
         if elem.type in springs:
             centroid = np.zeros(3)
             for node_ref in elem.nodes_ref:
@@ -56,10 +56,10 @@ def get_element_centroids(model: BDF,
             centroid /= len(elem.nodes_ref)
         else:
             centroid = elem.Centroid()
-        element_centroids_cid0.append(centroid)
+        element_centroids_cid0_list.append(centroid)
 
-    eids = np.array(eids, dtype=idtype)
-    element_centroids_cid0 = np.array(element_centroids_cid0, dtype=fdtype)
+    eids = np.array(eids_list, dtype=idtype)
+    element_centroids_cid0 = np.array(element_centroids_cid0_list, dtype=fdtype)
     return eids, element_centroids_cid0
 
 def get_stations(model: BDF,
@@ -144,7 +144,7 @@ def get_stations(model: BDF,
         method=method)
     xyz3 = model.coords[cid_p3].transform_node_to_global(p3)
 
-    coord_out = CORD2R(None, origin=origin, zaxis=zaxis2, xzplane=xzplane)
+    coord_out = CORD2R(-1, origin=origin, zaxis=zaxis2, xzplane=xzplane)
     #coord_march = coord_out
     xaxis_march = xyz3 - xyz1
     xaxis_march_norm = np.linalg.norm(xaxis_march)
@@ -159,7 +159,7 @@ def get_stations(model: BDF,
     assert np.allclose(np.linalg.norm(k), 1.0)
     jaxis_march = np.cross(k, iaxis_march)
     kaxis_march = np.cross(iaxis_march, jaxis_march)
-    coord_march = CORD2R(None, origin=origin, zaxis=origin+kaxis_march, xzplane=origin+iaxis_march)
+    coord_march = CORD2R(-1, origin=origin, zaxis=origin+kaxis_march, xzplane=origin+iaxis_march)
     #coord_march = CORD2R(None, origin=origin, zaxis=axis_march, xzplane=xzplane)
     #print(coord_out.get_stats())
 
@@ -520,7 +520,7 @@ def split_to_trias(model: BDF) -> None:
     model.elements = elements2
 
 def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
-                coord: CORD2R,
+                coord: Coord, # CORD2R,
                 plane_atol: float=1e-5,
                 skip_cleanup: bool=True,
                 plane_bdf_filename: str='plane_face.bdf',
@@ -554,13 +554,13 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
         ???
     """
     assert len(face_eids) > 0, face_eids
-    rod_elements = []
-    rod_nids = []
-    rod_xyzs = []
+    rod_elements: list[tuple[int, int, int]] = []
+    rod_nids: list[Any] = []
+    rod_xyzs: list[np.ndarray] = []
 
     #cid = 0
-    local_points = []
-    global_points = []
+    local_points: list[np.ndarray] = []
+    global_points: list[np.ndarray] = []
     nid_new = 1
     eid_new = 1
     mid = 1
@@ -570,8 +570,8 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
     #tri_face_eids, tri_faces = faces_to_tri_faces(face_eids, faces)
     tri_face_eids = face_eids
     tri_faces = faces
-    result = []
-    geometry = []
+    result: list[np.ndarray] = []
+    geometry: list[np.ndarray] = []
 
     #base, ext = os.path.splitext(plane_bdf_filename)
     #plane_bdf_filename2 = base + '2' + ext
@@ -684,7 +684,10 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
     #print('*unique_results_array', unique_results_array, type(unique_results_array))
     return unique_geometry_array, unique_results_array, (rods_elements_array, rod_nids_array, rod_xyzs_array)
 
-def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup: bool=True):
+def _unique_face_rows(geometry_array: np.ndarray,
+                      results_array: np.ndarray,
+                      nodes: np.ndarray,
+                      skip_cleanup: bool=True) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns
     -------
@@ -740,7 +743,9 @@ def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup: bool=T
     #print('iedges =', unused_iedges)
     return unique_geometry_array2, unique_results_array2
 
-def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
+def connect_face_rows(geometry_array: np.ndarray,
+                      results_array: np.ndarray,
+                      skip_cleanup: bool=True) -> tuple[list[Any], list[np.ndarray], list[np.ndarray]]:
     """
     Connects the faces by taking the count of how many times each node
     is used.  If a node is not used twice, then it is a starting/ending point,
@@ -778,7 +783,7 @@ def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
     node_start_end = nodes[ibad].tolist()
     #print('node_start_end = ', node_start_end)
     if len(ibad) == 2 or 1:
-        iedges = []
+        iedges: list[int] = []
         iedges_all = []
         #print("ibad = %s" % ibad)
         #print("edges:")
@@ -857,7 +862,9 @@ def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
     #print(results, type(results))
     return iedges_all, geometry, results
 
-def iedges_to_geometry_results(iedges_all, geometry_array, results_array):
+def iedges_to_geometry_results(iedges_all,
+                               geometry_array: np.ndarray,
+                               results_array: np.ndarray) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """
     Takes the iedges and slices the geometry/results to isolate the rings
     or C shapes.
@@ -872,15 +879,17 @@ def iedges_to_geometry_results(iedges_all, geometry_array, results_array):
         results.append(resultsi)
     return geometry, results
 
-def _face_on_edge(eid, eid_new, nid_new, mid, area, J, fbdf,
-                  inid1, inid2, unused_inid3,
-                  xyz1_local, xyz2_local, unused_xyz3_local,
-                  xyz1_global, xyz2_global, unused_xyz3_global,
-                  nodal_result,
+def _face_on_edge(eid: int, eid_new: int,
+                  nid_new: int, mid: int,
+                  area: float, J: float, fbdf,
+                  inid1: int, inid2: int, unused_inid3: int,
+                  xyz1_local: np.ndarray, xyz2_local: np.ndarray, unused_xyz3_local: np.ndarray,
+                  xyz1_global: np.ndarray, xyz2_global: np.ndarray, unused_xyz3_global: np.ndarray,
+                  nodal_result: np.ndarray,
                   local_points, global_points,
                   geometry, result,
                   rod_elements, rod_nids, rod_xyzs,
-                  unused_plane_atol):
+                  unused_plane_atol: float) -> tuple[int, int]:
     """is this function necessary?"""
     #raise NotImplementedError('on edge-y1')
     #print('  y-sym; nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
@@ -892,10 +901,10 @@ def _face_on_edge(eid, eid_new, nid_new, mid, area, J, fbdf,
     nid_a = inid1
     nid_b = inid2
 
-    out_grid1 = ['GRID', nid_new, cid, ] + list(xyz1_local)
-    out_grid2 = ['GRID', nid_new + 1, cid, ] + list(xyz2_local)
-    conrod = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
-    conm2 = ['CONM2', eid_new+1, nid_new, 0, 100.]
+    out_grid1: list[Union[str, int, float]] = ['GRID', nid_new, cid, ] + xyz1_local.tolist()
+    out_grid2: list[Union[str, int, float]] = ['GRID', nid_new + 1, cid, ] + xyz2_local.tolist()
+    conrod: list[Union[str, int, float]] = ['CONROD', eid_new, nid_new, nid_new + 1, mid, area, J]
+    conm2: list[Union[str, int, float]] = ['CONM2', eid_new+1, nid_new, 0, 100.]
     fbdf.write(print_card_8(out_grid1))
     fbdf.write(print_card_8(out_grid2))
     fbdf.write(print_card_8(conrod))
@@ -927,16 +936,20 @@ def _face_on_edge(eid, eid_new, nid_new, mid, area, J, fbdf,
     nid_new += 2
     return eid_new, nid_new
 
-def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J,
+def _interpolate_face_to_bar(nodes,
+                             eid: int, eid_new: int, nid_new: int, mid: int,
+                             area: float, J: float,
                              fbdf, fbdf2,
-                             inid1, inid2, inid3,
-                             xyz1_local, xyz2_local, xyz3_local,
-                             xyz1_global, xyz2_global, xyz3_global,
+                             inid1: int, inid2: int, inid3: int,
+                             xyz1_local: np.ndarray, xyz2_local: np.ndarray, xyz3_local: np.ndarray,
+                             xyz1_global: np.ndarray, xyz2_global: np.ndarray, xyz3_global: np.ndarray,
                              nodal_result,
                              local_points, global_points,
                              geometry, result,
-                             rod_elements, rod_nids, rod_xyzs,
-                             coord: CORD2R, plane_atol, plane_bdf_offset: float=0.):
+                             rod_elements, rod_nids, rod_xyzs: list[np.ndarray],
+                             coord: CORD2R,
+                             plane_atol: float,
+                             plane_bdf_offset: float=0.):
     """
     Parameters
     ----------
@@ -1317,13 +1330,17 @@ def _write_moi_file(moi_filename: str, eid_filename: str,
             #PID | MID |  A  |  J  |  C  | NSM
             eid_file.write(fmt % (eidi, pidi, areai, thicknessi, Ii[0], Ii[1], Ii[2]))
 
-def get_element_inertias(model: BDF, normal_plane,
-                         thetas, eids, length, centroid):
+def get_element_inertias(model: BDF, normal_plane: np.ndarray,
+                         thetas: dict[int, tuple[float, float, float, float]],
+                         eids: list[int],
+                         length: list[float],
+                         centroid: list[np.ndarray],
+                         ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     normal_plane_vector = normal_plane.copy().reshape((3, 1))
-    cg = []
-    area = []
-    thickness = []
-    E = []
+    cg_list: list[np.ndarray] = []
+    area_list: list[float] = []
+    thickness_list: list[float] = []
+    E_list: list[tuple[float, float, float]] = []
 
     for eid, lengthi, centroidi in zip(eids, length, centroid):
         #print(eid, lengthi)
@@ -1332,17 +1349,17 @@ def get_element_inertias(model: BDF, normal_plane,
             thicknessi, areai, thetad, Ex, Ey, Gxy, nu_xy = _get_shell_inertia(
                 element, normal_plane, normal_plane_vector, lengthi)
             thetas[eid] = (thetad, Ex, Ey, Gxy)
-            thickness.append(thicknessi)
-            area.append(areai)
-            cg.append(centroidi)
-            E.append((Ex, Ey, Gxy))
+            thickness_list.append(thicknessi)
+            area_list.append(areai)
+            cg_list.append(centroidi)
+            E_list.append((Ex, Ey, Gxy))
         else:
             print(element)
 
-    centroid = np.array(cg, dtype='float64')
-    area = np.array(area, dtype='float64')
-    thickness = np.array(thickness, dtype='float64')
-    E = np.array(E, dtype='float64')
+    centroid = np.array(cg_list, dtype='float64')
+    area = np.array(area_list, dtype='float64')
+    thickness = np.array(thickness_list, dtype='float64')
+    E = np.array(E_list, dtype='float64')
     return centroid, area, thickness, E
 
 def _get_shell_inertia(element: Union[CTRIA3, CQUAD4],
@@ -1417,8 +1434,11 @@ def _get_shell_inertia(element: Union[CTRIA3, CQUAD4],
     #  maximize m' dot p = p.T dot m
     # m' = R dot m
     #    = a + b*sin(theta) + c*cos(theta)
-    #
     #  d/d(theta) = b*cos(theta)*sin(theta) = 0
+    #
+    #  d/d(theta) = b*cos(theta) - c*sin(theta) = 0
+    #  b*cos(theta) = c*sin(theta)
+    #  tan(theta) = b/c
     #
     # the theta to rotate by in order to orient imat with the normal
     #print(b, c)

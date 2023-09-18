@@ -66,6 +66,9 @@ def mapfmt(fmt: bytes, size: int) -> bytes:
         return fmt
     return fmt.replace(b'i', b'q').replace(b'f', b'd')
 
+def mapfmt8(fmt: bytes) -> bytes:
+    return fmt.replace(b'i', b'q').replace(b'f', b'd')
+
 def mapfmt_str(fmt: str, size: int) -> str:
     """Same as mapfmt, but works on strings instead of bytes."""
     if size == 4:
@@ -78,7 +81,12 @@ def build_obj(obj):
     so this exists to combine those
     """
     if not obj.is_built:
-        obj.build()
+        try:
+            obj.build()
+        except (KeyboardInterrupt, SystemError, NameError, SyntaxError, AttributeError, MemoryError, TypeError, AssertionError):  # pragma: no cover
+            raise
+        #except Exception as e:
+            #raise RuntimeError(str(obj)) from e
         obj.is_built = True
 
 def apply_mag_phase(floats: Any, is_magnitude_phase: bool,

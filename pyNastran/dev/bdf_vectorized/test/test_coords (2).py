@@ -410,7 +410,7 @@ class TestCoords(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        card = CORD1C(card)
+        card = CORD1C.add_card(card)
         self.assertEqual(card.Cid(), 2)
         self.assertEqual(card.Rid(), 0)
         card.write_bdf(size, 'dummy')
@@ -447,7 +447,7 @@ class TestCoords(unittest.TestCase):
 
         # by running it through Patran...
         #GRID     20143          1.1067  .207647 -.068531
-        diff = g.Position() - array([1.106704, .207647, -0.068531])
+        diff = g.get_position() - array([1.106704, .207647, -0.068531])
 
         msg = 'diff=%s' % diff
         assert allclose(diff, 0.), msg
@@ -485,7 +485,7 @@ class TestCoords(unittest.TestCase):
 
 
     def test_A(self):
-        cid0 = CORD2R()
+        cid0 = CORD2R(cid=0, origin=[0., 0., 0.], zaxis=[0., 0., 1.], xzplane=[1., 0., 0.])
         Lx = 2.
         Ly = 0.
         Lz = 3.
@@ -498,7 +498,7 @@ class TestCoords(unittest.TestCase):
 
         Fxyz = [0., -Fy, 0.]
         Mxyz = [0., 0., 0.]
-        cid_new = CORD2R(data=data)
+        cid_new = CORD2R.add(data=data)
         model = None
 
         Fxyz_local, Mxyz_local = transform_load(Fxyz, Mxyz, cid0, cid_new, model)
@@ -510,7 +510,7 @@ class TestCoords(unittest.TestCase):
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
     def test_B(self):
-        cid0 = CORD2R()
+        cid0 = CORD2R(cid=0, origin=[0., 0., 0.], zaxis=[0., 0., 1.], xzplane=[1., 0., 0.])
         Lx = 2.
         Ly = 3.
         Lz = 5.

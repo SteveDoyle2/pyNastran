@@ -21,12 +21,13 @@ but chances are you already have those.  If you don't, they're very easy to inst
 
 Python
 ------
-The software is tested on Windows and Linux against:
+The software is tested on Windows and Linux against Python 3.10-3.11).  The latest versions support:
 
  * Python 3.7
  * Python 3.8
- * Python 3.9  (availible in pyNastran 1.3.4)
- * Python 3.10  (availible in pyNastran 1.3.4)
+ * Python 3.9
+ * Python 3.10
+ * Python 3.11 (avaible in dev)
 
 Packages
 --------
@@ -43,7 +44,7 @@ based on availbility), so it should work.  The recommended set of packages are:
  * **Optional**:
 
    * colorama >= 0.3.9    **(colored logging)**
-   * pandas >= 0.25
+   * pandas >= 0.25,<2.0
    * matplotlib >= 2.2.4  **(plotting)**
    * h5py >= 2.8.0        **(HDF5 support)**
 
@@ -69,7 +70,7 @@ Base functionality:
  * `64-bit Python <https://www.python.org/downloads/>`_
  * ``pip install numpy``
  * ``pip install scipy``
- * ``pip install pandas``     **(optional)**
+ * ``pip install pandas<2``     **(optional)**
  * ``pip install h5py``       **(optional for HDF5 support)**
  * ``pip install matplotlib`` **(optional for plotting)**
  * ``pip install colorama``   **(optional for colored logging)**
@@ -80,7 +81,7 @@ Base functionality:
 For **optional** GUI support:
 
  * On the command line:
- 
+
     * ``pip install imageio`` **(optional for animation support)**
     * ``pip install pyside2``
     * ``pip install vtk``
@@ -96,13 +97,13 @@ Install Procedure - From Anaconda (not recommended and untested)
 
 You've been warned, but in general Anaconda doesn't work well with pip.
 You need to be very careful with using ``pip`` instead of ``conda``.
-In general, it's best to always use conda first and pip only if 
+In general, it's best to always use conda first and pip only if
 conda fails.
 
   - `64-bit Python <https://www.anaconda.com/products/individual>`_
  * ``conda install numpy``
  * ``conda install scipy``
- * ``conda install pandas``
+ * ``conda install pandas<2``
  * ``conda install h5py``
  * ``conda install matplotlib``
  * ``conda install colorama``

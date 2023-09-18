@@ -7,11 +7,15 @@ import random
 import vtk
 assert int(vtk.VTK_VERSION[0]) > 6, vtk.VTK_VERSION
 #assert vtk.VTK_VERSION > (7, 1, 0), vtk.VTK_VERSION
+from pyNastran.gui.vtk_rendering_core import (
+    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
+    vtkActor, vtkBillboardTextActor3D,
+    vtkPolyDataMapper,
+)
 
 
 def ActorCallback(caller, eventId_unuseD, clientData, callData_unused):
-
-    text_actor = vtk.vtkBillboardTextActor3D(clientData)
+    text_actor = vtkBillboardTextActor3D(clientData)
     #actor = vtkActor *(caller)
 
     xyz = actor.GetPosition()
@@ -20,7 +24,7 @@ def ActorCallback(caller, eventId_unuseD, clientData, callData_unused):
     text_actor.SetInput(label)
 
 def make_billboard(renderer, xyz):
-    text_actor = vtk.vtkBillboardTextActor3D()
+    text_actor = vtkBillboardTextActor3D()
     #actor = vtkActor *(caller)
     #print(xyz)
 
@@ -29,10 +33,11 @@ def make_billboard(renderer, xyz):
     text_actor.SetInput(label)
 
     #text_actor.SetPosition (actor.GetPosition())
-    text_actor.GetTextProperty().SetFontSize(15)
-    #text_actor.GetTextProperty().SetColor(1.0, 1.0, 0.4)
-    text_actor.GetTextProperty().SetColor(0.0, 0.0, 0.0)
-    text_actor.GetTextProperty().SetJustificationToCentered()
+    prop = text_actor.GetTextProperty()
+    prop.SetFontSize(15)
+    #prop.SetColor(1.0, 1.0, 0.4)
+    prop.SetColor(0.0, 0.0, 0.0)
+    prop.SetJustificationToCentered()
 
     renderer.AddActor(text_actor)
 
@@ -46,29 +51,29 @@ def main():
     sphere_source.SetRadius(1.0)
 
     # Create an actor
-    mapper2 = vtk.vtkPolyDataMapper()
+    mapper2 = vtkPolyDataMapper()
     mapper2.SetInputConnection(sphere_source.GetOutputPort())
-    actor2 = vtk.vtkActor()
+    actor2 = vtkActor()
     actor2.SetMapper(mapper2)
     actor2.SetPosition(0, 0, 0)
     actor2.GetProperty().SetColor(1.0, .4, .4)
 
     # Create a renderer
-    renderer = vtk.vtkRenderer()
+    renderer = vtkRenderer()
     renderer.SetBackground(.6, .4, .2)
     renderer.AddActor(actor2)
 
     # Create a render window
-    render_window = vtk.vtkRenderWindow()
+    render_window = vtkRenderWindow()
     render_window.AddRenderer(renderer)
 
     # Create an interactor
-    render_window_interactor = vtk.vtkRenderWindowInteractor()
+    render_window_interactor = vtkRenderWindowInteractor()
     render_window_interactor.SetRenderWindow(render_window)
 
     for i in range(10):
         # Create a mapper
-        mapper = vtk.vtkPolyDataMapper()
+        mapper = vtkPolyDataMapper()
         mapper.SetInputConnection(sphere_source.GetOutputPort())
 
         # Create an actor

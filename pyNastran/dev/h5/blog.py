@@ -9,6 +9,11 @@ import vtk
 from vtk.numpy_interface import dataset_adapter as dsa
 from vtk.util.vtkAlgorithm import VTKPythonAlgorithmBase
 from vtk import *
+from pyNastran.gui.vtk_rendering_core import (
+    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
+    vtkActor,
+    vtkPolyDataMapper,
+)
 
 def write_file(data, xfreq, dirname: str):
     wdata = dsa.WrapDataObject(data)
@@ -105,17 +110,17 @@ def run_source():
     volume.SetMapper(volumeMapper)
     volume.SetProperty(volumeProperty)
 
-    ren = vtk.vtkRenderer() # Renderer
+    ren = vtkRenderer() # Renderer
     ren.AddVolume(volume)
     ren.ResetCamera()
     ren.GetActiveCamera().ParallelProjectionOn()
 
-    renwin = vtk.vtkRenderWindow () # Window
+    renwin = vtkRenderWindow() # Window
     renwin.AddRenderer (ren)
     renwin.SetSize(300, 300)
     renwin.SetDesiredUpdateRate(1.0)
 
-    iren = vtk.vtkRenderWindowInteractor() # Interactor
+    iren = vtkRenderWindowInteractor() # Interactor
     iren.SetRenderWindow(renwin)
     iren.Start()
 
@@ -214,16 +219,16 @@ def run_vtk(dirname: str):
     cf.SetInputConnection(alg.GetOutputPort())
     cf.SetValue(0, 200)
 
-    m = vtk.vtkPolyDataMapper()
+    m = vtkPolyDataMapper()
     m.SetInputConnection(cf.GetOutputPort())
 
-    a = vtk.vtkActor()
+    a = vtkActor()
     a.SetMapper(m)
 
-    ren = vtk.vtkRenderer()
+    ren = vtkRenderer()
     ren.AddActor(a)
 
-    renWin = vtk.vtkRenderWindow()
+    renWin = vtkRenderWindow()
     renWin.AddRenderer(ren)
     renWin.SetSize(600, 600)
 
@@ -247,16 +252,16 @@ def run_vtk2(dirname: str):
     cf.SetInputConnection(rs.GetOutputPort())
     cf.SetValue(0, 200)
 
-    m = vtk.vtkPolyDataMapper()
+    m = vtkPolyDataMapper()
     m.SetInputConnection(cf.GetOutputPort())
 
-    a = vtk.vtkActor()
+    a = vtkActor()
     a.SetMapper(m)
 
-    ren = vtk.vtkRenderer()
+    ren = vtkRenderer()
     ren.AddActor(a)
 
-    renWin = vtk.vtkRenderWindow()
+    renWin = vtkRenderWindow()
     renWin.AddRenderer(ren)
     renWin.SetSize(300, 300)
     renWin.Render()

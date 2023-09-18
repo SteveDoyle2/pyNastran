@@ -8,15 +8,16 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.cards.aero.aero import (
     #AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
-    #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-    #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    CAERO1, # CAERO2, CAERO3, CAERO4, CAERO5,
+    PAERO1, # PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3, MONDSP1,
-    #SPLINE1, SPLINE2, SPLINE3,
+    SPLINE1, SPLINE2, # SPLINE3,
     SPLINE4, SPLINE5)
 
 from pyNastran.op2.errors import DoubleCardError
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block_size # reshape_bytes_block,
 from pyNastran.bdf.cards.elements.acoustic import ACMODL
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLUTTER
 from .utils import get_minus1_start_end
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
@@ -84,7 +85,7 @@ class EDT:
             (7601, 76, 577) : ['MONPNT1', self._read_monpnt1],
             (3102, 31, 264) : ['PAERO1', self._read_paero1],
             (4601, 46, 170) : ['PAERO2', self._read_paero2],
-            (4701, 47, 171) : ['PAERO3', self._read_fake],
+            (4701, 47, 171) : ['PAERO3', self._read_paero3],
             (4801, 48, 172) : ['PAERO4', self._read_fake],
             (5101, 51, 176) : ['PAERO5', self._read_paero5],
             (5301, 53, 378) : ['PANEL', self._read_panel],
@@ -162,6 +163,9 @@ class EDT:
             mesh = reshape_bytes_block_size(mesh_bytes, size=self.size)
             dmik = reshape_bytes_block_size(dmik_bytes, size=self.size)
             perq = reshape_bytes_block_size(perq_bytes, size=self.size)
+            assert isinstance(mesh, str), mesh
+            assert isinstance(dmik, str), dmik
+            assert isinstance(perq, str), perq
 
             aeforce = op2.add_aeforce(mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq)
             str(aeforce)
@@ -199,7 +203,8 @@ class EDT:
             sym_xy = reshape_bytes_block_size(sym_xy_bytes, size=self.size)
             dmij = reshape_bytes_block_size(dmij_bytes, size=self.size)
             dmiji = reshape_bytes_block_size(dmiji_bytes, size=self.size)
-
+            assert isinstance(dmij, str), dmij
+            assert isinstance(dmiji, str), dmiji
             aepress = op2.add_aepress(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
             str(aepress)
             #print(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
@@ -208,8 +213,25 @@ class EDT:
 
     def _read_mkaero2(self, data: bytes, n: int) -> int:
         mkaero2x
+
     def _read_csschd(self, data: bytes, n: int) -> int:
-        csschd
+        """
+        (6401, 64, 307,
+         10, 510, 10, 20, 30,
+         20, 510, 100, 20, 300)
+
+        csschd	10	510	10	20	30
+        csschd	20	510	100	20	300
+        """
+        ints = np.frombuffer(data[n:], dtype=self.op2.idtype8)
+        nints = len(ints)
+        assert nints % 5 == 0
+        ints = ints.reshape(nints//5, 5)
+        for intsi in ints:
+            sid, aesid, lschd, lalpha, lmach = intsi
+            self.op2.add_csschd(sid, aesid, lschd, lalpha=lalpha, lmach=lmach)
+        return len(data)
+
     def _read_diverg(self, data: bytes, n: int) -> int:
         """
         Record – DIVERG(2702,27,387)
@@ -556,8 +578,10 @@ class EDT:
         struct = Struct(op2._endian + b'i 3f 2i')
         out = struct.unpack(data[n:])
         acsid, velocity, cref, rho_ref, sym_xz, sym_xy = out
-        op2.add_aero(velocity, cref, rho_ref,
-                     acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
+        aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
+        op2._add_methods._add_aero_object(aero, allow_overwrites=True)
+        #op2.add_aero(velocity, cref, rho_ref,
+                     #acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
         n = 36
         return n
 
@@ -712,6 +736,7 @@ class EDT:
 
         """
         op2 = self.op2
+        add_methods = op2._add_methods
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -721,12 +746,19 @@ class EDT:
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             eid, pid, cp, nspan, nchord, lspan, lchord, igid, x1, y1, z1, x12, x4, y4, z4, x43 = out
-            op2.add_caero1(eid, pid, igid,
-                           [x1, y1, z1], x12,
-                           [x4, y4, z4], x43,
-                           cp=cp,
-                           nspan=nspan, lspan=lspan,
-                           nchord=nchord, lchord=lchord)
+            caero = CAERO1(
+                eid, pid, igid,
+                [x1, y1, z1], x12,
+                [x4, y4, z4], x43, cp=cp,
+                nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                comment='')
+            add_methods._add_caero_object(caero, allow_overwrites=True)
+            #op2.add_caero1(eid, pid, igid,
+                           #[x1, y1, z1], x12,
+                           #[x4, y4, z4], x43,
+                           #cp=cp,
+                           #nspan=nspan, lspan=lspan,
+                           #nchord=nchord, lchord=lchord)
             n += ntotal
         return n
 
@@ -809,6 +841,18 @@ class EDT:
             assert min(zero1, zero2) == max(zero1, zero2)
             p1 = [x1, y1, z1]
             p4 = [x4, y4, z4]
+            #4 LISTW  I Identification number of an AEFACT entry that lists
+                       #coordinate pairs for structural interpolation of the wing
+            #5 LISTC1 I Identification number of an AEFACT entry that lists
+                       #coordinate pairs for control surfaces
+            #6 LISTC2 I Identification number of an AEFACT entry that lists
+                       #coordinate pairs for control surfaces
+            if list_w == 0:
+                list_w = None
+            if list_c1 == 0:
+                list_c1 = None
+            if list_c2 == 0:
+                list_c2 = None
             caero3 = op2.add_caero3(
                 eid, pid, list_w, p1, x12, p4, x43,
                 cp=cp, list_c1=list_c1, list_c2=list_c2, comment='')
@@ -939,7 +983,9 @@ class EDT:
             for body in [b1, b2, b3, b4, b5, b6, empty]:
                 if body != 0:
                     caero_body_ids.append(body)
-            paero1 = op2.add_paero1(pid, caero_body_ids=caero_body_ids)
+            paero1 = PAERO1(pid, caero_body_ids=caero_body_ids, comment='')
+            op2._add_methods._add_paero_object(paero1, allow_overwrites=True)
+            #paero1 = op2.add_paero1(pid, caero_body_ids=caero_body_ids)
             str(paero1)
             #if caero_body_ids:
                 #self.log.warning(str(paero1))
@@ -993,6 +1039,7 @@ class EDT:
             thi = [thi1, thi2, thi3]
             thn = [thn1, thn2, thn3]
             orient = reshape_bytes_block_size(orient_bytes, self.size)
+            assert isinstance(orient, str), orient
             paero2 = op2.add_paero2(pid, orient, width, ar,
                                     thi, thn,
                                     lrsb=lrsb,
@@ -1000,6 +1047,133 @@ class EDT:
                                     lth=lth)
             n += ntotal
             str(paero2)
+        return n
+
+    def _read_paero3(self, data: bytes, n: int) -> int:
+        """
+        NX 2019.2
+        Record – PAERO3(4701,47,171)
+        Aerodynamic panel property.
+        1 PID  I Property identification number
+        2 NBOX I Number of Mach boxes in the flow direction
+        3 FLAG I
+        FLAG = 0
+        4 UNDEF None
+        5 X5 RS X-coordinate of point 5 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        6 Y5 RS Y-coordinate of point 5 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        7 X6 RS X-coordinate of point 6 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        8 Y6 RS Y-coordinate of point 6 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        FLAG = 1
+        4 UNDEF None
+        5 X5 RS X-coordinate of point 5 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        6 Y5 RS Y-coordinate of point 5 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        7 X6 RS X-coordinate of point 6 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        8 Y6 RS Y-coordinate of point 6 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        9 X7 RS X-coordinate of point 7 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        10 Y7 RS Y-coordinate of point 7 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        11 X8 RS X-coordinate of point 8 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        12 Y8 RS Y-coordinate of point 8 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        13 X9 RS X-coordinate of point 9 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        14 Y9 RS Y-coordinate of point 9 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        15 X10 RS X-coordinate of point 10 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        16 Y10 RS Y-coordinate of point 10 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        FLAG = 2
+        4 UNDEF None
+        5 X5 RS X-coordinate of point 5 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        6 Y5 RS Y-coordinate of point 5 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        7 X6 RS X-coordinate of point 6 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        8 Y6 RS Y-coordinate of point 6 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        9 X7 RS X-coordinate of point 7 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        10 Y7 RS Y-coordinate of point 7 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        11 X8 RS X-coordinate of point 8 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        12 Y8 RS Y-coordinate of point 8 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        13 X9 RS X-coordinate of point 9 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        14 Y9 RS Y-coordinate of point 9 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        15 X10 RS X-coordinate of point 10 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        16 Y10 RS Y-coordinate of point 10 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        17 X11 RS X-coordinate of point 11 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        18 Y11 RS Y-coordinate of point 11 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        19 X12 RS X-coordinate of point 12 in the aerodynamic coordinate system defining the cranks and control surface geometry
+        20 Y12 RS Y-coordinate of point 12 in the aerodynamic coordinate system defining the cranks and control surface geometry
+
+        data = ()
+        ints    = (4701, 47, 171,
+                   1, 11, 0, 4, 0, 0, 0, 0)
+        floats  = (4701, 47, 171,
+                   1, 11, 0.0, 4, 0.0, 0.0, 0.0, 0.0)
+
+        """
+        op2 = self.op2
+        #op2.show_data(data, types='ifs', endian=None, force=False)
+        #asdf
+        #ntotal = 60 * self.factor # 4 * 15
+        #ndatai = len(data) - n
+        #ncards = ndatai // ntotal
+        #assert ndatai % ntotal == 0
+        if self.size == 4:
+            struct_init = Struct(op2._endian + b'3i')
+            struct0 = Struct(op2._endian + b'i 4f')
+            struct1 = Struct(op2._endian + b'i 12f')
+        else:
+            struct_init = Struct(op2._endian + b'3q')
+            struct0 = Struct(op2._endian + b'q 4d')
+            struct1 = Struct(op2._endian + b'q 12d')
+        n_init = 3 * self.size
+        n0 = 5 * self.size
+        n1 = 13 * self.size
+
+        #ncards = 0
+        while n < len(data):
+            #op2.show_data(data[n:])
+            data_init = data[n:n+n_init]
+            pid, nbox, flag = struct_init.unpack(data_init)
+            n += n_init
+            #print(pid, nbox, flag)
+            #if pid == 0 and nbox == 0 and flag == 0:
+                #continue
+            ncontrol_surfaces = 0
+            x = []
+            y = []
+            if flag == 0:
+                data0 = data[n:n+n0]
+                assert len(data0) == n0, (len(data0), n0)
+                #4 UNDEF None
+                #5 X5 RS X-coordinate of point 5 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #6 Y5 RS Y-coordinate of point 5 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #7 X6 RS X-coordinate of point 6 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #8 Y6 RS Y-coordinate of point 6 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                dummy, x5, y5, x6, y6 = struct0.unpack(data0)
+                x.extend([x5, x6])
+                y.extend([y5, y6])
+                #print('  ', dummy, x5, y5, x6, y6)
+                paero3 = op2.add_paero3(pid, nbox, ncontrol_surfaces, x, y)
+                str(paero3)
+                n += n0
+            elif flag == 1:
+                data1 = data[n:n+n1]
+                assert len(data1) == n1, (len(data1), n1)
+                #4 UNDEF None
+                #5 X5 RS X-coordinate of point 5 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #6 Y5 RS Y-coordinate of point 5 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #7 X6 RS X-coordinate of point 6 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #8 Y6 RS Y-coordinate of point 6 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #9 X7 RS X-coordinate of point 7 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #10 Y7 RS Y-coordinate of point 7 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #11 X8 RS X-coordinate of point 8 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #12 Y8 RS Y-coordinate of point 8 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #13 X9 RS X-coordinate of point 9 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #14 Y9 RS Y-coordinate of point 9 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #15 X10 RS X-coordinate of point 10 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                #16 Y10 RS Y-coordinate of point 10 in the aerodynamic coordinate system defining the cranks and control surface geometry
+                dummy, x5, y5, x6, y6, x7, y7, x8, y8, x9, y9, x10, y10 = struct1.unpack(data1)
+                x.extend([x5, x6, x7, x8, x9, x10])
+                y.extend([y5, y6, y7, y8, y9, y10])
+                paero3 = op2.add_paero3(pid, nbox, ncontrol_surfaces, x, y)
+                str(paero3)
+                n += n1
+            else:
+                raise NotImplementedError(flag)
+            #ncards += 1
         return n
 
     def _read_paero5(self, data: bytes, n: int) -> int:
@@ -1247,9 +1421,9 @@ class EDT:
             search_unit = reshape_bytes_block_size(search_unit_bytes, self.size)
             #ctype = reshape_bytes_block_size(ctype_bytes, self.size)
 
-            assert inter in ['IDENT', 'DIFF'], inter
+            assert inter in {'IDENT', 'DIFF'}, inter
             #assert ctype in ['STRONG', 'WEAK', 'WEAKINT', 'WEAKEXT'], ctype
-            assert method in ['CP', ''], method
+            assert method in {'CP', 'BW', ''}, method
             #assert area_op in [0, 1], area_op
             #If CTYPE = STRONG
             #If CTYPE = WEAK
@@ -1295,7 +1469,7 @@ class EDT:
 
         for (i0, i1) in zip(istart, iend):
             sid = ints[i0]
-            elements = floats[i0+1:i1]
+            elements = floats[i0+1:i1].tolist()
             assert ints[i1] == -1, ints[i1]
             op2.add_aelist(sid, elements)
             #n += ntotal
@@ -1328,6 +1502,7 @@ class EDT:
         """
         SET2
         MSC 2018.2
+        NX 2019.2
 
         Word Name Type Description
         1 SID I
@@ -1336,21 +1511,24 @@ class EDT:
 
         Record 71 - SET2(3602,36,269)
         Word Name Type Description
-        1 SID I
-        2 MACRO I
-        3 SP1 RS
-        4 SP2 RS
-        5 CH1 RS
-        6 CH2 RS
-        7 ZMAX RS
-        8 ZMIN RS
+        1 SID   I  Unique identification number
+        2 MACRO I  Identification number of an aerodynamic macro element
+        3 SP1   RS Lower span division point defining the prism containing the set
+        4 SP2   RS Higher span division point defining the prism containing the set
+        5 CH1   RS Lower chord division point defining the prism containing the set
+        6 CH2   RS Higher chord division point defining the prism containing the set
+        7 ZMAX  RS Z-coordinate of the top of the prism containing the set
+        8 ZMIN  RS Z-coordinate of the bottom of the prism containing the set.
 
+        data = (3602, 36, 269,
+                200, 101, -0.10, 1.10, -0.10, 1.0, 1.0, -0.10)
         """
         op2 = self.op2
-        ntotal = 32 # 4 * 8
+        #op2.show_data(data, types='if', endian=None, force=False)
+        ntotal = 32 * self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
-        assert ndatai % ntotal == 0
+        assert ndatai % ntotal == 0, (ndatai, ntotal)
         #structi = Struct(op2._endian + b'4i f 8s 8s 3i f') # msc
         structi = Struct(op2._endian + b'2i 6f')
         for unused_i in range(ncards):
@@ -1447,12 +1625,14 @@ class EDT:
                 ind_label_bytes, coeff = struct2.unpack(edata)
                 ind_label = reshape_bytes_block_size(ind_label_bytes, self.size)
                 independent_labels.append(ind_label)
+                assert isinstance(ind_label, str), ind_label
                 linking_coefficents.append(coeff)
                 #print(f'  {ind_label_bytes}, {coeff}')
                 n += ntotal
                 edata = data[n:n+ntotal]
             n += ntotal
             #print('  (-1, -1, -1)\n')
+            assert isinstance(label, str), label
             aelink = op2.add_aelink(aelink_id, label,
                                      independent_labels, linking_coefficents)
             str(aelink)
@@ -1562,10 +1742,16 @@ class EDT:
                 #nelements = None
             #if melements == 0:
                 #melements = None
-            spline1 = op2.add_spline1(eid, caero, box1, box2, setg,
-                                       dz=dz, method=method,
-                                       usage=usage, nelements=nelements,
-                                       melements=melements)
+
+            spline1 = SPLINE1(eid, caero, box1, box2, setg,
+                              dz=dz, method=method,
+                            usage=usage, nelements=nelements,
+                            melements=melements)
+            op2._add_methods._add_spline_object(spline1, allow_overwrites=True)
+            #spline1 = op2.add_spline1(eid, caero, box1, box2, setg,
+                                       #dz=dz, method=method,
+                                       #usage=usage, nelements=nelements,
+                                       #melements=melements)
             str(spline1)
             n += ntotal
         #op2.to_nx()
@@ -1604,12 +1790,20 @@ class EDT:
             out = structi.unpack(edata)
             eid, caero, id1, id2, setg, dz, dtor, cid, dthx, dthy, usage_bytes = out
             usage = usage_bytes.rstrip().decode('latin1')
-            spline2 = op2.add_spline2(
+            spline2 = SPLINE2(
                 eid, caero,
                 id1, id2, setg,
                 dz=dz, dtor=dtor, cid=cid,
                 dthx=dthx, dthy=dthy,
                 usage=usage)
+            op2._add_methods._add_spline_object(spline2, allow_overwrites=True)
+
+            #spline2 = op2.add_spline2(
+                #eid, caero,
+                #id1, id2, setg,
+                #dz=dz, dtor=dtor, cid=cid,
+                #dthx=dthx, dthy=dthy,
+                #usage=usage)
             str(spline2)
             n += ntotal
         #n = self._read_spline2_nx(data, n)
@@ -1720,6 +1914,9 @@ class EDT:
             #print(eid, caero, aelist, setg, dz, method_bytes, usage_bytes, nelements, melements, ftype, rcore)
             method = method_bytes.rstrip().decode('ascii')
             usage = usage_bytes.rstrip().decode('ascii')
+            if ftype == 2:
+                ftype = 'WF2'
+            assert isinstance(ftype, str), ftype
             spline = SPLINE4(eid, caero, aelist, setg,
                              dz, method, usage,
                              nelements, melements,
@@ -2052,11 +2249,16 @@ class EDT:
             6: 'MS',
             #7: 'MSA',?
             8: 'A', # A = L = P
+
             16: 'D',
+
             24: 'DP',
             26: 'SDP',
             28: 'MAD',
             30: 'SMAD',
+
+            # 32: C?
+            62: 'SMADC',
         }
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
@@ -2160,6 +2362,8 @@ class EDT:
                     value = 'ELMOFF'
                 elif value == 65:
                     value = 'NODIFF'
+                elif value == 96:
+                    value = 'NOMASS'
                 elif value in [128, 192]:
                     value = 'LROFF'
                 else:
@@ -2283,13 +2487,22 @@ class EDT:
                     #op2.log.debug(f'FLUTTER: 9: fmax={fmax}; 10: epsilon={epsilon:g}')
             method = method_bytes.rstrip().decode('ascii')
             imethod = imethod_bytes.rstrip().decode('ascii')
-            op2.add_flutter(sid, method,
-                            density, mach, reduced_freq_velocity,
-                            imethod=imethod, # 'L'
-                            nvalue=nvalue,
-                            epsilon=epsilon,
-                            omax=fmax,
-                            validate=True)
+            flutter = FLUTTER(
+                sid, method,
+                density, mach, reduced_freq_velocity,
+                imethod=imethod, # 'L'
+                nvalue=nvalue,
+                epsilon=epsilon,
+                omax=fmax,
+                validate=True)
+            op2._add_methods._add_flutter_object(flutter, allow_overwrites=True)
+            #op2.add_flutter(sid, method,
+                            #density, mach, reduced_freq_velocity,
+                            #imethod=imethod, # 'L'
+                            #nvalue=nvalue,
+                            #epsilon=epsilon,
+                            #omax=fmax,
+                            #validate=True)
         return len(data)
         #ntotal = 12 # 4 * 8
         #ndatai = len(data) - n

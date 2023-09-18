@@ -203,6 +203,7 @@ class WriteMesh(BDFAttributes):
             size, nodes_size, elements_size, loads_size)
 
         self._write_params(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_model_groups(bdf_file)
         self._write_nodes(bdf_file, nodes_size, is_double, is_long_ids=is_long_ids)
 
         if interspersed:
@@ -211,6 +212,11 @@ class WriteMesh(BDFAttributes):
             self._write_elements(bdf_file, elements_size, is_double, is_long_ids=is_long_ids)
             self._write_properties(bdf_file, size, is_double, is_long_ids=is_long_ids)
             #self._write_properties_by_element_type(bdf_file, size, is_double, is_long_ids)
+
+        for cards in (self.bolt, self.boltseq, self.boltfor, self.boltfrc, self.boltld):
+            for key, card in cards.items():
+                bdf_file.write(card.write_card(size, is_double))
+
         self._write_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         self._write_masses(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -491,6 +497,7 @@ class WriteMesh(BDFAttributes):
         self._write_parametric(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_rejects(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_matcids(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         if self.acmodl:
             bdf_file.write(self.acmodl.write_card(size, is_double))
@@ -586,6 +593,20 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(coord.write_card(size, is_double))
             except RuntimeError:
                 bdf_file.write(coord.write_card_16(is_double))
+
+    def _write_matcids(self, bdf_file: Any, size: int=8, is_double: bool=False,
+                      is_long_ids: Optional[bool]=None) -> None:
+        """Writes the MATCID cards in a sorted order"""
+        size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
+
+        if len(self.MATCID):
+            bdf_file.write('$MATCID\n')
+        for (cid, matcids) in sorted(self.MATCID.items()):
+            for matcid in matcids:
+                try:
+                    bdf_file.write(matcid.write_card(size, is_double))
+                except RuntimeError:
+                    bdf_file.write(matcid.write_card_16(is_double))
 
     def _write_dmigs(self, bdf_file: Any, size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
@@ -789,12 +810,22 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(material.write_card(size, is_double))
             for (unused_mid, material) in sorted(self.MATT9.items()):
                 bdf_file.write(material.write_card(size, is_double))
+            for (unused_mid, material) in sorted(self.MATDMG.items()):
+                bdf_file.write(material.write_card(size, is_double))
             for (unused_sid, nxstrat) in sorted(self.nxstrats.items()):
                 bdf_file.write(nxstrat.write_card(size, is_double))
 
             if is_big_materials:
                 for unused_mid, mat in sorted(self.big_materials.items()):
                     bdf_file.write(mat.write_card_16(is_double))
+
+    def _write_model_groups(self, bdf_file: Any):
+        if self.model_groups:
+            #bdf_file.write('$ MODELGROUPS\n')
+            for group in self.model_groups.values():
+                #bdf_file.write(f'$ {group}\n')
+                print(group)
+            #x = 1
 
     def _write_nodes(self, bdf_file: Any, size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
@@ -1249,7 +1280,7 @@ class WriteMesh(BDFAttributes):
 def _fix_sizes(size: int,
                nodes_size: Optional[int],
                elements_size: Optional[int],
-               loads_size: Optional[int]) -> tuple[int, int]:
+               loads_size: Optional[int]) -> tuple[int, int, int, int]:
     if nodes_size is None:
         nodes_size = size
     if elements_size is None:

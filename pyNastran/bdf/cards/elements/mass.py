@@ -1510,6 +1510,26 @@ class CONM2(PointMassElement):
     def center_of_mass(self) -> np.ndarray:
         return self.Centroid()
 
+    def mass_matrix(self, fdtype: str='float32') -> np.ndarray:
+        """gets the 6x6 mass matrix"""
+        mass = self.Mass()
+        unused_rx, unused_ry, unused_rz = self.X
+        mass_mat = np.zeros((6, 6), dtype=fdtype)
+        mass_mat[0, 0] = mass
+        mass_mat[1, 1] = mass
+        mass_mat[2, 2] = mass
+        #mass_mat[3, 3] = i11
+        #mass_mat[3, 4] = mass_mat[4, 3] = -i12
+        #mass_mat[3, 5] = mass_mat[5, 3] = -i13
+        #mass_mat[4, 4] = i22
+        #mass_mat[4, 5] = mass_mat[5, 4] = -i23
+        #mass_mat[5, 5] = i33
+        inertia = self.Inertia()
+        #inertia = np.ones((3, 3))
+        mass_mat[3:, 3:] = inertia
+        #print(mass_mat)
+        return mass_mat
+
     def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly

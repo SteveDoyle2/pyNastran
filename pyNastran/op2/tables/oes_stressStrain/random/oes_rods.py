@@ -68,7 +68,7 @@ class RandomRodArray(OES_Object):
         """actually performs the build step"""
         #self.ntimes = ntimes
         #self.nelements = nelements
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
         self.element = zeros(nelements, dtype=idtype)
 
         #[axial, torsion]
@@ -140,6 +140,7 @@ class RandomRodArray(OES_Object):
         return True
 
     def add_sort1(self, dt, eid, axial, torsion):
+        assert self.sort_method == 1, self
         self._times[self.itime] = dt
         #if self.itime == 0:
         #print('itime=%s eid=%s' % (self.itime, eid))
@@ -148,6 +149,7 @@ class RandomRodArray(OES_Object):
         self.ielement += 1
 
     def add_sort2(self, dt, eid, axial, torsion):
+        assert self.is_sort2, self
         itime, ielement = self._get_sort2_itime_ielement_from_itotal()
         #print(f'dt={dt} eid={eid}')
         #print(self._times.shape)
@@ -160,7 +162,7 @@ class RandomRodArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

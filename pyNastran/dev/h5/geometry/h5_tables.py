@@ -1,6 +1,6 @@
 from __future__ import annotations
-from typing import List, Callable, TYPE_CHECKING
-import numpy as np
+from typing import Callable, TYPE_CHECKING
+#import numpy as np
 import h5py
 from ..h5_utils import get_tree, passer
 if TYPE_CHECKING:  # pragma: no cover

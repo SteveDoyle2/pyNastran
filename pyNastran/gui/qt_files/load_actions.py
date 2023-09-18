@@ -10,20 +10,19 @@ from qtpy.compat import getopenfilename
 from pyNastran.bdf.patran_utils.read_patran_custom_results import load_patran_nod
 from pyNastran.utils import print_bad_path
 
-from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv
-from pyNastran.gui.utils.load_results import create_res_obj
+from pyNastran.gui.qt_files.base_gui import BaseGui
+from pyNastran.gui.utils.load_results import (
+    load_csv, load_deflection_csv, create_res_obj)
 IS_TESTING = 'test' in sys.argv[0]
 
 
-class LoadActions:
+class LoadActions(BaseGui):
     """performance mode should be handled in the main gui to minimize flipping"""
-    def __init__(self, gui):
-        self.gui = gui
 
-    @property
-    def log(self):
-        """links the the GUI's log"""
-        return self.gui.log
+    #@property
+    #def log(self):
+        #"""links the the GUI's log"""
+        #return self.gui.log
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
                          plot=True, raise_error=False):
@@ -106,6 +105,8 @@ class LoadActions:
                     load_function2 = getattr(cls, function_name2)
                     has_results = load_function2(infile_name, name=name, plot=plot)
                 else:
+                    #  nastran
+                    assert 'nastran' in geometry_format2
                     has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
 
                 dt = time_module.time() - time0

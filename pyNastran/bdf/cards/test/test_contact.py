@@ -106,5 +106,27 @@ class TestContact(unittest.TestCase):
         bconp.raw_fields()
         save_load_deck(model)
 
+    def test_contact_bgset(self):
+        """
+        |   1   |  2   |  3   |   4  |    5    | 6  |  7   |   8  |  9 |
+        | BGSET | GSID | SID1 | TID1 | SDIST1  |    | EXT1 |      |    |
+        |       |      | SID2 | TID2 | SDIST2  |    | EXT2 |      |    |
+        """
+        model = BDF(debug=True, log=None, mode='msc')
+        gsid = 1
+        sids = [1, 2, 3]
+        tids = [10, 20, 30]
+        sdists = [100., 200., 300.]
+        exts = [0.01, 0.02, 0.03]
+        card = [
+            'BGSET',
+            gsid, sids[0], tids[0], sdists[0], None, exts[0], None, None,
+            None, sids[1], tids[1], sdists[1], None, exts[1], None, None,
+            None, sids[2], tids[2], sdists[2], None, exts[2], None, None,
+        ]
+        card = model.add_card(card, 'BGSET', comment='comment', ifile=None, is_list=True, has_none=True)
+        save_load_deck(model)
+        #bgset = model.add_bgset
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

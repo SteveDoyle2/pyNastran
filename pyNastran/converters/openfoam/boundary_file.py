@@ -5,7 +5,6 @@ defines:
 
 """
 import os
-from collections import OrderedDict
 
 import numpy as np
 from cpylog import get_logger2
@@ -53,7 +52,7 @@ class BoundaryFile:
         #self.log.info('lineA = %r' % line)
 
         self.log.info('building boundaries')
-        boundaries = OrderedDict()
+        boundaries = {}
         boundaries = self._read_boundaries(lines, i, nboundaries, boundaries)
 
         return boundaries

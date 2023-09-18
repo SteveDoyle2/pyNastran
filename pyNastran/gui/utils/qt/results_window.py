@@ -121,6 +121,20 @@ class ResultsWindow(QWidget):
                 try:
                     text, i, children = element
                 except ValueError:
+                    #  [
+                    #     ('Point Data', None, [
+                    #         ('NodeID', 0, []),
+                    #         ('Displacement T_XYZ_subcase=1', 1, []),
+                    #         ('Displacement R_XYZ_subcase=1', 2, []),
+                    #     ])
+                    #  ]
+                    #
+                    # should be:
+                    #   ('Point Data', None, [
+                    #       ('NodeID', 0, []),
+                    #       ('Displacement T_XYZ_subcase=1', 1, []),
+                    #       ('Displacement R_XYZ_subcase=1', 2, []),
+                    #   ])
                     print('failed element = ', element)
                     raise
                 nchildren = len(children)

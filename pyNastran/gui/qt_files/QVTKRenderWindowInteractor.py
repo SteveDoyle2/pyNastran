@@ -40,9 +40,11 @@ Changes by Alex Tsui, Apr. 2015
 Changes by Fabian Wenzel, Jan. 2016
  Support for Python3
 """
-import vtk
+#import vtk
 from pyNastran.gui.qt_version import qt_int, qt_version
-
+from pyNastran.gui.vtk_rendering_core import (
+    vtkRenderer, vtkActor, vtkRenderWindow, vtkPolyDataMapper,
+    vtkGenericRenderWindowInteractor)
 
 if qt_version == "pyqt5":
     from PyQt5.QtWidgets import QWidget, QSizePolicy, QApplication
@@ -186,7 +188,7 @@ class QVTKRenderWindowInteractor(QWidget):
         if rw: # user-supplied render window
             self._RenderWindow = rw
         else:
-            self._RenderWindow = vtk.vtkRenderWindow()
+            self._RenderWindow = vtkRenderWindow()
 
         WId = self.winId()
 
@@ -225,7 +227,7 @@ class QVTKRenderWindowInteractor(QWidget):
         try:
             self._Iren = kw['iren']
         except KeyError:
-            self._Iren = vtk.vtkGenericRenderWindowInteractor()
+            self._Iren = vtkGenericRenderWindowInteractor()
             self._Iren.SetRenderWindow(self._RenderWindow)
 
         # do all the necessary qt setup
@@ -314,7 +316,7 @@ class QVTKRenderWindowInteractor(QWidget):
     def resizeEvent(self, ev):
         w = self.width()
         h = self.height()
-        vtk.vtkRenderWindow.SetSize(self._RenderWindow, w, h)
+        vtkRenderWindow.SetSize(self._RenderWindow, w, h)
         self._Iren.SetSize(w, h)
         self._Iren.ConfigureEvent()
         self.update()
@@ -434,6 +436,7 @@ class QVTKRenderWindowInteractor(QWidget):
 
 def QVTKRenderWidgetConeExample():
     """A simple example that uses the QVTKRenderWindowInteractor class."""
+    from vtk import vtkConeSource
 
     # every QT app needs an app
     app = QApplication(['QVTKRenderWindowInteractor'])
@@ -445,16 +448,16 @@ def QVTKRenderWidgetConeExample():
     # if you dont want the 'q' key to exit comment this.
     widget.AddObserver("ExitEvent", lambda o, e, a=app: a.quit())
 
-    ren = vtk.vtkRenderer()
+    ren = vtkRenderer()
     widget.GetRenderWindow().AddRenderer(ren)
 
-    cone = vtk.vtkConeSource()
+    cone = vtkConeSource()
     cone.SetResolution(8)
 
-    cone_mapper = vtk.vtkPolyDataMapper()
+    cone_mapper = vtkPolyDataMapper()
     cone_mapper.SetInputConnection(cone.GetOutputPort())
 
-    cone_actor = vtk.vtkActor()
+    cone_actor = vtkActor()
     cone_actor.SetMapper(cone_mapper)
 
     ren.AddActor(cone_actor)

@@ -4,7 +4,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import List, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 #import matplotlib
 #matplotlib.use('Qt5Agg')
 #from pyNastran.gui.matplotlib_backend import  matplotlib_backend
@@ -16,7 +16,7 @@ PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q]'
 USAGE_145 = (
     'Usage:\n'
     '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export_csv] [--export_zona] [--f06] '
+    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export_zona] [--f06] '
     '[--vd_limit VD_LIMIT] [--damping_limit DAMPING_LIMIT]\n'
 )
 USAGE_200 = (
@@ -30,7 +30,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     """the interface to ``f06 plot_145`` on the command line"""
     import sys
     import os
-    from docopt import docopt
+    from docopt import docopt, __version__ as docopt_version
     import pyNastran
     from pyNastran.f06.parse_flutter import plot_flutter_f06, float_types
     if argv is None:
@@ -77,7 +77,6 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         '  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
         "  --nopoints       don't plot the points\n"
         "  --noline         don't plot the lines\n"
-        '  --export_csv     export a CSV file\n'
         '  --export_zona    export a zona file\n'
         '  --f06            export an F06 file (temporary)\n'
         '  --vd_limit VD_LIMIT            add a Vd and 1.15*Vd line\n'
@@ -94,6 +93,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
+    assert docopt_version >= '0.9.0', docopt_version
     data = docopt(msg, version=ver, argv=argv[1:])
     f06_filename = data['F06_FILENAME']
     if f06_filename.lower().endswith(('.bdf', '.op2')):
@@ -120,14 +120,23 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     # SI has consistent in_units/out_units.
     in_units = 'si'
     if data['--in_units']:
-        in_units = data['IN'].lower()
+        if 'IN' in data:
+            in_units = data['IN']
+        else:
+            in_units = data['--in_units']
+    in_units = in_units.lower()
     assert in_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'in_units=%r' % in_units
 
     # The default used to be SI, but it's really weird when I'm working in
     # English units and my output is in SI
     out_units = in_units
     if data['--out_units']:
-        out_units = data['OUT'].lower()
+        if 'OUT' in data:
+            out_units = data['OUT']
+        else:
+            out_units = data['--out_units']
+    out_units = out_units.lower()
+
     assert out_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'out_units=%r' % out_units
 
     plot_type = 'tas'
@@ -162,11 +171,9 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
 
     export_f06 = data['--f06']
     export_zona = data['--export_zona']
-    export_csv = data['--export_csv']
     export_f06_filename = None if export_f06 is False else 'nastran.f06'
     export_zona_filename = None if export_zona is False else 'nastran.zona'
     export_veas_filename = None if export_zona is False else 'nastran.veas'
-    export_csv_filename = None if export_csv is False else 'flutter_subcase_%d.csv'
 
     # TODO: need a new parameter
     vg_filename = None if export_zona is  None else 'vg_subcase_%d.png'
@@ -194,7 +201,6 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
                      export_veas_filename=export_veas_filename,
                      export_zona_filename=export_zona_filename,
                      export_f06_filename=export_f06_filename,
-                     export_csv_filename=export_csv_filename,
                      vg_filename=vg_filename,
                      vg_vf_filename=vg_vf_filename,
                      root_locus_filename=root_locus_filename,

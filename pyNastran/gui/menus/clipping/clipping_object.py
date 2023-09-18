@@ -3,13 +3,15 @@ defines:
  - ClippingObject
 
 """
+from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.gui.menus.clipping.clipping import ClippingPropertiesWindow
 
-class ClippingObject:
+class ClippingObject(BaseGui):
     """defines ClippingObject"""
     def __init__(self, gui):
         """creates ClippingObject"""
-        self.gui = gui
+        #self.gui = gui
+        super().__init__(gui)
         self._clipping_window_shown = False
         self._clipping_window = None
 

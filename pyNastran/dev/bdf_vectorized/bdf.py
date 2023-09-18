@@ -533,7 +533,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         Parameters
         ----------
-        cards : list[str]; Set[str]
+        cards : list[str]; set[str]
             a list/set of cards that should not be read
 
         .. python ::
@@ -1577,7 +1577,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 """the method that forces the crash"""
                 raise NotImplementedError(card)
 
-        add_methods = self._add_methods
+        add_methods = self #._add_methods
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),
@@ -3252,10 +3252,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 'CMASS4' : self._parse_cmass4,
                 'PMASS' : self._parse_pmass,
 
-                'CDAMP1' : self._parse_cdamp1,
-                'CDAMP2' : self._parse_cdamp2,
-                'CDAMP3' : self._parse_cdamp3,
-                'CDAMP4' : self._parse_cdamp4,
+                #'CDAMP1' : self._parse_cdamp1,
+                #'CDAMP2' : self._parse_cdamp2,
+                #'CDAMP3' : self._parse_cdamp3,
+                #'CDAMP4' : self._parse_cdamp4,
             }
             # self._is_cards_dict = True
             # this is the loop that hits...
@@ -3276,7 +3276,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 ncards = len(card)
                 if self.is_reject(card_name):# and card_name not in :
                     self.log.warning('n%s = %s (rejecting)' % (card_name, ncards))
-                    asdf
                     #self.log.info('  rejecting card_name = %s' % card_name)
                     for comment, card_lines in card:
                         self.rejects.append([_format_comment(comment)] + card_lines)

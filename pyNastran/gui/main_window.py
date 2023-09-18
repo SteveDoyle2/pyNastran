@@ -105,7 +105,7 @@ class MainWindow(GuiCommon, NastranIO):
             'nastran',  # results
         ]
         if ISPY2:
-            fmt_order += ['h5nastran', 'nastranv',]
+            fmt_order += ['h5nastran', 'nastran2', 'nastran3']
 
         fmt_order += [
             'abaqus',
@@ -126,6 +126,7 @@ class MainWindow(GuiCommon, NastranIO):
             'usm3d',  # results
             'avl', # no results
             'vrml', # no results
+            'vtk',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
@@ -242,7 +243,7 @@ class MainWindow(GuiCommon, NastranIO):
 
     def open_website(self):
         """loads the pyNastran main website"""
-        self._urlopen(pyNastran.__website__)
+        self._openbrowswer(pyNastran.__website__)
 
     def open_docs(self):
         """loads the pyNastran docs website"""
@@ -250,18 +251,18 @@ class MainWindow(GuiCommon, NastranIO):
         try:
             urllib.request.urlopen(url)
         except (urllib.error.HTTPError, urllib.error.URLError):
-            url = pyNastran.__docs_rtd__
-        self._urlopen(url)
+            return
+        self._openbrowswer(url)
 
     def open_issue(self):
         """loads the pyNastran issue tracker"""
-        self._urlopen(pyNastran.__issue__)
+        self._openbrowswer(pyNastran.__issue__)
 
     def open_discussion_forum(self):
         """loads the pyNastran discussion forum website"""
-        self._urlopen(pyNastran.__discussion_forum__)
+        self._openbrowswer(pyNastran.__discussion_forum__)
 
-    def _urlopen(self, url):
+    def _openbrowswer(self, url):
         """opens a URL"""
         if self.is_gui:
             webbrowser.open(url)

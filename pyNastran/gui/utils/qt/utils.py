@@ -1,5 +1,5 @@
 """small Qt utils"""
-from typing import List, Any
+from typing import Any
 from qtpy.QtWidgets import QBoxLayout, QHBoxLayout, QGridLayout
 
 def add_obj_to_vbox(vbox, widget_layout):

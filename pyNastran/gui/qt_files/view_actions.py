@@ -1,7 +1,9 @@
 # coding: utf-8
 from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
-import vtk
+#import vtk
+from pyNastran.gui.vtk_common_core import vtkMath
+from pyNastran.gui.vtk_rendering_core import vtkCamera
 
 #from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 if TYPE_CHECKING:  # pragma: no cover
@@ -33,22 +35,22 @@ class ViewActions:
 
         # Calculate the forward pointing unit-vector 'vec' again in the same way,
         # i.e. the normalized vector of focal point – camera position
-        vtk.vtkMath.Subtract(focal, cam, vec)
+        vtkMath.Subtract(focal, cam, vec)
 
         vec[1] = 0 #We don't want roll
-        vtk.vtkMath.Normalize(vec)
+        vtkMath.Normalize(vec)
 
         # Calculate the cross product of the forward vector by the up vector,
         # which will give us an orthogonal vector pointing right relative to
         #the camera
-        vtk.vtkMath.Cross(vec, up, vec)
+        vtkMath.Cross(vec, up, vec)
 
         # Add this to the camera position and focal point to move it right
         # new_cam = cam + vec
-        vtk.vtkMath.Add(cam, vec, new_cam)
+        vtkMath.Add(cam, vec, new_cam)
 
         # new_focal = focal + vec
-        vtk.vtkMath.Add(focal, vec, new_focal)
+        vtkMath.Add(focal, vec, new_focal)
         self._set_camera_position_focal_point(camera, new_cam, new_focal)
 
     def on_pan_right(self, event):
@@ -63,23 +65,23 @@ class ViewActions:
 
         # Calculate the forward pointing unit-vector 'vec' again in the same way,
         # i.e. the normalized vector of focal point – camera position
-        vtk.vtkMath.Subtract(focal, cam, vec)
+        vtkMath.Subtract(focal, cam, vec)
 
         vec[1] = 0 #We don't want roll
-        vtk.vtkMath.Normalize(vec)
+        vtkMath.Normalize(vec)
 
         # Calculate the cross product of the forward vector by the up vector,
         # which will give us an orthogonal vector pointing right relative to
         #the camera
         #vec = up x vec
-        vtk.vtkMath.Cross(vec, up, vec)
+        vtkMath.Cross(vec, up, vec)
 
         # Subtract vec from the camera position and focal point to move it right
         # new_cam = cam - vec
-        vtk.vtkMath.Subtract(cam, vec, new_cam)
+        vtkMath.Subtract(cam, vec, new_cam)
 
         # new_focal = focal - vec
-        vtk.vtkMath.Subtract(focal, vec, new_focal)
+        vtkMath.Subtract(focal, vec, new_focal)
         self._set_camera_position_focal_point(camera, new_cam, new_focal)
 
     def on_pan_up(self, event):
@@ -95,10 +97,10 @@ class ViewActions:
 
         # Add the movement to the current camera position and focal point,
         # and save these in 'new_cam' and 'new_focal' respectively
-        vtk.vtkMath.Subtract(cam, vec, new_cam)
+        vtkMath.Subtract(cam, vec, new_cam)
 
         # new_focal = focal - vec
-        vtk.vtkMath.Subtract(focal, vec, new_focal)
+        vtkMath.Subtract(focal, vec, new_focal)
         self._set_camera_position_focal_point(camera, new_cam, new_focal)
 
     def on_pan_down(self, event):
@@ -114,10 +116,10 @@ class ViewActions:
 
         # Add the movement to the current camera position and focal point,
         # and save these in 'new_cam' and 'new_focal' respectively
-        vtk.vtkMath.Add(cam, vec, new_cam)
+        vtkMath.Add(cam, vec, new_cam)
 
         # new_focal = focal + vec
-        vtk.vtkMath.Add(focal, vec, new_focal)
+        vtkMath.Add(focal, vec, new_focal)
         self._set_camera_position_focal_point(camera, new_cam, new_focal)
 
     def _setup_pan(self):
@@ -309,7 +311,7 @@ class ViewActions:
         self.rend.ResetCamera()
         self.log_command('update_camera(%r)' % code)
 
-    def _update_camera(self, camera: Optional[vtk.vtkCamera]=None) -> None:
+    def _update_camera(self, camera: Optional[vtkCamera]=None) -> None:
         if camera is None:
             camera = self.GetCamera()
         camera.Modified()
@@ -319,7 +321,7 @@ class ViewActions:
     def Render(self) -> None:
         self.vtk_interactor.GetRenderWindow().Render()
 
-    def GetCamera(self) -> vtk.vtkCamera:
+    def GetCamera(self) -> vtkCamera:
         return self.rend.GetActiveCamera()
 
     #@property
@@ -327,7 +329,7 @@ class ViewActions:
         #return self.gui.settings
 
     @property
-    def rend(self) -> vtk.vtkRenderer:
+    def rend(self) -> vtkRenderer:
         return self.gui.rend
 
     @property

@@ -8,8 +8,8 @@ https://vtkpythonpackage.readthedocs.io/en/latest/index.html
 https://cvw.cac.cornell.edu/ParaViewAdv/pythonshell
 """
 from itertools import count
-from pprint import pprint
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
+#from pprint import pprint
+from typing import Optional, Any, TYPE_CHECKING
 
 import os
 import sys
@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from pyNastran.utils import print_bad_path, object_attributes, object_methods, object_stats
+from pyNastran.utils import print_bad_path # , object_attributes, object_methods, object_stats
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.dev.h5.h5_utils import get_tree, h5py_to_dataframe

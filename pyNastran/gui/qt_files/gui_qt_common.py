@@ -9,7 +9,7 @@ This file defines functions related to the result updating that are VTK specific
 import sys
 from copy import deepcopy
 from collections import namedtuple
-from typing import Tuple, List, Union, Optional, Any
+from typing import Union, Callable, Optional, Any
 
 import numpy as np
 from numpy import issubdtype
@@ -17,13 +17,16 @@ from numpy.linalg import norm  # type: ignore
 import vtk
 
 #import pyNastran
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
+from pyNastran.gui.vtk_rendering_core import vtkActor, vtkActor2D, vtkPolyDataMapper
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
-from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION
+#from pyNastran.gui.vtk_common_core import VTK_VERSION
+from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION_SPLIT
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 #from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
@@ -64,13 +67,13 @@ class GuiQtCommon(GuiAttributes):
         self._group_shown = {}
         self._names_storage = NamesStorage()
 
-        self.vtk_version = VTK_VERSION
+        self.vtk_version = VTK_VERSION_SPLIT
         #if not IS_TESTING or not pyNastran.is_pynastrangui_exe:  # pragma: no cover
             #print('vtk_version = %s' % (self.vtk_version))
         if self.vtk_version[0] < 7:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
 
-    def _cycle_results(self, icase=0):
+    def _cycle_results(self, icase: int=0) -> int:
         """used for testing"""
         self.icase = icase
         self.on_cycle_results(show_msg=True)
@@ -78,10 +81,10 @@ class GuiQtCommon(GuiAttributes):
         while self.icase != 0:
             self.on_cycle_results(show_msg=False)
             if i > 10000:   # pragma: no cover
-                raise RuntimeError('max cycle count; i=%s' % i)
+                raise RuntimeError(f'max cycle count; i={i}')
             i += 1
 
-    def on_rcycle_results(self, show_msg=True):
+    def on_rcycle_results(self, show_msg: bool=True) -> None:
         """the reverse of on_cycle_results"""
         if len(self.case_keys) <= 1:
             return
@@ -104,7 +107,7 @@ class GuiQtCommon(GuiAttributes):
                 icase -= 1
         self.update_icase()
 
-    def on_cycle_results(self, show_msg=True):
+    def on_cycle_results(self, show_msg: bool=True) -> None:
         """the gui method for calling cycle_results"""
         if len(self.case_keys) <= 1:
             return
@@ -127,11 +130,13 @@ class GuiQtCommon(GuiAttributes):
                 icase += 1
         self.update_icase()
 
-    def update_icase(self):
+    def update_icase(self) -> None:
         """updates the Qt sidebar"""
         self.res_widget.update_icase(self.icase)
 
-    def cycle_results(self, case=None, show_msg=True):
+    def cycle_results(self, case=None,
+                      show_msg: bool=True,
+                      update: bool=True) -> None:
         """
         Selects the next case
 
@@ -140,6 +145,9 @@ class GuiQtCommon(GuiAttributes):
         case : int; default=None
             selects the icase
             None : defaults to self.icase+1
+        update : bool; default=True
+            True:  normal operation
+            False: dont update legend/render
 
         """
         #print('-----------------')
@@ -156,23 +164,24 @@ class GuiQtCommon(GuiAttributes):
             if self.ncases == 0:
                 self.scalar_bar_actor.SetVisibility(False)
             return
-        case = self.cycle_results_explicit(case, explicit=False, show_msg=show_msg)
+        case = self.cycle_results_explicit(case, explicit=False,
+                                           show_msg=show_msg, update=update)
         assert case is not False, case
         if show_msg:
             self.log_command('cycle_results(case=%r)' % self.icase)
 
-    def get_new_icase(self):
+    def get_new_icase(self) -> int:
         if len(self.result_cases):
             return max(self.result_cases) + 1
         return 0
 
-    def update_result_cases(self, cases):
+    def update_result_cases(self, cases: dict[int, Any]) -> None:
         """acts like result_cases.update(cases)"""
         for key, case in cases.items():
             assert key not in self.result_cases, 'key=%r is already used' % key
             self.result_cases[key] = case
 
-    def get_subtitle_label(self, subcase_id):
+    def get_subtitle_label(self, subcase_id: int) -> tuple[str, str]:
         try:
             subtitle, label = self.isubcase_name_map[subcase_id]
         except TypeError:
@@ -183,7 +192,7 @@ class GuiQtCommon(GuiAttributes):
             label = 'label=NA'
         return subtitle, label
 
-    def on_clear_results(self, show_msg=True):
+    def on_clear_results(self, show_msg: bool=True) -> None:
         """clears the model of all results"""
         (obj, (i, name)) = self.result_cases[self.icase]
         unused_location = obj.get_location(i, name)
@@ -247,7 +256,8 @@ class GuiQtCommon(GuiAttributes):
         self.icase_disp = None
         self.icase_vector = None
 
-    def _get_fringe_data(self, icase, scale=None):
+    def _get_fringe_data(self, icase: int,
+                         scale: Optional[float]=None) -> tuple[bool, Any]:
         """helper for ``on_fringe``"""
         is_valid = False
         # (grid_result, name_tuple, name_str, data)
@@ -337,7 +347,7 @@ class GuiQtCommon(GuiAttributes):
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
 
-    def get_mapping_for_location(self, location):
+    def get_mapping_for_location(self, location: str) -> tuple[str, np.ndarray]:
         """helper method for ``export_case_data``"""
         if location == 'centroid':
             word = 'ElementID'
@@ -349,7 +359,8 @@ class GuiQtCommon(GuiAttributes):
             raise NotImplementedError(location)
         return word, eids_nids
 
-    def _get_disp_data(self, icase, is_disp, stop_on_failure=False):
+    def _get_disp_data(self, icase: int, is_disp: bool,
+                       stop_on_failure: bool=False) -> tuple[int, Any]:
         """helper for ``on_disp``"""
         is_valid = False
         failed_data = (None, None, None, None)
@@ -453,8 +464,10 @@ class GuiQtCommon(GuiAttributes):
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
 
-    def on_fringe(self, icase, update_legend_window=True, show_msg=True,
-                  stop_on_failure=False):
+    def on_fringe(self, icase: int,
+                  update_legend_window: bool=True,
+                  show_msg: bool=True,
+                  stop_on_failure: bool=False) -> bool:
         """
         Sets the icase data to the active fringe
 
@@ -536,7 +549,7 @@ class GuiQtCommon(GuiAttributes):
         is_valid = True
         return is_valid
 
-    def show_hide_min_actor(self, render=True):
+    def show_hide_min_actor(self, render: bool=True) -> None:
         """flips the status of the min label actor"""
         actor = self.min_max_actors[0]
         show_hide_actor(actor)
@@ -550,7 +563,7 @@ class GuiQtCommon(GuiAttributes):
         if render:
             self.Render()
 
-    def _update_min_max_actors(self, location, icase_fringe: int,
+    def _update_min_max_actors(self, location: str, icase_fringe: int,
                                imin: int, min_value: float,
                                imax: int, max_value: float) -> None:
         """updates the values for the min and max actors"""
@@ -596,7 +609,8 @@ class GuiQtCommon(GuiAttributes):
             text_prop.SetColor(settings.annotation_color)
             text_actor.Modified()
 
-    def _update_vtk_fringe(self, icase: int, scale=None) -> tuple[bool, Any]:
+    def _update_vtk_fringe(self, icase: int,
+                           scale: Optional[float]=None) -> tuple[bool, Any]:
         """helper method for ``on_fringe``"""
         is_valid, (grid_result, name, name_str, data) = self._get_fringe_data(icase, scale)
         #print("is_valid=%s scale=%s" % (is_valid, scale))
@@ -647,8 +661,11 @@ class GuiQtCommon(GuiAttributes):
         is_valid = True
         return is_valid, data
 
-    def on_disp(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True,
-                stop_on_failure=False):
+    def on_disp(self, icase: int,
+                apply_fringe: bool=False,
+                update_legend_window: bool=True,
+                show_msg: bool=True,
+                stop_on_failure: bool=False) -> None:
         """Sets the icase data to the active displacement"""
         is_disp = True
         self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg,
@@ -765,14 +782,22 @@ class GuiQtCommon(GuiAttributes):
         self.vtk_interactor.Render()
 
 
-    def cycle_results_explicit(self, case=None, explicit: bool=True,
+    def cycle_results_explicit(self, case=None,
+                               explicit: bool=True,
                                min_value: Optional[Union[int, float]]=None,
                                max_value: Optional[Union[int, float]]=None,
-                               show_msg: bool=True) -> int:
+                               show_msg: bool=True,
+                               update: bool=True) -> int:
         """
         Forces the result to cycle regardless of whether or not the
         icase value is the same.  You'd do this when you've just
         loaded a model.
+
+        Parameters
+        ----------
+        update : bool; default=True
+            True:  normal operation
+            False: dont update legend/render
 
         """
         assert case is not False, case
@@ -782,7 +807,7 @@ class GuiQtCommon(GuiAttributes):
         if found_cases:
             icase = self._set_case(case, self.icase, explicit=explicit, cycle=True,
                                    min_value=min_value, max_value=max_value,
-                                   show_msg=show_msg)
+                                   show_msg=show_msg, update=update)
             assert icase is not False, case
         else:
             icase = None
@@ -842,7 +867,9 @@ class GuiQtCommon(GuiAttributes):
                   skip_click_check: bool=False,
                   min_value: Optional[Union[int, float]]=None,
                   max_value: Optional[Union[int, float]]=None,
-                  is_legend_shown: Optional[bool]=None, show_msg: bool=True) -> Optional[int]:
+                  is_legend_shown: Optional[bool]=None,
+                  show_msg: bool=True,
+                  update: bool=True) -> Optional[int]:
         """
         Internal method for doing results updating
 
@@ -874,6 +901,9 @@ class GuiQtCommon(GuiAttributes):
             show the command when we're doing in the log
         show_msg : bool; default=True
             ???
+        update : bool; default=True
+            True:  normal operation
+            False: dont update legend/render
 
         """
         #if icase is None:
@@ -1007,6 +1037,8 @@ class GuiQtCommon(GuiAttributes):
                                name_vector, grid_result_vector,
                                key, subtitle, label,
                                min_value, max_value, show_msg)
+        if not update:
+            return self.icase
 
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
@@ -1176,7 +1208,7 @@ class GuiQtCommon(GuiAttributes):
     def update_grid_by_icase_scale_phase(self,
                                          icase: int,
                                          scale: float,
-                                         phase: float=0.0) -> np.ndarray:
+                                         phase: float=0.0) -> None:
         """
         Updates to the deflection state defined by the cases
 
@@ -1237,10 +1269,12 @@ class GuiQtCommon(GuiAttributes):
         self._update_forces(vector_data, set_scalars=False, scale=arrow_scale)
         #self._update_elemental_vectors(forces_array, set_scalars=True, scale=None)
 
-    def final_grid_update(self, icase, name, grid_result,
+    def final_grid_update(self, icase: int, name: str,
+                          grid_result,
                           name_vector, grid_result_vector,
-                          key, subtitle, label,
-                          min_value, max_value, show_msg):
+                          key: int, subtitle: str, label: str,
+                          min_value, max_value,
+                          show_msg: bool):
         assert isinstance(key, integer_types), key
         (obj, (i, res_name)) = self.result_cases[key]
         subcase_id = obj.subcase_id
@@ -1264,7 +1298,8 @@ class GuiQtCommon(GuiAttributes):
             #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
             #self._update_grid(vector_data)
 
-    def _final_grid_update(self, icase, name, grid_result, obj, i, res_name,
+    def _final_grid_update(self, icase: int, name: str,
+                           grid_result, obj, i, res_name,
                            vector_size, subcase_id, result_type, location, subtitle, label,
                            revert_displaced=True, show_msg=True):
         if name is None:
@@ -1471,7 +1506,7 @@ class GuiQtCommon(GuiAttributes):
             i += 1
         return icase
 
-    def increment_cycle(self, icase=None):
+    def increment_cycle(self, icase: Optional[int]=None) -> bool:
         #print('1-icase=%r self.icase=%s ncases=%r' % (icase, self.icase, self.ncases))
         #print(type(icase))
         if isinstance(icase, integer_types):
@@ -1510,18 +1545,19 @@ class GuiQtCommon(GuiAttributes):
         #print("next icase=%s key=%s" % (self.icase, key))
         return found_cases
 
-    def get_result_name(self, icase):
+    def get_result_name(self, icase: int) -> str:
         assert isinstance(icase, integer_types), icase
         (unused_obj, (unused_i, res_name)) = self.result_cases[icase]
         return res_name
 
-    def get_case_location(self, icase):
+    def get_case_location(self, icase: int) -> str:
         assert isinstance(icase, integer_types), icase
         (obj, (i, res_name)) = self.result_cases[icase]
         return obj.get_location(i, res_name)
 
     #---------------------------------------------------------------------------
-    def hide_labels(self, case_keys=None, show_msg=True):
+    def hide_labels(self, case_keys: Optional[list[int]]=None,
+                    show_msg: bool=True) -> None:
         if case_keys is None:
             names = 'None)  # None -> all'
             case_keys = sorted(self.label_actors.keys())
@@ -1539,7 +1575,8 @@ class GuiQtCommon(GuiAttributes):
         if count and show_msg:
             self.log_command('hide_labels(%s)' % names)
 
-    def show_labels(self, case_keys=None, show_msg=True):
+    def show_labels(self, case_keys: Optional[list[int]]=None,
+                    show_msg: bool=True) -> None:
         if case_keys is None:
             names = 'None)  # None -> all'
             case_keys = sorted(self.label_actors.keys())
@@ -1565,7 +1602,8 @@ class GuiQtCommon(GuiAttributes):
             # yes the ) is intentionally left off because it's already been added
             self.log_command('show_labels(%s)' % names)
 
-    def remove_alt_grid(self, name, remove_geometry_property=False):
+    def remove_alt_grid(self, name: str,
+                        remove_geometry_property: bool=False) -> None:
         if name in self.alt_grids:
             del self.alt_grids[name]
         if remove_geometry_property and name in self.geometry_properties:
@@ -1574,16 +1612,25 @@ class GuiQtCommon(GuiAttributes):
                 self.rend.RemoveActor(sloti)
             del self.geometry_properties[name]
 
-    def reset_label_actors(self, name):
+    def reset_label_actors(self, name: str) -> list[vtk.vtkActor]:
         slot = self.geometry_properties[name].label_actors
         for sloti in slot:
             self.rend.RemoveActor(sloti)
         return slot
 
-    def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
-                                  bar_scale=0.0, representation=None, display=None, is_visible=True,
-                                  follower_nodes=None, follower_function=None,
-                                  is_pickable=False, ugrid=None):
+    def create_alternate_vtk_grid(self, name: str,
+                                  color=None,
+                                  line_width: int=5,
+                                  opacity: float=1.0,
+                                  point_size: int=1,
+                                  bar_scale: float=0.0,
+                                  representation: Optional[str]=None,
+                                  display: Optional[str]=None,
+                                  is_visible: bool=True,
+                                  follower_nodes=None,
+                                  follower_function: Optional[Callable]=None,
+                                  is_pickable: bool=False,
+                                  ugrid: vtkUnstructuredGrid=None) -> None:
         """
         Creates an AltGeometry object
 
@@ -1614,13 +1661,13 @@ class GuiQtCommon(GuiAttributes):
             the nodes that are brought along with a deflection
         follower_function : function
             a custom follower_node update function
-        ugrid : vtk.vtkUnstructuredGrid(); default=None
+        ugrid : vtkUnstructuredGrid(); default=None
             the grid object; one will be created that you can fill
             if None is passed in
 
         """
         if ugrid is None:
-            ugrid = vtk.vtkUnstructuredGrid()
+            ugrid = vtkUnstructuredGrid()
         self.alt_grids[name] = ugrid
 
         if name not in self.geometry_properties:
@@ -1635,9 +1682,15 @@ class GuiQtCommon(GuiAttributes):
         if follower_function is not None:
             self.follower_functions[name] = follower_function
 
-    def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
-                                     opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
-                                     follower_nodes=None, is_pickable=False):
+    def duplicate_alternate_vtk_grid(self, name: str, name_duplicate_from: str,
+                                     color=None,
+                                     line_width: int=5,
+                                     opacity: float=1.0,
+                                     point_size: int=1,
+                                     bar_scale: float=0.0,
+                                     is_visible: bool=True,
+                                     follower_nodes=None,
+                                     is_pickable: bool=False) -> None:
         """
         Copies the VTK actor
 
@@ -1662,7 +1715,7 @@ class GuiQtCommon(GuiAttributes):
             the nodes that are brought along with a deflection
 
         """
-        self.alt_grids[name] = vtk.vtkUnstructuredGrid()
+        self.alt_grids[name] = vtkUnstructuredGrid()
         if name_duplicate_from == 'main':
             grid_copy_from = self.grid
             representation = 'toggle'
@@ -1726,7 +1779,7 @@ class GuiQtCommon(GuiAttributes):
             #self.plane_actor = plane_actor
         else:
             add = True
-            alt_grid = vtk.vtkUnstructuredGrid()
+            alt_grid = vtkUnstructuredGrid()
             self.alt_grids[actor_name] = alt_grid
 
             mapper = vtk.vtkDataSetMapper()
@@ -1763,7 +1816,7 @@ class GuiQtCommon(GuiAttributes):
             #self.rend.AddActor(point_actor)
             #self.point_actor = point_actor
         else:
-            alt_grid = vtk.vtkUnstructuredGrid()
+            alt_grid = vtkUnstructuredGrid()
             self.alt_grids[actor_name] = alt_grid
 
             mapper = vtk.vtkDataSetMapper()
@@ -1833,7 +1886,7 @@ class GuiQtCommon(GuiAttributes):
 
             # The labeled data mapper will place labels at the points
             label_mapper = vtk.vtkLabeledDataMapper()
-            label_mapper.SetFieldDataName("Isovalues")
+            label_mapper.SetFieldDataName('Isovalues')
             label_mapper.SetInputData(label_poly_data)
 
             label_mapper.SetLabelModeToLabelScalars()
@@ -1842,14 +1895,14 @@ class GuiQtCommon(GuiAttributes):
             label_mapper.SetLabelModeToLabelScalars()
             label_mapper.SetLabelFormat("%6.2f")
 
-            isolabels_actor = vtk.vtkActor2D()
+            isolabels_actor = vtkActor2D()
             isolabels_actor.SetMapper(label_mapper)
 
-        contour_mapper = vtk.vtkPolyDataMapper()
+        contour_mapper = vtkPolyDataMapper()
         contour_mapper.SetInputConnection(contour_stripper.GetOutputPort())
         contour_mapper.ScalarVisibilityOff()
 
-        isolines_actor = vtk.vtkActor()
+        isolines_actor = vtkActor()
         isolines_actor.SetMapper(contour_mapper)
         isolines_actor.GetProperty().SetColor(0., 0., 0.)
 

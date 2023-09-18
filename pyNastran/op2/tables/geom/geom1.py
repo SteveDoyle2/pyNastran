@@ -407,7 +407,7 @@ class GEOM1:
         #print(a, b, c)
         coord = op2.add_cord2c(cid, origin, zaxis, xzplane, rid=rid,
                                setup=True, comment='')
-        print(coord)
+        #print(coord)
         return len(data)
 
     def _read_cord2rx(self, data: bytes, n: int) -> int:
@@ -464,7 +464,7 @@ class GEOM1:
                     setup=True, comment='')
             else:
                 raise RuntimeError((two, one))
-            print(coord)
+            #print(coord)
             n += ntotal
         return n
 

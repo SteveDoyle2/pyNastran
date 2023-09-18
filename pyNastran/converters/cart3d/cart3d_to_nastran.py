@@ -156,4 +156,38 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
             bdf_file.write(card)
             card = print_card_8(['MAT1', mid, E, None, nu])
             bdf_file.write(card)
+
+
+        load_id = 1
+        if 'Cp' in cart3d.loads:
+            Cp = cart3d.loads['Cp']
+            #+--------+-----+------+------+------+------+------+------+------+
+            #|    1   |   2 |  3   |  4   |   5  |   6  |   7  |   8  |   9  |
+            #+========+=====+======+======+======+=============+======+======+
+            #| PLOAD2 | SID |  P   | EID1 | EID2 | EID3 | EID4 | EID5 | EID6 |
+            #+--------+-----+------+------+------+------+------+------+------+
+
+            #from collections import defaultdict
+            #nid_to_eids = defaultdict(list)
+
+            assert len(Cp) == len(nodes)
+            inode1 = elements[:, 0] - 1
+            inode2 = elements[:, 1] - 1
+            inode3 = elements[:, 2] - 1
+            cp1 = Cp[inode1]
+            cp2 = Cp[inode2]
+            cp3 = Cp[inode3]
+            cp_avg = (cp1 + cp2 + cp3) / 3.
+
+            for eid, cp_avgi in enumerate(cp_avg):
+                card = print_card_8(['PLOAD2', load_id, cp_avgi, eid + 1])  # +1 b/c it's 0-based
+                bdf_file.write(card)
+
         bdf_file.write('ENDDATA\n')
+
+if __name__ == '__main__':  # pragma: no cover
+    import sys
+    cart3d_filename = sys.argv[1]
+    print(cart3d_filename)
+    bdf_filename = 'spike.bdf'
+    cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=False)

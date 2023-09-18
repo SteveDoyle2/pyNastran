@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8, set_blank_if_default
 from pyNastran.bdf.cards.base_card import _format_comment
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, BDFCard
 
 
 class ShellElement:
@@ -226,8 +226,7 @@ class CTRIA3v(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
-        # type: (Any, str) -> CTRIA3
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CTRIA3 card from ``BDF.add_card(...)``
 
@@ -456,7 +455,7 @@ class CTRIA6v(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card: Any, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> None:
         """
         Adds a CTRIA6 card from ``BDF.add_card(...)``
 
@@ -585,8 +584,7 @@ class CTRIARv(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
-        # type: (Any, str) -> CTRIAR
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CTRIAR card from ``BDF.add_card(...)``
 
@@ -706,7 +704,7 @@ class CQUAD4v(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CQUAD4 card from ``BDF.add_card(...)``
 
@@ -883,7 +881,7 @@ class CQUAD8v(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CQUAD8 card from ``BDF.add_card(...)``
 
@@ -1059,7 +1057,7 @@ class CQUADv(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CQUAD card from ``BDF.add_card(...)``
 
@@ -1098,7 +1096,7 @@ class CQUADv(ShellElement):
             else:
                 self.eid = np.array(self._eid, dtype='int32')
                 self.pid = np.array(self._pid, dtype='int32')
-                self.nids = int_array(self._nids, dtype='int32')
+                self.nids = positive_int_array(self._nids, dtype='int32')
                 self.theta = np.array(self._theta, dtype='float64')
                 self.mcid = np.array(self._mcid, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
@@ -1237,7 +1235,7 @@ class CQUADRv(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: BDFCard, comment: str=''):
         """
         Adds a CQUADR card from ``BDF.add_card(...)``
 
@@ -1415,13 +1413,16 @@ class Shells:
     def __repr__(self):
         return self.repr_indent(indent='')
 
-def int_array(array_, dtype='int32'):
+def positive_int_array(array_, dtype='int32'):
+    """used for a CQUAD8 to support None -> 0"""
     try:
         new_array = np.array(array_, dtype=dtype)
     except TypeError:
         # TODO: potentially risky...check...
         float_array = np.array(array_, dtype='float64')
+        inan = np.isnan(float_array)
+        float_array[inan] = 0.
         new_array = float_array.astype(dtype)
-        i0 = np.where(new_array < 0)
-        new_array[i0] = 0
+        #i0 = np.where(new_array < 0)
+        #new_array[i0] = 0
     return new_array

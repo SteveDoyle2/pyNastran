@@ -1,10 +1,10 @@
 import vtk
 import numpy as np
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
-
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 
 def main():
-    grid = vtk.vtkUnstructuredGrid()
+    grid = vtkUnstructuredGrid()
     grid_mapper = vtk.vtkDataSetMapper()
     grid_mapper.SetInputData(grid)
     #grid_mapper.SetInputData(grid)

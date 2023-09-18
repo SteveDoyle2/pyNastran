@@ -287,7 +287,7 @@ class RealGridPointForcesArray(GridPointForces):
         #print("***name=%s ntimes=%s ntotal=%s" % (
             #self.element_names, self.ntimes, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
 
         assert self.ntotal < 2147483647, self.ntotal # max int
         if self.is_unique:
@@ -1107,6 +1107,7 @@ class RealGridPointForcesArray(GridPointForces):
 
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert eid is not None, eid
         #print(self.code_information())
         #assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
@@ -1128,7 +1129,7 @@ class RealGridPointForcesArray(GridPointForces):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
                 f'  _ntotals: {self._ntotals}\n',
@@ -1538,7 +1539,7 @@ class ComplexGridPointForcesArray(GridPointForces):
             #self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
-        self._times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=self.analysis_fmt)
 
         if self.is_unique:
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype=idtype)
@@ -1720,6 +1721,7 @@ class ComplexGridPointForcesArray(GridPointForces):
 
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         assert eid is not None, eid
         #assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, int), node_id
@@ -1731,13 +1733,13 @@ class ComplexGridPointForcesArray(GridPointForces):
         else:
             self.node_element[self.itotal, :] = [node_id, eid]
             self.element_names[self.itotal] = ename
-        self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
+        set_3d_data(self.data, self.itime, self.itotal, [t1, t2, t3, r1, r2, r3], self.size)
         self.itotal += 1
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -2082,3 +2084,32 @@ def _check_array(x, dtype, dim: int, msg=''):
         else:
             raise NotImplementedError(dtype)
     return
+
+def set_3d_data(data: np.ndarray, itime: int, itotal: int, values: list[float], size: int):
+    """annoying way to handle underflow"""
+    if size == 4:
+        #MIN_FLOAT32 = np.finfo(np.float32).min
+        datai = np.array(values)
+        try:
+            datai = datai.astype(data.dtype)
+            data[itime, itotal, :] = datai
+        except FloatingPointError:
+            if data.dtype.name in {'float32', 'float64'}:
+                for i, dataii in enumerate(datai):
+                    try:
+                        data[itime, itotal, i] = dataii
+                    except FloatingPointError:
+                        data[itime, itotal, i] = 0.
+            else:
+                for i, dataii in enumerate(datai):
+                    try:
+                        data.real[itime, itotal, i] = dataii.real
+                    except FloatingPointError:
+                        data.real[itime, itotal, i] = 0.
+
+                    try:
+                        data.imag[itime, itotal, i] = dataii.imag
+                    except FloatingPointError:
+                        data.imag[itime, itotal, i] = 0.
+    else:
+        data[itime, itotal, :] = values

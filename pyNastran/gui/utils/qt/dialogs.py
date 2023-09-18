@@ -1,6 +1,6 @@
 from pyNastran.gui.qt_version import qt_version
 
-from qtpy.QtWidgets import QFileDialog
+from qtpy.QtWidgets import QFileDialog, QWidget
 
 def open_file_dialog(self, title: str, default_filename: str,
                      file_types: str) -> tuple[str, str]:
@@ -28,14 +28,14 @@ def open_file_dialog(self, title: str, default_filename: str,
     #flt = str(filt).strip()
     return fname, flt
 
-def save_file_dialog(self, title: str, default_dirname: str,
+def save_file_dialog(self: QWidget, title: str, default_dirname: str,
                      file_types: str) -> tuple[str, str]:
     """
     Common method for saving files
 
     Parameters
     ----------
-    self : ???
+    self : QWidget
         the main GUI; not a vbox
     title : str
         the title of the dialog
@@ -45,15 +45,22 @@ def save_file_dialog(self, title: str, default_dirname: str,
         the wildcard
         'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch);;All files (*)'
 
+    Returns
+    -------
+    fname : str
+        the saved filename (file.bdf)
+    wildcard_level : str
+        the extension of the file (.bdf)
     """
     assert isinstance(title, str), f'title={title!r}'
     assert isinstance(default_dirname, str), f'default_dirname={default_dirname!r}'
     assert isinstance(file_types, str), f'file_types={file_types}'
 
     # tested in pyside2/pyside6
-    if qt_version == 'pyside6':
+    if qt_version in {'pyside6', 'pyside2'}:
         out = QFileDialog.getSaveFileName(parent=self, caption=title,
                                           dir=default_dirname, filter=file_types)
+        # selected_filter; options
     else:
         # pyside2
         out = QFileDialog.getSaveFileName(parent=self, caption=title,

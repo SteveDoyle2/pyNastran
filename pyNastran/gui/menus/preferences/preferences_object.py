@@ -1,10 +1,12 @@
 from pyNastran.gui.menus.preferences.preferences import PreferencesWindow
 from pyNastran.gui.gui_objects.settings import Settings, NASTRAN_BOOL_KEYS
+from pyNastran.gui.qt_files.base_gui import BaseGui
 
 
-class PreferencesObject:
+class PreferencesObject(BaseGui):
     def __init__(self, gui):
-        self.gui = gui
+        #self.gui = gui
+        super().__init__(gui)
         self._preferences_window_shown = False
         self._preferences_window = None
 

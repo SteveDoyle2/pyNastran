@@ -231,7 +231,7 @@ BULK_DATA_CARDS = {
     'DSCREEN',
 
     # sets
-    'SET1', 'SET3',  ## sets
+    'SET1', 'SET2', 'SET3',  ## sets
     'ASET', 'ASET1',  ## asets
     'OMIT', 'OMIT1',  ## omits
     'BSET', 'BSET1',  ## bsets

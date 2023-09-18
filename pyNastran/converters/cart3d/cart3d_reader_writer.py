@@ -16,6 +16,7 @@ Defines:
              is_binary=False, float_fmt='%6.7f')
 
 """
+from typing import Optional
 import sys
 from struct import pack, unpack
 
@@ -381,9 +382,25 @@ def _read_points_ascii(infile, npoints: int) -> np.ndarray:
             x = data.pop(0)
             y = data.pop(0)
             z = data.pop(0)
-            points[p] = [x, y, z]
+            try:
+                points[p] = [x, y, z]
+            except:
+                msg = f'failed reading ipoint={p}\nxyz=[{x},{y},{z}]'
+                x2 = _bad_parse_float(x)
+                y2 = _bad_parse_float(y)
+                z2 = _bad_parse_float(z)
+                raise RuntimeError(msg + f'; update=[{x2!r},{y2!r},{z2!r}]')
             p += 1
     return points
+
+def _bad_parse_float(in_value: str) -> str:
+    """hack to help xyz parsing"""
+    try:
+        out = float(in_value)
+        out = in_value.strip()
+    except ValueError:
+        out = '???'
+    return out
 
 def _read_regions_ascii(infile, nelements: int) -> np.ndarray:
     """reads the region section"""
@@ -400,7 +417,8 @@ def _read_regions_ascii(infile, nelements: int) -> np.ndarray:
 
 def _read_results_ascii(i: int, infile,
                         npoints: int, nresults: int, log: SimpleLogger,
-                        result_names=None):
+                        result_names: Optional[list[str]]=None) -> tuple[Optional[np.ndarray],
+                                                                         list[str]]:
     """
     Reads the Cp results.
     Results are read on a nodal basis from the following table:
@@ -435,16 +453,30 @@ def _read_results_ascii(i: int, infile,
 
     if nresults == 6:
         results = np.zeros((npoints, 6), dtype='float32')
-        for ipoint in range(npoints):
-            # Cp
-            # rho       rhoU      rhoV      rhoW      E
-            # 0.416594
-            # 1.095611  0.435676  0.003920  0.011579  0.856058
-            sline = [infile.readline().strip()]
-            sline += infile.readline().strip().split()
-            i += 2
-            values = _get_list(sline)
-            results[ipoint, :] = values
+
+        i0 = infile.tell()
+        try:
+            i2 = i
+            all_slines = []
+            for ipoint in range(npoints):
+                sline = [infile.readline().strip()]
+                sline += infile.readline().strip().split()
+                i2 += 2
+                all_slines.append(sline)
+            results = np.array(all_slines, dtype='float64')
+            i = i2
+        except ValueError:
+            infile.seek(i0)
+            for ipoint in range(npoints):
+                # Cp
+                # rho       rhoU      rhoV      rhoW      E
+                # 0.416594
+                # 1.095611  0.435676  0.003920  0.011579  0.856058
+                sline = [infile.readline().strip()]
+                sline += infile.readline().strip().split()
+                i += 2
+                values = _get_list(sline)
+                results[ipoint, :] = values
     else:
         raise RuntimeError('only nresults=6 is supported')
         #p=0
@@ -536,11 +568,13 @@ def _calculate_results(result_names: list[str], results: np.ndarray,
     if 'rho' in result_names:
         loads['rho'] = rho
 
+    is_mach = False
     if 'Mach' in result_names:
         if not is_bad:
             #Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2) / rho
             Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2)
         loads['Mach'] = Mach
+        is_mach = True
 
     if 'U' in result_names:
         if not is_bad:
@@ -566,10 +600,17 @@ def _calculate_results(result_names: list[str], results: np.ndarray,
     #Cp = (p - pinf) / qinf
     p = Cp * qinf + pinf
 
+    #Cp_neg = -1.196898
+    #rho_neg = 0.874096
+    #p_neg = Cp_neg * qinf + pinf
+    #T_neg = (Tinf * gamma * p_neg / rho_neg)
+
     T = (Tinf * gamma) * p / rho
-    q = 0.5 * rho * Mach ** 2
 
     if 'a' in result_names:
+        # T.min() = -0.773
+        # is nondimensional qinf wrong?
+        # -> more likely the formula for T is wrong
         #print('T: min=%s max=%s' % (T.min(), T.max()))
         loads['a'] = np.sqrt(T)
     if 'T' in result_names:
@@ -578,6 +619,7 @@ def _calculate_results(result_names: list[str], results: np.ndarray,
     if 'Pressure' in result_names:
         loads['Pressure'] = p
     if 'q' in result_names:
+        q = 0.5 * rho * Mach ** 2
         loads['q'] = q
     # dynamic pressure
     # speed of sound

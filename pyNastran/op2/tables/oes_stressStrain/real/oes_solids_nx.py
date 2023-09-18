@@ -229,7 +229,7 @@ class RealSolidArrayNx(OES_Object):
         #self.ntotal = ntotal
         #self.nelements = nelements
 
-        _times = zeros(ntimes, dtype=dtype)
+        _times = zeros(ntimes, dtype=self.analysis_fmt)
 
         # TODO: could be more efficient by using nelements for cid
         element_node = zeros((ntotal, 2), dtype=idtype)
@@ -436,7 +436,7 @@ class RealSolidArrayNx(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

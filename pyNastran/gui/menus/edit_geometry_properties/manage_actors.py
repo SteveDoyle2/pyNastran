@@ -5,6 +5,7 @@ https://wiki.python.org/moin/PyQt/Distinguishing%20between%20click%20and%20doubl
 http://www.saltycrane.com/blog/2007/12/pyqt-43-qtableview-qabstracttablemodel/
 http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-work-in-this-program
 """
+from typing import Union
 from pyNastran.gui.limits import MAX_POINT_SIZE, MAX_LINE_WIDTH
 #from pyNastran.gui.qt_version import qt_version #qt_int
 
@@ -897,7 +898,7 @@ class EditGeometryProperties(PyDialog):
             self.close()
             #self.destroy()
 
-def rounded_int(value: int | float) -> int:
+def rounded_int(value: Union[int, float]) -> int:
     """rounds a value that *should* be an integer"""
     return int(round(value, 0))
 

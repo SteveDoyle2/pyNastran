@@ -60,7 +60,7 @@ class RandomSolidArray(OES_Object):
             ntotal = self.ntotal
             dtype = self._get_analysis_code_dtype()
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = zeros(ntimes, dtype=self.analysis_fmt)
 
         # TODO: could be more efficient by using nelements for cid
         self.element_node = zeros((ntotal, 2), dtype='int32')
@@ -173,7 +173,7 @@ class RandomSolidArray(OES_Object):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

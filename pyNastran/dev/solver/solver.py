@@ -3,7 +3,7 @@ import copy
 from datetime import date
 from collections import defaultdict
 from itertools import count
-from typing import Set, Union, Any
+from typing import Union, Any
 
 import numpy as np
 import scipy as sp
@@ -1253,7 +1253,7 @@ def _get_node_gridtype(model: BDF, idtype: str='int32') -> NDArrayN2int:
     node_gridtype_array = np.array(node_gridtype, dtype=idtype)
     return node_gridtype_array
 
-def get_aset(model: BDF) -> Set[tuple[int, int]]:
+def get_aset(model: BDF) -> set[tuple[int, int]]:
     aset_map = set()
     for aset in model.asets:
         if aset.type == 'ASET1':
@@ -1269,7 +1269,7 @@ def get_aset(model: BDF) -> Set[tuple[int, int]]:
             raise NotImplementedError(aset)
     return aset_map
 
-def get_bset(model: BDF) -> Set[tuple[int, int]]:
+def get_bset(model: BDF) -> set[tuple[int, int]]:
     """creates the b-set"""
     bset_map = set()
     for bset in model.bsets:
@@ -1286,7 +1286,7 @@ def get_bset(model: BDF) -> Set[tuple[int, int]]:
             raise NotImplementedError(bset)
     return bset_map
 
-def get_cset(model: BDF) -> Set[tuple[int, int]]:
+def get_cset(model: BDF) -> set[tuple[int, int]]:
     """creates the c-set"""
     cset_map = set()
     for cset in model.csets:
@@ -1303,7 +1303,7 @@ def get_cset(model: BDF) -> Set[tuple[int, int]]:
             raise NotImplementedError(cset)
     return cset_map
 
-def get_omit_set(model: BDF) -> Set[tuple[int, int]]:
+def get_omit_set(model: BDF) -> set[tuple[int, int]]:
     """creates the o-set"""
     omit_set_map = set()
     for omit in model.omits:
@@ -1320,7 +1320,7 @@ def get_omit_set(model: BDF) -> Set[tuple[int, int]]:
             raise NotImplementedError(omit)
     return omit_set_map
 
-def get_rset(model: BDF) -> Set[tuple[int, int]]:
+def get_rset(model: BDF) -> set[tuple[int, int]]:
     """creates the r-set"""
     rset_map = set()
     for rset in model.suport:
@@ -1335,7 +1335,7 @@ def get_rset(model: BDF) -> Set[tuple[int, int]]:
                 rset_map.add((nid, int(compi)))
     return rset_map
 
-def get_qset(model: BDF) -> Set[tuple[int, int]]:
+def get_qset(model: BDF) -> set[tuple[int, int]]:
     """creates the q-set"""
     qset_map = set()
     for qset in model.qsets:

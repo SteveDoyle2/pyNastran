@@ -23,91 +23,91 @@ class GuiResultCommon:
         self.is_real = False
         self.is_complex = False
 
-    #def get_data_type(self, i, name):
+    #def get_data_type(self, i: int, name: str):
         #raise NotImplementedError(self.class_name)
 
-    #def get_header(self, i, name):
+    #def get_header(self, i: int, name: str):
         #raise NotImplementedError(self.class_name)
 
-    def is_normal_result(self, i, name):
+    def is_normal_result(self, i: int, name: str) -> bool:
         return False
 
-    def get_data_format(self, i, name):
+    def get_data_format(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_location(self, i, name):
+    def get_location(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_title(self, i, name):
+    def get_title(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_min_max(self, i, name):
+    def get_min_max(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_scalar(self, i, name):
+    def get_scalar(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_methods(self, i):
+    def get_methods(self, i: int):
         raise NotImplementedError(self.class_name)
 
-    def get_result(self, i, name):
+    def get_result(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_vector_size(self, i, name):
+    def get_vector_size(self, i: int, name: str) -> int:
         return 1
 
-    def get_scale(self, i, name):
+    def get_scale(self, i: int, name: str) -> float:
         return 0.
 
-    def get_phase(self, i, name):
+    def get_phase(self, i: int, name: str) -> Optional[float]:
         return None
 
     #------------
     # setters
 
-    def set_data_format(self, i, name, data_format):
+    def set_data_format(self, i: int, name: str, data_format):
         raise NotImplementedError(self.class_name)
 
-    def set_min_max(self, i, name, min_value, max_value):
+    def set_min_max(self, i: int, name: str, min_value, max_value):
         raise NotImplementedError(self.class_name)
 
-    def set_title(self, i, name, title):
+    def set_title(self, i: int, name: str, title):
         raise NotImplementedError(self.class_name)
 
-    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
+    def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str, nlabels, labelsize,
                                                ncolors, colormap):
         raise NotImplementedError(self.class_name)
 
-    def set_scale(self, i, name, scale):
+    def set_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
 
-    def set_phase(self, i, name, phase):
+    def set_phase(self, i: int, name: str, phase) -> None:
         pass
 
     #------------
     # default getters
-    def get_default_data_format(self, i, name):
+    def get_default_data_format(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_default_min_max(self, i, name):
+    def get_default_min_max(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_default_title(self, i, name):
+    def get_default_title(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
         raise NotImplementedError(self.class_name)
 
-    def get_default_scale(self, i, name):
+    def get_default_scale(self, i: int, name: str):
         return 0.
 
-    def get_default_phase(self, i, name):
+    def get_default_phase(self, i: int, name: str):
         return None
 
-    def _get_complex_displacements_by_phase(self, i, phase):
+    def _get_complex_displacements_by_phase(self, i: int, phase):
         raise NotImplementedError(self.class_name)
 
 
@@ -115,15 +115,18 @@ class NullResult(GuiResultCommon):
     def __init__(self):
         super(NullResult, self).__init__()
 
-    def get_scalar(self, i, name):
+    def get_scalar(self, i: int, name: str) -> None:
         return None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         msg = '<NormalResult>'
         return msg
 
 class GridPointForceResult(GuiResultCommon):
-    def __init__(self, subcase_id, header, title, gpforce_array, uname='GridPointForceResult'):
+    def __init__(self, subcase_id: int,
+                 header: str, title: str,
+                 gpforce_array,
+                 uname: str='GridPointForceResult'):
         """
         Parameters
         ----------
@@ -149,47 +152,53 @@ class GridPointForceResult(GuiResultCommon):
         super(GridPointForceResult, self).__init__()
         self.gpforce_array = gpforce_array
 
-    def get_scalar(self, i, name):
+    def get_scalar(self, i: int, name: str) -> None:
         return None
 
-    def get_result(self, i, name):
+    def get_result(self, i: int, name: str) -> None:
         return None
-    def get_title(self, i, name):
+    def get_title(self, i: int, name: str) -> str:
         return self.title
-    def get_location(self, i, name):
+    def get_location(self, i: int, name: str) -> str:
         return self.location
-    def get_header(self, i, name):
+    def get_header(self, i: int, name: str) -> str:
         return self.header
-    def get_methods(self, i):
+    def get_methods(self, i: int) -> None:
         return None
-    def get_data_format(self, i, name):
+    def get_data_format(self, i: int, name: str) -> None:
         return None
-    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str) -> tuple[Any, Any, Any, Any]:
         return None, None, None, None
-    def get_default_data_format(self, i, name):
+    def get_default_data_format(self, i: int, name: str) -> None:
         return None
-    def get_default_min_max(self, i, name):
+    def get_default_min_max(self, i: int, name: str) -> tuple[Optional[float], Optional[float]]:
         return None, None
-    def get_default_title(self, i, name):
+    def get_default_title(self, i: int, name: str) -> str:
         return self.title
-    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str) -> tuple[Any, Any, Any, Any]:
         return None, None, None, None
-    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize, ncolors, colormap):
+    def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str,
+                                               nlabels, labelsize, ncolors, colormap) -> None:
         return
-    def get_min_max(self, i, name):
+    def get_min_max(self, i: int, name: str) -> tuple[Any, Any]:
         return None, None
 
-    #def get_default_min_max(self, i, name):
+    #def get_default_min_max(self, i: int, name: str):
         #return None, None
 
-    def __repr__(self):
+    #def save_vtk_result(self, used_titles: set[str]) -> None:
+
+    def __repr__(self) -> str:
         msg = '<GridPointForceResult>'
         return msg
 
 class NormalResult(GuiResultCommon):
-    def __init__(self, subcase_id, header, title,
-                 nlabels=2, labelsize=5, ncolors=2, colormap='jet',
-                 data_format='%.1f', uname='NormalResult'):
+    def __init__(self, subcase_id: int,
+                 header: str, title: str,
+                 nlabels=2, labelsize=5, ncolors=2,
+                 colormap: str='jet',
+                 data_format: str='%.1f',
+                 uname: str='NormalResult'):
         """
         subcase_id : int
             the flag that points to self.subcases for a message
@@ -228,57 +237,57 @@ class NormalResult(GuiResultCommon):
         self.max_default = 1.
         self.uname = uname
 
-    def get_data_type(self, i, name):
+    def get_data_type(self, i: int, name: str):
         #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.data_type
 
-    def get_data_format(self, i, name):
+    def get_data_format(self, i: int, name: str):
         #print('Bname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.data_format
 
-    def get_location(self, i, name):
+    def get_location(self, i: int, name: str):
         #print('Cname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return None
 
-    def get_header(self, i, name):
+    def get_header(self, i: int, name: str):
         return self.header
 
-    def get_title(self, i, name):
+    def get_title(self, i: int, name: str):
         return self.title
 
-    def get_phase(self, i, name):
+    def get_phase(self, i: int, name: str):
         return None
 
-    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
         #self.ncolors = 1000
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
 
-    def get_min_max(self, i, name):
+    def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
-    def get_scalar(self, i, name):
+    def get_scalar(self, i: int, name: str):
         return self.scalar
 
     #------------
     # setters
 
-    def set_data_format(self, i, name, data_format):
+    def set_data_format(self, i: int, name: str, data_format):
         self.data_format = data_format
 
-    def set_min_max(self, i, name, min_value, max_value):
+    def set_min_max(self, i: int, name: str, min_value, max_value):
         self.min_value = min_value
         self.max_value = max_value
 
-    def set_scale(self, i, name, scale):
+    def set_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
 
-    def set_title(self, i, name, title):
+    def set_title(self, i: int, name: str, title):
         self.title = title
 
-    #def set_phase(self, i, name, phase):
+    #def set_phase(self, i: int, name: str, phase):
         #pass
 
-    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
+    def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str, nlabels, labelsize,
                                                ncolors, colormap):
         self.nlabels = nlabels
         self.labelsize = labelsize
@@ -287,39 +296,39 @@ class NormalResult(GuiResultCommon):
 
     #------------
     # default getters
-    def get_default_data_format(self, i, name):
+    def get_default_data_format(self, i: int, name: str):
         return self.data_format_default
 
-    def get_default_min_max(self, i, name):
+    def get_default_min_max(self, i: int, name: str):
         return self.min_default, self.max_default
 
-    def get_default_scale(self, i, name):
+    def get_default_scale(self, i: int, name: str):
         return 0.
 
-    def get_default_phase(self, i, name):
+    def get_default_phase(self, i: int, name: str):
         return None
 
-    def get_default_title(self, i, name):
+    def get_default_title(self, i: int, name: str):
         return self.title_default
 
-    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
         return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
     #------------
     # unmodifyable getters
-    def get_scale(self, i, name):
+    def get_scale(self, i: int, name: str):
         return 0.
 
-    def get_vector_size(self, i, name):
+    def get_vector_size(self, i: int, name: str):
         return 1
 
-    def get_methods(self, i):
+    def get_methods(self, i: int):
         return None
 
-    def get_result(self, i, name):
+    def get_result(self, i: int, name: str):
         return None
 
-    def is_normal_result(self, i, name):
+    def is_normal_result(self, i: int, name: str):
         return True
 
     def __repr__(self):
@@ -558,57 +567,57 @@ class GuiResult(GuiResultCommon):
     # getters
     #def export_hdf5_file(self, hdf5_file, exporter):
         #asd
-    def get_data_type(self, i, name):
+    def get_data_type(self, i: int, name: str):
         #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.data_type
 
-    def get_data_format(self, i, name):
+    def get_data_format(self, i: int, name: str):
         #print('Bname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.data_format
 
-    def get_location(self, i, name):
+    def get_location(self, i: int, name: str):
         #print('Cname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.location
 
-    def get_header(self, i, name):
+    def get_header(self, i: int, name: str):
         return self.header
 
-    def get_title(self, i, name):
+    def get_title(self, i: int, name: str):
         return self.title
 
-    def get_phase(self, i, name):
+    def get_phase(self, i: int, name: str):
         return None
 
-    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
         #self.ncolors = 1000
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
 
-    def get_min_max(self, i, name):
+    def get_min_max(self, i: int, name: str):
         return self.min_value, self.max_value
 
-    def get_scalar(self, i, name):
+    def get_scalar(self, i: int, name: str):
         return self.scalar
 
     #------------
     # setters
 
-    def set_data_format(self, i, name, data_format):
+    def set_data_format(self, i: int, name: str, data_format):
         self.data_format = data_format
 
-    def set_min_max(self, i, name, min_value, max_value):
+    def set_min_max(self, i: int, name: str, min_value, max_value):
         self.min_value = min_value
         self.max_value = max_value
 
-    def set_scale(self, i, name, scale):
+    def set_scale(self, i: int, name: str, scale):
         raise RuntimeError('This object cannot set a displacement scale factor.')
 
-    def set_title(self, i, name, title):
+    def set_title(self, i: int, name: str, title):
         self.title = title
 
-    #def set_phase(self, i, name, phase):
+    #def set_phase(self, i: int, name: str, phase):
         #pass
 
-    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
+    def set_nlabels_labelsize_ncolors_colormap(self, i: int, name: str, nlabels, labelsize,
                                                ncolors, colormap):
         self.nlabels = nlabels
         self.labelsize = labelsize
@@ -617,45 +626,45 @@ class GuiResult(GuiResultCommon):
 
     #------------
     # default getters
-    def get_default_data_format(self, i, name):
+    def get_default_data_format(self, i: int, name: str):
         return self.data_format_default
 
-    def get_default_min_max(self, i, name):
+    def get_default_min_max(self, i: int, name: str):
         return self.min_default, self.max_default
 
-    def get_default_scale(self, i, name):
+    def get_default_scale(self, i: int, name: str):
         return 0.
 
-    def get_default_phase(self, i, name):
+    def get_default_phase(self, i: int, name: str):
         return None
 
-    def get_default_title(self, i, name):
+    def get_default_title(self, i: int, name: str):
         return self.title_default
 
-    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i: int, name: str):
         # TODO: do this right
         return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
     #------------
     # unmodifyable getters
-    def get_scale(self, i, name):
+    def get_scale(self, i: int, name: str):
         return 0.
 
-    def get_vector_size(self, i, name):
+    def get_vector_size(self, i: int, name: str):
         return 1
 
-    def get_methods(self, i):
+    def get_methods(self, i: int):
         if self.is_real:
             return self.location
         else:
             raise NotImplementedError('title=%s is not real; fmt=%s' % (self.title, self.data_type))
             #return ['node real', 'node imag', 'node magnitude', 'node phase']
 
-    #def get_plot_value(self, i, name):
+    #def get_plot_value(self, i: int, name: str):
         #if self.is_real:
             #return self.dxyz[i, :]
 
-    def get_vector_array_by_phase(self, i, unused_name, phase=0.):
+    def get_vector_array_by_phase(self, i: int, unused_name, phase=0.):
         #assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
             # e(i*theta) = cos(theta) + i*sin(theta)
@@ -671,14 +680,14 @@ class GuiResult(GuiResultCommon):
         assert len(dxyz.shape) == 2, dxyz.shape
         return xyz, dxyz
 
-    def get_result(self, i, name):
+    def get_result(self, i: int, name: str):
         if self.is_real:
             #return self.dxyz[i, :]
             return self.scalar
         else:
             raise NotImplementedError('title=%s is not real; fmt=%s' % (self.title, self.data_type))
 
-    #def get_vector_result(self, i, name):
+    #def get_vector_result(self, i: int, name: str):
         #if self.is_real:
             #xyz = self.xyz + self.scales[i] * self.dxyz[i, :]
         #else:
@@ -687,7 +696,27 @@ class GuiResult(GuiResultCommon):
             #phase = self.phase
         #return self.xyz, xyz
 
-    def __repr__(self):
+    def save_vtk_result(self, used_titles: set[str]):
+        titlei = self.title
+        if self.subcase_id > 0:
+            titlei = f'{self.title}_subcase={self.subcase_id:d}'
+
+        from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
+        vtk_array = numpy_to_vtk(self.scalar, deep=0, array_type=None)
+
+        title_out = titlei
+        i = 1
+        while title_out in used_titles:
+            title_out = f'{titlei}_{i}'
+            i += 1
+
+        #if i != 1:
+            #log.warning(f'duplicate GuiResult {titlei} because it is already used -> {title_out}')
+        check_title(title_out, used_titles)
+        vtk_array.SetName(title_out)
+        return vtk_array
+
+    def __repr__(self) -> str:
         msg = 'GuiResult\n'
         msg += '    title=%r\n' % self.title
         msg += '    data_type=%r\n' % self.data_type
@@ -708,3 +737,8 @@ class GuiResultIDs(GuiResult):
             subcase_id, header, title, location, scalar,
             mask_value, nlabels, labelsize, ncolors, colormap, data_map,
             data_format, uname)
+
+
+def check_title(title: str, used_titles: set[str]) -> None:
+    assert title not in used_titles, title
+    used_titles.add(title)

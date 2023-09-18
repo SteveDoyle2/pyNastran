@@ -75,6 +75,9 @@ except ImportError:  # pragma: no cover
     raise
 
 
+from pyNastran.gui.gui_objects.vtk_io import VtkIO
+CLASS_MAP['vtk'] = VtkIO
+
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 #CLASS_MAP['nastran'] = NastranIO
 
@@ -107,11 +110,16 @@ except ImportError:  # pragma: no cover
     pass
 
 try:
-    from pyNastran2.nastran_io2 import NastranV
-    CLASS_MAP['nastranv'] = NastranV
+    from pyNastran2.nastran_io2 import Nastran2
+    CLASS_MAP['nastran2'] = Nastran2
 except ImportError:  # pragma: no cover
     pass
 
+try:
+    from pyNastran.dev.bdf_vectorized3.nastran_io3 import Nastran3
+    CLASS_MAP['nastran3'] = Nastran3
+except ImportError:  # pragma: no cover
+    pass
 
 if DEV:
     try:

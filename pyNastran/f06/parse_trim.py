@@ -2,7 +2,7 @@ from typing import Optional, TextIO
 import os
 import numpy as np
 #import scipy.sparse
-from cpylog import SimpleLogger, get_logger
+from cpylog import SimpleLogger, get_logger2
 from pyNastran.utils import print_bad_path
 
 #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
@@ -38,7 +38,14 @@ SKIP_FLAGS = [
 
 
 class MonitorLoads:
-    def __init__(self, name, comp, classi, label, cp, xyz, coefficient):
+    def __init__(self, name: np.ndarray,
+                 comp: np.ndarray,
+                 classi: np.ndarray,
+                 label: np.ndarray,
+                 cp: np.ndarray,
+                 xyz: np.ndarray,
+                 coefficient: np.ndarray,
+                 cd: np.ndarray):
         self.name = name
         self.comp = comp
         self.group = classi
@@ -46,15 +53,27 @@ class MonitorLoads:
         self.cp = cp
         self.xyz = xyz
         self.coefficient = coefficient
+        self.cd = cd
 
+    def __repr__(self) -> str:
+        msg = f'MonitorLoads; n={len(self.name)}'
+        return msg
 
 class TrimResults:
     def __init__(self):
-        self.aero_pressure = {}
-        self.aero_force = {}
-        self.structural_monitor_loads = {}
-        self.controller_state = {}
-        self.trim_variables = {} # TODO: not supported
+        # aero_pressure[(subcase, subtitle)] = (grid_id, loads)
+        self.aero_pressure: dict[tuple[str, str], tuple[np.ndarray, np.ndarray]] = {}
+
+        # aero_force[(subcase, subtitle)] = (grid_id, loads)
+        self.aero_force: dict[tuple[str, str], tuple[np.ndarray, np.ndarray]] = {}
+        self.structural_monitor_loads: dict[int, MonitorLoads] = {}
+
+        # controller_state = {'ALPHA': 2.0}
+        self.controller_state: dict[int, ControllerState] = {}
+
+        # trim_variables[name] = [idi, Type, trim_status, ux, ux_unit]
+        TrimVariables = dict[str, TrimVariable]
+        self.trim_variables: dict[int, TrimVariables] = {} # TODO: not supported
 
     def __repr__(self) -> str:
         msg = (
@@ -73,12 +92,15 @@ class TrimResults:
             msg += '\n  len(aero_pressure) = 0'
         return msg
 
+TrimVariable = tuple[int, str, str, float, str]
+ControllerState = dict[str, float]
+
 def read_f06_trim(f06_filename: str,
-                      log: Optional[SimpleLogger]=None,
-                      nlines_max: int=1_000_000,
-                      debug: bool=False) -> TrimResults:
+                  log: Optional[SimpleLogger]=None,
+                  nlines_max: int=1_000_000,
+                  debug: bool=False) -> TrimResults:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
-    log = get_logger(log=log, level='debug', encoding='utf-8')
+    log = get_logger2(log=log, debug=debug, encoding='utf-8')
     dirname = os.path.dirname(os.path.abspath(f06_filename))
     assert os.path.exists(f06_filename), print_bad_path(f06_filename)
     log.info(f'reading {f06_filename!r}')
@@ -118,11 +140,13 @@ def _skip_to_page_stamp(f06_file: TextIO, line: str, i: int,
 
 def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
                    nlines_max: int, dirname: str,
-                   debug: bool=False) -> tuple[TrimResults, str, np.ndarray]:
+                   debug: bool=False) -> tuple[TrimResults,
+                                               dict[str, np.ndarray],
+                                               dict[str, np.ndarray]]:
     i = 0
     #debug = True
-    tables = {}
-    matrices = {}
+    tables: dict[str, np.ndarray] = {}
+    matrices: dict[str, np.ndarray] = {}
     trim_results = TrimResults()
     iblank_count = 0
 
@@ -208,7 +232,7 @@ def _get_title_subtitle_subcase(f06_file: TextIO,
     #'SUBCASE 1'
     if 'SUBCASE' not in subcase_line:
         f06_file.seek(n)
-        return line, i, title, None, None
+        return line, i, title, '', ''
 
     i += 2
     assert 'SUBCASE' in subcase_line, f'i={i:d} subcase_line={subcase_line!r}'
@@ -228,7 +252,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
                                                     title: str, subtitle: str, subcase: str,
                                                     dirname: str,
                                                     #ipressure: int, iforce: int,
-                                                    log: SimpleLogger):
+                                                    log: SimpleLogger) -> tuple[str, int]:
     """
     '                              S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S'
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
@@ -266,7 +290,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         #dirname, log)
 
     if 'MONITOR POINT NAME' not in line:
-        asfd
+        raise RuntimeError("'MONITOR POINT NAME' not in line")
 
     controller_state = _get_controller_state(header_lines)
     line_end, iend, seek1 = _skip_to_page_stamp_and_rewind(f06_file, line, i, nlines_max)
@@ -280,6 +304,7 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
     xyzs = []
     cids = []
     all_coeffs = []
+    cds = []
     axis_to_index = {
         'CX': 0, 'CY': 1, 'CZ': 2,
         'CMX': 3, 'CMY': 4, 'CMZ': 5,}
@@ -288,6 +313,12 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         #'        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               '
         #'        LABEL = Full Vehicle Integrated Loads                           '
         #'        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
+
+        #line = _remove_intermediate_spaces(line)
+        #line2 = _remove_intermediate_spaces(line.replace('MONITOR POINT NAME', 'MONITOR_POINT_NAME'))
+        #sline2 = line2.split(' ')
+        #assert len(line2) == 3, sline2
+
         name_comp_class = line.split('MONITOR POINT NAME =')[1]
         name_comp, classi = name_comp_class.rsplit('CLASS = ')
         name_comp = name_comp.strip()
@@ -306,17 +337,42 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         i += 1
         label = line.split('LABEL =')[1].strip()
 
-        #'        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
         line = f06_file.readline()
+        line = _remove_intermediate_spaces(line)
         i += 1
-        sline = [val.strip() for val in line.split('=')]
-        assert sline[0] == 'CID'
-        cid = int(sline[1][:-1])
-        xyz = [float(sline[2][:-1]),
-               float(sline[3][:-1]),
-               float(sline[4])]
 
-        line0a = f06_file.readline()
+        sline = line.split(' ')
+        if len(sline) == 4:
+            # NX
+            assert 'CID' in sline[0], sline
+            cd = -1
+        else:
+            # TODO: doesn't support CD
+            assert len(sline) == 5, sline
+            # MSC
+            assert 'CP' in sline[0], sline
+            assert 'CD' in sline[4], sline
+            #['CP=100', 'X=0.00000E+00', 'Y=0.00000E+00', 'Z=0.00000E+00', 'CD=100']
+            sline_cd = sline[4].split('=')
+            assert sline_cd[0] == 'CD', sline
+            cd = int(sline_cd[1])
+
+        sline_cid_cd = sline[0].split('=')
+        sline_x = sline[1].split('=')
+        sline_y = sline[2].split('=')
+        sline_z = sline[3].split('=')
+        assert sline_x[0] == 'X', sline
+        assert sline_y[0] == 'Y', sline
+        assert sline_z[0] == 'Z', sline
+
+        cid = int(sline_cid_cd[1])
+        xyz = [
+            float(sline_x[1]),
+            float(sline_x[1]),
+            float(sline_x[1]),
+        ]
+
+        unused_line0a = f06_file.readline()
         line0b = f06_file.readline().strip()
         i += 2
 
@@ -390,30 +446,53 @@ def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
         #name_comps_classes_labels.append([name, comp, classi, label])
         cids.append(cid)
         xyzs.append(xyz)
+        cds.append(cd)
         all_coeffs.append(coeffs)
-    all_coeffs = np.stack(all_coeffs, axis=0)
+    all_coeffs_stacked = np.stack(all_coeffs, axis=0)
     nrows = len(names)
-    assert all_coeffs.shape == (nrows, 6, 4), all_coeffs.shape
+    assert all_coeffs_stacked.shape == (nrows, 6, 5), all_coeffs_stacked.shape
 
-    names = np.array(names)
-    comps = np.array(comps)
-    classes = np.array(classes)
-    labels = np.array(labels)
-    cids = np.array(cids, dtype='int32')
-    xyzs = np.array(xyzs, dtype='float64')
-    all_coeffs = np.array(all_coeffs, dtype='float64')
+    names_array = np.array(names)
+    comps_array = np.array(comps)
+    classes_array = np.array(classes)
+    labels_array = np.array(labels)
+    cids_array = np.array(cids, dtype='int32')
+    xyzs_array = np.array(xyzs, dtype='float64')
+    all_coeffs_array = np.array(all_coeffs_stacked, dtype='float64')
+    cds_array = np.array(cds, dtype='int32')
 
     isubcase = int(subcase)
     trim_results.structural_monitor_loads[isubcase] = MonitorLoads(
-        names, comps, classes, labels,
-        cids, xyzs, all_coeffs)
+        names_array, comps_array, classes_array, labels_array,
+        cids_array, xyzs_array, all_coeffs_array, cds_array)
     trim_results.controller_state[isubcase] = controller_state
     f06_file.seek(seek1)
     return line_end, iend
 
-def _get_controller_state(header_lines: list[str]) -> dict[str, float]:
-    controller_state = {}
-    controller_lines = []
+def _remove_intermediate_spaces(line_in: str) -> str:
+    """
+    Simplifies parsing of the following line
+
+    Parameters
+    ----------
+    line_in : str
+        a line that looks like:
+        '        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
+
+    Returns
+    -------
+    line : str
+        a simple to split line
+        'CID=102 X=0.00000E+00 Y=0.00000E+00 Z=0.00000E+00'
+    """
+    line = line_in.strip()
+    while ' =' in line or '= ' in line or '  ' in line:
+        line = line.replace(' =', '=').replace('= ', '=').replace('  ', ' ')
+    return line
+
+def _get_controller_state(header_lines: list[str]) -> ControllerState:
+    controller_state: ControllerState = {}
+    controller_lines: list[str] = []
     for i, line in enumerate(header_lines):
         if 'CONTROLLER STATE:' in line:
             controller_lines = header_lines[i+1:]
@@ -467,10 +546,10 @@ def _read_aeroelastic_trim_variables(f06_file: TextIO,
     line = f06_file.readline()
     i += 2
 
-    trim_variables = {}
+    trim_variables: dict[str, TrimVariable] = {}
     assert 'INTERCEPT' in line, line
     idi, name, Type, trim_status, ux, ux_unit = _split_trim_variable(line)
-    trim_variables[name] = [idi, Type, trim_status, ux, ux_unit]
+    trim_variables[name] = (idi, Type, trim_status, ux, ux_unit)
 
     line_end, iend, seek1 = _skip_to_page_stamp_and_rewind(f06_file, line, i, nlines_max)
 
@@ -482,7 +561,7 @@ def _read_aeroelastic_trim_variables(f06_file: TextIO,
         if len(line2) == 0:
             continue
         idi, name, Type, trim_status, ux, ux_unit = _split_trim_variable(line2)
-        trim_variables[name] = [idi, Type, trim_status, ux, ux_unit]
+        trim_variables[name] = (idi, Type, trim_status, ux, ux_unit)
     trim_results.trim_variables[isubcase] = trim_variables
     f06_file.seek(seek1)
 
@@ -505,7 +584,7 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     name = line2[40:50].strip()
     Type = line2[50:70].strip()
     trim_status = line2[70:90].strip()
-    ux = line2[90:106]
+    ux_str = line2[90:106]
     ux_unit = line2[106:130]
     assert line2[130:].strip() == '', line2[130:]
     #idi, name, type, trim_status, ux, ux_unit
@@ -515,11 +594,11 @@ def _split_trim_variable(line: str) -> tuple[int, str, str, str, float, str]:
     else:
         int_id = 0
 
-    #print('%r %r %r %r ux=%r %r' % (int_id, name, Type, trim_status, ux, ux_unit))
-    ux = float(ux)
+    #print('%r %r %r %r ux=%r %r' % (int_id, name, Type, trim_status, ux_str, ux_unit))
+    ux = float(ux_str)
     assert Type in {'RIGID BODY', 'CONTROL SURFACE'}, Type
     assert trim_status in {'FIXED', 'FREE', 'LINKED'}, trim_status
-    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE'}, ux_unit
+    assert ux_unit in {'', 'LOAD FACTOR', 'RADIANS', 'NONDIMEN. RATE', 'RAD/S/S PER G'}, ux_unit
 
     return int_id, name, Type, trim_status, ux, ux_unit
 
@@ -558,7 +637,7 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
     i += 1
     assert 'CHORD' in line, line.strip()
 
-    line1 = f06_file.readline()
+    unused_line1 = f06_file.readline()
     line2 = f06_file.readline()
     i += 2
     if 'TRIM ALGORITHM USED: LINEAR TRIM SOLUTION WITHOUT REDUNDANT CONTROL SURFACES.' in line2:
@@ -619,16 +698,15 @@ def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                 for nid, data in zip(grid_id, loads.tolist()):
                     msg = f'{nid:d},' + fmt % tuple(data)
                     file_obj.write(msg)
-        x = 1
         iforce += 1
     else:
         raise NotImplementedError(line3.strip())
 
-    x = 1
     return line, i, ipressure, iforce
 
 def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
-                                                        line: str, i: int, nlines_max: int, log: SimpleLogger):
+                                                        line: str, i: int, nlines_max: int, log: SimpleLogger) -> tuple[
+                                                            str, int, np.ndarray, np.ndarray]:
     """
     '                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S'
     '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
@@ -644,9 +722,9 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
     '                                          33     LS            4.857536E-02         4.857536E-02'
     """
     log.debug(' - reading aero pressure')
-    line1 = f06_file.readline()
-    line2 = f06_file.readline()
-    line3 = f06_file.readline()
+    unused_line1 = f06_file.readline()
+    unused_line2 = f06_file.readline()
+    unused_line3 = f06_file.readline()
     line_strip = f06_file.readline().strip()
     i += 4
 
@@ -670,7 +748,6 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
         grid_id[i] = grid
         Cp_pressure[i, :] = [Cp, pressure]
 
-    x = 1
     return line, i, grid_id, Cp_pressure
 
 
@@ -718,16 +795,15 @@ def _read_aerostatic_data_recover_output_table_force(f06_file: TextIO,
     loads = np.zeros((ndata, 6), dtype='float64')
     for i, line in enumerate(data_lines):
         group_str, grid_str, label, *force_moment = line.split()
-        group = int(group_str)
+        unused_group = int(group_str)
         grid = int(grid_str)
         grid_id[i] = grid
         force_moment_float = [float(val) for val in force_moment]
         loads[i] = force_moment_float
-    x = 1
     return line, i, grid_id, loads
 
 
-def main():
+def main() -> None:
     f06_filename = r'C:\NASA\ase2\ar9_caero.f06'
     read_f06_trim(f06_filename, log=None, nlines_max=1_000_000)
 

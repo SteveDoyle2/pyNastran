@@ -5,10 +5,9 @@ from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtyp
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.writer.utils import fix_table3_types
+from pyNastran.op2.result_objects.op2_objects import set_as_sort1
 
-SORT2_TABLE_NAME_MAP = {
-    'ONRGY2' : 'ONRGY1',
-}
+
 TABLE_NAME_TO_TABLE_CODE = {
     'ONRGY1' : 18,
 }
@@ -37,7 +36,7 @@ class RealStrainEnergyArray(BaseElement):
         self.nelements = 0  # result specific
         self.itime = None
         self.itotal2 = 0
-        #self.element_name_count = OrderedDict()
+        #self.element_name_count = {}
         self.dt_temp = None
 
         #if is_sort1:
@@ -91,7 +90,7 @@ class RealStrainEnergyArray(BaseElement):
 
     def build_data(self, dtype, idtype, fdtype):
         """actually performs the build step"""
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         #self.element = zeros(self.nelements, dtype='int32')
         #if dtype in 'DMIG':
         #print(self.element_name, self.element_type)
@@ -336,6 +335,7 @@ class RealStrainEnergyArray(BaseElement):
 
     def add_sort1(self, dt, eid, energyi, percenti, densityi):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         #itime = self.itime // self.nelement_types
         assert (isinstance(eid, int) and eid > 0) or isinstance(eid, bytes), 'dt=%s eid=%s' % (dt, eid)
         itime = self.itime
@@ -366,33 +366,12 @@ class RealStrainEnergyArray(BaseElement):
 
     def set_as_sort1(self):
         """changes the table into SORT1"""
-        if self.is_sort1:
-            return
-        try:
-            analysis_method = self.analysis_method
-        except AttributeError:
-            print(self.code_information())
-            raise
-        #print(self.get_stats())
-        #print(self.node_gridtype)
-        #print(self.data.shape)
-        self.sort_method = 1
-        self.sort_bits[1] = 0
-        bit0, bit1, bit2 = self.sort_bits
-        self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
-        self.sort_code = bit0 + 2*bit1 + 4*bit2
-        #print(self.code_information())
-        assert self.is_sort1
-        if analysis_method != 'N/A':
-            self.data_names[0] = analysis_method
-            #print(self.table_name_str, analysis_method, self._times)
-            setattr(self, self.analysis_method + 's', self._times)
-        del self.analysis_method
+        set_as_sort1(self)
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -655,7 +634,7 @@ class RealStrainEnergyArray(BaseElement):
         elif self.analysis_code == 5:
             #try:
             #print(self)
-            field5 = self.freq2s[itime]
+            field5 = self.freqs[itime]
             #except AttributeError:  # pragma: no cover
                 #print(self)
                 #raise
@@ -756,7 +735,7 @@ class ComplexStrainEnergyArray(BaseElement):
         self.nelements = 0  # result specific
         self.itime = None
         self.itotal2 = 0
-        #self.element_name_count = OrderedDict()
+        #self.element_name_count = {}
         self.dt_temp = None
 
         if not is_sort1:
@@ -809,7 +788,7 @@ class ComplexStrainEnergyArray(BaseElement):
 
     def build_data(self, dtype):
         """actually performs the build step"""
-        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self._times = np.zeros(self.ntimes, dtype=self.analysis_fmt)
         #self.element = np.zeros(self.nelements, dtype='int32')
         self.element = np.zeros((self.ntimes, self.nelements), dtype='int32')
         #self.element_data_type = empty(self.nelements, dtype='|U8')
@@ -950,6 +929,7 @@ class ComplexStrainEnergyArray(BaseElement):
 
     def add_sort1(self, dt, eid, energyr, energyi, percenti, densityi):
         """unvectorized method for adding SORT1 transient data"""
+        assert self.sort_method == 1, self
         #itime = self.itime // self.nelement_types
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itime = self.itime
@@ -967,7 +947,7 @@ class ComplexStrainEnergyArray(BaseElement):
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{self.__class__.__name__}>; table_name={self.table_name!r}\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]

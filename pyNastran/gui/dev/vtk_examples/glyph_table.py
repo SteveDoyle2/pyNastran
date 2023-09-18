@@ -1,4 +1,10 @@
+"""
+doesn't work in vtk 9
+"""
 import vtk
+from pyNastran.gui.vtk_rendering_core import (
+    vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor,
+    vtkActor, vtkPolyDataMapper)
 
 # This example uses a "glyph table" to change the shape of the 3d glyphs
 # according to a scalar value.
@@ -61,7 +67,7 @@ glyph.SetInputArrayToProcess(1,0,0,0,'RTDataGradient')    # vectors
 # glyph.Update()
 
 coloring_by = 'RTData'
-mapper = vtk.vtkPolyDataMapper()
+mapper = vtkPolyDataMapper()
 mapper.SetInputConnection(glyph.GetOutputPort())
 mapper.SetScalarModeToUsePointFieldData()
 mapper.SetColorModeToMapScalars()
@@ -72,14 +78,14 @@ mapper.ScalarVisibilityOn()
 # mapper.SetScalarRange(glyph.GetOutputDataObject(0).GetPointData().GetArray(coloring_by).GetRange())
 
 mapper.SelectColorArray(coloring_by)
-actor = vtk.vtkActor()
+actor = vtkActor()
 actor.SetMapper(mapper)
 
-ren = vtk.vtkRenderer()
+ren = vtkRenderer()
 ren.AddActor(actor)
-renWin = vtk.vtkRenderWindow()
+renWin = vtkRenderWindow()
 renWin.AddRenderer(ren)
-iren = vtk.vtkRenderWindowInteractor()
+iren = vtkRenderWindowInteractor()
 istyle = vtk.vtkInteractorStyleTrackballCamera()
 iren.SetInteractorStyle(istyle)
 iren.SetRenderWindow(renWin)

@@ -6,13 +6,15 @@ import os
 from qtpy.QtWidgets import QMainWindow
 from pyNastran.gui.menus.legend.qt_legend import LegendPropertiesWindow
 from pyNastran.gui.menus.legend.animation import AnimationWindow
+from pyNastran.gui.qt_files.base_gui import BaseGui
 from pyNastran.utils.numpy_utils import integer_types
 
 
-class LegendObject:
+class LegendObject(BaseGui):
     """defines LegendObject, which is an interface to the Legend Window"""
     def __init__(self, gui):
-        self.gui = gui
+        super().__init__(gui)
+        #self.gui = gui
         self._legend_window_shown = False
         self._legend_window = None
         self.is_horizontal_scalar_bar = False
@@ -338,11 +340,6 @@ class LegendObject:
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 
-    @property
-    def settings(self):
-        """gets the gui settings"""
-        return self.gui.settings
-
     def _apply_legend(self, data):
         title = data['title']
         min_value = data['min_value']
@@ -430,7 +427,10 @@ class LegendObject:
                     is_low_to_high != is_low_to_high_old) and
                 not update_fringe)
 
-            obj.set_min_max(i, res_name, min_value, max_value)
+            try:
+                obj.set_min_max(i, res_name, min_value, max_value)
+            except TypeError:
+                self.gui.log_error(f'Error setting min/max; i={i} res_name={res_name} min_value={min_value} max_value={max_value}\nobj={str(obj)}')
             obj.set_data_format(i, res_name, data_format)
             obj.set_nlabels_labelsize_ncolors_colormap(
                 i, res_name, nlabels, labelsize, ncolors, colormap)

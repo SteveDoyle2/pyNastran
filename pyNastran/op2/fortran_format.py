@@ -3,7 +3,8 @@ Defines:
  - FortranFormat
 
 """
-from typing import Optional
+from __future__ import annotations
+from typing import Optional, TYPE_CHECKING
 from pyNastran.utils import object_attributes
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.op2.errors import FortranMarkerError, SortCodeError
@@ -20,17 +21,26 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
+from pyNastran.op2.tables.oqg_constraintForces.obc import OBC
 from pyNastran.op2.tables.oug.oug import OUG
 from pyNastran.op2.tables.oug.otemp import OTEMP
 from pyNastran.op2.tables.oug.ougpk import OUGPK
+
+from pyNastran.op2.tables.contact.oslide import OSLIDE
+from pyNastran.op2.tables.contact.obolt import OBOLT
+from pyNastran.op2.tables.contact.ofcon3d import OFCON3D
+from pyNastran.op2.tables.contact.ougstrs import OUGSTRS
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.onmd import ONMD
 from pyNastran.op2.tables.opr import OPR
 from pyNastran.op2.tables.ogpwg import OGPWG
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
-class Op2Readers:
-    def __init__(self, op2):
+
+class Op2Tables:
+    def __init__(self, op2: OP2):
         #self.op2 = op2
         self.reader_onmd = ONMD(op2)
         self.reader_ogpwg = OGPWG(op2)
@@ -48,6 +58,14 @@ class Op2Readers:
         self.reader_oug = OUG(op2)
         self.reader_otemp = OTEMP(op2)  # Siemens
         self.reader_ougpk = OUGPK(op2)  # STK
+
+        # bolt
+        self.reader_obolt = OBOLT(op2) # NX 2019.2 Bolt output
+        # contact
+        self.reader_obc = OBC(op2)
+        self.reader_oslide = OSLIDE(op2) # Incremental and total slide output for contact/glue
+        self.reader_ofcon3d = OFCON3D(op2)
+        self.reader_ougstrs = OUGSTRS(op2)
 
         #  OEF - element force, heat flux
         self.reader_oef = OEF(op2)
@@ -75,7 +93,7 @@ class FortranFormat:
         #self.op2_reader = OP2Reader()
         self.IS_TESTING = False
 
-        self._op2_readers = Op2Readers(self)
+        self._op2_readers = Op2Tables(self)
 
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""

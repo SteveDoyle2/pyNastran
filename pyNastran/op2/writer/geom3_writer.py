@@ -371,9 +371,10 @@ def _write_accel1(load_type, loads, op2_file, op2_ascii, endian):
     data = []
     for load in loads:
         nids = load.node_ids
-        fmt += b'iif%ii' % (len(nids) + 1)
-        datai = [load.sid, load.Cid(), load.scale] + nids + [-1]
-        op2_ascii.write('  LOAD data=%s\n' % str(datai))
+        assert len(nids) > 0, nids
+        fmt += b'ii 4f %ii' % (len(nids) + 1)
+        datai = [load.sid, load.Cid(), load.scale, load.N[0], load.N[1], load.N[2]] + nids + [-1]
+        op2_ascii.write('  ACCEL1 data=%s\n' % str(datai))
         data += datai
     nfields = len(data)
     nbytes = write_header_nvalues(load_type, nfields, key, op2_file, op2_ascii)
