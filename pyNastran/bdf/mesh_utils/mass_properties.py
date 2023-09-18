@@ -2817,7 +2817,7 @@ def _breakdown_chexa(xyz_cid0, nids, nelementsi, etype,
     pids = np.array(pids_dict[etype], dtype='int32')
     assert len(pids) > 0, pids
     rho = np.array(mass_per_volume_dict['PSOLID']) # rho
-    assert  len(rho) > 0., rho
+    assert  len(rho) > 0, rho
 
     inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 8)
     p1 = xyz_cid0[inids[:, 0], :]
