@@ -51,7 +51,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.bdf.cards.coordinate_systems import transform_coords_vectorized
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import read_h5_geometry
-#from .bdf.cards.elements.bar import BAROR
+from .cards.elements.bar import BAROR
 from .cards.elements.beam import BEAMOR
 
 #from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
@@ -2739,7 +2739,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CONV' : self._prepare_conv,
             # GRDSET-will be last card to update from _card_parser_prepare
             'GRDSET' : self._prepare_grdset,
-            #'BAROR' : self._prepare_baror,
+            'BAROR' : self._prepare_baror,
             'BEAMOR' : self._prepare_beamor,
             #'BDYOR': self._prepare_bdyor,
 

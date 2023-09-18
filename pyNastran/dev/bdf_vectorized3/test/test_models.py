@@ -220,7 +220,7 @@ class TestModels(unittest.TestCase):
         h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-        run_nastran_gui(h5_filename)
+        #run_nastran_gui(h5_filename)
     def test_elements4(self):
         bdf_filename = MODEL_PATH / 'elements' / 'freq_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'

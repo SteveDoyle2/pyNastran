@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import zip_longest
-from typing import Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 #from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
@@ -11,7 +11,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, searchsorted_filter, get_print_card_8_16
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str # , array_default_int
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg, cast_int_array
@@ -127,7 +127,14 @@ class CONROD(Element):
 
     def _save(self, element_id, material_id, nodes, A, J, c, nsm):
         if len(self.element_id) != 0:
-            raise NotImplementedError()
+            element_id = np.hstack([self.element_id, element_id])
+            material_id = np.hstack([self.material_id, material_id])
+            nodes = np.vstack([self.nodes, nodes])
+            A = np.hstack([self.A, A])
+            J = np.hstack([self.J, J])
+            c = np.hstack([self.c, c])
+            nsm = np.hstack([self.nsm, nsm])
+
         nelements = len(element_id)
         self.element_id = element_id
         self.material_id = material_id
@@ -170,6 +177,10 @@ class CONROD(Element):
     @property
     def allowed_materials(self) -> list[MAT1]:
         return [prop for prop in rod_materials(self.model) if prop.n > 0]
+
+    def get_edge_ids(self) -> np.ndarray:
+        edge_ids = _1d_edges(self.nodes)
+        return edge_ids
 
     def mass(self) -> np.ndarray:
         mass_per_length = line_mid_mass_per_length(
@@ -304,6 +315,10 @@ class CROD(Element):
         return [prop for prop in [self.model.prod]
                 if prop.n > 0]
 
+    def get_edge_ids(self) -> np.ndarray:
+        edge_ids = _1d_edges(self.nodes)
+        return edge_ids
+
     def mass(self) -> np.ndarray:
         mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)
         length = self.length()
@@ -329,6 +344,34 @@ class CROD(Element):
         length = self.length()
         volume = self.area() * length
         return volume
+
+def _1d_edges(nodes: np.ndarray) -> np.ndarray:
+    edge_ids = np.column_stack([nodes.min(axis=1), nodes.max(axis=1)])
+    assert edge_ids.shape == nodes.shape
+    return edge_ids
+
+
+def tri_edges(nodes: np.ndarray) -> np.ndarray:
+    nodes1 = nodes[:, [0, 1]]
+    nodes2 = nodes[:, [1, 2]]
+    nodes3 = nodes[:, [0, 2]]
+    edge_ids1 = np.column_stack([nodes1.min(axis=1), nodes1.max(axis=1)])
+    edge_ids2 = np.column_stack([nodes2.min(axis=1), nodes2.max(axis=1)])
+    edge_ids3 = np.column_stack([nodes3.min(axis=1), nodes3.max(axis=1)])
+    edge_ids = np.vstack([edge_ids1, edge_ids2, edge_ids3])
+    return edge_ids
+
+def quad_edges(nodes: np.ndarray) -> np.ndarray:
+    nodes1 = nodes[:, [0, 1]]
+    nodes2 = nodes[:, [1, 2]]
+    nodes3 = nodes[:, [2, 3]]
+    nodes4 = nodes[:, [0, 3]]
+    edge_ids1 = np.column_stack([nodes1.min(axis=1), nodes1.max(axis=1)])
+    edge_ids2 = np.column_stack([nodes2.min(axis=1), nodes2.max(axis=1)])
+    edge_ids3 = np.column_stack([nodes3.min(axis=1), nodes3.max(axis=1)])
+    edge_ids4 = np.column_stack([nodes4.min(axis=1), nodes4.max(axis=1)])
+    edge_ids = np.vstack([edge_ids1, edge_ids2, edge_ids3, edge_ids4])
+    return edge_ids
 
 
 class PROD(Property):
@@ -511,6 +554,7 @@ class CTUBE(Element):
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
+        elem.n = len(i)
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -583,6 +627,10 @@ class CTUBE(Element):
                       if prop.n > 0]
         assert len(properties) > 0, all_properties
         return properties
+
+    def get_edge_ids(self) -> np.ndarray:
+        edge_ids = _1d_edges(self.nodes)
+        return edge_ids
 
     def mass(self) -> np.ndarray:
         mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)
@@ -697,13 +745,13 @@ class PTUBE(Property):
         self.n += 1
         return self.n
 
-    def __apply_slice__(self, elem: PTUBE, i: np.ndarray) -> None:  # ignore[override]
-        elem.property_id = self.property_id[i]
-        elem.diameter = self.diameter[i, :]
-        elem.t = self.t[i]
-        elem.nsm = self.nsm[i]
-        elem.material_id = self.material_id[i]
-        elem.n = len(i)
+    def __apply_slice__(self, prop: PTUBE, i: np.ndarray) -> None:  # ignore[override]
+        prop.property_id = self.property_id[i]
+        prop.diameter = self.diameter[i, :]
+        prop.t = self.t[i]
+        prop.nsm = self.nsm[i]
+        prop.material_id = self.material_id[i]
+        prop.n = len(i)
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -777,18 +825,30 @@ class PTUBE(Property):
         return
 
     def area(self) -> np.ndarray:
+        t1 = self.t.copy()
+        inan_t1 = np.isnan(t1)
         if self.diameter.ndim == 1:
-            return self._areai(self.diameter)
+            t1[inan_t1] = self.diameter[inan_t1]
+            return _tube_area(t1, self.diameter[inan_t1])
 
         diameter = self.diameter.copy()
         Dout1 = diameter[:, 0]
         Dout2 = diameter[:, 1]
-        inan = np.isnan(Dout2)
-        Dout2[inan] = Dout1[inan]
+
+        # fix D2
+        inan_d2 = np.isnan(Dout2)
+        Dout2[inan_d2] = Dout1[inan_d2]
+
+        t1[inan_t1] = Dout1[inan_t1] / 2.
 
         if np.array_equal(Dout1, Dout2):
-            return self._areai(Dout1)
-        A = (self._areai(Dout1) + self._areai(Dout2)) / 2.
+            A = _tube_area(t1, Dout1)
+            return A
+
+        t2 = self.t.copy()
+        inan_t2 = np.isnan(t2)
+        t2[inan_t2] = Dout2[inan_t2] / 2.
+        A = (_tube_area(t1, Dout1) + _tube_area(t2, Dout2)) / 2.
         return A
 
     def J(self) -> np.ndarray:
@@ -812,19 +872,6 @@ class PTUBE(Property):
         J = (J1 + J2) / 2
         return J
 
-    def _areai(self, Dout: np.ndarray) -> np.ndarray:
-        """Gets the Area of Section 1/2 of the CTUBE."""
-        A = np.zeros(len(self.t), dtype='float64')
-        #Dout = self.diameter[:, 0]
-        izero = np.where(self.t == 0.)[0]
-        ipos = np.where(self.t != 0.)[0]
-        if len(izero):
-            A[izero] = np.pi / 4. * Dout[izero] **2
-        if len(ipos):
-            Din = Dout[ipos] - 2 * self.t[ipos]
-            A[ipos] = np.pi / 4. * (Dout[ipos] * Dout[ipos] - Din[ipos] * Din[ipos])
-        return A
-
     @property
     def all_materials(self):
         model = self.model
@@ -844,6 +891,20 @@ class PTUBE(Property):
     def mass_per_length(self) -> np.ndarray:
         return line_mid_mass_per_length(self.material_id, self.nsm, self.area(),
                                         self.allowed_materials)
+
+def _tube_area(t, Dout: np.ndarray) -> np.ndarray:
+    """Gets the Area of Section 1/2 of the CTUBE."""
+    A = np.zeros(len(t), dtype='float64')
+    #Dout = self.diameter[:, 0]
+    izero = np.where(t == 0.)[0]
+    ipos = np.where(t != 0.)[0]
+    if len(izero):
+        A[izero] = np.pi / 4. * Dout[izero] ** 2
+    if len(ipos):
+        Din = Dout[ipos] - 2 * t[ipos]
+        A[ipos] = np.pi / 4. * (Dout[ipos] * Dout[ipos] - Din[ipos] * Din[ipos])
+    return A
+
 
 def line_mid_mass_per_length(material_id: np.ndarray,
                              nsm: np.ndarray,
