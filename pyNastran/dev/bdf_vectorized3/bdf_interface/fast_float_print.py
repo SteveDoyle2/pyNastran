@@ -29,15 +29,18 @@ def get_float_format(value: float):
             #print('A')
             # -123_456.
             field = print_scientific_8(value)
+            assert len(field) == 8, f'{field!r}; n={len(field)}'
             return field
         elif abs_value < 5e-7:
             #print('B')
             field = print_scientific_8(value)
+            assert len(field) == 8, f'{field!r}; n={len(field)}'
             return field
         elif abs_value < 1.:
             #print('C')
             field = f'{abs_value:7.6f}'
             field2 = '-' + field[1:]
+            assert len(field) == 8, f'{field!r}; n={len(field)}'
             return field2
 
         magnitude = int(math.floor(math.log10(abs_value)))
@@ -47,10 +50,12 @@ def get_float_format(value: float):
         #if value < -99_995:
         #if value < 0.1:
             # -0.1 to -1.0
+        assert len(field) == 8, f'{field!r}; n={len(field)}'
         return field
     if value < 5e-8:
         field = print_scientific_8(value)
         #print('scientific 1;', field)
+        assert len(field) == 8, f'{field!r}; n={len(field)}'
         return field
     elif value < 0.001:
         field = print_scientific_8(value)
@@ -61,8 +66,10 @@ def get_float_format(value: float):
             return print_scientific_8(value)
         if len(field2) <= 8 and float(field1) == float(field2):
             field = field2
-            field = field.strip(' 0')
+            field = '%8s' % field.strip(' 0')
+            assert len(field) == 8, f'{field!r}; n={len(field)}'
         #print('near 0.001;', field2, field1, field, len(field))
+        assert len(field) == 8, f'{field!r}; n={len(field)}'
         return field
     elif value < 1.:
         field = "%8.7f" % value  # same as before...
@@ -78,6 +85,8 @@ def get_float_format(value: float):
         #if len(field2) <= 8 and float(field1) == float(field2):
             #field = field2
             #field = field.strip(' 0')
+        field2 = field[1:9]
+        assert len(field2) == 8, f'{field2!r}; n={len(field2)}'
         return field[1:9]
     elif value > 1000000.:
         field = "%8.1f" % value
@@ -89,6 +98,7 @@ def get_float_format(value: float):
         else:
             field = print_scientific_8(value)
             #print('scientifc;', field)
+        assert len(field) == 8, f'{field!r}; n={len(field)}'
         return field
 
     i = int(log10(value))
@@ -115,6 +125,7 @@ def get_float_format(value: float):
     fmt = plus_log_dict.get(i)
     field = fmt % value
     #print(f'log print; i={i} field={field}')
+    assert len(field) == 8, field
     return field
 
 def get_field_zach(x: float):

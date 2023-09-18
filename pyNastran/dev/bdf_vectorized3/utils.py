@@ -100,8 +100,9 @@ def print_field_8(value: Union[int, float, str, None]) -> str:
     if isinstance(value, int):
         field = '%8i' % value
     elif isinstance(value, (float, float32, float64)):
-        field_old = print_float_8(value)
+        field_old = '%8s' % print_float_8(value)
         field_new = get_float_format(value)
+        assert len(field_new) == 8, f'{field_new!r}; n={len(field_new)}'
 
         try:
             value_old = double_from_str(field_old.strip())

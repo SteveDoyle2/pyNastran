@@ -4721,9 +4721,14 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                             G56, G66, rho, A, tref, ge, comment=comment)
         return mat
 
-    def add_mat10(self, mid, bulk, rho, c, ge=0.0, gamma=None,
-                  table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
-                  comment='') -> int:
+    def add_mat10(self, mid: int, bulk: float, rho: float, c: float,
+                  ge: float=0.0,
+                  gamma: Optional[float]=None,
+                  table_bulk: Optional[int]=None,
+                  table_rho: Optional[int]=None,
+                  table_ge: Optional[int]=None,
+                  table_gamma: Optional[int]=None,
+                  comment: str='') -> int:
         """
         Creates a MAT10 card
 

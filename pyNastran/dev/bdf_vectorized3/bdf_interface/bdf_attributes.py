@@ -8,13 +8,13 @@ from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI,
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, SPOINT, GRDSET # , POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
-#from pyNastran.dev.bdf_vectorized3.cards.elements.bush import CBUSH, PBUSH, PBUSHT, CBUSH1D, PBUSH1D, CBUSH2D, PBUSH2D
+from pyNastran.dev.bdf_vectorized3.cards.elements.bush import CBUSH, PBUSH, PBUSHT, CBUSH1D, PBUSH1D, CBUSH2D, PBUSH2D
 #from pyNastran.dev.bdf_vectorized3.cards.elements.fast import CFAST, PFAST
 #from pyNastran.dev.bdf_vectorized3.cards.elements.genel import GENEL
 from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, CELAS3, CELAS4, PELAS, PELAST
-#from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
-    #CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5,
-    #PDAMP, PDAMPT, CVISC, PVISC, CGAP, PGAP)
+from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
+    CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5,
+    PDAMP, PDAMPT, CVISC, PVISC, CGAP, PGAP)
 from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM, PBEAM, PBEAML, PBCOMP # , PBMSECT
 from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
@@ -170,13 +170,13 @@ class BDFAttributes:
         self.pelast = PELAST(self)
 
         # damper
-        #self.cdamp1 = CDAMP1(self)
-        #self.cdamp2 = CDAMP2(self)
-        #self.cdamp3 = CDAMP3(self)
-        #self.cdamp4 = CDAMP4(self)
-        #self.cdamp5 = CDAMP5(self)
-        #self.pdamp = PDAMP(self)
-        #self.pdampt = PDAMPT(self)
+        self.cdamp1 = CDAMP1(self)
+        self.cdamp2 = CDAMP2(self)
+        self.cdamp3 = CDAMP3(self)
+        self.cdamp4 = CDAMP4(self)
+        self.cdamp5 = CDAMP5(self)
+        self.pdamp = PDAMP(self)
+        self.pdampt = PDAMPT(self)
 
         # sets
         #self.set1 = SET1(self)
@@ -221,12 +221,12 @@ class BDFAttributes:
 
         #-------------------------------------------------
         # visc
-        #self.cvisc = CVISC(self)
-        #self.pvisc = PVISC(self)
+        self.cvisc = CVISC(self)
+        self.pvisc = PVISC(self)
 
         # gap
-        #self.cgap = CGAP(self)
-        #self.pgap = PGAP(self)
+        self.pgap = PGAP(self)
+        self.cgap = CGAP(self)
 
         # rod
         self.crod = CROD(self)
@@ -238,12 +238,12 @@ class BDFAttributes:
         self.ptube = PTUBE(self)
 
         # bush
-        #self.cbush = CBUSH(self)
-        #self.pbush = PBUSH(self)
-        #self.pbusht = PBUSHT(self)
+        self.cbush = CBUSH(self)
+        self.pbush = PBUSH(self)
+        self.pbusht = PBUSHT(self)
 
-        #self.cbush1d = CBUSH1D(self)
-        #self.pbush1d = PBUSH1D(self)
+        self.cbush1d = CBUSH1D(self)
+        self.pbush1d = PBUSH1D(self)
         #self.cbush2d = CBUSH2D(self)
         #self.pbush2d = PBUSH2D(self)
 
@@ -578,7 +578,7 @@ class BDFAttributes:
     @property
     def damper_elements(self) -> list[Any]:
         elements = [
-            #self.cdamp1, self.cdamp2, self.cdamp3, self.cdamp4, self.cdamp5,
+            self.cdamp1, self.cdamp2, self.cdamp3, self.cdamp4, self.cdamp5,
         ]
         return elements
 
@@ -609,8 +609,8 @@ class BDFAttributes:
             #self.chacab, self.chacbr,
         ]
         elements = self.spring_elements + self.damper_elements + [
-            #self.cvisc, self.cgap,
-            #self.cbush, self.cbush1d, # self.cbush2d,
+            self.cvisc, self.cgap,
+            self.cbush, self.cbush1d, # self.cbush2d,
             #self.cfast,
             self.crod, self.conrod, self.ctube,
             self.cbar,
@@ -659,11 +659,11 @@ class BDFAttributes:
     def properties(self) -> list[Any]:
         properties = [
             self.pelas, self.pelast,
-            #self.pdamp, self.pdampt,
-            #self.pbush, self.pbusht,
-            #self.pbush1d, # self.pbush2d,
+            self.pdamp, self.pdampt,
+            self.pbush, self.pbusht,
+            self.pbush1d, # self.pbush2d,
             #self.pfast,
-            #self.pvisc, self.pgap,
+            self.pvisc, self.pgap,
             self.prod, self.ptube,
             ] + self.bar_properties + self.beam_properties + [
             self.pshear,

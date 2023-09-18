@@ -741,6 +741,7 @@ class PSOLID(Property):
         prop.stress = self.stress[i]
         prop.isop = self.isop[i]
         prop.fctn = self.fctn[i]
+        prop.n = len(i)
 
     def add(self, pid: int, mid: int, cordm: int=0,
             integ: Optional[str|int]=None,
@@ -824,7 +825,14 @@ class PSOLID(Property):
 
     def _save(self, property_id, material_id, coord_id, integ, stress, isop, fctn):
         if len(self.property_id) != 0:
-            raise NotImplementedError()
+            property_id = np.hstack([self.property_id, property_id])
+            material_id = np.hstack([self.material_id, material_id])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            integ = np.hstack([self.integ, integ])
+            stress = np.hstack([self.stress, stress])
+            isop = np.hstack([self.isop, isop])
+            fctn = np.hstack([self.fctn, fctn])
+
         nproperties = len(property_id)
         self.property_id = property_id
         self.material_id = material_id

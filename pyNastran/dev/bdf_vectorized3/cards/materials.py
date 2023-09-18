@@ -1178,6 +1178,54 @@ class MAT10(Material):
         super().__init__(model)
         self.is_alpha = True
 
+    def add(self, mid: int, bulk: float, rho: float, c: float,
+            ge: float=0.0,
+            gamma: Optional[float]=None,
+            table_bulk: Optional[int]=None,
+            table_rho: Optional[int]=None,
+            table_ge: Optional[int]=None,
+            table_gamma: Optional[int]=None,
+            comment: str='') -> int:
+        """
+        Creates a MAT10 card
+
+        Parameters
+        ----------
+        mid : int
+            material id
+        bulk : float; default=None
+            Bulk modulus
+        rho : float; default=None
+            Density
+        c : float; default=None
+            Speed of sound
+        ge : float; default=0.
+            Damping
+        gamma : float; default=None
+            NX : ratio of imaginary bulk modulus to real bulk modulus; default=0.0
+            MSC : normalized admittance coefficient for porous material
+        table_bulk : int; default=None
+            TABLEDx entry defining bulk modulus vs. frequency
+            None for MSC Nastran
+        table_rho : int; default=None
+            TABLEDx entry defining rho vs. frequency
+            None for MSC Nastran
+        table_ge : int; default=None
+            TABLEDx entry defining ge vs. frequency
+            None for MSC Nastran
+        table_gamma : int; default=None
+            TABLEDx entry defining gamma vs. frequency
+            None for MSC Nastran
+        comment : str; default=''
+            a comment for the card
+
+        """
+        alpha_gamma = gamma
+        self.cards.append((mid, bulk, rho, c, ge, alpha_gamma,
+                           table_bulk, table_rho, table_ge, table_gamma, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str=''):
         mid = integer(card, 1, 'mid')
         bulk = double_or_blank(card, 2, 'bulk')
@@ -1194,6 +1242,7 @@ class MAT10(Material):
         self.cards.append((mid, bulk, rho, c, ge, alpha_gamma,
                            tid_bulk, tid_rho, tid_ge, tid_gamma, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -1215,6 +1264,16 @@ class MAT10(Material):
         for icard, card in enumerate(self.cards):
             (mid, bulki, rhoi, ci, gei, alpha_gammai,
              tid_bulk, tid_rho, tid_ge, tid_gamma, comment) = card
+            if rhoi is None:
+                rhoi = 0.0
+            if tid_bulk is None:
+                tid_bulk = 0
+            if tid_rho is None:
+                tid_rho = 0
+            if tid_ge is None:
+                tid_ge = 0
+            if tid_gamma is None:
+                tid_gamma = 0
             material_id[icard] = mid
             bulk[icard] = bulki
             c[icard] = ci

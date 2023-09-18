@@ -627,7 +627,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
             'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
-            #'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
+            'CSHEAR', # 'CVISC', 'CRAC2D', 'CRAC3D',
             #'CGAP',
             #'GENEL',
 
@@ -2399,32 +2399,32 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PELAST' : partial(self._prepare_card, self.pelast),
 
             # spring
-            #'CDAMP1' : partial(self._prepare_card, self.cdamp1),
-            #'CDAMP2' : partial(self._prepare_card, self.cdamp2),
-            #'CDAMP3' : partial(self._prepare_card, self.cdamp3),
-            #'CDAMP4' : partial(self._prepare_card, self.cdamp4),
-            #'CDAMP5' : partial(self._prepare_card, self.cdamp5),
-            #'PDAMP' : partial(self._prepare_card, self.pdamp),
-            #'PDAMPT': partial(self._prepare_card, self.pdampt),
+            'CDAMP1' : partial(self._prepare_card, self.cdamp1),
+            'CDAMP2' : partial(self._prepare_card, self.cdamp2),
+            'CDAMP3' : partial(self._prepare_card, self.cdamp3),
+            'CDAMP4' : partial(self._prepare_card, self.cdamp4),
+            'CDAMP5' : partial(self._prepare_card, self.cdamp5),
+            'PDAMP' : partial(self._prepare_card, self.pdamp),
+            'PDAMPT': partial(self._prepare_card, self.pdampt),
             #'PDAMP5' : (PDAMP5, add_methods._add_property_object),
 
             # visc
-            #'CVISC' : partial(self._prepare_card, self.cvisc),
-            #'PVISC' : partial(self._prepare_card, self.pvisc),
+            'CVISC' : partial(self._prepare_card, self.cvisc),
+            'PVISC' : partial(self._prepare_card, self.pvisc),
 
             # bush
-            #'CBUSH' : partial(self._prepare_card, self.cbush),
-            #'PBUSH' : partial(self._prepare_card, self.pbush),
-            #'PBUSHT' : partial(self._prepare_card, self.pbusht),
+            'CBUSH' : partial(self._prepare_card, self.cbush),
+            'PBUSH' : partial(self._prepare_card, self.pbush),
+            'PBUSHT' : partial(self._prepare_card, self.pbusht),
 
-            #'CBUSH1D' : partial(self._prepare_card, self.cbush1d),
-            #'PBUSH1D' : partial(self._prepare_card, self.pbush1d),
+            'CBUSH1D' : partial(self._prepare_card, self.cbush1d),
+            'PBUSH1D' : partial(self._prepare_card, self.pbush1d),
             #'CBUSH2D' : partial(self._prepare_card, self.cbush2d),
             #'PBUSH2D' : partial(self._prepare_card, self.pbush2d),
 
             # gap
-            #'CGAP' : partial(self._prepare_card, self.cgap),
-            #'PGAP' : partial(self._prepare_card, self.pgap),
+            'CGAP' : partial(self._prepare_card, self.cgap),
+            'PGAP' : partial(self._prepare_card, self.pgap),
 
             # fast
             #'CFAST' : partial(self._prepare_card, self.cfast),

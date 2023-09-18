@@ -386,18 +386,18 @@ class Writer():
         model.celas4.write_file(bdf_file, size=size, is_double=is_double)
 
         # cdamp
-        #bdf_file.write(model.cdamp1.write(size=size))
-        #bdf_file.write(model.cdamp2.write(size=size))
-        #bdf_file.write(model.cdamp3.write(size=size))
-        #bdf_file.write(model.cdamp4.write(size=size))
-        #bdf_file.write(model.cdamp5.write(size=size))
+        bdf_file.write(model.cdamp1.write(size=size))
+        bdf_file.write(model.cdamp2.write(size=size))
+        bdf_file.write(model.cdamp3.write(size=size))
+        bdf_file.write(model.cdamp4.write(size=size))
+        bdf_file.write(model.cdamp5.write(size=size))
 
-        #bdf_file.write(model.cvisc.write(size=size))
-        #bdf_file.write(model.cgap.write(size=size))
+        bdf_file.write(model.cvisc.write(size=size))
+        bdf_file.write(model.cgap.write(size=size))
 
         # bush
-        #bdf_file.write(model.cbush.write(size=size))
-        #bdf_file.write(model.cbush1d.write(size=size))
+        bdf_file.write(model.cbush.write(size=size))
+        bdf_file.write(model.cbush1d.write(size=size))
         #bdf_file.write(model.cbush2d.write(size=size))
 
         # fast
@@ -570,15 +570,15 @@ class Writer():
         # spring/damp
         model.pelas.write_file(bdf_file, size=size)
         model.pelast.write_file(bdf_file, size=size)
-        #bdf_file.write(model.pdamp.write(size=size))
-        #bdf_file.write(model.pdampt.write(size=size))
-        #bdf_file.write(model.pvisc.write(size=size))
-        #bdf_file.write(model.pgap.write(size=size))
+        bdf_file.write(model.pdamp.write(size=size))
+        bdf_file.write(model.pdampt.write(size=size))
+        bdf_file.write(model.pvisc.write(size=size))
+        bdf_file.write(model.pgap.write(size=size))
 
         # bush
-        #bdf_file.write(model.pbush.write(size=size))
-        #bdf_file.write(model.pbusht.write(size=size))
-        #bdf_file.write(model.pbush1d.write(size=size))
+        bdf_file.write(model.pbush.write(size=size))
+        bdf_file.write(model.pbusht.write(size=size))
+        bdf_file.write(model.pbush1d.write(size=size))
         #bdf_file.write(model.pbush2d.write(size=size))
 
         # fast

@@ -604,6 +604,28 @@ class TestSolids(unittest.TestCase):
         #elem2.write_card(size=16)
         #elem2.write_card_16(is_double=False)
 
+        eid10 = 1
+        pid10 = 10
+        mid10 = 10
+        bulk = 1.
+        c = 1.
+        rho = None
+        model.add_mat10(mid10, bulk, rho, c, ge=0.0, gamma=None,
+                        table_bulk=None, table_rho=None, table_ge=None, table_gamma=None,
+                        comment='')
+        model.add_psolid(pid10, mid10, fctn='FLUID')
+        #model.add_plsolid(pid10, mid10, stress_strain='GRID', ge=0., comment='')
+        elem3 = model.add_chexa(eid10, pid10, nids, comment='chexa')
+        model.cross_reference()
+
+        chexa = model.chexa
+        chexa.write(size=8)
+        chexa.write(size=16)
+        chexa.write_16(is_double=False)
+        chexa.mass()
+
+
+
         end_checks(model)
         elem = model.Element(eid)[0]
         assert elem.mass() > 0, elem.mass()
