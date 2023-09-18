@@ -550,6 +550,29 @@ class PELAST(Property):
     Specifies the stiffness, damping coefficient, and stress coefficient of a
     scalar elastic (spring) element (CELAS1 or CELAS3 entry).
     """
+    def add(self, pid: int, tkid: int=0, tgeid: int=0, tknid: int=0,
+            comment: str='') -> int:
+        """
+        Creates a PELAST card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        tkid : float
+            TABLEDx that defines k vs. frequency
+        tgeid : int; default=0
+            TABLEDx that defines ge vs. frequency
+        s : float; default=0.
+            TABLEDx that defines force vs. displacement
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((pid, tkid, tgeid, tknid, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         tkid = integer_or_blank(card, 2, 'tkid', default=0)

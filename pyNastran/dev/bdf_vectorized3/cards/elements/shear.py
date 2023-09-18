@@ -247,7 +247,7 @@ class PSHEAR(Property):
         self.cards = []
 
     def _save(self, property_id, material_id, t, nsm, f1, f2):
-        if len(self.element_id):
+        if len(self.property_id):
             raise NotImplementedError()
         self.property_id = property_id
         self.material_id = material_id

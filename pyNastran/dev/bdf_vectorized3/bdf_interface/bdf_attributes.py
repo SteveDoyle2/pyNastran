@@ -89,10 +89,12 @@ from pyNastran.dev.bdf_vectorized3.cards.constraints import SPC, SPC1, SPCADD # 
     #AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, AEPARM, AELINK, AESTAT,
     #MONPNT1, MONPNT2, MONPNT3,
     #GUST, AESURF, AESURFS, CSSCHD, TRIM, SUPORT)
-#from pyNastran.dev.bdf_vectorized3.cards.optimization import (
-    #DESVAR, DLINK, DVGRID,
-    #DRESP1, DRESP2, DCONSTR, DVPREL1,
-    #DVPREL2, DVMREL1, DVMREL2, DVCREL1, DVCREL2)
+from pyNastran.dev.bdf_vectorized3.cards.optimization import (
+    DESVAR, DLINK, DVGRID,
+    DRESP1, DRESP2, DCONSTR,
+    DVPREL1, DVPREL2,
+    #DVMREL1, DVMREL2, DVCREL1, DVCREL2,
+)
 from .loads_summation import (
     get_static_loads_by_subcase_id,
     get_reduced_static_load,
@@ -471,15 +473,15 @@ class BDFAttributes:
 
         # optimization
         #self.dresps = {}
-        #self.desvar = DESVAR(self)
-        #self.dlink = DLINK(self)
-        #self.dvgrid = DVGRID(self)
-        #self.dresp1 = DRESP1(self)
-        #self.dresp2 = DRESP2(self)
-        #self.dconstr = DCONSTR(self)
+        self.desvar = DESVAR(self)
+        self.dlink = DLINK(self)
+        self.dvgrid = DVGRID(self)
+        self.dresp1 = DRESP1(self)
+        self.dresp2 = DRESP2(self)
+        self.dconstr = DCONSTR(self)
 
-        #self.dvprel1 = DVPREL1(self)
-        #self.dvprel2 = DVPREL2(self)
+        self.dvprel1 = DVPREL1(self)
+        self.dvprel2 = DVPREL2(self)
         #self.dvmrel1 = DVMREL1(self)  # not supported
         #self.dvmrel2 = DVMREL2(self)  # not supported
         #self.dvcrel1 = DVCREL1(self)  # not supported
@@ -704,9 +706,9 @@ class BDFAttributes:
     @property
     def optimization(self) -> list[Any]:
         optimization = [
-            #self.desvar, self.dlink, self.dvgrid,
-            #self.dresp1, self.dresp2, self.dconstr,
-            #self.dvprel1, self.dvprel2,
+            self.desvar, self.dlink, self.dvgrid,
+            self.dresp1, self.dresp2, self.dconstr,
+            self.dvprel1, self.dvprel2,
             #self.dvmrel1, self.dvmrel2,
             #self.dvcrel1, self.dvcrel2,
         ]

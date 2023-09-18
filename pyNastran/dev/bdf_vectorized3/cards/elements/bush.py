@@ -45,6 +45,51 @@ class CBUSH(Element):
         super().__init__(model)
         self.property_id = np.array([], dtype='int32')
 
+    def add(self, eid: int, pid: int, nids: list[int],
+            x: Optional[list[float]], g0: Optional[int], cid=None,
+            s: float=0.5, ocid: int=-1, si: Optional[list[float]]=None, comment='') -> int:
+        """
+        Creates a CBUSH card
+
+        Parameters
+        ----------
+        eid : int
+            Element id
+        pid : int
+            Property id (PBUSH)
+        nids : list[int, int]
+            node ids; connected grid points at ends A and B
+            The nodes may be coincident, but then cid is required.
+        x : list[float, float, float]; None
+            list : the directional vector used to define the stiffnesses
+                   or damping from the PBUSH card
+            None : use g0
+        g0 : int/None
+            int : the directional vector used to define the stiffnesses
+                  or damping from the PBUSH card
+            None : use x
+        cid : int; default=None
+            Element coordinate system identification. A 0 means the basic
+            coordinate system. If CID is blank, then the element coordinate
+            system is determined from GO or Xi.
+        s: float; default=0.5
+            Location of spring damper (0 <= s <= 1.0)
+        ocid : int; default=-1
+            Coordinate system identification of spring-damper offset.
+            (Integer > -1; Default = -1, which means the offset
+            point lies on the line between GA and GB)
+        si : list[float, float, float]; default=None
+            Components of spring-damper offset in the OCID coordinate system
+            if OCID > 0.
+            None : [None, None, None]
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, pid, nids, cid, g0, x, s, ocid, si, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', default=eid)
@@ -109,6 +154,9 @@ class CBUSH(Element):
         ocid_offset = np.zeros((ncards, 3), dtype='float64')
         for icard, card in enumerate(self.cards):
             (eid, pid, nodesi, cidi, g0i, xi, si, ocidi, ocid_offseti, comment) = card
+            if cidi is None:
+                cidi = -1
+
             s[icard] = si
             cid[icard] = cidi
             ocid[icard] = ocidi
@@ -506,6 +554,12 @@ class PBUSHT(Property):
         #self.ge_tables = ge_tables
         #self.kn_tables = kn_tables
 
+    def add(self, pid: int, k_tables: list[int], b_tables: list[int],
+            ge_tables: list[int], kn_tables: list[int], comment: str='') -> int:
+        self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment=''):
         """
         Adds a PBUSHT card from ``BDF.add_card(...)``
@@ -549,6 +603,7 @@ class PBUSHT(Property):
                 raise ValueError(param)
         self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, comment))
         self.n += 1
+        return self.n
         #return PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
                       #comment=comment)
 
@@ -743,6 +798,9 @@ class PBUSH1D(Property):
             sa: float=0., se: float=0., optional_vars=None,
             comment: str='') -> int:
         """Creates a PBUSH1D card"""
+
+        if optional_vars is None:
+            optional_vars = {}
         self.cards.append((pid, k, c, m, sa, se, optional_vars, comment))
         self.n += 1
         return self.n
@@ -820,6 +878,7 @@ class PBUSH1D(Property):
             mass[icard] = massi
             sa[icard] = sai
             se[icard] = sei
+
             for key, values in optional_vars.items():
                 self.model.log.info(f'PBUSH1D {key} values ={values}')
                 if key == 'SPRING':

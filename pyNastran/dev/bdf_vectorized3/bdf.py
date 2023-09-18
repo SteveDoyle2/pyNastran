@@ -649,7 +649,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PBEAM3',  # v1.3
 
             'PSHELL', 'PCOMP', 'PCOMPG',
-            #'PSHEAR', 'PSHLN1', 'PSHLN2',
+            'PSHEAR', # 'PSHLN1', 'PSHLN2',
             #'PTRSHL', 'PQUAD1',
             'PSOLID', 'PLSOLID', # 'PVISC', 'PRAC2D', 'PRAC3D',
             #'PIHEX', 'PCOMPS', 'PCOMPLS',
@@ -790,9 +790,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # optimization cards
             #'DEQATN', 'DTABLE',
-            #'DCONSTR', 'DESVAR', 'TOPVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DRESP3',
+            'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', # 'DRESP3', 'TOPVAR',
             #'DVCREL1', 'DVCREL2',
-            #'DVPREL1', 'DVPREL2',
+            'DVPREL1', 'DVPREL2',
             #'DVMREL1', 'DVMREL2',
             #'DOPTPRM', 'DLINK', 'DCONADD', 'DVGRID',
             #'DSCREEN',
@@ -2698,14 +2698,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'MONDSP1' : (MONDSP1, add_methods._add_monpnt_object),
 
             # optimization
-            #'DESVAR': partial(self._prepare_card, self.desvar),
-            #'DLINK': partial(self._prepare_card, self.dlink),
-            #'DVGRID': partial(self._prepare_card, self.dvgrid),
-            #'DRESP1': partial(self._prepare_card, self.dresp1),
-            #'DRESP2': partial(self._prepare_card, self.dresp2),
-            #'DCONSTR': partial(self._prepare_card, self.dconstr),
-            #'DVPREL1': partial(self._prepare_card, self.dvprel1),
-            #'DVPREL2': partial(self._prepare_card, self.dvprel2),
+            'DESVAR': partial(self._prepare_card, self.desvar),
+            'DLINK': partial(self._prepare_card, self.dlink),
+            'DVGRID': partial(self._prepare_card, self.dvgrid),
+            'DRESP1': partial(self._prepare_card, self.dresp1),
+            'DRESP2': partial(self._prepare_card, self.dresp2),
+            'DCONSTR': partial(self._prepare_card, self.dconstr),
+            'DVPREL1': partial(self._prepare_card, self.dvprel1),
+            'DVPREL2': partial(self._prepare_card, self.dvprel2),
             #'DVCREL1': partial(self._prepare_card, self.dvcrel1),
             #'DVCREL2': partial(self._prepare_card, self.dvcrel2),
             #'DVMREL1': partial(self._prepare_card, self.dvmrel1),

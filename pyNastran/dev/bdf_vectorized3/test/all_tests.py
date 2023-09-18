@@ -8,6 +8,8 @@ from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_beams import *
 #from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_loads import *
 
 # good
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_springs import *
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_dampers import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_dmig import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_beams import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_bars import *

@@ -409,7 +409,8 @@ class Add0dElements(BDFAttributes):
         elem = self.cdamp3.add(eid, pid, nids, comment=comment)
         return elem
 
-    def add_cdamp4(self, eid: int, b: float, nids: list[int], comment: str='') -> int:
+    def add_cdamp4(self, eid: int, b: float, nids: list[int],
+                   comment: str='') -> int:
         """
         Creates a CDAMP4 card
 
@@ -449,19 +450,42 @@ class Add0dElements(BDFAttributes):
         return elem
 
     def add_pdamp(self, pid: int, b: float, comment: str='') -> int:
-        """Creates a PDAMP card"""
+        """
+        Creates a PDAMP card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        b : float
+            viscous damping
+        comment : str; default=''
+            a comment for the card
+
+        """
         prop = self.pdamp.add(pid, b, comment=comment)
         return prop
 
     def add_pdampt(self, pid: int, tbid: int, comment: str='') -> int:
-        """Creates a PDAMPT card"""
+        """
+        Creates a PDAMPT card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        tbid : int
+            TABLED1? id
+        comment : str; default=''
+            a comment for the card
+
+        """
         prop = self.pdampt.add(pid, tbid, comment=comment)
         return prop
 
     def add_pdamp5(self, pid: int, mid: int, b: float, comment: str='') -> int:
         """Creates a PDAMP5 card"""
-        prop = self.pdamp5(pid, mid, b, comment=comment)
-        self._add_methods._add_property_object(prop)
+        prop = self.pdamp5.add(pid, mid, b, comment=comment)
         return prop
 
     def add_cvisc(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
@@ -735,7 +759,8 @@ class Add0dElements(BDFAttributes):
                                comment=comment)
         return prop
 
-    def add_pelast(self, pid: int, tkid: int=0, tgeid: int=0, tknid: int=0, comment: str='') -> int:
+    def add_pelast(self, pid: int, tkid: int=0, tgeid: int=0, tknid: int=0,
+                   comment: str='') -> int:
         """
         Creates a PELAST card
 
@@ -754,7 +779,6 @@ class Add0dElements(BDFAttributes):
 
         """
         prop = self.pelast.add(pid, tkid, tgeid, tknid, comment=comment)
-        self._add_methods._add_pelast_object(prop)
         return prop
 
 

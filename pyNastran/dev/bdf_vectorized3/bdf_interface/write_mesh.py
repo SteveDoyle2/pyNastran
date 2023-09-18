@@ -233,7 +233,7 @@ class Writer():
         #self._write_thermal(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_thermal_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_constraints(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_optimization(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_optimization(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_tables(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_sets(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_superelements(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -1154,13 +1154,13 @@ class Writer():
         bdf_file.write(model.dconstr.write(size=size))
         #bdf_file.write(model.dconadd.write(size=size))
 
-        bdf_file.write(model.dvcrel1.write(size=size))  # not supported
-        bdf_file.write(model.dvcrel2.write(size=size))  # not supported
+        #bdf_file.write(model.dvcrel1.write(size=size))  # not supported
+        #bdf_file.write(model.dvcrel2.write(size=size))  # not supported
 
         bdf_file.write(model.dvprel1.write(size=size))
         bdf_file.write(model.dvprel2.write(size=size))
 
-        bdf_file.write(model.dvmrel1.write(size=size))  # not supported
-        bdf_file.write(model.dvmrel2.write(size=size))  # not supported
+        #bdf_file.write(model.dvmrel1.write(size=size))  # not supported
+        #bdf_file.write(model.dvmrel2.write(size=size))  # not supported
         if model.doptprm is not None:
             bdf_file.write(model.doptprm.write_card(size, is_double))
