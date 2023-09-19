@@ -113,6 +113,8 @@ class DESVAR(VectorizedBaseCard):
             xlb[icard] = xlbi
             xub[icard] = xubi
             delx[icard] = delxi
+            if ddvali is None:
+                ddvali = 0
             assert isinstance(ddvali, int), ddvali
             ddval[icard] = ddvali
 

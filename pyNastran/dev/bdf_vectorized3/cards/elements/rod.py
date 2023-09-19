@@ -10,7 +10,10 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, searchsorted_filter, get_print_card_8_16
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, Property,
+    parse_element_check, parse_property_check,
+    searchsorted_filter, get_print_card_8_16)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str # , array_default_int
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -157,11 +160,10 @@ class CONROD(Element):
                    node=(nid, self.nodes),
                    material_id=(mids, self.material_id))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         for eid, mid, nodes, A, j, c, nsm in zip_longest(self.element_id, self.material_id, self.nodes,
@@ -306,11 +308,10 @@ class CROD(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         for eid, pid, nodes in zip_longest(self.element_id, self.property_id, self.nodes):
@@ -361,6 +362,7 @@ class CROD(Element):
         length = self.length()
         volume = self.area() * length
         return volume
+
 
 def _1d_edges(nodes: np.ndarray) -> np.ndarray:
     edge_ids = np.column_stack([nodes.min(axis=1), nodes.max(axis=1)])
@@ -501,6 +503,7 @@ class PROD(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -620,11 +623,10 @@ class CTUBE(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         for eid, pid, nodes in zip_longest(self.element_id, self.property_id, self.nodes):
@@ -830,6 +832,7 @@ class PTUBE(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:

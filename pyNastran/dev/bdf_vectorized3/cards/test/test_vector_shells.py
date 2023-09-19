@@ -603,7 +603,7 @@ class TestShells(unittest.TestCase):
         #with self.assertRaises(IndexError):
             #p.MassPerArea(6)
 
-    def _test_cshear(self):
+    def test_cshear(self):
         """tests a PSHEAR/CSHEAR"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -618,8 +618,10 @@ class TestShells(unittest.TestCase):
         t = 0.1
         nids = [1, 2, 3, 4]
 
-        cshear = model.add_cshear(eid, pid, nids, comment='cshear')
-        pshear = model.add_pshear(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
+        cshear_id = model.add_cshear(eid, pid, nids, comment='cshear')
+        pshear_id = model.add_pshear(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
+        cshear = model.cshear
+        pshear = model.pshear
 
         dvids = [1]
         coeffs = 1.0

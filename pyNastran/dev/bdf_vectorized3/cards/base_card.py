@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import abstractmethod
+from functools import wraps
 from io import StringIO
 from typing import Callable, Optional, Any, TYPE_CHECKING
 import numpy as np
@@ -451,6 +452,36 @@ class Material(VectorizedBaseCard):
         #...
         raise NotImplementedError(f'{self.type}: add __apply_slice__')
 
+
+def parse_element_check(func):
+    @wraps(func)
+    def wrapper(self, args, **kwargs):
+        if len(self.element_id) == 0:
+            if self.n == 0:
+                return
+            self.parse_cards(*args, **kwargs)
+        return func()
+    return wrapper
+
+def parse_property_check(func):
+    @wraps(func)
+    def wrapper(self, args, **kwargs):
+        if len(self.property_id) == 0:
+            if self.n == 0:
+                return
+            self.parse_cards(*args, **kwargs)
+        return func()
+    return wrapper
+
+def parse_material_check(func):
+    @wraps(func)
+    def wrapper(self, args, **kwargs):
+        if len(self.material_id) == 0:
+            if self.n == 0:
+                return
+            self.parse_cards(*args, **kwargs)
+        return func()
+    return wrapper
 
 def get_print_card_8_16(size: int) -> Callable[list]:
     if size == 8:
