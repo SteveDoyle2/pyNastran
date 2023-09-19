@@ -182,6 +182,15 @@ class CONROD(Element):
         edge_ids = _1d_edges(self.nodes)
         return edge_ids
 
+    def mass_per_length(self) -> np.ndarray:
+        mass_per_length = line_mid_mass_per_length(
+            self.material_id, self.nsm, self.A,
+            self.allowed_materials)
+        return mass_per_length
+
+    def nonstructural_mass(self) -> np.ndarray:
+        return self.nsm
+
     def mass(self) -> np.ndarray:
         mass_per_length = line_mid_mass_per_length(
             self.material_id, self.nsm, self.A,
@@ -318,6 +327,14 @@ class CROD(Element):
     def get_edge_ids(self) -> np.ndarray:
         edge_ids = _1d_edges(self.nodes)
         return edge_ids
+
+    def mass_per_length(self) -> np.ndarray:
+        mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)
+        return mass_per_length
+
+    def nonstructural_mass(self) -> np.ndarray:
+        nsm = line_pid_nsm_per_length(self.property_id, self.allowed_properties)
+        return nsm
 
     def mass(self) -> np.ndarray:
         mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)
@@ -632,6 +649,14 @@ class CTUBE(Element):
         edge_ids = _1d_edges(self.nodes)
         return edge_ids
 
+    def mass_per_length(self) -> np.ndarray:
+        mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)
+        return mass_per_length
+
+    def nonstructural_mass(self) -> np.ndarray:
+        nsm_per_length = line_pid_nsm_per_length(self.property_id, self.allowed_properties)
+        return nsm_per_length
+
     def mass(self) -> np.ndarray:
         mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)
         length = self.length()
@@ -666,6 +691,18 @@ class CTUBE(Element):
         volume = self.area() * length
         return volume
 
+
+def line_pid_nsm_per_length(property_id: np.ndarray, allowed_properties: list[Any]):
+    nsm_per_length = np.zeros(len(property_id), dtype='float64')
+    for prop in allowed_properties:
+        i_lookup, i_all = searchsorted_filter(prop.property_id, property_id, msg='')
+        if len(i_lookup) == 0:
+            continue
+
+        # we're at least using some properties
+        nsm_per_lengthi = prop.nsm # nonstructural_mass()
+        nsm_per_length[i_lookup] = nsm_per_lengthi[i_all]
+    return nsm_per_length
 
 def line_pid_mass_per_length(property_id: np.ndarray, allowed_properties: list[Any]):
     mass_per_length = np.zeros(len(property_id), dtype='float64')
