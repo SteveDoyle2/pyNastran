@@ -455,32 +455,32 @@ class Material(VectorizedBaseCard):
 
 def parse_element_check(func):
     @wraps(func)
-    def wrapper(self, args, **kwargs):
+    def wrapper(self, *args, **kwargs):
         if len(self.element_id) == 0:
             if self.n == 0:
                 return
-            self.parse_cards(*args, **kwargs)
-        return func()
+            self.parse_cards()
+        return func(self, *args, **kwargs)
     return wrapper
 
 def parse_property_check(func):
     @wraps(func)
-    def wrapper(self, args, **kwargs):
+    def wrapper(self, *args, **kwargs):
         if len(self.property_id) == 0:
             if self.n == 0:
                 return
-            self.parse_cards(*args, **kwargs)
-        return func()
+            self.parse_cards()
+        return func(self, *args, **kwargs)
     return wrapper
 
 def parse_material_check(func):
     @wraps(func)
-    def wrapper(self, args, **kwargs):
+    def wrapper(self, *args, **kwargs):
         if len(self.material_id) == 0:
             if self.n == 0:
                 return
-            self.parse_cards(*args, **kwargs)
-        return func()
+            self.parse_cards()
+        return func(self, *args, **kwargs)
     return wrapper
 
 def get_print_card_8_16(size: int) -> Callable[list]:
