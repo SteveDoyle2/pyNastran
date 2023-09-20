@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 #from .utils import get_group_name
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from tables import Group
 

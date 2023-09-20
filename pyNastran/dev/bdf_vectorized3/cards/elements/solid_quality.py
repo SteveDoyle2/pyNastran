@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from .shell_quality import tri_quality_xyz, quad_quality_xyz, Quality # tri_quality_xyz0,
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from .solid import CTETRA, CHEXA, CPENTA, CPYRAM
 
 

@@ -6,7 +6,7 @@ from .solid_volume import volume_chexa, volume_cpenta
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     searchsorted_filter)
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     #from pyNastran.bdf.cards.materials import MAT1, MAT8
     from pyNastran.dev.bdf_vectorized3.cards.grid import GRID

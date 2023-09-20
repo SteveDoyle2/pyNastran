@@ -32,7 +32,7 @@ from .alt_actor_builder import (
     create_alt_conm2_grids, create_alt_rbe2_grids, create_alt_rbe3_grids, create_monpnt)
 #from pyNastran.dev.op2_vectorized3.op2_geom import OP2, OP2Geom
 from pyNastran.utils import PathLike
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
         CTETRA, CPENTA, CHEXA, CPYRAM,

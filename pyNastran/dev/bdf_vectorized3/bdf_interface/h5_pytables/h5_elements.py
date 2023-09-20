@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from .utils import get_group_name, get_attributes
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.bdf_vectorized3.cards.aero.aero import CAERO1
     from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM2
     #from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CONROD

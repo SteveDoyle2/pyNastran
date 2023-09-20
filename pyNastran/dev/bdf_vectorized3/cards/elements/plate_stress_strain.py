@@ -29,7 +29,7 @@ from .shell_properties import nonlinear_thickness
 
 #from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard

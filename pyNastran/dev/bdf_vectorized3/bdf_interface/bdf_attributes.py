@@ -106,7 +106,7 @@ from .breakdowns import (
 )
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.bdf_vectorized3.bdf import PARAM, MDLPRM, FLUTTER
     from pyNastran.bdf.case_control_deck import CaseControlDeck
 

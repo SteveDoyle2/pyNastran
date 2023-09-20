@@ -25,7 +25,7 @@ from pyNastran.femutils.utils import hstack0
 
 #from pyNastran.gui.gui_objects.gui_result import GuiResult# , NormalResult
 #from pyNastran.gui.gui_objects.displacements import ForceTableResults, ElementalTableResults
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.op2_vectorized3.bdf import BDF
     from pyNastran.dev.op2_vectorized3.bdf_interface.bdf_attributes import AECOMP, AECOMPL, SET1
     #from pyNastran.dev.op2_vectorized3.op2_geom import OP2Geom

@@ -22,7 +22,7 @@ from pyNastran.dev.bdf_vectorized3.cards.coord import transform_spherical_to_rec
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim, get_print_card_8_16 # , searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard

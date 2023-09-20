@@ -3,7 +3,7 @@ from typing import Union, TYPE_CHECKING
 
 #import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttributes
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF, PARAM
     from pyNastran.bdf.bdf import (
         MDLPRM,

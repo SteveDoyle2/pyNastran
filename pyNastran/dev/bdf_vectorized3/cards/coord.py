@@ -21,7 +21,7 @@ from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.coordinate_systems import _fix_xyz_shape
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_int
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from .grid import GRID
 

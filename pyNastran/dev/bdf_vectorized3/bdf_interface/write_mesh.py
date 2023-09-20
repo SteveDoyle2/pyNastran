@@ -5,7 +5,7 @@ from io import StringIO
 from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttributes
 from pyNastran.bdf.bdf_interface.write_mesh import _output_helper, _fix_sizes
 from pyNastran.dev.bdf_vectorized3.types import TextIOLike
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 

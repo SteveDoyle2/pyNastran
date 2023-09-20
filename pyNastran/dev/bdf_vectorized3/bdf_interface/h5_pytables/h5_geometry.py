@@ -18,7 +18,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_materials import
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_elements import load_h5_element
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_dynamic import load_h5_dynamic
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.utils import get_group_name
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 

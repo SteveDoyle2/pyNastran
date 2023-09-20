@@ -14,7 +14,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import Element
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 

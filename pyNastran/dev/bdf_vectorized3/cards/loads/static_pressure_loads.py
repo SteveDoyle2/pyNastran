@@ -27,7 +27,7 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_def
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from .static_loads import Load
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf.types import TextIOLike
     #from pyNastran.dev.bdf_vectorized3.bdf import BDF

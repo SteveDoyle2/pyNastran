@@ -14,7 +14,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16,
 #from pyNastran.dev.bdf_vectorized3.cards.solid_elements import CTETRA, CHEXA, CPENTA, CPYRAM
 #from pyNastran.dev.bdf_vectorized3.cards.static_loads import PLOAD4, FORCE
 from pyNastran.utils import object_stats # object_attributes, object_methods,
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard

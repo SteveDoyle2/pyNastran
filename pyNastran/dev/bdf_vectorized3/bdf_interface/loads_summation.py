@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Any, TYPE_CHECKING
 import numpy as np
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
         #LOAD, GRAV,

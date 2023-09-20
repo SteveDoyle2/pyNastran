@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import count, zip_longest
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import zip_strict, integer_types, float_types
@@ -18,6 +18,7 @@ from pyNastran.utils.mathematics import integrate_positive_unit_line # integrate
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, make_idim, hslice_by_idim, searchsorted_filter, # vslice_by_idim,
+    parse_element_check, parse_property_check,
     get_print_card_8_16
 )
 from .rod import line_pid_mass_per_length, line_length, line_vector_length, line_centroid
@@ -27,7 +28,7 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_def
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -244,11 +245,10 @@ class CBEAM(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_ids = array_str(self.element_id, size=size)
@@ -285,7 +285,7 @@ class CBEAM(Element):
 
     @property
     def is_x(self) -> np.ndarray:
-        return self.g0 == -1
+        return (self.g0 == -1)
 
     @property
     def is_g0(self) -> np.ndarray:
@@ -1391,11 +1391,10 @@ class PBEAM(Property):
                    self.material_id.max(),
                    self.s1.max(), self.s2.max()) < 99_999_999
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
 
         if size == 8 and self.is_small_field:
             print_card = print_card_8
@@ -1843,7 +1842,7 @@ class PBEAML(Property):
         self.property_id = property_id
         self.material_id = material_id
 
-        assert ndim.min() >= 1, idim
+        assert ndim.min() >= 1, ndim
         self.ndim = ndim
 
         #assert istation.ndim == 2, istation.shape
@@ -1903,11 +1902,10 @@ class PBEAML(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         assert len(self.property_id) == len(self.material_id)
@@ -2326,11 +2324,10 @@ class PBCOMP(Property):
         idim = make_idim(self.n, self.nstation)
         return idim
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         property_ids = array_str(self.property_id, size=size)

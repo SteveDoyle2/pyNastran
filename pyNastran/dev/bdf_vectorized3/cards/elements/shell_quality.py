@@ -3,7 +3,7 @@ import warnings
 from typing import TYPE_CHECKING
 import numpy as np
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     #from pyNastran.bdf.cards.materials import MAT1, MAT8
     from pyNastran.dev.bdf_vectorized3.cards.grid import GRID

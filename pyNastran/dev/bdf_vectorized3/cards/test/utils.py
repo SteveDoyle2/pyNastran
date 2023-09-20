@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 #from pyNastran.dev.bdf_vectorized3.mesh_utils.convert import convert
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=True,
