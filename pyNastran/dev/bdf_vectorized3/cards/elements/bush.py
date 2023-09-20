@@ -13,14 +13,16 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     fields)
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, get_print_card_8_16
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, Property, get_print_card_8_16,
+    parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from .rod import line_length, line_centroid, line_centroid_with_spoints
 from .utils import get_mass_from_property
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg, cast_int_array
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -197,11 +199,10 @@ class CBUSH(Element):
     def si(self, ocid_offset: np.ndarray) -> None:
         self.ocid_offset = ocid_offset
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_ids = array_str(self.element_id, size=size)
@@ -464,12 +465,10 @@ class PBUSH(Property):
                    #node=(nid, self.nodes),
                    #property_id=(pids, self.property_id))
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
-
         print_card = get_print_card_8_16(size)
 
         #RCV was added <= MSC 2016
@@ -645,11 +644,10 @@ class PBUSHT(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)
@@ -740,11 +738,10 @@ class CBUSH1D(Element):
             self.cid[icard] = cid
         self.cards = []
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_ids = array_str(self.element_id, size=size)
@@ -994,7 +991,8 @@ class PBUSH1D(Property):
         return damper_type, damper_idt, damper_idc, damper_idtdv, damper_idcdv
 
     @staticmethod
-    def _read_shock(card: BDFCard, istart: int) -> tuple[str, float, float, float, float]:
+    def _read_shock(card: BDFCard, istart: int) -> tuple[int,
+                                                         tuple[str, float, float, float, float]]:
         """
         F(u, v) = Cv * S(u) * sign(v) * |v|^ev
         """
@@ -1058,7 +1056,8 @@ class PBUSH1D(Property):
         return istart, out
 
     @staticmethod
-    def _read_gener(card, istart):
+    def _read_gener(card, istart: int) -> tuple[int,
+                                                tuple[int, int, int, int, int, int]]:
         """
         F(u, v) = Ft(u, v)
         """
@@ -1090,11 +1089,10 @@ class PBUSH1D(Property):
                    #property_id=(pids, self.property_id)
         #)
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)

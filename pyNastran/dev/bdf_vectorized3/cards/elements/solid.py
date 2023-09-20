@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TextIO, Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 #from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
@@ -13,7 +13,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check, find_missing
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, make_idim, hslice_by_idim, get_print_card_8_16 # searchsorted_filter,
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, Property, make_idim, hslice_by_idim, get_print_card_8_16,
+    parse_element_check, parse_property_check, ) # searchsorted_filter,
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_str, array_default_int
 from .utils import get_density_from_material, get_density_from_property, basic_mass_material_id
 
@@ -21,9 +23,10 @@ from .solid_quality import chexa_quality, tetra_quality, penta_quality, pyram_qu
 from .solid_utils import chexa_centroid
 from .solid_volume import volume_ctetra, volume_cpenta, volume_cpyram, volume_chexa
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
 
 class SolidElement(Element):
@@ -188,11 +191,10 @@ class CTETRA(SolidElement):
         assert midside_nodes.shape[1] == 6, midside_nodes.shape
         return midside_nodes
 
-    def write_file(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
-
         max_int = max(self.element_id.max(),
                       self.property_id.max(),
                       self.nodes.max())
@@ -396,10 +398,10 @@ class CPENTA(SolidElement):
         assert midside_nodes.shape[1] == 9, midside_nodes.shape
         return midside_nodes
 
-    def write_file(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         max_int = max(self.element_id.max(),
                       self.property_id.max(),
                       self.nodes.max())
@@ -534,10 +536,10 @@ class CPYRAM(SolidElement):
         assert midside_nodes.shape[1] == 8, midside_nodes.shape
         return midside_nodes
 
-    def write_file(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         max_int = max(self.element_id.max(),
                       self.property_id.max(),
                       self.nodes.max())
@@ -658,11 +660,10 @@ class CHEXA(SolidElement):
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
 
-    def write_file(self, bdf_file: TextIO,
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         max_int = max(self.element_id.max(),
                       self.property_id.max(),
                       self.nodes.max())
@@ -860,12 +861,10 @@ class PSOLID(Property):
                    coord=(cid, self.coord_id),
                    material_id=(mids, self.material_id))
 
-    def write_file(self, bdf_file: TextIO,
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
-
         max_int = max(
             self.property_id.max(),
             self.material_id.max(),
@@ -975,11 +974,10 @@ class PLSOLID(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
-    def write_file(self, bdf_file: TextIO,
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         property_ids = array_str(self.property_id, size=size)
@@ -1235,11 +1233,10 @@ class PCOMPS(Property):
     def iply(self) -> np.ndarray:
         return make_idim(self.n, self.nply)
 
-    def write_file(self, bdf_file: TextIO,
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         for pid, mid, cordm, psdir, sb, nb, tref, ge, iply in zip(self.property_id, self.material_id, self.coord_id,
@@ -1535,11 +1532,10 @@ class PCOMPLS(Property):
     def iply(self) -> np.ndarray:
         return make_idim(self.n, self.nply)
 
-    def write_file(self, bdf_file: TextIO,
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         for pid, mid, cordm, direct, analysis, sb, iply in zip(self.property_id, self.material_id, self.coord_id,
@@ -1649,11 +1645,10 @@ class CHACBR(SolidElement):
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
 
-    def write_file(self, bdf_file: TextIO,
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         base_nodes = self.base_nodes
@@ -1769,11 +1764,10 @@ class CHACAB(SolidElement):
         assert midside_nodes.shape[1] == 12, midside_nodes.shape
         return midside_nodes
 
-    def write_file(self, bdf_file: TextIO,
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         base_nodes = self.base_nodes

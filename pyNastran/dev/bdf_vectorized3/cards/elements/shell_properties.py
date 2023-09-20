@@ -21,6 +21,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Property, get_print_card_8_16,
     hslice_by_idim, make_idim, searchsorted_filter,
+    parse_property_check,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, # array_default_int,
@@ -43,7 +44,7 @@ NUMPY_INTS = {'int32', 'int64'}
 NUMPY_FLOATS = {'float32', 'float64'}
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -244,12 +245,10 @@ class PSHELL(Property):
                    missing,
                    material_id=(mids, material_ids))
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
-              write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
-
+                   write_card_header: bool=False) -> None:
         max_int = max(self.property_id.max(), self.material_id.max())
         print_card = get_print_card(size, max_int)
 
@@ -1099,11 +1098,10 @@ class PCOMP(CompositeProperty):
     def sb(self, sb):
         self.shear_bonding = sb
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
         assert self.failure_theory.dtype.name == 'str256', self.failure_theory.dtype.name
         for pid, nsm, shear_bonding, failure_theory, ge, tref, lam, z0, \
@@ -1465,11 +1463,10 @@ class PCOMPG(CompositeProperty):
         self.sort()
         self.cards = []
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
         property_id = array_str(self.property_id, size=size)
         for pid, nsm, sb, failure_theory, ge, tref, lam, z0, \
@@ -1636,11 +1633,10 @@ class PLPLANE(Property):
 #        self.write_file(bdf_file, size=16, is_double=is_double,
 #                        write_card_header=write_card_header)
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
         pids = array_str(self.property_id, size=size)
         mids = array_str(self.material_id, size=size)

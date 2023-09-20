@@ -7,8 +7,8 @@ from numpy import array
 
 from cpylog import get_logger
 from pyNastran.dev.bdf_vectorized3.bdf import BDF # PCOMP, MAT1, BDF, CTRIA3, CQUAD4
-from pyNastran.dev.bdf_vectorized3.cards.materials import MAT1
-from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+#from pyNastran.dev.bdf_vectorized3.cards.materials import MAT1
+#from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 #from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 #from pyNastran.bdf.mesh_utils.mass_properties import (
@@ -620,8 +620,6 @@ class TestShells(unittest.TestCase):
 
         cshear_id = model.add_cshear(eid, pid, nids, comment='cshear')
         pshear_id = model.add_pshear(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
-        cshear = model.cshear
-        pshear = model.pshear
 
         dvids = [1]
         coeffs = 1.0
@@ -634,18 +632,18 @@ class TestShells(unittest.TestCase):
         E = 30.e7
         G = None
         nu = 0.3
-        mat1 = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
+        mat1_id = model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
         model.setup()
         model.pop_parse_errors()
         model.validate()
 
         #cshear.raw_fields()
-        cshear.write(size=8)
+        model.cshear.write(size=8)
 
         #pshear.raw_fields()
-        pshear.write(size=8)
-        pshear.write(size=16)
-        #pshear.write(size=16, is_double=True)
+        model.pshear.write(size=8)
+        model.pshear.write(size=16)
+        model.pshear.write(size=16, is_double=True)
 
         model.validate()
         model._verify_bdf(xref=False)
@@ -654,12 +652,13 @@ class TestShells(unittest.TestCase):
         #mass_properties(model)
         model.mass()
 
-        cshear.write(size=8)
-        pshear.write(size=8)
-        #model.update_model_by_desvars()
+        model.cshear.write(size=8)
+        model.pshear.write(size=8)
+        if 0:
+            model.update_model_by_desvars()
         save_load_deck(model)
 
-    def _test_shells(self):
+    def test_shells(self):
         """tests a CTRIA3/CQUAD4/PSHELL and CTRIA6/CQUAD8/CQUAD/PCOMP"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -691,10 +690,10 @@ class TestShells(unittest.TestCase):
 
         pid = 2
         nids = [1, 2, 3, 5, 6, 9]
-        ctria6 = model.add_ctria6(3, pid, nids, comment='ctria6')
+        ctria6_id = model.add_ctria6(3, pid, nids, comment='ctria6')
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
-        cquad8 = model.add_cquad8(4, pid, nids, comment='cquad8')
+        cquad8_id = model.add_cquad8(4, pid, nids, comment='cquad8')
 
         #nids = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         #cquad = model.add_cquad(5, pid, nids, comment='cquad')
@@ -718,18 +717,18 @@ class TestShells(unittest.TestCase):
         model.validate()
 
         #ctria6.raw_fields()
-        ctria6.write(size=8)
+        model.ctria6.write(size=8)
 
         #cquad8.raw_fields()
-        cquad8.write(size=8)
+        model.cquad8.write(size=8)
 
         #model.cquad.raw_fields()
         model.cquad.write(size=8)
 
         #model.pcomp.raw_fields()
         model.pcomp.write(size=8)
-        #model.pcomp.write(size=16)
-        #model.pcomp.write(size=16, is_double=True)
+        model.pcomp.write(size=16)
+        model.pcomp.write(size=16, is_double=True)
 
         model._verify_bdf(xref=False)
 
@@ -744,21 +743,22 @@ class TestShells(unittest.TestCase):
         model.get_mass_breakdown(stop_if_no_mass=True)
         #model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
-        model.update_model_by_desvars(xref=True)
+        if 0:
+            model.update_model_by_desvars(xref=True)
 
         #ctria6.raw_fields()
-        ctria6.write(size=8)
+        model.ctria6.write(size=8)
 
         #cquad8.raw_fields()
-        cquad8.write(size=8)
+        model.cquad8.write(size=8)
 
         #cquad.raw_fields()
-        cquad.write(size=8)
+        model.cquad.write(size=8)
 
         #pcomp.raw_fields()
-        pcomp.write(size=8)
-        #pcomp.write(size=16)
-        #pcomp.write(size=16, is_double=True)
+        model.pcomp.write(size=8)
+        model.pcomp.write(size=16)
+        model.pcomp.write(size=16, is_double=True)
         model._verify_bdf(xref=False)
 
     def test_ctriar_cquadr(self):
@@ -787,18 +787,15 @@ class TestShells(unittest.TestCase):
         model.add_mat8(mid, e11, e22, nu12, rho=10.)
         model.setup()
 
-        ctriar = model.ctriar
-        cquadr = model.cquadr
-
         #ctriar.raw_fields()
-        ctriar.write(size=8)
-        #ctriar.write(size=8, is_double=False)
-        #ctriar.write(size=16, is_double=False)
-        ctriar.flip_normal()
+        model.ctriar.write(size=8)
+        model.ctriar.write(size=8, is_double=False)
+        model.ctriar.write(size=16, is_double=False)
+        model.ctriar.flip_normal()
 
-        cquadr.write(size=8)
+        model.cquadr.write(size=8)
         #cquadr.write_card(size=16, is_double=False)
-        cquadr.flip_normal()
+        model.cquadr.flip_normal()
 
         model.validate()
         model._verify_bdf(xref=False)
@@ -884,18 +881,18 @@ class TestShells(unittest.TestCase):
         eid = 3
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
         model.add_cplstn8(eid, pid, nids, comment='cplstn8')
-        cplstn8 = model.cplstn8
+        #cplstn8 = model.cplstn8
 
         eid = 5
         nids = [1, 2, 3, 4, 5, 6]
         mid = 10
         model.add_cplstn6(eid, pid, nids, comment='cplstn6')
-        cplstn6 = model.cplstn6
+        #cplstn6 = model.cplstn6
 
         model.add_pplane(
             pid, mid, t=0.1, nsm=0.,
             formulation_option=0, comment='pplane')
-        pplane = model.pplane
+        #pplane = model.pplane
         E = 1e7
         G = None
         nu = 0.3
@@ -909,9 +906,9 @@ class TestShells(unittest.TestCase):
 
         model.validate()
         model._verify_bdf(xref=False)
-        cplstn6.write(size=8)
-        cplstn8.write(size=8)
-        pplane.write(size=8)
+        model.cplstn6.write(size=8)
+        model.cplstn8.write(size=8)
+        model.pplane.write(size=8)
         model.cross_reference()
         model.pop_xref_errors()
         #cplstn3.write_card(size=8)
@@ -936,23 +933,23 @@ class TestShells(unittest.TestCase):
         pid = 4
         eid = 3
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
-        cquad8 = model.add_cquad8(eid, pid, nids, comment='cquad8')
+        cquad8_id = model.add_cquad8(eid, pid, nids, comment='cquad8')
 
         eid = 5
         nids = [1, 2, 3, 4, 5, 6]
         mid = 10
-        ctria6 = model.add_ctria6(eid, pid, nids, comment='ctria6')
+        ctria6_id = model.add_ctria6(eid, pid, nids, comment='ctria6')
 
-        plplane = model.add_plplane(pid, mid, cid=0,
-                                    stress_strain_output_location='GRID', comment='')
+        plplane_id = model.add_plplane(pid, mid, cid=0,
+                                       stress_strain_output_location='GRID', comment='')
 
         pid = 5
-        pplane = model.add_pplane(pid, mid, t=0.1, nsm=0.,
-                                  formulation_option=0, comment='pplane')
+        pplane_id = model.add_pplane(pid, mid, t=0.1, nsm=0.,
+                                     formulation_option=0, comment='pplane')
         E = 1e7
         G = None
         nu = 0.3
-        mat1 = model.add_mat1(mid, E, G, nu, rho=1.)
+        mat1_id = model.add_mat1(mid, E, G, nu, rho=1.)
 
         #ctria6.raw_fields()
         #cquad8.raw_fields()
@@ -977,7 +974,7 @@ class TestShells(unittest.TestCase):
         save_load_deck(model, run_mass_properties=False, run_test_bdf=False)
         #mass_properties(model)
 
-    def _test_shear(self):
+    def test_shear(self):
         """tests a CSHEAR, PSHEAR"""
         pid = 10
         pid_pshell = 11
@@ -992,11 +989,11 @@ class TestShells(unittest.TestCase):
         nsm = 10.0
         t = 1.0
         rho = 1.0
-        cshear = model.add_cshear(10, pid, [1, 2, 3, 4],
-                                  comment='cshear')
+        cshear_id = model.add_cshear(10, pid, [1, 2, 3, 4],
+                                     comment='cshear')
 
-        cquad4 = model.add_cquad4(14, pid_pshell, [1, 2, 3, 4],
-                                  comment='cquad4')
+        cquad4_id = model.add_cquad4(14, pid_pshell, [1, 2, 3, 4],
+                                     comment='cquad4')
         model.add_pshear(pid, mid, t=t,
                          nsm=nsm, f1=0., f2=0., comment='pshear')
         model.add_pshell(pid_pshell, mid1=mid, t=t, mid2=None, twelveIt3=1.0,
@@ -1037,11 +1034,12 @@ class TestShells(unittest.TestCase):
         mass = model.mass_sum(element_id=10)
         assert np.allclose(mass, mass_expected), 'mass_properties reduced: mass=%s mass_expected=%s' % (mass, mass_expected)
 
-        mass = mass_properties_nsm(model)[0]
-        assert np.allclose(mass, mass_expected*2), 'mass_properties_nsm all: mass=%s mass_expected=%s' % (mass, mass_expected*2)
+        if 0:
+            mass = mass_properties_nsm(model)[0]
+            assert np.allclose(mass, mass_expected*2), 'mass_properties_nsm all: mass=%s mass_expected=%s' % (mass, mass_expected*2)
 
-        mass = mass_properties_nsm(model, element_ids=10)[0]
-        assert np.allclose(mass, mass_expected), 'mass_properties_nsm reduced: mass=%s mass_expected=%s' % (mass, mass_expected)
+            mass = mass_properties_nsm(model, element_ids=10)[0]
+            assert np.allclose(mass, mass_expected), 'mass_properties_nsm reduced: mass=%s mass_expected=%s' % (mass, mass_expected)
 
         bdf_file = StringIO()
         model.write_bdf(bdf_file)
@@ -1051,48 +1049,16 @@ class TestShells(unittest.TestCase):
 
         model.get_area_breakdown(property_ids=None, stop_if_no_area=True)
         model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True)
-        model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
+        #model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
-        assert np.allclose(cshear.Mass(), mass_expected), cshear.Mass()
+        cshear = model.cshear
+        assert np.allclose(cshear.mass(), mass_expected), cshear.Mass()
 
         #model.uncross_reference()
         #model.safe_cross_reference()
         #model.uncross_reference()
 
-        #bdf_file = model.write_bdf(bdf_file)
-
-        save_load_deck(model)
-
-    def _test_cquadx4(self):
-        """tests a CQUADX4"""
-        log = get_logger(level='warning')
-        model = BDF(log=log)
-        eid = 1
-        pid = 2
-        mid = 3
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [1., 1., 0.])
-        model.add_grid(4, [0., 1., 0.])
-        cquadx4 = model.add_cquadx4(eid, pid, [1, 2, 3, 4], theta=0., comment='cquadx4')
-        psolid = model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
-                                 isop=None, fctn='SMECH', comment='psolid')
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        mat1 = model.add_mat1(mid, E, G, nu)
-        model.setup()
-
-        #model.cross_reference()
-        #model.pop_xref_errors()
-
-        mass = model.mass_sum()
-        assert np.allclose(mass, 0.0), mass  # TODO: not sure
-
-        #model.uncross_reference()
-        #model.safe_cross_reference()
-        #model.uncross_reference()
         #bdf_file = model.write_bdf(bdf_file)
 
         save_load_deck(model)
@@ -1115,39 +1081,38 @@ class TestShells(unittest.TestCase):
         model.add_grid(9, [.5, .5, 0.])
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
-        cquad8 = model.add_cquad8(eid, pid, nids, theta_mcid=0., comment='cquad8')
+        cquad8_id = model.add_cquad8(eid, pid, nids, theta_mcid=0., comment='cquad8')
         model.cquad8.flip_normal()
 
         eid = 2
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        cquad = model.add_cquad(eid, pid, nids, theta_mcid=0., comment='cquad')
+        cquad_id = model.add_cquad(eid, pid, nids, theta_mcid=0., comment='cquad')
         model.add_pshell(pid, mid1=mid, t=1.0)
 
         eid = 3
         nids = [1, 2, 3, 5, 6, 9]
-        ctria6 = model.add_ctria6(eid, pid, nids, theta_mcid=0., comment='ctria6')
+        ctria6_id = model.add_ctria6(eid, pid, nids, theta_mcid=0., comment='ctria6')
         model.ctria6.flip_normal()
 
         eid = 4
-        cquad4 = model.add_cquad4(eid, pid, [1, 2, 3, 4])
+        cquad4_id = model.add_cquad4(eid, pid, [1, 2, 3, 4])
         model.cquad4.flip_normal()
-        str(cquad4)
+        str(model.cquad4)
 
         eid = 5
         cquad4 = model.add_cquad4(eid, pid, [1, 2, 3, 4],
                                   tflag=1, T1=2., T2=2., T3=2., T4=2.)
-        str(cquad4)
+        str(model.cquad4)
 
         eid = 6
-        ctria3 = model.add_ctria3(eid, pid, [1, 2, 3])
+        ctria3_id = model.add_ctria3(eid, pid, [1, 2, 3])
         model.ctria3.flip_normal()
-        str(ctria3)
+        str(model.ctria3)
 
         eid = 7
-        ctria3 = model.add_ctria3(eid, pid, [1, 2, 3],
-                                  tflag=1, T1=2., T2=2., T3=2.)
-        str(ctria3)
-        str(ctria3)
+        ctria3_id = model.add_ctria3(eid, pid, [1, 2, 3],
+                                     tflag=1, T1=2., T2=2., T3=2.)
+        str(model.ctria3)
 
         E = 3.0e7
         G = None
@@ -1249,9 +1214,9 @@ class TestShells(unittest.TestCase):
         thetas = [0., 45., 90.]
         thicknesses = [0.1] * 3
         mids = len(thicknesses) * [mid]
-        pcomp = model.add_pcomp(pid, mids, thicknesses, thetas=None,
-                                souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0.,
-                                lam=None, z0=0., comment='')
+        pcomp_id = model.add_pcomp(pid, mids, thicknesses, thetas=None,
+                                   souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0.,
+                                   lam=None, z0=0., comment='')
         E = 3.0e7
         G = None
         nu = 0.3
@@ -1527,6 +1492,40 @@ class TestShells(unittest.TestCase):
         assert np.allclose(normal, normal_expected), normal
 
 class TestAxisymmetricShells(unittest.TestCase):
+    def test_cquadx4(self):
+        """tests a CQUADX4"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        eid = 1
+        pid = 2
+        mid = 3
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        cquadx4_id = model.add_cquadx4(eid, pid, [1, 2, 3, 4], theta=0.,
+                                       comment='cquadx4')
+        psolid_id = model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
+                                     isop=None, fctn='SMECH', comment='psolid')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        mat1_id = model.add_mat1(mid, E, G, nu)
+        model.setup()
+
+        #model.cross_reference()
+        #model.pop_xref_errors()
+
+        mass = model.mass_sum()
+        assert np.allclose(mass, 0.0), mass  # TODO: not sure
+
+        #model.uncross_reference()
+        #model.safe_cross_reference()
+        #model.uncross_reference()
+        #bdf_file = model.write_bdf(bdf_file)
+
+        save_load_deck(model)
+
     def test_axi_trax(self):
         """tests a CTRAX3/CTRAX6/???"""
         log = get_logger(level='warning')
@@ -1553,19 +1552,19 @@ class TestAxisymmetricShells(unittest.TestCase):
 
         pid = 1
         nids = [1, 2, 3]
-        ctrax3 = model.add_ctrax3(1, pid, nids, theta=0., comment='ctrax3')
+        ctrax3_id = model.add_ctrax3(1, pid, nids, theta=0., comment='ctrax3')
         #model.add_pshell(pid, mid1=2, t=0.1)
 
-        psolid = model.add_psolid(pid, mid1, cordm=0, integ=None, stress=None,
-                                  isop=None, fctn='SMECH', comment='psolid')
+        psolid_id = model.add_psolid(pid, mid1, cordm=0, integ=None, stress=None,
+                                     isop=None, fctn='SMECH', comment='psolid')
 
         pid = 2
         nids = [1, 2, 3, 5, 6, 9]
-        ctrax6 = model.add_ctrax6(2, pid, nids, theta=0., comment='ctrax6')
+        ctrax6_id = model.add_ctrax6(2, pid, nids, theta=0., comment='ctrax6')
 
-        plsolid = model.add_plsolid(pid, mid1, stress_strain='GRID', ge=0.,
-                                    comment='plsolid')
-        mathp = model.add_mathp(mid1)
+        plsolid_id = model.add_plsolid(pid, mid1, stress_strain='GRID', ge=0.,
+                                       comment='plsolid')
+        mathp_id = model.add_mathp(mid1)
         #assert pcomp.Thickness() == sum(thicknesses), thicknesses
 
         #pcomp.lam = 'SYM'
@@ -1574,18 +1573,18 @@ class TestAxisymmetricShells(unittest.TestCase):
         model.validate()
 
         #ctrax6.raw_fields()
-        ctrax6.write(size=8)
+        model.ctrax6.write(size=8)
 
 
         #psolid.raw_fields()
-        psolid.write(size=8)
-        #psolid.write_card(size=16)
-        #psolid.write_card(size=16, is_double=True)
+        model.psolid.write(size=8)
+        model.psolid.write_card(size=16)
+        model.psolid.write_card(size=16, is_double=True)
 
         #plsolid.raw_fields()
-        plsolid.write(size=8)
-        #plsolid.write_card(size=16)
-        #plsolid.write_card(size=16, is_double=True)
+        model.plsolid.write(size=8)
+        model.plsolid.write_card(size=16)
+        model.plsolid.write_card(size=16, is_double=True)
 
         model._verify_bdf(xref=False)
 
@@ -1594,15 +1593,15 @@ class TestAxisymmetricShells(unittest.TestCase):
         #model._verify_bdf(xref=True)
 
         #ctrax3.raw_fields()
-        ctrax3.write(size=8)
+        model.ctrax3.write(size=8)
 
         #ctrax6.raw_fields()
-        ctrax6.write(size=8)
+        model.ctrax6.write(size=8)
 
         #pcomp.raw_fields()
-        #pcomp.write_card(size=8)
-        #pcomp.write_card(size=16)
-        #pcomp.write_card(size=16, is_double=True)
+        model.pcomp.write_card(size=8)
+        model.pcomp.write_card(size=16)
+        model.pcomp.write_card(size=16, is_double=True)
         save_load_deck(model, run_convert=False)
 
 

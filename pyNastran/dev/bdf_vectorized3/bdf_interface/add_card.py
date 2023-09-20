@@ -25,7 +25,7 @@ from pyNastran.bdf.cards.constraints import SUPORT1, SUPORT
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.params import MDLPRM, PARAM
 from pyNastran.dev.bdf_vectorized3.bdf import DTI_UNITS
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray66float
     from pyNastran.dev.bdf_vectorized3.bdf import PARAM # BDF,
     #from pyNastran.dev.bdf_vectorized3.cards.grid import GRID
@@ -6689,7 +6689,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_freq_object(freq)
         return freq
 
-    def add_rrod(self, eid, nids, cma='', cmb='', alpha=0.0, comment='') -> RROD:
+    def add_rrod(self, eid, nids, cma='', cmb='', alpha=0.0, comment='') -> int:
         """
         Creates a RROD element
 
@@ -6830,7 +6830,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                              Gmi=Gmi, Cmi=Cmi, alpha=alpha, tref=tref, comment=comment)
         return self.rbe3
 
-    def add_rbar(self, eid, nids, cna, cnb, cma, cmb, alpha=0., comment='') -> RBAR:
+    def add_rbar(self, eid, nids, cna, cnb, cma, cmb, alpha=0., comment='') -> int:
         """
         Creates a RBAR element
 
@@ -8190,17 +8190,14 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
     def add_chacab(self, eid, pid, nodes, comment='') -> CHACAB:
         chacab = CHACAB(eid, pid, nodes, comment=comment)
-        self._add_methods._add_element_object(chacab)
         return chacab
 
     def add_caabsf(self, eid, pid, nodes, comment='') -> CHACAB:
         caabsf = CAABSF(eid, pid, nodes, comment=comment)
-        self._add_methods._add_element_object(caabsf)
         return caabsf
 
     def add_chacbr(self, eid, pid, nodes, comment='') -> CHACBR:
         chacbr = CHACBR(eid, pid, nodes, comment=comment)
-        self._add_methods._add_element_object(chacbr)
         return chacbr
 
     def add_paabsf(self, pid, tzreid=None, tzimid=None,

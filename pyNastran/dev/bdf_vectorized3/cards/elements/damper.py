@@ -12,11 +12,13 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_double_or_blank)
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, get_print_card_8_16
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, Property, get_print_card_8_16,
+    parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -105,11 +107,10 @@ class CDAMP1(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
@@ -238,11 +239,10 @@ class CDAMP2(Element):
                    missing,
                    node=(nid, self.nodes))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
@@ -332,11 +332,10 @@ class CDAMP3(Element):
                    spoint=(spoint, self.spoints),
                    property_id=(pids, self.property_id))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -391,6 +390,7 @@ class CDAMP4(Element):
         b = double(card, 2, 'b')
         s1 = integer_or_blank(card, 3, 's1', default=0)
         s2 = integer_or_blank(card, 4, 's2', default=0)
+        self.cards.append((eid, b, [s1, s2], comment))
         self.n += 1
         if card.field(5):
             eid = integer(card, 5, 'eid')
@@ -434,11 +434,10 @@ class CDAMP4(Element):
                    missing,
                    spoint=(spoint, self.spoints))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
@@ -497,11 +496,10 @@ class CDAMP5(Element):
         self.nodes = nodes
         self.n = nelements
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
@@ -602,11 +600,10 @@ class PDAMP(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)
@@ -667,11 +664,10 @@ class PDAMPT(Property):
         self.property_id = property_id
         self.table_b = table_b
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)
@@ -756,11 +752,10 @@ class CVISC(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
@@ -874,11 +869,10 @@ class PVISC(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)
@@ -974,11 +968,10 @@ class CGAP(Element):
             self.coord_id[icard] = cid
         self.cards = []
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
@@ -1110,11 +1103,10 @@ class PGAP(Property):
             self.trmin[icard] = trmin
         self.cards = []
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         property_ids = array_str(self.property_id, size=size)

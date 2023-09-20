@@ -11,11 +11,13 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank)
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, get_print_card_8_16
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, Property, get_print_card_8_16,
+    parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
@@ -105,11 +107,10 @@ class CELAS1(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         lines = []
@@ -231,11 +232,10 @@ class CELAS2(Element):
                    missing,
                    node=(nid, self.nodes))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
@@ -327,13 +327,10 @@ class CELAS3(Element):
                    spoint=(spoint, self.spoints),
                    property_id=(pids, self.property_id))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
-        #if size == 8:
-            #print_card = print_card_8
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -421,11 +418,10 @@ class CELAS4(Element):
                    missing,
                    spoint=(spoint, self.spoints))
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         element_id = array_str(self.element_id, size=size)
@@ -529,11 +525,10 @@ class PELAS(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)
@@ -626,11 +621,10 @@ class PELAST(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)

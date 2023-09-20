@@ -4,25 +4,28 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 #from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
+#from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank)
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, Property, get_print_card_8_16,
+    parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from .utils import get_mass_from_property
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class CMASS1(Element):
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CMASS1 card from ``BDF.add_card(...)``
 
@@ -43,6 +46,7 @@ class CMASS1(Element):
         assert len(card) <= 7, f'len(CMASS1 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, [n1, n2], [c1, c2], comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         if self.n == 0:
@@ -74,28 +78,27 @@ class CMASS1(Element):
         self.nodes = nodes
         self.components = components
 
-    def __apply_slice__(self, elem: CMASS2, i: np.ndarray) -> None:
+    def __apply_slice__(self, elem: CMASS1, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
         elem.components = self.components[i, :]
         elem.n = len(i)
 
-    def write(self, size: int=8) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
         components_ = array_default_int(self.components, default=0, size=size)
         for eid, pid, (n1, n2), (c1, c2) in zip(element_id, property_id, nodes_, components_):
             list_fields = ['CMASS1', eid, pid, n1, c1, n2, c2]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     @property
     def allowed_properties(self):
@@ -212,21 +215,20 @@ class CMASS2(Element):
         elem.components = self.components[i, :]
         elem.n = len(i)
 
-    def write(self, size: int=8) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         element_id = array_str(self.element_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
         components_ = array_default_int(self.components, default=0, size=size)
         for eid, mass, (n1, n2), (c1, c2) in zip(element_id, self._mass,
                                                 nodes_, components_):
             list_fields = ['CMASS2', eid, mass, n1, c1, n2, c2]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def mass(self) -> np.ndarray:
         return self._mass
@@ -241,7 +243,7 @@ class CMASS2(Element):
 
 class CMASS3(Element):
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CMASS3 card from ``BDF.add_card(...)``
 
@@ -260,6 +262,7 @@ class CMASS3(Element):
         assert len(card) <= 5, f'len(CMASS3 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, s1, s2, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         if self.n == 0:
@@ -290,20 +293,19 @@ class CMASS3(Element):
         self.spoints = spoints
         self.n = len(element_id)
 
-    def write(self, size: int=8) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        #if size == 8:
-            #print_card = print_card_8
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        #print_card = print_card_8
 
-        lines = []
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         spoints_ = array_default_int(self.spoints, default=0, size=size)
         for eid, pid, (spoint1, spoint2) in zip(element_id, property_id, spoints_):
             msg = 'CMASS3  %8s%8s%8s%8s\n' % (eid, pid, spoint1, spoint2)
-            lines.append(msg)
-        return ''.join(lines)
+            bdf_file.write(msg)
+        return
 
     @property
     def allowed_properties(self):
@@ -323,7 +325,7 @@ class CMASS4(Element):
     +--------+-----+-----+----+----+
 
     """
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         mass = double(card, 2, 'mass')
         s1 = integer_or_blank(card, 3, 's1', default=0)
@@ -338,6 +340,7 @@ class CMASS4(Element):
             self.cards.append((eid, mass, s1, s2, comment))
             self.n += 1
         assert len(card) <= 9, f'len(CMASS4 card) = {len(card):d}\ncard={card}'
+        return self.n
 
     def parse_cards(self):
         if self.n == 0:
@@ -366,19 +369,18 @@ class CMASS4(Element):
         self.spoints = spoints
         self.n = len(element_id)
 
-    def write(self, size: int=8) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        if size == 8:
-            print_card = print_card_8
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
 
-        lines = []
         element_id = array_str(self.element_id, size=size)
         spoints_ = array_default_int(self.spoints, default=0, size=size)
         for eid, massi, spoints in zip(element_id, self._mass, spoints_):
             list_fields = ['CMASS4', eid, massi, spoints[0], spoints[1]]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 
 class PMASS(Property):
@@ -394,7 +396,7 @@ class PMASS(Property):
     | PMASS |   7  | 4.29 |   6  | 13.2 |      |    |      |    |
     +-------+------+------+------+------+------+----+------+----+
     """
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         for icard, j in enumerate([1, 3, 5, 7]):
             if card.field(j):
                 ioffset = icard * 2
@@ -404,6 +406,7 @@ class PMASS(Property):
                 comment = ''
                 self.n += 1
         assert len(card) <= 9, f'len(PMASS card) = {len(card):d}\ncard={card}'
+        return self.n
 
     def parse_cards(self):
         if self.n == 0:
@@ -427,18 +430,17 @@ class PMASS(Property):
         self._mass = mass
         self.n = len(property_id)
 
-    def write(self, size: int=8) -> str:
-        if len(self.property_id) == 0:
-            return ''
-        lines = []
-        if size == 8:
-            print_card = print_card_8
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)
         for pid, mass in zip(property_id, self._mass):
             list_fields = ['PMASS', pid, mass]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def mass(self) -> np.ndarray:
         return self._mass

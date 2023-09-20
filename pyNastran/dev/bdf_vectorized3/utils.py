@@ -8,7 +8,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.fast_float_print import get_flo
 from pyNastran.bdf.field_writer_8 import print_float_8
 from pyNastran.bdf.bdf_interface.assign_type import double_from_str
 
-def hstack_msg(mylist, msg: str, min_size=0) -> np.ndarray:
+def hstack_msg(mylist, msg: str, min_size: int=0) -> np.ndarray:
     if isinstance(mylist, list) and len(mylist) == 0:
         raise ValueError(f'empty list; {msg}')
 
@@ -22,7 +22,7 @@ def hstack_msg(mylist, msg: str, min_size=0) -> np.ndarray:
         raise ValueError(f'empty list; {msg}')
     return stacked
 
-def cast_int_array(list_ints: list[int]) -> np.ndarray:
+def cast_int_array(list_ints: Union[list[int], list[list[int]]]) -> np.ndarray:
     try:
         return np.array(list_ints, dtype='int32')
     except OverflowError:

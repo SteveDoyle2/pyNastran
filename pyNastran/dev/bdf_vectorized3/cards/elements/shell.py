@@ -16,6 +16,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, get_print_card_8_16,
+    parse_element_check,
     #hslice_by_idim, make_idim,
     searchsorted_filter)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -37,7 +38,7 @@ NUMPY_INTS = {'int32', 'int64'}
 NUMPY_FLOATS = {'float32', 'float64'}
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -439,6 +440,7 @@ class ShellElement(Element):
                        missing,
                        node=(nid, midside_nodes), filter_node0=True)
 
+    @parse_element_check
     def write_file(self, file_obj: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -491,12 +493,13 @@ class CTRIA3(ShellElement):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0.,
             tflag: int=0, T1=None, T2=None, T3=None,
-            comment: str=''):
+            comment: str='') -> int:
         self.cards.append(((eid, pid, nids,
                             theta_mcid, zoffset,
                             tflag, T1, T2, T3,
                             comment)))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -534,6 +537,7 @@ class CTRIA3(ShellElement):
                             tflag, T1, T2, T3,
                             comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self) -> None:
         assert self.n >= 0, self.n
@@ -661,7 +665,7 @@ class CTRIA3(ShellElement):
                       is_double: bool=False,
                       write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
-            return ''
+            return
         size = 16
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -717,12 +721,12 @@ class CTRIA3(ShellElement):
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
-    def area_centroid_normal(self) -> np.ndarray:
+    def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         normal = tri_area_centroid_normal(self.model.grid, self.nodes)
         return normal
 
     @property
-    def base_nodes(self):
+    def base_nodes(self) -> np.ndarray:
         return self.nodes
     @property
     def midside_nodes(self):
@@ -775,7 +779,7 @@ class CTRIAR(ShellElement):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0.,
             tflag: int=0, T1=None, T2=None, T3=None,
-            comment: str=''):
+            comment: str='') -> int:
         """
         Creates a CTRIAR card
 
@@ -810,6 +814,7 @@ class CTRIAR(ShellElement):
                            tflag, [T1, T2, T3],
                            comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -842,6 +847,7 @@ class CTRIAR(ShellElement):
                 comment)
         self.cards.append(card)
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, element: CTRIAR, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -915,21 +921,22 @@ class CTRIAR(ShellElement):
         self.zoffset = zoffset
         self.T = T
 
+    @parse_element_check
     def write_file_8(self, bdf_file: TextIOLike,
                    write_card_header: bool=False) -> None:
         self.write_file(bdf_file, size=8, is_double=False,
                         write_card_header=write_card_header)
 
+    @parse_element_check
     def write_file_16(self, bdf_file: TextIOLike,
                       is_double=False, write_card_header: bool=False) -> None:
         self.write_file(bdf_file, size=16, is_double=is_double,
                         write_card_header=write_card_header)
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         assert self.nodes.shape[1] == 3, self.nodes.shape
         print_card = get_print_card_8_16(size)
 
@@ -975,12 +982,12 @@ class CTRIAR(ShellElement):
         normal = self.area_centroid_normal()[2]
         return normal
 
-    def area_centroid_normal(self) -> np.ndarray:
+    def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         normal = tri_area_centroid_normal(self.model.grid, self.nodes)
         return normal
 
     @property
-    def base_nodes(self):
+    def base_nodes(self) -> np.ndarray:
         return self.nodes
     @property
     def midside_nodes(self):
@@ -1023,12 +1030,13 @@ class CQUAD4(ShellElement):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=np.nan,
             tflag: int=0, T1=None, T2=None, T3=None, T4=None,
-            comment: str=''):
+            comment: str='') -> int:
         self.cards.append((eid, pid, nids,
             theta_mcid, zoffset,
             tflag, T1, T2, T3, T4,
             comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -1063,6 +1071,7 @@ class CQUAD4(ShellElement):
             tflag, T1, T2, T3, T4,
             comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self) -> None:
         assert self.n >= 0, self.n
@@ -1300,12 +1309,13 @@ class CQUAD4(ShellElement):
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
-    def area_centroid_normal(self) -> np.ndarray:
+
+    def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         normal = quad_area_centroid_normal(self.model.grid, self.nodes)
         return normal
 
     @property
-    def base_nodes(self):
+    def base_nodes(self) -> np.ndarray:
         return self.nodes
     @property
     def midside_nodes(self):
@@ -1381,13 +1391,9 @@ class CQUADR(ShellElement):
         element.T = self.T[i, :]
         element.n = len(self.element_id)
 
-    #def add(self, eid: int, pid: int, nids: list[int],
-            #theta_mcid: int|float=0.0, zoffset: float=0.,
-            #tflag: int=0, T1=None, T2=None, T3=None, T4=None,
-            #comment: str=''):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0., tflag: int=0,
-            T1=None, T2=None, T3=None, T4=None, comment: str='') -> CQUADR:
+            T1=None, T2=None, T3=None, T4=None, comment: str='') -> int:
         """
         Creates a CQUADR card
 
@@ -1434,6 +1440,7 @@ class CQUADR(ShellElement):
         #self.T = np.vstack([self.T, np.array([T1, T2, T3, T4], dtype='float64')])
         self.cards.append((eid, pid, nids, theta_mcid, zoffset, tflag, [T1, T2, T3, T4]))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -1493,11 +1500,10 @@ class CQUADR(ShellElement):
         _save_quad(self, element_id, property_id, nodes,
                    zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
 
         #remove_tflag = (
@@ -1542,12 +1548,12 @@ class CQUADR(ShellElement):
     def normal(self) -> np.ndarray:
         normal = self.area_centroid_normal()[2]
         return normal
-    def area_centroid_normal(self) -> np.ndarray:
+    def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         normal = quad_area_centroid_normal(self.model.grid, self.nodes)
         return normal
 
     @property
-    def base_nodes(self):
+    def base_nodes(self) -> np.ndarray:
         return self.nodes
     @property
     def midside_nodes(self):
@@ -1590,7 +1596,7 @@ class CTRIA6(ShellElement):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: float=0., zoffset: float=0.,
             tflag: int=0, T1=None, T2=None, T3=None,
-            comment: str='') -> CTRIA6:
+            comment: str='') -> int:
         """
         Creates a CTRIA6 card
 
@@ -1638,8 +1644,9 @@ class CTRIA6(ShellElement):
                 tflag, T1, T2, T3, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CTRIA6 card from ``BDF.add_card(...)``
 
@@ -1686,6 +1693,7 @@ class CTRIA6(ShellElement):
                 tflag, T1, T2, T3, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, element: CTRIA6, i: np.ndarray) -> None:  # ignore[override]
         assert element.type == 'CTRIA6'
@@ -1769,11 +1777,10 @@ class CTRIA6(ShellElement):
         self.T = T
         self.n = nelements
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
         #remove_tflag = (
             #np.all(self.tflag == 0) and
@@ -1818,7 +1825,7 @@ class CTRIA6(ShellElement):
         """center_of_mass considers density"""
         return self.centroid()
 
-    def area_centroid_normal(self) -> np.ndarray:
+    def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         normal = tri_area_centroid_normal(self.model.grid, self.base_nodes)
         return normal
 
@@ -1877,7 +1884,7 @@ class CQUAD8(ShellElement):
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0.0, zoffset: float=0.,
             tflag: int=0, T1=None, T2=None, T3=None, T4=None,
-            comment: str=''):
+            comment: str='') -> int:
         """
         Creates a CQUAD8 card
 
@@ -1925,8 +1932,9 @@ class CQUAD8(ShellElement):
                 tflag, T1, T2, T3, T4, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CQUAD8 card from ``BDF.add_card(...)``
 
@@ -1972,6 +1980,7 @@ class CQUAD8(ShellElement):
                 tflag, T1, T2, T3, T4, comment)
         self.cards.append(card)
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, element: CQUAD8, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -2081,11 +2090,10 @@ class CQUAD8(ShellElement):
         self.T = T
         self.n = nelements
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
         #remove_tflag = (
             #np.all(self.tflag == 0) and
@@ -2183,7 +2191,7 @@ class CQUAD(ShellElement):
         self.theta = np.array([], dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int],
-            theta_mcid: int|float=0., comment: str='') -> CQUAD:
+            theta_mcid: int|float=0., comment: str='') -> int:
         """
         Creates a CQUAD card
 
@@ -2218,6 +2226,7 @@ class CQUAD(ShellElement):
         self.mcid = np.hstack([self.mcid, mcid])
         self.theta = np.hstack([self.theta, theta])
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, element: CQUAD, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -2266,11 +2275,10 @@ class CQUAD(ShellElement):
         self.sort()
         self.cards = []
 
+    @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
-              write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return
+                   write_card_header: bool=False) -> None:
 
         element_id = array_str(self.element_id, size=size)
         mcids = array_default_int(self.mcid, default=-1, size=size)
