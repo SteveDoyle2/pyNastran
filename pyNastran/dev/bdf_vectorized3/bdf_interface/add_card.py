@@ -4084,7 +4084,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         elem = self.plotel.add(eid, nodes, comment=comment)
         return elem
 
-    def add_conm1(self, eid: int, nid: int, mass_matrix: NDArray66float, cid=0, comment='') -> int:
+    def add_conm1(self, eid: int, nid: int, mass_matrix: NDArray66float,
+                  cid: int=0, comment: str='') -> int:
         """
         Creates a CONM1 card
 
@@ -4111,7 +4112,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                 [                    M66]
 
         """
-        mass = self.conm2.add(eid, nid, mass_matrix, cid=cid, comment=comment)
+        mass = self.conm1.add(eid, nid, mass_matrix, cid=cid, comment=comment)
         return mass
 
     def add_conm2(self, eid: int, nid: int, mass: float, cid: int=0,

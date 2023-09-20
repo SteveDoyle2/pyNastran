@@ -54,6 +54,7 @@ def read_geometry_from_h5(model: BDF, h5_file: File, input_path: str):
                 load_h5_node(model, h5_node_)
                 continue
             elif name == 'PROPERTY':
+                continue
                 load_h5_property(model, h5_node_)
                 continue
             elif name == 'MATERIAL':

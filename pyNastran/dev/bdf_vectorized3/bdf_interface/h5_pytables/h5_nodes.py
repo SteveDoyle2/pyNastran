@@ -29,6 +29,7 @@ def load_h5_node(model: BDF, input_group: Group):
             grid._xyz_cid0[icp0, :] = grid.xyz[icp0, :]
             grid.write()
         elif name == 'EPOINT':
+            return
             epoint = model.epoint
             data = h5_element.read()
             #dtype([('ID', '<i8'), ('DOMAIN_ID', '<i8')])

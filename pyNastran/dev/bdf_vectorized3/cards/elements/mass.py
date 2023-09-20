@@ -1,8 +1,8 @@
 from __future__ import annotations
 from itertools import zip_longest
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
-from pyNastran.bdf.field_writer_8 import print_card_8
+#from pyNastran.bdf.field_writer_8 import print_card_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -10,13 +10,15 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_blank, double_or_blank,
 )
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, parse_element_check, get_print_card_8_16)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
 
 class CONM1(Element):
@@ -41,7 +43,38 @@ class CONM1(Element):
         self.node_id = np.array([], dtype='int32')
         self._mass = np.zeros((0, 6, 6), dtype='float64')
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add(self, eid: int, nid: int, mass_matrix: np.ndarray,
+            cid: int=0, comment: str='') -> int:
+        """
+        Creates a CONM1 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        nid : int
+            the node to put the mass matrix
+        mass_matrix : (6, 6) float ndarray
+            the 6x6 mass matrix, M
+        cid : int; default=0
+            the coordinate system for the mass matrix
+        comment : str; default=''
+            a comment for the card
+
+        ::
+
+          [M] = [M11 M21 M31 M41 M51 M61]
+                [    M22 M32 M42 M52 M62]
+                [        M33 M43 M53 M63]
+                [            M44 M54 M64]
+                [    Sym         M55 M65]
+                [                    M66]
+
+        """
+        self.cards.append((eid, nid, cid, mass_matrix, comment))
+        self.n += 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         m = np.zeros((6, 6), dtype='float64')
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
@@ -77,24 +110,63 @@ class CONM1(Element):
             return
         ncards = len(self.cards)
         assert ncards > 0, ncards
-        self.element_id = np.zeros(ncards, dtype='int32')
-        self._mass = np.zeros((ncards, 6, 6), dtype='float64')
-        self.coord_id = np.zeros(ncards, dtype='int32')
-        self.node_id = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype='int32')
+        _mass = np.zeros((ncards, 6, 6), dtype='float64')
+        coord_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype='int32')
         for icard, card in enumerate(self.cards):
             eid, nid, cid, m, comment = card
-            self.element_id[icard] = eid
-            self.node_id[icard] = nid
-            self.coord_id[icard] = cid
-            self._mass[icard, :, :] = m
+            element_id[icard] = eid
+            node_id[icard] = nid
+            coord_id[icard] = cid
+            _mass[icard, :, :] = m
+        self._save(element_id, node_id, coord_id, _mass)
         self.cards = []
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        lines = []
-        if size == 8:
-            print_card = print_card_8
+    def _save(self, element_id: np.ndarray,
+              node_id: np.ndarray,
+              coord_id: np.ndarray,
+              mass: np.ndarray) -> None:
+        self.element_id = element_id
+        self.node_id = node_id
+        self.coord_id = coord_id
+        self._mass = mass
+        self.n = len(element_id)
+
+    def mass_matrix(self) -> np.ndarray:
+        return self._mass
+
+    def centroid(self) -> np.ndarray:
+        nid = self.model.grid.node_id
+        xyz = self.model.grid.xyz_cid0()
+        inode = np.searchsorted(nid, self.node_id)
+        assert np.array_equal(nid[inode], self.node_id)
+        centroid = xyz[inode, :] + self.xyz_offset
+        return centroid
+
+    def center_of_mass(self) -> np.ndarray:
+        imatrix = self._mass[:, 3:, :][:, :, 3:]
+        i21 = imatrix[:, 0, 1] # i2 * i1
+        i31 = imatrix[:, 0, 2] # i3 * i1
+        i32 = imatrix[:, 1, 2] # i3 * i2
+        zero = np.zeros(len(self.element_id), dtype='float64')
+        is_same = (
+            np.array_equal(i21, zero) and
+            np.array_equal(i31, zero) and
+            np.array_equal(i32, zero))
+        if is_same:
+            center_of_mass = self.centroid()
+        else:
+            #i1_i2 = i31 / i32
+            center_of_mass = self.centroid() + dxyz
+        assert center_of_mass.shape == (self.n, 3), center_of_mass.shape
+        return center_of_mass
+
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
 
         element_ids = array_str(self.element_id, size=size)
         node_ids = array_str(self.node_id, size=size)
@@ -106,8 +178,8 @@ class CONM1(Element):
                 m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
                 m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5],
             ]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -207,6 +279,7 @@ class CONM2(Element):
         elem.node_id = self.node_id[i]
         elem.xyz_offset = self.xyz_offset[i, :]
         elem.inertia = self.inertia[i, :]
+        elem.n = len(i)
 
     def parse_cards(self):
         assert self.n >= 0, self.n
@@ -246,12 +319,11 @@ class CONM2(Element):
         #I11, I21, I22, I31, I32, I33 = I
         self.inertia = inertia
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        lines = []
-        if size == 8:
-            print_card = print_card_8
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
 
         is_xyz = self.xyz_offset.max() != 0. or self.xyz_offset.min() != 0.
         is_inertia = self.inertia.max() != 0. or self.inertia.min() != 0.
@@ -263,17 +335,17 @@ class CONM2(Element):
                                                                   self._mass, self.xyz_offset, self.inertia):
                 list_fields = (['CONM2', eid, nid, cid, mass] +
                                list(xyz_offset) + [''] + list(I))
-                lines.append(print_card(list_fields))
+                bdf_file.write(print_card(list_fields))
         elif is_xyz:
             for eid, nid, cid, mass, xyz_offset in zip_longest(element_str, node_str, coord_str,
                                                                self._mass, self.xyz_offset):
                 list_fields = ['CONM2', eid, nid, cid, mass] + list(xyz_offset)
-                lines.append(print_card(list_fields))
+                bdf_file.write(print_card(list_fields))
         else:
             for eid, nid, cid, mass in zip_longest(element_str, node_str, coord_str, self._mass):
                 list_fields = ['CONM2', eid, nid, cid, mass]
-                lines.append(print_card(list_fields))
-        return ''.join(lines)
+                bdf_file.write(print_card(list_fields))
+        return
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id

@@ -24,6 +24,28 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class CMASS1(Element):
+    def add(self, eid: int, pid: int, nids: list[int],
+            c1: int=0, c2: int=0, comment: str='') -> int:
+        """
+        Creates a CMASS1 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PMASS)
+        nids : list[int, int]
+            node ids
+        c1 / c2 : int; default=None
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, pid, nids, [c1, c2], comment))
+        self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -105,7 +127,7 @@ class CMASS1(Element):
         return [prop for prop in [self.model.pmass]
                 if prop.n > 0]
 
-    def mass(self):
+    def mass(self) -> np.ndarray:
         mass = get_mass_from_property(self.property_id, self.allowed_properties)
         return mass
     #def length(self) -> np.ndarray:
@@ -167,6 +189,29 @@ class CMASS2(Element):
     +--------+-----+-----+----+----+----+----+
 
     """
+    def add(self, eid: int, mass: float, nids: list[int],
+            c1: int, c2: int, comment: str='') -> int:
+        """
+        Creates a CMASS2 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mass : float
+            mass
+        nids : list[int, int]
+            node ids
+        c1 / c2 : int; default=None
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, mass, nids, [c1, c2], comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         mass = double_or_blank(card, 2, 'mass', default=0.)
@@ -242,6 +287,25 @@ class CMASS2(Element):
 
 
 class CMASS3(Element):
+    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+        """
+        Creates a CMASS3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PMASS)
+        nids : list[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, pid, *nids, comment))
+        self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -293,6 +357,15 @@ class CMASS3(Element):
         self.spoints = spoints
         self.n = len(element_id)
 
+    def mass(self) -> np.ndarray:
+        return np.zeros(len(self.element_id), dtype='float64')
+
+    def center_of_mass(self) -> np.ndarray:
+        return np.zeros((len(self.element_id), 3), dtype='float64')
+
+    def centroid(self) -> np.ndarray:
+        return self.center_of_mass()
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -325,6 +398,26 @@ class CMASS4(Element):
     +--------+-----+-----+----+----+
 
     """
+    def add(self, eid: int, mass: float, nids: list[int], comment: str='') -> int:
+        """
+        Creates a CMASS4 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mass : float
+            SPOINT mass
+        nids : list[int, int]
+            SPOINT ids
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, mass, *nids, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         mass = double(card, 2, 'mass')
@@ -369,6 +462,15 @@ class CMASS4(Element):
         self.spoints = spoints
         self.n = len(element_id)
 
+    def mass(self) -> np.ndarray:
+        return np.zeros(len(self.element_id), dtype='float64')
+
+    def center_of_mass(self) -> np.ndarray:
+        return np.zeros((len(self.element_id), 3), dtype='float64')
+
+    def centroid(self) -> np.ndarray:
+        return self.center_of_mass()
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -396,6 +498,24 @@ class PMASS(Property):
     | PMASS |   7  | 4.29 |   6  | 13.2 |      |    |      |    |
     +-------+------+------+------+------+------+----+------+----+
     """
+    def add(self, pid: int, mass: float, comment: str='') -> int:
+        """
+        Creates an PMASS card, which defines a mass applied to a single DOF
+
+        Parameters
+        ----------
+        pid : int
+            Property id used by a CMASS1/CMASS3 card
+        mass : float
+            the mass to apply
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((pid, mass, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         for icard, j in enumerate([1, 3, 5, 7]):
             if card.field(j):

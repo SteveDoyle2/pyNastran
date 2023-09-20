@@ -34,23 +34,23 @@ def run_nastran_gui(filename: str, load_results: bool=True):
     test.on_rcycle_results()
 
 class TestModels(unittest.TestCase):
-    #def test_h5_freq(self):
-        #h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
-        #args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-        #test_bdf(args, show_args=False)
+    def _test_h5_freq(self):
+        h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
+        args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
+        test_bdf(args, show_args=False)
 
-        #args2 = ['test_op2', str(h5_filename), '-ctfo', '--quiet']
-        #test_op2(args2, show_args=False)
-        #run_nastran_gui(h5_filename)
+        args2 = ['test_op2', str(h5_filename), '-ctfo', '--quiet']
+        test_op2(args2, show_args=False)
+        run_nastran_gui(h5_filename)
 
-    #def test_h5_transient(self):
-        #h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
-        #args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-        #test_bdf(args, show_args=False)
+    def _test_h5_transient(self):
+        h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
+        args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
+        test_bdf(args, show_args=False)
 
-        #args2 = ['test_op2', str(h5_filename), '-ctfo', '--quiet']
-        #test_op2(args2, show_args=False)
-        #run_nastran_gui(h5_filename)
+        args2 = ['test_op2', str(h5_filename), '-ctfo', '--quiet']
+        test_op2(args2, show_args=False)
+        run_nastran_gui(h5_filename)
 
     #def test_h5_transient_thermal(self):
         #h5_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.h5'
@@ -69,13 +69,13 @@ class TestModels(unittest.TestCase):
         #test_op2(args2, show_args=False)
         #run_nastran_gui(h5_filename)
 
-    #def test_h5_modes(self):
-        #h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
-        #args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-        #test_bdf(args, show_args=False)
-        #args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
-        #test_op2(args2, show_args=False)
-        #run_nastran_gui(h5_filename)
+    def _test_h5_modes(self):
+        h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
+        args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
+        test_bdf(args, show_args=False)
+        args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
+        test_op2(args2, show_args=False)
+        run_nastran_gui(h5_filename)
 
     #def test_h5_modes_complex(self):
         #h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
