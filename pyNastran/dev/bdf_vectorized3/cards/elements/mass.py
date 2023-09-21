@@ -73,6 +73,7 @@ class CONM1(Element):
         """
         self.cards.append((eid, nid, cid, mass_matrix, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         m = np.zeros((6, 6), dtype='float64')
@@ -103,6 +104,7 @@ class CONM1(Element):
         m[5, 5] = double_or_blank(card, 24, 'M66', default=0.)
         self.cards.append((eid, nid, cid, m, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         assert self.n >= 0, self.n

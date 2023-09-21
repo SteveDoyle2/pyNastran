@@ -5726,7 +5726,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                    g1=-1, g34=-1, cid: int=0,
                    nvector=None,
                    surf_or_line: str='SURF', line_load_dir: str='NORM',
-                   comment='') -> PLOAD4:
+                   comment='') -> int:
         """
         Creates a PLOAD4 card
 
@@ -5765,11 +5765,11 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         load = self.pload4.add(sid, eids, pressures, g1=g1, g34=g34, cid=cid,
                                nvector=nvector, surf_or_line=surf_or_line,
                                line_load_dir=line_load_dir, comment=comment)
-        return self.pload4
+        return load
 
     def add_ploadx1(self, sid: int, eid: int, pa: float,
                     nids: list[int], pb: Optional[float]=None, theta: float=0.,
-                    comment: str='') -> PLOADX1:
+                    comment: str='') -> int:
         """
         Creates a PLOADX1 card, which defines surface traction for
         axisymmetric elements.
@@ -5794,10 +5794,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         load = self.ploadx1.add(sid, eid, pa, nids, pb=pb, theta=theta, comment=comment)
-        return self.ploadx1
+        return load
 
     def add_spc(self, conid :int, nodes: list[int], components: list[str],
-                enforced: list[float], comment: str='') -> SPC:
+                enforced: list[float], comment: str='') -> int:
         """
         Creates an SPC card, which defines the degree of freedoms to be
         constrained
@@ -5823,9 +5823,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         spc = self.spc.add(conid, nodes, components, enforced, comment=comment)
-        return self.spc
+        return spc
 
-    def add_spc1(self, spc_id: int, components: int, nodes: list[int], comment: str='') -> SPC1:
+    def add_spc1(self, spc_id: int, components: int, nodes: list[int], comment: str='') -> int:
         """
         Creates an SPC1 card, which defines the degree of freedoms to be
         constrained to a value of 0.0

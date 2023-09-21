@@ -56,6 +56,13 @@ class SPC(VectorizedBaseCard):
         spc.enforced = self.enforced[i]
         return spc
 
+    def clear(self) -> None:
+        self.spc_id = np.array([], dtype='int32')
+        self.node_id = np.array([], dtype='int32')
+        self.components = np.array([], dtype='int32')
+        self.enforced = np.array([], dtype='float64')
+        self.n = 0
+
     def add(self, spc_id: int, nodes: list[int], components: list[str],
             enforced: list[float], comment: str=''):
         """
@@ -82,8 +89,11 @@ class SPC(VectorizedBaseCard):
         .. warning:: non-zero enforced deflection requires an SPCD as well
 
         """
+        nnodes = len(nodes)
         if isinstance(spc_id, integer_types):
-            spc_id = [spc_id]
+            spc_id = [spc_id] * nnodes
+        assert nnodes == len(components)
+        assert nnodes == len(enforced)
         self.cards.append((spc_id, nodes, components, enforced, comment))
         self.n += 1
 
@@ -148,6 +158,13 @@ class SPC(VectorizedBaseCard):
         self.components = components
         self.enforced = enforced
         self.n = nspcs
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id),
+                   )
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -287,6 +304,14 @@ class SPC1(VectorizedBaseCard):
         self.components = components
         self.nnodes = nnodes
         self.n = nspcs
+
+    def clear(self) -> None:
+        self.spc_id = np.array([], dtype='int32')
+        self.node_id = np.array([], dtype='int32')
+        self.components = np.array([], dtype='int32')
+        self.nnodes = np.array([], dtype='int32')
+        self.enforced = np.array([], dtype='float64')
+        self.n = 0
 
     @property
     def inode(self) -> np.ndarray:
@@ -466,6 +491,12 @@ class ADD(VectorizedBaseCard):
         self.sid = np.array([], dtype='int32')
         self.sids = np.array([], dtype='int32')
         self.nsids = np.array([], dtype='int32')
+
+    def clear(self) -> None:
+        self.spc_id = np.array([], dtype='int32')
+        self.spc_ids = np.array([], dtype='int32')
+        self.nsids = np.array([], dtype='int32')
+        self.n = 0
 
     def add(self, sid: int, sets, comment: str='') -> int:
         """Creates an MPCADD card"""
