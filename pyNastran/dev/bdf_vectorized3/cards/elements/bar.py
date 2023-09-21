@@ -158,7 +158,7 @@ class CBAR(Element):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         PROPERTY_ID_DEFAULT = 0
         OFFT_DEFAULT = ''
 
@@ -1119,7 +1119,7 @@ class PBARL(Property):
 
 
 class PBRSECT(Property):
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PBRSECT card from ``BDF.add_card(...)``
 

@@ -10,14 +10,14 @@ from pyNastran.bdf.field_writer_double import print_scientific_double
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.nodes import compress_xpoints
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, _format_comment
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, components_or_blank,
     integer_or_string, blank)
 
-from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
+#from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, get_print_card_8_16
+from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, get_print_card_8_16, parse_node_check
 
 from pyNastran.femutils.coord_transforms import (
     xyz_to_rtz_array,
@@ -257,6 +257,8 @@ class GRID(VectorizedBaseCard):
         ps = 0 if ps == '' else ps
         assert isinstance(ps, int), ps
         self.cards.append((nid, xyz, cp, cd, ps, seid, comment))
+        if comment:
+            self.comment[nid] = _format_comment(comment)
         self.n += 1
         return self.n
 
@@ -268,6 +270,7 @@ class GRID(VectorizedBaseCard):
         nid = integer(card, 1, 'nid')
 
         GRID_CP_DEFAULT = GRID_CD_DEFAULT = GRID_PS_DEFAULT = GRID_SEID_DEFAULT = -100
+        GRID_PS_DEFAULT_STR = str(GRID_PS_DEFAULT)
 
         #: Grid point coordinate system
         cp = integer_or_blank(card, 2, 'cp', default=GRID_CP_DEFAULT)
@@ -284,7 +287,8 @@ class GRID(VectorizedBaseCard):
             cd = integer_or_blank(card, 6, 'cd', default=GRID_CD_DEFAULT)
 
             #: SPC constraint
-            ps = int(components_or_blank(card, 7, 'ps', default=GRID_PS_DEFAULT))
+            ps_str = components_or_blank(card, 7, 'ps', default=GRID_PS_DEFAULT_STR)
+            ps = int(ps_str)
             #u(integer_or_blank(card, 7, 'ps', ''))
 
             #: Superelement ID
@@ -296,6 +300,8 @@ class GRID(VectorizedBaseCard):
             seid = GRID_SEID_DEFAULT
             assert len(card) >= 2, f'len(GRID card) = {len(card):d}\ncard={card}'
         self.cards.append((nid, xyz, cp, cd, ps, seid, comment))
+        if comment:
+            self.comment[nid] = comment
         self.n += 1
         return self.n
 
@@ -309,13 +315,13 @@ class GRID(VectorizedBaseCard):
             self.model.log.debug('parse GRID')
 
         try:
-            node_id, cp, cd, xyz, ps, seid = self._setup(
+            node_id, cp, cd, xyz, ps, seid, comment = self._setup(
                 ncards, self.cards, 'int32', 'float64')
         except OverflowError:
-            node_id, cp, cd, xyz, ps, seid = self._setup(
+            node_id, cp, cd, xyz, ps, seid, comment = self._setup(
                 ncards, self.cards, 'int64', 'float64')
 
-        self._save(node_id, cp, cd, xyz, ps, seid)
+        self._save(node_id, cp, cd, xyz, ps, seid, comment)
 
         grdset = self.model.grdset
         if grdset is not None:
@@ -361,6 +367,7 @@ class GRID(VectorizedBaseCard):
         ps = np.zeros(ncards, dtype=idtype)
         seid = np.zeros(ncards, dtype=idtype)
 
+        comment = {}
         for i, card in enumerate(cards):
             (nidi, xyzi, cpi, cdi, psi, seidi, commenti) = card
             node_id[i] = nidi
@@ -369,13 +376,15 @@ class GRID(VectorizedBaseCard):
             xyz[i, :] = xyzi
             ps[i] = psi
             seid[i] = seidi
-            #comment[i] = commenti
-        return node_id, cp, cd, xyz, ps, seid
+            if commenti:
+                #comment[i] = commenti
+                comment[nidi] = commenti
+        return node_id, cp, cd, xyz, ps, seid, comment
 
     def _save(self,
               node_id: np.ndarray, cp: np.ndarray, cd: np.ndarray,
               xyz: np.ndarray, ps: np.ndarray, seid: np.ndarray,
-              ) -> None:
+              comment: dict[int, str]) -> None:
         ncards = len(node_id)
         ncards_existing = len(self.node_id)
 
@@ -388,6 +397,8 @@ class GRID(VectorizedBaseCard):
             ps = np.hstack([self.ps, ps])
             seid = np.hstack([self.seid, seid])
             _xyz_cid0 = np.vstack([self._xyz_cid0, _xyz_cid0])
+        if comment:
+            self.comment.update(comment)
 
         self.node_id = node_id
         self.cp = cp
@@ -427,6 +438,8 @@ class GRID(VectorizedBaseCard):
         return grid
 
     def __apply_slice__(self, grid: GRID, i: np.ndarray) -> None:
+        self._slice_comment(grid, i)
+
         grid.n = len(i)
         grid._is_sorted = self._is_sorted
         grid.node_id = self.node_id[i]
@@ -487,9 +500,7 @@ class GRID(VectorizedBaseCard):
 
     def write_file(self, file_obj: TextIOLike,
                    size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> str:
-        if len(self.node_id) == 0:
-            return
+                   write_card_header: bool=False) -> None:
         if size == 8:
             self.write_file_8(file_obj, write_card_header=write_card_header)
         elif is_double:
@@ -498,6 +509,7 @@ class GRID(VectorizedBaseCard):
             self.write_file_16(file_obj, write_card_header=write_card_header)
         return
 
+    @parse_node_check
     def write_file_8(self, file_obj, write_card_header: bool=False) -> None:
         coord_basic, extra_basic, is_basic = self._write_flags()
         node_id = array_str(self.node_id, size=8)
@@ -505,11 +517,14 @@ class GRID(VectorizedBaseCard):
             cps = ''
             for nid, xyz in zip_longest(node_id, self.xyz):
                 #x, y, z = xyz
+                comment = self.comment.get(nid, '')
+                file_obj.write(comment)
                 msg = 'GRID    %8s%8s%8s%8s%8s\n' % (
                     nid, cps,
                     print_float_8(xyz[0]),
                     print_float_8(xyz[1]),
                     print_float_8(xyz[2]))
+                file_obj.write(comment)
                 file_obj.write(msg)
         elif coord_basic: # cp=cd=0
             cps = array_default_int(self.cp, size=8, default=0)
@@ -517,12 +532,14 @@ class GRID(VectorizedBaseCard):
             for nid, cp, cd, xyz in zip_longest(node_id, cps, cds, self.xyz):
                 #x, y, z = xyz
                 #msg = print_card_8(['GRID', nid, cp, x, y, z, cd])
+                comment = self.comment.get(nid, '')
                 msg = 'GRID    %8s%8s%8s%8s%8s%8s\n' % (
                     nid, cp,
                     print_float_8(xyz[0]),
                     print_float_8(xyz[1]),
                     print_float_8(xyz[2]),
                     cd)
+                file_obj.write(comment)
                 file_obj.write(msg)
         else:
             cps = array_default_int(self.cp, size=8, default=0)
@@ -531,12 +548,14 @@ class GRID(VectorizedBaseCard):
             seids = array_default_int(self.seid, size=8, default=0)
             for nid, cp, cd, xyz, ps, seid in zip_longest(node_id, cps, cds, self.xyz, pss, seids):
                 #msg = print_card_8(['GRID', nid, cp, x, y, z, cd])
+                comment = self.comment.get(nid, '')
                 msg = 'GRID    %8s%8s%8s%8s%8s%8s%8s%8s\n' % (
                     nid, cp,
                     print_float_8(xyz[0]),
                     print_float_8(xyz[1]),
                     print_float_8(xyz[2]),
                     cd, ps, seid)
+                file_obj.write(comment)
                 file_obj.write(msg)
         return
 
@@ -546,10 +565,12 @@ class GRID(VectorizedBaseCard):
         is_basic = coord_basic and extra_basic
         return coord_basic, extra_basic, is_basic
 
+    @parse_node_check
     def write_file_16(self, file_obj: TextIOLike,
                       write_card_header: bool=False) -> None:
         return _write_grid_large(self, file_obj, print_scientific_16, write_card_header=write_card_header)
 
+    @parse_node_check
     def write_file_double(self, file_obj: TextIOLike,
                           write_card_header: bool=False) -> None:
         return _write_grid_large(self, file_obj, print_scientific_double, write_card_header=write_card_header)
@@ -743,17 +764,20 @@ def _write_grid_large(grid: GRID, file_obj: TextIOLike,
     node_id = array_str(grid.node_id, size=16)
     if is_basic:
         for nid, xyz in zip_longest(node_id, grid.xyz):
+            comment = grid.comment.get(nid, '')
             msg = ('GRID*   %16s                %16s%16s\n'
                    '*       %16s\n' % (
                        nid,
                        print_scientific_16(xyz[0]),
                        print_scientific_16(xyz[1]),
                        print_scientific_16(xyz[2])))
+            file_obj.write(comment)
             file_obj.write(msg)
     elif coord_basic: # cp=cd=0
         cps = array_default_int(grid.cp, size=16, default=0)
         cds = array_default_int(grid.cd, size=16, default=0)
         for nid, cp, cd, xyz in zip_longest(node_id, cps, cds, grid.xyz):
+            comment = grid.comment.get(nid, '')
             msg = ('GRID*   %16s%16s%16s%16s\n'
                    '*       %16s%16s\n' % (
                        nid,
@@ -762,6 +786,7 @@ def _write_grid_large(grid: GRID, file_obj: TextIOLike,
                        print_scientific_16(xyz[1]),
                        print_scientific_16(xyz[2]),
                        cd))
+            file_obj.write(comment)
             file_obj.write(msg)
     else:
         cps = array_default_int(grid.cp, size=16, default=0)
@@ -769,6 +794,7 @@ def _write_grid_large(grid: GRID, file_obj: TextIOLike,
         pss = array_default_int(grid.ps, size=16, default=0)
         seids = array_default_int(grid.seid, size=16, default=0)
         for nid, cp, cd, xyz, ps, seid in zip_longest(node_id, cps, cds, grid.xyz, pss, seids):
+            comment = grid.comment.get(nid, '')
             msg = ('GRID*   %16s%16s%16s%16s\n'
                    '*       %16s%16s%16s%16s\n' % (
                        nid,
@@ -777,5 +803,6 @@ def _write_grid_large(grid: GRID, file_obj: TextIOLike,
                        print_scientific_16(xyz[1]),
                        print_scientific_16(xyz[2]),
                        cd, ps, seid))
+            file_obj.write(comment)
             file_obj.write(msg)
     return

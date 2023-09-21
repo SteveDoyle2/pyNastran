@@ -108,9 +108,33 @@ class VectorizedBaseCard:
         self.debug = False
         self.write_default_fields = True
         self.id = np.array([], dtype='int32')
+        self.comment: dict[int, str] = {}
 
     def __len__(self) -> int:
         return self.n
+
+    def _slice_comment(self, new_obj: VectorizedBaseCard, i: np.ndarray) -> None:
+        """
+        only slices comments when ids are unique
+         - yes: GRID, CORDx, CBAR, PSHELL, MAT1, RBE2
+         - no:  MPC, SPC, SPC1, ASET, FREQ
+        """
+        if not self.comment:
+            return
+
+        # new method
+        #new_ids = self.node_id[i]
+        new_ids = self._ids[i]
+        common_ids = np.intersect1d(self._ids, new_ids)
+        new_obj.comment = {nid: self.comment[nid] for nid in common_ids}
+
+        #----
+        #old method
+        #keys = list(self.comment.keys())
+        #ikeys = [ii for ii in i
+                 #if ii in keys]
+        #new_obj.comment = {self.comment[i] for i in ikeys}
+
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -453,6 +477,16 @@ class Material(VectorizedBaseCard):
         raise NotImplementedError(f'{self.type}: add __apply_slice__')
 
 
+def parse_node_check(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if len(self.node_id) == 0:
+            if self.n == 0:
+                return
+            self.parse_cards()
+        return func(self, *args, **kwargs)
+    return wrapper
+
 def parse_element_check(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
@@ -477,6 +511,16 @@ def parse_material_check(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         if len(self.material_id) == 0:
+            if self.n == 0:
+                return
+            self.parse_cards()
+        return func(self, *args, **kwargs)
+    return wrapper
+
+def parse_load_check(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if len(self.load_id) == 0:
             if self.n == 0:
                 return
             self.parse_cards()

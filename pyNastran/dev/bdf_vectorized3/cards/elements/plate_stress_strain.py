@@ -132,7 +132,7 @@ class CPLSTS3(PlateStressElement):
         super().__init__(model)
         self.nodes = np.zeros((0, 3), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CPLSTS3 card from ``BDF.add_card(...)``
 
@@ -271,7 +271,7 @@ class CPLSTS4(PlateStressElement):
         super().__init__(model)
         self.nodes = np.zeros((0, 4), dtype='int32')
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CPLSTS4 card from ``BDF.add_card(...)``
 

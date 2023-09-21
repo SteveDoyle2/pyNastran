@@ -68,8 +68,18 @@ def volume_chexa(n1: np.ndarray, n2: np.ndarray,
     # x6 / x7
     def det3(a, b, c):
         stack = np.dstack([a, b, c])
-        assert stack.shape == (nelement, 3, 3)
-        return np.linalg.det(stack)
+        d3 = np.linalg.det(stack)
+        #except FloatingPointError:
+            # recasting it to a float64 array gets rid of the underflow
+            #if stack.dtype.name == 'float64':
+                #stack2 = stack.astype('float64')
+                #d3 = np.linalg.det(stack2)
+            #else:
+                #raise NotImplementedError(stack.dtype.name)
+            #abs_stack = np.abs(stack-stack2)
+            #print(f'dstack = {abs_stack.max():.3e}')
+        return d3
+
     #volume = (
         #det3(x6 - x0, x1 - x0, x2 - x5) +
         #det3(x6 - x0, x4 - x0, x5 - x7) +

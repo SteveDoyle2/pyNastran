@@ -247,7 +247,7 @@ class SPC1(VectorizedBaseCard):
         self.cards.append((spc_id, components, nodes, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         spc_id = integer(card, 1, 'conid')
         components = components_or_blank(card, 2, 'components', default=0)  # 246 = y; dx, dz dir
         #nodes = [node for node in card.fields(3) if node is not None]
@@ -346,7 +346,7 @@ class MPC(VectorizedBaseCard):
         self.cards.append((mpc_id, nodes, components, coefficients, comment))
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         mpc_id = integer(card, 1, 'conid')
         nodes = []
         components = []
