@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 from cpylog import SimpleLogger
 import pyNastran
-from pyNastran.dev.solver.solver import Solver, BDF
+from pyNastran.dev.bdf_vectorized3.solver.solver import Solver, BDF
 from pyNastran.dev.solver.solver import Solver as SolverOld, BDF as BDFold
 #from .solver import Solver, BDF
 from pyNastran.bdf.case_control_deck import CaseControlDeck
@@ -53,7 +53,7 @@ class TestSolverSpring(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
 
         solver = Solver(model)
         model.sol = 101
@@ -83,7 +83,7 @@ class TestSolverSpring(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
 
         solver = Solver(model)
         model.sol = 101
@@ -134,7 +134,7 @@ class TestSolverSpring(unittest.TestCase):
             components = 123456
             nodes = 1
             model.add_spc1(spc_id, components, nodes, comment='')
-            setup_case_control(model)
+            setup_static_case_control(model)
 
         solver_old = SolverOld(model_old)
         solver_old.run()
@@ -186,7 +186,7 @@ class TestSolverSpring(unittest.TestCase):
         components = 0
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
 
         solver = Solver(model)
         #model.sol = 103
@@ -228,7 +228,7 @@ class TestSolverSpring(unittest.TestCase):
         components = 0
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
 
         solver = Solver(model)
         solver.run()
@@ -269,7 +269,7 @@ class TestSolverRod(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         #with self.assertRaises(RuntimeError):
         solver.run()
@@ -303,7 +303,7 @@ class TestSolverRod(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
 
@@ -353,7 +353,7 @@ class TestSolverRod(unittest.TestCase):
         components = 123456
         #model.add_spc1(spc_id, components, nodes, comment='')
         model.add_spc(spc_id, nodes, components, 0., comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
         # F = kx
@@ -396,7 +396,7 @@ class TestSolverRod(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
 
@@ -442,7 +442,7 @@ class TestSolverRod(unittest.TestCase):
         aset_components = ['456', '123']
         model.add_aset1(aset_ids, aset_components, comment='')
 
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
 
@@ -481,7 +481,7 @@ class TestSolverRod(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model, extra_case_lines=['MPC=10'])
+        setup_static_case_control(model, extra_case_lines=['MPC=10'])
         solver = Solver(model)
         solver.run()
 
@@ -516,7 +516,7 @@ class TestSolverRod(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
 
@@ -569,7 +569,7 @@ class TestSolverRod(unittest.TestCase):
 
         #nodes = 2
         #model.add_spc1(spc_id, 23456, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
 
@@ -639,7 +639,7 @@ class TestSolverBar(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
 
@@ -695,7 +695,7 @@ class TestSolverBar(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
 
@@ -753,7 +753,7 @@ class TestSolverBar(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
 
@@ -822,7 +822,7 @@ class TestSolverBar(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         solver.run()
 
@@ -834,7 +834,7 @@ class TestSolverBar(unittest.TestCase):
 
 
 
-def setup_case_control(model, extra_case_lines=None):
+def setup_static_case_control(model: BDF, extra_case_lines=None):
     lines = [
         'STRESS(PLOT,PRINT) = ALL',
         'STRAIN(PLOT,PRINT) = ALL',
@@ -854,6 +854,73 @@ def setup_case_control(model, extra_case_lines=None):
     cc = CaseControlDeck(lines, log=model.log)
     model.sol = 101
     model.case_control_deck = cc
+
+
+def setup_harmonic_case_control(model: BDF, extra_case_lines=None):
+    lines = [
+        'STRESS(PLOT,PRINT) = ALL',
+        'STRAIN(PLOT,PRINT) = ALL',
+        'FORCE(PLOT,PRINT) = ALL',
+        'DISP(PLOT,PRINT) = ALL',
+        #'GPFORCE(PLOT,PRINT) = ALL',
+        'SPCFORCE(PLOT,PRINT) = ALL',
+        'MPCFORCE(PLOT,PRINT) = ALL',
+        #'OLOAD(PLOT,PRINT) = ALL',
+        #'ESE(PLOT,PRINT) = ALL',
+        'SUBCASE 1',
+        '  LOAD = 2',
+        '  SPC = 3',
+    ]
+    if extra_case_lines is not None:
+        lines += extra_case_lines
+    cc = CaseControlDeck(lines, log=model.log)
+    model.sol = 111
+    model.case_control_deck = cc
+
+class TestHarmonic(unittest.TestCase):
+    def test_spring_mass_damper(self):
+        """spring-mass-damper problem"""
+        model = BDF(debug=None, log=None, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cquad4_bad_normal.bdf'
+        mid = 3
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+
+        eid = 10
+        pid = 20
+        nids = [1, 2]
+        #x = [1., 0., 0.]
+        #g0 = None
+        #model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
+                       #pa=0, pb=0, wa=None, wb=None, comment='', validate=False)
+        #mid = 30
+        #Type = 'ROD'
+        #dim = [0.5]
+        #model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0., comment='')
+
+        k = 1e6
+        model.add_celas2(eid, k, nids, c1=1, c2=1, ge=0., s=0., comment='')
+
+        #E = 3.0e7
+        #G = None
+        #nu = 0.3
+        #model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
+                       #St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+
+        eid = 11
+        nid = 2
+        mass = 2.0
+        model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
+
+        spc_id = 1
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_harmonic_case_control(model)
+        solver = Solver(model)
+        #with self.assertRaises(RuntimeError):
+        solver.run()
+
 
 class TestSolverShell(unittest.TestCase):
     """tests the shells"""
@@ -885,7 +952,7 @@ class TestSolverShell(unittest.TestCase):
         model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
         model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
 
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
 
         with self.assertRaises(RuntimeError):
@@ -925,7 +992,7 @@ class TestSolverShell(unittest.TestCase):
         model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
         model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
 
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         with self.assertRaises(RuntimeError):
             solver.run()
@@ -985,7 +1052,7 @@ class TestSolverShell(unittest.TestCase):
         model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
         model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
 
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         #with self.assertRaises(RuntimeError):
         solver.run()
@@ -1054,7 +1121,7 @@ class TestSolverShell(unittest.TestCase):
         model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
         model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
 
-        setup_case_control(model)
+        setup_static_case_control(model)
         solver = Solver(model)
         with self.assertRaises(RuntimeError):
             solver.run()

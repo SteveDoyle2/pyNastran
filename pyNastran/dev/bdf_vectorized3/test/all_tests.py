@@ -12,6 +12,7 @@ from pyNastran.dev.bdf_vectorized3.test.bdfv_unit_tests import *
 from pyNastran.dev.bdf_vectorized3.test.test_numpy_utils import *
 
 from pyNastran.dev.bdf_vectorized3.cards.test.all_tests import *
+#from pyNastran.dev.bdf_vectorized3.solver.test_solver_springs import *
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

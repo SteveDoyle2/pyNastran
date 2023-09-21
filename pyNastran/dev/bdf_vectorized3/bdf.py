@@ -3470,13 +3470,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         [2]
 
         """
-        nnodes = len(self.grid.node_id)
-        assert nnodes > 0, nnodes
+        nnodes = self.grid.n # + self.spoint.n
         spoints = None
         epoints = None
         nrings = len(self.ringaxs)
         nspoints = self.spoint.n
         nepoints = 0
+        assert nnodes + nspoints > 0, (nnodes, nspoints)
+
         #nepoints = self.epoint.n
         if nspoints:
             spoints = list(self.spoint.ids)
@@ -3573,7 +3574,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             fdtype=fdtype, idtype=idtype, sort_ids=True)
         nids = nid_cp_cd[:, 0]
         if cid == 0:
-            xyz_cid = self.grid.xyz_cid0()
+            #xyz_cid = self.grid.xyz_cid0()
+            xyz_cid = xyz_cp
         else:
             xyz_cid = self.transform_xyzcp_to_xyz_cid(xyz_cp, nids, icp_transform,
                                                       cid=cid, in_place=False, atol=1e-6)
@@ -4863,7 +4865,9 @@ def _set_nodes(model: BDF,
     nxyz = nnodes + nspoints + nepoints + ngridb
     xyz_cp = np.zeros((nxyz, 3), dtype=fdtype)
     nid_cp_cd = np.zeros((nxyz, 3), dtype=idtype)
-    nids_cp_transform, nids_cd_transform, nid_cp_cd, xyz_cp = model.grid.get_nid_cp_cd_xyz_transforms()
+
+    if nnodes:
+        nids_cp_transform, nids_cd_transform, nid_cp_cd, xyz_cp = model.grid.get_nid_cp_cd_xyz_transforms()
 
     if nspoints:
         for nid in sorted(spoints):

@@ -54,7 +54,7 @@ class XPOINT(VectorizedBaseCard):
         if isinstance(ids, integer_types):
             ids = [ids]
         self.cards.append((ids, comment))
-        self.n += 1
+        self.n += len(ids)
         return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
@@ -66,7 +66,7 @@ class XPOINT(VectorizedBaseCard):
             field = integer_or_string(card, i, 'ID%d' % i)
             ids.append(field)
         self.cards.append((ids, comment))
-        self.n += 1
+        self.n += len(ids)
         return self.n
 
     def parse_cards(self) -> None:

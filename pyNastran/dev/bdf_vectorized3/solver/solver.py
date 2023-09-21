@@ -64,6 +64,7 @@ class Solver:
         solmap = {
             101 : self.run_sol_101,  # static
             103 : self.run_sol_103,  # modes
+            111 : self.run_sol_111,  # modal frequency response
         }
         model.cross_reference()
         self._update_card_count()
@@ -1258,16 +1259,17 @@ def _get_node_gridtype(model: BDF, idtype: str='int32') -> NDArrayN2int:
 
     """
     node_gridtype = []
+    fdtype = 'float64'
     if model.grid.n:
         nodes = model.grid.node_id
-        ones = np.ones(model.grid.n, nodes.dtype)
+        ones = np.ones(model.grid.n, dtype=fdtype)
         node_gridtype.append(np.column_stack([nodes, ones]))
 
     if model.spoint.n:
         #raise NotImplementedError()
         spoint_id = model.spoint.spoint_id
         spoint_id.sort()
-        twos = np.ones(model.spoint.n, nodes.dtype) * 2
+        twos = np.ones(model.spoint.n, dtype=fdtype) * 2
         node_gridtype.append(np.column_stack([spoint_id, twos]))
 
     assert len(node_gridtype) > 0

@@ -120,13 +120,21 @@ def _build_kbb_celas3(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
     celas = model.celas3
     if celas.n == 0:
         return celas.n
-    eids = model._type_to_id_map['CELAS3']
-    for eid in eids:
-        elem = model.elements[eid]
-        ki = elem.K()
+    eids = celas.element_id
+    pelas = model.pelas.slice_card_by_id(celas.property_id, assume_sorted=True)
+    nids1 = celas.spoints[:, 0]
+    nids2 = celas.spoints[:, 1]
+
+    ks = pelas.k
+    for nid1, nid2, ki in zip(nids1, nids2, ks):
+        #i = dof_map[(nid1, c1)]
+        #j = dof_map[(nid2, c2)]
+    #for eid in eids:
+        #elem = model.elements[eid]
+        #ki = elem.K()
         #print(elem, ki)
         #print(elem.get_stats())
-        _build_kbbi_celas34(Kbb, dof_map, elem, ki)
+        _build_kbbi_celas34(Kbb, dof_map, nid1, nid2, ki)
     return len(eids)
 
 def _build_kbb_celas4(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
@@ -164,9 +172,8 @@ def _build_kbbi_celas12(Kbb, dof_map: DOF_MAP,
     #del i, j, ki, nid1, nid2, c1, c2
 
 def _build_kbbi_celas34(Kbb, dof_map: DOF_MAP,
-                        elem: Union[CELAS3, CELAS4], ki: float) -> None:
+                        nid1: int, nid2: int, ki: float) -> None:
     """fill the CELASx Kbb matrix"""
-    nid1, nid2 = elem.nodes
     #print(dof_map)
     i = dof_map[(nid1, 0)]
     j = dof_map[(nid2, 0)]
