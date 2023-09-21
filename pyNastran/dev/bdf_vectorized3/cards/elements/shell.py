@@ -1639,7 +1639,7 @@ class CTRIA6(ShellElement):
         self.cards.append(card)
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CTRIA6 card from ``BDF.add_card(...)``
 
@@ -1926,7 +1926,7 @@ class CQUAD8(ShellElement):
         self.cards.append(card)
         self.n += 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CQUAD8 card from ``BDF.add_card(...)``
 
@@ -2268,7 +2268,7 @@ class CQUAD(ShellElement):
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
-              write_card_header: bool=False) -> str:
+                   write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
             return
 

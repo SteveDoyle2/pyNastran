@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, get_print_card_8_16
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, get_print_card_8_16, parse_material_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str # , array_default_int
 
 if TYPE_CHECKING:
@@ -250,13 +250,12 @@ class MAT1(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.material_id) == 0:
-            return ''
-
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         max_int = max(self.material_id.max(), self.mcsid.max())
         print_card = get_print_card(size, max_int)
-        lines = []
         for mid, e, g, nu, rho, alpha, tref, ge, Ss, St, Sc, \
             mcsid in zip_longest(self.material_id, self.E, self.G, self.nu, self.rho,
                                  self.alpha, self.tref, self.ge,
@@ -278,8 +277,8 @@ class MAT1(Material):
                 mcsid = set_blank_if_default(mcsid, 0)
                 list_fields = ['MAT1', mid, e, G, nu, rho, a, tref, ge,
                                St, Sc, Ss, mcsid]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
     def s33(self):
         """
@@ -525,13 +524,12 @@ class MAT2(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.material_id) == 0:
-            return ''
-
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         max_int = max(self.material_id.max(), self.mcsid.max())
         print_card = get_print_card(size, max_int)
-        lines = []
         self.validate()
         #print(self.material_id)
         #print(self.G11)
@@ -577,8 +575,8 @@ class MAT2(Material):
                 #ge23 = set_blank_if_default(ge_matrix[4], 0.0)
                 #ge33 = set_blank_if_default(ge_matrix[5], 0.0)
                 #list_fields += [ge11, ge12, ge13, ge22, ge23, ge33]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 
 class MAT8(Material):
@@ -625,7 +623,8 @@ class MAT8(Material):
     def add(self, mid: int, e11: float, e22: float, nu12: float,
             g12: float=0.0, g1z: float=1e8, g2z: float=1e8,
             rho: float=0., a1: float=0., a2: float=0., tref: float=0.,
-            xt: float=0., xc: float=Optional[None], yt: float=0., yc: float=Optional[None],
+            xt: float=0., xc: Optional[float]=None,
+            yt: float=0., yc: Optional[float]=None,
             s: float=0., ge: float=0., f12: float=0., strn: float=0.,
             comment: str='') -> int:
         """Creates a MAT8 card"""
@@ -830,11 +829,10 @@ class MAT8(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
-              write_card_header: bool=False) -> str:
-        if len(self.material_id) == 0:
-            return
+              write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
         for mid, e11, e22, g12, g13, g23, nu12, rho, \
             alpha, tref, ge, xt, xc, yt, yc, S, f12, strn, in zip_longest(self.material_id, self.E11, self.E22,
@@ -1111,10 +1109,10 @@ class MAT9(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.material_id) == 0:
-            return ''
-        lines = []
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
         # TODO: ge_list
         for mid, G11, G12, G13, G14, G15, G16, \
@@ -1144,8 +1142,8 @@ class MAT9(Material):
                             G26, G33, G34, G35, G36, G44,
                             G45, G46, G55, G56, G66, rho]
                            + A + [tref, ge])
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 
 class MAT10(Material):
@@ -1226,7 +1224,7 @@ class MAT10(Material):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         bulk = double_or_blank(card, 2, 'bulk')
         rho = double_or_blank(card, 3, 'rho', default=0.0)
@@ -1361,10 +1359,10 @@ class MAT10(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.material_id) == 0:
-            return ''
-        lines = []
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
         material_ids = array_str(self.material_id)
         for mid, bulk, rho, c, ge, gamma, \
@@ -1380,8 +1378,8 @@ class MAT10(Material):
             ]
             list_fields = ['' if isinstance(value, float) and np.isnan(value) else value
                            for value in list_fields]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 
 class MAT11(Material):
@@ -1398,7 +1396,19 @@ class MAT11(Material):
     +-------+-----+-----+-----+----+------+------+------+-----+
 
     """
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add(self, mid: int, e1: float, e2: float, e3: float,
+            nu12: float, nu13: float, nu23: float,
+            g12: float, g13: float, g23: float,
+            rho: float=0.0,
+            a1: float=0.0, a2: float=0.0, a3: float=0.0,
+            tref: float=0.0, ge: float=0.0, comment: str='') -> int:
+        """Creates a MAT11 card"""
+        self.cards.append((mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
+                           rho, a1, a2, a3, tref, ge, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         e1 = double(card, 2, 'E1')
         e2 = double(card, 3, 'E2')
@@ -1515,10 +1525,10 @@ class MAT11(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.material_id) == 0:
-            return ''
-        lines = []
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
         material_ids = array_str(self.material_id)
         for mid, e1, e2, e3, nu12, nu13, nu23, \
@@ -1538,7 +1548,7 @@ class MAT11(Material):
             list_fields = ['MAT11', mid, e1, e2, e3, nu12,
                            nu13, nu23, g12, g13, g23, rho, a1,
                            a2, a3, tref, ge]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 

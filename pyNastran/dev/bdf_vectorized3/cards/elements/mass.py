@@ -41,7 +41,7 @@ class CONM1(Element):
         self.node_id = np.array([], dtype='int32')
         self._mass = np.zeros((0, 6, 6), dtype='float64')
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         m = np.zeros((6, 6), dtype='float64')
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')

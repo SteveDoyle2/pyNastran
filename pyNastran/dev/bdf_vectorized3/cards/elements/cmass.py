@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 class CMASS1(Element):
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CMASS1 card from ``BDF.add_card(...)``
 
@@ -241,7 +241,7 @@ class CMASS2(Element):
 
 class CMASS3(Element):
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CMASS3 card from ``BDF.add_card(...)``
 
@@ -323,7 +323,7 @@ class CMASS4(Element):
     +--------+-----+-----+----+----+
 
     """
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         mass = double(card, 2, 'mass')
         s1 = integer_or_blank(card, 3, 's1', default=0)

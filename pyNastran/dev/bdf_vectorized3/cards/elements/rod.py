@@ -507,8 +507,6 @@ class PROD(Property):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
 
         for pid, mid, A, j, nsm, c in zip_longest(self.property_id, self.material_id,

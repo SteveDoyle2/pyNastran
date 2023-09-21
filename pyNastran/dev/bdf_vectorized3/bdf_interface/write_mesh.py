@@ -172,7 +172,7 @@ class Writer():
         #self._write_properties_by_element_type(bdf_file, size, is_double, is_long_ids)
         self._write_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
-        #self._write_masses(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_masses(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         # split out for write_bdf_symmetric
         #self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -545,7 +545,6 @@ class Writer():
         masses = [mass for mass in all_masses if mass.n > 0]
         if len(masses) == 0:
             return
-
         bdf_file.write('$MASSES\n')
         for mass in masses:
             bdf_file.write(mass.write(size=size))

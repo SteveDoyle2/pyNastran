@@ -176,12 +176,14 @@ class TestRods(unittest.TestCase):
         nsm = 1.
         A = 2.0
         eid = 1
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(1, [0., 0., 0.], comment='node1')
+        model.add_grid(2, [1., 0., 0.], comment='node2')
         nids = [1, 2]
         conrod_id = model.add_conrod(eid, mid, nids, A=A, j=0.0, c=0.0, nsm=nsm,
                                      comment='')
         model.setup(run_geom_check=False)
+
+        grid = model.grid.slice_card_by_id(2)
         conrod = model.conrod.slice_card_by_element_id(eid)
         assert np.array_equal(conrod.get_edge_ids(), [(1, 2)])
 

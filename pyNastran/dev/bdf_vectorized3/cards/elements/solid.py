@@ -188,7 +188,8 @@ class CTETRA(SolidElement):
         assert midside_nodes.shape[1] == 6, midside_nodes.shape
         return midside_nodes
 
-    def write_file(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+    def write_file(self, bdf_file: TextIO,
+                   size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
             return
@@ -396,7 +397,8 @@ class CPENTA(SolidElement):
         assert midside_nodes.shape[1] == 9, midside_nodes.shape
         return midside_nodes
 
-    def write_file(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+    def write_file(self, bdf_file: TextIO,
+                   size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
             return
@@ -534,7 +536,8 @@ class CPYRAM(SolidElement):
         assert midside_nodes.shape[1] == 8, midside_nodes.shape
         return midside_nodes
 
-    def write_file(self, bdf_file: TextIO, size: int=8, is_double: bool=False,
+    def write_file(self, bdf_file: TextIO,
+                   size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         if len(self.element_id) == 0:
             return

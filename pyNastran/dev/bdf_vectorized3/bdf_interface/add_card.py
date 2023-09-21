@@ -18,9 +18,9 @@ from pyNastran.bdf.cards.dynamic import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
-from pyNastran.bdf.cards.aero.aero import AESURF
+#from pyNastran.bdf.cards.aero.aero import AESURF
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLUTTER, MKAERO1, MKAERO2
-from pyNastran.bdf.cards.aero.static_loads import AEROS, AESTAT
+from pyNastran.bdf.cards.aero.static_loads import AEROS #, AESTAT
 from pyNastran.bdf.cards.constraints import SUPORT1, SUPORT
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.params import MDLPRM, PARAM
@@ -1699,11 +1699,11 @@ class Add2dElements(BDFAttributes):
 
         """
         elem = self.cquad.add(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
-        return self.cquad
+        return elem
 
     def add_ctriar(self, eid: int, pid: int, nids: list[int],
                    theta_mcid: Union[int, float]=0.0, zoffset: float=0.0,
-                   tflag: int=0, T1=None, T2=None, T3=None, comment: str='') -> CTRIAR:
+                   tflag: int=0, T1=None, T2=None, T3=None, comment: str='') -> int:
         """
         Creates a CTRIAR card
 
@@ -2720,7 +2720,7 @@ class AddAero(BDFAttributes):
         return mkaero
 
     def add_gust(self, sid: int, dload: int, wg: float, x0: float, V: Optional[float]=None,
-                 comment: str='') -> GUST:
+                 comment: str='') -> int:
         """
         Creates a GUST card, which defines a stationary vertical gust
         for use in aeroelastic response analysis.
@@ -2747,7 +2747,7 @@ class AddAero(BDFAttributes):
 
         """
         gust = self.gust.add(sid, dload, wg, x0, V=V, comment=comment)
-        return self.gust
+        return gust
 
     def add_flutter(self, sid: int, method: str,
                     density: int, mach: int, reduced_freq_velocity: int,
@@ -2807,7 +2807,7 @@ class AddAero(BDFAttributes):
         self._add_methods._add_flutter_object(flutter)
         return flutter
 
-    def add_flfact(self, sid: int, factors: list[float], comment: str='') -> FLFACT:
+    def add_flfact(self, sid: int, factors: list[float], comment: str='') -> int:
         """
         Creates an FLFACT card, which defines factors used for flutter
         analysis.  These factors define either:
@@ -2842,10 +2842,10 @@ class AddAero(BDFAttributes):
 
         """
         flfact = self.flfact.add(sid, factors, comment=comment)
-        return self.flfact
+        return flfact
 
     def add_aecomp(self, name: str, list_type: list[str], lists: Union[int, list[int]],
-                   comment: str='') -> AECOMP:
+                   comment: str='') -> int:
         """
         Creates an AECOMP card
 
@@ -2867,7 +2867,7 @@ class AddAero(BDFAttributes):
 
         """
         aecomp = self.aecomp.add(name, list_type, lists, comment=comment)
-        return self.aecomp
+        return aecomp
 
     def add_aecompl(self, name: str, labels: list[str], comment: str='') -> AECOMPL:
         """
@@ -2888,7 +2888,7 @@ class AddAero(BDFAttributes):
         self._add_methods._add_aecomp_object(aecompl)
         return aecompl
 
-    def add_aestat(self, aestat_id: int, label: str, comment: str='') -> AESTAT:
+    def add_aestat(self, aestat_id: int, label: str, comment: str='') -> int:
         """
         Creates an AESTAT card, which is a variable to be used in a TRIM analysis
 
@@ -2903,7 +2903,7 @@ class AddAero(BDFAttributes):
 
         """
         aestat = self.aestat.add(aestat_id, label, comment=comment)
-        return self.aestat
+        return aestat
 
     def add_aelink(self, aelink_id: int, label: str,
                    independent_labels: list[str], linking_coefficients: list[float],
@@ -3920,7 +3920,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_seqgp_object(seqgp)
         return seqgp
 
-    def add_spoint(self, ids: Union[int, list[int]], comment: str='') -> SPOINTs:
+    def add_spoint(self, ids: Union[int, list[int]], comment: str='') -> int:
         """
         Creates the SPOINTs card that contains many SPOINTs
 
@@ -3933,9 +3933,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         spoint = self.spoint.add(ids, comment=comment)
-        return self.spoint
+        return spoint
 
-    def add_epoint(self, ids: Union[int, list[int]], comment: str='') -> EPOINTs:
+    def add_epoint(self, ids: Union[int, list[int]], comment: str='') -> int:
         """
         Creates the EPOINTs card that contains many EPOINTs
 
@@ -4722,7 +4722,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
     def add_mat8(self, mid: int, e11: float, e22: float, nu12: float,
                  g12: float=0.0, g1z: float=1e8, g2z: float=1e8,
                  rho: float=0., a1: float=0., a2: float=0., tref: float=0.,
-                 Xt: float=0., Xc: float=None, Yt: float=0., Yc: float=None,
+                 Xt: float=0., Xc: Optional[float]=None,
+                 Yt: float=0., Yc: Optional[float]=None,
                  S: float=0., ge: float=0., F12: float=0., strn: float=0.,
                  comment: str='') -> MAT8:
         """Creates a MAT8 card"""
@@ -4793,8 +4794,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                              comment=comment)
         return mat
 
-    def add_mat11(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
-                  a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='') -> int:
+    def add_mat11(self, mid: int, e1: float, e2: float, e3: float,
+                  nu12: float, nu13: float, nu23: float,
+                  g12: float, g13: float, g23: float,
+                  rho: float=0.0,
+                  a1: float=0.0, a2: float=0.0, a3: float=0.0,
+                  tref: float=0.0, ge: float=0.0, comment: str='') -> int:
         """Creates a MAT11 card"""
         mat = self.mat11.add(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
                              a1=a1, a2=a2, a3=a3, tref=tref, ge=ge, comment=comment)
@@ -7275,7 +7280,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
     def add_dscons(self, dscid: int, label: str, constraint_type: str,
                    nid_eid: int, comp: int,
-                   limit: float=0.0, opt: str='MAX', layer_id: int=1):
+                   limit: float=0.0, opt: str='MAX', layer_id: int=1) -> None:
         """
         Design Constraint
         Defines a design constraint in design sensitivity analysis
@@ -7300,7 +7305,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         fields = ['AEPRESS', mach, sym_xz, sym_xy, ux_id, dmij, dmiji]
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
 
-    def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int, mesh: str, force: int, dmik: str, perq: str):
+    def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int, mesh: str, force: int, dmik: str, perq: str) -> None:
         """adds an AEPRESS card"""
         assert isinstance(mesh, str), mesh
         assert isinstance(sym_xz, str), sym_xz
@@ -7311,7 +7316,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
 
     def add_dvset(self, vid: int, dv_type: str, field: int, pref: float, pids: list[float],
-                  alpha: float=1.0):
+                  alpha: float=1.0) -> None:
         """
         Design Variable Set Property
 
@@ -7333,7 +7338,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         fields = ['DVSET', vid, dv_type, field, pref, alpha] + pids
         self.reject_card_lines('DVSET', print_card_(fields).split('\n'), show_log=False)
 
-    def add_dvar(self, bid: int, label: str, vids: list[float], deltab: float=0.02):
+    def add_dvar(self, bid: int, label: str, vids: list[float],
+                 deltab: float=0.02) -> None:
         """
         Design Variable
 
@@ -7363,7 +7369,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         fields = ['DVAR', bid, label, deltab] + vids
         self.reject_card_lines('DVAR', print_card_(fields).split('\n'), show_log=False)
 
-    def add_extrn(self, nids: list[int], comps: list[str]):
+    def add_extrn(self, nids: list[int], comps: list[str]) -> None:
         fields = ['EXTRN']
         for nid, comp in zip(nids, comps):
             fields.extend([nid, comp])
@@ -7402,7 +7408,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         fields = ['RSPINT', rid, grida, gridb, gr, unit, table_id]
         self.reject_card_lines('RSPINT', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_temp(self, sid, temperatures, comment='') -> TEMP:
+    def add_temp(self, sid, temperatures, comment='') -> int:
         """
         Creates a TEMP card
 
@@ -7420,14 +7426,14 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         temp = self.temp.add(sid, temperatures, comment=comment)
-        return self.temp
+        return temp
 
     #def add_tempp1(self) -> TEMPP1:
         #temp = TEMPP1()
         #self._add_thermal_load_object(temp)
         #return temp
 
-    def add_tempd(self, sid, temperature, comment='') -> TEMPD:
+    def add_tempd(self, sid, temperature, comment='') -> int:
         """
         Creates a TEMPD card
 
@@ -7442,9 +7448,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         tempd = self.tempd.add(sid, temperature, comment=comment)
-        return self.tempd
+        return tempd
 
-    def add_qhbdy(self, sid, flag, q0, grids, af=None, comment='') -> QHBDY:
+    def add_qhbdy(self, sid, flag, q0, grids, af=None, comment='') -> int:
         """
         Creates a QHBDY card
 
@@ -7466,19 +7472,19 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         load = self.qhbdy.add(sid, flag, q0, grids, af=af, comment=comment)
-        return self.qhbdy
+        return load
 
-    def add_qbdy1(self, sid, qflux, eids, comment='') -> QBDY1:
+    def add_qbdy1(self, sid, qflux, eids, comment='') -> int:
         """Creates a QBDY1 card"""
         load = self.qbdy1.add(sid, qflux, eids, comment=comment)
-        return self.qbdy1
+        return load
 
-    def add_qbdy2(self, sid, eid, qfluxs, comment='') -> QBDY2:
+    def add_qbdy2(self, sid, eid, qfluxs, comment='') -> int:
         """Creates a QBDY1 card"""
         load = self.qbdy2.add(sid, eid, qfluxs, comment=comment)
-        return self.qbdy2
+        return load
 
-    def add_qbdy3(self, sid, Q0, cntrlnd, eids, comment='') -> QBDY3:
+    def add_qbdy3(self, sid, Q0, cntrlnd, eids, comment='') -> int:
         """
         Creates a QBDY3 card
 
@@ -7498,15 +7504,15 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         load = self.qbdy3.add(sid, Q0, cntrlnd, eids, comment=comment)
-        return self.qbdy3
+        return load
 
-    def add_qvol(self, sid, qvol, control_point, elements, comment='') -> QVOL:
+    def add_qvol(self, sid, qvol, control_point, elements, comment='') -> int:
         """Creates a QVOL card"""
         load = self.qvol.add(sid, qvol, control_point, elements, comment=comment)
-        return self.qvol
+        return load
 
     def add_qvect(self, sid, q0, eids, t_source=None,
-                  ce=0, vector_tableds=None, control_id=0, comment='') -> QVECT:
+                  ce=0, vector_tableds=None, control_id=0, comment='') -> int:
         """
         Creates a QVECT card
 
@@ -7540,25 +7546,25 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             sid, q0, eids, t_source=t_source, ce=ce,
             vector_tableds=vector_tableds, control_id=control_id,
             comment=comment)
-        return self.qvect
+        return load
 
     def add_chbdyg(self, eid, surface_type, nodes,
                    iview_front=0, iview_back=0,
-                   rad_mid_front=0, rad_mid_back=0, comment='') -> CHBDYG:
+                   rad_mid_front=0, rad_mid_back=0, comment='') -> int:
         """Creates a CHBDYG card"""
         elem = self.chbdyg.add(
             eid, surface_type, nodes,
             iview_front=iview_front, iview_back=iview_back,
             rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
             comment=comment)
-        return self.chbdyg
+        return elem
 
     def add_chbdyp(self, eid, pid, surface_type, g1, g2,
                    g0=0, gmid=None, ce=0,
                    iview_front=0, iview_back=0,
                    rad_mid_front=0, rad_mid_back=0,
                    e1=None, e2=None, e3=None,
-                   comment='') -> CHBDYP:
+                   comment='') -> int:
         """
         Creates a CHBDYP card
 
@@ -7602,12 +7608,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
             e1=e1, e2=e2, e3=e3,
             comment=comment)
-        return self.chbdyp
+        return elem
 
     def add_chbdye(self, eid, eid2, side,
                    iview_front=0, iview_back=0,
                    rad_mid_front=0, rad_mid_back=0,
-                   comment='') -> CHBDYE:
+                   comment='') -> int:
         """
         Creates a CHBDYE card
 
@@ -7636,7 +7642,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             iview_front=iview_front, iview_back=iview_back,
             rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
             comment=comment)
-        return self.chbdye
+        return elem
 
     def add_phbdy(self, pid, af=None, d1=None, d2=None, comment='') -> PHBDY:
         """
