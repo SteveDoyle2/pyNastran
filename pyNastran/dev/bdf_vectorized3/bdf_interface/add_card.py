@@ -5874,7 +5874,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         spc = self.spcd.add(spc_id, nodes, components, enforced, comment=comment)
-        return self.spcd
+        return spc
 
     def add_spcadd(self, conid, sets, comment='') -> SPCADD:
         """Creates a SPCADD card"""

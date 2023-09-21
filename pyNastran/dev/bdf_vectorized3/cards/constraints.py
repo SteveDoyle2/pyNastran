@@ -4,7 +4,7 @@ from collections import defaultdict
 from itertools import count
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim
@@ -64,7 +64,7 @@ class SPC(VectorizedBaseCard):
         self.n = 0
 
     def add(self, spc_id: int, nodes: list[int], components: list[str],
-            enforced: list[float], comment: str=''):
+            enforced: list[float], comment: str='') -> int:
         """
         Creates an SPC card, which defines the degree of freedoms to be
         constrained
@@ -89,15 +89,24 @@ class SPC(VectorizedBaseCard):
         .. warning:: non-zero enforced deflection requires an SPCD as well
 
         """
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
         nnodes = len(nodes)
+
+        if isinstance(components, integer_types):
+            components = [components]
+        if isinstance(enforced, float_types):
+            enforced = [enforced] * nnodes
+
         if isinstance(spc_id, integer_types):
             spc_id = [spc_id] * nnodes
         assert nnodes == len(components)
         assert nnodes == len(enforced)
         self.cards.append((spc_id, nodes, components, enforced, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         spc_idi = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
             spc_id = [spc_idi]
@@ -407,6 +416,7 @@ class MPC(VectorizedBaseCard):
             i += 1
         self.cards.append((mpc_id, nodes, components, coefficients, comment))
         self.n += 1
+        return self.n
 
     def parse_cards(self):
         assert self.n >= 0, self.n
@@ -693,7 +703,7 @@ class MPCADD(ADD):
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> str:
+                   write_card_header: bool=False) -> None:
         if len(self.mpc_id) == 0:
             return
         if size == 8 and self.is_small_field:

@@ -858,7 +858,7 @@ class Solver:
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
 
         aset, sset, xa, xs, eigenvalues = self._setup_modes(
-            model, dof_map, ndof, ngrid, ndof_per_grid, fdtype)
+            model, subcase, dof_map, ndof, ngrid, ndof_per_grid, fdtype)
 
         isubcase = subcase.id
         mode_cycles = eigenvalues
@@ -900,7 +900,9 @@ class Solver:
         #raise NotImplementedError(subcase)
 
 
-    def _setup_modes(self, model: BDF, dof_map,
+    def _setup_modes(self, model: BDF,
+                     subcase: Subcase,
+                     dof_map,
                      ndof: int, ngrid: int,
                      ndof_per_grid: int, fdtype: str):
         Kgg = build_Kgg(model, dof_map,

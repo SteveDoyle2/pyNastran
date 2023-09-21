@@ -5,9 +5,11 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.dev.bdf_vectorized.solver.solver import Solver
+from pyNastran.utils import print_bad_path
+
 
 PKG_PATH = pyNastran.__path__[0]
-TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'dev_vectorized', 'solver', 'test')
+TEST_PATH = os.path.join(PKG_PATH, 'dev', 'bdf_vectorized', 'solver', 'test')
 log = SimpleLogger('warning', encoding='utf8')
 
 class TestSolverSpring(unittest.TestCase):
@@ -21,6 +23,8 @@ class TestSolverSpring(unittest.TestCase):
             'BDFNAME' : os.path.join(TEST_PATH, 'celas1.bdf'),
             'BDFBASE' : 'celas1',
         }
+        #C:\NASA\m4\formats\git\pyNastran\pyNastran\dev\bdf_vectorized\solver\test
+        assert os.path.exists(fargs['BDFNAME']), print_bad_path(fargs['BDFNAME'])
         solver = Solver(fargs, log=log)
         solver.run_solver()
 
