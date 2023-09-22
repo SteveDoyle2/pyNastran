@@ -718,7 +718,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE', 'RFORCE1',
-            #'SPCD', 'DEFORM',
+            'SPCD', 'DEFORM',
 
             # msgmesh
             #'GMLOAD',  # loads
@@ -2570,8 +2570,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'TEMPD': partial(self._prepare_card, self.tempd),
             #'DTEMP': partial(self._prepare_card, self.dtemp),
             #'LSEQ': partial(self._prepare_card, self.lseq),
-            #'SPCD' : partial(self._prepare_card, self.spcd), # enforced displacement; load
-            #'DEFORM' : partial(self._prepare_card, self.deform),  # enforced displacement
+            'SPCD' : partial(self._prepare_card, self.spcd), # enforced displacement; load
+            'DEFORM' : partial(self._prepare_card, self.deform),  # enforced displacement
             #'RFORCE' : partial(self._prepare_card, self.rforce),
             #'RFORCE1' : partial(self._prepare_card, self.rforce1),
 

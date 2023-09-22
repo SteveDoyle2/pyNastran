@@ -53,7 +53,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2,
     MOMENT, MOMENT1, MOMENT2,
     #TEMP, TEMPD, DTEMP, DTEMP,
-    #SPCD, DEFORM,
+    SPCD, DEFORM,
     #RFORCE, RFORCE1,
     #GRAV, ACCEL, ACCEL1,
 )
@@ -385,8 +385,8 @@ class BDFAttributes:
         #self.dtemp = DTEMP(self)  # has nodes
         #self.lseq = LSEQ(self)    # static load sequence
         #self.qvect = QVECT(self)
-        #self.spcd = SPCD(self)   # enforced displacment; load
-        #self.deform = DEFORM(self) # encforced displacement; load
+        self.spcd = SPCD(self)   # enforced displacment; load
+        self.deform = DEFORM(self) # encforced displacement; load
         #self.rforce = RFORCE(self)    # rotational force
         #self.rforce1 = RFORCE1(self)  # rotational force
 
@@ -726,7 +726,7 @@ class BDFAttributes:
             #self.temp, self.tempd,
             #self.dtemp, # has nodes
             #self.qhbdy, self.qbdy1, self.qbdy2, self.qbdy3, self.qvol, self.qvect,
-            #self.spcd, self.deform,
+            self.spcd, self.deform,
             #self.rforce, self.rforce1,
             #self.ploadx1,
         ]
@@ -1439,7 +1439,7 @@ class BDFAttributes:
             volume += volumei.sum()
         return volume
 
-    def quality(self, cards_to_read: Optional[Set[str]]=None) -> float:
+    def quality(self, cards_to_read: Optional[Set[str]]=None):
         """
         cards_to_read is intended for the gui, which doesn't support
         every card and also masses, which don't have results and so are not
@@ -1448,12 +1448,14 @@ class BDFAttributes:
         NO_QUALITY = {
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+            'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4', 'CONM1', 'CONM2',
             'CROD', 'CTUBE', 'CBAR', 'CBEAM',
             'CVISC', 'CGAP', 'CBUSH',
-            'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4', 'CONM1', 'CONM2',
+            'CSHEAR',
         }
         nelements = 0
-        for card in self.elements:
+        elements2 = [card for card in self.elements if card.n > 0]
+        for card in elements2:
             if cards_to_read is not None and card.type not in cards_to_read:
                 continue
             #if card.type in NOT_ELEMENT:
@@ -1461,11 +1463,11 @@ class BDFAttributes:
             #if card.n == 0 or card.type in NO_QUALITY:
                 #continue
             # all elements have a quality value; it's just None
-            if card.n > 0:
-                print(f'adding {card.type} to quality; n={card.n}')
+            #print(f'adding {card.type} to quality; n={card.n}')
             nelements += card.n
 
         #area = np.full(nelements, np.nan, dtype='float64')
+        element_ids = np.full(nelements, -1, dtype='int32')
         taper_ratio = np.full(nelements, np.nan, dtype='float64')
         area_ratio = np.full(nelements, np.nan, dtype='float64')
         max_skew = np.full(nelements, np.nan, dtype='float64')
@@ -1479,7 +1481,7 @@ class BDFAttributes:
 
         i0 = 0
         icard = 0
-        for card in self.elements:
+        for card in elements2:
             if cards_to_read is not None and card.type not in cards_to_read:
                 continue
             n = card.n
@@ -1489,7 +1491,8 @@ class BDFAttributes:
             if n == 0:
                 continue
 
-            print(f'card_type={card.type}; icard_type={icard}; [{i0}:{i0+n}]; n={n}')
+            #print(f'card_type={card.type}; icard_type={icard}; [{i0}:{i0+n}]; n={n} eids={card.element_id}')
+            element_ids[i0:i0+n] = card.element_id
             if card.type in NO_QUALITY:
                 icard += 1
                 i0 += n
@@ -1512,6 +1515,7 @@ class BDFAttributes:
             min_edge_length[i0:i0+n] = min_edge_lengthi
             max_warp[i0:i0+n] = max_warpi
             icard_type[i0:i0+n] = icard
+            i0 += n
             icard += 1
             #if i0 + n >= 46934:
                 #print('*********')
@@ -1521,7 +1525,7 @@ class BDFAttributes:
                 #raise RuntimeError(f'{card.type} has nan area; area={areai}')
             #area += areai.sum()
         out = (
-            taper_ratio, area_ratio, max_skew, aspect_ratio,
+            element_ids, taper_ratio, area_ratio, max_skew, aspect_ratio,
             min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
             #icard_type,
         )

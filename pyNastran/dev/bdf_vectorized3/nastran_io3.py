@@ -215,7 +215,7 @@ class Nastran3:
         gui._add_alt_actors(gui.alt_grids)
 
         element_id, property_id = self.load_elements(ugrid, model, node_id)
-        print(f'nelements = {len(element_id)}')
+        #print(f'nelements = {len(element_id)}')
         form, cases, icase = self.save_results(model, node_id, element_id, property_id)
 
         ugrid.SetPoints(points)
@@ -274,7 +274,8 @@ class Nastran3:
 
         mean_edge_length, icase, quality_form = _set_quality(
             icase, cases,
-            model, subcase_id, self.gui_elements, nelements, self.gui_elements)
+            model, subcase_id, self.gui_elements,
+            element_id, nelements, self.gui_elements)
         self.mean_edge_length = mean_edge_length
 
         form = [
@@ -350,7 +351,7 @@ class Nastran3:
                 'CONROD', 'CTUBE', 'CROD',
                 'CBEAM', 'CBAR', 'CBUSH',
                 'CBAR', 'CBEAM', 'CSHEAR',
-                'CTRIA3', 'CQUAD4', 'CSHEAR',
+                'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR',
             }
             midside_elements = {
                 'CTRIA6', 'CQUAD8', # 'CQUAD'
@@ -361,8 +362,9 @@ class Nastran3:
             gui_elements = basic_elements | solid_elements | midside_elements
             self.gui_elements = gui_elements
             etype = element.type
-            print('load', etype, nelement)
+            #print('load', etype, nelement, element.element_id)
             if etype in basic_elements:
+                #print('  basic')
                 # basic elements
                 # missing nodes are not allowed
                 if etype in {'CONROD'}:
@@ -371,10 +373,10 @@ class Nastran3:
                 elif etype in {'CROD', 'CTUBE', 'CBAR', 'CBEAM', 'CBUSH'}:
                     cell_type = cell_type_line
                     property_id = element.property_id
-                elif etype in {'CTRIA3'}:
+                elif etype in {'CTRIA3', 'CTRIAR'}:
                     cell_type = cell_type_tri3
                     property_id = element.property_id
-                elif etype in {'CQUAD4'}:
+                elif etype in {'CQUAD4', 'CQUADR'}:
                     cell_type = cell_type_quad4
                     property_id = element.property_id
                 elif etype == 'CSHEAR':
@@ -426,6 +428,7 @@ class Nastran3:
                 del cell_offseti, nnodesi, nodesi
                 cell_offset0 += nelement * (dnode + 1)
             elif etype in midside_elements:
+                #print('  midside')
                 midside_nodes = element.midside_nodes
                 min_midside_nid = midside_nodes.min(axis=1)
                 assert len(min_midside_nid) == nelement
@@ -441,6 +444,9 @@ class Nastran3:
                     property_id = element.property_id
                 nfull = is_full.sum()
                 npartial = is_partial.sum()
+
+                if nfull and npartial:
+                    log.warning(f'{etype} nelement={nelement} downcasting midside elements to first order')
 
                 log.debug(f'{etype} nelement={nelement} nfull={nfull} npartial={npartial}')
                 if nfull:
@@ -465,12 +471,32 @@ class Nastran3:
                         cell_offset_)
 
                 if npartial:
+                    if etype in {'CTRIA6'}:
+                        cell_type = cell_type_tri3
+                        nodes = element.nodes[:, :3]
+                    elif etype == 'CTRIAX6':
+                        cell_type = cell_type_tri3
+                        nodes = element.nodes[:, [0, 2, 4]]
+                    elif etype == 'CQUAD8':
+                        cell_type = cell_type_quad8
+                        nodes = element.nodes[:, :4]
+                    else:
+                        raise NotImplementedError(f'full {etype}')
+                    is_full = np.arange(element.n, dtype='int32')
+                    cell_offset0 = _save_element(
+                        is_full, grid_id, cell_type, cell_offset0,
+                        element_id, property_id, nodes,
+                        element_ids,
+                        property_ids,
+                        n_nodes_,
+                        cell_type_,
+                        cell_offset_)
                     continue
-                    raise NotImplementedError(f'partial {etype}')
                 nodesi = element.base_nodes
 
 
             elif etype in solid_elements:
+                print('  solid')
                 cell_offset0, n_nodesi, cell_typei, cell_offseti = _create_solid_vtk_arrays(
                     element, grid_id, cell_offset0)
 
@@ -515,7 +541,7 @@ class Nastran3:
                 cell_offset0 += nelement * (dnode + 1)
             else:
                 # more complicated element
-                print('dropping', element)
+                print('  dropping', element)
                 continue
                 #raise NotImplementedError(element.type)
             del nelement # , dnode
@@ -610,6 +636,7 @@ def _mean_min_edge_length(min_edge_length: np.ndarray) -> float:
 def _set_quality(icase: int, cases: dict[int, Any],
                  model: BDF, subcase_id: int,
                  gui_elements: set[str],
+                 element_id: np.ndarray,
                  nelements: int,
                  cards_to_read) -> tuple[float, int, Form]:
 
@@ -617,10 +644,13 @@ def _set_quality(icase: int, cases: dict[int, Any],
         #'CBAR', 'CBEAM', 'CBUSH',
         #'CQUAD4', 'CTRIA3', 'CSHEAR',
         #'CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA'}
-    (taper_ratio, area_ratio, max_skew, aspect_ratio,
+    (element_id_quality, taper_ratio, area_ratio, max_skew, aspect_ratio,
      min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
      #icard_type,
     ) = model.quality(cards_to_read=cards_to_read)
+
+    if not np.array_equal(element_id, element_id_quality):
+        raise RuntimeError('quality map error')
 
     # not included in the vtk mesh
     NO_ELEMENT = {'CONM1', 'CONM2'}

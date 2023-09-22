@@ -63,8 +63,9 @@ class WriteMesh(BDFAttributes):
         #else:
             #is_long_ids, size = self._get_long_ids(size)
 
+        log = self.log
         out_filename, size = _output_helper(out_filename,
-                                            interspersed, size, is_double, self.log)
+                                            interspersed, size, is_double, log)
         encoding = self.get_encoding(encoding)
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
@@ -72,12 +73,12 @@ class WriteMesh(BDFAttributes):
         if has_read_write:
             bdf_file = out_filename
         else:
-            self.log.debug(f'---starting BDF.write_bdf of {out_filename}---')
+            log.debug(f'---starting BDF.write_bdf of {out_filename}---')
             assert isinstance(encoding, str), encoding
             bdf_file = open(out_filename, 'w', encoding=encoding)
         self.writer._write_header(bdf_file, encoding, write_header=write_header)
 
-        self.log.warning('write_bdf')
+        log.warning('write_bdf')
 
         #-------------------------------------------------------------
         self.write_bulk_data(
@@ -892,8 +893,8 @@ class Writer():
             model.sload.write_file(bdf_file, size=size, is_double=is_double)
             #bdf_file.write(model.tempd.write(size=size))  # default temp
             #bdf_file.write(model.temp.write(size=size))
-            #bdf_file.write(model.spcd.write(size=size))
-            #bdf_file.write(model.deform.write(size=size))
+            bdf_file.write(model.spcd.write(size=size))
+            bdf_file.write(model.deform.write(size=size))
 
             # axisymmetric loads
             #bdf_file.write(model.ploadx1.write(size=size))

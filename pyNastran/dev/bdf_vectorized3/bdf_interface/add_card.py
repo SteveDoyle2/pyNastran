@@ -5845,7 +5845,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         spc = self.spc1.add(spc_id, components, nodes, comment=comment)
         return spc
 
-    def add_spcd(self, spc_id, nodes, components, enforced, comment='') -> SPCD:
+    def add_spcd(self, spc_id: int, nodes: list[int],
+                 components: list[int], enforced: list[float], comment: str='') -> int:
         """
         Creates an SPCD card, which defines the degree of freedoms to be
         set during enforced motion
@@ -5876,12 +5877,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         spc = self.spcd.add(spc_id, nodes, components, enforced, comment=comment)
         return spc
 
-    def add_spcadd(self, conid, sets, comment='') -> SPCADD:
+    def add_spcadd(self, conid, sets, comment='') -> int:
         """Creates a SPCADD card"""
         spcadd = self.spcadd.add(conid, sets, comment=comment)
-        return self.spcadd
+        return spcadd
 
-    def add_spcax(self, conid, ringax, hid, component, enforced, comment='') -> SPCAX:
+    def add_spcax(self, conid, ringax, hid, component, enforced, comment='') -> int:
         """Creates an SPCAX card"""
         spcax = self.spcax.add(conid, ringax, hid, component, enforced, comment=comment)
         return self.spcax
@@ -5913,12 +5914,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         mpc = self.mpc.add(mpc_id, nodes, components, coefficients, comment=comment)
         return self.mpc
 
-    def add_mpcadd(self, mpc_id, sets, comment='') -> MPCADD:
+    def add_mpcadd(self, mpc_id, sets, comment='') -> int:
         """Creates an MPCADD card"""
         mpcadd = self.mpcadd.add(mpc_id, sets, comment=comment)
         return self.mpcadd
 
-    def add_suport(self, nodes: list[int], components: list[int], comment: str='') -> SUPORT:
+    def add_suport(self, nodes: list[int], components: list[int], comment: str='') -> int:
         """
         Creates a SUPORT card, which defines free-body reaction points.
         This is always active.
@@ -5940,7 +5941,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return self.suport
 
     def add_suport1(self, conid, nodes: list[int], components: list[int],
-                    comment: str='') -> SUPORT1:
+                    comment: str='') -> int:
         """
         Creates a SUPORT card, which defines free-body reaction points.
 
@@ -6075,7 +6076,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return method
 
     def add_set1(self, sid: int, ids: list[int], is_skin: bool=False,
-                 comment: str='') -> SET1:
+                 comment: str='') -> int:
         """
         Creates a SET1 card, which defines a list of structural grid
         points or element identification numbers.
@@ -6096,13 +6097,13 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         set_obj = self.set1.add(sid, ids, is_skin=is_skin, comment=comment)
-        return self.set1
+        return set_obj
 
     def add_set2(self, sid: int, macro: int,
                  sp1: float, sp2: float,
                  ch1: float, ch2: float,
                  zmax: float=0.0, zmin: float=0.0,
-                 comment: str='') -> SET2:
+                 comment: str='') -> int:
         """
         Creates a SET2 card, which defines a list of structural grid
         points in terms of aerodynamic macro elements.
@@ -6129,10 +6130,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_set_object(set_obj)
         return self.set2
 
-    def add_set3(self, sid: int, desc: str, ids: list[int], comment: str='') -> SET3:
+    def add_set3(self, sid: int, desc: str, ids: list[int], comment: str='') -> int:
         """Creates a SET3 card"""
         set_obj = self.set3.add(sid, desc, ids, comment=comment)
-        return self.set3
+        return set_obj
 
     def add_aset(self, ids, components, comment='') -> Union[ASET, ASET1]:
         """

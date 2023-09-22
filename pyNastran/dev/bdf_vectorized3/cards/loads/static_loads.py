@@ -19,7 +19,9 @@ from pyNastran.utils.numpy_utils import (
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.coord import transform_spherical_to_rectangular
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim, get_print_card_8_16 # , searchsorted_filter
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    VectorizedBaseCard, hslice_by_idim, make_idim,
+    parse_load_check, get_print_card_8_16) # , searchsorted_filter
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -53,6 +55,222 @@ class Load(VectorizedBaseCard):
                 index.append(i)
         assert len(index) > 0, f'no {card.type}s found; {self} load_id={load_id} load_ids={self.load_id}'
         return self.slice_card_by_index(index)
+
+
+class DEFORM(Load):
+    """
+    Defines an enforced displacement value for static analysis.
+
+     +--------+-----+-----+------+----+----+----+----+
+     |    1   |  2  |  3  |   5  |  6 |  8 |  6 |  8 |
+     +========+=====+=====+======+====+====+====+====+
+     | DEFORM | SID |  E1 |  D1  | E2 | D2 | E3 | D3 |
+     +--------+-----+-----+------+----+----+----+----+
+     | DEFORM | 100 | 32  | -2.6 | 5  | .9 | 6  | .9 |
+     +--------+-----+-----+------+----+----+----+----+
+    """
+    def slice_card_by_index(self, i: np.ndarray) -> DEFORM:
+        load = DEFORM(self.model)
+        self.__apply_slice__(load, i)
+        return load
+
+    def __apply_slice__(self, load: DEFORM, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.elements = self.elements[i]
+        load.enforced = self.enforced[i]
+
+    def add_card(self, card: BDFCard, comment: str='') -> None:
+        """
+        Adds a DEFORM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        eid = integer(card, 2, 'eid1')
+        deformation = double(card, 3, 'D1')
+        self.cards.append((sid, eid, deformation, comment))
+        comment = ''
+        self.n += 1
+        if card.field(4):
+            eid = integer(card, 4, 'eid2')
+            deformation = double(card, 5, 'D2')
+            self.cards.append((sid, eid, deformation, comment))
+            self.n += 1
+        if card.field(6):
+            eid = integer(card, 6, 'eid3')
+            deformation = double(card, 7, 'D3')
+            self.cards.append((sid, eid, deformation, comment))
+            self.n += 1
+
+
+    def parse_cards(self):
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+
+        self.load_id = np.zeros(ncards, dtype='int32')
+        self.elements = np.zeros(ncards, dtype='int32')
+        self.enforced = np.zeros(ncards, dtype='float64')
+        for icard, card in enumerate(self.cards):
+            (sid, eid, enforced, comment) = card
+            self.load_id[icard] = sid
+            self.elements[icard] = eid
+            self.enforced[icard] = enforced
+        self.cards = []
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+
+        load_ids = array_str(self.load_id, size=size)
+        elements = array_str(self.elements, size=size)
+        for load_id, eid, enforced in zip(load_ids, elements, self.enforced):
+            fields = ['DEFORM', load_id, eid, enforced]
+            bdf_file.write(print_card(fields))
+        return
+
+
+class SPCD(Load):
+    """
+    Defines an enforced displacement value for static analysis and an
+    enforced motion value (displacement, velocity or acceleration) in
+    dynamic analysis.
+
+     +------+-----+-----+-----+------+----+----+----+
+     |   1  |  2  |  3  |  4  |   5  |  6 | 7  |  8 |
+     +======+=====+=====+=====+======+====+====+====+
+     | SPCD | SID |  G1 | C1  |  D1  | G2 | C2 | D2 |
+     +------+-----+-----+-----+------+----+----+----+
+     | SPCD | 100 | 32  | 436 | -2.6 | 5  | 2  | .9 |
+     +------+-----+-----+-----+------+----+----+----+
+    """
+    def slice_card_by_index(self, i: np.ndarray) -> SPCD:
+        load = SPCD(self.model)
+        self.__apply_slice__(load, i)
+        return load
+
+    def __apply_slice__(self, load: SPCD, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.nodes = self.nodes[i]
+        load.components = self.components[i]
+        load.enforced = self.enforced[i]
+
+    def add(self, spc_id: list[int], nodes: list[int],
+            components: list[int], enforced: list[float],
+            comment: str='') -> int:
+        """
+        Creates an SPCD card, which defines the degree of freedoms to be
+        set during enforced motion
+
+        Parameters
+        ----------
+        spc_id : int
+            constraint id
+        nodes : list[int]
+            GRID/SPOINT ids
+        components : list[str]
+            the degree of freedoms to constrain (e.g., '1', '123')
+        enforced : list[float]
+            the constrained value for the given node (typically 0.0)
+        comment : str; default=''
+            a comment for the card
+
+        Notes
+        -----
+        len(nodes) == len(components) == len(enforced)
+
+        .. warning:: Non-zero enforced deflection requires an SPC/SPC1 as well.
+                     Yes, you really want to constrain the deflection to 0.0
+                     with an SPC1 card and then reset the deflection using an
+                     SPCD card.
+
+        """
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
+        nnodes = len(nodes)
+
+        if isinstance(spc_id, integer_types):
+            spc_id = [spc_id] * nnodes
+        self.cards.append((spc_id, nodes, components, enforced, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        sid = integer(card, 1, 'sid')
+        if card.field(5) in [None, '']:
+            sids = [sid]
+            nodes = [integer(card, 2, 'G1'),]
+            components = [components_or_blank(card, 3, 'C1', default='0')]
+            enforced = [double_or_blank(card, 4, 'D1', default=0.0)]
+        else:
+            sids = [sid, sid]
+            nodes = [
+                integer(card, 2, 'G1'),
+                integer(card, 5, 'G2'),
+            ]
+            # :0 if scalar point 1-6 if grid
+            components = [components_or_blank(card, 3, 'C1', default='0'),
+                          components_or_blank(card, 6, 'C2', default='0')]
+            enforced = [double_or_blank(card, 4, 'D1', default=0.0),
+                        double_or_blank(card, 7, 'D2', default=0.0)]
+        self.cards.append((sids, nodes, components, enforced, comment))
+        self.n += 1
+
+    def parse_cards(self):
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+
+        load_ids = []
+        all_nodes = []
+        all_components = []
+        all_enforced = []
+        for icard, card in enumerate(self.cards):
+            (sids, nodesi, componentsi, enforcedi, comment) = card
+            load_ids.extend(sids)
+            all_nodes.extend(nodesi)
+            all_components.extend(componentsi)
+            all_enforced.extend(enforcedi)
+        load_id = np.array(load_ids, dtype='int32')
+        nodes = np.array(all_nodes, dtype='int32')
+        components = np.array(all_components, dtype='int32')
+        enforced = np.array(all_enforced, dtype='float64')
+        self._save(load_id, nodes, components, enforced)
+        self.cards = []
+
+    def _save(self, load_id, nodes, components, enforced):
+        nloads = len(load_id)
+        self.load_id = load_id
+        self.nodes = nodes
+        self.components = components
+        self.enforced = enforced
+        self.n = nloads
+
+    def write(self, size: int=8) -> str:
+        if len(self.load_id) == 0:
+            return ''
+        lines = []
+        load_ids = array_str(self.load_id, size=size)
+        node_ids = array_str(self.nodes, size=size)
+        components = array_default_int(self.components, default=0, size=size)
+        for load_id, nid , component, enforced in zip(load_ids, node_ids, components, self.enforced):
+            fields = ['SPCD', load_id, nid, component, enforced]
+            lines.append(print_card_8(fields))
+        return ''.join(lines)
 
 
 class Load0(Load):
@@ -151,11 +369,10 @@ class Load0(Load):
                    node=(nid, self.node_id), filter_node0=False,
                    coord=(cid, self.coord_id))
 
+    @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.load_id) == 0:
-            return
         #print_card = get_print_card_8_16(size)
         card_class = self.type
         if size == 8:
@@ -220,11 +437,10 @@ class Load1(Load):
         self.nodes = nodes
         self.n = nloads
 
+    @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.load_id) == 0:
-            return
         card_class = self.type
         if size == 8:
             for sid, nid, mag, nodes in zip(self.load_id, self.node_id, self.mag, self.nodes):
@@ -287,11 +503,10 @@ class Load2(Load):
         self.nodes = nodes
         self.n = nloads
 
+    @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.load_id) == 0:
-            return
         card_class = self.type
         load_ids = array_str(self.load_id, size=size)
         node_id_ = array_str(self.node_id, size=size)
@@ -679,11 +894,10 @@ class LOAD(Load):
     def iload(self) -> np.ndarray:
         return make_idim(self.n, self.nloads)
 
+    @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.load_id) == 0:
-            return
         #get_reduced_loads(self, filter_zero_scale_factors=False)
         print_card = get_print_card_8_16(size)
 
@@ -980,11 +1194,10 @@ class SLOAD(Load):
         force[:, 0] = self.mags
         return force_moment
 
+    @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.load_id) == 0:
-            return
         print_card = get_print_card_8_16(size)
         load_ids = array_str(self.load_id, size=size)
         for sid, node, mag in zip(load_ids, self.nodes, self.mags):

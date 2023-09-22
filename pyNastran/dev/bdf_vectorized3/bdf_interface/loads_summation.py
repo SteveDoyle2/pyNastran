@@ -20,7 +20,8 @@ if TYPE_CHECKING:  # pragma: no cover
     )
 
 
-def get_static_loads_by_subcase_id(model: BDF, subcase_ids: list[int]=None) -> dict[int, Any]:
+def get_static_loads_by_subcase_id(model: BDF,
+                                   subcase_ids: Optional[list[int]]=None) -> dict[int, Any]:
     res = {}
     for subcase_id, subcase in model.subcases:
         loadset_id = 0
