@@ -482,7 +482,7 @@ class TestMaterials(unittest.TestCase):
                                  comment='mat9')
         mat9 = model.mat9
         mat9.write(size=16, is_double=False)
-        mat9.Rho
+        mat9.rho
         mat9.validate()
 
         matt9_id = model.add_matt9(
@@ -512,30 +512,33 @@ class TestMaterials(unittest.TestCase):
             '+       9000000.3000000.      .1    1.-5    7.-6    8.-6     50.',
         ]
         lines_expected = [
+            #'MAT11          1    1.+75000000. 700000..1000000.1300000.26000007000000.'
+            #'        9000000.3000000.          .00001 .000007 .000008     50.'
             'MAT11          1    1.+75000000. 700000.      .1     .13     .267000000.',
             '        9000000.3000000.      .1  .00001 .000007 .000008     50.'
         ]
         card = model._process_card(lines)
         cardi = BDFCard(card)
-        mat = MAT11.add_card(cardi)
+        mat11 = model.mat11
+        mat_id = mat11.add_card(cardi)
 
         #fields = mat.raw_fields()
-        msg = print_card_8(fields)
+        #msg = print_card_8(fields)
         #f = StringIO.StringIO()
         size = 8
-        msg = mat.write(size, 'dummy')
+        msg = mat11.write(size, 'dummy')
         #msg = f.getvalue()
         #print(msg)
 
         lines_actual = msg.rstrip().split('\n')
-        msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
-        msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
+        msg2 = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
+        msg2 += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
         #print(msg)
-        self.assertEqual(len(lines_actual), len(lines_expected), msg)
+        self.assertEqual(len(lines_actual), len(lines_expected), msg2)
         for actual, expected in zip(lines_actual, lines_expected):
-            msg = '\nactual   = %r\n' % actual
-            msg += 'expected =  %r' % expected
-            self.assertEqual(actual, expected, msg)
+            msg2 = '\nactual   = %r\n' % actual
+            msg2 += 'expected =  %r' % expected
+            self.assertEqual(actual, expected, msg2)
 
         save_load_deck(model, xref='standard', punch=True,
                        run_remove_unused=False)

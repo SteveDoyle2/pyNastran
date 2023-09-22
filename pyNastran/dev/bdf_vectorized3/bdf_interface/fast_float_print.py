@@ -85,9 +85,10 @@ def get_float_format(value: float):
         #if len(field2) <= 8 and float(field1) == float(field2):
             #field = field2
             #field = field.strip(' 0')
-        field2 = field[1:9]
+        field2 = '%8s' % field[1:9].rstrip('0')
+        #print('field2 =', field2)
         assert len(field2) == 8, f'{field2!r}; n={len(field2)}'
-        return field[1:9]
+        return field2
     elif value > 1000000.:
         field = "%8.1f" % value
         if field.index('.') < 8:
@@ -123,7 +124,8 @@ def get_float_format(value: float):
     #     field = "%8.1f" % value
 
     fmt = plus_log_dict.get(i)
-    field = fmt % value
+    field1 = fmt % value
+    field = '%8s' % field1.rstrip('0')
     #print(f'log print; i={i} field={field}')
     assert len(field) == 8, field
     return field

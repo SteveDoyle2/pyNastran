@@ -215,6 +215,7 @@ class Nastran3:
         gui._add_alt_actors(gui.alt_grids)
 
         element_id, property_id = self.load_elements(ugrid, model, node_id)
+        print(f'nelements = {len(element_id)}')
         form, cases, icase = self.save_results(model, node_id, element_id, property_id)
 
         ugrid.SetPoints(points)
@@ -255,13 +256,14 @@ class Nastran3:
         icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'ElementID', element_id)
         icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeIndex', np.arange(len(node_id)))
         icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'ElementIndex', np.arange(len(element_id)))
+        nelements = len(element_id)
 
         node_cp = model.grid.cp
         node_cd = model.grid.cd
         if (node_cp.min(), node_cp.max()) != (0, 0):
-            icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'NodeCp', node_cp)
+            icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeCp', node_cp)
         if (node_cd.min(), node_cd.max()) != (0, 0):
-            icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'NodeCd', node_cd)
+            icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeCd', node_cd)
 
         icase = _add_integer_centroid_gui_result(
             icase, cases, geometry_form, subcase_id, 'PropertyID', property_id, mask_value=0)
@@ -272,7 +274,7 @@ class Nastran3:
 
         mean_edge_length, icase, quality_form = _set_quality(
             icase, cases,
-            model, subcase_id, self.gui_elements)
+            model, subcase_id, self.gui_elements, nelements, self.gui_elements)
         self.mean_edge_length = mean_edge_length
 
         form = [
@@ -322,10 +324,10 @@ class Nastran3:
                       model: BDF,
                       grid_id: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         log = model.log
-        property_ids = []  # type: list[np.ndarray]
-        element_ids = []   # type: list[np.ndarray]
-        #nodes_ids = []     # type: list[np.ndarray]
-        #nnodes = []        # type: list[np.ndarray]
+        property_ids: list[np.ndarray] = []
+        element_ids: list[np.ndarray] = []
+        #nodes_ids: list[np.ndarray] = []
+        #nnodes: list[np.ndarray] = []
         n_nodes_ = []
         cell_type_ = []
         cell_offset_ = []
@@ -346,7 +348,7 @@ class Nastran3:
             # elements that don't use SPOINTs or
             basic_elements = {
                 'CONROD', 'CTUBE', 'CROD',
-                'CBEAM', 'CBAR',
+                'CBEAM', 'CBAR', 'CBUSH',
                 'CBAR', 'CBEAM', 'CSHEAR',
                 'CTRIA3', 'CQUAD4', 'CSHEAR',
             }
@@ -357,15 +359,16 @@ class Nastran3:
             solid_elements = {'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM'}
 
             gui_elements = basic_elements | solid_elements | midside_elements
+            self.gui_elements = gui_elements
             etype = element.type
+            print('load', etype, nelement)
             if etype in basic_elements:
                 # basic elements
                 # missing nodes are not allowed
-                print(etype)
                 if etype in {'CONROD'}:
                     cell_type = cell_type_line
                     property_id = np.full(nelement, -1)
-                elif etype in {'CROD', 'CTUBE', 'CBAR', 'CBEAM'}:
+                elif etype in {'CROD', 'CTUBE', 'CBAR', 'CBEAM', 'CBUSH'}:
                     cell_type = cell_type_line
                     property_id = element.property_id
                 elif etype in {'CTRIA3'}:
@@ -512,7 +515,7 @@ class Nastran3:
                 cell_offset0 += nelement * (dnode + 1)
             else:
                 # more complicated element
-                print(element)
+                print('dropping', element)
                 continue
                 #raise NotImplementedError(element.type)
             del nelement # , dnode
@@ -606,9 +609,43 @@ def _mean_min_edge_length(min_edge_length: np.ndarray) -> float:
 
 def _set_quality(icase: int, cases: dict[int, Any],
                  model: BDF, subcase_id: int,
-                 gui_elements: set[str]) -> tuple[float, int, Form]:
+                 gui_elements: set[str],
+                 nelements: int,
+                 cards_to_read) -> tuple[float, int, Form]:
+
+    #cards_to_read = {
+        #'CBAR', 'CBEAM', 'CBUSH',
+        #'CQUAD4', 'CTRIA3', 'CSHEAR',
+        #'CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA'}
     (taper_ratio, area_ratio, max_skew, aspect_ratio,
-     min_theta, max_theta, dideal_theta, min_edge_length, max_warp) = model.quality(gui_elements)
+     min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
+     #icard_type,
+    ) = model.quality(cards_to_read=cards_to_read)
+
+    # not included in the vtk mesh
+    NO_ELEMENT = {'CONM1', 'CONM2'}
+    #is_valid_element = np.ones(nelements, dtype='bool')
+
+    if 0:
+        is_valid_list = []
+        for elem in model.elements:
+            if elem.n == 0:
+                continue
+            if elem.type in NO_ELEMENT:
+                print('n', elem.type, elem.n)
+                is_validi = np.zeros(elem.n, dtype='bool')
+            else:
+                print('y', elem.type, elem.n)
+                is_validi = np.ones(elem.n, dtype='bool')
+            is_valid_list.append(is_validi)
+        is_valid_element = np.hstack(is_valid_list)
+        nvalid_elements = is_valid_element.sum()
+        assert nvalid_elements == nelements, (nvalid_elements, nelements)
+
+
+    #is_active_element = ~np.isnan(icard_type)
+    #nactive_element = is_active_element.sum()
+    #assert nactive_element == nelements, (nactive_element, nelements)
 
     mean_edge_length = _mean_min_edge_length(min_edge_length)
 
@@ -621,6 +658,7 @@ def _set_quality(icase: int, cases: dict[int, Any],
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'dIdeal Theta', dideal_theta)
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'Min Edge Length', min_edge_length)
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'Max Warp', max_warp)
+    #icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'icard_type', icard_type[is_valid_element])
 
     return mean_edge_length, icase, quality_form
 
