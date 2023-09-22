@@ -224,8 +224,9 @@ def tri_quality_xyz0(p1: np.ndarray, p2: np.ndarray, p3: np.ndarray) -> Quality:
     taper_ratio = np.full(nelements, np.nan, dtype=area.dtype)
     area_ratio = np.full(nelements, np.nan, dtype=area.dtype)
     max_warp = np.full(nelements, np.nan, dtype=area.dtype)
-    out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
-           min_theta, max_theta, dideal_theta, min_edge_length, max_warp)
+    out = (area, taper_ratio, area_ratio, np.degrees(max_skew), aspect_ratio,
+           np.degrees(min_theta), np.degrees(max_theta), np.degrees(dideal_theta),
+           min_edge_length, np.degrees(max_warp))
     return out
     #return area, max_skew, aspect_ratio, min_theta, max_theta, dideal_theta, min_edge_length
 
@@ -456,6 +457,7 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
             assert np.allclose(dideal_thetai, dideal_thetai_old)
         #return area, max_skew, aspect_ratio, min_theta, max_theta, dideal_theta, min_edge_length
 
-    out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
-           min_theta, max_theta, dideal_theta, min_edge_length, max_warp)
+    out = (area, taper_ratio, area_ratio, np.degrees(max_skew), aspect_ratio,
+           np.degrees(min_theta), np.degrees(max_theta), np.degrees(dideal_theta),
+           min_edge_length, np.degrees(max_warp))
     return out

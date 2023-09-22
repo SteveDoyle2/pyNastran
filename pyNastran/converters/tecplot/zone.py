@@ -283,6 +283,20 @@ class Zone:
             raise RuntimeError(zonetype)
         return zone_type_int
 
+    def quads_to_tris(self) -> None:
+        zonetype = self.headers_dict['ZONETYPE']
+        if zonetype == 'FEQUADRILATERAL':
+            n3 = self.quad_elements[:, 2]
+            n4 = self.quad_elements[:, 3]
+            if np.all(n3 == n4):
+                self.tri_elements = self.quad_elements[:, :3]
+                assert self.tri_elements.shape[1] == 3, self.tri_elements.shape
+                self.quad_elements = np.zeros((0, 4), self.quad_elements.dtype)
+                self.headers_dict['ZONETYPE'] = 'FETRIANGLE'
+
+        #if zonetype == 'FETRIANGLE',  'FETETRAHEDRON', 'FEBRICK'
+
+
     def split_elements(self, ntri_nodes: int=1) -> None:
         """
         Splits elements and linearly interpolates the data.

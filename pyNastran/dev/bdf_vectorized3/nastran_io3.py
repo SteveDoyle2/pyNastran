@@ -680,6 +680,7 @@ def _set_quality(icase: int, cases: dict[int, Any],
     mean_edge_length = _mean_min_edge_length(min_edge_length)
 
     quality_form: Form = []
+    icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'AspectRatio', aspect_ratio)
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'TaperRatio', taper_ratio)
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'AreaRatio', area_ratio)
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'Max Skew', max_skew)
