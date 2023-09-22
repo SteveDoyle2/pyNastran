@@ -857,9 +857,11 @@ class Solver:
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
 
-        aset, sset, xa, xs, eigenvalues = self._setup_modes(
-            model, subcase, dof_map, ndof, ngrid, ndof_per_grid, fdtype)
+        aset, sset, xa, xs, xg_out, eigenvalues = self._setup_modes(
+            model, subcase, dof_map, ndof, ngrid, ndof_per_grid,
+            idtype=idtype, fdtype=fdtype)
 
+        nmodes = len(eigenvalues)
         isubcase = subcase.id
         mode_cycles = eigenvalues
         unused_eigenvalues = RealEigenvalues(title, 'LAMA', nmodes=0)
@@ -904,11 +906,13 @@ class Solver:
                      subcase: Subcase,
                      dof_map,
                      ndof: int, ngrid: int,
-                     ndof_per_grid: int, fdtype: str):
+                     ndof_per_grid: int,
+                     idtype: str='int32',
+                     fdtype: str='float64'):
         Kgg = build_Kgg(model, dof_map,
                         ndof, ngrid,
                         ndof_per_grid,
-                        idtype='int32', fdtype=fdtype)
+                        idtype=idtype, fdtype=fdtype)
 
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
         Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
@@ -985,7 +989,7 @@ class Solver:
         #xg[sset] = xs
         xg_out[:, aset] = xa
         xg_out[:, sset] = xs
-        return aset, sset, xa, xs, eigenvalues
+        return aset, sset, xa, xs, xg_out, eigenvalues
 
     #end_options = runner(
         #subcase, f06_file, page_stamp,

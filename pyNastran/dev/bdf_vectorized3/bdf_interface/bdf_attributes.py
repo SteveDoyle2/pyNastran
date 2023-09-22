@@ -80,8 +80,13 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
 
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.constraints import SPC, SPC1, SPCADD # , MPC, MPCADD
-#from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
-    #RBAR, RBAR1, RROD, RBE1, RBE2, RBE3, RSSCON)
+from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
+    RBAR,
+    #RBAR1,
+    RROD,
+    RBE1, RBE2, RBE3,
+    #RSSCON,
+)
 #from pyNastran.dev.bdf_vectorized3.cards.aero.aero import (
     #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7,
     #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
@@ -441,12 +446,12 @@ class BDFAttributes:
         #self.mpcadd = MPCADD(self)
 
         # rigid elements
-        #self.rbar = RBAR(self)
+        self.rbar = RBAR(self)
         #self.rbar1 = RBAR1(self)  # not supported
-        #self.rbe1 = RBE1(self)  # not supported
-        #self.rbe2 = RBE2(self)
-        #self.rbe3 = RBE3(self)
-        #self.rrod = RROD(self)
+        self.rbe1 = RBE1(self)
+        self.rbe2 = RBE2(self)
+        self.rbe3 = RBE3(self)
+        self.rrod = RROD(self)
         #self.rsscon = RSSCON(self)  # not supported
 
         # modes
@@ -755,9 +760,9 @@ class BDFAttributes:
     @property
     def rigid_elements(self) -> list[Any]:
         rigid_elements = [
-            #self.rbar, self.rbar1,
-            #self.rrod,
-            #self.rbe1, self.rbe2, self.rbe3,
+            self.rbar, # self.rbar1,
+            self.rrod,
+            self.rbe1, self.rbe2, self.rbe3,
             #self.rsscon,
         ]
         return rigid_elements

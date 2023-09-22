@@ -206,9 +206,9 @@ class Nastran3:
 
         ugrid = gui.grid
         create_alt_conm2_grids(gui, model, node_id, xyz_cid0)
+        create_alt_rbe2_grids(gui, model, node_id, xyz_cid0)
+        create_alt_rbe3_grids(gui, model, node_id, xyz_cid0)
         if 0:
-            create_alt_rbe2_grids(gui, model, node_id, xyz_cid0)
-            create_alt_rbe3_grids(gui, model, node_id, xyz_cid0)
             create_monpnt(gui, model, node_id, xyz_cid0)
 
         # add alternate actors

@@ -632,7 +632,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'GENEL',
 
             ## rigid_elements
-            #'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON',
+            'RBAR', #'RBAR1', 
+            'RBE1', 'RBE2', 'RBE3', 'RROD', # 'RSPLINE', 'RSSCON',
 
             ## plotels
             #'PLOTEL',
@@ -2630,12 +2631,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'MAT5' : partial(self._prepare_card, self.mat5),
 
             # rigid elements
-            #'RBAR': partial(self._prepare_card, self.rbar),
+            'RBAR': partial(self._prepare_card, self.rbar),
             #'RBAR1': partial(self._prepare_card, self.rbar1),  # not supported
-            #'RBE1': partial(self._prepare_card, self.rbe1),  # not supported
-            #'RBE2': partial(self._prepare_card, self.rbe2),
-            #'RBE3': partial(self._prepare_card, self.rbe3),
-            #'RROD': partial(self._prepare_card, self.rrod),
+            'RBE1': partial(self._prepare_card, self.rbe1),
+            'RBE2': partial(self._prepare_card, self.rbe2),
+            'RBE3': partial(self._prepare_card, self.rbe3),
+            'RROD': partial(self._prepare_card, self.rrod),
             #'RSSCON': partial(self._prepare_card, self.rsscon),  # not supported
             #'RSPLINE' : (RSPLINE, add_methods._add_rigid_element_object),
 

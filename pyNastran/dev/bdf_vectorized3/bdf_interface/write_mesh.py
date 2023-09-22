@@ -176,7 +176,7 @@ class Writer():
         self._write_masses(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         # split out for write_bdf_symmetric
-        #self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_nonstructural_mass(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
@@ -516,10 +516,13 @@ class Writer():
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         model = self.model
         bdf_file.write(model.rrod.write(size=size))
+        #bdf_file.write(model.rrod1.write(size=size))
         bdf_file.write(model.rbar.write(size=size))
         bdf_file.write(model.rbe1.write(size=size))
         bdf_file.write(model.rbe2.write(size=size))
         bdf_file.write(model.rbe3.write(size=size))
+        #bdf_file.write(model.rspline.write(size=size))
+        #bdf_file.write(model.rsscon.write(size=size))
 
     def _write_nonstructural_mass(self, bdf_file: TextIOLike,
                                   size: int=8, is_double: bool=False,
