@@ -644,7 +644,7 @@ class COORD(VectorizedBaseCard):
             if len(coords_to_resolve) == 0:
                 raise RuntimeError(f'cannot resolve any coordinate systems...unresolved_cids={unresolved_cids}')
 
-            log.debug(f'to_resolve: coord1={coord1_cids_to_resolve}; coord2={coord2_cids_to_resolve}')
+            log.debug(f'to_resolve: coord1={np.array(coord1_cids_to_resolve)}; coord2={np.array(coord2_cids_to_resolve)}')
             #nresolved0 = nresolved
             nresolved = self._resolve_cord1(coord1_cids_to_resolve, nresolved, resolved, grid,
                                             unresolved_cids)
@@ -665,7 +665,7 @@ class COORD(VectorizedBaseCard):
             # just limiting log messages
             resolved.remove(0)
         if resolved:
-            log.info(f'resolved = {resolved}')
+            log.info(f'resolved = {np.array(list(resolved))}')
         if unresolved_cids:
             raise RuntimeError(f'unresolved_cids = {unresolved_cids}')
         assert np.all(np.isfinite(self.origin)), self.origin
@@ -950,6 +950,21 @@ class COORD(VectorizedBaseCard):
         for i, forcei in enumerate(force):
             force2[i, :] = forcei @ T # reversed?
         return force2
+
+    def transform_local_xyz_to_global_coords(self, xyz: np.ndarray, cd: np.ndarray) -> np.ndarray:
+        """takes a consistent set of xyz and cd values and transforms them"""
+        xyz2 = np.zeros(xyz.shape, dtype=xyz.dtype)
+        for i, xyzi, cdi in zip(count(), xyz, cd):
+            xyz2[i, :] = self.transform_local_xyz_to_global(xyzi, cdi)
+        return xyz2
+
+    def transform_node_to_global_assuming_rectangular(self, xyz: np.ndarray) -> np.ndarray:
+        xform = np.dstack([self.i, self.j, self.k]) # 3x3 unit matrix
+        #print('xform.shape', xform.shape)
+        #xyz2 = xyz @ xform
+        xyz2 = np.einsum('ni,nij->nj', xyz, xform)
+        assert xyz.shape == xyz2.shape, (xyz.shape, xyz2.shape)
+        return xyz2
 
     def transform_node_to_local_xyz(self, node_id: np.ndarray, cid: int) -> np.ndarray:
         xyz_cid0 = self.transform_node_to_global_xyz(node_id)

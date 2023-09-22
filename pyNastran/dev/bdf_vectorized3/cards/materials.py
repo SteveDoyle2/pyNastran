@@ -1468,7 +1468,7 @@ class MAT11(Material):
         self.ge = np.zeros(ncards, dtype='float64')
 
         for i, card in enumerate(self.cards):
-            (mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, a1, a2, a3, tref, ge, comment) = card
+            (mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rhoi, a1, a2, a3, tref, ge, comment) = card
             self.material_id[i] = mid
             self.e1[i] = e1
             self.e2[i] = e2
@@ -1485,6 +1485,7 @@ class MAT11(Material):
             self.alpha1[i] = a1
             self.alpha2[i] = a2
             self.alpha3[i] = a3
+            self.rho[i] = rhoi
             self.tref[i] = tref
             self.ge[i] = ge
         self.sort()
@@ -1511,6 +1512,8 @@ class MAT11(Material):
         mat.alpha3 = self.alpha3[i]
         mat.tref = self.tref[i]
         mat.ge = self.ge[i]
+        mat.rho = self.rho[i]
+        x = 1
 
         #mat.bulk = self.bulk[i]
         #mat.c = self.c[i]

@@ -105,7 +105,8 @@ class MainWindow(GuiCommon, NastranIO):
             'nastran',  # results
         ]
         if ISPY2:
-            fmt_order += ['h5nastran', 'nastran2', 'nastran3']
+            fmt_order += ['h5nastran', 'nastran2']
+        fmt_order.append('nastran3')
 
         fmt_order += [
             'abaqus',

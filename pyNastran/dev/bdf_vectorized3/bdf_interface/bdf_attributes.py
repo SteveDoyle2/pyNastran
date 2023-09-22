@@ -1456,11 +1456,13 @@ class BDFAttributes:
         for card in self.elements:
             if cards_to_read is not None and card.type not in cards_to_read:
                 continue
+            #if card.type in NOT_ELEMENT:
+                #continue
             #if card.n == 0 or card.type in NO_QUALITY:
                 #continue
             # all elements have a quality value; it's just None
-            #if card.n > 0:
-                #print(f'adding {card.type} to quality')
+            if card.n > 0:
+                print(f'adding {card.type} to quality; n={card.n}')
             nelements += card.n
 
         #area = np.full(nelements, np.nan, dtype='float64')
@@ -1473,8 +1475,10 @@ class BDFAttributes:
         dideal_theta = np.full(nelements, np.nan, dtype='float64')
         min_edge_length = np.full(nelements, np.nan, dtype='float64')
         max_warp = np.full(nelements, np.nan, dtype='float64')
+        icard_type = np.full(nelements, np.nan, dtype='float64')
 
         i0 = 0
+        icard = 0
         for card in self.elements:
             if cards_to_read is not None and card.type not in cards_to_read:
                 continue
@@ -1482,10 +1486,16 @@ class BDFAttributes:
             #if n > 0:
                 #print(f'adding {card.type} to quality with {n} elements')
 
-            if n == 0 or card.type in NO_QUALITY:
+            if n == 0:
+                continue
+
+            print(f'card_type={card.type}; icard_type={icard}; [{i0}:{i0+n}]; n={n}')
+            if card.type in NO_QUALITY:
+                icard += 1
                 i0 += n
                 continue
             if not hasattr(card, 'quality'):
+                icard += 1
                 self.log.warning(f'{card.type} has no quality() method')
                 i0 += n
                 continue
@@ -1501,13 +1511,19 @@ class BDFAttributes:
             dideal_theta[i0:i0+n] = dideal_thetai
             min_edge_length[i0:i0+n] = min_edge_lengthi
             max_warp[i0:i0+n] = max_warpi
+            icard_type[i0:i0+n] = icard
+            icard += 1
+            #if i0 + n >= 46934:
+                #print('*********')
+
             #if np.any(np.isnan(areai)):
                 #self.log.error(f'{card.type} has nan area; area={areai}')
                 #raise RuntimeError(f'{card.type} has nan area; area={areai}')
             #area += areai.sum()
         out = (
             taper_ratio, area_ratio, max_skew, aspect_ratio,
-            min_theta, max_theta, dideal_theta, min_edge_length, max_warp
+            min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
+            #icard_type,
         )
         return out
 

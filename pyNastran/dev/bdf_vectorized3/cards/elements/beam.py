@@ -341,9 +341,9 @@ class CBEAM(Element):
         is_x = self.is_x
         v = np.full(self.x.shape, np.nan, dtype=self.x.dtype)
         if np.any(is_g0):
-            grid_g0 = self.model.grid.slice_card_by_node_id(self.g0)
+            grid_g0 = self.model.grid.slice_card_by_node_id(self.g0[is_g0])
             n0 = grid_g0.xyz_cid0()
-            v = n0 - xyz1
+            v[is_g0, :] = n0 - xyz1[is_g0, :]
 
         grid = self.model.grid
         # get the cd frames for the nodes
@@ -360,12 +360,24 @@ class CBEAM(Element):
         cd1 = cd[:, 0]
 
         if np.any(is_x):
-            if cd1.max() > 0:
-                v = cd1_ref.transform_node_to_global(elem.x)
-                cd1_ref = model.Coord(cd1)
-                cd2_ref = model.Coord(cd2)
-            else:
-                v[is_x, :] = self.x[is_x, :]
+            coords = self.model.coord
+            is_cd1 = (cd1 > 0) & (is_x)
+
+            v[is_x, :] = self.x[is_x, :]
+            if np.any(is_cd1):
+                #cd1_ref = coords.slice_card_by_id(cd1)
+                #print(cd1_ref.get_stats())
+                #print(cd1_ref.get_object_methods())
+                #v[is_cd1, :] = cd1_ref.transform_local_xyz_to_global(self.x)
+                x_vector = self.x[is_cd1, :]
+                cd1i = cd1[is_cd1]
+                vi = coords.transform_local_xyz_to_global_coords(x_vector, cd1i)
+                v[is_cd1, :] = vi
+
+                #v[is_cd1, :] = coords.transform_local_xyz_to_global(x_vector, cd1[is_cd1])
+                #cd1_ref = model.Coord(cd1)
+                #cd2_ref = model.Coord(cd2)
+        assert not np.isnan(v.max()), v
         return v, cd
 
     def split_offt_vector(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -381,6 +393,8 @@ class CBEAM(Element):
 
     def center_of_mass(self) -> np.ndarray:
         log = self.model.log
+        coords = self.model.coord
+
         neids = len(self.element_id)
         grid = self.model.grid
         xyz = grid.xyz_cid0()
@@ -393,6 +407,8 @@ class CBEAM(Element):
         xyz2 = xyz[in2, :]
         centroid = (xyz1 + xyz2) / 2.
         assert centroid.shape[0] == self.nodes.shape[0]
+        assert not np.isnan(np.max(xyz1)), xyz1
+        assert not np.isnan(np.max(xyz2)), xyz2
 
         i = xyz2 - xyz1
         ihat_norm = np.linalg.norm(i, axis=1)
@@ -422,11 +438,15 @@ class CBEAM(Element):
         if np.any(is_rotate_v):
             # end A
             # global - cid != 0
-            cd1_vector = cd1[is_rotate_v]
-            icd1_vector = (cd1_vector != 0)
-            if np.any(icd1_vector):
-                v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
-            del cd1_vector, icd1_vector
+            icd1_v_vector = (is_rotate_v) & (cd1 != 0)
+            cd1_v_vector = cd1[icd1_v_vector]
+            if np.any(cd1_v_vector):
+                #v[icd1_vector, :] = np.nan
+                cd1_ref = coords.slice_card_by_id(cd1_v_vector)
+                v1v = v[icd1_v_vector, :]
+                v[icd1_v_vector, :] = cd1_ref.transform_node_to_global_assuming_rectangular(v1v)
+                del v1v
+            del icd1_v_vector, cd1_v_vector
         elif offt_vector == 'B':
             # basic - cid = 0
             pass
@@ -435,16 +455,27 @@ class CBEAM(Element):
             log.error(msg)
             raise RuntimeError(msg)
 
+        if np.any(np.isnan(v.max(axis=1))):
+            raise RuntimeError(f'v = {v}')
+
         #--------------------------------------------------------------------------
         # determine the bar vectors
         #log.info(f'v =\n{v}')
         #log.info(f'ihat =\n{i_offset}')
         ihat = i_offset
+
         vnorm = np.linalg.norm(v, axis=1)
+
+        #if np.any(np.isnan(v.max(axis=1))):
+        #print(f'vnorm = {vnorm}')
+
         vhat = v / vnorm[:, np.newaxis] # j
         z = np.cross(ihat, vhat) # k
         norm_z = np.linalg.norm(z, axis=1)
         assert len(norm_z) == neids
+
+        #if np.any(np.isnan(zhat.max(axis=1))):
+        #print(f'norm_z = {norm_z}')
 
         zhat = z / norm_z[:, np.newaxis]
         yhat = np.cross(zhat, ihat) # j
@@ -452,17 +483,33 @@ class CBEAM(Element):
         norm_yhat = np.linalg.norm(yhat, axis=1)
         xform_offset = np.dstack([ihat, yhat, zhat]) # 3x3 unit matrix
         #del ihat, yhat, zhat, norm_z, norm_yhat
-        del norm_i, norm_z, norm_yhat
         xform = xform_offset
+
+        if np.any(np.isnan(yhat.max(axis=1))):
+            print(f'norm_yhat = {norm_yhat}')
+
+        del norm_i, norm_z, norm_yhat
+        #aaa
         #--------------------------------------------------------------------------
         # rotate wa
         # wa defines the offset at end A
         wa = self.wa.copy()  # we're going to be inplace hacking it, so copy :)
+
         if np.any(is_rotate_wa):
-            cd1_vector = cd1[is_rotate_v]
-            icd1_vector = (cd1_vector != 0)
+            icd1_vector = (is_rotate_wa) & (cd1 != 0)
+            cd1_vector = cd1[icd1_vector]
             if np.any(icd1_vector):
-                wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
+                cd1_ref = coords.slice_card_by_id(cd1_vector)
+                wai1 = wa[icd1_vector, :]
+                wai2 = cd1_ref.transform_node_to_global_assuming_rectangular(wai1)
+                #print('eids.shape =', self.element_id.shape)
+                #print('len(cd1_vector) =', len(cd1_vector))
+                #print('icd1_vector.shape =', icd1_vector.shape)
+                #print('is_rotate_wa.shape =', is_rotate_wa.shape)
+                #print('wai1.shape =', wai1.shape)
+                #print('wai2.shape =', wai2.shape)
+                #print('wa.shape =', wa.shape)
+                wa[icd1_vector, :] = wai2
             del cd1_vector, icd1_vector
         elif offt_end_a == 'B':
             pass
@@ -476,16 +523,24 @@ class CBEAM(Element):
             raise NotImplementedError(msg)
             #return v, None, None, xform_offset
 
+        assert not np.isnan(np.max(wa)), wa
+
         #--------------------------------------------------------------------------
         # rotate wb
         # wb defines the offset at end B
         wb = self.wb.copy()  # we're going to be inplace hacking it, so copy :)
         if np.any(is_rotate_wb):
-            cd2_vector = cd2[is_rotate_wb]
-            icd2_vector = (cd2_vector != 0)
+            icd2_vector = (is_rotate_wb) & (cd2 != 0)
+            cd2_vector = cd2[icd2_vector]
+            #cd2_vector = cd2[is_rotate_wb]
+            #icd2_vector = (cd2_vector != 0)
             if np.any(icd2_vector):
                 # MasterModelTaxi
-                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+                #wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+                cd2_ref = coords.slice_card_by_id(cd2_vector)
+                wbi1 = wb[icd2_vector, :]
+                wbi2 = cd2_ref.transform_node_to_global_assuming_rectangular(wbi1)
+                wb[icd2_vector, :] = wbi2
             del cd2_vector, icd2_vector
         elif offt_end_b == 'B':
             pass
@@ -498,6 +553,8 @@ class CBEAM(Element):
             log.error(msg)
             raise RuntimeError(msg)
             #return v, wa, None, xform_offset
+
+        assert not np.isnan(np.max(wb)), wb
 
         #ihat = xform[0, :]
         #yhat = xform[1, :]
@@ -516,7 +573,7 @@ class CBEAM(Element):
         nsm_per_length = np.full(neids, np.nan, dtype='float64')
         nsm_centroid = np.full((neids, 3), np.nan, dtype='float64')
 
-        log.debug(f'property_id = {self.property_id}')
+        #log.debug(f'property_id = {self.property_id}')
         for prop in self.allowed_properties:
             pids_common = np.union1d(prop.property_id, self.property_id)
             #ind = prop.property_id[ipid]
@@ -561,12 +618,21 @@ class CBEAM(Element):
                         log.warning(f'  skipping {prop.type}; pid={pid}')
                         continue
                     #ipidrev2.append(_pid)
+                    #log.debug(f'iipid = {iipid}')
 
                     nsm_n1 = (p1[iipid, :] + jhat[iipid, :] * m1a[jpid] + khat[iipid, :] * m2a[jpid])
                     nsm_n2 = (p2[iipid, :] + jhat[iipid, :] * m1b[jpid] + khat[iipid, :] * m2b[jpid])
+
+                    #log.debug(f'  jhat={jhat}')
+                    #log.debug(f'  khat={khat}')
+                    #log.debug(f'  m1a={m1a}')
+                    #log.debug(f'  m2a={m2a}')
+                    #log.debug(f'  m1b={m1b}')
+                    #log.debug(f'  m2b={m2b}')
+
                     #print("nsm_per_length=%s" % nsm_per_length)
-                    #print("nsm_n1=%s" % nsm_n1)
-                    #print("nsm_n2=%s" % nsm_n2)
+                    #log.debug('  nsm_n1=%s' % nsm_n1)
+                    #log.debug('  nsm_n2=%s' % nsm_n2)
                     nsm_centroid[iipid] = (nsm_n1 + nsm_n2) / 2.
                     mass_per_length[iipid] = mpl
                     nsm_per_length[iipid] = nsmpl
@@ -633,16 +699,25 @@ class CBEAM(Element):
             assert isinstance(nsm_per_length, np.ndarray), nsm_per_length
             assert nsm_centroid.shape == (self.n, 3), nsm_centroid.shape
 
-        assert not np.isnan(nsm_centroid.max()), nsm_centroid
+        if np.isnan(nsm_centroid.max()):
+            inan = np.isnan(nsm_centroid.max(axis=1))
+            assert len(inan) == len(self.element_id)
+            eid = self.element_id[inan]
+            pid = self.property_id[inan]
+            upid = np.unique(pid)
+            eid_pid = np.column_stack([eid, pid])
+            #'[eid,pid]={eid_pid}\n'
+            raise RuntimeError(f'nan nsm_centroids for upids={upid}')
+
         assert not np.isnan(mass_per_length.max()), mass_per_length
         assert not np.isnan(nsm_per_length.max()), nsm_per_length
         total_mass = mass_per_length + nsm_per_length
 
         assert centroid.shape == (self.n, 3), centroid.shape
-        if total_mass == 0.0:
+        if np.abs(total_mass).sum() == 0.0:
             return centroid
 
-        center_of_mass = (centroid * mass_per_length + nsm_centroid * nsm_per_length) / total_mass
+        center_of_mass = (centroid * mass_per_length[:, np.newaxis] + nsm_centroid * nsm_per_length[:, np.newaxis]) / total_mass[:, np.newaxis]
         assert not np.isnan(center_of_mass.max()), center_of_mass
         assert mass_per_length.shape == (self.n, ), mass_per_length.shape
         assert nsm_per_length.shape == (self.n, ), nsm_per_length.shape

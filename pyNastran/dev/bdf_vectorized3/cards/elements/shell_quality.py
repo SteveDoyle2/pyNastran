@@ -423,6 +423,11 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
     max_warp = warps.max(axis=0)
     assert len(max_warp) == nelement
 
+    if np.isnan(max_warp.max()):
+        print(f'NAN max_warp = {max_warp}')
+    #for warp in warps:
+        #print(warp.tolist())
+
     test = False
     if test:
         from pyNastran.bdf.mesh_utils.delete_bad_elements import quad_quality as quad_quality_old
