@@ -646,8 +646,10 @@ class TestBeams(unittest.TestCase):
         model_old.safe_cross_reference()
         i = 0
         for eid, elem in model_old.elements.items():
-            is_failed, (wai, wbi, ihati, yhati, zhati) = elem.get_axes(model_old)
-            vi = elem.get_orientation_vector(model_old)
+            is_failed, (vai1, ihati, yhati, zhati, wai, wbi) = elem.get_axes(model_old)
+            vai2 = elem.get_orientation_vector(model_old)
+            assert np.allclose(vai1, vai2)
+            vi = vai1
 
             xyz1i = elem.nodes_ref[0].get_position()
             xyz2i = elem.nodes_ref[1].get_position()
@@ -1117,25 +1119,27 @@ class TestBeams(unittest.TestCase):
 
         nsm = [1., 1.]
         pid_pbeam_nsm = 30
-        pbeam_b1 = model.add_pbeam(pid_pbeam_nsm, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                                   c1, c2, d1, d2,
-                                   e1, e2, f1, f2,
-                                   k1=1., k2=1.,
-                                   s1=0., s2=0.,
-                                   nsia=10., nsib=10.,
-                                   cwa=0., cwb=None,
-                                   # cg location at A/B (1.,1.)
-                                   m1a=1., m2a=1.,
-                                   m1b=None, m2b=None,
-                                   # neutral axis at A/B (0., 0.)
-                                   n1a=0., n2a=0.,
-                                   n1b=None, n2b=None,
-                                   comment='')
+        pbeam_b1 = model.add_pbeam(
+            pid_pbeam_nsm, mid, xxb, so, area, i1, i2, i12, j, nsm,
+            c1, c2, d1, d2,
+            e1, e2, f1, f2,
+            k1=1., k2=1.,
+            s1=0., s2=0.,
+            nsia=10., nsib=10.,
+            cwa=0., cwb=None,
+            # cg location at A/B (1.,1.)
+            m1a=1., m2a=1.,
+            m1b=None, m2b=None,
+            # neutral axis at A/B (0., 0.)
+            n1a=0., n2a=0.,
+            n1b=None, n2b=None,
+            comment='')
         model.pbeam.validate()
 
         eid = 42
-        model.add_cbeam(eid, pid_pbeam_nsm, [1, 2], x, g0, offt='GGG', bit=None,
-                        pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+        cbeam2 = model.add_cbeam(
+            eid, pid_pbeam_nsm, [1, 2], x, g0, offt='GGG', bit=None,
+            pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
 
         E = 1.0
         G = None
@@ -1149,12 +1153,30 @@ class TestBeams(unittest.TestCase):
         model.add_card(card_lines, 'PBEAML', comment='', is_list=False,
                        has_none=True)
         model.pop_parse_errors()
-        #pbeam_a2 = model.properties[2]
-        pbeam = model.pbeaml
         #------------------
         model.cross_reference()
         model.pop_xref_errors()
 
+        model.setup(run_geom_check=False)
+
+        #-----------------------
+        cbeam = model.cbeam
+        xyz1, xyz2 = cbeam.get_xyz()
+        v, ihat, yhat, zhat, wa, wb = cbeam.get_axes(xyz1, xyz2)
+
+        assert v.shape == (1, 3)
+        ihat_expected = [1., 0., 0.]
+        yhat_expected = [0., 1., 0.]  # x
+        zhat_expected = [0., 0., 1.]  # i x y
+
+        assert np.allclose(v[0], x), f'v={v} expected={x}'
+        assert np.allclose(ihat[0], ihat_expected), f'v={ihat} expected={ihat_expected}'
+        assert np.allclose(yhat[0], yhat_expected), f'v={yhat} expected={yhat_expected}'
+        assert np.allclose(zhat[0], zhat_expected), f'v={zhat} expected={zhat_expected}'
+
+        #-----------------------
+        #pbeam_a2 = model.properties[2]
+        pbeam = model.pbeaml
         assert pbeam.area() == 2.0
 
         # mass/L = area*rho + nsm
@@ -1170,15 +1192,16 @@ class TestBeams(unittest.TestCase):
             #scale=None)
 
         centroid_expected = np.array([0.5, 0., 0.])
-        cg_expected = np.array([0.5, 1., 1.])
+        center_of_mass_expected = np.array([0.5, 1., 1.])
         cbeam = model.cbeam
         assert np.allclose(cbeam.centroid(), centroid_expected), cbeam.centroid() # should be 10
-        assert np.allclose(cbeam.center_of_mass()[0], cg_expected), cbeam.center_of_mass() # should be 10
+        center_of_mass = cbeam.center_of_mass()
+        assert np.allclose(center_of_mass[0], center_of_mass_expected), center_of_mass # should be 10
 
         mass, cg1, inertia = model.inertia_sum()
         assert mass == 1.0, mass
         #print('cg1=%s' % cg)
-        assert np.allclose(cg1, cg_expected), cg1
+        assert np.allclose(cg1, center_of_mass_expected), cg1
 
         if 0:
             mass, cg2, unused_inertia = mass_properties_nsm(

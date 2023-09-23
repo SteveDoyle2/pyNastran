@@ -237,7 +237,7 @@ def _recover_forcei_cbar(model: BDF,
 
 
     # ------------------
-    is_failed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+    is_failed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
     assert is_failed is False
     #print(wa, wb)
     #xyz1 = elem.nodes_ref[0].get_position() + wa
@@ -305,7 +305,7 @@ def _recover_forcei_cbar(model: BDF,
     #Ke = _beami_stiffness(pid_ref, mat, L, I1, I2, k1=k1, k2=k2, pa=pa, pb=pb)
     #K = Teb.T @ Ke @ Teb
 
-    #is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+    #is_passed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
     #T = np.vstack([ihat, jhat, khat])
     #z = np.zeros((3, 3), dtype='float64')
     #I1 = prop.I11()

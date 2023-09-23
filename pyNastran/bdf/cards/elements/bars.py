@@ -842,7 +842,7 @@ class CBAR(LineElement):
         #x3 = set_blank_if_default(self.x[2], 0.0)
         return list(self.x)
 
-    def get_axes(self, model):
+    def get_axes(self, model: BDF) -> tuple[bool, Any]:
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
@@ -851,8 +851,12 @@ class CBAR(LineElement):
         :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
         description of the OFFT flag.
 
+        Returns
+        -------
         is_passed: bool
-        out: (wa, wb, ihat, jhat, khat)
+            flag
+        out: (v, ihat, jhat, khat, wa, wb)
+            data
         """
         is_failed = True
 
@@ -870,16 +874,15 @@ class CBAR(LineElement):
         xyz2 = node2.get_position()
 
         elem = model.elements[eid]
-        pid_ref = elem.pid_ref
-        if pid_ref is None:
-            pid_ref = model.Property(elem.pid)
-        assert not isinstance(pid_ref, integer_types), elem
 
-        is_failed, (wa, wb, ihat, yhat, zhat) = self.get_axes_by_nodes(
-            model, pid_ref, node1, node2, xyz1, xyz2, model.log)
-        return is_failed, (wa, wb, ihat, yhat, zhat)
+        is_failed, (v, ihat, yhat, zhat, wa, wb) = self.get_axes_by_nodes(
+            model, node1, node2, xyz1, xyz2, model.log)
+        return is_failed, (v, ihat, yhat, zhat, wa, wb)
 
-    def get_axes_by_nodes(self, model, pid_ref, node1, node2, xyz1, xyz2, log):
+    def get_axes_by_nodes(self, model: BDF,
+                          node1: GRID, node2: GRID,
+                          xyz1: np.ndarray, xyz2: np.ndarray,
+                          log: SimpleLogger) -> tuple[bool, Any]:
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
@@ -914,43 +917,60 @@ class CBAR(LineElement):
             raise ValueError(msg)
         i_offset = i / Li
 
-        unused_v, wa, wb, xform = rotate_v_wa_wb(
+        v, wa, wb, xform = rotate_v_wa_wb(
             model, elem,
             xyz1, xyz2, node1, node2,
             i_offset, i, eid, Li, log)
+
         if wb is None:
             # one or more of v, wa, wb are bad
-
+            #
             # xform is xform_offset...assuming None
             ihat = None
             yhat = None
             zhat = None
-            return is_failed, (wa, wb, ihat, yhat, zhat)
+            return is_failed, (v, ihat, yhat, zhat, wa, wb)
 
         ihat = xform[0, :]
         yhat = xform[1, :]
         zhat = xform[2, :]
 
         is_failed = False
-        return is_failed, (wa, wb, ihat, yhat, zhat)
+        return is_failed, (v, ihat, yhat, zhat, wa, wb)
 
-    def get_orientation_vector(self, xyz):
+    def get_orientation_vector(self, model: BDF):
         """
-        Element offsets are defined in a Cartesian system located at the
-        connecting grid point. The components of the offsets are always
-        defined in units of translation, even if the displacement
-        coordinate system is cylindrical or spherical.
+        Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
-        For example, in Figure 11-11, the grid point displacement
-        coordinate system is cylindrical, and the offset vector is
-        defined using Cartesian coordinates u1, u2, and u3 in units of
-        translation.
+        Notes
+        -----
+        :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
+        description of the OFFT flag.
+
         """
-        if self.g0:
-            v = xyz[self.g0] - xyz[self.Ga()]
-        else:
-            v = self.x
-        assert self.offt == 'GGG', self.offt
+        #TODO: not integrated with CBAR yet...
+
+        eid = self.eid
+
+        elem = self
+        node1 = self.nodes_ref[0]
+        node2 = self.nodes_ref[1]
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+
+        # wa/wb are not considered in i_offset
+        # they are considered in ihat
+        i = xyz2 - xyz1
+        ihat_norm = norm(i)
+        if ihat_norm== 0.:
+            msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
+            raise ValueError(msg)
+        i_offset = i / ihat_norm
+
+        v, unused_wa, unused_wb, unused_xform = rotate_v_wa_wb(
+            model, elem,
+            xyz1, xyz2, node1, node2,
+            i_offset, i, eid, ihat_norm, model.log)
         return v
 
     @property
@@ -1839,7 +1859,10 @@ def get_bar_vector(model, elem, node1, node2, xyz1):
 
     return v, cd1, cd1_ref, cd2, cd2_ref
 
-def rotate_v_wa_wb(model: BDF, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset, eid,
+def rotate_v_wa_wb(model: BDF, elem,
+                   xyz1: np.ndarray, xyz2: np.ndarray,
+                   node1, node2,
+                   ihat_offset, i_offset, eid,
                    Li_offset,
                    log: SimpleLogger) -> tuple[NDArray3float, NDArray3float, NDArray3float, NDArray33float]:
     """
@@ -1991,7 +2014,11 @@ def rotate_v_wa_wb(model: BDF, elem, xyz1, xyz2, node1, node2, ihat_offset, i_of
 
     return v, wa, wb, xform
 
-def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
+def get_bar_yz_transform(v: np.ndarray, ihat: np.ndarray,
+                         eid: int,
+                         xyz1: np.ndarray, xyz2: np.ndarray,
+                         nid1: int, nid2: int,
+                         i: np.ndarray, Li: float) -> tuple[np.ndarray, np.ndarray]:
     """
     helper method for ``_get_bar_yz_arrays``
 

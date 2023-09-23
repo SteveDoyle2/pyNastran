@@ -273,7 +273,7 @@ class TriShell(ShellElement):
             tuple(sorted([node_ids[2], node_ids[0]]))
         ]
 
-    def get_edge_axes(self):
+    def get_edge_axes(self) -> tuple[np.ndarray, np.ndarray]:
         n1, n2, n3 = self.nodes_ref
         g1 = n1.get_position()
         g2 = n2.get_position()
@@ -1750,7 +1750,7 @@ class QuadShell(ShellElement):
         iedge = edge_ids.index(tedge)
         return iedge
 
-    def get_edge_axes(self):
+    def get_edge_axes(self) -> tuple[np.ndarray, np.ndarray]:
         n1, n2, n3, n4 = self.nodes_ref
 
         g1 = n1.get_position()

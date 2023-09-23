@@ -75,7 +75,7 @@ class ShellElement(Element):
         assert len(props) > 0, f'{self.type}: all_props={all_props}'
         return props
 
-    def get_edge_axes(self):
+    def get_edge_axes(self) -> tuple[np.ndarray, np.ndarray]:
         grid = self.model.grid
         xyz = grid.xyz_cid0()
         nid = grid.node_id

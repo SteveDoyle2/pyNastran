@@ -303,7 +303,7 @@ def _recover_straini_cbar(model: BDF, xb: NDArrayNfloat,
     pid_ref = elem.pid_ref
     mat = pid_ref.mid_ref
 
-    #is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+    #is_passed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
     #T = np.vstack([ihat, jhat, khat])
     #z = np.zeros((3, 3), dtype='float64')
     prop = elem.pid_ref

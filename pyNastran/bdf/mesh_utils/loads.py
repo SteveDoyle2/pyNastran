@@ -320,7 +320,7 @@ def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p)
         M += Mi
         model.log.info('Fi=%s Mi=%s x=%s' % (Fi, Mi, x))
     else:
-        _bar_eq_pload1(load, elem, xyz, Ldir,
+        _bar_eq_pload1(model, load, elem, xyz, Ldir,
                        n1, n2,
                        x1, x2,
                        p1, p2,
@@ -607,13 +607,13 @@ def sum_forces_moments_elements(model: BDF, p0: int, loadcase_id: int,
     return F2, M2
 
 
-def _bar_eq_pload1(load, elem, xyz, Ldir,
+def _bar_eq_pload1(model: BDF, load, elem, xyz, Ldir,
                    n1, n2,
                    x1, x2,
                    p1, unused_p2,
                    F, M, p):
     """helper for ``_elements_pload1`` and ``_elementi_pload1``"""
-    v = elem.get_orientation_vector(xyz)
+    v = elem.get_orientation_vector(model)
     i = Ldir
     ki = cross(i, v)
     k = ki / norm(ki)

@@ -1003,7 +1003,7 @@ class COORD(VectorizedBaseCard):
             return xyz_cid.copy()
 
         if local_coord_id not in self.coord_id:
-            raise RuntimeError(f'local_coord_id={local_coord_id} cannot be found')
+            raise KeyError(f'local_coord_id={local_coord_id} cannot be found')
         icid = self.index(local_coord_id).squeeze()
         if not self.coord_id[icid] == local_coord_id:
             raise KeyError(f'icid={icid} local_coord_id={local_coord_id} actual={self.coord_id[icid]}\n'

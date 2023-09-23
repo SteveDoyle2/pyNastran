@@ -968,7 +968,8 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         if is_failed:
             model.log.error(out)
             raise RuntimeError(out)
-        wa, wb, _ihat, jhat, khat = out
+
+        _v, _ihat, jhat, khat, wa, wb = out
         p1 = xyz1 + wa
         p2 = xyz2 + wb
         if prop.type == 'PBEAM':
@@ -1075,7 +1076,7 @@ def _get_cbeam_mass_no_nsm(model, elem, mass, cg, inertia, reference_point):
         model.log.error(str(out))
         raise RuntimeError(out)
 
-    wa, wb, _ihat, jhat, khat = out
+    _v, _ihat, jhat, khat, wa, wb = out
     p1 = xyz1 + wa
     p2 = xyz2 + wb
     if prop.type == 'PBEAM':

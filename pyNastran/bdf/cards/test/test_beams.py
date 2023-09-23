@@ -1008,23 +1008,25 @@ class TestBeams(unittest.TestCase):
 
         nsm = [1., 1.]
         pid_pbeam_nsm = 30
-        pbeam_b1 = model.add_pbeam(pid_pbeam_nsm, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                                   c1, c2, d1, d2,
-                                   e1, e2, f1, f2,
-                                   k1=1., k2=1.,
-                                   s1=0., s2=0.,
-                                   nsia=10., nsib=10.,
-                                   cwa=0., cwb=None,
-                                   # cg location at A/B (1.,1.)
-                                   m1a=1., m2a=1.,
-                                   m1b=None, m2b=None,
-                                   # neutral axis at A/B (0., 0.)
-                                   n1a=0., n2a=0.,
-                                   n1b=None, n2b=None,
-                                   comment='')
+        pbeam_b1 = model.add_pbeam(
+            pid_pbeam_nsm, mid, xxb, so, area, i1, i2, i12, j, nsm,
+            c1, c2, d1, d2,
+            e1, e2, f1, f2,
+            k1=1., k2=1.,
+            s1=0., s2=0.,
+            nsia=10., nsib=10.,
+            cwa=0., cwb=None,
+            # cg location at A/B (1.,1.)
+            m1a=1., m2a=1.,
+            m1b=None, m2b=None,
+            # neutral axis at A/B (0., 0.)
+            n1a=0., n2a=0.,
+            n1b=None, n2b=None,
+            comment='')
         eid = 42
-        model.add_cbeam(eid, pid_pbeam_nsm, [1, 2], x, g0, offt='GGG', bit=None,
-                        pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+        cbeam = model.add_cbeam(
+            eid, pid_pbeam_nsm, [1, 2], x, g0, offt='GGG', bit=None,
+            pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
 
         pbeam_a1.validate()
         pbeam_b1.validate()
@@ -1046,6 +1048,19 @@ class TestBeams(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
+        #-----------------------------------------
+        #xyz1, xyz2 = cbeam.get_xyz()
+        is_failed, (v, ihat, yhat, zhat, wa, wb) = cbeam.get_axes(model)
+
+        ihat_expected = [1., 0., 0.]
+        yhat_expected = [0., 1., 0.]  # x
+        zhat_expected = [0., 0., 1.]  # i x y
+
+        assert np.allclose(v, x), f'v={v} expected={x}'
+        assert np.allclose(ihat, ihat_expected), f'v={ihat} expected={ihat_expected}'
+        assert np.allclose(yhat, yhat_expected), f'v={yhat} expected={yhat_expected}'
+        assert np.allclose(zhat, zhat_expected), f'v={zhat} expected={zhat_expected}'
+        # ----------------------------------------
         assert pbeam_a1.Nsm() == 1.0
         assert pbeam_a1.Area() == 2.0
 

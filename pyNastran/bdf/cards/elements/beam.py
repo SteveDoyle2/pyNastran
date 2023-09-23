@@ -500,7 +500,7 @@ class CBEAM(LineElement):
             #model.log.error(out)
             raise RuntimeError(out)
 
-        wa, wb, _ihat, jhat, khat = out
+        _v, _ihat, jhat, khat, wa, wb = out
         p1 = xyz1 + wa
         p2 = xyz2 + wb
 
@@ -594,29 +594,9 @@ class CBEAM(LineElement):
         cdb = node2.cid_ref
         ga = node1.get_position() + cda.transform_node_to_global_assuming_rectangular(self.wa)
         gb = node2.get_position() + cdb.transform_node_to_global_assuming_rectangular(self.wb)
-        #x = self.get_orientation_vector()
         return (ga + gb) / 2.
 
-    def get_orientation_vector(self, xyz: np.ndarray):
-        """
-        Element offsets are defined in a Cartesian system located at the
-        connecting grid point. The components of the offsets are always
-        defined in units of translation, even if the displacement
-        coordinate system is cylindrical or spherical.
-
-        For example, in Figure 11-11, the grid point displacement
-        coordinate system is cylindrical, and the offset vector is
-        defined using Cartesian coordinates u1, u2, and u3 in units of
-        translation.
-        """
-        if self.g0:
-            v = xyz[self.g0] - xyz[self.Ga()]
-        else:
-            v = self.x
-        assert self.offt == 'GGG', self.offt
-        return v
-
-    def get_axes(self, model: BDF) -> tuple[bool, tuple[Any, Any, Any, Any, Any]]:
+    def get_axes(self, model: BDF) -> tuple[bool, tuple[Any, Any, Any, Any, Any, Any]]:
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
@@ -625,8 +605,12 @@ class CBEAM(LineElement):
         :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
         description of the OFFT flag.
 
+        Returns
+        -------
         is_passed: bool
-        out: (wa, wb, ihat, jhat, khat)
+            flag
+        out: (v, ihat, jhat, khat, wa, wb)
+            data
         """
         is_failed = True
         #TODO: not integrated with CBAR yet...
@@ -649,9 +633,9 @@ class CBEAM(LineElement):
 
         #elem = model.elements[eid]
 
-        is_failed, (wa, wb, ihat, yhat, zhat) = self.get_axes_by_nodes(
+        is_failed, (v, ihat, yhat, zhat, wa, wb) = self.get_axes_by_nodes(
             model, node1, node2, xyz1, xyz2, model.log)
-        return is_failed, (wa, wb, ihat, yhat, zhat)
+        return is_failed, (v, ihat, yhat, zhat, wa, wb)
 
     def get_orientation_vector(self, model: BDF):
         """
@@ -688,7 +672,10 @@ class CBEAM(LineElement):
             i_offset, i, eid, ihat_norm, model.log)
         return v
 
-    def get_axes_by_nodes(self, model: BDF, node1, node2, xyz1, xyz2, log):
+    def get_axes_by_nodes(self, model: BDF,
+                          node1: GRID, node2: GRID,
+                          xyz1: np.ndarray, xyz2: np.ndarray,
+                          log: SimpleLogger) -> tuple[bool, Any]:
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
@@ -723,25 +710,26 @@ class CBEAM(LineElement):
             raise ValueError(msg)
         i_offset = i / ihat_norm
 
-        unused_v, wa, wb, xform = rotate_v_wa_wb(
+        v, wa, wb, xform = rotate_v_wa_wb(
             model, elem,
             xyz1, xyz2, node1, node2,
             i_offset, i, eid, ihat_norm, log)
+
         if wb is None:
             # one or more of v, wa, wb are bad
-
+            #
             # xform is xform_offset...assuming None
             ihat = None
             yhat = None
             zhat = None
-            return is_failed, (wa, wb, ihat, yhat, zhat)
+            return is_failed, (v, ihat, yhat, zhat, wa, wb)
 
         ihat = xform[0, :]
         yhat = xform[1, :]
         zhat = xform[2, :]
 
         is_failed = False
-        return is_failed, (wa, wb, ihat, yhat, zhat)
+        return is_failed, (v, ihat, yhat, zhat, wa, wb)
 
     @property
     def node_ids(self):

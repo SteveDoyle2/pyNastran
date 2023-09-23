@@ -405,8 +405,9 @@ class CBEAM(Element):
         return xyz1, xyz2
 
 
-    def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray,
-                                                                    np.ndarray, np.ndarray, np.ndarray]:
+    def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray,
+                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                            np.ndarray, np.ndarray, np.ndarray]:
         log = self.model.log
         coords = self.model.coord
         #xyz1, xyz2 = self.get_xyz()
@@ -575,7 +576,7 @@ class CBEAM(Element):
         assert not np.isnan(np.max(xyz1)), xyz1
         assert not np.isnan(np.max(xyz2)), xyz2
 
-        v, wa, wb, ihat, jhat, khat = self.get_axes(xyz1, xyz2)
+        v, ihat, jhat, khat, wa, wb = self.get_axes(xyz1, xyz2)
 
         # we finally have the nodal coordaintes!!!! :)
         p1 = xyz1 + wa
