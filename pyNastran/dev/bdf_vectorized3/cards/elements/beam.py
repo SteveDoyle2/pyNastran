@@ -392,7 +392,7 @@ class CBEAM(Element):
         return offt_vector, offt_end_a, offt_end_b
 
     def get_xyz(self) -> tuple[np.ndarray, np.ndarray]:
-        neids = len(self.element_id)
+        #neids = len(self.element_id)
         grid = self.model.grid
         xyz = grid.xyz_cid0()
         nid = grid.node_id
@@ -582,9 +582,6 @@ class CBEAM(Element):
         p2 = xyz2 + wb
         # ----------------------------------
         # now some mass properties :(
-        jhat = yhat
-        khat = zhat
-
         mass_per_length = np.full(neids, np.nan, dtype='float64')
         nsm_per_length = np.full(neids, np.nan, dtype='float64')
         nsm_centroid = np.full((neids, 3), np.nan, dtype='float64')
@@ -620,7 +617,7 @@ class CBEAM(Element):
                 m1b = prop2.m1b
                 m2a = prop2.m2a
                 m2b = prop2.m2b
-                rho = prop2.rho()
+                #rho = prop2.rho()
 
                 # we don't call the MassPerLength method so we can put the NSM centroid
                 # on a different axis (the PBEAM is weird)
