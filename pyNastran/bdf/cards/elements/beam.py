@@ -495,7 +495,7 @@ class CBEAM(LineElement):
 
         model = None
         log = None
-        is_failed, out = elem.get_axes_by_nodes(model, self.pid_ref, node1, node2, xyz1, xyz2, log)
+        is_failed, out = elem.get_axes_by_nodes(model, node1, node2, xyz1, xyz2, log)
         if is_failed:
             #model.log.error(out)
             raise RuntimeError(out)
@@ -616,7 +616,7 @@ class CBEAM(LineElement):
         assert self.offt == 'GGG', self.offt
         return v
 
-    def get_axes(self, model: BDF) -> tuple[Any, Any, Any, Any, Any]:
+    def get_axes(self, model: BDF) -> tuple[bool, tuple[Any, Any, Any, Any, Any]]:
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
@@ -640,24 +640,55 @@ class CBEAM(LineElement):
         yhat = None
         zhat = None
 
-        eid = self.eid
+        #eid = self.eid
         (nid1, nid2) = self.node_ids
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
         xyz1 = node1.get_position()
         xyz2 = node2.get_position()
 
-        elem = model.elements[eid]
-        pid_ref = elem.pid_ref
-        if pid_ref is None:
-            pid_ref = model.Property(elem.pid)
-        assert not isinstance(pid_ref, integer_types), elem
+        #elem = model.elements[eid]
 
         is_failed, (wa, wb, ihat, yhat, zhat) = self.get_axes_by_nodes(
-            model, pid_ref, node1, node2, xyz1, xyz2, model.log)
+            model, node1, node2, xyz1, xyz2, model.log)
         return is_failed, (wa, wb, ihat, yhat, zhat)
 
-    def get_axes_by_nodes(self, model: BDF, pid_ref, node1, node2, xyz1, xyz2, log):
+    def get_orientation_vector(self, model: BDF):
+        """
+        Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
+
+        Notes
+        -----
+        :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
+        description of the OFFT flag.
+
+        """
+        #TODO: not integrated with CBAR yet...
+
+        eid = self.eid
+
+        elem = self
+        node1 = self.nodes_ref[0]
+        node2 = self.nodes_ref[1]
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+
+        # wa/wb are not considered in i_offset
+        # they are considered in ihat
+        i = xyz2 - xyz1
+        ihat_norm = norm(i)
+        if ihat_norm== 0.:
+            msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
+            raise ValueError(msg)
+        i_offset = i / ihat_norm
+
+        v, unused_wa, unused_wb, unused_xform = rotate_v_wa_wb(
+            model, elem,
+            xyz1, xyz2, node1, node2,
+            i_offset, i, eid, ihat_norm, model.log)
+        return v
+
+    def get_axes_by_nodes(self, model: BDF, node1, node2, xyz1, xyz2, log):
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 

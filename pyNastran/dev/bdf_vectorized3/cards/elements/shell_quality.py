@@ -178,6 +178,15 @@ def tri_quality_xyz0(p1: np.ndarray, p2: np.ndarray, p3: np.ndarray) -> Quality:
     cos_theta3 = np.einsum('ij,ij->i', v13, -v32) / length_cos3
     thetas = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.))
 
+    # https://scicomp.stackexchange.com/questions/25012/calculate-jacobian-of-triangular-element-given-coordinates-of-vertices-and-displ
+    #j11 = xb - xa
+    #j12 = xc - xa
+
+    #j21 = yb - ya
+    #j22 = yc - ya
+    #det_j = j11 * y22 - j12 * j21
+    #jacobian = det_j
+
     # old
     #min_theta[ipos] = thetas.min(axis=0)
     #max_theta[ipos] = thetas.max(axis=0)
@@ -423,6 +432,10 @@ def quad_quality_xyz(p1: np.ndarray, p2: np.ndarray,
         np.clip([cos_warp1, cos_warp2], -1., 1.)))
     max_warp = warps.max(axis=0)
     assert len(max_warp) == nelement
+
+    #https://math.stackexchange.com/questions/2430691/jacobian-determinant-for-bi-linear-quadrilaterals
+    #https://scicomp.stackexchange.com/questions/35881/fem-shape-functions-on-triangular-elements-transition-from-2d-to-3d
+    #dx_d
 
     if np.isnan(max_warp.max()):
         print(f'NAN max_warp = {max_warp}')

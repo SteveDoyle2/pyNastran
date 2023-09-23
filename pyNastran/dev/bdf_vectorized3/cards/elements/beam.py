@@ -391,10 +391,7 @@ class CBEAM(Element):
             offt_end_b[i] = offt_end_bi
         return offt_vector, offt_end_a, offt_end_b
 
-    def center_of_mass(self) -> np.ndarray:
-        log = self.model.log
-        coords = self.model.coord
-
+    def get_xyz(self) -> tuple[np.ndarray, np.ndarray]:
         neids = len(self.element_id)
         grid = self.model.grid
         xyz = grid.xyz_cid0()
@@ -405,11 +402,16 @@ class CBEAM(Element):
         in2 = inode[:, 1]
         xyz1 = xyz[in1, :]
         xyz2 = xyz[in2, :]
-        centroid = (xyz1 + xyz2) / 2.
-        assert centroid.shape[0] == self.nodes.shape[0]
-        assert not np.isnan(np.max(xyz1)), xyz1
-        assert not np.isnan(np.max(xyz2)), xyz2
+        return xyz1, xyz2
 
+
+    def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                                    np.ndarray, np.ndarray, np.ndarray]:
+        log = self.model.log
+        coords = self.model.coord
+        #xyz1, xyz2 = self.get_xyz()
+
+        neids = xyz1.shape[0]
         i = xyz2 - xyz1
         ihat_norm = np.linalg.norm(i, axis=1)
         assert len(ihat_norm) == neids
@@ -483,7 +485,6 @@ class CBEAM(Element):
         norm_yhat = np.linalg.norm(yhat, axis=1)
         xform_offset = np.dstack([ihat, yhat, zhat]) # 3x3 unit matrix
         #del ihat, yhat, zhat, norm_z, norm_yhat
-        xform = xform_offset
 
         if np.any(np.isnan(yhat.max(axis=1))):
             print(f'norm_yhat = {norm_yhat}')
@@ -560,6 +561,21 @@ class CBEAM(Element):
         #yhat = xform[1, :]
         #zhat = xform[2, :]
         #wa, wb, _ihat, jhat, khat = out
+
+        # we finally have the nodal coordaintes!!!! :)
+        return v, ihat, yhat, zhat, wa, wb
+
+    def center_of_mass(self) -> np.ndarray:
+        log = self.model.log
+
+        xyz1, xyz2 = self.get_xyz()
+        neids = xyz1.shape[0]
+        centroid = (xyz1 + xyz2) / 2.
+        assert centroid.shape[0] == self.nodes.shape[0]
+        assert not np.isnan(np.max(xyz1)), xyz1
+        assert not np.isnan(np.max(xyz2)), xyz2
+
+        v, wa, wb, ihat, jhat, khat = self.get_axes(xyz1, xyz2)
 
         # we finally have the nodal coordaintes!!!! :)
         p1 = xyz1 + wa
@@ -702,10 +718,10 @@ class CBEAM(Element):
         if np.isnan(nsm_centroid.max()):
             inan = np.isnan(nsm_centroid.max(axis=1))
             assert len(inan) == len(self.element_id)
-            eid = self.element_id[inan]
+            #eid = self.element_id[inan]
             pid = self.property_id[inan]
             upid = np.unique(pid)
-            eid_pid = np.column_stack([eid, pid])
+            #eid_pid = np.column_stack([eid, pid])
             #'[eid,pid]={eid_pid}\n'
             raise RuntimeError(f'nan nsm_centroids for upids={upid}')
 

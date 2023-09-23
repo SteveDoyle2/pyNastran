@@ -6,8 +6,9 @@ from pathlib import PurePath
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
-import vtk
+#import vtk
 
+from pyNastran.gui.vtk_interface import vtkUnstructuredGrid
 #from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.gui_objects.types import Formi, Form, Cases #, FormDict, HeaderDict, Case, Cases, KeysMap
@@ -204,7 +205,7 @@ class Nastran3:
         #points.SetNumberOfPoints(npoints)
         #points.SetData(points_data)
 
-        ugrid = gui.grid
+        ugrid: vtkUnstructuredGrid = gui.grid
         create_alt_conm2_grids(gui, model, node_id, xyz_cid0)
         create_alt_rbe2_grids(gui, model, node_id, xyz_cid0)
         create_alt_rbe3_grids(gui, model, node_id, xyz_cid0)
@@ -232,9 +233,16 @@ class Nastran3:
                      node_id: np.ndarray,
                      element_id: np.ndarray,
                      property_id: np.ndarray):
+
+        node_index = np.arange(len(node_id))
+        element_index = np.arange(len(element_id))
+
         gui = self.gui
-        gui.node_ids = node_id
-        gui.element_ids = element_id
+
+        # I think we specifically look up NodeID, ELementID,
+        # but I think we want to look up by Index here
+        gui.node_ids = node_id        # TODO: should this be node_id/index
+        gui.element_ids = element_id  # TODO: should this be element_id/index
         gui.nnodes = len(node_id)
         gui.nelements = len(element_id)
 
@@ -254,16 +262,17 @@ class Nastran3:
         geometry_form: list[Form] = []
         icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeID', node_id)
         icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'ElementID', element_id)
-        icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeIndex', np.arange(len(node_id)))
-        icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'ElementIndex', np.arange(len(element_id)))
+        icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeIndex', node_index)
+        icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'ElementIndex', element_index)
         nelements = len(element_id)
 
-        node_cp = model.grid.cp
-        node_cd = model.grid.cd
-        if (node_cp.min(), node_cp.max()) != (0, 0):
-            icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeCp', node_cp)
-        if (node_cd.min(), node_cd.max()) != (0, 0):
-            icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeCd', node_cd)
+        if len(model.grid):
+            node_cp = model.grid.cp
+            node_cd = model.grid.cd
+            if (node_cp.min(), node_cp.max()) != (0, 0):
+                icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeCp', node_cp)
+            if (node_cd.min(), node_cd.max()) != (0, 0):
+                icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeCd', node_cd)
 
         icase = _add_integer_centroid_gui_result(
             icase, cases, geometry_form, subcase_id, 'PropertyID', property_id, mask_value=0)
@@ -285,16 +294,19 @@ class Nastran3:
             geometry_form.append(('Quality', None, quality_form))
         return form, cases, icase# , nids, eids, data_map_dict
 
-    def _simple_gui(self, ugrid: vtk.vtkUnstructuredGrid) -> None:
-        grid_mapper = vtk.vtkDataSetMapper()
+    def _simple_gui(self, ugrid: vtkUnstructuredGrid) -> None:
+        from pyNastran.gui.vtk_rendering_core import (
+            vtkActor, vtkDataSetMapper, vtkRenderer,
+            vtkRenderWindow, vtkRenderWindowInteractor)
+        grid_mapper = vtkDataSetMapper()
         grid_mapper.SetInputData(ugrid)
 
-        geom_actor = vtk.vtkActor()
+        geom_actor = vtkActor()
         geom_actor.SetMapper(grid_mapper)
 
 
         # Setup renderer
-        renderer = vtk.vtkRenderer()
+        renderer = vtkRenderer()
         renderer.AddActor(geom_actor)
         #if make_glyphs:
             #renderer.AddActor(arrow_actor)
@@ -302,15 +314,15 @@ class Nastran3:
         renderer.SetBackground(0.7, 0.8, 1.0)
 
         # Setup render window
-        renderWindow = vtk.vtkRenderWindow()
+        renderWindow = vtkRenderWindow()
         renderWindow.AddRenderer(renderer)
 
         # Setup render window
-        render_window = vtk.vtkRenderWindow()
+        render_window = vtkRenderWindow()
         render_window.AddRenderer(renderer)
 
         # Setup render window interactor
-        renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+        renderWindowInteractor = vtkRenderWindowInteractor()
         #style = vtk.vtkInteractorStyleImage()
 
         # Render and start interaction
@@ -321,9 +333,16 @@ class Nastran3:
         #x = 1
 
     def load_elements(self,
-                      ugrid: vtk.vtkUnstructuredGrid,
+                      ugrid: vtkUnstructuredGrid,
                       model: BDF,
                       grid_id: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Fills the vtkUnstructuredGrid.
+
+        Elements are added by the order in model.elements, not by element id.
+        This makes it easier to fill the geometry/results, but harder to lookup
+        a specific element id.
+        """
         log = model.log
         property_ids: list[np.ndarray] = []
         element_ids: list[np.ndarray] = []

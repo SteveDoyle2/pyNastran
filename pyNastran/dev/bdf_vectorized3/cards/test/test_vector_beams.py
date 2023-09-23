@@ -20,7 +20,7 @@ if IS_MATPLOTLIB:
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
-from pyNastran.bdf.bdf import BDFCard # BDF,
+from pyNastran.bdf.bdf import BDFCard, BDF as BDF_old
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.cards.elements.beam import PBEAM
 #from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBEND, PBMSECT, PBRSECT
@@ -569,6 +569,107 @@ class TestBeams(unittest.TestCase):
         model.cross_reference()
 
         save_load_deck(model)
+
+    def test_cbeam_v_g0(self):
+        model = BDF(debug=False)
+        model_old = BDF_old(debug=False)
+
+        model.add_grid(1, [0., 0., 0.], cd=0)
+        model.add_grid(2, [1., 0., 0.], cd=0)
+        model.add_grid(11, [0., 0., 0.], cd=1)
+        model.add_grid(12, [1., 0., 0.], cd=1)
+        model.add_grid(3, [0., 1., 0.])
+
+        model_old.add_grid(1, [0., 0., 0.], cd=0)
+        model_old.add_grid(2, [1., 0., 0.], cd=0)
+        model_old.add_grid(11, [0., 0., 0.], cd=1)
+        model_old.add_grid(12, [1., 0., 0.], cd=1)
+        model_old.add_grid(3, [0., 1., 0.])
+
+        eid = 1
+        pid = 101
+        nids = [1, 2]
+
+        offts = ['GGG', 'GOG', 'GBG', 'GGO', 'GOO', 'GGB', 'GBB',
+                 'BGG', 'BOG', 'BBG', 'BGO', 'BOO', 'BGB', 'BBB']
+
+        all_nids = [
+            [1, 2],   # no xform
+            #[11, 2],  # xform A
+            #[1, 12],  # xform B
+            #[11, 12], # xform A/B
+        ]
+        #-------------------------------
+        for nids in all_nids:
+            x = [0., 0., 1.]
+            g0 = None
+            for offt in offts:
+                model.add_cbeam(eid, pid, nids, x, g0, offt=offt, bit=None,
+                                pa=0, pb=0, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+                model_old.add_cbeam(eid, pid, nids, x, g0, offt=offt, bit=None,
+                                    pa=0, pb=0, wa=None, wb=None,
+                                    sa=0, sb=0, comment='CBEAM')
+                eid += 1
+
+            # g0
+            x = None
+            g0 = 3
+            for offt in offts:
+                model.add_cbeam(eid, pid, nids, x, g0, offt=offt, bit=None,
+                                pa=0, pb=0, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+                model_old.add_cbeam(eid, pid, nids, x, g0, offt=offt, bit=None,
+                                    pa=0, pb=0, wa=None, wb=None,
+                                    sa=0, sb=0, comment='CBEAM')
+                eid += 1
+
+
+        cid = 1
+        origin = [1., 1., 1.]
+        zaxis = [1., 0., 0.]
+        xzplane = [2., 2., 2.]
+        model.add_cord2r(cid, origin, zaxis, xzplane)
+        model_old.add_cord2r(cid, origin, zaxis, xzplane)
+        #-------------------------------
+
+        #offt_v offt_a, offt_b = 'GGG'
+        cbeam = model.cbeam
+        model.setup(run_geom_check=False)
+        model_old
+
+        xyz1, xyz2 = cbeam.get_xyz()
+        #v, cd = cbeam.get_bar_vector(xyz1)
+
+        v, ihat, yhat, zhat, wa, wb = cbeam.get_axes(xyz1, xyz2)
+
+        model_old.safe_cross_reference()
+        i = 0
+        for eid, elem in model_old.elements.items():
+            is_failed, (wai, wbi, ihati, yhati, zhati) = elem.get_axes(model_old)
+            vi = elem.get_orientation_vector(model_old)
+
+            xyz1i = elem.nodes_ref[0].get_position()
+            xyz2i = elem.nodes_ref[1].get_position()
+
+            assert np.allclose(xyz1[i, :], xyz1i), f'eid={eid}; xyz1_new={xyz1[i,:]} expected={xyz1i}\n{elem}'
+            assert np.allclose(xyz2[i, :], xyz2i), f'eid={eid}; xyz2_new={xyz2[i,:]} expected={xyz2i}\n{elem}'
+
+
+            assert np.allclose(ihat[i, :], ihati), f'eid={eid}; i_new={ihat[i,:]} expected={ihati}\n{elem}'
+            assert np.allclose(v[i, :], vi), f'eid={eid}; i_new={v[i,:]} expected={vi}\n{elem}'
+
+            assert np.allclose(yhat[i, :], yhati), f'eid={eid}; j_new={yhat[i,:]} expected={yhati}\n{elem}'
+            assert np.allclose(zhat[i, :], zhati), f'eid={eid}; k_new={zhat[i,:]} expected={zhati}\n{elem}'
+
+            assert np.allclose(wa[i, :], wai), f'eid={eid}; wa_new={wa[i,:]} expected={wai}\n{elem}'
+            assert np.allclose(wb[i, :], wbi), f'eid={eid}; wb_new={wb[i,:]} expected={wbi}\n{elem}'
+            y = 1
+            i += 1
+
+        x = 1
+
+
 
     def test_cbeam_pbeaml(self):
         """CBEAM/PBEAML"""

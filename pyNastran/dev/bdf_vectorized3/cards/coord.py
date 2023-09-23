@@ -951,8 +951,14 @@ class COORD(VectorizedBaseCard):
             force2[i, :] = forcei @ T # reversed?
         return force2
 
+    def check_missing_ids(self, coord_id: np.ndarray):
+        missing_coords = np.setdiff1d(coord_id, self.coord_id)
+        if len(missing_coords):
+            raise RuntimeError(f'coords={missing_coords} not found in {self.coord_id}')
+
     def transform_local_xyz_to_global_coords(self, xyz: np.ndarray, cd: np.ndarray) -> np.ndarray:
         """takes a consistent set of xyz and cd values and transforms them"""
+        self.check_missing_ids(cd)
         xyz2 = np.zeros(xyz.shape, dtype=xyz.dtype)
         for i, xyzi, cdi in zip(count(), xyz, cd):
             xyz2[i, :] = self.transform_local_xyz_to_global(xyzi, cdi)
@@ -996,6 +1002,8 @@ class COORD(VectorizedBaseCard):
         if local_coord_id == 0:
             return xyz_cid.copy()
 
+        if local_coord_id not in self.coord_id:
+            raise RuntimeError(f'local_coord_id={local_coord_id} cannot be found')
         icid = self.index(local_coord_id).squeeze()
         if not self.coord_id[icid] == local_coord_id:
             raise KeyError(f'icid={icid} local_coord_id={local_coord_id} actual={self.coord_id[icid]}\n'
