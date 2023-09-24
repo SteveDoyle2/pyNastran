@@ -579,6 +579,458 @@ class MAT2(Material):
         return
 
 
+class MAT3(Material):
+    """
+    Defines the material properties for linear orthotropic materials used by
+    the CTRIAX6 element entry.
+
+    +------+-----+----+-----+----+-------+-------+------+-----+
+    |   1  |  2  |  3 |  4  | 5  |   6   |   7   |  8   |  9  |
+    +======+=====+====+=====+====+=======+=======+======+=====+
+    | MAT3 | MID | EX | ETH | EZ | NUXTH | NUTHZ | NUZX | RHO |
+    +------+-----+----+-----+----+-------+-------+------+-----+
+    |      |     |    | GZX | AX |  ATH  |  AZ   | TREF | GE  |
+    +------+-----+----+-----+----+-------+-------+------+-----+
+
+    """
+    def add(self, mid: int, ex: float, eth: float, ez: float,
+            nuxth: float, nuthz: float, nuzx: float,
+            rho: float=0.0, gzx: Optional[float]=None,
+            ax: float=0., ath: float=0., az: float=0.,
+            tref: float=0., ge: float=0.,
+            comment: str='') -> int:
+        """Creates a MAT3 card"""
+        self.cards.append((mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
+                           ax, ath, az, tref, ge, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str=''):
+        mid = integer(card, 1, 'mid')
+        ex = double(card, 2, 'ex')
+        eth = double(card, 3, 'eth')
+        ez = double(card, 4, 'ez')
+        nuxth = double(card, 5, 'nuxth')
+        nuthz = double(card, 6, 'nuthz')
+        nuzx = double(card, 7, 'nuzx')
+        rho = double_or_blank(card, 8, 'rho', default=0.0)
+
+        gzx = double_or_blank(card, 11, 'gzx')
+        ax = double_or_blank(card, 12, 'ax', default=0.0)
+        ath = double_or_blank(card, 13, 'ath', default=0.0)
+        az = double_or_blank(card, 14, 'az', default=0.0)
+        tref = double_or_blank(card, 15, 'tref', default=0.0)
+        ge = double_or_blank(card, 16, 'ge', default=0.0)
+        assert len(card) <= 17, f'len(MAT3 card) = {len(card):d}\ncard={card}'
+        self.cards.append((mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
+                           ax, ath, az, tref, ge, comment))
+        self.n += 1
+        return self.n
+
+    def parse_cards(self):
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+
+        material_id = np.zeros(ncards, dtype='int32')
+        ex = np.zeros(ncards, dtype='float64')
+        eth = np.zeros(ncards, dtype='float64')
+        ez = np.zeros(ncards, dtype='float64')
+        nuxth = np.zeros(ncards, dtype='float64')
+        nuthz = np.zeros(ncards, dtype='float64')
+        nuzx = np.zeros(ncards, dtype='float64')
+        gzx = np.zeros(ncards, dtype='float64')
+
+        rho = np.zeros(ncards, dtype='float64')
+        ax = np.zeros(ncards, dtype='float64')
+        ath = np.zeros(ncards, dtype='float64')
+        az = np.zeros(ncards, dtype='float64')
+        tref = np.zeros(ncards, dtype='float64')
+        ge = np.zeros(ncards, dtype='float64')
+
+        for i, card in enumerate(self.cards):
+            (mid, exi, ethi, ezi, nuxthi, nuthzi, nuzxi, rhoi, gzxi,
+             axi, athi, azi, trefi, gei, comment) = card
+            material_id[i] = mid
+            ex[i] = exi
+            eth[i] = ethi
+            ez[i] = ezi
+            nuxth[i] = nuxthi
+            nuthz[i] = nuthzi
+            nuzx[i] = nuzxi
+            gzx[i] = gzxi
+
+            ax[i] = axi
+            ath[i] = athi
+            az[i] = azi
+
+            rho[i] = rhoi
+            tref[i] = trefi
+            ge[i] = gei
+        self._save(material_id, ex, eth, ez,
+                   nuxth, nuthz, nuzx, gzx,
+                   ax, ath, az, rho, tref, ge)
+        self.sort()
+        self.cards = []
+
+    def _save(self, material_id, ex, eth, ez,
+              nuxth, nuthz, nuzx, gzx,
+              ax, ath, az, rho, tref, ge):
+        assert material_id.min() > 0, material_id
+        nmaterials = len(material_id)
+        self.material_id = material_id
+        self.ex = ex
+        self.eth = eth
+        self.ez = ez
+        self.nuxth = nuxth
+        self.nuthz = nuthz
+        self.nuzx = nuzx
+        self.gzx = gzx
+
+        self.ax = ax
+        self.ath = ath
+        self.az = az
+
+        self.rho = rho
+        self.tref = tref
+        self.ge = ge
+        self.n = nmaterials
+
+    def __apply_slice__(self, mat: MAT3, i: np.ndarray) -> None:
+        mat.n = len(i)
+        mat.material_id = self.material_id[i]
+        mat.ex = self.ex[i]
+        mat.eth = self.eth[i]
+        mat.ez = self.ez[i]
+        mat.nuxth = self.nuxth[i]
+        mat.nuthz = self.nuthz[i]
+        mat.gzx = self.gzx[i]
+
+        mat.rho = self.rho[i]
+        mat.ax = self.ax[i]
+        mat.ath = self.ath[i]
+        mat.az = self.az[i]
+        mat.tref = self.tref[i]
+        mat.ge = self.ge[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        max_int = self.material_id.max()
+        print_card = get_print_card(size, max_int)
+
+        material_ids = array_str(self.material_id, size=size)
+        for mid, ex, eth, ez, nuxth, nuthz, nuzx, \
+            rho, gzx, ax, ath, az, tref, ge in zip_longest(material_ids,
+                                                           self.ex, self.eth, self.ez, \
+                                                           self.nuxth, self.nuthz, self.nuzx, \
+                                                           self.rho, self.gzx, self.ax, self.ath, self.az,
+                                                           self.tref, self.ge):
+            ax = set_blank_if_default(ax, 0.0)
+            ath = set_blank_if_default(ath, 0.0)
+            az = set_blank_if_default(az, 0.0)
+            rho = set_blank_if_default(rho, 0.0)
+            tref = set_blank_if_default(tref, 0.0)
+            ge = set_blank_if_default(ge, 0.0)
+            list_fields = ['MAT3', mid, ex, eth, ez, nuxth,
+                           nuthz, nuzx, rho, None, None, gzx,
+                           ax, ath, az, tref, ge]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class MAT4(Material):
+    """
+    Defines the constant or temperature-dependent thermal material properties
+    for conductivity, heat capacity, density, dynamic viscosity, heat
+    generation, reference enthalpy, and latent heat associated with a
+    single-phase change.
+
+    +------+-----+--------+------+-----+----+-----+------+---------+
+    |   1  |  2  |   3    |   4  |  5  | 6  |  7  |  8   |    9    |
+    +======+=====+========+======+=====+====+=====+======+=========+
+    | MAT4 | MID |   K    |  CP  | RHO | MU |  H  | HGEN | REFENTH |
+    +------+-----+--------+------+-----+----+-----+------+---------+
+    |      | TCH | TDELTA | QLAT |     |    |     |      |         |
+    +------+-----+--------+------+-----+----+-----+------+---------+
+
+    """
+    def add(self, mid: int, k: float, cp: float=0.0, rho: float=1.0,
+            H: Optional[float]=None, mu: Optional[float]=None, hgen: float=1.0,
+            ref_enthalpy: Optional[float]=None, tch: Optional[float]=None, tdelta: Optional[float]=None,
+            qlat: Optional[float]=None, comment: str='') -> int:
+        """Creates a MAT4 card"""
+        self.cards.append((mid, k, cp, rho, H, mu, hgen, ref_enthalpy, tch, tdelta, qlat, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        mid = integer(card, 1, 'mid')
+        k = double_or_blank(card, 2, 'k')
+        cp = double_or_blank(card, 3, 'cp', default=0.0)
+        rho = double_or_blank(card, 4, 'rho', default=1.0)
+        H = double_or_blank(card, 5, 'H')
+        mu = double_or_blank(card, 6, 'mu')
+        hgen = double_or_blank(card, 7, 'hgen', default=1.0)
+        ref_enthalpy = double_or_blank(card, 8, 'refEnthalpy')
+        tch = double_or_blank(card, 9, 'tch')
+        tdelta = double_or_blank(card, 10, 'tdelta')
+        qlat = double_or_blank(card, 11, 'qlat')
+        assert len(card) <= 12, f'len(MAT4 card) = {len(card):d}\ncard={card}'
+        self.cards.append((mid, k, cp, rho, H, mu, hgen, ref_enthalpy, tch, tdelta, qlat, comment))
+        self.n += 1
+        return self.n
+
+    def parse_cards(self):
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+
+        material_id = np.zeros(ncards, dtype='int32')
+        k = np.zeros(ncards, dtype='float64')
+        rho = np.zeros(ncards, dtype='float64')
+
+        cp = np.zeros(ncards, dtype='float64')
+        H = np.zeros(ncards, dtype='float64')
+        mu = np.zeros(ncards, dtype='float64')
+        hgen = np.zeros(ncards, dtype='float64')
+        ref_enthalpy = np.zeros(ncards, dtype='float64')
+        tch = np.zeros(ncards, dtype='float64')
+        tdelta = np.zeros(ncards, dtype='float64')
+        qlat = np.zeros(ncards, dtype='float64')
+
+        for i, card in enumerate(self.cards):
+            (mid, ki, cpi, rhoi, Hi, mui, hgeni, ref_enthalpyi,
+             tchi, tdeltai, qlati, comment) = card
+            material_id[i] = mid
+            k[i] = ki
+            cp[i] = cpi
+            rho[i] = rhoi
+            H[i] = Hi
+            mu[i] = mui
+            hgen[i] = hgeni
+            ref_enthalpy[i] = ref_enthalpyi
+            tch[i] = tchi
+            tdelta[i] = tdeltai
+            qlat[i] = qlati
+        self._save(material_id, k, cp, rho, H, mu, hgen, ref_enthalpy,
+                   tch, tdelta, qlat)
+        self.sort()
+        self.cards = []
+
+    def _save(self, material_id, k, cp, rho, H, mu, hgen, ref_enthalpy,
+              tch, tdelta, qlat):
+        self.material_id = material_id
+        self.k = k
+        self.rho = rho
+
+        self.cp = cp
+        self.H = H
+        self.mu = mu
+        self.hgen = hgen
+        self.ref_enthalpy = ref_enthalpy
+        self.tch = tch
+        self.tdelta = tdelta
+        self.qlat = qlat
+        self.n = len(material_id)
+
+    def __apply_slice__(self, mat: MAT4, i: np.ndarray) -> None:
+        mat.n = len(i)
+        mat.material_id = self.material_id[i]
+        mat.k = self.k[i]
+        mat.cp = self.cp[i]
+        mat.rho = self.rho[i]
+        mat.H = self.H[i]
+        mat.mu = self.mu[i]
+        mat.hgen = self.hgen[i]
+        mat.ref_enthalpy = self.ref_enthalpy[i]
+        mat.tch = self.tch[i]
+        mat.tdelta = self.tdelta[i]
+        mat.qlat = self.qlat[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        max_int = self.material_id.max()
+        print_card = get_print_card(size, max_int)
+        for mid, k, cp, rho, H, mu, \
+            hgen, ref_enthalpy, tch, tdelta, qlat in zip_longest(self.material_id, self.k, self.cp, self.rho, self.H, self.mu,
+                                                                 self.hgen, self.ref_enthalpy, self.tch, self.tdelta, self.qlat):
+            rhos = set_blank_if_default(rho, 1.0)
+            hgens = set_blank_if_default(hgen, 1.0)
+            cps = set_blank_if_default(cp, 0.0)
+            list_fields = ['MAT4', mid, k, cps, rhos, H, mu, hgens,
+                           ref_enthalpy, tch, tdelta, qlat]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class MAT5(Material):
+    """
+    Defines the thermal material properties for anisotropic materials.
+
+    +------+-----+-------+-----+-----+-----+-----+-----+----+
+    |   1  |  2  |   3   |  4  |  5  |  6  |  7  |  8  | 9  |
+    +======+=====+=======+=====+=====+=====+=====+=====+====+
+    | MAT5 | MID |  KXX  | KXY | KXZ | KYY | KYZ | KZZ | CP |
+    +------+-----+-------+-----+-----+-----+-----+-----+----+
+    |      | RHO |  HGEN |     |     |     |     |     |    |
+    +------+-----+-------+-----+-----+-----+-----+-----+----+
+
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.kxx = np.zeros(0, dtype='float64')
+        self.kxy = np.zeros(0, dtype='float64')
+        self.kxz = np.zeros(0, dtype='float64')
+        self.kyy = np.zeros(0, dtype='float64')
+        self.kyz = np.zeros(0, dtype='float64')
+        self.kzz = np.zeros(0, dtype='float64')
+        self.cp = np.zeros(0, dtype='float64')
+        self.rho = np.zeros(0, dtype='float64')
+        self.hgen = np.zeros(0, dtype='float64')
+
+    def add(self, mid: int, kxx: float=0., kxy: float=0., kxz: float=0.,
+            kyy: float=0., kyz: float=0., kzz: float=0., cp: float=0.,
+            rho: float=1., hgen: float=1., comment: str='') -> int:
+        """Creates a MAT5 card"""
+        self.cards.append((mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        mid = integer(card, 1, 'mid')
+        kxx = double_or_blank(card, 2, 'kxx', default=0.0)
+        kxy = double_or_blank(card, 3, 'kxy', default=0.0)
+        kxz = double_or_blank(card, 4, 'kxz', default=0.0)
+        kyy = double_or_blank(card, 5, 'kyy', default=0.0)
+        kyz = double_or_blank(card, 6, 'kyz', default=0.0)
+        kzz = double_or_blank(card, 7, 'kzz', default=0.0)
+
+        cp = double_or_blank(card, 8, 'cp', default=0.0)
+        rho = double_or_blank(card, 9, 'rho', default=1.0)
+        hgen = double_or_blank(card, 10, 'hgen', default=1.0)
+        assert len(card) <= 11, f'len(MAT5 card) = {len(card):d}\ncard={card}'
+        self.cards.append((mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen, comment))
+        self.n += 1
+        return self.n
+
+    def parse_cards(self):
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+
+        material_id = np.zeros(ncards, dtype='int32')
+        kxx = np.zeros(ncards, dtype='float64')
+        kxy = np.zeros(ncards, dtype='float64')
+        kxz = np.zeros(ncards, dtype='float64')
+        kyy = np.zeros(ncards, dtype='float64')
+        kyz = np.zeros(ncards, dtype='float64')
+        kzz = np.zeros(ncards, dtype='float64')
+        rho = np.zeros(ncards, dtype='float64')
+
+        cp = np.zeros(ncards, dtype='float64')
+        hgen = np.zeros(ncards, dtype='float64')
+
+        for i, card in enumerate(self.cards):
+            (mid, kxxi, kxyi, kxzi, kyyi, kyzi, kzzi, cpi, rhoi, hgeni, comment) = card
+            material_id[i] = mid
+            kxx[i] = kxxi
+            kxy[i] = kxyi
+            kxz[i] = kxzi
+            kyy[i] = kyyi
+            kyz[i] = kyzi
+            kzz[i] = kzzi
+            cp[i] = cpi
+            rho[i] = rhoi
+            hgen[i] = hgeni
+        self._save(material_id, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen)
+        self.sort()
+        self.cards = []
+
+    def _save(self, material_id, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen):
+        nmaterials = len(material_id)
+        self.material_id = material_id
+        self.kxx = kxx
+        self.kxy = kxy
+        self.kxz = kxz
+        self.kyy = kyy
+        self.kyz = kyz
+        self.kzz = kzz
+        self.cp = cp
+        self.rho = rho
+        self.hgen = hgen
+        self.n = nmaterials
+        assert material_id.min() >= 1, material_id
+
+    def __apply_slice__(self, mat: MAT5, i: np.ndarray) -> None:
+        mat.n = len(i)
+        mat.material_id = self.material_id[i]
+        mat.kxx = self.kxx[i]
+        mat.kxy = self.kxy[i]
+        mat.kxz = self.kxz[i]
+        mat.kyy = self.kyy[i]
+        mat.kyz = self.kyz[i]
+        mat.kzz = self.kzz[i]
+        mat.cp = self.cp[i]
+        mat.rho = self.rho[i]
+        mat.hgen = self.hgen[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    def k(self):
+        """thermal conductivity matrix"""
+        k = np.zeros((self.n, 3, 3))
+        k[:, 0, 0] = self.kxx
+        k[:, 1, 1] = self.kyy
+        k[:, 2, 2] = self.kzz
+        k[:, 0, 1] = k[:, 1, 0] = self.kxy
+        k[:, 0, 2] = k[:, 2, 0] = self.kxz
+        k[:, 1, 2] = k[:, 2, 1] = self.kyz
+        return k
+
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        max_int = self.material_id.max()
+        print_card = get_print_card(size, max_int)
+        for mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, \
+            hgen  in zip_longest(self.material_id,
+                                 self.kxx, self.kxy, self.kxz,
+                                 self.kyy, self.kyz, self.kzz, self.cp, self.rho,
+                                 self.hgen):
+            kxx = set_blank_if_default(kxx, 0.0)
+            kyy = set_blank_if_default(kyy, 0.0)
+            kzz = set_blank_if_default(kzz, 0.0)
+            kxy = set_blank_if_default(kxy, 0.0)
+            kyz = set_blank_if_default(kyz, 0.0)
+            kxz = set_blank_if_default(kxz, 0.0)
+
+            rho = set_blank_if_default(rho, 1.0)
+            hgen = set_blank_if_default(hgen, 1.0)
+            cp = set_blank_if_default(cp, 0.0)
+            list_fields = ['MAT5', mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho,
+                           hgen]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
 class MAT8(Material):
     """
     Defines the material property for an orthotropic material for
@@ -1513,7 +1965,6 @@ class MAT11(Material):
         mat.tref = self.tref[i]
         mat.ge = self.ge[i]
         mat.rho = self.rho[i]
-        x = 1
 
         #mat.bulk = self.bulk[i]
         #mat.c = self.c[i]

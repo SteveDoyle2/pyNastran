@@ -14,7 +14,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.bush import CBUSH, PBUSH, PBUS
 from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, CELAS3, CELAS4, PELAS, PELAST
 from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
     CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5,
-    PDAMP, PDAMPT, CVISC, PVISC, CGAP, PGAP)
+    PDAMP, PDAMP5, PDAMPT, CVISC, PVISC, CGAP, PGAP)
 from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM, PBEAM, PBEAML, PBCOMP # , PBMSECT
 from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
@@ -73,7 +73,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
 
 from pyNastran.dev.bdf_vectorized3.cards.materials import (
     MAT1,
-    MAT2, # MAT3, MAT4, MAT5,
+    MAT2, MAT3, MAT4, MAT5,
     MAT8, MAT9, MAT10, MAT11,
     #MAT10C, MATORT, MATHE, MATHP,
 )
@@ -183,6 +183,7 @@ class BDFAttributes:
         self.cdamp4 = CDAMP4(self)
         self.cdamp5 = CDAMP5(self)
         self.pdamp = PDAMP(self)
+        self.pdamp5 = PDAMP5(self)
         self.pdampt = PDAMPT(self)
 
         # sets
@@ -427,9 +428,9 @@ class BDFAttributes:
 
         self.mat1 = MAT1(self)
         self.mat2 = MAT2(self)
-        #self.mat3 = MAT3(self)
-        #self.mat4 = MAT4(self)
-        #self.mat5 = MAT5(self)
+        self.mat3 = MAT3(self)
+        self.mat4 = MAT4(self)
+        self.mat5 = MAT5(self)
         self.mat8 = MAT8(self)
         self.mat9 = MAT9(self)
         self.mat10 = MAT10(self)
@@ -687,8 +688,7 @@ class BDFAttributes:
     @property
     def structural_materials(self) -> list[Any]:
         materials = [
-            self.mat1, self.mat2,
-            # self.mat3,
+            self.mat1, self.mat2, self.mat3,
             self.mat8, self.mat9, self.mat10, self.mat11,
             #self.mat10c, self.matort,
         ]
@@ -697,7 +697,7 @@ class BDFAttributes:
     @property
     def thermal_materials(self) -> list[Any]:
         materials = [
-            #self.mat4, self.mat5,
+            self.mat4, self.mat5,
         ]
         return materials
 

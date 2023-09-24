@@ -446,7 +446,6 @@ class Add0dElements(BDFAttributes):
 
         """
         elem = self.cdamp5.add(eid, pid, nids, comment=comment)
-        self._add_methods._add_element_object(elem)
         return elem
 
     def add_pdamp(self, pid: int, b: float, comment: str='') -> int:
@@ -646,8 +645,10 @@ class Add0dElements(BDFAttributes):
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_cbush(self, eid: int, pid: int, nids, x: Optional[list[float]], g0: Optional[int], cid=None,
-                  s: float=0.5, ocid: int=-1, si: Optional[list[float]]=None, comment='') -> int:
+    def add_cbush(self, eid: int, pid: int, nids,
+                  x: Optional[list[float]], g0: Optional[int], cid=None,
+                  s: float=0.5, ocid: int=-1,
+                  si: Optional[list[float]]=None, comment: str='') -> int:
         """
         Creates a CBUSH card
 
@@ -686,7 +687,8 @@ class Add0dElements(BDFAttributes):
             a comment for the card
 
         """
-        elem = self.cbush.add(eid, pid, nids, x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
+        elem = self.cbush.add(eid, pid, nids, x, g0, cid=cid, s=s, ocid=ocid, si=si,
+                              comment=comment)
         return elem
 
     def add_pbush(self, pid: int, k: list[float], b: list[float], ge: list[float],
@@ -4694,26 +4696,31 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                             Ss=Ss, mcsid=mcsid, comment=comment)
         return mat
 
-    def add_mat3(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0, gzx=None,
-                 ax=0., ath=0., az=0., tref=0., ge=0.,
-                 comment='') -> int:
+    def add_mat3(self, mid: int, ex: float, eth: float, ez: float,
+                 nuxth: float, nuthz: float, nuzx: float,
+                 rho: float=0.0, gzx: Optional[float]=None,
+                 ax: float=0., ath: float=0., az: float=0.,
+                 tref: float=0., ge: float=0.,
+                 comment: str='') -> int:
         """Creates a MAT3 card"""
         mat = self.mat3.add(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=rho, gzx=gzx,
                             ax=ax, ath=ath, az=az, tref=tref, ge=ge,
                             comment=comment)
         return mat
 
-    def add_mat4(self, mid, k, cp=0.0, rho=1.0, H=None, mu=None, hgen=1.0,
-                 ref_enthalpy=None, tch=None, tdelta=None,
-                 qlat=None, comment='') -> int:
+    def add_mat4(self, mid: int, k: float, cp: float=0.0, rho: float=1.0,
+                 H: Optional[float]=None, mu: Optional[float]=None, hgen: float=1.0,
+                 ref_enthalpy: Optional[float]=None, tch: Optional[float]=None, tdelta: Optional[float]=None,
+                 qlat: Optional[float]=None, comment: str='') -> int:
         """Creates a MAT4 card"""
         mat = self.mat4.add(mid, k, cp=cp, rho=rho, H=H, mu=mu, hgen=hgen,
                             ref_enthalpy=ref_enthalpy, tch=tch, tdelta=tdelta,
                             qlat=qlat, comment=comment)
         return mat
 
-    def add_mat5(self, mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0., kzz=0., cp=0.,
-                 rho=1., hgen=1., comment='') -> int:
+    def add_mat5(self, mid: int, kxx: float=0., kxy: float=0., kxz: float=0.,
+                 kyy: float=0., kyz: float=0., kzz: float=0., cp: float=0.,
+                 rho: float=1., hgen: float=1., comment: str='') -> int:
         """Creates a MAT5 card"""
         mat = self.mat5.add(mid, kxx=kxx, kxy=kxy, kxz=kxz, kyy=kyy,
                             kyz=kyz, kzz=kzz, cp=cp,

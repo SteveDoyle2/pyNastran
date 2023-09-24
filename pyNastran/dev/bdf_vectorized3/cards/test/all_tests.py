@@ -12,6 +12,7 @@ from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_dampers import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_dmig import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_nsm import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_mass_elements import *
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_rigid import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_rods import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import TestShells
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_solids import *

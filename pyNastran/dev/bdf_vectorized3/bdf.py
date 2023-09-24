@@ -632,7 +632,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'GENEL',
 
             ## rigid_elements
-            'RBAR', #'RBAR1', 
+            'RBAR', #'RBAR1',
             'RBE1', 'RBE2', 'RBE3', 'RROD', # 'RSPLINE', 'RSSCON',
 
             ## plotels
@@ -664,7 +664,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'FORCEAX', # loads
 
             ## pdampt
-            #'PDAMPT',
+            'PDAMPT',
 
             ## pelast
             'PELAST',
@@ -676,8 +676,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CREEP',
 
             ## materials
-            'MAT1', 'MAT2',
-            #'MAT3',
+            'MAT1', 'MAT2', 'MAT3',
             'MAT8', 'MAT9',
             'MAT10', 'MAT11', # 'MAT3D',
             #'MATG', 'MATHE', 'MATHP', 'MATEV', 'MATORT', 'MAT10C',
@@ -692,7 +691,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'NXSTRAT',
 
             ## thermal_materials
-            #'MAT4', 'MAT5',
+            'MAT4', 'MAT5',
 
             ## spcs
             'SPC', 'SPCADD', 'SPC1', #'SPCAX', 'SPCOFF', 'SPCOFF1',
@@ -2406,8 +2405,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CDAMP4' : partial(self._prepare_card, self.cdamp4),
             'CDAMP5' : partial(self._prepare_card, self.cdamp5),
             'PDAMP' : partial(self._prepare_card, self.pdamp),
+            'PDAMP5': partial(self._prepare_card, self.pdamp5),
             'PDAMPT': partial(self._prepare_card, self.pdampt),
-            #'PDAMP5' : (PDAMP5, add_methods._add_property_object),
 
             # visc
             'CVISC' : partial(self._prepare_card, self.cvisc),
@@ -2627,8 +2626,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'MATHP' : partial(self._prepare_card, self.mathp),
 
             # thermal materials
-            #'MAT4' : partial(self._prepare_card, self.mat4),
-            #'MAT5' : partial(self._prepare_card, self.mat5),
+            'MAT4' : partial(self._prepare_card, self.mat4),
+            'MAT5' : partial(self._prepare_card, self.mat5),
 
             # rigid elements
             'RBAR': partial(self._prepare_card, self.rbar),

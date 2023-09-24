@@ -209,9 +209,19 @@ class RROD(RigidElement):
         super().__init__(model)
         self.element_id = np.array([])
 
-    def add(self, eid, nids, cma='', cmb='', alpha=0.0, comment=''):
+    def add(self, eid, nids, cma='', cmb='', alpha=0.0, comment='') -> int:
+        if cma is None or cma == '':
+            cma = 0
+        else:
+            cma = int(cma)
+
+        if cmb is None or cmb == '':
+            cmb = 0
+        else:
+            cmb = int(cmb)
         self.cards.append((eid, nids, [cma, cmb], alpha, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -565,27 +575,48 @@ class RBE2(RigidElement):
             return
         ncards = len(self.cards)
         assert ncards > 0, ncards
-        self.element_id = np.zeros(ncards, dtype='int32')
-        self.independent_node = np.zeros(ncards, dtype='int32')
-        self.independent_dof = np.zeros(ncards, dtype='int32')
-        self.tref = np.zeros(ncards, dtype='float64')
-        self.alpha = np.zeros(ncards, dtype='float64')
-        self.nnode = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype='int32')
+        independent_node = np.zeros(ncards, dtype='int32')
+        independent_dof = np.zeros(ncards, dtype='int32')
+        tref = np.zeros(ncards, dtype='float64')
+        alpha = np.zeros(ncards, dtype='float64')
+        nnode = np.zeros(ncards, dtype='int32')
 
         dependent_nodes = []
         for icard, card in enumerate(self.cards):
-            eid, gn, cm, Gmi, alpha, tref, comment = card
+            eid, gn, cm, Gmi, alphai, trefi, comment = card
             dependent_nodes.extend(Gmi)
-            self.nnode[icard] = len(Gmi)
+            nnode[icard] = len(Gmi)
 
-            self.element_id[icard] = eid
-            self.independent_node[icard] = gn
-            self.independent_dof[icard] = cm
-            self.alpha[icard] = alpha
-            self.tref[icard] = tref
-        self.dependent_nodes = np.array(dependent_nodes, dtype='int32')
+            element_id[icard] = eid
+            independent_node[icard] = gn
+            independent_dof[icard] = cm
+            alpha[icard] = alphai
+            tref[icard] = trefi
+        dependent_nodes = np.array(dependent_nodes, dtype='int32')
+
+        self._save(element_id, independent_node, independent_dof, dependent_nodes, nnode, alpha, tref)
         self.sort()
         self.cards = []
+
+    def _save(self, element_id, independent_node, independent_dof, dependent_nodes, nnode, alpha, tref):
+        if len(self.element_id) != 0:
+            element_id = np.hstack([self.element_id, element_id])
+            independent_node = np.hstack([self.independent_node, independent_node])
+            independent_dof = np.hstack([self.independent_dof, independent_dof])
+            dependent_nodes = np.hstack([self.dependent_nodes, dependent_nodes])
+            nnode = np.hstack([self.nnode, nnode])
+            alpha = np.hstack([self.alpha, alpha])
+            tref = np.hstack([self.tref, tref])
+
+        self.element_id = element_id
+        self.independent_dof = independent_dof
+        self.independent_node = independent_node
+        self.dependent_nodes = dependent_nodes
+        self.nnode = nnode
+        self.alpha = alpha
+        self.tref = tref
+
 
     @property
     def idim(self) -> np.ndarray:

@@ -218,8 +218,9 @@ class TestMaterials(unittest.TestCase):
                               ath=0., az=0.,
                               tref=0., ge=0.,
                               comment='mat3')
+        mat3 = model.mat3
         mat3.write(size=16, is_double=False)
-        mat3.Rho()
+        mat3.rho
         #mat3.raw_fields()
         mat3.validate()
 
@@ -270,6 +271,7 @@ class TestMaterials(unittest.TestCase):
                               hgen=1.0, ref_enthalpy=None, tch=None, tdelta=None, qlat=None,
                               comment='mat4')
         #mat4.raw_fields()
+        mat4 = model.mat4
         mat4.write(size=16, is_double=False)
         mat4.validate()
 
@@ -320,11 +322,16 @@ class TestMaterials(unittest.TestCase):
         model = BDF(log=log)
         mid = 10
         mat5_id = model.add_mat5(mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0.,
-                              kzz=0., cp=0.,
-                              rho=1., hgen=1., comment='mat5')
-        mat5.K()
-        mat5.get_density()
-        mat5.Rho()
+                                 kzz=0., cp=0.,
+                                 rho=1., hgen=1., comment='mat5')
+        mat5 = model.mat5
+        #model.parse_cards()
+
+        mat5.parse_cards()
+
+        mat5.k()
+        #mat5.get_density()
+        mat5.rho
         mat5.write(size=16, is_double=False)
         mat5.validate()
 

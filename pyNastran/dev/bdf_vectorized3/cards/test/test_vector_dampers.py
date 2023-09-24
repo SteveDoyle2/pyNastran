@@ -109,13 +109,15 @@ class TestDampers(unittest.TestCase):
         unused_model2 = read_bdf(bdf_file, punch=True, debug=False)
         save_load_deck(model)
 
-    def _test_cdamp5(self):
+    def test_cdamp5(self):
         log = get_logger(level='warning')
         model = BDF(log=log)
 
         eid = 5
         pid = 5
         mid = 10
+        s1 = 10
+        s2 = 20
         bdamp = 3.0e3
         pdamp5_id = model.add_pdamp5(pid, mid, bdamp, comment='pdamp5')
         cdamp5_id = model.add_cdamp5(eid, pid, [s1, s2], comment='cdamp5')
@@ -326,6 +328,30 @@ class TestDampers(unittest.TestCase):
         model.add_card(card_lines, 'PDAMP', comment='', is_list=True, has_none=True)
         model.validate()
         model._verify_bdf()
+        save_load_deck(model)
+
+    def test_cgap(self):
+        model = BDF(debug=False)
+        eid = 1
+        pid = 2
+        nids = [10, 11]
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        x = [0., 0., 1.]
+        g0 = None
+        model.add_cgap(eid, pid, nids, x, g0, cid=None, comment='')
+        model.add_pgap(pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
+                       kt=None, mu2=None, tmax=0., mar=100., trmin=0.001, comment='')
+
+        eid += 1
+        pid += 1
+        k = 1.0
+        b = 2.0
+        ge = 0.0
+        model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5, ocid=-1, si=None, comment='')
+        model.add_pbush(pid, k, b, ge, rcv=None, mass=None, alpha=0., tref=0.,
+                        coincident_length=None, comment='')
+        model.setup(run_geom_check=True)
         save_load_deck(model)
 
 if __name__ == '__main__':  # pragma: no cover

@@ -78,8 +78,7 @@ class WriteMesh(BDFAttributes):
             bdf_file = open(out_filename, 'w', encoding=encoding)
         self.writer._write_header(bdf_file, encoding, write_header=write_header)
 
-        log.warning('write_bdf')
-
+        #log.warning('write_bdf')
         #-------------------------------------------------------------
         self.write_bulk_data(
             bdf_file, size=size, is_double=is_double, interspersed=interspersed,
@@ -632,13 +631,12 @@ class Writer():
                         #self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
                         #self.MATT8 or self.MATT9 or self.nxstrats or is_big_materials)
         structural_materials = [
-            model.mat1, model.mat2, # model.mat3,
+            model.mat1, model.mat2, model.mat3,
             model.mat8, model.mat9, model.mat10, model.mat11,
             #model.mat10c, model.matort,
             #model.mathe, model.mathp,  # hyperelastic
         ]
-        #thermal_materials = [model.mat4, model.mat5]
-        thermal_materials = []
+        thermal_materials = [model.mat4, model.mat5]
         is_materials = any([mat.n for mat in structural_materials])
         is_thermal_materials = any([mat.n for mat in thermal_materials])
         if is_materials:

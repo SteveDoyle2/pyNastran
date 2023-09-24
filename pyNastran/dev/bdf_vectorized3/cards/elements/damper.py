@@ -459,6 +459,26 @@ class CDAMP5(Element):
     | CDAMP5 | EID | PID | N1 | N2 |
     +--------+-----+-----+----+----+
     """
+    def add(self, eid: int, pid: int, nids: list[int], comment: str='') -> int:
+        """
+        Creates a CDAMP5 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PDAMP5)
+        nids : list[int, int]
+            GRID/SPOINT ids
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, pid, nids, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -609,6 +629,94 @@ class PDAMP(Property):
         property_id = array_str(self.property_id, size=size)
         for pid, b in zip(property_id, self.b):
             list_fields = ['PDAMP', pid, b]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class PDAMP5(Property):
+    """
+    +--------+------+-----+------+----+------+----+------+----+
+    |    1   |  2   |  3  |   4  | 5  |  6   |  7 |   8  |  9 |
+    +========+======+=====+======+====+======+====+======+====+
+    | PDAMP5 | PID  | MID |  B   |    |      |    |      |    |
+    +--------+------+-----+------+----+------+----+------+----+
+    | PDAMP5 |  1   | 2   |  2.0 |    |      |    |      |    |
+    +--------+------+-----+------+----+------+----+------+----+
+    """
+    def add(self, pid: int, mid: int, b: float, comment: str='') -> int:
+        """
+        Creates a PDAMP card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        b : float
+            viscous damping
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((pid, mid, b, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> list[int]:
+        """adds a PDAMP"""
+        ns = [self.n]
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        b = double(card, 3, 'b')
+        self.cards.append((pid, mid, b, comment))
+        self.n += 1
+
+        assert len(card) <= 3, f'len(PDAMP5 card) = {len(card):d}\ncard={card}'
+        return self.n
+
+    def parse_cards(self):
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+
+        property_id = np.zeros(ncards, dtype='int32')
+        material_id = np.zeros(ncards, dtype='int32')
+        b = np.zeros(ncards, dtype='float64')
+
+        for icard, card in enumerate(self.cards):
+            (pid, mid, bi, comment) = card
+            property_id[icard] = pid
+            material_id[icard] = mid
+            b[icard] = bi
+        self._save(property_id, material_id, b)
+        self.cards = []
+
+    def _save(self, property_id, material_id, b):
+        nproperties = len(property_id)
+        self.property_id = property_id
+        self.material_id = material_id
+        self.b = b
+        self.n = nproperties
+
+    def validate(self) -> None:
+        return
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+
+        property_id = array_str(self.property_id, size=size)
+        material_id = array_str(self.material_id, size=size)
+        for pid, mid, b in zip(property_id, material_id, self.b):
+            list_fields = ['PDAMP5', pid, mid, b]
             bdf_file.write(print_card(list_fields))
         return
 
@@ -967,6 +1075,16 @@ class CGAP(Element):
             self.nodes[icard, :] = nids
             self.coord_id[icard] = cid
         self.cards = []
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
+                          msg=f'no PGAP properties for {self.type}')
+        pids.sort()
+        geom_check(self,
+                   missing,
+                   node=(nid, self.nodes),
+                   property_id=(pids, self.property_id))
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
