@@ -956,18 +956,17 @@ class COORD(VectorizedBaseCard):
         if len(missing_coords):
             raise RuntimeError(f'coords={missing_coords} not found in {self.coord_id}')
 
-    def transform_local_xyz_to_global_coords(self, xyz: np.ndarray, cd: np.ndarray) -> np.ndarray:
+    def transform_local_xyz_to_global_coords(self, xyz: np.ndarray, coord_id: np.ndarray) -> np.ndarray:
         """takes a consistent set of xyz and cd values and transforms them"""
-        self.check_missing_ids(cd)
+        self.check_missing_ids(coord_id)
         xyz2 = np.zeros(xyz.shape, dtype=xyz.dtype)
-        for i, xyzi, cdi in zip(count(), xyz, cd):
-            xyz2[i, :] = self.transform_local_xyz_to_global(xyzi, cdi)
+        for i, xyzi, cid in zip(count(), xyz, coord_id):
+            xyz2[i, :] = self.transform_local_xyz_to_global(xyzi, cid)
         return xyz2
 
-    def transform_node_to_global_assuming_rectangular(self, xyz: np.ndarray) -> np.ndarray:
-        xform = np.dstack([self.i, self.j, self.k]) # 3x3 unit matrix
-        #print('xform.shape', xform.shape)
-        #xyz2 = xyz @ xform
+    def transform_xyz_to_global_assuming_rectangular(self, xyz: np.ndarray) -> np.ndarray:
+        assert len(xyz) == len(self.coord_id)
+        xform = self.T
         xyz2 = np.einsum('ni,nij->nj', xyz, xform)
         assert xyz.shape == xyz2.shape, (xyz.shape, xyz2.shape)
         return xyz2
@@ -983,6 +982,21 @@ class COORD(VectorizedBaseCard):
         grid2 = grid.slice_card_by_node_id(node_id)
         xyz_cid0 = grid2.xyz_cid0()
         return xyz_cid0
+
+    def transform_offset_xyz_to_global_xyz(self, xyz: np.ndarray, coord_id: np.ndarray) -> np.ndarray:
+        self.check_missing_ids(coord_id)
+
+        icoord = np.searchsorted(self.coord_id, coord_id)
+        origin = self.origin[icoord, :]
+
+        T = self.T[icoord, :, :]
+        xyz2 = np.einsum('ni,nij->nj', xyz, T)
+        assert xyz2.shape == xyz.shape
+
+        xyz2 += origin
+        assert xyz2.shape == xyz.shape
+        #xyz2 = xyz @ T + origin
+        return xyz2
 
     def transform_node_to_local_coord_id(self, node_id: np.ndarray, local_coord_id: int) -> np.ndarray:
         # transform_node_to_local_xyz

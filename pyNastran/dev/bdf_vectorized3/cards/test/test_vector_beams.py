@@ -595,12 +595,12 @@ class TestBeams(unittest.TestCase):
 
         all_nids = [
             [1, 2],   # no xform
-            #[11, 2],  # xform A
-            #[1, 12],  # xform B
-            #[11, 12], # xform A/B
+            [11, 2],  # xform A
+            [1, 12],  # xform B
+            [11, 12], # xform A/B
         ]
         #-------------------------------
-        for nids in all_nids:
+        for inid, nids in enumerate(all_nids):
             x = [0., 0., 1.]
             g0 = None
             for offt in offts:
@@ -612,17 +612,18 @@ class TestBeams(unittest.TestCase):
                                     sa=0, sb=0, comment='CBEAM')
                 eid += 1
 
-            # g0
-            x = None
-            g0 = 3
-            for offt in offts:
-                model.add_cbeam(eid, pid, nids, x, g0, offt=offt, bit=None,
-                                pa=0, pb=0, wa=None, wb=None,
-                                sa=0, sb=0, comment='CBEAM')
-                model_old.add_cbeam(eid, pid, nids, x, g0, offt=offt, bit=None,
+            if 1:
+                # g0
+                x = None
+                g0 = 3
+                for offt in offts:
+                    model.add_cbeam(eid, pid, nids, x, g0, offt=offt, bit=None,
                                     pa=0, pb=0, wa=None, wb=None,
                                     sa=0, sb=0, comment='CBEAM')
-                eid += 1
+                    model_old.add_cbeam(eid, pid, nids, x, g0, offt=offt, bit=None,
+                                        pa=0, pb=0, wa=None, wb=None,
+                                        sa=0, sb=0, comment='CBEAM')
+                    eid += 1
 
 
         cid = 1
@@ -630,7 +631,7 @@ class TestBeams(unittest.TestCase):
         zaxis = [1., 0., 0.]
         xzplane = [2., 2., 2.]
         model.add_cord2r(cid, origin, zaxis, xzplane)
-        model_old.add_cord2r(cid, origin, zaxis, xzplane)
+        coord_old = model_old.add_cord2r(cid, origin, zaxis, xzplane)
         #-------------------------------
 
         #offt_v offt_a, offt_b = 'GGG'
@@ -641,9 +642,28 @@ class TestBeams(unittest.TestCase):
         xyz1, xyz2 = cbeam.get_xyz()
         #v, cd = cbeam.get_bar_vector(xyz1)
 
+        v0, _cd = cbeam.get_bar_vector(xyz1)
         v, ihat, yhat, zhat, wa, wb = cbeam.get_axes(xyz1, xyz2)
 
         model_old.safe_cross_reference()
+
+        xyz_check = [
+            [0., 0., 0.],
+            [0., 0., 1.],
+            [0., 1., 0.],
+            [1., 0., 0.],
+            [1., 1., 0.],
+            [0., 1., 1.],
+            [1., 0., 1.],
+            [1., 1., 1.],
+        ]
+        coord = model.coord.slice_card_by_coord_id(cid)
+        for i, xyz in enumerate(xyz_check):
+            xyz2a = coord_old.transform_node_to_global_assuming_rectangular(xyz)
+            xyz = np.array(xyz).reshape(1, 3)
+            xyz2b = coord.transform_xyz_to_global_assuming_rectangular(xyz)
+            assert np.allclose(xyz2a, xyz2b)
+
         i = 0
         for eid, elem in model_old.elements.items():
             is_failed, (vai1, ihati, yhati, zhati, wai, wbi) = elem.get_axes(model_old)
@@ -657,9 +677,19 @@ class TestBeams(unittest.TestCase):
             assert np.allclose(xyz1[i, :], xyz1i), f'eid={eid}; xyz1_new={xyz1[i,:]} expected={xyz1i}\n{elem}'
             assert np.allclose(xyz2[i, :], xyz2i), f'eid={eid}; xyz2_new={xyz2[i,:]} expected={xyz2i}\n{elem}'
 
-
             assert np.allclose(ihat[i, :], ihati), f'eid={eid}; i_new={ihat[i,:]} expected={ihati}\n{elem}'
-            assert np.allclose(v[i, :], vi), f'eid={eid}; i_new={v[i,:]} expected={vi}\n{elem}'
+
+            if elem.x is not None and 0:
+                node1 = elem.nodes_ref[0]
+                cd1_ref = node1.cd_ref
+
+                v0i = cd1_ref.transform_node_to_global(elem.x)
+                assert np.allclose(v0[i, :], v0i), f'eid={eid}; vi={v0[i,:]} expected={v0i}\n{elem}'
+
+                if elem.offt[0] == 'G':
+                    vi2 = cd1_ref.transform_node_to_global_assuming_rectangular(v0i)
+                assert np.allclose(vi, vi2), f'eid={eid}; vi={vi} expected={vi2}\n{elem}'  # old check
+            assert np.allclose(v[i, :], vi), f'eid={eid}; v={v[i,:]} expected={vi}\n{elem}'
 
             assert np.allclose(yhat[i, :], yhati), f'eid={eid}; j_new={yhat[i,:]} expected={yhati}\n{elem}'
             assert np.allclose(zhat[i, :], zhati), f'eid={eid}; k_new={zhat[i,:]} expected={zhati}\n{elem}'

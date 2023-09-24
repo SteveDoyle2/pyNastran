@@ -676,7 +676,7 @@ class Coord(BaseCard):
         p3 = p2 @ matrix
         return p3
 
-    def transform_node_to_global(self, xyz):
+    def transform_node_to_global(self, xyz: np.ndarray) -> np.ndarray:
         r"""
         Transforms a point from the local coordinate system to the reference
         coordinate frames "global" coordinate system.

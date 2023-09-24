@@ -26,7 +26,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray33float
     from cpylog import SimpleLogger
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, GRID
 
 
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
@@ -872,8 +872,6 @@ class CBAR(LineElement):
         node2 = model.nodes[nid2]
         xyz1 = node1.get_position()
         xyz2 = node2.get_position()
-
-        elem = model.elements[eid]
 
         is_failed, (v, ihat, yhat, zhat, wa, wb) = self.get_axes_by_nodes(
             model, node1, node2, xyz1, xyz2, model.log)
@@ -1822,7 +1820,7 @@ def init_x_g0(card, eid, x1_default, x2_default, x3_default):
         raise RuntimeError(msg)
     return x, g0
 
-def get_bar_vector(model, elem, node1, node2, xyz1):
+def get_bar_vector(model: BDF, elem, node1: GRID, node2: GRID, xyz1: np.ndarray):
     """helper method for ``rotate_v_wa_wb``"""
     cd1 = node1.Cd()
     cd2 = node2.Cd()
@@ -1861,9 +1859,10 @@ def get_bar_vector(model, elem, node1, node2, xyz1):
 
 def rotate_v_wa_wb(model: BDF, elem,
                    xyz1: np.ndarray, xyz2: np.ndarray,
-                   node1, node2,
-                   ihat_offset, i_offset, eid,
-                   Li_offset,
+                   node1: GRID, node2: GRID,
+                   ihat_offset: np.ndarray, i_offset: np.ndarray,
+                   eid: int,
+                   Li_offset: float,
                    log: SimpleLogger) -> tuple[NDArray3float, NDArray3float, NDArray3float, NDArray33float]:
     """
     Rotates v, wa, wb

@@ -32,6 +32,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from ..coord import COORD
     from ..materials import MAT1
 
 
@@ -371,7 +372,10 @@ class CBEAM(Element):
                 #v[is_cd1, :] = cd1_ref.transform_local_xyz_to_global(self.x)
                 x_vector = self.x[is_cd1, :]
                 cd1i = cd1[is_cd1]
-                vi = coords.transform_local_xyz_to_global_coords(x_vector, cd1i)
+
+                #vi = coords.transform_local_xyz_to_global_coords(x_vector, cd1i)  # old
+                # transform_node_to_global
+                vi = coords.transform_offset_xyz_to_global_xyz(x_vector, cd1i)
                 v[is_cd1, :] = vi
 
                 #v[is_cd1, :] = coords.transform_local_xyz_to_global(x_vector, cd1[is_cd1])
@@ -429,34 +433,57 @@ class CBEAM(Element):
         cd2 = cd[:, 1]
 
         offt_vector, offt_end_a, offt_end_b = self.split_offt_vector()
-        is_rotate_v = (offt_vector == 'G')
-        is_rotate_wa = (offt_end_a == 'G')
-        is_rotate_wb = (offt_end_b == 'G')
+        is_rotate_v_g = (offt_vector == 'G')
+        is_rotate_wa_g = (offt_end_a == 'G')
+        is_rotate_wb_g = (offt_end_b == 'G')
+
+        #is_rotate_v_b = (offt_vector == 'B')
+        #is_rotate_wa_b = (offt_end_a == 'B')
+        #is_rotate_wb_b = (offt_end_b == 'B')
+
+        is_rotate_wa_o = (offt_end_a == 'O')
+        is_rotate_wb_o = (offt_end_b == 'O')
+
+        uofft_vector = np.unique(offt_vector)
+        uofft_end_a = np.unique(offt_end_a)
+        uofft_end_b = np.unique(offt_end_b)
+
+        msg = ''
+        for i, offt_vectori in enumerate(uofft_vector):
+            if offt_vectori not in 'GB':
+                msg += f'OFFT field[0]={offt_vectori} and must be G/B; offt={self.offt[i]}\n'
+        for i, offt_end_ai in enumerate(uofft_end_a):
+            if offt_end_ai not in 'GBO':
+                msg += f'OFFT field[1]={offt_end_ai} and must be G/B/O; offt={self.offt[i]}\n'
+        for i, offt_end_bi in enumerate(uofft_end_b):
+            if offt_end_bi not in 'GBO':
+                msg += f'OFFT field[2]={offt_end_bi} and must be G/B/O; offt={self.offt[i]}\n'
+        if msg:
+            log.error(msg)
+            raise ValueError(msg)
 
         #--------------------------------------------------------------------------
         # rotate v
         #log.info(f'offt = {self.offt}')
         #log.info(f'v0 =\n{v}')
         #log.info(f'cd =\n{cd}')
-        if np.any(is_rotate_v):
+
+        if np.any(is_rotate_v_g):
             # end A
             # global - cid != 0
-            icd1_v_vector = (is_rotate_v) & (cd1 != 0)
+            icd1_v_vector = (is_rotate_v_g) & (cd1 != 0)
             cd1_v_vector = cd1[icd1_v_vector]
             if np.any(cd1_v_vector):
                 #v[icd1_vector, :] = np.nan
-                cd1_ref = coords.slice_card_by_id(cd1_v_vector)
+                cd1_ref: COORD = coords.slice_card_by_id(cd1_v_vector)
                 v1v = v[icd1_v_vector, :]
-                v[icd1_v_vector, :] = cd1_ref.transform_node_to_global_assuming_rectangular(v1v)
+                v[icd1_v_vector, :] = cd1_ref.transform_xyz_to_global_assuming_rectangular(v1v)
                 del v1v
             del icd1_v_vector, cd1_v_vector
-        elif offt_vector == 'B':
+
+        #elif offt_vector == 'B':
             # basic - cid = 0
-            pass
-        else:
-            msg = f'offt_vector={offt_vector!r} is not supported; offt={elem.offt}'
-            log.error(msg)
-            raise RuntimeError(msg)
+            #pass
 
         if np.any(np.isnan(v.max(axis=1))):
             raise RuntimeError(f'v = {v}')
@@ -497,13 +524,13 @@ class CBEAM(Element):
         # wa defines the offset at end A
         wa = self.wa.copy()  # we're going to be inplace hacking it, so copy :)
 
-        if np.any(is_rotate_wa):
-            icd1_vector = (is_rotate_wa) & (cd1 != 0)
+        if np.any(is_rotate_wa_g):
+            icd1_vector = (is_rotate_wa_g) & (cd1 != 0)
             cd1_vector = cd1[icd1_vector]
             if np.any(icd1_vector):
                 cd1_ref = coords.slice_card_by_id(cd1_vector)
                 wai1 = wa[icd1_vector, :]
-                wai2 = cd1_ref.transform_node_to_global_assuming_rectangular(wai1)
+                wai2 = cd1_ref.transform_xyz_to_global_assuming_rectangular(wai1)
                 #print('eids.shape =', self.element_id.shape)
                 #print('len(cd1_vector) =', len(cd1_vector))
                 #print('icd1_vector.shape =', icd1_vector.shape)
@@ -513,17 +540,16 @@ class CBEAM(Element):
                 #print('wa.shape =', wa.shape)
                 wa[icd1_vector, :] = wai2
             del cd1_vector, icd1_vector
-        elif offt_end_a == 'B':
-            pass
-        elif offt_end_a == 'O':
+        #elif offt_end_a == 'B':
+            #pass
+        if np.any(is_rotate_wa_o):
             # rotate point wa from the local frame to the global frame
-            wa = wa @ xform_offset
-            #ia = n1 + wa
-        else:
-            msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, self.offt)
-            log.error(msg)
-            raise NotImplementedError(msg)
-            #return v, None, None, xform_offset
+            #wa = wa @ xform_offset
+            wao1 = wa[is_rotate_wa_o, :]
+            To = xform_offset[is_rotate_wa_o, :, :]
+            wao = np.einsum('ni,nij->nj', wao1, To)
+            wa[is_rotate_wa_o, :] = wao
+            del wao1, To, wao
 
         assert not np.isnan(np.max(wa)), wa
 
@@ -531,8 +557,8 @@ class CBEAM(Element):
         # rotate wb
         # wb defines the offset at end B
         wb = self.wb.copy()  # we're going to be inplace hacking it, so copy :)
-        if np.any(is_rotate_wb):
-            icd2_vector = (is_rotate_wb) & (cd2 != 0)
+        if np.any(is_rotate_wb_g):
+            icd2_vector = (is_rotate_wb_g) & (cd2 != 0)
             cd2_vector = cd2[icd2_vector]
             #cd2_vector = cd2[is_rotate_wb]
             #icd2_vector = (cd2_vector != 0)
@@ -541,20 +567,22 @@ class CBEAM(Element):
                 #wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
                 cd2_ref = coords.slice_card_by_id(cd2_vector)
                 wbi1 = wb[icd2_vector, :]
-                wbi2 = cd2_ref.transform_node_to_global_assuming_rectangular(wbi1)
+                wbi2 = cd2_ref.transform_xyz_to_global_assuming_rectangular(wbi1)
                 wb[icd2_vector, :] = wbi2
             del cd2_vector, icd2_vector
-        elif offt_end_b == 'B':
-            pass
-        elif offt_end_b == 'O':
+        #elif offt_end_b == 'B':
+            #pass
+
+        if np.any(is_rotate_wb_o):
             # rotate point wb from the local frame to the global frame
-            wb = wb @ xform_offset
+
+            wbo1 = wb[is_rotate_wb_o, :]
+            To = xform_offset[is_rotate_wb_o, :, :]
+            wbo = np.einsum('ni,nij->nj', wbo1, To)
+            wb[is_rotate_wb_o, :] = wbo
+            del wbo1, To, wbo
+            #wb = wb @ xform_offset
             #ib = n2 + wb
-        else:
-            msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, self.offt)
-            log.error(msg)
-            raise RuntimeError(msg)
-            #return v, wa, None, xform_offset
 
         assert not np.isnan(np.max(wb)), wb
 
