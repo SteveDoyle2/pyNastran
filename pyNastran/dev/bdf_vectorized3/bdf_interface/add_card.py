@@ -3189,7 +3189,7 @@ class AddOptimization(BDFAttributes):
                    atta: Union[int, float, str, None],
                    attb: Union[int, float, str, None],
                    atti: list[Union[int, float, str]],
-                   validate: bool=True, comment: str='') -> DRESP1:
+                   validate: bool=True, comment: str='') -> int:
         """
         Creates a DRESP1 card.
 
@@ -3266,14 +3266,16 @@ class AddOptimization(BDFAttributes):
 
         """
         assert len(label) <= 8, label
-        dresp = DRESP1(dresp_id, label, response_type, property_type, region,
-                       atta, attb, atti, validate=validate, comment=comment)
-        self._add_methods._add_dresp_object(dresp)
+        dresp = self.dresp1.add(
+            dresp_id, label, response_type, property_type, region,
+            atta, attb, atti, validate=validate, comment=comment)
         return dresp
 
-    def add_dresp2(self, dresp_id, label, dequation, region, params,
-                   method='MIN', c1=1., c2=0.005, c3=10.,
-                   validate=True, comment='') -> DRESP2:
+    def add_dresp2(self, dresp_id: int, label: str, dequation: int, region: int,
+                   params: dict[tuple[int, str], list[int]],
+                   method: str='MIN',
+                   c1: float=1., c2: float=0.005, c3: float=10.,
+                   validate: bool=True, comment: str='') -> int:
         """
         Creates a DRESP2 card.
 
@@ -3328,10 +3330,10 @@ class AddOptimization(BDFAttributes):
 
         """
         assert len(label) <= 8, label
-        dresp = DRESP2(dresp_id, label, dequation, region, params,
-                       method=method, c1=c1, c2=c2, c3=c3, comment=comment,
-                       validate=validate)
-        self._add_methods._add_dresp_object(dresp)
+        dresp = self.dresp2.add(
+            dresp_id, label, dequation, region, params,
+            method=method, c1=c1, c2=c2, c3=c3, comment=comment,
+            validate=validate)
         return dresp
 
     def add_dresp3(self, dresp_id, label, group, Type, region, params,
@@ -3343,7 +3345,7 @@ class AddOptimization(BDFAttributes):
         return dresp
 
     def add_dvcrel1(self, oid, Type, eid, cp_name, dvids, coeffs,
-                    cp_min=None, cp_max=1e20, c0=0., validate=True, comment='') -> DVCREL1:
+                    cp_min=None, cp_max=1e20, c0=0., validate=True, comment='') -> int:
         """
         Creates a DVCREL1 card
 
@@ -3373,10 +3375,10 @@ class AddOptimization(BDFAttributes):
             a comment for the card
 
         """
-        dvcrel = DVCREL1(oid, Type, eid, cp_name, dvids, coeffs,
-                         cp_min=cp_min, cp_max=cp_max, c0=c0,
-                         validate=validate, comment=comment)
-        self._add_methods._add_dvcrel_object(dvcrel)
+        dvcrel = self.dvcrel1(
+            oid, Type, eid, cp_name, dvids, coeffs,
+            cp_min=cp_min, cp_max=cp_max, c0=c0,
+            validate=validate, comment=comment)
         return dvcrel
 
     def add_dvcrel2(self, oid, Type, eid, cp_name, deqation, dvids, labels,
@@ -3432,7 +3434,7 @@ class AddOptimization(BDFAttributes):
                     dvids: list[int]=None,
                     labels: list[str]=None,
                     p_min: Optional[float]=None, p_max: float=1.0e20,
-                    validate: bool=True, comment: str='') -> DVPREL2:
+                    validate: bool=True, comment: str='') -> int:
         """
         Creates a DVPREL2 card
 
@@ -3466,9 +3468,9 @@ class AddOptimization(BDFAttributes):
         either dvids or labels is required
 
         """
-        dvprel = DVPREL2(oid, prop_type, pid, pname_fid, deqation, dvids, labels,
-                         p_min=p_min, p_max=p_max, validate=validate, comment=comment)
-        self._add_methods._add_dvprel_object(dvprel)
+        dvprel = self.dvprel2.add(
+            oid, prop_type, pid, pname_fid, deqation, dvids, labels,
+            p_min=p_min, p_max=p_max, validate=validate, comment=comment)
         return dvprel
 
     def add_dvmrel1(self, oid: int, mat_type: str, mid: int, mp_name: str,
@@ -3504,9 +3506,9 @@ class AddOptimization(BDFAttributes):
             a comment for the card
 
         """
-        dvmrel = DVMREL1(oid, mat_type, mid, mp_name, dvids, coeffs,
-                         mp_min, mp_max, c0=c0, validate=validate, comment=comment)
-        self._add_methods._add_dvmrel_object(dvmrel)
+        dvmrel = self.dvmrel1.add(
+            oid, mat_type, mid, mp_name, dvids, coeffs,
+            mp_min, mp_max, c0=c0, validate=validate, comment=comment)
         return dvmrel
 
     def add_dvmrel2(self, oid: int, mat_type: str, mid: int, mp_name: str,
@@ -3514,7 +3516,7 @@ class AddOptimization(BDFAttributes):
                     dvids: list[int],
                     labels: list[str],
                     mp_min: Optional[float]=None, mp_max: float=1e20,
-                    validate: bool=True, comment: str='') -> DVMREL2:
+                    validate: bool=True, comment: str='') -> int:
         """
         Creates a DVMREL2 card
 
@@ -3548,10 +3550,10 @@ class AddOptimization(BDFAttributes):
         either dvids or labels is required
 
         """
-        dvmrel = DVMREL2(oid, mat_type, mid, mp_name, deqation, dvids, labels,
-                         mp_min=mp_min, mp_max=mp_max,
-                         validate=validate, comment=comment)
-        self._add_methods._add_dvmrel_object(dvmrel)
+        dvmrel = self.dvmrel2(
+            oid, mat_type, mid, mp_name, deqation, dvids, labels,
+            mp_min=mp_min, mp_max=mp_max,
+            validate=validate, comment=comment)
         return dvmrel
 
     def add_dvgrid(self, dvid: int, nid: int, dxyz: NDArray3float,
@@ -3579,10 +3581,9 @@ class AddOptimization(BDFAttributes):
         self._add_methods._add_dvgrid_object(dvgrid)
         return dvgrid
 
-    def add_ddval(self, oid, ddvals, comment='') -> DDVAL:
+    def add_ddval(self, oid: int, ddvals: list[int], comment: str='') -> int:
         """Creates a DDVAL card"""
-        ddval = DDVAL(oid, ddvals, comment=comment)
-        self._add_methods._add_ddval_object(ddval)
+        ddval = self.ddval.add(oid, ddvals, comment=comment)
         return ddval
 
     def add_dlink(self, oid: int, dependent_desvar: int,
@@ -3616,14 +3617,15 @@ class AddOptimization(BDFAttributes):
             independent_desvars, coeffs, c0=c0, cmult=cmult, comment=comment)
         return dlink
 
-    def add_dconstr(self, oid: int, dresp_id: int, lid: float=-1.e20, uid: float=1.e20,
-                    lowfq: float=0.0, highfq: float=1.e20, comment: str='') -> DCONSTR:
+    def add_dconstr(self, dconstr_id: int, dresp_id: int,
+                    lid: float=-1.e20, uid: float=1.e20,
+                    lowfq: float=0.0, highfq: float=1.e20, comment: str='') -> int:
         """
         Creates a DCONSTR card
 
         Parameters
         ----------
-        oid : int
+        dconstr_id : int
             unique optimization id
         dresp_id : int
             DRESP1/2 id
@@ -3635,15 +3637,13 @@ class AddOptimization(BDFAttributes):
             a comment for the card
 
         """
-        dconstr = DCONSTR(oid, dresp_id, lid=lid, uid=uid, lowfq=lowfq,
-                          highfq=highfq, comment=comment)
-        self._add_methods._add_dconstr_object(dconstr)
+        dconstr = self.dconstr.add(dconstr_id, dresp_id, lid=lid, uid=uid, lowfq=lowfq,
+                                   highfq=highfq, comment=comment)
         return dconstr
 
-    def add_dconadd(self, oid, dconstrs, comment='') -> DCONADD:
+    def add_dconadd(self, dconstr_id: int, dconstrs: list[int], comment: str='') -> int:
         """Creates a DCONADD card"""
-        dconadd = DCONADD(oid, dconstrs, comment=comment)
-        self._add_methods._add_dconstr_object(dconadd)
+        dconadd = self.dconadd.add(dconstr_id, dconstrs, comment=comment)
         return dconadd
 
     def add_doptprm(self, params: dict[str, Union[int, float]], comment='') -> DOPTPRM:

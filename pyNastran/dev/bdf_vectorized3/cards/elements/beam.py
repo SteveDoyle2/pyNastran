@@ -594,7 +594,13 @@ class CBEAM(Element):
         # we finally have the nodal coordaintes!!!! :)
         return v, ihat, yhat, zhat, wa, wb
 
+    #def check_missing_ids(self, property_id: np.ndarray):
+        #missing_coords = np.setdiff1d(coord_id, self.coord_id)
+        #if len(missing_coords):
+            #raise RuntimeError(f'coords={missing_coords} not found in {self.coord_id}')
+
     def center_of_mass(self) -> np.ndarray:
+        #self.check_missing(self.property_id)
         log = self.model.log
 
         xyz1, xyz2 = self.get_xyz()
@@ -617,19 +623,26 @@ class CBEAM(Element):
 
         #log.debug(f'property_id = {self.property_id}')
         for prop in self.allowed_properties:
-            pids_common = np.union1d(prop.property_id, self.property_id)
+            pids_common = np.intersect1d(prop.property_id, self.property_id)
             #ind = prop.property_id[ipid]
             if len(pids_common) == 0:
                 log.debug(f'  skipping {prop.type}; pids={prop.property_id}')
                 continue
 
-            ipid = np.searchsorted(prop.property_id, self.property_id)
-            ipid = ipid[ipid < len(prop.property_id)]
-            if len(ipid) == 0:
-                log.warning(f'skipping {prop.type}; pids={prop.property_id}')
-                continue
-            is_valid = (prop.property_id[ipid] == self.property_id)
-            ipid = ipid[is_valid]
+            if 0:
+                ipid = np.searchsorted(prop.property_id, self.property_id)
+                ipid = ipid[ipid < len(prop.property_id)]
+                if len(ipid) == 0:
+                    log.warning(f'skipping {prop.type}; pids={prop.property_id}')
+                    continue
+                is_valid = (prop.property_id[ipid] == self.property_id)
+                ipid = ipid[is_valid]
+            else:
+                ipid = np.array([i for i, pid  in enumerate(self.property_id)
+                                 if pid in prop.property_id])
+                if len(ipid) == 0:
+                    log.warning(f'skipping {prop.type}; pids={prop.property_id}')
+                    continue
 
             prop2 = prop.slice_card_by_property_id(pids_common)
             log.info(f'running...{prop.type}: pids={prop.property_id}')
@@ -695,7 +708,7 @@ class CBEAM(Element):
                     mass_per_length[iipid] = mpl
 
                     #mass_per_length = prop.MassPerLength() # includes simplified nsm
-                    nsm_centroid[iipid, :] = (p1 + p2) / 2.
+                    nsm_centroid[iipid, :] = (p1[iipid, :] + p2[iipid, :]) / 2.
 
                     # mass_per_length already includes nsm
                     nsm_per_length[iipid] = 0.

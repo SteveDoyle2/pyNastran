@@ -7,7 +7,7 @@ defines:
 from typing import Union
 
 
-def build_table_lines(fields, nstart=1, nend=0):
+def build_table_lines(fields, nstart: int=1, nend: int=0):
     """
     Builds a table of the form:
 

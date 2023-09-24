@@ -15,8 +15,9 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default # , print_card_8
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.utils import build_table_lines
 
+from pyNastran.bdf.cards.optimization import build_table_lines, DRESP2_PACK_LENGTH
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim, get_print_card_8_16
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, array_default_str
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -154,6 +155,9 @@ class DESVAR(VectorizedBaseCard):
         self.xub = xub
         self.delx = delx
         self.ddval = ddval
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
 
     def index(self, desvar_id: np.ndarray) -> np.ndarray:
         assert len(self.desvar_id) > 0, self.desvar_id
@@ -525,94 +529,241 @@ class DRESP1(VectorizedBaseCard):
         super().__init__(model)
         self.dresp_id = np.array([], dtype='int32')
 
+    def add(self, dresp_id: int, label: str,
+            response_type: str, property_type: str, region: str,
+            atta: Union[int, float, str, None],
+            attb: Union[int, float, str, None],
+            atti: list[Union[int, float, str]],
+            validate: bool=True, comment: str='') -> int:
+        """
+        Creates a DRESP1 card.
+
+        A DRESP1 is used to define a "simple" output result that may be
+        optimized on.  A simple result is a result like stress, strain,
+        force, displacement, eigenvalue, etc. for a node/element that
+        may be found in a non-optimization case.
+
+        Parameters
+        ----------
+        dresp_id : int
+            response id
+        label : str
+            Name of the response
+        response_type : str
+            Response type
+        property_type : str
+            Element flag (PTYPE = 'ELEM'), or property entry name, or panel
+            flag for ERP responses (PTYPE = 'PANEL' - See Remark 34), or
+            RANDPS ID. Blank for grid point responses. 'ELEM' or property
+            name used only with element type responses (stress, strain,
+            force, etc.) to identify the relevant element IDs, or the property
+            type and relevant property IDs.
+
+            Must be {ELEM, PBAR, PSHELL, PCOMP, PANEL, etc.)
+            PTYPE = RANDPS ID when RTYPE=PSDDISP, PSDVELO, or PSDACCL.
+        region : str
+            Region identifier for constraint screening
+        atta : int / float / str / blank
+            Response attribute
+        attb : int / float / str / blank
+            Response attribute
+        atti : list[int / float / str]
+            the response values to pull from
+            list[int]:
+                list of grid ids
+                list of property ids
+            list[str]
+                'ALL'
+        comment : str; default=''
+            a comment for the card
+        validate : bool; default=True
+            should the card be validated when it's created
+
+        Examples
+        --------
+        **Stress/PSHELL**
+
+        >>> dresp_id = 103
+        >>> label = 'resp1'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PSHELL'
+        >>> pid = 3
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = None
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+
+        **Stress/PCOMP**
+
+        >>> dresp_id = 104
+        >>> label = 'resp2'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PCOMP'
+        >>> pid = 3
+        >>> layer = 4
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = layer
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        """
+        assert len(label) <= 8, label
+        if isinstance(atti, integer_types):
+            atti = [atti]
+        self.cards.append((dresp_id, label, response_type, property_type, region,
+                           atta, attb, atti, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a DRESP1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+
+        dresp_id = integer(card, 1, 'dresp_id')
+        label = string(card, 2, 'label')
+        #label = loose_string(card, 2, 'label')
+        response_type = string(card, 3, 'rtype')
+
+        # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
+        property_type = integer_string_or_blank(card, 4, 'ptype', default='')
+        region = integer_or_blank(card, 5, 'region', default=-1)
+
+        atta = integer_double_string_or_blank(card, 6, 'atta', default='')
+        attb = integer_double_string_or_blank(card, 7, 'attb', default='')
+
+        atti_list = []
+        for i in range(8, len(card)):
+            #attii = integer_double_string_or_blank(card, i, 'atti_%d' % (i + 1))
+            attii = integer_or_blank(card, i, 'atti_%d' % (i + 1))
+            atti_list.append(attii)
+        if len(atti_list) == 0:
+            self.model.log.debug(card)
+        #assert len(atti) > 0
+
+        self.cards.append((dresp_id, label, response_type, property_type, region,
+                           atta, attb, atti_list, comment))
+        self.n += 1
+        return self.n
+
     def parse_cards(self):
         assert self.n >= 0, self.n
         if len(self.cards) == 0:
             return
         ncards = len(self.cards)
         assert ncards > 0, ncards
-        self.dresp_id = np.zeros(ncards, dtype='int32')
+        dresp_id = np.zeros(ncards, dtype='int32')
 
         #: user-defined name for printing purposes
-        self.label = np.zeros(ncards, dtype='|U8')
-        self.response_type = np.zeros(ncards, dtype='|U8')
+        label = np.zeros(ncards, dtype='|U8')
+        response_type = np.zeros(ncards, dtype='|U8')
 
-        self.property_type = np.zeros(ncards, dtype='|U8')
-        self.region = np.zeros(ncards, dtype='int32')
+        property_type = np.zeros(ncards, dtype='|U8')
+        region = np.zeros(ncards, dtype='int32')
 
-        self.atta_type = np.zeros(ncards, dtype='|U1')
-        self.atta_int = np.zeros(ncards, dtype='int32')
-        self.atta_float = np.full(ncards, np.nan, dtype='float64')
-        self.atta_str = np.zeros(ncards, dtype='|U8')
+        atta_type = np.zeros(ncards, dtype='|U1')
+        atta_int = np.zeros(ncards, dtype='int32')
+        atta_float = np.full(ncards, np.nan, dtype='float64')
+        atta_str = np.zeros(ncards, dtype='|U8')
 
-        self.attb_type = np.zeros(ncards, dtype='|U1')
-        self.attb_int = np.zeros(ncards, dtype='int32')
-        self.attb_float = np.full(ncards, np.nan, dtype='float64')
-        self.attb_str = np.zeros(ncards, dtype='|U8')
+        attb_type = np.zeros(ncards, dtype='|U1')
+        attb_int = np.zeros(ncards, dtype='int32')
+        attb_float = np.full(ncards, np.nan, dtype='float64')
+        attb_str = np.zeros(ncards, dtype='|U8')
 
         attis = []
-        self.iatti = np.zeros((ncards, 2), dtype='int32')
+        iatti = np.zeros((ncards, 2), dtype='int32')
         atti0 = 0
-        for icard, card_comment in enumerate(self.cards):
-            card, comment = card_comment
+        for icard, card in enumerate(self.cards):
+            (dresp_idi, labeli, response_typei, property_typei, regioni,
+             attai, attbi, attii, comment) = card
+            dresp_id[icard] = dresp_idi
+            label[icard] = labeli
+            response_type[icard] = response_typei
+            property_type[icard] = property_typei
 
-            dresp_id = integer(card, 1, 'dresp_id')
-            label = string(card, 2, 'label')
-            #label = loose_string(card, 2, 'label')
-            response_type = string(card, 3, 'rtype')
+            if regioni is None:
+                regioni = -1
 
-            # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
-            property_type = integer_string_or_blank(card, 4, 'ptype', default='')
-            region = integer_or_blank(card, 5, 'region', default=-1)
-
-            atta = integer_double_string_or_blank(card, 6, 'atta', default='')
-            attb = integer_double_string_or_blank(card, 7, 'attb', default='')
-
-            atti = []
-            for i in range(8, len(card)):
-                #attii = integer_double_string_or_blank(card, i, 'atti_%d' % (i + 1))
-                attii = integer_or_blank(card, i, 'atti_%d' % (i + 1))
-                atti.append(attii)
-            if len(atti) == 0:
-                self.model.log.debug(card)
-            #assert len(atti) > 0
-            self.dresp_id[icard] = dresp_id
-            self.label[icard] = label
-            self.response_type[icard] = response_type
-            self.property_type[icard] = property_type
-            self.region[icard] = region
-            if isinstance(atta, int):
-                self.attb_type[icard] = 'i'
-                self.atta_int[icard] = atta
-            elif isinstance(atta, str):
-                self.attb_type[icard] = 's'
-                self.atta_str[icard] = atta
+            region[icard] = regioni
+            if isinstance(attai, int):
+                atta_type[icard] = 'i'
+                atta_int[icard] = attai
+            elif isinstance(attai, str):
+                atta_type[icard] = 's'
+                atta_str[icard] = attai
             else:
-                self.attb_type[icard] = 'f'
-                self.atta_float[icard] = atta
+                atta_type[icard] = 'f'
+                atta_float[icard] = attai
 
-            if isinstance(attb, int):
-                self.attb_type[icard] = 'i'
-                self.attb_int[icard] = attb
-            elif isinstance(attb, str):
-                self.attb_type[icard] = 's'
-                self.attb_str[icard] = attb
+            if isinstance(attbi, int):
+                attb_type[icard] = 'i'
+                attb_int[icard] = attbi
+            elif isinstance(attbi, str):
+                attb_type[icard] = 's'
+                attb_str[icard] = attbi
             else:
-                self.attb_type[icard] = 'f'
-                self.attb_float[icard] = attb
+                attb_type[icard] = 'f'
+                attb_float[icard] = attbi
 
-            natti = len(atti)
+            natti = len(attii)
             atti1 = atti0 + natti
-            attis.extend(atti)
-            self.iatti[icard, :] = [atti0, atti1]
+            attis.extend(attii)
+            iatti[icard, :] = [atti0, atti1]
             atti1 = atti0
-        self.atti = np.array(attis, dtype='int32')
+
+        atti = np.array(attis, dtype='int32')
         ##xinit = np.clip(xinit, xlb, xub)
+
+        self._save(dresp_id, label, response_type, property_type, region,
+                   atta_type, atta_float, atta_int, atta_str,
+                   attb_type, attb_float, attb_int, attb_str,
+                   iatti, atti)
         #assert len(label) <= 8, f'desvar_id={desvar_id} label={label!r} must be less than 8 characters; length={len(label):d}'
         #assert xlb <= xub, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
         #assert xinit >= xlb, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
         #assert xinit <= xub, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
         #x = 1
+        self.cards = []
+
+    def _save(self, dresp_id, label, response_type, property_type, region,
+              atta_type, atta_float, atta_int, atta_str,
+              attb_type, attb_float, attb_int, attb_str,
+              iatti, atti):
+        if len(self.dresp_id) != 0:
+            assdf
+
+        self.dresp_id = dresp_id
+
+        self.label = label
+        self.response_type = response_type
+
+        self.property_type = property_type
+        self.region = region
+
+        self.atta_type = atta_type
+        self.atta_int = atta_int
+        self.atta_float = atta_float
+        self.atta_str = atta_str
+
+        self.attb_type = attb_type
+        self.attb_int = attb_int
+        self.attb_float = attb_float
+        self.attb_str = attb_str
+
+        self.iatti = iatti
+        self.atti = atti
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -654,9 +805,151 @@ class DRESP1(VectorizedBaseCard):
 
 
 class DRESP2(VectorizedBaseCard):
+    """
+    Design Sensitivity Equation Response Quantities
+    Defines equation responses that are used in the design, either as
+    constraints or as an objective.
+
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |   1    |    2    |    3   |     4     |    5   |    6   |    7   |    8   |    9   |
+    +========+=========+========+===========+========+========+========+========+========+
+    | DRESP2 |   ID    |  LABEL | EQID/FUNC | REGION | METHOD |   C1   |   C2   |   C3   |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DESVAR  | DVID1  |   DVID2   |  DVID3 |  DVID4 |  DVID5 |  DVID6 |  DVID7 |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         | DVID8  |   etc.    |        |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DTABLE  | LABL1  |  LABL2    |  LABL3 |  LABL4 |  LABL5 |  LABL6 |  LABL7 |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         | LABL8  |  etc.     |        |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DRESP1  |  NR1   |    NR2    |   NR3  |   NR4  |   NR5  |   NR6  |  NR7   |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         |  NR8   |   etc.    |        |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DNODE   |   G1   |    C1     |   G2   |   C2   |   G3   |   C3   |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         |   G4   |    C4     |  etc.  |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DVPREL1 | DPIP1  |   DPIP2   | DPIP3  | DPIP4  | DPIP5  | DPIP6  | DPIP7  |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         | DPIP8  |   DPIP9   |  etc.  |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DVCREL1 | DCIC1  |   DCIC2   | DCIC3  | DCIC4  | DCIC5  | DCIC6  | DCIC7  |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         | DCIC8  |   DCIC9   |  etc.  |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DVMREL1 | DMIM1  |   DMIM2   | DMIM3  | DMIM4  | DMIM5  | DMIM6  | DMIM7  |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         | DMIM8  |   DMIM9   |  etc.  |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DVPREL2 | DPI2P1 |   DPI2P2  | DPI2P3 | DPI2P4 | DPI2P5 | DPI2P6 | DPI2P7 |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         | DPI2P8 |   DPI2P9  |  etc.  |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DVCREL2 | DCI2C1 |   DCI2C2  | DCI2C3 | DCI2C4 | DCI2C5 | DCI2C6 | DCI2C7 |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         | DCI2C8 |   DCI2C9  |   etc. |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DVMREL2 | DMI2M1 |   DMI2M2  | DMI2M3 | DMI2M4 | DMI2M5 | DMI2M6 | DMI2M7 |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         | DMI2M8 |   DMI2M9  |   etc. |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DRESP2  | NRR1   |   NRR2    |  NRR3  |  NRR4  |  NRR5  |  NRR6  |  NRR7  |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         | NRR8   |   etc.    |        |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        | DVLREL1 | DLIL1  |   DLIL2   |  DLIL3 |  DLIL4 |  DLIL5 |  DLIL6 |  DLIL7 |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+    |        |         | DLIL8  |   etc.    |        |        |        |        |        |
+    +--------+---------+--------+-----------+--------+--------+--------+--------+--------+
+
+    C1, C2, C3 are MSC specific
+    """
     def __init__(self, model: BDF):
         super().__init__(model)
         self.dresp_id = np.array([], dtype='int32')
+
+        #: user-defined name for printing purposes
+        self.label = np.array([], dtype='|U8')
+        self.dequation = np.array([], dtype='int32')
+        self.region = np.array([], dtype='int32')
+        self.method = np.array([], dtype='|U8')
+        self.c1 = np.array([], dtype='float64')
+        self.c2 = np.array([], dtype='float64')
+        self.c3 = np.array([], dtype='float64')
+
+        self.nparams = np.array([], dtype='int32')
+        self.param_type = np.array([], dtype='|U8')
+        self.nparam_values = np.array([], dtype='int32')
+        self.param_values = np.array([], dtype='int32')
+
+    def add(self, dresp_id: int, label: str, dequation: int, region: int,
+            params: dict[tuple[int, str], list[int]],
+            method: str='MIN',
+            c1: float=1., c2: float=0.005, c3: float=10.,
+            validate: bool=True, comment: str='') -> int:
+        """
+        Creates a DRESP2 card.
+
+        A DRESP2 is used to define a "complex" output result that may be
+        optimized on.  A complex result is a result that uses:
+          - simple (DRESP1) results
+          - complex (DRESP2) results
+          - default values (DTABLE)
+          - DVCRELx values
+          - DVMRELx values
+          - DVPRELx values
+          - DESVAR values
+        Then, an equation (DEQATN) is used to formulate an output response.
+
+        Parameters
+        ----------
+        dresp_id : int
+            response id
+        label : str
+            Name of the response
+        dequation : int
+            DEQATN id
+        region : str
+            Region identifier for constraint screening
+        params : dict[(index, card_type)] = values
+            the storage table for the response function
+            index : int
+                a counter
+            card_type : str
+                the type of card to pull from
+                DESVAR, DVPREL1, DRESP2, etc.
+            values : list[int]
+                the values for this response
+        method : str; default=MIN
+            flag used for FUNC=BETA/MATCH
+            FUNC = BETA
+                valid options are {MIN, MAX}
+            FUNC = MATCH
+                valid options are {LS, BETA}
+        c1 / c2 / c3 : float; default=1. / 0.005 / 10.0
+            constants for FUNC=BETA or FUNC=MATCH
+        comment : str; default=''
+            a comment for the card
+        validate : bool; default=False
+            should the card be validated when it's created
+
+        params = {
+           (0, 'DRESP1') = [10, 20],
+           (1, 'DESVAR') = [30],
+           (2, 'DRESP1') = [40],
+        }
+
+        """
+        assert len(label) <= 8, label
+        if region is None:
+            region = -1
+        self.cards.append((
+            dresp_id, label, dequation, region, params,
+            method, c1, c2, c3, comment))
+        self.n += 1
+        return self.n
 
     def parse_cards(self):
         assert self.n >= 0, self.n
@@ -664,87 +957,104 @@ class DRESP2(VectorizedBaseCard):
             return
         ncards = len(self.cards)
         assert ncards > 0, ncards
-        self.dresp_id = np.zeros(ncards, dtype='int32')
+        dresp_id = np.zeros(ncards, dtype='int32')
 
         #: user-defined name for printing purposes
-        self.label = np.zeros(ncards, dtype='|U8')
-        #self.response_type = np.zeros(ncards, dtype='|U8')
+        label = np.zeros(ncards, dtype='|U8')
+        #response_type = np.zeros(ncards, dtype='|U8')
 
         #self.property_type = np.zeros(ncards, dtype='|U8')
         #self.region = np.zeros(ncards, dtype='int32')
 
-        #self.atta_type = np.zeros(ncards, dtype='|U1')
-        #self.atta_int = np.zeros(ncards, dtype='int32')
-        #self.atta_float = np.full(ncards, np.nan, dtype='float64')
-        #self.atta_str = np.zeros(ncards, dtype='|U8')
+        dequation = np.zeros(ncards, dtype='int32')
+        region = np.zeros(ncards, dtype='int32')
 
-        #self.attb_type = np.zeros(ncards, dtype='|U1')
-        #self.attb_int = np.zeros(ncards, dtype='int32')
-        #self.attb_float = np.full(ncards, np.nan, dtype='float64')
-        #self.attb_str = np.zeros(ncards, dtype='|U8')
+        method = np.zeros(ncards, dtype='|U8')
+        c1 = np.zeros(ncards, dtype='float64')
+        c2 = np.zeros(ncards, dtype='float64')
+        c3 = np.zeros(ncards, dtype='float64')
 
-        #attis = []
-        #self.iatti = np.zeros((ncards, 2), dtype='int32')
-        atti0 = 0
-        for icard, card_comment in enumerate(self.cards):
-            card, comment = card_comment
+        nparams = np.zeros(ncards, dtype='int32')
+        param_type_list = []
+        param_values_list = []
+        nparam_values_list = []
+        for icard, card in enumerate(self.cards):
+            (dresp_idi, labeli, dequationi, regioni, paramsi,
+             methodi, c1i, c2i, c3i, comment) = card
 
-            dresp_id = integer(card, 1, 'dresp_id')
-            label = string(card, 2, 'label')
-            #label = loose_string(card, 2, 'label')
-            #response_type = string(card, 3, 'rtype')
+            nparams[icard] = len(paramsi)
+            for key, value in paramsi.items():
+                param_type_list.append(key[1])
+                if isinstance(value[0], integer_types):
+                    assert key[1] != 'DNODE', key
+                    pass
+                elif isinstance(value[0], list):
+                    assert key[1] == 'DNODE', key
+                    assert isinstance(value[0][0], integer_types), value
+                    value = np.array(value, dtype='int32').flatten().tolist()
+                nparam_values_list.append(len(value))
+                param_values_list.extend(value)
+            #params = {
+                #(0, 'DRESP1'): [42],
+                #(1, 'DESVAR'): [12],
+                #(3, 'DNODE'): [[100, 101],
+                               #[1, 2]],
+            #}
 
-            ## elem, pbar, pshell, etc. (ELEM flag or Prop Name)
-            #property_type = integer_string_or_blank(card, 4, 'ptype', default='')
-            #region = integer_or_blank(card, 5, 'region', default=-1)
+            assert isinstance(dequationi, integer_types), dequationi
+            dresp_id[icard] = dresp_idi
+            label[icard] = labeli
+            dequation[icard] = dequationi
+            region[icard] = regioni
+            method[icard] = methodi
+            c1[icard] = c1i
+            c2[icard] = c2i
+            c3[icard] = c3i
+            #asf
 
-            #atta = integer_double_string_or_blank(card, 6, 'atta', default='')
-            #attb = integer_double_string_or_blank(card, 7, 'attb', default='')
+        param_type = np.array(param_type_list)
+        nparam_values = np.array(nparam_values_list)
+        param_values = np.array(param_values_list)
 
-            #atti = []
-            #for i in range(8, len(card)):
-                ##attii = integer_double_string_or_blank(card, i, 'atti_%d' % (i + 1))
-                #attii = integer_or_blank(card, i, 'atti_%d' % (i + 1))
-                #atti.append(attii)
-            #if len(atti) == 0:
-                #print(card)
-            #assert len(atti) > 0
-            self.dresp_id[icard] = dresp_id
-            self.label[icard] = label
-            #self.response_type[icard] = response_type
-            #self.property_type[icard] = property_type
-            #self.region[icard] = region
-            #if isinstance(atta, int):
-                #self.attb_type[icard] = 'i'
-                #self.atta_int[icard] = atta
-            #elif isinstance(atta, str):
-                #self.attb_type[icard] = 's'
-                #self.atta_str[icard] = atta
-            #else:
-                #self.attb_type[icard] = 'f'
-                #self.atta_float[icard] = atta
-
-            #if isinstance(attb, int):
-                #self.attb_type[icard] = 'i'
-                #self.attb_int[icard] = attb
-            #elif isinstance(attb, str):
-                #self.attb_type[icard] = 's'
-                #self.attb_str[icard] = attb
-            #else:
-                #self.attb_type[icard] = 'f'
-                #self.attb_float[icard] = attb
-
-            #natti = len(atti)
-            #atti1 = atti0 + natti
-            #attis.extend(atti)
-            #self.iatti = [atti0, atti1]
-            #atti1 = atti0
         ##xinit = np.clip(xinit, xlb, xub)
         #assert len(label) <= 8, f'desvar_id={desvar_id} label={label!r} must be less than 8 characters; length={len(label):d}'
         #assert xlb <= xub, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
         #assert xinit >= xlb, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
         #assert xinit <= xub, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
         #x = 1
+        self._save(dresp_id, label, dequation, region, method, c1, c2, c3,
+                   nparams, param_type, nparam_values, param_values)
+        self.cards = []
+
+    def _save(self, dresp_id, label, dequation, region, method, c1, c2, c3,
+              nparams, param_type, nparam_values, param_values):
+        self.dresp_id = dresp_id
+
+        #: user-defined name for printing purposes
+        self.label = label
+        #response_type = np.zeros(ncards, dtype='|U8')
+
+        #self.property_type = np.zeros(ncards, dtype='|U8')
+        #self.region = np.zeros(ncards, dtype='int32')
+
+        self.dequation = dequation
+        self.region = region
+
+        self.method = method
+        self.c1 = c1
+        self.c2 = c2
+        self.c3 = c3
+        self.nparams = nparams
+        self.param_type = param_type
+        self.nparam_values = nparam_values
+        self.param_values = param_values
+
+    @property
+    def iparam(self) -> np.ndarray:
+        return make_idim(self.n, self.nparams)
+
+    #def iparam_value(self, iparam: int) -> np.ndarray:
+        #return make_idim(self.n, self.nparam_values[iparam])
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -753,11 +1063,48 @@ class DRESP2(VectorizedBaseCard):
             return
 
         print_card = get_print_card_8_16(size)
-        for dresp_id, label in zip_longest(self.dresp_id, self.label):
-            list_fields = ['DRESP2', dresp_id, label]
+        iparam_value = 0
+
+        dresp_ids = array_str(self.dresp_id, size=size)
+        regions = array_str(self.region, size=size)
+        #pas = array_default_int(self.pa, default=0, size=size)
+        methods = array_default_str(self.method, default='MIN', size=size)
+
+        for (dresp_id, label, deqatn, region, method, c1, c2, c3, iparam) in zip_longest(
+            dresp_ids, self.label, self.dequation, regions, methods,
+            self.c1, self.c2, self.c3, self.iparam):
+
+            iparam0, iparam1 = iparam
+            param_types = self.param_type[iparam0:iparam1]
+            nparam_values = self.nparam_values[iparam0:iparam1]
+
+            #method = set_blank_if_default(method, 'MIN')
+            #c1 = None
+            #c2 = None
+            #c3 = None
+            #if self.method == 'BETA':
+                #if 'BETA' in self.func or 'MATCH' in  self.func:
+                    ## MSC 2005   Defaults: C1=100., C2=.005)
+                    ## MSC 2016.1 Defaults: C1=1., C2=.005, C3=10.)
+                    #c1 = set_blank_if_default(c1, 100.)
+                    #c2 = set_blank_if_default(c2, 0.005)
+                    #c3 = set_blank_if_default(c3, 10.)
+
+            if np.isnan(c3):
+                c3 = ''
+
+            list_fields = ['DRESP2', dresp_id, label, deqatn,
+                           region, method, c1, c2, c3]
+
+            for param_type, nvalues in zip(param_types, nparam_values):
+                values_list2 = self.param_values[iparam_value:iparam_value + nvalues]
+                fields2 = [param_type] + values_list2.tolist()
+                (i, j) = DRESP2_PACK_LENGTH[param_type]
+                list_fields += build_table_lines(fields2, nstart=i, nend=j)
+                iparam_value += nvalues
+
             bdf_file.write(print_card(list_fields))
         return
-
 
 class DCONSTR(VectorizedBaseCard):
     """
@@ -782,6 +1129,30 @@ class DCONSTR(VectorizedBaseCard):
 
         self.low_frequency = np.array([], dtype='float64')
         self.high_frequency = np.array([], dtype='float64')
+
+    def add(self, dconstr_id: int, dresp_id: int,
+            lid: float=-1.e20, uid: float=1.e20,
+            lowfq: float=0.0, highfq: float=1.e20, comment: str='') -> int:
+        """
+        Creates a DCONSTR card
+
+        Parameters
+        ----------
+        oid : int
+            unique optimization id
+        dresp_id : int
+            DRESP1/2 id
+        lid / uid=-1.e20 / 1.e20
+            lower/upper bound
+        lowfq / highfq : float; default=0. / 1.e20
+            lower/upper end of the frequency range
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((dconstr_id, dresp_id, lid, uid, lowfq, highfq, comment))
+        self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         dconstr_id = integer(card, 1, 'dconstr_id')
@@ -1094,6 +1465,133 @@ class DVPREL2(VectorizedBaseCard):
         self.p_max = np.array([], dtype='float64')
 
 
+    def add(self, dvprel_id: int, prop_type: str, pid: int,
+            pname_fid: Union[int, str], deqation: int,
+            desvars: list[int]=None,
+            labels: list[str]=None,
+            p_min: Optional[float]=None, p_max: float=1.0e20,
+            validate: bool=True, comment: str='') -> int:
+        """
+        Creates a DVPREL2 card
+
+        Parameters
+        ----------
+        dvprel_id : int
+            optimization id
+        prop_type : str
+            property card name (e.g., PSHELL)
+        pid : int
+            property id
+        pname_fid : str/int
+            optimization parameter as a pname (property name; T) or field number (fid)
+        deqation : int
+            DEQATN id
+        dvids : list[int]; default=None
+            DESVAR ids
+        labels : list[str]; default=None
+            DTABLE names
+        p_min : float; default=None
+            minimum property value
+        p_max : float; default=1e20
+            maximum property value
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
+
+        Notes
+        -----
+        either dvids or labels is required
+
+        """
+        if isinstance(desvars, integer_types):
+            desvars = [desvars]
+
+        # DTABLE
+        if labels is None:
+            labels = []
+        elif isinstance(labels, str):
+            labels = [labels]
+        self.cards.append((dvprel_id, prop_type, pid, deqation, pname_fid,
+                           p_min, p_max, desvars, labels, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a DVPREL2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        dvprel_id = integer(card, 1, 'oid')
+        prop_type = string(card, 2, 'prop_type')
+        pid = integer(card, 3, 'pid')
+        pname_fid = integer_or_string(card, 4, 'pName_FID')
+        p_min = double_or_blank(card, 5, 'p_in', None)
+        p_max = double_or_blank(card, 6, 'p_max', 1e20)
+        dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
+
+        fields = [interpret_value(field) for field in card[9:]]
+        ioffset = 9
+        iend = len(fields) + ioffset
+
+        #F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\d200m20.dat
+        #params = parse_table_fields('DRESP2', card, fields)
+        #print(params)
+
+        try:
+            idesvar = fields.index('DESVAR') + ioffset
+        except ValueError:
+            idesvar = None
+
+        try:
+            idtable = fields.index('DTABLE') + ioffset
+            #iDesMax  = idtable # the index to start parsing DESVAR
+            ides_stop = idtable  # the index to stop  parsing DESVAR
+        except ValueError:
+            idtable = None
+            ides_stop = iend
+
+        desvars = []
+        if idesvar:
+            n = 1
+            for i in range(10, ides_stop):
+                dvid_name = 'DVID' + str(n)
+                dvid = integer_or_blank(card, i, dvid_name)
+                #print("%s = %s" % (dvid_name, dvid))
+                if dvid:
+                    assert dvid is not None
+                    assert dvid != 'DESVAR'
+                    desvars.append(dvid)
+                    n += 1
+
+        labels = []
+        if idtable:
+            n = 1
+            for i in range(idtable + 1, iend):
+                label_name = 'Label' + str(n)
+                label = string(card, i, label_name)
+                #print("%s = %s" % (label_name, label))
+                if label:
+                    assert label != 'DTABLE'
+                    labels.append(label)
+
+        #dvprel = DVPREL2(oid, prop_type, pid, pname_fid, dequation, dvids, labels,
+                         #p_min=p_min, p_max=p_max, comment=comment)
+        #if len(dvids) and len(labels) and idtable < idesvar:
+            #raise SyntaxError('DESVARs must be defined before DTABLE\n%s' % str(dvprel))
+
+        self.cards.append((dvprel_id, prop_type, pid, dequation, pname_fid,
+                           p_min, p_max, desvars, labels, comment))
+        self.n += 1
+        return self.n
+
     def parse_cards(self):
         assert self.n >= 0, self.n
         if len(self.cards) == 0:
@@ -1101,98 +1599,61 @@ class DVPREL2(VectorizedBaseCard):
         ncards = len(self.cards)
         assert ncards > 0, ncards
 
-        self.dvprel_id = np.zeros(ncards, dtype='int32')
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.property_type = np.zeros(ncards, dtype='|U8')
-        self.property_name = np.zeros(ncards, dtype='|U8')
-        self.field_num = np.zeros(ncards, dtype='int32')
-        self.deqatn_id = np.zeros(ncards, dtype='int32')
-        self.p_min = np.zeros(ncards, dtype='float64')
-        self.p_max = np.zeros(ncards, dtype='float64')
-        #self.c0 = np.zeros(ncards, dtype='float64')
-        self.ndesvar = np.zeros(ncards, dtype='int32')
-        self.ndtable = np.zeros(ncards, dtype='int32')
+        dvprel_id = np.zeros(ncards, dtype='int32')
+        property_id = np.zeros(ncards, dtype='int32')
+        property_type = np.zeros(ncards, dtype='|U8')
+        property_name = np.zeros(ncards, dtype='|U8')
+        field_num = np.zeros(ncards, dtype='int32')
+        deqatn_id = np.zeros(ncards, dtype='int32')
+        p_min = np.zeros(ncards, dtype='float64')
+        p_max = np.zeros(ncards, dtype='float64')
+        ndesvar = np.zeros(ncards, dtype='int32')
+        ndtable = np.zeros(ncards, dtype='int32')
 
         all_desvars = []
         all_labels = []
-        for icard, card_comment in enumerate(self.cards):
-            card, comment = card_comment
-
-            oid = integer(card, 1, 'oid')
-            prop_type = string(card, 2, 'prop_type')
-            pid = integer(card, 3, 'pid')
-            pname_fid = integer_or_string(card, 4, 'pName_FID')
-            p_min = double_or_blank(card, 5, 'p_in', None)
-            p_max = double_or_blank(card, 6, 'p_max', 1e20)
-            dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
-
-            fields = [interpret_value(field) for field in card[9:]]
-            ioffset = 9
-            iend = len(fields) + ioffset
-
-            #F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\d200m20.dat
-            #params = parse_table_fields('DRESP2', card, fields)
-            #print(params)
-
-            try:
-                idesvar = fields.index('DESVAR') + ioffset
-            except ValueError:
-                idesvar = None
-
-            try:
-                idtable = fields.index('DTABLE') + ioffset
-                #iDesMax  = idtable # the index to start parsing DESVAR
-                ides_stop = idtable  # the index to stop  parsing DESVAR
-            except ValueError:
-                idtable = None
-                ides_stop = iend
-
-            desvars = []
-            if idesvar:
-                n = 1
-                for i in range(10, ides_stop):
-                    dvid_name = 'DVID' + str(n)
-                    dvid = integer_or_blank(card, i, dvid_name)
-                    #print("%s = %s" % (dvid_name, dvid))
-                    if dvid:
-                        assert dvid is not None
-                        assert dvid != 'DESVAR'
-                        desvars.append(dvid)
-                        n += 1
-
-            labels = []
-            if idtable:
-                n = 1
-                for i in range(idtable + 1, iend):
-                    label_name = 'Label' + str(n)
-                    label = string(card, i, label_name)
-                    #print("%s = %s" % (label_name, label))
-                    if label:
-                        assert label != 'DTABLE'
-                        labels.append(label)
-
-            #dvprel = DVPREL2(oid, prop_type, pid, pname_fid, dequation, dvids, labels,
-                             #p_min=p_min, p_max=p_max, comment=comment)
-            #if len(dvids) and len(labels) and idtable < idesvar:
-                #raise SyntaxError('DESVARs must be defined before DTABLE\n%s' % str(dvprel))
-            self.dvprel_id[icard] = oid
-            self.property_type[icard] = prop_type
-            self.property_id[icard] = pid
-            self.deqatn_id[icard] = dequation
+        for icard, card in enumerate(self.cards):
+            (dvprel_idi, prop_type, pid, dequation, pname_fid,
+             p_mini, p_maxi, desvars, labels, comment) = card
+            dvprel_id[icard] = dvprel_idi
+            property_type[icard] = prop_type
+            property_id[icard] = pid
+            deqatn_id[icard] = dequation
             if isinstance(pname_fid, str):
-                self.property_name[icard] = pname_fid
+                property_name[icard] = pname_fid
             else:
-                self.field_num[icard] = pname_fid
-            self.p_min[icard] = p_min
-            self.p_max[icard] = p_max
-            #self.c0[icard] = c0
+                field_num[icard] = pname_fid
+            p_min[icard] = p_mini
+            p_max[icard] = p_maxi
 
-            self.ndesvar[icard] = len(desvars)
-            self.ndtable[icard] = len(labels)
+            ndesvar[icard] = len(desvars)
+            ndtable[icard] = len(labels)
             all_desvars.extend(desvars)
             all_labels.extend(labels)
-        self.desvar_id = np.array(all_desvars, dtype='int32')
-        self.labels = np.array(all_labels, dtype='|U8')
+
+        desvar_ids = np.array(all_desvars, dtype='int32')
+        labels = np.array(all_labels, dtype='|U8')
+        self._save(dvprel_id, property_id, property_type, property_name, field_num,
+                   deqatn_id, p_min, p_max, ndesvar, ndtable, desvar_ids, labels)
+        self.cards = []
+
+    def _save(self, dvprel_id, property_id, property_type, property_name, field_num,
+              deqatn_id, p_min, p_max, ndesvar, ndtable, desvar_ids, labels):
+        if len(self.dvprel_id) != 0:
+            asdf
+        self.dvprel_id = dvprel_id
+        self.property_id = property_id
+        self.property_type = property_type
+        self.property_name = property_name
+        self.field_num = field_num
+        self.deqatn_id = deqatn_id
+        self.p_min = p_min
+        self.p_max = p_max
+        #self.c0 = np.zeros(ncards, dtype='float64')
+        self.ndesvar = ndesvar
+        self.ndtable = ndtable
+        self.desvar_ids = desvar_ids
+        self.labels = labels
 
     @property
     def idesvar(self) -> np.ndarray:
@@ -1210,7 +1671,7 @@ class DVPREL2(VectorizedBaseCard):
         print_card = get_print_card_8_16(size)
         dvprel_ids = array_str(self.dvprel_id, size=size)
         property_ids = array_str(self.property_id, size=size)
-        desvar_ids = array_str(self.desvar_id, size=size)
+        desvar_ids = array_str(self.desvar_ids, size=size)
 
         for dvprel_id, pid, prop_type, \
             prop_name, field_num, deqatn_id, \
@@ -1221,6 +1682,7 @@ class DVPREL2(VectorizedBaseCard):
             ilabel0, ilabel1 = ilabel
             desvars = desvar_ids[idesvar0:idesvar1]
             labels = self.labels[ilabel0:ilabel1]
+            assert len(desvars) + len(labels) > 0, (desvars, labels)
             pname_fid = prop_name if prop_name else field_num
             p_max = set_blank_if_default(p_max, 1e20)
 
@@ -1232,6 +1694,7 @@ class DVPREL2(VectorizedBaseCard):
             if len(labels):
                 fields2 = ['DTABLE'] + labels.tolist()
                 list_fields += build_table_lines(fields2, nstart=1, nend=0)
+
             bdf_file.write(print_card(list_fields))
         return
 

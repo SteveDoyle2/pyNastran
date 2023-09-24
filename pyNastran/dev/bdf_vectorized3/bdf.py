@@ -2613,7 +2613,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # materials
             'MAT1' : partial(self._prepare_card, self.mat1),
             'MAT2' : partial(self._prepare_card, self.mat2),
-            #'MAT3' : partial(self._prepare_card, self.mat3),
+            'MAT3' : partial(self._prepare_card, self.mat3),
             ## there is no MAT6 or MAT7
             'MAT8' : partial(self._prepare_card, self.mat8),
             'MAT9' : partial(self._prepare_card, self.mat9),
