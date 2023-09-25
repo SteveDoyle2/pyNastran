@@ -435,10 +435,10 @@ class Writer():
         #bdf_file.write(model.ctrax6.write(size=size))
 
         # plate stress
-        #bdf_file.write(model.cplsts3.write(size=size))
-        #bdf_file.write(model.cplsts4.write(size=size))
-        #bdf_file.write(model.cplsts6.write(size=size))
-        #bdf_file.write(model.cplsts8.write(size=size))
+        model.cplsts3.write_file(bdf_file, size=size, is_double=is_double)
+        model.cplsts4.write_file(bdf_file, size=size, is_double=is_double)
+        model.cplsts6.write_file(bdf_file, size=size, is_double=is_double)
+        model.cplsts8.write_file(bdf_file, size=size, is_double=is_double)
 
         # plate strain
         model.cplstn3.write_file(bdf_file, size=size, is_double=is_double)

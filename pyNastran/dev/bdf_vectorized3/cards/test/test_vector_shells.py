@@ -918,6 +918,108 @@ class TestShells(unittest.TestCase):
         #model.safe_cross_reference()
         save_load_deck(model)
 
+    def test_cplstn34(self):
+        """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        pid = 4
+        eid = 3
+        nids = [1, 2, 3, 4]
+        model.add_cplstn4(eid, pid, nids, comment='cplstn4')
+        cplstn4 = model.cplstn4
+        cplstn4.flip_normal()
+
+        eid = 5
+        nids = [1, 2, 3]
+        mid = 10
+        model.add_cplstn3(eid, pid, nids, comment='cplstn3')
+        cplstn3 = model.cplstn3
+        cplstn3.flip_normal()
+
+        pplane = model.add_pplane(
+            pid, mid, t=0.1, nsm=0.,
+            formulation_option=0, comment='pplane')
+        E = 1e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.setup()
+        #cplstn3.repr_fields()
+        #cplstn4.repr_fields()
+
+        #cplstn3.raw_fields()
+        #cplstn4.raw_fields()
+        #pplane.raw_fields()
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.cplsts3.write(size=8)
+        model.cplsts4.write(size=8)
+        model.pplane.write(size=8)
+        model.cross_reference()
+        model.pop_xref_errors()
+        model.cplsts3.write(size=16)
+        model.cplsts4.write(size=16)
+
+        #model.uncross_reference()
+        #model.safe_cross_reference()
+        save_load_deck(model)
+
+    def test_cplsts68(self):
+        """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
+        pid = 4
+        eid = 3
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        model.add_cplsts8(eid, pid, nids, comment='cplstn8')
+
+        eid = 5
+        nids = [1, 2, 3, 4, 5, 6]
+        mid = 10
+        model.add_cplsts6(eid, pid, nids, comment='cplstn6')
+
+        model.add_pplane(
+            pid, mid, t=0.1, nsm=0.,
+            formulation_option=0, comment='pplane')
+        #pplane = model.pplane
+        E = 1e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        mat1 = model.mat1
+        model.setup()
+
+        #cplstn6.raw_fields()
+        #cplstn8.raw_fields()
+        #pplane.raw_fields()
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.cplsts6.write(size=8)
+        model.cplsts8.write(size=8)
+        model.pplane.write(size=8)
+        model.cross_reference()
+        model.pop_xref_errors()
+        #cplstn3.write_card(size=8)
+        #cplstn4.write_card(size=8)
+
+        #model.uncross_reference()
+        #model.safe_cross_reference()
+        save_load_deck(model)
+
     def test_ctrishell68(self):
         """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
         log = get_logger(level='warning')

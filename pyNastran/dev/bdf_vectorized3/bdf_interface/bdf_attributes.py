@@ -33,7 +33,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.shell_properties import (
 
 from pyNastran.dev.bdf_vectorized3.cards.elements.plate_stress_strain import (
     PPLANE,
-    #CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
+    CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
@@ -301,10 +301,10 @@ class BDFAttributes:
 
         # plane stress
         # what are the properties?
-        #self.cplsts3 = CPLSTS3(self)
-        #self.cplsts4 = CPLSTS4(self)
-        #self.cplsts6 = CPLSTS6(self)  # not supported
-        #self.cplsts8 = CPLSTS8(self)  # not supported
+        self.cplsts3 = CPLSTS3(self)
+        self.cplsts4 = CPLSTS4(self)
+        self.cplsts6 = CPLSTS6(self)
+        self.cplsts8 = CPLSTS8(self)
 
         # plate strain
         # what are the properties?
@@ -629,7 +629,7 @@ class BDFAttributes:
         ] + self.shell_elements + self.solid_elements + axisymmetric_elements + [
             self.conm1, self.conm2,
             self.cmass1, self.cmass2, self.cmass3, self.cmass4,
-            #self.cplsts3, self.cplsts4, self.cplsts6, self.cplsts8,
+            self.cplsts3, self.cplsts4, self.cplsts6, self.cplsts8,
             self.cplstn3, self.cplstn4, self.cplstn6, self.cplstn8,
         ] + acoustic_elements
         return elements

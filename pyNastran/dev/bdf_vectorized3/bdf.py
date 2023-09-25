@@ -618,8 +618,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CTRSHL', 'CQUAD1',
             #'SNORM',
 
-            #'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', # plate strain
-            #'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8', # plate stress
+            'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', # plate strain
+            'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8', # plate stress
 
             # acoustic
             #'CHACAB', 'CAABSF', 'CHACBR',
@@ -2497,10 +2497,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # plate stress
             'PPLANE' : partial(self._prepare_card, self.pplane),
-            #'CPLSTS3' : partial(self._prepare_card, self.cplsts3),
-            #'CPLSTS4' : partial(self._prepare_card, self.cplsts4),
-            #'CPLSTS6' : partial(self._prepare_card, self.cplsts6),
-            #'CPLSTS8' : partial(self._prepare_card, self.cplsts8),
+            'CPLSTS3' : partial(self._prepare_card, self.cplsts3),
+            'CPLSTS4' : partial(self._prepare_card, self.cplsts4),
+            'CPLSTS6' : partial(self._prepare_card, self.cplsts6),
+            'CPLSTS8' : partial(self._prepare_card, self.cplsts8),
 
             # plate strain
             # what are the properties?

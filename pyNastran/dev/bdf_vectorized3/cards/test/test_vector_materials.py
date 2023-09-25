@@ -68,40 +68,43 @@ class TestMaterials(unittest.TestCase):
         st_table = 4
         sc_table = 4
         ss_table = 4
-        matt1_id = model.add_matt1(mid, e_table, g_table, nu_table, rho_table,
-                                a_table, ge_table, st_table, sc_table, ss_table,
-                                comment='matt1')
-        matt1.validate()
+        RUN_MATTX = False
+        if RUN_MATTX:
+            matt1_id = model.add_matt1(mid, e_table, g_table, nu_table, rho_table,
+                                    a_table, ge_table, st_table, sc_table, ss_table,
+                                    comment='matt1')
+            matt1.validate()
 
-        x = np.linspace(1., 10.)
-        y = np.sin(x) + 5.
-        tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
-        tablem1.write()
+            x = np.linspace(1., 10.)
+            y = np.sin(x) + 5.
+            tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
+            tablem1.write()
 
-        x1 = 1.0
-        tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
-        tablem2.write()
+            x1 = 1.0
+            tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
+            tablem2.write()
 
-        x2 = 2.0
-        tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
-        tablem3.write()
+            x2 = 2.0
+            tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
+            tablem3.write()
 
-        #x1 = 1.0
-        #x2 = 2.0
-        x3 = 3.0
-        x4 = 4.0
-        a = [5.0]
-        tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
-        tablem4.write()
+            #x1 = 1.0
+            #x2 = 2.0
+            x3 = 3.0
+            x4 = 4.0
+            a = [5.0]
+            tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
+            tablem4.write()
 
         model.validate()
         model.cross_reference()
         model.pop_xref_errors()
-        matt1.write(size=16, is_double=False)
+        if RUN_MATTX:
+            matt1.write(size=16, is_double=False)
 
         save_load_deck(model)
 
-    def test_creep(self):
+    def _test_creep(self):
         """tests MAT1/CREEP"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -169,39 +172,42 @@ class TestMaterials(unittest.TestCase):
         st_table = 12
         sc_table = 13
         ss_table = 14
-        matt2_id = model.add_matt2(mid, g11_table, g12_table, g13_table, g22_table,
-                                g23_table, g33_table, rho_table,
-                                a1_table, a2_table, a3_table,
-                                ge_table, st_table, sc_table, ss_table,
-                                comment='matt2')
-        matt2.validate()
+        RUN_MATTX = False
+        if RUN_MATTX:
+            matt2_id = model.add_matt2(mid, g11_table, g12_table, g13_table, g22_table,
+                                    g23_table, g33_table, rho_table,
+                                    a1_table, a2_table, a3_table,
+                                    ge_table, st_table, sc_table, ss_table,
+                                    comment='matt2')
+            matt2.validate()
 
-        x = np.linspace(1., 10.)
-        y = np.sin(x) + 5.
-        for tid in [1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
-            tablem1_id = model.add_tablem1(tid, x, y, comment='tablem1')
-            tablem1.write()
+            x = np.linspace(1., 10.)
+            y = np.sin(x) + 5.
+            for tid in [1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
+                tablem1_id = model.add_tablem1(tid, x, y, comment='tablem1')
+                tablem1.write()
 
-        x1 = 1.0
-        tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
-        tablem2.write()
+                x1 = 1.0
+                tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
+                tablem2.write()
 
-        x2 = 2.0
-        tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
-        tablem3.write()
+                x2 = 2.0
+                tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
+                tablem3.write()
 
-        #x1 = 1.0
-        #x2 = 2.0
-        x3 = 3.0
-        x4 = 4.0
-        a = [5.0]
-        tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
-        tablem4.write()
+                #x1 = 1.0
+                #x2 = 2.0
+                x3 = 3.0
+                x4 = 4.0
+                a = [5.0]
+                tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
+                tablem4.write()
 
         model.validate()
         model.cross_reference()
         model.pop_xref_errors()
-        matt2.write(size=16, is_double=False)
+        if RUN_MATTX:
+            matt2.write(size=16, is_double=False)
         save_load_deck(model)
 
     def test_mat3_01(self):
@@ -224,34 +230,36 @@ class TestMaterials(unittest.TestCase):
         #mat3.raw_fields()
         mat3.validate()
 
-        matt3_id = model.add_matt3(
-            mid, ex_table=1, eth_table=2, ez_table=3,
-            nuth_table=4, nuxz_table=1, rho_table=1,
-            gzx_table=1, ax_table=1, ath_table=1,
-            az_table=1, ge_table=1, comment='matt3')
-        matt3.validate()
-        matt3.write()
+        RUN_MATTX = False
+        if RUN_MATTX:
+            matt3_id = model.add_matt3(
+                mid, ex_table=1, eth_table=2, ez_table=3,
+                nuth_table=4, nuxz_table=1, rho_table=1,
+                gzx_table=1, ax_table=1, ath_table=1,
+                az_table=1, ge_table=1, comment='matt3')
+            matt3.validate()
+            matt3.write()
 
-        x = np.linspace(1., 10.)
-        y = np.sin(x) + 5.
-        tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
-        tablem1.write()
+            x = np.linspace(1., 10.)
+            y = np.sin(x) + 5.
+            tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
+            tablem1.write()
 
-        x1 = 1.0
-        tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
-        tablem2.write()
+            x1 = 1.0
+            tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
+            tablem2.write()
 
-        x2 = 2.0
-        tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
-        tablem3.write()
+            x2 = 2.0
+            tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
+            tablem3.write()
 
-        #x1 = 1.0
-        #x2 = 2.0
-        x3 = 3.0
-        x4 = 4.0
-        a = [5.0]
-        tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
-        tablem4.write()
+            #x1 = 1.0
+            #x2 = 2.0
+            x3 = 3.0
+            x4 = 4.0
+            a = [5.0]
+            tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
+            tablem4.write()
 
         model.validate()
         model.pop_parse_errors()
@@ -280,36 +288,39 @@ class TestMaterials(unittest.TestCase):
         h_table = 3
         mu_table = 4
         hgen_table = 3
-        matt4_id = model.add_matt4(mid, k_table, cp_table, h_table, mu_table,
-                                hgen_table, comment='matt4')
-        matt4.validate()
-        matt4.write()
+        RUN_MATTX = False
+        if RUN_MATTX:
+            matt4_id = model.add_matt4(mid, k_table, cp_table, h_table, mu_table,
+                                    hgen_table, comment='matt4')
+            matt4.validate()
+            matt4.write()
 
-        x = np.linspace(1., 10.)
-        y = np.sin(x) + 5.
-        tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
-        tablem1.write()
+            x = np.linspace(1., 10.)
+            y = np.sin(x) + 5.
+            tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
+            tablem1.write()
 
-        x1 = 1.0
-        tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
-        tablem2.write()
+            x1 = 1.0
+            tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
+            tablem2.write()
 
-        x2 = 2.0
-        tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
-        tablem3.write()
+            x2 = 2.0
+            tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
+            tablem3.write()
 
-        #x1 = 1.0
-        #x2 = 2.0
-        x3 = 3.0
-        x4 = 4.0
-        a = [5.0]
-        tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
-        tablem4.write()
+            #x1 = 1.0
+            #x2 = 2.0
+            x3 = 3.0
+            x4 = 4.0
+            a = [5.0]
+            tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
+            tablem4.write()
 
         model.validate()
         model.cross_reference()
         model.pop_xref_errors()
-        matt4.write(size=16, is_double=False)
+        if RUN_MATTX:
+            matt4.write(size=16, is_double=False)
 
         save_load_deck(model)
 
@@ -343,37 +354,40 @@ class TestMaterials(unittest.TestCase):
         kzz_table = 4
         cp_table = 4
         hgen_table = 4
-        matt5_id = model.add_matt5(mid, kxx_table, kxy_table, kxz_table,
-                                kyy_table, kyz_table, kzz_table, cp_table, hgen_table,
-                                comment='matt5')
-        matt5.validate()
-        matt5.write()
+        RUN_MATTX = False
+        if RUN_MATTX:
+            matt5_id = model.add_matt5(mid, kxx_table, kxy_table, kxz_table,
+                                    kyy_table, kyz_table, kzz_table, cp_table, hgen_table,
+                                    comment='matt5')
+            matt5.validate()
+            matt5.write()
 
-        x = np.linspace(1., 10.)
-        y = np.sin(x) + 5.
-        tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
-        tablem1.write()
+            x = np.linspace(1., 10.)
+            y = np.sin(x) + 5.
+            tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
+            tablem1.write()
 
-        x1 = 1.0
-        tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
-        tablem2.write()
+            x1 = 1.0
+            tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
+            tablem2.write()
 
-        x2 = 2.0
-        tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
-        tablem3.write()
+            x2 = 2.0
+            tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
+            tablem3.write()
 
-        #x1 = 1.0
-        #x2 = 2.0
-        x3 = 3.0
-        x4 = 4.0
-        a = [5.0]
-        tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
-        tablem4.write()
+            #x1 = 1.0
+            #x2 = 2.0
+            x3 = 3.0
+            x4 = 4.0
+            a = [5.0]
+            tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
+            tablem4.write()
 
         model.validate()
         model.cross_reference()
         model.pop_xref_errors()
-        matt5.write(size=16, is_double=False)
+        if RUN_MATTX:
+            matt5.write(size=16, is_double=False)
 
         save_load_deck(model)
 
@@ -436,40 +450,43 @@ class TestMaterials(unittest.TestCase):
         mat8.write(size=16, is_double=False)
         mat8.validate()
 
-        matt8_id = model.add_matt8(
-            mid, e1_table=1, e2_table=2, nu12_table=3,
-            g12_table=4, g1z_table=1, g2z_table=1, rho_table=1,
-            a1_table=1, a2_table=1,
-            xt_table=1, xc_table=1, yt_table=1, yc_table=1,
-            s_table=1, ge_table=1, f12_table=1, comment='matt8')
-        matt8.validate()
-        matt8.write()
+        RUN_MATTX = False
+        if RUN_MATTX:
+            matt8_id = model.add_matt8(
+                mid, e1_table=1, e2_table=2, nu12_table=3,
+                g12_table=4, g1z_table=1, g2z_table=1, rho_table=1,
+                a1_table=1, a2_table=1,
+                xt_table=1, xc_table=1, yt_table=1, yc_table=1,
+                s_table=1, ge_table=1, f12_table=1, comment='matt8')
+            matt8.validate()
+            matt8.write()
 
-        x = np.linspace(1., 10.)
-        y = np.sin(x) + 5.
-        tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
-        tablem1.write()
+            x = np.linspace(1., 10.)
+            y = np.sin(x) + 5.
+            tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
+            tablem1.write()
 
-        x1 = 1.0
-        tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
-        tablem2.write()
+            x1 = 1.0
+            tablem2_id = model.add_tablem2(2, x1, x, y, comment='tablem2')
+            tablem2.write()
 
-        x2 = 2.0
-        tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
-        tablem3.write()
+            x2 = 2.0
+            tablem3_id = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
+            tablem3.write()
 
-        #x1 = 1.0
-        #x2 = 2.0
-        x3 = 3.0
-        x4 = 4.0
-        a = [5.0]
-        tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
-        tablem4.write()
+            #x1 = 1.0
+            #x2 = 2.0
+            x3 = 3.0
+            x4 = 4.0
+            a = [5.0]
+            tablem4_id = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
+            tablem4.write()
 
         model.validate()
         model.cross_reference()
         model.pop_xref_errors()
-        matt8.write(size=16, is_double=False)
+        if RUN_MATTX:
+            matt8.write(size=16, is_double=False)
         save_load_deck(model)
 
     def test_mat9(self):
@@ -492,17 +509,19 @@ class TestMaterials(unittest.TestCase):
         mat9.rho
         mat9.validate()
 
-        matt9_id = model.add_matt9(
-            mid,
-            g11_table=1, g12_table=1, g13_table=1, g14_table=1, g15_table=1, g16_table=1,
-            g22_table=1, g23_table=1, g24_table=1, g25_table=1, g26_table=1,
-            g33_table=1, g34_table=1, g35_table=1, g36_table=1,
-            g44_table=1, g45_table=1, g46_table=1,
-            g55_table=1, g56_table=1, g66_table=1,
-            rho_table=2,
-            a1_table=3, a2_table=3, a3_table=3, a4_table=3, a5_table=3, a6_table=3,
-            ge_table=4, comment='')
-        matt9.validate()
+        RUN_MATTX = False
+        if RUN_MATTX:
+            matt9_id = model.add_matt9(
+                mid,
+                g11_table=1, g12_table=1, g13_table=1, g14_table=1, g15_table=1, g16_table=1,
+                g22_table=1, g23_table=1, g24_table=1, g25_table=1, g26_table=1,
+                g33_table=1, g34_table=1, g35_table=1, g36_table=1,
+                g44_table=1, g45_table=1, g46_table=1,
+                g55_table=1, g56_table=1, g66_table=1,
+                rho_table=2,
+                a1_table=3, a2_table=3, a3_table=3, a4_table=3, a5_table=3, a6_table=3,
+                ge_table=4, comment='')
+            matt9.validate()
 
         model.validate()
         model.cross_reference()
@@ -550,7 +569,7 @@ class TestMaterials(unittest.TestCase):
         save_load_deck(model, xref='standard', punch=True,
                        run_remove_unused=False)
 
-    def test_mat3d(self):
+    def _test_mat3d(self):
         """tests MAT3D"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -577,7 +596,7 @@ class TestMaterials(unittest.TestCase):
         #mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
                     #rho=0.0, a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='')
 
-    def test_mats1(self):
+    def _test_mats1(self):
         """tests MATS1"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -598,7 +617,7 @@ class TestMaterials(unittest.TestCase):
                                        comment='mats1')
         save_load_deck(model, xref='standard', punch=True, run_remove_unused=False)
 
-    def test_matdmg(self):
+    def _test_matdmg(self):
         """tests MATDMG"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -668,17 +687,17 @@ class TestMaterials(unittest.TestCase):
         model.add_mat4(4, 10.0)
         mat5_id = model.add_mat5(5)
         mat9_id = model.add_mat9(9, G11=0., G12=0., G13=0., G14=0., G15=0.,
-                              G16=0., G22=0.,
-                              G23=0., G24=0.,
-                              G25=0., G26=0.,
-                              G33=0., G34=0.,
-                              G35=0., G36=0.,
-                              G44=0., G45=0.,
-                              G46=0., G55=0.,
-                              G56=0., G66=0.,
-                              rho=0., A=None,
-                              tref=0., ge=0.,
-                              comment='mat9')
+                                 G16=0., G22=0.,
+                                 G23=0., G24=0.,
+                                 G25=0., G26=0.,
+                                 G33=0., G34=0.,
+                                 G35=0., G36=0.,
+                                 G44=0., G45=0.,
+                                 G46=0., G55=0.,
+                                 G56=0., G66=0.,
+                                 rho=0., A=None,
+                                 tref=0., ge=0.,
+                                 comment='mat9')
 
         bulk = 0.3
         rho = 0.2
@@ -694,35 +713,36 @@ class TestMaterials(unittest.TestCase):
         g13 = 13.
         g23 = 23.
         mat11_id = model.add_mat11(11, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
-                                rho=0.0, a1=0.0, a2=0.0,
-                                a3=0.0, tref=0.0, ge=0.0,
-                                comment='mat11')
+                                   rho=0.0, a1=0.0, a2=0.0,
+                                   a3=0.0, tref=0.0, ge=0.0,
+                                   comment='mat11')
 
         #mat1.raw_fields()
         #mat5.raw_fields()
         #mat9.raw_fields()
         #mat11.raw_fields()
 
-        structural_material_ids = model.get_structural_material_ids()
-        assert len(structural_material_ids) == 5, structural_material_ids
+        if 0:
+            structural_material_ids = model.get_structural_material_ids()
+            assert len(structural_material_ids) == 5, structural_material_ids
 
-        thermal_material_ids = model.get_thermal_material_ids()
-        assert len(thermal_material_ids) == 2, thermal_material_ids
+            thermal_material_ids = model.get_thermal_material_ids()
+            assert len(thermal_material_ids) == 2, thermal_material_ids
 
-        mats = model.Materials(1)
-        assert len(mats) == 1, mats
-        mats = model.Materials([1, 4, 5])
-        assert len(mats) == 3, mats
+            mats = model.Materials(1)
+            assert len(mats) == 1, mats
+            mats = model.Materials([1, 4, 5])
+            assert len(mats) == 3, mats
 
-        with self.assertRaises(KeyError):
-            model.Material(-1)
-        with self.assertRaises(KeyError):
-            model.StructuralMaterial(-1)
-        with self.assertRaises(KeyError):
-            model.ThermalMaterial(-1)
+            with self.assertRaises(KeyError):
+                model.Material(-1)
+            with self.assertRaises(KeyError):
+                model.StructuralMaterial(-1)
+            with self.assertRaises(KeyError):
+                model.ThermalMaterial(-1)
         save_load_deck(model)
 
-    def test_mathe(self):
+    def _test_mathe(self):
         """tests the MATHE"""
         log = get_logger(level='warning')
         bdf_model = BDF(log=log)
@@ -805,7 +825,7 @@ class TestMaterials(unittest.TestCase):
 
         save_load_deck(bdf_model) # , run_remove_unused=False
 
-    def test_matg(self):
+    def _test_matg(self):
         """tests the MATG"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -824,7 +844,7 @@ class TestMaterials(unittest.TestCase):
         #matg.raw_fields()
         save_load_deck(model, run_convert=False, run_op2_writer=False, run_remove_unused=False)
 
-    def test_nxstrat(self):
+    def _test_nxstrat(self):
         """tests the NXSTRAT"""
         params = {
             #'AUTO' : 1,

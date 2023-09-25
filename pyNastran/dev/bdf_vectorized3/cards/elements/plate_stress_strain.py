@@ -16,7 +16,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
-#from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
     #hslice_by_idim, make_idim, searchsorted_filter,
@@ -29,8 +29,9 @@ from .shell import (
     shell_thickness, shell_mass_per_area,
 )
 from .shell_properties import nonlinear_thickness
+from .shell_quality import tri_quality_nodes, quad_quality_nodes
 
-#from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
+from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
@@ -240,6 +241,9 @@ class CPLSTS3(PlateStressElement):
         centroid = tri_centroid(self.model.grid, self.nodes)
         return centroid
 
+    def quality(self):
+        return tri_quality_nodes(self.model.grid, self.nodes)
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -376,6 +380,9 @@ class CPLSTS4(PlateStressElement):
     def centroid(self) -> np.ndarray:
         centroid = quad_centroid(self.model.grid, self.nodes)
         return centroid
+
+    def quality(self):
+        return quad_quality_nodes(self.model.grid, self.nodes)
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -548,6 +555,15 @@ class PPLANE(Property):
         materials = [mat for mat in all_materials if mat.n > 0]
         assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.materials}'
         return materials
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        mids = hstack_msg([mat.material_id for mat in self.allowed_materials],
+                          msg=f'no pplane materials for {self.type}')
+        mids.sort()
+        material_ids = np.unique(self.material_id.ravel())
+        geom_check(self,
+                   missing,
+                   material_id=(mids, material_ids))
 
     def mass_per_area(self) -> np.ndarray:
         #self.model.log.warning(f'faking mass/area for {self.type}')
@@ -754,6 +770,9 @@ class CPLSTN3(PlateStrainElement):
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
 
+    def quality(self):
+        return tri_quality_nodes(self.model.grid, self.nodes)
+
     def flip_normal(self, i=None) -> None:
         """
         Flips normal of element.
@@ -880,6 +899,9 @@ class CPLSTN4(PlateStrainElement):
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
 
+    def quality(self):
+        return quad_quality_nodes(self.model.grid, self.nodes)
+
     def flip_normal(self, i=None):
         """
         1-2-3-4
@@ -1004,6 +1026,9 @@ class CPLSTN6(PlateStrainElement):
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
 
+    def quality(self):
+        return tri_quality_nodes(self.model.grid, self.base_nodes)
+
     @property
     def base_nodes(self):
         return self.nodes[:, :3]
@@ -1126,6 +1151,9 @@ class CPLSTN8(PlateStrainElement):
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
 
+    def quality(self):
+        return quad_quality_nodes(self.model.grid, self.base_nodes)
+
     @property
     def base_nodes(self):
         return self.nodes[:, :4]
@@ -1170,7 +1198,7 @@ class CPLSTS6(PlateStrainElement):
             tflag: int=0, thickness=None, comment: str='') -> int:
         """Creates a CPLSTS6 card"""
         if thickness is None:
-            thickness = np.full(8, np.nan, dtype='float64')
+            thickness = np.full(6, np.nan, dtype='float64')
         self.cards.append((eid, pid, nids, theta, tflag, thickness, comment))
         self.n += 1
         return self.n
@@ -1270,6 +1298,9 @@ class CPLSTS6(PlateStrainElement):
 
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
+
+    def quality(self):
+        return tri_quality_nodes(self.model.grid, self.base_nodes)
 
     @property
     def base_nodes(self):
@@ -1421,6 +1452,9 @@ class CPLSTS8(PlateStrainElement):
 
     def center_of_mass(self) -> np.ndarray:
         return self.centroid()
+
+    def quality(self):
+        return quad_quality_nodes(self.model.grid, self.base_nodes)
 
     @property
     def base_nodes(self):
