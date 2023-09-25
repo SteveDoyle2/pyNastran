@@ -242,6 +242,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         str(matrix2s)
         #print(matrix1r)
         #print(matrix1s)
+        save_load_deck(model, run_mass_properties=False)
 
 
 class TestDMIGReal(unittest.TestCase):
@@ -266,6 +267,7 @@ class TestDMIGReal(unittest.TestCase):
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         self.assertTrue(np.allclose(reals_expected, reals_actual))
         a_matrix.get_matrix()
+        save_load_deck(model, run_mass_properties=False)
 
     def test_dmig_2(self):
         model = BDF(debug=False)
@@ -337,6 +339,7 @@ class TestDMIGReal(unittest.TestCase):
         dmi = DMIG.add_card(card_obj)
         dmi.write_card(size, 'dummy')
         #dmi.raw_fields()
+        save_load_deck(model, run_mass_properties=False)
 
     def test_dmig_5(self):
         cards = [
@@ -428,7 +431,7 @@ class TestDMIGReal(unittest.TestCase):
         vax_dict_col_expected = {0: (1, 0)}
         assert list(sorted(vax_dict_col)) == list(sorted(vax_dict_col_expected)), 'vax_dict_col=%s vax_dict_col_expected=%s' % (vax_dict_col, vax_dict_col_expected)
         assert list(sorted(vax_dict_row)) == list(sorted(vax_dict_row_expected)), 'vax_dict_row=%s vax_dict_row_expected=%s' % (vax_dict_row, vax_dict_row_expected)
-        #save_load_deck(model, run_mass_properties=False)
+        save_load_deck(model, run_mass_properties=False)
 
     def test_dmig_10(self):
         """tests the add card method with a real DMIG"""
@@ -579,6 +582,7 @@ class TestDMIGReal(unittest.TestCase):
 
         get_matrices(model)
         #kaax = model.dmig['KAAX'].get_matrix(is_sparse=True)
+        save_load_deck(model, run_mass_properties=False)
 
     def test_dmig_rectangular(self):
         """testing symmetric DMIGs"""

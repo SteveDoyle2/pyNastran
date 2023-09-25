@@ -17,7 +17,10 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Element, Property, get_print_card_8_16 # , hslice_by_idim, make_idim, searchsorted_filter
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    Element, Property, get_print_card_8_16,
+    #hslice_by_idim, make_idim, searchsorted_filter,
+    parse_element_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from .utils import get_density_from_material
 from .shell import (
@@ -237,11 +240,10 @@ class CPLSTS3(PlateStressElement):
         centroid = tri_centroid(self.model.grid, self.nodes)
         return centroid
 
-    def write(self, size: int=8, is_double: bool=False,
-              write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        lines = []
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -251,8 +253,8 @@ class CPLSTS3(PlateStressElement):
             element_id, property_id, nodes, self.theta, self.tflag, self.T):
             list_fields = ['CPLSTS3', eid, pid, n1, n2, n3, None, theta, None,
                             None, None, None, tflag, t1, t2, t3]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 
 class CPLSTS4(PlateStressElement):
@@ -375,11 +377,10 @@ class CPLSTS4(PlateStressElement):
         centroid = quad_centroid(self.model.grid, self.nodes)
         return centroid
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        write_card_header: bool=False
-        if len(self.element_id) == 0:
-            return ''
-        lines = []
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -388,8 +389,9 @@ class CPLSTS4(PlateStressElement):
             element_id, property_id, nodes, self.theta, self.tflag, self.T):
             list_fields = ['CPLSTS4', eid, pid, n1, n2, n3, n4, theta,
                             None, None, None, None, tflag, t1, t2, t3, t4]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
+
 
 class PPLANE(Property):
     """NX specific card"""
@@ -770,10 +772,10 @@ class CPLSTN3(PlateStrainElement):
         #self.nodes[i, :] = self.nodes[i, [0, 2, 1]] # fast flip
         self.nodes[i, :] = self.nodes[i, [1, 0, 2]]  # preserve material orientation
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        lines = []
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -781,8 +783,8 @@ class CPLSTN3(PlateStrainElement):
         for eid, pid, (n1, n2, n3), theta in zip_longest(
             element_id, property_id, nodes, self.theta):
             list_fields = ['CPLSTN3', eid, pid, n1, n2, n3, theta]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 class CPLSTN4(PlateStrainElement):
     """
@@ -887,20 +889,20 @@ class CPLSTN4(PlateStrainElement):
             i = slice(len(self.element_id))
         self.nodes[i, :] = self.nodes[i, [1, 0, 3, 2]]
 
-    def write(self, size: int=8, is_double: bool=False,
-              write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        lines = []
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
+
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
         for eid, pid, (n1, n2, n3, n4), theta in zip_longest(
             element_id, property_id, nodes, self.theta):
             list_fields = ['CPLSTN4', eid, pid, n1, n2, n3, n4, theta]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 
 class CPLSTN6(PlateStrainElement):
@@ -1009,10 +1011,10 @@ class CPLSTN6(PlateStrainElement):
     def midside_nodes(self):
         return self.nodes[:, 3:]
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        lines = []
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -1021,8 +1023,8 @@ class CPLSTN6(PlateStrainElement):
             element_id, property_id, nodes, self.theta):
             list_fields = ['CPLSTN6', eid, pid, n1, n2, n3, n4, n5, n6,
                            theta]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 
 class CPLSTN8(PlateStrainElement):
@@ -1131,10 +1133,10 @@ class CPLSTN8(PlateStrainElement):
     def midside_nodes(self):
         return self.nodes[:, 4:]
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return ''
-        lines = []
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
@@ -1143,8 +1145,8 @@ class CPLSTN8(PlateStrainElement):
             element_id, property_id, nodes, self.theta):
             list_fields = ['CPLSTN8', eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
                            theta]
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 
 class CPLSTS6(PlateStrainElement):
@@ -1276,11 +1278,11 @@ class CPLSTS6(PlateStrainElement):
     def midside_nodes(self):
         return self.nodes[:, 3:]
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return ''
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
-        lines = []
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
@@ -1292,8 +1294,8 @@ class CPLSTS6(PlateStrainElement):
             if not np.all(np.isnan(thickness)):
                 t1, t2, t3, t4, t5, t6 = thickness
                 list_fields.extend([t1, t2, t3, '', '', '', '', '', t4, t5, t6])
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 
 
 class CPLSTS8(PlateStrainElement):
@@ -1427,11 +1429,11 @@ class CPLSTS8(PlateStrainElement):
     def midside_nodes(self):
         return self.nodes[:, 4:]
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
-        if len(self.element_id) == 0:
-            return ''
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
-        lines = []
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
@@ -1443,6 +1445,6 @@ class CPLSTS8(PlateStrainElement):
             if not np.all(np.isnan(thickness)):
                 t1, t2, t3, t4, t5, t6, t7, t8 = thickness
                 list_fields.extend([t1, t2, t3, t4, '', '', '', '', t5, t6, t7, t8])
-            lines.append(print_card(list_fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(list_fields))
+        return
 

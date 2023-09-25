@@ -3097,11 +3097,11 @@ class OP2Reader:
         self.read_markers([0])
 
     def read_rst(self):
-        """
+        r"""
         reads the RST table (restart file?)
 
-        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\k402rerun3d2ss.op2
         """
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\k402rerun3d2ss.op2
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])

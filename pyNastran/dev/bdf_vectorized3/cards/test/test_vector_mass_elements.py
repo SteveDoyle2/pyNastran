@@ -1,5 +1,5 @@
 # coding: utf-8
-from copy import deepcopy
+#from copy import deepcopy
 import unittest
 import numpy as np
 

@@ -814,7 +814,7 @@ class TestShells(unittest.TestCase):
 
         save_load_deck(model)
 
-    def _test_cplstn34(self):
+    def test_cplstn34(self):
         """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -853,19 +853,19 @@ class TestShells(unittest.TestCase):
 
         model.validate()
         model._verify_bdf(xref=False)
-        cplstn3.write(size=8)
-        cplstn4.write(size=8)
-        pplane.write(size=8)
+        model.cplstn3.write(size=8)
+        model.cplstn4.write(size=8)
+        model.pplane.write(size=8)
         model.cross_reference()
         model.pop_xref_errors()
-        #cplstn3.write_card(size=8)
-        #cplstn4.write_card(size=8)
+        model.cplstn3.write(size=16)
+        model.cplstn4.write(size=16)
 
         #model.uncross_reference()
         #model.safe_cross_reference()
         save_load_deck(model)
 
-    def _test_cplstn68(self):
+    def test_cplstn68(self):
         """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -971,7 +971,7 @@ class TestShells(unittest.TestCase):
 
         #model.uncross_reference()
         #model.safe_cross_reference()
-        save_load_deck(model, run_mass_properties=False, run_test_bdf=False)
+        save_load_deck(model, run_test_bdf=False)
         #mass_properties(model)
 
     def test_shear(self):
@@ -1663,7 +1663,8 @@ def make_dvcrel_optimization(model, params, element_type, eid, i=1):
         model.add_desvar(j, 'v%s' % name, desvar_value)
     return j + 1
 
-def make_dvprel_optimization(model, params, prop_type, pid, i=1):
+def make_dvprel_optimization(model: BDF, params, prop_type: str, pid: int,
+                             i: int=1) -> int:
     """makes a series of DVPREL1 and a DESVAR"""
     j = i
     for ii, (name, desvar_value) in enumerate(params):

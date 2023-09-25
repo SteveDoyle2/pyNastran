@@ -1221,6 +1221,9 @@ class PGAP(Property):
             self.trmin[icard] = trmin
         self.cards = []
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,

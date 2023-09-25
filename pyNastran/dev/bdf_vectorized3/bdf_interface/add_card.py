@@ -29,7 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray66float
     from pyNastran.dev.bdf_vectorized3.bdf import PARAM # BDF,
     #from pyNastran.dev.bdf_vectorized3.cards.grid import GRID
-    from pyNastran.dev.bdf_vectorized3.cards.coord import COORD # CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+    #from pyNastran.dev.bdf_vectorized3.cards.coord import COORD # CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
     #from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2, LOADSET
     #from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import PLOAD, PLOAD1, PLOAD2, PLOAD4 # , PLOADX1
     #from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
@@ -1282,24 +1282,21 @@ class Add1dElements(BDFAttributes):
 
     def add_pbmsect(self, pid, mid, form, options, comment='') -> int:
         """Creates a PBMSECT card"""
-        prop = PBMSECT(pid, mid, form, options, comment=comment)
-        self._add_methods._add_property_object(prop)
+        prop = self.pbmsect.add(pid, mid, form, options, comment=comment)
         return prop
 
     def add_pbrsect(self, pid, mid, form, options, comment='') -> int:
         """Creates a PBRSECT card"""
-        prop = PBRSECT(pid, mid, form, options, comment=comment)
-        self._add_methods._add_property_object(prop)
+        prop = self.pbrsect.add(pid, mid, form, options, comment=comment)
         return prop
 
     def add_pbeam3(self, pid, mid, A, iz, iy, iyz=0., j=None, nsm=0.,
                    cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0.,
                    comment='') -> int:
         """Creates a PBEAM3 card"""
-        prop = PBEAM3(pid, mid, A, iz, iy, iyz=iyz, j=j, nsm=nsm,
-                      cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
-                      comment=comment)
-        self._add_methods._add_property_object(prop)
+        prop = self.pbeam3.add(pid, mid, A, iz, iy, iyz=iyz, j=j, nsm=nsm,
+                               cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
+                               comment=comment)
         return prop
 
     def add_pbeaml(self, pid: int, mid: int, beam_type: str,
@@ -1456,8 +1453,7 @@ class Add1dElements(BDFAttributes):
 
     def add_cbend(self, eid, pid, nids, g0, x, geom, comment='') -> int:
         """Creates a CBEND card"""
-        elem = CBEND(eid, pid, nids, g0, x, geom, comment=comment)
-        self._add_methods._add_element_object(elem)
+        elem = self.cbend.add(eid, pid, nids, g0, x, geom, comment=comment)
         return elem
 
     def add_pbend(self, pid, mid, beam_type, A, i1, i2, j,
@@ -1465,19 +1461,17 @@ class Add1dElements(BDFAttributes):
                   nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b,
                   comment='') -> int:
         """Creates a PBEND card"""
-        prop = PBEND(pid, mid, beam_type, A, i1, i2, j,
+        prop = self.pbend.add(pid, mid, beam_type, A, i1, i2, j,
                      c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
                      nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b,
                      comment=comment)
-        self._add_methods._add_property_object(prop)
         return prop
 
     def add_cbeam3(self, eid, pid, nids, x, g0, wa, wb, wc, tw, s,
                    comment='') -> int:
         """Creates a CBEAM3 card"""
-        elem = CBEAM3(eid, pid, nids, x, g0, wa, wb, wc, tw, s,
-                      comment=comment)
-        self._add_methods._add_element_object(elem)
+        elem = self.cbeam3.add(eid, pid, nids, x, g0, wa, wb, wc, tw, s,
+                               comment=comment)
         return elem
 
 
@@ -7690,7 +7684,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        prop = sef.phbdy.add(pid, af=af, d1=d1, d2=d2, comment=comment)
+        prop = self.phbdy.add(pid, af=af, d1=d1, d2=d2, comment=comment)
         return prop
 
     def add_conv(self, eid, pconid, ta, film_node=0, cntrlnd=0, comment='') -> int:
@@ -8156,38 +8150,38 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self.reject_card_lines('UXVEC', print_card_8(fields).split('\n'), show_log=False)
     #----------------------------------------------------------------------------------
     # parametric
-    def add_pset(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment='') -> PSET:
-        """PSET ID POLY1 POLY2 POLY3 CID SETTYP ID"""
-        pset = PSET(idi, poly1, poly2, poly3, cid, typei, typeids, comment=comment)
-        self.pset[idi] = pset
-        return pset
+    #def add_pset(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment='') -> PSET:
+        #"""PSET ID POLY1 POLY2 POLY3 CID SETTYP ID"""
+        #pset = PSET(idi, poly1, poly2, poly3, cid, typei, typeids, comment=comment)
+        #self.pset[idi] = pset
+        #return pset
 
-    def add_pval(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment='') -> PVAL:
-        """PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID"""
-        pval = PVAL(idi, poly1, poly2, poly3, cid, typei, typeids, comment=comment)
-        self._add_methods._add_pval(pval, allow_overwrites=False)
-        return pval
+    #def add_pval(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment='') -> PVAL:
+        #"""PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID"""
+        #pval = PVAL(idi, poly1, poly2, poly3, cid, typei, typeids, comment=comment)
+        #self._add_methods._add_pval(pval, allow_overwrites=False)
+        #return pval
 
-    def add_gmcurv(self, curve_id, group, data, cid_in=0, cid_bc=0, comment='') -> GMCURV:
-        curve = GMCURV(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc,
-                       comment=comment)
-        self._add_methods._add_gmcurv(curve, allow_overwrites=False)
-        return curve
+    #def add_gmcurv(self, curve_id, group, data, cid_in=0, cid_bc=0, comment='') -> GMCURV:
+        #curve = GMCURV(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc,
+                       #comment=comment)
+        #self._add_methods._add_gmcurv(curve, allow_overwrites=False)
+        #return curve
 
-    def add_gmsurf(self, curve_id, group, data, cid_in=0, cid_bc=0, comment='') -> GMSURF:
-        surf = GMSURF(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc, comment=comment)
-        self._add_methods._add_gmsurf(surf, allow_overwrites=False)
-        return surf
+    #def add_gmsurf(self, curve_id, group, data, cid_in=0, cid_bc=0, comment='') -> GMSURF:
+        #surf = GMSURF(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc, comment=comment)
+        #self._add_methods._add_gmsurf(surf, allow_overwrites=False)
+        #return surf
 
-    def add_feedge(self, edge_id, nids, cid, geom_ids, geomin='POINT', comment='') -> FEEDGE:
-        edge = FEEDGE(edge_id, nids, cid, geom_ids, geomin=geomin, comment=comment)
-        self._add_methods._add_feedge(edge, allow_overwrites=False)
-        return edge
+    #def add_feedge(self, edge_id, nids, cid, geom_ids, geomin='POINT', comment='') -> FEEDGE:
+        #edge = FEEDGE(edge_id, nids, cid, geom_ids, geomin=geomin, comment=comment)
+        #self._add_methods._add_feedge(edge, allow_overwrites=False)
+        #return edge
 
-    def add_feface(self, face_id, nids, cid, surf_ids, comment='') -> FEFACE:
-        face = FEFACE(face_id, nids, cid, surf_ids, comment=comment)
-        self._add_methods._add_feface(face, allow_overwrites=False)
-        return face
+    #def add_feface(self, face_id, nids, cid, surf_ids, comment='') -> FEFACE:
+        #face = FEFACE(face_id, nids, cid, surf_ids, comment=comment)
+        #self._add_methods._add_feface(face, allow_overwrites=False)
+        #return face
     #----------------------------------------------------------------------------------
     # cyclic
     def add_cyax(self, nids, comment='') -> CYAX:

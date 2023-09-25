@@ -34,7 +34,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.shell_properties import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.plate_stress_strain import (
     PPLANE,
     #CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
-    #CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
+    CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     CTETRA, CHEXA, CPENTA, CPYRAM,
@@ -45,7 +45,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
 from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
 from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
 #from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import CHBDYE, CHBDYP, CHBDYG, CONV, PCONV, CONVM, PCONVM, PHBDY
-#from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL
+from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL
 #from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import SET1, SET2, SET3, USET, USET1
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
@@ -166,7 +166,7 @@ class BDFAttributes:
         self.coord = COORD(self)
 
         # plot
-        #self.plotel = PLOTEL(self)
+        self.plotel = PLOTEL(self)
 
         # spring
         self.celas1 = CELAS1(self)
@@ -308,10 +308,10 @@ class BDFAttributes:
 
         # plate strain
         # what are the properties?
-        #self.cplstn3 = CPLSTN3(self)
-        #self.cplstn4 = CPLSTN4(self)
-        #self.cplstn6 = CPLSTN6(self)
-        #self.cplstn8 = CPLSTN8(self)
+        self.cplstn3 = CPLSTN3(self)
+        self.cplstn4 = CPLSTN4(self)
+        self.cplstn6 = CPLSTN6(self)
+        self.cplstn8 = CPLSTN8(self)
 
         # axisymmetric shells
         #self.cquadx = CQUADX(self)
@@ -572,7 +572,7 @@ class BDFAttributes:
     @property
     def plot_elements(self) -> list[Any]:
         elements = [
-            #self.plotel,
+            self.plotel,
         ]
         return elements
 
@@ -630,7 +630,7 @@ class BDFAttributes:
             self.conm1, self.conm2,
             self.cmass1, self.cmass2, self.cmass3, self.cmass4,
             #self.cplsts3, self.cplsts4, self.cplsts6, self.cplsts8,
-            #self.cplstn3, self.cplstn4, self.cplstn6, self.cplstn8,
+            self.cplstn3, self.cplstn4, self.cplstn6, self.cplstn8,
         ] + acoustic_elements
         return elements
 
@@ -1434,13 +1434,20 @@ class BDFAttributes:
         cards_to_read is intended for the gui, which doesn't support
         every card and also masses, which don't have results and so are not
         really elements
+
+        Parameters
+        ----------
+        cards_to_read : set[str]
+            cards that won't be included in element_ids
         """
+        # list of elements that have no quality results
         NO_QUALITY = {
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
             'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4', 'CONM1', 'CONM2',
             'CROD', 'CONROD', 'CTUBE', 'CBAR', 'CBEAM',
-            'CVISC', 'CGAP', 'CBUSH',
+            'CVISC', 'CGAP',
+            'CBUSH', 'CBUSH1D', 'CBUSH2D',
             'CSHEAR',
         }
         nelements = 0

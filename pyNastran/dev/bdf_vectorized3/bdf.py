@@ -652,7 +652,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PSHELL', 'PCOMP', 'PCOMPG',
             'PSHEAR', # 'PSHLN1', 'PSHLN2',
             #'PTRSHL', 'PQUAD1',
-            'PSOLID', 'PLSOLID', # 'PVISC', 'PRAC2D', 'PRAC3D',
+            'PSOLID', 'PLSOLID', 'PVISC', # 'PRAC2D', 'PRAC3D',
             #'PIHEX', 'PCOMPS', 'PCOMPLS',
             # PQUAD4
 
@@ -670,7 +670,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PELAST',
 
             ## pbusht
-            #'PBUSHT',
+            'PBUSHT',
 
             ## creep_materials
             #'CREEP',
@@ -2373,7 +2373,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         }
 
         self._card_parser_prepare = {
-            #'PLOTEL': partial(self._prepare_card, self.plotel),
+            'PLOTEL': partial(self._prepare_card, self.plotel),
             'GRID': partial(self._prepare_card, self.grid),
             'SPOINT': partial(self._prepare_card, self.spoint),
             #'EPOINT': partial(self._prepare_card, self.epoint),
@@ -2504,10 +2504,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # plate strain
             # what are the properties?
-            #'CPLSTN3' : partial(self._prepare_card, self.cplstn3),
-            #'CPLSTN4' : partial(self._prepare_card, self.cplstn4),
-            #'CPLSTN6' : partial(self._prepare_card, self.cplstn6),
-            #'CPLSTN8' : partial(self._prepare_card, self.cplstn8),
+            'CPLSTN3' : partial(self._prepare_card, self.cplstn3),
+            'CPLSTN4' : partial(self._prepare_card, self.cplstn4),
+            'CPLSTN6' : partial(self._prepare_card, self.cplstn6),
+            'CPLSTN8' : partial(self._prepare_card, self.cplstn8),
 
             # axisymmetric shells
             #'CQUADX': partial(self._prepare_card, self.cquadx),

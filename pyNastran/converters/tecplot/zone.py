@@ -298,7 +298,7 @@ class Zone:
 
 
     def split_elements(self, ntri_nodes: int=1) -> None:
-        """
+        r"""
         Splits elements and linearly interpolates the data.
 
         Supports:

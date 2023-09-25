@@ -155,7 +155,7 @@ class GEOM4(GeomCommon):
         }
 
     def _read_seseta(self, data: bytes, n: int) -> int:  # pragma: no cover
-        """
+        r"""
         (610, 6, 0,
          12, 0, 1, -1)
         C:\MSC.Software\msc_nastran_runs\see10195.op2

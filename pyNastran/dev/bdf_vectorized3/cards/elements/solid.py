@@ -88,10 +88,6 @@ class SolidElement(Element):
         pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
                           msg=f'no solid properties for {self.type}')
         pids.sort()
-        #geom_check(self,
-                   #missing,
-                   #node=(nid, self.nodes),
-                   #property_id=(pids, self.property_id))
 
         geom_check(self,
                    missing,
@@ -761,7 +757,7 @@ class PSOLID(Property):
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
-        cordm = integer_or_blank(card, 3, 'cordm', default=0)
+        cordm = integer_or_blank(card, 3, 'cordm', default=-1)
         integ = integer_string_or_blank(card, 4, 'integ', default='')
         stress = integer_string_or_blank(card, 5, 'stress', default='')
         isop = integer_string_or_blank(card, 6, 'isop', default='')
@@ -855,7 +851,6 @@ class PSOLID(Property):
         mids = hstack_msg([mat.material_id for mat in self.allowed_materials],
                           msg=f'no solid materials for {self.type}')
         mids.sort()
-
         geom_check(self,
                    missing,
                    coord=(cid, self.coord_id),
@@ -871,11 +866,11 @@ class PSOLID(Property):
             self.coord_id.max())
         print_card = get_print_card(size, max_int)
 
-        #property_id = array_str(self.property_id, size=size)
-        #property_id = array_str(self.property_id, size=size)
-        for pid, mid, cordm, integ, stress, isop, fctn in zip(self.property_id, self.material_id, self.coord_id,
+        property_id = array_str(self.property_id, size=size)
+        material_id = array_str(self.material_id, size=size)
+        coord_id = array_default_int(self.coord_id, default=-1, size=size)
+        for pid, mid, cordm, integ, stress, isop, fctn in zip(property_id, material_id, coord_id,
                                                               self.integ, self.stress, self.isop, self.fctn):
-            cordm = set_blank_if_default(cordm, 0)
             fctn = set_blank_if_default(fctn, 'SMECH')
             fields = ['PSOLID', pid, mid, cordm, integ, stress, isop, fctn]
             bdf_file.write(print_card(fields))

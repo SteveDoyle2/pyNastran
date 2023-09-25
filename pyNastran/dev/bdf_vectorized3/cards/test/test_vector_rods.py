@@ -6,7 +6,7 @@ import numpy as np
 
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, BDFCard
 #from pyNastran.dev.bdf_vectorized3.bdf import CROD, CONROD, PROD, CTUBE, PTUBE, GRID, MAT1
-#from pyNastran.dev.bdf_vectorized3.cards.test.test_shells import make_dvprel_optimization
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import make_dvprel_optimization
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 #mass_properties
 
@@ -388,7 +388,7 @@ class TestRods(unittest.TestCase):
         #ptube.J()
         #self.assertEqual(ptube.Rho(), rho)
 
-    def _test_rod_opt(self):
+    def test_rod_opt(self):
         model = BDF(debug=False,)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -419,7 +419,8 @@ class TestRods(unittest.TestCase):
         i = make_dvprel_optimization(model, params, 'PTUBE', pid_tube, i)
 
         model.cross_reference()
-        model.update_model_by_desvars()
+        if 0:
+            model.update_model_by_desvars()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

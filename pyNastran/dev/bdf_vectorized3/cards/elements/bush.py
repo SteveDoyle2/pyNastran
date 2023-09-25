@@ -729,14 +729,27 @@ class CBUSH1D(Element):
         self.element_id = np.zeros(ncards, dtype='int32')
         self.property_id = np.zeros(ncards, dtype='int32')
         self.nodes = np.zeros((ncards, 2), dtype='int32')
-        self.cid = np.zeros(ncards, dtype='int32')
+        self.coord_id = np.full(ncards, -1, dtype='int32')
         for icard, card in enumerate(self.cards):
             (eid, pid, nodes, cid, comment) = card
             self.element_id[icard] = eid
             self.property_id[icard] = pid
             self.nodes[icard, :] = nodes
-            self.cid[icard] = cid
+            self.coord_id[icard] = cid
         self.cards = []
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
+                          msg=f'no pbush1d properties for {self.type}')
+        pids.sort()
+        cids = self.model.coord.coord_id
+        coord_id = self.coord_id[self.coord_id != -1]
+        geom_check(self,
+                   missing,
+                   node=(nid, self.nodes),
+                   property_id=(pids, self.property_id),
+                   coord=(cids, coord_id))
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -747,7 +760,7 @@ class CBUSH1D(Element):
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
         nodess = array_str(self.nodes, size=size)
-        cids = array_default_int(self.cid, default=-1, size=size)
+        cids = array_default_int(self.coord_id, default=-1, size=size)
         for eid, pid, nodes, cid in zip(element_ids, property_ids, nodess, cids):
             n1, n2 = nodes
             list_fields = ['CBUSH1D', eid, pid, n1, n2, cid]

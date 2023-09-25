@@ -377,7 +377,7 @@ class Writer():
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
 
         # plot
-        #bdf_file.write(model.plotel.write(size=size))
+        bdf_file.write(model.plotel.write(size=size))
 
         # celas
         model.celas1.write_file(bdf_file, size=size, is_double=is_double)
@@ -441,10 +441,10 @@ class Writer():
         #bdf_file.write(model.cplsts8.write(size=size))
 
         # plate strain
-        #bdf_file.write(model.cplstn3.write(size=size))
-        #bdf_file.write(model.cplstn4.write(size=size))
-        #bdf_file.write(model.cplstn6.write(size=size))
-        #bdf_file.write(model.cplstn8.write(size=size))
+        model.cplstn3.write_file(bdf_file, size=size, is_double=is_double)
+        model.cplstn4.write_file(bdf_file, size=size, is_double=is_double)
+        model.cplstn6.write_file(bdf_file, size=size, is_double=is_double)
+        model.cplstn8.write_file(bdf_file, size=size, is_double=is_double)
 
         # solids
         model.ctetra.write_file(bdf_file, size=size, is_double=is_double)

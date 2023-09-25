@@ -399,12 +399,18 @@ def shell_mass_per_area(model: BDF,
             continue
 
         # differential thickness
-        assert prop.type == 'PSHELL', prop.type
-        nsm, rho, ti = prop.nsm_rho_thickness()
-        nsm_all = nsm[iall]
-        rho_all = rho[iall]
-        ti_all = ti[iall]
-        mass_per_areai_all = nsm_all + rho_all * ti_all
+        if prop.type == 'PSHELL':
+            nsm, rho, ti = prop.nsm_rho_thickness()
+            nsm_all = nsm[iall]
+            rho_all = rho[iall]
+            ti_all = ti[iall]
+            mass_per_areai_all = nsm_all + rho_all * ti_all
+        elif prop.type == 'PPLANE':
+            mpa = prop.mass_per_area()
+            mass_per_area[ilookup] = mpa[iall]
+            continue
+        else:
+            raise NotImplementedError(prop.type)
         mass_per_area[ilookup] = mass_per_areai_all
 
         inan = np.isnan(ti_all)
