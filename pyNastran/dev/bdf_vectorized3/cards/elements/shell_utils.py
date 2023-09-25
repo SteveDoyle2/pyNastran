@@ -452,6 +452,11 @@ def shell_mass_per_area(model: BDF,
             raise RuntimeError(msg)
     assert nelement > 0, nelement
     assert len(mass_per_area) == nelement, mass_per_area
+
+    #if np.isnan(mass_per_area.max()):
+        #inan = np.isnan(mass_per_area)
+        #pid_nan = property_id[inan]
+        #raise RuntimeError(f'property_id={pid_nan} has nan mass_per_area')
     return mass_per_area
 
 

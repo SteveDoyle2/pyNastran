@@ -636,11 +636,18 @@ class CompositeProperty(Property):
 
 
         rho = get_density_from_material(self.material_id, self.allowed_materials, debug=False)
+        #if np.isnan(rho.max()):
+            #inan = np.isnan(rho)
+            #mid_nan = self.material_id[inan]
+            #raise RuntimeError(f'material_id={mid_nan} has nan rho')
+
         rho_t = rho * thickness
         mass_per_area = np.zeros(nproperties, dtype='float64') + nsm
         for i, scale, ilayer in zip(count(), symmetry_scale, ilayers):
             idim0, idim1 = ilayer
-            mass_per_area[i] += scale * rho_t[idim0:idim1].sum()
+            mass_per_areai = scale * rho_t[idim0:idim1].sum()
+            #assert not np.isnan(mass_per_areai), (i, scale, ilayer, nsm, rho, thickness)
+            mass_per_area[i] += mass_per_areai
             #pid = self.property_id[i]
             #if pid == 2:
                 #x = 1
@@ -652,6 +659,11 @@ class CompositeProperty(Property):
         #pcard = self.slice_card_by_property_id(pid_to_check)
         #mids = pcard.material_id
         #assert np.allclose(mpa, 0.220467), f'mass/area={mpa}\n{pcard.write()}\nmids={mids}'
+
+        #if np.isnan(mass_per_area.max()):
+            #inan = np.isnan(mass_per_area)
+            #pid_nan = self.property_id[inan]
+            #raise RuntimeError(f'property_id={pid_nan} has nan mass_per_area')
         return mass_per_area
 
     def mass_per_area_breakdown(self) -> np.ndarray:
@@ -1302,9 +1314,12 @@ class PCOMP(CompositeProperty):
 
 class PCOMPG(CompositeProperty):
 
-    def add(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
-                   nsm=0.0, sb=0.0, ft='', tref=0.0, ge=0.0, lam=None, z0=None,
-                   comment='') -> int:
+    def add(self, pid: int,
+            global_ply_ids: list[int], mids: list[int], thicknesses: list[float],
+            thetas=None, souts=None,
+            nsm: float=0.0, sb: float=0.0, ft: str='',
+            tref: float=0.0, ge: float=0.0, lam=None, z0=None,
+            comment: str='') -> int:
         lam = lam if lam is not None else ''
         z0 = z0 if z0 is not None else np.nan
 
@@ -1337,7 +1352,6 @@ class PCOMPG(CompositeProperty):
         prop.tref = self.tref[i]
         prop.ge = self.ge[i]
         prop.lam = self.lam[i]
-        prop.group = self.group[i]
 
         ilayer = self.ilayer # [i, :]
         prop.material_id = hslice_by_idim(i, ilayer, self.material_id)
@@ -1415,18 +1429,17 @@ class PCOMPG(CompositeProperty):
         if ncards == 0:
             return
 
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.nsm = np.zeros(ncards, dtype='float64')
-        self.shear_bonding = np.zeros(ncards, dtype='float64')
-        self.failure_theory = np.zeros(ncards, dtype='|U8')
+        property_id = np.zeros(ncards, dtype='int32')
+        nsm = np.zeros(ncards, dtype='float64')
+        shear_bonding = np.zeros(ncards, dtype='float64')
+        failure_theory = np.zeros(ncards, dtype='|U8')
 
-        self.tref = np.zeros(ncards, dtype='float64')
-        self.lam = np.zeros(ncards, dtype='|U5')
-        self.z0 = np.zeros(ncards, dtype='float64')
+        tref = np.zeros(ncards, dtype='float64')
+        lam = np.zeros(ncards, dtype='|U5')
+        z0 = np.zeros(ncards, dtype='float64')
 
-        self.nlayer = np.zeros(ncards, dtype='int32')
-        self.ge = np.zeros(ncards, dtype='float64')
-        self.group = np.full(ncards, '', dtype='|U8')
+        nlayer = np.zeros(ncards, dtype='int32')
+        ge = np.zeros(ncards, dtype='float64')
 
         global_ply_ids_list = []
         mids_list = []
@@ -1434,34 +1447,58 @@ class PCOMPG(CompositeProperty):
         thetas_list = []
         sout_list = []
         for icard, card in enumerate(self.cards):
-            (pid, nsm, sb, ft, tref, ge, lam, z0,
+            (pid, nsmi, sbi, fti, trefi, gei, lami, z0i,
              mids, thicknesses, thetas, souts, global_ply_ids, commment) = card
 
-            self.failure_theory[icard] = ft
-            self.shear_bonding[icard] = sb
-            self.tref[icard] = tref
-            self.ge[icard] = ge
-            self.lam[icard] = lam
+            failure_theory[icard] = fti
+            shear_bonding[icard] = sbi
+            tref[icard] = trefi
+            ge[icard] = gei
+            lam[icard] = lami
 
-            nlayers = len(mids)
-            self.property_id[icard] = pid
+            nlayeri = len(mids)
+            property_id[icard] = pid
             global_ply_ids_list.extend(global_ply_ids)
             mids_list.extend(mids)
             thickness_list.extend(thicknesses)
             sout_list.extend(souts)
             thetas_list.extend(thetas)
-            self.z0[icard] = z0
-            self.nlayer[icard] = nlayers
-            self.nsm[icard] = nsm
+            z0[icard] = z0i
+            nlayer[icard] = nlayeri
+            nsm[icard] = nsmi
 
-        self.global_ply_id = np.array(global_ply_ids_list, dtype='int32')
-        self.material_id = np.array(mids_list, dtype='int32')
-        self.thickness = np.array(thickness_list, dtype='float64')
-        self.sout = np.array(sout_list, dtype='|U4') # YES, NO, YESA
-        self.theta = np.array(thetas_list, dtype='float64')
+        global_ply_id = np.array(global_ply_ids_list, dtype='int32')
+        material_id = np.array(mids_list, dtype='int32')
+        thickness = np.array(thickness_list, dtype='float64')
+        sout = np.array(sout_list, dtype='|U4') # YES, NO, YESA
+        theta = np.array(thetas_list, dtype='float64')
+        self._save(property_id, nsm, shear_bonding, failure_theory, tref, ge, lam, z0,
+                   nlayer, global_ply_id, material_id, thickness, sout, theta)
         assert len(mids_list) == self.nlayer.sum()
         self.sort()
         self.cards = []
+
+    def _save(self, property_id, nsm, shear_bonding, failure_theory, tref, ge, lam, z0,
+              nlayer, global_ply_id, material_id, thickness, sout, theta):
+        if len(self.property_id) != 0:
+            asdf
+        self.property_id = property_id
+        self.nsm = nsm
+        self.shear_bonding = shear_bonding
+        self.failure_theory = failure_theory
+
+        self.tref = tref
+        self.lam = lam
+        self.z0 = z0
+        self.ge = ge
+        #self.group = group
+
+        self.nlayer = nlayer
+        self.global_ply_id = global_ply_id
+        self.material_id = material_id
+        self.thickness = thickness
+        self.sout = sout
+        self.theta = theta
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,

@@ -884,64 +884,49 @@ class BDFAttributes:
     @property
     def spring_element_ids(self) -> np.ndarray:
         elements = self.spring_elements
-        if len(elements) > 0:
-            element_ids = check_element_ids(elements)
-            return element_ids
-        return np.array([], dtype=self.idtype)
+        element_ids = check_element_ids(elements)
+        return element_ids
+
     @property
     def damper_element_ids(self) -> np.ndarray:
         elements = self.damper_elements
-        if len(elements) > 0:
-            element_ids = check_element_ids(elements)
-            return element_ids
-        return np.array([], dtype=self.idtype)
+        element_ids = check_element_ids(elements)
+        return element_ids
 
     @property
     def shell_element_ids(self) -> np.ndarray:
         elements = self.shell_elements
-        if len(elements) > 0:
-            element_ids = check_element_ids(elements)
-            return element_ids
-        return np.array([], dtype=self.idtype)
+        element_ids = check_element_ids(elements)
+        return element_ids
     @property
     def solid_element_ids(self) -> np.ndarray:
         elements = self.solid_elements
-        if len(elements) > 0:
-            element_ids = check_element_ids(elements)
-            return element_ids
-        return np.array([], dtype=self.idtype)
+        element_ids = check_element_ids(elements)
+        return element_ids
     # ------------------------------------------------------------------------
     @property
     def bar_property_ids(self) -> np.ndarray:
         properties = self.bar_properties
-        if len(properties) > 0:
-            property_ids = check_property_ids(properties, 'Bar ')
-            return property_ids
-        return np.array([], dtype=self.idtype)
+        property_ids = check_property_ids(properties, 'Bar ')
+        return property_ids
 
     @property
     def beam_property_ids(self) -> np.ndarray:
         properties = self.beam_properties
-        if len(properties) > 0:
-            property_ids = check_property_ids(properties, 'Beam ')
-            return property_ids
-        return np.array([], dtype=self.idtype)
+        property_ids = check_property_ids(properties, 'Beam ')
+        return property_ids
 
     @property
     def shell_property_ids(self) -> np.ndarray:
         properties = self.shell_properties
-        if len(properties) > 0:
-            property_ids = check_property_ids(properties, 'Shell ')
-            return property_ids
-        return np.array([], dtype=self.idtype)
+        property_ids = check_property_ids(properties, 'Shell ')
+        return property_ids
 
     @property
     def solid_property_ids(self) -> np.ndarray:
         properties = self.solid_properties
-        if len(properties) > 0:
-            property_ids = check_property_ids(properties, 'Solid ')
-            return property_ids
-        return np.array([], dtype=self.idtype)
+        property_ids = check_property_ids(properties, 'Solid ')
+        return property_ids
 
     @property
     def spline_ids(self) -> np.ndarray:
@@ -1454,7 +1439,7 @@ class BDFAttributes:
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
             'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4', 'CONM1', 'CONM2',
-            'CROD', 'CTUBE', 'CBAR', 'CBEAM',
+            'CROD', 'CONROD', 'CTUBE', 'CBAR', 'CBEAM',
             'CVISC', 'CGAP', 'CBUSH',
             'CSHEAR',
         }

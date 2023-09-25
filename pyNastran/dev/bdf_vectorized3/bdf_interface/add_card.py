@@ -5437,7 +5437,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         load = self.force.add(sid, node, mag, xyz, cid=cid, comment=comment)
         return load
 
-    def add_force1(self, sid, node, mag, g1, g2, comment='') -> int:
+    def add_force1(self, sid: int, node: int, mag: float,
+                   g1: int, g2: int, comment: str='') -> int:
         """
         Creates a FORCE1 card
 
@@ -5459,7 +5460,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         load = self.force1.add(sid, node, mag, g1, g2, comment=comment)
         return load
 
-    def add_force2(self, sid, node, mag, g1, g2, g3, g4, comment='') -> int:
+    def add_force2(self, sid: int, node: int, mag: float,
+                   g1: int, g2: int, g3: int, g4: int, comment: str='') -> int:
         """
         Creates a FORCE2 card
 
@@ -5647,7 +5649,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         grav = self.grav.add(sid, scale, N, cid=cid, mb=mb, comment=comment)
         return grav
 
-    def add_pload(self, sid, pressure, nodes, comment='') -> int:
+    def add_pload(self, sid: int, pressure: float, nodes: list[int],
+                  comment: str='') -> int:
         """
         Creates a PLOAD card, which defines a uniform pressure load on a
         shell/solid face or arbitrarily defined quad/tri face
@@ -5705,7 +5708,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         load = self.pload1.add(sid, eid, load_type, scale, x1, p1, x2=x2, p2=p2, comment=comment)
         return load
 
-    def add_pload2(self, sid, pressure, eids, comment='') -> int:
+    def add_pload2(self, sid: int, pressure: float, eids: list[int], comment: str='') -> int:
         """
         Creates a PLOAD2 card, which defines an applied load normal
         to the quad/tri face

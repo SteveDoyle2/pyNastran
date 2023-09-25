@@ -52,6 +52,30 @@ class PLOAD(Load):
     """
     _id_name = 'load_id'
 
+    def add(self, sid: int, pressure: float, nodes: list[int],
+            comment: str='') -> int:
+        """
+        Creates a PLOAD card, which defines a uniform pressure load on a
+        shell/solid face or arbitrarily defined quad/tri face
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        pressure : float
+            the pressure to apply
+        nodes : list[int]
+            The nodes that are used to define the normal are defined
+            using the same method as the CTRIA3/CQUAD4 normal.
+            n = 3 or 4
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, pressure, nodes, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         pressure = double(card, 2, 'pressure')
@@ -70,16 +94,20 @@ class PLOAD(Load):
         ncards = len(self.cards)
         if ncards == 0:
             return
-        self.load_id = np.zeros(ncards, dtype='int32')
-        self.pressure = np.zeros(ncards, dtype='float64')
-        self.node_id = np.zeros((ncards, 4), dtype='int32')
+        load_id = np.zeros(ncards, dtype='int32')
+        pressure = np.zeros(ncards, dtype='float64')
+        node_id = np.zeros((ncards, 4), dtype='int32')
         assert ncards > 0, ncards
 
         for icard, card in enumerate(self.cards):
-            (sid, pressure, nodes, comment) = card
-            self.load_id[icard] = sid
-            self.pressure[icard] = pressure
-            self.node_id[icard] = nodes
+            (sid, pressurei, nodesi, comment) = card
+            load_id[icard] = sid
+            pressure[icard] = pressurei
+            if len(nodesi) == 3:
+                node_id[icard, :-1] = nodesi
+            else:
+                node_id[icard, :] = nodesi
+        self._save(load_id, pressure, node_id)
         self.cards = []
 
     def _save(self, load_id, pressure, node_id):
@@ -96,6 +124,14 @@ class PLOAD(Load):
         load.load_id = self.load_id[i]
         load.pressure = self.pressure[i]
         load.node_id = self.node_id[i, :]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        node_id = self.node_id.flatten()
+        node_id = node_id[node_id != 0]
+        geom_check(self,
+                   missing,
+                   node=(nid, node_id),)
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -297,6 +333,14 @@ class PLOAD1(Load):
     def line_elements(self) -> list[Any]:
         model = self.model
         return [card for card in [model.cbar, model.cbeam] if card.n]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        eids = hstack_msg([elem.element_id for elem in self.line_elements],
+                          msg=f'no bar/beam elements for {self.type}')
+        eids.sort()
+        geom_check(self,
+                   missing,
+                   element_id=(eids, self.element_id))
 
     def sum_forces_moments(self):
         log = self.model.log
@@ -557,6 +601,29 @@ class PLOAD2(Load):
         #self.__apply_slice__(load, i)
         #return load
 
+    def add(self, sid: int, pressure: float, eids: list[int],
+            comment: str='') -> int:
+        """
+        Creates a PLOAD2 card, which defines an applied load normal
+        to the quad/tri face
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        pressure : float
+            the pressure to apply to the elements
+        eids : list[int]
+            the elements to apply pressure to
+            n < 6 or a continouus monotonic list of elements (e.g., [1, 2, ..., 1000])
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, pressure, eids, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         pressure = double(card, 2, 'p')
@@ -628,6 +695,14 @@ class PLOAD2(Load):
                                       model.cquad4, model.cquad8, model.cquadr]
                 if card.n]
         return elements
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        eids = hstack_msg([elem.element_id for elem in self.shell_elements],
+                          msg=f'no shell elements for {self.type}')
+        eids.sort()
+        geom_check(self,
+                   missing,
+                   element_id=(eids, self.element_ids))
 
     @property
     def is_small_field(self):
@@ -818,7 +893,7 @@ class PLOAD4(Load):
         if ncards == 0:
             return
         load_id = np.zeros(ncards, dtype='int32')
-        coord_id = np.zeros(ncards, dtype='int32')
+        coord_id = np.full(ncards, -1, dtype='int32')
         pressure = np.zeros((ncards, 4), dtype='float64')
         nodes_g1_g34 = np.full((ncards, 2), -1, dtype='int32')
 
@@ -833,7 +908,8 @@ class PLOAD4(Load):
              cid, n123, surf_or_linei, line_load_diri, comment) = card
             load_id[icard] = sid
             pressure[icard, :] = pressures
-            coord_id[icard] = cid
+            if cid is not None:
+                coord_id[icard] = cid
             #element_id[icard] = eid
             nvector[icard, :] = n123
             surf_or_line[icard] = surf_or_linei
@@ -1025,11 +1101,36 @@ class PLOAD4(Load):
         min_nid = self.nodes_g1_g34.min(axis=1)
         assert len(min_nid) == nloads, min_nid.shape
         is_shell = (min_nid == -1)
+        #assert len(is_shell) == self.element_ids
         return is_shell
 
     @property
     def is_solid(self) -> np.ndarray:
         return ~self.is_shell
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        available_eids = hstack_msg([elem.element_id for elem in self.shell_elements + self.solid_elements],
+                                    msg=f'no shell/solid elements for {self.type}')
+        available_eids.sort()
+        geom_check(self,
+                   missing,
+                   element_id=(available_eids, self.element_ids))
+
+        #available_shell_eids = hstack_msg([elem.element_id for elem in self.shell_elements],
+                                          #msg=f'no shell elements for {self.type}')
+        #available_solid_eids = hstack_msg([elem.element_id for elem in self.solid_elements],
+                                          #msg=f'no solid elements for {self.type}')
+        #available_shell_eids.sort()
+        #available_solid_eids.sort()
+
+        #shell_eids = self.element_ids[self.is_shell]
+        #solid_eids = self.element_ids[self.is_solid]
+        #geom_check(self,
+                   #missing,
+                   #element_id=(available_shell_eids, shell_eids))
+        #geom_check(self,
+                   #missing,
+                   #element_id=(available_solid_eids, solid_eids))
 
     def area_centroid_normal_pressure(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """gets the area, centroid, normal, and pressure"""
@@ -1194,7 +1295,6 @@ class PLOAD4(Load):
 
         # apply nvector to the normal for places that the normal vector isn't used
         normal[~is_normal, :] = nvector[~is_normal, :]
-
 
         if np.any(np.isnan(mean_pressure)):
             raise RuntimeError('there are nan pressures', mean_pressure)

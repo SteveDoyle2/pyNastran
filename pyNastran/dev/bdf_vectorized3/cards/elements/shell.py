@@ -308,6 +308,10 @@ class ShellElement(Element):
             self.model, self.tflag, self.T,
             self.property_id, self.allowed_properties)
         assert len(mass_per_area) == nelement, mass_per_area
+        #if np.isnan(mass_per_area.max()):
+            #inan = np.isnan(mass_per_area)
+            #eid = self.element_id[inan]
+            #raise RuntimeError(f'element_id={eid} has nan mass_per_area')
         return mass_per_area
 
     #def total_thickness(self) -> np.ndarray:

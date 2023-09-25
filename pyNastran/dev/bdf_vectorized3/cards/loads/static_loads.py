@@ -373,18 +373,22 @@ class Load0(Load):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        #print_card = get_print_card_8_16(size)
         card_class = self.type
+        load_ids = array_str(self.load_id, size=size)
+        node_ids = array_default_int(self.node_id, default=0, size=size)
+        coord_ids = array_default_int(self.coord_id, default=0, size=size)
         if size == 8:
-            for sid, nid, cid, mag, xyz in zip(self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
-                cids = set_string8_blank_if_default(cid, 0)
-                msg = '%-8s%8d%8d%8s%8s%8s%8s%8s\n' % (
+            for sid, nid, cid, mag, xyz in zip(load_ids, node_ids, coord_ids, self.mag, self.xyz):
+                msg = '%-8s%8s%8s%8s%8s%8s%8s%8s\n' % (
                     card_class, sid, nid,
-                    cids, print_float_8(mag), print_float_8(xyz[0]),
+                    cid, print_float_8(mag), print_float_8(xyz[0]),
                     print_float_8(xyz[1]), print_float_8(xyz[2]))
                 bdf_file.write(msg)
         else:
-            raise RuntimeError(size)
+            print_card = get_print_card_8_16(size)
+            for sid, nid, cid, mag, xyz in zip(load_ids, node_ids, coord_ids, self.mag, self.xyz):
+                fields = [card_class, sid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
+                bdf_file.write(print_card(fields))
         return
 
 class Load1(Load):
@@ -394,6 +398,30 @@ class Load1(Load):
         self.nodes = np.zeros((0, 2), dtype='float64')
         self.mag = np.array([], dtype='float64')
         #self.xyz = np.zeros((0, 3), dtype='float64')
+
+    def add(self, sid: int, node: int, mag: float,
+            g1: int, g2: int, comment: str='') -> int:
+        """
+        Creates a FORCE1/MOMENT1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        n1 / n2 : int / int
+            defines the load direction
+            n = n2 - n1
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, node, mag, [g1, g2], comment))
+        self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -437,19 +465,33 @@ class Load1(Load):
         self.nodes = nodes
         self.n = nloads
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id),
+                   )
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         card_class = self.type
+        load_ids = array_str(self.load_id, size=size)
+        node_id = array_default_int(self.node_id, default=0, size=size)
+        node_ids = array_default_int(self.nodes, default=0, size=size)
         if size == 8:
-            for sid, nid, mag, nodes in zip(self.load_id, self.node_id, self.mag, self.nodes):
-                msg = '%-8s%8d%8d%8s%8s%8s\n' % (
+            for sid, nid, mag, nodes in zip(load_ids, node_id, self.mag, node_ids):
+                msg = '%-8s%8s%8s%8s%8s%8s\n' % (
                     card_class, sid, nid, print_float_8(mag), nodes[0], nodes[1])
                 bdf_file.write(msg)
         else:
-            raise RuntimeError(size)
+            print_card = get_print_card_8_16(size)
+            for sid, nid, mag, nodes in zip(load_ids, node_id, self.mag, node_ids):
+                fields = [card_class, sid, nid, mag, nodes[0], nodes[1]]
+                bdf_file.write(print_card(fields))
         return
+
 
 class Load2(Load):
     def __init__(self, model: BDF):
@@ -458,6 +500,31 @@ class Load2(Load):
         self.nodes = np.zeros((0, 4), dtype='float64')
         self.mag = np.array([], dtype='float64')
         #self.xyz = np.zeros((0, 3), dtype='float64')
+
+    def add(self, sid: int, node: int, mag: float,
+            g1: int, g2: int, g3: int, g4: int,
+            comment: str='') -> int:
+        """
+        Creates a FORCE2/MOMENT2 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        g1 / g2 / g3 / g4 : int / int / int / int
+            defines the load direction
+            n = (g2 - g1) x (g4 - g3)
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, node, mag, [g1, g2, g3, g4], comment))
+        self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -503,6 +570,18 @@ class Load2(Load):
         self.nodes = nodes
         self.n = nloads
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id),)
+
+        nodes = self.nodes.flatten()
+        nodes = nodes[nodes != 0]
+        geom_check(self,
+                   missing,
+                   node=(nid, nodes),)
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -517,7 +596,10 @@ class Load2(Load):
                     card_class, sid, nid, print_float_8(mag), nodes[0], nodes[2], nodes[1], nodes[3])
                 bdf_file.write(msg)
         else:
-            raise RuntimeError(size)
+            print_card = get_print_card_8_16(size)
+            for sid, nid, mag, nodes in zip(load_ids, node_id_, self.mag, node_ids_):
+                fields = [card_class, sid, nid, mag, nodes[0], nodes[2], nodes[1], nodes[3]]
+                bdf_file.write(print_card(fields))
         return
 
 class FORCE(Load0):
@@ -866,29 +948,53 @@ class LOAD(Load):
     def parse_cards(self) -> None:
         if self.n == 0:
             return
-        nloads = len(self.cards)
-        if nloads == 0:
+        ncards = len(self.cards)
+        if ncards == 0:
             return
-        self.load_id = np.zeros(nloads, dtype='int32')
-        self.scale = np.zeros(nloads, dtype='float64')
-        self.nloads = np.zeros(nloads, dtype='int32')
+        load_id = np.zeros(ncards, dtype='int32')
+        scale = np.zeros(ncards, dtype='float64')
+        nloads = np.zeros(ncards, dtype='int32')
 
         all_load_ids = []
         all_scale_factors = []
-        assert nloads > 0, nloads
+        assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
-            (sid, scale, scale_factors, load_ids, comment) = card
+            (sid, scalei, scale_factors, load_ids, comment) = card
 
             nloads_actual = len(scale_factors)
 
-            self.load_id[icard] = sid
-            self.scale[icard] = scale
-            self.nloads[icard] = nloads_actual
+            load_id[icard] = sid
+            scale[icard] = scalei
+            nloads[icard] = nloads_actual
             all_load_ids.extend(load_ids)
             all_scale_factors.extend(scale_factors)
-        self.load_ids = np.array(all_load_ids, dtype='int32')
-        self.scale_factors = np.array(all_scale_factors, dtype='float64')
+        load_ids = np.array(all_load_ids, dtype='int32')
+        scale_factors = np.array(all_scale_factors, dtype='float64')
+        self._save(load_id, scale, nloads, load_ids, scale_factors)
         self.cards = []
+
+    def _save(self, load_id, scale, nloads, load_ids, scale_factors):
+        if len(self.load_id) != 0:
+            load_id = np.hstack([self.load_id, load_id])
+            scale = np.hstack([self.scale, scale])
+            nloads = np.hstack([self.nloads, nloads])
+            load_ids = np.hstack([self.load_ids, load_ids])
+            scale_factors = np.hstack([self.scale_factors, scale_factors])
+        self.load_id = load_id
+        self.scale = scale
+        self.nloads = nloads
+        self.load_ids = load_ids
+        self.scale_factors = scale_factors
+
+    def __apply_slice__(self, load: LOAD, i: np.ndarray) -> None:  # ignore[override]
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.scale = self.scale[i]
+
+        iload = self.iload
+        load.load_ids = hslice_by_idim(i, iload, self.load_ids)
+        load.scale_factors = hslice_by_idim(i, iload, self.scale_factors)
+        load.nloads = self.nloads[i]
 
     @property
     def iload(self) -> np.ndarray:
