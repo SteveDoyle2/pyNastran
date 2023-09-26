@@ -1014,10 +1014,25 @@ class PLSOLID(Property):
         rho = get_density_from_material(self.material_id, self.allowed_materials)
         return rho
 
+
 class PCOMPS(Property):
     def __init__(self, model: BDF):
         super().__init__(model)
+        self.coord_id = np.array([], dtype='int32')
+        self.psdir = np.array([], dtype='int32')
+        self.sb = np.array([], dtype='float64')
+        self.nb = np.array([], dtype='float64')
+        self.tref = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+
+        self.global_ply_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
+        self.thickness = np.array([], dtype='float64')
+        self.theta = np.array([], dtype='float64')
+
+        self.failure_theory = np.array([], dtype='|U8')
+        self.interlaminar_failure_theory = np.array([], dtype='|U8')
+        self.sout = np.array([], dtype='|U8')
 
     def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPS:
         """uses a node_ids to extract PCOMPSs"""
@@ -1036,7 +1051,6 @@ class PCOMPS(Property):
         prop.nb = self.nb[i]
         prop.tref = self.tref[i]
         prop.ge = self.ge[i]
-
 
         #self.property_id = property_id
         #self.global_ply_id = global_ply_id
@@ -1064,7 +1078,9 @@ class PCOMPS(Property):
             thicknesses: list[float],
             thetas: list[float],
             cordm: int=0, psdir: int=13,
-            sb=None, nb=None, tref: float=0.0, ge: float=0.0,
+            sb: Optional[float]=None,
+            nb: Optional[float]=None,
+            tref: float=0.0, ge: float=0.0,
             failure_theories=None, interlaminar_failure_theories=None,
             souts=None, comment='') -> None:
         nb = nb if nb is not None else np.nan
@@ -1093,6 +1109,7 @@ class PCOMPS(Property):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         cordm = integer_or_blank(card, 2, 'cordm', default=0)
@@ -1146,7 +1163,6 @@ class PCOMPS(Property):
         if ncards == 0:
             return
         property_id = np.zeros(ncards, dtype='int32')
-        #material_id = np.zeros(ncards, dtype='int32')
         coord_id = np.zeros(ncards, dtype='int32')
         psdir = np.zeros(ncards, dtype='int32')
         sb = np.zeros(ncards, dtype='float64')
@@ -1234,9 +1250,14 @@ class PCOMPS(Property):
                    write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
 
-        for pid, mid, cordm, psdir, sb, nb, tref, ge, iply in zip(self.property_id, self.material_id, self.coord_id,
-                                                                  self.psdir, self.sb, self.nb, self.tref, self.ge, self.iply):
+        for pid, cordm, psdir, sb, nb, tref, ge, iply in zip(self.property_id, self.coord_id,
+                                                             self.psdir, self.sb, self.nb, self.tref, self.ge, self.iply):
             iply0, iply1 = iply
+
+            if np.isnan(sb):
+                sb = None
+            if np.isnan(nb):
+                nb = None
             list_fields = ['PCOMPS', pid, cordm, psdir, sb,
                            nb, tref, ge, None]
 

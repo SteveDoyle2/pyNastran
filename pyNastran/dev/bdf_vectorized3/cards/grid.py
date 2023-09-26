@@ -18,6 +18,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, get_print_card_8_16, parse_node_check
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, MAX_8_CHAR_INT
 
 from pyNastran.femutils.coord_transforms import (
     xyz_to_rtz_array,
@@ -101,7 +102,9 @@ class XPOINT(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        max_int = self.ids.max()
+        print_card = get_print_card(size, max_int)
+
         #node_id = array_str(self.node_id, size=8)
         lists_fields = compress_xpoints(self.type, self.ids)
         for fields in lists_fields:
@@ -501,6 +504,11 @@ class GRID(VectorizedBaseCard):
     def write_file(self, file_obj: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
+        max_int = max(
+            self.node_id.max(),
+            self.cp.max(),
+            self.cd.max(), )
+        size = update_field_size(max_int, size)
         if size == 8:
             self.write_file_8(file_obj, write_card_header=write_card_header)
         elif is_double:
@@ -756,6 +764,11 @@ class GRID(VectorizedBaseCard):
         assert xyz_cid0.shape[0] > 0, xyz_cid0.shape
         return xyz_cid0
 
+
+def update_field_size(max_int: int, size: int) -> int:
+    if max_int > MAX_8_CHAR_INT:
+        size = 16
+    return size
 
 def _write_grid_large(grid: GRID, file_obj: TextIOLike,
                       function: Callable[float],

@@ -398,12 +398,12 @@ class TestModels(unittest.TestCase):
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
-        # = parsing
+        # = parsing - replication
         #bdf_filename = MODEL_PATH / 'other' / 'cqra00366.bdf'
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
-        # = parsing
+        # = parsing - replication
         #bdf_filename = MODEL_PATH / 'other' / 'dbxdra7.bdf'
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
@@ -433,9 +433,9 @@ class TestModels(unittest.TestCase):
         #test_bdf(args, show_args=False)
 
         # overflow
-        #bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
-        #args = ['test_bdf', str(bdf_filename)]
-        #test_bdf(args, show_args=False)
+        bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
+        args = ['test_bdf', str(bdf_filename)]
+        test_bdf(args, show_args=False)
 
         # EIGC parsing
         #bdf_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.bdf'
@@ -450,10 +450,10 @@ class TestModels(unittest.TestCase):
         args = ['test_bdf', str(bdf_filename)]
         test_bdf(args, show_args=False)
 
-        # missing properties
+        # missing properties - PCOMPS
         bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.bdf'
         args = ['test_bdf', str(bdf_filename)]
-        #test_bdf(args, show_args=False)
+        test_bdf(args, show_args=False)
 
 
 if __name__ == '__main__':
