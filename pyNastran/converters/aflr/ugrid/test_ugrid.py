@@ -101,12 +101,25 @@ class TestUgrid(unittest.TestCase):
         os.remove(tecplot_filename3)
 
     def test_ugrid3d_convert(self):
-        argv = ['format_converter', 'afrl', 'junk.b8.ugrid', 'stl', 'cart3d.stl']
+        ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'cart3d', 'model.tri']
+        cmd_line_format_converter(argv=argv, quiet=True)
+
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'nastran', 'model.bdf']
+        cmd_line_format_converter(argv=argv, quiet=True)
+
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'stl', 'model.stl']
+        cmd_line_format_converter(argv=argv, quiet=True)
+
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'tecplot', 'model.plt']
+        cmd_line_format_converter(argv=argv, quiet=True)
+
+        argv = ['format_converter', 'afrl', ugrid_filename, 'stl', 'cart3d.stl']
         with self.assertRaises(NotImplementedError):
             cmd_line_format_converter(argv=argv, quiet=True)
 
-        argv = ['format_converter', 'ugrid', 'junk.b8.ugrid', 'abaqus', 'cart3d.stl']
-        with self.assertRaises(AssertionError):
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'abaqus', 'model.dat']
+        with self.assertRaises(NotImplementedError):
             cmd_line_format_converter(argv=argv, quiet=True)
 
 
