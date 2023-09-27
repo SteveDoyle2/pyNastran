@@ -4,8 +4,11 @@ Defines the following classes:
 
 """
 import os
-from struct import Struct, unpack
 import sys
+from struct import Struct, unpack
+from pathlib import PurePath
+from typing import Union
+
 import numpy as np
 from numpy import zeros, unique, array
 from numpy import arange, hstack, setdiff1d, union1d
@@ -17,6 +20,8 @@ from cpylog import get_logger
 
 from pyNastran.bdf.field_writer_8 import print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16
+
+PathLike = Union[str, PurePath]
 
 
 def read_ugrid(ugrid_filename=None,
@@ -239,7 +244,59 @@ class UGRID:
         if check:
             self.check_hanging_nodes()
 
-    def write_bdf(self, bdf_filename, include_shells=True, include_solids=True,
+    def write_cart3d(self, cart3d_filename: PathLike, float_fmt='%f', encoding=None, check=True):
+        self._check_node_ids()
+
+        if encoding is None:
+            encoding = sys.getdefaultencoding()
+        #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
+
+        pids = self.pids #+ 1
+        nids_to_write = np.unique(np.hstack([self.quads.ravel(), self.tris.ravel()]))
+        #print(f'nodes: min={nids_to_write.min()} max={nids_to_write.max()}')
+        #nnodes = self.nodes.shape[0]
+        nnodes = nids_to_write.max()
+        #all_nids = np.arange(nnodes, dtype='int32')
+        #print(f'nnodes = {nnodes}')
+
+        #inid = np.searchsorted(all_nids, nids_to_write)
+        #nodes = self.nodes[inid, :]
+        nodes = self.nodes[:nnodes, :]
+        print(nodes.shape)
+        nnodes = len(nodes)
+
+        float_fmts = float_fmt + ' ' + float_fmt + ' ' + float_fmt + '\n'
+        #nnodes = len(nids_to_write)
+        nelements = len(self.tris) + 2 * len(self.quads)
+
+        eid = 1
+        regions = []
+        with open(cart3d_filename, 'w', encoding=encoding) as cart3d_file:
+            cart3d_file.write(f'{nnodes} {nelements}\n')
+            for node in nodes:
+                cart3d_file.write(float_fmts % tuple(node))
+
+            for element in self.tris:
+                assert len(np.unique(element)) == 3, element
+                cart3d_file.write('%-8i %-8i %-8i\n' % tuple(element))
+                regions.append(pids[eid-1])
+                eid += 1
+
+            for element in self.quads:
+                #print(element)
+                assert len(np.unique(element)) == 4, element
+                cart3d_file.write('%-8i %-8i %-8i\n' % (
+                    element[0], element[1], element[2]))
+                cart3d_file.write('%-8i %-8i %-8i\n' % (
+                    element[0], element[2], element[3]))
+                regions.append(pids[eid-1])
+                regions.append(pids[eid-1])
+                eid += 1
+
+            for region in regions:
+                cart3d_file.write(f'{region}\n')
+
+    def write_bdf(self, bdf_filename: PathLike, include_shells=True, include_solids=True,
                   convert_pyram_to_penta=True, write_grids=True, encoding=None,
                   size=16, is_double=False, check=True):
         """
@@ -258,17 +315,17 @@ class UGRID:
             encoding = sys.getdefaultencoding()
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
+        mid = 1
+        write_grids = True
         with open(bdf_filename, 'w', encoding=encoding) as bdf_file:
             #bdf_file.write('CEND\n')
             #bdf_file.write('BEGIN BULK\n')
             bdf_file.write('$ pyNastran: punch=True\n')
             bdf_file.write('$ pyNastran: encoding=utf-8\n')
-            mid = 1
             bdf_file.write('MAT1, %i, 1.0e7,, 0.3\n' % mid)
 
 
             self.log.debug('writing GRIDs')
-            write_grids = True
             if write_grids:
                 if not self.read_solids:
                     nids_to_write = np.unique(np.hstack([self.quads.ravel(), self.tris.ravel()]))

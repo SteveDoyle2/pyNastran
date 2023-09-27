@@ -265,10 +265,12 @@ def process_ugrid(ugrid_filename: str, fmt2: str, fname2: str,
     elif fmt2 == 'cart3d':
         include_shells = True
         include_solids = False
-        bdf_filename = fname2 + '.bdf'
-        model.write_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
+        #bdf_filename = fname2 + '.bdf'
+        cart3d_filename = fname2
+        #model.write_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
+        model.write_cart3d(cart3d_filename, float_fmt='%f', check=True)
         # ugrid_to_cart3d(model, fname2)
-        process_nastran(bdf_filename, 'cart3d', fname2, data=None)
+        #process_nastran(bdf_filename, 'cart3d', fname2, data=None)
     elif fmt2 == 'stl':
         include_shells = True
         include_solids = False
