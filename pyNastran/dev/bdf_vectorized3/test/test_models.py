@@ -318,41 +318,46 @@ class TestModels(unittest.TestCase):
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
+        # TSTEP
         #bdf_filename = MODEL_PATH / 'other' / 'ac10901a.bdf'
         #args = ['test_bdf', str(bdf_filename), '--skip_nominal']
         #test_bdf(args, show_args=False)
 
+        # replication error
         #bdf_filename = MODEL_PATH / 'other' / 'v10111.bdf'
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
-        #bdf_filename = MODEL_PATH / 'other' / 'ar29sadl.bdf'
-        #args = ['test_bdf', str(bdf_filename)]
-        #test_bdf(args, show_args=False)
-
-        bdf_filename = MODEL_PATH / 'other' / 'randvar2.bdf'
+        bdf_filename = MODEL_PATH / 'other' / 'ar29sadl.bdf'
         args = ['test_bdf', str(bdf_filename)]
+        test_bdf(args, show_args=False)
+
+        # spoint centroid bug
+        #bdf_filename = MODEL_PATH / 'other' / 'randvar2.bdf'
+        #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
         bdf_filename = MODEL_PATH / 'other' / 'v12902.bdf'
         args = ['test_bdf', str(bdf_filename)]
-        #test_bdf(args, show_args=False)
+        test_bdf(args, show_args=False)
 
+        # replication
         #bdf_filename = MODEL_PATH / 'other' / 'mne7a.bdf'
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
-        ##bdf_filename = MODEL_PATH / 'other' / 'sdbush10.bdf'
-        ##args = ['test_bdf', str(bdf_filename)]
-        ##test_bdf(args, show_args=False)
+        bdf_filename = MODEL_PATH / 'other' / 'sdbush10.bdf'
+        args = ['test_bdf', str(bdf_filename)]
+        test_bdf(args, show_args=False)
 
         bdf_filename = MODEL_PATH / 'other' / 'v10112.bdf'
         args = ['test_bdf', str(bdf_filename)]
         test_bdf(args, show_args=False)
 
-        ##bdf_filename = MODEL_PATH / 'other' / 'cbus129.bdf'
-        ##args = ['test_bdf', str(bdf_filename)]
-        ##test_bdf(args, show_args=False)
+        # bad deck sections
+        #bdf_filename = MODEL_PATH / 'other' / 'cbus129.bdf'
+        #args = ['test_bdf', str(bdf_filename)]
+        #test_bdf(args, show_args=False)
 
         # incorrect cbeam area
         bdf_filename = MODEL_PATH / 'other' / 'api3.bdf'
@@ -370,11 +375,11 @@ class TestModels(unittest.TestCase):
         ##test_bdf(args, show_args=False)
 
         # bad parsing of GRID
-        #bdf_filename = MODEL_PATH / 'other' / 'dbxdra2.bdf'
-        #args = ['test_bdf', str(bdf_filename), '--skip_nominal']
-        #test_bdf(args, show_args=False)
+        bdf_filename = MODEL_PATH / 'other' / 'dbxdra2.bdf'
+        args = ['test_bdf', str(bdf_filename), '--skip_nominal']
+        test_bdf(args, show_args=False)
 
-        # bad pshell mass/area
+        # ADAPT - bad pshell mass/area
         #bdf_filename = MODEL_PATH / 'other' / 'phsflux4.bdf'
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
@@ -398,12 +403,12 @@ class TestModels(unittest.TestCase):
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
-        # = parsing
+        # = parsing - replication
         #bdf_filename = MODEL_PATH / 'other' / 'cqra00366.bdf'
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
-        # = parsing
+        # = parsing - replication
         #bdf_filename = MODEL_PATH / 'other' / 'dbxdra7.bdf'
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
@@ -433,9 +438,9 @@ class TestModels(unittest.TestCase):
         #test_bdf(args, show_args=False)
 
         # overflow
-        #bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
-        #args = ['test_bdf', str(bdf_filename)]
-        #test_bdf(args, show_args=False)
+        bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
+        args = ['test_bdf', str(bdf_filename)]
+        test_bdf(args, show_args=False)
 
         # EIGC parsing
         #bdf_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.bdf'
@@ -450,10 +455,10 @@ class TestModels(unittest.TestCase):
         args = ['test_bdf', str(bdf_filename)]
         test_bdf(args, show_args=False)
 
-        # missing properties
+        # missing properties - PCOMPS
         bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.bdf'
         args = ['test_bdf', str(bdf_filename)]
-        #test_bdf(args, show_args=False)
+        test_bdf(args, show_args=False)
 
 
 if __name__ == '__main__':

@@ -104,7 +104,7 @@ class CELAS1(Element):
         pids.sort()
         geom_check(self,
                    missing,
-                   node=(nid, self.nodes),
+                   node=(nid, self.nodes), filter_node0=True,
                    property_id=(pids, self.property_id))
 
     @parse_element_check
@@ -230,7 +230,7 @@ class CELAS2(Element):
         nid = self.model.grid.node_id
         geom_check(self,
                    missing,
-                   node=(nid, self.nodes))
+                   node=(nid, self.nodes), filter_node0=True)
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
@@ -324,7 +324,7 @@ class CELAS3(Element):
         pids.sort()
         geom_check(self,
                    missing,
-                   spoint=(spoint, self.spoints),
+                   spoint=(spoint, self.spoints), filter_node0=True,
                    property_id=(pids, self.property_id))
 
     @parse_element_check
@@ -416,7 +416,7 @@ class CELAS4(Element):
         spoint = self.model.spoint
         geom_check(self,
                    missing,
-                   spoint=(spoint, self.spoints))
+                   spoint=(spoint, self.spoints), filter_node0=True, )
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,

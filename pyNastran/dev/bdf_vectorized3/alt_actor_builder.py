@@ -15,7 +15,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points)
 from pyNastran.gui.qt_files.colors import (
     RED_FLOAT, BLUE_FLOAT,
-    LIGHT_GREEN_FLOAT, PINK_FLOAT, # GREEN_FLOAT, PURPLE_FLOAT,
+    LIGHT_GREEN_FLOAT, PINK_FLOAT, GREEN_FLOAT, #PURPLE_FLOAT,
     YELLOW_FLOAT, # ORANGE_FLOAT,
 )
 from pyNastran.bdf.cards.aero.utils import (
@@ -86,7 +86,7 @@ def create_alt_rbe3_grids(gui: MainWindow,
     name = f'RBE3 independents'
     _build_dots(gui, name, xyz_independents, color=BLUE_FLOAT)
 
-    name = f'RBE2 Reference dependents'
+    name = f'RBE3 Reference dependents'
     inid_all_dependent = np.searchsorted(grid_id, elem.ref_grid)
     ref_xyz_dependents = xyz_cid0[inid_all_dependent, :]
     _build_dots(gui, name, ref_xyz_dependents, color=RED_FLOAT)
@@ -159,6 +159,106 @@ def _build_rbe3_vtk_lines(gui, elem: RBE3,
     #node_lines = np.vstack(lines)
     #name = f'RBE3 lines'
     #_build_lines(gui, name, xyz_lines, node_lines, color=LIGHT_GREEN_FLOAT)
+
+def create_alt_axes(self,
+                    gui: MainWindow,
+                    model: BDF,
+                    grid_id: np.ndarray,
+                    xyz_cid0: np.ndarray):
+    #_create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbush, 'CBUSH')
+    #_create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cgap, 'CGAP')
+    _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbar, 'CBAR')
+    _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbeam, 'CBEAM')
+
+def _create_alt_axes(self, gui: MainWindow,
+                     model: BDF,
+                     grid_id: np.ndarray,
+                     xyz_cid0: np.ndarray,
+                     elem, card_name: str):
+    if elem.n == 0:
+        return
+
+    xyz1, xyz2 = elem.get_xyz()
+    neids = xyz1.shape[0]
+    centroid = (xyz1 + xyz2) / 2.
+    assert centroid.shape[0] == elem.nodes.shape[0]
+    assert not np.isnan(np.max(xyz1)), xyz1
+    assert not np.isnan(np.max(xyz2)), xyz2
+
+    v, ihat, jhat, khat, wa, wb = elem.get_axes(xyz1, xyz2)
+    del v, ihat, wa, wb
+
+    p1 = centroid
+    p2 = centroid + jhat
+    p3 = centroid + khat
+    i1 = np.arange(neids)
+    i2 = i1 + neids
+    node_lines = np.column_stack([i1, i2])
+
+    name_bar_y = f'{card_name} y axis'
+    name_bar_z = f'{card_name} z axis'
+    if 0:
+        scale = 1.0
+        gui.create_alternate_vtk_grid(
+            name_bar_y, color=GREEN_FLOAT, line_width=5, opacity=1.,
+            point_size=5, representation='bar', bar_scale=scale, is_visible=False)
+        gui.create_alternate_vtk_grid(
+            name_bar_y, color=BLUE_FLOAT, line_width=5, opacity=1.,
+            point_size=5, representation='bar', bar_scale=scale, is_visible=False)
+
+        eids = elem.element_id
+        xyz_lines = np.vstack([p1, p2]).reshape(neids, 6)
+        _add_nastran_lines_xyz_to_grid(gui, name_bar_y, xyz_lines, eids)
+
+        xyz_lines = np.vstack([p1, p3]).reshape(neids, 6)
+        _add_nastran_lines_xyz_to_grid(gui, name_bar_z, xyz_lines, eids)
+
+        #gui._add_nastran_lines_xyz_to_grid(name_bar_y, xyz_lines, eids)
+
+    else:
+        #if not hasattr(gui, 'bar_lines'):
+        gui.bar_eids = {}
+        gui.bar_lines = {}
+        xyz_lines = np.vstack([p1, p2])
+        _build_lines(gui, name_bar_y, xyz_lines, node_lines, color=GREEN_FLOAT,
+                     representation='bar', is_visible=False)
+        #self.bar_lines[name_bar_y] = xyz_lines
+        self.bar_lines[name_bar_y] = np.column_stack([p1, p2])
+        gui.bar_lines[name_bar_y] = np.column_stack([p1, p2])
+
+        xyz_lines = np.vstack([p1, p3])
+        _build_lines(gui, name_bar_z, xyz_lines, node_lines, color=BLUE_FLOAT,
+                     representation='bar', is_visible=False)
+        self.bar_lines[name_bar_z] = np.column_stack([p1, p3])
+        gui.bar_lines[name_bar_z] = np.column_stack([p1, p3])
+        #self.bar_lines[name_bar_z] = xyz_lines
+
+    #gui.bar_lines[name] = bar_lines
+
+    eids = elem.element_id
+
+#def _add_nastran_lines_xyz_to_grid(gui: MainWindow, name: str, lines, eids) -> None:
+    #"""creates the bar orientation vector lines"""
+    #nlines = len(lines)
+    #nnodes = nlines * 2
+    #if nlines == 0:
+        #return
+
+    #assert name != 'Bar Nodes', name
+    #grid = gui.alt_grids[name]
+
+    #bar_eids = np.asarray(eids, dtype='int32')
+    #bar_lines = np.asarray(lines, dtype='float32').reshape(nlines, 6)
+    #gui.bar_eids[name] = bar_eids
+    #gui.bar_lines[name] = bar_lines
+
+    #nodes = bar_lines.reshape(nlines * 2, 3)
+    #points = numpy_to_vtk_points(nodes)
+    #elements = np.arange(0, nnodes, dtype='int32').reshape(nlines, 2)
+
+    #etype = 3 # vtkLine().GetCellType()
+    #create_vtk_cells_of_constant_element_type(grid, elements, etype)
+    #grid.SetPoints(points)
 
 def create_alt_rbe2_grids(gui: MainWindow,
                           model: BDF,
@@ -707,14 +807,16 @@ def _build_dots(gui: MainWindow, name: str, xyzs: np.ndarray,
 def _build_lines(gui: MainWindow, name: str,
                  xyzs: np.ndarray,
                  nodes_index: np.ndarray,
-                 line_width: int=3, color=RED_FLOAT, is_visible: bool=True):
+                 line_width: int=3, color=RED_FLOAT,
+                 representation: str = 'wire',
+                 is_visible: bool=True):
     assert len(xyzs.shape) == 2, xyzs.shape
     assert len(nodes_index.shape) == 2, nodes_index.shape
     nelement = nodes_index.shape[0]
 
     gui.create_alternate_vtk_grid(
         name, color=color, line_width=line_width, opacity=1.0,
-        representation='wire', is_visible=is_visible, is_pickable=False)
+        representation=representation, is_visible=is_visible, is_pickable=False)
     alt_grid = gui.alt_grids[name]
 
     nnodes = np.ones((nelement, 1), dtype='int64') * 2

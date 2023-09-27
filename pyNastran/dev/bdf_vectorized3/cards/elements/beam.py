@@ -22,7 +22,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     get_print_card_8_16
 )
 from .rod import line_pid_mass_per_length, line_length, line_vector_length, line_centroid
-from .bar import apply_bar_default, init_x_g0
+from .bar import apply_bar_default, init_x_g0, get_bar_vector, split_offt_vector
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -330,70 +330,9 @@ class CBEAM(Element):
         centroid = line_centroid(self.model, self.nodes)
         return centroid
 
-    def get_bar_vector(self, xyz1: np.ndarray) -> np.ndarray:
-        #if self.g0:
-            #v = xyz[self.g0] - xyz[self.Ga()]
-        #else:
-            #v = self.x
-
-        # get the vector v, which defines the projection on to the elemental
-        # coordinate frame
-        is_g0 = self.is_g0
-        is_x = self.is_x
-        v = np.full(self.x.shape, np.nan, dtype=self.x.dtype)
-        if np.any(is_g0):
-            grid_g0 = self.model.grid.slice_card_by_node_id(self.g0[is_g0])
-            n0 = grid_g0.xyz_cid0()
-            v[is_g0, :] = n0 - xyz1[is_g0, :]
-
-        grid = self.model.grid
-        # get the cd frames for the nodes
-
-        #n1 = self.nodes[:, 0]
-        #in1 = np.searchsorted(grid.node_id, n1)
-        #assert np.array_equal(grid.node_id[in1], n1)
-        #cd = grid.cd[in1]
-
-        # get the cd frames for nodes A/B (1/2)
-        inode = np.searchsorted(grid.node_id, self.nodes)
-        assert np.array_equal(grid.node_id[inode], self.nodes)
-        cd = grid.cd[inode]
-        cd1 = cd[:, 0]
-
-        if np.any(is_x):
-            coords = self.model.coord
-            is_cd1 = (cd1 > 0) & (is_x)
-
-            v[is_x, :] = self.x[is_x, :]
-            if np.any(is_cd1):
-                #cd1_ref = coords.slice_card_by_id(cd1)
-                #print(cd1_ref.get_stats())
-                #print(cd1_ref.get_object_methods())
-                #v[is_cd1, :] = cd1_ref.transform_local_xyz_to_global(self.x)
-                x_vector = self.x[is_cd1, :]
-                cd1i = cd1[is_cd1]
-
-                #vi = coords.transform_local_xyz_to_global_coords(x_vector, cd1i)  # old
-                # transform_node_to_global
-                vi = coords.transform_offset_xyz_to_global_xyz(x_vector, cd1i)
-                v[is_cd1, :] = vi
-
-                #v[is_cd1, :] = coords.transform_local_xyz_to_global(x_vector, cd1[is_cd1])
-                #cd1_ref = model.Coord(cd1)
-                #cd2_ref = model.Coord(cd2)
-        assert not np.isnan(v.max()), v
+    def get_bar_vector(self, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        v, cd = get_bar_vector(self, xyz1)
         return v, cd
-
-    def split_offt_vector(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        neids = len(self.element_id)
-        offt_vector = np.full(neids, '', dtype='|U1')
-        offt_end_a = np.full(neids, '', dtype='|U1')
-        offt_end_b = np.full(neids, '', dtype='|U1')
-        for i, (offt_vectori, offt_end_ai, offt_end_bi) in enumerate(self.offt):
-            offt_vector[i] = offt_vectori
-            offt_end_a[i] = offt_end_ai
-            offt_end_b[i] = offt_end_bi
-        return offt_vector, offt_end_a, offt_end_b
 
     def get_xyz(self) -> tuple[np.ndarray, np.ndarray]:
         #neids = len(self.element_id)
@@ -407,7 +346,6 @@ class CBEAM(Element):
         xyz1 = xyz[in1, :]
         xyz2 = xyz[in2, :]
         return xyz1, xyz2
-
 
     def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray,
                  ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
@@ -432,7 +370,7 @@ class CBEAM(Element):
         cd1 = cd[:, 0]
         cd2 = cd[:, 1]
 
-        offt_vector, offt_end_a, offt_end_b = self.split_offt_vector()
+        offt_vector, offt_end_a, offt_end_b = split_offt_vector(self.offt)
         is_rotate_v_g = (offt_vector == 'G')
         is_rotate_wa_g = (offt_end_a == 'G')
         is_rotate_wb_g = (offt_end_b == 'G')

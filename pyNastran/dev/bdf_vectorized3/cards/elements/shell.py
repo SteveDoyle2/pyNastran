@@ -437,7 +437,7 @@ class ShellElement(Element):
         #print(self.base_nodes)
         geom_check(self,
                    missing,
-                   node=(nid, base_nodes), filter_node0=True,
+                   node=(nid, base_nodes), filter_node0=False,
                    property_id=(pids, self.property_id))
         if midside_nodes is not None:
             geom_check(self,
@@ -1531,6 +1531,10 @@ class CQUADR(ShellElement):
                 T1 = T2 = T3 = T4 = '' # , None, None, None
             else:
                 T1, T2, T3, T4 = T
+                T1 = None if np.isnan(T3) else T1
+                T2 = None if np.isnan(T3) else T2
+                T3 = None if np.isnan(T3) else T3
+                T4 = None if np.isnan(T4) else T4
 
             list_fields = (['CQUADR', eid, pid] + nodes +
                            [theta_mcid, zoffset, None, tflag, T1, T2, T3, T4])

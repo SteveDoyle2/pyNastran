@@ -651,10 +651,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             'PSHELL', 'PCOMP', 'PCOMPG',
             'PSHEAR', # 'PSHLN1', 'PSHLN2',
-            #'PTRSHL', 'PQUAD1',
             'PSOLID', 'PLSOLID', 'PVISC', # 'PRAC2D', 'PRAC3D',
-            #'PIHEX', 'PCOMPS', 'PCOMPLS',
-            # PQUAD4
+            'PCOMPS', 'PCOMPLS',
+
+            #  nastran 95
+            #'PTRSHL', 'PQUAD1',
+            #'PIHEX', # PQUAD4
 
             # axixsymmetric
             #'CCONEAX', # element
@@ -4107,7 +4109,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 list(cards_dict.keys())))
 
         for card_name, cards in sorted(cards_dict.items()):
-            if self.is_reject(card_name):
+            try:
+                is_reject = self.is_reject(card_name)
+            except ReplicationError as error:
+                card_strs = [f'{icard}: {str(card)}' for icard, (comment, card, ifile) in enumerate(cards)]
+                msg = '\n'.join(card_strs)
+                raise ReplicationError('Unparsable Replication:\n' + msg) from error
+
+            if is_reject:
                 self.log.info(f'    rejecting card_name = {card_name}')
                 for comment, card_lines, unused_ifile_iline in cards:
                     self.increase_card_count(card_name)
