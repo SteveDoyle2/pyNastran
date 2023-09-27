@@ -187,6 +187,11 @@ class BDFAttributes:
         self.pdampt = PDAMPT(self)
 
         # sets
+        #self.aset = ASET(self)
+        #self.bset = BSET(self)
+        #self.cset = CSET(self)
+        #self.omit = OMIT(self)
+
         #self.set1 = SET1(self)
         #self.set2 = SET2(self)
         #self.set3 = SET3(self)

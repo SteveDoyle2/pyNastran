@@ -850,10 +850,12 @@ class PSOLID(Property):
         cid = model.coord.coord_id
         mids = hstack_msg([mat.material_id for mat in self.allowed_materials],
                           msg=f'no solid materials for {self.type}')
+        ucoord_id = np.unique(self.coord_id)
+        ucoord_id = np.setdiff1d(ucoord_id, [-1])
         mids.sort()
         geom_check(self,
                    missing,
-                   coord=(cid, self.coord_id),
+                   coord=(cid, ucoord_id),
                    material_id=(mids, self.material_id))
 
     @parse_property_check

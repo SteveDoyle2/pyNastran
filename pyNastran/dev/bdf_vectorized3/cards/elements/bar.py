@@ -133,6 +133,70 @@ def init_x_g0(card: BDFCard, eid: int):
         raise RuntimeError(msg)
     return x, g0
 
+def split_offt_vector(offt: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    neids = len(offt)
+    offt_vector = np.full(neids, '', dtype='|U1')
+    offt_end_a = np.full(neids, '', dtype='|U1')
+    offt_end_b = np.full(neids, '', dtype='|U1')
+    for i, (offt_vectori, offt_end_ai, offt_end_bi) in enumerate(offt):
+        offt_vector[i] = offt_vectori
+        offt_end_a[i] = offt_end_ai
+        offt_end_b[i] = offt_end_bi
+    return offt_vector, offt_end_a, offt_end_b
+
+def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    #if self.g0:
+        #v = xyz[self.g0] - xyz[self.Ga()]
+    #else:
+        #v = self.x
+
+    # get the vector v, which defines the projection on to the elemental
+    # coordinate frame
+    is_g0 = elem.is_g0
+    is_x = elem.is_x
+    v = np.full(elem.x.shape, np.nan, dtype=elem.x.dtype)
+    if np.any(is_g0):
+        grid_g0 = elem.model.grid.slice_card_by_node_id(elem.g0[is_g0])
+        n0 = grid_g0.xyz_cid0()
+        v[is_g0, :] = n0 - xyz1[is_g0, :]
+
+    grid = elem.model.grid
+    # get the cd frames for the nodes
+
+    #n1 = self.nodes[:, 0]
+    #in1 = np.searchsorted(grid.node_id, n1)
+    #assert np.array_equal(grid.node_id[in1], n1)
+    #cd = grid.cd[in1]
+
+    # get the cd frames for nodes A/B (1/2)
+    inode = np.searchsorted(grid.node_id, elem.nodes)
+    assert np.array_equal(grid.node_id[inode], elem.nodes)
+    cd = grid.cd[inode]
+    cd1 = cd[:, 0]
+
+    if np.any(is_x):
+        coords = elem.model.coord
+        is_cd1 = (cd1 > 0) & (is_x)
+
+        v[is_x, :] = elem.x[is_x, :]
+        if np.any(is_cd1):
+            #cd1_ref = coords.slice_card_by_id(cd1)
+            #print(cd1_ref.get_stats())
+            #print(cd1_ref.get_object_methods())
+            #v[is_cd1, :] = cd1_ref.transform_local_xyz_to_global(self.x)
+            x_vector = elem.x[is_cd1, :]
+            cd1i = cd1[is_cd1]
+
+            #vi = coords.transform_local_xyz_to_global_coords(x_vector, cd1i)  # old
+            # transform_node_to_global
+            vi = coords.transform_offset_xyz_to_global_xyz(x_vector, cd1i)
+            v[is_cd1, :] = vi
+
+            #v[is_cd1, :] = coords.transform_local_xyz_to_global(x_vector, cd1[is_cd1])
+            #cd1_ref = model.Coord(cd1)
+            #cd2_ref = model.Coord(cd2)
+    assert not np.isnan(v.max()), v
+    return v, cd
 
 class CBAR(Element):
     def __init__(self, model: BDF):
@@ -405,6 +469,220 @@ class CBAR(Element):
         A = self.area()
         L = self.length()
         return A * L
+
+    @property
+    def is_x(self) -> np.ndarray:
+        return (self.g0 == -1)
+
+    @property
+    def is_g0(self) -> np.ndarray:
+        return ~self.is_x
+
+    def get_xyz(self) -> tuple[np.ndarray, np.ndarray]:
+        #neids = len(self.element_id)
+        grid = self.model.grid
+        xyz = grid.xyz_cid0()
+        nid = grid.node_id
+        inode = np.searchsorted(nid, self.nodes)
+        assert np.array_equal(nid[inode], self.nodes)
+        in1 = inode[:, 0]
+        in2 = inode[:, 1]
+        xyz1 = xyz[in1, :]
+        xyz2 = xyz[in2, :]
+        return xyz1, xyz2
+
+    def get_bar_vector(self, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        v, cd = get_bar_vector(self, xyz1)
+        return v, cd
+
+    def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray,
+                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                            np.ndarray, np.ndarray, np.ndarray]:
+        log = self.model.log
+        coords = self.model.coord
+        #xyz1, xyz2 = self.get_xyz()
+
+        neids = xyz1.shape[0]
+        i = xyz2 - xyz1
+        ihat_norm = np.linalg.norm(i, axis=1)
+        assert len(ihat_norm) == neids
+        if min(ihat_norm) == 0.:
+            msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
+            log.error(msg)
+            raise ValueError(msg)
+        i_offset = i / ihat_norm[:, np.newaxis]
+
+        #log.info(f'x =\n{self.x}')
+        #log.info(f'g0   = {self.g0}')
+        v, cd = self.get_bar_vector(xyz1)
+        cd1 = cd[:, 0]
+        cd2 = cd[:, 1]
+
+        offt_vector, offt_end_a, offt_end_b = split_offt_vector(self.offt)
+        is_rotate_v_g = (offt_vector == 'G')
+        is_rotate_wa_g = (offt_end_a == 'G')
+        is_rotate_wb_g = (offt_end_b == 'G')
+
+        #is_rotate_v_b = (offt_vector == 'B')
+        #is_rotate_wa_b = (offt_end_a == 'B')
+        #is_rotate_wb_b = (offt_end_b == 'B')
+
+        is_rotate_wa_o = (offt_end_a == 'O')
+        is_rotate_wb_o = (offt_end_b == 'O')
+
+        uofft_vector = np.unique(offt_vector)
+        uofft_end_a = np.unique(offt_end_a)
+        uofft_end_b = np.unique(offt_end_b)
+
+        msg = ''
+        for i, offt_vectori in enumerate(uofft_vector):
+            if offt_vectori not in 'GB':
+                msg += f'OFFT field[0]={offt_vectori} and must be G/B; offt={self.offt[i]}\n'
+        for i, offt_end_ai in enumerate(uofft_end_a):
+            if offt_end_ai not in 'GBO':
+                msg += f'OFFT field[1]={offt_end_ai} and must be G/B/O; offt={self.offt[i]}\n'
+        for i, offt_end_bi in enumerate(uofft_end_b):
+            if offt_end_bi not in 'GBO':
+                msg += f'OFFT field[2]={offt_end_bi} and must be G/B/O; offt={self.offt[i]}\n'
+        if msg:
+            log.error(msg)
+            raise ValueError(msg)
+
+        #--------------------------------------------------------------------------
+        # rotate v
+        #log.info(f'offt = {self.offt}')
+        #log.info(f'v0 =\n{v}')
+        #log.info(f'cd =\n{cd}')
+
+        if np.any(is_rotate_v_g):
+            # end A
+            # global - cid != 0
+            icd1_v_vector = (is_rotate_v_g) & (cd1 != 0)
+            cd1_v_vector = cd1[icd1_v_vector]
+            if np.any(cd1_v_vector):
+                #v[icd1_vector, :] = np.nan
+                cd1_ref: COORD = coords.slice_card_by_id(cd1_v_vector)
+                v1v = v[icd1_v_vector, :]
+                v[icd1_v_vector, :] = cd1_ref.transform_xyz_to_global_assuming_rectangular(v1v)
+                del v1v
+            del icd1_v_vector, cd1_v_vector
+
+        #elif offt_vector == 'B':
+            # basic - cid = 0
+            #pass
+
+        if np.any(np.isnan(v.max(axis=1))):
+            raise RuntimeError(f'v = {v}')
+
+        #--------------------------------------------------------------------------
+        # determine the bar vectors
+        #log.info(f'v =\n{v}')
+        #log.info(f'ihat =\n{i_offset}')
+        ihat = i_offset
+
+        vnorm = np.linalg.norm(v, axis=1)
+
+        #if np.any(np.isnan(v.max(axis=1))):
+        #print(f'vnorm = {vnorm}')
+
+        vhat = np.full(v.shape, np.nan, dtype=v.dtype)
+        izero = (vnorm > 0)
+        if np.any(izero):
+            vhat[izero] = v[izero, :] / vnorm[izero, np.newaxis]
+            #vhat = v / vnorm[:, np.newaxis] # j
+        z = np.cross(ihat, vhat) # k
+        norm_z = np.linalg.norm(z, axis=1)
+        assert len(norm_z) == neids
+
+        #if np.any(np.isnan(zhat.max(axis=1))):
+        #print(f'norm_z = {norm_z}')
+
+        zhat = z / norm_z[:, np.newaxis]
+        yhat = np.cross(zhat, ihat) # j
+        norm_i = np.linalg.norm(ihat, axis=1)
+        norm_yhat = np.linalg.norm(yhat, axis=1)
+        xform_offset = np.dstack([ihat, yhat, zhat]) # 3x3 unit matrix
+        #del ihat, yhat, zhat, norm_z, norm_yhat
+
+        if np.any(np.isnan(yhat.max(axis=1))):
+            print(f'norm_yhat = {norm_yhat}')
+
+        del norm_i, norm_z, norm_yhat
+        #aaa
+        #--------------------------------------------------------------------------
+        # rotate wa
+        # wa defines the offset at end A
+        wa = self.wa.copy()  # we're going to be inplace hacking it, so copy :)
+
+        if np.any(is_rotate_wa_g):
+            icd1_vector = (is_rotate_wa_g) & (cd1 != 0)
+            cd1_vector = cd1[icd1_vector]
+            if np.any(icd1_vector):
+                cd1_ref = coords.slice_card_by_id(cd1_vector)
+                wai1 = wa[icd1_vector, :]
+                wai2 = cd1_ref.transform_xyz_to_global_assuming_rectangular(wai1)
+                #print('eids.shape =', self.element_id.shape)
+                #print('len(cd1_vector) =', len(cd1_vector))
+                #print('icd1_vector.shape =', icd1_vector.shape)
+                #print('is_rotate_wa.shape =', is_rotate_wa.shape)
+                #print('wai1.shape =', wai1.shape)
+                #print('wai2.shape =', wai2.shape)
+                #print('wa.shape =', wa.shape)
+                wa[icd1_vector, :] = wai2
+            del cd1_vector, icd1_vector
+        #elif offt_end_a == 'B':
+            #pass
+        if np.any(is_rotate_wa_o):
+            # rotate point wa from the local frame to the global frame
+            #wa = wa @ xform_offset
+            wao1 = wa[is_rotate_wa_o, :]
+            To = xform_offset[is_rotate_wa_o, :, :]
+            wao = np.einsum('ni,nij->nj', wao1, To)
+            wa[is_rotate_wa_o, :] = wao
+            del wao1, To, wao
+
+        assert not np.isnan(np.max(wa)), wa
+
+        #--------------------------------------------------------------------------
+        # rotate wb
+        # wb defines the offset at end B
+        wb = self.wb.copy()  # we're going to be inplace hacking it, so copy :)
+        if np.any(is_rotate_wb_g):
+            icd2_vector = (is_rotate_wb_g) & (cd2 != 0)
+            cd2_vector = cd2[icd2_vector]
+            #cd2_vector = cd2[is_rotate_wb]
+            #icd2_vector = (cd2_vector != 0)
+            if np.any(icd2_vector):
+                # MasterModelTaxi
+                #wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+                cd2_ref = coords.slice_card_by_id(cd2_vector)
+                wbi1 = wb[icd2_vector, :]
+                wbi2 = cd2_ref.transform_xyz_to_global_assuming_rectangular(wbi1)
+                wb[icd2_vector, :] = wbi2
+            del cd2_vector, icd2_vector
+        #elif offt_end_b == 'B':
+            #pass
+
+        if np.any(is_rotate_wb_o):
+            # rotate point wb from the local frame to the global frame
+
+            wbo1 = wb[is_rotate_wb_o, :]
+            To = xform_offset[is_rotate_wb_o, :, :]
+            wbo = np.einsum('ni,nij->nj', wbo1, To)
+            wb[is_rotate_wb_o, :] = wbo
+            del wbo1, To, wbo
+            #wb = wb @ xform_offset
+            #ib = n2 + wb
+
+        assert not np.isnan(np.max(wb)), wb
+
+        #ihat = xform[0, :]
+        #yhat = xform[1, :]
+        #zhat = xform[2, :]
+        #wa, wb, _ihat, jhat, khat = out
+
+        # we finally have the nodal coordaintes!!!! :)
+        return v, ihat, yhat, zhat, wa, wb
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id

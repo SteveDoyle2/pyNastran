@@ -30,7 +30,9 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult# , NormalResult
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 from .alt_actor_builder import (
     build_vtk_geometry,
-    create_alt_conm2_grids, create_alt_rbe2_grids, create_alt_rbe3_grids, create_monpnt)
+    create_alt_conm2_grids, create_alt_rbe2_grids, create_alt_rbe3_grids,
+    create_alt_axes,
+    create_monpnt)
 #from pyNastran.dev.op2_vectorized3.op2_geom import OP2, OP2Geom
 from pyNastran.utils import PathLike
 if TYPE_CHECKING:  # pragma: no cover
@@ -49,6 +51,8 @@ class Nastran3:
 
         # the set of element types that are supported
         self.gui_elements: set[str] = set([])
+        self.bar_eids = {}
+        self.bar_lines = {}
         self.include_mass_in_geometry = True
 
     def get_nastran3_wildcard_geometry_results_functions(self):
@@ -209,6 +213,7 @@ class Nastran3:
         create_alt_conm2_grids(gui, model, node_id, xyz_cid0)
         create_alt_rbe2_grids(gui, model, node_id, xyz_cid0)
         create_alt_rbe3_grids(gui, model, node_id, xyz_cid0)
+        #create_alt_axes(self, gui, model, node_id, xyz_cid0)
         if 0:
             create_monpnt(gui, model, node_id, xyz_cid0)
 
