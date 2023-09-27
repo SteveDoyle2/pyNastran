@@ -246,7 +246,10 @@ def process_ugrid(ugrid_filename: str, fmt2: str, fname2: str,
     """
     Converts UGRID to Nastran/Cart3d/STL/Tecplot
     """
-    assert fmt2 in ['stl', 'nastran', 'cart3d', 'tecplot'], 'format2=%s' % fmt2
+    format2s = ['stl', 'nastran', 'cart3d', 'tecplot']
+    if not fmt2 in format2s:
+        raise NotImplementedError(f'fmt2={fmt2} is not supported by ugrid; '
+                                  f'use {", ".join(format2s)}')
     read_shells = True
     read_solids = True
     if fmt2 in ['stl', 'cart3d']:
@@ -272,12 +275,17 @@ def process_ugrid(ugrid_filename: str, fmt2: str, fname2: str,
         # ugrid_to_cart3d(model, fname2)
         #process_nastran(bdf_filename, 'cart3d', fname2, data=None)
     elif fmt2 == 'stl':
-        include_shells = True
-        include_solids = False
-        bdf_filename = fname2 + '.bdf'
-        model.write_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
-        process_nastran(bdf_filename, 'cart3d', fname2, data=None)
+        #include_shells = True
+        #include_solids = False
+        #bdf_filename = fname2 + '.bdf'
+        #model.write_bdf(bdf_filename, include_shells=include_shells, include_solids=include_solids)
+        #process_nastran(bdf_filename, 'cart3d', fname2, data=None)
         # ugrid_to_stl(model, fname2)
+        from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
+        cart3d_filename = fname2 + '.tri'
+        model.write_cart3d(cart3d_filename, float_fmt='%.10e', check=True)
+        cart3d_to_stl_filename(cart3d_filename, fname2, log=log, is_binary=data['--binary'])
+
     elif fmt2 == 'tecplot':
         from pyNastran.converters.aflr.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
         # ugrid_to_tecplot(model, fname2)
@@ -331,9 +339,9 @@ def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet
         #format1s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot', 'vrml']
         #format2s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
         "  format_converter nastran   <INPUT> <format2> <OUTPUT> [-o <OP2>] --no_xref\n"
-        "  format_converter <format1> <INPUT> tecplot   <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>] [--scale SCALE]\n"
-        "  format_converter <format1> <INPUT> stl       <OUTPUT> [-b]  [--scale SCALE]\n"
-        '  format_converter cart3d    <INPUT> <format2> <OUTPUT> [-b]  [--scale SCALE]\n'
+        "  format_converter <format1> <INPUT> tecplot   <OUTPUT> [-b] [--scale SCALE] [-r RESTYPE...] [--block] [-x <X>] [-y <Y>] [-z <Z>]\n"
+        "  format_converter <format1> <INPUT> stl       <OUTPUT> [-b] [--scale SCALE]\n"
+        '  format_converter cart3d    <INPUT> <format2> <OUTPUT> [-b] [--scale SCALE]\n'
         '  format_converter <format1> <INPUT> <format2> <OUTPUT> [--scale SCALE] [--encoding ENCODING]\n'
         #"  format_converter nastran  <INPUT> <format2> <OUTPUT>\n"
         #"  format_converter cart3d   <INPUT> <format2> <OUTPUT>\n"
@@ -382,6 +390,15 @@ def cmd_line_format_converter(argv=None, log: Optional[SimpleLogger]=None, quiet
         '  UGRID outfiles must be of the form model.b8.ugrid, where\n'
         '    b8, b4, lb8, lb4 are valid choices and periods are important\n'
         '  Scale has only been tested on STL -> STL\n'
+        '\n'
+        'Format List:\n'
+        '  nastran: nastran, cart3d, stl, tecplot, ugrid, abaqus\n'
+        '  cart3d:  nastran, cart3d, stl, tecplot\n'
+        '  stl:     nastran, cart3d, stl\n'
+        '  tecplot: nastran, cart3d, stl, tecplot\n'
+        '  ugrid:   nastran, cart3d, stl, tecplot\n'
+        '  abaqus:  nastran\n'
+
     )
 
     from docopt import docopt
