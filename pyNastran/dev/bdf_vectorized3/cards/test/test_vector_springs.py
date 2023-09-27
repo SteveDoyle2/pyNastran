@@ -121,6 +121,7 @@ class TestSprings(unittest.TestCase):
         spoint_id = model.add_spoint([3, 21, 4, 10], comment='spoints')
         spoints = model.spoint
         #spoints.raw_fields()
+        model.setup()
         spoints.write()
 
         save_load_deck(model)
@@ -132,6 +133,8 @@ class TestSprings(unittest.TestCase):
         model.pop_parse_errors()
         model.validate()
         assert len(model.celas2) == 1, model.celas1
+        model.setup()
+        save_load_deck(model)
 
 
 if __name__ == '__main__':  # pragma: no cover

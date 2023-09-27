@@ -60,7 +60,8 @@ def get_static_loads_by_subcase_id(model: BDF,
             pass
     return res
 
-def get_reduced_static_load(model: BDF, load: Optional[StaticLoad]=None) -> dict[int, list[tuple[float, Any]]]:
+def get_reduced_static_load(model: BDF,
+                            load: Optional[StaticLoad]=None) -> dict[int, list[tuple[float, Any]]]:
     """
     if load is None, then use self.load (LOAD)
     otherwise, use self.loadset
@@ -141,8 +142,10 @@ def sum_forces_moments(model: BDF,
     log = model.log
     #reduced_loads_lseq = self.get_reduced_static_load(self.lseq)
     reduced_loads = model.get_reduced_static_load(model.load)
+    #reduced_loads2 = {loadcase_id: reduced_loads[loadcase_id]}
     loads_by_load_id = {}
     loads_by_subcase_id = {}
+    #del reduced_loads
 
     #is_grav_loads = False
     eids = np.array([], dtype='int32')
@@ -152,6 +155,9 @@ def sum_forces_moments(model: BDF,
     for load_id, reduced_loadsi in sorted(reduced_loads.items()):
         force_moment_global = np.zeros(6, dtype='float64')
         for scale, loads in reduced_loadsi:
+            if not isinstance(loads, list):
+                loads = [loads]
+
             for load in loads:
                 if load.type in grav_loads:
                     #is_grav_loads = True
@@ -163,6 +169,9 @@ def sum_forces_moments(model: BDF,
     for load_id, reduced_loadsi in sorted(reduced_loads.items()):
         force_moment_global = np.zeros(6, dtype='float64')
         for scale, loads in reduced_loadsi:
+            if not isinstance(loads, list):
+                loads = [loads]
+
             for load in loads:
                 #if load.type in SKIP_LOADS or load.n == 0:
                     #continue
@@ -195,6 +204,9 @@ def sum_forces_moments(model: BDF,
         if 'LOAD' not in subcase:
             continue
         load_id, options = subcase['LOAD']
+        if load_id not in loads_by_load_id:
+            raise RuntimeError(f'skipping load_id={load_id}.  Does the LOAD card reference another LOAD card?')
+            #continue
         force_moment_global = loads_by_load_id[load_id]
         log.info(f'subcase={subcase_id} F={force_moment_global[:3]} M={force_moment_global[3:]}')
         loads_by_subcase_id[subcase_id] = force_moment_global

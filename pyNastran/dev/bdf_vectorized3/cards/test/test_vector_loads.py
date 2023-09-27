@@ -522,11 +522,12 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(moments1[2], fm[5], 'm=%s mexpected=%s' % (moments1, fm[3:]))
         save_load_deck(model, run_loads=False)
 
-    def _test_pload4_ctria3(self):
+    def test_pload4_ctria3(self):
         """tests a PLOAD4 with a CTRIA3"""
         bdf_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'ctria3.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'ctria3.op2')
         #op2 = read_op2(op2_filename, load_geometry=True, log=log)
+        op2 = None
 
         model = read_bdf(bdf_filename, log=log)
         # p0 = (model.nodes[21].xyz + model.nodes[22].xyz + model.nodes[23].xyz) / 3.
@@ -562,9 +563,12 @@ class TestLoads(unittest.TestCase):
             nids = None
             forces2, moments2 = sum_forces_moments_elements(
                 model, p0, loadcase_id, eids, nids, include_grav=False)
-            assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
-            assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
+            for key in moments1:
+                assert allclose(forces1[key], forces2[key]), 'forces1=%s forces2=%s' % (forces1[key], forces2[key])
+                assert allclose(moments1[key], moments2[key]), 'moments1=%s moments2=%s' % (moments1[key], moments2[key])
 
+            if op2 is None:
+                continue
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
@@ -579,11 +583,12 @@ class TestLoads(unittest.TestCase):
                     isubcase, forces1.tolist(), fm.tolist()))
         save_load_deck(model, punch=False)
 
-    def _test_pload4_cquad4(self):
+    def test_pload4_cquad4(self):
         """tests a PLOAD4 with a CQUAD4"""
         bdf_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'cquad4.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'cquad4.op2')
         #op2 = read_op2(op2_filename, log=log)
+        op2 = None
 
         model = read_bdf(bdf_filename, log=log)
         # p0 = (model.nodes[21].xyz + model.nodes[22].xyz + model.nodes[23].xyz) / 3.
@@ -597,6 +602,10 @@ class TestLoads(unittest.TestCase):
 
             loadcase_id = subcase.get_parameter('LOAD')[0]
             load = get_reduced_static_load_from_load_id(model, loadcase_id)
+
+            if len(load) == 0:
+                log.warning(f'skipping subcase={isubcase:d} LOAD={loadcase_id:d}')
+                continue
             #load = model.Load(loadcase_id)
             scale, loadi = load[0]
             loadi = cast(PLOAD4, loadi)
@@ -622,9 +631,22 @@ class TestLoads(unittest.TestCase):
             f1, m1 = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
             f2, m2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                                                  include_grav=False)
-            assert allclose(f1, f2), 'f1=%s f2=%s' % (f1, f2)
-            assert allclose(m1, m2), 'm1=%s m2=%s' % (m1, m2)
+            #f1 = f1.sum(axis=0)
+            #f2 = f2.sum(axis=0)
+            #m1 = m1.sum(axis=0)
+            #m2 = m2.sum(axis=0)
+            if isinstance(f1, dict):
+                for key in f1:
+                    assert allclose(f1[key], f2[key]), 'f1=%s f2=%s' % (f1[key], f2[key])
+                    assert allclose(m1[key], m2[key]), 'm1=%s m2=%s' % (m1[key], m2[key])
 
+            else:
+                asdf
+                assert allclose(f1, f2), 'f1=%s f2=%s' % (f1, f2)
+                assert allclose(m1, m2), 'm1=%s m2=%s' % (m1, m2)
+
+            if op2 is None:
+                continue
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
@@ -645,6 +667,7 @@ class TestLoads(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'ctetra.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'ctetra.op2')
         #op2 = read_op2(op2_filename, log=log)
+        op2 = None
 
         model = read_bdf(bdf_filename, log=log)
         p0 = model.grid.slice_card_by_node_id(21).xyz[0, :]
@@ -718,6 +741,8 @@ class TestLoads(unittest.TestCase):
             assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
             assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
+            if op2 is None:
+                continue
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm

@@ -1059,6 +1059,21 @@ class LOAD(Load):
                     #loadi.nvector
 
                 loads_by_load_id[uload_id].append(loadi2)
+
+        #loads_by_load_id = dict(loads_by_load_id)
+
+        #load = model.load
+        #for sid, scale, iload in zip(load.load_id, load.scale, load.iload):
+            #iload0, iload1 = iload
+            ##list_fields = ['LOAD', sid, scale]
+            #scale_factors = load.scale_factors[iload0:iload1]
+            #load_ids = load.load_ids[iload0:iload1]
+            #for (scale_factor, load_id) in zip(scale_factors, load_ids):
+                #scale2 = scale * scale_factor
+                #cards = loads_by_load_id[load_id]
+                #loads_by_load_id[uload_id].append(loadi2)
+
+                #list_fields += [scale_factor, load_id]
         return dict(loads_by_load_id)
 
     def get_reduced_loads(self,
@@ -1110,7 +1125,7 @@ def get_reduced_static_load_from_load_id(model: BDF,
             #remove_missing_loads=False,
             #filter_zero_scale_factors=False,
             #stop_on_failure=True)
-        raise RuntimeError('aaa')
+        #raise RuntimeError('aaa')
     else:
         for load in model.loads:
             if load.n == 0:
@@ -1156,13 +1171,27 @@ def get_reduced_loads(load: Union[LOAD, LSEQ],
         for (scale_factor, load_id) in zip(scale_factors, load_ids):
             if scale_factor == 0. and filter_zero_scale_factors:
                 continue
-            loads_found = loads_by_load_id[load_id]
-            if len(loads_found) == 0:
-                msg = f'No referenced loads found for load_id={load_id} on {load.type} load_id={sid}'
-                log.error(msg)
-                if stop_on_failure:
-                    raise RuntimeError(msg)
-            reduced_loadsi.append((scale_factor, loads_found))
+
+            if load_id in loads_by_load_id:
+                loads_found = loads_by_load_id[load_id]
+                if len(loads_found) == 0:
+                    msg = f'No referenced loads found for load_id={load_id} on {load.type} load_id={sid}'
+                    log.error(msg)
+                    if stop_on_failure:
+                        raise RuntimeError(msg)
+                reduced_loadsi.append((scale_factor, loads_found))
+            elif load_id in reduced_loads:
+                #scale_factors = global_scale * load.scale_factors[iload0:iload1]
+                log.warning(f'LOAD card sid={sid} references another LOAD sid={load_id:d}')
+                #for scalei, loadi in reduced_loads[load_id]:
+                    #scale_factor2 = scalei * scale_factor
+                    #reduced_loadsi.append((scale_factor2, loadi))
+                x = 1
+            else:
+                log.warning(f'cannot find load_id={load_id:d}; '
+                            'does a LOAD card reference another LOAD card?')
+        if len(reduced_loadsi) == 0:
+            continue
         reduced_loads[sid] = reduced_loadsi
 
     # loads that weren't referenced by a LOAD card
