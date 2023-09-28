@@ -59,7 +59,7 @@ def get_mass_breakdown(model: BDF, stop_if_no_mass: bool=True) -> tuple[dict[int
     pid_to_mass = defaultdict(float)
     mass_type_to_mass = {}
     #mass_by_material_type = {}
-    for card in model.elements:
+    for card in model.element_cards:
         if card.n == 0 or card.type in NO_MASS:
             continue
         mass = card.mass()
@@ -97,7 +97,7 @@ def get_length_breakdown(model: BDF, property_ids=None, stop_if_no_length: bool=
 
     """
     pids_to_length = {}
-    for element in model.elements:
+    for element in model.element_cards:
         if element.n == 0 or element.type in NO_LENGTH:
             continue
         length = element.length()
@@ -136,7 +136,7 @@ def get_area_breakdown(model: BDF,
 
     """
     pids_to_area = defaultdict(float)
-    for element in model.elements:
+    for element in model.element_cards:
         if element.n == 0 or element.type in NO_AREA:
             continue
         area = element.area()
@@ -239,7 +239,7 @@ def get_volume_breakdown(model: BDF,
 
     pids_to_volume = defaultdict(float)
     #skipped_eid_pid = set()
-    for element in model.elements:
+    for element in model.element_cards:
         if element.n == 0 or element.type in NO_VOLUME:
             continue
         volume = element.volume()

@@ -42,7 +42,7 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
             for nsm_type, (ielement0, ielement1) in zip(nsm.nsm_type, nsm.ielement):
                 pid_eid = nsm.pid_eid[ielement0:ielement1]
                 if nsm_type in {'PSHELL', 'PCOMP'}:
-                    cards = get_cards_by_property_id(pid_eid, model.shell_elements)
+                    cards = get_cards_by_property_id(pid_eid, model.shell_element_cards)
                     if len(cards) == 0:
                         continue
                     shell_pids.append((nsm_type, cards, 'per', pid_eid, nsm.value))
@@ -92,7 +92,7 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
             #value  : array([1.])
             for nsm_type in nsm.nsm_type:
                 if nsm_type in {'PSHELL', 'PCOMP'}:
-                    cards = get_cards_by_property_id(nsm.pid_eid, model.shell_elements)
+                    cards = get_cards_by_property_id(nsm.pid_eid, model.shell_element_cards)
                     if len(cards) == 0:
                         continue
                     shell_pids.append((nsm_type, cards, 'smear', nsm.pid_eid, nsm.value))
@@ -143,7 +143,7 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
             for nsm_type in nsm.nsm_type:
                 pid_eid = nsm.pid_eid
                 if nsm_type in {'PSHELL', 'PCOMP'}:
-                    cards = get_cards_by_property_id(pid_eid, model.shell_elements)
+                    cards = get_cards_by_property_id(pid_eid, model.shell_element_cards)
                     if len(cards) == 0:
                         continue
                     shell_pids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
@@ -193,7 +193,7 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
                 values = nsm.value[ivalue0 : ivalue1]
                 assert len(values) == 1, values
                 if nsm_type == 'PSHELL':
-                    cards = get_cards_by_property_id(pid_eid, model.shell_elements)
+                    cards = get_cards_by_property_id(pid_eid, model.shell_element_cards)
                     if len(cards) == 0:
                         continue
                     shell_pids.append((nsm_type, cards, distribution_type, pid_eid, nsm.value))
@@ -244,7 +244,7 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
         neid = len(eid)
         eid.sort()
         area_length_type_list = [] # np.full((neid, 5), np.nan, dtype='float64')
-        cards = [card for card in model.elements if card.n > 0]
+        cards = [card for card in model.element_cards if card.n > 0]
 
         #all_cards = []
         all_cards_eids = []
@@ -679,7 +679,7 @@ class TestNsm(unittest.TestCase):
             4012 : 1.0,
         }
         nsm_ids = np.hstack([
-            nsm.nsm_id for nsm in model.nsms
+            nsm.nsm_id for nsm in model.nsm_cards
             if nsm.n > 0])
         nsm_ids.sort()
         for nsm_id in nsm_ids:

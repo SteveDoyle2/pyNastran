@@ -55,7 +55,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
     #TEMP, TEMPD, DTEMP, DTEMP,
     SPCD, DEFORM,
     #RFORCE, RFORCE1,
-    #GRAV, ACCEL, ACCEL1,
+    GRAV, # ACCEL, ACCEL1,
 )
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import (
     PLOAD, PLOAD1, PLOAD2, PLOAD4, # PLOADX1,
@@ -388,7 +388,7 @@ class BDFAttributes:
         self.pload1 = PLOAD1(self)
         self.pload2 = PLOAD2(self)
         self.pload4 = PLOAD4(self)
-        #self.grav = GRAV(self)
+        self.grav = GRAV(self)
         #self.accel = ACCEL(self)
         #self.accel1 = ACCEL1(self)
         #self.temp = TEMP(self)
@@ -575,28 +575,28 @@ class BDFAttributes:
         return coord
 
     @property
-    def plot_elements(self) -> list[Any]:
+    def plot_element_cards(self) -> list[Any]:
         elements = [
             self.plotel,
         ]
         return elements
 
     @property
-    def spring_elements(self) -> list[Any]:
+    def spring_element_cards(self) -> list[Any]:
         elements = [
             self.celas1, self.celas2, self.celas3, self.celas4,
         ]
         return elements
 
     @property
-    def damper_elements(self) -> list[Any]:
+    def damper_element_cards(self) -> list[Any]:
         elements = [
             self.cdamp1, self.cdamp2, self.cdamp3, self.cdamp4, self.cdamp5,
         ]
         return elements
 
     @property
-    def shell_elements(self) -> list[Any]:
+    def shell_element_cards(self) -> list[Any]:
         elements = [
             self.ctria3, self.cquad4, self.ctria6, self.cquad8,
             self.ctriar, self.cquadr, self.cquad,
@@ -604,24 +604,24 @@ class BDFAttributes:
         return elements
 
     @property
-    def solid_elements(self) -> list[Any]:
+    def solid_element_cards(self) -> list[Any]:
         elements = [
             self.ctetra, self.cpenta, self.chexa, self.cpyram,
         ]
         return elements
 
     @property
-    def elements(self) -> list[Any]:
-        axisymmetric_elements = [
+    def element_cards(self) -> list[Any]:
+        axisymmetric_element_cards = [
             #self.ctriax,
             #self.cquadx, self.cquadx4, self.cquadx8,
             #self.ctriax, self.ctriax6,
             #self.ctrax3, self.ctrax6,
         ]
-        acoustic_elements = [
+        acoustic_element_cards = [
             #self.chacab, self.chacbr,
         ]
-        elements = self.spring_elements + self.damper_elements + [
+        elements = self.spring_element_cards + self.damper_element_cards + [
             self.cvisc, self.cgap,
             self.cbush, self.cbush1d, # self.cbush2d,
             #self.cfast,
@@ -631,30 +631,31 @@ class BDFAttributes:
             self.cshear,
             #self.caabsf, # acoustic shells
             #self.genel,
-        ] + self.shell_elements + self.solid_elements + axisymmetric_elements + [
+        ] + self.shell_element_cards + self.solid_element_cards + \
+        axisymmetric_element_cards + [
             self.conm1, self.conm2,
             self.cmass1, self.cmass2, self.cmass3, self.cmass4,
             self.cplsts3, self.cplsts4, self.cplsts6, self.cplsts8,
             self.cplstn3, self.cplstn4, self.cplstn6, self.cplstn8,
-        ] + acoustic_elements
+        ] + acoustic_element_cards
         return elements
 
     @property
-    def bar_properties(self) -> list[Any]:
+    def bar_property_cards(self) -> list[Any]:
         properties = [
             self.pbar, self.pbarl, self.pbrsect,
         ]
         return properties
 
     @property
-    def beam_properties(self) -> list[Any]:
+    def beam_property_cards(self) -> list[Any]:
         properties = [
             self.pbeam, self.pbeaml, self.pbcomp,
         ]
         return properties
 
     @property
-    def shell_properties(self) -> list[Any]:
+    def shell_property_cards(self) -> list[Any]:
         properties = [
             self.pshell, self.pcomp, self.pcompg,
             self.plplane, self.pplane, # self.pshln1, self.pshln2,
@@ -662,14 +663,14 @@ class BDFAttributes:
         return properties
 
     @property
-    def solid_properties(self) -> list[Any]:
+    def solid_property_cards(self) -> list[Any]:
         properties = [
             self.psolid, self.plsolid, self.pcomps, self.pcompls,
         ]
         return properties
 
     @property
-    def properties(self) -> list[Any]:
+    def property_cards(self) -> list[Any]:
         properties = [
             self.pelas, self.pelast,
             self.pdamp, self.pdampt,
@@ -678,20 +679,20 @@ class BDFAttributes:
             #self.pfast,
             self.pvisc, self.pgap,
             self.prod, self.ptube,
-            ] + self.bar_properties + self.beam_properties + [
+            ] + self.bar_property_cards + self.beam_property_cards + [
             self.pshear,
-        ] + self.shell_properties + self.solid_properties + [
+        ] + self.shell_property_cards + self.solid_property_cards + [
             self.pmass,
         ]
         return properties
 
     @property
-    def materials(self) -> list[Any]:
-        materials = self.structural_materials + self.thermal_materials + self.hyperelastic_materials
+    def material_cards(self) -> list[Any]:
+        materials = self.structural_material_cards + self.thermal_material_cards + self.hyperelastic_material_cards
         return materials
 
     @property
-    def structural_materials(self) -> list[Any]:
+    def structural_material_cards(self) -> list[Any]:
         materials = [
             self.mat1, self.mat2, self.mat3,
             self.mat8, self.mat9, self.mat10, self.mat11,
@@ -700,21 +701,21 @@ class BDFAttributes:
         return materials
 
     @property
-    def thermal_materials(self) -> list[Any]:
+    def thermal_material_cards(self) -> list[Any]:
         materials = [
             self.mat4, self.mat5,
         ]
         return materials
 
     @property
-    def hyperelastic_materials(self) -> list[Any]:
+    def hyperelastic_material_cards(self) -> list[Any]:
         materials = [
             #self.mathe, self.mathp,
         ]
         return materials
 
     @property
-    def optimization(self) -> list[Any]:
+    def optimization_cards(self) -> list[Any]:
         optimization = [
             self.desvar, self.dlink, self.dvgrid,
             self.dresp1, self.dresp2, self.dconstr,
@@ -725,13 +726,13 @@ class BDFAttributes:
         return optimization
 
     @property
-    def loads(self) -> list[Any]:
+    def load_cards(self) -> list[Any]:
         loads = [
             self.load, # self.lseq,
             self.force, self.force1, self.force2,
             self.moment, self.moment1, self.moment2,
             self.pload, self.pload1, self.pload2, self.pload4,
-            #self.grav, self.accel, self.accel1,
+            self.grav, # self.accel, self.accel1,
             self.sload,
             #self.temp, self.tempd,
             #self.dtemp, # has nodes
@@ -743,7 +744,7 @@ class BDFAttributes:
         return loads
 
     @property
-    def dynamic_loads(self) -> list[Any]:
+    def dynamic_load_cards(self) -> list[Any]:
         loads = [
             #self.dload,
             #self.darea,
@@ -763,7 +764,7 @@ class BDFAttributes:
         return cards
 
     @property
-    def rigid_elements(self) -> list[Any]:
+    def rigid_element_cards(self) -> list[Any]:
         rigid_elements = [
             self.rbar, # self.rbar1,
             self.rrod,
@@ -782,14 +783,14 @@ class BDFAttributes:
         return cards
 
     @property
-    def thermal_elements(self) -> list[Any]:
+    def thermal_element_cards(self) -> list[Any]:
         thermal_elements = [
             #self.chbdye, self.chbdyg, self.chbdyp, self.phbdy,
         ]
         return thermal_elements
 
     @property
-    def thermal_boundary_conditions(self) -> list[Any]:
+    def thermal_boundary_condition_cards(self) -> list[Any]:
         boundary_conditions = [
             #self.conv, self.pconv,
             #self.convm, self.pconvm,
@@ -840,12 +841,12 @@ class BDFAttributes:
             #self.aelist, self.aeparm, self.aelink,
             #self.aefact, self.flfact,
             ] + self.aero_elements + \
-            self.aero_properties + self.aero_splines + self.monitor_points + \
+            self.aero_properties + self.aero_splines + self.monitor_point_cards + \
             self.aero_loads
         return aero
 
     @property
-    def monitor_points(self) -> list[Any]:
+    def monitor_point_cards(self) -> list[Any]:
         monitor_points = [
             #self.monpnt1, self.monpnt3, # self.monpnt2,
         ]
@@ -854,17 +855,17 @@ class BDFAttributes:
     # ------------------------------------------------------------------------
     # constraints
     @property
-    def spcs(self):
+    def spc_cards(self):
         return [
             self.spc, self.spc1, self.spcadd,
         ]
     @property
-    def mpcs(self):
+    def mpc_cards(self):
         return [
             #self.mpc, self.mpcadd,
         ]
     @property
-    def nsms(self):
+    def nsm_cards(self):
         return [
             self.nsm, self.nsm1, self.nsml, self.nsml1, self.nsmadd,
         ]
@@ -877,9 +878,11 @@ class BDFAttributes:
             #self.snorm,
             #self.suport, # self.suport1,
             self.cbarao,
-        ] + self.spcs + self.mpcs + self.elements + self.rigid_elements + \
-        self.properties + self.materials + self.optimization + self.loads + self.dynamic_loads + \
-        self.plot_elements + self.thermal_elements + self.thermal_boundary_conditions + self.sets + \
+        ] + self.spc_cards + self.mpc_cards + self.element_cards + self.rigid_element_cards + \
+        self.property_cards + self.material_cards + self.optimization_cards + \
+        self.load_cards + self.dynamic_load_cards + \
+        self.plot_element_cards + self.thermal_element_cards + \
+        self.thermal_boundary_condition_cards + self.sets + \
         self.aero_objects + self.dynamic_cards + self.nonstructural_mass_cards
         #for i, card in enumerate(cards):
             #assert isinstance(card.type, str), card
@@ -888,48 +891,48 @@ class BDFAttributes:
     # ------------------------------------------------------------------------
     @property
     def spring_element_ids(self) -> np.ndarray:
-        elements = self.spring_elements
+        elements = self.spring_element_cards
         element_ids = check_element_ids(elements)
         return element_ids
 
     @property
     def damper_element_ids(self) -> np.ndarray:
-        elements = self.damper_elements
+        elements = self.damper_element_cards
         element_ids = check_element_ids(elements)
         return element_ids
 
     @property
     def shell_element_ids(self) -> np.ndarray:
-        elements = self.shell_elements
+        elements = self.shell_element_cards
         element_ids = check_element_ids(elements)
         return element_ids
     @property
     def solid_element_ids(self) -> np.ndarray:
-        elements = self.solid_elements
+        elements = self.solid_element_cards
         element_ids = check_element_ids(elements)
         return element_ids
     # ------------------------------------------------------------------------
     @property
     def bar_property_ids(self) -> np.ndarray:
-        properties = self.bar_properties
+        properties = self.bar_property_cards
         property_ids = check_property_ids(properties, 'Bar ')
         return property_ids
 
     @property
     def beam_property_ids(self) -> np.ndarray:
-        properties = self.beam_properties
+        properties = self.beam_property_cards
         property_ids = check_property_ids(properties, 'Beam ')
         return property_ids
 
     @property
     def shell_property_ids(self) -> np.ndarray:
-        properties = self.shell_properties
+        properties = self.shell_property_cards
         property_ids = check_property_ids(properties, 'Shell ')
         return property_ids
 
     @property
     def solid_property_ids(self) -> np.ndarray:
-        properties = self.solid_properties
+        properties = self.solid_property_cards
         property_ids = check_property_ids(properties, 'Solid ')
         return property_ids
 
@@ -1221,7 +1224,7 @@ class BDFAttributes:
         element_ids_all = []
         masses = []
         #mass = 0.
-        for card in self.elements:
+        for card in self.element_cards:
             if card.n == 0 or card.type in NO_MASS:
                 continue
             element_ids_all.append(card.element_id)
@@ -1266,7 +1269,7 @@ class BDFAttributes:
         inertias = []
         total_mass = 0.
         mass_cg = np.zeros(3, dtype='float64')
-        for card in self.elements:
+        for card in self.element_cards:
             if card.n == 0 or card.type in NO_MASS:
                 continue
             card.center_of_mass()
@@ -1341,7 +1344,7 @@ class BDFAttributes:
         mass_cg = np.zeros(3, dtype='float64')
         masses = []
         centroids = []
-        for card in self.elements:
+        for card in self.element_cards:
             if card.n == 0 or card.type in NO_MASS:
                 continue
 
@@ -1400,7 +1403,7 @@ class BDFAttributes:
 
     def length(self) -> float:
         length = 0.
-        for card in self.elements:
+        for card in self.element_cards:
             if card.n == 0 or card.type in NO_LENGTH:
                 continue
             lengthi = card.length()
@@ -1412,7 +1415,7 @@ class BDFAttributes:
 
     def area(self) -> float:
         area = 0.
-        for card in self.elements:
+        for card in self.element_cards:
             if card.n == 0 or card.type in NO_AREA:
                 continue
             areai = card.area()
@@ -1424,7 +1427,7 @@ class BDFAttributes:
 
     def volume(self) -> float:
         volume = 0.
-        for card in self.elements:
+        for card in self.element_cards:
             if card.n == 0 or card.type in NO_VOLUME:
                 continue
             volumei = card.volume()
@@ -1456,7 +1459,7 @@ class BDFAttributes:
             'CSHEAR',
         }
         nelements = 0
-        elements2 = [card for card in self.elements if card.n > 0]
+        elements2 = [card for card in self.element_cards if card.n > 0]
         for card in elements2:
             if cards_to_read is not None and card.type not in cards_to_read:
                 continue
@@ -1565,7 +1568,7 @@ class BDFAttributes:
 
     def Element(self, element_id: int) -> list[Element]:
         elements = []
-        for card in self.elements:
+        for card in self.element_cards:
             if card.n == 0:
                 continue
             if element_id in card.element_id:
@@ -1575,7 +1578,7 @@ class BDFAttributes:
 
     def Property(self, property_id: int) -> list[Property]:
         props = []
-        for card in self.properties:
+        for card in self.property_cards:
             if card.n == 0:
                 continue
             if property_id in card.property_id:
@@ -1585,7 +1588,7 @@ class BDFAttributes:
 
     def Material(self, material_id: int) -> list[Material]:
         materials = []
-        for card in self.materials:
+        for card in self.material_cards:
             if card.n == 0:
                 continue
             if material_id in card.material_id:

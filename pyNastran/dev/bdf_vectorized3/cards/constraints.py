@@ -630,7 +630,7 @@ class SPCADD(ADD):
         #for spc_id in uspc_ids:
             #spc_by_spc_id[spc_id] = []
 
-        for spc in model.spcs:
+        for spc in model.spc_cards:
             if spc.type in {'SPCADD'}:
                 continue
 

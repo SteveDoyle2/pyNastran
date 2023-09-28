@@ -86,7 +86,7 @@ def get_reduced_static_load(model: BDF,
         filter_load_ids = True
 
     #new_reduced_loads = defaultdict(list)
-    for loadi in model.loads:
+    for loadi in model.load_cards:
         log.debug(loadi)
         if loadi.type in SKIP_LOADS or loadi.n == 0:
             continue

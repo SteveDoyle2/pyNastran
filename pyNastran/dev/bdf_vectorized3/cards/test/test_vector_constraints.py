@@ -235,7 +235,7 @@ class TestConstraints(unittest.TestCase):
         #spc = model.add_spc(1, node_ids, components, enforced, comment='spc')
         #with self.assertRaises(AssertionError):
             #spc.validate()
-        model.spcs.clear()
+        model.spc_cards.clear()
 
         enforced = [1000., 1., 101.]
         node_ids = [2, 3, 4]

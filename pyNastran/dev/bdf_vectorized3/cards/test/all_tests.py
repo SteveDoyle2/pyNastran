@@ -1,7 +1,6 @@
 import unittest
 
 #from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_aero import *
-#from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_loads import *
 
 # good
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_bars import *

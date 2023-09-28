@@ -344,7 +344,7 @@ class Nastran3:
         """
         Fills the vtkUnstructuredGrid.
 
-        Elements are added by the order in model.elements, not by element id.
+        Elements are added by the order in model.element_cards, not by element id.
         This makes it easier to fill the geometry/results, but harder to lookup
         a specific element id.
         """
@@ -365,7 +365,7 @@ class Nastran3:
         cell_type_quad8 = 23
 
         cell_offset0 = 0
-        for element in model.elements:
+        for element in model.element_cards:
             nelement = element.n
             if nelement == 0:
                 continue
@@ -682,7 +682,7 @@ def _set_quality(icase: int, cases: dict[int, Any],
 
     if 0:
         is_valid_list = []
-        for elem in model.elements:
+        for elem in model.element_cards:
             if elem.n == 0:
                 continue
             if elem.type in NO_ELEMENT:

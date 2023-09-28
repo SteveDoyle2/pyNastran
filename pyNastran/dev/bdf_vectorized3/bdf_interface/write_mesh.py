@@ -874,10 +874,10 @@ class Writer():
         model = self.model
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         #if self.load_combinations or self.loads or self.tempds or self.cyjoin:
-        if any(load.n for load in model.loads):
+        if any(load.n for load in model.load_cards):
             bdf_file.write('$LOADS\n')
             bdf_file.write(model.load.write(size=size))
-            #bdf_file.write(model.grav.write(size=size))
+            bdf_file.write(model.grav.write(size=size))
             #bdf_file.write(model.accel.write(size=size))
             #bdf_file.write(model.accel1.write(size=size))
 
@@ -921,7 +921,7 @@ class Writer():
             bdf_file.write(model.dphase.write(size=size))
             bdf_file.write(model.delay.write(size=size))
 
-        if any(load.n for load in model.dynamic_loads):
+        if any(load.n for load in model.dynamic_load_cards):
             bdf_file.write(model.dload.write(size=size))
             bdf_file.write(model.darea.write(size=size))
             bdf_file.write(model.tload1.write(size=size))
@@ -993,13 +993,13 @@ class Writer():
         """Writes the constraint cards sorted by ID"""
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         model = self.model
-        if any((card.n for card in model.spcs)):
+        if any((card.n for card in model.spc_cards)):
             bdf_file.write('$SPCs\n')
             bdf_file.write(model.spcadd.write(size=size))
             bdf_file.write(model.spc.write(size=size))
             bdf_file.write(model.spc1.write(size=size))
 
-        if any((card.n for card in model.mpcs)):
+        if any((card.n for card in model.mpc_cards)):
             bdf_file.write('$MPCs\n')
             bdf_file.write(model.mpcadd.write(size=size))
             bdf_file.write(model.mpc.write(size=size))

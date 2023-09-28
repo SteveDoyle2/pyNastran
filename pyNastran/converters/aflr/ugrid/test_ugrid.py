@@ -103,7 +103,7 @@ class TestUgrid(unittest.TestCase):
     def test_ugrid3d_convert_cart3d(self):
         ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
         argv = ['format_converter', 'ugrid', ugrid_filename, 'cart3d', 'model.tri']
-        cmd_line_format_converter(argv=argv, quiet=False)
+        cmd_line_format_converter(argv=argv, quiet=True)
         #os.remove('model.tri')
 
     def test_ugrid3d_convert_nastran(self):

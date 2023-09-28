@@ -507,7 +507,7 @@ class NSMADD(ADD):
         #for nsm_id in unsm_ids:
             #nsm_by_nsm_id[nsm_id] = []
 
-        for nsm in model.nsms:
+        for nsm in model.nsm_cards:
             if nsm.type in {'NSMADD'}:
                 continue
 

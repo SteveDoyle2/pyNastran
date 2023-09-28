@@ -88,9 +88,8 @@ from .cards.elements.beam import BEAMOR
 ## CMASS5
 #from .cards.elements.mass import CMASS1, CMASS2, CMASS3, CMASS4
 #from .cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
-from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
-                                             MPC, MPCADD, SUPORT1, SESUP,
-                                             GMSPC)
+from pyNastran.bdf.cards.constraints import (SPCAX, SPCOFF, SPCOFF1,
+                                             SUPORT1, SESUP, GMSPC)
 #from .cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                        #CORD2R, CORD2C, CORD2S, #CORD3G,
                                        #transform_coords_vectorized,
@@ -717,7 +716,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SLOAD',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
-            #'GRAV', 'ACCEL', 'ACCEL1',
+            'GRAV', # 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE', 'RFORCE1',
             'SPCD', 'DEFORM',
@@ -2564,7 +2563,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MOMENT' : partial(self._prepare_card, self.moment),
             'MOMENT1' : partial(self._prepare_card, self.moment1),
             'MOMENT2' : partial(self._prepare_card, self.moment2),
-            #'GRAV' : partial(self._prepare_card, self.grav),
+            'GRAV' : partial(self._prepare_card, self.grav),
             #'ACCEL' : partial(self._prepare_card, self.accel),
             #'ACCEL1' : partial(self._prepare_card, self.accel1),
             'SLOAD': partial(self._prepare_card, self.sload),

@@ -8,10 +8,12 @@ from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default, print_car
 #from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, string,
-    integer_or_blank, double_or_blank, integer_or_string,
-    components_or_blank, fields)
-from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+    integer, double,
+    integer_or_blank, double_or_blank,
+    components_or_blank,
+    # string, integer_or_string, fields,
+)
+#from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type_force import force_integer
 from pyNastran.utils.numpy_utils import (
     integer_types, float_types,   # integer_float_types,
@@ -899,6 +901,141 @@ class MOMENT2(Load2):
         return force_moment
 
 
+class GRAV(Load):
+    """
+    Defines acceleration vectors for gravity or other acceleration loading.
+
+    +------+-----+-----+------+-----+-----+------+-----+
+    |  1   |  2  |  3  |   4  |  5  |  6  |   7  |  8  |
+    +======+=====+=====+======+=====+=====+======+=====+
+    | GRAV | SID | CID |  A   | N1  | N2  |  N3  |  MB |
+    +------+-----+-----+------+-----+-----+------+-----+
+    | GRAV | 1   | 3   | 32.2 | 0.0 | 0.0 | -1.0 |     |
+    +------+-----+-----+------+-----+-----+------+-----+
+
+    """
+    def slice_card_by_index(self, i: np.ndarray) -> GRAV:
+        load = GRAV(self.model)
+        self.__apply_slice__(load, i)
+        return load
+
+    def __apply_slice__(self, load: GRAV, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.coord_id = self.coord_id[i]
+        load.scale = self.scale[i]
+        load.main_bulk = self.main_bulk[i]
+        load.N = self.N[i, :]
+
+    def add(self, sid: int, scale: float, N: np.ndarray,
+            cid: int=0, mb: int=0, comment: str='') -> GRAV:
+        """
+        Creates an GRAV card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            scale factor for load
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        cid : int; default=0
+            the coordinate system for the load
+        mb : int; default=0
+            ???
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, cid, scale, N, mb, comment))
+        self.n += 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> None:
+        sid = integer(card, 1, 'sid')
+        cid = integer_or_blank(card, 2, 'cid', 0)
+        scale = double(card, 3, 'scale')
+        N = [double_or_blank(card, 4, 'N1', default=0.0),
+             double_or_blank(card, 5, 'N2', default=0.0),
+             double_or_blank(card, 6, 'N3', default=0.0), ]
+        main_bulk = integer_or_blank(card, 7, 'mb', default=0)
+        assert len(card) <= 8, f'len(GRAV card) = {len(card):d}\ncard={card}'
+        #assert not np.allclose(max(abs(N)), 0.), ('GRAV N is a zero vector, '
+                                                    #'N=%s' % str(self.N))
+        self.cards.append((sid, cid, scale, N, main_bulk, comment))
+        self.n += 1
+
+    def parse_cards(self) -> None:
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+        #: Set identification number
+        load_id = np.zeros(ncards, dtype='int32')
+        #: Coordinate system identification number.
+        coord_id = np.zeros(ncards, dtype='int32')
+        #: scale factor
+        scale = np.zeros(ncards, dtype='float64')
+
+        #: Indicates whether the CID coordinate system is defined in the
+        #: main Bulk Data Section (MB = -1) or the partitioned superelement
+        #: Bulk Data Section (MB = 0). Coordinate systems referenced in the
+        #: main Bulk Data Section are considered stationary with respect to
+        #: the assembly basic coordinate system. See Remark 10.
+        #: (Integer; Default = 0)
+        main_bulk = np.zeros(ncards, dtype='int32')
+
+        #: Acceleration vector components measured in coordinate system CID
+        N = np.zeros((ncards, 3), dtype='float64')
+
+        assert ncards > 0, ncards
+        for icard, card in enumerate(self.cards):
+            (sid, cid, scalei, Ni, main_bulki, comment) = card
+            load_id[icard] = sid
+            coord_id[icard] = cid
+            scale[icard] = scalei
+            main_bulk[icard] = main_bulki
+            N[icard, :] = Ni
+        self._save(load_id, coord_id, scale, main_bulk, N)
+        assert len(self.load_id) == self.n
+        self.cards = []
+
+    def _save(self, load_id, coord_id, scale, main_bulk, N):
+        if len(self.load_id):
+            load_id = np.hstack([self.load_id, load_id])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            scale = np.hstack([self.scale, scale])
+            main_bulk = np.hstack([self.main_bulk, main_bulk])
+            N = np.vstack([self.N, N])
+        nloads = len(load_id)
+        self.load_id = load_id
+        self.coord_id = coord_id
+        self.scale = scale
+        self.main_bulk = main_bulk
+        self.N = N
+        self.n = nloads
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+        #array_str, array_default_int
+        load_ids = array_default_int(self.load_id, size=size)
+        coord_ids = array_default_int(self.coord_id, default=0, size=size)
+        main_bulks = array_default_int(self.main_bulk, default=0, size=size)
+        for sid, cid, scale, main_bulk, N in zip(load_ids, coord_ids, self.scale, main_bulks, self.N):
+            #cids = set_string8_blank_if_default(cid, 0)
+            list_fields = ['GRAV', sid, cid, scale, N[0], N[1], N[2], main_bulk]
+            #msg = 'GRAV    %8d%8d%8s%8s%8s%8s%8s\n' % (
+                #sid, nid,
+                #cids, print_float_8(mag), print_float_8(xyz[0]),
+                #print_float_8(xyz[1]), print_float_8(xyz[2]))
+            bdf_file.write(print_card(list_fields))
+        return
+
+
 class LOAD(Load):
     """
     +------+-----+------+------+----+-----+----+----+----+
@@ -1038,7 +1175,7 @@ class LOAD(Load):
         loads_by_load_id = defaultdict(list)
 
         #print('all_laods =', model.loads)
-        for loadi in model.loads:
+        for loadi in model.load_cards:
             if loadi.type in {'LOAD', 'LSEQ'}:
                 continue
             if loadi.n == 0:
@@ -1127,7 +1264,7 @@ def get_reduced_static_load_from_load_id(model: BDF,
             #stop_on_failure=True)
         #raise RuntimeError('aaa')
     else:
-        for load in model.loads:
+        for load in model.load_cards:
             if load.n == 0:
                 continue
             if load.type in {'LOAD', 'LSEQ'}:
@@ -1314,6 +1451,13 @@ class SLOAD(Load):
         self.nodes = nodes
         self.mags = mags
         self.n = nloads
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        spoint = self.model.spoint
+        used_spoints = np.unique(self.nodes)
+        geom_check(self,
+                   missing,
+                   spoint=(spoint, used_spoints), )
 
     def sum_forces_moments(self) -> np.ndarray:
         #spoint = self.model.spoint

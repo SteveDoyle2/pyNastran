@@ -219,7 +219,7 @@ class TestLoads(unittest.TestCase):
         #darea.raw_fields()
         save_load_deck(model, run_convert=False)
 
-    def _test_grav(self):
+    def test_grav(self):
         """tests a GRAV"""
         model = BDF(log=log)
         sid = 1
@@ -1325,7 +1325,7 @@ class TestLoads(unittest.TestCase):
         #with self.assertRaises(IndexError):
             #load.validate()
 
-    def _test_sload(self):
+    def test_sload(self):
         """tests SLOAD"""
         log = get_logger(level='warning')
         model = BDF(log=log)
