@@ -125,14 +125,14 @@ class UGRID:
             nnodes, ntris, nquads, ntets, npenta5s, npenta6s, nhexas = unpack(endian + '7i', data)
             npids = nquads + ntris
             nvol_elements = ntets + npenta5s + npenta6s + nhexas
-            self.log.info('nnodes=%.3fm ntris=%s nquads=%s ntets=%.3fm'
-                          ' npenta5s=%.3fm npenta6s=%.3fm nhexas=%.3fm' % (
-                              nnodes / 1e6, ntris, nquads,
-                              ntets / 1e6, npenta5s / 1e6, npenta6s / 1e6, nhexas / 1e6))
+            self.log.info(f'nnodes={_to_unit(nnodes)} ntris={_to_unit(ntris)} '
+                          f'nquads={_to_unit(nquads)} ntets={_to_unit(ntets)} '
+                          f'npenta5s={_to_unit(npenta5s)} npenta6s={_to_unit(npenta6s)} '
+                          f'nhexas={_to_unit(nhexas)}')
 
             nvolume_elements = ntets + npenta5s + npenta6s + nhexas
-            self.log.info('nsurface_elements=%s nvolume_elements=%.3f Million' % (
-                npids, nvolume_elements / 1e6))
+            self.log.info(f'nsurface_elements={_to_unit(npids)} '
+                          f'nvolume_elements={_to_unit(nvolume_elements)}')
 
             # we know the shapes of nodes (e.g. Nx3), but we want to directly
             # unpack the data into the array, so we shape it as N*3, load the
@@ -263,22 +263,6 @@ class UGRID:
         float_fmts = float_fmt + ' ' + float_fmt + ' ' + float_fmt + '\n'
 
         #-------------------------------------
-        # filter unwanted nodes
-        nids_to_write = np.unique(np.hstack([self.quads.ravel(), self.tris.ravel()]))
-        #print(f'nodes: min={nids_to_write.min()} max={nids_to_write.max()}')
-        #nnodes = self.nodes.shape[0]
-        nnodes = nids_to_write.max()
-        #all_nids = np.arange(nnodes, dtype='int32')
-        #print(f'nnodes = {nnodes}')
-
-        #inid = np.searchsorted(all_nids, nids_to_write)
-        #nodes = self.nodes[inid, :]
-        nodes = self.nodes[:nnodes, :]
-        #print(nodes.shape)
-        nnodes = len(nodes)
-        #nnodes = len(nids_to_write)
-
-        #-------------------------------------
         # filter unwanted properties
         #pids_to_remove = [1]
         pid_check = np.ones(len(self.pids), dtype='bool')
@@ -287,14 +271,17 @@ class UGRID:
             pid_check = np.logical_and(pid_check, pid_check1)
         pids = self.pids
 
+        # slice the properties and slice the pid_check, to simplify writing
         ntri = len(self.tris)
         nquad = len(self.quads)
-        #nelements = ntri + 2 * nquad
+
         pids_tri = pids[:ntri]
         pids_quad = pids[ntri:]
+
         pids_check_tri = pid_check[:ntri]
         pids_check_quad = pid_check[ntri:]
 
+        #
         ntri2 = pids_check_tri.sum()
         nquad2 = pids_check_quad.sum()
         nelements = ntri2 + 2 * nquad2
@@ -304,32 +291,65 @@ class UGRID:
             raise RuntimeError(msg)
 
         #-------------------------------------
+        # filter unwanted nodes
+        pids = self.pids
+
+        nids_to_write_list = []
+        if len(self.tris):
+            nids_to_write_list.append(self.tris[pids_check_tri, :].ravel())
+        if len(self.quads):
+            nids_to_write_list.append(self.quads[pids_check_quad, :].ravel())
+        nids_to_write = np.unique(nids_to_write_list)
+        del nids_to_write_list
+
+        nnodes_all = nids_to_write.max()
+        nnodes = len(nids_to_write)
+        log.debug(f'nodes: min={nids_to_write.min()} max={nids_to_write.max()} len={nnodes}')
+        assert nnodes > 0, nnodes
+        all_nids = np.arange(nnodes_all, dtype='int32') + 1
+
+        # map the nodes/elements
+        inid = np.searchsorted(all_nids, nids_to_write)
+        tris = np.searchsorted(nids_to_write, self.tris) + 1
+        quads = np.searchsorted(nids_to_write, self.quads) + 1
+        nodes = self.nodes[inid, :]
+
+        #-------------------------------------
         regions = []
-        log.info(f'writing cart3d; ntri={ntri}; nquad={nquad} -> nelements={nelements}')
+        log.debug(f'writing cart3d; ntri={ntri}; nquad={nquad} -> nnodes={nnodes} nelements={nelements}')
         with open(cart3d_filename, 'w', encoding=encoding) as cart3d_file:
             cart3d_file.write(f'{nnodes} {nelements}\n')
             for node in nodes:
                 cart3d_file.write(float_fmts % tuple(node))
 
-            for element, pid, is_valid in zip_longest(self.tris, pids_tri, pids_check_tri):
-                if not is_valid:
-                    continue
-                assert len(np.unique(element)) == 3, element
-                cart3d_file.write('%-8i %-8i %-8i\n' % tuple(element))
-                regions.append(pid)
+            if pids_check_tri.sum():
+                quads2 = tris[pids_check_tri, :]
+                pids2 = pids_tri[pids_check_tri]
+                for element, pid in zip_longest(tris2, pids2):
+                    assert len(np.unique(element)) == 3, element
+                    cart3d_file.write('%-8i %-8i %-8i\n' % tuple(element))
+                    regions.append(pid)
 
-            for element, pid, is_valid in zip_longest(self.quads, pids_quad, pids_check_quad):
-                if not is_valid:
-                    continue
-                cart3d_file.write('%-8i %-8i %-8i\n' % (
-                    element[0], element[1], element[2]))
-                cart3d_file.write('%-8i %-8i %-8i\n' % (
-                    element[0], element[2], element[3]))
-                regions.append(pid)
-                regions.append(pid)
+            if pids_check_quad.sum():
+                quads2 = quads[pids_check_quad, :]
+                pids2 = pids_quad[pids_check_quad]
+                for element, pid in zip_longest(quads2, pids2):
+                    cart3d_file.write('%-8i %-8i %-8i\n' % (
+                        element[0], element[1], element[2]))
+                    cart3d_file.write('%-8i %-8i %-8i\n' % (
+                        element[0], element[2], element[3]))
+                    regions.append(pid)
+                    regions.append(pid)
 
             for region in regions:
                 cart3d_file.write(f'{region}\n')
+        if check:
+            # check we didn't lose nodes
+            from pyNastran.converters.cart3d.cart3d import read_cart3d
+            model = read_cart3d(cart3d_filename, log=self.log)
+            assert model.get_area().sum() > 0
+            del model
+        return
 
     def write_bdf(self, bdf_filename: PathLike,
                   include_shells: bool=True, include_solids: bool=True,
@@ -805,6 +825,15 @@ class UGRID:
         #print(quads)
         return tris, quad_array
 
+
+def _to_unit(value: int) -> str:
+    if value < 10_000:
+        str_value = '%d' % value
+    elif value < 1_000_000:
+        str_value = '%.3fk' % (value / 1000.)
+    else:
+        str_value = '%.3fm' % (value / 1_000_000.)
+    return str_value
 
 def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename: Optional[PathLike]=None):
     """figures out what the format of the binary data is based on the filename"""
