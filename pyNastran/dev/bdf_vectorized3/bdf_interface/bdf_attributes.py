@@ -79,7 +79,7 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
-from pyNastran.dev.bdf_vectorized3.cards.constraints import SPC, SPC1, SPCADD # , MPC, MPCADD
+from pyNastran.dev.bdf_vectorized3.cards.constraints import SPC, SPC1, SPCADD, MPC, MPCADD
 from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
     RBAR,
     #RBAR1,
@@ -448,8 +448,8 @@ class BDFAttributes:
         self.spc = SPC(self)
         self.spc1 = SPC1(self)
         self.spcadd = SPCADD(self)
-        #self.mpc = MPC(self)
-        #self.mpcadd = MPCADD(self)
+        self.mpc = MPC(self)
+        self.mpcadd = MPCADD(self)
 
         # rigid elements
         self.rbar = RBAR(self)
@@ -862,7 +862,7 @@ class BDFAttributes:
     @property
     def mpc_cards(self):
         return [
-            #self.mpc, self.mpcadd,
+            self.mpc, self.mpcadd, # self.mpcax,
         ]
     @property
     def nsm_cards(self):

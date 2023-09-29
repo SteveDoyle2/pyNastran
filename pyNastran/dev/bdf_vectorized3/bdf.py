@@ -2645,8 +2645,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'RSPLINE' : (RSPLINE, add_methods._add_rigid_element_object),
 
             # mpcs
-            #'MPC': partial(self._prepare_card, self.mpc),
-            #'MPCADD' : partial(self._prepare_card, self.mpcadd),
+            'MPC': partial(self._prepare_card, self.mpc),
+            'MPCADD' : partial(self._prepare_card, self.mpcadd),
 
             'SPC': partial(self._prepare_card, self.spc),
             'SPC1': partial(self._prepare_card, self.spc1),

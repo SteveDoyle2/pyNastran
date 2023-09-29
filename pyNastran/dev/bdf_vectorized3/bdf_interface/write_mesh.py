@@ -643,7 +643,7 @@ class Writer():
             bdf_file.write('$MATERIALS\n')
             bdf_file.write(model.mat1.write(size=size))
             bdf_file.write(model.mat2.write(size=size))
-            #bdf_file.write(model.mat3.write(size=size))
+            bdf_file.write(model.mat3.write(size=size))
             bdf_file.write(model.mat8.write(size=size))
             bdf_file.write(model.mat9.write(size=size))
             bdf_file.write(model.mat10.write(size=size))
