@@ -40,6 +40,24 @@ class PLOTEL(Element):
     +--------+-----+-----+-----+
 
     """
+    def add(self, eid: int, nodes: list[int], comment: str='') -> int:
+        """
+        Adds a PLOTEL card
+
+        Parameters
+        ----------
+        eid : int
+            Element ID
+        nodes : list[int, int]
+            Unique GRID point IDs
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((eid, nodes, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """adds a PLOTEL"""
         #['PLOTEL', '3101', '3101', '3102', None, '3102', '3102', '3103']
@@ -52,6 +70,7 @@ class PLOTEL(Element):
         self.cards.append((eid, nodes, comment))
         self.n += 1
 
+        # TODO: find source that it's 4 and not 5
         if card.field(5):  # eid
             eid = integer(card, 5, 'eid')
             nodes = [
@@ -63,6 +82,7 @@ class PLOTEL(Element):
             assert len(card) <= 8, f'len(PLOTEL card) = {len(card):d}\ncard={card}'
         else:
             assert len(card) <= 5, f'len(PLOTEL card) = {len(card):d}\ncard={card}'
+        self.n += 1
 
     def parse_cards(self):
         if self.n == 0:

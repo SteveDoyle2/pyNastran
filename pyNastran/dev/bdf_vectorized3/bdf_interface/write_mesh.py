@@ -401,7 +401,7 @@ class Writer():
         #bdf_file.write(model.cbush2d.write(size=size))
 
         # fast
-        #bdf_file.write(model.cfast.write(size=size))
+        bdf_file.write(model.cfast.write(size=size))
 
         # rod
         model.crod.write_file(bdf_file, size=size, is_double=is_double)

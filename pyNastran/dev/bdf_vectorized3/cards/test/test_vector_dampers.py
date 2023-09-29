@@ -335,6 +335,7 @@ class TestDampers(unittest.TestCase):
         save_load_deck(model)
 
     def test_cgap(self):
+        """tests a CGAP/PGAP"""
         model = BDF(debug=False)
         eid = 1
         pid = 2
@@ -357,6 +358,71 @@ class TestDampers(unittest.TestCase):
                         coincident_length=None, comment='')
         model.setup(run_geom_check=True)
         save_load_deck(model)
+
+    def test_cvisc_01(self):
+        """tests a CVISC/PVISC"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        size = 8
+        eid = 2001
+        nids = [4, 1]
+        pid = 20
+        ce = 1.0
+        cr = 2.0
+
+        model.add_grid(4, [0., 0., 0.])
+        model.add_grid(1, [1., 0., 0.])
+        model.add_cvisc(eid, pid, nids, comment='cvisc')
+        model.add_pvisc(pid, ce, cr, comment='pvisc')
+        model.setup()
+
+        elem = model.cvisc
+        self.assertEqual(elem.element_id, 2001)
+        self.assertEqual(elem.property_id, 20)
+        node_ids = elem.nodes[0]
+        assert np.array_equal(node_ids, [4, 1]), node_ids
+        elem.write(size, 'dummy')
+
+        save_load_deck(model)
+
+
+    def test_cfast_01(self):
+        """tests a CFAST/PFASTE"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        size = 8
+        eid = 2001
+        nids = [4, 1]
+        pid = 20
+        ce = 1.0
+        cr = 2.0
+
+        fast_type = 'cat'
+        ida = 10
+        idb = 9
+
+        model.add_grid(4, [0., 0., 0.])
+        model.add_grid(1, [1., 0., 0.])
+
+        #eid: int, pid: int, Type: str,
+        #ida: int, idb: int
+        model.add_cfast(eid, pid, fast_type, ida, idb, comment='cvisc')
+        d = 42
+        kt1 = 1e7
+        kt2 = 2e7
+        kt3 = 3e7
+        model.add_pfast(pid, d, kt1, kt2, kt3, comment='pvisc')
+        model.setup()
+
+        elem = model.cfast
+        self.assertEqual(elem.element_id, 2001)
+        self.assertEqual(elem.property_id, 20)
+        node_ids = elem.nodes[0]
+        assert np.array_equal(node_ids, [0, 0]), node_ids
+        elem.write(size, 'dummy')
+
+        save_load_deck(model)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

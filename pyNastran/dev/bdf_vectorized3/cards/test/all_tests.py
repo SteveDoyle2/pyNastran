@@ -14,6 +14,7 @@ from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_mass_elements import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_materials import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_nsm import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_optimization import *
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_plot_elements import TestPlotElements
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_rigid import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_rods import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import TestShells

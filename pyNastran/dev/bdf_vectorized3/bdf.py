@@ -605,47 +605,51 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # bushings
             'CBUSH', 'CBUSH1D', # 'CBUSH2D',
             # dampers
-            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-            #'CFAST',
+            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC',
+            #  misc
+            'CFAST', 'CGAP', 'CSHEAR', #'GENEL',
 
             'CBAR', 'CBARAO', 'BAROR',
-            'CROD', 'CTUBE',
-            'CBEAM', 'CBEAM3', 'CONROD', 'CBEND', 'BEAMOR',
+            'CROD', 'CTUBE', 'CONROD',
+            'CBEAM', 'CBEAM3', 'CBEND', 'BEAMOR',
             'CTRIA3', 'CTRIA6', 'CTRIAR',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
             #'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
-            #'CTRSHL', 'CQUAD1',
             #'SNORM',
 
             'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', # plate strain
             'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8', # plate stress
 
+            # solids
+            'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+
             # acoustic
             #'CHACAB', 'CAABSF', 'CHACBR',
             #'PACABS', 'PAABSF', 'PACBAR', 'ACMODL',
 
-            'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-            'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
-            'CSHEAR', # 'CVISC', 'CRAC2D', 'CRAC3D',
-            #'CGAP',
-            #'GENEL',
+            # crack
+            #'CRAC2D', 'CRAC3D',
+
+            #  nastran95
+            #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
+            #'CTRSHL', 'CQUAD1',
 
             ## rigid_elements
             'RBAR', #'RBAR1',
             'RBE1', 'RBE2', 'RBE3', 'RROD', # 'RSPLINE', 'RSSCON',
 
             ## plotels
-            #'PLOTEL',
+            'PLOTEL',
 
             ## properties
             'PMASS',
-            'PELAS', 'PGAP', # 'PFAST',
+            'PELAS', 'PGAP', 'PFAST',
             'PLPLANE', 'PPLANE',
             'PBUSH', 'PBUSH1D',
             'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PTUBE',
             'PBEAM', 'PBEAML', 'PBCOMP', # 'PBRSECT', 'PBEND',
-            # 'PBMSECT', # not fully supported
+            #'PBMSECT', # not fully supported
             #'PBEAM3',  # v1.3
 
             'PSHELL', 'PCOMP', 'PCOMPG',
@@ -2428,8 +2432,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PGAP' : partial(self._prepare_card, self.pgap),
 
             # fast
-            #'CFAST' : partial(self._prepare_card, self.cfast),
-            #'PFAST' : partial(self._prepare_card, self.pfast),
+            'CFAST' : partial(self._prepare_card, self.cfast),
+            'PFAST' : partial(self._prepare_card, self.pfast),
 
             #'GENEL' : partial(self._prepare_card, self.genel),
 
@@ -2713,9 +2717,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'DVMREL2': partial(self._prepare_card, self.dvmrel2),
 
             #'DCONADD': partial(self._prepare_card, self.dconadd),
-            #'DCONSTR': partial(self._prepare_card, self.dconstr),
-            #'DCONADD' : (DCONADD, add_methods._add_dconstr_object),
-            #'DCONSTR' : (DCONSTR, add_methods._add_dconstr_object),
             #'DDVAL' : (DDVAL, add_methods._add_ddval_object),
             #'DSCREEN' : (DSCREEN, add_methods._add_dscreen_object),
 
@@ -4762,23 +4763,23 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
             #'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
             #'add_DIVERG',
-            #'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
-            #'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
-            #'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
+            #'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DDVAL',
+            #'add_DELAY', 'add_DEQATN', 'add_DLINK', 'add_DMI',
+            #'add_DPHASE', 'add_DRESP', 'add_DTABLE',
             #'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
             #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
-            #'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
+            #'add_PAERO', 'add_PARAM', 'add_PHBDY',
             #'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
-            #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_tempd', 'add_TF', 'add_TRIM',
+            #'add_SEUSET', 'add_SPLINE', 'add_tempd', 'add_TF', 'add_TRIM',
             #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
 
             #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
             #'add_constraint_MPC', 'add_constraint_MPCADD',
             #'add_constraint_SPC', 'add_constraint_SPCADD',
-            #'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper',
+            #'add_convection_property', x'add_creep_material',
             #'add_dload', '_add_dload_entry', 'add_element', 'add_hyperelastic_material',
-            #'add_load', 'add_mass', 'add_material_dependence', 'add_method', 'add_node',
-            #'add_plotel', 'add_property', 'add_property_mass', 'add_random_table',
+            #'add_load', 'add_mass', 'add_material_dependence', 'add_method',
+            #'add_property', 'add_property_mass', 'add_random_table',
             #'add_rigid_element', 'add_structural_material', 'add_suport', 'add_suport1',
             #'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element',
             #'add_thermal_load', 'add_thermal_material',

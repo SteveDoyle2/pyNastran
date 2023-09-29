@@ -9,7 +9,7 @@ from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, SPOINT, GRDSET # , PO
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
 from pyNastran.dev.bdf_vectorized3.cards.elements.bush import CBUSH, PBUSH, PBUSHT, CBUSH1D, PBUSH1D, CBUSH2D, PBUSH2D
-#from pyNastran.dev.bdf_vectorized3.cards.elements.fast import CFAST, PFAST
+from pyNastran.dev.bdf_vectorized3.cards.elements.fast import CFAST, PFAST
 #from pyNastran.dev.bdf_vectorized3.cards.elements.genel import GENEL
 from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, CELAS3, CELAS4, PELAS, PELAST
 from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
@@ -261,8 +261,8 @@ class BDFAttributes:
         #self.pbush2d = PBUSH2D(self)
 
         # fast
-        #self.cfast = CFAST(self)
-        #self.pfast = PFAST(self)
+        self.cfast = CFAST(self)
+        self.pfast = PFAST(self)
 
         # genel
         #self.genel = GENEL(self)
@@ -624,7 +624,7 @@ class BDFAttributes:
         elements = self.spring_element_cards + self.damper_element_cards + [
             self.cvisc, self.cgap,
             self.cbush, self.cbush1d, # self.cbush2d,
-            #self.cfast,
+            self.cfast,
             self.crod, self.conrod, self.ctube,
             self.cbar,
             self.cbeam,

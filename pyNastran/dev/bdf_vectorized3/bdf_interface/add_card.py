@@ -604,16 +604,22 @@ class Add0dElements(BDFAttributes):
                              comment=comment)
         return prop
 
-    def add_cfast(self, eid: int, pid: int, Type: str, ida: int, idb: int,
+    def add_cfast(self, eid: int, pid: int, fast_type: str,
+                  ida: int, idb: int,
                   gs=None, ga=None, gb=None,
                   xs=None, ys=None, zs=None, comment: str='') -> int:
         """Creates a CFAST card"""
-        elem = self.cfast.add(eid, pid, Type, ida, idb, gs=gs, ga=ga, gb=gb,
+        elem = self.cfast.add(eid, pid, fast_type, [ida, idb],
+                              gs=gs, ga=ga, gb=gb,
                               xs=xs, ys=ys, zs=zs, comment=comment)
         return elem
 
-    def add_pfast(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
-                  kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment: str='') -> int:
+    def add_pfast(self, pid: int, d: float,
+                  kt1: float, kt2: float, kt3: float,
+                  mcid: int=-1, mflag: int=0,
+                  kr1: float=0., kr2: float=0., kr3: float=0.,
+                  mass: float=0., ge: float=0.,
+                  comment: str='') -> int:
         """
         Creates a PAST card
 
@@ -642,7 +648,6 @@ class Add0dElements(BDFAttributes):
         prop = self.pfast.add(pid, d, kt1, kt2, kt3, mcid=mcid, mflag=mflag,
                               kr1=kr1, kr2=kr2, kr3=kr3, mass=mass, ge=ge,
                               comment=comment)
-        self._add_methods._add_property_object(prop)
         return prop
 
     def add_cbush(self, eid: int, pid: int, nids,
