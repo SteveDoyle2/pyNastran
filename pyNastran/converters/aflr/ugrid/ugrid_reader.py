@@ -323,7 +323,7 @@ class UGRID:
                 cart3d_file.write(float_fmts % tuple(node))
 
             if pids_check_tri.sum():
-                quads2 = tris[pids_check_tri, :]
+                tris2 = tris[pids_check_tri, :]
                 pids2 = pids_tri[pids_check_tri]
                 for element, pid in zip_longest(tris2, pids2):
                     assert len(np.unique(element)) == 3, element
