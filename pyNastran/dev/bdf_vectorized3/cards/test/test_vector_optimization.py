@@ -124,6 +124,7 @@ class TestOpt(unittest.TestCase):
         model.add_dvcrel1(4, element_type, eid_conm2, cp_name, desvars, coeffs, cp_min=None,
                           cp_max=1e20, c0=x10,
                           validate=True, comment='')
+        model.setup(run_geom_check=True)
         #---------------------------------------------------
 
         pid_pcomp = 2
@@ -623,7 +624,7 @@ class TestOpt(unittest.TestCase):
         assert 'THETA11' in model.dvprel1.property_name, dvprel1a
         assert 'T42' in model.dvprel1.property_name, dvprel1b
 
-    def _test_dvmrel1(self):
+    def test_dvmrel1(self):
         """tests a DVMREL1"""
         model = BDF(debug=False)
 
@@ -649,15 +650,17 @@ class TestOpt(unittest.TestCase):
                                        mp_min=0.1, mp_max=0.2, c0=0., validate=True,
                                        comment='dmvrel')
 
-        oid = 21
-        deqation = 42
-        mp_name = 'E'
-        mat_type = 'MAT1'
-        labels = []
-        dvmrel2_1 = model.add_dvmrel2(oid, mat_type, mid1, mp_name, deqation,
-                                      dvids, labels, mp_min=None, mp_max=1e20,
-                                      validate=True,
-                                      comment='dvmrel')
+        run_dvmrel2 = False
+        if run_dvmrel2:
+            oid = 21
+            deqation = 42
+            mp_name = 'E'
+            mat_type = 'MAT1'
+            labels = []
+            dvmrel2_1 = model.add_dvmrel2(oid, mat_type, mid1, mp_name, deqation,
+                                          dvids, labels, mp_min=None, mp_max=1e20,
+                                          validate=True,
+                                          comment='dvmrel')
         E = 30.e7
         G = None
         nu = 0.3
@@ -674,47 +677,50 @@ class TestOpt(unittest.TestCase):
         c = 4000.
         mat10 = model.add_mat10(mid10, bulk, rho, c, ge=0.0, comment='mat10')
 
-        equation_id = 42
-        eqs = ['fstress(x) = x + 10.']
-        model.add_deqatn(equation_id, eqs, comment='deqatn')
+        run_deqatn = False
+        if run_deqatn:
+            equation_id = 42
+            eqs = ['fstress(x) = x + 10.']
+            model.add_deqatn(equation_id, eqs, comment='deqatn')
 
 
-        dvmrel1_1.raw_fields()
-        dvmrel1_1.write_card(size=8)
-        dvmrel1_1.write_card(size=16)
+        #dvmrel1_1.raw_fields()
+        model.dvmrel1.write(size=8)
+        model.dvmrel1.write(size=16)
 
-        dvmrel1_8.raw_fields()
-        dvmrel1_8.write_card(size=8)
-        dvmrel1_8.write_card(size=16)
+        #dvmrel1_8.raw_fields()
+        #dvmrel1_8.write(size=8)
+        #dvmrel1_8.write(size=16)
 
-        dvmrel1_10.raw_fields()
-        dvmrel1_10.write_card(size=8)
-        dvmrel1_10.write_card(size=16)
+        #dvmrel1_10.raw_fields()
+        #dvmrel1_10.write(size=8)
+        #dvmrel1_10.write(size=16)
 
-        dvmrel2_1.raw_fields()
-        dvmrel2_1.write_card(size=8)
-        dvmrel2_1.write_card(size=16)
+        #dvmrel2_1.raw_fields()
+        if run_dvmrel2:
+            model.dvmrel2.write(size=8)
+            model.dvmrel2.write(size=16)
 
-        mat8.raw_fields()
-        mat8.write_card(size=8)
-        mat8.write_card(size=16)
+        #mat8.raw_fields()
+        model.mat8.write(size=8)
+        model.mat8.write(size=16)
 
-        mat10.raw_fields()
-        mat10.write_card(size=8)
-        mat10.write_card(size=16)
+        #mat10.raw_fields()
+        model.mat10.write(size=8)
+        model.mat10.write(size=16)
 
         model.validate()
         model.cross_reference()
 
-        dvmrel1_1.raw_fields()
-        dvmrel1_8.raw_fields()
-        dvmrel1_10.raw_fields()
-        dvmrel2_1.raw_fields()
-        mat8.raw_fields()
-        mat10.raw_fields()
+        #dvmrel1_1.raw_fields()
+        #dvmrel1_8.raw_fields()
+        #dvmrel1_10.raw_fields()
+        #dvmrel2_1.raw_fields()
+        #mat8.raw_fields()
+        #mat10.raw_fields()
         save_load_deck(model, run_convert=False)
 
-    def _test_dvcrel1(self):
+    def test_dvcrel1(self):
         """tests a DVCREL1, DVCREL2, DVGRID"""
         model = BDF(debug=False)
         oid = 10
@@ -724,10 +730,11 @@ class TestOpt(unittest.TestCase):
         desvar_id = 11
         desvar_ids = 11
         coeffs = 1.0
-        dvcrel1 = model.add_dvcrel1(oid, 'CONM2', conm2_eid, 'X2', desvar_ids, coeffs,
-                                    cp_min, cp_max, c0=0., validate=True, comment='dvcrel')
-        dvcrel1.Type = 'CONM2'
-        assert dvcrel1.Type == dvcrel1.element_type
+        dvcrel1_id = model.add_dvcrel1(oid, 'CONM2', conm2_eid, 'X2', desvar_ids, coeffs,
+                                       cp_min, cp_max, c0=0., validate=True, comment='dvcrel')
+        dvcrel1 = model.dvcrel1
+        dvcrel1.element_type = np.array(['CONM2'])
+        assert dvcrel1.element_type == dvcrel1.element_type
         #dvcrel1.pMax = p_max
         #dvcrel1.pMin = None
 
@@ -735,7 +742,7 @@ class TestOpt(unittest.TestCase):
         xinit = 0.1
         xlb = 0.01
         xub = 1.0
-        desvar = model.add_desvar(desvar_id, label, xinit, xlb, xub, comment='desvar')
+        desvar_id = model.add_desvar(desvar_id, label, xinit, xlb, xub, comment='desvar')
 
         mass = 1.
         nid1 = 100
@@ -749,16 +756,21 @@ class TestOpt(unittest.TestCase):
         pid = 102
         x = [1., 0., 0.]
         g0 = None
-        cbar = model.add_cbar(eid, pid, [nid1, nid2], x, g0, offt='GGG', pa=0, pb=0,
+        cbar_id = model.add_cbar(eid, pid, [nid1, nid2], x, g0, offt='GGG', pa=0, pb=0,
                               wa=None, wb=None, comment='cbar')
 
-        oid = 11
-        equation_id = 100
-        dvcrel2 = model.add_dvcrel2(oid, 'CBAR', eid, 'X3', equation_id, desvar_ids, labels=None,
-                                    cp_min=2., cp_max=4.,
-                                    validate=True, comment='dvcrel2')
-        dvcrel2.Type = 'CBAR'
-        assert dvcrel2.Type == dvcrel2.element_type
+        run_dvcrel2 = False
+        run_deqatn = False
+        run_dvgrid = False
+        if run_dvcrel2:
+            oid = 11
+            equation_id = 100
+            dvcrel2_id = model.add_dvcrel2(
+                oid, 'CBAR', eid, 'X3', equation_id, desvar_ids, labels=None,
+                cp_min=2., cp_max=4.,
+                validate=True, comment='dvcrel2')
+            dvcrel2.element_type = np.array(['CBAR'])
+            assert dvcrel2.element_type == dvcrel2.element_type
 
         mid = 1000
         dim = [1., 2., 0.1, 0.2]
@@ -769,70 +781,86 @@ class TestOpt(unittest.TestCase):
         nu = 0.3
         model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
 
-        eqs = ['fx2(x) = x + 10.']
-        deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
+        if run_deqatn:
+            eqs = ['fx2(x) = x + 10.']
+            deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
 
-        nid = 100
-        dvid = 10000
-        dxyz = [1., 2., 3.]
-        dvgrid1 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
-                                   comment='dvgrid')
-
-        nid = 101
-        dvid = 10001
-        dxyz = np.array([1., 2., 3.])
-        unused_dvgrid2 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
+        if run_dvgrid:
+            nid = 100
+            dvid = 10000
+            dxyz = [1., 2., 3.]
+            dvgrid1_id = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
                                           comment='dvgrid')
 
+            nid = 101
+            dvid = 10001
+            dxyz = np.array([1., 2., 3.])
+            unused_dvgrid2 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
+                                              comment='dvgrid')
+
         model.pop_parse_errors()
+        model.setup(run_geom_check=True)
 
-        dvcrel1.raw_fields()
-        dvcrel1.write_card(size=16)
-        dvcrel2.raw_fields()
-        dvcrel2.write_card(size=16)
-        dvgrid1.raw_fields()
-        dvgrid1.write_card(size=16)
+        #dvcrel1.raw_fields()
+        model.dvcrel1.write(size=16)
 
-        dvcrel1.comment = ''
-        dvcrel2.comment = ''
-        desvar.comment = ''
-        dvgrid1.comment = ''
-        dvcrel1_msg = dvcrel1.write_card(size=8)
-        dvcrel2_msg = dvcrel2.write_card(size=8)
-        desvar_msg = desvar.write_card(size=8)
-        dvgrid_msg = dvgrid1.write_card(size=8)
+        if run_dvcrel2:
+            #dvcrel2.raw_fields()
+            model.dvcrel2.write(size=16)
+
+        if run_dvgrid:
+            #dvgrid1.raw_fields()
+            dvgrid1.write(size=16)
+
+        #dvcrel1.comment = ''
+        #dvcrel2.comment = ''
+        #desvar.comment = ''
+        #dvgrid1.comment = ''
+        dvcrel1_msg = model.dvcrel1.write(size=8)
+        if run_dvcrel2:
+            dvcrel2_msg = model.dvcrel2.write(size=8)
+        desvar_msg = model.desvar.write(size=8)
+        dvgrid_msg = model.dvgrid.write(size=8)
 
         model.validate()
         model.cross_reference()
         model.pop_xref_errors()
 
-        dvcrel1.raw_fields()
-        dvcrel1.write_card(size=16)
-        dvcrel1.write_card(size=8)
+        #dvcrel1.raw_fields()
+        model.dvcrel1.write(size=16)
+        model.dvcrel1.write(size=8)
 
-        dvcrel2.raw_fields()
-        dvcrel2.write_card(size=16)
-        dvcrel2.write_card(size=8)
+        if run_dvcrel2:
+            #dvcrel2.raw_fields()
+            model.dvcrel2.write(size=16)
+            model.dvcrel2.write(size=8)
 
-        dvgrid1.raw_fields()
-        dvgrid1.write_card(size=16)
-        dvgrid1.write_card(size=8)
+        if run_dvgrid:
+            #dvgrid.raw_fields()
+            dvgrid.write(size=16)
+            dvgrid.write(size=8)
 
-        deqatn.write_card()
-        assert cbar.Mass() > 0, cbar.Mass()
-        model.uncross_reference()
+        #deqatn.write_card()
+        mass = model.cbar.mass()
+        assert mass > 0, mass
+        #model.uncross_reference()
 
         #-------------------------------------------
-        dvcrel1_lines = dvcrel1_msg.split('\n')
-        dvcrel2_lines = dvcrel2_msg.split('\n')
-        desvar_lines = desvar_msg.split('\n')
-        dvgrid_lines = dvgrid_msg.split('\n')
         model2 = BDF(debug=True)
 
+        dvcrel1_lines = dvcrel1_msg.split('\n')
         model2.add_card(dvcrel1_lines, 'DVCREL1', is_list=False)
-        model2.add_card(dvcrel2_lines, 'DVCREL2', is_list=False)
+
+        if run_dvcrel2:
+            dvcrel2_lines = dvcrel2_msg.split('\n')
+            model2.add_card(dvcrel2_lines, 'DVCREL2', is_list=False)
+
+        desvar_lines = desvar_msg.split('\n')
         model2.add_card(desvar_lines, 'DESVAR', is_list=False)
-        model2.add_card(dvgrid_lines, 'DVGRID', is_list=False)
+        if run_dvgrid:
+            dvgrid_lines = dvgrid_msg.split('\n')
+            model2.add_card(dvgrid_lines, 'DVGRID', is_list=False)
+
         #model2.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
                          #comment='conm2')
         #model2.add_grid(100, [1., 2., 3.])

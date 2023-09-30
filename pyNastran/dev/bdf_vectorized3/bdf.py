@@ -129,11 +129,10 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import DOPTPRM
-    #DCONADD, DCONSTR, DESVAR, TOPVAR, DDVAL, DOPTPRM, DLINK,
-    #DRESP1, DRESP2, DRESP3,
-    #DVCREL1, DVCREL2,
-    #DVMREL1, DVMREL2,
-    #DVPREL1, DVPREL2,
+    #DCONADD, TOPVAR, DDVAL, DOPTPRM, DLINK,
+    #DRESP3,
+    #DVCREL2,
+    #DVMREL2,
     #DVGRID, DSCREEN)
 #from .cards.optimization_nx import (
     #DVTREL1, GROUP, DMNCON,
@@ -798,7 +797,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', # 'DRESP3', 'TOPVAR',
             #'DVCREL1', 'DVCREL2',
             'DVPREL1', 'DVPREL2',
-            #'DVMREL1', 'DVMREL2',
+            'DVMREL1', # 'DVMREL2',
             #'DOPTPRM', 'DLINK', 'DCONADD', 'DVGRID',
             #'DSCREEN',
 
@@ -2569,8 +2568,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'LSEQ': partial(self._prepare_card, self.lseq),
             'SPCD' : partial(self._prepare_card, self.spcd), # enforced displacement; load
             'DEFORM' : partial(self._prepare_card, self.deform),  # enforced displacement
-            #'RFORCE' : partial(self._prepare_card, self.rforce),
-            #'RFORCE1' : partial(self._prepare_card, self.rforce1),
+            'RFORCE' : partial(self._prepare_card, self.rforce),
+            'RFORCE1' : partial(self._prepare_card, self.rforce1),
 
             # axisymmetric loads
             #'PLOADX1' : partial(self._prepare_card, self.ploadx1),
@@ -2703,9 +2702,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DCONSTR': partial(self._prepare_card, self.dconstr),
             'DVPREL1': partial(self._prepare_card, self.dvprel1),
             'DVPREL2': partial(self._prepare_card, self.dvprel2),
-            #'DVCREL1': partial(self._prepare_card, self.dvcrel1),
+            'DVCREL1': partial(self._prepare_card, self.dvcrel1),
             #'DVCREL2': partial(self._prepare_card, self.dvcrel2),
-            #'DVMREL1': partial(self._prepare_card, self.dvmrel1),
+            'DVMREL1': partial(self._prepare_card, self.dvmrel1),
             #'DVMREL2': partial(self._prepare_card, self.dvmrel2),
 
             #'DCONADD': partial(self._prepare_card, self.dconadd),

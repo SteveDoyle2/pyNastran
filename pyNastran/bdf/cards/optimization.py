@@ -41,6 +41,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 #TODO: replace this with formula
 valid_pcomp_codes = [3, #3-z0
@@ -3578,9 +3579,9 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
         eid = integer(card, 3, 'eid')
         cp_name = integer_or_string(card, 4, 'cp_name')
 
-        cp_min = double_or_blank(card, 5, 'cp_min', None)
-        cp_max = double_or_blank(card, 6, 'cp_max', 1e20)
-        c0 = double_or_blank(card, 7, 'c0', 0.0)
+        cp_min = double_or_blank(card, 5, 'cp_min', default=None)
+        cp_max = double_or_blank(card, 6, 'cp_max', default=1e20)
+        c0 = double_or_blank(card, 7, 'c0', default=0.0)
 
         dvids = []
         coeffs = []
@@ -4064,8 +4065,10 @@ class DVMREL1(DVXREL1):
         return DVMREL1(oid, mat_type, mid, mp_name, dvids, coeffs,
                        mp_min=None, mp_max=1e20, c0=0., validate=False, comment='')
 
-    def __init__(self, oid, mat_type, mid, mp_name, dvids, coeffs,
-                 mp_min=None, mp_max=1e20, c0=0., validate=False, comment=''):
+    def __init__(self, oid: int, mat_type: str, mid: int, mp_name: str,
+                 dvids: list[int], coeffs: list[float],
+                 mp_min: Optional[float]=None, mp_max: float=1e20,
+                 c0: float=0., validate: bool=False, comment: str=''):
         """
         Creates a DVMREL1 card
 
@@ -4073,7 +4076,7 @@ class DVMREL1(DVXREL1):
         ----------
         oid : int
             optimization id
-        prop_type : str
+        mat_type : str
             material card name (e.g., MAT1)
         mid : int
             material id
@@ -5458,7 +5461,7 @@ class DVGRID(BaseCard):
     def _verify(self, xref):
         pass
 
-def parse_table_fields(card_type, card, fields):
+def parse_table_fields(card_type: str, card: BDFCard, fields):
     """
     params = {
        (0, 'DRESP1') = [10, 20],

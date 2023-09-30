@@ -1362,6 +1362,37 @@ class TestLoads(unittest.TestCase):
         #assert np.array_equal(moments1, moments2)
         save_load_deck(model, run_convert=False)
 
+    def test_rforce(self):
+        """tests RFORCE"""
+        model = BDF(debug=False)
+        nid = 42
+        r123 = [1., 2., 3.]
+        model.add_grid(nid, [0., 0., 0.])
+
+        sid = 3
+        scale = 1.0
+        model.add_rforce(sid, nid, scale, r123,
+                         cid=0, method=1, racc=0., main_bulk=0, idrf=0, comment='')
+        model.add_rforce(sid, nid, scale, r123,
+                         cid=0, method=1, racc=0., main_bulk=0, idrf=0, comment='rforce')
+        save_load_deck(model)
+
+    def test_rforce1(self):
+        """tests RFORCE1"""
+        model = BDF(debug=False)
+        nid = 42
+        r123 = [1., 2., 3.]
+        model.add_grid(nid, [0., 0., 0.])
+
+        sid = 3
+        scale = 1.0
+        group_id = 3
+        model.add_rforce1(sid, nid, scale, group_id,
+                          cid=0, r123=None, racc=0., main_bulk=0, method=2, comment='')
+        model.add_rforce1(sid, nid, scale, group_id,
+                          cid=0, r123=r123, racc=0., main_bulk=0, method=2, comment='')
+        save_load_deck(model)
+
     def _test_loads_nonlinear(self):
         """tests a nonlinear variation on a FORCE and PLOAD4"""
         model = BDF()

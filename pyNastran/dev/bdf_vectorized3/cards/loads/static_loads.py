@@ -1467,3 +1467,439 @@ class SLOAD(Load):
             list_fields = ['SLOAD', sid, node, mag]
             bdf_file.write(print_card(list_fields))
         return
+
+
+class RFORCE(Load):
+    def __init__(self, model: BDF):
+        super().__init__(model)
+
+    def slice_card_by_index(self, i: np.ndarray) -> RFORCE:
+        load = RFORCE(self.model)
+        self.__apply_slice__(load, i)
+        return load
+
+    def __apply_slice__(self, load: RFORCE, i: np.ndarray) -> None:
+        #self.model.log.info(self.dphase_int)
+        #self.model.log.info(i)
+        assert len(i) > 0
+        load.n = len(i)
+
+        load.load_id = self.load_id[i]
+        load.node_id = self.node_id[i]
+        load.coord_id = self.coord_id[i]
+        load.scale = self.scale[i]
+        load.r = self.r[i, :]
+        load.method = self.method[i]
+        load.racc = self.racc[i]
+        load.main_bulk = self.main_bulk[i]
+        load.idrf = self.idrf[i]
+
+    def add(self, sid: int, nid: int, scale: float, r123: list[float],
+            cid: int=0, method: int=1, racc: float=0.,
+            main_bulk: int=0, idrf: int=0, comment: str='') -> int:
+        """
+        idrf doesn't exist in MSC 2005r2; exists in MSC 2016
+
+        Parameters
+        ----------
+        sid : int
+            load set id
+        nid : int
+            grid point through which the rotation vector acts
+        scale : float
+            scale factor of the angular velocity in revolutions/time
+        r123 : list[float, float, float] / (3, ) float ndarray
+            rectangular components of the rotation vector R that passes
+            through point G (R1**2+R2**2+R3**2 > 0 unless A and RACC are
+            both zero).
+        cid : int; default=0
+            Coordinate system defining the components of the rotation vector.
+        method : int; default=1
+            Method used to compute centrifugal forces due to angular velocity.
+        racc : int; default=0.0
+            Scale factor of the angular acceleration in revolutions per
+            unit time squared.
+        main_bulk : int; default=0
+            Indicates whether the CID coordinate system is defined in the main
+            Bulk Data Section (MB = -1) or the partitioned superelement Bulk
+            Data Section (MB = 0). Coordinate systems referenced in the main
+            Bulk Data Section are considered stationary with respect to the
+            assembly basic coordinate system.
+        idrf : int; default=0
+            ID indicating to which portion of the structure this particular
+            RFORCE entry applies. It is possible to have multiple RFORCE
+            entries in the same subcase for SOL 600 to represent different
+            portions of the structure with different rotational accelerations.
+            IDRF corresponds to a SET3 entry specifying the elements with this
+            acceleration. A BRKSQL entry may also be specified with a matching
+            IDRF entry.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, nid, cid, scale, r123,
+                           method, racc, main_bulk, idrf, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> None:
+        """
+        Adds a RFORCE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        nid = integer_or_blank(card, 2, 'nid', default=0)
+        cid = integer_or_blank(card, 3, 'cid', default=0)
+        scale = double_or_blank(card, 4, 'scale', default=1.)
+        r1 = double_or_blank(card, 5, 'r1', default=0.)
+        r2 = double_or_blank(card, 6, 'r2', default=0.)
+        r3 = double_or_blank(card, 7, 'r3', default=0.)
+        method = integer_or_blank(card, 8, 'method', default=1)
+        racc = double_or_blank(card, 9, 'racc', default=0.)
+        main_bulk = integer_or_blank(card, 10, 'mb', default=0)
+        idrf = integer_or_blank(card, 11, 'idrf', default=0)
+        assert len(card) <= 12, f'len(RFORCE card) = {len(card):d}\ncard={card}'
+        self.cards.append((sid, nid, cid, scale, [r1, r2, r3],
+                           method, racc, main_bulk, idrf, comment))
+        self.n += 1
+        return self.n
+
+    @Load.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+
+        #: Set identification number
+        load_id = np.zeros(ncards, dtype='int32')
+
+        # nid : int
+        #     grid point through which the rotation vector acts
+        node_id = np.zeros(ncards, dtype='int32')
+
+        # cid : int; default=0
+        #     Coordinate system defining the components of the rotation vector.
+        coord_id = np.zeros(ncards, dtype='int32')
+
+        # scale : float
+        #     scale factor of the angular velocity in revolutions/time
+        scale = np.zeros(ncards, dtype='float64')
+
+        # r123 : list[float, float, float] / (3, ) float ndarray
+        #     rectangular components of the rotation vector R that passes
+        #     through point G (R1**2+R2**2+R3**2 > 0 unless A and RACC are
+        #     both zero).
+        r = np.zeros((ncards, 3), dtype='float64')
+
+        # method : int; default=1
+        #     Method used to compute centrifugal forces due to angular velocity.
+        method = np.zeros(ncards, dtype='int32')
+
+        # racc : int; default=0.0
+        #     Scale factor of the angular acceleration in revolutions per
+        #     unit time squared.
+        racc = np.zeros(ncards, dtype='float64')
+
+        # mb : int; default=0
+        #     Indicates whether the CID coordinate system is defined in the main
+        #     Bulk Data Section (MB = -1) or the partitioned superelement Bulk
+        #     Data Section (MB = 0). Coordinate systems referenced in the main
+        #     Bulk Data Section are considered stationary with respect to the
+        #     assembly basic coordinate system.
+        main_bulk = np.zeros(ncards, dtype='int32')
+
+        # idrf : int; default=0
+        #     ID indicating to which portion of the structure this particular
+        #     RFORCE entry applies. It is possible to have multiple RFORCE
+        #     entries in the same subcase for SOL 600 to represent different
+        #     portions of the structure with different rotational accelerations.
+        #     IDRF corresponds to a SET3 entry specifying the elements with this
+        #     acceleration. A BRKSQL entry may also be specified with a matching
+        #     IDRF entry.
+        idrf = np.zeros(ncards, dtype='int32')
+
+        assert ncards > 0, ncards
+        for icard, card in enumerate(self.cards):
+            (sid, nid, cid, scalei, r123, methodi, racci, mb, idrfi, comment) = card
+            load_id[icard] = sid
+            node_id[icard] = nid
+            coord_id[icard] = cid
+            scale[icard] = scalei
+            r[icard, :] = r123
+            method[icard] = methodi
+            racc[icard] = racci
+            main_bulk[icard] = mb
+            idrf[icard] = idrfi
+
+        self._save(load_id, node_id, coord_id, scale, r, method, racc, main_bulk, idrf)
+        assert len(self.load_id) == self.n
+        self.cards = []
+
+    def _save(self, load_id, node_id, coord_id, scale, r, method, racc, main_bulk, idrf):
+        if len(self.load_id) != 0:
+            asdf
+        self.load_id = load_id
+        self.node_id = node_id
+        self.coord_id = coord_id
+        self.scale = scale
+        self.r = r
+        self.method = method
+        self.racc = racc
+        self.main_bulk = main_bulk
+        self.idrf = idrf
+        assert isinstance(self.r, np.ndarray), type(self.r)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        cid = self.model.coord.coord_id
+
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id), filter_node0=False,
+                   coord=(cid, self.coord_id))
+
+    def sum_forces_moments(self) -> np.ndarray:
+        self.model.log.warning("RFORCE hasn't implemented sum_forces_moments")
+        force_moment = np.zeros((len(self.load_id), 6), dtype='float64')
+        return force_moment
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+        #array_str, array_default_int
+        load_ids = array_str(self.load_id, size=size)
+        nids = array_default_int(self.node_id, default=0, size=size)
+        cids = array_default_int(self.coord_id, default=0, size=size)
+        methods = array_default_int(self.method, default=1, size=size)
+        mbs = array_default_int(self.main_bulk, default=0, size=size)
+        idrfs = array_default_int(self.idrf, default=0, size=size)
+        for sid, nid, cid, scale, r123, method, racc, mb, idrf in zip(
+            load_ids, nids, cids, self.scale, self.r.tolist(), methods, self.racc, mbs, idrfs):
+            list_fields = (['RFORCE', sid, nid, cid, scale] +
+                           r123 + [method, racc, mb, idrf])
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class RFORCE1(Load):
+    """
+    NX Nastran specific card
+
+    +---------+------+----+---------+---+----+----+----+--------+
+    |    1    |   2  | 3  |    4    | 5 |  6 |  7 |  8 |   9    |
+    +=========+======+====+=========+===+====+====+====+========+
+    | RFORCE1 | SID  | G  |   CID   | A | R1 | R2 | R3 | METHOD |
+    +---------+------+----+---------+---+----+----+----+--------+
+    |         | RACC | MB | GROUPID |   |    |    |    |        |
+    +---------+------+----+---------+---+----+----+----+--------+
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+
+    def slice_card_by_index(self, i: np.ndarray) -> RFORCE1:
+        load = RFORCE1(self.model)
+        self.__apply_slice__(load, i)
+        return load
+
+    def __apply_slice__(self, load: RFORCE1, i: np.ndarray) -> None:
+        #self.model.log.info(self.dphase_int)
+        #self.model.log.info(i)
+        assert len(i) > 0
+        load.n = len(i)
+
+        load.load_id = self.load_id[i]
+        load.node_id = self.node_id[i]
+        load.coord_id = self.coord_id[i]
+        load.scale = self.scale[i]
+        load.r = self.r[i, :]
+        load.method = self.method[i]
+        load.racc = self.racc[i]
+        load.main_bulk = self.main_bulk[i]
+        load.group_id = self.group_id[i]
+
+    def add(self, sid: int, nid: int, scale: float,
+            group_id: int, cid: int=0, r123: Optional[list[float]]=None,
+            racc: float=0., main_bulk: int=0, method: int=2,
+            comment: str='') -> int:
+        """
+        Creates an RFORCE1 card
+
+        Parameters
+        ----------
+        sid : int
+            load set id
+        nid : int
+            grid point through which the rotation vector acts
+        scale : float
+            scale factor of the angular velocity in revolutions/time
+        r123 : list[float, float, float] / (3, ) float ndarray
+            rectangular components of the rotation vector R that passes
+            through point G
+        racc : int; default=0.0
+            ???
+        main_bulk : int; default=0
+            Indicates whether the CID coordinate system is defined in the main
+            Bulk Data Section (MB = -1) or the partitioned superelement Bulk
+            Data Section (MB = 0). Coordinate systems referenced in the main
+            Bulk Data Section are considered stationary with respect to the
+            assembly basic coordinate system.
+        group_id : int
+            Group identification number. The GROUP entry referenced in the
+            GROUPID field selects the grid points to which the load is applied.
+        cid : int; default=0
+            Coordinate system defining the components of the rotation vector.
+        method : int; default=2
+            Method used to compute centrifugal forces due to angular velocity.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, nid, cid, scale, r123,
+                           method, racc, main_bulk, group_id, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> None:
+        """
+        Adds a RFORCE1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        nid = integer_or_blank(card, 2, 'nid', default=0)
+        cid = integer_or_blank(card, 3, 'cid', default=0)
+        scale = double_or_blank(card, 4, 'scale', default=1.)
+        r123 = [
+            double_or_blank(card, 5, 'r1', default=1.),
+            double_or_blank(card, 6, 'r2', default=0.),
+            double_or_blank(card, 7, 'r3', default=0.),
+        ]
+        method = integer_or_blank(card, 8, 'method', default=1)
+        racc = double_or_blank(card, 9, 'racc', default=0.)
+        main_bulk = integer_or_blank(card, 10, 'main_bulk', default=0)
+        group_id = integer_or_blank(card, 11, 'group_id', default=0)
+        assert len(card) <= 12, f'len(RFORCE1 card) = {len(card):d}\ncard={card}'
+        self.cards.append((sid, nid, cid, scale, r123, method, racc, main_bulk, group_id, comment))
+        self.n += 1
+        return self.n
+
+    @Load.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+
+        #: Set identification number
+        load_id = np.zeros(ncards, dtype='int32')
+
+        # nid : int
+        #     grid point through which the rotation vector acts
+        node_id = np.zeros(ncards, dtype='int32')
+
+        # cid : int; default=0
+        #     Coordinate system defining the components of the rotation vector.
+        coord_id = np.zeros(ncards, dtype='int32')
+
+        # scale : float
+        #     scale factor of the angular velocity in revolutions/time
+        scale = np.zeros(ncards, dtype='float64')
+
+        # r123 : list[float, float, float] / (3, ) float ndarray
+        #     rectangular components of the rotation vector R that passes
+        #     through point G (R1**2+R2**2+R3**2 > 0 unless A and RACC are
+        #     both zero).
+        r = np.zeros((ncards, 3), dtype='float64')
+
+        # method : int; default=1
+        #     Method used to compute centrifugal forces due to angular velocity.
+        method = np.zeros(ncards, dtype='int32')
+
+        # racc : int; default=0.0
+        #     Scale factor of the angular acceleration in revolutions per
+        #     unit time squared.
+        racc = np.zeros(ncards, dtype='float64')
+
+        # mb : int; default=0
+        #     Indicates whether the CID coordinate system is defined in the main
+        #     Bulk Data Section (MB = -1) or the partitioned superelement Bulk
+        #     Data Section (MB = 0). Coordinate systems referenced in the main
+        #     Bulk Data Section are considered stationary with respect to the
+        #     assembly basic coordinate system.
+        main_bulk = np.zeros(ncards, dtype='int32')
+
+        # Group identification number. The GROUP entry referenced in the
+        # GROUPID field selects the grid points to which the load is applied.
+        group_id = np.zeros(ncards, dtype='int32')
+
+        assert ncards > 0, ncards
+        for icard, card in enumerate(self.cards):
+            (sid, nid, cid, scalei, r123, methodi, racci, main_bulki, group_idi, comment) = card
+            load_id[icard] = sid
+            node_id[icard] = nid
+            coord_id[icard] = cid
+            scale[icard] = scalei
+            r[icard, :] = r123
+            method[icard] = methodi
+            racc[icard] = racci
+            main_bulk[icard] = main_bulki
+            group_id[icard] = group_idi
+        self._save(load_id, node_id, coord_id, scale, r, method, racc, main_bulk, group_id)
+        assert len(self.load_id) == self.n
+        self.cards = []
+
+    def _save(self, load_id, node_id, coord_id, scale, r, method, racc, main_bulk, group_id):
+        if len(self.load_id) != 0:
+            asdf
+        self.load_id = load_id
+        self.node_id = node_id
+        self.coord_id = coord_id
+        self.scale = scale
+        self.r = r
+        self.method = method
+        self.racc = racc
+        self.main_bulk = main_bulk
+        self.group_id = group_id
+
+    def sum_forces_moments(self) -> np.ndarray:
+        self.model.log.warning("RFORCE1 hasn't implemented sum_forces_moments")
+        force_moment = np.zeros((len(self.load_id), 6), dtype='float64')
+        return force_moment
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        cid = self.model.coord.coord_id
+
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id), filter_node0=False,
+                   coord=(cid, self.coord_id))
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+
+        load_ids = array_str(self.load_id, size=size)
+        nids = array_default_int(self.node_id, default=0, size=size)
+        cids = array_default_int(self.coord_id, default=0, size=size)
+        methods = array_default_int(self.method, default=1, size=size)
+        mbs = array_default_int(self.main_bulk, default=0, size=size)
+        group_ids = array_default_int(self.group_id, default=0, size=size)
+        for sid, nid, cid, scale, r123, method, racc, mb, group_id in zip(
+            load_ids, nids, cids, self.scale, self.r.tolist(), methods, self.racc, mbs, group_ids):
+            list_fields = (['RFORCE1', sid, nid, cid, scale]
+                           + r123 + [method, racc, mb, group_id])
+            bdf_file.write(print_card(list_fields))
+        return

@@ -1304,6 +1304,7 @@ class RFORCE(Load):
             IDRF entry.
         comment : str; default=''
             a comment for the card
+
         """
         if comment:
             self.comment = comment

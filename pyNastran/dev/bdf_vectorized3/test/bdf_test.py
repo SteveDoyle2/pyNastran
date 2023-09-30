@@ -5,34 +5,10 @@ import sys
 
 import pyNastran
 from pyNastran.dev.bdf_vectorized3.test.test_bdf import run_lots_of_files
+from pyNastran.bdf.test.bdf_test import remove_marc_files
 from pyNastran.op2.test.op2_test import get_failed_files, get_all_files
 from pyNastran.utils.dev import get_files_of_type
 
-def remove_marc_files(filenames):
-    """Marc files are not supported"""
-    filenames2 = []
-    for filename in filenames:
-        if 'marc' not in filename:
-            filenames2.append(filename)
-    return filenames2
-
-# def get_open_fds():
-    # import resource
-    # fds = []
-    # soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-    # for fd in range(0, soft):
-        # try:
-            # flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-        # except IOError:
-            # continue
-        # fds.append(fd)
-    # return fds
-
-# def get_file_names_from_file_number(fds):
-    # names = []
-    # for fd in fds:
-        # names.append(os.readlink('/proc/self/fd/%d' % fd))
-    # return names
 
 def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True,
         crash_cards=None):
@@ -42,7 +18,9 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
     # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test
     files = get_files_of_type('tests', '.bdf')
     files += get_files_of_type('tests', '.dat')
-    folders_file = 'tests/foldersRead.txt'
+
+    test_dirname = os.path.dirname(pyNastran.bdf.test.__file__)
+    folders_file = os.path.join(test_dirname, 'tests', 'foldersRead.txt')
 
     # isubcases = []
     # save_cases = True

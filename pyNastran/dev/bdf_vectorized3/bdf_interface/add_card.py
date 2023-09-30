@@ -3343,22 +3343,24 @@ class AddOptimization(BDFAttributes):
         self._add_methods._add_dresp_object(dresp)
         return dresp
 
-    def add_dvcrel1(self, oid, Type, eid, cp_name, dvids, coeffs,
-                    cp_min=None, cp_max=1e20, c0=0., validate=True, comment: str='') -> int:
+    def add_dvcrel1(self, dvcrel_id: int, element_type: str, eid: int, cp_name: str,
+                    desvar_ids: list[int], coeffs: list[float],
+                    cp_min=None, cp_max: float=1e20, c0: float=0.,
+                    validate: bool=True, comment: str='') -> int:
         """
         Creates a DVCREL1 card
 
         Parameters
         ----------
-        oid : int
+        element_type : int
             optimization id
-        prop_type : str
-            property card name (e.g., PSHELL)
-        EID : int
+        element_type : str
+            element card name (e.g., CONM2)
+        eid : int
             element id
         cp_name : str/int
             optimization parameter as an element connectivity name (e.g., X1)
-        dvids : list[int]
+        desvar_ids : list[int]
             DESVAR ids
         coeffs : list[float]
             scale factors for DESVAR ids
@@ -3374,23 +3376,24 @@ class AddOptimization(BDFAttributes):
             a comment for the card
 
         """
-        dvcrel = self.dvcrel1(
-            oid, Type, eid, cp_name, dvids, coeffs,
+        dvcrel = self.dvcrel1.add(
+            dvcrel_id, element_type, eid, cp_name, desvar_ids, coeffs,
             cp_min=cp_min, cp_max=cp_max, c0=c0,
             validate=validate, comment=comment)
         return dvcrel
 
-    def add_dvcrel2(self, oid, Type, eid, cp_name, deqation, dvids, labels,
-                    cp_min=None, cp_max=1e20, validate=True, comment: str='') -> DVCREL2:
+    def add_dvcrel2(self, dvcrel_id: int, element_type: str, eid: int, cp_name: str,
+                    deqation, desvar_ids: list[int], labels: list[float],
+                    cp_min=None, cp_max: float=1e20,
+                    validate: bool=True, comment: str='') -> int:
         """Creates a DVCREL2 card"""
         dvcrel = DVCREL2(oid, Type, eid, cp_name, deqation, dvids, labels,
                          cp_min=cp_min, cp_max=cp_max,
                          validate=validate, comment=comment)
-        self._add_methods._add_dvcrel_object(dvcrel)
         return dvcrel
 
-    def add_dvprel1(self, oid: int, prop_type: str, pid: int, pname_fid: Union[int, str],
-                    dvids: list[int],
+    def add_dvprel1(self, dvprel_id: int, prop_type: str, pid: int, pname_fid: Union[int, str],
+                    desvar_ids: list[int],
                     coeffs: list[float],
                     p_min=None, p_max: float=1e20, c0: float=0.0,
                     validate: bool=True, comment: str='') -> int:
@@ -3399,7 +3402,7 @@ class AddOptimization(BDFAttributes):
 
         Parameters
         ----------
-        oid : int
+        dvprel_id : int
             optimization id
         prop_type : str
             property card name (e.g., PSHELL)
@@ -3423,12 +3426,12 @@ class AddOptimization(BDFAttributes):
             a comment for the card
 
         """
-        dvprel = self.dvprel1.add(oid, prop_type, pid, pname_fid, dvids, coeffs,
+        dvprel = self.dvprel1.add(dvprel_id, prop_type, pid, pname_fid, desvar_ids, coeffs,
                                   p_min=p_min, p_max=p_max,
                                   c0=c0, validate=validate, comment=comment)
         return dvprel
 
-    def add_dvprel2(self, oid: int, prop_type: str, pid: int,
+    def add_dvprel2(self, dvprel_id: int, prop_type: str, pid: int,
                     pname_fid: Union[int, str], deqation: int,
                     dvids: list[int]=None,
                     labels: list[str]=None,
@@ -3439,7 +3442,7 @@ class AddOptimization(BDFAttributes):
 
         Parameters
         ----------
-        oid : int
+        dvprel_id : int
             optimization id
         prop_type : str
             property card name (e.g., PSHELL)
@@ -3468,7 +3471,7 @@ class AddOptimization(BDFAttributes):
 
         """
         dvprel = self.dvprel2.add(
-            oid, prop_type, pid, pname_fid, deqation, dvids, labels,
+            dvprel_id, prop_type, pid, pname_fid, deqation, dvids, labels,
             p_min=p_min, p_max=p_max, validate=validate, comment=comment)
         return dvprel
 
@@ -5267,15 +5270,18 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                                Type=Type, comment=comment)
         return load
 
-    def add_rforce(self, sid, nid, scale, r123, cid=0, method=1, racc=0.,
-                   mb=0, idrf=0, comment: str='') -> int:
+    def add_rforce(self, sid: int, nid: int, scale: float, r123: list[float],
+                   cid: int=0, method: int=1, racc: float=0.,
+                   main_bulk: int=0, idrf: int=0, comment: str='') -> int:
         """Creates an RFORCE card"""
         load = self.rforce.add(sid, nid, scale, r123, cid=cid, method=method, racc=racc,
-                               mb=mb, idrf=idrf, comment=comment)
+                               main_bulk=main_bulk, idrf=idrf, comment=comment)
         return load
 
-    def add_rforce1(self, sid, nid, scale, group_id, cid=0, r123=None, racc=0.,
-                    mb=0, method=2, comment: str='') -> int:
+    def add_rforce1(self, sid: int, nid: int, scale: float,
+                    group_id: int, cid: int=0, r123: Optional[list[float]]=None,
+                    racc: float=0., main_bulk: int=0, method: int=2,
+                    comment: str='') -> int:
         """
         Creates an RFORCE1 card
 
@@ -5292,7 +5298,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             through point G
         racc : int; default=0.0
             ???
-        mb : int; default=0
+        main_bulk : int; default=0
             Indicates whether the CID coordinate system is defined in the main
             Bulk Data Section (MB = -1) or the partitioned superelement Bulk
             Data Section (MB = 0). Coordinate systems referenced in the main
@@ -5310,7 +5316,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         load = self.rforce1.add(sid, nid, scale, group_id, cid=cid, r123=r123, racc=racc,
-                                mb=mb, method=method, comment=comment)
+                                main_bulk=main_bulk, method=method, comment=comment)
         return load
 
     def add_randps(self, sid, j, k, x=0., y=0., tid=0, comment: str='') -> int:

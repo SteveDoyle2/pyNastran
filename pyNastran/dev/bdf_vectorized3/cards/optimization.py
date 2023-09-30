@@ -8,15 +8,18 @@ from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran2.bdf.cards.base_card import BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
-    string, integer_double_string_or_blank,
+    string, string_or_blank, integer_double_string_or_blank,
     integer_string_or_blank, integer_double_or_blank, interpret_value)
 from pyNastran.bdf.field_writer_8 import set_blank_if_default # , print_card_8
 #from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.utils import build_table_lines
 
-from pyNastran.bdf.cards.optimization import build_table_lines, DRESP2_PACK_LENGTH
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim, get_print_card_8_16
+from pyNastran.bdf.cards.optimization import build_table_lines, parse_table_fields, DRESP2_PACK_LENGTH
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    VectorizedBaseCard, make_idim, get_print_card_8_16,
+    #hslice_by_idim,
+)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, array_default_str
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
@@ -933,6 +936,59 @@ class DRESP2(VectorizedBaseCard):
         assert len(label) <= 8, label
         if region is None:
             region = -1
+        if method is None:
+            method = 'MIN'
+        self.cards.append((
+            dresp_id, label, dequation, region, params,
+            method, c1, c2, c3, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a DRESP2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        dresp_id = integer(card, 1, 'dresp_id')
+        label = string(card, 2, 'label')
+        dequation = integer_or_string(card, 3, 'dequation_id')
+        region = integer_or_blank(card, 4, 'region', default=-1)
+        method = string_or_blank(card, 5, 'method', default='MIN')
+
+        # MSC 2005   Defaults: C1=100., C2=.005)
+        # MSC 2016.1 Defaults: C1=1., C2=.005, C3=10.)
+        c1 = double_or_blank(card, 6, 'c1', default=1.)
+        c2 = double_or_blank(card, 7, 'c2', default=0.005)
+        c3 = double_or_blank(card, 8, 'c3', default=10.)
+
+        fields = [interpret_value(field) for field in card[9:]]
+
+        # DRESP2, dresp_id,
+        #         DRESP1, 10, 20
+        #         DESVAR, 30
+        #         DRESP1, 40
+        # params = {
+        #    (0, 'DRESP1') = [10, 20],
+        #    (1, 'DESVAR') = [30],
+        #    (2, 'DRESP1') = [40],
+        # }
+        params = parse_table_fields('DRESP2', card, fields)
+
+        #print("--DRESP2 Params--")
+        #for key, value_list in sorted(params.items()):
+            #print("  key=%s value_list=%s" %(key, value_list))
+        #return DRESP2(dresp_id, label, dequation, region, params,
+                      #method, c1, c2, c3, comment=comment)
+
+
+        # ------------------------
         self.cards.append((
             dresp_id, label, dequation, region, params,
             method, c1, c2, c3, comment))
@@ -1679,5 +1735,420 @@ class DVPREL2(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
-DVCREL1 = DVCREL2 = DVPREL1
-DVMREL1 = DVMREL2 = DVPREL1
+
+class DVMREL1(VectorizedBaseCard):
+    """
+    Design Variable to Material Relation
+    Defines the relation between a material property and design variables.
+
+    +---------+-------+-------+-------+--------+-------+-------+--------+
+    |    1    |   2   |   3   |   4   |    5   |   6   |   7   |    8   |
+    +=========+=======+=======+=======+========+=======+=======+========+
+    | DVMREL1 |  ID   | TYPE  |  MID  | MPNAME | MPMIN | MPMAX |   C0   |
+    +---------+-------+-------+-------+--------+-------+-------+--------+
+    |         | DVID1 | COEF1 | DVID2 | COEF2  | DVID3 | COEF3 |  etc.  |
+    +---------+-------+-------+-------+--------+-------+-------+--------+
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.dvmrel_id = np.array([], dtype='int32')
+
+        #self.dvmrel_id = np.zeros(ncards, dtype='int32')
+        #self.material_id = np.zeros(ncards, dtype='int32')
+        #self.material_type = np.zeros(ncards, dtype='|U8')
+        #self.material_name = np.zeros(ncards, dtype='|U8')
+        #self.mp_min = np.zeros(ncards, dtype='float64')
+        #self.mp_max = np.zeros(ncards, dtype='float64')
+        #self.c0 = np.zeros(ncards, dtype='float64')
+        #self.ndesvar = np.zeros(ncards, dtype='int32')
+
+        self.material_id = np.array([], dtype='int32')
+        self.material_type = np.array([], dtype='|U8')
+        self.material_name = np.array([], dtype='float64')
+        ##self.field_num = np.array([], dtype='int32')
+        self.mp_min = np.array([], dtype='float64')
+        self.mp_max = np.array([], dtype='float64')
+        self.c0 = np.array([], dtype='float64')
+
+        self.ndesvar = np.array([], dtype='int32')
+        self.desvar_id = np.array([], dtype='int32')
+        self.coefficients = np.array([], dtype='float64')
+
+    def add(self, dvmrel_id: int, mat_type: str, mid: int, mp_name: str,
+            desvar_ids: list[int], coeffs: list[float],
+            mp_min: Optional[float]=None, mp_max: float=1e20,
+            c0: float=0., validate: bool=False, comment: str=''):
+        """
+        Creates a DVMREL1 card
+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        mat_type : str
+            material card name (e.g., MAT1)
+        mid : int
+            material id
+        mp_name : str
+            optimization parameter as a pname (material name; E)
+        dvids : list[int]
+            DESVAR ids
+        coeffs : list[float]
+            scale factors for DESVAR ids
+        mp_min : float; default=None
+            minimum material property value
+        mp_max : float; default=1e20
+            maximum material property value
+        c0 : float; default=0.
+            offset factor for the variable
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if isinstance(desvar_ids, integer_types):
+            desvar_ids = [desvar_ids]
+        if isinstance(coeffs, float_types):
+            coeffs = [coeffs]
+        assert len(desvar_ids) == len(coeffs), f'desvar_ids={desvar_ids} coeffs={coeffs}'
+        card = (dvmrel_id, mat_type, mid, mp_name, desvar_ids, coeffs,
+                mp_min, mp_max, c0, comment)
+        self.cards.append(card)
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a DVMREL1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        dvmrel_id = integer(card, 1, 'dvmrel_id')
+        mat_type = string(card, 2, 'mat_type')
+        mid = integer(card, 3, 'mid')
+        mp_name = string(card, 4, 'mpName')
+        #if self.mp_name in ['E', 'RHO', 'NU']:  positive values
+            #self.mp_min = double_or_blank(card, 5, 'mpMin', 1e-15)
+        #else: # negative
+            #self.mp_min = double_or_blank(card, 5, 'mpMin', -1e-35)
+        mp_min = double_or_blank(card, 5, 'mp_min', default=np.nan)  #: .. todo:: bad default
+        mp_max = double_or_blank(card, 6, 'mp_max', default=1e20)
+        c0 = double_or_blank(card, 7, 'c0', default=0.0)
+
+        desvar_ids = []
+        coeffs = []
+        end_fields = [interpret_value(field) for field in card[9:]]
+        nfields = len(end_fields) - 1
+        if nfields % 2 == 1:
+            end_fields.append(None)
+            nfields += 1
+
+        i = 0
+        for i in range(0, nfields, 2):
+            desvar_ids.append(end_fields[i])
+            coeffs.append(end_fields[i + 1])
+        if nfields % 2 == 1:
+            print(card)
+            print("desvar_ids = %s" % (desvar_ids))
+            print("coeffs = %s" % (coeffs))
+            raise RuntimeError('invalid DVMREL1...')
+        #return DVMREL1(dvmrel_id, mat_type, mid, mp_name, desvar_ids, coeffs,
+                       #mp_min=mp_min, mp_max=mp_max, c0=c0, comment=comment)
+        card = (dvmrel_id, mat_type, mid, mp_name, desvar_ids, coeffs,
+                mp_min, mp_max, c0, comment)
+        self.cards.append(card)
+        self.n += 1
+        return self.n
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        dvmrel_id = np.zeros(ncards, dtype='int32')
+        material_id = np.zeros(ncards, dtype='int32')
+        material_type = np.zeros(ncards, dtype='|U8')
+        material_name = np.zeros(ncards, dtype='|U8')
+        mp_min = np.zeros(ncards, dtype='float64')
+        mp_max = np.zeros(ncards, dtype='float64')
+        c0 = np.zeros(ncards, dtype='float64')
+        ndesvar = np.zeros(ncards, dtype='int32')
+
+        all_desvars = []
+        all_coeffs = []
+        for icard, card in enumerate(self.cards):
+            (dvmrel_idi, mat_type, mid, mp_name, desvar_idsi, coeffsi,
+             mp_mini, mp_maxi, c0i, comment) = card
+
+            dvmrel_id[icard] = dvmrel_idi
+            material_type[icard] = mat_type
+            material_id[icard] = mid
+            material_name[icard] = mp_name
+            mp_min[icard] = mp_mini
+            mp_max[icard] = mp_maxi
+            c0[icard] = c0i
+
+            ndesvar[icard] = len(desvar_idsi)
+            all_desvars.extend(desvar_idsi)
+            all_coeffs.extend(coeffsi)
+        desvar_id = np.array(all_desvars, dtype='int32')
+        coefficients = np.array(all_coeffs, dtype='float64')
+        self._save(dvmrel_id, material_id, material_type, material_name,
+                   mp_min, mp_max, c0, ndesvar, desvar_id, coefficients)
+        self.cards = []
+
+    def _save(self, dvmrel_id, material_id, material_type, material_name,
+              mp_min, mp_max, c0, ndesvar, desvar_id, coefficients):
+        if len(self.dvmrel_id) != 0:
+            assdf
+        self.dvmrel_id = dvmrel_id
+        self.material_id = material_id
+        self.material_type = material_type
+        self.material_name = material_name
+        self.mp_min = mp_min
+        self.mp_max = mp_max
+        self.c0 = c0
+        self.ndesvar = ndesvar
+        self.desvar_id = desvar_id
+        self.coefficients = coefficients
+
+    @property
+    def idim(self) -> np.ndarray:
+        return make_idim(self.n, self.ndesvar)
+
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.dvmrel_id) == 0:
+            return
+
+        print_card = get_print_card_8_16(size)
+        dvmrel_ids = array_str(self.dvmrel_id, size=size)
+        material_ids = array_str(self.material_id, size=size)
+        desvar_ids = array_str(self.desvar_id, size=size)
+
+        for dvmrel_id, mid, mat_type, mp_name, \
+            mp_min, mp_max, c0, idim in zip_longest(dvmrel_ids, material_ids, self.material_type,
+                                                    self.material_name,
+                                                    self.mp_max, self.mp_min, self.c0, self.idim):
+            idim0, idim1 = idim
+            desvars = desvar_ids[idim0:idim1]
+            coeffs = self.coefficients[idim0:idim1]
+            #p_max = set_blank_if_default(p_max, 1e20)
+            #c0 = set_blank_if_default(c0, 0.)
+            list_fields = ['DVCREL1', dvmrel_id, mat_type, mid,
+                           mp_name, mp_min, mp_max, c0, None]
+            for (dvid, coeff) in zip_longest(desvars, coeffs):
+                list_fields.append(dvid)
+                list_fields.append(coeff)
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class DVCREL1(VectorizedBaseCard):
+    """
+    Design Variable to Connectivity Relation
+    Defines the relation between a element and design variables.
+
+    +---------+-------+-------+-------+--------+-------+-------+--------+
+    |    1    |   2   |   3   |   4   |    5   |   6   |   7   |    8   |
+    +=========+=======+=======+=======+========+=======+=======+========+
+    | DVCREL1 |  ID   | TYPE  |  EID  | CPNAME | CPMIN | CPMAX |   C0   |
+    +---------+-------+-------+-------+--------+-------+-------+--------+
+    |         | DVID1 | COEF1 | DVID2 | COEF2  | DVID3 | COEF3 |  etc.  |
+    +---------+-------+-------+-------+--------+-------+-------+--------+
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.dvcrel_id = np.array([], dtype='int32')
+
+        self.element_id = np.array([], dtype='int32')
+        self.element_type = np.array([], dtype='|U8')
+        self.cp_name = np.array([], dtype='|U8')
+        self.cp_min = np.array([], dtype='float64')
+        self.cp_max = np.array([], dtype='float64')
+        self.c0 = np.array([], dtype='float64')
+
+        self.ndesvar = np.array([], dtype='int32')
+        self.desvar_id = np.array([], dtype='int32')
+        self.coefficients = np.array([], dtype='float64')
+
+    def add(self, dvcrel_id: int, element_type: str, eid: int, cp_name: str,
+            desvar_ids: list[int], coeffs: list[float],
+            cp_min: Optional[float]=None, cp_max: float=1e20,
+            c0: float=0., validate: bool=False, comment: str=''):
+        """
+        Creates a DVCREL1 card
+
+        Parameters
+        ----------
+        dvcrel_id : int
+            optimization id
+        element_type : str
+            material card name (e.g., CONM2)
+        eid : int
+            material id
+        cp_name : str
+            optimization parameter as a pname (material name; X1)
+        desvar_ids : list[int]
+            DESVAR ids
+        coeffs : list[float]
+            scale factors for DESVAR ids
+        cp_min : float; default=None
+            minimum material property value
+        cp_max : float; default=1e20
+            maximum material property value
+        c0 : float; default=0.
+            offset factor for the variable
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if isinstance(desvar_ids, integer_types):
+            desvar_ids = [desvar_ids]
+        if isinstance(coeffs, float_types):
+            coeffs = [coeffs]
+        assert len(desvar_ids) == len(coeffs), f'desvar_ids={desvar_ids} coeffs={coeffs}'
+        card = (dvcrel_id, element_type, eid, cp_name, desvar_ids, coeffs,
+                cp_min, cp_max, c0, comment)
+        self.cards.append(card)
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a DVCREL1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        dvcrel_id = integer(card, 1, 'dvcrel_id')
+        element_type = string(card, 2, 'Type')
+        eid = integer(card, 3, 'eid')
+        cp_name = integer_or_string(card, 4, 'cp_name')
+
+        cp_min = double_or_blank(card, 5, 'cp_min', default=None)
+        cp_max = double_or_blank(card, 6, 'cp_max', default=1e20)
+        c0 = double_or_blank(card, 7, 'c0', default=0.0)
+
+        desvar_ids = []
+        coeffs = []
+        end_fields = [interpret_value(field) for field in card[9:]]
+        nfields = len(end_fields) - 1
+        if nfields % 2 == 1:
+            end_fields.append(None)
+            nfields += 1
+
+        i = 0
+        for i in range(0, nfields, 2):
+            desvar_ids.append(end_fields[i])
+            coeffs.append(end_fields[i + 1])
+        if nfields % 2 == 1:
+            print(card)
+            print("desvar_ids = %s" % (desvar_ids))
+            print("coeffs = %s" % (coeffs))
+            raise RuntimeError('invalid DVMREL1...')
+        card = (dvcrel_id, element_type, eid, cp_name, desvar_ids, coeffs,
+                cp_min, cp_max, c0, comment)
+        self.cards.append(card)
+        self.n += 1
+        return self.n
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        dvcrel_id = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype='int32')
+        element_type = np.zeros(ncards, dtype='|U8')
+        cp_name = np.zeros(ncards, dtype='|U8')
+        cp_min = np.zeros(ncards, dtype='float64')
+        cp_max = np.zeros(ncards, dtype='float64')
+        c0 = np.zeros(ncards, dtype='float64')
+        ndesvar = np.zeros(ncards, dtype='int32')
+
+        all_desvars = []
+        all_coeffs = []
+        for icard, card in enumerate(self.cards):
+            (dvmrel_idi, element_typei, eid, cp_namei,
+             desvar_idsi, coeffsi,
+             cp_mini, cp_maxi, c0i, comment) = card
+
+            dvcrel_id[icard] = dvmrel_idi
+            element_type[icard] = element_typei
+            element_id[icard] = eid
+            cp_name[icard] = cp_namei
+            cp_min[icard] = cp_mini
+            cp_max[icard] = cp_maxi
+            c0[icard] = c0i
+
+            ndesvar[icard] = len(desvar_idsi)
+            all_desvars.extend(desvar_idsi)
+            all_coeffs.extend(coeffsi)
+        desvar_id = np.array(all_desvars, dtype='int32')
+        coefficients = np.array(all_coeffs, dtype='float64')
+        self._save(dvcrel_id, element_id, element_type, cp_name,
+                   cp_min, cp_max, c0, ndesvar, desvar_id, coefficients)
+        self.cards = []
+
+    def _save(self, dvcrel_id, element_id, element_type, cp_name,
+              cp_min, cp_max, c0, ndesvar, desvar_id, coefficients):
+        if len(self.dvcrel_id) != 0:
+            assdf
+        self.dvcrel_id = dvcrel_id
+        self.element_id = element_id
+        self.element_type = element_type
+        self.cp_name = cp_name
+        self.cp_min = cp_min
+        self.cp_max = cp_max
+        self.c0 = c0
+        self.ndesvar = ndesvar
+        self.desvar_id = desvar_id
+        self.coefficients = coefficients
+
+    @property
+    def idim(self) -> np.ndarray:
+        return make_idim(self.n, self.ndesvar)
+
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.dvcrel_id) == 0:
+            return
+
+        print_card = get_print_card_8_16(size)
+        dvcrel_ids = array_str(self.dvcrel_id, size=size)
+        element_ids = array_str(self.element_id, size=size)
+        desvar_ids = array_str(self.desvar_id, size=size)
+
+        for dvcrel_id, eid, element_type, cp_name, \
+            cp_min, cp_max, c0, idim in zip_longest(dvcrel_ids, element_ids, self.element_type,
+                                                    self.cp_name,
+                                                    self.cp_max, self.cp_min, self.c0, self.idim):
+            idim0, idim1 = idim
+            desvars = desvar_ids[idim0:idim1]
+            coeffs = self.coefficients[idim0:idim1]
+            #p_max = set_blank_if_default(p_max, 1e20)
+            #c0 = set_blank_if_default(c0, 0.)
+            list_fields = ['DVCREL1', dvcrel_id, element_type, eid,
+                           cp_name, cp_min, cp_max, c0, None]
+            for (dvid, coeff) in zip_longest(desvars, coeffs):
+                list_fields.append(dvid)
+                list_fields.append(coeff)
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+DVCREL2 = DVPREL1
+DVMREL2 = DVPREL1
