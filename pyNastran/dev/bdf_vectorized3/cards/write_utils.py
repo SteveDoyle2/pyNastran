@@ -1,6 +1,7 @@
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from typing import Callable
 
 MAX_8_CHAR_INT = 99_999_999
 
@@ -20,12 +21,20 @@ def print_card_16_comment(fields: list[str]) -> str:
             msg += '\n$       '
     return msg.rstrip('$ \n') + '\n'
 
-def get_print_card(size: int, max_int: int):
+def get_print_card(size: int, max_int: int) -> Callable:
     if size == 16 or max_int > MAX_8_CHAR_INT:
         print_card = print_card_16
     else:
         print_card = print_card_8
     return print_card
+
+def get_print_card_size(size: int, max_int: int) -> tuple[Callable, int]:
+    if size == 16 or max_int > MAX_8_CHAR_INT:
+        print_card = print_card_16
+        size = 16
+    else:
+        print_card = print_card_8
+    return print_card, size
 
 #def array_8(ndarray: np.ndarray) -> np.ndarray:
     #str_array = ndarray.astype('|U8')

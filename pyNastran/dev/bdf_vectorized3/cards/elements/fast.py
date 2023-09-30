@@ -87,12 +87,9 @@ class CFAST(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
 
@@ -282,12 +279,9 @@ class PFAST(Property):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
         diameter = np.zeros(ncards, dtype='float64')
         kt = np.zeros((ncards, 3), dtype='float64')

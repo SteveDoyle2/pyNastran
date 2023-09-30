@@ -123,12 +123,9 @@ class RBAR(RigidElement):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @RigidElement.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         element_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 2), dtype='int32')
         dependent_dof = np.zeros((ncards, 2), dtype='int32')
@@ -247,12 +244,9 @@ class RROD(RigidElement):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @RigidElement.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         element_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 2), dtype='int32')
         dependent_dof = np.zeros((ncards, 2), dtype='int32')
@@ -400,12 +394,9 @@ class RBE1(RigidElement):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @RigidElement.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         self.element_id = np.zeros(ncards, dtype='int32')
         self.ndependent = np.zeros(ncards, dtype='int32')
         self.nindependent = np.zeros(ncards, dtype='int32')
@@ -821,13 +812,9 @@ class RBE3(RigidElement):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @RigidElement.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-
         # basic
         element_id = []
         ref_grid = []

@@ -265,12 +265,9 @@ class CROD(Element):
         elem.nodes = self.nodes[i, :]
         elem.n = len(i)
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
-        ncards = len(self.cards)
-        if ncards == 0:
-            return
+        #ncards = len(self.cards)
         #element_id = np.zeros(ncards, dtype='int32')
         #property_id = np.zeros(ncards, dtype='int32')
         #nodes = np.zeros((ncards, 2), dtype='int32')
@@ -459,12 +456,9 @@ class PROD(Property):
         prop.nsm = self.nsm[i]
         prop.n = len(i)
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         A = np.zeros(ncards, dtype='float64')
@@ -574,12 +568,9 @@ class CTUBE(Element):
         elem.nodes = self.nodes[i, :]
         elem.n = len(i)
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
-        ncards = len(self.cards)
-        if ncards == 0:
-            return
+        #ncards = len(self.cards)
         element_ids = []
         property_ids = []
         nodess = []

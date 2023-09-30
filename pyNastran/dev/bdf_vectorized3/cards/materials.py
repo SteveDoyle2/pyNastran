@@ -160,14 +160,11 @@ class MAT1(Material):
         self.cards.append((mid, E, G, nu, rho, alpha, tref, ge, St, Sc, Ss,
                            mcsid, comment))
         self.n += 1
+        return self.n
 
+    @Material.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         material_id = np.zeros(ncards, dtype='int32')
         E = np.zeros(ncards, dtype='float64')
         G = np.zeros(ncards, dtype='float64')
@@ -382,13 +379,9 @@ class MAT2(Material):
         self.n += 1
         return self.n
 
+    @Material.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         material_id = np.zeros(ncards, dtype='int32')
         G11 = np.zeros(ncards, dtype='float64')
         G12 = np.zeros(ncards, dtype='float64')
@@ -627,13 +620,9 @@ class MAT3(Material):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Material.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         material_id = np.zeros(ncards, dtype='int32')
         ex = np.zeros(ncards, dtype='float64')
         eth = np.zeros(ncards, dtype='float64')
@@ -787,13 +776,9 @@ class MAT4(Material):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Material.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         material_id = np.zeros(ncards, dtype='int32')
         k = np.zeros(ncards, dtype='float64')
         rho = np.zeros(ncards, dtype='float64')
@@ -1134,13 +1119,9 @@ class MAT8(Material):
         self.n += 1
         return self.n
 
+    @Material.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         material_id = np.zeros(ncards, dtype='int32')
 
         E11 = np.zeros(ncards, dtype='float64')
@@ -1694,12 +1675,9 @@ class MAT10(Material):
         self.n += 1
         return self.n
 
+    @Material.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         material_id = np.zeros(ncards, dtype='int32')
         bulk = np.zeros(ncards, dtype='float64')
         c  = np.zeros(ncards, dtype='float64')

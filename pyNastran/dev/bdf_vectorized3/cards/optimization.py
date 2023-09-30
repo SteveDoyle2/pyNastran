@@ -91,13 +91,9 @@ class DESVAR(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-
         desvar_id = np.zeros(ncards, dtype='int32')
         #: user-defined name for printing purposes
         label = np.zeros(ncards, dtype='|U8')
@@ -337,13 +333,9 @@ class DLINK(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-
         self.desvar_id = np.zeros(ncards, dtype='int32')
         self.dependent_desvar = np.zeros(ncards, dtype='int32')
         self.nindependent_desvars = np.zeros(ncards, dtype='int32')
@@ -474,13 +466,9 @@ class DVGRID(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-
         self.desvar_id = np.zeros(ncards, dtype='int32')
         self.node_id = np.zeros(ncards, dtype='int32')
         self.coord_id = np.zeros(ncards, dtype='int32')
@@ -951,12 +939,9 @@ class DRESP2(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         dresp_id = np.zeros(ncards, dtype='int32')
 
         #: user-defined name for printing purposes
@@ -1361,13 +1346,9 @@ class DVPREL1(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-
         self.dvprel_id = np.zeros(ncards, dtype='int32')
         self.property_id = np.zeros(ncards, dtype='int32')
         self.property_type = np.zeros(ncards, dtype='|U8')

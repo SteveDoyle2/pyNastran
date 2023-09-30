@@ -69,12 +69,9 @@ class CDAMP1(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 2), dtype='int32')
@@ -205,12 +202,9 @@ class CDAMP2(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         b = np.zeros(ncards, dtype='float64')
         nodes = np.zeros((ncards, 2), dtype='int32')
@@ -297,12 +291,9 @@ class CDAMP3(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         spoints = np.zeros((ncards, 2), dtype='int32')
@@ -402,12 +393,9 @@ class CDAMP4(Element):
         assert len(card) <= 9, f'len(CDAMP4 card) = {len(card):d}\ncard={card}'
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         b = np.zeros(ncards, dtype='float64')
         spoints = np.zeros((ncards, 2), dtype='int32')
@@ -489,12 +477,9 @@ class CDAMP5(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 2), dtype='int32')
@@ -591,13 +576,9 @@ class PDAMP(Property):
         assert len(card) <= 9, f'len(PDAMP card) = {len(card):d}\ncard={card}'
         return ns
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         property_id = np.zeros(ncards, dtype='int32')
         b = np.zeros(ncards, dtype='float64')
 
@@ -675,13 +656,9 @@ class PDAMP5(Property):
         assert len(card) <= 3, f'len(PDAMP5 card) = {len(card):d}\ncard={card}'
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         b = np.zeros(ncards, dtype='float64')
@@ -825,12 +802,9 @@ class CVISC(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 2), dtype='int32')
@@ -948,14 +922,9 @@ class PVISC(Property):
             self.n += 1
         return self.n
 
-
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         property_id = np.zeros(ncards, dtype='int32')
         cr = np.zeros(ncards, dtype='float64')
         ce = np.zeros(ncards, dtype='float64')
@@ -1046,12 +1015,9 @@ class CGAP(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         self.element_id = np.zeros(ncards, dtype='int32')
         self.property_id = np.zeros(ncards, dtype='int32')
         self.nodes = np.zeros((ncards, 2), dtype='int32')

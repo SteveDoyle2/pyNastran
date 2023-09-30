@@ -138,12 +138,9 @@ class CBUSH(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = []
         property_id = np.zeros(ncards, dtype='int32')
         nodes = []
@@ -389,12 +386,9 @@ class PBUSH(Property):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         self.property_id = np.zeros(ncards, dtype='int32')
 
         k_fields = np.zeros((ncards, 6), dtype='float64')
@@ -606,12 +600,9 @@ class PBUSHT(Property):
         #return PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
                       #comment=comment)
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
         k_tables = np.zeros((ncards, 6), dtype='int32')
         b_tables = np.zeros((ncards, 6), dtype='int32')
@@ -720,12 +711,9 @@ class CBUSH1D(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         self.element_id = np.zeros(ncards, dtype='int32')
         self.property_id = np.zeros(ncards, dtype='int32')
         self.nodes = np.zeros((ncards, 2), dtype='int32')
@@ -854,12 +842,9 @@ class PBUSH1D(Property):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
 
         k = np.zeros(ncards, dtype='float64')

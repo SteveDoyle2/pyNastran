@@ -115,12 +115,9 @@ class NSMi(VectorizedBaseCard):
         #self.n += 1
         return self.n
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         nsm_id = np.zeros(ncards, dtype='int32')
         nsm_type = np.zeros(ncards, dtype='|U7') # ELEMENT
         nvalues = np.zeros(ncards, dtype='int32')
@@ -305,12 +302,10 @@ class NSM1i(VectorizedBaseCard):
     def ielement(self) -> np.ndarray:
         return make_idim(self.n, self.npid_eid)
 
+
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         nsm_id = np.zeros(ncards, dtype='int32')
 
         # PSHELL, ELEMENT

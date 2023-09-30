@@ -22,7 +22,7 @@ from collections import defaultdict
 import traceback
 
 from typing import (
-    Set, Sequence, Optional, Union, Any, TYPE_CHECKING)
+    Sequence, Optional, Union, Any, TYPE_CHECKING)
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -492,12 +492,12 @@ def load_bdf_object(obj_filename:str, xref: bool=True, log=None, debug: bool=Tru
 #class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 class BDF(AddCards, WriteMesh): # BDFAttributes
     """NASTRAN BDF Reader/Writer/Editor class."""
-    _properties = ['is_bdf_vectorized', 'nid_map', 'wtmass', 'type_slot_str'] + [
+    _properties = ['nid_map', 'wtmass', 'type_slot_str'] + [
         'nastran_format', 'is_long_ids', 'sol', 'subcases',
         'nnodes', 'node_ids', 'point_ids', 'npoints',
         'nelements', 'element_ids', 'nproperties', 'property_ids',
         'nmaterials', 'material_ids', 'ncoords', 'coord_ids',
-        'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map',
+        'ncaeros', 'caero_ids', 'wtmass', 'nid_map',
         #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
     ]
 
@@ -1137,7 +1137,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             disable_set = set(cards)
         self.cards_to_read = self.cards_to_read.difference(disable_set)
 
-    def set_cards(self, cards: Union[list[str],Set[str]]) -> None:
+    def enable_cards(self, cards: Sequence[str]) -> None:
         """
         Method for setting the cards that will be processed
 
@@ -1148,7 +1148,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
         .. python ::
 
-            bdf_model.set_cards(['GRID', 'CTRIA3'])
+            bdf_model.enable_cards(['GRID', 'CTRIA3'])
 
         """
         if cards is None:
@@ -1828,8 +1828,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         else:  # very common
             self.sol_method = None
 
-    def update_card(self, card_name: str, icard: int, ifield: int,
-                    value: int | float | str) -> None:
+    def update_card(self, card_name: str, ids: np.ndarray, ifield: int,
+                    values: np.ndarray) -> None:
         """
         Updates a Nastran card based on standard Nastran optimization names
 
@@ -1838,14 +1838,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         card_name : str
             the name of the card
             (e.g. GRID)
-        icard : int
+        ids : (n, ) int np.ndarray
             the unique 1-based index identifier for the card
             (e.g. the GRID id)
         ifield : int
             the index on the card
             (e.g. X on GRID card as an integer representing the field number)
-        value : varies
-            the value to assign
+        value : (n, ) int/float/str np.ndarray
+            the value to assign (float/int/str)
 
         Returns
         -------
@@ -1871,23 +1871,15 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         #_type_to_slot_map['GRID'] : ['nodes']
 
         # get the storage object
-        try:
-            field_str = self._type_to_slot_map[card_name] # 'nodes'
-        except KeyError:
-            msg = 'Updating card card_name=%r is not supported\nkeys=%s' % (
-                card_name, list(self._type_to_slot_map.keys()))
-            raise KeyError(msg)
+        card = getattr(self, card_name.lower())
 
-        objs = getattr(self, field_str) # self.nodes
-        # get the specific card
-        try:
-            obj = objs[icard]
-        except KeyError:
-            msg = 'Could not find %s ID=%r' % (card_name, icard)
-            raise KeyError(msg)
-
-        # update the card
-        obj.update_field(ifield, value)
+        #ids = [1, 2, 3]  # -> GRID 1, 2, 3
+        #ifield = 2   # CP
+        #ifield = 3   # X
+        #ifield = 4   # Y
+        #ifield = 5   # Z
+        #values = [0.1, 0.2, 0.3]
+        card.update_field(ifield, ids, values)
         return obj
 
     def set_dynamic_syntax(self, dict_of_vars: dict[str, int | float | str]) -> None:
@@ -3116,30 +3108,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                                                  is_list=False, has_none=has_none)
         self._add_card_helper(card_obj, card, card_name, comment)
 
-    def get_xyz_in_coord_no_xref(self, cid=0, fdtype='float64', sort_ids=True):
-        """see get_xyz_in_coord"""
-        npoints, nids, all_nodes = self._get_npoints_nids_allnids()
-
-        xyz_cid0 = np.zeros((npoints, 3), dtype=fdtype)
-        if cid == 0:
-            for i, nid in enumerate(nids):
-                node = self.nodes[nid]
-                xyz = node.get_position_no_xref(self)
-                xyz_cid0[i, :] = xyz
-        else:
-            for i, nid in enumerate(nids):
-                node = self.nodes[nid]
-                xyz = node.get_position_wrt_no_xref(self, cid)
-                xyz_cid0[i, :] = xyz
-        if sort_ids:
-            isort = np.argsort(all_nodes)
-            xyz_cid0 = xyz_cid0[isort, :]
-        return all_nodes, xyz_cid0
-
     def _get_npoints_nids_allnids(self):
         """helper method for get_xyz_in_coord"""
-        if self.is_bdf_vectorized:
-            return self.nodes.nids
+        return self.nodes.nids
 
         nnodes = len(self.nodes)
         nspoints = 0
@@ -3340,7 +3311,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             card_class, add_card_function = self._card_parser[card_name]
             try:
                 class_instance = card_class.add_card(card_obj, comment=comment)
-                add_card_function(class_instance)
+                card_idi = add_card_function(class_instance)
+                if card_name not in {'PARAM', 'MDLPRM'}:
+                    if not isinstance(card_idi, int):
+                        msg = f'card_name={card_name!r} card_idi={card_idi}'
+                        raise TypeError(msg)
+
             except TypeError:
                 # this should never be turned on, but is useful for testing
                 print('problem adding %s' % card_obj)
@@ -3686,21 +3662,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 for cp in cord1s_to_update:
                     coord = self.coords[cp]
                     nid1, nid2, nid3 = coord.node_ids
-                    if self.is_bdf_vectorized or 1:
-                        i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
-                        assert nids[i1] == nid1
-                        assert nids[i2] == nid2
-                        assert nids[i3] == nid3
-                        coord.e1 = xyz_cid0[i1, :] #: the origin in the local frame
-                        coord.e2 = xyz_cid0[i2, :] #: a point on the z-axis
-                        coord.e3 = xyz_cid0[i3, :] #: a point on the xz-plane
-                    else:
-                        g1_ref = nodes[nid1]
-                        g2_ref = nodes[nid2]
-                        g3_ref = nodes[nid3]
-                        coord.e1 = g1_ref.get_position() #: the origin in the local frame
-                        coord.e2 = g2_ref.get_position() #: a point on the z-axis
-                        coord.e3 = g3_ref.get_position() #: a point on the xz-plane
+
+                    i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
+                    assert nids[i1] == nid1
+                    assert nids[i2] == nid2
+                    assert nids[i3] == nid3
+                    coord.e1 = xyz_cid0[i1, :] #: the origin in the local frame
+                    coord.e2 = xyz_cid0[i2, :] #: a point on the z-axis
+                    coord.e3 = xyz_cid0[i3, :] #: a point on the xz-plane
                     coord.setup_no_xref(self)
                     #coord.rid_ref = self.coords[coord.rid]
                     #coord.setup_no_xref(self)
@@ -3726,15 +3695,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                     #coord.e1 = xyz_cid0[i1, :] #: the origin in the local frame
                     #coord.e2 = xyz_cid0[i2, :] #: a point on the z-axis
                     #coord.e3 = xyz_cid0[i3, :] #: a point on the xz-plane
-                    if self.is_bdf_vectorized:
-                        i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
-                        cp1 = nodes.cp[i1]
-                        cp2 = nodes.cp[i2]
-                        cp3 = nodes.cp[i3]
-                    else:
-                        cp1 = nodes[nid1].cp
-                        cp2 = nodes[nid2].cp
-                        cp3 = nodes[nid3].cp
+                    i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
+                    cp1 = nodes.cp[i1]
+                    cp2 = nodes.cp[i2]
+                    cp3 = nodes.cp[i3]
                     msg += f'  g1={nid1} xyz={coord.e1} cp={cp1}\n'
                     msg += f'  g2={nid2} xyz={coord.e2} cp={cp2}\n'
                     msg += f'  g3={nid3} xyz={coord.e3} cp={cp3}\n'
@@ -3820,11 +3784,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             nids, xyz_cp, xyz_cid0, xyz_cid0_correct,
             self.coords, do_checks)
         return nids_checked, cps_checked, cps_to_check
-
-    @property
-    def is_bdf_vectorized(self):
-        """Returns False for the ``BDF`` class"""
-        return hasattr(self, 'grid')
 
     def get_displacement_index(self) -> tuple[Any, Any, dict[int, Any]]:
         """
@@ -4125,8 +4084,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
             else:
                 for comment, card_lines, (ifile, unused_iline) in cards:
-                    self.add_card(card_lines, card_name, comment=comment, ifile=ifile,
-                                  is_list=False, has_none=False)
+                    card_idi = self.add_card(card_lines, card_name, comment=comment, ifile=ifile,
+                                             is_list=False, has_none=False)
 
     def _parse_cards_list(self, cards_list: list[str], strict: bool=True):
         """parses the cards that are in list format"""
@@ -4740,7 +4699,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
     if skip_cards:
         model.disable_cards(skip_cards)
     elif read_cards:
-        model.set_cards(read_cards)
+        model.enable_cards(read_cards)
 
     if bdf_filename and not isinstance(bdf_filename, StringIO):
         check_path(bdf_filename, 'bdf_filename')

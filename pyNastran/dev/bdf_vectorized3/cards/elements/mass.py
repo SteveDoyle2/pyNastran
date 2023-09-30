@@ -106,12 +106,9 @@ class CONM1(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         element_id = np.zeros(ncards, dtype='int32')
         _mass = np.zeros((ncards, 6, 6), dtype='float64')
         coord_id = np.zeros(ncards, dtype='int32')
@@ -283,12 +280,9 @@ class CONM2(Element):
         elem.inertia = self.inertia[i, :]
         elem.n = len(i)
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         element_id = []
         mass = np.zeros(ncards, dtype='float64')
         coord_id = np.zeros(ncards, dtype='int32')

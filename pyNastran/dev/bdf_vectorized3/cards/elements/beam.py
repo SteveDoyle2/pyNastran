@@ -162,12 +162,9 @@ class CBEAM(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 2), dtype='int32')
@@ -1115,12 +1112,9 @@ class PBEAM(Property):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         xxb_list = []
@@ -1801,13 +1795,9 @@ class PBEAML(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
 
@@ -2245,13 +2235,9 @@ class PBCOMP(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         self.property_id = np.zeros(ncards, dtype='int32')
         self.material_id = np.zeros(ncards, dtype='int32')
         self.symopt = np.zeros(ncards, dtype='int32')

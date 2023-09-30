@@ -157,12 +157,9 @@ class CTETRA(SolidElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 10), dtype='int32')
@@ -364,12 +361,9 @@ class CPENTA(SolidElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 15), dtype='int32')
@@ -503,12 +497,9 @@ class CPYRAM(SolidElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 13), dtype='int32')
@@ -768,12 +759,9 @@ class PSOLID(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         coord_id = np.zeros(ncards, dtype='int32')
@@ -1158,12 +1146,9 @@ class PCOMPS(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
         coord_id = np.zeros(ncards, dtype='int32')
         psdir = np.zeros(ncards, dtype='int32')
@@ -1634,12 +1619,9 @@ class CHACBR(SolidElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 20), dtype='int32')

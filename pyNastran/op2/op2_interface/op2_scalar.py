@@ -455,41 +455,22 @@ class OP2_Scalar(OP2Common, FortranFormat):
     @property
     def modal_effective_mass_fraction(self):
         """6xnmodes matrix"""
-        return self.matrices['EFMFACS']#.dataframe
+        return self.matrices['EFMFACS']
 
     @property
     def modal_participation_factors(self):
         """6xnmodes matrix"""
-        return self.matrices['MPFACS']#.dataframe
+        return self.matrices['MPFACS']
 
     @property
     def modal_effective_mass(self):
         """6xnmodes matrix"""
-        return self.matrices['MEFMASS']#.dataframe
+        return self.matrices['MEFMASS']
 
     @property
     def modal_effective_weight(self):
         """6xnmodes matrix"""
-        return self.matrices['MEFWTS']#.dataframe
-
-
-    #@property
-    #def monitor1(self):
-        #self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
-        #return self.op2_results.monitor1
-    #@monitor1.setter
-    #def monitor1(self, monitor1):
-        #self.deprecated('op2.monitor1', 'op2.op2_results.monitor1', '1.4')
-        #self.op2_results.monitor1 = monitor1
-
-    #@property
-    #def monitor3(self):
-        #self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
-        #return self.op2_results.monitor3
-    #@monitor3.setter
-    #def monitor3(self, monitor3):
-        #self.deprecated('op2.monitor3', 'op2.op2_results.monitor3', '1.4')
-        #self.op2_results.monitor3 = monitor3
+        return self.matrices['MEFWTS']
 
     @property
     def matrix_tables(self):

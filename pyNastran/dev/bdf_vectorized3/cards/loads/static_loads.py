@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Union, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.bdf.cards.base_card import expand_thru_by
+#from pyNastran.bdf.cards.base_card import expand_thru_by
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default, print_card_8, print_float_8 # , print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
@@ -14,7 +14,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     # string, integer_or_string, fields,
 )
 #from pyNastran.bdf.cards.collpase_card import collapse_thru_by
-from pyNastran.bdf.bdf_interface.assign_type_force import force_integer
+#from pyNastran.bdf.bdf_interface.assign_type_force import force_integer
 from pyNastran.utils.numpy_utils import (
     integer_types, float_types,   # integer_float_types,
 )
@@ -112,13 +112,9 @@ class DEFORM(Load):
             self.n += 1
 
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Load.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         self.load_id = np.zeros(ncards, dtype='int32')
         self.elements = np.zeros(ncards, dtype='int32')
         self.enforced = np.zeros(ncards, dtype='float64')
@@ -229,14 +225,11 @@ class SPCD(Load):
                         double_or_blank(card, 7, 'D2', default=0.0)]
         self.cards.append((sids, nodes, components, enforced, comment))
         self.n += 1
+        return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
-        ncards = len(self.cards)
-        if ncards == 0:
-            return
-
+    @Load.parse_cards_check
+    def parse_cards(self) -> None:
+        #ncards = len(self.cards)
         load_ids = []
         all_nodes = []
         all_components = []
@@ -262,17 +255,18 @@ class SPCD(Load):
         self.enforced = enforced
         self.n = nloads
 
-    def write(self, size: int=8) -> str:
-        if len(self.load_id) == 0:
-            return ''
-        lines = []
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
         load_ids = array_str(self.load_id, size=size)
         node_ids = array_str(self.nodes, size=size)
         components = array_default_int(self.components, default=0, size=size)
         for load_id, nid , component, enforced in zip(load_ids, node_ids, components, self.enforced):
             fields = ['SPCD', load_id, nid, component, enforced]
-            lines.append(print_card_8(fields))
-        return ''.join(lines)
+            bdf_file.write(print_card(fields))
+        return
 
 
 class Load0(Load):
@@ -320,12 +314,9 @@ class Load0(Load):
         self.n += 1
         return self.n
 
+    @Load.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         load_id = np.zeros(ncards, dtype='int32')
         node_id = np.zeros(ncards, dtype='int32')
         coord_id = np.zeros(ncards, dtype='int32')
@@ -436,12 +427,9 @@ class Load1(Load):
         self.n += 1
         return self.n
 
+    @Load.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         load_id = np.zeros(ncards, dtype='int32')
         node_id = np.zeros(ncards, dtype='int32')
         mag = np.zeros(ncards, dtype='float64')
@@ -965,12 +953,9 @@ class GRAV(Load):
         self.cards.append((sid, cid, scale, N, main_bulk, comment))
         self.n += 1
 
+    @Load.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         #: Set identification number
         load_id = np.zeros(ncards, dtype='int32')
         #: Coordinate system identification number.
@@ -1371,7 +1356,8 @@ class SLOAD(Load):
         load.nodes = self.nodes
         load.mags = self.mags
 
-    def add(self, sid: int, nodes: list[int], mags: list[float], comment: str=''):
+    def add(self, sid: int, nodes: list[int], mags: list[float],
+            comment: str='') -> int:
         """
         Creates an SLOAD (GRID/SPOINT load)
 
@@ -1394,8 +1380,9 @@ class SLOAD(Load):
         assert len(nodes) == len(mags)
         self.cards.append((sid, nodes, mags, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
 
         nfields = len(card) - 2
@@ -1413,14 +1400,11 @@ class SLOAD(Load):
             mags.append(double(card, j + 1, f'mag{i:d}'))
         self.cards.append((sid, nodes, mags, comment))
         self.n += 1
+        return self.n
 
+    @Load.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         assert ncards > 0, ncards
         all_sids = []
         all_nodes = []

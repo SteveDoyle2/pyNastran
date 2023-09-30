@@ -250,6 +250,7 @@ class PLOAD1(Load):
         p2 = p2 if p2 is not None else p1
         self.cards.append((sid, eid, load_type, scale, [x1, x2], [p1, p2], comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -265,12 +266,9 @@ class PLOAD1(Load):
         self.n += 1
         return self.n
 
+    @Load.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         load_id = np.zeros(ncards, dtype='int32')
         element_id = np.zeros(ncards, dtype='int32')
         load_type = np.zeros(ncards, dtype='|U8')
@@ -640,12 +638,9 @@ class PLOAD2(Load):
         self.n += 1
         return self.n
 
+    @Load.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         load_id = np.zeros(ncards, dtype='int32')
         pressure = np.zeros(ncards, dtype='float64')
         nelement = np.zeros(ncards, dtype='int32')
@@ -673,7 +668,6 @@ class PLOAD2(Load):
         self.element_ids = element_ids
         self.nelement = nelement
         self.n = nloads
-
 
     def __apply_slice__(self, load: PLOAD2, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)

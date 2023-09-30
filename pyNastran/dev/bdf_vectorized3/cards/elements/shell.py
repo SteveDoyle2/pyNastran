@@ -543,13 +543,9 @@ class CTRIA3(ShellElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 3), dtype='int32')
@@ -864,12 +860,9 @@ class CTRIAR(ShellElement):
         element.T = self.T[i, :]
         element.n = len(self.element_id)
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 3), dtype='int32')
@@ -1077,12 +1070,9 @@ class CQUAD4(ShellElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if self.n == 0 or len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 4), dtype='int32')
@@ -1715,13 +1705,9 @@ class CTRIA6(ShellElement):
         element.T = self.T[i, :]
         element.n = len(self.element_id)
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 6), dtype='int32')
@@ -2244,12 +2230,9 @@ class CQUAD(ShellElement):
         element.theta = self.theta[i]
         element.n = len(self.element_id)
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if self.n == 0 or len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         self.element_id = np.zeros(ncards, dtype='int32')
         self.property_id = np.zeros(ncards, dtype='int32')
         self.nodes = np.zeros((ncards, 9), dtype='int32')

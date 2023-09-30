@@ -113,6 +113,17 @@ class VectorizedBaseCard:
     def __len__(self) -> int:
         return self.n
 
+    def parse_cards_check(func):
+        @wraps(func)
+        def wrapper(self):
+            if self.n == 0:
+                return
+            ncards = len(self.cards)
+            if ncards == 0:
+                return
+            return func(self)
+        return wrapper
+
     def _slice_comment(self, new_obj: VectorizedBaseCard, i: np.ndarray) -> None:
         """
         only slices comments when ids are unique
@@ -343,11 +354,13 @@ class VectorizedBaseCard:
         #...
         raise NotImplementedError(f'{self.type}: add __apply_slice__')
 
-    #def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    #def write(self, size: int=8, is_double: bool=False,
+              #write_card_header: bool=False) -> str:
         ##...
         #raise NotImplementedError(f'{self.type}: add write')
 
-    def write(self, size: int=8, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write(self, size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> str:
         """write typically exists and is probably overwritten; otherwise write_file is used"""
         stringio = StringIO()
         self.write_file(stringio, size=size, is_double=is_double, write_card_header=write_card_header)
@@ -358,18 +371,22 @@ class VectorizedBaseCard:
         msg = stringio.getvalue()
         return msg
 
-    def write_8(self, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_8(self, is_double: bool=False,
+                write_card_header: bool=False) -> str:
         """write is the base function"""
         #stringio = StringIO()
         msg = self.write(size=8, is_double=is_double, write_card_header=write_card_header)
         #if hasattr(self, 'write_file_8'):
-        #    self.write_file_8(stringio, is_double=is_double, write_card_header=write_card_header)
+           #self.write_file_8(stringio, is_double=is_double,
+                             #write_card_header=write_card_header)
         #else:
-        #    self.write_file(stringio, size=8, is_double=is_double, write_card_header=write_card_header)
+           #self.write_file(stringio, size=8, is_double=is_double,
+                           #write_card_header=write_card_header)
         #msg = stringio.getvalue()
         return msg
 
-    def write_16(self, is_double: bool=False, write_card_header: bool=False) -> str:
+    def write_16(self, is_double: bool=False,
+                 write_card_header: bool=False) -> str:
         """write is the base function"""
         #stringio = StringIO()
         msg = self.write(size=16, is_double=is_double, write_card_header=write_card_header)

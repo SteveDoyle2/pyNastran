@@ -134,12 +134,9 @@ class SPC(VectorizedBaseCard):
         self.cards.append((spc_id, nodes, components, enforced, comment))
         self.n += 1
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         spc_id_ = []
         components_ = []
         node_id_ = []
@@ -285,12 +282,9 @@ class SPC1(VectorizedBaseCard):
         self.cards.append((spc_id, components, nodes, comment))
         self.n += 1
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         spc_id = np.zeros(ncards, dtype='int32')
         components = np.zeros(ncards, dtype='int32')
         nnodes = np.zeros(ncards, dtype='int32')
@@ -418,12 +412,9 @@ class MPC(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         self.mpc_id = np.zeros(ncards, dtype='int32')
         self.idim = np.zeros((ncards, 2), dtype='int32')
         all_nodes = []
@@ -526,12 +517,9 @@ class ADD(VectorizedBaseCard):
         self.n += 1
         return self.n
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         sid = np.zeros(ncards, dtype='int32')
         nsids = np.zeros(ncards, dtype='int32')
 

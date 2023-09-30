@@ -1130,7 +1130,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             disable_set = set(cards)
         self.cards_to_read = self.cards_to_read.difference(disable_set)
 
-    def set_cards(self, cards: Union[list[str], set[str]]) -> None:
+    def enable_cards(self, cards: Union[list[str], set[str]]) -> None:
         """
         Method for setting the cards that will be processed
 
@@ -1141,7 +1141,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         .. python ::
 
-            bdf_model.set_cards(['GRID', 'CTRIA3'])
+            bdf_model.enable_cards(['GRID', 'CTRIA3'])
 
         """
         if cards is None:

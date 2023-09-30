@@ -20,7 +20,8 @@ from pyNastran.femutils.coord_transforms import (
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.coordinate_systems import _fix_xyz_shape
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    get_print_card, get_print_card_size, array_str, array_default_int)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from .grid import GRID
@@ -887,13 +888,15 @@ class COORD(VectorizedBaseCard):
             unresolved_cids.remove(cid)
         return nresolved
 
-    def write(self, size: int=8, is_double: bool=False,
-              write_card_header: bool=False) -> str:
+    #@parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
         if len(self.coord_id) == 0:
             return ''
 
         max_int = max(self.coord_id.max(), self.nodes.max(), self.ref_coord_id.max())
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, max_int)
         lines = []
 
         class_name = self.type
@@ -935,8 +938,8 @@ class COORD(VectorizedBaseCard):
                     class_name = 'CORD2%s' % coord_type
                     fields = [class_name, cid, rid] + origin.tolist() + zaxis.tolist() + xzplane.tolist()
                     assert rid != -1
-                lines.append(print_card(fields))
-        return ''.join(lines)
+                bdf_file.write(print_card(fields))
+        return
 
     def transform_force_local_to_global(self, force: np.ndarray, local_coord_id: int=0) -> np.ndarray:
         force2 = np.full(force.shape, np.nan, dtype=force.dtype)

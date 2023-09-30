@@ -6,22 +6,27 @@ import numpy as np
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, integer_or_blank, double_or_blank)
-from pyNastran.bdf.cards.elements.bars import set_blank_if_default
+    integer,
+    #double,
+    integer_or_blank,
+    #double_or_blank,
+)
+#from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 #from pyNastran.bdf.cards.properties.bars import _bar_areaL # PBARL as pbarl, A_I1_I2_I12
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, parse_element_check, # searchsorted_filter,
     get_print_card_8_16)
 from .rod import line_length, line_centroid
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str #, array_default_int
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
+#from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
+
 
 class PLOTEL(Element):
     """
@@ -84,12 +89,9 @@ class PLOTEL(Element):
             assert len(card) <= 5, f'len(PLOTEL card) = {len(card):d}\ncard={card}'
         self.n += 1
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        #if ncards == 0:
-            #return
         element_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 2), dtype='int32')
 
@@ -124,7 +126,7 @@ class PLOTEL(Element):
         for eid, nodesi in zip(element_id, nodes):
             n1, n2 = nodesi
             list_fields = ['PLOTEL', eid, n1, n2]
-            lines.append(print_card(list_fields))
+            bdf_file.write(print_card(list_fields))
         return
 
     #@property

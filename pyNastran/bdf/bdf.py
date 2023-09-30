@@ -17,7 +17,8 @@ import sys
 from copy import deepcopy
 from io import StringIO, IOBase
 from pathlib import PurePath
-from functools import partial
+from functools import wraps
+#from functools import partial
 from collections import defaultdict
 import traceback
 
@@ -28,7 +29,7 @@ from pickle import load, dump, dumps  # type: ignore
 import numpy as np  # type: ignore
 from cpylog import get_logger2
 
-from pyNastran.utils import object_attributes, check_path
+from pyNastran.utils import object_attributes, check_path, deprecated as _deprecated
 from .utils import parse_patran_syntax
 from .bdf_interface.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck,
@@ -500,7 +501,6 @@ def load_bdf_object(obj_filename:str, xref: bool=True, log=None, debug: bool=Tru
                           xref_sets=True,
                           xref_optimization=True)
     return model
-
 
 class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     """
@@ -1143,7 +1143,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             disable_set = set(cards)
         self.cards_to_read = self.cards_to_read.difference(disable_set)
 
-    def set_cards(self, cards: Union[list[str],set[str]]) -> None:
+    def enable_cards(self, cards: Sequence[str]) -> None:
         """
         Method for setting the cards that will be processed
 
@@ -1154,7 +1154,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         .. python ::
 
-            bdf_model.set_cards(['GRID', 'CTRIA3'])
+            bdf_model.enable_cards(['GRID', 'CTRIA3'])
 
         """
         if cards is None:
@@ -1164,6 +1164,22 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:
             enable_set = set(cards)
         self.cards_to_read = enable_set
+
+    def deprecated(old_name: str, new_name: str, version: str, levels=None):
+        """deprecates methods"""
+        if levels is None:
+            levels = [0, 1, 2]
+        def decorator(func):
+            @wraps(func)
+            def wrapper(self, *args, **kwargs):
+                _deprecated(old_name, new_name, version)
+                return func(self, *args, **kwargs)
+            return wrapper
+        return decorator
+
+    @deprecated('set_cards', 'enable_cards', '1.4')
+    def set_cards(self, cards: Sequence[str]) -> None:
+        self.enable_cards(cards)
 
     def set_error_storage(self, nparse_errors: int=100, stop_on_parsing_error: bool=True,
                           nxref_errors: int=100, stop_on_xref_error: bool=True) -> None:
@@ -4888,7 +4904,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
     if skip_cards:
         model.disable_cards(skip_cards)
     elif read_cards:
-        model.set_cards(read_cards)
+        model.enable_cards(read_cards)
 
     if bdf_filename and not isinstance(bdf_filename, StringIO):
         check_path(bdf_filename, 'bdf_filename')
@@ -5173,6 +5189,7 @@ def map_update(fem: BDF, version: str):
 #else:  # pragma: no cover
     #msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, nasa95, mystran]'
     #raise NotImplementedError(msg)
+
 
 def main():  # pragma: no cover
     """shows off how unicode works because it's overly complicated"""

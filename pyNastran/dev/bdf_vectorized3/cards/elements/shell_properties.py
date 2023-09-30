@@ -874,13 +874,9 @@ class PCOMP(CompositeProperty):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         property_id = np.zeros(ncards, dtype='int32')
         z0 = np.zeros(ncards, dtype='float64')
         nsm = np.zeros(ncards, dtype='float64')
@@ -1422,13 +1418,9 @@ class PCOMPG(CompositeProperty):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         property_id = np.zeros(ncards, dtype='int32')
         nsm = np.zeros(ncards, dtype='float64')
         shear_bonding = np.zeros(ncards, dtype='float64')

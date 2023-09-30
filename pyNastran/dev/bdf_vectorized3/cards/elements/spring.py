@@ -67,12 +67,9 @@ class CELAS1(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 2), dtype='int32')
@@ -190,12 +187,9 @@ class CELAS2(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         k = np.zeros(ncards, dtype='float64')
         nodes = np.zeros((ncards, 2), dtype='int32')
@@ -291,12 +285,9 @@ class CELAS3(Element):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         spoints = np.zeros((ncards, 2), dtype='int32')
@@ -481,13 +472,9 @@ class PELAS(Property):
         #i = len(self.cards) - 1
         #return i
 
-    def parse_cards(self):
-        if self.n == 0:
-            return
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         property_id = np.zeros(ncards, dtype='int32')
         k = np.zeros(ncards, dtype='float64')
         ge = np.zeros(ncards, dtype='float64')

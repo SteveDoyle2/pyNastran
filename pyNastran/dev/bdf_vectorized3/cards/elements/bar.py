@@ -276,12 +276,9 @@ class CBAR(Element):
         elem.wb = self.wb[i, :]
         elem.n = len(i)
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = []
         property_id = np.zeros(ncards, dtype='int32')
         nodes = []
@@ -785,12 +782,9 @@ class PBAR(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         #Type = np.full(ncards, '', dtype='|U8')
@@ -1223,12 +1217,9 @@ class PBARL(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         ndim = np.zeros(ncards, dtype='int32')
@@ -1446,12 +1437,9 @@ class PBRSECT(Property):
         self.n += 1
         #return PBRSECT(pid, mid, form, options, comment=comment)
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         self.property_id = np.zeros(ncards, dtype='int32')
         self.material_id = np.zeros(ncards, dtype='int32')
         #self.Type = np.full(ncards, '', dtype='|U8')
@@ -1616,12 +1604,9 @@ class CBARAO(Element):
         elem.nstation = self.nstation[i]
         elem.n = len(i)
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         element_id = []
         station: list[float] = []
 

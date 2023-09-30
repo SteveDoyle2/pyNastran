@@ -1814,18 +1814,6 @@ class DMI(NastranMatrix):
         if finalize:
             self.finalize()
 
-    #@property
-    #def form(self):
-        #"""gets the matrix_form"""
-        #self.deprecated('form', 'matrix_form', '1.1')
-        #return self.matrix_form
-
-    #@form.setter
-    #def form(self, matrix_form):
-        #"""sets the matrix_form"""
-        #self.deprecated('form', 'matrix_form', '1.1')
-        #self.matrix_form = matrix_form
-
     @classmethod
     def add_card(cls, card, comment=''):
         """
