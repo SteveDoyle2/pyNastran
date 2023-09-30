@@ -279,7 +279,7 @@ class PSHEAR(Property):
     def allowed_materials(self) -> list[Any]:
         all_materials = self.all_materials
         materials = [mat for mat in all_materials if mat.n > 0]
-        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.materials}'
+        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
         return materials
 
     def total_thickness(self):

@@ -613,10 +613,10 @@ class Writer():
         #bdf_file.write(model.pshln2.write(size=size))
 
         # solid
-        model.psolid.write_file(bdf_file, size=size)
-        model.plsolid.write_file(bdf_file, size=size)
-        model.pcomps.write_file(bdf_file, size=size)
-        model.pcompls.write_file(bdf_file, size=size)
+        model.psolid.write_file(bdf_file, size=size, is_double=is_double)
+        model.plsolid.write_file(bdf_file, size=size, is_double=is_double)
+        model.pcomps.write_file(bdf_file, size=size, is_double=is_double)
+        model.pcompls.write_file(bdf_file, size=size, is_double=is_double)
 
 
     def _write_materials(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
@@ -877,8 +877,8 @@ class Writer():
             bdf_file.write('$LOADS\n')
             model.load.write_file(bdf_file, size=size, is_double=is_double)
             model.grav.write_file(bdf_file, size=size, is_double=is_double)
-            #bdf_file.write(model.accel.write(size=size))
-            #bdf_file.write(model.accel1.write(size=size))
+            model.accel.write_file(bdf_file, size=size, is_double=is_double)
+            model.accel1.write_file(bdf_file, size=size, is_double=is_double)
 
             model.force.write_file(bdf_file, size=size, is_double=is_double)
             model.force1.write_file(bdf_file, size=size, is_double=is_double)
@@ -994,14 +994,14 @@ class Writer():
         model = self.model
         if any((card.n for card in model.spc_cards)):
             bdf_file.write('$SPCs\n')
-            bdf_file.write(model.spcadd.write(size=size))
-            bdf_file.write(model.spc.write(size=size))
-            bdf_file.write(model.spc1.write(size=size))
+            model.spcadd.write_file(bdf_file, size=size, is_double=is_double)
+            model.spc.write_file(bdf_file, size=size, is_double=is_double)
+            model.spc1.write_file(bdf_file, size=size, is_double=is_double)
 
         if any((card.n for card in model.mpc_cards)):
             bdf_file.write('$MPCs\n')
-            bdf_file.write(model.mpcadd.write(size=size))
-            bdf_file.write(model.mpc.write(size=size))
+            model.mpcadd.write_file(bdf_file, size=size, is_double=is_double)
+            model.mpc.write_file(bdf_file, size=size, is_double=is_double)
             #bdf_file.write(model.mpcax.write(size=size))
 
         return
@@ -1069,7 +1069,7 @@ class Writer():
         model = self.model
         if model.coord.coord_id.max() > 0:
             bdf_file.write('$COORDS\n')
-            bdf_file.write(model.coord.write(size=size))
+            model.coord.write_file(bdf_file, size=size, is_double=is_double)
         return
 
     def _write_dynamic(self, bdf_file: TextIOLike,
@@ -1145,22 +1145,22 @@ class Writer():
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the optimization cards sorted by ID"""
         model = self.model
-        bdf_file.write(model.desvar.write(size=size))
-        bdf_file.write(model.dlink.write(size=size))
-        bdf_file.write(model.dvgrid.write(size=size))
+        model.desvar.write_file(bdf_file, size=size, is_double=is_double)
+        model.dlink.write_file(bdf_file, size=size, is_double=is_double)
+        model.dvgrid.write_file(bdf_file, size=size, is_double=is_double)
 
-        bdf_file.write(model.dresp1.write(size=size))
-        bdf_file.write(model.dresp2.write(size=size))  # poorly supported
-        bdf_file.write(model.dconstr.write(size=size))
+        model.dresp1.write_file(bdf_file, size=size, is_double=is_double)
+        model.dresp2.write_file(bdf_file, size=size, is_double=is_double)  # poorly supported
+        model.dconstr.write_file(bdf_file, size=size, is_double=is_double)
         #bdf_file.write(model.dconadd.write(size=size))
 
-        bdf_file.write(model.dvcrel1.write(size=size))
-        #bdf_file.write(model.dvcrel2.write(size=size))  # not supported
+        model.dvcrel1.write_file(bdf_file, size=size, is_double=is_double)
+        model.dvcrel2.write_file(bdf_file, size=size, is_double=is_double)
 
-        bdf_file.write(model.dvprel1.write(size=size))
-        bdf_file.write(model.dvprel2.write(size=size))
+        model.dvprel1.write_file(bdf_file, size=size, is_double=is_double)
+        model.dvprel2.write_file(bdf_file, size=size, is_double=is_double)
 
-        bdf_file.write(model.dvmrel1.write(size=size))
-        #bdf_file.write(model.dvmrel2.write(size=size))  # not supported
+        model.dvmrel1.write_file(bdf_file, size=size, is_double=is_double)
+        model.dvmrel2.write_file(bdf_file, size=size, is_double=is_double)
         if model.doptprm is not None:
             bdf_file.write(model.doptprm.write_card(size, is_double))

@@ -15,7 +15,7 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
     parse_element_check, parse_property_check)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 if TYPE_CHECKING:  # pragma: no cover
@@ -936,7 +936,6 @@ class PVISC(Property):
         self._save(property_id, cr, ce)
         self.cards = []
 
-
     def _save(self, property_id, cr, ce):
         self.property_id = property_id
         self.cr = cr
@@ -953,7 +952,8 @@ class PVISC(Property):
         print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)
-        for pid, ce, cr in zip_longest(property_id, self.ce, self.cr):
+        ces = array_float(self.ce, size=size, is_double=is_double)
+        for pid, ce, cr in zip_longest(property_id, ces, self.cr):
             cr = set_blank_if_default(cr, 0.)
             list_fields = ['PVISC', pid, ce, cr]
             bdf_file.write(print_card(list_fields))
@@ -1062,10 +1062,11 @@ class CGAP(Element):
         property_id = array_str(self.property_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
         coord_ids = array_default_int(self.coord_id, default=-1, size=size)
-        for eid, pid, nodes, g0, x, cid in zip_longest(element_id, property_id, nodes_, self.g0, self.x, coord_ids):
+        xs = array_float(self.x, size=size, is_double=is_double)
+        for eid, pid, nodes, g0, x, cid in zip_longest(element_id, property_id, nodes_, self.g0, xs, coord_ids):
             ga, gb = nodes
             if g0 == -1:
-                x1, x2, x3 = x # self.get_x_g0_defaults()
+                x1, x2, x3 = x
             else:
                 x1 = g0
                 x2 = ''

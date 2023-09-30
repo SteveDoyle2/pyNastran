@@ -54,17 +54,16 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_geometry import 
 from .cards.elements.bar import BAROR
 from .cards.elements.beam import BEAMOR
 
-#from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
-#from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
+#from pyNastran.bdf.cards.elements.elements import CRAC2D, CRAC3D, GENEL
+#from pyNastran.bdf.cards.properties.properties import PRAC2D, PRAC3D
 #from pyNastran.bdf.cards.properties.solid import PIHEX
 #from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
 #from pyNastran.bdf.cards.msgmesh import CGEN
 
 #from pyNastran.bdf.cards.elements.solid import (
-    #CTETRA, CPYRAM, CPENTA, CHEXA,
     #CIHEX1, CIHEX2, CHEXA1, CHEXA2,
 #)
-#from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+#from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RROD, RSPLINE, RSSCON
 
 #from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     #AXIF, RINGFL,
@@ -76,22 +75,16 @@ from .cards.elements.beam import BEAMOR
 #from .cards.properties.shell import PTRSHL
 #from .cards.elements.acoustic import (
     #CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
-#from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
+#from .cards.elements.bush import CBUSH2D
 #from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH_OPTISTRUCT
-#from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
-                                    #CDAMP5)
-#from .cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
 #from .cards.elements.bars import CBEAM3, CBEND
 #from .cards.elements.beam import CBEAM, BEAMOR
 #from .cards.properties.bars import PBRSECT, PBEND, PBEAM3
-#from .cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
+#from .cards.properties.beam import PBCOMP, PBMSECT
 ## CMASS5
-#from .cards.elements.mass import CMASS1, CMASS2, CMASS3, CMASS4
-#from .cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
 from pyNastran.bdf.cards.constraints import (SPCAX, SPCOFF, SPCOFF1,
                                              SUPORT1, SESUP, GMSPC)
-#from .cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
-                                       #CORD2R, CORD2C, CORD2S, #CORD3G,
+#from .cards.coordinate_systems import (#CORD3G,
                                        #transform_coords_vectorized,
                                        #CORDx)
 #from .cards.coordinate_systems.msgmesh import CGEN, GMCORD, GMLOAD
@@ -102,14 +95,13 @@ from pyNastran.bdf.cards.dynamic import (
     #TIC,
 )
 #from .cards.loads.loads import (
-    #LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
+    #LSEQ, DAREA, RFORCE, RFORCE1, LOADCYN, LOADCYH)
 #from .cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
-#from .cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1)
+#from .cards.loads.static_loads import CLOAD
 
 #from .cards.loads.random_loads import RANDPS, RANDT1
 
-#from .cards.materials import (MAT3, MAT4, MAT5,
-                              #MAT9, MAT3D,
+#from .cards.materials import (MAT9, MAT3D,
                               #MATG, MATHE, MATHP, MATEV,
                               #CREEP, EQUIV, NXSTRAT)
 #from .cards.material_deps import (
@@ -117,7 +109,7 @@ from pyNastran.bdf.cards.dynamic import (
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from .cards.grid import GRDSET
-#from pyNastran.bdf.cards.nodes import GRDSET # GRID, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
+#from pyNastran.bdf.cards.nodes import GRDSET # EPOINTs, POINT, SEQGP, GRIDB
 from pyNastran.bdf.cards.aero.aero import (
     #AESURF,
     AELINK, AESURFS,
@@ -131,8 +123,6 @@ from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, 
 from pyNastran.bdf.cards.optimization import DOPTPRM
     #DCONADD, TOPVAR, DDVAL, DOPTPRM, DLINK,
     #DRESP3,
-    #DVCREL2,
-    #DVMREL2,
     #DVGRID, DSCREEN)
 #from .cards.optimization_nx import (
     #DVTREL1, GROUP, DMNCON,
@@ -701,7 +691,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SPC', 'SPCADD', 'SPC1', #'SPCAX', 'SPCOFF', 'SPCOFF1',
 
             ## mpcs
-            #'MPC', 'MPCADD',
+            'MPC', 'MPCADD',
 
             ## suport/suport1/se_suport
             #'SUPORT', 'SUPORT1', 'SESUP',
@@ -719,7 +709,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SLOAD',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
-            'GRAV', # 'ACCEL', 'ACCEL1',
+            'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE', 'RFORCE1',
             'SPCD', 'DEFORM',
@@ -780,7 +770,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'NLPARM',  ## nlparms
             #'ROTORG', 'ROTORD', ## rotors
             #'NLPCI',  ## nlpcis
-            #'TSTEP',  ## tsteps
+            'TSTEP',  ## tsteps
             #'TSTEPNL', 'TSTEP1',  ## tstepnls
             #'TF',  ## transfer_functions
             #'TIC', ## initial conditions - sid (set ID)
@@ -795,9 +785,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # optimization cards
             #'DEQATN', 'DTABLE',
             'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', # 'DRESP3', 'TOPVAR',
-            #'DVCREL1', 'DVCREL2',
+            'DVCREL1', 'DVCREL2',
             'DVPREL1', 'DVPREL2',
-            'DVMREL1', # 'DVMREL2',
+            'DVMREL1', 'DVMREL2',
             #'DOPTPRM', 'DLINK', 'DCONADD', 'DVGRID',
             #'DSCREEN',
 
@@ -2559,8 +2549,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MOMENT1' : partial(self._prepare_card, self.moment1),
             'MOMENT2' : partial(self._prepare_card, self.moment2),
             'GRAV' : partial(self._prepare_card, self.grav),
-            #'ACCEL' : partial(self._prepare_card, self.accel),
-            #'ACCEL1' : partial(self._prepare_card, self.accel1),
+            'ACCEL' : partial(self._prepare_card, self.accel),
+            'ACCEL1' : partial(self._prepare_card, self.accel1),
             'SLOAD': partial(self._prepare_card, self.sload),
             #'TEMP': partial(self._prepare_card, self.temp),
             #'TEMPD': partial(self._prepare_card, self.tempd),
@@ -2703,9 +2693,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DVPREL1': partial(self._prepare_card, self.dvprel1),
             'DVPREL2': partial(self._prepare_card, self.dvprel2),
             'DVCREL1': partial(self._prepare_card, self.dvcrel1),
-            #'DVCREL2': partial(self._prepare_card, self.dvcrel2),
+            'DVCREL2': partial(self._prepare_card, self.dvcrel2),
             'DVMREL1': partial(self._prepare_card, self.dvmrel1),
-            #'DVMREL2': partial(self._prepare_card, self.dvmrel2),
+            'DVMREL2': partial(self._prepare_card, self.dvmrel2),
 
             #'DCONADD': partial(self._prepare_card, self.dconadd),
             #'DDVAL' : (DDVAL, add_methods._add_ddval_object),
@@ -3311,7 +3301,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             try:
                 class_instance = card_class.add_card(card_obj, comment=comment)
                 card_idi = add_card_function(class_instance)
-                if card_name not in {'PARAM', 'MDLPRM'}:
+                if card_name not in {'PARAM', 'MDLPRM', 'TSTEP', 'TSTEPNL'}:
                     if not isinstance(card_idi, int):
                         msg = f'card_name={card_name!r} card_idi={card_idi}'
                         raise TypeError(msg)
@@ -4724,7 +4714,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DDVAL',
             #'add_DELAY', 'add_DEQATN', 'add_DLINK', 'add_DMI',
             #'add_DPHASE', 'add_DRESP', 'add_DTABLE',
-            #'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
+            #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
             #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
             #'add_PAERO', 'add_PARAM', 'add_PHBDY',
             #'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
@@ -4732,12 +4722,10 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
 
             #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
-            #'add_constraint_MPC', 'add_constraint_MPCADD',
-            #'add_constraint_SPC', 'add_constraint_SPCADD',
             #'add_convection_property', x'add_creep_material',
             #'add_dload', '_add_dload_entry', 'add_element', 'add_hyperelastic_material',
             #'add_load', 'add_mass', 'add_material_dependence', 'add_method',
-            #'add_property', 'add_property_mass', 'add_random_table',
+            #'add_property', 'add_random_table',
             #'add_rigid_element', 'add_structural_material', 'add_suport', 'add_suport1',
             #'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element',
             #'add_thermal_load', 'add_thermal_material',

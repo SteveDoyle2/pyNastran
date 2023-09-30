@@ -12,7 +12,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, parse_element_check, get_print_card_8_16)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
 if TYPE_CHECKING:  # pragma: no cover
@@ -326,19 +326,21 @@ class CONM2(Element):
         element_str = array_str(self.element_id, size=size)
         node_str = array_str(self.node_id, size=size)
         coord_str = array_str(self.coord_id, size=size)
+        masses = array_float(self._mass, size=size, is_double=is_double)
+        xyzs = array_float(self.xyz_offset, size=size, is_double=is_double)
         if is_inertia:
             for eid, nid, cid, mass, xyz_offset, I in zip_longest(element_str, node_str, coord_str,
-                                                                  self._mass, self.xyz_offset, self.inertia):
+                                                                  masses, xyzs, self.inertia):
                 list_fields = (['CONM2', eid, nid, cid, mass] +
                                list(xyz_offset) + [''] + list(I))
                 bdf_file.write(print_card(list_fields))
         elif is_xyz:
             for eid, nid, cid, mass, xyz_offset in zip_longest(element_str, node_str, coord_str,
-                                                               self._mass, self.xyz_offset):
+                                                               masses, xyzs):
                 list_fields = ['CONM2', eid, nid, cid, mass] + list(xyz_offset)
                 bdf_file.write(print_card(list_fields))
         else:
-            for eid, nid, cid, mass in zip_longest(element_str, node_str, coord_str, self._mass):
+            for eid, nid, cid, mass in zip_longest(element_str, node_str, coord_str, masses):
                 list_fields = ['CONM2', eid, nid, cid, mass]
                 bdf_file.write(print_card(list_fields))
         return

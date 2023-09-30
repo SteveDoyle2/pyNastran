@@ -3387,9 +3387,10 @@ class AddOptimization(BDFAttributes):
                     cp_min=None, cp_max: float=1e20,
                     validate: bool=True, comment: str='') -> int:
         """Creates a DVCREL2 card"""
-        dvcrel = DVCREL2(oid, Type, eid, cp_name, deqation, dvids, labels,
-                         cp_min=cp_min, cp_max=cp_max,
-                         validate=validate, comment=comment)
+        dvcrel = self.dvcrel2.add(dvcrel_id, element_type, eid, cp_name,
+                                  deqation, desvar_ids, labels,
+                                  cp_min=cp_min, cp_max=cp_max,
+                                  validate=validate, comment=comment)
         return dvcrel
 
     def add_dvprel1(self, dvprel_id: int, prop_type: str, pid: int, pname_fid: Union[int, str],
@@ -3513,10 +3514,8 @@ class AddOptimization(BDFAttributes):
             mp_min, mp_max, c0=c0, validate=validate, comment=comment)
         return dvmrel
 
-    def add_dvmrel2(self, oid: int, mat_type: str, mid: int, mp_name: str,
-                    deqation: int,
-                    dvids: list[int],
-                    labels: list[str],
+    def add_dvmrel2(self, dvmrel_id: int, mat_type: str, mid: int, mp_name: str,
+                    deqatn_id: int, desvar_ids: list[int], labels: list[str],
                     mp_min: Optional[float]=None, mp_max: float=1e20,
                     validate: bool=True, comment: str='') -> int:
         """
@@ -3524,7 +3523,7 @@ class AddOptimization(BDFAttributes):
 
         Parameters
         ----------
-        oid : int
+        dvmrel_id : int
             optimization id
         mat_type : str
             material card name (e.g., MAT1)
@@ -3532,9 +3531,9 @@ class AddOptimization(BDFAttributes):
             material id
         mp_name : str
             optimization parameter as a pname (material name; E)
-        deqation : int
+        deqatn_id : int
             DEQATN id
-        dvids : list[int]; default=None
+        desvar_ids : list[int]; default=None
             DESVAR ids
         labels : list[str]; default=None
             DTABLE names
@@ -3552,8 +3551,8 @@ class AddOptimization(BDFAttributes):
         either dvids or labels is required
 
         """
-        dvmrel = self.dvmrel2(
-            oid, mat_type, mid, mp_name, deqation, dvids, labels,
+        dvmrel = self.dvmrel2.add(
+            dvmrel_id, mat_type, mid, mp_name, deqatn_id, desvar_ids, labels,
             mp_min=mp_min, mp_max=mp_max,
             validate=validate, comment=comment)
         return dvmrel

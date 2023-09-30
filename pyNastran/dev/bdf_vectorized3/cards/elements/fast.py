@@ -42,7 +42,7 @@ class CFAST(Element):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a CFAST card from ``BDF.add_card(...)``
 
@@ -241,7 +241,7 @@ class PFAST(Property):
         return self.n
 
     @classmethod
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PFAST card from ``BDF.add_card(...)``
 
@@ -340,7 +340,7 @@ class PFAST(Property):
     def allowed_materials(self) -> list[Any]:
         all_materials = self.all_materials
         materials = [mat for mat in all_materials if mat.n > 0]
-        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.materials}'
+        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
         return materials
 
     def mass(self) -> np.ndarray:

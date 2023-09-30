@@ -185,7 +185,7 @@ PARAMS = (
     ('KGGCPCH', 0, [0, 1]),
     ('KGGLPCH', 0, [0, 1]),
 
-    ('OUGCORD', '', ['', 'GLOBAL']),
+    ('OUGCORD', '', ['', 'GLOBAL', 'BASIC']),
     ('UNITSYS', '', unit_systems),
     # L
 )

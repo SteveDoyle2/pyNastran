@@ -55,7 +55,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
     #TEMP, TEMPD, DTEMP, DTEMP,
     SPCD, DEFORM,
     RFORCE, RFORCE1,
-    GRAV, # ACCEL, ACCEL1,
+    GRAV, ACCEL, ACCEL1,
 )
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import (
     PLOAD, PLOAD1, PLOAD2, PLOAD4, # PLOADX1,
@@ -98,8 +98,8 @@ from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DESVAR, DLINK, DVGRID,
     DRESP1, DRESP2, DCONSTR,
     DVPREL1, DVPREL2,
-    DVMREL1, # DVMREL2,
-    DVCREL1, # DVCREL2,
+    DVMREL1, DVMREL2,
+    DVCREL1, DVCREL2,
 )
 from .loads_summation import (
     get_static_loads_by_subcase_id,
@@ -390,8 +390,8 @@ class BDFAttributes:
         self.pload2 = PLOAD2(self)
         self.pload4 = PLOAD4(self)
         self.grav = GRAV(self)
-        #self.accel = ACCEL(self)
-        #self.accel1 = ACCEL1(self)
+        self.accel = ACCEL(self)
+        self.accel1 = ACCEL1(self)
         #self.temp = TEMP(self)
         #self.tempd = TEMPD(self)  # default temp
         #self.dtemp = DTEMP(self)  # has nodes
@@ -495,9 +495,9 @@ class BDFAttributes:
         self.dvprel1 = DVPREL1(self)
         self.dvprel2 = DVPREL2(self)
         self.dvmrel1 = DVMREL1(self)
-        #self.dvmrel2 = DVMREL2(self)  # not supported
+        self.dvmrel2 = DVMREL2(self)
         self.dvcrel1 = DVCREL1(self)
-        #self.dvcrel2 = DVCREL2(self)  # not supported
+        self.dvcrel2 = DVCREL2(self)
 
         # ---------------------------------------------------
         ## unoptimized
@@ -721,8 +721,8 @@ class BDFAttributes:
             self.desvar, self.dlink, self.dvgrid,
             self.dresp1, self.dresp2, self.dconstr,
             self.dvprel1, self.dvprel2,
-            self.dvmrel1, # self.dvmrel2,
-            self.dvcrel1, # self.dvcrel2,
+            self.dvmrel1, self.dvmrel2,
+            self.dvcrel1, self.dvcrel2,
         ]
         return optimization
 
@@ -733,7 +733,7 @@ class BDFAttributes:
             self.force, self.force1, self.force2,
             self.moment, self.moment1, self.moment2,
             self.pload, self.pload1, self.pload2, self.pload4,
-            self.grav, # self.accel, self.accel1,
+            self.grav, self.accel, self.accel1,
             self.sload,
             #self.temp, self.tempd,
             #self.dtemp, # has nodes

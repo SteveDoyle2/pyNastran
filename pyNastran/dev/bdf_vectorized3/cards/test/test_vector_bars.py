@@ -359,6 +359,7 @@ class TestBars(unittest.TestCase):
         model.add_card(force, 'FORCE')
         model.setup()
         model.validate()
+        save_load_deck(model)
         return
         model.cross_reference()
 
@@ -422,6 +423,7 @@ class TestBars(unittest.TestCase):
 
             unused_cg = np.array([0.5, 0., 0.], dtype='float32')
             #print('cg =', op2_cg)
+        save_load_deck(model)
 
     def test_bar_mass_2(self):
         """CBAR/PBARL"""
@@ -494,6 +496,7 @@ class TestBars(unittest.TestCase):
 
         model._verify_bdf(xref=True)
         #model.uncross_reference()
+        save_load_deck(model)
 
     def test_pbar_nsm(self):
         model = BDF(debug=False)
@@ -537,6 +540,7 @@ class TestBars(unittest.TestCase):
         mat1.rho = np.array([10.0], dtype='float64')
         assert pbar.mass_per_length()[0] == 21.0, pbar.mass_per_length()
         assert pbar2.mass_per_length()[0] == 21.0, pbar2.mass_per_length()
+        save_load_deck(model)
 
     def test_pbarl_nsm(self):
         model = BDF(debug=False)
@@ -689,6 +693,7 @@ class TestBars(unittest.TestCase):
 
         #model._verify_bdf(xref=True)
         #model.uncross_reference()
+        save_load_deck(model)
 
     def _test_cbeam3(self):
         """tests a CBEAM3"""
@@ -731,6 +736,7 @@ class TestBars(unittest.TestCase):
         model.pop_parse_errors()
         model.pop_xref_errors()
         assert pbeam3 == model.properties[pid]
+        save_load_deck(model)
 
     def test_bar_area(self):
         """tests the PBARL"""
@@ -822,6 +828,7 @@ class TestBars(unittest.TestCase):
                 pbarli.i12()
             assert np.allclose(areai, area2), 'bar_type=%r dims=%s area=%s area_expected=%s' % (bar_type, dims, area2, areai)
             pid += 1
+        save_load_deck(model)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

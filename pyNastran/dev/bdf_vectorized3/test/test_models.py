@@ -298,11 +298,11 @@ class TestModels(unittest.TestCase):
         test_bdf(args, show_args=False)
         run_nastran_gui(bdf_filename)
 
-    def _test_other_1(self):
+    def test_other_1(self):
         bdf_filename = MODEL_PATH / 'other' / 'ac10707a.bdf'
         args = ['test_bdf', str(bdf_filename), '--skip_nominal']
         test_bdf(args, show_args=False)
-    def _test_other_2(self):
+    def test_other_2(self):
         bdf_filename = MODEL_PATH / 'other' / 'dbxdra2.bdf'
         args = ['test_bdf', str(bdf_filename)]
         test_bdf(args, show_args=False)

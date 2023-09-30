@@ -262,6 +262,7 @@ class CBAR(Element):
         assert len(card) <= 17, f'len(CBAR card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, [ga, gb], x, g0, offt, pa, pb, wa, wb, comment))
         self.n += 1
+        return self.n
 
     def __apply_slice__(self, elem: CBAR, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
@@ -1038,7 +1039,7 @@ class PBAR(Property):
     def allowed_materials(self) -> list[Any]:
         all_materials = self.all_materials
         materials = [mat for mat in all_materials if mat.n > 0]
-        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.materials}'
+        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
         return materials
 
     def mass_per_length(self) -> np.ndarray:
@@ -1436,6 +1437,7 @@ class PBRSECT(Property):
         self.cards.append((pid, mid, form, nsm, brps, inps, outp, ts, comment))
         self.n += 1
         #return PBRSECT(pid, mid, form, options, comment=comment)
+        return self.n
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:

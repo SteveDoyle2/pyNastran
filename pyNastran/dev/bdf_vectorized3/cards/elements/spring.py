@@ -110,7 +110,6 @@ class CELAS1(Element):
                    write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
 
-        lines = []
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
@@ -119,7 +118,7 @@ class CELAS1(Element):
             list_fields = ['CELAS1', eid, pid,
                            nodes[0], components[0],
                            nodes[1], components[1]]
-            lines.append(print_card(list_fields))
+            bdf_file.write(print_card(list_fields))
         return
 
     @property

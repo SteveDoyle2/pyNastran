@@ -2,7 +2,7 @@ from __future__ import annotations
 from itertools import count
 from typing import Any, TYPE_CHECKING
 import numpy as np
-from pyNastran.bdf.field_writer_8 import print_float_8 # print_card_8
+#from pyNastran.bdf.field_writer_8 import print_float_8 # print_card_8
 #from pyNastran.bdf.field_writer_16 import print_card_16 #, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.utils.numpy_utils import integer_types
@@ -21,9 +21,10 @@ from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.coordinate_systems import _fix_xyz_shape
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    get_print_card, get_print_card_size, array_str, array_default_int)
+    get_print_card_size, array_float, array_str, array_default_int)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from .grid import GRID
 
 class COORD(VectorizedBaseCard):
@@ -897,17 +898,19 @@ class COORD(VectorizedBaseCard):
 
         max_int = max(self.coord_id.max(), self.nodes.max(), self.ref_coord_id.max())
         print_card, size = get_print_card_size(size, max_int)
-        lines = []
 
         class_name = self.type
         nodes = array_str(self.nodes, size=size)
         ref_coord_ids = array_default_int(self.ref_coord_id, default=0, size=size)
         #array_str
+        e1s = array_float(self.e1, size=size, is_double=is_double)
+        e2s = array_float(self.e2, size=size, is_double=is_double)
+        e3s = array_float(self.e3, size=size, is_double=is_double)
         if size == 8:
             for icoord, coord_type, cid, rid, nodesi, origin, zaxis, xzplane in zip(
                     self.icoord, self.coord_type,
                     self.coord_id, ref_coord_ids, nodes,
-                    self.e1, self.e2, self.e3):
+                    e1s, e2s, e3s):
                 if cid == 0:
                     continue
                 if icoord == 1:
@@ -918,17 +921,17 @@ class COORD(VectorizedBaseCard):
                     class_name = 'CORD2%s' % coord_type
                     msg = '%-8s%8d%8s%8s%8s%8s%8s%8s%s\n        %8s%8s%8s\n' % (
                         class_name, cid, rid,
-                        print_float_8(origin[0]), print_float_8(origin[1]), print_float_8(origin[2]),
-                        print_float_8(zaxis[0]), print_float_8(zaxis[1]), print_float_8(zaxis[2]),
-                        print_float_8(xzplane[0]), print_float_8(xzplane[1]), print_float_8(xzplane[2]),
+                        origin[0], origin[1], origin[2],
+                        zaxis[0], zaxis[1], zaxis[2],
+                        xzplane[0], xzplane[1], xzplane[2],
                     )
                     assert rid != -1
-                lines.append(msg)
+                bdf_file.write(msg)
         else:
             for icoord, coord_type, cid, rid, nodesi, origin, zaxis, xzplane in zip(
                     self.icoord, self.coord_type,
                     self.coord_id, ref_coord_ids, nodes,
-                    self.e1, self.e2, self.e3):
+                    e1s, e2s, e3s):
                 if cid == 0:
                     continue
                 if icoord == 1:
@@ -936,7 +939,11 @@ class COORD(VectorizedBaseCard):
                     fields = [class_name, cid, nodesi[0], nodesi[1], nodesi[2]]
                 else:
                     class_name = 'CORD2%s' % coord_type
-                    fields = [class_name, cid, rid] + origin.tolist() + zaxis.tolist() + xzplane.tolist()
+                    fields = [class_name, cid, rid,
+                              origin[0], origin[1], origin[2],
+                              zaxis[0], zaxis[1], zaxis[2],
+                              xzplane[0], xzplane[1], xzplane[2],
+                              ]
                     assert rid != -1
                 bdf_file.write(print_card(fields))
         return

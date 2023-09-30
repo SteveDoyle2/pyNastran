@@ -598,7 +598,7 @@ class MAT3(Material):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
         ex = double(card, 2, 'ex')
         eth = double(card, 3, 'eth')

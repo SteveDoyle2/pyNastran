@@ -94,7 +94,7 @@ class TestLoads(unittest.TestCase):
         #moment.raw_fields()
         save_load_deck(model)
 
-    def _test_accel1(self):
+    def test_accel1(self):
         """tests ACCEL1"""
         model = BDF(log=log)
         sid = 42
@@ -122,7 +122,7 @@ class TestLoads(unittest.TestCase):
         accel1.write(size=16, is_double=True)
         save_load_deck(model)
 
-    def _test_accel1_2(self):
+    def test_accel1_2(self):
         """tests problematic ACCEL1 cards"""
         cards = [
             ['ACCEL1  1               -32.2   0.2672610.5345220.801784',

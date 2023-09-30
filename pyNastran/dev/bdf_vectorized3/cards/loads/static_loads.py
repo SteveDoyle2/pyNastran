@@ -3,17 +3,17 @@ from collections import defaultdict
 from typing import Union, TYPE_CHECKING
 import numpy as np
 
-#from pyNastran.bdf.cards.base_card import expand_thru_by
-from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default, print_card_8, print_float_8 # , print_field_8
+from pyNastran.bdf.cards.base_card import expand_thru_by
+from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default, print_float_8 # , print_card_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double,
     integer_or_blank, double_or_blank,
     components_or_blank,
-    # string, integer_or_string, fields,
+    string, integer_or_string, fields,
 )
-#from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 #from pyNastran.bdf.bdf_interface.assign_type_force import force_integer
 from pyNastran.utils.numpy_utils import (
     integer_types, float_types,   # integer_float_types,
@@ -82,7 +82,7 @@ class DEFORM(Load):
         load.elements = self.elements[i]
         load.enforced = self.enforced[i]
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a DEFORM card from ``BDF.add_card(...)``
 
@@ -110,6 +110,7 @@ class DEFORM(Load):
             deformation = double(card, 7, 'D3')
             self.cards.append((sid, eid, deformation, comment))
             self.n += 1
+        return self.n
 
 
     @Load.parse_cards_check
@@ -916,7 +917,7 @@ class GRAV(Load):
         load.N = self.N[i, :]
 
     def add(self, sid: int, scale: float, N: np.ndarray,
-            cid: int=0, mb: int=0, comment: str='') -> GRAV:
+            cid: int=0, mb: int=0, comment: str='') -> int:
         """
         Creates an GRAV card
 
@@ -938,8 +939,9 @@ class GRAV(Load):
         """
         self.cards.append((sid, cid, scale, N, mb, comment))
         self.n += 1
+        return self.n
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         scale = double(card, 3, 'scale')
@@ -952,6 +954,7 @@ class GRAV(Load):
                                                     #'N=%s' % str(self.N))
         self.cards.append((sid, cid, scale, N, main_bulk, comment))
         self.n += 1
+        return self.n
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -1021,6 +1024,321 @@ class GRAV(Load):
         return
 
 
+class ACCEL(Load):
+    """
+    Acceleration Load
+
+    Defines static acceleration loads, which may vary over a region of
+    the structural model. The load variation is based upon the tabular
+    input defined on this Bulk Data entry.
+
+    +-------+------+------+--------+------+-----+-----+--------+-----+
+    |   1   |   2  |   3  |    4   |   5  |  6  |  7  |   8    |  9  |
+    +=======+======+======+========+======+=====+=====+========+=====+
+    | ACCEL | SID  | CID  |   N1   |  N2  | N3  | DIR |        |     |
+    +-------+------+------+--------+------+-----+-----+--------+-----+
+    |       | LOC1 | VAL1 |  LOC2  | VAL2 | Continues in Groups of 2 |
+    +-------+------+------+--------+------+--------------------------+
+    | ACCEL |  100 |   2  |   0.0  |  1.0 | 2.0 |  X  |        |     |
+    +-------+------+------+--------+------+-----+-----+--------+-----+
+    |       |  1.0 |  1.1 |   2.0  |  2.1 | 3.0 | 3.1 |  4.0   | 4.1 |
+    +-------+------+------+--------+------+-----+-----+--------+-----+
+
+    """
+    def slice_card_by_index(self, i: np.ndarray) -> ACCEL:
+        load = ACCEL(self.model)
+        self.__apply_slice__(load, i)
+        return load
+
+    def __apply_slice__(self, load: ACCEL, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.locs = hslice_by_idim(i, self.iloc, self.locs)
+        load.vals = hslice_by_idim(i, self.iloc, self.vals)
+        load.nloc = self.nloc[i]
+        load.coord_id = self.coord_id[i]
+        load.direction = self.direction[i]
+        load.N = self.N[i, :]
+
+    def add(self, sid: int, N: list[float], direction: str,
+            locs: list[float], vals: list[float], cid: int=0,
+            comment: str='') -> int:
+        """
+        Creates an ACCEL card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        direction : str
+            Component direction of acceleration variation
+            {X, Y, Z}
+        locs : list[float]
+            Location along direction DIR in coordinate system CID for
+            specification of a load scale factor.
+        vals : list[float]
+            The load scale factor associated with location LOCi
+        cid : int; default=0
+            the coordinate system for the load
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, N, direction, locs, vals, cid, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a ACCEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        cid = integer_or_blank(card, 2, 'cid', default=0)
+        N = [double_or_blank(card, 3, 'N1', default=0.0),
+             double_or_blank(card, 4, 'N2', default=0.0),
+             double_or_blank(card, 5, 'N3', default=0.0)]
+        direction = string(card, 6, 'dir')
+
+        i = 9
+        locs = []
+        vals = []
+        j = 0
+        nfields = len(card)
+        while i < nfields:
+            #raise NotImplementedError('ACCEL-line 2')
+            loc = double(card, i, 'loc%d' % j)
+            val = double(card, i, 'val%d' % j)
+            #print('i=%s j=%s len=%s loc=%s val=%s' % (i, j, len(card), loc, val))
+            locs.append(loc)
+            vals.append(val)
+            j += 1
+            i += 2
+        #return ACCEL(sid, N, direction, locs, vals, cid=cid, comment=comment)
+        self.cards.append((sid, N, direction, locs, vals, cid, comment))
+        self.n += 1
+        return self.n
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+
+        #: Set identification number
+        load_id = np.zeros(ncards, dtype='int32')
+        #: Coordinate system identification number.
+        coord_id = np.zeros(ncards, dtype='int32')
+
+        nloc = np.zeros(ncards, dtype='int32')
+
+        #: Acceleration vector components measured in coordinate system CID
+        N = np.zeros((ncards, 3), dtype='float64')
+        direction = np.zeros(ncards, dtype='|U1')
+
+        assert ncards > 0, ncards
+        locs = []
+        vals = []
+        for icard, card in enumerate(self.cards):
+            (sid, Ni, directioni, locsi, valsi, cid, comment) = card
+            assert len(locsi) == len(valsi)
+            load_id[icard] = sid
+            coord_id[icard] = cid
+            nloci = len(locsi)
+            nloc[icard] = nloci
+            locs.extend(locsi)
+            vals.extend(valsi)
+            direction[icard] = directioni
+            N[icard, :] = Ni
+        locs = np.array(locs, dtype='float64')
+        vals = np.array(vals, dtype='float64')
+        self._save(load_id, coord_id, nloc, locs, vals, direction, N)
+        assert len(self.load_id) == self.n
+        self.cards = []
+
+    def _save(self, load_id, coord_id, nloc, locs, vals, direction, N):
+        if len(self.load_id) != 0:
+            asdf
+        nloads = len(load_id)
+        self.load_id = load_id
+        self.coord_id = coord_id
+        self.nloc = nloc
+        self.locs = locs
+        self.vals = vals
+        self.direction = direction
+        self.N = N
+        self.n = nloads
+
+    @property
+    def iloc(self) -> np.ndarray:
+        return make_idim(self.n, self.nloc)
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+
+        load_ids = array_default_int(self.load_id, size=size)
+        coord_ids = array_default_int(self.coord_id, default=0, size=size)
+        for sid, cid, (iloc0, iloc1), N, directioni in zip(load_ids, coord_ids, self.iloc, self.N, self.direction):
+            locs = self.locs[iloc0:iloc1]
+            vals = self.vals[iloc0:iloc1]
+
+            list_fields = [
+                'ACCEL', sid, cid, N[0], N[1], N[2], directioni, None, None,
+            ]
+            for loc, val in zip(locs, vals):
+                list_fields += [loc, val]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class ACCEL1(Load):
+    def slice_card_by_index(self, i: np.ndarray) -> ACCEL1:
+        load = ACCEL1(self.model)
+        self.__apply_slice__(load, i)
+        return load
+
+    def __apply_slice__(self, load: ACCEL1, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.nodes = hslice_by_idim(i, self.inode, self.nodes)
+        load.nnodes = self.nnodes[i]
+        load.coord_id = self.coord_id[i]
+        load.scale = self.scale[i]
+        load.N = self.N[i, :]
+
+    def add(self, sid: int, scale: float,
+            N: list[float], nodes: list[int],
+            cid: int=0, comment: str='') -> int:
+        """
+        Creates an ACCEL1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            scale factor for load
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        nodes : list[int]
+            the nodes to apply acceleration to
+        cid : int; default=0
+            the coordinate system for the load
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, scale, N, nodes, cid, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a ACCEL1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        cid = integer_or_blank(card, 2, 'cid', default=0)
+        scale = double(card, 3, 'scale')
+        N = [double_or_blank(card, 4, 'N1', default=0.0),
+             double_or_blank(card, 5, 'N2', default=0.0),
+             double_or_blank(card, 6, 'N3', default=0.0)]
+
+        nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
+        #return ACCEL1(sid, scale, N, nodes, cid=cid, comment=comment)
+        self.cards.append((sid, scale, N, nodes, cid, comment))
+        self.n += 1
+        return self.n
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+
+        #: Set identification number
+        load_id = np.zeros(ncards, dtype='int32')
+        #: Coordinate system identification number.
+        coord_id = np.zeros(ncards, dtype='int32')
+
+        nnodes = np.zeros(ncards, dtype='int32')
+
+        #: Acceleration vector components measured in coordinate system CID
+        N = np.zeros((ncards, 3), dtype='float64')
+        scale = np.zeros(ncards, dtype='float64')
+        #direction = np.zeros(ncards, dtype='|U1')
+
+        assert ncards > 0, ncards
+        nodes = []
+        for icard, card in enumerate(self.cards):
+            (sid, scalei, Ni, nodesi, cidi, comment) = card
+            #print(Ni, directioni, locsi, valsi)
+            nodesi2 = expand_thru_by(nodesi)
+            load_id[icard] = sid
+            coord_id[icard] = cidi
+            scale[icard] = scalei
+            nnodes[icard] = len(nodesi2)
+            nodes.extend(nodesi2)
+            N[icard, :] = Ni
+        #assert isinstance(nnodes.tolist()[0], int), nnodes[0]
+
+        nodes = np.array(nodes, dtype='int32')
+        self._save(load_id, coord_id, scale, nnodes, nodes, N)
+        assert len(self.load_id) == self.n
+        self.cards = []
+
+    def _save(self, load_id, coord_id, scale, nnodes, nodes, N):
+        if len(self.load_id) != 0:
+            asdf
+        nloads = len(load_id)
+        self.load_id = load_id
+        self.coord_id = coord_id
+        self.nnodes = nnodes
+        #assert isinstance(self.nnodes.tolist()[0], int), self.nnodes[0]
+        self.nodes = nodes
+        self.scale = scale
+        self.N = N
+        self.n = nloads
+
+    @property
+    def inode(self) -> np.ndarray:
+        assert isinstance(self.nnodes.tolist()[0], int), self.nnodes[0]
+        return make_idim(self.n, self.nnodes)
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+
+        load_ids = array_default_int(self.load_id, size=size)
+        coord_ids = array_default_int(self.coord_id, default=0, size=size)
+        for sid, cid, scale, (inode0, inode1), N in zip(load_ids, coord_ids, self.scale, self.inode, self.N):
+            nodes = self.nodes[inode0:inode1]
+            #print(N, nodes)
+
+            list_fields = [
+                'ACCEL1', sid, cid, scale, N[0], N[1], N[2], None, None
+            ] + collapse_thru_by(nodes)
+            bdf_file.write(print_card(list_fields))
+        return
+
+
 class LOAD(Load):
     """
     +------+-----+------+------+----+-----+----+----+----+
@@ -1042,10 +1360,11 @@ class LOAD(Load):
 
     def add(self, sid: int, scale: float,
             scale_factors: list[float],
-            load_ids: list[int], comment: str='') -> None:
+            load_ids: list[int], comment: str='') -> int:
         assert len(scale_factors) == len(load_ids), f'sid={sid:d} scale_factors={scale_factors} load_ids={load_ids}'
         self.cards.append((sid, scale, scale_factors, load_ids, comment))
         self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -1067,12 +1386,9 @@ class LOAD(Load):
         self.n += 1
         return self.n
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         load_id = np.zeros(ncards, dtype='int32')
         scale = np.zeros(ncards, dtype='float64')
         nloads = np.zeros(ncards, dtype='int32')
@@ -1542,7 +1858,7 @@ class RFORCE(Load):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a RFORCE card from ``BDF.add_card(...)``
 
@@ -1766,7 +2082,7 @@ class RFORCE1(Load):
         self.n += 1
         return self.n
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a RFORCE1 card from ``BDF.add_card(...)``
 

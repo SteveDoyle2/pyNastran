@@ -98,7 +98,7 @@ def print_field_8(value: Union[int, float, str, None]) -> str:
     assert not isinstance(value, list), value
 
     if isinstance(value, int):
-        field = '%8i' % value
+        field = '%8d' % value
     elif isinstance(value, (float, float32, float64)):
         field_old = '%8s' % print_float_8(value)
         field_new = get_float_format(value)

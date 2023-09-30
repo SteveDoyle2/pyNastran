@@ -18,7 +18,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16,
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_default_str, array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_default_int, array_default_float)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -230,6 +231,7 @@ class RROD(RigidElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
@@ -240,7 +242,6 @@ class RROD(RigidElement):
         assert len(card) <= 7, f'len(RROD card) = {len(card):d}\ncard={card}'
         #return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
         self.cards.append((eid, [ga, gb], [cma, cmb], alpha, comment))
-        self.n += 1
         self.n += 1
         return self.n
 
@@ -286,13 +287,12 @@ class RROD(RigidElement):
         nodes = array_str(self.nodes, size=size)
         #ind_nodes = array_default_int(self.independent_dof, default=0, size=size)
         dep_nodes = array_default_int(self.dependent_dof, default=0, size=size)
-
-        for eid, nodes, dependent_dof, alpha in zip(eids, nodes, dep_nodes, self.alpha):
+        alphas = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
+        for eid, nodes, dependent_dof, alpha in zip(eids, nodes, dep_nodes, alphas):
             ga, gb = nodes
             #cna, cnb = independent_dof
             cma, cmb = dependent_dof
 
-            alpha = set_blank_if_default(alpha, 0.)
             list_fields = ['RROD', eid, ga, gb,
                            cma, cmb, alpha]
             bdf_file.write(print_card(list_fields))
@@ -608,7 +608,6 @@ class RBE2(RigidElement):
         self.alpha = alpha
         self.tref = tref
 
-
     @property
     def idim(self) -> np.ndarray:
         return make_idim(self.n, self.nnode)
@@ -634,22 +633,22 @@ class RBE2(RigidElement):
                 list_fields = ['RBE2', eid, ind_node, ind_component] + dep_nodes
                 bdf_file.write(print_card(list_fields))
         elif no_tref:
+            alphas = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
             for eid, ind_node, ind_component, idim, alpha in zip_longest(eid_str, ind_node_str, ind_components_str,
-                                                                         self.idim, self.alpha):
+                                                                         self.idim, alphas):
                 idim0, idim1 = idim
                 dep_nodes = dep_node_str[idim0:idim1].tolist()  # Gmi
 
-                alpha = set_blank_if_default(alpha, 0.)
                 list_fields = ['RBE2', eid, ind_node, ind_component] + dep_nodes + [alpha]
                 bdf_file.write(print_card(list_fields))
         else:
+            alphas = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
+            trefs = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
             for eid, ind_node, ind_component, idim, alpha, tref in zip_longest(eid_str, ind_node_str, ind_components_str,
-                                                                               self.idim, self.alpha, self.tref):
+                                                                               self.idim, alphas, trefs):
                 idim0, idim1 = idim
                 dep_nodes = dep_node_str[idim0:idim1].tolist()  # Gmi
 
-                alpha = set_blank_if_default(alpha, 0.)
-                tref = set_blank_if_default(tref, 0.)
                 list_fields = ['RBE2', eid, ind_node, ind_component] + dep_nodes + [alpha, tref]
                 bdf_file.write(print_card(list_fields))
         return
