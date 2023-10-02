@@ -39,10 +39,25 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
         convert(model, units_to, units)
 
     if run_read_write:
-        stringio = io.StringIO()
-        model.write_bdf(stringio, close=False)
-        stringio.seek(0)
+        stringio8 = io.StringIO()
+        model.write_bdf(stringio8, close=False)
+        stringio8.seek(0)
+
+        stringio16 = io.StringIO()
+        model.write_bdf(stringio16, size=16, close=False)
+        stringio16.seek(0)
+
+
+        stringio_double = io.StringIO()
+        model.write_bdf(stringio_double, size=16, is_double=True, close=False)
+        stringio_double.seek(0)
 
         model2 = BDF(debug=False, log=model.log)
-        model2.read_bdf(stringio, punch=model.punch)
+        model2.read_bdf(stringio8, punch=model.punch)
+
+        model3 = BDF(debug=False, log=model.log)
+        model3.read_bdf(stringio16, punch=model.punch)
+
+        model4 = BDF(debug=False, log=model.log)
+        model4.read_bdf(stringio_double, punch=model.punch)
     return model

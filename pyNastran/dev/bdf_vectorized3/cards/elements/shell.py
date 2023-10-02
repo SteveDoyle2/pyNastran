@@ -1278,7 +1278,7 @@ class CQUAD4(ShellElement):
                                % tuple(data))
                     else:
                         data = [eid, pid] + nodes.tolist() + row2
-                        msg = ('CQUAD4* %16d%16d%16d%16d\n'
+                        msg = ('CQUAD4* %16s%16s%16d%16d\n'
                                '*       %16d%16d%16s%16s\n'
                                '*                     %16s%16s%16s\n'
                                '*       %16s%16s\n'
@@ -2207,18 +2207,41 @@ class CQUAD(ShellElement):
             a comment for the card
 
         """
-        self.element_id = np.hstack([self.element_id, eid])
-        self.property_id = np.hstack([self.property_id, pid])
-        self.nodes = np.vstack([self.nodes, nids])
-        if isinstance(theta_mcid, integer_types):
-            mcid = theta_mcid
-            theta = np.nan
-        else:
-            mcid = -1
-            theta = theta_mcid
+        self.cards.append((eid, pid, nids, theta_mcid, comment))
+        self.n += 1
+        return self.n
 
-        self.mcid = np.hstack([self.mcid, mcid])
-        self.theta = np.hstack([self.theta, theta])
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a CQUAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        nids = [integer(card, 3, 'n1'),
+                integer(card, 4, 'n2'),
+                integer(card, 5, 'n3'),
+                integer(card, 6, 'n4'),
+                integer_or_blank(card, 7, 'n5', default=0),
+                integer_or_blank(card, 8, 'n6', default=0),
+                integer_or_blank(card, 9, 'n7', default=0),
+                integer_or_blank(card, 10, 'n8', default=0),
+                integer_or_blank(card, 11, 'n9', default=0),]
+        theta_mcid = integer_double_or_blank(card, 12, 'theta_mcid', default=0.)
+        assert len(card) <= 13, f'len(CQUAD card) = {len(card):d}\ncard={card}'
+        #return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
+
+        self.cards.append((eid, pid, nids, theta_mcid, comment))
         self.n += 1
         return self.n
 
@@ -2233,57 +2256,55 @@ class CQUAD(ShellElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.element_id = np.zeros(ncards, dtype='int32')
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.nodes = np.zeros((ncards, 9), dtype='int32')
-        self.mcid = np.full(ncards, -1, dtype='int32')
-        self.theta = np.full(ncards, np.nan, dtype='float64')
+        element_id = np.zeros(ncards, dtype='int32')
+        property_id = np.zeros(ncards, dtype='int32')
+        nodes = np.zeros((ncards, 9), dtype='int32')
+        mcid = np.full(ncards, -1, dtype='int32')
+        theta = np.full(ncards, np.nan, dtype='float64')
 
-        for icard, card_comment in enumerate(self.cards):
-            card, comment = card_comment
+        for icard, card in enumerate(self.cards):
+            (eid, pid, nids, theta_mcid, comment) = card
 
-            eid = integer(card, 1, 'eid')
-            pid = integer(card, 2, 'pid')
-            nids = [integer(card, 3, 'n1'),
-                    integer(card, 4, 'n2'),
-                    integer(card, 5, 'n3'),
-                    integer(card, 6, 'n4'),
-                    integer_or_blank(card, 7, 'n5', default=0),
-                    integer_or_blank(card, 8, 'n6', default=0),
-                    integer_or_blank(card, 9, 'n7', default=0),
-                    integer_or_blank(card, 10, 'n8', default=0),
-                    integer_or_blank(card, 11, 'n9', default=0),]
-            theta_mcid = integer_double_or_blank(card, 12, 'theta_mcid', default=0.)
-            assert len(card) <= 13, f'len(CQUAD card) = {len(card):d}\ncard={card}'
-
-            self.element_id[icard] = eid
-            self.property_id[icard] = pid
-            self.nodes[icard, :] = nids
+            element_id[icard] = eid
+            property_id[icard] = pid
+            nodes[icard, :] = nids
             if isinstance(theta_mcid, float):
-                self.theta[icard] = theta_mcid
+                theta[icard] = theta_mcid
             else:
-                self.mcid[icard] = theta_mcid
+                mcid[icard] = theta_mcid
+        self._save(element_id, property_id, nodes, theta, mcid)
         self.sort()
         self.cards = []
+
+    def _save(self, element_id, property_id, nodes, theta, mcid):
+        self.element_id = element_id
+        self.property_id = property_id
+        self.nodes = nodes
+        self.mcid = mcid
+        self.theta = theta
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
 
-        element_id = array_str(self.element_id, size=size)
+        element_ids = array_str(self.element_id, size=size)
+        property_ids = array_str(self.property_id, size=size)
+        nodes = array_default_int(self.nodes, default=0, size=size)
         mcids = array_default_int(self.mcid, default=-1, size=size)
-        for eid, pid, nodes, theta, mcid in zip_longest(element_id, self.property_id, self.nodes,
-                                                        self.theta, mcids):
+        for eid, pid, nodesi, theta, mcid in zip_longest(element_ids, property_ids, nodes,
+                                                         self.theta, mcids):
             if np.isnan(theta):
                 theta_mcid = '%8s' % mcid
             else:
                 theta_mcid = print_field_8(theta)
 
-            nodes2 = ['' if node is None else '%8d' % node for node in nodes[4:]]
-
-            data = [eid, pid] + nodes[:4].tolist() + nodes2 + [theta_mcid]
-            msg = ('CQUAD   %8s%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
+            #nodes2 = ['' if node is None else '%8d' % node for node in nodes[4:]]
+            #data = [eid, pid] + nodes[:4].tolist() + nodes2 + [theta_mcid]
+            #msg = ('CQUAD   %8s%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
+                   #'        %8s%8s%8s%8s\n' % tuple(data))
+            data = [eid, pid] + nodesi.tolist() + [theta_mcid]
+            msg = ('CQUAD   %8s%8s%8s%8s%8s%8s%8s%8s\n'  # 6 nodes
                    '        %8s%8s%8s%8s\n' % tuple(data))
             bdf_file.write(msg)
         return
