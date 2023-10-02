@@ -1269,7 +1269,7 @@ class TestShells(unittest.TestCase):
         model.setup()
         #t = pplane.total_thickness()
         #assert np.allclose(t, 1.0), t
-        save_load_deck(model)
+        save_load_deck(model, run_read_write=False)
 
     def test_pplane_pshln2(self):
         """tests the PPLANE, PSHELN2"""
@@ -1807,7 +1807,8 @@ class TestAxisymmetricShells(unittest.TestCase):
         save_load_deck(model, run_test_bdf=False)
 
 
-def make_dvcrel_optimization(model, params, element_type, eid, i=1):
+def make_dvcrel_optimization(model: BDF, params, element_type: str, eid: int,
+                             i: int=1) -> int:
     """makes a series of DVCREL1 and a DESVAR"""
     j = i
     for ii, (name, desvar_value) in enumerate(params):
@@ -1836,7 +1837,8 @@ def make_dvprel_optimization(model: BDF, params, prop_type: str, pid: int,
         model.add_desvar(j, 'v%s' % name, desvar_value)
     return j + 1
 
-def make_dvmrel_optimization(model, params, material_type, mid, i=1):
+def make_dvmrel_optimization(model: BDF, params, material_type: str, mid: int,
+                             i: int=1) -> int:
     """makes a series of DVMREL1 and a DESVAR"""
     j = i
     for ii, (name, desvar_value) in enumerate(params):

@@ -1213,7 +1213,7 @@ class PBARL(Property):
         assert ndim > 0, f'PBARL: property_id={pid} dims={dim}'
 
         nsm = double_or_blank(card, 9 + ndim, 'nsm', default=0.0)
-        assert len(card) <= 17, f'len(CBAR card) = {len(card):d}\ncard={card}'
+        assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
         self.cards.append((pid, mid, group, bar_type, dim, nsm, comment))
         self.n += 1
         return self.n

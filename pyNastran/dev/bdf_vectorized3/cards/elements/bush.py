@@ -677,8 +677,9 @@ def _set_fields_pbush(list_fields: list[Any], var: str, fields: list[Any]):
         else:
             fields2.append(field)
             write_fields = True
-    if write_fields:
-        list_fields += [var] + fields2
+    if not write_fields:
+        return
+    list_fields += [var] + fields2
 
     nspaces = 8 - (len(list_fields) - 1) % 8
     if nspaces == 8:

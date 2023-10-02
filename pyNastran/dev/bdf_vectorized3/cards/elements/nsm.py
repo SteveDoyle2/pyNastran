@@ -302,7 +302,6 @@ class NSM1i(VectorizedBaseCard):
     def ielement(self) -> np.ndarray:
         return make_idim(self.n, self.npid_eid)
 
-
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
@@ -382,9 +381,11 @@ class NSM1(NSM1i):
 
         nsm_str = array_str(self.nsm_id, size=size)
         pid_eid_str = array_str(self.pid_eid, size=size)
-        for nsm_id, nsm_type, pid_eid, value, (insm0, insm1) in zip_longest(
-                nsm_str, self.nsm_type, pid_eid_str, self.value, self.insm):
-            ids = self.pid_eid[insm0:insm1]
+        #insm = self.insm
+        ielement = self.ielement
+        for nsm_id, nsm_type, value, (insm0, insm1) in zip_longest(
+                nsm_str, self.nsm_type, self.value, ielement):
+            ids = self.pid_eid[insm0:insm1].tolist()
             list_fields = ['NSM1', nsm_id, nsm_type, value, ] + ids
             bdf_file.write(print_card(list_fields))
         return
@@ -399,9 +400,10 @@ class NSML1(NSM1i):
 
         nsm_str = array_str(self.nsm_id, size=size)
         pid_eid_str = array_str(self.pid_eid, size=size)
-        for nsm_id, nsm_type, pid_eid, value, (insm0, insm1) in zip_longest(
-                nsm_str, self.nsm_type, pid_eid_str, self.value, self.insm):
-            ids = self.pid_eid[insm0:insm1]
+        insm = self.ielement
+        for nsm_id, nsm_type, value, (insm0, insm1) in zip_longest(
+                nsm_str, self.nsm_type, self.value, insm):
+            ids = self.pid_eid[insm0:insm1].tolist()
             list_fields = ['NSML1', nsm_id, nsm_type, value, ] + ids
             bdf_file.write(print_card(list_fields))
         return

@@ -1928,46 +1928,54 @@ class PSHLN1(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.material_id = np.zeros((ncards, 2), dtype='int32')
-        self.analysis = np.zeros(ncards, dtype='|U8')
-        self.beh = np.zeros((ncards, 4), dtype='|U8')
-        self.beh_h = np.zeros((ncards, 4), dtype='|U8')
-        self.integration = np.zeros((ncards, 4), dtype='|U8')
-        self.integration_h = np.zeros((ncards, 4), dtype='|U8')
+        property_id = np.zeros(ncards, dtype='int32')
+        material_id = np.zeros((ncards, 2), dtype='int32')
+        analysis = np.zeros(ncards, dtype='|U8')
+        beh = np.zeros((ncards, 4), dtype='|U8')
+        beh_h = np.zeros((ncards, 4), dtype='|U8')
+        integration = np.zeros((ncards, 4), dtype='|U8')
+        integration_h = np.zeros((ncards, 4), dtype='|U8')
 
         for icard, card in enumerate(self.cards):
-            (pid, mids, analysis,
-             behx, integration, behxh, integration_h, comment) = card
+            (pid, mids, analysisi,
+             behx, integrationx, behxh, integration_hx, comment) = card
 
-            self.property_id[icard] = pid
-            self.material_id[icard] = mids
-            self.analysis[icard] = analysis
+            property_id[icard] = pid
+            material_id[icard] = mids
+            analysis[icard] = analysisi
             if behx is None:
                 behx = [''] * 4
-            if integration is None:
-                integration = [''] * 4
+            if integrationx is None:
+                integrationx = [''] * 4
             if behxh is None:
                 behxh = [''] * 4
-            if integration_h is None:
-                integration_h = [''] * 4
+            if integration_hx is None:
+                integration_hx = [''] * 4
 
-            self.beh[icard] = [val if val is not None else ''
-                               for val in behx]
-            self.integration[icard] = [val if val is not None else ''
-                                       for val in integration]
-            self.beh_h[icard] = [val if val is not None else ''
-                                 for val in behxh]
-            self.integration_h[icard] = [val if val is not None else ''
-                                         for val in integration_h]
+            beh[icard] = [val if val is not None else ''
+                          for val in behx]
+            integration[icard] = [val if val is not None else ''
+                                  for val in integrationx]
+            beh_h[icard] = [val if val is not None else ''
+                            for val in behxh]
+            integration_h[icard] = [val if val is not None else ''
+                                    for val in integration_hx]
+        self._save(property_id, material_id, analysis, beh, beh_h, integration, integration_h)
         self.sort()
         self.cards = []
+
+    def _save(self, property_id, material_id, analysis, beh, beh_h, integration, integration_h) -> None:
+        self.property_id = property_id
+        self.material_id = material_id
+        self.analysis = analysis
+        self.beh = beh
+        self.beh_h = beh_h
+        self.integration = integration
+        self.integration_h = integration_h
+
 
     def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:
         prop.n = len(i)

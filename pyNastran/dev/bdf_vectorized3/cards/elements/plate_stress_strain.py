@@ -21,7 +21,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
     #hslice_by_idim, make_idim, searchsorted_filter,
     parse_element_check)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_float, array_default_int)
 from .utils import get_density_from_material
 from .shell import (
     tri_centroid, tri_area, # tri_area_centroid_normal, tri_quality_xyz, tri_quality_nodes,
@@ -542,9 +543,9 @@ class PPLANE(Property):
         print_card = get_print_card_8_16(size)
         pids = array_str(self.property_id, size=size)
         mids = array_str(self.material_id, size=size)
-
+        thicknesses = array_float(self.thickness, size=size, is_double=is_double)
         for pid, mid, thickness, nsm, formulation_option in zip_longest(
-            pids, mids, self.thickness, self.nsm, self.formulation_option):
+            pids, mids, thicknesses, self.nsm, self.formulation_option):
             list_fields = ['PPLANE', pid, mid, thickness, nsm, formulation_option]
             msg = print_card(list_fields)
             bdf_file.write(msg)

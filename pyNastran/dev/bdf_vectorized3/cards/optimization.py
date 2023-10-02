@@ -769,13 +769,15 @@ class DRESP1(VectorizedBaseCard):
         atta_ints = array_str(self.atta_int, size=size)
         attb_ints = array_str(self.attb_int, size=size)
         attis = array_str(self.atti, size=size)
+        atta_floats = array_float(self.atta_float, size=size, is_double=is_double)
+        attb_floats = array_float(self.attb_float, size=size, is_double=is_double)
 
         for dresp_id, label, response_type, property_type, region, \
             atta_type, atta_int, atta_float, atta_str, \
             attb_type, attb_int, attb_float, attb_str, iatti in zip_longest(
                 self.dresp_id, self.label, self.response_type, self.property_type, regions,
-                self.atta_type, atta_ints, self.atta_float, self.atta_str,
-                self.attb_type, attb_ints, self.attb_float, self.attb_str, self.iatti):
+                self.atta_type, atta_ints, atta_floats, self.atta_str,
+                self.attb_type, attb_ints, attb_floats, self.attb_str, self.iatti):
             iatti0, iatti1 = iatti
             atti = attis[iatti0:iatti1]
             if atta_type == 'i':
@@ -793,12 +795,14 @@ class DRESP1(VectorizedBaseCard):
                 attb = attb_str
 
             if response_type == 'WEIGHT' and len(atti) and atti[0] == -1:
-                atti = ['ALL']
-                print(self.response_type, self.atti)
+                atti_list = ['ALL']
+                #print(self.response_type, self.atti)
                 #iatti_all = (self.response_type == 'WEIGHT') & (self.atti == -1)
                 #attis[iatti_all] = 'ALL'
+            else:
+                atti_list = atti.tolist()
             list_fields = ['DRESP1', dresp_id, label, response_type, property_type,
-                           region, atta, attb] + atti.tolist()
+                           region, atta, attb] + atti_list
             bdf_file.write(print_card(list_fields))
         return
 

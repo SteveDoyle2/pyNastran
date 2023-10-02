@@ -167,16 +167,16 @@ class RBAR(RigidElement):
 
         eids = array_str(self.element_id)
         nodes = array_str(self.nodes, size=size)
-        ind_nodes = array_default_int(self.independent_dof, default=0, size=size)
-        dep_nodes = array_default_int(self.dependent_dof, default=0, size=size)
+        ind_nodes = array_default_int(self.independent_dof, default=-1, size=size)
+        dep_nodes = array_default_int(self.dependent_dof, default=-1, size=size)
 
-        for eid, nodes, independent_dof, dependent_dof, alpha, tref in zip(eids, nodes, ind_nodes, dep_nodes, self.alpha, self.tref):
+        alphas = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
+        trefs = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
+        for eid, nodes, independent_dof, dependent_dof, alpha, tref in zip(eids, nodes, ind_nodes, dep_nodes, alphas, trefs):
             ga, gb = nodes
             cna, cnb = independent_dof
             cma, cmb = dependent_dof
 
-            alpha = set_blank_if_default(alpha, 0.)
-            tref = set_blank_if_default(tref, 0.)
             list_fields = ['RBAR', eid, ga, gb, cna, cnb,
                            cma, cmb, alpha, tref]
             bdf_file.write(print_card(list_fields))

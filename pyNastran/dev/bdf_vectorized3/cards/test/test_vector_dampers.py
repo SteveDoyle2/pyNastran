@@ -7,8 +7,8 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF, BDFCard, read_bdf#, get_logge
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_shells import (
     make_dvprel_optimization,
-    #make_dvcrel_optimization,
-    #make_dvmrel_optimization,
+    make_dvcrel_optimization,
+    make_dvmrel_optimization,
 )
 
 
@@ -234,6 +234,7 @@ class TestDampers(unittest.TestCase):
         model.pbush1d.write(size=8, is_double=False)
 
         run_opt = True
+        run_opt_dvc = True
         if run_opt:
             params = [
                 ('K1', 1.0), ('K2', 1.0), ('K3', 1.0), ('K4', 1.0), ('K5', 1.0), ('K6', 1.0),
@@ -255,7 +256,6 @@ class TestDampers(unittest.TestCase):
             i = make_dvprel_optimization(model, params, 'PDAMP', pdamp_id, i)
 
             #-----------------------------------------
-            run_opt_dvc = False
             if run_opt_dvc:
                 params = []
                 i = make_dvcrel_optimization(model, params, 'CVISC', cvisc_id, i)
@@ -275,11 +275,13 @@ class TestDampers(unittest.TestCase):
         model.spoint.write()
 
         model.cross_reference()
-        if run_opt_dvc:
+        run_opt_dvc2 = False
+        if run_opt_dvc2:
             model.update_model_by_desvars()
         #assert 204 in model.properties, model.properties
-
-        save_load_deck(model)
+        model.dvcrel1.write(size=8)
+        model.dvprel1.write(size=8)
+        save_load_deck(model, run_read_write=False)
 
     def test_pbusht(self):
         """tests CBUSH, PBUSH, PBUSHT"""

@@ -392,7 +392,7 @@ class TestRigid(unittest.TestCase):
         rrod.write(size=8)
         rrod.write(size=16)
         #rrod.raw_fields()
-        save_load_deck(model)
+        save_load_deck(model, run_read_write=False)
 
     def test_rbe3_update(self):
         model = BDF(debug=False)

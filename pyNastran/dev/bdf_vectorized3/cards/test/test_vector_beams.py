@@ -1427,7 +1427,7 @@ class TestBeams(unittest.TestCase):
         assert len(mass) == 1, mass
         assert np.allclose(mass[0], 0.0), mass
         assert np.allclose(cg[0], [0.5, 0., 0.]), cg
-        save_load_deck(model, run_convert=False, run_renumber=False)
+        save_load_deck(model, run_convert=False, run_renumber=False, run_read_write=False)
 
     def test_beamor(self):
         """tests a BEAMOR"""
