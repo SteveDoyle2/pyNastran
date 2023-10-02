@@ -857,7 +857,6 @@ class TestShells(unittest.TestCase):
         model.cplstn4.write(size=8)
         model.pplane.write(size=8)
         model.cross_reference()
-        model.pop_xref_errors()
         model.cplstn3.write(size=16)
         model.cplstn4.write(size=16)
 
@@ -910,9 +909,8 @@ class TestShells(unittest.TestCase):
         model.cplstn8.write(size=8)
         model.pplane.write(size=8)
         model.cross_reference()
-        model.pop_xref_errors()
-        #cplstn3.write_card(size=8)
-        #cplstn4.write_card(size=8)
+        model.cplstn3.write(size=8)
+        model.cplstn4.write(size=8)
 
         #model.uncross_reference()
         #model.safe_cross_reference()
@@ -961,7 +959,6 @@ class TestShells(unittest.TestCase):
         model.cplsts4.write(size=8)
         model.pplane.write(size=8)
         model.cross_reference()
-        model.pop_xref_errors()
         model.cplsts3.write(size=16)
         model.cplsts4.write(size=16)
 
@@ -1012,9 +1009,8 @@ class TestShells(unittest.TestCase):
         model.cplsts8.write(size=8)
         model.pplane.write(size=8)
         model.cross_reference()
-        model.pop_xref_errors()
-        #cplstn3.write_card(size=8)
-        #cplstn4.write_card(size=8)
+        model.cplstn3.write(size=8)
+        model.cplstn4.write(size=8)
 
         #model.uncross_reference()
         #model.safe_cross_reference()
@@ -1069,7 +1065,6 @@ class TestShells(unittest.TestCase):
         mass2 = model.cquad8.mass_breakdown()
 
         #model.cross_reference()
-        #model.pop_xref_errors()
 
         #model.uncross_reference()
         #model.safe_cross_reference()
@@ -1118,7 +1113,6 @@ class TestShells(unittest.TestCase):
         ])
         xyz_cid0 = model.grid.xyz_cid0()
         #model.cross_reference()
-        #model.pop_xref_errors()
         assert np.array_equal(model.grid.node_id, [1, 2, 3, 4])
         assert np.allclose(xyz_cid0, xyz_cid0_expected)
 
@@ -1147,7 +1141,6 @@ class TestShells(unittest.TestCase):
         model.write_bdf(bdf_file)
         #model.uncross_reference()
         #model.cross_reference()
-        #model.pop_xref_errors()
 
         model.get_area_breakdown(property_ids=None, stop_if_no_area=True)
         model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True)
@@ -1222,7 +1215,6 @@ class TestShells(unittest.TestCase):
         model.add_mat1(mid, E, G, nu, rho=0.1)
 
         #model.cross_reference()
-        #model.pop_xref_errors()
 
         model.grid.sort()
         model.setup()
@@ -1243,6 +1235,74 @@ class TestShells(unittest.TestCase):
         #model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
+        save_load_deck(model)
+
+    def test_pplane_pshln1(self):
+        """tests the PPLANE, PSHELN1"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        eid = 10
+        pid = 100
+        mid = 1000
+
+        # only when t=0.0
+        model.add_pplane(pid, mid, t=0.0, nsm=0.0, formulation_option=0, comment='')
+        pplane = model.pplane
+        pshln1 = model.pshln1
+        #with self.assertRaises(AssertionError):
+            #t = pplane.total_thickness()
+
+        model.add_pshln1(
+            pid, mid1=0, mid2=0, analysis='ISH',
+            behx=None, integration=None,
+            behxh=None, integration_h=None, comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.1)
+
+        model.setup()
+        #t = pplane.total_thickness()
+        #assert np.allclose(t, 1.0), t
+        save_load_deck(model)
+
+    def test_pplane_pshln2(self):
+        """tests the PPLANE, PSHELN2"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        eid = 10
+        pid = 100
+        mid = 1000
+
+        # only when t=0.0
+        model.add_pplane(pid, mid, t=0.0, nsm=0.0, formulation_option=0, comment='')
+        pplane = model.pplane
+        pshln2 = model.pshln2
+        #with self.assertRaises(AssertionError):
+            #t = pplane.total_thickness()
+
+        model.add_pshln2(
+            pid, mid, direct=1, thickness=1.0, analysis='ISH',
+            behx=None, integration=None, behxh=None, integration_h=None,
+            comment='pshln2')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.1)
+
+        model.setup()
+        t = pplane.total_thickness()
+        assert np.allclose(t, 1.0), t
         save_load_deck(model)
 
     def test_shell_mcid(self):
@@ -1353,7 +1413,6 @@ class TestShells(unittest.TestCase):
 
         model.pop_parse_errors()
         model.cross_reference()
-        model.pop_xref_errors()
         ABD = model.pcomp.get_ABD_matrices()
 
         thetad = np.linspace(0., 90., num=91)
@@ -1418,7 +1477,6 @@ class TestShells(unittest.TestCase):
 
         #model.pop_parse_errors()
         #model.cross_reference()
-        #model.pop_xref_errors()
         ABD = model.pcomp.get_ABD_matrices()
 
         #print(f'pcomp_sym:\n{pcomp_sym}')
@@ -1616,7 +1674,6 @@ class TestAxisymmetricShells(unittest.TestCase):
         model.setup()
 
         #model.cross_reference()
-        #model.pop_xref_errors()
 
         mass = model.mass_sum()
         assert np.allclose(mass, 0.0), mass  # TODO: not sure
@@ -1747,7 +1804,6 @@ class TestAxisymmetricShells(unittest.TestCase):
         model.add_mat1(mid, E, G, nu)
 
         #model.cross_reference()
-        #model.pop_xref_errors()
         save_load_deck(model, run_test_bdf=False)
 
 

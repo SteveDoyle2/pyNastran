@@ -132,7 +132,7 @@ class NSMi(VectorizedBaseCard):
             nsm_id[icard] = sid
             nsm_type[icard] = nsm_typei
             assert len(nsm_typei) <= 7, f'nsm_type={nsm_typei!r} len={len(nsm_typei)}'
-            print(pid_eidi)
+            #model.log.debug(pid_eidi)
             if isinstance(pid_eidi, int):
                 pid_eidi = [pid_eidi]
                 valuei = [valuei]

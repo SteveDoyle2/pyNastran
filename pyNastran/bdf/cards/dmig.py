@@ -456,7 +456,17 @@ class NastranMatrix(BaseCard):
         elif matrix_form == 6: # symmetric
             ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form in {2, 9}: # rectangular
-            ncols = integer(card, 8, 'matrix_form=%s; ncol' % (matrix_form))
+            # If NCOL is not used for rectangular matrices:
+            # - IFO=9, GJ and CJ will determine the sorted sequence, but will
+            #   otherwise be ignored; a rectangular matrix will be generated
+            #   with the columns submitted being in the 1 to N positions, where
+            #   N is the number of logical entries submitted (not counting
+            #   the header entry).
+            # - IFO=2, the number of columns of the rectangular matrix will be
+            #   equal to the index of the highest numbered non-null column (in
+            #   internal sort). Trailing null columns of the g- or p-size matrix
+            #   will be truncated.
+            ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % (matrix_form))
         else:
             # technically right, but nulling this will fix bad decks
             #self.ncols = blank(card, 8, 'matrix_form=%s; ncol' % self.matrix_form)

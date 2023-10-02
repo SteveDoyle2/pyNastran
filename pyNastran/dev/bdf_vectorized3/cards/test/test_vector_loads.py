@@ -114,7 +114,6 @@ class TestLoads(unittest.TestCase):
         model.validate()
         model.pop_parse_errors()
         model.cross_reference()
-        model.pop_xref_errors()
 
         #accel1.raw_fields()
         accel1.write(size=8)
@@ -194,7 +193,6 @@ class TestLoads(unittest.TestCase):
         model.validate()
         model.pop_parse_errors()
         model.cross_reference()
-        model.pop_xref_errors()
 
         #accel.raw_fields()
         accel.write(size=8)

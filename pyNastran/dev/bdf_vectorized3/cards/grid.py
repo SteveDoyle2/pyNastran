@@ -128,6 +128,27 @@ class SPOINT(XPOINT):
         #spoint.ids = self.ids[i]
         #return spoint
 
+
+class EPOINT(XPOINT):
+    _id_name = 'epoint_id'
+    @property
+    def epoint_id(self) -> np.ndarray:
+        return self.ids
+    @epoint_id.setter
+    def epoint_id(self, epoint_id: np.ndarray):
+        self.ids = epoint_id
+
+    #def slice_card(self, i: np.ndarray) -> EPOINT:
+        #"""uses a node_index to extract SPOINTs"""
+        #assert len(self.ids) > 0, self.ids
+        #i = np.atleast_1d(np.asarray(i, dtype=self.ids.dtype))
+        #i.sort()
+        #epoint = EPOINT(self.model)
+        #epoint.n = len(i)
+        #epoint.ids = self.ids[i]
+        #return epoint
+
+
 class GRDSET(BaseCard):
     """
     Defines default options for fields 3, 7, 8, and 9 of all GRID entries.
@@ -751,6 +772,125 @@ class GRID(VectorizedBaseCard):
         assert not np.any(np.isnan(xyz_cid0))
         assert xyz_cid0.shape[0] > 0, xyz_cid0.shape
         return xyz_cid0
+
+
+class POINT(VectorizedBaseCard):
+    """
+    +-------+-----+----+----+----+----+
+    |   1   |  2  | 3  | 4  | 5  | 6  |
+    +=======+=====+====+====+====+====+
+    | POINT | NID | CP | X1 | X2 | X3 |
+    +-------+-----+----+----+----+----+
+
+    """
+    _id_name = 'node_id'
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self._is_sorted = False
+        self.node_id = np.array([], dtype='int32')
+        self.cp = np.array([], dtype='int32')
+        self.xyz = np.zeros((0, 3), dtype='float64')
+        self._xyz_cid0 = np.zeros((0, 3), dtype='float64')
+
+    def add(self, nid: int, xyz: np.ndarray,
+            cp: int=0, comment: str=''):
+        self.cards.append((nid, xyz, cp, comment))
+        self.n += 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+        """
+        Adds a POINT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        nid = integer(card, 1, 'nid')
+        cp = integer_or_blank(card, 2, 'cp', default=0)
+
+        xyz = np.array([
+            double_or_blank(card, 3, 'x1', default=0.),
+            double_or_blank(card, 4, 'x2', default=0.),
+            double_or_blank(card, 5, 'x3', default=0.)], dtype='float64')
+
+        assert len(card) <= 9, f'len(POINT card) = {len(card):d}\ncard={card}'
+        self.cards.append((nid, xyz, cp, comment))
+        self.n += 1
+
+    def parse_cards(self):
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+        if self.debug:
+            self.model.log.debug('parse POINT')
+        self.point_id = np.zeros(ncards, dtype='int32')
+        self.cp = np.zeros(ncards, dtype='int32')
+        self.xyz = np.zeros((ncards, 3), dtype='float64')
+        self._xyz_cid0 = np.full((ncards, 3), np.nan, dtype='float64')
+
+        for i, card in enumerate(self.cards):
+            (nid, xyz, cp, comment) = card
+            self.point_id[i] = nid
+            self.cp[i] = cp
+            self.xyz[i, :] = xyz
+            self.comment[i] = comment
+
+        self.sort()
+        icp0 = np.where(self.cp == 0)[0]
+        self._xyz_cid0[icp0, :] = self.xyz[icp0, :]
+        assert self.xyz.shape == self._xyz_cid0.shape
+        self.cards = []
+
+    #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
+        #inid = self._node_index(node_id)
+        #return self.slice_card(inid)
+
+    def slice_card_by_point_id(self, node_id: np.ndarray) -> POINT:
+        """uses a node_ids to extract POINTs"""
+        inid = self.index(node_id)
+        #assert len(self.node_id) > 0, self.node_id
+        #i = np.searchsorted(self.node_id, node_id)
+        point = self.slice_card_by_index(inid)
+        return point
+
+    def __apply_slice__(self, point: POINT, i: np.ndarray) -> None:
+        point.n = len(i)
+        point.point_id = self.point_id[i]
+        point.xyz = self.xyz[i, :]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+
+        cids = self.model.coord.coord_id
+        geom_check(self,
+                   missing,
+                   property_id=(cids, self.cp))
+
+    def write(self, size: int=8) -> str:
+        point_ids = array_str(self.point_id, size=size)
+        cps = array_default_int(self.cp, default=0, size=size)
+        for point_id, cp, xyz in zip(point_ids, cps, self.xyz.tolist()):
+            list_fields = ['POINT', point_id, cp] + xyz
+            lines.append(print_card_8(list_fields))
+        return ''.join(lines)
+
+    def sort(self) -> None:
+        i = np.argsort(self.point_id)
+        self.__apply_slice__(self, i)
+
+    def index(self, node_id: np.ndarray) -> np.ndarray:
+        assert len(self.node_id) > 0, self.node_id
+        node_id = np.atleast_1d(np.asarray(node_id, dtype=self.node_id.dtype))
+        inid = np.searchsorted(self.node_id, node_id)
+        return inid
 
 
 def update_field_size(max_int: int, size: int) -> int:

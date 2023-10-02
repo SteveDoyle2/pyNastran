@@ -624,7 +624,6 @@ class TestNsm(unittest.TestCase):
 
         model.pop_parse_errors()
         model.cross_reference()
-        model.pop_xref_errors()
 
         expected_dict = {
             # NSM1
@@ -753,7 +752,6 @@ class TestNsm(unittest.TestCase):
         model.add_nsmadd(5000, [1000, 2000, 3000, 4000], comment='nsmadd')
         model.add_nsmadd(5000, [1000, 2000, 3000, 4000], comment='nsmadd')
         model.cross_reference()
-        model.pop_xref_errors()
 
 
         #mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=1000)

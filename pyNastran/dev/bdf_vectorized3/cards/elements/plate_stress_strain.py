@@ -489,21 +489,31 @@ class PPLANE(Property):
             return
         ncards = len(self.cards)
         assert ncards > 0, ncards
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.material_id = np.zeros(ncards, dtype='int32')
-        self.formulation_option = np.zeros(ncards, dtype='int32')
-        self.thickness = np.zeros(ncards, dtype='float64')
-        self.nsm = np.zeros(ncards, dtype='float64')
+        property_id = np.zeros(ncards, dtype='int32')
+        material_id = np.zeros(ncards, dtype='int32')
+        formulation_option = np.zeros(ncards, dtype='int32')
+        thickness = np.zeros(ncards, dtype='float64')
+        nsm = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, t, nsm, formulation_option, comment) = card
-            self.property_id[icard] = pid
-            self.material_id[icard] = mid
-            self.thickness[icard] = t
-            self.nsm[icard] = t
-            self.formulation_option[icard] = formulation_option
+            (pid, mid, t, nsmi, formulation_optioni, comment) = card
+            property_id[icard] = pid
+            material_id[icard] = mid
+            thickness[icard] = t
+            nsm[icard] = t
+            formulation_option[icard] = formulation_optioni
+
+        thickness[(thickness == 0.)] = np.nan
+        self._save(property_id, material_id, thickness, nsm, formulation_option)
         self.sort()
         self.cards = []
+
+    def _save(self, property_id, material_id, thickness, nsm, formulation_option):
+        self.property_id = property_id
+        self.material_id = material_id
+        self.thickness = thickness
+        self.nsm = nsm
+        self.formulation_option = formulation_option
 
     def __apply_slice__(self, prop: PPLANE, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
@@ -587,7 +597,8 @@ class PPLANE(Property):
     def total_thickness(self) -> np.ndarray:
         is_all_nan = np.all(np.isnan(self.thickness))
         if is_all_nan:
-            thickness = nonlinear_thickness(self.property_id, self.allowed_properties)
+            allowed_properties = self.allowed_properties
+            thickness = nonlinear_thickness(self.property_id, allowed_properties)
         else:
             thickness = self.thickness
         return thickness

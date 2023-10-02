@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Set, Optional, Any
 
 from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
-from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, SPOINT, GRDSET # , POINT
+from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, EPOINT, SPOINT, GRDSET, POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
 from pyNastran.dev.bdf_vectorized3.cards.elements.bush import CBUSH, PBUSH, PBUSHT, CBUSH1D, PBUSH1D, CBUSH2D, PBUSH2D
@@ -24,7 +24,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell_properties import (
     PSHELL, PCOMP, PCOMPG,
-    PLPLANE, # PSHLN1, PSHLN2,
+    PLPLANE, PSHLN1, PSHLN2,
 )
 #from pyNastran.dev.bdf_vectorized3.cards.elements.shell_axi import (
     #CTRIAX, CTRIAX6,
@@ -162,8 +162,8 @@ class BDFAttributes:
         self.grdset = None # GRDSET(cp=0, cd=0, ps=0, seid=0, comment='')
         self.grid = GRID(self)
         self.spoint = SPOINT(self)
-        #self.epoint = EPOINT(self)
-        #self.point = POINT(self)
+        self.epoint = EPOINT(self)
+        self.point = POINT(self)
         self.coord = COORD(self)
 
         # plot
@@ -297,8 +297,8 @@ class BDFAttributes:
         self.pshell = PSHELL(self)
         self.pcomp = PCOMP(self)
         self.pcompg = PCOMPG(self)
-        #self.pshln1 = PSHLN1(self)
-        #self.pshln2 = PSHLN2(self)
+        self.pshln1 = PSHLN1(self)
+        self.pshln2 = PSHLN2(self)
         #self.shell_properties = [self.pshell, self.pcomp, self.pcompg]
 
         # planar shells
@@ -659,7 +659,14 @@ class BDFAttributes:
     def shell_property_cards(self) -> list[Any]:
         properties = [
             self.pshell, self.pcomp, self.pcompg,
-            self.plplane, self.pplane, # self.pshln1, self.pshln2,
+            self.plplane, self.pplane,
+            # self.pshln1, self.pshln2,
+        ]
+        return properties
+    @property
+    def nonlinear_shell_property_cards(self) -> list[Any]:
+        properties = [
+            self.pshln1, self.pshln2,
         ]
         return properties
 
@@ -677,12 +684,13 @@ class BDFAttributes:
             self.pdamp, self.pdampt,
             self.pbush, self.pbusht,
             self.pbush1d, # self.pbush2d,
-            #self.pfast,
+            self.pfast,
             self.pvisc, self.pgap,
             self.prod, self.ptube,
             ] + self.bar_property_cards + self.beam_property_cards + [
             self.pshear,
-        ] + self.shell_property_cards + self.solid_property_cards + [
+        ] + self.shell_property_cards + self.nonlinear_shell_property_cards + \
+            self.solid_property_cards + [
             self.pmass,
         ]
         return properties
@@ -874,7 +882,7 @@ class BDFAttributes:
     @property
     def _cards_to_setup(self) -> list[Any]:
         cards = [
-            self.grid, self.spoint, # self.epoint, # self.point,
+            self.grid, self.spoint, self.epoint, self.point,
             self.coord,
             #self.snorm,
             #self.suport, # self.suport1,

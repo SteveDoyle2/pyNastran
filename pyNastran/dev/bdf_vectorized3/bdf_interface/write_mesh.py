@@ -583,7 +583,7 @@ class Writer():
         #bdf_file.write(model.pbush2d.write(size=size))
 
         # fast
-        #bdf_file.write(model.pfast.write(size=size))
+        model.pfast.write_file(bdf_file, size=size, is_double=is_double)
 
         # rod
         model.prod.write_file(bdf_file, size=size, is_double=is_double)
@@ -604,13 +604,16 @@ class Writer():
 
         # shell
         model.pshell.write_file(bdf_file, size=size, is_double=is_double)
+        model.pshln1.write_file(bdf_file, size=size, is_double=is_double)
+        model.pshln2.write_file(bdf_file, size=size, is_double=is_double)
         model.pcomp.write_file(bdf_file, size=size, is_double=is_double)
         model.pcompg.write_file(bdf_file, size=size, is_double=is_double)
 
         # planar shells
         model.plplane.write_file(bdf_file, size=size)
         model.pplane.write_file(bdf_file, size=size)
-        #bdf_file.write(model.pshln2.write(size=size))
+        model.pshln1.write_file(bdf_file, size=size)
+        model.pshln2.write_file(bdf_file, size=size)
 
         # solid
         model.psolid.write_file(bdf_file, size=size, is_double=is_double)

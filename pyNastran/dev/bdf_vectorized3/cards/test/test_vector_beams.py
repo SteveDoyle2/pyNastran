@@ -898,7 +898,6 @@ class TestBeams(unittest.TestCase):
 
         model.validate()
         model.pop_parse_errors()
-        model.pop_xref_errors()
         #pbeaml.raw_fields()
         pbeaml = model.pbeaml
         pbeaml.write_16()
@@ -1185,8 +1184,6 @@ class TestBeams(unittest.TestCase):
         model.pop_parse_errors()
         #------------------
         model.cross_reference()
-        model.pop_xref_errors()
-
         model.setup(run_geom_check=False)
 
         #-----------------------
@@ -1425,7 +1422,6 @@ class TestBeams(unittest.TestCase):
         model.validate()
         model.pop_parse_errors()
         model.cross_reference()
-        model.pop_xref_errors()
         eids, mass, cg, inertia = model.inertia()
         assert len(eids) == 1, eids
         assert len(mass) == 1, mass
@@ -1494,17 +1490,16 @@ class TestBeams(unittest.TestCase):
 
         pbeam3.validate()
         #pbeam3.raw_fields()
-        pbeam3.write_card()
-        pbeam3.write_card(size=16)
+        pbeam3.write()
+        pbeam3.write(size=16)
         model.cross_reference()
-        model.pop_xref_errors()
 
-        pbeam3.write_card()
-        pbeam3.write_card(size=16)
+        pbeam3.write()
+        pbeam3.write(size=16)
 
-        model.uncross_reference()
-        pbeam3.write_card()
-        pbeam3.write_card(size=16)
+        #model.uncross_reference()
+        pbeam3.write()
+        pbeam3.write(size=16)
 
     def _test_cbend(self):
         model = BDF(debug=False)
@@ -1562,7 +1557,6 @@ class TestBeams(unittest.TestCase):
         model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
         model.validate()
         model.cross_reference()
-        model.pop_xref_errors()
 
         model.uncross_reference()
 

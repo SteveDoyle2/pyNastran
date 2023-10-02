@@ -4427,6 +4427,27 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             formulation_option=formulation_option, comment=comment)
         return prop
 
+    def add_pshln1(self, pid: int, mid1: int=0, mid2: int=0, analysis: str='ISH',
+                   behx=None, integration=None, behxh=None, integration_h=None,
+                   comment: str='') -> int:
+        prop = self.pshln1.add(
+            pid, mid1=mid1, mid2=mid2, analysis=analysis,
+            behx=behx, integration=integration,
+            behxh=behxh, integration_h=integration_h, comment='')
+        return prop
+
+    def add_pshln2(self, pid: int, mid: int, direct: int=1, thickness: float=1.0,
+                   analysis='ISH',
+                   behx: list[str]=None,
+                   integration: list[str]=None,
+                   behxh: list[str]=None,
+                   integration_h: list[str]=None,
+                   comment: str='') -> int:
+        prop = self.pshln2.add(
+            pid, mid, direct=1, thickness=1.0, analysis='ISH',
+            behx=None, integration=None, behxh=None, integration_h=None, comment='')
+        return prop
+
     def add_cplstn3(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
                     comment: str='') -> int:
         """Creates a CPLSTN4 card"""

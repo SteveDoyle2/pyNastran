@@ -20,7 +20,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, make_idim, get_print_card_8_16,
     #hslice_by_idim,
 )
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, array_default_str
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_float, array_default_int, array_default_float, array_default_str)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -621,7 +622,6 @@ class DRESP1(VectorizedBaseCard):
             a comment for the card
 
         """
-
         dresp_id = integer(card, 1, 'dresp_id')
         label = string(card, 2, 'label')
         #label = loose_string(card, 2, 'label')
@@ -637,7 +637,7 @@ class DRESP1(VectorizedBaseCard):
         atti_list = []
         for i in range(8, len(card)):
             #attii = integer_double_string_or_blank(card, i, 'atti_%d' % (i + 1))
-            attii = integer_or_blank(card, i, 'atti_%d' % (i + 1))
+            attii = integer_string_or_blank(card, i, 'atti_%d' % (i + 1))
             atti_list.append(attii)
         if len(atti_list) == 0:
             self.model.log.debug(card)
@@ -769,8 +769,6 @@ class DRESP1(VectorizedBaseCard):
         atta_ints = array_str(self.atta_int, size=size)
         attb_ints = array_str(self.attb_int, size=size)
         attis = array_str(self.atti, size=size)
-        iatti_all = (self.response_type == 'WEIGHT') & (self.atti == -1)
-        attis[iatti_all] = 'ALL'
 
         for dresp_id, label, response_type, property_type, region, \
             atta_type, atta_int, atta_float, atta_str, \
@@ -794,6 +792,11 @@ class DRESP1(VectorizedBaseCard):
             else:
                 attb = attb_str
 
+            if response_type == 'WEIGHT' and len(atti) and atti[0] == -1:
+                atti = ['ALL']
+                print(self.response_type, self.atti)
+                #iatti_all = (self.response_type == 'WEIGHT') & (self.atti == -1)
+                #attis[iatti_all] = 'ALL'
             list_fields = ['DRESP1', dresp_id, label, response_type, property_type,
                            region, atta, attb] + atti.tolist()
             bdf_file.write(print_card(list_fields))
@@ -1378,7 +1381,7 @@ class DVPREL1(VectorizedBaseCard):
         p_max = double_or_blank(card, 6, 'p_max', default=1e20)
         c0 = double_or_blank(card, 7, 'c0', default=0.0)
 
-        desvars = []
+        desvar_ids = []
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
 
@@ -1389,18 +1392,18 @@ class DVPREL1(VectorizedBaseCard):
 
         i = 0
         for i in range(0, nfields, 2):
-            desvars.append(end_fields[i])
+            desvar_ids.append(end_fields[i])
             coeffs.append(end_fields[i + 1])
         if nfields % 2 == 1:
             print(card)
-            print("desvars = %s" % (desvars))
+            print("desvar_ids = %s" % (desvar_ids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVPREL1...')
 
         #return DVPREL1(oid, prop_type, pid, pname_fid, desvars, coeffs,
                        #p_min=p_min, p_max=p_max, c0=c0,
                        #comment=comment)
-        card = (oid, prop_type, pid, pname_fid, desvars, coeffs,
+        card = (oid, prop_type, pid, pname_fid, desvar_ids, coeffs,
                 p_min, p_max, c0,
                 comment)
         self.cards.append(card)
@@ -1927,10 +1930,14 @@ class DVMREL1(VectorizedBaseCard):
         material_ids = array_str(self.material_id, size=size)
         desvar_ids = array_str(self.desvar_id, size=size)
 
+        mp_mins = array_float(self.mp_min, size=size)
+        mp_maxs = array_default_float(self.mp_max, default=1e20, size=size)
+        c0s = array_default_float(self.c0, default=0., size=size)
+
         for dvmrel_id, mid, mat_type, mp_name, \
             mp_min, mp_max, c0, idim in zip_longest(dvmrel_ids, material_ids, self.material_type,
                                                     self.material_name,
-                                                    self.mp_max, self.mp_min, self.c0, self.idim):
+                                                    mp_maxs, mp_mins, c0s, self.idim):
             idim0, idim1 = idim
             desvars = desvar_ids[idim0:idim1]
             coeffs = self.coefficients[idim0:idim1]
@@ -2186,13 +2193,17 @@ class DVMREL2(VectorizedBaseCard):
         dvmrel_ids = array_str(self.dvmrel_id, size=size)
         material_ids = array_str(self.material_id, size=size)
         desvar_ids = array_str(self.desvar_id, size=size)
+        deqatn_ids = array_str(self.deqatn_id, size=size)
+
+        mp_mins = array_float(self.mp_min, size=size)
+        mp_maxs = array_default_float(self.mp_max, default=1e20, size=size)
 
         for dvmrel_id, mid, mat_type, mp_name, \
             mp_min, mp_max, deqatn_id, idim, ilabel in zip_longest(
                 dvmrel_ids, material_ids,
                 self.material_type, self.material_name,
-                self.mp_max, self.mp_min,
-                self.deqatn_id, self.idesvar, self.ilabel):
+                mp_maxs, mp_mins,
+                deqatn_ids, self.idesvar, self.ilabel):
             idim0, idim1 = idim
             ilabel0, ilabel1 = ilabel
             desvars = desvar_ids[idim0:idim1]
@@ -2393,11 +2404,15 @@ class DVCREL1(VectorizedBaseCard):
         dvcrel_ids = array_str(self.dvcrel_id, size=size)
         element_ids = array_str(self.element_id, size=size)
         desvar_ids = array_str(self.desvar_id, size=size)
+        cp_mins = array_float(self.cp_min, size=size)
+        cp_maxs = array_default_float(self.cp_max, default=1e20, size=size)
+        c0s = array_default_float(self.c0, default=0., size=size)
 
+        #coeffs = array_float(self.cp_min, size=size)
         for dvcrel_id, eid, element_type, cp_name, \
             cp_min, cp_max, c0, idim in zip_longest(dvcrel_ids, element_ids, self.element_type,
                                                     self.cp_name,
-                                                    self.cp_max, self.cp_min, self.c0, self.idim):
+                                                    cp_maxs, cp_mins, c0s, self.idim):
             idim0, idim1 = idim
             desvars = desvar_ids[idim0:idim1]
             coeffs = self.coefficients[idim0:idim1]
@@ -2646,11 +2661,14 @@ class DVCREL2(VectorizedBaseCard):
         element_ids = array_str(self.element_id, size=size)
         desvar_ids = array_str(self.desvar_id, size=size)
 
+        cp_mins = array_float(self.cp_min, size=size)
+        cp_maxs = array_default_float(self.cp_max, default=1e20, size=size)
+
         for dvcrel_id, eid, element_type, cp_name, \
             cp_min, cp_max, deqatn_id, idim, ilabel in zip_longest(
                 dvcrel_ids, element_ids,
                 self.element_type, self.cp_name,
-                self.cp_max, self.cp_min,
+                cp_maxs, cp_mins,
                 self.deqatn_id, self.idesvar, self.ilabel):
             idim0, idim1 = idim
             ilabel0, ilabel1 = ilabel

@@ -219,7 +219,6 @@ class TestConstraints(unittest.TestCase):
         #assert mpc.nodes == node_ids
 
         model.pop_parse_errors()
-        model.pop_xref_errors()
 
         if 0:
             #model.mpcs = {}
@@ -267,7 +266,6 @@ class TestConstraints(unittest.TestCase):
         spc.write(size=16, is_double=False)
         spc.write(size=16, is_double=True)
         model.pop_parse_errors()
-        model.pop_xref_errors()
 
         model.spc.clear()
         model.spcadd.clear()
@@ -314,18 +312,17 @@ class TestConstraints(unittest.TestCase):
         model.add_card(card_lines, 'SPCOFF1', comment='spcoff1', is_list=True, has_none=True)
 
         model.pop_parse_errors()
-        model.pop_xref_errors()
         spcoff1 = model.spcoffs['SPCOFF1'][0]
-        spcoff1.write_card(size=8)
-        spcoff1.write_card(size=16)
-        spcoff1.raw_fields()
-        model.uncross_reference()
+        spcoff1.write(size=8)
+        spcoff1.write(size=16)
+        #spcoff1.raw_fields()
+        #model.uncross_reference()
 
         with self.assertRaises(KeyError):
             spcoff1.cross_reference(model)
         model.add_grid(43, [0., 0., 0.])
         spcoff1.cross_reference(model)
-        model.uncross_reference()
+        #model.uncross_reference()
 
         model.add_grid(50, [0., 0., 0.])
         model.add_grid(51, [0., 0., 0.])

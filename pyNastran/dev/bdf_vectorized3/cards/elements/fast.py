@@ -1,7 +1,7 @@
 from __future__ import annotations
+from itertools import zip_longest
 from typing import Any, TYPE_CHECKING
 import numpy as np
-
 #from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
@@ -15,7 +15,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    Element, Property, get_print_card_8_16, parse_element_check)
+    Element, Property, get_print_card_8_16,
+    parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 #from .rod import line_length, line_centroid, line_centroid_with_spoints
 #from .utils import get_mass_from_property
@@ -155,7 +156,7 @@ class CFAST(Element):
         property_ids = array_str(self.property_id, size=size)
         gab_nodes = array_default_int(self.nodes, default=0, size=size)
         fastener_node = array_default_int(self.fastener_node, default=0, size=size)
-        for eid, pid, fast_type, (ida, idb), (ga, gb), gs, (xs, ys, zs) in zip(
+        for eid, pid, fast_type, (ida, idb), (ga, gb), gs, (xs, ys, zs) in zip_longest(
                 element_ids, property_ids, self.fast_type, self.ids,
                 gab_nodes, fastener_node, self.fastener_xyz):
 
@@ -240,7 +241,6 @@ class PFAST(Property):
         self.n += 1
         return self.n
 
-    @classmethod
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PFAST card from ``BDF.add_card(...)``
@@ -293,20 +293,21 @@ class PFAST(Property):
 
         for icard, card in enumerate(self.cards):
             (pid, d, kt1, kt2, kt3, kr1, kr2, kr3,
-             massi, gei, mcid, mflag, comment) = card
+             massi, gei, mcid, mflagi, comment) = card
 
             property_id[icard] = pid
             diameter[icard] = d
             coord_id[icard] = mcid
-            mflag[icard] = mflag
+            mflag[icard] = mflagi
             kt[icard, :] = [kt1, kt2, kt3]
             kr[icard, :] = [kr1, kr2, kr3]
             mass[icard] = massi
             ge[icard] = gei
-        self._save(property_id, diameter, kt, kr, mass, coord_id, mflag)
+        self._save(property_id, diameter, kt, kr, mass, coord_id, mflag, ge)
+        self.sort()
         self.cards = []
 
-    def _save(self, property_id, diameter, kt, kr, mass, coord_id, mflag):
+    def _save(self, property_id, diameter, kt, kr, mass, coord_id, mflag, ge):
         self.property_id = property_id
         self.diameter = diameter
         self.kt = kt
@@ -314,14 +315,15 @@ class PFAST(Property):
         self._mass = mass
         self.coord_id = coord_id
         self.mflag = mflag
+        self.ge = ge
 
-    @parse_element_check
+    @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
 
-        for pid, diameter, (kt1, kt2, kt3), (kr1, kr2, kr3), mcid, mflag, mass, ge in zip(
+        for pid, diameter, (kt1, kt2, kt3), (kr1, kr2, kr3), mcid, mflag, mass, ge in zip_longest(
                 self.property_id, self.diameter, self.kt, self.kr,
                 self.coord_id, self.mflag, self._mass, self.ge):
 

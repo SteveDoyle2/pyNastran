@@ -492,7 +492,6 @@ class TestBars(unittest.TestCase):
         model._verify_bdf(xref=False)
 
         #model.cross_reference()
-        #model.pop_xref_errors()
 
         model._verify_bdf(xref=True)
         #model.uncross_reference()
@@ -689,7 +688,6 @@ class TestBars(unittest.TestCase):
         model._verify_bdf(xref=False)
         model.pop_parse_errors()
         #model.cross_reference()
-        #model.pop_xref_errors()
 
         #model._verify_bdf(xref=True)
         #model.uncross_reference()
@@ -734,7 +732,6 @@ class TestBars(unittest.TestCase):
         model.cards_to_read.add('PBEAM3')
         model.add_card(card_lines, 'PBEAM3', comment='', ifile=None, is_list=False, has_none=True)
         model.pop_parse_errors()
-        model.pop_xref_errors()
         assert pbeam3 == model.properties[pid]
         save_load_deck(model)
 

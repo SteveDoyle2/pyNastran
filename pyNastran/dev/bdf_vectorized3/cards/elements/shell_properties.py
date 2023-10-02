@@ -24,7 +24,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     parse_property_check,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, # array_default_int,
+    array_str, array_default_int,
     get_print_card,
     #print_card_8_comment, print_card_16_comment,
 )
@@ -1730,6 +1730,611 @@ class PLPLANE(Property):
         else:
             thickness = self.thickness
         return thickness
+
+
+class PSHLN1(Property):
+    """
+    Fully Nonlinear Plane Element Properties (SOL 601)
+    Defines the properties of a fully nonlinear
+    (i.e., large strain and large rotation)
+    hyperelastic plane strain or axisymmetric element.
+
+    +--------+------+------+--------+----------+--------+
+    |    1   |  2   |  3   |   4    |     5    |    6   |
+    +========+======+======+========+==========+========+
+    | PSHLN1 |  PID | MID1 |  MID2  | ANALYSIS |        |
+    +--------+------+------+--------+----------+--------+
+    |        | 'C3' | BEH3 |  INT3  |   BEH3H  | INT3H  |
+    +--------+------+------+--------+----------+--------+
+    |        | 'C4' | BEH4 |  INT4  |   BEH4H  | INT4H  |
+    +--------+------+------+--------+----------+--------+
+    |        | 'C6' | BEH6 |  INT6  |   BEH6H  | INT6H  |
+    +--------+------+------+--------+----------+--------+
+    |        | 'C8' | BEH8 |  INT8  |   BEH8H  | INT8H  |
+    +--------+------+------+--------+----------+--------+
+    MSC
+
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.property_id = np.array([], dtype='int32')
+        self.material_id = np.zeros((0, 2), dtype='int32')
+        self.coord_id = np.array([], dtype='int32')
+        self.thickness = np.array([], dtype='float64')
+        self.analysis = np.array([], dtype='|U8')
+
+        self.beh = np.zeros((0, 4), dtype='|U8')
+        self.beh_h = np.zeros((0, 4), dtype='|U8')
+        self.integration = np.zeros((0, 4), dtype='|U8')
+        self.integration_h = np.zeros((0, 4), dtype='|U8')
+        #self.coord_id = np.array([], dtype='int32')
+        #self.stress_strain_output_location = np.array([], dtype='|U4')
+        #self.thickness = np.array([], dtype='float64')
+
+    #def add(self, pid: int, mid1: int=None, t: float=None,
+            #mid2: int=None, twelveIt3: float=1.0,
+            #mid3: int=None, tst: float=0.833333, nsm: float=0.0,
+            #z1: float=None, z2: float=None, mid4: int=None,
+            #comment: str='') -> PSHELL:
+        #"""
+        #Creates a PSHELL card
+
+        #Parameters
+        #----------
+        #pid : int
+            #property id
+        #mid1 : int; default=None
+            #defines membrane material
+            #defines element density (unless blank)
+        #mid2 : int; default=None
+            #defines bending material
+            #defines element density if mid1=None
+        #mid3 : int; default=None
+            #defines transverse shear material
+        #mid4 : int; default=None
+            #defines membrane-bending coupling material
+        #twelveIt3 : float; default=1.0
+            #Bending moment of inertia ratio, 12I/T^3. Ratio of the actual
+            #bending moment inertia of the shell, I, to the bending
+            #moment of inertia of a homogeneous shell, T^3/12. The default
+            #value is for a homogeneous shell.
+        #nsm : float; default=0.0
+            #non-structural mass per unit area
+        #z1 / z2 : float; default=None
+            #fiber distance location 1/2 for stress/strain calculations
+            #z1 default : -t/2 if thickness is defined
+            #z2 default : t/2 if thickness is defined
+        #comment : str; default=''
+            #a comment for the card
+
+        #"""
+        #if z1 is None and t is not None:
+            #z1 = -t / 2.
+        #if z2 is None and t is not None:
+            #z2 = t / 2.
+        #t = np.nan if t is None else t
+
+        #self.cards.append((pid, mid1, t,
+                           #mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4,
+                           #comment))
+        ##self.property_id = np.hstack([self.property_id, pid])
+        ##mids = [mid if mid is not None else -1
+                ##for mid in [mid1, mid2, mid3, mid4]]
+        ##self.material_id = np.vstack([self.material_id, mids])
+        ##self.t = np.hstack([self.t, t])
+        ##self.twelveIt3 = np.hstack([self.twelveIt3, twelveIt3])
+        ##self.tst = np.hstack([self.tst, tst])
+        ##self.nsm = np.hstack([self.nsm, nsm])
+
+        ##self.z = np.vstack([self.z, [z1, z2]])
+        #self.n += 1
+
+    def add(self, pid: int, mid1: int=0, mid2: int=0, analysis: str='ISH',
+            behx=None, integration=None, behxh=None, integration_h=None,
+            comment: str='') -> int:
+        self.cards.append((pid, (mid1, mid2), analysis,
+                           behx, integration, behxh, integration_h, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a PSHLN2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        #| PSHLN2  | PID  | MID  | DIRECT |    T   | ANALYSIS |
+        #|         | 'C3' | BEH3 |  INT3  |  BEH3H | INT3H    |
+        #|         | 'C4' | BEH4 |  INT4  |  BEH4H | INT4H    |
+        #|         | 'C6' | BEH6 |  INT6  |  BEH6H | INT6H    |
+        #|         | 'C8' | BEH8 |  INT8  |  BEH8H | INT8H    |
+
+        pid = integer(card, 1, 'pid')
+        mid1 = integer_or_blank(card, 2, 'mid1', default=0)  # MATHE, MATHP
+        mid2 = integer_or_blank(card, 3, 'mid2', default=0)
+
+        #: Analysis type.
+        #  'IS' - Implicit structural elements are being referred to.
+        #  'IH' - Implicit heat analysis elements are being referred to.
+        #  'ISH' - Implicit structural and heat elements are being referred to. (Character Default ISH)
+        analysis = string_or_blank(card, 4, 'analysis', default='ISH')
+        i = 9
+        beh3 = None
+        int3 = None
+        beh4 = None
+        int4 = None
+        beh6 = None
+        int6 = None
+        beh8 = None
+        int8 = None
+
+        beh3h = None
+        int3h = None
+        beh4h = None
+        int4h = None
+        beh6h = None
+        int6h = None
+        beh8h = None
+        int8h = None
+        while i < len(card):
+            code = string(card, i, 'code')
+            # C3 : applies to elements with three corner grids
+            # C4 : applies to elements with four corner grids
+            # C6 : applies to elements with three corner grids and three midside grids
+            # C8 : applies to elements with four corner grids and four midside grids
+            # BEHi Element structural behavior. See Remark 7. (Default: PLSTRN for BEH3, BEH4, BEH6, and BEH8)
+            # INTi Integration scheme. See Remarks 7. and 10. (Default: L for INT3, INT4, Q for INT6 and INT8)
+            # BEHiH Element heat behavior. (Default: PLSTRN for BEH3H, BEH4H, BEH6H, and BEH8H.)
+            # INTiH Integration scheme.    (Default: L for INT3H, L for INT4H, Q for INT6H and INT8H)
+            if code == 'C3':
+                beh3 = string_or_blank(card, i+1, 'BEH3', default='DCTN')
+                int3 = string_or_blank(card, i+2, 'INT3', default='LDK')
+                beh3h = string_or_blank(card, i+3, 'BEH3H', default='DCT')
+                int3h = string_or_blank(card, i+4, 'INT3H', default='L')
+            elif code == 'C4':
+                beh4 = string_or_blank(card, i+1, 'BEH4', default='DCT')
+                int4 = string_or_blank(card, i+2, 'INT4', default='L')
+                beh4h = string_or_blank(card, i+3, 'BEH4H', default='DCT')
+                int4h = string_or_blank(card, i+4, 'INT4H', default='L')
+            elif code == 'C6':
+                beh6 = string_or_blank(card, i+1, 'BEH6', default='MB')
+                int6 = string_or_blank(card, i+2, 'INT6', default='Q')
+                beh6h = string_or_blank(card, i+3, 'BEH6H', default='MB')
+                int6h = string_or_blank(card, i+4, 'INT6H', default='Q')
+            elif code == 'C8':
+                beh8 = string_or_blank(card, i+1, 'BEH8', default='DCT')
+                int8 = string_or_blank(card, i+2, 'INT8', default='QRI')
+                beh8h = string_or_blank(card, i+3, 'BEH8H', default='DCT')
+                int8h = string_or_blank(card, i+4, 'INT8H', default='Q')
+            else:
+                raise NotImplementedError(f'PSHLN2 code={code!r}')
+            i += 8
+        behx = [beh3, beh4, beh6, beh8]
+        behxh = [beh3h, beh4h, beh6h, beh8h]
+        integration = [int3, int4, int6, int8]
+        integration_h = [int3h, int4h, int6h, int8h]
+        assert len(card) <= 28, f'len(PSHLN1 card) = {len(card):d}\ncard={card}'
+        self.cards.append((pid, (mid1, mid2), analysis,
+                           behx, integration, behxh, integration_h, comment))
+        self.n += 1
+        return self.n
+
+    def parse_cards(self):
+        assert self.n >= 0, self.n
+        if len(self.cards) == 0:
+            return
+        ncards = len(self.cards)
+        assert ncards > 0, ncards
+        self.property_id = np.zeros(ncards, dtype='int32')
+        self.material_id = np.zeros((ncards, 2), dtype='int32')
+        self.analysis = np.zeros(ncards, dtype='|U8')
+        self.beh = np.zeros((ncards, 4), dtype='|U8')
+        self.beh_h = np.zeros((ncards, 4), dtype='|U8')
+        self.integration = np.zeros((ncards, 4), dtype='|U8')
+        self.integration_h = np.zeros((ncards, 4), dtype='|U8')
+
+        for icard, card in enumerate(self.cards):
+            (pid, mids, analysis,
+             behx, integration, behxh, integration_h, comment) = card
+
+            self.property_id[icard] = pid
+            self.material_id[icard] = mids
+            self.analysis[icard] = analysis
+            if behx is None:
+                behx = [''] * 4
+            if integration is None:
+                integration = [''] * 4
+            if behxh is None:
+                behxh = [''] * 4
+            if integration_h is None:
+                integration_h = [''] * 4
+
+            self.beh[icard] = [val if val is not None else ''
+                               for val in behx]
+            self.integration[icard] = [val if val is not None else ''
+                                       for val in integration]
+            self.beh_h[icard] = [val if val is not None else ''
+                                 for val in behxh]
+            self.integration_h[icard] = [val if val is not None else ''
+                                         for val in integration_h]
+        self.sort()
+        self.cards = []
+
+    def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:
+        prop.n = len(i)
+        prop.property_id = self.property_id[i]
+        prop.material_id = self.material_id[i]
+        prop.coord_id = self.coord_id[i]
+        prop.stress_strain_output_location = self.stress_strain_output_location[i]
+        prop.thickness = self.thickness[i]
+        sdfasfd
+
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        max_int = max(self.property_id.max(), self.material_id.max())
+        print_card = get_print_card(size, max_int)
+
+        property_ids = array_str(self.property_id, size=size)
+        material_ids = array_str(self.material_id, size=size)
+        directs = array_default_int(self.direct, default=1, size=size)
+        #inan = np.isnan(self.thickness)
+
+        #self.property_id = np.zeros(ncards, dtype='int32')
+        #self.material_id = np.zeros(ncards, dtype='int32')
+        #self.direct = np.zeros(ncards, dtype='int32')
+        #self.analysis = np.zeros(ncards, dtype='|U8')
+        #self.thickness = np.zeros(ncards, dtype='float64')
+        #self.beh = np.zeros((ncards, 2), dtype='|U8')
+        #self.beh_h = np.zeros((ncards, 2), dtype='|U8')
+        #self.integration = np.zeros((ncards, 2), dtype='|U8')
+        #self.integration_h = np.zeros((ncards, 2), dtype='|U8')
+
+        codes = ['C3', 'C4', 'C6', 'C8']
+        for pid, (mid1, mid2), direct, analysis, beh, integration, beh_h, integration_h in zip_longest(
+            property_ids, material_ids, directs, self.analysis, self.thickness,
+            self.beh, self.integration, self.beh_h, self.integration_h):
+            list_fields = ['PSHLN2', pid, mid1, mid2, None, analysis, None, None, None]
+            values = (beh, integration, beh_h, integration_h)
+            for code, behx, intx, behxh, intxh in zip(codes, beh, integration, beh_h, integration_h):
+                if behx == '' and intx == '' and behx == '' and intxh == '':
+                    continue
+                list_fields.extend([code, behx, intx, behxh, intxh, '', '', ''])
+            #print(print_card_8(list_fields))
+            bdf_file.write(print_card(list_fields))
+        return
+
+    @property
+    def allowed_materials(self) -> list[Any]:
+        return []
+        #return [mat for mat in shell_materials(self.model) if mat.n]
+
+    def mass_per_area(self) -> np.ndarray:
+        #thickness = self.thickness
+        thickness = np.zeros(len(self.property_id))
+        #nsm = self.nsm
+        #mid = self.material_id
+
+        #rho = get_density_from_material(mid, self.allowed_materials)
+        #mass_per_area = rho * thickness
+        #print(rho)
+        #print(mass_per_area)
+        mass_per_area = thickness
+        return mass_per_area
+
+    #def total_thickness(self) -> np.ndarray:
+        #return self.thickness
+
+
+class PSHLN2(Property):
+    """
+    Fully Nonlinear Plane Element Properties (SOL 601)
+    Defines the properties of a fully nonlinear
+    (i.e., large strain and large rotation)
+    hyperelastic plane strain or axisymmetric element.
+
+    +---------+------+------+--------+--------+----------+
+    |    1    |  2   |  3   |   4    |    5   |     6    |
+    +=========+======+======+========+========+==========+
+    | PSHLN2  | PID  | MID  | DIRECT |    T   | ANALYSIS |
+    +---------+------+------+--------+--------+----------+
+    |         | 'C3' | BEH3 |  INT3  |  BEH3H | INT3H    |
+    +---------+------+------+--------+--------+----------+
+    |         | 'C4' | BEH4 |  INT4  |  BEH4H | INT4H    |
+    +---------+------+------+--------+--------+----------+
+    |         | 'C6' | BEH6 |  INT6  |  BEH6H | INT6H    |
+    +---------+------+------+--------+--------+----------+
+    |         | 'C8' | BEH8 |  INT8  |  BEH8H | INT8H    |
+    +---------+------+------+--------+--------+----------+
+    MSC
+
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.property_id = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
+        self.coord_id = np.array([], dtype='int32')
+        self.stress_strain_output_location = np.array([], dtype='|U4')
+        self.thickness = np.array([], dtype='float64')
+
+    #def add(self, pid: int, mid1: int=None, t: float=None,
+            #mid2: int=None, twelveIt3: float=1.0,
+            #mid3: int=None, tst: float=0.833333, nsm: float=0.0,
+            #z1: float=None, z2: float=None, mid4: int=None,
+            #comment: str='') -> PSHELL:
+        #"""
+        #Creates a PSHELL card
+
+        #Parameters
+        #----------
+        #pid : int
+            #property id
+        #mid1 : int; default=None
+            #defines membrane material
+            #defines element density (unless blank)
+        #mid2 : int; default=None
+            #defines bending material
+            #defines element density if mid1=None
+        #mid3 : int; default=None
+            #defines transverse shear material
+        #mid4 : int; default=None
+            #defines membrane-bending coupling material
+        #twelveIt3 : float; default=1.0
+            #Bending moment of inertia ratio, 12I/T^3. Ratio of the actual
+            #bending moment inertia of the shell, I, to the bending
+            #moment of inertia of a homogeneous shell, T^3/12. The default
+            #value is for a homogeneous shell.
+        #nsm : float; default=0.0
+            #non-structural mass per unit area
+        #z1 / z2 : float; default=None
+            #fiber distance location 1/2 for stress/strain calculations
+            #z1 default : -t/2 if thickness is defined
+            #z2 default : t/2 if thickness is defined
+        #comment : str; default=''
+            #a comment for the card
+
+        #"""
+        #if z1 is None and t is not None:
+            #z1 = -t / 2.
+        #if z2 is None and t is not None:
+            #z2 = t / 2.
+        #t = np.nan if t is None else t
+
+        #self.cards.append((pid, mid1, t,
+                           #mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4,
+                           #comment))
+        ##self.property_id = np.hstack([self.property_id, pid])
+        ##mids = [mid if mid is not None else -1
+                ##for mid in [mid1, mid2, mid3, mid4]]
+        ##self.material_id = np.vstack([self.material_id, mids])
+        ##self.t = np.hstack([self.t, t])
+        ##self.twelveIt3 = np.hstack([self.twelveIt3, twelveIt3])
+        ##self.tst = np.hstack([self.tst, tst])
+        ##self.nsm = np.hstack([self.nsm, nsm])
+
+        ##self.z = np.vstack([self.z, [z1, z2]])
+        #self.n += 1
+
+    def add(self, pid: int, mid: int, direct: int=1, thickness: float=1.0,
+            analysis='ISH',
+            behx: list[str]=None,
+            integration: list[str]=None,
+            behxh: list[str]=None,
+            integration_h: list[str]=None,
+            comment: str='') -> int:
+        self.cards.append((pid, mid, direct, thickness, analysis,
+                           behx, integration, behxh, integration_h, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a PSHLN2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        #| PSHLN2  | PID  | MID  | DIRECT |    T   | ANALYSIS |
+        #|         | 'C3' | BEH3 |  INT3  |  BEH3H | INT3H    |
+        #|         | 'C4' | BEH4 |  INT4  |  BEH4H | INT4H    |
+        #|         | 'C6' | BEH6 |  INT6  |  BEH6H | INT6H    |
+        #|         | 'C8' | BEH8 |  INT8  |  BEH8H | INT8H    |
+
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')  # MATHE, MATHP
+        #: The layer direction for BEHi=COMPS or AXCOMP. (Integer=1/2; Default=1)
+        direct = integer_or_blank(card, 3, 'direct', default=1)
+        thickness = double_or_blank(card, 4, 'thickness', default=1.0)
+
+        #: Analysis type.
+        #  'IS' - Implicit structural elements are being referred to.
+        #  'IH' - Implicit heat analysis elements are being referred to.
+        #  'ISH' - Implicit structural and heat elements are being referred to. (Character Default ISH)
+        analysis = string_or_blank(card, 5, 'analysis', default='ISH')
+        i = 9
+        beh3 = None
+        int3 = None
+        beh4 = None
+        int4 = None
+        beh6 = None
+        int6 = None
+        beh8 = None
+        int8 = None
+
+        beh3h = None
+        int3h = None
+        beh4h = None
+        int4h = None
+        beh6h = None
+        int6h = None
+        beh8h = None
+        int8h = None
+        while i < len(card):
+            code = string(card, i, 'code')
+            # C3 : applies to elements with three corner grids
+            # C4 : applies to elements with four corner grids
+            # C6 : applies to elements with three corner grids and three midside grids
+            # C8 : applies to elements with four corner grids and four midside grids
+            # BEHi Element structural behavior. See Remark 7. (Default: PLSTRN for BEH3, BEH4, BEH6, and BEH8)
+            # INTi Integration scheme. See Remarks 7. and 10. (Default: L for INT3, INT4, Q for INT6 and INT8)
+            # BEHiH Element heat behavior. (Default: PLSTRN for BEH3H, BEH4H, BEH6H, and BEH8H.)
+            # INTiH Integration scheme.    (Default: L for INT3H, L for INT4H, Q for INT6H and INT8H)
+            if code == 'C3':
+                beh3 = string_or_blank(card, i+1, 'BEH3', default='PLSTRN')
+                int3 = string_or_blank(card, i+2, 'INT3', default='L')
+                beh3h = string_or_blank(card, i+3, 'BEH3H', default='PLSTRN')
+                int3h = string_or_blank(card, i+4, 'INT3H', default='L')
+            elif code == 'C4':
+                beh4 = string_or_blank(card, i+1, 'BEH4', default='PLSTRN')
+                int4 = string_or_blank(card, i+2, 'INT4', default='L')
+                beh4h = string_or_blank(card, i+3, 'BEH4H', default='PLSTRN')
+                int4h = string_or_blank(card, i+4, 'INT4H', default='L')
+            elif code == 'C6':
+                beh6 = string_or_blank(card, i+1, 'BEH6', default='PLSTRN')
+                int6 = string_or_blank(card, i+2, 'INT6', default='Q')
+                beh6h = string_or_blank(card, i+3, 'BEH6H', default='PLSTRN')
+                int6h = string_or_blank(card, i+4, 'INT6H', default='Q')
+            elif code == 'C8':
+                beh8 = string_or_blank(card, i+1, 'BEH8', default='PLSTRN')
+                int8 = string_or_blank(card, i+2, 'INT8', default='Q')
+                beh8h = string_or_blank(card, i+3, 'BEH8H', default='PLSTRN')
+                int8h = string_or_blank(card, i+4, 'INT8H', default='Q')
+            else:
+                raise NotImplementedError(f'PSHLN2 code={code!r}')
+            i += 8
+        behx = [beh3, beh4, beh6, beh8]
+        behxh = [beh3h, beh4h, beh6h, beh8h]
+        integration = [int3, int4, int6, int8]
+        integration_h = [int3h, int4h, int6h, int8h]
+        assert len(card) <= 20, f'len(PSHLN2 card) = {len(card):d}\ncard={card}'
+        self.cards.append((pid, mid, direct, thickness, analysis,
+                           behx, integration, behxh, integration_h, comment))
+        self.n += 1
+        return self.n
+
+    @Property.parse_cards_check
+    def parse_cards(self):
+        ncards = len(self.cards)
+        self.property_id = np.zeros(ncards, dtype='int32')
+        self.material_id = np.zeros(ncards, dtype='int32')
+        self.direct = np.zeros(ncards, dtype='int32')
+        self.analysis = np.zeros(ncards, dtype='|U8')
+        self.thickness = np.zeros(ncards, dtype='float64')
+        self.beh = np.zeros((ncards, 4), dtype='|U8')
+        self.beh_h = np.zeros((ncards, 4), dtype='|U8')
+        self.integration = np.zeros((ncards, 4), dtype='|U8')
+        self.integration_h = np.zeros((ncards, 4), dtype='|U8')
+
+        for icard, card in enumerate(self.cards):
+            (pid, mid, direct, thickness, analysis,
+             behx, integration, behxh, integration_h, comment) = card
+            if behx is None:
+                behx = [''] * 4
+            if integration is None:
+                integration = [''] * 4
+            if behxh is None:
+                behxh = [''] * 4
+            if integration_h is None:
+                integration_h = [''] * 4
+
+            self.property_id[icard] = pid
+            self.material_id[icard] = mid
+            self.thickness[icard] = thickness
+            self.direct[icard] = direct
+            self.analysis[icard] = analysis
+            self.beh[icard] = [val if val is not None else ''
+                               for val in behx]
+            self.integration[icard] = [val if val is not None else ''
+                                       for val in integration]
+            self.beh_h[icard] = [val if val is not None else ''
+                                 for val in behxh]
+            self.integration_h[icard] = [val if val is not None else ''
+                                         for val in integration_h]
+        self.sort()
+        self.model.log.warning(f'PSHLN2 self.thickness={self.thickness}')
+        self.cards = []
+
+    def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:
+        prop.n = len(i)
+        prop.property_id = self.property_id[i]
+        prop.material_id = self.material_id[i]
+        prop.coord_id = self.coord_id[i]
+        prop.stress_strain_output_location = self.stress_strain_output_location[i]
+        prop.thickness = self.thickness[i]
+
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        max_int = max(self.property_id.max(), self.material_id.max())
+        print_card = get_print_card(size, max_int)
+        property_ids = array_str(self.property_id, size=size)
+        material_ids = array_str(self.material_id, size=size)
+        directs = array_default_int(self.direct, default=1, size=size)
+        #inan = np.isnan(self.thickness)
+
+        #self.property_id = np.zeros(ncards, dtype='int32')
+        #self.material_id = np.zeros(ncards, dtype='int32')
+        #self.direct = np.zeros(ncards, dtype='int32')
+        #self.analysis = np.zeros(ncards, dtype='|U8')
+        #self.thickness = np.zeros(ncards, dtype='float64')
+        #self.beh = np.zeros((ncards, 2), dtype='|U8')
+        #self.beh_h = np.zeros((ncards, 2), dtype='|U8')
+        #self.integration = np.zeros((ncards, 2), dtype='|U8')
+        #self.integration_h = np.zeros((ncards, 2), dtype='|U8')
+
+        codes = ['C3', 'C4', 'C6', 'C8']
+        for pid, mid, direct, analysis, thickness, beh, integration, beh_h, integration_h in zip_longest(
+            property_ids, material_ids, directs, self.analysis, self.thickness,
+            self.beh, self.integration, self.beh_h, self.integration_h):
+            list_fields = ['PSHLN2', pid, mid, direct, thickness, analysis, None, None, None]
+            values = (beh, integration, beh_h, integration_h)
+            for code, behx, intx, behxh, intxh in zip(codes, beh, integration, beh_h, integration_h):
+                if behx == '' and intx == '' and behx == '' and intxh == '':
+                    continue
+                list_fields.extend([code, behx, intx, behxh, intxh, '', '', ''])
+            #print(print_card_8(list_fields))
+            bdf_file.write(print_card(list_fields))
+        return
+
+    @property
+    def allowed_materials(self) -> list[Any]:
+        return []
+        #return [mat for mat in shell_materials(self.model) if mat.n]
+
+    def mass_per_area(self) -> np.ndarray:
+        #thickness = self.thickness
+        thickness = np.zeros(len(self.property_id))
+        #nsm = self.nsm
+        #mid = self.material_id
+
+        #rho = get_density_from_material(mid, self.allowed_materials)
+        #mass_per_area = rho * thickness
+        #print(rho)
+        #print(mass_per_area)
+        mass_per_area = thickness
+        return mass_per_area
+
+    #def total_thickness(self) -> np.ndarray:
+        #return self.thickness
 
 
 def get_2d_plate_transform(theta: np.ndarray) -> np.ndarray:

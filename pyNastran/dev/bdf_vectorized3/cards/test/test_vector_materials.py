@@ -98,7 +98,6 @@ class TestMaterials(unittest.TestCase):
 
         model.validate()
         model.cross_reference()
-        model.pop_xref_errors()
         if RUN_MATTX:
             matt1.write(size=16, is_double=False)
 
@@ -139,7 +138,6 @@ class TestMaterials(unittest.TestCase):
         model.pop_parse_errors()
         #creep.raw_fields()
         model.cross_reference()
-        model.pop_xref_errors()
         #model.uncross_reference()
         unused_model2 = save_load_deck(model)
 
@@ -205,7 +203,6 @@ class TestMaterials(unittest.TestCase):
 
         model.validate()
         model.cross_reference()
-        model.pop_xref_errors()
         if RUN_MATTX:
             matt2.write(size=16, is_double=False)
         save_load_deck(model)
@@ -264,7 +261,6 @@ class TestMaterials(unittest.TestCase):
         model.validate()
         model.pop_parse_errors()
         model.cross_reference()
-        model.pop_xref_errors()
         #matt3.write(size=16, is_double=False)
 
         save_load_deck(model)
@@ -276,8 +272,8 @@ class TestMaterials(unittest.TestCase):
         mid = 10
         k = 1000.
         mat4_id = model.add_mat4(mid, k, cp=0.0, rho=1.0, H=None, mu=None,
-                              hgen=1.0, ref_enthalpy=None, tch=None, tdelta=None, qlat=None,
-                              comment='mat4')
+                                 hgen=1.0, ref_enthalpy=None, tch=None, tdelta=None, qlat=None,
+                                 comment='mat4')
         #mat4.raw_fields()
         mat4 = model.mat4
         mat4.write(size=16, is_double=False)
@@ -318,7 +314,6 @@ class TestMaterials(unittest.TestCase):
 
         model.validate()
         model.cross_reference()
-        model.pop_xref_errors()
         if RUN_MATTX:
             matt4.write(size=16, is_double=False)
 
@@ -385,7 +380,6 @@ class TestMaterials(unittest.TestCase):
 
         model.validate()
         model.cross_reference()
-        model.pop_xref_errors()
         if RUN_MATTX:
             matt5.write(size=16, is_double=False)
 
@@ -484,7 +478,6 @@ class TestMaterials(unittest.TestCase):
 
         model.validate()
         model.cross_reference()
-        model.pop_xref_errors()
         if RUN_MATTX:
             matt8.write(size=16, is_double=False)
         save_load_deck(model)
@@ -525,7 +518,6 @@ class TestMaterials(unittest.TestCase):
 
         model.validate()
         model.cross_reference()
-        model.pop_xref_errors()
         #matt8.write(size=16, is_double=False)
         save_load_deck(model)
 

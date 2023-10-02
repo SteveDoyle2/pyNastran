@@ -494,7 +494,6 @@ class TestSolids(unittest.TestCase):
         model.setup()
         #model.pop_parse_errors()
         #model.cross_reference()
-        #model.pop_xref_errors()
 
         eids = None
         nids = None
@@ -667,7 +666,6 @@ def end_checks(model):
     model._verify_bdf(xref=True)
     #model.uncross_reference()
     #model.cross_reference()
-    #model.pop_xref_errors()
     eids, mass, cg, inertia = model.inertia()
     assert mass.sum() > 0, 'mass=%s, cg=%s, inertia=%s' % (mass, cg, inertia)
 

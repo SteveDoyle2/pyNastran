@@ -520,7 +520,7 @@ class Nastran3:
 
 
             elif etype in solid_elements:
-                print('  solid')
+                model.log.debug('  solid')
                 cell_offset0, n_nodesi, cell_typei, cell_offseti = _create_solid_vtk_arrays(
                     element, grid_id, cell_offset0)
 
@@ -565,7 +565,7 @@ class Nastran3:
                 cell_offset0 += nelement * (dnode + 1)
             else:
                 # more complicated element
-                print('  dropping', element)
+                model.log.warning(f'  dropping {element}')
                 continue
                 #raise NotImplementedError(element.type)
             del nelement # , dnode
@@ -686,10 +686,10 @@ def _set_quality(icase: int, cases: dict[int, Any],
             if elem.n == 0:
                 continue
             if elem.type in NO_ELEMENT:
-                print('n', elem.type, elem.n)
+                model.log.info('n {elem.type} {elem.n}')
                 is_validi = np.zeros(elem.n, dtype='bool')
             else:
-                print('y', elem.type, elem.n)
+                model.log.info('y {elem.type} {elem.n}')
                 is_validi = np.ones(elem.n, dtype='bool')
             is_valid_list.append(is_validi)
         is_valid_element = np.hstack(is_valid_list)

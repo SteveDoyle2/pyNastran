@@ -450,7 +450,7 @@ class CBEAM(Element):
         #del ihat, yhat, zhat, norm_z, norm_yhat
 
         if np.any(np.isnan(yhat.max(axis=1))):
-            print(f'norm_yhat = {norm_yhat}')
+            self.model.log.error(f'norm_yhat = {norm_yhat}')
 
         del norm_i, norm_z, norm_yhat
         #aaa
@@ -2215,9 +2215,9 @@ class PBCOMP(Property):
 
         for row in range(nrows):
             i = 8 * row + 17
-            yi = double(card, i, 'y' + str(row))
-            zi = double(card, i + 1, 'z' + str(row))
-            ci = double_or_blank(card, i + 2, 'c' + str(row), 0.0)
+            yi = double_or_blank(card, i, 'y' + str(row), default=0.0)
+            zi = double_or_blank(card, i + 1, 'z' + str(row), default=0.0)
+            ci = double_or_blank(card, i + 2, 'c' + str(row), default=0.0)
             mid = integer_or_blank(card, i + 3, 'mid' + str(row), mid)
             y.append(yi)
             z.append(zi)

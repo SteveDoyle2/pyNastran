@@ -285,6 +285,13 @@ class TestOpt(unittest.TestCase):
         # reset
         atti = []
 
+        model.add_card(['DRESP1', dresp_id, 'BUCK', 'LAMA', None, None, '1', '0'], 'DRESP1')
+        dresp_id += 1
+        model.add_card(['DRESP1', dresp_id, 'MODE', 'EIGN', None, None, '2', '0'], 'DRESP1')
+        dresp_id += 1
+        model.add_card(['DRESP1', dresp_id, 'W', 'WEIGHT'], 'DRESP1')
+        dresp_id += 1
+
         #----------------------------------------------
         # atta only
         dresp_id += 1
@@ -548,7 +555,6 @@ class TestOpt(unittest.TestCase):
         model.validate()
         model._verify_bdf(xref=False)
         model.cross_reference()
-        model.pop_xref_errors()
 
         desvar = model.desvar
         dvprel1 = model.dvprel1
@@ -825,7 +831,6 @@ class TestOpt(unittest.TestCase):
 
         model.validate()
         model.cross_reference()
-        model.pop_xref_errors()
 
         #dvcrel1.raw_fields()
         model.dvcrel1.write(size=16)

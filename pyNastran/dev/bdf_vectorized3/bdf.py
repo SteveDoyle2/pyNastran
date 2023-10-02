@@ -121,7 +121,7 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import DOPTPRM
-    #DCONADD, TOPVAR, DDVAL, DOPTPRM, DLINK,
+    #DCONADD, TOPVAR, DDVAL, DOPTPRM,
     #DRESP3,
     #DVGRID, DSCREEN)
 #from .cards.optimization_nx import (
@@ -460,6 +460,8 @@ MISSING_CARDS = {
     'FREQV', 'VATVFS', 'PMIC', 'MAT10C', 'ALOAD', 'ELAR', 'ATVBULK', 'AMLREG',
     'ATVFS', 'BOLTLD', 'BCTPAR2', 'MATFT', 'PLOTEL4', 'CYCADD', 'MATT11'
 }
+OBJ_CARDS = {'PARAM', 'MDLPRM', 'TSTEP', 'TSTEPNL',
+             'EIGC', 'EIGP', 'AERO', 'AEROS'}
 
 
 def load_bdf_object(obj_filename:str, xref: bool=True, log=None, debug: bool=True):
@@ -711,7 +713,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-            'PLOADX1', 'RFORCE', 'RFORCE1',
+            #'PLOADX1',
+            'RFORCE', 'RFORCE1',
             'SPCD', 'DEFORM',
 
             # msgmesh
@@ -771,7 +774,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'ROTORG', 'ROTORD', ## rotors
             #'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
-            #'TSTEPNL', 'TSTEP1',  ## tstepnls
+            'TSTEPNL', 'TSTEP1',  ## tstepnls
             #'TF',  ## transfer_functions
             #'TIC', ## initial conditions - sid (set ID)
 
@@ -788,7 +791,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DVCREL1', 'DVCREL2',
             'DVPREL1', 'DVPREL2',
             'DVMREL1', 'DVMREL2',
-            #'DOPTPRM', 'DLINK', 'DCONADD', 'DVGRID',
+            #'DOPTPRM',
+            'DLINK', # 'DCONADD', 'DVGRID',
             #'DSCREEN',
 
             # nx optimization
@@ -852,7 +856,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'EIGB', 'EIGR', 'EIGRL',
 
             #: cMethods
-            #'EIGC', 'EIGP',
+            'EIGC', 'EIGP',
 
             # : modtrak
             #'MODTRAK',
@@ -1030,7 +1034,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         #lines = print(self.case_control_deck)
         #self.case_control_lines = lines.split('\n')
         #del self.case_control_deck
-        #self.uncross_reference()
         #import types
         with open(obj_filename, 'rb') as obj_file:
             obj = load(obj_file)
@@ -1148,8 +1151,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             enable_set = set(cards)
         self.cards_to_read = enable_set
 
-    def set_error_storage(self, nparse_errors: int=100, stop_on_parsing_error: bool=True,
-                          nxref_errors: int=100, stop_on_xref_error: bool=True) -> None:
+    def set_error_storage(self, nparse_errors: int=100,
+                          stop_on_parsing_error: bool=True,
+                          nxref_errors: int=100,
+                          stop_on_xref_error: bool=True) -> None:
         """
         Catch parsing errors and store them up to print them out all at once
         (not all errors are caught).
@@ -1192,8 +1197,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         #self.log.warning('no get_rigid_elements_with_node_ids')
     #def get_rigid_elements_with_node_ids(self, node_ids: list[int]):
         #self.log.warning('no get_rigid_elements_with_node_ids')
-
-
 
     def _verify_bdf(self, xref: Optional[bool]=None) -> None:
         """Cross reference verification method."""
@@ -1566,22 +1569,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             if is_error:
                 print('%s' % msg)
                 raise DuplicateIDsError(msg.rstrip())
-
-    def pop_xref_errors(self) -> None:
-        """raises an error if there are cross-reference errors"""
-        return
-        is_error = False
-        if self._stop_on_xref_error:
-            if self._ixref_errors == 1 and self._nxref_errors == 0:
-                raise
-            if self._stored_xref_errors:
-                msg = 'There are cross-reference errors.\n\n'
-                for (card, an_error) in self._stored_xref_errors:
-                    msg += '%scard=%s\n' % (an_error[0], card)
-                    is_error = True
-
-                if is_error and self._stop_on_xref_error:
-                    raise CrossReferenceError(msg.rstrip())
 
     def get_bdf_cards(self, bulk_data_lines: list[str],
                       bulk_data_ilines: Optional[Any]=None) -> tuple[Any, Any, Any]:
@@ -2065,8 +2052,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'=' : (Crash, None),
             '/' : (Crash, None),
 
-            #'CGEN' : (CrashIgnore, None),
-
             #'SETREE' : (SETREE, add_methods._add_setree_object),
             #'SENQSET' : (SENQSET, add_methods._add_senqset_object),
             #'SEBULK' : (SEBULK, add_methods._add_sebulk_object),
@@ -2089,7 +2074,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'BFRIC' : (BFRIC, add_methods._add_bfric_object),
             #'MODTRAK' : (MODTRAK, add_methods._add_modtrak_object),
 
-            #  nx contact
+            # nx contact
             #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
             #'BCTPARM' : (BCTPARM, add_methods._add_bctparam_object),
             #'BGADD' : (BGADD, add_methods._add_bgadd_object),
@@ -2157,6 +2142,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'FEEDGE' : (FEEDGE, add_methods._add_feedge),
 
             # msgmesh
+            #'CGEN' : (CrashIgnore, None),
             #'GMCORD' : (GMCORD, add_methods._add_coord_object), # coords
             #'CGEN' : (CGEN, add_methods._add_element_object),   # elements
             #'GMLOAD' : (GMLOAD, add_methods._add_load_object),  # basic loads
@@ -2259,7 +2245,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'NLPARM' : (NLPARM, add_methods._add_nlparm_object),
             'NLPCI' : (NLPCI, add_methods._add_nlpci_object),
             'TSTEP' : (TSTEP, add_methods._add_tstep_object),
-            #'TSTEP1' : (TSTEP1, add_methods._add_tstepnl_object),
+            'TSTEP1' : (TSTEP1, add_methods._add_tstepnl_object),
             'TSTEPNL' : (TSTEPNL, add_methods._add_tstepnl_object),
 
             #'TF' : (TF, add_methods._add_tf_object),
@@ -2355,14 +2341,13 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'ROTORD' : (ROTORD, add_methods._add_rotor_object),
 
             #'CYJOIN' : (CYJOIN, add_methods._add_cyjoin_object),
-
         }
 
         self._card_parser_prepare = {
             'PLOTEL': partial(self._prepare_card, self.plotel),
             'GRID': partial(self._prepare_card, self.grid),
             'SPOINT': partial(self._prepare_card, self.spoint),
-            #'EPOINT': partial(self._prepare_card, self.epoint),
+            'EPOINT': partial(self._prepare_card, self.epoint),
             'CORD1R': self._prepare_cord1r,
             'CORD1C': self._prepare_cord1c,
             'CORD1S': self._prepare_cord1s,
@@ -2457,7 +2442,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PBEAML': partial(self._prepare_card, self.pbeaml),
             'PBCOMP' : partial(self._prepare_card, self.pbcomp),
             #'PBMSECT' : (PBMSECT, add_methods._add_property_object),
-            #'POINT' : partial(self._prepare_card, self.point),
+            'POINT' : partial(self._prepare_card, self.point),
 
             # shear
             'CSHEAR': partial(self._prepare_card, self.cshear),
@@ -2475,8 +2460,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PSHELL': partial(self._prepare_card, self.pshell),
             'PCOMP': partial(self._prepare_card, self.pcomp),
             'PCOMPG': partial(self._prepare_card, self.pcompg),
-            #'PSHLN1' : partial(self._prepare_card, self.pshln1),
-            #'PSHLN2' : partial(self._prepare_card, self.pshln2),
+            'PSHLN1' : partial(self._prepare_card, self.pshln1),
+            'PSHLN2' : partial(self._prepare_card, self.pshln2),
 
             # planar shells
             'PLPLANE': partial(self._prepare_card, self.plplane),
@@ -3301,7 +3286,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             try:
                 class_instance = card_class.add_card(card_obj, comment=comment)
                 card_idi = add_card_function(class_instance)
-                if card_name not in {'PARAM', 'MDLPRM', 'TSTEP', 'TSTEPNL'}:
+                if card_name not in OBJ_CARDS:
                     if not isinstance(card_idi, int):
                         msg = f'card_name={card_name!r} card_idi={card_idi}'
                         raise TypeError(msg)
@@ -4712,7 +4697,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
             #'add_DIVERG',
             #'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DDVAL',
-            #'add_DELAY', 'add_DEQATN', 'add_DLINK', 'add_DMI',
+            #'add_DELAY', 'add_DEQATN', 'add_DMI',
             #'add_DPHASE', 'add_DRESP', 'add_DTABLE',
             #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
             #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
@@ -4734,7 +4719,6 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'set_as_nx',
 
             #'pop_parse_errors',
-            ##'pop_xref_errors',
             #'set_error_storage',
             #'is_reject',
         #]
