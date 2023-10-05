@@ -179,17 +179,18 @@ class DESVAR(VectorizedBaseCard):
         labels = self.label
         #xlbs = array_default_8(self.xlb, -1e20)
         #xubs = array_default_8(self.xub, 1e20)
-        xlbs = self.xlb
-        xubs = self.xub
+        xlbs = array_float(self.xlb, size=size, is_double=is_double)
+        xubs = array_float(self.xub, size=size, is_double=is_double)
 
         if is_delx and is_ddval:
+            delxs = array_float(self.delx, size=size, is_double=is_double)
             for desvar_id, label, xinit, xlb, xub, delx, ddval in zip_longest(desvar_id, labels, self.xinit, xlbs, xubs,
-                                                                              self.delx, self.ddval):
+                                                                              delxs, self.ddval):
                 list_fields = ['DESVAR', desvar_id, label, xinit, xlb, xub,
                                delx, ddval]
                 bdf_file.write(print_card(list_fields))
         elif is_delx:
-            for desvar_id, label, xinit, xlb, xub, delx in zip_longest(desvar_id, labels, self.xinit, xlbs, xubs, self.delx):
+            for desvar_id, label, xinit, xlb, xub, delx in zip_longest(desvar_id, labels, self.xinit, xlbs, xubs, delxs):
                 list_fields = ['DESVAR', desvar_id, label, xinit, xlb, xub,
                                delx]
                 bdf_file.write(print_card(list_fields))

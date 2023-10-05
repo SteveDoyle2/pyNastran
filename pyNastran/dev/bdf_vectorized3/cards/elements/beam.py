@@ -1379,7 +1379,7 @@ class PBEAM(Property):
         materials = self.allowed_materials
         mids = hstack_msg([prop.material_id for prop in materials],
                           msg=f'no materials for {self.type}; {self.all_materials}')
-        mids.sort()
+        mids = np.unique(mids)
         geom_check(self,
                    missing,
                    material_id=(mids, self.material_id))
@@ -1955,7 +1955,7 @@ class PBEAML(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
                           msg=f'no materials for {self.type}; {self.all_materials}')
-        mids.sort()
+        mids = np.unique(mids)
         geom_check(self,
                    missing,
                    material_id=(mids, self.material_id))

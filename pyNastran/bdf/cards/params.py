@@ -262,7 +262,7 @@ INT_WORDS_1 = {
     'MARCREVR', 'MARCRIGD', 'MARCRUN', 'MARCSETT', 'MARCSINC',
     'MARCSLHT', 'MARCSUMY', 'MARCT19', 'MARCTABL', 'MARCTNSF',
     'MARCTNSF', 'MARCTOL', 'MARCVERS', 'MATFILE', 'MATNL', 'MAXIT',
-    'MAXITER', 'MAXLINES', 'MESHG', 'METHCMRS', 'MDOF', 'MODACC', 'MODTRK',
+    'MAXITER', 'MAXLINES', 'MESHG', 'METHCMRS', 'MODACC', 'MODTRK',
     'MPCX', 'MPTDUMP', 'MRALIAS', 'MRFOLOW1', 'MRFOLOW3', 'MRFOLOW4',
     'MRORINTS', 'MROUTLAY', 'MRTIMING', 'NASPRT', 'NBRUPT', 'NEWSEQ',
     'NEWSET', 'NLAYERS', 'NLDISP', 'NLPACK', 'NLTOL', 'NMLOOP', 'NOAP',
@@ -408,6 +408,10 @@ class PARAM(BaseCard):
             value = integer_or_blank(card, 2, 'value', default=1)
         elif key == 'UNITSYS':
             value = string_or_blank(card, 2, 'value', default='')
+        elif key == 'MDOF':
+            # NX  - integer
+            # MSC - string
+            value = integer_string_or_blank(card, 2, 'value', default=None)
 
         #-------------------------------------------------------------
         # strings; has defaults

@@ -1,6 +1,7 @@
 import math
 from math import log10
 from pyNastran.bdf.field_writer_8 import print_scientific_8, print_float_8
+from pyNastran.bdf.bdf_interface.assign_type import double_from_str
 
 plus_log_dict = {
     #-1. : "%%8.7f",
@@ -35,6 +36,18 @@ def get_float_format(value: float):
             #print('B')
             field = print_scientific_8(value)
             assert len(field) == 8, f'{field!r}; n={len(field)}'
+            return field
+        elif value > -0.01:  # -0.001
+            field = print_scientific_8(value)
+            field2 = "%8.6f" % value  # small value
+            field2 = field2.strip('0 ')
+
+            # get rid of the first minus sign, add it on afterwards
+            field1 = '-' + field.strip(' 0-').replace('-', 'e-')
+
+            if len(field2) <= 8 and float(field1) == float(field2):
+                field = field2.rstrip(' 0')
+                field = field.replace('-0.', '-.')
             return field
         elif abs_value < 1.:
             #print('C')
@@ -177,10 +190,10 @@ def get_field_zach(x: float):
         field_zach = s
     else:
         field_zach = 0.
-        pass
+        raise RuntimeError(x)
     return field_zach
 
-def compare(x: float):
+def compare(x: float, stop_on_error: bool=False):
     """ Get optimal way to print the number in 8 characters"""
     #print(x)
     field_new = get_float_format(x).strip()
@@ -191,14 +204,27 @@ def compare(x: float):
 
 
     field_old = '%8s' % field_old
-    field_zach = get_field_zach(x)
+    #field_zach = get_field_zach(x)
+    field_new = get_float_format(x)
     assert len(field_old) == 8
-    assert len(field_zach) == 8
+    assert len(field_new) == 8
+    #assert len(field_zach) == 8
     field_old = field_old.strip()
-    field_zach = field_zach.strip()
+    #field_zach = field_zach.strip()
     field_new = field_new.strip()
-    if field_old != field_zach:
-        print(f'x={x!r} old={field_old!r} field_zach={field_zach!r} new={field_new!r}')
+    value_old = double_from_str(field_old)
+    value_new = double_from_str(field_new)
+    if '.' not in field_new:
+        # it must be a float; major error
+        msg = f'x={x!r} old={field_old!r} new={field_new!r}'
+        raise RuntimeError(msg)
+
+    if value_old != value_new:
+        # loss of precision
+        #msg = f'x={x!r} old={field_old!r} field_zach={field_zach!r} new={field_new!r}'
+        msg = f'x={x!r} old={field_old!r} new={field_new!r}'
+        if stop_on_error:
+            raise RuntimeError(msg)
 
 def main(get_optimal_short_form_float):
     #get_optimal_short_form_float = get_field_zach

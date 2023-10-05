@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Set, Optional, Any
 
 from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
+from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, EPOINT, SPOINT, GRDSET, POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
@@ -188,10 +189,11 @@ class BDFAttributes:
         self.pdampt = PDAMPT(self)
 
         # sets
-        #self.aset = ASET(self)
-        #self.bset = BSET(self)
-        #self.cset = CSET(self)
-        #self.omit = OMIT(self)
+        self.aset = ASET(self)
+        self.bset = BSET(self)
+        self.cset = CSET(self)
+        self.qset = QSET(self)
+        self.omit = OMIT(self)
 
         #self.set1 = SET1(self)
         #self.set2 = SET2(self)

@@ -237,7 +237,7 @@ class PSHELL(Property):
     def geom_check(self, missing: dict[str, np.ndarray]):
         mids = hstack_msg([mat.material_id for mat in self.allowed_materials],
                           msg=f'no shell materials for {self.type}')
-        mids.sort()
+        mids = np.unique(mids)
         material_ids = np.unique(self.material_id.ravel())
         if -1 == material_ids[0]:
             material_ids = material_ids[1:]

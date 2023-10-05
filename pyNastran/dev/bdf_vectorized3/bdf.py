@@ -134,8 +134,8 @@ from pyNastran.bdf.cards.optimization import DOPTPRM
 #)
 #from .cards.bdf_sets import (
     #ASET, BSET, CSET, QSET, USET,
-    #ASET1, BSET1, CSET1, QSET1, USET1,
-    #OMIT, OMIT1,
+    #USET1,
+    #OMIT,
     #SET1, SET2, SET3,
     #SEBSET, SECSET, SEQSET, # SEUSET
     #SEBSET1, SECSET1, SEQSET1, # SEUSET1
@@ -461,7 +461,9 @@ MISSING_CARDS = {
     'ATVFS', 'BOLTLD', 'BCTPAR2', 'MATFT', 'PLOTEL4', 'CYCADD', 'MATT11'
 }
 OBJ_CARDS = {'PARAM', 'MDLPRM', 'TSTEP', 'TSTEPNL',
-             'EIGC', 'EIGP', 'AERO', 'AEROS'}
+             'AERO', 'AEROS',
+             'EIGR', 'EIGRL', 'EIGB',
+             'EIGC', 'EIGP', }
 
 
 def load_bdf_object(obj_filename:str, xref: bool=True, log=None, debug: bool=True):
@@ -800,12 +802,13 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # sets
             #'SET1', 'SET3',  ## sets
-            #'ASET', 'ASET1',  ## asets
-            #'OMIT', 'OMIT1',  ## omits
-            #'BSET', 'BSET1',  ## bsets
-            #'CSET', 'CSET1',  ## csets
-            #'QSET', 'QSET1',  ## qsets
-            #'USET', 'USET1',  ## usets
+
+            'ASET1', #'ASET', ## aset
+            'OMIT1', #'OMIT', ## omits
+            'BSET1', #'BSET', ## bsets
+            'CSET1', #'CSET', ## csets
+            'QSET1', #'QSET', ## qsets
+            #'USET', 'USET1', ## usets
 
             #'RADSET',  # radset
 
@@ -853,7 +856,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #------------------------------------------------------------------
             #: methods
-            #'EIGB', 'EIGR', 'EIGRL',
+            'EIGB', 'EIGR', 'EIGRL',
 
             #: cMethods
             'EIGC', 'EIGP',
@@ -2153,12 +2156,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CBEND' : (CBEND, add_methods._add_element_object),
             #'PBEND' : (PBEND, add_methods._add_property_object),
 
-            #'CTRSHL' : (CTRSHL, add_methods._add_element_object),  # nasa95
-            #'CQUAD1' : (CQUAD1, add_methods._add_element_object),  # nasa95
+            # nastran95
+            #'CTRSHL' : (CTRSHL, add_methods._add_element_object),
+            #'CQUAD1' : (CQUAD1, add_methods._add_element_object),
             #'PTRSHL' : (PTRSHL, add_methods._add_property_object),
             #'PQUAD1' : (PQUAD1, add_methods._add_property_object),
-
-            # nastran95
+            #
             #'CIHEX1' : (CIHEX1, add_methods._add_element_object),
             #'CIHEX2' : (CIHEX2, add_methods._add_element_object),
             #'CHEXA1' : (CHEXA1, add_methods._add_element_object),
@@ -2302,21 +2305,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'RADMTX' : (RADMTX, add_methods._add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
             #'RADMT' : (Crash, None),
 
-            #'ASET' : (ASET, add_methods._add_aset_object),
-            #'ASET1' : (ASET1, add_methods._add_aset_object),
-
-            #'BSET' : (BSET, add_methods._add_bset_object),
-            #'BSET1' : (BSET1, add_methods._add_bset_object),
-
-            #'CSET' : (CSET, add_methods._add_cset_object),
-            #'CSET1' : (CSET1, add_methods._add_cset_object),
-
-            #'QSET' : (QSET, add_methods._add_qset_object),
-            #'QSET1' : (QSET1, add_methods._add_qset_object),
-
-            #'OMIT' : (OMIT, add_methods._add_omit_object),
-            #'OMIT1' : (OMIT1, add_methods._add_omit_object),
-
             # radset
             #'RADSET' : (RADSET, add_methods._add_radset_object),
 
@@ -2344,6 +2332,21 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         }
 
         self._card_parser_prepare = {
+            #'ASET': partial(self._prepare_card_by_method, self.aset.add_set_card),
+            'ASET1': partial(self._prepare_card_by_method, self.aset.add_set1_card),
+
+            #'BSET': partial(self._prepare_card_by_method, self.bset.add_set_card),
+            'BSET1': partial(self._prepare_card_by_method, self.bset.add_set1_card),
+
+            #'CSET': partial(self._prepare_card_by_method, self.cset.add_set_card),
+            'CSET1': partial(self._prepare_card_by_method, self.cset.add_set1_card),
+
+            #'QSET': partial(self._prepare_card_by_method, self.qset.add_set_card),
+            'QSET1': partial(self._prepare_card_by_method, self.qset.add_set1_card),
+
+            #'OMIT': partial(self._prepare_card_by_method, self.omit.add_set_card),
+            'OMIT1': partial(self._prepare_card_by_method, self.omit.add_set1_card),
+
             'PLOTEL': partial(self._prepare_card, self.plotel),
             'GRID': partial(self._prepare_card, self.grid),
             'SPOINT': partial(self._prepare_card, self.spoint),
@@ -2809,6 +2812,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
     def _prepare_card(self, cls, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
         """adds a CBAR"""
         i = cls.add_card(card_obj, comment=comment)
+        return i
+
+    def _prepare_card_by_method(self, func: Callable, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+        """adds a CBAR"""
+        i = func(card_obj, comment=comment)
         return i
 
     def _prepare_bctset(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:

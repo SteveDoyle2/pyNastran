@@ -220,7 +220,7 @@ class Writer():
         #model = self.model
         self._write_dmigs(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_loads(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_dynamic(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_dynamic(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_static_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
@@ -240,6 +240,13 @@ class Writer():
         #self._write_parametric(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_rejects(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids)
+
+        model = self.model
+        model.aset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.bset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.cset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.qset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.omit.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
         #if self.acmodl:
             #bdf_file.write(self.acmodl.write_card(size, is_double))
@@ -1081,7 +1088,7 @@ class Writer():
         """Writes the dynamic cards sorted by ID"""
         model = self.model
 
-        bdf_file.write(model.tic.write(size=size))
+        #bdf_file.write(model.tic.write(size=size))
         is_dynamic = (
             model.nlparms or model.frequencies or
             model.methods or model.cMethods or
