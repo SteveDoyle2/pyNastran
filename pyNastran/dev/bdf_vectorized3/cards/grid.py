@@ -18,7 +18,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check #get_print_card_8_16,
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, MAX_8_CHAR_INT
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, update_field_size, MAX_8_CHAR_INT
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 from pyNastran.femutils.coord_transforms import (
     xyz_to_rtz_array,
@@ -903,11 +904,6 @@ class POINT(VectorizedBaseCard):
         inid = np.searchsorted(self.node_id, node_id)
         return inid
 
-
-def update_field_size(max_int: int, size: int) -> int:
-    if max_int > MAX_8_CHAR_INT:
-        size = 16
-    return size
 
 def _write_grid_large(grid: GRID, bdf_file: TextIOLike,
                       print_scientific: Callable[float],

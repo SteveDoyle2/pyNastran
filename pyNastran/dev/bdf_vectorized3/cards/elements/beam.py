@@ -627,7 +627,6 @@ class CBEAM(Element):
                     mass_per_length[iipid] = mpl
                     nsm_per_length[iipid] = nsmpl
                     #nsm_centroid[iipid] = 0.
-                x = 1
 
                 #if nsm != 0.:
                     #p1_nsm = p1 + prop.ma
@@ -671,7 +670,6 @@ class CBEAM(Element):
                     nsm_n1 = (p1[iipid, :] + jhat[iipid, :] * m1 + khat[jpid, :] * m2)
                     nsm_n2 = (p2[iipid, :] + jhat[iipid, :] * m1 + khat[jpid, :] * m2)
                     nsm_centroid[iipid, :] = (nsm_n1 + nsm_n2) / 2.
-                x = 1
             #elif prop.type == 'PBMSECT':
                 #continue
                 #mass_per_length = prop.MassPerLength()

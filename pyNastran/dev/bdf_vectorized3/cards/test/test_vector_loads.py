@@ -283,6 +283,8 @@ class TestLoads(unittest.TestCase):
     def test_pload4_01(self):
         """tests a PLOAD4"""
         model = BDF(debug=False)
+        pload4 = model.pload4
+
         lines = ['PLOAD4  1000    1       -60.    -60.    60.             1']
         card = model._process_card(lines)
         cardi = BDFCard(card)
@@ -304,28 +306,21 @@ class TestLoads(unittest.TestCase):
         model.pload4.write(size, 'dummy')
         #card.raw_fields()
 
-    def _test_pload4_line(self):
+    def test_pload4_line(self):
         """tests a PLOAD4 LINE option"""
         #PLOAD4        10      10      0.819.2319
         #0      1.      0.      0.    LINE    NORM
         model = BDF(log=log, mode='msc')
+        pload4 = model.pload4
 
         sid = 1
         eids = 1
         pressures = 1.
-        model.add_pload4(sid, eids, pressures,
-                         g1=None, g34=None, cid=0, nvector=None,
-                         surf_or_line='SURFBAD', line_load_dir='NORMBAD', comment='')
-        model.setup()
-        pload4 = model.pload4
-        #with self.assertRaises(RuntimeError):
-            #pload4.validate()
-        pload4.surf_or_line[0] = 'SURF'
-        #with self.assertRaises(RuntimeError):
-            #pload4.validate()
-        pload4.line_load_dir[0] = 'NORM'
-        #pload4.validate()
-        #model.clear_attributes()
+        iload0 = model.add_pload4(
+            sid, eids, pressures,
+            g1=None, g34=None, cid=0, nvector=None,
+            surf_or_line='SURFBAD', line_load_dir='NORMBAD', comment='') - 1
+
 
         eid = 10
         pid = 20
@@ -371,6 +366,18 @@ class TestLoads(unittest.TestCase):
         #    P1 denotes that the line load along edge G1 and G2 has the
         #    constant value of P1.
         #
+        model.setup()
+        #with self.assertRaises(RuntimeError):
+            #pload4.validate()
+        print(pload4.write())
+        pload4.element_ids[iload0] = 10
+        pload4.surf_or_line[iload0] = 'SURF'
+        #with self.assertRaises(RuntimeError):
+            #pload4.validate()
+        pload4.line_load_dir[iload0] = 'NORM'
+        #pload4.validate()
+        #model.clear_attributes()
+
         sid = 10
         eids = [10, 11]
         pressures = [1., 0., 0., 0.]
@@ -386,9 +393,9 @@ class TestLoads(unittest.TestCase):
         # direction of the element coordinate system.  If both (CID, N1, n2, N3) and LDIR are
         # blank, then the default is LDIR=NORM.
         nvector = [1., 0., 0.]
-        pload4 = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
-                                  cid=cid, nvector=nvector,
-                                  surf_or_line='LINE', line_load_dir='NORM', comment='pload4_line')
+        pload4i = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
+                                   cid=cid, nvector=nvector,
+                                   surf_or_line='LINE', line_load_dir='NORM', comment='pload4_line')
         pload4 = model.pload4
         #assert pload4.raw_fields() == ['PLOAD4', 10, 10, 1.0, 0.0, 0.0, 0.0, 'THRU', 11,
                                        #0, 1.0, 0.0, 0.0, 'LINE', 'NORM']
@@ -398,7 +405,6 @@ class TestLoads(unittest.TestCase):
                                               cid=cid, nvector=nvector,
                                               surf_or_line='SURF', line_load_dir='NORM',
                                               comment='pload4_line')
-        pload4 = model.pload4
         #str(pload4.raw_fields())
 
         sid = 11
@@ -408,9 +414,11 @@ class TestLoads(unittest.TestCase):
                                               cid=cid, nvector=nvector,
                                               surf_or_line='SURF', line_load_dir='NORM',
                                               comment='pload4_line')
-        pload4 = model.pload4
+
+        model.setup()
         model.validate()
         model.cross_reference()
+        pload4.sum_forces_moments()
 
         p0 = [0., 0., 0.]
         loadcase_id = sid

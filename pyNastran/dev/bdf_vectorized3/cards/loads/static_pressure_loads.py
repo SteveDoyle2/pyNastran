@@ -4,7 +4,7 @@ import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import expand_thru
-from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8 # , print_field_8
+from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8 # , print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -89,16 +89,12 @@ class PLOAD(Load):
         self.n += 1
         return self.n
 
+    @Load.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         load_id = np.zeros(ncards, dtype='int32')
         pressure = np.zeros(ncards, dtype='float64')
         node_id = np.zeros((ncards, 4), dtype='int32')
-        assert ncards > 0, ncards
 
         for icard, card in enumerate(self.cards):
             (sid, pressurei, nodesi, comment) = card
@@ -276,7 +272,6 @@ class PLOAD1(Load):
         scale = np.zeros(ncards, dtype='|U8')
         x = np.zeros((ncards, 2), dtype='float64')
         pressure = np.zeros((ncards, 2), dtype='float64')
-        assert ncards > 0, ncards
 
         for icard, card in enumerate(self.cards):
             (sid, eid, load_typei, scalei, x12, pressurei, comment) = card
@@ -645,7 +640,7 @@ class PLOAD2(Load):
         load_id = np.zeros(ncards, dtype='int32')
         pressure = np.zeros(ncards, dtype='float64')
         nelement = np.zeros(ncards, dtype='int32')
-        assert ncards > 0, ncards
+
         element_ids_ = []
         for icard, card in enumerate(self.cards):
             (sid, pressurei, eids, comment) = card
@@ -881,12 +876,9 @@ class PLOAD4(Load):
         self.n += 1
         return self.n
 
+    @Load.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         load_id = np.zeros(ncards, dtype='int32')
         coord_id = np.full(ncards, -1, dtype='int32')
         pressure = np.zeros((ncards, 4), dtype='float64')
@@ -896,7 +888,6 @@ class PLOAD4(Load):
         line_load_dir = np.full(ncards, '', dtype='|U8')
         nvector = np.zeros((ncards, 3), dtype='float64')
         nelement = np.zeros(ncards, dtype='int32')
-        assert ncards > 0, ncards
         element_ids = []
         for icard, card in enumerate(self.cards):
             (sid, eid, pressures, eids, g1, g34,
@@ -921,8 +912,24 @@ class PLOAD4(Load):
 
     def _save(self, load_id, element_ids, coord_id, pressure, nodes_g1_g34,
               surf_or_line, line_load_dir, nvector, nelement):
+
+        nloads = len(load_id)
+        if surf_or_line is None:
+            surf_or_line = np.full(nloads, 'SURF', dtype='|U8')
+        if line_load_dir is None:
+            line_load_dir = np.full(nloads, 'NOMR', dtype='|U8')
+
         if len(self.load_id) != 0:
-            raise NotImplementedError()
+            load_id = np.hstack([self.load_id, load_id])
+            element_ids = np.hstack([self.element_ids, element_ids])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            pressure = np.vstack([self.pressure, pressure])
+            nodes_g1_g34 = np.vstack([self.nodes_g1_g34, nodes_g1_g34])
+            surf_or_line = np.hstack([self.surf_or_line, surf_or_line])
+            line_load_dir = np.hstack([self.line_load_dir, line_load_dir])
+            nvector = np.vstack([self.nvector, nvector])
+            nelement = np.hstack([self.nelement, nelement])
+
         nloads = len(load_id)
         self.load_id = load_id
         self.element_ids = element_ids
@@ -930,11 +937,6 @@ class PLOAD4(Load):
         self.pressure = pressure
         assert pressure.shape == (nloads, 4), pressure
         self.nodes_g1_g34 = nodes_g1_g34
-
-        if surf_or_line is None:
-            surf_or_line = np.full(nloads, 'SURF', dtype='|U8')
-        if line_load_dir is None:
-            line_load_dir = np.full(nloads, 'NOMR', dtype='|U8')
 
         self.surf_or_line = surf_or_line
         self.line_load_dir = line_load_dir
@@ -1290,8 +1292,11 @@ class PLOAD4(Load):
         # apply nvector to the normal for places that the normal vector isn't used
         normal[~is_normal, :] = nvector[~is_normal, :]
 
-        if np.any(np.isnan(mean_pressure)):
-            raise RuntimeError('there are nan pressures', mean_pressure)
+        inan = np.isnan(mean_pressure)
+        if np.any(inan):
+            assert len(mean_pressure) == len(self.element_ids)
+            eids_nan = self.element_ids[inan]
+            raise RuntimeError(f'there are nan PLOAD4 pressures for eids={eids_nan}')
         assert len(area) == nelement, f'narea={len(area)}; nelement={nelement}'
         assert len(mean_pressure) == nelement, f'npressure={len(mean_pressure)}; nelement={nelement}'
 
