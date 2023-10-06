@@ -79,6 +79,7 @@ class XPOINT(VectorizedBaseCard):
         ids = []
         for i, (idsi, comment) in enumerate(self.cards):
             idsi2 = expand_thru(idsi)
+            assert min(idsi2) > 0, idsi
             ids.extend(idsi2)
             self.comment[i] = comment
 
@@ -95,6 +96,10 @@ class XPOINT(VectorizedBaseCard):
         #nvalues = len(self.node_id)
         if not np.array_equal(uarg, iarg):
             self.ids = self.ids[iarg]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        bad_ids = self.ids[self.ids <= 0]
+        assert self.ids.min() > 0, bad_ids
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
