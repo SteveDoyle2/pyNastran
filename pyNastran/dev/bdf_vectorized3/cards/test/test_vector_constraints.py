@@ -8,114 +8,142 @@ RUN_OP2 = False
 
 
 class TestConstraints(unittest.TestCase):
-    def _test_support_01(self):
-        lines = ['SUPORT, 1,      126']
+    def test_support_01(self):
         model = BDF(debug=False)
+        suport = model.suport
+
+        lines = ['SUPORT, 1,      126']
         con = model.add_card(lines, 'SUPORT', comment='',
                              ifile=None, is_list=False, has_none=True)
         model.add_grid(1, [0., 0., 0.])
 
-        con = model.suport[0]
         size = 8
-        con.write_card(size, 'dummy')
-        con.raw_fields()
+        suport.write(size, 'dummy')
+        #con.raw_fields()
         save_load_deck(model)
 
-    def _test_suport_02(self):
+    def test_suport_02(self):
+        model = BDF(debug=False)
+        suport = model.suport
+
         card = ['SUPORT']
         cardi = BDFCard(card)
-        with self.assertRaises(AssertionError):  # too short
-            SUPORT.add_card(cardi)
+        #with self.assertRaises(AssertionError):  # too short
+            #SUPORT.add_card(cardi)
 
         card = ['SUPORT', '2']
         cardi = BDFCard(card)
-        con = SUPORT.add_card(cardi) # default
-        self.assertEqual(con.nodes[0], 2)
-        self.assertEqual(con.Cs[0], '0')
-        self.assertEqual(len(con.nodes), 1)
-        self.assertEqual(len(con.Cs), 1)
+        icon = suport.add_set_card(cardi) - 1 # default
+        model.setup()
+        self.assertEqual(suport.node_id[icon], 2)
+        self.assertEqual(suport.component[icon], 0)
+        self.assertEqual(len(suport.node_id), 1)
+        self.assertEqual(len(suport.component), 1)
 
         card = ['SUPORT', '2', '432']
         cardi = BDFCard(card)
-        con = SUPORT.add_card(cardi) # default
-        self.assertEqual(con.nodes[0], 2)
-        self.assertEqual(con.Cs[0], '234')
-        self.assertEqual(len(con.nodes), 1)
-        self.assertEqual(len(con.Cs), 1)
+        icon = suport.add_set_card(cardi) - 1 # default
+        model.setup()
+        self.assertEqual(suport.node_id[icon], 2)
+        self.assertEqual(suport.component[icon], 234)
+        self.assertEqual(len(suport.node_id), 2)
+        self.assertEqual(len(suport.component), 2)
 
-        card = ['SUPORT', '2', '432', 3]
+        card = ['SUPORT', '3', '4325', 4]
         cardi = BDFCard(card)
-        con = SUPORT.add_card(cardi) # default
-        self.assertEqual(con.nodes[1], 3)
-        self.assertEqual(len(con.nodes), 2)
-        self.assertEqual(len(con.Cs), 2)
+        icon = suport.add_set_card(cardi) - 1 # default
+        model.setup()
+        self.assertEqual(suport.node_id[icon-1], 3)
+        self.assertEqual(suport.node_id[icon], 4)
+        self.assertEqual(suport.component[icon-1], 2345)
+        self.assertEqual(suport.component[icon], 0)
+        self.assertEqual(len(suport.node_id), 4)
+        self.assertEqual(len(suport.component), 4)
 
         card = ['SUPORT', '2', None, 3]
         cardi = BDFCard(card)
-        con = SUPORT.add_card(cardi) # default
-        self.assertEqual(con.nodes[0], 2)
-        self.assertEqual(con.nodes[1], 3)
-        self.assertEqual(con.Cs[0], '0')
-        self.assertEqual(con.Cs[1], '0')
-        self.assertEqual(len(con.nodes), 2)
-        self.assertEqual(len(con.Cs), 2)
+        icon = suport.add_set_card(cardi) - 1 # default
+        model.setup()
+        self.assertEqual(suport.node_id[icon-1], 2)
+        self.assertEqual(suport.node_id[icon], 3)
+        self.assertEqual(suport.component[icon-1], 0)
+        self.assertEqual(suport.component[icon], 0)
+        self.assertEqual(len(suport.node_id), 6)
+        self.assertEqual(len(suport.component), 6)
 
         card = ['SUPORT', '2', '432', 3, '1325']
         cardi = BDFCard(card)
-        con = SUPORT.add_card(cardi) # default
-        self.assertEqual(con.nodes[1], 3)
-        self.assertEqual(con.Cs[1], '1235')
-        self.assertEqual(len(con.nodes), 2)
-        self.assertEqual(len(con.Cs), 2)
+        icon = suport.add_set_card(cardi) - 1 # default
+        model.setup()
+        self.assertEqual(suport.node_id[icon-1], 2)
+        self.assertEqual(suport.node_id[icon], 3)
+        self.assertEqual(suport.component[icon-1], 234)
+        self.assertEqual(suport.component[icon], 1235)
+        self.assertEqual(len(suport.node_id), 8)
+        self.assertEqual(len(suport.component), 8)
 
-    def _test_suport1_01(self):
-        lines = ['SUPORT1, 1,      126']
+    def test_suport1_01(self):
         model = BDF(debug=False)
+        suport = model.suport
+
+        lines = ['SUPORT1, 1,      126']
         card = model._process_card(lines)
         cardi = BDFCard(card)
 
         size = 8
-        con = SUPORT1.add_card(cardi)
-        con.write_card(size, 'dummy')
-        con.raw_fields()
+        con = suport.add_set1_card(cardi)
+        suport.write(size, 'dummy')
+        #con.raw_fields()
         save_load_deck(model)
 
-    def _test_suport1_02(self):
+    def test_suport1_02(self):
+        model = BDF(debug=False)
+        suport = model.suport
+
         card = ['SUPORT1', '1']
         card_obj = BDFCard(card)
-        with self.assertRaises(AssertionError):  # too short
-            SUPORT1.add_card(card_obj)
+        with self.assertRaises(AttributeError):  # removed
+            suport.add_card(card_obj)
+        #with self.assertRaises(AssertionError):  # too short
+            #suport.add_set1_card(card_obj)
 
         card = ['SUPORT1', '1', '2']
         card_obj = BDFCard(card)
-        con = SUPORT1.add_card(card_obj) # default
-        self.assertEqual(con.nodes[0], 2)
-        self.assertEqual(con.Cs[0], '0')
+        con = suport.add_set1_card(card_obj) # default
+        model.setup()
+        #print(suport.write())
+        suporti = suport.slice_card_by_id(1)
+        self.assertEqual(suporti.node_id[0], 2)
+        self.assertEqual(suporti.component[0], 0)
 
         card = ['SUPORT1', '1', '2', '432']
         card_obj = BDFCard(card)
-        con = SUPORT1.add_card(card_obj) # default
-        self.assertEqual(con.nodes[0], 2)
-        self.assertEqual(con.Cs[0], '234')
+        con = suport.add_set1_card(card_obj) # default
+        model.setup()
+        self.assertEqual(suport.node_id[1], 2)
+        self.assertEqual(suport.component[1], 234)
 
         card = ['SUPORT1', '1', '2', '432', 3]
         card_obj = BDFCard(card)
-        con = SUPORT1.add_card(card_obj) # default
-        self.assertEqual(con.nodes[1], 3)
+        con = suport.add_set1_card(card_obj) # default
+        model.setup()
+        self.assertEqual(suport.node_id[3], 3)
 
         card = ['SUPORT1', '1', '2', None, 3]
         card_obj = BDFCard(card)
-        con = SUPORT1.add_card(card_obj) # default
-        self.assertEqual(con.nodes[0], 2)
-        self.assertEqual(con.nodes[1], 3)
-        self.assertEqual(con.Cs[0], '0')
-        self.assertEqual(con.Cs[1], '0')
+        con = suport.add_set1_card(card_obj) # default
+        model.setup()
+        self.assertEqual(suport.node_id[4], 2)
+        self.assertEqual(suport.node_id[5], 3)
+        self.assertEqual(suport.component[4], 0)
+        self.assertEqual(suport.component[5], 0)
 
         card = ['SUPORT1', '1', '2', '432', 3, '1325']
         card = BDFCard(card)
-        con = SUPORT1.add_card(card) # default
-        self.assertEqual(con.nodes[1], 3)
-        self.assertEqual(con.Cs[1], '1235')
+        con = suport.add_set1_card(card) # default
+        model.setup()
+        self.assertEqual(suport.node_id[7], 3)
+        self.assertEqual(suport.component[7], 1235)
 
     def test_mpc_01(self):
         card = ['MPC', 1, 1002, 1, 1., 1000, 1, -3.861003861]

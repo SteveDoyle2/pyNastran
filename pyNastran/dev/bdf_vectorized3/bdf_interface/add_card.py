@@ -1430,7 +1430,7 @@ class Add1dElements(BDFAttributes):
                 dvids = [desvar_id]
                 coeffs = [1.]
 
-            dvprel1 = self.add_dvprel1(
+            dvprel1 = self.dvprel1.add(
                 oid, prop_type, pid, pname_fid, dvids, coeffs,
                 p_min=None, p_max=1e20, c0=0.0,
                 validate=True, comment=comment)
@@ -3723,7 +3723,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                     'but is included in the set of cards to process\n'
                     'add it to bdf.py\n'
                 )
-                if card not in self.cards_to_read:
+                if card not in self.cards_to_read and card not in {'ASET'}:
                     msg += 'add it to self.cards_to_read'
                 raise RuntimeError(msg)
             assert isinstance(card.n, int), f'{card.type} n={card.n} type={type(card.n)}'
@@ -6178,7 +6178,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         set_obj = self.set3.add(sid, desc, ids, comment=comment)
         return set_obj
 
-    def add_aset(self, ids, components, comment: str='') -> Union[ASET, ASET1]:
+    def add_aset(self, ids: list[int],
+                 components: Union[str, list[str]],
+                 comment: str='') -> int:
         """
         Creates an ASET/ASET1 card, which defines the degree of freedoms
         that will be retained during an ASET modal reduction.
@@ -6199,18 +6201,21 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         the length of components and ids must be the same
         """
         if isinstance(components, list):
-            aset = ASET(ids, components, comment=comment)
+            aset = self.aset.add_set(ids, components, comment=comment)
         else:
-            assert isinstance(components, str)
-            aset = ASET1(ids, components, comment=comment)
-        self._add_methods._add_aset_object(aset)
+            assert isinstance(components, (str, integer_types)), components
+            aset = self.aset.add_set1(ids, components, comment=comment)
         return aset
 
-    def add_aset1(self, ids, components, comment: str='') -> Union[ASET, ASET1]:
+    def add_aset1(self, ids: list[int],
+                  components: Union[str, list[str]],
+                  comment: str='') -> int:
         """.. .. seealso:: ``add_aset``"""
         return self.add_aset(ids, components, comment=comment)
 
-    def add_bset(self, ids, components, comment: str='') -> Union[BSET, BSET1]:
+    def add_bset(self, ids: list[int],
+                 components: Union[str, list[str]],
+                 comment: str='') -> int:
         """
         Creates an BSET/BSET1 card, which defines the degree of freedoms
         that will be fixed during a generalized dynamic reduction or
@@ -6231,18 +6236,22 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         -----
         the length of components and ids must be the same
         """
-        if isinstance(components, str):
-            bset = BSET1(ids, components, comment=comment)
+        if isinstance(components, list):
+            bset = self.bset.add_set(ids, components, comment=comment)
         else:
-            bset = BSET(ids, components, comment=comment)
-        self._add_methods._add_bset_object(bset)
+            assert isinstance(components, (str, integer_types)), components
+            bset = self.bset.add_set1(ids, components, comment=comment)
         return bset
 
-    def add_bset1(self, ids, components, comment: str='') -> Union[BSET, BSET1]:
+    def add_bset1(self, ids: list[int],
+                  components: Union[str, list[str]],
+                  comment: str='') -> int:
         """.. .. seealso:: ``add_bset``"""
         return self.add_bset(ids, components, comment=comment)
 
-    def add_cset(self, ids, components, comment: str='') -> Union[CSET, CSET1]:
+    def add_cset(self, ids: list[int],
+                 components: Union[str, list[str]],
+                 comment: str='') -> int:
         """
         Creates an CSET/CSET1 card, which defines the degree of freedoms
         that will be free during a generalized dynamic reduction or
@@ -6264,45 +6273,28 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         the length of components and ids must be the same
 
         """
-        if isinstance(components, str):
-            cset = CSET1(ids, components, comment=comment)
+        if isinstance(components, list):
+            cset = self.cset.add_set(ids, components, comment=comment)
         else:
-            cset = CSET(ids, components, comment=comment)
-        self._add_methods._add_cset_object(cset)
+            assert isinstance(components, (str, integer_types)), components
+            cset = self.cset.add_set1(ids, components, comment=comment)
         return cset
 
-    def add_cset1(self, ids, components, comment: str='') -> Union[CSET, CSET1]:
+    def add_cset1(self, ids: list[int],
+                  components: Union[str, list[str]],
+                  comment: str='') -> int:
         """.. seealso:: ``add_cset``"""
         return self.add_cset(ids, components, comment=comment)
 
-    #def add_omit1(self, ids, components, comment: str='') -> Union[OMIT, OMIT1]:
-        #""".. seealso:: ``add_omit``"""
-        #return self.add_omit(ids, components, comment=comment)
+    def add_omit1(self, ids: list[int],
+                  components: Union[str, list[str]],
+                  comment: str='') -> int:
+        """.. seealso:: ``add_omit``"""
+        return self.add_omit(ids, components, comment=comment)
 
-    #def add_omit(self, ids, components, comment: str='') -> Union[OMIT, OMIT1]:
-        #"""
-        #Creates an OMIT1 card, which defines the degree of freedoms that
-        #will be excluded (o-set) from the analysis set (a-set).
-
-        #Parameters
-        #----------
-        #ids : list[int]
-            #the GRID/SPOINT ids
-        #components : list[str]; str
-            #the degree of freedoms to be retained (e.g., '1', '123')
-            #if a list is passed in, a OMIT is made
-            #if a str is passed in, a OMIT1 is made
-        #comment : str; default=''
-            #a comment for the card
-        #"""
-        #if isinstance(components, str):
-            #omit = OMIT1(ids, components, comment=comment)
-        #else:
-            #omit = OMIT(ids, components, comment=comment)
-        #self._add_omit_object(omit)
-        #return omit
-
-    def add_omit1(self, ids, components, comment: str='') -> Union[OMIT, OMIT1]:
+    def add_omit(self, ids: list[int],
+                  components: Union[str, list[str]],
+                  comment: str='') -> int:
         """
         Creates an OMIT1 card, which defines the degree of freedoms that
         will be excluded (o-set) from the analysis set (a-set).
@@ -6311,17 +6303,24 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         ----------
         ids : list[int]
             the GRID/SPOINT ids
-        components : str
-            the degree of freedoms to be omitted (e.g., '1', '123')
+        components : list[str]; str
+            the degree of freedoms to be retained (e.g., '1', '123')
+            if a list is passed in, a OMIT is made
+            if a str is passed in, a OMIT1 is made
         comment : str; default=''
             a comment for the card
 
         """
-        omit1 = OMIT1(ids, components, comment=comment)
-        self._add_methods._add_omit_object(omit1)
-        return omit1
+        if isinstance(components, list):
+            omit = self.omit.add_set(ids, components, comment=comment)
+        else:
+            assert isinstance(components, (str, integer_types)), components
+            omit = self.omit.add_set1(ids, components, comment=comment)
+        return omit
 
-    def add_qset(self, ids, components, comment: str='') -> Union[QSET, QSET1]:
+    def add_qset(self, ids: list[int],
+                 components: Union[str, list[str]],
+                 comment: str='') -> int:
         """
         Creates a QSET/QSET1 card, which defines generalized degrees of
         freedom (q-set) to be used for dynamic reduction or component
@@ -6346,7 +6345,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_qset_object(qset)
         return qset
 
-    def add_qset1(self, ids, components, comment: str='') -> Union[QSET, QSET1]:
+    def add_qset1(self, ids: list[int],
+                  components: Union[str, list[str]],
+                  comment: str='') -> int:
         """.. seealso:: ``add_qset``"""
         return self.add_qset(ids, components, comment=comment)
 

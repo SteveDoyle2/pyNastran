@@ -698,7 +698,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MPC', 'MPCADD',
 
             ## suport/suport1/se_suport
-            #'SUPORT', 'SUPORT1', 'SESUP',
+            'SUPORT', 'SUPORT1',  # suport
+            #'SESUP',
 
             ## dloads
             #'DLOAD',
@@ -803,12 +804,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # sets
             #'SET1', 'SET3',  ## sets
 
-            'ASET1', #'ASET', ## aset
-            'OMIT1', #'OMIT', ## omits
-            'BSET1', #'BSET', ## bsets
-            'CSET1', #'CSET', ## csets
-            'QSET1', #'QSET', ## qsets
-            #'USET', 'USET1', ## usets
+            'ASET', 'ASET1',  ## aset
+            'OMIT', 'OMIT1',  ## omit
+            'BSET', 'BSET1',  ## bset
+            'CSET', 'CSET1',  ## cset
+            'QSET', 'QSET1',  ## qset
+            #'USET', 'USET1', ## uset
 
             #'RADSET',  # radset
 
@@ -2210,8 +2211,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'GMSPC' : (GMSPC, add_methods._add_constraint_spc_object),
 
             #'SESUP' : (SESUP, add_methods._add_sesuport_object), # pseudo-constraint
-            #'SUPORT' : (SUPORT, add_methods._add_suport_object), # pseudo-constraint
-            'SUPORT1' : (SUPORT1, add_methods._add_suport1_object),  # pseudo-constraint
 
             #'LSEQ' : (LSEQ, add_methods._add_lseq_object),
             #'CLOAD' : (CLOAD, add_methods._add_load_combination_object),
@@ -2332,19 +2331,23 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         }
 
         self._card_parser_prepare = {
-            #'ASET': partial(self._prepare_card_by_method, self.aset.add_set_card),
+            # pseudo-constraint
+            'SUPORT': partial(self._prepare_card_by_method, self.suport.add_set_card),
+            'SUPORT1': partial(self._prepare_card_by_method, self.suport.add_set1_card),
+
+            'ASET': partial(self._prepare_card_by_method, self.aset.add_set_card),
             'ASET1': partial(self._prepare_card_by_method, self.aset.add_set1_card),
 
-            #'BSET': partial(self._prepare_card_by_method, self.bset.add_set_card),
+            'BSET': partial(self._prepare_card_by_method, self.bset.add_set_card),
             'BSET1': partial(self._prepare_card_by_method, self.bset.add_set1_card),
 
-            #'CSET': partial(self._prepare_card_by_method, self.cset.add_set_card),
+            'CSET': partial(self._prepare_card_by_method, self.cset.add_set_card),
             'CSET1': partial(self._prepare_card_by_method, self.cset.add_set1_card),
 
-            #'QSET': partial(self._prepare_card_by_method, self.qset.add_set_card),
+            'QSET': partial(self._prepare_card_by_method, self.qset.add_set_card),
             'QSET1': partial(self._prepare_card_by_method, self.qset.add_set1_card),
 
-            #'OMIT': partial(self._prepare_card_by_method, self.omit.add_set_card),
+            'OMIT': partial(self._prepare_card_by_method, self.omit.add_set_card),
             'OMIT1': partial(self._prepare_card_by_method, self.omit.add_set1_card),
 
             'PLOTEL': partial(self._prepare_card, self.plotel),
@@ -4710,7 +4713,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
             #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
             #'add_PAERO', 'add_PARAM', 'add_PHBDY',
-            #'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
+            #'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
             #'add_SEUSET', 'add_SPLINE', 'add_tempd', 'add_TF', 'add_TRIM',
             #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
 

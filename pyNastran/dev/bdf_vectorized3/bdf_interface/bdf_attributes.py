@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Set, Optional, Any
 
 from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
-from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT
+from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT, SUPORT
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, EPOINT, SPOINT, GRDSET, POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
@@ -94,7 +94,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
     #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     #AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, AEPARM, AELINK, AESTAT,
     #MONPNT1, MONPNT2, MONPNT3,
-    #GUST, AESURF, AESURFS, CSSCHD, TRIM, SUPORT)
+    #GUST, AESURF, AESURFS, CSSCHD, TRIM)
 from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DESVAR, DLINK, DVGRID,
     DRESP1, DRESP2, DCONSTR,
@@ -189,6 +189,7 @@ class BDFAttributes:
         self.pdampt = PDAMPT(self)
 
         # sets
+        self.suport = SUPORT(self)
         self.aset = ASET(self)
         self.bset = BSET(self)
         self.cset = CSET(self)
@@ -814,6 +815,7 @@ class BDFAttributes:
         sets = [
             #self.set1, self.set2, self.set3,
             #self.uset, self.uset1,
+            self.aset, self.bset, self.cset, self.qset, self.omit,
         ]
         return sets
 
@@ -887,7 +889,7 @@ class BDFAttributes:
             self.grid, self.spoint, self.epoint, self.point,
             self.coord,
             #self.snorm,
-            #self.suport, # self.suport1,
+            self.suport, # self.suport1,
             self.cbarao,
         ] + self.spc_cards + self.mpc_cards + self.element_cards + self.rigid_element_cards + \
         self.property_cards + self.material_cards + self.optimization_cards + \
