@@ -280,6 +280,106 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(force_moment1[1], force_moment2[1])
         save_load_deck(model)
 
+    def test_pload_01(self):
+        """tests a PLOAD"""
+        model = BDF(debug=False)
+        pload = model.pload
+
+        eid = 10
+        pid = 20
+        mid = 100
+        nids = [1, 2, 3, 4]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=None, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None, mid4=None, comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu,
+                       rho=0.1, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        model.add_cquadr(eid, pid, nids,
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_ctriar(eid+1, pid, nids[:-1],
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, comment='')
+
+        sid = 100
+        pressure = 1.
+        nodes = [1, 2, 3]
+        model.add_pload(sid, pressure, nodes, comment='')
+
+        pressure = 2.
+        nodes = [1, 2, 3, 4]
+        model.add_pload(sid, pressure, nodes, comment='')
+
+        model.setup()
+        force_moment = pload.sum_forces_moments()
+        force_moment_expected = np.array([
+            [ 0.   ,  0.   ,  1.   ,  0.3333333, -0.6666666,  0.   ],
+            [ 0.   ,  0.   ,  2.   ,  1.   , -1.   ,  0.   ],
+        ])
+        assert np.allclose(force_moment_expected, force_moment)
+        save_load_deck(model)
+
+    def test_pload2_01(self):
+        """tests a PLOAD2"""
+        model = BDF(debug=False)
+        pload2 = model.pload2
+
+        eid = 10
+        pid = 20
+        mid = 100
+        nids = [1, 2, 3, 4]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=None, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None, mid4=None, comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu,
+                       rho=0.1, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+
+        model.add_cquadr(eid, pid, nids,  #  eid=10
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_ctriar(eid+1, pid, nids[:-1],
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, comment='')
+        model.add_ctriar(eid+2, pid, nids[:-1],
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, comment='')
+        model.add_ctriar(eid+3, pid, nids[:-1],  #  eid=13
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, comment='')
+
+        sid = 100
+        pressure = 2.
+        eids = [10, 11]
+        model.add_pload2(sid, pressure, eids, comment='')
+        model.setup()
+        force_moment = pload2.sum_forces_moments()
+        force_moment_expected = np.array([
+            [ 0.   , -0.   ,  2.   ,  1.   , -1.   , -0.   ],
+            [ 0.   ,  0.   ,  1.   ,  0.3333333, -0.666666,  0.   ]])
+        assert np.allclose(force_moment_expected, force_moment)
+
+        model.add_pload2(sid, pressure, [10, 'THRU', 13], comment='')
+        model.setup()
+        force_moment = pload2.sum_forces_moments()
+
+        save_load_deck(model)
+
     def test_pload4_01(self):
         """tests a PLOAD4"""
         model = BDF(debug=False)

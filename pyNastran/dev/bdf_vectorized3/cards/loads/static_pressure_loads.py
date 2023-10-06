@@ -146,7 +146,7 @@ class PLOAD(Load):
             bdf_file.write(msg)
         return
 
-    def sum_forces_moments(self):
+    def sum_forces_moments(self) -> np.ndarray:
         nloads = len(self.load_id)
         grid = self.model.grid
         xyz_cid0 = grid.xyz_cid0()
@@ -644,6 +644,7 @@ class PLOAD2(Load):
         element_ids_ = []
         for icard, card in enumerate(self.cards):
             (sid, pressurei, eids, comment) = card
+            eids = expand_thru(eids, set_fields=True, sort_fields=False)
             load_id[icard] = sid
             pressure[icard] = pressurei
             nelement[icard] = len(eids)
