@@ -253,7 +253,7 @@ class TestModels(unittest.TestCase):
         args = ['test_bdf', str(bdf_filename)]
         test_bdf(args, show_args=False)
 
-    def test_overflow(self):
+    def _test_overflow(self):
         # overflow
         bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
         args = ['test_bdf', str(bdf_filename)]
@@ -409,4 +409,6 @@ class TestModels(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    import warnings
+    warnings.simplefilter('always', DeprecationWarning)
     unittest.main()

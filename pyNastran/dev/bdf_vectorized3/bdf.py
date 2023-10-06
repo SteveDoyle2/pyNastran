@@ -628,7 +628,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CTRSHL', 'CQUAD1',
 
             ## rigid_elements
-            'RBAR', #'RBAR1',
+            'RBAR', 'RBAR1',
             'RBE1', 'RBE2', 'RBE3', 'RROD', # 'RSPLINE', 'RSSCON',
 
             ## plotels
@@ -2608,7 +2608,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # rigid elements
             'RBAR': partial(self._prepare_card, self.rbar),
-            #'RBAR1': partial(self._prepare_card, self.rbar1),  # not supported
+            'RBAR1': partial(self._prepare_card, self.rbar1),
             'RBE1': partial(self._prepare_card, self.rbe1),
             'RBE2': partial(self._prepare_card, self.rbe2),
             'RBE3': partial(self._prepare_card, self.rbe3),

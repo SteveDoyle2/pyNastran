@@ -106,6 +106,7 @@ class XPOINT(VectorizedBaseCard):
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         max_int = self.ids.max()
+        assert self.ids.min() > 0, self.ids[self.ids <= 0]
         print_card = get_print_card(size, max_int)
 
         #node_id = array_str(self.node_id, size=8)

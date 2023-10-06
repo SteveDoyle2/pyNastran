@@ -523,6 +523,7 @@ class Writer():
         model.rrod.write_file(bdf_file, size=size, is_double=is_double)
         #bdf_file.write(model.rrod1.write(size=size))
         model.rbar.write_file(bdf_file, size=size, is_double=is_double)
+        model.rbar1.write_file(bdf_file, size=size, is_double=is_double)
         model.rbe1.write_file(bdf_file, size=size, is_double=is_double)
         model.rbe2.write_file(bdf_file, size=size, is_double=is_double)
         model.rbe3.write_file(bdf_file, size=size, is_double=is_double)
