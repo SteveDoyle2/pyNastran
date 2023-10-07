@@ -29,6 +29,11 @@ def get_print_card(size: int, max_int: int) -> Callable:
         print_card = print_card_8
     return print_card
 
+def update_field_size(max_int: int, size: int) -> int:
+    if max_int > MAX_8_CHAR_INT:
+        size = 16
+    return size
+
 def get_print_card_size(size: int, max_int: int) -> tuple[Callable, int]:
     if size == 16 or max_int > MAX_8_CHAR_INT:
         print_card = print_card_16

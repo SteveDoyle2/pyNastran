@@ -18,7 +18,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check #get_print_card_8_16,
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, MAX_8_CHAR_INT
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, update_field_size, MAX_8_CHAR_INT
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 from pyNastran.femutils.coord_transforms import (
     xyz_to_rtz_array,
@@ -79,6 +80,7 @@ class XPOINT(VectorizedBaseCard):
         ids = []
         for i, (idsi, comment) in enumerate(self.cards):
             idsi2 = expand_thru(idsi)
+            assert min(idsi2) > 0, idsi
             ids.extend(idsi2)
             self.comment[i] = comment
 
@@ -96,10 +98,15 @@ class XPOINT(VectorizedBaseCard):
         if not np.array_equal(uarg, iarg):
             self.ids = self.ids[iarg]
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        bad_ids = self.ids[self.ids <= 0]
+        assert self.ids.min() > 0, bad_ids
+
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         max_int = self.ids.max()
+        assert self.ids.min() > 0, self.ids[self.ids <= 0]
         print_card = get_print_card(size, max_int)
 
         #node_id = array_str(self.node_id, size=8)
@@ -898,11 +905,6 @@ class POINT(VectorizedBaseCard):
         inid = np.searchsorted(self.node_id, node_id)
         return inid
 
-
-def update_field_size(max_int: int, size: int) -> int:
-    if max_int > MAX_8_CHAR_INT:
-        size = 16
-    return size
 
 def _write_grid_large(grid: GRID, bdf_file: TextIOLike,
                       print_scientific: Callable[float],

@@ -146,6 +146,8 @@ class RBAR(RigidElement):
         self.cards = []
 
     def _save(self, element_id, nodes, independent_dof, dependent_dof, alpha, tref):
+        if len(self.element_id):
+            asdf
         nelements = len(element_id)
         self.element_id = element_id
         self.nodes = nodes
@@ -266,6 +268,8 @@ class RROD(RigidElement):
         self.cards = []
 
     def _save(self, element_id, nodes, cm, alpha) -> None:
+        if len(self.element_id):
+            asdf
         nelements = len(element_id)
         assert element_id.min() > 0, element_id
         assert nodes.min() > 0, nodes
@@ -295,6 +299,116 @@ class RROD(RigidElement):
 
             list_fields = ['RROD', eid, ga, gb,
                            cma, cmb, alpha]
+            bdf_file.write(print_card(list_fields))
+        return
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        #all_nodes = np.intersect1d(self.independent_node, self.dependent_nodes, assume_unique=False)
+        #geom_check(self,
+                   #missing,
+                   #node=(nid, all_nodes))
+
+
+class RBAR1(RigidElement):
+    """
+    +-------+-----+----+----+-----+-------+
+    |   1   |  2  |  3 |  4 |  5  |   6   |
+    +=======+=====+====+====+=====+=======+
+    | RBAR1 | EID | GA | GB | CB  | ALPHA |
+    +-------+-----+----+----+-----+-------+
+    | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
+    +-------+-----+----+----+-----+-------+
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.element_id = np.array([])
+
+    def add(self, eid: int, nids: list[int],
+            cb: str='123456', alpha: float=0.0, comment: str='') -> int:
+        #if cma is None or cma == '':
+            #cma = 0
+        #else:
+            #cma = int(cma)
+
+        #if cmb is None or cmb == '':
+            #cmb = 0
+        #else:
+            #cmb = int(cmb)
+        self.cards.append((eid, nids, cb, alpha, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a RBAR1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = integer(card, 1, 'eid')
+        ga = integer(card, 2, 'ga')
+        gb = integer(card, 3, 'gb')
+        cb = components_or_blank(card, 4, 'cb', default='123456')
+        alpha = double_or_blank(card, 5, 'alpha', default=0.0)
+        assert len(card) <= 6, f'len(RBAR1 card) = {len(card):d}\ncard={card}'
+        #return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
+        self.cards.append((eid, [ga, gb], cb, alpha, comment))
+        self.n += 1
+        return self.n
+
+    @RigidElement.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        element_id = np.zeros(ncards, dtype='int32')
+        nodes = np.zeros((ncards, 2), dtype='int32')
+        dependent_dof = np.zeros(ncards, dtype='int32')
+        #independent_dof = np.zeros((ncards, 2), dtype='int32')
+        #tref = np.zeros(ncards, dtype='float64')
+        alpha = np.zeros(ncards, dtype='float64')
+
+        for icard, card in enumerate(self.cards):
+            (eid, nodesi, cb, alphai, comment) = card
+            element_id[icard] = eid
+            nodes[icard, :] = nodesi
+            dependent_dof[icard] = cb
+            alpha[icard] = alphai
+            #self.tref[icard] = tref
+        self._save(element_id, nodes, dependent_dof, alpha)
+        self.cards = []
+
+    def _save(self, element_id, nodes, cb, alpha) -> None:
+        if len(self.element_id):
+            asdf
+        nelements = len(element_id)
+        assert element_id.min() > 0, element_id
+        assert nodes.min() > 0, nodes
+        self.nodes = nodes
+        self.element_id = element_id
+        self.dependent_dof = cb
+        if alpha is None:
+            alpha = np.zeros(nelements, dtype='float64')
+        self.alpha = alpha
+        self.n = nelements
+
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+
+        eids = array_str(self.element_id)
+        nodes = array_str(self.nodes, size=size)
+        dep_nodes = array_default_int(self.dependent_dof, default=0, size=size)
+        alphas = array_default_float(self.alpha, default=0., size=size, is_double=is_double)
+        for eid, nodes, cb, alpha in zip(eids, nodes, dep_nodes, alphas):
+            ga, gb = nodes
+            list_fields = ['RBAR1', eid, ga, gb, cb, alpha]
             bdf_file.write(print_card(list_fields))
         return
 
@@ -897,6 +1011,8 @@ class RBE3(RigidElement):
               nweight, ndependent,
               weight, independent_nodes, independent_dofs,
               ngrid_per_weight, dependent_nodes, dependent_dofs) -> None:
+        if len(self.element_id):
+            asdf
 
         self.element_id = element_id
         self.ref_grid = ref_grid
@@ -1019,4 +1135,4 @@ class RBE3(RigidElement):
                    missing,
                    node=(nid, all_nodes))
 
-RSSCON = RBAR1 = RBAR
+RSSCON = RBAR

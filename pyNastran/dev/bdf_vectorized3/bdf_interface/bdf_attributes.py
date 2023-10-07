@@ -85,8 +85,7 @@ from pyNastran.dev.bdf_vectorized3.cards.constraints import (
     SPCOFF, SPCOFF1,
     MPC, MPCADD)
 from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
-    RBAR,
-    #RBAR1,
+    RBAR, RBAR1,
     RROD,
     RBE1, RBE2, RBE3,
     #RSSCON,
@@ -462,7 +461,7 @@ class BDFAttributes:
 
         # rigid elements
         self.rbar = RBAR(self)
-        #self.rbar1 = RBAR1(self)  # not supported
+        self.rbar1 = RBAR1(self)
         self.rbe1 = RBE1(self)
         self.rbe2 = RBE2(self)
         self.rbe3 = RBE3(self)
@@ -788,7 +787,7 @@ class BDFAttributes:
     @property
     def rigid_element_cards(self) -> list[Any]:
         rigid_elements = [
-            self.rbar, # self.rbar1,
+            self.rbar, self.rbar1,
             self.rrod,
             self.rbe1, self.rbe2, self.rbe3,
             #self.rsscon,

@@ -318,7 +318,7 @@ class TestRigid(unittest.TestCase):
         model.add_rbar(eid, nids, cna, cnb, cma, cmb, alpha=0., comment='rbar')
         save_load_deck(model)
 
-    def _test_rbar1(self):
+    def test_rbar1(self):
         """tests an RBAR1"""
         model = BDF(debug=False, log=None, mode='msc')
         eid = 100
@@ -326,8 +326,8 @@ class TestRigid(unittest.TestCase):
         cb = '123'
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(20, [0., 0., 0.])
-        rbar1 = model.add_rbar1(eid, nids, cb, comment='rbar1')
-        rbar1.raw_fields()
+        rbar1_id = model.add_rbar1(eid, nids, cb, comment='rbar1')
+        #rbar1.raw_fields()
         save_load_deck(model)
 
     def _test_rspline(self):

@@ -280,9 +280,111 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(force_moment1[1], force_moment2[1])
         save_load_deck(model)
 
+    def test_pload_01(self):
+        """tests a PLOAD"""
+        model = BDF(debug=False)
+        pload = model.pload
+
+        eid = 10
+        pid = 20
+        mid = 100
+        nids = [1, 2, 3, 4]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=None, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None, mid4=None, comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu,
+                       rho=0.1, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        model.add_cquadr(eid, pid, nids,
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_ctriar(eid+1, pid, nids[:-1],
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, comment='')
+
+        sid = 100
+        pressure = 1.
+        nodes = [1, 2, 3]
+        model.add_pload(sid, pressure, nodes, comment='')
+
+        pressure = 2.
+        nodes = [1, 2, 3, 4]
+        model.add_pload(sid, pressure, nodes, comment='')
+
+        model.setup()
+        force_moment = pload.sum_forces_moments()
+        force_moment_expected = np.array([
+            [ 0.   ,  0.   ,  1.   ,  0.3333333, -0.6666666,  0.   ],
+            [ 0.   ,  0.   ,  2.   ,  1.   , -1.   ,  0.   ],
+        ])
+        assert np.allclose(force_moment_expected, force_moment)
+        save_load_deck(model)
+
+    def test_pload2_01(self):
+        """tests a PLOAD2"""
+        model = BDF(debug=False)
+        pload2 = model.pload2
+
+        eid = 10
+        pid = 20
+        mid = 100
+        nids = [1, 2, 3, 4]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=None, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None, mid4=None, comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu,
+                       rho=0.1, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+
+        model.add_cquadr(eid, pid, nids,  #  eid=10
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_ctriar(eid+1, pid, nids[:-1],
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, comment='')
+        model.add_ctriar(eid+2, pid, nids[:-1],
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, comment='')
+        model.add_ctriar(eid+3, pid, nids[:-1],  #  eid=13
+                         theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, comment='')
+
+        sid = 100
+        pressure = 2.
+        eids = [10, 11]
+        model.add_pload2(sid, pressure, eids, comment='')
+        model.setup()
+        force_moment = pload2.sum_forces_moments()
+        force_moment_expected = np.array([
+            [ 0.   , -0.   ,  2.   ,  1.   , -1.   , -0.   ],
+            [ 0.   ,  0.   ,  1.   ,  0.3333333, -0.666666,  0.   ]])
+        assert np.allclose(force_moment_expected, force_moment)
+
+        model.add_pload2(sid, pressure, [10, 'THRU', 13], comment='')
+        model.setup()
+        force_moment = pload2.sum_forces_moments()
+
+        save_load_deck(model)
+
     def test_pload4_01(self):
         """tests a PLOAD4"""
         model = BDF(debug=False)
+        pload4 = model.pload4
+
         lines = ['PLOAD4  1000    1       -60.    -60.    60.             1']
         card = model._process_card(lines)
         cardi = BDFCard(card)
@@ -304,28 +406,21 @@ class TestLoads(unittest.TestCase):
         model.pload4.write(size, 'dummy')
         #card.raw_fields()
 
-    def _test_pload4_line(self):
+    def test_pload4_line(self):
         """tests a PLOAD4 LINE option"""
         #PLOAD4        10      10      0.819.2319
         #0      1.      0.      0.    LINE    NORM
         model = BDF(log=log, mode='msc')
+        pload4 = model.pload4
 
         sid = 1
         eids = 1
         pressures = 1.
-        model.add_pload4(sid, eids, pressures,
-                         g1=None, g34=None, cid=0, nvector=None,
-                         surf_or_line='SURFBAD', line_load_dir='NORMBAD', comment='')
-        model.setup()
-        pload4 = model.pload4
-        #with self.assertRaises(RuntimeError):
-            #pload4.validate()
-        pload4.surf_or_line[0] = 'SURF'
-        #with self.assertRaises(RuntimeError):
-            #pload4.validate()
-        pload4.line_load_dir[0] = 'NORM'
-        #pload4.validate()
-        #model.clear_attributes()
+        iload0 = model.add_pload4(
+            sid, eids, pressures,
+            g1=None, g34=None, cid=0, nvector=None,
+            surf_or_line='SURFBAD', line_load_dir='NORMBAD', comment='') - 1
+
 
         eid = 10
         pid = 20
@@ -371,6 +466,18 @@ class TestLoads(unittest.TestCase):
         #    P1 denotes that the line load along edge G1 and G2 has the
         #    constant value of P1.
         #
+        model.setup()
+        #with self.assertRaises(RuntimeError):
+            #pload4.validate()
+        print(pload4.write())
+        pload4.element_ids[iload0] = 10
+        pload4.surf_or_line[iload0] = 'SURF'
+        #with self.assertRaises(RuntimeError):
+            #pload4.validate()
+        pload4.line_load_dir[iload0] = 'NORM'
+        #pload4.validate()
+        #model.clear_attributes()
+
         sid = 10
         eids = [10, 11]
         pressures = [1., 0., 0., 0.]
@@ -386,9 +493,9 @@ class TestLoads(unittest.TestCase):
         # direction of the element coordinate system.  If both (CID, N1, n2, N3) and LDIR are
         # blank, then the default is LDIR=NORM.
         nvector = [1., 0., 0.]
-        pload4 = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
-                                  cid=cid, nvector=nvector,
-                                  surf_or_line='LINE', line_load_dir='NORM', comment='pload4_line')
+        pload4i = model.add_pload4(sid, eids, pressures, g1=None, g34=None,
+                                   cid=cid, nvector=nvector,
+                                   surf_or_line='LINE', line_load_dir='NORM', comment='pload4_line')
         pload4 = model.pload4
         #assert pload4.raw_fields() == ['PLOAD4', 10, 10, 1.0, 0.0, 0.0, 0.0, 'THRU', 11,
                                        #0, 1.0, 0.0, 0.0, 'LINE', 'NORM']
@@ -398,7 +505,6 @@ class TestLoads(unittest.TestCase):
                                               cid=cid, nvector=nvector,
                                               surf_or_line='SURF', line_load_dir='NORM',
                                               comment='pload4_line')
-        pload4 = model.pload4
         #str(pload4.raw_fields())
 
         sid = 11
@@ -408,9 +514,11 @@ class TestLoads(unittest.TestCase):
                                               cid=cid, nvector=nvector,
                                               surf_or_line='SURF', line_load_dir='NORM',
                                               comment='pload4_line')
-        pload4 = model.pload4
+
+        model.setup()
         model.validate()
         model.cross_reference()
+        pload4.sum_forces_moments()
 
         p0 = [0., 0., 0.]
         loadcase_id = sid

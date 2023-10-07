@@ -3,7 +3,7 @@ from itertools import zip_longest
 from collections import defaultdict
 from typing import Any, TYPE_CHECKING
 import numpy as np
-from pyNastran.bdf.field_writer_8 import print_card_8
+#from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import expand_thru, _format_comment
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -13,8 +13,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check #get_print_card_8_16,
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, MAX_8_CHAR_INT
+from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check, get_print_card_8_16
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, update_field_size
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -208,13 +209,19 @@ class ABCOQSET(VectorizedBaseCard):
         grid.node_id = self.node_id[i]
         grid.component = self.component[i]
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id),)
+
     @parse_node_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         max_int = self.node_id.max()
-        #size = update_field_size(max_int, size)
-        print_card = print_card_8
+        size = update_field_size(max_int, size)
+        print_card = get_print_card(size, max_int)
 
         comp_to_nids = defaultdict(list)
         for nid, comp in zip_longest(self.node_id, self.component):
@@ -466,13 +473,20 @@ class SUPORT(VectorizedBaseCard):
         grid.node_id = self.node_id[i]
         grid.component = self.component[i]
 
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id),)
+
     @parse_node_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         max_int = self.node_id.max()
-        #size = update_field_size(max_int, size)
-        print_card = print_card_8
+        size = update_field_size(max_int, size)
+        print_card = get_print_card_8_16(size)
 
         suport_id_to_nid_comp = defaultdict(list)
         for suport_idi, nid, comp in zip_longest(self.suport_id, self.node_id, self.component):

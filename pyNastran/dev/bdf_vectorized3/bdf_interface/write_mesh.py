@@ -523,6 +523,7 @@ class Writer():
         model.rrod.write_file(bdf_file, size=size, is_double=is_double)
         #bdf_file.write(model.rrod1.write(size=size))
         model.rbar.write_file(bdf_file, size=size, is_double=is_double)
+        model.rbar1.write_file(bdf_file, size=size, is_double=is_double)
         model.rbe1.write_file(bdf_file, size=size, is_double=is_double)
         model.rbe2.write_file(bdf_file, size=size, is_double=is_double)
         model.rbe3.write_file(bdf_file, size=size, is_double=is_double)
@@ -1014,12 +1015,9 @@ class Writer():
             model.mpc.write_file(bdf_file, size=size, is_double=is_double)
             #bdf_file.write(model.mpcax.write(size=size))
 
-        return
-        if len(model.suport) or len(model.suport1):
+        if len(model.suport):
             bdf_file.write('$CONSTRAINTS\n')
-            bdf_file.write(model.suport.write(size, is_double))
-            for unused_suport_id, suport in sorted(model.suport1.items()):
-                bdf_file.write(suport.write_card(size, is_double))
+            model.suport.write_file(bdf_file, size=size, is_double=is_double)
 
         return
         if self.spcoffs:

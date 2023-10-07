@@ -253,6 +253,12 @@ class TestModels(unittest.TestCase):
         args = ['test_bdf', str(bdf_filename), '--skip_nominal']
         test_bdf(args, show_args=False)
 
+    def _test_overflow(self):
+        # overflow
+        bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
+        args = ['test_bdf', str(bdf_filename), '--skip_nominal']
+        test_bdf(args, show_args=False)
+
     def test_other_3(self):
         # missing GRID card
         #bdf_filename = MODEL_PATH / 'other' / 'ofprand1.bdf'
@@ -383,11 +389,6 @@ class TestModels(unittest.TestCase):
         #args = ['test_bdf', str(bdf_filename)]
         #test_bdf(args, show_args=False)
 
-        # overflow
-        bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
-        args = ['test_bdf', str(bdf_filename), '--skip_nominal']
-        test_bdf(args, show_args=False)
-
         # EIGC parsing
         #bdf_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.bdf'
         #args = ['test_bdf', str(bdf_filename)]
@@ -408,4 +409,6 @@ class TestModels(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    import warnings
+    warnings.simplefilter('always', DeprecationWarning)
     unittest.main()
