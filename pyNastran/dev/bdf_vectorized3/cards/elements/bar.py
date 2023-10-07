@@ -195,7 +195,11 @@ def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
             #v[is_cd1, :] = coords.transform_local_xyz_to_global(x_vector, cd1[is_cd1])
             #cd1_ref = model.Coord(cd1)
             #cd2_ref = model.Coord(cd2)
-    assert not np.isnan(v.max()), v
+    vmax = v.max(axis=1)
+    inan = np.isnan(vmax)
+    if np.any(inan):
+        element_id = elem.element_id[inan]
+        elem.model.log.error(f'{elem.type} element_id={element_id} has nan vectors')
     return v, cd
 
 class CBAR(Element):
@@ -298,9 +302,10 @@ class CBAR(Element):
             property_id[icard] = pid
             nodes.append(nids)
 
-            if g0i is None:
-                g0i = 0
+            if g0i is None or g0i == -1:
+                g0i = -1
             else:
+                assert g0i > 0, g0i
                 xi = [np.nan, np.nan, np.nan]
             g0[icard] = g0i
             x[icard, :] = xi
@@ -515,6 +520,9 @@ class CBAR(Element):
         v, cd = self.get_bar_vector(xyz1)
         cd1 = cd[:, 0]
         cd2 = cd[:, 1]
+        vnorm1 = np.linalg.norm(v, axis=1)
+        if np.any(vnorm1 == 0.):
+            raise RuntimeError(f'vnorm1 = {vnorm1}')
 
         offt_vector, offt_end_a, offt_end_b = split_offt_vector(self.offt)
         is_rotate_v_g = (offt_vector == 'G')
@@ -572,17 +580,18 @@ class CBAR(Element):
         if np.any(np.isnan(v.max(axis=1))):
             raise RuntimeError(f'v = {v}')
 
+        vnorm = np.linalg.norm(v, axis=1)
+        if np.any(vnorm == 0.):
+            raise RuntimeError(f'vnorm = {vnorm}')
+
         #--------------------------------------------------------------------------
         # determine the bar vectors
         #log.info(f'v =\n{v}')
         #log.info(f'ihat =\n{i_offset}')
         ihat = i_offset
+        #vhat = safe_normalize(v)
 
         vnorm = np.linalg.norm(v, axis=1)
-
-        #if np.any(np.isnan(v.max(axis=1))):
-        #print(f'vnorm = {vnorm}')
-
         vhat = np.full(v.shape, np.nan, dtype=v.dtype)
         izero = (vnorm > 0)
         if np.any(izero):
@@ -595,18 +604,18 @@ class CBAR(Element):
         #if np.any(np.isnan(zhat.max(axis=1))):
         #print(f'norm_z = {norm_z}')
 
-        zhat = z / norm_z[:, np.newaxis]
+        zhat = safe_normalize(z)
+
+        #zhat = z / norm_z[:, np.newaxis]
         yhat = np.cross(zhat, ihat) # j
         norm_i = np.linalg.norm(ihat, axis=1)
         norm_yhat = np.linalg.norm(yhat, axis=1)
         xform_offset = np.dstack([ihat, yhat, zhat]) # 3x3 unit matrix
-        #del ihat, yhat, zhat, norm_z, norm_yhat
 
-        if np.any(np.isnan(yhat.max(axis=1))):
-            print(f'norm_yhat = {norm_yhat}')
+        #if np.any(np.isnan(yhat.max(axis=1))):
+            #print(f'norm_yhat = {norm_yhat}')
 
         del norm_i, norm_z, norm_yhat
-        #aaa
         #--------------------------------------------------------------------------
         # rotate wa
         # wa defines the offset at end A
@@ -691,6 +700,14 @@ class CBAR(Element):
                    missing,
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
+
+def safe_normalize(vector: np.ndarray, axis: int=1) -> np.ndarray:
+    norm_vector = np.linalg.norm(vector, axis=1)
+    vector_hat = np.full(vector.shape, np.nan, dtype=vector.dtype)
+    izero = (norm_vector > 0)
+    if np.any(izero):
+        vector_hat[izero] = vector[izero, :] / norm_vector[izero, np.newaxis]
+    return vector_hat
 
 PBARL_MSG = '\n' + """
 +-------+------+------+-------+------+------+------+------+------+

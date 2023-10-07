@@ -18,6 +18,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 from .rod import line_length, line_centroid, line_centroid_with_spoints
+from .bar import get_bar_vector, safe_normalize
 from .utils import get_mass_from_property
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg, cast_int_array
@@ -147,7 +148,7 @@ class CBUSH(Element):
         g0 = np.full(ncards, -1, dtype='int32')
         x = np.full((ncards, 3), np.nan, dtype='float64')
 
-        cid = np.zeros(ncards, dtype='int32')
+        coord_id = np.zeros(ncards, dtype='int32')
         s = np.zeros(ncards, dtype='float64')
         ocid = np.zeros(ncards, dtype='int32')
         ocid_offset = np.zeros((ncards, 3), dtype='float64')
@@ -157,7 +158,7 @@ class CBUSH(Element):
                 cidi = -1
 
             s[icard] = si
-            cid[icard] = cidi
+            coord_id[icard] = cidi
             ocid[icard] = ocidi
             ocid_offset[icard, :] = ocid_offseti
 
@@ -169,7 +170,7 @@ class CBUSH(Element):
             else:
                 g0[icard] = g0i
         self._save(element_id, property_id, nodes, x, g0,
-                   s, cid, ocid, ocid_offset)
+                   s, coord_id, ocid, ocid_offset)
         self.cards = []
 
     def _save(self, element_id: np.ndarray,
@@ -177,7 +178,7 @@ class CBUSH(Element):
               nodes: np.ndarray,
               x: np.ndarray, g0: np.ndarray,
               s: np.ndarray,
-              cid: np.ndarray,
+              coord_id: np.ndarray,
               ocid: np.ndarray, ocid_offset: np.ndarray) -> None:
         self.element_id = cast_int_array(element_id)
         self.property_id = property_id
@@ -185,9 +186,29 @@ class CBUSH(Element):
         self.x = x
         self.g0 = g0
         self.s = s
-        self.cid = cid
+        self.coord_id = coord_id
         self.ocid = ocid
         self.ocid_offset = ocid_offset
+
+    def __apply_slice__(self, elem: CBUSH, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.g0 = self.g0[i]
+        elem.x = self.x[i, :]
+        elem.s = self.s[i]
+        elem.coord_id = self.coord_id[i]
+        elem.ocid = self.ocid[i]
+        elem.ocid_offset = self.ocid_offset[i, :]
+        elem.n = len(i)
+
+    @property
+    def is_x(self) -> np.ndarray:
+        return (self.g0 == -1)
+
+    @property
+    def is_g0(self) -> np.ndarray:
+        return ~self.is_x
 
     @property
     def si(self) -> np.ndarray:
@@ -205,8 +226,8 @@ class CBUSH(Element):
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
         nodess = array_str(self.nodes, size=size)
-        ocids = array_default_int(self.cid, default=-1, size=size)
-        cids = array_default_int(self.cid, default=-1, size=size)
+        ocids = array_default_int(self.ocid, default=-1, size=size)
+        cids = array_default_int(self.coord_id, default=-1, size=size)
         for eid, pid, nodes, g0, x, cid, s, ocid, si in zip(element_ids, property_ids, nodess,
                                                              self.g0, self.x, cids, self.s, ocids, self.si):
             n1, n2 = nodes
@@ -226,8 +247,6 @@ class CBUSH(Element):
             si1, si2, si3 = '', '', ''
             if not np.all(np.isnan(si)):
                 si1, si2, si3 = si
-            #cid = set_blank_if_default(cid, -1)
-            #ocid = set_blank_if_default(ocid, -1)
             s = set_blank_if_default(s, 0.5)
             list_fields = ['CBUSH', eid, pid, n1, n2,
                            x1, x2, x3,
@@ -253,6 +272,93 @@ class CBUSH(Element):
     def mass(self) -> np.ndarray:
         mass = get_mass_from_property(self.property_id, self.allowed_properties)
         return mass
+
+    def get_xyz(self) -> tuple[np.ndarray, np.ndarray]:
+        #neids = len(self.element_id)
+        grid = self.model.grid
+        xyz = grid.xyz_cid0()
+        nid = grid.node_id
+        inode = np.searchsorted(nid, self.nodes)
+        assert np.array_equal(nid[inode], self.nodes)
+        in1 = inode[:, 0]
+        in2 = inode[:, 1]
+        xyz1 = xyz[in1, :]
+        xyz2 = xyz[in2, :]
+        return xyz1, xyz2
+
+    def get_bar_vector(self, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        idefault = (self.coord_id == -1)
+        icoord = ~idefault
+
+        i = np.full(self.x.shape, np.nan, self.x.dtype)
+        j = np.full(self.x.shape, np.nan, self.x.dtype)
+        k = np.full(self.x.shape, np.nan, self.x.dtype)
+        xyz1, xyz2 = self.get_xyz()
+        i_vector = xyz2 - xyz1
+        nelement = self.n
+        maxs = np.abs(i_vector).max(axis=1)
+        assert len(maxs) == nelement, (len(maxs), nelement)
+
+        if np.any(idefault):
+            sub_i = i_vector[idefault, :]
+            ihat = safe_normalize(sub_i)
+
+            index = np.where(idefault)[0]
+            sub_cbush = self.slice_card_by_index(index)
+            v, cd = get_bar_vector(sub_cbush, xyz1[idefault, :])
+
+            ki = np.cross(ihat, v, axis=1)
+            khat = safe_normalize(ki)
+            jhat = np.cross(khat, ihat, axis=1)
+            i[idefault, :] = ihat
+            j[idefault, :] = jhat
+            k[idefault, :] = khat
+
+        if np.any(icoord):
+            coord_ids = self.coord_id[icoord]
+            assert len(coord_ids) == icoord.sum()
+            coords = self.model.coord.slice_card_by_coord_id(coord_ids)
+            ihat = coords.i
+            jhat = coords.j
+            khat = coords.k
+            i[icoord, :] = ihat
+            j[icoord, :] = jhat
+            k[icoord, :] = khat
+        #if 0:
+            #v, cd = get_bar_vector(self, xyz1)
+        return i, j, k
+
+    def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray,
+                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                            np.ndarray, np.ndarray, np.ndarray]:
+        log = self.model.log
+        coords = self.model.coord
+        #xyz1, xyz2 = self.get_xyz()
+
+        neids = xyz1.shape[0]
+        #i = xyz2 - xyz1
+        #ihat_norm = np.linalg.norm(i, axis=1)
+        #assert len(ihat_norm) == neids
+        #if min(ihat_norm) == 0.:
+            #msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
+            #log.error(msg)
+            #raise ValueError(msg)
+        #i_offset = i / ihat_norm[:, np.newaxis]
+
+        #log.info(f'x =\n{self.x}')
+        #log.info(f'g0   = {self.g0}')
+        ihat, yhat, zhat = self.get_bar_vector(xyz1)
+
+        v = yhat
+        wa = np.zeros(ihat.shape, ihat.dtype)
+        wb = wa
+        #ihat = xform[0, :]
+        #yhat = xform[1, :]
+        #zhat = xform[2, :]
+        #wa, wb, _ihat, jhat, khat = out
+
+        # we finally have the nodal coordaintes!!!! :)
+        return v, ihat, yhat, zhat, wa, wb
 
     def length(self) -> np.ndarray:
         length = line_length(self.model, self.nodes)

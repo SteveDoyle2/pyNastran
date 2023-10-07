@@ -423,7 +423,6 @@ def run_and_compare_fems(
         name: str='',
         run_nominal: bool=True):
     """runs two fem models and compares them"""
-    run_nominal = False
     if skip_cards is None:
         skip_cards = []
     assert isinstance(bdf_model, str) and os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
@@ -481,9 +480,8 @@ def run_and_compare_fems(
                 pickle_obj=pickle_obj, stop=stop, name=name,
                 is_nominal=True,
             )
+            compare_old_vs_new(fem1, fem1_nominal, check_nodes=True)
 
-            compare_old_vs_new(fem1, fem1_nominal,
-                               check_nodes=True)
         if stop:
             if not quiet:
                 print('card_count:')
@@ -683,7 +681,8 @@ def _get_nominal_quantity(elements: list[Any],
     return eid_to_mass
 
 def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
-                       check_nodes: bool=True):
+                       check_nodes: bool=True,
+                       compare_bar_vectors: bool=True):
     if fem1.pbarl.n:
         assert isinstance(fem1.pbarl.ndim, np.ndarray), fem1.pbarl.ndim
 
@@ -736,14 +735,14 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
 
     no_density = []
     if check_density:
-        mid_to_density_vector = _get_vectorized_quantity(fem1.structural_materials, 'material_id', 'get_density', log, cards_to_skip=no_density)
+        mid_to_density_vector = _get_vectorized_quantity(fem1.structural_material_cards, 'material_id', 'get_density', log, cards_to_skip=no_density)
         mid_to_density_nominal = _get_nominal_quantity(fem1_nominal.materials, 'Rho', log, cards_to_skip=no_density)
         compare_dict(fem1_nominal.materials,
                      mid_to_density_vector,
                      mid_to_density_nominal,
                      'mid', 'rho', rtol=5e-4)
 
-        mid_to_density2_vector = _get_vectorized_quantity(fem1.thermal_materials, 'material_id', 'get_density', log, cards_to_skip=no_density)
+        mid_to_density2_vector = _get_vectorized_quantity(fem1.thermal_material_cards, 'material_id', 'get_density', log, cards_to_skip=no_density)
         mid_to_density2_nominal = _get_nominal_quantity(fem1_nominal.thermal_materials, 'Rho', log, cards_to_skip=no_density)
         compare_dict(fem1_nominal.thermal_materials,
                      mid_to_density2_vector,
@@ -751,7 +750,7 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                      'mid', 'rho', rtol=1e-4)
 
     if check_length:
-        eid_to_length_vector = _get_vectorized_quantity(fem1.elements, 'element_id', 'length', log, cards_to_skip=no_length)
+        eid_to_length_vector = _get_vectorized_quantity(fem1.element_cards, 'element_id', 'length', log, cards_to_skip=no_length)
         eid_to_length_nominal = _get_nominal_quantity(fem1_nominal.elements, 'Length', log, cards_to_skip=no_length)
         compare_dict(fem1_nominal.elements,
                      eid_to_length_vector,
@@ -759,7 +758,7 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                      'eid', 'length', rtol=5e-4)
 
     if check_area:
-        eid_to_area_vector = _get_vectorized_quantity(fem1.elements, 'element_id', 'area', log, cards_to_skip=no_area)
+        eid_to_area_vector = _get_vectorized_quantity(fem1.element_cards, 'element_id', 'area', log, cards_to_skip=no_area)
         eid_to_area_nominal = _get_nominal_quantity(fem1_nominal.elements, 'Area', log, cards_to_skip=no_area)
         for eid, (card_name, area_vectorized) in sorted(eid_to_area_vector.items()):
             #card_name, area_vectorized = type_area_vectorized
@@ -776,7 +775,7 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                      'eid', 'area', rtol=1e-4)
 
     if check_volume:
-        eid_to_volume_vector = _get_vectorized_quantity(fem1.elements, 'element_id', 'volume', log, cards_to_skip=no_volume)
+        eid_to_volume_vector = _get_vectorized_quantity(fem1.element_cards, 'element_id', 'volume', log, cards_to_skip=no_volume)
         eid_to_volume_nominal = _get_nominal_quantity(fem1_nominal.elements, 'Volume', log, cards_to_skip=no_volume)
         rtol_dict = {
             'CPENTA': 1e-1,
@@ -793,7 +792,7 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                                                                cards_to_skip=no_mass_per_length)
 
     if check_mass_per_area:
-        pid_to_mass_per_area_vector = _get_vectorized_quantity(fem1.properties, 'property_id', 'mass_per_area', log,
+        pid_to_mass_per_area_vector = _get_vectorized_quantity(fem1.property_cards, 'property_id', 'mass_per_area', log,
                                                              cards_to_skip=no_mass_per_area)
         pid_to_mass_per_area_nominal = _get_nominal_quantity(fem1_nominal.properties, 'MassPerArea', log,
                                                              cards_to_skip=no_mass_per_area)
@@ -802,8 +801,36 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                      pid_to_mass_per_area_nominal,
                      'pid', 'mass_per_area', rtol=1e-4)
 
+
+    if compare_bar_vectors:
+        for elem in [fem1.cbar, fem1.cbeam]:
+            if elem.n == 0:
+                continue
+            xyz1, xyz2 = elem.get_xyz()
+            v, ihat, jhat, khat, wa, wb = elem.get_axes(xyz1, xyz2)
+            #length = elem.length()
+            for eid, vi1, ihati1, jhati1, khati1, wai1, wbi1 in zip(elem.element_id, v, ihat, jhat, khat, wa, wb):
+                elem_old = fem1_nominal.elements[eid]
+                is_failedi2, (vi2, ihati2, yhati2, zhati2, wai2, wbi2) = elem_old.get_axes(fem1_nominal)
+                msgi = ''
+                if not np.allclose(vi1, vi2):
+                    msgi += f'v={vi2} v_new={vi1}\n'
+                if not np.allclose(ihati2, ihati2):
+                    msgi += f'  ihat={ihati2} ihat_new={ihati2}\n'
+                if not np.allclose(jhati1, yhati2):
+                    msgi += f'  yhat={yhati2} yhat_new={jhati1}\n'
+                if not np.allclose(khati1, zhati2):
+                    msgi += f'  zhat={zhati2} zhat_new={khati1}\n'
+                if not np.allclose(wai1, wai2):
+                    msgi += f'  wa={wai2} wa_new={wai1}\n'
+                if not np.allclose(wbi1, wbi2):
+                    msgi += f'  wb={wbi2} wb_new={wbi1}\n'
+                if msgi:
+                    msg = f'{elem.type} eid={eid}\n' + msgi.rstrip()
+                    raise RuntimeError(msg)
+
     if check_mass:
-        eid_to_mass_vector = _get_vectorized_quantity(fem1.elements, 'element_id', 'mass', log, cards_to_skip=no_mass)
+        eid_to_mass_vector = _get_vectorized_quantity(fem1.element_cards, 'element_id', 'mass', log, cards_to_skip=no_mass)
         eid_to_mass_nominal = _get_nominal_quantity(fem1_nominal.elements, 'Mass', log, cards_to_skip=no_mass)
         mass_eid_to_mass_nominal = _get_nominal_quantity(fem1_nominal.masses, 'Mass', log, cards_to_skip=no_mass)
         rtol_nominal = 1e-4
@@ -2838,7 +2865,8 @@ def get_test_bdf_usage_args_examples(encoding):
         '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
         '  -L, --loads    Disables forces/moments summation for the different subcases (default=True)\n'
-        '  --skip_nominal  skip the nominal model comparison (default=False)\n'
+        '  --skip_nominal  skip all the nominal model comparison checks (default=False)\n'
+        '  --skip_nominal_bar  skip the nominal model bar comparison (default=False)\n'
         '  --skip_loads   skip the loads summation calculations (default=False)\n'
         '  --skip_mass    skip the mass properties calculations (default=False)\n'
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'

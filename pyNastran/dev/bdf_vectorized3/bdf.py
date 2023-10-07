@@ -692,7 +692,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MAT4', 'MAT5',
 
             ## spcs
-            'SPC', 'SPCADD', 'SPC1', #'SPCAX', 'SPCOFF', 'SPCOFF1',
+            'SPC', 'SPCADD', 'SPC1', #'SPCAX',
+            #'SPCOFF', 'SPCOFF1',
 
             ## mpcs
             'MPC', 'MPCADD',
@@ -2204,8 +2205,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # hasn't been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             #'CREEP' : (CREEP, add_methods._add_creep_material_object),
 
-            #'SPCOFF' : (SPCOFF, add_methods._add_constraint_spcoff_object),
-            #'SPCOFF1' : (SPCOFF1, add_methods._add_constraint_spcoff_object),
             #'SPCAX' : (SPCAX, add_methods._add_constraint_spc_object),
             ## parametric
             #'GMSPC' : (GMSPC, add_methods._add_constraint_spc_object),
@@ -2331,10 +2330,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         }
 
         self._card_parser_prepare = {
-            # pseudo-constraint
-            'SUPORT': partial(self._prepare_card_by_method, self.suport.add_set_card),
-            'SUPORT1': partial(self._prepare_card_by_method, self.suport.add_set1_card),
-
             'ASET': partial(self._prepare_card_by_method, self.aset.add_set_card),
             'ASET1': partial(self._prepare_card_by_method, self.aset.add_set1_card),
 
@@ -2623,7 +2618,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SPC': partial(self._prepare_card, self.spc),
             'SPC1': partial(self._prepare_card, self.spc1),
             'SPCADD' : partial(self._prepare_card, self.spcadd),
-            #'SUPORT' : partial(self._prepare_card, self.suport),
+            'SPCOFF' : partial(self._prepare_card, self.spcoff),
+            'SPCOFF1' : partial(self._prepare_card, self.spcoff1),
+
+            # pseudo-constraint
+            'SUPORT': partial(self._prepare_card_by_method, self.suport.add_set_card),
+            'SUPORT1': partial(self._prepare_card_by_method, self.suport.add_set1_card),
 
             # aero
             #'CAERO1': partial(self._prepare_card, self.caero1),

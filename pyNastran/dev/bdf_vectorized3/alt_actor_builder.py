@@ -11,7 +11,7 @@ from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkCellArray, vtkVe
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.utils.vtk.vtk_utils import (
-    #create_vtk_cells_of_constant_element_type,
+    create_vtk_cells_of_constant_element_type,
     numpy_to_vtk_points)
 from pyNastran.gui.qt_files.colors import (
     RED_FLOAT, BLUE_FLOAT,
@@ -31,6 +31,7 @@ if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.dev.op2_vectorized3.op2_geom import OP2Geom
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.dev.op2_vectorized3.bdf_interface.bdf_attributes import RBE2, RBE3 #, GRID
+    from .nastran_io3 import Nastran3 as NastranIO
 
 
 def create_alt_conm2_grids(gui: MainWindow,
@@ -160,21 +161,38 @@ def _build_rbe3_vtk_lines(gui, elem: RBE3,
     #name = f'RBE3 lines'
     #_build_lines(gui, name, xyz_lines, node_lines, color=LIGHT_GREEN_FLOAT)
 
-def create_alt_axes(self,
+def create_alt_axes(self: NastranIO,
                     gui: MainWindow,
                     model: BDF,
                     grid_id: np.ndarray,
                     xyz_cid0: np.ndarray):
-    #_create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbush, 'CBUSH')
-    #_create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cgap, 'CGAP')
+    assert gui is not None
+    if not hasattr(gui, 'bar_eids') or gui.bar_eids is None:
+        gui.bar_eids = {}
+    if not hasattr(gui, 'bar_lines') or gui.bar_lines is None:
+        gui.bar_lines = {}
+    #from pyNastran.utils import object_attributes
+    #print('gui attrs', object_attributes(gui))
+    #print('gui type = ', type(gui))
+    _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbush, 'CBUSH')
+    _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cgap, 'CGAP')
     _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbar, 'CBAR')
     _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbeam, 'CBEAM')
 
-def _create_alt_axes(self, gui: MainWindow,
+def _create_alt_axes(self: NastranIO,
+                     gui: MainWindow,
                      model: BDF,
                      grid_id: np.ndarray,
                      xyz_cid0: np.ndarray,
                      elem, card_name: str):
+    """
+    Parameters
+    ----------
+    self : NastranIO
+        do I need this?
+
+    """
+    assert gui is not None
     if elem.n == 0:
         return
 
@@ -186,79 +204,87 @@ def _create_alt_axes(self, gui: MainWindow,
     assert not np.isnan(np.max(xyz2)), xyz2
 
     v, ihat, jhat, khat, wa, wb = elem.get_axes(xyz1, xyz2)
+    length = elem.length()
     del v, ihat, wa, wb
 
     p1 = centroid
-    p2 = centroid + jhat
-    p3 = centroid + khat
-    i1 = np.arange(neids)
-    i2 = i1 + neids
-    node_lines = np.column_stack([i1, i2])
+    p2 = centroid + jhat * length[:, np.newaxis] / 2
+    p3 = centroid + khat * length[:, np.newaxis] / 2
+    #i1 = np.arange(neids)
+    #i2 = i1 + neids
+    #node_lines = np.column_stack([i1, i2])
 
     name_bar_y = f'{card_name} y axis'
     name_bar_z = f'{card_name} z axis'
-    if 0:
-        scale = 1.0
-        gui.create_alternate_vtk_grid(
-            name_bar_y, color=GREEN_FLOAT, line_width=5, opacity=1.,
-            point_size=5, representation='bar', bar_scale=scale, is_visible=False)
-        gui.create_alternate_vtk_grid(
-            name_bar_y, color=BLUE_FLOAT, line_width=5, opacity=1.,
-            point_size=5, representation='bar', bar_scale=scale, is_visible=False)
 
-        eids = elem.element_id
-        xyz_lines = np.vstack([p1, p2]).reshape(neids, 6)
-        _add_nastran_lines_xyz_to_grid(gui, name_bar_y, xyz_lines, eids)
+    scale = 1.0
+    gui.create_alternate_vtk_grid(
+        name_bar_y, color=GREEN_FLOAT, line_width=5, opacity=1.,
+        point_size=5, representation='bar', bar_scale=scale, is_visible=False)
+    gui.create_alternate_vtk_grid(
+        name_bar_z, color=BLUE_FLOAT, line_width=5, opacity=1.,
+        point_size=5, representation='bar', bar_scale=scale, is_visible=False)
 
-        xyz_lines = np.vstack([p1, p3]).reshape(neids, 6)
-        _add_nastran_lines_xyz_to_grid(gui, name_bar_z, xyz_lines, eids)
+    eids = elem.element_id
+    xyz_lines = np.vstack([p1, p2]).reshape(neids, 6)
+    xyz_lines2 = np.column_stack([p1, p2])
+    #for line1, line2 in zip(xyz_lines, xyz_lines2):
+        #if not np.allclose(line1, line2):
+            #print('*', line1, line2)
+    _add_nastran_bar_vectors_to_grid(gui, name_bar_y, xyz_lines2, eids)
 
-        #gui._add_nastran_lines_xyz_to_grid(name_bar_y, xyz_lines, eids)
+    #xyz_lines = np.vstack([p1, p3]).reshape(neids, 6)
+    xyz_lines = np.column_stack([p1, p3])
+    _add_nastran_bar_vectors_to_grid(gui, name_bar_z, xyz_lines, eids)
 
-    else:
-        #if not hasattr(gui, 'bar_lines'):
-        gui.bar_eids = {}
-        gui.bar_lines = {}
-        xyz_lines = np.vstack([p1, p2])
-        _build_lines(gui, name_bar_y, xyz_lines, node_lines, color=GREEN_FLOAT,
-                     representation='bar', is_visible=False)
-        #self.bar_lines[name_bar_y] = xyz_lines
-        self.bar_lines[name_bar_y] = np.column_stack([p1, p2])
-        gui.bar_lines[name_bar_y] = np.column_stack([p1, p2])
-
-        xyz_lines = np.vstack([p1, p3])
-        _build_lines(gui, name_bar_z, xyz_lines, node_lines, color=BLUE_FLOAT,
-                     representation='bar', is_visible=False)
-        self.bar_lines[name_bar_z] = np.column_stack([p1, p3])
-        gui.bar_lines[name_bar_z] = np.column_stack([p1, p3])
-        #self.bar_lines[name_bar_z] = xyz_lines
+    #gui._add_nastran_lines_xyz_to_grid(name_bar_y, xyz_lines, eids)
 
     #gui.bar_lines[name] = bar_lines
 
     eids = elem.element_id
 
-#def _add_nastran_lines_xyz_to_grid(gui: MainWindow, name: str, lines, eids) -> None:
-    #"""creates the bar orientation vector lines"""
-    #nlines = len(lines)
-    #nnodes = nlines * 2
-    #if nlines == 0:
-        #return
+def _add_nastran_bar_vectors_to_grid(gui: MainWindow,
+                                     name: str,
+                                     lines: np.ndarray,
+                                     eids: np.ndarray) -> None:
+    """creates the bar orientation vector lines
 
-    #assert name != 'Bar Nodes', name
-    #grid = gui.alt_grids[name]
+    Parameters
+    ----------
+    name: str
+        the name of the actor
+    lines : (nlines, 6) float array
+        [x1, y1, z1, x2, y2, z2], # line1
+        [x1, y1, z1, x2, y2, z2], # line2
+    eids : (n,) int array
+        informational
+    """
+    assert name is not None
+    nlines = len(lines)
+    nnodes = nlines * 2
+    if nlines == 0:
+        return
 
-    #bar_eids = np.asarray(eids, dtype='int32')
-    #bar_lines = np.asarray(lines, dtype='float32').reshape(nlines, 6)
-    #gui.bar_eids[name] = bar_eids
-    #gui.bar_lines[name] = bar_lines
+    assert name != 'Bar Nodes', name
+    grid = gui.alt_grids[name]
 
-    #nodes = bar_lines.reshape(nlines * 2, 3)
-    #points = numpy_to_vtk_points(nodes)
-    #elements = np.arange(0, nnodes, dtype='int32').reshape(nlines, 2)
+    bar_eids_array = np.asarray(eids, dtype='int32')
+    bar_lines_array = np.asarray(lines, dtype='float32').reshape(nlines, 6)
+    #for line in bar_lines_array[:10, :]:
+        #print(line)
+    bar_eids = gui.bar_eids
+    bar_lines = gui.bar_lines
 
-    #etype = 3 # vtkLine().GetCellType()
-    #create_vtk_cells_of_constant_element_type(grid, elements, etype)
-    #grid.SetPoints(points)
+    gui.bar_eids[name] = bar_eids_array
+    gui.bar_lines[name] = bar_lines_array
+
+    nodes = bar_lines_array.reshape(nlines * 2, 3)
+    points = numpy_to_vtk_points(nodes)
+    elements = np.arange(0, nnodes, dtype='int32').reshape(nlines, 2)
+
+    etype = 3 # vtkLine().GetCellType()
+    create_vtk_cells_of_constant_element_type(grid, elements, etype)
+    grid.SetPoints(points)
 
 def create_alt_rbe2_grids(gui: MainWindow,
                           model: BDF,

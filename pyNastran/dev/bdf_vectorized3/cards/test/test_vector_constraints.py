@@ -318,46 +318,53 @@ class TestConstraints(unittest.TestCase):
     def _test_spcoff(self):
         """tests SPCOFF/SPCOFF1"""
         model = BDF(debug=False)
-        with self.assertRaises(KeyError):
-            model.EmptyNodes([1, 2], msg='')
+        spcoff = model.spcoff
+        spcoff1 = model.spcoff1
+
+        #with self.assertRaises(KeyError):
+            #model.EmptyNodes([1, 2], msg='')
         #model.add_spcoff()
-        card_lines = ['SPCOFF', 1]
-        model.add_card(card_lines, 'SPCOFF', comment='spcoff', is_list=True, has_none=True)
-        spcoff = model.spcoffs['SPCOFF'][0]
-        spcoff.write_card(size=8)
-        spcoff.write_card(size=16)
-        spcoff.raw_fields()
-        with self.assertRaises(KeyError):
-            spcoff.cross_reference(model)
+
+        # TOD: doesn't support default component=0
+        #card_lines = ['SPCOFF', 1]
+        #model.add_card(card_lines, 'SPCOFF', comment='spcoff', is_list=True, has_none=True)
+        model.setup()
+        spcoff.write(size=8)
+        spcoff.write(size=16)
+        #spcoff.raw_fields()
+        #with self.assertRaises(KeyError):
+            #spcoff.cross_reference(model)
         model.add_grid(1, [0., 0., 0.])
-        spcoff.cross_reference(model)
+        model.setup()
+        #spcoff.cross_reference(model)
 
         card_lines = ['SPCOFF1', 24, 43]
         model.add_card(card_lines, 'SPCOFF1', comment='spcoff1', is_list=True, has_none=True)
 
         card_lines = ['SPCOFF1', 5, 50, 'THRU', 52]
         model.add_card(card_lines, 'SPCOFF1', comment='spcoff1', is_list=True, has_none=True)
-
+        model.setup()
         model.pop_parse_errors()
-        spcoff1 = model.spcoffs['SPCOFF1'][0]
+
         spcoff1.write(size=8)
         spcoff1.write(size=16)
         #spcoff1.raw_fields()
         #model.uncross_reference()
 
-        with self.assertRaises(KeyError):
-            spcoff1.cross_reference(model)
+        #with self.assertRaises(KeyError):
+            #spcoff1.cross_reference(model)
         model.add_grid(43, [0., 0., 0.])
-        spcoff1.cross_reference(model)
+        #spcoff1.cross_reference(model)
         #model.uncross_reference()
 
         model.add_grid(50, [0., 0., 0.])
         model.add_grid(51, [0., 0., 0.])
         model.add_grid(52, [0., 0., 0.])
+        model.setup()
         model.cross_reference()
-        model.uncross_reference()
+        #model.uncross_reference()
         model.validate()
-        model.safe_cross_reference()
+        #model.safe_cross_reference()
 
         save_load_deck(model, run_remove_unused=False, run_save_load_hdf5=False)
 

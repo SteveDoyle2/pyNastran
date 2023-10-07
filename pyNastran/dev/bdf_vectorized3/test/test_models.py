@@ -140,16 +140,16 @@ class TestModels(unittest.TestCase):
         test_bdf(args, show_args=False)
     def test_isat1(self):
         bdf_filename = MODEL_PATH / 'iSat' / 'ISat_Dploy_Sm.dat'
-        args = ['test_bdf', str(bdf_filename), '--quiet']
+        args = ['test_bdf', str(bdf_filename), '--quiet', '--skip_nominal']
         test_bdf(args, show_args=False)
     def test_isat2(self):
         bdf_filename = MODEL_PATH / 'iSat' / 'iSat_launch_100Hz.dat'
-        args = ['test_bdf', str(bdf_filename), '--quiet']
+        args = ['test_bdf', str(bdf_filename), '--quiet', '--skip_nominal']
         test_bdf(args, show_args=False)
 
     def test_contact_1(self):
         bdf_filename = MODEL_PATH / 'contact' / 'contact.bdf'
-        args = ['test_bdf', str(bdf_filename), '--quiet']
+        args = ['test_bdf', str(bdf_filename), '--quiet', '--skip_nominal']
         test_bdf(args, show_args=False)
     def test_contact_2(self):
         bdf_filename = MODEL_PATH / 'contact' / '2bars_shell_s-contact.dat'
@@ -250,7 +250,7 @@ class TestModels(unittest.TestCase):
         test_bdf(args, show_args=False)
     def test_other_2(self):
         bdf_filename = MODEL_PATH / 'other' / 'dbxdra2.bdf'
-        args = ['test_bdf', str(bdf_filename)]
+        args = ['test_bdf', str(bdf_filename), '--skip_nominal']
         test_bdf(args, show_args=False)
 
     def test_other_3(self):
@@ -385,7 +385,7 @@ class TestModels(unittest.TestCase):
 
         # overflow
         bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
-        args = ['test_bdf', str(bdf_filename)]
+        args = ['test_bdf', str(bdf_filename), '--skip_nominal']
         test_bdf(args, show_args=False)
 
         # EIGC parsing

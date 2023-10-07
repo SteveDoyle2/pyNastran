@@ -18,6 +18,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
+from .bar import get_bar_vector, safe_normalize, line_length
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -1018,29 +1020,54 @@ class CGAP(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.element_id = np.zeros(ncards, dtype='int32')
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.nodes = np.zeros((ncards, 2), dtype='int32')
-        self.coord_id = np.zeros(ncards, dtype='int32')
-        self.g0 = np.full(ncards, -1, dtype='int32')
-        self.x = np.full((ncards, 3), np.nan, dtype='float64')
+        element_id = np.zeros(ncards, dtype='int32')
+        property_id = np.zeros(ncards, dtype='int32')
+        nodes = np.zeros((ncards, 2), dtype='int32')
+        coord_id = np.zeros(ncards, dtype='int32')
+        g0 = np.full(ncards, -1, dtype='int32')
+        x = np.full((ncards, 3), np.nan, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, x, g0, cid, comment) = card
-            if g0 is None:
-                self.x[icard, :] = x
+            (eid, pid, nids, xi, g0i, cid, comment) = card
+            if g0i is None or g0i == -1:
+                x[icard, :] = xi
             else:
-                assert isinstance(g0, integer_types)
-                self.g0[icard] = g0
+                assert isinstance(g0i, integer_types), g0i
+                g0[icard] = g0i
 
             if cid is None:
                 cid = -1
 
-            self.element_id[icard] = eid
-            self.property_id[icard] = pid
-            self.nodes[icard, :] = nids
-            self.coord_id[icard] = cid
+            element_id[icard] = eid
+            property_id[icard] = pid
+            nodes[icard, :] = nids
+            coord_id[icard] = cid
+        self._save(element_id, property_id, nodes, coord_id, x, g0)
+        self.sort()
         self.cards = []
+
+    def _save(self, element_id, property_id, nodes, coord_id, x, g0) -> None:
+        if len(self.element_id):
+            asdf
+        self.element_id = element_id
+        self.property_id = property_id
+        self.nodes = nodes
+        self.coord_id = coord_id
+        self.x = x
+        self.g0 = g0
+
+    def __apply_slice__(self, elem: CGAP, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.g0 = self.g0[i]
+        elem.x = self.x[i, :]
+        elem.coord_id = self.coord_id[i]
+        elem.n = len(i)
+
+    def length(self) -> np.ndarray:
+        length = line_length(self.model, self.nodes)
+        return length
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -1051,6 +1078,103 @@ class CGAP(Element):
                    missing,
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
+
+    @property
+    def is_x(self) -> np.ndarray:
+        return (self.g0 == -1)
+
+    @property
+    def is_g0(self) -> np.ndarray:
+        return ~self.is_x
+
+    def get_xyz(self) -> tuple[np.ndarray, np.ndarray]:
+        #neids = len(self.element_id)
+        grid = self.model.grid
+        xyz = grid.xyz_cid0()
+        nid = grid.node_id
+        inode = np.searchsorted(nid, self.nodes)
+        assert np.array_equal(nid[inode], self.nodes)
+        in1 = inode[:, 0]
+        in2 = inode[:, 1]
+        xyz1 = xyz[in1, :]
+        xyz2 = xyz[in2, :]
+        return xyz1, xyz2
+
+    def get_bar_vector(self, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        idefault = (self.coord_id == -1)
+        icoord = ~idefault
+
+        i = np.full(self.x.shape, np.nan, self.x.dtype)
+        j = np.full(self.x.shape, np.nan, self.x.dtype)
+        k = np.full(self.x.shape, np.nan, self.x.dtype)
+        xyz1, xyz2 = self.get_xyz()
+        i_vector = xyz2 - xyz1
+        nelement = self.n
+        maxs = np.abs(i_vector).max(axis=1)
+        assert len(maxs) == nelement, (len(maxs), nelement)
+
+        if np.any(idefault):
+            sub_i = i_vector[idefault, :]
+            ihat = safe_normalize(sub_i)
+
+            index = np.where(idefault)[0]
+            sub_cgap = self.slice_card_by_index(index)
+            v, cd = get_bar_vector(sub_cgap, xyz1[idefault, :])
+
+            ki = np.cross(ihat, v, axis=1)
+            khat = safe_normalize(ki)
+            jhat = np.cross(khat, ihat, axis=1)
+            i[idefault, :] = ihat
+            j[idefault, :] = jhat
+            k[idefault, :] = khat
+
+        if np.any(icoord):
+            print('icoord =', icoord)
+            coord_ids = self.coord_id[icoord]
+            print('coord_ids =', coord_ids)
+            assert len(coord_ids) == icoord.sum()
+            coords = self.model.coord.slice_card_by_coord_id(coord_ids)
+            ihat = coords.i
+            jhat = coords.j
+            khat = coords.k
+            i[icoord, :] = ihat
+            j[icoord, :] = jhat
+            k[icoord, :] = khat
+        #if 0:
+            #v, cd = get_bar_vector(self, xyz1)
+        return i, j, k
+
+    def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray,
+                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                            np.ndarray, np.ndarray, np.ndarray]:
+        log = self.model.log
+        coords = self.model.coord
+        #xyz1, xyz2 = self.get_xyz()
+
+        neids = xyz1.shape[0]
+        #i = xyz2 - xyz1
+        #ihat_norm = np.linalg.norm(i, axis=1)
+        #assert len(ihat_norm) == neids
+        #if min(ihat_norm) == 0.:
+            #msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
+            #log.error(msg)
+            #raise ValueError(msg)
+        #i_offset = i / ihat_norm[:, np.newaxis]
+
+        #log.info(f'x =\n{self.x}')
+        #log.info(f'g0   = {self.g0}')
+        ihat, yhat, zhat = self.get_bar_vector(xyz1)
+
+        v = yhat
+        wa = np.zeros(ihat.shape, ihat.dtype)
+        wb = wa
+        #ihat = xform[0, :]
+        #yhat = xform[1, :]
+        #zhat = xform[2, :]
+        #wa, wb, _ihat, jhat, khat = out
+
+        # we finally have the nodal coordaintes!!!! :)
+        return v, ihat, yhat, zhat, wa, wb
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,

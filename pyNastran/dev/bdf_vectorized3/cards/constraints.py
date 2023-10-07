@@ -713,5 +713,9 @@ class MPCADD(ADD):
                    missing,
                    mpc=(mpc_id, self.mpc_ids))
 
+class SPCOFF(SPC):
+    pass
+class SPCOFF1(SPC1):
+    pass
 SPCs = Union[SPC, SPC1]
 

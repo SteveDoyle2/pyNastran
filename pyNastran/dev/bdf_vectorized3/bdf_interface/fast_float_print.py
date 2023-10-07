@@ -48,12 +48,14 @@ def get_float_format(value: float):
             if len(field2) <= 8 and float(field1) == float(field2):
                 field = field2.rstrip(' 0')
                 field = field.replace('-0.', '-.')
+                field = '%8s' % field
+            assert len(field) == 8, f'{field!r}; n={len(field)}'
             return field
         elif abs_value < 1.:
             #print('C')
             field = f'{abs_value:7.6f}'
             field2 = '-' + field[1:]
-            assert len(field) == 8, f'{field!r}; n={len(field)}'
+            assert len(field2) == 8, f'{field2!r}; n={len(field2)}'
             return field2
 
         magnitude = int(math.floor(math.log10(abs_value)))
