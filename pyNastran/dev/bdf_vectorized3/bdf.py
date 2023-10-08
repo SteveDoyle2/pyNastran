@@ -95,7 +95,7 @@ from pyNastran.bdf.cards.dynamic import (
     #TIC,
 )
 #from .cards.loads.loads import (
-    #LSEQ, DAREA, RFORCE, RFORCE1, LOADCYN, LOADCYH)
+    #LSEQ, RFORCE, RFORCE1, LOADCYN, LOADCYH)
 #from .cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 #from .cards.loads.static_loads import CLOAD
 
@@ -677,7 +677,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MAT1', 'MAT2', 'MAT3',
             'MAT8', 'MAT9',
             'MAT10', 'MAT11', # 'MAT3D',
-            #'MATG', 'MATHE', 'MATHP', 'MATEV', 'MATORT', 'MAT10C',
+            #'MATG', 'MATHE',
+            'MATHP', 'MATORT', 'MAT10C', # 'MATEV',
 
             ## Material dependence - MATT1/MATT2/etc.
             #'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
@@ -771,7 +772,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'RADCAV', ## radcavs
 
             # ---- dynamic cards ---- #
-            #'DAREA',  ## dareas
+            'DAREA',  ## darea
             #'DPHASE',  ## dphases
             #'DELAY',  ## delays
             #'NLPARM',  ## nlparms
@@ -2563,9 +2564,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # dynamic loads
             #'DLOAD' : partial(self._prepare_card, self.dload),
-            #'DAREA' : partial(self._prepare_card, self.darea),
-            #'TLOAD1' : partial(self._prepare_card, self.tload1),
-            #'TLOAD2' : partial(self._prepare_card, self.tload2),
+            'DAREA' : partial(self._prepare_card, self.darea),
+            'TLOAD1' : partial(self._prepare_card, self.tload1),
+            'TLOAD2' : partial(self._prepare_card, self.tload2),
             #'RLOAD1' : partial(self._prepare_card, self.rload1),
             #'RLOAD2' : partial(self._prepare_card, self.rload2),
             #'TIC' : partial(self._prepare_card, self.tic),
@@ -2591,11 +2592,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MAT9' : partial(self._prepare_card, self.mat9),
             'MAT10' : partial(self._prepare_card, self.mat10),
             'MAT11' : partial(self._prepare_card, self.mat11),
-            #'MAT10C' : partial(self._prepare_card, self.mat10c),
-            #'MATORT' : partial(self._prepare_card, self.matort),
+            'MAT10C' : partial(self._prepare_card, self.mat10c),
+            'MATORT' : partial(self._prepare_card, self.matort),
 
             #'MATHE' : partial(self._prepare_card, self.mathe),  # not supported
-            #'MATHP' : partial(self._prepare_card, self.mathp),
+            'MATHP' : partial(self._prepare_card, self.mathp),
 
             # thermal materials
             'MAT4' : partial(self._prepare_card, self.mat4),
@@ -4704,10 +4705,10 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
 
             #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
-            #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
-            #'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
+            #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_BCRPARA', 'add_BCTADD',
+            #'add_BCTPARA', 'add_BCTSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
             #'add_DIVERG',
-            #'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DDVAL',
+            # 'add_CSSCHD', 'add_DCONADD', 'add_DDVAL',
             #'add_DELAY', 'add_DEQATN', 'add_DMI',
             #'add_DPHASE', 'add_DRESP', 'add_DTABLE',
             #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',

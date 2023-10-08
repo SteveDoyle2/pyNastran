@@ -912,13 +912,9 @@ class MAT5(Material):
         self.n += 1
         return self.n
 
+    @Material.parse_cards_check
     def parse_cards(self):
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         material_id = np.zeros(ncards, dtype='int32')
         kxx = np.zeros(ncards, dtype='float64')
         kxy = np.zeros(ncards, dtype='float64')
@@ -1380,13 +1376,9 @@ class MAT9(Material):
         self.n += 1
         return self.n
 
+    @Material.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         material_id = np.zeros(ncards, dtype='int32')
         G11 = np.zeros(ncards, dtype='float64')
         G12 = np.zeros(ncards, dtype='float64')
@@ -1864,15 +1856,10 @@ class MAT11(Material):
                            rho, a1, a2, a3, tref, ge, comment))
         self.n += 1
 
+    @Material.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         self.material_id = np.zeros(ncards, dtype='int32')
-
         self.bulk = np.zeros(ncards, dtype='float64')
 
         self.e1 = np.zeros(ncards, dtype='float64')
@@ -1981,6 +1968,683 @@ class MAT11(Material):
                            nu13, nu23, g12, g13, g23, rho, a1,
                            a2, a3, tref, ge]
             bdf_file.write(print_card(list_fields))
+
+
+class MAT10C(Material):
+    """
+    Fluid or Absorber Material Property Definition in Complex Format
+
+    Defines constant or nominal material properties for fluid or absorber elements in
+    coupled fluid-structural analysis.
+
+    +--------+-----+----------+---------+------+--------+--------+-----+-----+
+    |    1   |  2  |    3     |    4    |  5   |   6    |    7   |  8  |  9  |
+    +========+=====+==========+=========+======+========+========+=====+=====+
+    | MAT10C | MID |   FORM   |   RHOR  | RHOI |   CR   |   CI   |     |     |
+    +--------+-----+----------+---------+------+--------+--------+-----+-----+
+
+    per NX 2019.2
+
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+
+    def add(self, mid: int, form: str='REAL',
+            rho_real: float=0.0, rho_imag: float=0.0,
+            c_real: float=0.0, c_imag: float=0.0,
+            comment: str=''):
+        assert form in {'REAL', 'IMAG'}, f'form={form!r}'
+        self.cards.append((mid, form, rho_real, rho_imag, c_real, c_imag, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        #ID Material identification number. (Integer > 0)
+        #FORM Format to define the fluid density and speed of sound. (Character; REAL or PHASE; Default=REAL)
+        # - REAL, define the fluid density and speed of sound in rectangular format (real and imaginary).
+        # - PHASE, define the fluid density and speed of sound in polar format (magnitude and phase).
+        #RHOR Real part of density. (Real; Default=0.0)
+        #RHOI Imaginary part of density. (Real; Default=0.0)
+        #CR Real part of speed of sound. (Real; Default=0.0)
+        #CI Imaginary part of speed of sound. (Real; Default=0.0)
+        mid = integer(card, 1, 'mid')
+        form = string_or_blank(card, 2, 'form', default='REAL')
+        assert form in {'REAL', 'IMAG'}, f'form={form!r}'
+        rho_real = double_or_blank(card, 3, 'rho_real', default=0.0)
+        rho_imag = double_or_blank(card, 4, 'rho_imag', default=0.0)
+        c_real = double_or_blank(card, 5, 'sos_real', default=0.0)
+        c_imag = double_or_blank(card, 6, 'sos_imag', default=0.0)
+
+        assert len(card) <= 7, f'len(MAT10C card) = {len(card):d}\ncard={card}'
+        self.cards.append((mid, form, rho_real, rho_imag, c_real, c_imag, comment))
+        self.n += 1
+        return self.n
+
+    @Material.parse_cards_check
+    def parse_cards(self):
+        ncards = len(self.cards)
+        material_id = np.zeros(ncards, dtype='int32')
+        form = np.zeros(ncards, dtype='|U4')
+        c  = np.zeros(ncards, dtype='complex128')
+        rho = np.zeros(ncards, dtype='complex128')
+
+        for icard, card in enumerate(self.cards):
+            (mid, formi, rho_real, rho_imag, c_real, c_imag, comment) = card
+            material_id[icard] = mid
+            form[icard] = formi
+            c[icard] = c_real + 1j * c_imag
+            rho[icard] = rho_real + 1j * rho_imag
+
+        self._save(material_id, form, rho, c)
+        self.sort()
+        self.cards = []
+
+    def _save(self, material_id, form, rho, c):
+        self.material_id = material_id
+        self.form = form
+        self.rho = rho
+        self.c = c
+        self.n = len(material_id)
+
+    def __apply_slice__(self, mat: MAT10C, i: np.ndarray) -> None:
+        mat.n = len(i)
+        mat.material_id = self.material_id[i]
+        mat.form = self.form[i]
+        mat.c = self.c[i]
+        mat.rho = self.rho[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        max_int = self.material_id.max()
+        print_card = get_print_card(size, max_int)
+
+        material_ids = array_str(self.material_id)
+        for mid, form, rhor, rhoi, cr, ci in zip_longest(
+                material_ids, self.form, self.rho.real, self.rho.imag, self.c.real, self.c.imag):
+
+            list_fields = [
+                'MAT10C', mid, form, rhor, rhoi, cr, ci]
+            bdf_file.write(print_card(list_fields))
         return
 
+
+class MATORT(Material):
+    """
+    Defines the material properties for linear isotropic materials.
+
+    +--------+--------+-------+-------+-----+------+------+------+-----+
+    |    1   |    2   |   3   |   4   |  5  |   6  |  7   |  8   |  9  |
+    +========+========+=======+=======+=====+======+======+======+=====+
+    | MATORT |   MID  |   E1  |   E2  |  E3 | NU12 | NU23 | NU31 | RHO |
+    +--------+--------+-------+-------+-----+------+------+------+-----+
+    |        |   G12  |  G23  |  G31  |  A1 |  A2  |  A3  | TREF |  GE |
+    +--------+--------+-------+-------+-----+------+------+------+-----+
+    |        |  IYLD  | IHARD |   SY  |     |  Y1  |  Y2  |  Y3  | N/A |
+    +--------+--------+-------+-------+-----+------+------+------+-----+
+    |        |  Yshr1 | Yshr2 | Yshr3 | N/A | N/A  |  N/A |  N/A | N/A |
+    +--------+--------+-------+-------+-----+------+------+------+-----+
+    |        | OPTION |  FILE |   X1  |  Y1 |  Z1  |  X2  |  Y2  |  Z2 |
+    +--------+--------+-------+-------+-----+------+------+------+-----+
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.cards = []
+        self.n = 0
+        self.material_id = np.array([], dtype='int32')
+        self.E1 = np.zeros([], dtype='float64')
+        self.E2 = np.zeros([], dtype='float64')
+        self.E3 = np.zeros([], dtype='float64')
+
+        self.G12 = np.array([], dtype='float64')
+        self.G23 = np.array([], dtype='float64')
+        self.G31 = np.array([], dtype='float64')
+
+        self.nu = np.array([], dtype='float64')
+        self.rho = np.array([], dtype='float64')
+
+        self.alpha1 = np.array([], dtype='float64')
+        self.alpha2 = np.array([], dtype='float64')
+        self.alpha3 = np.array([], dtype='float64')
+
+        self.tref = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+
+    def add(self, mid: int, E1: float, E2: float, E3: float,
+            nu12: float, nu23: float, nu31: float,
+            G12: float, G23: float, G31: float,
+            rho: float=0.0,
+            alpha1: float=0.0, alpha2: float=0.0, alpha3: float=0.0,
+            tref: float=0.0, ge: float=0.0,
+            comment: str=''):
+        self.cards.append((mid, E1, E2, E3, nu12, nu23, nu31, rho, G12, G23, G31,
+                           alpha1, alpha2, alpha3, tref, ge, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        #| MATORT |   MID  |   E1  |   E2  |  E3 | NU12 | NU23 | NU31 | RHO |
+        #|        |   G12  |  G23  |  G31  |  A1 |  A2  |  A3  | TREF |  GE |
+        #|        |  IYLD  | IHARD |   SY  |     |  Y1  |  Y2  |  Y3  | N/A |
+        #|        |  Yshr1 | Yshr2 | Yshr3 | N/A | N/A  |  N/A |  N/A | N/A |
+        #|        | OPTION |  FILE |   X1  |  Y1 |  Z1  |  X2  |  Y2  |  Z2 |
+        mid = integer(card, 1, 'mid')
+        E1 = double_or_blank(card, 2, 'E1')
+        E2 = double_or_blank(card, 3, 'E2')
+        E3 = double_or_blank(card, 4, 'E3')
+
+        nu12 = double_or_blank(card, 5, 'nu12')
+        nu23 = double_or_blank(card, 6, 'nu23')
+        nu31 = double_or_blank(card, 7, 'nu31')
+        rho = double_or_blank(card, 8, 'rho', default=0.)
+
+        G12 = double_or_blank(card, 9, 'G12')
+        G23 = double_or_blank(card, 10, 'G23')
+        G31 = double_or_blank(card, 11, 'G31')
+
+        alpha1 = double_or_blank(card, 12, 'a1', default=0.0)
+        alpha2 = double_or_blank(card, 13, 'a2', default=0.0)
+        alpha3 = double_or_blank(card, 14, 'a3', default=0.0)
+
+        tref = double_or_blank(card, 15, 'tref', default=0.0)
+        ge = double_or_blank(card, 16, 'ge', default=0.0)
+        assert len(card) <= 18, f'len(MATORT card) = {len(card):d}\ncard={card}'
+        self.cards.append((mid, E1, E2, E3, nu12, nu23, nu31, rho, G12, G23, G31,
+                           alpha1, alpha2, alpha3, tref, ge, comment))
+        self.n += 1
+        return self.n
+
+    @Material.parse_cards_check
+    def parse_cards(self):
+        ncards = len(self.cards)
+        material_id = np.zeros(ncards, dtype='int32')
+        E1 = np.zeros(ncards, dtype='float64')
+        E2 = np.zeros(ncards, dtype='float64')
+        E3 = np.zeros(ncards, dtype='float64')
+        G12 = np.zeros(ncards, dtype='float64')
+        G23 = np.zeros(ncards, dtype='float64')
+        G31 = np.zeros(ncards, dtype='float64')
+
+        nu12 = np.zeros(ncards, dtype='float64')
+        nu23 = np.zeros(ncards, dtype='float64')
+        nu31 = np.zeros(ncards, dtype='float64')
+        rho = np.zeros(ncards, dtype='float64')
+        alpha1 = np.zeros(ncards, dtype='float64')
+        alpha2 = np.zeros(ncards, dtype='float64')
+        alpha3 = np.zeros(ncards, dtype='float64')
+        tref = np.zeros(ncards, dtype='float64')
+        ge = np.zeros(ncards, dtype='float64')
+
+        for i, card in enumerate(self.cards):
+            (mid, E1i, E2i, E3i, nu12i, nu23i, nu31i, rhoi, G12i, G23i, G31i,
+             alpha1i, alpha2i, alpha3i, trefi, gei, comment) = card
+            material_id[i] = mid
+            E1[i] = E1i
+            E2[i] = E2i
+            E3[i] = E3i
+            G12[i] = G12i
+            G23[i] = G23i
+            G31[i] = G31i
+
+            nu12[i] = nu12i
+            nu23[i] = nu23i
+            nu31[i] = nu31i
+
+            rho[i] = rhoi
+            alpha1[i] = alpha1i
+            alpha2[i] = alpha2i
+            alpha3[i] = alpha3i
+            tref[i] = trefi
+            ge[i] = gei
+        self._save(material_id, E1, E2, E3, nu12, nu23, nu31, G12, G23, G31,
+                   rho, alpha1, alpha2, alpha3, tref, ge)
+        self.sort()
+        self.cards = []
+
+    def _save(self, material_id, E1, E2, E3, nu12, nu23, nu31, G12, G23, G31,
+                   rho, alpha1, alpha2, alpha3, tref, ge):
+        assert len(self.material_id) == 0, self.material_id
+        self.material_id = material_id
+        self.E1 = E1
+        self.E2 = E2
+        self.E3 = E3
+        self.G12 = G12
+        self.G23 = G23
+        self.G31 = G31
+        self.nu12 = nu12
+        self.nu23 = nu23
+        self.nu31 = nu31
+        self.rho = rho
+        self.alpha1 = alpha1
+        self.alpha2 = alpha2
+        self.alpha3 = alpha3
+        self.tref = tref
+        self.ge = ge
+        assert len(self.material_id) > 0, self.material_id
+        #self.model.log.warning('saved MATORT')
+
+    def __apply_slice__(self, mat: MATORT, i: np.ndarray) -> None:
+        mat.n = len(i)
+        mat.material_id = self.material_id[i]
+        mat.E1 = self.E1[i]
+        mat.E2 = self.E2[i]
+        mat.E3 = self.E3[i]
+        mat.G12 = self.G12[i]
+        mat.G23 = self.G23[i]
+        mat.G31 = self.G31[i]
+        mat.nu12 = self.nu12[i]
+        mat.nu23 = self.nu23[i]
+        mat.nu31 = self.nu31[i]
+        mat.rho = self.rho[i]
+        mat.alpha1 = self.alpha1[i]
+        mat.alpha2 = self.alpha2[i]
+        mat.alpha3 = self.alpha3[i]
+        mat.tref = self.tref[i]
+        mat.ge = self.ge[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        max_int = self.material_id.max()
+        print_card = get_print_card(size, max_int)
+
+        for mid, e1, e2, e3, g12, g23, g31, nu12, nu23, nu31, \
+            rho, alpha1, alpha2, alpha3, tref, ge, \
+            in zip_longest(self.material_id, self.E1, self.E2, self.E3,
+                           self.G12, self.G23, self.G31,
+                           self.nu12, self.nu23, self.nu31, self.rho,
+                           self.alpha1, self.alpha2, self.alpha3, self.tref, self.ge):
+
+            rho = set_blank_if_default(rho, 0.)
+            a1 = set_blank_if_default(alpha1, 0.)
+            a2 = set_blank_if_default(alpha2, 0.)
+            a3 = set_blank_if_default(alpha3, 0.)
+            tref = set_blank_if_default(tref, 0.)
+            ge = set_blank_if_default(ge, 0.)
+
+            list_fields = ['MATORT', mid, e1, e2, e3, nu12, nu23, nu31, rho,
+                           g12, g23, g31, a1, a2, a3, tref, ge]
+            bdf_file.write(print_card(list_fields))
+        return
+
+    #def s33(self):
+        #"""
+        #ei2 = [
+            #[  1 / e, -nu / e,    0.],
+            #[-nu / e,   1 / e,    0.],
+            #[     0.,      0., 1 / g],
+        #]
+        #"""
+        #nmaterial = len(self.material_id)
+        #s33 = np.zeros((nmaterial, 3, 3), dtype='float64')
+        #s33[:, 0, 0] = s33[:, 1, 1] = 1 / self.E
+        #s33[:, 1, 0] = s33[:, 0, 1] = -self.nu / self.E
+        #s33[:, 2, 2] = 1 / self.G
+        #return s33
+
+
+class MATHP(Material):
+    def add(self, mid: int, a10=0., a01=0., d1=None, rho=0., av=0., tref=0., ge=0., na=1, nd=1,
+            a20=0., a11=0., a02=0., d2=0.,
+            a30=0., a21=0., a12=0., a03=0., d3=0.,
+            a40=0., a31=0., a22=0., a13=0., a04=0., d4=0.,
+            a50=0., a41=0., a32=0., a23=0., a14=0., a05=0., d5=0.,
+            tab1=None, tab2=None, tab3=None, tab4=None, tabd=None, comment=''):
+        #HyperelasticMaterial.__init__(self)
+        if comment:
+            self.comment = comment
+        if d1 is None:
+            d1 = (a10 + a01) * 1000.
+
+        self.cards.append((mid, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
+                           a02, d2, a30, a21, a12, a03, d3, a40,
+                           a31, a22, a13, a04, d4, a50, a41,
+                           a32, a23, a14, a05, d5, tab1, tab2,
+                           tab3, tab4, tabd, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a MATHP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        mid = integer(card, 1, 'mid')
+        a10 = double_or_blank(card, 2, 'a10', default=0.)
+        a01 = double_or_blank(card, 3, 'a01', default=0.)
+        d1 = double_or_blank(card, 4, 'd1', default=(a10 + a01) * 1000)
+        rho = double_or_blank(card, 5, 'rho', default=0.)
+        av = double_or_blank(card, 6, 'av', default=0.)
+        tref = double_or_blank(card, 7, 'tref', default=0.)
+        ge = double_or_blank(card, 8, 'ge', default=0.)
+
+        na = integer_or_blank(card, 10, 'na', default=1)
+        nd = integer_or_blank(card, 11, 'nd', default=1)
+
+        a20 = double_or_blank(card, 17, 'a20', default=0.)
+        a11 = double_or_blank(card, 18, 'a11', default=0.)
+        a02 = double_or_blank(card, 19, 'a02', default=0.)
+        d2 = double_or_blank(card, 20, 'd2', default=0.)
+
+        a30 = double_or_blank(card, 25, 'a30', default=0.)
+        a21 = double_or_blank(card, 26, 'a21', default=0.)
+        a12 = double_or_blank(card, 27, 'a12', default=0.)
+        a03 = double_or_blank(card, 28, 'a03', default=0.)
+        d3 = double_or_blank(card, 29, 'd3', default=0.)
+
+        a40 = double_or_blank(card, 33, 'a40', default=0.)
+        a31 = double_or_blank(card, 34, 'a31', default=0.)
+        a22 = double_or_blank(card, 35, 'a22', default=0.)
+        a13 = double_or_blank(card, 36, 'a13', default=0.)
+        a04 = double_or_blank(card, 37, 'a04', default=0.)
+        d4 = double_or_blank(card, 38, 'd4', default=0.)
+
+        a50 = double_or_blank(card, 41, 'a50', default=0.)
+        a41 = double_or_blank(card, 42, 'a41', default=0.)
+        a32 = double_or_blank(card, 43, 'a32', default=0.)
+        a23 = double_or_blank(card, 44, 'a23', default=0.)
+        a14 = double_or_blank(card, 45, 'a14', default=0.)
+        a05 = double_or_blank(card, 46, 'a05', default=0.)
+        d5 = double_or_blank(card, 47, 'd5', default=0.)
+
+        tab1 = integer_or_blank(card, 49, 'tab1', default=0)
+        tab2 = integer_or_blank(card, 50, 'tab2', default=0)
+        tab3 = integer_or_blank(card, 51, 'tab3', default=0)
+        tab4 = integer_or_blank(card, 52, 'tab4', default=0)
+        tabd = integer_or_blank(card, 56, 'tabd', default=0)
+        assert len(card) <= 57, f'len(MATHP card) = {len(card):d}\ncard={card}'
+        #return MATHP(mid, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
+                     #a02, d2, a30, a21, a12, a03, d3, a40,
+                     #a31, a22, a13, a04, d4, a50, a41,
+                     #a32, a23, a14, a05, d5, tab1, tab2,
+                     #tab3, tab4, tabd, comment=comment)
+        self.cards.append((mid, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
+                           a02, d2, a30, a21, a12, a03, d3, a40,
+                           a31, a22, a13, a04, d4, a50, a41,
+                           a32, a23, a14, a05, d5, tab1, tab2,
+                           tab3, tab4, tabd, comment))
+        self.n += 1
+        return self.n
+
+    @Material.parse_cards_check
+    def parse_cards(self):
+        ncards = len(self.cards)
+        material_id = np.zeros(ncards, dtype='int32')
+        a10 = np.zeros(ncards, dtype='float64')
+        a01 = np.zeros(ncards, dtype='float64')
+        d1 = np.zeros(ncards, dtype='float64')
+        rho = np.zeros(ncards, dtype='float64')
+        av = np.zeros(ncards, dtype='float64')
+        tref = np.zeros(ncards, dtype='float64')
+        ge = np.zeros(ncards, dtype='float64')
+
+        na = np.zeros(ncards, dtype='int32')
+        nd = np.zeros(ncards, dtype='int32')
+
+        a20 = np.zeros(ncards, dtype='float64')
+        a11 = np.zeros(ncards, dtype='float64')
+        a02 = np.zeros(ncards, dtype='float64')
+        d2 = np.zeros(ncards, dtype='float64')
+
+        a30 = np.zeros(ncards, dtype='float64')
+        a21 = np.zeros(ncards, dtype='float64')
+        a12 = np.zeros(ncards, dtype='float64')
+        a03 = np.zeros(ncards, dtype='float64')
+        d3 = np.zeros(ncards, dtype='float64')
+
+        a40 = np.zeros(ncards, dtype='float64')
+        a31 = np.zeros(ncards, dtype='float64')
+        a22 = np.zeros(ncards, dtype='float64')
+        a13 = np.zeros(ncards, dtype='float64')
+        a04 = np.zeros(ncards, dtype='float64')
+        d4 = np.zeros(ncards, dtype='float64')
+
+        a50 = np.zeros(ncards, dtype='float64')
+        a41 = np.zeros(ncards, dtype='float64')
+        a32 = np.zeros(ncards, dtype='float64')
+        a23 = np.zeros(ncards, dtype='float64')
+        a14 = np.zeros(ncards, dtype='float64')
+        a05 = np.zeros(ncards, dtype='float64')
+        d5 = np.zeros(ncards, dtype='float64')
+
+        tab1 = np.zeros(ncards, dtype='int32')
+        tab2 = np.zeros(ncards, dtype='int32')
+        tab3 = np.zeros(ncards, dtype='int32')
+        tab4 = np.zeros(ncards, dtype='int32')
+        tabd = np.zeros(ncards, dtype='int32')
+
+        for i, card in enumerate(self.cards):
+            (mid, a10i, a01i, d1i, rhoi, avi, trefi, gei, nai, ndi, a20i, a11i,
+             a02i, d2i, a30i, a21i, a12i, a03i, d3i, a40i,
+             a31i, a22i, a13i, a04i, d4i, a50i, a41i,
+             a32i, a23i, a14i, a05i, d5i,
+             tab1i, tab2i, tab3i, tab4i, tabdi, comment) = card
+            tab1i = tab1i if tab1i is not None else 0
+            tab2i = tab2i if tab2i is not None else 0
+            tab3i = tab3i if tab3i is not None else 0
+            tab4i = tab4i if tab4i is not None else 0
+            tabdi = tabdi if tabdi is not None else 0
+
+            material_id[i] = mid
+            a10[i] = a10i
+            a01[i] = a01i
+            d1[i] = d1i
+            av[i] = avi
+            na[i] = nai
+            nd[i] = ndi
+            a20[i] = a20i
+            a11[i] = a11i
+            a02[i] = a02i
+            d2[i] = d2i
+            a30[i] = a30i
+            a21[i] = a21i
+            a12[i] = a12i
+            a03[i] = a03i
+            d3[i] = d3i
+            a40[i] = a40i
+            a31[i] = a31i
+            a22[i] = a22i
+            a13[i] = a13i
+            a04[i] = a04i
+            d4[i] = d4i
+            a50[i] = a50i
+            a41[i] = a41i
+            a32[i] = a32i
+            a23[i] = a23i
+            a14[i] = a14i
+            a05[i] = a05i
+            d5[i] = d5i
+            rho[i] = rhoi
+            tref[i] = trefi
+            ge[i] = gei
+            tab1[i] = tab1i
+            tab2[i] = tab2i
+            tab3[i] = tab3i
+            tab4[i] = tab4i
+            tabd[i] = tabdi
+        self._save(material_id, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
+                   a02, d2, a30, a21, a12, a03, d3, a40,
+                   a31, a22, a13, a04, d4, a50, a41,
+                   a32, a23, a14, a05, d5, tab1, tab2,
+                   tab3, tab4, tabd)
+        self.sort()
+        self.cards = []
+
+    def _save(self, material_id, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
+              a02, d2, a30, a21, a12, a03, d3, a40,
+              a31, a22, a13, a04, d4, a50, a41,
+              a32, a23, a14, a05, d5, tab1, tab2,
+              tab3, tab4, tabd):
+        assert len(self.material_id) == 0, self.material_id
+        self.material_id = material_id
+
+        self.a10 = a10
+        self.a01 = a01
+        self.d1 = d1
+        self.rho = rho
+        self.av = av
+        self.tref = tref
+        self.ge = ge
+        self.na = na
+        self.nd = nd
+
+        self.a20 = a20
+        self.a11 = a11
+        self.a02 = a02
+        self.d2 = d2
+        self.a30 = a30
+        self.a21 = a21
+        self.a12 = a12
+        self.a03 = a03
+        self.d3 = d3
+        self.a40 = a40
+        self.a31 = a31
+        self.a22 = a22
+        self.a13 = a13
+        self.a04 = a04
+        self.d4 = d4
+        self.a50 = a50
+        self.a41 = a41
+        self.a32 = a32
+        self.a23 = a23
+        self.a14 = a14
+        self.a05 = a05
+        self.d5 = d5
+
+        self.tab1 = tab1
+        self.tab2 = tab2
+        self.tab3 = tab3
+        self.tab4 = tab4
+        self.tabd = tabd
+        assert len(self.material_id) > 0, self.material_id
+        #self.model.log.warning('saved MATORT')
+
+    def __apply_slice__(self, mat: MATHP, i: np.ndarray) -> None:
+        mat.n = len(i)
+        mat.material_id = self.material_id[i]
+
+        mat.a10 = self.a10[i]
+        mat.a01 = self.a01[i]
+        mat.d1 = self.d1[i]
+        mat.rho = self.rho[i]
+        mat.av = self.av[i]
+        mat.tref = self.tref[i]
+        mat.ge = self.ge[i]
+        mat.na = self.na[i]
+        mat.nd = self.nd[i]
+
+        mat.a20 = self.a20[i]
+        mat.a11 = self.a11[i]
+        mat.a02 = self.a02[i]
+        mat.d2 = self.d2[i]
+        mat.a30 = self.a30[i]
+        mat.a21 = self.a21[i]
+        mat.a12 = self.a12[i]
+        mat.a03 = self.a03[i]
+        mat.d3 = self.d3[i]
+        mat.a40 = self.a40[i]
+        mat.a31 = self.a31[i]
+        mat.a22 = self.a22[i]
+        mat.a13 = self.a13[i]
+        mat.a04 = self.a04[i]
+        mat.d4 = self.d4[i]
+        mat.a50 = self.a50[i]
+        mat.a41 = self.a41[i]
+        mat.a32 = self.a32[i]
+        mat.a23 = self.a23[i]
+        mat.a14 = self.a14[i]
+        mat.a05 = self.a05[i]
+        mat.d5 = self.d5[i]
+
+        mat.tab1 = self.tab1[i]
+        mat.tab2 = self.tab2[i]
+        mat.tab3 = self.tab3[i]
+        mat.tab4 = self.tab4[i]
+        mat.tabd = self.tabd[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        max_int = self.material_id.max()
+        print_card = get_print_card(size, max_int)
+        for (mid, a10, a01, d1, rho, av, tref, ge,
+             na, nd,
+             a20, a11, a02, d2,
+             a30, a21, a12, a03, d3,
+             a40, a31, a22, a13, a04, d4,
+             a50, a41, a32, a23, a14, a05, d5,
+             tab1, tab2, tab3, tab4, tabd) in zip_longest(
+                 self.material_id,
+                 self.a10, self.a01, self.d1, self.rho, self.av, self.tref, self.ge,
+                 self.na, self.nd,
+                 self.a20, self.a11, self.a02, self.d2,
+                 self.a30, self.a21, self.a12, self.a03, self.d3,
+                 self.a40, self.a31, self.a22, self.a13, self.a04, self.d4,
+                 self.a50, self.a41, self.a32, self.a23, self.a14, self.a05, self.d5,
+                 self.tab1, self.tab2, self.tab3, self.tab4, self.tabd):
+
+                #av = set_blank_if_default(self.av, 0.0)
+                #na = set_blank_if_default(self.na, 0.0)
+                #nd = set_blank_if_default(self.nd, 0.0)
+
+                #a01 = set_blank_if_default(self.a01, 0.0)
+                #a10 = set_blank_if_default(self.a10, 0.0)
+                #d1 = set_blank_if_default(self.d1, 1000 * (self.a01 + self.a10))
+
+                #a20 = set_blank_if_default(self.a20, 0.0)
+                #a11 = set_blank_if_default(self.a11, 0.0)
+                #a02 = set_blank_if_default(self.a02, 0.0)
+                #d2 = set_blank_if_default(self.d2, 0.0)
+
+                #a30 = set_blank_if_default(self.a30, 0.0)
+                #a12 = set_blank_if_default(self.a12, 0.0)
+                #a21 = set_blank_if_default(self.a21, 0.0)
+                #a03 = set_blank_if_default(self.a03, 0.0)
+                #d3 = set_blank_if_default(self.d3, 0.0)
+
+                #a40 = set_blank_if_default(self.a40, 0.0)
+                #a31 = set_blank_if_default(self.a31, 0.0)
+                #a22 = set_blank_if_default(self.a22, 0.0)
+                #a13 = set_blank_if_default(self.a13, 0.0)
+                #a04 = set_blank_if_default(self.a04, 0.0)
+                #d4 = set_blank_if_default(self.d4, 0.0)
+
+                #a50 = set_blank_if_default(self.a50, 0.0)
+                #a41 = set_blank_if_default(self.a41, 0.0)
+                #a32 = set_blank_if_default(self.a32, 0.0)
+                #a23 = set_blank_if_default(self.a23, 0.0)
+                #a14 = set_blank_if_default(self.a14, 0.0)
+                #a05 = set_blank_if_default(self.a05, 0.0)
+                #d5 = set_blank_if_default(self.d5, 0.0)
+
+                #tref = set_blank_if_default(self.tref, 0.0)
+                #ge = set_blank_if_default(self.ge, 0.0)
+                list_fields = ['MATHP', mid, a10, a01, d1, rho, av, tref, ge,
+                               None, na, nd, None, None, None, None, None,
+                               a20, a11, a02, d2, None, None, None, None,
+                               a30, a21, a12, a03, d3, None, None, None,
+                               a40, a31, a22, a13, a04, d4, None, None,
+                               a50, a41, a32, a23, a14, a05, d5, None,
+                               tab1, tab2, tab3, tab4, None, None, None, tabd]
+                bdf_file.write(print_card(list_fields))
+        return
 

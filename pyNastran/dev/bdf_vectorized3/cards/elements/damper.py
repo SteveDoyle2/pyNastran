@@ -15,7 +15,8 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
     parse_element_check, parse_property_check)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_float, array_default_int, array_default_float)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from .bar import get_bar_vector, safe_normalize, line_length
@@ -955,8 +956,9 @@ class PVISC(Property):
 
         property_id = array_str(self.property_id, size=size)
         ces = array_float(self.ce, size=size, is_double=is_double)
-        for pid, ce, cr in zip_longest(property_id, ces, self.cr):
-            cr = set_blank_if_default(cr, 0.)
+        crs = array_default_float(self.ce, default=0., size=size, is_double=is_double)
+        for pid, ce, cr in zip_longest(property_id, ces, crs):
+            #cr = set_blank_if_default(cr, 0.)
             list_fields = ['PVISC', pid, ce, cr]
             bdf_file.write(print_card(list_fields))
         return

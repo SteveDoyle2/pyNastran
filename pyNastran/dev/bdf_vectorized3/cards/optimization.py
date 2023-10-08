@@ -1352,16 +1352,23 @@ class DVPREL1(VectorizedBaseCard):
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
 
-        nfields = len(end_fields) - 1
-        if nfields % 2 == 1:
-            end_fields.append(None)
-            nfields += 1
+        nfields = len(end_fields) # - 1
+        #if nfields % 2 == 1:
+            #print('end_fields', end_fields)
+            #end_fields.append(None)
+            #nfields += 1
 
         i = 0
         for i in range(0, nfields, 2):
-            desvar_ids.append(end_fields[i])
-            coeffs.append(end_fields[i + 1])
-        if nfields % 2 == 1:
+            desvar_id = end_fields[i]
+            coeff = end_fields[i + 1]
+            assert isinstance(desvar_id, integer_types), card
+            assert isinstance(coeff, float_types), card
+            desvar_ids.append(desvar_id)
+            coeffs.append(coeff)
+
+        if len(desvar_ids) != len(coeffs):
+        #if nfields % 2 == 1:
             print(card)
             print("desvar_ids = %s" % (desvar_ids))
             print("coeffs = %s" % (coeffs))
@@ -1408,11 +1415,16 @@ class DVPREL1(VectorizedBaseCard):
             p_max[icard] = p_maxi
             c0[icard] = c0i
 
+            print(dvprel_id, desvars, coeffs)
             ndesvar[icard] = len(desvars)
             all_desvars.extend(desvars)
             all_coeffs.extend(coeffs)
 
-        desvar_id = np.array(all_desvars, dtype='int32')
+        try:
+            desvar_id = np.array(all_desvars, dtype='int32')
+        except TypeError:
+            print(all_desvars)
+            raise
         coefficients = np.array(all_coeffs, dtype='float64')
         self._save(dvprel_id, property_id, property_type,
                    property_name, field_num,
@@ -1865,16 +1877,22 @@ class DVMREL1(VectorizedBaseCard):
         desvar_ids = []
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
-        nfields = len(end_fields) - 1
-        if nfields % 2 == 1:
-            end_fields.append(None)
-            nfields += 1
+        nfields = len(end_fields) # - 1
+        #if nfields % 2 == 1:
+            #end_fields.append(None)
+            #nfields += 1
 
         i = 0
         for i in range(0, nfields, 2):
-            desvar_ids.append(end_fields[i])
-            coeffs.append(end_fields[i + 1])
-        if nfields % 2 == 1:
+            desvar_id = end_fields[i]
+            coeff = end_fields[i + 1]
+            assert isinstance(desvar_id, integer_types), card
+            assert isinstance(coeff, float_types), card
+            desvar_ids.append(desvar_id)
+            coeffs.append(coeff)
+
+        if len(desvar_ids) != len(coeffs):
+        #if nfields % 2 == 1:
             print(card)
             print("desvar_ids = %s" % (desvar_ids))
             print("coeffs = %s" % (coeffs))
@@ -2373,20 +2391,25 @@ class DVCREL1(VectorizedBaseCard):
         desvar_ids = []
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
-        nfields = len(end_fields) - 1
-        if nfields % 2 == 1:
-            end_fields.append(None)
-            nfields += 1
+        nfields = len(end_fields) # - 1
+        #if nfields % 2 == 1:
+            #end_fields.append(None)
+            #nfields += 1
 
         i = 0
         for i in range(0, nfields, 2):
-            desvar_ids.append(end_fields[i])
-            coeffs.append(end_fields[i + 1])
-        if nfields % 2 == 1:
+            desvar_id = end_fields[i]
+            coeff = end_fields[i + 1]
+            assert isinstance(desvar_id, integer_types), card
+            assert isinstance(coeff, float_types), card
+            desvar_ids.append(desvar_id)
+            coeffs.append(coeff)
+
+        if len(desvar_ids) != len(coeffs): # nfields % 2 == 1:
             print(card)
             print("desvar_ids = %s" % (desvar_ids))
             print("coeffs = %s" % (coeffs))
-            raise RuntimeError('invalid DVMREL1...')
+            raise RuntimeError('invalid DVCREL1...')
         card = (dvcrel_id, element_type, eid, cp_name, desvar_ids, coeffs,
                 cp_min, cp_max, c0, comment)
         self.cards.append(card)

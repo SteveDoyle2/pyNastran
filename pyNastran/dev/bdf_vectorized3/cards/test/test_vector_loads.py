@@ -200,7 +200,7 @@ class TestLoads(unittest.TestCase):
         accel.write(size=16, is_double=True)
         save_load_deck(model)
 
-    def _test_darea_01(self):
+    def test_darea_01(self):
         """tests a DAREA"""
         #DAREA SID P1 C1 A1  P2 C2 A2
         #DAREA 3   6   2 8.2 15 1  10.1

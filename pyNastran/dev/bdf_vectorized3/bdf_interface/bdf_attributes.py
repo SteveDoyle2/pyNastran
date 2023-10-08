@@ -63,11 +63,12 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import (
 )
 from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
 
-#from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
+from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
     #LSEQ,
-    #DLOAD, DAREA, TLOAD1, TLOAD2, RLOAD1, RLOAD2, TIC, QVECT,
+    #DLOAD,
+    DAREA, TLOAD1, TLOAD2, # RLOAD1, RLOAD2, TIC, QVECT,
     #RANDPS, DELAY, DPHASE
-#)
+)
 
 #from pyNastran.dev.bdf_vectorized3.cards.loads.thermal_loads import (
     #QHBDY, QBDY1, QBDY2, QBDY3, QVOL, TEMPBC, RADBC, RADM)
@@ -76,7 +77,7 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
     MAT1,
     MAT2, MAT3, MAT4, MAT5,
     MAT8, MAT9, MAT10, MAT11,
-    #MAT10C, MATORT, MATHE, MATHP,
+    MAT10C, MATORT, MATHP, # MATHE,
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
@@ -423,9 +424,9 @@ class BDFAttributes:
 
         # dynamic loads
         #self.dload = DLOAD(self)
-        #self.darea = DAREA(self)
-        #self.tload1 = TLOAD1(self)
-        #self.tload2 = TLOAD2(self)
+        self.darea = DAREA(self)
+        self.tload1 = TLOAD1(self)
+        self.tload2 = TLOAD2(self)
         #self.rload1 = RLOAD1(self)
         #self.rload2 = RLOAD2(self)
         #self.tic = TIC(self)  # initial conditions
@@ -446,10 +447,10 @@ class BDFAttributes:
         self.mat9 = MAT9(self)
         self.mat10 = MAT10(self)
         self.mat11 = MAT11(self)
-        #self.mat10c = MAT10C(self)
-        #self.matort = MATORT(self)
+        self.mat10c = MAT10C(self)
+        self.matort = MATORT(self)
         #self.mathe = MATHE(self)
-        #self.mathp = MATHP(self)
+        self.mathp = MATHP(self)
 
         self.spc = SPC(self)
         self.spc1 = SPC1(self)
@@ -717,7 +718,7 @@ class BDFAttributes:
         materials = [
             self.mat1, self.mat2, self.mat3,
             self.mat8, self.mat9, self.mat10, self.mat11,
-            #self.mat10c, self.matort,
+            self.mat10c, self.matort,
         ]
         return materials
 
@@ -731,7 +732,8 @@ class BDFAttributes:
     @property
     def hyperelastic_material_cards(self) -> list[Any]:
         materials = [
-            #self.mathe, self.mathp,
+            #self.mathe,
+            self.mathp,
         ]
         return materials
 
@@ -768,8 +770,8 @@ class BDFAttributes:
     def dynamic_load_cards(self) -> list[Any]:
         loads = [
             #self.dload,
-            #self.darea,
-            #self.tload1, self.tload2,
+            self.darea,
+            self.tload1, self.tload2,
             #self.rload1, self.rload2,
 
             # random loads

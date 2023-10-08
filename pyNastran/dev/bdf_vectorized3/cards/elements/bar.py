@@ -1538,15 +1538,6 @@ class CBARAO(Element):
         #self.x = np.array([], dtype='float64')
         self.station = np.array([], dtype='float64')
 
-    #def add(self, eid: int, pid: int, nids: list[int],
-            #x: Optional[list[float]], g0: Optional[int],
-            #offt: str='GGG', pa: int=0, pb: int=0,
-            #wa: Optional[list[float]]=None, wb: Optional[list[float]]=None,
-            #comment: str='', validate: bool=False):
-        #assert x is None or g0 is None, f'pid={pid} x={x} g0={g0}'
-        #self.cards.append((eid, pid, nids, x, g0, offt, pa, pb, wa, wb, comment))
-        #self.n += 1
-
     def add(self, eid: int, scale: str, x: list[float], comment: str='') -> int:
         """
         Creates a CBARAO card, which defines additional output locations
@@ -1576,6 +1567,7 @@ class CBARAO(Element):
         MSC only
 
         """
+        assert isinstance(scale, str), scale
         self.cards.append((eid, scale, x, comment))
         self.n += 1
         return self.n
@@ -1613,6 +1605,8 @@ class CBARAO(Element):
             ]
             x = [xi for xi in x if xi is not None]
         assert len(card) <= 9, f'len(CBARAO card) = {len(card):d}\ncard={card}'
+        nstation = len(x)
+        assert nstation > 0, x
         self.cards.append((eid, scale, x, comment))
         self.n += 1
         return self.n
@@ -1639,7 +1633,9 @@ class CBARAO(Element):
             element_id.append(eid)
             assert scalei in ['FR'], (eid, scalei)
             scale[icard] = scalei
-            nstation[icard] = len(station)
+            nstationi = len(stationi)
+            nstation[icard] = nstationi
+            assert nstationi > 0, stationi
             station.extend(stationi)
         self._save(element_id, scale, nstation, station)
         self.sort()
@@ -1670,8 +1666,9 @@ class CBARAO(Element):
         element_ids = array_str(self.element_id, size=size)
 
         for eid, scale, (istation0, istation1) in zip(element_ids, self.scale, self.istation):
-            station = self.station[istation0:istation1]
-            list_fields = ['CBARAO', eid, self.scale] + station.tolist()
+            station = self.station[istation0:istation1].tolist()
+            assert len(station) > 0, station
+            list_fields = ['CBARAO', eid, scale] + station
             #print(list_fields)
             bdf_file.write(print_card(list_fields))
         return
@@ -1754,8 +1751,15 @@ def apply_bar_default(bar: Union[CBAR, CBEAM],
     data_temp_default += [
         #(bar.property_id, PROPERTY_ID_DEFAULT, baror.pid),
         (bar.property_id, PROPERTY_ID_DEFAULT, bar.element_id),
-        (bar.offt, OFFT_DEFAULT, offt_),
     ]
+    if baror is None or baror.type == 'BAROR':
+        data_temp_default.append((bar.offt, OFFT_DEFAULT, offt_))
+    else:
+        if isinstance(baror.offt, str):
+            data_temp_default.append((bar.offt, OFFT_DEFAULT, offt_))
+        else:
+            data_temp_default.append((bar.bit, -1, baror.offt))
+
     #print(bar.x)
     #print(bar.g0)
     is_x_nan = np.isnan(bar.x)

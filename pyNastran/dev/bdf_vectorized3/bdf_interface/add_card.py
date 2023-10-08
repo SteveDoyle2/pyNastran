@@ -3479,7 +3479,7 @@ class AddOptimization(BDFAttributes):
     def add_dvmrel1(self, oid: int, mat_type: str, mid: int, mp_name: str,
                     dvids: list[int], coeffs: list[float],
                     mp_min: Optional[float]=None, mp_max: float=1e20, c0: float=0.,
-                    validate: bool=True, comment: str='') -> DVMREL1:
+                    validate: bool=True, comment: str='') -> int:
         """
         Creates a DVMREL1 card
 
@@ -3558,7 +3558,7 @@ class AddOptimization(BDFAttributes):
         return dvmrel
 
     def add_dvgrid(self, dvid: int, nid: int, dxyz: NDArray3float,
-                   cid: int=0, coeff: float=1.0, comment: str='') -> DVGRID:
+                   cid: int=0, coeff: float=1.0, comment: str='') -> int:
         """
         Creates a DVGRID card
 
@@ -3677,7 +3677,7 @@ class AddOptimization(BDFAttributes):
     # nx optimization
     def add_dvtrel1(self, dvtrel_id: int, label: str, group_id: int,
                     state: str='ACTIVE', dsv_flag: int=0, dvid1: int=0,
-                    validate=False, comment: str='') -> DVTREL1:
+                    validate=False, comment: str='') -> int:
         dvtrel = DVTREL1(dvtrel_id, label, group_id, state=state,
                          dsv_flag=dsv_flag, dvid1=dvid1, comment=comment)
         self._add_methods._add_dvtrel_object(dvtrel)
@@ -4835,6 +4835,32 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                              a1=a1, a2=a2, a3=a3, tref=tref, ge=ge, comment=comment)
         return mat
 
+    def add_mat10c(self, mid: int, form: str='REAL',
+                   rho_real: float=0.0, rho_imag: float=0.0,
+                   c_real: float=0.0, c_imag: float=0.0,
+                   comment: str='') -> int:
+        mat = self.mat10c.add(mid, form=form, rho_real=rho_real, rho_imag=rho_imag,
+                              c_real=c_real, c_imag=c_imag, comment=comment)
+        return mat
+
+    def add_mathe(self, mid: int) -> int:
+        mat = self.mathe.add(mid)
+        return mat
+
+    def add_matort(self, mid: int, E1: float, E2: float, E3: float,
+                   nu12: float, nu23: float, nu31: float,
+                   G12: float, G23: float, G31: float,
+                   rho: float=0.0,
+                   alpha1: float=0.0, alpha2: float=0.0, alpha3: float=0.0,
+                   tref: float=0.0, ge: float=0.0,
+                   comment: str=''):
+        mat = self.matort.add(
+            mid, E1, E2, E3, nu12, nu23, nu31, G12, G23, G31,
+            rho=rho, alpha1=alpha1, alpha2=alpha2, alpha3=alpha3,
+            tref=tref, ge=ge,
+            comment=comment)
+        return mat
+
     def add_mat3d(self, mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=0.0,
                   comment: str='') -> int:
         """
@@ -5091,7 +5117,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         dload = self.dload.add(sid, scale, scale_factors, load_ids, comment=comment)
         return dload
 
-    def add_darea(self, sid, nid, component, scale, comment: str='') -> int:
+    def add_darea(self, sid: int, nid: int, component: str, scale: float, comment: str='') -> int:
         """
         Creates a DAREA card
 

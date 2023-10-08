@@ -624,10 +624,10 @@ class DCONSTR(OptConstraint):
         """
         oid = integer(card, 1, 'oid')
         dresp_id = integer(card, 2, 'dresp_id')
-        lid = integer_double_or_blank(card, 3, 'lid', -1e20)
-        uid = integer_double_or_blank(card, 4, 'uid', 1e20)
-        lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
-        highfq = double_or_blank(card, 6, 'highfq', 1e20)
+        lid = integer_double_or_blank(card, 3, 'lid', default=-1e20)
+        uid = integer_double_or_blank(card, 4, 'uid', default=1e20)
+        lowfq = double_or_blank(card, 5, 'lowfq', default=0.0)
+        highfq = double_or_blank(card, 6, 'highfq', default=1e20)
         assert len(card) <= 7, f'len(DCONSTR card) = {len(card):d}\ncard={card}'
         return DCONSTR(oid, dresp_id, lid, uid, lowfq, highfq, comment=comment)
 
@@ -839,8 +839,8 @@ class DESVAR(OptConstraint):
         desvar_id = integer(card, 1, 'desvar_id')
         label = string(card, 2, 'label')
         xinit = double(card, 3, 'xinit')
-        xlb = double_or_blank(card, 4, 'xlb', -1e20)
-        xub = double_or_blank(card, 5, 'xub', 1e20)
+        xlb = double_or_blank(card, 4, 'xlb', default=-1e20)
+        xub = double_or_blank(card, 5, 'xub', default=1e20)
         delx = double_or_blank(card, 6, 'delx')
         ddval = integer_or_blank(card, 7, 'ddval')
         assert len(card) <= 8, f'len(DESVAR card) = {len(card):d}\ncard={card}'
@@ -949,9 +949,9 @@ class TOPVAR(BaseCard):
         label = string(card, 2, 'label')
         prop_type = string(card, 3, 'prop_type')
         xinit = double_or_blank(card, 4, 'xinit')
-        xlb = double_or_blank(card, 5, 'xlb', 0.001)
-        delxv = double_or_blank(card, 6, 'delxv', 0.2)
-        power = double_or_blank(card, 7, 'power', 3.0)
+        xlb = double_or_blank(card, 5, 'xlb', default=0.001)
+        delxv = double_or_blank(card, 6, 'delxv', default=0.2)
+        power = double_or_blank(card, 7, 'power', default=3.0)
         pid = integer(card, 8, 'pid')
         options = {}
         if len(card) > 8:
@@ -1401,8 +1401,8 @@ class DLINK(OptConstraint):
         """
         oid = integer(card, 1, 'oid')
         dependent_desvar = integer(card, 2, 'dependent_desvar')
-        c0 = double_or_blank(card, 3, 'c0', 0.)
-        cmult = double_or_blank(card, 4, 'cmult', 1.)
+        c0 = double_or_blank(card, 3, 'c0', default=0.)
+        cmult = double_or_blank(card, 4, 'cmult', default=1.)
 
         nfields = len(card) - 4
         n = nfields // 2
@@ -2715,13 +2715,13 @@ class DRESP2(OptConstraint):
         label = string(card, 2, 'label')
         dequation = integer_or_string(card, 3, 'dequation_id')
         region = integer_or_blank(card, 4, 'region')
-        method = string_or_blank(card, 5, 'method', 'MIN')
+        method = string_or_blank(card, 5, 'method', default='MIN')
 
         # MSC 2005   Defaults: C1=100., C2=.005)
         # MSC 2016.1 Defaults: C1=1., C2=.005, C3=10.)
-        c1 = double_or_blank(card, 6, 'c1', 1.)
-        c2 = double_or_blank(card, 7, 'c2', 0.005)
-        c3 = double_or_blank(card, 8, 'c3', 10.)
+        c1 = double_or_blank(card, 6, 'c1', default=1.)
+        c2 = double_or_blank(card, 7, 'c2', default=0.005)
+        c3 = double_or_blank(card, 8, 'c3', default=10.)
 
         fields = [interpret_value(field) for field in card[9:]]
 
@@ -3476,8 +3476,8 @@ class DSCREEN(OptConstraint):
 
         """
         rtype = string(card, 1, 'rtype')
-        trs = double_or_blank(card, 2, 'trs', -0.5)
-        nstr = integer_or_blank(card, 3, 'nstr', 20)
+        trs = double_or_blank(card, 2, 'trs', default=-0.5)
+        nstr = integer_or_blank(card, 3, 'nstr', default=20)
         assert len(card) <= 4, f'len(DSCREEN card) = {len(card):d}\ncard={card}'
         return DSCREEN(rtype, trs=trs, nstr=nstr, comment=comment)
 
@@ -3583,24 +3583,28 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
         cp_max = double_or_blank(card, 6, 'cp_max', default=1e20)
         c0 = double_or_blank(card, 7, 'c0', default=0.0)
 
-        dvids = []
+        desvar_ids = []
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
 
-        nfields = len(end_fields) - 1
-        if nfields % 2 == 1:
-            end_fields.append(None)
-            nfields += 1
+        nfields = len(end_fields) # - 1
+        #if nfields % 2 == 1:
+            #end_fields.append(None)
+            #nfields += 1
         i = 0
         for i in range(0, nfields, 2):
-            dvids.append(end_fields[i])
-            coeffs.append(end_fields[i + 1])
-        if nfields % 2 == 1:
+            desvar_id = end_fields[i]
+            coeff = end_fields[i + 1]
+            assert isinstance(desvar_id, integer_types), card
+            assert isinstance(coeff, float_types), card
+            desvar_ids.append(desvar_id)
+            coeffs.append(coeff)
+        if len(desvar_ids) != len(coeffs): # nfields % 2 == 1:
             print(card)
-            print("dvids = %s" % (dvids))
+            print("desvar_ids = %s" % (desvar_ids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVCREL1...')
-        return DVCREL1(oid, element_type, eid, cp_name, dvids, coeffs,
+        return DVCREL1(oid, element_type, eid, cp_name, desvar_ids, coeffs,
                        c0=c0, cp_min=cp_min, cp_max=cp_max, comment=comment)
 
     def _verify(self, xref):
@@ -4140,27 +4144,31 @@ class DVMREL1(DVXREL1):
         #else: # negative
             #self.mp_min = double_or_blank(card, 5, 'mpMin', -1e-35)
         mp_min = double_or_blank(card, 5, 'mp_min')  #: .. todo:: bad default
-        mp_max = double_or_blank(card, 6, 'mp_max', 1e20)
-        c0 = double_or_blank(card, 7, 'c0', 0.0)
+        mp_max = double_or_blank(card, 6, 'mp_max', default=1e20)
+        c0 = double_or_blank(card, 7, 'c0', default=0.0)
 
-        dvids = []
+        desvar_ids = []
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
-        nfields = len(end_fields) - 1
-        if nfields % 2 == 1:
-            end_fields.append(None)
-            nfields += 1
+        nfields = len(end_fields) # - 1
+        #if nfields % 2 == 1:
+            #end_fields.append(None)
+            #nfields += 1
 
         i = 0
         for i in range(0, nfields, 2):
-            dvids.append(end_fields[i])
-            coeffs.append(end_fields[i + 1])
-        if nfields % 2 == 1:
+            desvar_id = end_fields[i]
+            coeff = end_fields[i + 1]
+            assert isinstance(desvar_id, integer_types), card
+            assert isinstance(coeff, float_types), card
+            desvar_ids.append(desvar_id)
+            coeffs.append(coeff)
+        if len(desvar_ids) != len(coeffs): # nfields % 2 == 1:
             print(card)
-            print("dvids = %s" % (dvids))
+            print("desvar_ids = %s" % (desvar_ids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVMREL1...')
-        return DVMREL1(oid, mat_type, mid, mp_name, dvids, coeffs,
+        return DVMREL1(oid, mat_type, mid, mp_name, desvar_ids, coeffs,
                        mp_min=mp_min, mp_max=mp_max, c0=c0, comment=comment)
 
     def object_attributes(self, mode='public', keys_to_skip=None,
@@ -4374,7 +4382,7 @@ class DVMREL2(DVXREL2):
         mid = integer(card, 3, 'mid')
         mp_name = integer_or_string(card, 4, 'mp_name')
         mp_min = double_or_blank(card, 5, 'mp_min')
-        mp_max = double_or_blank(card, 6, 'mp_max', 1e20)
+        mp_max = double_or_blank(card, 6, 'mp_max', default=1e20)
         dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
 
         fields = [interpret_value(field) for field in card[9:]]
@@ -4776,27 +4784,33 @@ class DVPREL1(DVXREL1):
         #: Minimum value allowed for this property.
         #: .. todo:: bad default (see DVMREL1)
         p_min = double_or_blank(card, 5, 'p_min', None)
-        p_max = double_or_blank(card, 6, 'p_max', 1e20)
-        c0 = double_or_blank(card, 7, 'c0', 0.0)
+        p_max = double_or_blank(card, 6, 'p_max', default=1e20)
+        c0 = double_or_blank(card, 7, 'c0', default=0.0)
 
-        dvids = []
+        desvar_ids = []
         coeffs = []
         end_fields = [interpret_value(field) for field in card[9:]]
 
-        nfields = len(end_fields) - 1
-        if nfields % 2 == 1:
-            end_fields.append(None)
-            nfields += 1
+        nfields = len(end_fields) # - 1
+        #if nfields % 2 == 1:
+            #end_fields.append(None)
+            #nfields += 1
         i = 0
         for i in range(0, nfields, 2):
-            dvids.append(end_fields[i])
-            coeffs.append(end_fields[i + 1])
-        if nfields % 2 == 1:
+            desvar_id = end_fields[i]
+            coeff = end_fields[i + 1]
+            assert isinstance(desvar_id, integer_types), card
+            assert isinstance(coeff, float_types), card
+            desvar_ids.append(desvar_id)
+            coeffs.append(coeff)
+            #dvids.append(end_fields[i])
+            #coeffs.append(end_fields[i + 1])
+        if len(desvar_ids) != len(coeffs): # nfields % 2 == 1:
             print(card)
-            print("dvids = %s" % (dvids))
+            print("desvar_ids = %s" % (desvar_ids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVPREL1...')
-        return DVPREL1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+        return DVPREL1(oid, prop_type, pid, pname_fid, desvar_ids, coeffs,
                        p_min=p_min, p_max=p_max, c0=c0,
                        comment=comment)
 
@@ -5091,8 +5105,8 @@ class DVPREL2(DVXREL2):
         prop_type = string(card, 2, 'prop_type')
         pid = integer(card, 3, 'pid')
         pname_fid = integer_or_string(card, 4, 'pName_FID')
-        p_min = double_or_blank(card, 5, 'p_in', None)
-        p_max = double_or_blank(card, 6, 'p_max', 1e20)
+        p_min = double_or_blank(card, 5, 'p_in', default=None)
+        p_max = double_or_blank(card, 6, 'p_max', default=1e20)
         dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
 
         fields = [interpret_value(field) for field in card[9:]]

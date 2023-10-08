@@ -643,8 +643,9 @@ class Writer():
         structural_materials = [
             model.mat1, model.mat2, model.mat3,
             model.mat8, model.mat9, model.mat10, model.mat11,
-            #model.mat10c, model.matort,
-            #model.mathe, model.mathp,  # hyperelastic
+            model.mat10c, model.matort,
+            #model.mathe, # hyperelastic
+            model.mathp,  # hyperelastic
         ]
         thermal_materials = [model.mat4, model.mat5]
         is_materials = any([mat.n for mat in structural_materials])
@@ -932,15 +933,15 @@ class Writer():
             bdf_file.write(model.delay.write(size=size))
 
         if any(load.n for load in model.dynamic_load_cards):
-            bdf_file.write(model.dload.write(size=size))
+            #bdf_file.write(model.dload.write(size=size))
             bdf_file.write(model.darea.write(size=size))
             bdf_file.write(model.tload1.write(size=size))
             bdf_file.write(model.tload2.write(size=size))
-            bdf_file.write(model.rload1.write(size=size))
-            bdf_file.write(model.rload2.write(size=size))
+            #bdf_file.write(model.rload1.write(size=size))
+            #bdf_file.write(model.rload2.write(size=size))
 
             # random loads
-            bdf_file.write(model.randps.write(size=size))
+            #bdf_file.write(model.randps.write(size=size))
 
             #for (key, load_combinations) in sorted(self.load_combinations.items()):
                 #for load_combination in load_combinations:

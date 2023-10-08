@@ -817,6 +817,57 @@ class TestMaterials(unittest.TestCase):
 
         save_load_deck(bdf_model) # , run_remove_unused=False
 
+    def test_mat10c(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        mid = 10
+        model.add_mat10c(mid, form='REAL', rho_real=0.0, rho_imag=0.0, c_real=0.0, c_imag=0.0, comment='')
+        model.setup()
+        print(model.mat10c.write())
+        save_load_deck(model)
+
+    def test_matort(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        mid = 10
+        E1 = 10.
+        E2 = 20.
+        E3 = 30.
+        nu12 = 0.3
+        nu23 = 0.2
+        nu31 = 0.1
+        G12 = 1.
+        G23 = 2.
+        G31 = 3.
+        model.add_matort(mid, E1, E2, E3, nu12, nu23, nu31, G12, G23, G31,
+                         rho=0.0, alpha1=0.0, alpha2=0.0, alpha3=0.0, tref=0.0, ge=0.0, comment='')
+        model.setup()
+        print(model.mathort.write())
+        save_load_deck(model)
+
+    def test_matort(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        mid = 10
+        #E1 = 10.
+        #E2 = 20.
+        #E3 = 30.
+        #nu12 = 0.3
+        #nu23 = 0.2
+        #nu31 = 0.1
+        #G12 = 1.
+        #G23 = 2.
+        #G31 = 3.
+        model.add_mathp(mid, a10=0., a01=0., d1=None, rho=0.,
+                        av=0., tref=0., ge=0., na=1, nd=1,
+                        a20=0., a11=0., a02=0., d2=0., a30=0., a21=0., a12=0., a03=0., d3=0.,
+                        a40=0., a31=0., a22=0., a13=0., a04=0., d4=0., a50=0., a41=0.,
+                        a32=0., a23=0., a14=0., a05=0., d5=0.,
+                        tab1=None, tab2=None, tab3=None, tab4=None, tabd=None, comment='')
+        print(model.mathp.write())
+        model.setup()
+        save_load_deck(model)
+
     def _test_matg(self):
         """tests the MATG"""
         log = get_logger(level='warning')

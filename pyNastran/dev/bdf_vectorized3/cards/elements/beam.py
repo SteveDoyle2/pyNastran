@@ -24,7 +24,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from .rod import line_pid_mass_per_length, line_length, line_vector_length, line_centroid
 from .bar import apply_bar_default, init_x_g0, get_bar_vector, split_offt_vector
 from .utils import get_density_from_material
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_default_int, array_default_float, array_default_str)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
@@ -169,6 +170,7 @@ class CBEAM(Element):
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 2), dtype='int32')
         offt = np.full(ncards, '', dtype='|U3')
+        bit = np.full(ncards, -1, dtype='int32')
         g0 = np.full(ncards, -1, dtype='int32')
         x = np.full((ncards, 3), np.nan, dtype='float64')
 
@@ -189,7 +191,10 @@ class CBEAM(Element):
                 x[icard, :] = xi
             else:
                 g0[icard] = g0i
-            offt[icard] = offti
+            if isinstance(offti, str):
+                offt[icard] = offti
+            else:
+                bit[icard] = offti
             pa[icard] = pai
             pb[icard] = pbi
             wa[icard, :] = wai
@@ -197,18 +202,23 @@ class CBEAM(Element):
             sa[icard] = sai
             sb[icard] = sbi
 
-        self._save(element_id, property_id, nodes, offt, g0, x,
+        self._save(element_id, property_id, nodes,
+                   offt, bit,
+                   g0, x,
                    pa, pb, wa, wb, sa, sb)
         beamor = self.model.beamor
         apply_bar_default(self, beamor)
         self.cards = []
 
-    def _save(self, element_id, property_id, nodes, offt, g0, x,
+    def _save(self, element_id, property_id, nodes,
+              offt, bit,
+              g0, x,
               pa, pb, wa, wb, sa, sb):
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
         self.offt = offt
+        self.bit = bit
         self.g0 = g0
         self.x = x
 
@@ -252,29 +262,29 @@ class CBEAM(Element):
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
         nodes_ = array_str(self.nodes, size=size)
+        offts = array_default_str(self.offt, default='GGG', size=size)
+        bits = array_str(self.bit, size=size)
+        ibit = (self.bit != -1)
+        offts[ibit] = bits[ibit]
         pas = array_default_int(self.pa, default=0, size=size)
         pbs = array_default_int(self.pb, default=0, size=size)
+        was = array_default_float(self.wa, default=0, size=size, is_double=False)
+        wbs = array_default_float(self.wb, default=0, size=size, is_double=False)
         for eid, pid, nodes, g0, x, is_g0, offt, pa, pb, wa, wb in zip_longest(element_ids, property_ids, nodes_,
-                                                                        self.g0, self.x, self.is_g0, self.offt,
-                                                                        pas, pbs, self.wa, self.wb):
+                                                                        self.g0, self.x, self.is_g0, offts,
+                                                                        pas, pbs, was, wbs):
             n1, n2 = nodes
-            w1a = set_blank_if_default(wa[0], default=0.0)
-            w2a = set_blank_if_default(wa[1], default=0.0)
-            w3a = set_blank_if_default(wa[2], default=0.0)
-
-            w1b = set_blank_if_default(wb[0], default=0.0)
-            w2b = set_blank_if_default(wb[1], default=0.0)
-            w3b = set_blank_if_default(wb[2], default=0.0)
-
+            w1a, w2a, w3a = wa
+            w1b, w2b, w3b = wb
             if is_g0:
-                x1, x2, x3 = x # self.get_x_g0_defaults()
-            else:
                 x1 = g0
                 x2 = ''
                 x3 = ''
+            else:
+                x1, x2, x3 = x # self.get_x_g0_defaults()
 
             # offt doesn't exist in NX nastran
-            offt = set_blank_if_default(offt, 'GGG')
+            #offt = set_blank_if_default(offt, 'GGG')
 
             list_fields = ['CBEAM', eid, pid, n1, n2,
                            x1, x2, x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]

@@ -64,6 +64,28 @@ def array_default_int(ndarray: np.ndarray, default: int=0, size: int=8) -> np.nd
 
 def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
+    if size == 8:
+        str_array = np.zeros(ndarray.shape, dtype='|U8')
+        print_float = print_float_8
+    else:
+        str_array = np.zeros(ndarray.shape, dtype='|U16')
+        print_float = print_float_16
+        if is_double:
+            print_float = print_scientific_double
+
+    if ndarray.ndim == 1:
+        for i, value in enumerate(ndarray):
+            str_array[i] = print_float(value)
+    elif ndarray.ndim == 2:
+        for i, values in enumerate(ndarray):
+            for j, value in enumerate(values):
+                str_array[i, j] = print_float(value)
+    else:
+        raise NotImplementedError(ndarray.shape)
+    return str_array
+
+def array_float_nan(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> np.ndarray:
+    """setup the nan values and fill in the holes"""
     inan = np.isnan(ndarray)
     ivalue = ~inan
     if size == 8:
@@ -91,6 +113,34 @@ def array_float(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> np.n
 
 def array_default_float(ndarray: np.ndarray, default=0.,
                         size: int=8, is_double: bool=False) -> np.ndarray:
+    """setup the nan values and fill in the holes"""
+    idefault = (ndarray == default)
+    ivalue = ~idefault
+    if size == 8:
+        str_array = np.zeros(ndarray.shape, dtype='|U8')
+        print_float = print_float_8
+    else:
+        str_array = np.zeros(ndarray.shape, dtype='|U16')
+        print_float = print_float_16
+        if is_double:
+            print_float = print_scientific_double
+
+    if ndarray.ndim == 1:
+        i = np.where(ivalue)[0]
+        for ii in i:
+            str_array[ii] = print_float(ndarray[ii])
+    elif ndarray.ndim == 2:
+        i, j = np.where(ivalue)
+        for ij in zip(i, j):
+            str_array[ij] = print_float(ndarray[ij])
+    else:
+        raise NotImplementedError(ndarray.shape)
+
+    str_array[idefault] = ''
+    return str_array
+
+def array_default_float_nan(ndarray: np.ndarray, default=0.,
+                            size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
     idefault = (np.isnan(ndarray) | (ndarray == default))
     ivalue = ~idefault
