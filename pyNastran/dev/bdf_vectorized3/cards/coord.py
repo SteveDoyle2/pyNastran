@@ -301,6 +301,8 @@ class COORD(VectorizedBaseCard):
         #return cls(cid, e1, e2, e3, rid=rid, comment=comment)
 
     def sort(self) -> None:
+        if np.array_equal(self.coord_id, np.unique(self.coord_id)):
+            return
         isort = np.argsort(self.coord_id)
         self.__apply_slice__(self, isort)
 
@@ -737,7 +739,7 @@ class COORD(VectorizedBaseCard):
             assert icoord == 1, icoord
 
             assert node_id.min() > 0, node_id
-            gridi = grid.slice_card_by_node_id(node_id)
+            gridi = grid.slice_card_by_node_id(node_id, sort_ids=True)
             grid_xyz_cid0 = gridi.xyz_cid0()
             grid_node_id = gridi.node_id
             inid = np.searchsorted(grid_node_id, node_id)
@@ -989,7 +991,7 @@ class COORD(VectorizedBaseCard):
 
     def transform_node_to_global_xyz(self, node_id: np.ndarray) -> np.ndarray:
         grid = self.model.grid
-        grid2 = grid.slice_card_by_node_id(node_id)
+        grid2 = grid.slice_card_by_node_id(node_id, sort_ids=False)
         xyz_cid0 = grid2.xyz_cid0()
         return xyz_cid0
 
@@ -1012,7 +1014,7 @@ class COORD(VectorizedBaseCard):
         # transform_node_to_local_xyz
         # transform_node_to_local_coord_id
         ## TODO: this is redundant
-        grid2 = self.model.grid.slice_card_by_node_id(node_id)
+        grid2 = self.model.grid.slice_card_by_node_id(node_id, sort_ids=False)
         xyz_cid0 = grid2.xyz_cid0()
         xyz_cid = self.transform_global_xyz_to_local_coord_id(xyz_cid0, local_coord_id)
         return xyz_cid

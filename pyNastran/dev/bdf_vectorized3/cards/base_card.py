@@ -229,11 +229,12 @@ class VectorizedBaseCard:
             card = self
             self.__apply_slice__(card, i)
         else:
-            card = self.slice_card_by_index(i)
+            card = self.slice_card_by_index(i, sort_ids=True)
         return card
 
     def slice_card_by_id(self, ids: np.ndarray,
-                         assume_sorted: bool=True) -> Any:
+                         assume_sorted: bool=True,
+                         sort_ids: bool=False) -> Any:
         """uses a node_id to extract Elements, Properties, etc.
 
         Parameters
@@ -242,10 +243,16 @@ class VectorizedBaseCard:
             the ids to extract (should be a subset of elem.element_id)
         assume_sorted: bool; default=True
             assume the parent array (e.g., elem.element_id is sorted)
+        sort_ids: bool; default=False
+            True: sort the input ids
+            False: output is unsorted, which could cause issues
 
         """
         i = self.index(ids, assume_sorted=assume_sorted)
-        cls_obj = self.slice_card_by_index(i) # , assume_sorted=assume_sorted)
+        cls_obj = self.slice_card_by_index(i, sort_index=sort_ids) # , assume_sorted=assume_sorted)
+        #if 1:
+            #assert np.array_equal(self._ids, np.unique(self._ids))
+            #ids = np.atleast_1d(np.asarray(ids, dtype=self._ids.dtype))
         return cls_obj
 
     def remove_card_by_id(self, ids: np.ndarray) -> Any:
@@ -259,6 +266,7 @@ class VectorizedBaseCard:
         #return card
 
     def slice_card_by_index(self, i: np.ndarray,
+                            sort_index: bool=False,
                             #assume_sorted: bool=True,
                             ) -> Any:
         """
@@ -268,16 +276,22 @@ class VectorizedBaseCard:
         ----------
         i : (n,) int array
             the indices to extract (should be a subset of elem.element_id)
-        assume_sorted: bool; default=True
-            assume the parent array (e.g., elem.element_id is sorted)
+        sort_index: bool; default=False
+            True: sort the input ids (i)
+            False: output is unsorted, which could cause issues
+        #assume_sorted: bool; default=True
+            #assume the parent array (e.g., elem.element_id is sorted)
 
         """
         assert self.n > 0, self
         self_ids = self._ids
         assert len(self_ids), self_ids
         i = np.atleast_1d(np.asarray(i, dtype=self_ids.dtype))
-        i.sort()
-        imax = i[-1]
+        if sort_index:
+            i.sort()
+            imax = i[-1]
+        else:
+            imax = i.max()
         imax_allowable = len(self_ids) - 1
         #if imax_allowable == -1:
             #imax_allowable = 0
@@ -442,13 +456,14 @@ class Element(VectorizedBaseCard):
         self.n: int = 0
         self.element_id: np.ndarray = np.array([], dtype='int32')
 
-    def slice_card_by_element_id(self, element_id: np.ndarray) -> Element:
+    def slice_card_by_element_id(self, element_id: np.ndarray,
+                                 sort_ids: bool=False) -> Element:
         assert self.n > 0, self.n
         assert len(self.element_id) > 0, self.element_id
         i = self.index(element_id)
         #cls_obj = cls(self.model)
         #cls_obj.__apply_slice__(self, i)
-        cls_obj = self.slice_card_by_index(i)
+        cls_obj = self.slice_card_by_index(i, sort_index=sort_ids)
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 
@@ -461,11 +476,12 @@ class Property(VectorizedBaseCard):
         self.n = 0
         self.property_id: np.ndarray = np.array([], dtype='int32')
 
-    def slice_card_by_property_id(self, property_id: np.ndarray) -> Property:
+    def slice_card_by_property_id(self, property_id: np.ndarray,
+                                 sort_ids: bool=False) -> Property:
         assert self.n > 0, self.n
         assert len(self.property_id) > 0, self.property_id
         i = self.index(property_id)
-        cls_obj = self.slice_card_by_index(i)
+        cls_obj = self.slice_card_by_index(i, sort_index=sort_ids)
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 
@@ -478,10 +494,11 @@ class Material(VectorizedBaseCard):
         self.n = 0
         self.material_id: np.ndarray = np.array([], dtype='int32')
 
-    def slice_card_by_material_id(self, material_id: np.ndarray) -> Material:
+    def slice_card_by_material_id(self, material_id: np.ndarray,
+                                  sort_ids: bool=False) -> Material:
         assert self.n > 0, self.n
         i = self.index(material_id)
-        cls_obj = self.slice_card_by_index(i)
+        cls_obj = self.slice_card_by_index(i, sort_index=sort_ids)
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 

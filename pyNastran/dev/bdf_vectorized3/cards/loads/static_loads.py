@@ -1005,6 +1005,12 @@ class GRAV(Load):
         self.N = N
         self.n = nloads
 
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        cid = self.model.coord.coord_id
+        geom_check(self,
+                   missing,
+                   coord=(cid, self.coord_id))
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,

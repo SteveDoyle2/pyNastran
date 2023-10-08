@@ -444,20 +444,21 @@ class GRID(VectorizedBaseCard):
         #inid = self._node_index(node_id)
         #return self.slice_card(inid)
 
-    def slice_card_by_node_id(self, node_id: np.ndarray) -> GRID:
+    def slice_card_by_node_id(self, node_id: np.ndarray, sort_ids: bool=False) -> GRID:
         """uses a node_ids to extract GRIDs"""
         inid = self.index(node_id)
         #assert len(self.node_id) > 0, self.node_id
         #i = np.searchsorted(self.node_id, node_id)
-        grid = self.slice_card_by_index(inid)
+        grid = self.slice_card_by_index(inid, sort_index=sort_ids)
         return grid
 
-    def slice_card_by_index(self, i: np.ndarray) -> GRID:
+    def slice_card_by_index(self, i: np.ndarray, sort_index: bool=False) -> GRID:
         """uses a node_index to extract GRIDs"""
         assert self.xyz.shape == self._xyz_cid0.shape
         assert len(self.node_id) > 0, self.node_id
         i = np.atleast_1d(np.asarray(i, dtype=self.node_id.dtype))
-        i.sort()
+        if sort_index:
+            i.sort()
         grid = GRID(self.model)
         self.__apply_slice__(grid, i)
         return grid

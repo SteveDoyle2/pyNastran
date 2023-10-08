@@ -82,7 +82,7 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.constraints import (
     SPC, SPC1, SPCADD,
-    SPCOFF, SPCOFF1,
+    SPCOFF, # SPCOFF1,
     MPC, MPCADD)
 from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
     RBAR, RBAR1,
@@ -454,7 +454,7 @@ class BDFAttributes:
         self.spc = SPC(self)
         self.spc1 = SPC1(self)
         self.spcoff = SPCOFF(self)
-        self.spcoff1 = SPCOFF1(self)
+        #self.spcoff1 = SPCOFF1(self)
         self.spcadd = SPCADD(self)
         self.mpc = MPC(self)
         self.mpcadd = MPCADD(self)
@@ -539,7 +539,7 @@ class BDFAttributes:
         self.dti: dict[str, DMI] = {}
         self._dmig_temp = defaultdict(list)  # type: dict[str, list[str]]
         # ----------------------------------------
-        self.suport1 = {}
+        #self.suport1 = {}
         #self.suport = []
         #self.suport = SUPORT(self)
 

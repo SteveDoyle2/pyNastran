@@ -6918,7 +6918,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        elem = self.rbar.add(eid, nids, cna, cnb, cma, cmb, alpha=alpha, tref=tref, comment=comment)
+        elem = self.rbar.add(eid, nids, cna, cnb, cma, cmb,
+                             alpha=alpha, tref=tref, comment=comment)
         return elem
 
     def add_rbar1(self, eid: int, nids: list[int], cb: str,

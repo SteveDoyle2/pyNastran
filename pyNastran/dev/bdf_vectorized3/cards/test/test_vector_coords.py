@@ -234,7 +234,7 @@ class TestCoords(unittest.TestCase):
         #+======+=====+====+====+====+====+====+====+======+
         #| GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID |
         #+------+-----+----+----+----+----+----+----+------+
-        node = model.grid.slice_card_by_node_id(4)
+        node = model.grid.slice_card_by_node_id(4, sort_ids=False)
         #self.assertEqual(node.get_field(1), 4)
         #self.assertEqual(node.get_field(2), 0)
         #self.assertEqual(node.get_field(3), 1.)

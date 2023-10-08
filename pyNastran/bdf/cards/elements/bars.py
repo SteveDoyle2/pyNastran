@@ -9,7 +9,7 @@ defines:
 """
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import annotations
-from typing import Optional, Any, TYPE_CHECKING
+from typing import cast, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -23,6 +23,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.cards.coordinate_systems import CORD2R
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray33float
     from cpylog import SimpleLogger
@@ -32,7 +33,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def __init__(self):
         Element.__init__(self)
-        self.pid_ref = None  # type: Optional[Any]
+        self.pid_ref: Optional[Any] = None
         #self.nodes_ref = None
 
     def C(self):
@@ -1938,6 +1939,7 @@ def rotate_v_wa_wb(model: BDF, elem,
         # end A
         # global - cid != 0
         if cd1 != 0:
+            cd1_ref = cast(CORD2R, cd1_ref)
             v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
     elif offt_vector == 'B':
         # basic - cid = 0

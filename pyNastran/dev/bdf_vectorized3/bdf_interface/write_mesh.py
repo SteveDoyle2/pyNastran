@@ -1008,6 +1008,7 @@ class Writer():
             model.spcadd.write_file(bdf_file, size=size, is_double=is_double)
             model.spc.write_file(bdf_file, size=size, is_double=is_double)
             model.spc1.write_file(bdf_file, size=size, is_double=is_double)
+            model.spcoff.write_file(bdf_file, size=size, is_double=is_double)
 
         if any((card.n for card in model.mpc_cards)):
             bdf_file.write('$MPCs\n')

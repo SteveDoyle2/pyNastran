@@ -22,6 +22,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float, array_default_int, array_default_float, array_default_str)
+from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -36,6 +38,7 @@ class DESVAR(VectorizedBaseCard):
     | DESVAR | OID | LABEL | XINIT | XLB | XUB | DELXV | DDVAL |
     +--------+-----+-------+-------+-----+-----+-------+-------+
     """
+    _id_name = 'desvar_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.desvar_id = np.array([], dtype='int32')
@@ -216,10 +219,10 @@ class DLINK(VectorizedBaseCard):
     |       | IDV3 |   C3  |  etc.  |       |      |    |      |    |
     +-------+------+-------+--------+-------+------+----+------+----+
     """
-    _id_name = 'desvar_id'
+    _id_name = 'dlink_id'
     def __init__(self, model: BDF):
         super().__init__(model)
-        self.desvar_id = np.array([], dtype='int32')
+        self.dlink_id = np.array([], dtype='int32')
         self.label = np.array([], dtype='|U8')
         self.xinit = np.array([], dtype='float64')
         self.xlb = np.array([], dtype='float64')
@@ -227,48 +230,7 @@ class DLINK(VectorizedBaseCard):
         self.delx = np.array([], dtype='float64')
         self.ddval = np.array([], dtype='float64')
 
-    #def add(self, desvar_id: int, label: str, xinit: float,
-            #xlb: float=-1e20, xub: float=1e20,
-            #delx=None, ddval: Optional[int]=None,
-            #comment: str=''):
-        #"""
-        #Creates a DESVAR card
-
-        #Parameters
-        #----------
-        #desvar_id : int
-            #design variable id
-        #label : str
-            #name of the design variable
-        #xinit : float
-            #the starting point value for the variable
-        #xlb : float; default=-1.e20
-            #the lower bound
-        #xub : float; default=1.e20
-            #the lower bound
-        #delx : float; default=1.e20
-            #fractional change allowed for design variables during
-            #approximate optimization
-            #NX  if blank : take from DOPTPRM; otherwise 1.0
-            #MSC if blank : take from DOPTPRM; otherwise 0.5
-        #ddval : int; default=None
-            #int : DDVAL id
-                  #allows you to set discrete values
-            #None : continuous
-        #comment : str; default=''
-            #a comment for the card
-
-        #"""
-        #asdf
-        ##self.desvar_id = np.hstack([self.desvar_id, desvar_id])
-        ##self.label = np.hstack([self.label, label])
-        ##self.xinit = np.hstack([self.xinit, xinit])
-        ##self.xlb = np.hstack([self.xlb, xlb])
-        ##self.xub = np.hstack([self.xub, xub])
-        ##self.delx = np.hstack([self.delx, delx])
-        ##self.ddval = np.hstack([self.ddval, ddval])
-
-    def add(self, oid: int, dependent_desvar: int,
+    def add(self, dlink_id: int, dependent_desvar: int,
             independent_desvars: list[int],
             coeffs: list[float],
             c0: float=0.0, cmult: float=1.0, comment: str='') -> int:
@@ -278,7 +240,7 @@ class DLINK(VectorizedBaseCard):
 
         Parameters
         ----------
-        oid : int
+        dlink_id : int
             optimization id
         dependent_desvar : int
             the DESVAR to link
@@ -298,7 +260,7 @@ class DLINK(VectorizedBaseCard):
             coeffs = [coeffs]
         if isinstance(independent_desvars, integer_types):
             independent_desvars = [independent_desvars]
-        self.cards.append((oid, dependent_desvar, independent_desvars, coeffs,
+        self.cards.append((dlink_id, dependent_desvar, independent_desvars, coeffs,
                            c0, cmult, comment))
         self.n += 1
         return self.n
@@ -315,7 +277,7 @@ class DLINK(VectorizedBaseCard):
             a comment for the card
 
         """
-        desvar_id = integer(card, 1, 'oid')
+        dlink_id = integer(card, 1, 'oid')
         dependent_desvar = integer(card, 2, 'dependent_desvar')
         c0 = double_or_blank(card, 3, 'c0', 0.)
         cmult = double_or_blank(card, 4, 'cmult', 1.)
@@ -333,7 +295,7 @@ class DLINK(VectorizedBaseCard):
             coeffs.append(coeff)
         #return DLINK(oid, dependent_desvar, independent_desvars, coeffs,
                      #c0=c0, cmult=cmult, comment=comment)
-        self.cards.append((desvar_id, dependent_desvar, independent_desvars, coeffs,
+        self.cards.append((dlink_id, dependent_desvar, independent_desvars, coeffs,
                            c0, cmult, comment))
         self.n += 1
         return self.n
@@ -341,27 +303,44 @@ class DLINK(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.desvar_id = np.zeros(ncards, dtype='int32')
-        self.dependent_desvar = np.zeros(ncards, dtype='int32')
-        self.nindependent_desvars = np.zeros(ncards, dtype='int32')
+        dlink_id = np.zeros(ncards, dtype='int32')
+        dependent_desvar = np.zeros(ncards, dtype='int32')
+        nindependent_desvars = np.zeros(ncards, dtype='int32')
 
-        self.c0 = np.zeros(ncards, dtype='float64')
-        self.cmult = np.zeros(ncards, dtype='float64')
-        all_coefficents = []
+        c0 = np.zeros(ncards, dtype='float64')
+        cmult = np.zeros(ncards, dtype='float64')
+        all_coefficients = []
         all_independent_desvars = []
         for icard, card in enumerate(self.cards):
-            desvar_id, dependent_desvar, independent_desvars, coeffs, c0, cmult, comment = card
-            self.desvar_id[icard] = desvar_id
-            self.dependent_desvar[icard] = dependent_desvar
+            (dlink_idi, dependent_desvari, independent_desvarsi, coeffsi,
+             c0i, cmulti, comment) = card
+            dlink_id[icard] = dlink_idi
+            dependent_desvar[icard] = dependent_desvari
 
-            all_coefficents.extend(coeffs)
-            all_independent_desvars.extend(independent_desvars)
-            self.nindependent_desvars[icard] = len(independent_desvars)
+            all_coefficients.extend(coeffsi)
+            all_independent_desvars.extend(independent_desvarsi)
+            nindependent_desvars[icard] = len(independent_desvarsi)
             #self.coefficents[icard] = coeffs
-            self.c0[icard] = c0
-            self.cmult[icard] = cmult
-        self.coefficents = np.array(all_coefficents, dtype='float64')
-        self.independent_desvars = np.array(all_independent_desvars, dtype='int32')
+            c0[icard] = c0i
+            cmult[icard] = cmulti
+
+        coefficients = np.array(all_coefficients, dtype='float64')
+
+        independent_desvars = np.array(all_independent_desvars, dtype='int32')
+        self._save(dlink_id, dependent_desvar, c0, cmult,
+                   nindependent_desvars, independent_desvars, coefficients)
+
+    def _save(self, dlink_id, dependent_desvar,
+              c0, cmult,
+              nindependent_desvars, independent_desvars, coefficients):
+        self.dlink_id = dlink_id
+        self.dependent_desvar = dependent_desvar
+        self.c0 = c0
+        self.cmult = cmult
+
+        self.nindependent_desvars = nindependent_desvars
+        self.independent_desvars = independent_desvars
+        self.coefficients = coefficients
 
     @property
     def idesvar(self) -> np.ndarray:
@@ -370,20 +349,23 @@ class DLINK(VectorizedBaseCard):
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.desvar_id) == 0:
+        if len(self.dlink_id) == 0:
             return
 
         print_card = get_print_card_8_16(size)
-        desvar_ids = array_str(self.desvar_id, size=size)
+        dlink_ids = array_str(self.dlink_id, size=size)
         dependent_desvar = array_str(self.dependent_desvar, size=size)
-        for desvar_id, dep_desvar, (idesvar0, idesvar1), xinit, c0, cmult in zip_longest(
-            desvar_ids, dependent_desvar, self.idesvar, self.xinit, self.c0, self.cmult):
-            c0 = set_blank_if_default(c0, 0.)
-            cmult = set_blank_if_default(cmult, 1.)
+        c0s = array_default_float(self.c0, default=0.0, size=size, is_double=False)
+        cmults = array_default_float(self.c0, default=1.0, size=size, is_double=False)
+        for dlink_id, dep_desvar, (idesvar0, idesvar1), xinit, c0, cmult in zip_longest(
+            dlink_ids, dependent_desvar, self.idesvar,
+            self.xinit, c0s, cmults):
+            #c0 = set_blank_if_default(c0, 0.)
+            #cmult = set_blank_if_default(cmult, 1.)
             independent_desvars = self.independent_desvars[idesvar0 : idesvar1]
-            coeffs = self.coefficents[idesvar0 : idesvar1]
+            coeffs = self.coefficients[idesvar0 : idesvar1]
 
-            list_fields = ['DLINK', desvar_id, dep_desvar, c0, cmult]
+            list_fields = ['DLINK', dlink_id, dep_desvar, c0, cmult]
             for (idv, ci) in zip(independent_desvars, coeffs):
                 list_fields += [idv, ci]
             bdf_file.write(print_card(list_fields))
@@ -398,6 +380,7 @@ class DVGRID(VectorizedBaseCard):
     | DVGRID | DVID | GID | CID | COEFF | N1 | N2 | N3 |
     +--------+------+-----+-----+-------+----+----+----+
     """
+    _id_name = 'desvar_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.desvar_id = np.array([], dtype='int32')
@@ -405,46 +388,6 @@ class DVGRID(VectorizedBaseCard):
         self.coord_id = np.array([], dtype='int32')
         self.coefficient = np.array([], dtype='float64')
         self.dxyz = np.zeros((0, 3), dtype='float64')
-
-    #def add(self, desvar_id: int, label: str, xinit: float,
-            #xlb: float=-1e20, xub: float=1e20,
-            #delx=None, ddval: Optional[int]=None,
-            #comment: str=''):
-        #"""
-        #Creates a DESVAR card
-
-        #Parameters
-        #----------
-        #desvar_id : int
-            #design variable id
-        #label : str
-            #name of the design variable
-        #xinit : float
-            #the starting point value for the variable
-        #xlb : float; default=-1.e20
-            #the lower bound
-        #xub : float; default=1.e20
-            #the lower bound
-        #delx : float; default=1.e20
-            #fractional change allowed for design variables during
-            #approximate optimization
-            #NX  if blank : take from DOPTPRM; otherwise 1.0
-            #MSC if blank : take from DOPTPRM; otherwise 0.5
-        #ddval : int; default=None
-            #int : DDVAL id
-                  #allows you to set discrete values
-            #None : continuous
-        #comment : str; default=''
-            #a comment for the card
-
-        #"""
-        #self.desvar_id = np.hstack([self.desvar_id, desvar_id])
-        #self.label = np.hstack([self.label, label])
-        #self.xinit = np.hstack([self.xinit, xinit])
-        #self.xlb = np.hstack([self.xlb, xlb])
-        #self.xub = np.hstack([self.xub, xub])
-        #self.delx = np.hstack([self.delx, delx])
-        #self.ddval = np.hstack([self.ddval, ddval])
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -474,19 +417,30 @@ class DVGRID(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.desvar_id = np.zeros(ncards, dtype='int32')
-        self.node_id = np.zeros(ncards, dtype='int32')
-        self.coord_id = np.zeros(ncards, dtype='int32')
-        self.coefficient = np.zeros(ncards, dtype='float64')
-        self.dxyz = np.zeros((ncards, 3), dtype='float64')
+        desvar_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype='int32')
+        coord_id = np.zeros(ncards, dtype='int32')
+        coefficient = np.zeros(ncards, dtype='float64')
+        dxyz = np.zeros((ncards, 3), dtype='float64')
         for icard, card in enumerate(self.cards):
-            desvar_id, nid, cid, coeff, dxyz, comment = card
-            self.desvar_id[icard] = desvar_id
-            self.node_id[icard] = nid
-            self.coord_id[icard] = cid
-            self.coefficient[icard] = coeff
-            self.dxyz[icard, :] = dxyz
+            desvar_idi, nid, cid, coeff, dxyzi, comment = card
+            desvar_id[icard] = desvar_idi
+            node_id[icard] = nid
+            coord_id[icard] = cid
+            coefficient[icard] = coeff
+            dxyz[icard, :] = dxyzi
+        self._save(desvar_id, node_id, coord_id, coefficient, dxyz)
         self.cards = []
+
+    def _save(self, desvar_id, node_id, coord_id,
+              coefficient, dxyz) -> None:
+        if len(self.desvar_id) != 0:
+            asdf
+        self.desvar_id = desvar_id
+        self.node_id = node_id
+        self.coord_id = coord_id
+        self.coefficient = coefficient
+        self.dxyz = dxyz
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
@@ -498,8 +452,10 @@ class DVGRID(VectorizedBaseCard):
         desvar_ids = array_str(self.desvar_id, size=size)
         node_ids = array_str(self.node_id, size=size)
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
-        for desvar_id, node_id, coord_id, coeff, dxyz in zip_longest(desvar_ids, node_ids, coord_ids,
-                                                                     self.coefficient, self.dxyz.tolist()):
+        coefficients = array_float(self.coefficient, size=size, is_double=False)
+        dxyzs = array_float(self.dxyz, size=size, is_double=False).tolist()
+        for desvar_id, node_id, coord_id, coeff, dxyz in zip_longest(
+            desvar_ids, node_ids, coord_ids, coefficients, dxyzs):
             list_fields = [
                 'DVGRID', desvar_id, node_id, coord_id, coeff] + dxyz
             bdf_file.write(print_card(list_fields))
@@ -518,6 +474,7 @@ class DRESP1(VectorizedBaseCard):
     | DRESP1 |  1S1  | CSTRAN3 | CSTRAIN |  PCOMP |        |   1   |  1   | 10000 |
     +--------+-------+---------+---------+--------+--------+-------+------+-------+
     """
+    _id_name = 'dresp_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.dresp_id = np.array([], dtype='int32')
@@ -649,12 +606,9 @@ class DRESP1(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         dresp_id = np.zeros(ncards, dtype='int32')
 
         #: user-defined name for printing purposes
@@ -870,13 +824,15 @@ class DRESP2(VectorizedBaseCard):
 
     C1, C2, C3 are MSC specific
     """
+    _id_name = 'dresp_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.dresp_id = np.array([], dtype='int32')
 
         #: user-defined name for printing purposes
         self.label = np.array([], dtype='|U8')
-        self.dequation = np.array([], dtype='int32')
+        self.dequation_id = np.array([], dtype='int32')
+        self.dequation_str = np.array([], dtype='|U8')
         self.region = np.array([], dtype='int32')
         self.method = np.array([], dtype='|U8')
         self.c1 = np.array([], dtype='float64')
@@ -1015,12 +971,9 @@ class DRESP2(VectorizedBaseCard):
 
         #: user-defined name for printing purposes
         label = np.zeros(ncards, dtype='|U8')
-        #response_type = np.zeros(ncards, dtype='|U8')
 
-        #self.property_type = np.zeros(ncards, dtype='|U8')
-        #self.region = np.zeros(ncards, dtype='int32')
-
-        dequation = np.zeros(ncards, dtype='int32')
+        dequation_id = np.full(ncards, -1, dtype='int32')
+        dequation_str = np.zeros(ncards, dtype='|U8')
         region = np.zeros(ncards, dtype='int32')
 
         method = np.zeros(ncards, dtype='|U8')
@@ -1055,16 +1008,18 @@ class DRESP2(VectorizedBaseCard):
                                #[1, 2]],
             #}
 
-            assert isinstance(dequationi, integer_types), dequationi
+            if isinstance(dequationi, integer_types):
+                dequation_id[icard] = dequationi
+            else:
+                dequation_str[icard] = dequationi
+
             dresp_id[icard] = dresp_idi
             label[icard] = labeli
-            dequation[icard] = dequationi
             region[icard] = regioni
             method[icard] = methodi
             c1[icard] = c1i
             c2[icard] = c2i
             c3[icard] = c3i
-            #asf
 
         param_type = np.array(param_type_list)
         nparam_values = np.array(nparam_values_list)
@@ -1075,12 +1030,14 @@ class DRESP2(VectorizedBaseCard):
         #assert xlb <= xub, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
         #assert xinit >= xlb, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
         #assert xinit <= xub, f'desvar_id={desvar_id:d} xlb={xlb} xub={xub}'
-        #x = 1
-        self._save(dresp_id, label, dequation, region, method, c1, c2, c3,
+
+        self._save(dresp_id, label, dequation_id, dequation_str,
+                   region, method, c1, c2, c3,
                    nparams, param_type, nparam_values, param_values)
         self.cards = []
 
-    def _save(self, dresp_id, label, dequation, region, method, c1, c2, c3,
+    def _save(self, dresp_id, label, dequation_id, dequation_str,
+              region, method, c1, c2, c3,
               nparams, param_type, nparam_values, param_values):
         self.dresp_id = dresp_id
 
@@ -1091,7 +1048,8 @@ class DRESP2(VectorizedBaseCard):
         #self.property_type = np.zeros(ncards, dtype='|U8')
         #self.region = np.zeros(ncards, dtype='int32')
 
-        self.dequation = dequation
+        self.dequation_id = dequation_id
+        self.dequation_str = dequation_str
         self.region = region
 
         self.method = method
@@ -1124,9 +1082,15 @@ class DRESP2(VectorizedBaseCard):
         #pas = array_default_int(self.pa, default=0, size=size)
         methods = array_default_str(self.method, default='MIN', size=size)
 
-        for (dresp_id, label, deqatn, region, method, c1, c2, c3, iparam) in zip_longest(
-            dresp_ids, self.label, self.dequation, regions, methods,
-            self.c1, self.c2, self.c3, self.iparam):
+        c1s = array_float(self.c1, size=size, is_double=False)
+        c2s = array_float(self.c2, size=size, is_double=False)
+        c3s = array_float(self.c3, size=size, is_double=False)
+        for (dresp_id, label, deqatn_id, deqatn_str,
+             region, method, c1, c2, c3, iparam) in zip_longest(
+            dresp_ids, self.label,
+            self.dequation_id, self.dequation_str,
+            regions, methods,
+            c1s, c2s, c3s, self.iparam):
 
             iparam0, iparam1 = iparam
             param_types = self.param_type[iparam0:iparam1]
@@ -1144,9 +1108,7 @@ class DRESP2(VectorizedBaseCard):
                     #c2 = set_blank_if_default(c2, 0.005)
                     #c3 = set_blank_if_default(c3, 10.)
 
-            if np.isnan(c3):
-                c3 = ''
-
+            deqatn = deqatn_str if deqatn_id == -1 else deqatn_id
             list_fields = ['DRESP2', dresp_id, label, deqatn,
                            region, method, c1, c2, c3]
 
@@ -1170,6 +1132,7 @@ class DCONSTR(VectorizedBaseCard):
     | DCONSTR |  10  |  4  |    1.25    |            |       |        |
     +---------+------+-----+------------+------------+-------+--------+
     """
+    _id_name = 'dconstr_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.dconstr_id = np.array([], dtype='int32')
@@ -1186,7 +1149,8 @@ class DCONSTR(VectorizedBaseCard):
 
     def add(self, dconstr_id: int, dresp_id: int,
             lid: float=-1.e20, uid: float=1.e20,
-            lowfq: float=0.0, highfq: float=1.e20, comment: str='') -> int:
+            lowfq: float=0.0, highfq: float=1.e20,
+            comment: str='') -> int:
         """
         Creates a DCONSTR card
 
@@ -1220,12 +1184,9 @@ class DCONSTR(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         dconstr_id = np.zeros(ncards, dtype='int32')
         dresp_id = np.zeros(ncards, dtype='int32')
 
@@ -1302,6 +1263,7 @@ class DVPREL1(VectorizedBaseCard):
     |         | 200000 |   1.0  |        |           |       |        |     |
     +---------+--------+--------+--------+-----------+-------+--------+-----+
     """
+    _id_name = 'dvprel_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.dvprel_id = np.array([], dtype='int32')
@@ -1418,39 +1380,80 @@ class DVPREL1(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.dvprel_id = np.zeros(ncards, dtype='int32')
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.property_type = np.zeros(ncards, dtype='|U8')
-        self.property_name = np.zeros(ncards, dtype='|U8')
-        self.field_num = np.zeros(ncards, dtype='int32')
-        self.p_min = np.zeros(ncards, dtype='float64')
-        self.p_max = np.zeros(ncards, dtype='float64')
-        self.c0 = np.zeros(ncards, dtype='float64')
-        self.ndesvar = np.zeros(ncards, dtype='int32')
+        dvprel_id = np.zeros(ncards, dtype='int32')
+        property_id = np.zeros(ncards, dtype='int32')
+        property_type = np.zeros(ncards, dtype='|U8')
+        property_name = np.zeros(ncards, dtype='|U8')
+        field_num = np.zeros(ncards, dtype='int32')
+        p_min = np.zeros(ncards, dtype='float64')
+        p_max = np.zeros(ncards, dtype='float64')
+        c0 = np.zeros(ncards, dtype='float64')
+        ndesvar = np.zeros(ncards, dtype='int32')
 
         all_desvars = []
         all_coeffs = []
         for icard, card in enumerate(self.cards):
             (oid, prop_type, pid, pname_fid, desvars, coeffs,
-             p_min, p_max, c0,
+             p_mini, p_maxi, c0i,
              comment) = card
 
-            self.dvprel_id[icard] = oid
-            self.property_type[icard] = prop_type
-            self.property_id[icard] = pid
+            dvprel_id[icard] = oid
+            property_type[icard] = prop_type
+            property_id[icard] = pid
             if isinstance(pname_fid, str):
-                self.property_name[icard] = pname_fid
+                property_name[icard] = pname_fid
             else:
-                self.field_num[icard] = pname_fid
-            self.p_min[icard] = p_min
-            self.p_max[icard] = p_max
-            self.c0[icard] = c0
+                field_num[icard] = pname_fid
+            p_min[icard] = p_mini
+            p_max[icard] = p_maxi
+            c0[icard] = c0i
 
-            self.ndesvar[icard] = len(desvars)
+            ndesvar[icard] = len(desvars)
             all_desvars.extend(desvars)
             all_coeffs.extend(coeffs)
-        self.desvar_id = np.array(all_desvars, dtype='int32')
-        self.coefficients = np.array(all_coeffs, dtype='float64')
+
+        desvar_id = np.array(all_desvars, dtype='int32')
+        coefficients = np.array(all_coeffs, dtype='float64')
+        self._save(dvprel_id, property_id, property_type,
+                   property_name, field_num,
+                   p_min, p_max, c0, ndesvar,
+                   desvar_id, coefficients)
+        self.sort()
+        self.cards = []
+
+    def _save(self, dvprel_id, property_id, property_type,
+              property_name, field_num,
+              p_min, p_max, c0, ndesvar,
+              desvar_id, coefficients) -> None:
+        if len(self.dvprel_id) != 0:
+            asdf
+        self.dvprel_id = dvprel_id
+        self.property_id = property_id
+        self.property_type = property_type
+        self.property_name = property_name
+        self.field_num = field_num
+        self.p_min = p_min
+        self.p_max = p_max
+        self.c0 = np.array([], dtype='float64')
+
+        self.ndesvar = ndesvar
+        self.desvar_id = desvar_id
+        self.coefficients = coefficients
+
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        #ptype_to_pids = {}
+        for ptype in np.unique(self.property_type):
+            ptype_lower = ptype.lower()
+            prop = getattr(self.model, ptype_lower)
+            iptype = np.where(ptype == self.property_type)[0]
+            #ptype_to_pids[ptype] = self.property_id[iptype]
+
+            # TODO: add desvars
+            geom_check(
+                self,
+                missing,
+                property_id=(prop.property_id, self.property_id[iptype]),
+            )
 
     @property
     def idim(self) -> np.ndarray:
@@ -1503,6 +1506,7 @@ class DVPREL2(VectorizedBaseCard):
     |          |        | LABL8  | etc.  |           |       |       |       |       |
     +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
     """
+    _id_name = 'dvprel_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.dvprel_id = np.array([], dtype='int32')
@@ -1642,13 +1646,9 @@ class DVPREL2(VectorizedBaseCard):
         self.n += 1
         return self.n
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-
         dvprel_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         property_type = np.zeros(ncards, dtype='|U8')
@@ -1704,6 +1704,22 @@ class DVPREL2(VectorizedBaseCard):
         self.ndtable = ndtable
         self.desvar_ids = desvar_ids
         self.labels = labels
+
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        #ptype_to_pids = {}
+        for ptype in np.unique(self.property_type):
+            ptype_lower = ptype.lower()
+            prop = getattr(self.model, ptype_lower)
+
+            iptype = np.where(ptype == self.property_type)[0]
+            #ptype_to_pids[ptype] = self.property_id[iptype]
+
+            # TODO: add desvars, dtable, deqatn
+            geom_check(
+                self,
+                missing,
+                property_id=(prop.property_id, self.property_id[iptype]),
+            )
 
     @property
     def idesvar(self) -> np.ndarray:
@@ -1762,6 +1778,7 @@ class DVMREL1(VectorizedBaseCard):
     |         | DVID1 | COEF1 | DVID2 | COEF2  | DVID3 | COEF3 |  etc.  |
     +---------+-------+-------+-------+--------+-------+-------+--------+
     """
+    _id_name = 'dvmrel_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.dvmrel_id = np.array([], dtype='int32')
@@ -1920,6 +1937,21 @@ class DVMREL1(VectorizedBaseCard):
         self.desvar_id = desvar_id
         self.coefficients = coefficients
 
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        #ptype_to_pids = {}
+        for mtype in np.unique(self.material_type):
+            mtype_lower = mtype.lower()
+            mat = getattr(self.model, mtype_lower)
+            imtype = np.where(mtype == self.material_type)[0]
+            #ptype_to_pids[ptype] = self.property_id[iptype]
+
+            # TODO: add desvars
+            geom_check(
+                self,
+                missing,
+                material_id=(mat.material_id, self.material_id[imtype]),
+            )
+
     @property
     def idim(self) -> np.ndarray:
         return make_idim(self.n, self.ndesvar)
@@ -1976,6 +2008,7 @@ class DVMREL2(VectorizedBaseCard):
     |         | LABL8  |  etc.  |       |         |       |       |       |       |
     +---------+--------+--------+-------+---------+-------+-------+-------+-------+
     """
+    _id_name = 'dvmrel_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.dvmrel_id = np.array([], dtype='int32')
@@ -2181,6 +2214,21 @@ class DVMREL2(VectorizedBaseCard):
         self.nlabel = nlabel
         self.labels = labels
 
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        #ptype_to_pids = {}
+        for mtype in np.unique(self.material_type):
+            mtype_lower = mtype.lower()
+            mat = getattr(self.model, mtype_lower)
+            imtype = np.where(mtype == self.material_type)[0]
+            #ptype_to_pids[ptype] = self.property_id[iptype]
+
+            # TODO: add desvars, dtable, deqatn
+            geom_check(
+                self,
+                missing,
+                material_id=(mat.material_id, self.material_id[imtype]),
+            )
+
     @property
     def idesvar(self) -> np.ndarray:
         return make_idim(self.n, self.ndesvar)
@@ -2241,6 +2289,7 @@ class DVCREL1(VectorizedBaseCard):
     |         | DVID1 | COEF1 | DVID2 | COEF2  | DVID3 | COEF3 |  etc.  |
     +---------+-------+-------+-------+--------+-------+-------+--------+
     """
+    _id_name = 'dvcrel_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.dvcrel_id = np.array([], dtype='int32')
@@ -2395,6 +2444,21 @@ class DVCREL1(VectorizedBaseCard):
         self.desvar_id = desvar_id
         self.coefficients = coefficients
 
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        #ptype_to_pids = {}
+        for etype in np.unique(self.element_type):
+            etype_lower = etype.lower()
+            elem = getattr(self.model, etype_lower)
+            ietype = np.where(etype == self.element_type)[0]
+            #ptype_to_pids[ptype] = self.property_id[iptype]
+
+            # TODO: add desvars
+            geom_check(
+                self,
+                missing,
+                element_id=(elem.element_id, self.element_id[ietype]),
+            )
+
     @property
     def idim(self) -> np.ndarray:
         return make_idim(self.n, self.ndesvar)
@@ -2451,6 +2515,7 @@ class DVCREL2(VectorizedBaseCard):
     |         | LABL8  |  etc.  |       |         |       |       |       |       |
     +---------+--------+--------+-------+---------+-------+-------+-------+-------+
     """
+    _id_name = 'dvcrel_id'
     def __init__(self, model: BDF):
         super().__init__(model)
         self.dvcrel_id = np.array([], dtype='int32')
@@ -2647,6 +2712,21 @@ class DVCREL2(VectorizedBaseCard):
         self.desvar_id = desvar_id
         self.nlabel = nlabel
         self.labels = labels
+
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        #ptype_to_pids = {}
+        for etype in np.unique(self.element_type):
+            etype_lower = etype.lower()
+            elem = getattr(self.model, etype_lower)
+            ietype = np.where(etype == self.element_type)[0]
+            #ptype_to_pids[ptype] = self.property_id[iptype]
+
+            # TODO: add desvars, dtable, deqatn
+            geom_check(
+                self,
+                missing,
+                element_id=(elem.element_id, self.element_id[ietype]),
+            )
 
     @property
     def idesvar(self) -> np.ndarray:

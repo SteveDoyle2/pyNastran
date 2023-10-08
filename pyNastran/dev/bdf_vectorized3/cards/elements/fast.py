@@ -130,6 +130,18 @@ class CFAST(Element):
         self.fastener_node = fastener_node
         self.fastener_xyz = fastener_xyz
 
+    def __apply_slice__(self, elem: CFAST, i: np.ndarray) -> None:
+        self._slice_comment(elem, i)
+
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.fast_type = self.fast_type[i]
+        elem.ids = self.ids[i, :]
+        elem.fastener_node = self.fastener_node[i]
+        elem.fastener_xyz = self.fastener_xyz[i, :]
+        elem.n = len(i)
+
     def set_from_op2(self, element_id, property_id, gs, elem_grid_flag, nodes):
         assert element_id.min() > 0, element_id
         assert property_id.min() > 0, property_id
@@ -316,6 +328,19 @@ class PFAST(Property):
         self.coord_id = coord_id
         self.mflag = mflag
         self.ge = ge
+
+    def __apply_slice__(self, prop: PFAST, i: np.ndarray) -> None:
+        self._slice_comment(prop, i)
+
+        prop.property_id = self.property_id[i]
+        prop.diameter = self.diameter[i]
+        prop.kt = self.kt[i]
+        prop.kr = self.kr[i]
+        prop.coord_id = self.coord_id[i]
+        prop.coord_id = self.coord_id[i]
+        prop.mflag = self.mflag[i]
+        prop.ge = self.ge[i]
+        prop.n = len(i)
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,

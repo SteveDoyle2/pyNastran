@@ -466,13 +466,68 @@ class SUPORT(VectorizedBaseCard):
         #self.__apply_slice__(grid, i)
         #return grid
 
-    def __apply_slice__(self, grid: SUPORT, i: np.ndarray) -> None:
-        self._slice_comment(grid, i)
-        grid.n = len(i)
-        grid.suport_id = self.suport_id[i]
-        grid.node_id = self.node_id[i]
-        grid.component = self.component[i]
+    def index(self, ids: np.ndarray,
+              assume_sorted: bool=True,
+              check_index: bool=True,
+              inverse: bool=False) -> np.ndarray:
+        """
+        Parameters
+        ----------
+        ids: (n,) int array
+            the node/element/property/material/etc. ids
+        assume_sorted: bool; default=True
+            assume the parent array (e.g., elem.element_id is sorted)
+        check_index: bool; default=True
+            validate the lookup
+        inverse: bool; default=False
+            False: get the indices for the ids
+            True: get the inverse indices for the ids
 
+        Returns
+        -------
+        index: (n,) int array
+            the indicies in the node_ids array (or other array)
+
+        Example
+        -------
+        >>> all_ids   = [1, 2, 3, 4, 5]
+        >>> all_index = [0, 1, 2, 3, 4]
+        >>> ids = [3, 4]
+        >>> index(all_ids, ids, inverse=False)
+        [2, 3]
+        >>> index(all_ids, ids, inverse=True)
+        [0, 1, 4]
+
+        """
+        if not assume_sorted:
+            self.sort()
+        self_ids = self._ids
+        assert len(self_ids) > 0, f'{self.type}: {self._id_name}={self_ids}'
+        if ids is None:
+            return None # np.arange(len(ids), dtype='int32')
+        ids = np.atleast_1d(np.asarray(ids, dtype=self_ids.dtype))
+
+        ielem = np.array([
+            ii for ii, suport_idi in enumerate(ids)
+            if suport_idi in self.suport_id])
+        #ielem = np.searchsorted(self_ids, ids)
+
+        if check_index:
+            actual_ids = self_ids[ielem]
+            if not np.array_equal(actual_ids, ids):
+                raise KeyError(f'{self.type}: expected_{self._id_name}={ids}; actual_{self._id_name}={actual_ids}')
+        if inverse:
+            i = np.arange(len(self_ids), dtype=self_ids.dtype)
+            index = np.setdiff1d(i, ielem)
+            return index
+        return ielem
+
+    def __apply_slice__(self, suport: SUPORT, i: np.ndarray) -> None:
+        self._slice_comment(suport, i)
+        suport.n = len(i)
+        suport.suport_id = self.suport_id[i]
+        suport.node_id = self.node_id[i]
+        suport.component = self.component[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id

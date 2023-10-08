@@ -2618,8 +2618,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SPC': partial(self._prepare_card, self.spc),
             'SPC1': partial(self._prepare_card, self.spc1),
             'SPCADD' : partial(self._prepare_card, self.spcadd),
-            'SPCOFF' : partial(self._prepare_card, self.spcoff),
-            'SPCOFF1' : partial(self._prepare_card, self.spcoff1),
+            'SPCOFF' : partial(self._prepare_card_by_method, self.spcoff.add_set_card),
+            'SPCOFF1' : partial(self._prepare_card_by_method, self.spcoff.add_set1_card),
 
             # pseudo-constraint
             'SUPORT': partial(self._prepare_card_by_method, self.suport.add_set_card),

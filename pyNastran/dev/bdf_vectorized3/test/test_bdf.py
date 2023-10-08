@@ -42,6 +42,12 @@ from pyNastran.bdf.test.compare import compare_card_count
 from pyNastran.bdf.bdf import BDF as BDF_old #, read_bdf as read_bdf_old
 from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDFv, read_bdf as read_bdfv, map_version
 
+try:
+    import tables
+    IS_PYTABLES = True
+except ImportError:
+    IS_PYTABLES = False
+
 BDFs = Union[BDF_old, BDFv]
 
 #from pyNastran.bdf.mesh_utils.export_mcids import export_mcids, export_mcids_all
@@ -2084,7 +2090,7 @@ def _check_case_parameters(subcase: Subcase,
         subcase, fem, sol,
         ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
 
-    if 'METHOD' in subcase and 0:
+    if 'METHOD' in subcase:
         method_id = subcase.get_parameter('METHOD')[0]
         if method_id in fem.methods:
             unused_method = fem.methods[method_id]
@@ -2306,7 +2312,7 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
                                 stop_on_failure: bool=True) -> int:
     """helper method for ``_check_case_parameters``"""
     log = fem.log
-    if 'TRIM' in subcase:
+    if 'TRIM' in subcase and 0:
         trim_id = subcase.get_parameter('TRIM')[0]
         if trim_id not in fem.trims:
             msg = (
@@ -2317,13 +2323,13 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
             log_error(sol, [144, 200], msg, log)
         else:
             trim = fem.trims[trim_id]
-            suport1 = None
+            suport = None # fem.suport.slice_card_by_index([])
             if 'SUPORT1' in subcase:
                 suport_id = subcase.get_parameter('SUPORT1')[0]
-                suport1 = fem.suport1[suport_id]
+                suport = fem.suport.slice_card_by_id([0, suport_id])
             try:
                 trim.verify_trim(
-                    fem.suport, suport1, fem.aestats, fem.aeparams,
+                    suport, fem.aestats, fem.aeparams,
                     fem.aelinks, fem.aesurf, xref=True)
             except RuntimeError:
                 if stop_on_failure or ierror == nerrors:

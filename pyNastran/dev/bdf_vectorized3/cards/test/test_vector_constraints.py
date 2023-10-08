@@ -315,11 +315,11 @@ class TestConstraints(unittest.TestCase):
                 model, run_op2_writer=True, run_op2_reader=True,
                 nastran_format='msc')
 
-    def _test_spcoff(self):
+    def test_spcoff(self):
         """tests SPCOFF/SPCOFF1"""
         model = BDF(debug=False)
         spcoff = model.spcoff
-        spcoff1 = model.spcoff1
+        #spcoff1 = model.spcoff1
 
         #with self.assertRaises(KeyError):
             #model.EmptyNodes([1, 2], msg='')
@@ -346,8 +346,8 @@ class TestConstraints(unittest.TestCase):
         model.setup()
         model.pop_parse_errors()
 
-        spcoff1.write(size=8)
-        spcoff1.write(size=16)
+        spcoff.write(size=8)
+        spcoff.write(size=16)
         #spcoff1.raw_fields()
         #model.uncross_reference()
 

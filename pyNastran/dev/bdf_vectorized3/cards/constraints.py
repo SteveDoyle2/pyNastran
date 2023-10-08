@@ -7,17 +7,20 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.cards.base_card import expand_thru
+from pyNastran.bdf.cards.collpase_card import collapse_thru
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
-    components_or_blank)
+    components_or_blank, parse_components,)
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.dev.bdf_vectorized3.cards.base_card import get_print_card_8_16
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_default_str, array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_default_str, array_str, array_default_int, update_field_size)
 from pyNastran.dev.bdf_vectorized3.utils import cast_int_array, print_card_8
+from .grid import parse_node_check
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -713,9 +716,224 @@ class MPCADD(ADD):
                    missing,
                    mpc=(mpc_id, self.mpc_ids))
 
-class SPCOFF(SPC):
-    pass
-class SPCOFF1(SPC1):
-    pass
+class SPCOFF(VectorizedBaseCard):
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.node_id = np.array([], dtype='int32')
+        self.component = np.array([], dtype='int32')
+
+    def add_set(self, nids: list[int], components: list[int],
+                comment: str='') -> int:
+        assert isinstance(nids, (list, np.ndarray, tuple))
+        assert isinstance(components, (list, np.ndarray, tuple))
+        nnodes = len(nids)
+        ncomp = len(components)
+        assert nnodes == ncomp, (nnodes, ncomp)
+        suport_id = 0
+        self.cards.append((suport_id, nids, components, comment))
+        #if comment:
+            #self.comment[nid] = _format_comment(comment)
+        self.n += nnodes
+        return self.n
+
+    def add_set1(self, suport_id: int, nids: list[int], component: list[int],
+                  comment: str='') -> int:
+        assert isinstance(component, (str, integer_types)), component
+        nids = expand_thru(nids, set_fields=True, sort_fields=False)
+        nnodes = len(nids)
+        components = [component] * nnodes
+        self.cards.append((suport_id, nids, components, comment))
+        #if comment:
+            #self.comment[nid] = _format_comment(comment)
+        self.n += nnodes
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str=''):
+        card_name = card[0].upper()
+        msg = f'add_card(...) has been removed for {card_name}.  Use add_set_card or add_set1_card'
+        raise AttributeError(msg)
+
+    def add_set_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a SPCOFF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        nodes = []
+        components = []
+        nfields = len(card) - 1
+        nconstraints = nfields // 2
+        if nfields % 2 == 1:
+            nconstraints += 1
+        for counter in range(nconstraints):
+            igrid = counter + 1
+            ifield = counter * 2 + 1
+            node = integer(card, ifield, 'G%i' % igrid)
+            component = components_or_blank(card, ifield+1, 'C%i' % igrid, default='0')
+            nodes.append(node)
+            components.append(component)
+        assert len(card) > 1, f'len(SPCOFF card) = {len(card):d}\ncard={card}'
+        self.cards.append((nodes, components, comment))
+        self.n += len(nodes)
+        return self.n
+
+    def add_set1_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a SPCOFF1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        component = parse_components(card, 1, 'components')  # 246 = y; dx, dz dir
+        nodes = card.fields(2)
+        assert len(card) > 2, f'len(SPCOFF1 card) = {len(card):d}\ncard={card}'
+        #return cls(components, nodes, comment=comment)
+        nodes = expand_thru(nodes)
+        nnodes = len(nodes)
+        components = [component] * nnodes
+        self.cards.append((nodes, components, comment))
+        #if comment:
+            #self.comment[nid] = comment
+        self.n += nnodes
+        return self.n
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+
+        try:
+            node_id, component = self._setup(ncards, self.cards, 'int32')
+        except OverflowError:
+            node_id, component = self._setup(ncards, self.cards, 'int64')
+        self._save(node_id, component)
+        #self.sort()
+        self.cards = []
+
+    def _setup(self, ncards: int, cards: list[Any],
+               idtype: str) -> tuple[np.ndarray, np.ndarray]:
+
+        node_id = []
+        component_list = []
+        #comment = {}
+        for i, card in enumerate(cards):
+            (nidi, componenti, commenti) = card
+            assert isinstance(nidi, list), nidi
+            assert isinstance(componenti, list), componenti
+            nnodes = len(nidi)
+            node_id.extend(nidi)
+            component_list.extend(componenti)
+            #if commenti:
+                #comment[i] = commenti
+                #comment[nidi] = commenti
+        node_id2 = np.array(node_id, dtype=idtype)
+        component2 = np.array(component_list, dtype=idtype)
+        return node_id2, component2
+
+    def _save(self,
+              node_id: np.ndarray,
+              component: np.ndarray,
+              comment: dict[int, str]=None) -> None:
+        #ncards = len(node_id)
+        ncards_existing = len(self.node_id)
+
+        if ncards_existing != 0:
+            node_id = np.hstack([self.node_id, node_id])
+            component = np.hstack([self.component, component])
+        #if comment:
+            #self.comment.update(comment)
+        self.node_id = node_id
+        self.component = component
+        #print(node_id, component)
+        self.n = len(node_id)
+        #self.sort()
+        #self.cards = []
+
+    #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
+        #inid = self._node_index(node_id)
+        #return self.slice_card(inid)
+
+    #def slice_card_by_node_id(self, node_id: np.ndarray) -> GRID:
+        #"""uses a node_ids to extract GRIDs"""
+        #inid = self.index(node_id)
+        ##assert len(self.node_id) > 0, self.node_id
+        ##i = np.searchsorted(self.node_id, node_id)
+        #grid = self.slice_card_by_index(inid)
+        #return grid
+
+    #def slice_card_by_index(self, i: np.ndarray) -> GRID:
+        #"""uses a node_index to extract GRIDs"""
+        #assert self.xyz.shape == self._xyz_cid0.shape
+        #assert len(self.node_id) > 0, self.node_id
+        #i = np.atleast_1d(np.asarray(i, dtype=self.node_id.dtype))
+        #i.sort()
+        #grid = GRID(self.model)
+        #self.__apply_slice__(grid, i)
+        #return grid
+
+    def __apply_slice__(self, spcoff: SPCOFF, i: np.ndarray) -> None:
+        self._slice_comment(spcoff, i)
+        grid.n = len(i)
+        grid.node_id = self.node_id[i]
+        grid.component = self.component[i]
+
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id),)
+
+    @parse_node_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        max_int = self.node_id.max()
+        size = update_field_size(max_int, size)
+        print_card = get_print_card_8_16(size)
+
+        component_to_nodes = defaultdict(list)
+        for nid, comp in zip(self.node_id, self.component):
+            component_to_nodes[comp].append(nid)
+
+        for component, nodes in component_to_nodes.items():
+            nodes_collapsed = collapse_thru(nodes, nthru=None)
+            list_fields = ['SPCOFF1', component] + nodes_collapsed
+            bdf_file.write(print_card(list_fields))
+        return
+
+    #def index(self, node_id: np.ndarray, safe: bool=False) -> np.ndarray:
+        #assert len(self.node_id) > 0, self.node_id
+        #node_id = np.atleast_1d(np.asarray(node_id, dtype=self.node_id.dtype))
+        #inid = np.searchsorted(self.node_id, node_id)
+        #if safe:
+            #ibad = inid >= len(self.node_id)
+            #if sum(ibad):
+                ##self.model.log.error(f'bad nids; node_id={node_id[ibad]}')
+                #raise RuntimeError(f'bad nids; node_id={node_id[ibad]}')
+            #inids_leftover = inid[~ibad]
+            #if len(inids_leftover):
+                #actual_nids = self.node_id[inids_leftover]
+                #assert np.array_equal(actual_nids, node_id)
+        #return inid
+
 SPCs = Union[SPC, SPC1]
 

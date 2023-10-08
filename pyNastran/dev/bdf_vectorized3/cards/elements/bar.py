@@ -31,6 +31,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM, BEAMOR
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
+    from ..coord import COORD
     #from pyNastran.dev.bdf_vectorized3.cards.elements.beam import BEAMOR, CBEAM
 
 
@@ -156,7 +157,7 @@ def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     is_x = elem.is_x
     v = np.full(elem.x.shape, np.nan, dtype=elem.x.dtype)
     if np.any(is_g0):
-        grid_g0 = elem.model.grid.slice_card_by_node_id(elem.g0[is_g0])
+        grid_g0 = elem.model.grid.slice_card_by_node_id(elem.g0[is_g0], sort_ids=False)
         n0 = grid_g0.xyz_cid0()
         v[is_g0, :] = n0 - xyz1[is_g0, :]
 
@@ -180,7 +181,7 @@ def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
         v[is_x, :] = elem.x[is_x, :]
         if np.any(is_cd1):
-            #cd1_ref = coords.slice_card_by_id(cd1)
+            #cd1_ref = coords.slice_card_by_id(cd1, sort_ids=False)
             #print(cd1_ref.get_stats())
             #print(cd1_ref.get_object_methods())
             #v[is_cd1, :] = cd1_ref.transform_local_xyz_to_global(self.x)
@@ -502,7 +503,7 @@ class CBAR(Element):
                  ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                             np.ndarray, np.ndarray, np.ndarray]:
         log = self.model.log
-        coords = self.model.coord
+        coords: COORD = self.model.coord
         #xyz1, xyz2 = self.get_xyz()
 
         neids = xyz1.shape[0]
@@ -565,13 +566,14 @@ class CBAR(Element):
             # global - cid != 0
             icd1_v_vector = (is_rotate_v_g) & (cd1 != 0)
             cd1_v_vector = cd1[icd1_v_vector]
+            eid_v_vector = self.element_id[icd1_v_vector]
             if np.any(cd1_v_vector):
-                #v[icd1_vector, :] = np.nan
-                cd1_ref: COORD = coords.slice_card_by_id(cd1_v_vector)
+                cd1_ref: COORD = coords.slice_card_by_id(cd1_v_vector, sort_ids=False)
                 v1v = v[icd1_v_vector, :]
-                v[icd1_v_vector, :] = cd1_ref.transform_xyz_to_global_assuming_rectangular(v1v)
-                del v1v
-            del icd1_v_vector, cd1_v_vector
+                v2 = cd1_ref.transform_xyz_to_global_assuming_rectangular(v1v)
+                v[icd1_v_vector, :] = v2
+                del v1v, v2
+            del icd1_v_vector, cd1_v_vector, eid_v_vector
 
         #elif offt_vector == 'B':
             # basic - cid = 0
@@ -625,7 +627,7 @@ class CBAR(Element):
             icd1_vector = (is_rotate_wa_g) & (cd1 != 0)
             cd1_vector = cd1[icd1_vector]
             if np.any(icd1_vector):
-                cd1_ref = coords.slice_card_by_id(cd1_vector)
+                cd1_ref = coords.slice_card_by_id(cd1_vector, sort_ids=False)
                 wai1 = wa[icd1_vector, :]
                 wai2 = cd1_ref.transform_xyz_to_global_assuming_rectangular(wai1)
                 #print('eids.shape =', self.element_id.shape)
@@ -662,7 +664,7 @@ class CBAR(Element):
             if np.any(icd2_vector):
                 # MasterModelTaxi
                 #wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
-                cd2_ref = coords.slice_card_by_id(cd2_vector)
+                cd2_ref = coords.slice_card_by_id(cd2_vector, sort_ids=False)
                 wbi1 = wb[icd2_vector, :]
                 wbi2 = cd2_ref.transform_xyz_to_global_assuming_rectangular(wbi1)
                 wb[icd2_vector, :] = wbi2
@@ -1106,11 +1108,11 @@ class PBARL(Property):
         self.nsm = np.array([], dtype='float64')
         self.dims = np.array([], dtype='float64')
 
-    def slice_card_by_property_id(self, property_id: np.ndarray) -> PBARL:
-        """uses a node_ids to extract PBARLs"""
-        iprop = self.index(property_id)
-        prop = self.slice_card_by_index(iprop)
-        return prop
+    #def slice_card_by_property_id(self, property_id: np.ndarray) -> PBARL:
+        #"""uses a node_ids to extract PBARLs"""
+        #iprop = self.index(property_id)
+        #prop = self.slice_card_by_index(iprop)
+        #return prop
 
     def validate(self) -> None:
         utypes = np.unique(self.Type)
