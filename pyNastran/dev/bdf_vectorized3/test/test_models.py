@@ -16,14 +16,10 @@ MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 class TestModels(unittest.TestCase):
-    def test_h5_freq(self):
-        bdf_filename = MODEL_PATH / 'elements' / 'freq_elements.bdf'
-        args = ['test_bdf', str(bdf_filename), '--skip_nominal', '--quiet']
-        test_bdf(args, show_args=False)
-
+    def _test_h5_freq(self):
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-        #test_bdf(args, show_args=False)
+        test_bdf(args, show_args=False)
 
         args2 = ['test_op2', str(h5_filename), '-ctfo', '--quiet']
         #test_op2(args2, show_args=False)
@@ -40,12 +36,8 @@ class TestModels(unittest.TestCase):
         args3 = ['test_op2', str(h5_filename), '-ctfo', '--quiet']
         #test_op2(args3, show_args=False)
 
-    def test_h5_transient_thermal(self):
-        bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
+    def _test_h5_transient_thermal(self):
         h5_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.h5'
-
-        args = ['test_bdf', str(bdf_filename), '--skip_nominal', '--quiet']
-        test_bdf(args, show_args=False)
 
         args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
         #test_bdf(args, show_args=False)
@@ -72,11 +64,11 @@ class TestModels(unittest.TestCase):
         args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
         test_op2(args2, show_args=False)
 
-    #def test_h5_modes_complex(self):
-        #h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
-        #args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-        #test_bdf(args, show_args=False)
-        #args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
+    def _test_h5_modes_complex(self):
+        h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
+        args1 = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
+        test_bdf(args1, show_args=False)
+        args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
         #test_op2(args2, show_args=False)
 
     #def test_h5_buckling(self):
@@ -228,14 +220,12 @@ class TestModels(unittest.TestCase):
             #args = ['test_bdf', str(h5_filename), '--quiet']
             #test_bdf(args, show_args=False)
 
-    def test_elements3(self):
+    def test_elements_transient(self):
         bdf_filename = MODEL_PATH / 'elements' / 'time_elements.bdf'
-        #h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-    def test_elements4(self):
+    def test_elements_freq(self):
         bdf_filename = MODEL_PATH / 'elements' / 'freq_elements.bdf'
-        #h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
     def test_elements5(self):
@@ -255,22 +245,15 @@ class TestModels(unittest.TestCase):
             #h5_filename = MODEL_PATH / 'elements' / 'loadstep_elements.h5'
             #args = ['test_bdf', str(h5_filename), '--quiet']
             #test_bdf(args, show_args=False)
-    def _test_elements7(self):
+    def test_elements_modes_complex(self):
         bdf_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-        if IS_PYTABLES:
-            h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
-            args = ['test_bdf', str(h5_filename), '--quiet']
-            test_bdf(args, show_args=False)
-    def _test_elements8(self):
+
+    def test_elements_transient_thermal(self):
         bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
         args = ['test_bdf', str(bdf_filename)]
         test_bdf(args, show_args=False)
-        if IS_PYTABLES:
-            h5_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.h5'
-            args = ['test_bdf', str(h5_filename), '--quiet']
-            test_bdf(args, show_args=False)
 
     def _test_thermal_1(self):
         bdf_filename = MODEL_PATH / 'thermal' / 'hd15901.bdf'
@@ -301,7 +284,7 @@ class TestModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'sol200' / 'model_200.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-    def _test_transfer_function(self):
+    def test_transfer_function(self):
         bdf_filename = MODEL_PATH / 'transfer_function' / 'actuator_tf_modeling.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)

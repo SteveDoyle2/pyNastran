@@ -193,7 +193,36 @@ class TLOAD1(VectorizedBaseCard):
     """
     def __init__(self, model: BDF):
         super().__init__(model)
+
+        #: Set identification number
         self.load_id = np.array([], dtype='int32')
+
+        #: Identification number of DAREA or SPCD entry set or a thermal load
+        #: set (in heat transfer analysis) that defines {A}. (Integer > 0)
+        self.excite_id = np.array([], dtype='int32')
+
+        #: If it is a non-zero integer, it represents the
+        #: identification number of DELAY Bulk Data entry that defines .
+        #: If it is real, then it directly defines the value of that will
+        #: be used for all degrees-of-freedom that are excited by this
+        #: dynamic load entry.  See also Remark 9. (Integer >= 0,
+        #: real or blank)
+        self.delay_int = np.array([], dtype='int32')
+        self.delay_float = np.array([], dtype='float64')
+
+        #: Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
+        self.load_type = np.array([], dtype='|U4')
+
+        #: Identification number of TABLEDi entry that gives F(t). (Integer > 0)
+        self.tabled_id = np.array([], dtype='int32')
+
+        #: Factor for initial displacements of the enforced degrees-of-freedom.
+        #: (Real; Default = 0.0)
+        self.us0 = np.array([], dtype='float64')
+
+        #: Factor for initial velocities of the enforced degrees-of-freedom.
+        #: (Real; Default = 0.0)
+        self.vs0 = np.array([], dtype='float64')
 
     def slice_card_by_index(self, i: np.ndarray) -> TLOAD1:
         load = TLOAD1(self.model)
@@ -213,8 +242,8 @@ class TLOAD1(VectorizedBaseCard):
         load.vs0 = self.vs0[i]
 
     def add(self, sid: int, excite_id: int, tabled_id: int, delay: int=0,
-                   load_type: str='LOAD', us0: float=0.0, vs0: float=0.0,
-                   comment: str='') -> int:
+            load_type: str='LOAD', us0: float=0.0, vs0: float=0.0,
+            comment: str='') -> int:
         """
         Creates a TLOAD1 card, which defines a load based on a table
 
@@ -274,12 +303,12 @@ class TLOAD1(VectorizedBaseCard):
         ncards = len(self.cards)
 
         #: Set identification number
-        self.load_id = np.zeros(ncards, dtype='int32')
+        load_id = np.zeros(ncards, dtype='int32')
 
 
         #: Identification number of DAREA or SPCD entry set or a thermal load
         #: set (in heat transfer analysis) that defines {A}. (Integer > 0)
-        self.excite_id = np.zeros(ncards, dtype='int32')
+        excite_id = np.zeros(ncards, dtype='int32')
 
         #: If it is a non-zero integer, it represents the
         #: identification number of DELAY Bulk Data entry that defines .
@@ -287,36 +316,56 @@ class TLOAD1(VectorizedBaseCard):
         #: be used for all degrees-of-freedom that are excited by this
         #: dynamic load entry.  See also Remark 9. (Integer >= 0,
         #: real or blank)
-        self.delay_int = np.zeros(ncards, dtype='int32')
-        self.delay_float = np.full(ncards, np.nan, dtype='float64')
+        delay_int = np.zeros(ncards, dtype='int32')
+        delay_float = np.full(ncards, np.nan, dtype='float64')
 
         #: Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
-        self.load_type = np.zeros(ncards, dtype='|U4')
+        load_type = np.zeros(ncards, dtype='|U4')
 
         #: Identification number of TABLEDi entry that gives F(t). (Integer > 0)
-        self.tabled_id = np.zeros(ncards, dtype='int32')
+        tabled_id = np.zeros(ncards, dtype='int32')
 
         #: Factor for initial displacements of the enforced degrees-of-freedom.
         #: (Real; Default = 0.0)
-        self.us0 = np.zeros(ncards, dtype='float64')
+        us0 = np.zeros(ncards, dtype='float64')
 
         #: Factor for initial velocities of the enforced degrees-of-freedom.
         #: (Real; Default = 0.0)
-        self.vs0 = np.zeros(ncards, dtype='float64')
+        vs0 = np.zeros(ncards, dtype='float64')
 
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
-            (sid, excite_id, delay, load_type_str, tabled_id, us0, vs0, comment) = card
-            self.load_id[icard] = sid
-            self.excite_id[icard] = excite_id
-            _set_int_float(icard, self.delay_int, self.delay_float, delay)
+            (sid, excite_idi, delay, load_type_str, tabled_idi, us0i, vs0i, comment) = card
+            load_id[icard] = sid
+            excite_id[icard] = excite_idi
+            _set_int_float(icard, delay_int, delay_float, delay)
 
-            self.load_type[icard] = load_type_str
-            self.tabled_id[icard] = tabled_id
-            self.us0[icard] = us0
-            self.vs0[icard] = vs0
+            load_type[icard] = load_type_str
+            tabled_id[icard] = tabled_idi
+            us0[icard] = us0i
+            vs0[icard] = vs0i
+        self._save(load_id, excite_id, delay_int, delay_float, load_type, tabled_id, us0, vs0)
         assert len(self.load_id) == self.n
         self.cards = []
+
+    def _save(self, load_id, excite_id, delay_int, delay_float, load_type, tabled_id, us0, vs0):
+        if len(self.load_id) == 0:
+            load_id = np.hstack([self.load_id, load_id])
+            excite_id = np.hstack([self.excite_id, excite_id])
+            delay_int = np.hstack([self.delay_int, delay_int])
+            delay_float = np.hstack([self.delay_float, delay_float])
+            load_type = np.hstack([self.load_type, load_type])
+            tabled_id = np.hstack([self.tabled_id, tabled_id])
+            us0 = np.hstack([self.us0, us0])
+            vs0 = np.hstack([self.vs0, vs0])
+        self.load_id = load_id
+        self.excite_id = excite_id
+        self.delay_int = delay_int
+        self.delay_float = delay_float
+        self.load_type = load_type
+        self.tabled_id = tabled_id
+        self.us0 = us0
+        self.vs0 = vs0
 
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
@@ -489,13 +538,13 @@ class TLOAD2(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        #: Set identification number
-        self.load_id = np.zeros(ncards, dtype='int32')
 
+        #: Set identification number
+        load_id = np.zeros(ncards, dtype='int32')
 
         #: Identification number of DAREA or SPCD entry set or a thermal load
         #: set (in heat transfer analysis) that defines {A}. (Integer > 0)
-        self.excite_id = np.zeros(ncards, dtype='int32')
+        excite_id = np.zeros(ncards, dtype='int32')
 
         #: If it is a non-zero integer, it represents the
         #: identification number of DELAY Bulk Data entry that defines .
@@ -503,59 +552,77 @@ class TLOAD2(VectorizedBaseCard):
         #: be used for all degrees-of-freedom that are excited by this
         #: dynamic load entry.  See also Remark 9. (Integer >= 0,
         #: real or blank)
-        self.delay_int = np.zeros(ncards, dtype='int32')
-        self.delay_float = np.zeros(ncards, dtype='float64')
+        delay_int = np.zeros(ncards, dtype='int32')
+        delay_float = np.zeros(ncards, dtype='float64')
 
         #: Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
-        self.load_type = np.zeros(ncards, dtype='|U4')
+        load_type = np.zeros(ncards, dtype='|U4')
 
         #: Identification number of TABLEDi entry that gives F(t). (Integer > 0)
-        self.tabled_id = np.zeros(ncards, dtype='int32')
+        #tabled_id = np.zeros(ncards, dtype='int32')
 
         #: T1: Time constant. (Real >= 0.0)
         #: T2: Time constant. (Real; T2 > T1)
-        self.T = np.zeros((ncards, 2), dtype='float64')
+        T = np.zeros((ncards, 2), dtype='float64')
 
         #: Frequency in cycles per unit time. (Real >= 0.0; Default=0.0)
-        self.frequency = np.zeros(ncards, dtype='float64')
+        frequency = np.zeros(ncards, dtype='float64')
 
         #: Phase angle in degrees. (Real; Default=0.0)
-        self.phase = np.zeros(ncards, dtype='float64')
+        phase = np.zeros(ncards, dtype='float64')
 
         #: Growth coefficient. (Real; Default=0.0)
-        self.b = np.zeros(ncards, dtype='float64')
+        b = np.zeros(ncards, dtype='float64')
 
         #: Exponential coefficient. (Real; Default=0.0)
-        self.c = np.zeros(ncards, dtype='float64')
+        c = np.zeros(ncards, dtype='float64')
 
         #: Factor for initial displacements of the enforced degrees-of-freedom.
         #: (Real; Default=0.0)
-        self.us0 = np.zeros(ncards, dtype='float64')
+        us0 = np.zeros(ncards, dtype='float64')
 
         #: Factor for initial velocities of the enforced degrees-of-freedom.
         #: (Real; Default = 0.0)
-        self.vs0 = np.zeros(ncards, dtype='float64')
+        vs0 = np.zeros(ncards, dtype='float64')
 
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
-            (sid, excite_id, delay, load_type_str, time_constant,
-             frequency, phase, b, c, us0, vs0, comment) = card
-            self.load_id[icard] = sid
-            self.excite_id[icard] = excite_id
-            _set_int_float(icard, self.delay_int, self.delay_float, delay)
+            (sid, excite_idi, delayi, load_type_str, time_constant,
+             frequencyi, phasei, bi, ci, us0i, vs0i, comment) = card
+            load_id[icard] = sid
+            excite_id[icard] = excite_idi
+            _set_int_float(icard, delay_int, delay_float, delayi)
 
-            self.load_type[icard] = load_type_str
+            load_type[icard] = load_type_str
 
-            #self.tabled_id[icard] = tabled_id
-            self.T[icard] = time_constant
-            self.frequency[icard] = frequency
-            self.phase[icard] = phase
-            self.b[icard] = b
-            self.c[icard] = c
-            self.us0[icard] = us0
-            self.vs0[icard] = vs0
+            #tabled_id[icard] = tabled_idi
+            T[icard] = time_constant
+            frequency[icard] = frequencyi
+            phase[icard] = phasei
+            b[icard] = bi
+            c[icard] = ci
+            us0[icard] = us0i
+            vs0[icard] = vs0i
+        self._save(load_id, excite_id, load_type, T,
+                   delay_int, delay_float,
+                   frequency, phase, b, c, us0, vs0)
         assert len(self.load_id) == self.n
         self.cards = []
+
+    def _save(self, load_id, excite_id, load_type, T,
+              delay_int, delay_float, frequency, phase, b, c, us0, vs0):
+        self.load_id = load_id
+        self.excite_id = excite_id
+        self.load_type = load_type
+        self.T = T
+        self.frequency = frequency
+        self.delay_int = delay_int
+        self.delay_float = delay_float
+        self.phase = phase
+        self.b = b
+        self.c = c
+        self.us0 = us0
+        self.vs0 = vs0
 
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,

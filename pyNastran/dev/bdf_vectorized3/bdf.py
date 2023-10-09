@@ -457,7 +457,7 @@ MISSING_CARDS = {
     'FREQV', 'VATVFS', 'PMIC', 'MAT10C', 'ALOAD', 'ELAR', 'ATVBULK', 'AMLREG',
     'ATVFS', 'BOLTLD', 'BCTPAR2', 'MATFT', 'PLOTEL4', 'CYCADD', 'MATT11'
 }
-OBJ_CARDS = {'PARAM', 'MDLPRM', 'TSTEP', 'TSTEPNL',
+OBJ_CARDS = {'PARAM', 'MDLPRM', 'TSTEP', 'TSTEPNL', 'NLPCI', 'NLPARM',
              'AERO', 'AEROS',
              'EIGR', 'EIGRL', 'EIGB',
              'EIGC', 'EIGP', }
@@ -704,7 +704,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'DLOAD',
 
             ## dload_entries
-            #'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+            #'ACSRCE',
+            'TLOAD1', 'TLOAD2', # 'RLOAD1', 'RLOAD2',
             #'QVECT',
             #'RANDPS', 'RANDT1', # random
 
@@ -772,9 +773,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DAREA',  ## darea
             #'DPHASE',  ## dphases
             #'DELAY',  ## delays
-            #'NLPARM',  ## nlparms
+            'NLPARM',  ## nlparms
             #'ROTORG', 'ROTORD', ## rotors
-            #'NLPCI',  ## nlpcis
+            'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
             'TSTEPNL', 'TSTEP1',  ## tstepnls
             #'TF',  ## transfer_functions

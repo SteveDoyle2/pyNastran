@@ -1,5 +1,6 @@
 from __future__ import annotations
 from collections import defaultdict
+from itertools import zip_longest
 from typing import Union, TYPE_CHECKING
 import numpy as np
 
@@ -140,15 +141,36 @@ class DEFORM(Load):
     @Load.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.load_id = np.zeros(ncards, dtype='int32')
-        self.elements = np.zeros(ncards, dtype='int32')
-        self.enforced = np.zeros(ncards, dtype='float64')
+        load_id = np.zeros(ncards, dtype='int32')
+        elements = np.zeros(ncards, dtype='int32')
+        enforced = np.zeros(ncards, dtype='float64')
         for icard, card in enumerate(self.cards):
-            (sid, eid, enforced, comment) = card
-            self.load_id[icard] = sid
-            self.elements[icard] = eid
-            self.enforced[icard] = enforced
+            (sid, eid, enforcedi, comment) = card
+            load_id[icard] = sid
+            elements[icard] = eid
+            enforced[icard] = enforcedi
+        self._save(load_id, elements, enforced)
+        self.sort()
         self.cards = []
+
+    def _save(self, load_id, elements, enforced):
+        self.load_id = load_id
+        self.elements = elements
+        self.enforced = enforced
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        """CTUBE/CROD/CONROD/CBAR/CBEAM"""
+        model = self.model
+        line_element_cards = (
+                model.ctube, model.crod, model.conrod,
+                model.cbar, model.cbeam)
+        line_element_ids = np.hstack([
+            elem.element_id for elem in line_element_cards
+            if elem.n])
+        uelements = np.unique(line_element_ids)
+        geom_check(self,
+                   missing,
+                   element_id=(uelements, self.elements))
 
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2026,7 +2048,7 @@ class RFORCE(Load):
         methods = array_default_int(self.method, default=1, size=size)
         mbs = array_default_int(self.main_bulk, default=0, size=size)
         idrfs = array_default_int(self.idrf, default=0, size=size)
-        for sid, nid, cid, scale, r123, method, racc, mb, idrf in zip(
+        for sid, nid, cid, scale, r123, method, racc, mb, idrf in zip_longest(
             load_ids, nids, cids, self.scale, self.r.tolist(), methods, self.racc, mbs, idrfs):
             list_fields = (['RFORCE', sid, nid, cid, scale] +
                            r123 + [method, racc, mb, idrf])
@@ -2204,9 +2226,18 @@ class RFORCE1(Load):
         assert len(self.load_id) == self.n
         self.cards = []
 
-    def _save(self, load_id, node_id, coord_id, scale, r, method, racc, main_bulk, group_id):
+    def _save(self, load_id, node_id, coord_id, scale, r,
+              method, racc, main_bulk, group_id):
         if len(self.load_id) != 0:
-            asdf
+            load_id = np.hstack([self.load_id, load_id])
+            node_id = np.hstack([self.node_id, node_id])
+            coord_id = np.hstack([self.coord_id, coord_id])
+            r = np.vstack([self.r, r])
+            method = np.hstack([self.method, method])
+            racc = np.hstack([self.racc, racc])
+            main_bulk = np.hstack([self.main_bulk, main_bulk])
+            group_id = np.hstack([self.group_id, group_id])
+
         self.load_id = load_id
         self.node_id = node_id
         self.coord_id = coord_id
@@ -2216,6 +2247,15 @@ class RFORCE1(Load):
         self.racc = racc
         self.main_bulk = main_bulk
         self.group_id = group_id
+
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        nid = self.model.grid.node_id
+        cid = self.model.coord.coord_id
+
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id), filter_node0=False,
+                   coord=(cid, self.coord_id))
 
     def sum_forces_moments(self) -> np.ndarray:
         self.model.log.warning("RFORCE1 hasn't implemented sum_forces_moments")
@@ -2242,10 +2282,10 @@ class RFORCE1(Load):
         cids = array_default_int(self.coord_id, default=0, size=size)
         methods = array_default_int(self.method, default=1, size=size)
         mbs = array_default_int(self.main_bulk, default=0, size=size)
-        r123s = array_float(self.r, size=size, is_double=is_double)
+        r123s = array_float(self.r, size=size, is_double=is_double).tolist()
         group_ids = array_default_int(self.group_id, default=0, size=size)
-        for sid, nid, cid, scale, r123, method, racc, mb, group_id in zip(
-            load_ids, nids, cids, self.scale, r123s.tolist(), methods, self.racc, mbs, group_ids):
+        for sid, nid, cid, scale, r123, method, racc, mb, group_id in zip_longest(
+            load_ids, nids, cids, self.scale, r123s, methods, self.racc, mbs, group_ids):
             list_fields = (['RFORCE1', sid, nid, cid, scale]
                            + r123 + [method, racc, mb, group_id])
             bdf_file.write(print_card(list_fields))
