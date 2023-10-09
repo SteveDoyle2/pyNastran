@@ -5117,7 +5117,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         dload = self.dload.add(sid, scale, scale_factors, load_ids, comment=comment)
         return dload
 
-    def add_darea(self, sid: int, nid: int, component: str, scale: float, comment: str='') -> int:
+    def add_darea(self, sid: int, nid: int, component: str, scale: float,
+                  comment: str='') -> int:
         """
         Creates a DAREA card
 
@@ -5136,10 +5137,11 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         darea = self.darea.add(sid, nid, component, scale, comment=comment)
         return darea
 
-    def add_tload1(self, sid, excite_id, tid, delay=0, Type='LOAD', us0=0.0, vs0=0.0,
+    def add_tload1(self, sid: int, excite_id: int, tabled_id: int, delay: int=0,
+                   load_type: str='LOAD', us0: float=0.0, vs0: foat=0.0,
                    comment: str='') -> int:
         """
-        Creates a TLOAD1 card, which defienes a load based on a table
+        Creates a TLOAD1 card, which defines a load based on a table
 
         Parameters
         ----------
@@ -5147,7 +5149,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             load id
         excite_id : int
             node id where the load is applied
-        tid : int
+        tabled_id : int
             TABLEDi id that defines F(t) for all degrees of freedom in
             EXCITEID entry
             float : MSC not supported
@@ -5172,13 +5174,18 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = self.tload1.add(sid, excite_id, tid, delay=delay, Type=Type, us0=us0, vs0=vs0,
+        load = self.tload1.add(sid, excite_id, tabled_id, delay=delay,
+                               load_type=load_type, us0=us0, vs0=vs0,
                                comment=comment)
         return load
 
-    def add_tload2(self, sid, excite_id, delay=0, Type='LOAD', T1=0., T2=None,
-                   frequency=0., phase=0., c=0., b=0.,
-                   us0=0., vs0=0., comment: str='') -> int:
+    def add_tload2(self, sid: int, excite_id: int, delay: int=0,
+                   load_type: str='LOAD',
+                   T1: float=0., T2: Optional[float]=None,
+                   frequency: float=0., phase: float=0.,
+                   c: float=0., b: float=0.,
+                   us0: float=0., vs0: float=0.,
+                   comment: str='') -> int:
         """
         Creates a TLOAD2 card, which defines a exponential time load
 
@@ -5192,7 +5199,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             the delay; if it's 0/blank there is no delay
             float : delay in units of time
             int : delay id
-        Type : int/str; default='LOAD'
+        load_type : int/str; default='LOAD'
             the type of load
             0/LOAD
             1/DISP
@@ -5223,7 +5230,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = self.tload2.add(sid, excite_id, delay=delay, Type=Type, T1=T1, T2=T2,
+        load = self.tload2.add(sid, excite_id, delay=delay, load_type=load_type, T1=T1, T2=T2,
                                frequency=frequency, phase=phase, c=c, b=b,
                                us0=us0, vs0=vs0, comment=comment)
         return load
@@ -5231,7 +5238,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
     def add_rload1(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0,
                    Type='LOAD', comment: str='') -> int:
         """
-        Creates an RLOAD1 card, which defienes a frequency-dependent load
+        Creates an RLOAD1 card, which defines a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -5272,7 +5279,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
     def add_rload2(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0,
                    Type='LOAD', comment: str='') -> int:
         """
-        Creates a nRLOAD2 card, which defienes a frequency-dependent load
+        Creates an RLOAD2 card, which defines a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -5605,7 +5612,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
     def add_deform(self, sid: int, eid: int, deformation: float, comment: str='') -> int:
         """
         Creates an DEFORM card, which defines applied deformation on
-        a 1D elemment.  Links to the DEFORM card in the case control
+        a 1D element.  Links to the DEFORM card in the case control
         deck.
 
         Parameters

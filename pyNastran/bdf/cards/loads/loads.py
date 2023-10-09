@@ -985,7 +985,7 @@ class DEFORM(Load):
     def __init__(self, sid, eid, deformation, comment=''):
         """
         Creates an DEFORM card, which defines applied deformation on
-        a 1D elemment.  Links to the DEFORM card in the case control
+        a 1D element.  Links to the DEFORM card in the case control
         deck.
 
         Parameters

@@ -468,7 +468,7 @@ class AddMethods:
         self.model.doptprm = doptprm
 
     def _add_nsm_object(self, nsm: Union[NSM, NSM1, NSML, NSML1], allow_overwrites: bool=False) -> None:
-        """adds a nsm object to a nsm set"""
+        """adds an nsm object to a nsm set"""
         key = nsm.sid
         assert key > 0, 'sid=%s must be positive; nsm=\n%s' % (key, nsm)
         if key in self.model.nsms:
@@ -478,7 +478,7 @@ class AddMethods:
             self.model._type_to_id_map[nsm.type].append(key)
 
     def _add_nsmadd_object(self, nsmadd: NSMADD, allow_overwrites: bool=False) -> None:
-        """adds a nsmadd object to a nsm set"""
+        """adds an nsmadd object to a nsm set"""
         key = nsmadd.sid
         assert key > 0, 'sid=%s must be positive; nsmadd=\n%s' % (key, nsmadd)
         if key in self.model.nsmadds:
@@ -1504,7 +1504,7 @@ class AddMethods:
     #-----------------------------------------------------------
 
     def _add_nlparm_object(self, nlparm: NLPARM) -> None:
-        """adds a NLPARM object"""
+        """adds an NLPARM object"""
         key = nlparm.nlparm_id
         assert key not in self.model.nlparms
         assert key > 0, 'key=%s; nlparm=%s\n' % (key, nlparm)
@@ -1524,7 +1524,7 @@ class AddMethods:
         self.model._type_to_id_map[rotor.type].append(key)
 
     def _add_nlpci_object(self, nlpci: NLPCI) -> None:
-        """adds a NLPCI object"""
+        """adds an NLPCI object"""
         key = nlpci.nlpci_id
         assert key not in self.model.nlpcis
         assert key > 0

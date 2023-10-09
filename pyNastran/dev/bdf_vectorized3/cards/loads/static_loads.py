@@ -83,6 +83,29 @@ class DEFORM(Load):
         load.elements = self.elements[i]
         load.enforced = self.enforced[i]
 
+    def add(self, sid: int, eid: int, deformation: float,
+            comment: str='') -> int:
+        """
+        Creates an DEFORM card, which defines applied deformation on
+        a 1D element.  Links to the DEFORM card in the case control
+        deck.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            CTUBE/CROD/CONROD/CBAR/CBEAM element id
+        deformation : float
+            the applied deformation
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, eid, deformation, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a DEFORM card from ``BDF.add_card(...)``

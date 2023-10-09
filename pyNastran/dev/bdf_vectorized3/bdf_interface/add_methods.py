@@ -134,7 +134,7 @@ class AddMethods():
 
     # nonlinear
     def _add_nlparm_object(self, nlparm: NLPARM) -> None:
-        """adds a NLPARM object"""
+        """adds an NLPARM object"""
         key = nlparm.nlparm_id
         assert key not in self.model.nlparms
         assert key > 0, 'key=%s; nlparm=%s\n' % (key, nlparm)
@@ -142,7 +142,7 @@ class AddMethods():
         self.model._type_to_id_map[nlparm.type].append(key)
 
     def _add_nlpci_object(self, nlpci: NLPCI) -> None:
-        """adds a NLPCI object"""
+        """adds an NLPCI object"""
         key = nlpci.nlpci_id
         assert key not in self.model.nlpcis
         assert key > 0

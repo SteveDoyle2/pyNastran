@@ -1415,7 +1415,6 @@ class DVPREL1(VectorizedBaseCard):
             p_max[icard] = p_maxi
             c0[icard] = c0i
 
-            print(dvprel_id, desvars, coeffs)
             ndesvar[icard] = len(desvars)
             all_desvars.extend(desvars)
             all_coeffs.extend(coeffs)

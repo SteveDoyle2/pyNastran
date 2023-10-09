@@ -218,7 +218,7 @@ class NSM1x(Property):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a NSM1/NSML1 card from ``BDF.add_card(...)``
+        Adds an NSM1/NSML1 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -480,7 +480,7 @@ class NSMADD(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a NSMADD card from ``BDF.add_card(...)``
+        Adds an NSMADD card from ``BDF.add_card(...)``
 
         Parameters
         ----------

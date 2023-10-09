@@ -4103,7 +4103,7 @@ class AddCards:
                    us0: float=0.0, vs0: float=0.0,
                    comment: str='') -> TLOAD1:
         """
-        Creates a TLOAD1 card, which defienes a load based on a table
+        Creates a TLOAD1 card, which defines a load based on a table
 
         Parameters
         ----------
@@ -4196,7 +4196,7 @@ class AddCards:
     def add_rload1(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0,
                    Type='LOAD', comment='') -> RLOAD1:
         """
-        Creates an RLOAD1 card, which defienes a frequency-dependent load
+        Creates an RLOAD1 card, which defines a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -4238,7 +4238,7 @@ class AddCards:
     def add_rload2(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0,
                    Type='LOAD', comment='') -> RLOAD2:
         """
-        Creates a nRLOAD2 card, which defienes a frequency-dependent load
+        Creates an RLOAD2 card, which defines a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -4576,7 +4576,7 @@ class AddCards:
     def add_deform(self, sid: int, eid: int, deformation: float, comment='') -> DEFORM:
         """
         Creates an DEFORM card, which defines applied deformation on
-        a 1D elemment.  Links to the DEFORM card in the case control
+        a 1D element.  Links to the DEFORM card in the case control
         deck.
 
         Parameters

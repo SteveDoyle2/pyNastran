@@ -113,6 +113,9 @@ class VectorizedBaseCard:
     def __len__(self) -> int:
         return self.n
 
+    def __contains__(self, key) -> bool:
+        return key in self._ids
+
     def parse_cards_check(func):
         @wraps(func)
         def wrapper(self):

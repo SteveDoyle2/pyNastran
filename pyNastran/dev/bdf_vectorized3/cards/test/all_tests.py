@@ -9,6 +9,7 @@ from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_coords import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_constraints import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_dampers import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_dmig import *
+from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_dynamic import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_loads import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_mass_elements import *
 from pyNastran.dev.bdf_vectorized3.cards.test.test_vector_materials import *

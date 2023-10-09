@@ -69,6 +69,27 @@ class DAREA(VectorizedBaseCard):
         load.component = self.component[i]
         load.scale = self.scale[i]
 
+    def add(self, sid: int, nid: int, component: str, scale: float,
+            comment: str='') -> int:
+        """
+        Creates a DAREA card
+
+        Parameters
+        ----------
+        sid : int
+            darea id
+        nid : int
+            GRID, EPOINT, SPOINT id
+        component : str
+            Component number. (0-6; 0-EPOINT/SPOINT; 1-6 GRID)
+        scale : float
+            Scale (area) factor
+
+        """
+        self.cards.append((sid, nid, component, scale, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         # sid : int
         #     darea id
@@ -191,6 +212,47 @@ class TLOAD1(VectorizedBaseCard):
         load.us0 = self.us0[i]
         load.vs0 = self.vs0[i]
 
+    def add(self, sid: int, excite_id: int, tabled_id: int, delay: int=0,
+                   load_type: str='LOAD', us0: float=0.0, vs0: float=0.0,
+                   comment: str='') -> int:
+        """
+        Creates a TLOAD1 card, which defines a load based on a table
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        excite_id : int
+            node id where the load is applied
+        tabled_id : int
+            TABLEDi id that defines F(t) for all degrees of freedom in
+            EXCITEID entry
+            float : MSC not supported
+        delay : int/float; default=0
+            the delay; if it's 0/blank there is no delay
+            float : delay in units of time
+            int : delay id
+        load_type : int/str; default='LOAD'
+            the type of load
+            0/LOAD
+            1/DISP
+            2/VELO
+            3/ACCE
+            4, 5, 6, 7, 12, 13 - MSC only
+        us0 : float; default=0.
+            Factor for initial displacements of the enforced degrees-of-freedom
+            MSC only
+        vs0 : float; default=0.
+            Factor for initial velocities of the enforced degrees-of-freedom
+            MSC only
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, excite_id, delay, load_type, tabled_id, us0, vs0, comment))
+        self.n += 1
+        return self.n
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
@@ -289,7 +351,7 @@ class TLOAD1(VectorizedBaseCard):
         geom_check(
             self,
             missing,
-            delay=(model.delay.delay_id, udelay),
+            #delay=(model.delay.delay_id, udelay),
         )
 
 
@@ -347,7 +409,63 @@ class TLOAD2(VectorizedBaseCard):
         load.us0 = self.us0[i]
         load.vs0 = self.vs0[i]
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add(self, sid: int, excite_id: int, delay: int=0,
+            load_type: str='LOAD',
+            T1: float=0., T2: Optional[float]=None,
+            frequency: float=0., phase: float=0.,
+            c: float=0., b: float=0.,
+            us0: float=0., vs0: float=0.,
+            comment: str='') -> int:
+        """
+        Creates a TLOAD2 card, which defines a exponential time load
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        excite_id : int
+            node id where the load is applied
+        delay : int/float; default=None
+            the delay; if it's 0/blank there is no delay
+            float : delay in units of time
+            int : delay id
+        load_type : int/str; default='LOAD'
+            the type of load
+            0/LOAD
+            1/DISP
+            2/VELO
+            3/ACCE
+            4, 5, 6, 7, 12, 13 - MSC only
+        T1 : float; default=0.
+            time constant (t1 > 0.0)
+            times below this are ignored
+        T2 : float; default=None
+            time constant (t2 > t1)
+            times above this are ignored
+        frequency : float; default=0.
+            Frequency in cycles per unit time.
+        phase : float; default=0.
+            Phase angle in degrees.
+        c : float; default=0.
+            Exponential coefficient.
+        b : float; default=0.
+            Growth coefficient.
+        us0 : float; default=0.
+            Factor for initial displacements of the enforced degrees-of-freedom
+            MSC only
+        vs0 : float; default=0.
+            Factor for initial velocities of the enforced degrees-of-freedom
+            MSC only
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, excite_id, delay, load_type, [T1, T2],
+                           frequency, phase, b, c, us0, vs0, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', default=0)
@@ -480,7 +598,7 @@ class TLOAD2(VectorizedBaseCard):
         geom_check(
             self,
             missing,
-            delay=(model.delay.delay_id, udelay),
+            #delay=(model.delay.delay_id, udelay),
         )
 
 def _set_int_float(i: int, array_int: np.ndarray, array_float: np.ndarray, value: Union[int, float]) -> None:

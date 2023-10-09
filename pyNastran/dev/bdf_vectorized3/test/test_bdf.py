@@ -1248,7 +1248,6 @@ def _run_mass(model: BDFs, xref: bool, has_nodes: bool, is_nominal: bool):
                 model.get_volume_breakdown(stop_if_no_volume=False)
                 model.get_mass_breakdown(stop_if_no_mass=False)
         else:
-            return
             model.get_mass_breakdown(stop_if_no_mass=False)
             wtmass = 1.
             if 'WTMASS' in model.params:
@@ -1487,14 +1486,14 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
     #fem2.write_as_ctria3(out_model_2)
     return fem2
 
-def _has_restart(fem: BDFs):
+def _has_restart(fem: BDFs) -> bool:
     is_restart = False
     for line in fem.system_command_lines:
         if line.strip().upper().startswith('RESTART'):
             is_restart = True
     return is_restart
 
-def _assert_has_spc(subcase, fem: BDFv):
+def _assert_has_spc(subcase, fem: BDFv) -> bool:
     """
     SPCs may be defined on SPC/SPC1 cards or may be defined on
     the GRID PS field
@@ -1504,7 +1503,8 @@ def _assert_has_spc(subcase, fem: BDFv):
         has_ps = fem.grid.has_ps()
         assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
 
-def _validate_case_control(fem: BDFs, p0: Any, sol_base: int, subcase_keys: list[int],
+def _validate_case_control(fem: BDFs, p0: Any, sol_base: int,
+                           subcase_keys: list[int],
                            subcases: Any, unused_sol_200_map: Any,
                            stop_on_failure: bool=True,
                            ierror: int=0, nerrors: int=100) -> int:
@@ -1535,7 +1535,8 @@ def _validate_case_control(fem: BDFs, p0: Any, sol_base: int, subcase_keys: list
         assert isinstance(ierror, int), ierror
     return ierror
 
-def check_for_flag_in_subcases(fem2: BDFs, subcase: Any, parameters: list[str]) -> None:
+def check_for_flag_in_subcases(fem2: BDFs, subcase: Subcase,
+                               parameters: list[str]) -> None:
     """
     For a multi-subcase deck, you can define specific required cards
     (e.g., TSTEP) in secondary cases, but not primary cases.  This
@@ -1581,7 +1582,7 @@ def check_for_optional_param(keys: list[str], subcase: Any,
     return ierror
 
 def check_sol(sol: int,
-              subcase: Any,
+              subcase: Subcase,
               allowed_sols: list[int],
               case_control_key: str,
               log: Any, ierror: int, nerrors: int,
@@ -1793,7 +1794,8 @@ def check_case(sol: int,
     return ierror
 
 def _check_static_aero_case(fem: BDFv, log: Any, sol: int,
-                            subcase: Any, ierror: int, nerrors: int) -> int:
+                            subcase: Subcase,
+                            ierror: int, nerrors: int) -> int:
     """checks that TRIM/DIVERG is valid"""
     if not any(subcase.has_parameter('TRIM', 'DIVERG')):
         msg = 'A TRIM or DIVERG card is required for STATIC AERO - SOL %i\n%s' % (
@@ -2088,9 +2090,9 @@ def _check_case_parameters(subcase: Subcase,
         tstepnl_id = subcase.get_parameter('TSTEPNL')[0]
         assert tstepnl_id in fem.tstepnls, _tstep_msg(fem, subcase, tstepnl_id, tstep_type='nl')
 
-    if 'SUPORT1' in subcase and 0:
+    if 'SUPORT1' in subcase:
         suport1_id = subcase.get_parameter('SUPORT1')[0]
-        assert suport1_id in fem.suport1, 'suport1_id=%s\n suport1=%s\n subcase:\n%s' % (suport1_id, str(fem.suport1), str(subcase))
+        assert suport1_id in fem.suport, 'suport1_id=%s\n suport1=%s\n subcase:\n%s' % (suport1_id, str(fem.suport.write()), str(subcase))
 
     ierror = _check_case_parameters_aero(
         subcase, fem, sol,
@@ -2127,13 +2129,13 @@ def _check_case_parameters(subcase: Subcase,
 
     if 'RMETHOD' in subcase:
         unused_rmethod_id = subcase.get_parameter('RMETHOD')[0]
-        #if method_id in fem.methods:
-            #method = fem.methods[method_id]
+        if method_id in fem.methods:
+            unused_method = fem.methods[method_id]
         #elif method_id in fem.cMethods:
             #method = fem.cMethods[method_id]
-        #else:
-            #method_ids = list(fem.methods.keys())
-            #raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
+        else:
+            method_ids = list(fem.methods.keys())
+            raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
 
         allowed_sols = [101, 110, 111]
         ierror = check_sol(sol, subcase, allowed_sols, 'RMETHOD', log, ierror, nerrors,
@@ -2318,6 +2320,14 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
                                 stop_on_failure: bool=True) -> int:
     """helper method for ``_check_case_parameters``"""
     log = fem.log
+
+    suport = None # fem.suport.slice_card_by_index([])
+    if 'SUPORT1' in subcase:
+        suport_id = subcase.get_parameter('SUPORT1')[0]
+        suporti = fem.suport
+        suport_ids = [0, suport_id] if 0 in suporti else [suport_id]
+        suport = suporti.slice_card_by_id(suport_ids)
+
     if 'TRIM' in subcase and 0:
         trim_id = subcase.get_parameter('TRIM')[0]
         if trim_id not in fem.trims:
@@ -2329,10 +2339,6 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
             log_error(sol, [144, 200], msg, log)
         else:
             trim = fem.trims[trim_id]
-            suport = None # fem.suport.slice_card_by_index([])
-            if 'SUPORT1' in subcase:
-                suport_id = subcase.get_parameter('SUPORT1')[0]
-                suport = fem.suport.slice_card_by_id([0, suport_id])
             try:
                 trim.verify_trim(
                     suport, fem.aestats, fem.aeparams,
@@ -2362,22 +2368,6 @@ def _check_case_parameters_aero(subcase: Subcase, fem: BDFs, sol: int,
         allowed_sols = [145, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'FMETHOD', log, ierror, nerrors, require_sol=False)
     return ierror
-
-#def divide(value1: int, value2: int) -> float:
-    #"""
-    #Used to divide the number of cards to check that nothing was lost.
-    #Handles division by 0 by returning 0, which is the reciprocal.
-
-    #"""
-    #if value1 == value2:  # good for 0/0
-        #return 1.0
-    #else:
-        #try:
-            #div_value = value1 / float(value2)
-        #except ZeroDivisionError:
-            #div_value = 0.
-    #return div_value
-
 
 def test_get_cards_by_card_types(model: BDFs) -> None:
     """Verifies the ``model.get_cards_by_card_types`` method works"""
@@ -2413,81 +2403,6 @@ def test_get_cards_by_card_types(model: BDFs) -> None:
                 card_type, card.type)
             if card_type != card.type and card_type + '1' != card.type:
                 raise RuntimeError(msg)
-
-
-#def compare_card_count(fem1: BDFs, fem2: BDFs,
-                       #print_stats: bool=False, quiet: bool=False) -> list[str]:
-    #"""Checks that no cards from fem1 are lost when we write fem2"""
-    #cards1 = fem1.card_count
-    #cards2 = fem2.card_count
-    #for key in cards1:
-        #if key != key.upper():
-            #raise RuntimeError('Proper capitalization wasnt determined')
-    #if print_stats and not quiet:
-        #print(fem1.get_bdf_stats())
-    #else:
-        #fem1.get_bdf_stats()
-    #return compute_ints(cards1, cards2, fem1, quiet=quiet)
-
-
-#def compute_ints(cards1, cards2, fem1, quiet=True):
-    #"""
-    #computes the difference / ratio / inverse-ratio between
-    #fem1 and fem2 to verify the number of card are the same:
-
-    #Examples
-    #--------
-
-    #name   fem1  fem2  diff  ratio  1/ratio
-    #====   ====  ====  ==== ======  =======
-    #GRID      1     1     1     1.       1.
-    #*SPOINT  10     1     9    10.      0.1
-
-    #The * indicates a change, which may or may not be a problem.
-
-    #"""
-    #card_keys1 = set(cards1.keys())
-    #card_keys2 = set(cards2.keys())
-    #all_keys = card_keys1.union(card_keys2)
-    #diff_keys1 = list(all_keys.difference(card_keys1))
-    #diff_keys2 = list(all_keys.difference(card_keys2))
-
-    #list_keys1 = list(card_keys1)
-    #list_keys2 = list(card_keys2)
-    #if diff_keys1 or diff_keys2:
-        #print(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
-
-    #for key in sorted(all_keys):
-        #msg = ''
-        #value1 = 0
-        #if key in list_keys1:
-            #value1 = cards1[key]
-
-        #value2 = 0
-        #if key in list_keys2:
-            #value2 = cards2[key]
-
-        #diff = abs(value1 - value2)
-        #star = ' '
-        #if diff and key not in ['INCLUDE']:
-            #star = '*'
-        #if key not in fem1.cards_to_read:
-            #star = '-'
-
-        #factor1 = divide(value1, value2)
-        #factor2 = divide(value2, value1)
-        #factor_msg = ''
-        #if not quiet or not star or factor1 != factor2:
-            #if factor1 != factor2:
-                #factor_msg = 'diff=%s factor1=%g factor2=%g' % (
-                    #diff, factor1, factor2)
-            #msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (
-                #star, key, value1, value2) + factor_msg
-        #if msg:
-            #msg = msg.rstrip()
-            #print(msg)
-    ##return list_keys1 + list_keys2
-    #return diff_keys1 + diff_keys2
 
 
 def compute(cards1, cards2, quiet=False):

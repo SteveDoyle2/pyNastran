@@ -419,7 +419,7 @@ class RLOAD1(DynamicLoad):
 
     def __init__(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0, Type='LOAD', comment=''):
         """
-        Creates an RLOAD1 card, which defienes a frequency-dependent load
+        Creates an RLOAD1 card, which defines a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -832,7 +832,7 @@ class RLOAD2(DynamicLoad):
     # P(f) = {A} * B(f) * e^(i*phi(f), + theta - 2*pi*f*tau)
     def __init__(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0, Type='LOAD', comment=''):
         """
-        Creates a nRLOAD2 card, which defienes a frequency-dependent load
+        Creates an RLOAD2 card, which defines a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -1135,7 +1135,7 @@ class TLOAD1(DynamicLoad):
                  Type: str='LOAD',
                  us0: float=0.0, vs0: float=0.0, comment: str=''):
         """
-        Creates a TLOAD1 card, which defienes a time-dependent load
+        Creates a TLOAD1 card, which defines a time-dependent load
         based on a DTABLE.
 
         Parameters

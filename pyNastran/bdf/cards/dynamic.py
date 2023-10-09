@@ -1105,7 +1105,7 @@ class NLPARM(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a NLPARM card from ``BDF.add_card(...)``
+        Adds an NLPARM card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -1159,7 +1159,7 @@ class NLPARM(BaseCard):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         """
-        Adds a NLPARM card from the OP2
+        Adds an NLPARM card from the OP2
 
         Parameters
         ----------
@@ -1275,7 +1275,7 @@ class NLPCI(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a NLPCI card from ``BDF.add_card(...)``
+        Adds an NLPCI card from ``BDF.add_card(...)``
 
         Parameters
         ----------
