@@ -271,32 +271,39 @@ class TestSets(unittest.TestCase):
         qset.write()
         save_load_deck(model)
 
-    def _test_uset(self):
+    def test_uset(self):
         """checks the USET/USET1 cards"""
         model = BDF(debug=False)
-        add_methods = model._add_methods
-        uset1a = USET1('MYSET1', [1, 'THRU', 10], 4, comment='uset')
-        fields = ['USET1', 'MYSET2',
-                  5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]
+        #add_methods = model._add_methods
+        uset = model.uset
+        uset1a = model.add_uset1('MYSET1', [1, 'THRU', 10], 4, comment='uset')
+        model.setup()
+        fields = ['USET1', 'MYSET2', 5,
+                  1, 2, 3, 4, 5, 6, 7, 8, 10, 9]
         model.add_card(fields, 'USET1', comment='uset1')
-        add_methods._add_uset_object(uset1a)
+        model.setup()
+        #add_methods._add_uset_object(uset1a)
         #add_methods._add_uset_object(uset1b)
-        uset1a.write()
+        uset.write()
 
-        useta = USET('MYSET3', [1, 2, 3, 4, 5],
-                     [5, 4, 3, 2, 1], comment='uset')
+        useta = model.add_uset(
+            'MYSET3',
+            [1, 2, 3, 4, 5],
+            [5, 4, 3, 2, 1], comment='uset')
+        model.setup()
         fields = ['USET', 'MYSET4',
                   1, 2, 3, 4, 5,
                   5, 4, 3, 2, 1]
+        model.setup()
         model.add_card(fields, 'USET', comment='uset')
-        add_methods._add_uset_object(useta)
+        #add_methods._add_uset_object(useta)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
             model.add_grid(nid, [float(nid), 0., 0.])
-        useta.validate()
+        uset.validate()
         model.validate()
-        useta.write()
+        uset.write()
         save_load_deck(model)
 
     def _test_sebset(self):

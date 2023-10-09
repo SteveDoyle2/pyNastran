@@ -5,11 +5,13 @@ from typing import TYPE_CHECKING, Set, Optional, Any
 
 from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
-from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT, SUPORT
+#from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import SET1, SET2, SET3
+from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT, USET, SUPORT
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, EPOINT, SPOINT, GRDSET, POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
-from pyNastran.dev.bdf_vectorized3.cards.elements.bush import CBUSH, PBUSH, PBUSHT, CBUSH1D, PBUSH1D, CBUSH2D, PBUSH2D
+from pyNastran.dev.bdf_vectorized3.cards.elements.bush import (
+    CBUSH, PBUSH, PBUSHT, CBUSH1D, PBUSH1D, CBUSH2D, PBUSH2D)
 from pyNastran.dev.bdf_vectorized3.cards.elements.fast import CFAST, PFAST
 #from pyNastran.dev.bdf_vectorized3.cards.elements.genel import GENEL
 from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, CELAS3, CELAS4, PELAS, PELAST
@@ -47,7 +49,6 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CM
 from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
 #from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import CHBDYE, CHBDYP, CHBDYG, CONV, PCONV, CONVM, PCONVM, PHBDY
 from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL
-#from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import SET1, SET2, SET3, USET, USET1
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
     LOAD, SLOAD,
@@ -193,17 +194,16 @@ class BDFAttributes:
 
         # sets
         self.suport = SUPORT(self)
-        self.aset = ASET(self)
-        self.bset = BSET(self)
-        self.cset = CSET(self)
-        self.qset = QSET(self)
-        self.omit = OMIT(self)
+        self.aset = ASET(self)  # ASET, ASET1
+        self.bset = BSET(self)  # BSET, BSET1
+        self.cset = CSET(self)  # CSET, CSET1
+        self.qset = QSET(self)  # QSET, QSET1
+        self.omit = OMIT(self)  # OMIT, OMIT1
+        self.uset = USET(self)  # USET, USET1
 
         #self.set1 = SET1(self)
         #self.set2 = SET2(self)
         #self.set3 = SET3(self)
-        #self.uset = USET(self)
-        #self.uset1 = USET1(self)
 
         # aero geometry
         #self.caero1 = CAERO1(self)
@@ -823,10 +823,11 @@ class BDFAttributes:
 
     @property
     def sets(self) -> list[Any]:
+        """handles ASET/ASET1, ..."""
         sets = [
             #self.set1, self.set2, self.set3,
-            #self.uset, self.uset1,
-            self.aset, self.bset, self.cset, self.qset, self.omit,
+            self.aset, self.bset, self.cset, self.qset,
+            self.omit, self.uset,
         ]
         return sets
 
@@ -879,17 +880,17 @@ class BDFAttributes:
     # ------------------------------------------------------------------------
     # constraints
     @property
-    def spc_cards(self):
+    def spc_cards(self) -> list[Any]:
         return [
-            self.spc, self.spc1, self.spcadd,
+            self.spc, self.spc1, self.spcadd, self.spcoff,
         ]
     @property
-    def mpc_cards(self):
+    def mpc_cards(self) -> list[Any]:
         return [
             self.mpc, self.mpcadd, # self.mpcax,
         ]
     @property
-    def nsm_cards(self):
+    def nsm_cards(self) -> list[Any]:
         return [
             self.nsm, self.nsm1, self.nsml, self.nsml1, self.nsmadd,
         ]
@@ -993,7 +994,7 @@ class BDFAttributes:
         return ucaero_ids
     # ------------------------------------------------------------------------
 
-    def set_as_msc(self):
+    def set_as_msc(self) -> None:
         self._nastran_format = 'msc'
         self.is_nx = False
         self.is_msc = True
@@ -1002,7 +1003,7 @@ class BDFAttributes:
         self.is_nasa95 = False
         self.is_zona = False
 
-    def set_as_nx(self):
+    def set_as_nx(self) -> None:
         self._nastran_format = 'nx'
         self.is_nx = True
         self.is_msc = False
@@ -1029,7 +1030,7 @@ class BDFAttributes:
         self.is_nasa95 = False
         self.is_zona = True
 
-    def set_as_mystran(self):
+    def set_as_mystran(self) -> None:
         self._nastran_format = 'mystran'
         self.is_nx = False
         self.is_msc = False
@@ -1039,7 +1040,7 @@ class BDFAttributes:
         self.is_zona = False
         self._update_for_mystran()
 
-    def set_as_nasa95(self):
+    def set_as_nasa95(self) -> None:
         self._nastran_format = 'nasa95'
         self.is_nx = False
         self.is_msc = False
@@ -1052,7 +1053,7 @@ class BDFAttributes:
     # ------------------------------------------------------------------------
     # optimization
     @property
-    def dresp_ids(self):
+    def dresp_ids(self) -> np.ndarray:
         return np.hstack([self.dresp1.dresp_id, self.dresp2.dresp_id])
 
     @property
@@ -1076,7 +1077,8 @@ class BDFAttributes:
         reduced_loads = get_reduced_static_load(self, load=load)
         return reduced_loads
 
-    def sum_forces_moments(self) -> float:
+    def sum_forces_moments(self) -> tuple[dict[int, np.ndarray],
+                                          dict[int, np.ndarray],]:
         loads_by_load_id, loads_by_subcase_id = sum_forces_moments(self, [0., 0., 0.])
         return loads_by_load_id, loads_by_subcase_id
 
@@ -1240,7 +1242,7 @@ class BDFAttributes:
         #self.nsml.get_nsms_by_nsm_id()
         #self.nsml1.get_nsms_by_nsm_id()
 
-    def mass(self) -> np.ndarray:
+    def mass(self) -> tuple[np.ndarray, np.ndarray]:
         """
         TODO: limit element ids somehow...by id???
         """
@@ -1620,7 +1622,7 @@ class BDFAttributes:
                 materials.append(mat)
         return materials
 
-def _unique_keys(mydict: dict[int, Any]) -> str:
+def _unique_keys(mydict: dict[int, Any]) -> np.ndarray:
     """helper method"""
     return np.unique(list(mydict.keys()))
 

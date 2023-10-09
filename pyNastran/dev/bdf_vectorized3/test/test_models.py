@@ -16,21 +16,29 @@ MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 class TestModels(unittest.TestCase):
-    def _test_h5_freq(self):
+    def test_h5_freq(self):
+        bdf_filename = MODEL_PATH / 'elements' / 'freq_elements.bdf'
+        args = ['test_bdf', str(bdf_filename), '--skip_nominal', '--quiet']
+        test_bdf(args, show_args=False)
+
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-        test_bdf(args, show_args=False)
+        #test_bdf(args, show_args=False)
 
         args2 = ['test_op2', str(h5_filename), '-ctfo', '--quiet']
-        test_op2(args2, show_args=False)
+        #test_op2(args2, show_args=False)
 
-    def _test_h5_transient(self):
+    def test_h5_transient(self):
+        bdf_filename = MODEL_PATH / 'elements' / 'time_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
-        args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
+        args = ['test_bdf', str(bdf_filename), '--skip_nominal', '--quiet']
         test_bdf(args, show_args=False)
 
-        args2 = ['test_op2', str(h5_filename), '-ctfo', '--quiet']
-        test_op2(args2, show_args=False)
+        args2 = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
+        #test_bdf(args2, show_args=False)
+
+        args3 = ['test_op2', str(h5_filename), '-ctfo', '--quiet']
+        #test_op2(args3, show_args=False)
 
     def test_h5_transient_thermal(self):
         bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
@@ -106,11 +114,11 @@ class TestModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'beam_modes' / 'beam_modes.dat'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-    def _test_beam_modes2(self):
+    def test_beam_modes2(self):
         bdf_filename = MODEL_PATH / 'beam_modes' / 'cbarao_cbeam_static.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
-    def _test_beam_modes3(self):
+    def test_beam_modes3(self):
         bdf_filename = MODEL_PATH / 'beam_modes' / 'cbarao_cbeam_modes.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
@@ -220,14 +228,14 @@ class TestModels(unittest.TestCase):
             #args = ['test_bdf', str(h5_filename), '--quiet']
             #test_bdf(args, show_args=False)
 
-    def _test_elements3(self):
+    def test_elements3(self):
         bdf_filename = MODEL_PATH / 'elements' / 'time_elements.bdf'
-        h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
+        #h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
     def test_elements4(self):
         bdf_filename = MODEL_PATH / 'elements' / 'freq_elements.bdf'
-        h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
+        #h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
     def test_elements5(self):

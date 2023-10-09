@@ -133,9 +133,6 @@ from pyNastran.bdf.cards.optimization import DOPTPRM
     #CSUPER, CSUPEXT,
 #)
 #from .cards.bdf_sets import (
-    #ASET, BSET, CSET, QSET, USET,
-    #USET1,
-    #OMIT,
     #SET1, SET2, SET3,
     #SEBSET, SECSET, SEQSET, # SEUSET
     #SEBSET1, SECSET1, SEQSET1, # SEUSET1
@@ -811,7 +808,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BSET', 'BSET1',  ## bset
             'CSET', 'CSET1',  ## cset
             'QSET', 'QSET1',  ## qset
-            #'USET', 'USET1', ## uset
+            'USET', 'USET1',  ## uset
 
             #'RADSET',  # radset
 
@@ -2331,21 +2328,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         }
 
         self._card_parser_prepare = {
-            'ASET': partial(self._prepare_card_by_method, self.aset.add_set_card),
-            'ASET1': partial(self._prepare_card_by_method, self.aset.add_set1_card),
-
-            'BSET': partial(self._prepare_card_by_method, self.bset.add_set_card),
-            'BSET1': partial(self._prepare_card_by_method, self.bset.add_set1_card),
-
-            'CSET': partial(self._prepare_card_by_method, self.cset.add_set_card),
-            'CSET1': partial(self._prepare_card_by_method, self.cset.add_set1_card),
-
-            'QSET': partial(self._prepare_card_by_method, self.qset.add_set_card),
-            'QSET1': partial(self._prepare_card_by_method, self.qset.add_set1_card),
-
-            'OMIT': partial(self._prepare_card_by_method, self.omit.add_set_card),
-            'OMIT1': partial(self._prepare_card_by_method, self.omit.add_set1_card),
-
             'PLOTEL': partial(self._prepare_card, self.plotel),
             'GRID': partial(self._prepare_card, self.grid),
             'SPOINT': partial(self._prepare_card, self.spoint),
@@ -2360,8 +2342,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # sets
             #'SET1': partial(self._prepare_card, self.set1),
             #'SET3': partial(self._prepare_card, self.set3),
-            #'USET': partial(self._prepare_card, self.uset),
-            #'USET1': partial(self._prepare_card, self.uset1),
 
             # spring
             'CELAS1' : partial(self._prepare_card, self.celas1),
@@ -2625,6 +2605,24 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # pseudo-constraint
             'SUPORT': partial(self._prepare_card_by_method, self.suport.add_set_card),
             'SUPORT1': partial(self._prepare_card_by_method, self.suport.add_set1_card),
+
+            'ASET': partial(self._prepare_card_by_method, self.aset.add_set_card),
+            'ASET1': partial(self._prepare_card_by_method, self.aset.add_set1_card),
+
+            'BSET': partial(self._prepare_card_by_method, self.bset.add_set_card),
+            'BSET1': partial(self._prepare_card_by_method, self.bset.add_set1_card),
+
+            'CSET': partial(self._prepare_card_by_method, self.cset.add_set_card),
+            'CSET1': partial(self._prepare_card_by_method, self.cset.add_set1_card),
+
+            'QSET': partial(self._prepare_card_by_method, self.qset.add_set_card),
+            'QSET1': partial(self._prepare_card_by_method, self.qset.add_set1_card),
+
+            'OMIT': partial(self._prepare_card_by_method, self.omit.add_set_card),
+            'OMIT1': partial(self._prepare_card_by_method, self.omit.add_set1_card),
+
+            'USET': partial(self._prepare_card_by_method, self.uset.add_set_card),
+            'USET1': partial(self._prepare_card_by_method, self.uset.add_set1_card),
 
             # aero
             #'CAERO1': partial(self._prepare_card, self.caero1),

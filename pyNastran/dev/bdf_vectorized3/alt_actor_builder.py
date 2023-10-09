@@ -214,6 +214,7 @@ def _create_alt_axes(self: NastranIO,
     #i2 = i1 + neids
     #node_lines = np.column_stack([i1, i2])
 
+    name_nodes = f'{card_name} nodes'
     name_bar_y = f'{card_name} y axis'
     name_bar_z = f'{card_name} z axis'
 
@@ -224,6 +225,11 @@ def _create_alt_axes(self: NastranIO,
     gui.create_alternate_vtk_grid(
         name_bar_z, color=BLUE_FLOAT, line_width=5, opacity=1.,
         point_size=5, representation='bar', bar_scale=scale, is_visible=False)
+
+    nids = np.unique(elem.nodes.ravel())
+    inid = np.searchsorted(grid_id, nids)
+    all_xyz = xyz_cid0[inid, :]
+    _build_dots(gui, name_nodes, all_xyz, color=RED_FLOAT)
 
     eids = elem.element_id
     xyz_lines = np.vstack([p1, p2]).reshape(neids, 6)

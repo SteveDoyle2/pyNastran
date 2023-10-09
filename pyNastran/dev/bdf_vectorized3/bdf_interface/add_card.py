@@ -6378,7 +6378,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return self.add_qset(ids, components, comment=comment)
 
     def add_uset(self, name: str, ids: list[int], components: list[int],
-                 comment: str='') -> Union[USET, USET1]:
+                 comment: str='') -> int:
         """
         Creates a USET card, which defines a degrees-of-freedom set.
 
@@ -6397,17 +6397,11 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        if isinstance(components, integer_string_types):
-            #uset = USET1(name, ids, components, comment=comment)
-            #print(f'adding uset1 name={name} ids={ids} comps={components}')
-            self.uset1.add(name, ids, components, comment=comment)
-            uset = self.uset1
+        if isinstance(components, list):
+            uset = self.uset.add_set(name, ids, components, comment=comment)
         else:
-            #print(f'adding uset name={name} ids={ids} comps={components}')
-            self.uset.add(name, ids, components, comment=comment)
-            uset = self.uset
-            #uset = USET(name, ids, components, comment=comment)
-        #self._add_methods._add_uset_object(uset)
+            assert isinstance(components, (str, integer_types)), components
+            uset = self.uset.add_set1(name, ids, components, comment=comment)
         assert uset is not None
         return uset
 

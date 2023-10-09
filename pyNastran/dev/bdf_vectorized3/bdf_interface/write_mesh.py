@@ -234,19 +234,12 @@ class Writer():
         self._write_constraints(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_optimization(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_tables(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_sets(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_sets(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_superelements(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_contact(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_parametric(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_rejects(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids)
-
-        model = self.model
-        model.aset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
-        model.bset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
-        model.cset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
-        model.qset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
-        model.omit.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
         #if self.acmodl:
             #bdf_file.write(self.acmodl.write_card(size, is_double))
@@ -708,12 +701,16 @@ class Writer():
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the SETx cards sorted by ID"""
         model = self.model
-        bdf_file.write(model.set1.write(size=size))
-        bdf_file.write(model.set2.write(size=size))  #  faked
-        bdf_file.write(model.set3.write(size=size))
+        model.aset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.bset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.cset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.qset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.omit.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.uset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
-        bdf_file.write(model.uset.write(size=size))
-        bdf_file.write(model.uset1.write(size=size))
+        #bdf_file.write(model.set1.write(size=size))
+        #bdf_file.write(model.set2.write(size=size))  #  faked
+        #bdf_file.write(model.set3.write(size=size))
 
     def _write_superelements(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                              is_long_ids: Optional[bool]=None) -> None:

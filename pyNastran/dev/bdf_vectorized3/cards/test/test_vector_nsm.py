@@ -29,7 +29,7 @@ def mass_properties_nsm(model: BDF, nsm_id: int, debug: bool=False):
     elements_flag = []
     elements = []
     element_values = []
-    print('nsm_id', nsm_id)
+    #print('nsm_id', nsm_id)
     for nsm in nsms:
         #shell_pid_values = []
         _elements = []
