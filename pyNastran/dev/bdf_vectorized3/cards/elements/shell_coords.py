@@ -5,13 +5,20 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
+def _nshell_elements(model: BDF) -> tuple[int, str]:
+    ncards = 0
+    idtype = 'int32'
+    for elem in model.shell_element_cards:
+        ncards += elem.n
+        if elem.element_id.dtype.name == 'int64':
+            idtype = 'int64'
+    return ncards, idtype
+
+
 def get_shell_element_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                                              np.ndarray, np.ndarray]:
-    n = 0
-    for elem in model.shell_element_cards:
-        n += elem.n
-
-    if n == 0:
+    ncards, dtype = _nshell_elements(model)
+    if ncards == 0:
         element_id = np.array([], dtype='int32')
         length = np.array([], dtype='int32')
         centroid = np.zeros((0, 3), dtype='float32')
@@ -19,11 +26,11 @@ def get_shell_element_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndar
         jelement = np.zeros((0, 3), dtype='float32')
         return element_id, length, centroid, ielement, jelement
 
-    element_id = np.zeros(n, dtype='int32')
-    length = np.full(n, np.nan, dtype='float32')
-    centroid = np.full((n, 3), np.nan, dtype='float32')
-    ielement = np.full((n, 3), np.nan, dtype='float32')
-    jelement = np.full((n, 3), np.nan, dtype='float32')
+    element_id = np.zeros(ncards, dtype=dtype)
+    length = np.full(ncards, np.nan, dtype='float32')
+    centroid = np.full((ncards, 3), np.nan, dtype='float32')
+    ielement = np.full((ncards, 3), np.nan, dtype='float32')
+    jelement = np.full((ncards, 3), np.nan, dtype='float32')
     #normal = np.full((n, 3), np.nan, dtype='float32')
     n1 = 0
     for elem in model.shell_element_cards:
@@ -37,16 +44,13 @@ def get_shell_element_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndar
         ielement[n1:n2, :] = ielementi
         jelement[n1:n2, :] = jelementi
         #normal[n1:n2, :] = normali
-        n2 = n1
+        n1 = n2
     return element_id, length, centroid, ielement, jelement
 
 def get_shell_material_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                                               np.ndarray, np.ndarray]:
-    n = 0
-    for elem in model.shell_element_cards:
-        n += elem.n
-
-    if n == 0:
+    ncards, dtype = _nshell_elements(model)
+    if ncards == 0:
         element_id = np.array([], dtype='int32')
         length = np.array([], dtype='int32')
         centroid = np.zeros((0, 3), dtype='float32')
@@ -54,25 +58,31 @@ def get_shell_material_coordinate_system(model: BDF) -> tuple[np.ndarray, np.nda
         jelement = np.zeros((0, 3), dtype='float32')
         return element_id, length, centroid, ielement, jelement
 
-    element_id = np.zeros(n, dtype='int32')
-    length = np.full(n, np.nan, dtype='float32')
-    centroid = np.full((n, 3), np.nan, dtype='float32')
-    ielement = np.full((n, 3), np.nan, dtype='float32')
-    jelement = np.full((n, 3), np.nan, dtype='float32')
-    #normal = np.full((n, 3), np.nan, dtype='float32')
+    element_id = np.zeros(ncards, dtype=dtype)
+    length = np.full(ncards, np.nan, dtype='float32')
+    centroid = np.full((ncards, 3), np.nan, dtype='float32')
+    ielement = np.full((ncards, 3), np.nan, dtype='float32')
+    jelement = np.full((ncards, 3), np.nan, dtype='float32')
+    #normal = np.full((ncards, 3), np.nan, dtype='float32')
     n1 = 0
     for elem in model.shell_element_cards:
         if elem.n == 0:
             continue
         n2 = n1 + elem.n
         dxyzi, centroidi, ielementi, jelementi, normali = elem.material_coordinate_system()
-        element_id[n1:n2] = elem.element_id
+        eids = elem.element_id
+        #assert eids.min() > 0, elem.get_stats()
+
+        neid = len(eids)
+        assert neid == elem.n
+        element_id[n1:n2] = eids
         length[n1:n2] = dxyzi
         centroid[n1:n2, :] = centroidi
         ielement[n1:n2, :] = ielementi
         jelement[n1:n2, :] = jelementi
         #normal[n1:n2, :] = normali
-        n2 = n1
+        n1 = n2
+    assert element_id.min() > 0, element_id.min()
     return element_id, length, centroid, ielement, jelement
 
 def material_coordinate_system(element,

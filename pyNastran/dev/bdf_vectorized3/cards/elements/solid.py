@@ -160,10 +160,10 @@ class CTETRA(SolidElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 10), dtype='int32')
-        assert ncards > 0, ncards
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 10), dtype=idtype)
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, comment) = card
             element_id[icard] = eid
@@ -364,9 +364,10 @@ class CPENTA(SolidElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 15), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 15), dtype=idtype)
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, comment) = card
@@ -500,9 +501,10 @@ class CPYRAM(SolidElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 13), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 13), dtype=idtype)
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, comment) = card
             element_id[icard] = eid
@@ -618,15 +620,13 @@ class CHEXA(SolidElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 20), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 20), dtype=idtype)
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, comment) = card
             element_id[icard] = eid
@@ -1622,9 +1622,10 @@ class CHACBR(SolidElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 20), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 20), dtype=idtype)
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, comment) = card
             element_id[icard] = eid
@@ -1735,15 +1736,13 @@ class CHACAB(SolidElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 20), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 20), dtype=idtype)
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, comment) = card
             element_id[icard] = eid

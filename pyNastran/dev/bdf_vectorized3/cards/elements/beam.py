@@ -166,12 +166,13 @@ class CBEAM(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         offt = np.full(ncards, '', dtype='|U3')
         bit = np.full(ncards, -1, dtype='int32')
-        g0 = np.full(ncards, -1, dtype='int32')
+        g0 = np.full(ncards, -1, dtype=idtype)
         x = np.full((ncards, 3), np.nan, dtype='float64')
 
         pa = np.zeros(ncards, dtype='int32')
@@ -1123,8 +1124,9 @@ class PBEAM(Property):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
-        material_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
         xxb_list = []
         so_list = []
         A_list = []
@@ -1806,8 +1808,9 @@ class PBEAML(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
-        material_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
 
         #idim = np.zeros((ncards, 2), dtype='int32')  # for all properties
         ndim = np.zeros(ncards, dtype='int32')

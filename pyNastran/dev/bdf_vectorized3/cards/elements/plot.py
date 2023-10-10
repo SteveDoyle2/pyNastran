@@ -92,8 +92,9 @@ class PLOTEL(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card_comment in enumerate(self.cards):
             eid, nodesi, comment = card_comment

@@ -457,7 +457,8 @@ MISSING_CARDS = {
     'FREQV', 'VATVFS', 'PMIC', 'MAT10C', 'ALOAD', 'ELAR', 'ATVBULK', 'AMLREG',
     'ATVFS', 'BOLTLD', 'BCTPAR2', 'MATFT', 'PLOTEL4', 'CYCADD', 'MATT11'
 }
-OBJ_CARDS = {'PARAM', 'MDLPRM', 'TSTEP', 'TSTEPNL', 'NLPCI', 'NLPARM',
+OBJ_CARDS = {'PARAM', 'MDLPRM', 'TSTEP', 'TSTEP1', 'TSTEPNL',
+             'NLPCI', 'NLPARM',
              'AERO', 'AEROS',
              'EIGR', 'EIGRL', 'EIGB',
              'EIGC', 'EIGP', }

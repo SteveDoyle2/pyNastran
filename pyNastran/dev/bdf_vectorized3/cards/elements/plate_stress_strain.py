@@ -184,9 +184,10 @@ class CPLSTS3(PlateStressElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 3), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 3), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
 
         tflag = np.zeros(ncards, dtype='int32')
@@ -326,9 +327,10 @@ class CPLSTS4(PlateStressElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 4), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 4), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
 
         tflag = np.zeros(ncards, dtype='int32')
@@ -734,9 +736,10 @@ class CPLSTN3(PlateStrainElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 3), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 3), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
@@ -866,9 +869,10 @@ class CPLSTN4(PlateStrainElement):
             return
         ncards = len(self.cards)
         assert ncards > 0, ncards
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 4), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 4), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
@@ -987,9 +991,10 @@ class CPLSTN6(PlateStrainElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 6), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 6), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
@@ -1108,15 +1113,13 @@ class CPLSTN8(PlateStrainElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 8), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 8), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
@@ -1254,9 +1257,10 @@ class CPLSTS6(PlateStrainElement):
             return
         ncards = len(self.cards)
         assert ncards > 0, ncards
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 6), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 6), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
         tflag = np.zeros(ncards, dtype='int32')
         thickness = np.zeros((ncards, 6), dtype='float64')
@@ -1406,9 +1410,10 @@ class CPLSTS8(PlateStrainElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 8), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 8), dtype=idtype)
         theta = np.zeros(ncards, dtype='float64')
         tflag = np.zeros(ncards, dtype='int32')
         thickness = np.zeros((ncards, 8), dtype='float64')

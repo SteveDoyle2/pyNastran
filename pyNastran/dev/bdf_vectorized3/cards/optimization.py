@@ -2418,8 +2418,9 @@ class DVCREL1(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
         dvcrel_id = np.zeros(ncards, dtype='int32')
-        element_id = np.zeros(ncards, dtype='int32')
+        element_id = np.zeros(ncards, dtype=idtype)
         element_type = np.zeros(ncards, dtype='|U8')
         cp_name = np.zeros(ncards, dtype='|U8')
         cp_min = np.zeros(ncards, dtype='float64')

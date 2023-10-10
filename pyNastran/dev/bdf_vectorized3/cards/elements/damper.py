@@ -75,9 +75,10 @@ class CDAMP1(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
 
         for icard, card in enumerate(self.cards):
@@ -208,9 +209,10 @@ class CDAMP2(Element):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
         b = np.zeros(ncards, dtype='float64')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
 
         for icard, card in enumerate(self.cards):
@@ -297,9 +299,10 @@ class CDAMP3(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        spoints = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        spoints = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
             (eid, pid, spointsi, comment) = card
@@ -399,9 +402,10 @@ class CDAMP4(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
         b = np.zeros(ncards, dtype='float64')
-        spoints = np.zeros((ncards, 2), dtype='int32')
+        spoints = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
             eid, bi, spointsi, comment = card
@@ -483,13 +487,13 @@ class CDAMP5(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
             eid, pid, nids, comment = card
-
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
@@ -582,7 +586,8 @@ class PDAMP(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
         b = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
@@ -662,8 +667,9 @@ class PDAMP5(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
-        material_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
         b = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
@@ -808,9 +814,10 @@ class CVISC(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, comment) = card
@@ -1022,11 +1029,12 @@ class CGAP(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         coord_id = np.zeros(ncards, dtype='int32')
-        g0 = np.full(ncards, -1, dtype='int32')
+        g0 = np.full(ncards, -1, dtype=idtype)
         x = np.full((ncards, 3), np.nan, dtype='float64')
 
         for icard, card in enumerate(self.cards):

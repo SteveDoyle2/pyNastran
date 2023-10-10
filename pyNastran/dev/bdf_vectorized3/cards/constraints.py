@@ -140,6 +140,7 @@ class SPC(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
         spc_id_ = []
         components_ = []
         node_id_ = []
@@ -150,8 +151,8 @@ class SPC(VectorizedBaseCard):
             node_id_.extend(nodesi)
             enforced_.extend(enforcedi)
             components_.extend(componentsi)
-        spc_id = np.array(spc_id_, dtype='int32')
-        node_id = np.array(node_id_, dtype='int32')
+        spc_id = np.array(spc_id_, dtype=idtype)
+        node_id = np.array(node_id_, dtype=idtype)
         components = np.array(components_, dtype='int32')
         enforced = np.array(enforced_, dtype='float64')
         self._save(spc_id, node_id, components, enforced)

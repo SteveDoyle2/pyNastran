@@ -142,10 +142,11 @@ class CBUSH(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = []
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = []
-        g0 = np.full(ncards, -1, dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
+        g0 = np.full(ncards, -1, dtype=idtype)
         x = np.full((ncards, 3), np.nan, dtype='float64')
 
         coord_id = np.zeros(ncards, dtype='int32')
@@ -162,9 +163,9 @@ class CBUSH(Element):
             ocid[icard] = ocidi
             ocid_offset[icard, :] = ocid_offseti
 
-            element_id.append(eid)
+            element_id[icard] = eid
             property_id[icard] = pid
-            nodes.append(nodesi)
+            nodes[icard, :] = nodesi
             if g0i is None:
                 x[icard, :] = xi
             else:
@@ -492,10 +493,11 @@ class PBUSH(Property):
         self.n += 1
         return self.n
 
-    @Element.parse_cards_check
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.property_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        self.property_id = np.zeros(ncards, dtype=idtype)
 
         k_fields = np.zeros((ncards, 6), dtype='float64')
         b_fields = np.zeros((ncards, 6), dtype='float64')
@@ -823,9 +825,10 @@ class CBUSH1D(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.element_id = np.zeros(ncards, dtype='int32')
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        self.element_id = np.zeros(ncards, dtype=idtype)
+        self.property_id = np.zeros(ncards, dtype=idtype)
+        self.nodes = np.zeros((ncards, 2), dtype=idtype)
         self.coord_id = np.full(ncards, -1, dtype='int32')
         for icard, card in enumerate(self.cards):
             (eid, pid, nodes, cid, comment) = card
@@ -954,7 +957,8 @@ class PBUSH1D(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
 
         k = np.zeros(ncards, dtype='float64')
         c = np.zeros(ncards, dtype='float64')

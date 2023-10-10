@@ -47,11 +47,11 @@ class TestBeams(unittest.TestCase):
             '     ,   ,   ,1.1,    ,2.1,,0.21',
             '     ,   ,   ,   ,    ,0.5,,0.0',
         ]
-        bdf = BDF(debug=False)
-        card = bdf._process_card(lines)
+        model = BDF(debug=False)
+        card = model._process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
-        pbeam = PBEAM(model=None)
+        pbeam = model.pbeam
         card2 = pbeam.add_card(cardi)
         pbeam.parse_cards()
         #fields = pbeam.write().split()

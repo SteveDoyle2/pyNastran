@@ -267,7 +267,8 @@ class PLOAD1(Load):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         load_id = np.zeros(ncards, dtype='int32')
-        element_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
         load_type = np.zeros(ncards, dtype='|U8')
         scale = np.zeros(ncards, dtype='|U8')
         x = np.zeros((ncards, 2), dtype='float64')

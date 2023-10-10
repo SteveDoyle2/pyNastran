@@ -189,42 +189,44 @@ def _create_shell_axes(self: NastranIO,
                        model: BDF,
                        grid_id: np.ndarray,
                        xyz_cid0: np.ndarray) -> None:
-    get_shell_element_coordinate_system(model)
-    element_id, length, centroid, ielement, jelement = get_shell_material_coordinate_system(model)
-    if len(element_id) == 0:
-        return
+    name_func = [
+        ('eleement', get_shell_material_coordinate_system),
+        ('material', get_shell_element_coordinate_system),
+    ]
+    for name, func in name_func:
+        element_id, length, centroid, ielement, jelement = func(model)
+        if len(element_id) == 0:
+            return
 
-    imax = ~np.isnan(ielement.max(axis=1))
-    jmax = ~np.isnan(jelement.max(axis=1))
-    assert len(imax) == len(length)
-    #length = 1.0
-    p1 = centroid
-    p2 = centroid + ielement * length[:, np.newaxis] / 2
-    p3 = centroid + jelement * length[:, np.newaxis] / 2
-    #print('length', length.max(), length.min())
-    name_i = 'shell material_coord i axis'
-    name_j = 'shell material_coord j axis'
+        imax = ~np.isnan(ielement.max(axis=1))
+        jmax = ~np.isnan(jelement.max(axis=1))
+        assert len(imax) == len(length)
 
-    scale = 1.0
-    gui.create_alternate_vtk_grid(
-        name_i, color=RED_FLOAT, line_width=5, opacity=1.,
-        point_size=5, representation='bar', bar_scale=scale, is_visible=False)
-    gui.create_alternate_vtk_grid(
-        name_j, color=GREEN_FLOAT, line_width=5, opacity=1.,
-        point_size=5, representation='bar', bar_scale=scale, is_visible=False)
+        p1 = centroid
+        p2 = centroid + ielement * length[:, np.newaxis] / 2
+        p3 = centroid + jelement * length[:, np.newaxis] / 2
+        name_i = f'shell {name}_coord i axis'
+        name_j = f'shell {name}_coord j axis'
 
-    if imax.sum():
-        xyz_lines = np.column_stack([p1, p2])[imax, :]
-        _add_nastran_bar_vectors_to_grid(gui, name_i, xyz_lines, element_id[imax])
-    else:
-        model.log.error('nan shell i')
+        scale = 1.0
+        gui.create_alternate_vtk_grid(
+            name_i, color=RED_FLOAT, line_width=5, opacity=1.,
+            point_size=5, representation='bar', bar_scale=scale, is_visible=False)
+        gui.create_alternate_vtk_grid(
+            name_j, color=GREEN_FLOAT, line_width=5, opacity=1.,
+            point_size=5, representation='bar', bar_scale=scale, is_visible=False)
 
-    if jmax.sum():
-        xyz_lines = np.column_stack([p1, p3])[jmax, :]
-        _add_nastran_bar_vectors_to_grid(gui, name_j, xyz_lines, element_id[jmax])
-    else:
-        model.log.error('nan shell j')
+        if imax.sum():
+            xyz_lines = np.column_stack([p1, p2])[imax, :]
+            _add_nastran_bar_vectors_to_grid(gui, name_i, xyz_lines, element_id[imax])
+        else:
+            model.log.error('nan shell i')
 
+        if jmax.sum():
+            xyz_lines = np.column_stack([p1, p3])[jmax, :]
+            _add_nastran_bar_vectors_to_grid(gui, name_j, xyz_lines, element_id[jmax])
+        else:
+            model.log.error('nan shell j')
 
 def _create_alt_axes(self: NastranIO,
                      gui: MainWindow,

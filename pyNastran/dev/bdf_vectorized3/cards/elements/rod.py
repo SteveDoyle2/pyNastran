@@ -94,19 +94,13 @@ class CONROD(Element):
         elem.nsm = self.nsm[i]
         elem.n = len(i)
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
-        element_ids = []
-        material_ids = []
-        nodess = []
-        #element_id = np.zeros(ncards, dtype='int32')
-        #material_id = np.zeros(ncards, dtype='int32')
-        #nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         A = np.zeros(ncards, dtype='float64')
         J = np.zeros(ncards, dtype='float64')
         c = np.zeros(ncards, dtype='float64')
@@ -114,17 +108,13 @@ class CONROD(Element):
 
         for icard, card in enumerate(self.cards):
             (eid, nodesi, mid, Ai, ji, ci, nsmi, comment) = card
-            element_ids.append(eid)
-            material_ids.append(mid)
-            nodess.append(nodesi)
+            element_id[icard] = eid
+            material_id[icard] = mid
+            nodes[icard, :] = nodesi
             A[icard] = Ai
             J[icard] = ji
             c[icard] = ci
             nsm[icard] = nsmi
-
-        element_id = cast_int_array(element_ids)
-        material_id = cast_int_array(material_ids)
-        nodes = cast_int_array(nodess)
         self._save(element_id, material_id, nodes, A, J, c, nsm)
         self.cards = []
 
@@ -267,22 +257,16 @@ class CROD(Element):
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
-        #ncards = len(self.cards)
-        #element_id = np.zeros(ncards, dtype='int32')
-        #property_id = np.zeros(ncards, dtype='int32')
-        #nodes = np.zeros((ncards, 2), dtype='int32')
-        element_ids = []
-        property_ids = []
-        nodess = []
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         for icard, card in enumerate(self.cards):
             (eid, pid, nodesi, comment) = card
-            element_ids.append(eid)
-            property_ids.append(pid)
-            nodess.append(nodesi)
-
-        element_id = cast_int_array(element_ids)
-        property_id = cast_int_array(property_ids)
-        nodes = cast_int_array(nodess)
+            element_id[icard] = eid
+            property_id[icard] = pid
+            nodes[icard, :] = nodesi
         self._save(element_id, property_id, nodes)
         self.cards = []
 
@@ -570,25 +554,16 @@ class CTUBE(Element):
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
-        #ncards = len(self.cards)
-        element_ids = []
-        property_ids = []
-        nodess = []
-        #element_id = np.zeros(ncards, dtype='int32')
-        #property_id = np.zeros(ncards, dtype='int32')
-        #nodes = np.zeros((ncards, 2), dtype='int32')
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, comment) = card
-            element_ids.append(eid)
-            property_ids.append(pid)
-            nodess.append(nids)
-            #element_id[icard] = eid
-            #property_id[icard] = pid
-            #nodes[icard, :] = nids
-
-        element_id = cast_int_array(element_ids)
-        property_id = cast_int_array(property_ids)
-        nodes = cast_int_array(nodess)
+            element_id[icard] = eid
+            property_id[icard] = pid
+            nodes[icard, :] = nids
         self._save(element_id, property_id, nodes)
         self.sort()
         self.cards = []

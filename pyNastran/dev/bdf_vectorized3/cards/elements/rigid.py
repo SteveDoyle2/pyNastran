@@ -127,8 +127,9 @@ class RBAR(RigidElement):
     @RigidElement.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         dependent_dof = np.zeros((ncards, 2), dtype='int32')
         independent_dof = np.zeros((ncards, 2), dtype='int32')
         tref = np.zeros(ncards, dtype='float64')
@@ -250,8 +251,9 @@ class RROD(RigidElement):
     @RigidElement.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         dependent_dof = np.zeros((ncards, 2), dtype='int32')
         #independent_dof = np.zeros((ncards, 2), dtype='int32')
         #tref = np.zeros(ncards, dtype='float64')
@@ -365,8 +367,9 @@ class RBAR1(RigidElement):
     @RigidElement.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         dependent_dof = np.zeros(ncards, dtype='int32')
         #independent_dof = np.zeros((ncards, 2), dtype='int32')
         #tref = np.zeros(ncards, dtype='float64')
@@ -511,38 +514,60 @@ class RBE1(RigidElement):
     @RigidElement.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.element_id = np.zeros(ncards, dtype='int32')
-        self.ndependent = np.zeros(ncards, dtype='int32')
-        self.nindependent = np.zeros(ncards, dtype='int32')
-        self.tref = np.zeros(ncards, dtype='float64')
-        self.alpha = np.zeros(ncards, dtype='float64')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        ndependent = np.zeros(ncards, dtype='int32')
+        nindependent = np.zeros(ncards, dtype='int32')
+        tref = np.zeros(ncards, dtype='float64')
+        alpha = np.zeros(ncards, dtype='float64')
 
         all_dependent_nodes = []
         all_dependent_dofs = []
         all_independent_nodes = []
         all_independent_dofs = []
         for icard, card in enumerate(self.cards):
-            (eid, alpha, Gni, Cni, Gmi, Cmi, comment) = card
+            (eid, alphai, Gni, Cni, Gmi, Cmi, comment) = card
 
             #def independent_nodes(self):
                 #return self.Gni_node_ids
             #def dependent_nodes(self):
                 #return self.Gmi_node_ids
 
-            self.element_id[icard] = eid
-            self.ndependent[icard] = len(Gni)
-            self.nindependent[icard] = len(Gmi)
+            element_id[icard] = eid
+            ndependent[icard] = len(Gni)
+            nindependent[icard] = len(Gmi)
 
             all_dependent_nodes.extend(Gni)
             all_dependent_dofs.extend(Cni)
             all_independent_nodes.extend(Gmi)
             all_independent_dofs.extend(Cmi)
-            self.alpha[icard] = alpha
-        self.dependent_node = np.array(all_dependent_nodes, dtype='int32')
-        self.dependent_dof = np.array(all_dependent_dofs, dtype='int32')
-        self.independent_node = np.array(all_independent_nodes, dtype='int32')
-        self.independent_dof = np.array(all_independent_dofs, dtype='int32')
+            alpha[icard] = alphai
+
+        dependent_node = np.array(all_dependent_nodes, dtype='int32')
+        dependent_dof = np.array(all_dependent_dofs, dtype='int32')
+        independent_node = np.array(all_independent_nodes, dtype='int32')
+        independent_dof = np.array(all_independent_dofs, dtype='int32')
+        self._save(element_id,
+                   ndependent, dependent_node, dependent_dof,
+                   nindependent, independent_node, independent_dof,
+                   tref, alpha)
         self.cards = []
+
+    def _save(self, element_id,
+              ndependent, dependent_node, dependent_dof,
+              nindependent, independent_node, independent_dof,
+              tref, alpha):
+        self.element_id = element_id
+
+        self.ndependent = ndependent
+        self.dependent_node = dependent_node
+        self.dependent_dof = dependent_dof
+
+        self.nindependent = nindependent
+        self.independent_node = independent_node
+        self.independent_dof = independent_dof
+        self.tref = tref
+        self.alpha = alpha
 
     @property
     def idependent(self) -> np.ndarray:
@@ -674,14 +699,12 @@ class RBE2(RigidElement):
         self.n += 1
         return self.n
 
+    @RigidElement.parse_cards_check
     def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-        element_id = np.zeros(ncards, dtype='int32')
-        independent_node = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        independent_node = np.zeros(ncards, dtype=idtype)
         independent_dof = np.zeros(ncards, dtype='int32')
         tref = np.zeros(ncards, dtype='float64')
         alpha = np.zeros(ncards, dtype='float64')
@@ -929,8 +952,9 @@ class RBE3(RigidElement):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         # basic
-        element_id = []
-        ref_grid = []
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        ref_grid = np.zeros(ncards, dtype=idtype)
         ref_component = np.zeros(ncards, dtype='int32')
         tref = np.zeros(ncards, dtype='float64')
         alpha = np.zeros(ncards, dtype='float64')
@@ -959,8 +983,8 @@ class RBE3(RigidElement):
              weights, Gijs, comps,
              Gmi, Cmi, comment) = card
             # basic
-            element_id.append(eid)
-            ref_grid.append(refgrid)
+            element_id[icard] = eid
+            ref_grid[icard] = refgrid
             ref_component[icard] = refc
             alpha[icard] = alphai
             tref[icard] = trefi
@@ -981,8 +1005,8 @@ class RBE3(RigidElement):
             dependent_nodes.extend(Gmi)
             dependent_dofs.extend(Cmi)
 
-        element_id = cast_ints(element_id, dtype='int32')
-        ref_grid = cast_ints(ref_grid, dtype='int32')
+        #element_id = cast_ints(element_id, dtype='int32')
+        #ref_grid = cast_ints(ref_grid, dtype='int32')
 
         weight = np.array(all_weights, dtype='float64')
         independent_nodes = cast_ints(independent_nodes, dtype='int32')
@@ -999,7 +1023,8 @@ class RBE3(RigidElement):
         #self.alpha = np.zeros(ncards, dtype='float64')
         #self.nweight = np.zeros(ncards, dtype='int32')
         #self.ndependent = np.zeros(ncards, dtype='int32')
-        self._save(element_id, ref_grid, ref_component, tref, alpha, nweight, ndependent,
+        self._save(element_id, ref_grid, ref_component, tref, alpha,
+                   nweight, ndependent,
                    weight, independent_nodes, independent_dofs,
                    ngrid_per_weight,
                    dependent_nodes, dependent_dofs)

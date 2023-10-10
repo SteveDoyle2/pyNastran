@@ -72,9 +72,10 @@ class CSHEAR(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 4), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 4), dtype=idtype)
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, comment) = card
             element_id[icard] = eid

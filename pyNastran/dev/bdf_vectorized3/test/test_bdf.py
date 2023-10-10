@@ -738,6 +738,7 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
     check_mass_per_length = True
     check_mass = True
     check_density = True
+    compare_shell_vectors = True
 
     no_density = []
     if check_density:
@@ -825,21 +826,49 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                 elem_old = fem1_nominal.elements[eid]
                 is_failedi2, (vi2, ihati2, yhati2, zhati2, wai2, wbi2) = elem_old.get_axes(fem1_nominal)
                 msgi = ''
-                if not np.allclose(vi1, vi2):
+                if not np.allclose(vi1, vi2):  # pragma: no cover
                     msgi += f'v={vi2} v_new={vi1}\n'
-                if not np.allclose(ihati2, ihati2):
+                if not np.allclose(ihati1, ihati2):  # pragma: no cover
                     msgi += f'  ihat={ihati2} ihat_new={ihati2}\n'
-                if not np.allclose(jhati1, yhati2):
+                if not np.allclose(jhati1, yhati2):  # pragma: no cover
                     msgi += f'  yhat={yhati2} yhat_new={jhati1}\n'
-                if not np.allclose(khati1, zhati2):
+                if not np.allclose(khati1, zhati2):  # pragma: no cover
                     msgi += f'  zhat={zhati2} zhat_new={khati1}\n'
-                if not np.allclose(wai1, wai2):
+                if not np.allclose(wai1, wai2):  # pragma: no cover
                     msgi += f'  wa={wai2} wa_new={wai1}\n'
-                if not np.allclose(wbi1, wbi2):
+                if not np.allclose(wbi1, wbi2):  # pragma: no cover
                     msgi += f'  wb={wbi2} wb_new={wbi1}\n'
-                if msgi:
+                if msgi:  # pragma: no cover
                     msg = f'{elem.type} eid={eid}\n' + msgi.rstrip()
                     raise RuntimeError(msg)
+
+    if compare_shell_vectors:
+        from pyNastran.dev.bdf_vectorized3.cards.elements.shell_coords import (
+            get_shell_element_coordinate_system, get_shell_material_coordinate_system)
+        element_id, length, centroid, ielem, jelem = get_shell_element_coordinate_system(fem1)
+        element_id, length, centroid, imat, jmat = get_shell_material_coordinate_system(fem1)
+
+        for eid, lengthi, centroidi, ielemi, jelemi, imati, jmati in zip(
+            element_id, length, centroid, ielem, jelem, imat, jmat):
+            elem = fem1_nominal.elements[eid]
+            dxyz0, centroid0, ielem0, jelem0, normal0 = elem.material_coordinate_system()
+            dxyz0, centroid0, imat0, jmat0, normal0 = elem.material_coordinate_system()
+            msgi = ''
+            if not np.allclose(imat0, imati):  # pragma: no cover
+                msgi += f'  imat={imat0} imat_new={imati}\n'
+            if not np.allclose(jmat0, jmati):  # pragma: no cover
+                msgi += f'  jmat={jmat0} jmat_new={jmati}\n'
+            if not np.allclose(ielem0, ielemi):  # pragma: no cover
+                msgi += f'  ielem={imat0} ielem_new={ielemi}\n'
+            if not np.allclose(jelem0, jelemi):  # pragma: no cover
+                msgi += f'  jelem={jelem0} jelem_new={jelemi}\n'
+            #if not np.allclose(normal0, zhati2):  # pragma: no cover
+                #msgi += f'  zhat={normal0} zhat_new={khati1}\n'
+            if not np.allclose(dxyz0, lengthi):  # pragma: no cover
+                msgi += f'  dxyz={dxyz0} dxyz_new={lengthi}\n'
+            if msgi:  # pragma: no cover
+                msg = f'{elem.type} eid={eid}\n' + msgi.rstrip()
+                raise RuntimeError(msg)
 
     if check_mass:
         eid_to_mass_vector = _get_vectorized_quantity(fem1.element_cards, 'element_id', 'mass', log, cards_to_skip=no_mass)

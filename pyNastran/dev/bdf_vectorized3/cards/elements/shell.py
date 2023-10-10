@@ -187,6 +187,7 @@ class ShellElement(Element):
 
     def _dxyz_centroid_normal_xyz1_xyz2(self, ndim: int) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                                                   np.ndarray, np.ndarray]:
+        neid = len(self.element_id)
         normal = self.normal()  # k = kmat
 
         grid = self.model.grid
@@ -205,10 +206,10 @@ class ShellElement(Element):
             dxyz21 = np.linalg.norm(xyz2 - xyz1, axis=1)
             dxyz32 = np.linalg.norm(xyz3 - xyz2, axis=1)
             dxyz13 = np.linalg.norm(xyz1 - xyz3, axis=1)
-            dxyz = np.mean([dxyz21, dxyz32, dxyz13]) / 2.
+            assert dxyz13.shape == (neid, )
+            dxyz = np.mean([dxyz21, dxyz32, dxyz13], axis=0) / 2.
         else:
             xyz4 = xyz[inids[:, 3], :]
-
             centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
 
             # take the mean length to size the vectors in the GUI
@@ -216,7 +217,9 @@ class ShellElement(Element):
             dxyz32 = np.linalg.norm(xyz3 - xyz2, axis=1)
             dxyz43 = np.linalg.norm(xyz4 - xyz3, axis=1)
             dxyz14 = np.linalg.norm(xyz1 - xyz4, axis=1)
-            dxyz = np.mean([dxyz21, dxyz32, dxyz43, dxyz14]) / 2.
+            assert dxyz14.shape == (neid,)
+            dxyz = np.mean([dxyz21, dxyz32, dxyz43, dxyz14], axis=0) / 2.
+        assert dxyz.shape == (neid,)
         return dxyz, centroid, normal, xyz1, xyz2
 
     @abstractmethod
@@ -546,9 +549,10 @@ class CTRIA3(ShellElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 3), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 3), dtype=idtype)
         tflag = np.zeros(ncards, dtype='int8')
         mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
@@ -863,9 +867,10 @@ class CTRIAR(ShellElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 3), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 3), dtype=idtype)
         tflag = np.zeros(ncards, dtype='int8')
         mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
@@ -1073,9 +1078,10 @@ class CQUAD4(ShellElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 4), dtype='int32')
+        idtype = self.model.idtype
+        element_id =  np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 4), dtype=idtype)
         tflag = np.zeros(ncards, dtype='int8')
         mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
@@ -1097,6 +1103,7 @@ class CQUAD4(ShellElement):
             else:
                 mcid[icard] = theta_mcid
             T[icard, :] = [T1, T2, T3, T4]
+
         self._save(element_id, property_id, nodes,
                    zoffset=zoffset, theta=theta, mcid=mcid,
                    tflag=tflag, T=T)
@@ -1459,34 +1466,35 @@ class CQUADR(ShellElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if self.n == 0 or len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-        self.element_id = np.zeros(ncards, dtype='int32')
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.nodes = np.zeros((ncards, 4), dtype='int32')
-        self.tflag = np.zeros(ncards, dtype='int8')
-        self.mcid = np.full(ncards, -1, dtype='int32')
-        self.theta = np.full(ncards, np.nan, dtype='float64')
-        self.zoffset = np.full(ncards, np.nan, dtype='float64')
-        self.T = np.zeros((ncards, 4), dtype='float64')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 4), dtype=idtype)
+        tflag = np.zeros(ncards, dtype='int8')
+        mcid = np.full(ncards, -1, dtype='int32')
+        theta = np.full(ncards, np.nan, dtype='float64')
+        zoffset = np.full(ncards, np.nan, dtype='float64')
+        T = np.zeros((ncards, 4), dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (eid, pid, nids, theta_mcid, zoffset, tflag, T) = card
+            (eid, pid, nids, theta_mcid, zoffseti, tflagi, Ti) = card
 
-            self.element_id[icard] = eid
-            self.property_id[icard] = pid
-            self.nodes[icard, :] = nids
-            self.zoffset[icard] = zoffset
-            self.tflag[icard] = tflag
+            element_id[icard] = eid
+            property_id[icard] = pid
+            nodes[icard, :] = nids
+            zoffset[icard] = zoffseti
+            tflag[icard] = tflagi
             if isinstance(theta_mcid, float):
-                self.theta[icard] = theta_mcid
+                theta[icard] = theta_mcid
             else:
-                self.mcid[icard] = theta_mcid
-            self.T[icard, :] = T
+                mcid[icard] = theta_mcid
+            T[icard, :] = Ti
+        self._save(element_id, property_id, nodes,
+                   zoffset=zoffset, theta=theta, mcid=mcid,
+                   tflag=tflag, T=T)
         self.sort()
         self.cards = []
 
@@ -1710,9 +1718,10 @@ class CTRIA6(ShellElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 6), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 6), dtype=idtype)
         tflag = np.zeros(ncards, dtype='int8')
         mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
@@ -1999,9 +2008,10 @@ class CQUAD8(ShellElement):
             return
         ncards = len(self.cards)
         assert ncards > 0, ncards
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 8), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 8), dtype=idtype)
         tflag = np.zeros(ncards, dtype='int8')
         mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
@@ -2266,9 +2276,10 @@ class CQUAD(ShellElement):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 9), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 9), dtype=idtype)
         mcid = np.full(ncards, -1, dtype='int32')
         theta = np.full(ncards, np.nan, dtype='float64')
 

@@ -109,10 +109,11 @@ class CONM1(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
         _mass = np.zeros((ncards, 6, 6), dtype='float64')
         coord_id = np.zeros(ncards, dtype='int32')
-        node_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype=idtype)
         for icard, card in enumerate(self.cards):
             eid, nid, cid, m, comment = card
             element_id[icard] = eid

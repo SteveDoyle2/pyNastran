@@ -70,15 +70,13 @@ class CMASS1(Element):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self):
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
 
         for icard, card in enumerate(self.cards):
@@ -227,9 +225,10 @@ class CMASS2(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
         mass = np.zeros(ncards, dtype='float64')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         components = np.zeros((ncards, 2), dtype='int32')
 
         for icard, card in enumerate(self.cards):
@@ -328,9 +327,10 @@ class CMASS3(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
-        spoints = np.zeros((ncards, 2), dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        spoints = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
             (eid, pid, s1, s2, comment) = card
@@ -432,9 +432,10 @@ class CMASS4(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
         mass = np.zeros(ncards, dtype='float64')
-        spoints = np.zeros((ncards, 2), dtype='int32')
+        spoints = np.zeros((ncards, 2), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
             (eid, massi, s1, s2, comment) = card
@@ -522,7 +523,8 @@ class PMASS(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        property_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        property_id = np.zeros(ncards, dtype=idtype)
         mass = np.zeros(ncards, dtype='float64')
         for icard, card in enumerate(self.cards):
             (pid, massi, comment) = card

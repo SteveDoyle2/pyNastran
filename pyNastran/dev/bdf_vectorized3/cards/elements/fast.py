@@ -91,8 +91,9 @@ class CFAST(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = np.zeros(ncards, dtype='int32')
-        property_id = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
 
         # If both GA and GB are specified, they must lie on or at least
         # have projections onto surface patches A and B respectively.
@@ -103,7 +104,7 @@ class CFAST(Element):
         # B within machine precision. The length of the fastener is the
         # final distance between GA and GB. If the length is zero, the
         # normal to patch A is used to define the axis of the fastener.
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        nodes = np.zeros((ncards, 2), dtype=idtype)
 
         fast_type = np.zeros(ncards, dtype='|U4')
         ids = np.zeros((ncards, 2), dtype='int32')
