@@ -88,6 +88,9 @@ class OP2(OP2_Scalar, OP2Writer):
         # to the result key, but rarely do you want to do it
         self.use_table_name_in_code = False
 
+        # flag that you can disable
+        self.read_matpool = True
+
         self.encoding = None
         self.mode = mode
         if mode is not None:
