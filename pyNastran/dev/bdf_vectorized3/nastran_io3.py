@@ -520,7 +520,7 @@ class Nastran3:
 
 
             elif etype in solid_elements:
-                model.log.debug('  solid')
+                #model.log.debug('  solid')
                 cell_offset0, n_nodesi, cell_typei, cell_offseti = _create_solid_vtk_arrays(
                     element, grid_id, cell_offset0)
 

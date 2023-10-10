@@ -816,7 +816,7 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
 
             if elem.type == 'CBEAM': # and np.any(elem.offt == ''):
                 #print(elem.type, elem.offt, elem.bit)
-                fem1.log.warning('bit fieild on CBEAM is not supported')
+                fem1.log.warning('bit field on CBEAM is not supported')
                 continue
 
             v, ihat, jhat, khat, wa, wb = elem.get_axes(xyz1, xyz2)

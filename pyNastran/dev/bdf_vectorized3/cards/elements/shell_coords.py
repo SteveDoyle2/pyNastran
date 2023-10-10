@@ -1,5 +1,79 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
+
+def get_shell_element_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                             np.ndarray, np.ndarray]:
+    n = 0
+    for elem in model.shell_element_cards:
+        n += elem.n
+
+    if n == 0:
+        element_id = np.array([], dtype='int32')
+        length = np.array([], dtype='int32')
+        centroid = np.zeros((0, 3), dtype='float32')
+        ielement = np.zeros((0, 3), dtype='float32')
+        jelement = np.zeros((0, 3), dtype='float32')
+        return element_id, length, centroid, ielement, jelement
+
+    element_id = np.zeros(n, dtype='int32')
+    length = np.full(n, np.nan, dtype='float32')
+    centroid = np.full((n, 3), np.nan, dtype='float32')
+    ielement = np.full((n, 3), np.nan, dtype='float32')
+    jelement = np.full((n, 3), np.nan, dtype='float32')
+    #normal = np.full((n, 3), np.nan, dtype='float32')
+    n1 = 0
+    for elem in model.shell_element_cards:
+        if elem.n == 0:
+            continue
+        n2 = n1 + elem.n
+        dxyzi, centroidi, ielementi, jelementi, normali = elem.element_coordinate_system()
+        element_id[n1:n2] = elem.element_id
+        length[n1:n2] = dxyzi
+        centroid[n1:n2, :] = centroidi
+        ielement[n1:n2, :] = ielementi
+        jelement[n1:n2, :] = jelementi
+        #normal[n1:n2, :] = normali
+        n2 = n1
+    return element_id, length, centroid, ielement, jelement
+
+def get_shell_material_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                              np.ndarray, np.ndarray]:
+    n = 0
+    for elem in model.shell_element_cards:
+        n += elem.n
+
+    if n == 0:
+        element_id = np.array([], dtype='int32')
+        length = np.array([], dtype='int32')
+        centroid = np.zeros((0, 3), dtype='float32')
+        ielement = np.zeros((0, 3), dtype='float32')
+        jelement = np.zeros((0, 3), dtype='float32')
+        return element_id, length, centroid, ielement, jelement
+
+    element_id = np.zeros(n, dtype='int32')
+    length = np.full(n, np.nan, dtype='float32')
+    centroid = np.full((n, 3), np.nan, dtype='float32')
+    ielement = np.full((n, 3), np.nan, dtype='float32')
+    jelement = np.full((n, 3), np.nan, dtype='float32')
+    #normal = np.full((n, 3), np.nan, dtype='float32')
+    n1 = 0
+    for elem in model.shell_element_cards:
+        if elem.n == 0:
+            continue
+        n2 = n1 + elem.n
+        dxyzi, centroidi, ielementi, jelementi, normali = elem.material_coordinate_system()
+        element_id[n1:n2] = elem.element_id
+        length[n1:n2] = dxyzi
+        centroid[n1:n2, :] = centroidi
+        ielement[n1:n2, :] = ielementi
+        jelement[n1:n2, :] = jelementi
+        #normal[n1:n2, :] = normali
+        n2 = n1
+    return element_id, length, centroid, ielement, jelement
 
 def material_coordinate_system(element,
                                normal: np.ndarray,
@@ -25,15 +99,16 @@ def material_coordinate_system(element,
     if nmcid:
         #assert element.theta_mcid_ref is not None, f'mcid={element.theta_mcid} not found for\n{element}'
         i = element.theta_mcid_ref.i
-        jmat = np.cross(normal, i) # k x i
+        jmat = np.cross(normal, i, axis=1) # k x i
+        jnorm = np.linalg.norm(jmat, axis=1)
         try:
-            jmat /= np.linalg.norm(jmat)
+            jmat /= jnorm[:, np.newaxis]
         except FloatingPointError:
             raise ValueError(f'Cannot project i-axis onto element normal i={i} normal={normal}\n{element}')
         # we do an extra normalization here because
         # we had to project i onto the elemental plane
         # unlike in the next block
-        imat = np.cross(jmat, normal)
+        imat = np.cross(jmat, normal, axis=1)
 
     if ntheta:
         # rotate by the angle theta
@@ -49,9 +124,10 @@ def material_coordinate_system(element,
             pass
         else:
             itheta2 = itheta & (thetai != 0.)
-            imat, jmat = rotate_by_thetad(theta[itheta2], imat[itheta2, :], jmat[itheta2, :], normal[itheta, :])
+            if itheta2.sum():
+                imat, jmat = rotate_by_thetad(theta[itheta2], imat[itheta2, :], jmat[itheta2, :], normal[itheta, :])
     else:
-        raise RuntimeError(element.theta_mcid)
+        raise RuntimeError(element.get_stats())
     return imat, jmat
 
 
@@ -61,10 +137,12 @@ def element_coordinate_system(element,
                               xyz2: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """helper function for material_coordinate_system"""
     imat = xyz2 - xyz1
-    imat /= np.linalg.norm(imat, axis=1)
-    jmat = np.cross(normal, imat) # k x i
+    normi = np.linalg.norm(imat, axis=1)
+    imat /= normi[:, np.newaxis]
+    jmat = np.cross(normal, imat, axis=1) # k x i
+    jnorm = np.linalg.norm(jmat, axis=1)
     try:
-        jmat /= np.linalg.norm(jmat)
+        jmat /= jnorm[:, np.newaxis]
     except FloatingPointError:
         raise ValueError(f'Cannot project i-axis onto element normal i={imat} normal={normal}\n{element}')
     assert xyz1.shape == imat.shape

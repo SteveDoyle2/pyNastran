@@ -25,6 +25,10 @@ from pyNastran.femutils.utils import hstack0
 
 #from pyNastran.gui.gui_objects.gui_result import GuiResult# , NormalResult
 #from pyNastran.gui.gui_objects.displacements import ForceTableResults, ElementalTableResults
+
+from pyNastran.dev.bdf_vectorized3.cards.elements.shell_coords import (
+    get_shell_element_coordinate_system, get_shell_material_coordinate_system)
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.op2_vectorized3.bdf import BDF
     from pyNastran.dev.op2_vectorized3.bdf_interface.bdf_attributes import AECOMP, AECOMPL, SET1
@@ -178,6 +182,49 @@ def create_alt_axes(self: NastranIO,
     _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cgap, 'CGAP')
     _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbar, 'CBAR')
     _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbeam, 'CBEAM')
+    _create_shell_axes(self, gui, model, grid_id, xyz_cid0)
+
+def _create_shell_axes(self: NastranIO,
+                       gui: MainWindow,
+                       model: BDF,
+                       grid_id: np.ndarray,
+                       xyz_cid0: np.ndarray) -> None:
+    get_shell_element_coordinate_system(model)
+    element_id, length, centroid, ielement, jelement = get_shell_material_coordinate_system(model)
+    if len(element_id) == 0:
+        return
+
+    imax = ~np.isnan(ielement.max(axis=1))
+    jmax = ~np.isnan(jelement.max(axis=1))
+    assert len(imax) == len(length)
+    #length = 1.0
+    p1 = centroid
+    p2 = centroid + ielement * length[:, np.newaxis] / 2
+    p3 = centroid + jelement * length[:, np.newaxis] / 2
+    #print('length', length.max(), length.min())
+    name_i = 'shell material_coord i axis'
+    name_j = 'shell material_coord j axis'
+
+    scale = 1.0
+    gui.create_alternate_vtk_grid(
+        name_i, color=RED_FLOAT, line_width=5, opacity=1.,
+        point_size=5, representation='bar', bar_scale=scale, is_visible=False)
+    gui.create_alternate_vtk_grid(
+        name_j, color=GREEN_FLOAT, line_width=5, opacity=1.,
+        point_size=5, representation='bar', bar_scale=scale, is_visible=False)
+
+    if imax.sum():
+        xyz_lines = np.column_stack([p1, p2])[imax, :]
+        _add_nastran_bar_vectors_to_grid(gui, name_i, xyz_lines, element_id[imax])
+    else:
+        model.log.error('nan shell i')
+
+    if jmax.sum():
+        xyz_lines = np.column_stack([p1, p3])[jmax, :]
+        _add_nastran_bar_vectors_to_grid(gui, name_j, xyz_lines, element_id[jmax])
+    else:
+        model.log.error('nan shell j')
+
 
 def _create_alt_axes(self: NastranIO,
                      gui: MainWindow,
@@ -197,7 +244,7 @@ def _create_alt_axes(self: NastranIO,
         return
 
     xyz1, xyz2 = elem.get_xyz()
-    neids = xyz1.shape[0]
+    #neids = xyz1.shape[0]
     centroid = (xyz1 + xyz2) / 2.
     assert centroid.shape[0] == elem.nodes.shape[0]
     assert not np.isnan(np.max(xyz1)), xyz1
@@ -232,14 +279,9 @@ def _create_alt_axes(self: NastranIO,
     _build_dots(gui, name_nodes, all_xyz, color=RED_FLOAT)
 
     eids = elem.element_id
-    xyz_lines = np.vstack([p1, p2]).reshape(neids, 6)
-    xyz_lines2 = np.column_stack([p1, p2])
-    #for line1, line2 in zip(xyz_lines, xyz_lines2):
-        #if not np.allclose(line1, line2):
-            #print('*', line1, line2)
-    _add_nastran_bar_vectors_to_grid(gui, name_bar_y, xyz_lines2, eids)
+    xyz_lines = np.column_stack([p1, p2])
+    _add_nastran_bar_vectors_to_grid(gui, name_bar_y, xyz_lines, eids)
 
-    #xyz_lines = np.vstack([p1, p3]).reshape(neids, 6)
     xyz_lines = np.column_stack([p1, p3])
     _add_nastran_bar_vectors_to_grid(gui, name_bar_z, xyz_lines, eids)
 

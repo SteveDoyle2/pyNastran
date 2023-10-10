@@ -193,8 +193,8 @@ class ShellElement(Element):
         xyz = grid.xyz_cid0()
         nid = grid.node_id
 
-        inids = np.searchsorted(nid, self.nodes[:, :ndim])
-        assert self.nodes.shape[1] == ndim, inids.shape
+        inids = np.searchsorted(nid, self.base_nodes[:, :ndim])
+        assert self.base_nodes.shape[1] == ndim, inids.shape
         xyz1 = xyz[inids[:, 0], :]
         xyz2 = xyz[inids[:, 1], :]
         xyz3 = xyz[inids[:, 2], :]
@@ -202,9 +202,9 @@ class ShellElement(Element):
             centroid = (xyz1 + xyz2 + xyz3) / 3.
 
             # take the mean edge length to size the vectors in the GUI
-            dxyz21 = np.linalg.norm(xyz2 - xyz1)
-            dxyz32 = np.linalg.norm(xyz3 - xyz2)
-            dxyz13 = np.linalg.norm(xyz1 - xyz3)
+            dxyz21 = np.linalg.norm(xyz2 - xyz1, axis=1)
+            dxyz32 = np.linalg.norm(xyz3 - xyz2, axis=1)
+            dxyz13 = np.linalg.norm(xyz1 - xyz3, axis=1)
             dxyz = np.mean([dxyz21, dxyz32, dxyz13]) / 2.
         else:
             xyz4 = xyz[inids[:, 3], :]
@@ -212,10 +212,10 @@ class ShellElement(Element):
             centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
 
             # take the mean length to size the vectors in the GUI
-            dxyz21 = np.linalg.norm(xyz2 - xyz1)
-            dxyz32 = np.linalg.norm(xyz3 - xyz2)
-            dxyz43 = np.linalg.norm(xyz4 - xyz3)
-            dxyz14 = np.linalg.norm(xyz1 - xyz4)
+            dxyz21 = np.linalg.norm(xyz2 - xyz1, axis=1)
+            dxyz32 = np.linalg.norm(xyz3 - xyz2, axis=1)
+            dxyz43 = np.linalg.norm(xyz4 - xyz3, axis=1)
+            dxyz14 = np.linalg.norm(xyz1 - xyz4, axis=1)
             dxyz = np.mean([dxyz21, dxyz32, dxyz43, dxyz14]) / 2.
         return dxyz, centroid, normal, xyz1, xyz2
 
@@ -571,8 +571,8 @@ class CTRIA3(ShellElement):
                 mcid[icard] = theta_mcid
             T[icard, :] = [T1, T2, T3]
         self._save(element_id, property_id, nodes,
-                   zoffset, mcid, theta,
-                   tflag, T)
+                   zoffset=zoffset, mcid=mcid, theta=theta,
+                   tflag=tflag, T=T)
         self.sort()
         self.cards = []
 
@@ -888,8 +888,8 @@ class CTRIAR(ShellElement):
                 mcid[icard] = theta_mcid
             T[icard, :] = Ti
         self._save(element_id, property_id, nodes,
-                   zoffset, theta, mcid,
-                   tflag, T)
+                   zoffset=zoffset, theta=theta, mcid=mcid,
+                   tflag=tflag, T=T)
         self.sort()
         self.cards = []
 
@@ -1097,7 +1097,9 @@ class CQUAD4(ShellElement):
             else:
                 mcid[icard] = theta_mcid
             T[icard, :] = [T1, T2, T3, T4]
-        self._save(element_id, property_id, nodes, zoffset, theta, mcid, tflag, T)
+        self._save(element_id, property_id, nodes,
+                   zoffset=zoffset, theta=theta, mcid=mcid,
+                   tflag=tflag, T=T)
         self.sort()
         self.cards = []
 
@@ -1734,8 +1736,8 @@ class CTRIA6(ShellElement):
         self.cards = []
 
         self._save(element_id, property_id, nodes,
-                   zoffset, theta, mcid,
-                   tflag, T)
+                   zoffset=zoffset, theta=theta, mcid=mcid,
+                   tflag=tflag, T=T)
         self.sort()
         self.cards = []
 
@@ -1818,6 +1820,10 @@ class CTRIA6(ShellElement):
     def center_of_mass(self) -> np.ndarray:
         """center_of_mass considers density"""
         return self.centroid()
+
+    def normal(self) -> np.ndarray:
+        normal = self.area_centroid_normal()[2]
+        return normal
 
     def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         normal = tri_area_centroid_normal(self.model.grid, self.base_nodes)
@@ -2047,8 +2053,8 @@ class CQUAD8(ShellElement):
             T[icard, :] = [T1, T2, T3, T4]
 
         self._save(element_id, property_id, nodes,
-                   zoffset, mcid, theta,
-                   tflag, T)
+                   zoffset=zoffset, theta=theta, mcid=mcid,
+                   tflag=tflag, T=T)
         self.sort()
         self.cards = []
 
@@ -2134,7 +2140,11 @@ class CQUAD8(ShellElement):
         """center_of_mass considers density"""
         return self.centroid()
 
-    def area_centroid_normal(self) -> np.ndarray:
+    def normal(self) -> np.ndarray:
+        normal = self.area_centroid_normal()[2]
+        return normal
+
+    def area_centroid_normal(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         normal = quad_area_centroid_normal(self.model.grid, self.base_nodes)
         return normal
 
