@@ -773,10 +773,18 @@ class TestShells(unittest.TestCase):
         pid = 13
         nids = [1, 2, 3]
         ctriar_id = model.add_ctriar(eid, pid, nids, comment='ctriar')
+        eid += 1
+        model.add_ctriar(eid, pid, nids, theta_mcid=0, comment='ctriar')
+        eid += 1
+        model.add_ctriar(eid, pid, nids, theta_mcid=90., comment='ctriar')
 
-        eid = 8
+        eid = 10
         nids = [1, 2, 3, 4]
         cquadr_id = model.add_cquadr(eid, pid, nids, comment='cquadr')
+        eid += 1
+        cquadr_id = model.add_cquadr(eid, pid, nids, theta_mcid=0, comment='cquadr')
+        eid += 1
+        cquadr_id = model.add_cquadr(eid, pid, nids, theta_mcid=45., comment='cquadr')
         #cquadr.raw_fields()
 
         mid = 42
@@ -796,6 +804,11 @@ class TestShells(unittest.TestCase):
         model.cquadr.write(size=8)
         #cquadr.write_card(size=16, is_double=False)
         model.cquadr.flip_normal()
+
+        model.ctriar.element_coordinate_system()
+        model.ctriar.material_coordinate_system()
+        model.cquadr.element_coordinate_system()
+        model.cquadr.material_coordinate_system()
 
         model.validate()
         model._verify_bdf(xref=False)

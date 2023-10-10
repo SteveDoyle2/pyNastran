@@ -95,30 +95,34 @@ def material_coordinate_system(element,
     theta = element.theta
     mcid = element.mcid
     itheta = (mcid == -1)
+    imcid = ~itheta
     ntheta = itheta.sum()
-    nmcid = len(itheta) - ntheta
-
-    #if element.theta_mcid is None:
-        #raise NotImplementedError('theta_mcid=%r' % element.theta_mcid)
+    nmcid = imcid.sum()
+    neid = ntheta + nmcid # element.n
+    #nmcid = len(itheta) - ntheta
 
     if (ntheta + nmcid == 0):
         raise NotImplementedError((ntheta, nmcid))
-    elif ntheta and nmcid:
-        raise NotImplementedError((ntheta, nmcid))
 
+    imat = np.full((neid, 3), np.nan, dtype=normal.dtype)
+    jmat = np.full((neid, 3), np.nan, dtype=normal.dtype)
     if nmcid:
-        #assert element.theta_mcid_ref is not None, f'mcid={element.theta_mcid} not found for\n{element}'
-        i = element.theta_mcid_ref.i
-        jmat = np.cross(normal, i, axis=1) # k x i
-        jnorm = np.linalg.norm(jmat, axis=1)
+        normali = normal[imcid, :]
+        cids = mcid[imcid]
+        mcid_ref = element.model.coord.slice_card_by_id(cids)
+        i = mcid_ref.i
+        jmati = np.cross(normali, i, axis=1) # k x i
+        jnorm = np.linalg.norm(jmati, axis=1)
         try:
-            jmat /= jnorm[:, np.newaxis]
+            jmati /= jnorm[:, np.newaxis]
         except FloatingPointError:
-            raise ValueError(f'Cannot project i-axis onto element normal i={i} normal={normal}\n{element}')
+            raise ValueError(f'Cannot project i-axis onto element normal i={i} normal={normali}\n{element}')
         # we do an extra normalization here because
         # we had to project i onto the elemental plane
         # unlike in the next block
-        imat = np.cross(jmat, normal, axis=1)
+        imat[imcid, :] = np.cross(jmati, normali, axis=1)
+        jmat[imcid, :] = jmati
+        del normali, jnorm, i, mcid_ref
 
     if ntheta:
         # rotate by the angle theta
@@ -129,15 +133,29 @@ def material_coordinate_system(element,
         xyz1i = xyz1[itheta, :]
         xyz2i = xyz2[itheta, :]
 
-        imat, jmat = element_coordinate_system(element, normali, xyz1i, xyz2i)
+        imati, jmati = element_coordinate_system(element, normali, xyz1i, xyz2i)
+        assert imati.shape == (ntheta, 3)
+        assert jmati.shape == (ntheta, 3)
+        assert jmat.shape == (neid, 3)
+        imat[itheta, :] = imati
+        jmat[itheta, :] = jmati
         if np.all(thetai == 0.):
             pass
         else:
-            itheta2 = itheta & (thetai != 0.)
+            itheta2 = itheta & (theta != 0.)
             if itheta2.sum():
-                imat, jmat = rotate_by_thetad(theta[itheta2], imat[itheta2, :], jmat[itheta2, :], normal[itheta, :])
+                theta2 = theta[itheta2]
+                imat2 = imat[itheta2, :]
+                jmat2 = jmat[itheta2, :]
+                normal2 = normal[itheta2, :]
+                imati, jmati = rotate_by_thetad(theta2, imat2, jmat2, normal2)
+                imat[itheta2, :] = imati
+                jmat[itheta2, :] = jmati
     else:
         raise RuntimeError(element.get_stats())
+
+    #if np.isnan(imat.max()) or np.isnan(jmat.max()):
+        #raise RuntimeError('imat/jmat is nan')
     return imat, jmat
 
 
