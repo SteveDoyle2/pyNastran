@@ -2698,7 +2698,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #'CORD3G' : self._prepare_CORD3G,
 
-            #'DTI' : self._prepare_dti,
+            'DTI' : self._prepare_dti,
             'DMIG' : self._prepare_dmig,
             'DMIAX' : self._prepare_dmiax,
             'DMI' : self._prepare_dmi,

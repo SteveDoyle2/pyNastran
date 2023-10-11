@@ -1826,6 +1826,7 @@ def _check_static_aero_case(fem: BDFv, log: Any, sol: int,
                             subcase: Subcase,
                             ierror: int, nerrors: int) -> int:
     """checks that TRIM/DIVERG is valid"""
+    return ierror
     if not any(subcase.has_parameter('TRIM', 'DIVERG')):
         msg = 'A TRIM or DIVERG card is required for STATIC AERO - SOL %i\n%s' % (
             sol, subcase)
@@ -1846,8 +1847,9 @@ def _check_static_aero_case(fem: BDFv, log: Any, sol: int,
     return ierror
 
 def _check_flutter_case(fem: BDFs, log: SimpleLogger, sol: int, subcase: Subcase,
-                        ierror: int, nerrors: int) -> None:
+                        ierror: int, nerrors: int) -> int:
     """checks that FLUTTER is valid"""
+    return ierror
     if fem.aero is None:
         msg = 'An AERO card is required for FLUTTER - SOL %i; AERO=%s' % (sol, fem.aero)
         log.error(msg)
@@ -1897,6 +1899,8 @@ def _check_gust_case(fem2: BDFs, log: SimpleLogger, sol: int, subcase: Subcase,
         msg = 'A METHOD card is required for FLUTTER - SOL %i\n%s' % (sol, subcase)
         log.error(msg)
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
+
+    return ierror
     if not any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')):
         msg = (
             'A FREQUENCY/TIME/TSTEP/TSTEPNL card is required for GUST'

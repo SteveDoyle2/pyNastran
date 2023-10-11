@@ -16,7 +16,8 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check, f
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, make_idim, hslice_by_idim, get_print_card_8_16,
     parse_element_check, parse_property_check, ) # searchsorted_filter,
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    get_print_card, array_str, array_default_str, array_default_int, array_float_nan)
 from .utils import get_density_from_material, get_density_from_property, basic_mass_material_id
 
 from .solid_quality import chexa_quality, tetra_quality, penta_quality, pyram_quality, Quality
@@ -1472,8 +1473,8 @@ class PCOMPLS(Property):
             analysis[icard] = analysisi
             assert len(analysisi) <= 4, analysisi
             direct[icard] = directi
-            print('8:', c8i)
-            print('20:', c20i)
+            #print('8:', c8i)
+            #print('20:', c20i)
             c8_list.extend(c8i)
             c20_list.extend(c20i)
             #self.nb[icard] = nb
@@ -1541,8 +1542,13 @@ class PCOMPLS(Property):
                    write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
 
-        for pid, mid, cordm, direct, analysis, sb, iply in zip(self.property_id, self.material_id, self.coord_id,
-                                                               self.direct, self.analysis, self.sb, self.iply):
+        property_ids = array_str(self.property_id, size=size)
+        material_ids = array_str(self.material_id, size=size)
+        coord_ids = array_default_int(self.coord_id, default=0, size=size)
+        sbs = array_float_nan(self.sb, size=size, is_double=False)
+
+        for pid, mid, cordm, direct, analysis, sb, iply in zip(property_ids, material_ids, coord_ids,
+                                                               self.direct, self.analysis, sbs, self.iply):
             iply0, iply1 = iply
             global_ply_ids = self.global_ply_id[iply0:iply1]
             mids = self.material_id[iply0:iply1]

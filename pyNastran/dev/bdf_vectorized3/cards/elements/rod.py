@@ -942,6 +942,18 @@ def line_vector_length(model, nodes: np.ndarray) -> tuple[np.ndarray, np.ndarray
     assert len(length) == nodes.shape[0]
     return line_vector, length
 
+def line_length_nan(model: BDF, nodes: np.ndarray, default_node: int=-1) -> np.ndarray:
+    min_node = nodes.min(axis=1)
+    assert len(min_node) == len(nodes)
+    if min_node.min() == -1:
+        length = np.full(min_node.shape, np.nan, dtype='float64')
+        if min_node.max() > 0:
+            inode = (min_node > 0)
+            length[inode] = line_length(model, nodes[inode, :])
+    else:
+        length = line_length(model, nodes)
+    return length
+
 def line_length(model, nodes: np.ndarray) -> np.ndarray:
     return line_vector_length(model, nodes)[1]
 

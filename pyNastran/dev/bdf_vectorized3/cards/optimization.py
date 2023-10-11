@@ -2210,7 +2210,7 @@ class DVMREL2(VectorizedBaseCard):
             all_desvars.extend(desvar_idsi)
             all_labels.extend(labelsi)
         desvar_id = np.array(all_desvars, dtype='int32')
-        labels = np.array(all_labels, dtype='float64')
+        labels = np.array(all_labels, dtype='|U8')
         self._save(dvmrel_id, material_id, material_type, material_name,
                    mp_min, mp_max, deqatn_id, ndesvar, desvar_id, nlabel, labels)
         self.cards = []
@@ -2715,7 +2715,7 @@ class DVCREL2(VectorizedBaseCard):
             all_desvars.extend(desvar_idsi)
             all_labels.extend(labelsi)
         desvar_id = np.array(all_desvars, dtype='int32')
-        labels = np.array(all_labels, dtype='float64')
+        labels = np.array(all_labels, dtype='|U8')
         self._save(dvcrel_id, element_id, element_type, cp_name,
                    cp_min, cp_max, deqatn_id, ndesvar, desvar_id, nlabel, labels)
         self.cards = []

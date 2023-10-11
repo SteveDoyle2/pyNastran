@@ -1,5 +1,6 @@
 from __future__ import annotations
 from collections import defaultdict
+from itertools import zip_longest
 import numpy as np
 from typing import TYPE_CHECKING, Set, Optional, Any
 
@@ -155,16 +156,16 @@ class BDFAttributes:
         #: used in solution 600, method
         self.sol_method = None
         #: the line with SOL on it, marks ???
-        self.sol_iline = None  # type : Optional[int]
-        self.case_control_deck = None  # type: Optional[CaseControlDeck]
+        self.sol_iline: Optional[int] = None
+        self.case_control_deck: Optional[CaseControlDeck] = None
         self.app = ''
 
         # ---------------------------------------------------------------------
         #: store the PARAM cards
-        self.params = {}    # type: dict[str, PARAM]
-        self.mdlprm = None  # type: MDLPRM
+        self.params: dict[str, PARAM] = {}
+        self.mdlprm: Optional[MDLPRM] = None
 
-        self.grdset = None # GRDSET(cp=0, cd=0, ps=0, seid=0, comment='')
+        self.grdset: Optional[GRDSET] = None # GRDSET(cp=0, cd=0, ps=0, seid=0, comment='')
         self.grid = GRID(self)
         self.spoint = SPOINT(self)
         self.epoint = EPOINT(self)
@@ -1201,9 +1202,9 @@ class BDFAttributes:
 
     def get_mass_breakdown_by_property_id_by_material_id(self):
         """TODO: not done"""
-        property_id = []
-        material_id = []
-        mass = []
+        #property_id = []
+        #material_id = []
+        #mass = []
         NO_DETAILED_MASS = {
             'CROD', 'CBAR', 'CBEAM',
             'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
@@ -1394,7 +1395,7 @@ class BDFAttributes:
         element_id = np.hstack(element_ids_all)
         mass = np.hstack(masses)
         centroid = np.vstack(centroids)
-        abs_mass = np.abs(mass).sum()
+        #abs_mass = np.abs(mass).sum()
         neids = len(element_id)
         #if abs_mass == 0.:
             #assert len(element_id) > 0, element_id
@@ -1428,12 +1429,13 @@ class BDFAttributes:
         return element_id, mass, centroid, inertia
 
     def length(self) -> float:
+        NAN_LENGTHS = {'CBUSH', 'CBUSH1D'}
         length = 0.
         for card in self.element_cards:
             if card.n == 0 or card.type in NO_LENGTH:
                 continue
             lengthi = card.length()
-            if np.any(np.isnan(lengthi)):
+            if card.type not in NAN_LENGTHS and np.any(np.isnan(lengthi)):
                 self.log.error(f'{card.type} has nan length; length={lengthi}')
                 raise RuntimeError(f'{card.type} has nan length; length={lengthi}')
             length += lengthi.sum()
@@ -1627,15 +1629,17 @@ def _unique_keys(mydict: dict[int, Any]) -> np.ndarray:
     return np.unique(list(mydict.keys()))
 
 def check_element_ids(elements: list[Any]) -> np.ndarray:
-    list_element_ids = [card.element_id for card in elements
-                        if card.n > 0]
-    if len(list_element_ids) == 0:
+    elements2 = [card for card in elements if card.n > 0]
+    list_element_ids2 = [card.element_id for card in elements2]
+
+    if len(list_element_ids2) == 0:
         return np.array([], dtype=elements[0].element_id.dtype)
-    element_ids = np.hstack(list_element_ids)
+    element_ids = np.hstack(list_element_ids2)
     uelement_ids = np.unique(element_ids)
     if len(element_ids) != len(uelement_ids):
-        assert len(element_ids) == len(uelement_ids), ''
-        count_where, count, count2, str_cards = _get_duplicate_cards(elements, element_ids, list_element_ids)
+        #assert len(element_ids) == len(uelement_ids), '{}'
+        count_where, count, count2, str_cards = _get_duplicate_cards(
+            elements2, element_ids, list_element_ids2)
         msg = ''
         raise RuntimeError(f'Duplicate {msg}Element IDs\n'
                            f'element_ids={count_where}\ncount={count2}\n{str_cards}')
@@ -1643,20 +1647,20 @@ def check_element_ids(elements: list[Any]) -> np.ndarray:
 
 
 def check_property_ids(properties: list[Any], msg: str='') -> np.ndarray:
-    list_property_ids = [card.property_id for card in properties
-                         if card.n > 0]
-    if len(list_property_ids) == 0:
+    properties2 = [card for card in properties if card.n > 0]
+    list_property_ids2 = [card.property_id for card in properties2]
+    if len(list_property_ids2) == 0:
         return np.array([], dtype=properties[0].property_id.dtype)
 
-    property_ids = np.hstack(list_property_ids)
+    property_ids = np.hstack(list_property_ids2)
     uproperty_ids = np.unique(property_ids)
     if len(property_ids) != len(uproperty_ids):
-        list_property = [card for card in properties if card.n > 0]
         msg2 = ''
-        for card in list_property:
+        for card in properties2:
             msg2 += card.write()
         print(msg2)
-        count_where, count, count2, str_cards = _get_duplicate_cards(properties, property_ids, list_property_ids)
+        count_where, count, count2, str_cards = _get_duplicate_cards(
+            properties2, property_ids, list_property_ids2)
         raise RuntimeError(f'Duplicate {msg}Property IDs\n'
                            f'property_ids={count_where}\ncount={count2}\n{str_cards}')
         #assert len(property_ids) == len(uproperty_ids)
@@ -1664,14 +1668,16 @@ def check_property_ids(properties: list[Any], msg: str='') -> np.ndarray:
 
 def _get_duplicate_cards(properties: list[Any],
                          property_ids: np.ndarray,
-                         list_property_ids: list[np.ndarray]) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str]]:
+                         list_property_ids: list[np.ndarray],
+                         ) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str]]:
     count = np.bincount(property_ids)
     count_where = np.where(count > 1)[0]
     count2 = count[count_where]
     #print(len(properties))
     #print('--------------------------')
+    assert len(properties) == len(list_property_ids)
     cards = []
-    for card, ids in zip(properties, list_property_ids):
+    for card, ids in zip_longest(properties, list_property_ids):
         if card.n == 0:
             continue
         common_ids = np.intersect1d(ids, count_where)

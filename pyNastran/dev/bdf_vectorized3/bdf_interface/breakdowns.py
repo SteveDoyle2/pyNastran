@@ -7,7 +7,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 NO_LENGTH = {
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
     'CVISC', 'CGAP', 'CBUSH',
     'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD', 'CSHEAR',
     'CTRIA3', 'CTRIA6', 'CTRIAR',
@@ -20,7 +20,7 @@ NO_LENGTH = {
 }
 NO_AREA = {
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
     'CVISC', 'CGAP', 'CBUSH', 'CBUSH1D',
     'CHEXA', 'CPENTA', 'CPYRAM', 'CTETRA',
     'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4', 'CONM1', 'CONM2',
@@ -29,7 +29,7 @@ NO_AREA = {
 }
 NO_VOLUME = {
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
     'CVISC', 'CGAP', 'CBUSH', 'CBUSH1D',
     'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4', 'CONM1', 'CONM2',
     #'CQUADX4', 'CQUADX8', 'CQUADX', 'CTRIAX', 'CTRIAX6', # not really
@@ -38,7 +38,7 @@ NO_VOLUME = {
 }
 NO_MASS = {
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
     'CVISC', 'CGAP', 'CBUSH', 'CBUSH1D',
     #'CQUADX4', 'CQUADX8', 'CQUADX', 'CTRIAX', 'CTRIAX6', # not really
     'CFAST',

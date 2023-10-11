@@ -661,7 +661,7 @@ class PDAMP5(Property):
         self.cards.append((pid, mid, b, comment))
         self.n += 1
 
-        assert len(card) <= 3, f'len(PDAMP5 card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 4, f'len(PDAMP5 card) = {len(card):d}\ncard={card}'
         return self.n
 
     @Property.parse_cards_check
@@ -690,8 +690,19 @@ class PDAMP5(Property):
     def validate(self) -> None:
         return
 
-    def geom_check(self, missing: dict[str, np.ndarray]):
-        pass
+    @property
+    def allowed_materials(self) -> list[Any]:
+        return [mat for mat in [self.model.mat4, self.model.mat5]
+                if mat.n > 0]
+
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        mids = hstack_msg([mat.material_id for prop in self.allowed_materials],
+                          msg=f'no thermal materials for {self.type}')
+        mids.sort()
+        geom_check(self,
+                   missing,
+                   node=(nid, self.nodes),
+                   property_id=(mids, self.material_id))
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,

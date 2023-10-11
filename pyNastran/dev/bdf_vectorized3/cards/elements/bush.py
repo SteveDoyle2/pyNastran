@@ -17,7 +17,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
     parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import update_field_size, array_str, array_default_int
-from .rod import line_length, line_centroid, line_centroid_with_spoints
+from .rod import line_length_nan, line_centroid, line_centroid_with_spoints
 from .bar import get_bar_vector, safe_normalize
 from .utils import get_mass_from_property
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
@@ -362,7 +362,7 @@ class CBUSH(Element):
         return v, ihat, yhat, zhat, wa, wb
 
     def length(self) -> np.ndarray:
-        length = line_length(self.model, self.nodes)
+        length = line_length_nan(self.model, self.nodes, default_node=-1)
         return length
 
     def centroid(self) -> np.ndarray:
@@ -877,7 +877,7 @@ class CBUSH1D(Element):
         #return mass
 
     def length(self) -> np.ndarray:
-        length = line_length(self.model, self.nodes)
+        length = line_length_nan(self.model, self.nodes, default_node=-1)
         return length
 
     def centroid(self) -> np.ndarray:
@@ -978,6 +978,15 @@ class PBUSH1D(Property):
         shock_table = np.zeros((ncards, 5), dtype='int32')
         shock_equation = np.zeros((ncards, 4), dtype='int32')
 
+        # TYPE = EQUAT
+        gener_equation = np.zeros((ncards, 6), dtype='int32')
+        #self.gener_idt = gener_idt
+        #self.gener_idc = gener_idc
+        #self.gener_idtdu = gener_idtdu
+        #self.gener_idcdu = gener_idcdu
+        #self.gener_idtdv = gener_idtdv
+        #self.gener_idcdv = gener_idcdv
+
         for icard, card in enumerate(self.cards):
             (pid, ki, ci, massi, sai, sei, optional_vars, comment) = card
             property_id[icard] = pid
@@ -1023,20 +1032,53 @@ class PBUSH1D(Property):
                         shock_equation[icard, :] = shock_data
                     else:
                         raise RuntimeError(values)
+                elif key == 'GENER':
+                    #  F(u, v) = Ft(u, v)
+                    #IDT IDC IDTDU IDCDU IDTDV IDCDV
+                    gener_idt, gener_idc, gener_idtdu, gener_idcdu, gener_idtdv, gener_idcdv = values
+                    print('values =', values)
+
+                    #gener_idt   = integer(card, istart + 2, 'generIDT')
+                    #gener_idc   = integer_or_blank(card, istart + 3, 'generIDC', gener_idt)
+                    #gener_idtdu = integer(card, istart + 4, 'generIDTDU')
+                    #gener_idcdu = integer_or_blank(card, istart + 5, 'generIDCDU', gener_idtdu)
+                    #gener_idtdv = integer(card, istart + 6, 'generIDTDV')
+                    #gener_idcdv = integer_or_blank(card, istart + 7, 'generIDCDV', gener_idtdv)
+                    #shock_cvt = double(card, istart + 2, 'shockCVT')
+                    #shock_cvc = double_or_blank(card, istart + 3, 'shockCVC', default=shock_cvt)
+                    #shock_exp_vt = double_or_blank(card, istart + 4, 'shockExpVT', default=1.0)
+                    #shock_exp_vc = double_or_blank(card, istart + 5,
+
+                    self.model.log.debug(f'gener_data={values}')
+                    gener_equation[icard, :] = values
+                    #self.gener_idt[icard, :] = gener_idt
+                    #self.gener_idc[icard, :] = gener_idc
+                    #self.gener_idtdu[icard, :] = gener_idtdu
+                    #self.gener_idcdu[icard, :] = gener_idcdu
+                    #self.gener_idtdv[icard, :] = gener_idtdv
+                    #self.gener_idcdv[icard, :] = gener_idcdv
                 else:
                     raise NotImplementedError(key)
             #assert len(optional_vars) == 0, optional_vars
         self._save(property_id, k, c, sa, se, mass,
                    spring_type, spring_table, spring_equation,
                    damper_type, damper_table, damper_equation,
-                   shock_type, shock_table, shock_equation)
+                   shock_type, shock_table, shock_equation,
+                   gener_equation,
+                   #gener_idt, gener_idc,
+                   #gener_idtdu, gener_idcdu, gener_idtdv, gener_idcdv,
+                   )
         self.sort()
         self.cards = []
 
     def _save(self, property_id, k, c, sa, se, mass,
               spring_type, spring_table, spring_equation,
               damper_type, damper_table, damper_equation,
-              shock_type, shock_table, shock_equation):
+              shock_type, shock_table, shock_equation,
+              #gener_idt, gener_idc,
+              #gener_idtdu, gener_idcdu, gener_idtdv, gener_idcdv,
+              gener_equation,
+              ):
         self.property_id = property_id
         self.k = k
         self.c = c
@@ -1056,6 +1098,14 @@ class PBUSH1D(Property):
         self.shock_type = shock_type
         self.shock_table = shock_table
         self.shock_equation = shock_equation
+
+        self.gener_equation = gener_equation
+        #self.gener_idt = gener_idt
+        #self.gener_idc = gener_idc
+        #self.gener_idtdu = gener_idtdu
+        #self.gener_idcdu = gener_idcdu
+        #self.gener_idtdv = gener_idtdv
+        #self.gener_idcdv = gener_idcdv
         self.n = len(property_id)
 
     @staticmethod
