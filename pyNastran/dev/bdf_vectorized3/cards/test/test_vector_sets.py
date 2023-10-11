@@ -14,21 +14,26 @@ from pyNastran.bdf.cards.bdf_sets import (
 
 class TestSets(unittest.TestCase):
 
-    def _test_set1_01(self):
-        bdf = BDF(debug=False)
+    def test_set1_01(self):
+        model = BDF(debug=False)
+        set1 = model.set1
+
         lines = ['SET1,    1100,    100,     101']
-        card = bdf._process_card(lines)
+        card = model._process_card(lines)
         card = BDFCard(card)
 
         size = 8
-        card = SET1.add_card(card)
-        card.write_card(size, 'dummy')
-        card.raw_fields()
+        card = set1.add_card(card)
+        model.setup()
+        set1.write(size, 'dummy')
+        #card.raw_fields()
 
-        card2 = SET1(1100, [100, 101], is_skin=False, comment='')
-        card2.write_card(size, 'dummy')
+        card2 = model.add_set1(1100, [100, 101], is_skin=False, comment='')
+        model.setup()
+        set1.write(size, 'dummy')
+        save_load_deck(model)
 
-    def _test_set1_02(self):
+    def test_set1_02(self):
         """checks the SET1 card"""
         fields_blocks = [
             'SET1',
@@ -57,14 +62,18 @@ class TestSets(unittest.TestCase):
         self.assertEqual('SET1           a      1.       3       1       2       3       5       4\n'
                          '               6\n', msg3)
 
-    def _test_set1_03(self):
+    def test_set1_03(self):
         """checks the SET1 card"""
+        model = BDF(debug=False)
+        set1 = model.set1
         sid = 10
         ids = [1, 2, 3, 4, 5]
-        set1a = SET1(sid, ids, is_skin=False, comment='set1')
-        set1b = SET1.add_card(BDFCard(['SET1', sid] + ids))
-        set1a.write_card()
-        set1b.write_card()
+        set1a = model.add_set1(sid, ids, is_skin=False, comment='set1')
+        set1b = set1.add_card(BDFCard(['SET1', sid] + ids))
+        model.setup()
+        #set1a.write_card()
+        #set1b.write_card()
+        str(set1.write())
 
     def _test_set2_01(self):
         """checks the SET2 card"""

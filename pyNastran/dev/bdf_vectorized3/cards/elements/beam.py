@@ -2036,7 +2036,7 @@ class PBEAML(Property):
             #so = self.so[istation0:istation1]
             dims = self.dims[idim0 : idim1].reshape(nstation, ndim)
             dims_str = str(dims).replace('\n', '')
-            self.model.log.info(f'pid={pid} beam_type={beam_type!r} dims={dims_str} idim0={idim0} idim1={idim1}')
+            #self.model.log.info(f'pid={pid} beam_type={beam_type!r} dims={dims_str} idim0={idim0} idim1={idim1}')
 
             #prop = pbarl(self.property_id[i], self.material_id[i], beam_type, dim)
             #A, I1, I2, I12 = A_I1_I2_I12(prop, beam_type, dim)

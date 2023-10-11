@@ -433,6 +433,7 @@ def run_and_compare_fems(
         skip_cards = []
     assert isinstance(bdf_model, str) and os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDFv(debug=debug, log=log)
+    fem1.idtype = 'int64'
     fem1.run_testing_checks = True
 
     _setup_fem(fem1, debug, log, version,
@@ -1038,7 +1039,10 @@ def run_nastran(bdf_model: str, nastran: str, post: int=-1,
         #os.remove(bdf_model2)
 
     # make sure we're writing an OP2
-    bdf = read_bdfv(bdf_model, debug=False)
+    #bdf = BDFv(debug=False, log=None, mode='msc')
+    #bdf.idtype = 'int64'
+    #bdf.read_bdf(bdf_model)
+    #bdf = read_bdfv(bdf_model, debug=False)
     if 'POST' in bdf.params:
         param_post = bdf.params['POST']
         #print('post = %s' % post)

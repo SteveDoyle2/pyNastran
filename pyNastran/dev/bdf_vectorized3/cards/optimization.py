@@ -597,8 +597,9 @@ class DRESP1(VectorizedBaseCard):
             #attii = integer_double_string_or_blank(card, i, 'atti_%d' % (i + 1))
             attii = integer_string_or_blank(card, i, 'atti_%d' % (i + 1))
             atti_list.append(attii)
-        if len(atti_list) == 0:
-            self.model.log.debug(card)
+        #if len(atti_list) == 0:
+            #['DRESP1', '10', 'WEIGHT', 'WEIGHT']
+            #self.model.log.debug(card)
         #assert len(atti) > 0
 
         self.cards.append((dresp_id, label, response_type, property_type, region,

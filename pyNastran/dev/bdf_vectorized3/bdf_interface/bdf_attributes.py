@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Set, Optional, Any
 
 from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
-#from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import SET1, SET2, SET3
+from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import SET1 # , SET2, SET3
 from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT, USET, SUPORT
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, EPOINT, SPOINT, GRDSET, POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
@@ -135,7 +135,7 @@ class BDFAttributes:
         self.run_testing_checks = False
 
         self.fdtype = 'float64'
-        self.idtype = 'int64'
+        self.idtype = 'int32'
         self.punch = None
         self._encoding = None
         self.save_file_structure = False
@@ -202,7 +202,7 @@ class BDFAttributes:
         self.omit = OMIT(self)  # OMIT, OMIT1
         self.uset = USET(self)  # USET, USET1
 
-        #self.set1 = SET1(self)
+        self.set1 = SET1(self)
         #self.set2 = SET2(self)
         #self.set3 = SET3(self)
 
@@ -826,7 +826,7 @@ class BDFAttributes:
     def sets(self) -> list[Any]:
         """handles ASET/ASET1, ..."""
         sets = [
-            #self.set1, self.set2, self.set3,
+            self.set1, # self.set2, self.set3,
             self.aset, self.bset, self.cset, self.qset,
             self.omit, self.uset,
         ]

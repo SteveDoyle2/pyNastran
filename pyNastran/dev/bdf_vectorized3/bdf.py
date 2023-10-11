@@ -803,7 +803,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'DVTREL1', 'GROUP', 'DMNCON',
 
             # sets
-            #'SET1', 'SET3',  ## sets
+            'SET1', # 'SET3',  ## sets
 
             'ASET', 'ASET1',  ## aset
             'OMIT', 'OMIT1',  ## omit
@@ -2342,7 +2342,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CORD2S': self._prepare_cord2s,
 
             # sets
-            #'SET1': partial(self._prepare_card, self.set1),
+            'SET1': partial(self._prepare_card, self.set1),
             #'SET3': partial(self._prepare_card, self.set3),
 
             # spring

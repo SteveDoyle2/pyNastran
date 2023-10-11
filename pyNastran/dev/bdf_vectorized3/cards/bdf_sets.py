@@ -8,14 +8,17 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import expand_thru, _format_comment
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, string, parse_components,
+    integer_or_string, fields,
     #integer_or_blank, double_or_blank, # components_or_blank,
     integer_string_or_blank, parse_components_or_blank,
     components_or_blank as fcomponents_or_blank)
 
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check, get_print_card_8_16
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, update_field_size
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    VectorizedBaseCard, parse_node_check, get_print_card_8_16,
+    hslice_by_idim, make_idim)
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    get_print_card, update_field_size, array_str, array_default_int)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 
@@ -133,36 +136,30 @@ class ABCOQSET(VectorizedBaseCard):
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        ncards = len(self.cards)
+        idtype = self.model.idtype
+        #ncards = len(self.cards)
         if self.debug:
             self.model.log.debug(f'parse {self.type}')
 
-        try:
-            node_id, component = self._setup(ncards, self.cards, 'int32')
-        except OverflowError:
-            node_id, component = self._setup(ncards, self.cards, 'int64')
-        self._save(node_id, component)
 
-        self.sort()
-        self.cards = []
-
-    def _setup(self, ncards: int, cards: list[Any],
-               idtype: str) -> tuple[np.ndarray, np.ndarray]:
-        node_id = []
+        node_id_list = []
         component_list = []
         #comment = {}
-        for i, card in enumerate(cards):
+        for i, card in enumerate(self.cards):
             (nidi, componenti, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
-            node_id.extend(nidi)
+            node_id_list.extend(nidi)
             component_list.extend(componenti)
             #if commenti:
                 #comment[i] = commenti
                 #comment[nidi] = commenti
-        node_id2 = np.array(node_id, dtype=idtype)
-        component2 = np.array(component_list, dtype=idtype)
-        return node_id2, component2
+
+        node_id = np.array(node_id_list, dtype=idtype)
+        component = np.array(component_list, dtype='int32')
+        self._save(node_id, component)
+        self.sort()
+        self.cards = []
 
     def _save(self,
               node_id: np.ndarray,
@@ -402,7 +399,6 @@ class SUPORT(VectorizedBaseCard):
 
     def _setup(self, ncards: int, cards: list[Any],
                idtype: str) -> tuple[np.ndarray, np.ndarray]:
-
         suport_id = []
         node_id = []
         component_list = []
@@ -500,8 +496,8 @@ class SUPORT(VectorizedBaseCard):
         [0, 1, 4]
 
         """
-        if not assume_sorted:
-            self.sort()
+        #if not assume_sorted:
+            #self.sort()
         self_ids = self._ids
         assert len(self_ids) > 0, f'{self.type}: {self._id_name}={self_ids}'
         if ids is None:
@@ -509,8 +505,8 @@ class SUPORT(VectorizedBaseCard):
         ids = np.atleast_1d(np.asarray(ids, dtype=self_ids.dtype))
 
         ielem = np.array([
-            ii for ii, suport_idi in enumerate(ids)
-            if suport_idi in self.suport_id])
+            ii for ii, suport_idi in enumerate(self.suport_id)
+            if suport_idi in ids])
         #ielem = np.searchsorted(self_ids, ids)
 
         if check_index:
@@ -873,4 +869,214 @@ class USET(VectorizedBaseCard):
                 #actual_nids = self.node_id[inids_leftover]
                 #assert np.array_equal(actual_nids, node_id)
         #return inid
+
+
+class SET1(VectorizedBaseCard):
+    """
+    Defines a list of structural grid points or element identification
+    numbers.
+
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    |  1   |    2   |    3   |  4  |   5  |  6  |  7  |   8  |  9  |
+    +======+========+========+=====+======+=====+=====+======+=====+
+    | SET1 |  SID   |   ID1  | ID2 | ID3  | ID4 | ID5 | ID6  | ID7 |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    |      |  ID8   |  etc.  |     |      |     |     |      |     |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    | SET1 |   3    |   31   | 62  |  93  | 124 | 16  |  17  | 18  |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    |      |   19   |        |     |      |     |     |      |     |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    | SET1 |   6    |   29   | 32  | THRU | 50  | 61  | THRU | 70  |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    |      |   17   |   57   |     |      |     |     |      |     |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    """
+    _id_name = 'set_id'
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.set_id = np.array([], dtype='int32')
+        self.is_skin = np.array([], dtype='bool')
+        self.ids = np.array([], dtype='int32')
+        self.num_ids = np.array([], dtype='int32')
+
+    def slice_card_by_set_id(self, ids: np.ndarray) -> SET1:
+        assert self.n > 0, self.n
+        assert len(self.set_id) > 0, self.set_id
+        i = self.index(ids)
+        cls_obj = self.slice_card_by_index(i)
+        assert cls_obj.n > 0, cls_obj
+        return cls_obj
+
+    def __apply_slice__(self, set_card: SET1, i: np.ndarray) -> None:
+        #print('set_id', self.set_id)
+        #print('is_skin', self.is_skin)
+        #print('num_ids', self.num_ids)
+        #print('ids', self.ids)
+        #print('i = ', i)
+        #self.set_id = np.zeros(ncards, dtype='int32')
+        #self.is_skin = np.zeros(ncards, dtype='bool')
+        #self.num_ids = np.zeros(ncards, dtype='int32')
+        #self.ids = np.array([], dtype='int32')
+
+        set_card.set_id = self.set_id[i]
+        set_card.is_skin = self.is_skin[i]
+
+        inid = self.inid
+        set_card.ids = hslice_by_idim(i, inid, self.ids)
+        set_card.num_ids = self.num_ids[i]
+        set_card.n = len(self.set_id)
+        #print('--------------------------------------')
+        #print(self)
+        #print('set_id', set_card.set_id)
+        #print('is_skin', set_card.is_skin)
+        #print('num_ids', set_card.num_ids)
+        #print('ids', set_card.ids)
+        assert set_card.n > 0, set_card.set_id
+
+    def add(self, sid: int, ids: list[int], is_skin: bool=False,
+            comment: str='') -> int:
+        """
+        Creates a SET1 card, which defines a list of structural grid
+        points or element identification numbers.
+
+        Parameters
+        ----------
+        sid : int
+            set id
+        ids : list[int, str]
+            AECOMP, SPLINEx, PANEL : all grid points must exist
+            XYOUTPUT : missing grid points are ignored
+            The only valid string is THRU
+            ``ids = [1, 3, 5, THRU, 10]``
+        is_skin : bool; default=False
+            if is_skin is used; ids must be empty
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, is_skin, ids, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a SET1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+        is_skin = False
+        i = 0
+        if len(ids) > 0:
+            if isinstance(ids[0], str) and ids[0] == 'SKIN':
+                is_skin = True
+                i += 1
+        else:
+            assert len(card) > 2, card
+        self.cards.append((sid, is_skin, ids[i:], comment))
+        #return SET1(sid, ids[i:], is_skin=is_skin, comment=comment)
+        self.n += 1
+        return self.n
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self):
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+
+        set_id = np.zeros(ncards, dtype='int32')
+        is_skin = np.zeros(ncards, dtype='bool')
+        num_ids = np.zeros(ncards, dtype='int32')
+        #ids = np.array([], dtype='int32')
+
+        all_ids = []
+        for icard, card in enumerate(self.cards):
+            sid, is_skini, idsi, comment = card
+            set_id[icard] = sid
+            is_skin[icard] = is_skini
+            ids2 = expand_thru(idsi)
+            num_ids[icard] = len(ids2)
+            all_ids.extend(ids2)
+        ids = np.array(all_ids, dtype=idtype)
+        self._save(set_id, is_skin, num_ids, ids)
+        self.sort()
+        self.cards = []
+
+    def _save(self, set_id, is_skin, num_ids, ids):
+        self.set_id = set_id
+        self.is_skin = is_skin
+        self.num_ids = num_ids
+        self.ids = ids
+        self.n = len(set_id)
+
+    def sort(self) -> None:
+        usid = np.unique(self.set_id)
+        if np.array_equal(usid, self.set_id):
+            return
+        i = np.argsort(self.set_id)
+        self.__apply_slice__(self, i)
+
+    def __apply_slice__(self, set_card: SET1, i: np.ndarray) -> None:
+        assert self.num_ids.sum() == len(self.ids)
+        set_card.n = len(i)
+        set_card.set_id = self.set_id[i]
+        set_card.is_skin = self.is_skin[i]
+
+        inid = self.inid # [i, :]
+        set_card.dims = hslice_by_idim(i, inid, self.ids)
+
+        set_card.num_ids = self.num_ids[i]
+        #assert isinstance(prop.ndim, np.ndarray), prop.ndim
+        #assert prop.ndim.sum() == len(prop.dims), f'prop.ndim={prop.ndim} len(prop.dims)={len(prop.dims)}'
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @property
+    def inid(self) -> np.ndarray:
+        return make_idim(self.n, self.num_ids)
+
+    #@parse_node_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.set_id) == 0:
+            return
+        max_int = self.set_id.max()
+        size = update_field_size(max_int, size)
+        print_card = get_print_card_8_16(size)
+
+        set_ids = array_str(self.set_id, size=size)
+        ids_ = array_str(self.ids, size=size).tolist()
+        for sid, is_skin, inid in zip(set_ids, self.is_skin, self.inid):
+            inid0, inid1 = inid
+            ids = ids_[inid0:inid1]
+
+            # checked in NX 2014 / MSC 2005.1
+            if is_skin:
+                list_fields = ['SET1', sid, 'SKIN'] + ids
+            else:
+                list_fields = ['SET1', sid] + ids
+
+            # I thought this worked in the new MSC Nastran...
+            # Doesn't work in NX 2014 / MSC 2005.1 (multiple duplicate sids).
+            # It may work with one sid, with singles and doubles on one card.
+            #field_packs = []
+            #singles, doubles = collapse_thru_packs(self.get_ids())
+            #if singles:
+                #field_packs.append(['SET1', self.sid] + skin + singles)
+            #if doubles:
+                #for pack in doubles:
+                    #field_packs.append(['SET1', self.sid] + skin + pack)
+
+            bdf_file.write(print_card(list_fields))
+        return
+
 
