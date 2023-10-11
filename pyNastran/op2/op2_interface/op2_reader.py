@@ -5366,6 +5366,8 @@ class OP2Reader:
         """
         #print('-------------------------------------')
         op2 = self.op2
+        read_matpool = op2.read_matpool
+
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         utable_name = table_name.decode('utf-8')
         #print(utable_name)
@@ -5408,7 +5410,7 @@ class OP2Reader:
             #nvalues = len(data) // 4
             assert len(data) % 4 == 0, len(data) / 4
 
-            if self.read_mode == 1:
+            if self.read_mode == 1 and read_matpool:
                 self.read_matpool_result(code, op2, data, utable_name)
 
             self.read_3_markers([itable, 1, 0])
@@ -5420,7 +5422,7 @@ class OP2Reader:
                 #self.log.debug(f'  read [{itable},1,0]')
                 self.read_3_markers([itable, 1, 0])
                 break
-            elif self.read_mode == 1:
+            elif self.read_mode == 1 and read_matpool:
                 #self.show_data(data, types='ifs', endian=None, force=False)
                 code = struct_3i.unpack(data[:12*self.factor])
                 self.read_matpool_result(code, op2, data, utable_name)

@@ -41,7 +41,7 @@ if TYPE_CHECKING:  # pragma: no cover
 def create_alt_conm2_grids(gui: MainWindow,
                            model: BDF,
                            grid_id: np.ndarray,
-                           xyz_cid0: np.ndarray):
+                           xyz_cid0: np.ndarray) -> None:
     element = model.conm2
 
     try:
@@ -80,7 +80,7 @@ def create_alt_conm2_grids(gui: MainWindow,
 def create_alt_rbe3_grids(gui: MainWindow,
                           model: BDF,
                           grid_id: np.ndarray,
-                          xyz_cid0: np.ndarray):
+                          xyz_cid0: np.ndarray) -> None:
     elem = model.rbe3
     if elem.n == 0:
         return
@@ -120,7 +120,7 @@ def create_alt_rbe3_grids(gui: MainWindow,
 
 def _build_rbe3_vtk_lines(gui, elem: RBE3,
                           xyz_independents: np.ndarray,
-                          ref_xyz_dependents: np.ndarray):
+                          ref_xyz_dependents: np.ndarray) -> None:
     """not quite right..."""
     pass
     #lines: list[tuple[int, int]] = []
@@ -233,7 +233,7 @@ def _create_alt_axes(self: NastranIO,
                      model: BDF,
                      grid_id: np.ndarray,
                      xyz_cid0: np.ndarray,
-                     elem, card_name: str):
+                     elem, card_name: str) -> None:
     """
     Parameters
     ----------
@@ -256,6 +256,17 @@ def _create_alt_axes(self: NastranIO,
     length = elem.length()
     del v, ihat, wa, wb
 
+    if elem.type in {'CBUSH', 'CGAP'} and np.isnan(length.max()):
+        try:
+            mean_length = np.nanmean(length)
+        except:
+            ## TODO: should be based on the mean edge length of the model
+            mean_length = 1.0
+            raise
+        inan = np.isnan(length)
+        length[inan] = mean_length
+        del mean_length, inan
+
     p1 = centroid
     p2 = centroid + jhat * length[:, np.newaxis] / 2
     p3 = centroid + khat * length[:, np.newaxis] / 2
@@ -268,13 +279,6 @@ def _create_alt_axes(self: NastranIO,
     name_bar_z = f'{card_name} z axis'
 
     scale = 1.0
-    gui.create_alternate_vtk_grid(
-        name_bar_y, color=GREEN_FLOAT, line_width=5, opacity=1.,
-        point_size=5, representation='bar', bar_scale=scale, is_visible=False)
-    gui.create_alternate_vtk_grid(
-        name_bar_z, color=BLUE_FLOAT, line_width=5, opacity=1.,
-        point_size=5, representation='bar', bar_scale=scale, is_visible=False)
-
     nids = np.unique(elem.nodes.ravel())
     inid = np.searchsorted(grid_id, nids)
     all_xyz = xyz_cid0[inid, :]
@@ -282,16 +286,22 @@ def _create_alt_axes(self: NastranIO,
 
     eids = elem.element_id
     xyz_lines = np.column_stack([p1, p2])
-    _add_nastran_bar_vectors_to_grid(gui, name_bar_y, xyz_lines, eids)
+    if len(xyz_lines):
+        gui.create_alternate_vtk_grid(
+            name_bar_y, color=GREEN_FLOAT, line_width=5, opacity=1.,
+            point_size=5, representation='bar', bar_scale=scale, is_visible=False)
+        _add_nastran_bar_vectors_to_grid(gui, name_bar_y, xyz_lines, eids)
 
     xyz_lines = np.column_stack([p1, p3])
-    _add_nastran_bar_vectors_to_grid(gui, name_bar_z, xyz_lines, eids)
+    if len(xyz_lines):
+        gui.create_alternate_vtk_grid(
+            name_bar_z, color=BLUE_FLOAT, line_width=5, opacity=1.,
+            point_size=5, representation='bar', bar_scale=scale, is_visible=False)
+        _add_nastran_bar_vectors_to_grid(gui, name_bar_z, xyz_lines, eids)
 
     #gui._add_nastran_lines_xyz_to_grid(name_bar_y, xyz_lines, eids)
-
     #gui.bar_lines[name] = bar_lines
-
-    eids = elem.element_id
+    #eids = elem.element_id
 
 def _add_nastran_bar_vectors_to_grid(gui: MainWindow,
                                      name: str,
@@ -308,12 +318,11 @@ def _add_nastran_bar_vectors_to_grid(gui: MainWindow,
         [x1, y1, z1, x2, y2, z2], # line2
     eids : (n,) int array
         informational
+
     """
     assert name is not None
     nlines = len(lines)
     nnodes = nlines * 2
-    if nlines == 0:
-        return
 
     assert name != 'Bar Nodes', name
     grid = gui.alt_grids[name]
@@ -322,8 +331,8 @@ def _add_nastran_bar_vectors_to_grid(gui: MainWindow,
     bar_lines_array = np.asarray(lines, dtype='float32').reshape(nlines, 6)
     #for line in bar_lines_array[:10, :]:
         #print(line)
-    bar_eids = gui.bar_eids
-    bar_lines = gui.bar_lines
+    #bar_eids = gui.bar_eids
+    #bar_lines = gui.bar_lines
 
     gui.bar_eids[name] = bar_eids_array
     gui.bar_lines[name] = bar_lines_array
