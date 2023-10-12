@@ -4,6 +4,7 @@ import io
 from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
+from pyNastran.dev.bdf_vectorized3.bdf_interface.convert import convert
 #from pyNastran.dev.bdf_vectorized3.mesh_utils.convert import convert
 #if TYPE_CHECKING:  # pragma: no cover
 
@@ -33,7 +34,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
     if run_loads and 0:
         model.sum_forces_moments()
 
-    if run_convert and 0:
+    if run_convert:
         units_to = ['m', 'kg', 's']
         units = ['ft', 'lbm', 's']
         convert(model, units_to, units)

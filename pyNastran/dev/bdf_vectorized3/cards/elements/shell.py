@@ -580,6 +580,14 @@ class CTRIA3(ShellElement):
         self.sort()
         self.cards = []
 
+    def convert(self, xyz_scale: float=1.0,
+                **kwargs):
+        self.zoffset *= xyz_scale
+
+        # T is a thickness if tflag == 0 (unless T=nan)
+        itflag = (self.tflag == 0)
+        self.T[itflag] *= xyz_scale
+
     def _save(self, element_id, property_id, nodes,
               zoffset, mcid, theta,
               tflag, T):
@@ -923,6 +931,15 @@ class CTRIAR(ShellElement):
         self.zoffset = zoffset
         self.T = T
 
+    def convert(self, xyz_scale: float=1.0,
+                **kwargs):
+        self.zoffset *= xyz_scale
+
+        # T is a thickness if tflag == 0 (unless T=nan)
+        itflag = (self.tflag == 0)
+        self.T[itflag] *= xyz_scale
+
+
     @parse_element_check
     def write_file_8(self, bdf_file: TextIOLike,
                    write_card_header: bool=False) -> None:
@@ -1115,6 +1132,14 @@ class CQUAD4(ShellElement):
               tflag=None, T=None) -> None:
         _save_quad(self, element_id, property_id, nodes,
                    zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
+
+    def convert(self, xyz_scale: float=1.0,
+                **kwargs):
+        self.zoffset *= xyz_scale
+
+        # T is a thickness if tflag == 0 (unless T=nan)
+        itflag = (self.tflag == 0)
+        self.T[itflag] *= xyz_scale
 
     def __apply_slice__(self, element: CQUAD4, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -1504,6 +1529,14 @@ class CQUADR(ShellElement):
         _save_quad(self, element_id, property_id, nodes,
                    zoffset=zoffset, theta=theta, mcid=mcid, tflag=tflag, T=T)
 
+    def convert(self, xyz_scale: float=1.0,
+                **kwargs):
+        self.zoffset *= xyz_scale
+
+        # T is a thickness if tflag == 0 (unless T=nan)
+        itflag = (self.tflag == 0)
+        self.T[itflag] *= xyz_scale
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1781,6 +1814,13 @@ class CTRIA6(ShellElement):
         self.tflag = tflag
         self.T = T
         self.n = nelements
+
+    def convert(self, xyz_scale: float=1.0, **kwargs):
+        self.zoffset *= xyz_scale
+
+        # T is a thickness if tflag == 0 (unless T=nan)
+        itflag = (self.tflag == 0)
+        self.T[itflag] *= xyz_scale
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2099,6 +2139,13 @@ class CQUAD8(ShellElement):
         self.tflag = tflag
         self.T = T
         self.n = nelements
+
+    def convert(self, xyz_scale: float=1.0, **kwargs):
+        self.zoffset *= xyz_scale
+
+        # T is a thickness if tflag == 0 (unless T=nan)
+        itflag = (self.tflag == 0)
+        self.T[itflag] *= xyz_scale
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,

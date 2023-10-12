@@ -433,9 +433,22 @@ class GRID(VectorizedBaseCard):
         self.seid = seid
         self._xyz_cid0 = _xyz_cid0
         self.n = len(node_id)
-
         #self.sort()
         #self.cards = []
+
+    def convert(self, xyz_scale: float=1., **kwargs):
+        self._xyz_cid0 *= xyz_scale
+        if self.cp.max() == 0:
+            self.xyz *= xyz_scale
+            return
+        coords = self.model.coord.slice_card_by_id(self.cp)
+        is_xyz = (coords.icoord == 2) & (coords.coord_type == 'R')
+        is_rtz = (coords.icoord == 2) & (coords.coord_type == 'C')
+        is_rtp = (coords.icoord == 2) & (coords.coord_type == 'S')
+        self.xyz[is_xyz, :] *= xyz_scale # xyz
+        self.xyz[is_rtz, 0] *= xyz_scale # R
+        self.xyz[is_rtz, 2] *= xyz_scale # z
+        self.xyz[is_rtp, 0] *= xyz_scale # rho
 
     def has_ps(self) -> bool:
         return self.n > 0 and self.ps.max() > 0
@@ -801,6 +814,20 @@ class POINT(VectorizedBaseCard):
         self.xyz = np.zeros((0, 3), dtype='float64')
         self._xyz_cid0 = np.zeros((0, 3), dtype='float64')
 
+    def convert(self, xyz_scale: float=1., **kwargs):
+        self._xyz_cid0 *= xyz_scale
+        if self.cp.max() == 0:
+            self.xyz *= xyz_scale
+            return
+        coords = self.model.coord.slice_card_by_id(self.cp)
+        is_xyz = (coords.icoord == 2) & (coords.coord_type == 'R')
+        is_rtz = (coords.icoord == 2) & (coords.coord_type == 'C')
+        is_rtp = (coords.icoord == 2) & (coords.coord_type == 'S')
+        self.xyz[is_xyz, :] *= xyz_scale # xyz
+        self.xyz[is_rtz, 0] *= xyz_scale # R
+        self.xyz[is_rtz, 2] *= xyz_scale # z
+        self.xyz[is_rtp, 0] *= xyz_scale # rho
+
     def add(self, nid: int, xyz: np.ndarray,
             cp: int=0, comment: str=''):
         self.cards.append((nid, xyz, cp, comment))
@@ -840,23 +867,33 @@ class POINT(VectorizedBaseCard):
             return
         if self.debug:
             self.model.log.debug('parse POINT')
-        self.point_id = np.zeros(ncards, dtype='int32')
-        self.cp = np.zeros(ncards, dtype='int32')
-        self.xyz = np.zeros((ncards, 3), dtype='float64')
-        self._xyz_cid0 = np.full((ncards, 3), np.nan, dtype='float64')
 
+        point_id = np.zeros(ncards, dtype='int32')
+        cp = np.zeros(ncards, dtype='int32')
+        xyz = np.zeros((ncards, 3), dtype='float64')
+        _xyz_cid0 = np.full((ncards, 3), np.nan, dtype='float64')
+        comment = self.comment
         for i, card in enumerate(self.cards):
-            (nid, xyz, cp, comment) = card
-            self.point_id[i] = nid
-            self.cp[i] = cp
-            self.xyz[i, :] = xyz
-            self.comment[i] = comment
+            (nid, xyzi, cpi, commenti) = card
+            point_id[i] = nid
+            cp[i] = cpi
+            xyz[i, :] = xyzi
+            comment[i] = commenti
 
+        self._save(point_id, cp, xyz, _xyz_cid0, comment)
         self.sort()
         icp0 = np.where(self.cp == 0)[0]
         self._xyz_cid0[icp0, :] = self.xyz[icp0, :]
         assert self.xyz.shape == self._xyz_cid0.shape
         self.cards = []
+
+    def _save(self, point_id, cp, xyz, _xyz_cid0, comment):
+        print(cp)
+        self.point_id = point_id
+        self.cp = cp
+        self.xyz = xyz
+        self._xyz_cid0 = _xyz_cid0
+        self.comment = comment
 
     #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
         #inid = self._node_index(node_id)

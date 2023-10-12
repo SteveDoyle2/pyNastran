@@ -349,7 +349,12 @@ class VectorizedBaseCard:
         ids = np.atleast_1d(np.asarray(ids, dtype=self_ids.dtype))
         ielem = np.searchsorted(self_ids, ids)
         if check_index:
-            actual_ids = self_ids[ielem]
+            try:
+                actual_ids = self_ids[ielem]
+            except IndexError:
+                missing_ids = np.setdiff1d(ids, self_ids)
+                raise IndexError(f'{self.type}: missing {self._id_name}={missing_ids}')
+
             if not np.array_equal(actual_ids, ids):
                 raise KeyError(f'{self.type}: expected_{self._id_name}={ids}; actual_{self._id_name}={actual_ids}')
         if inverse:

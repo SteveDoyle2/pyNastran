@@ -192,6 +192,12 @@ class PSHELL(Property):
         self.z = z
         self.n = len(property_id)
 
+    def convert(self, xyz_scale: float=1.0,
+                nsm_per_area_scale: float=1.0, **kwargs):
+        self.t *= xyz_scale
+        self.z *= xyz_scale
+        self.nsm *= nsm_per_area_scale
+
     def __apply_slice__(self, prop: PSHELL, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
         prop.property_id = self.property_id[i]
@@ -975,6 +981,15 @@ class PCOMP(CompositeProperty):
             self.z0[inan] = -total_thickness[inan] / 2
         #x = 1
 
+    def convert(self, xyz_scale: float=1.0,
+                nsm_per_area_scale: float=1.0,
+                temperature_scale: float=1.0, **kwargs):
+        self.thickness *= xyz_scale
+        self.z0 *= xyz_scale
+        # self.thickness ## TODO: ???
+        self.tref *= temperature_scale
+        self.nsm *= nsm_per_area_scale
+
     def add_op2_data(self, data, comment=''):
         """
         Adds a PCOMP card from the OP2
@@ -1492,6 +1507,16 @@ class PCOMPG(CompositeProperty):
         self.sout = sout
         self.theta = theta
 
+
+    def convert(self, xyz_scale: float=1.0,
+                nsm_per_area_scale: float=1.0,
+                temperature_scale: float=1.0, **kwargs):
+        self.thickness *= xyz_scale
+        self.z0 *= xyz_scale
+        # self.thickness ## TODO: ???
+        self.tref *= temperature_scale
+        self.nsm *= nsm_per_area_scale
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1651,6 +1676,9 @@ class PLPLANE(Property):
         prop.coord_id = self.coord_id[i]
         prop.stress_strain_output_location = self.stress_strain_output_location[i]
         prop.thickness = self.thickness[i]
+
+    def convert(self, xyz_scale: float=1.0, **kwargs):
+        self.thickness *= xyz_scale
 
     #def write_file_8(self, bdf_file: TextIOLike,
     #               write_card_header: bool=False) -> None:

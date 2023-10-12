@@ -1429,6 +1429,27 @@ class TestBeams(unittest.TestCase):
         assert np.allclose(cg[0], [0.5, 0., 0.]), cg
         save_load_deck(model, run_convert=False, run_renumber=False, run_read_write=False)
 
+    def test_point(self):
+        """tests a POINT card"""
+        model = BDF(debug=False)
+        point = model.point
+        n1 = 10
+        n2 = 20
+        model.add_point(n1, [0., 0., 0.], cp=0, comment='point1')
+        model.add_point(n2, [1., 0., 0.], cp=1)
+        model.setup()
+        print(str(point.write(size=8)))
+        str(point.write(size=16))
+        with self.assertRaises(IndexError):
+            point.convert(xyz_scale=1.)
+
+        model.add_cord2r(1, [0., 0.1, 0.], [0., 1., 0.], [0., 0., 1.])
+        model.setup()
+        point.convert(xyz_scale=2.)
+
+        print(str(point.write(size=8)))
+        save_load_deck(model)
+
     def test_beamor(self):
         """tests a BEAMOR"""
         model = BDF(debug=False)

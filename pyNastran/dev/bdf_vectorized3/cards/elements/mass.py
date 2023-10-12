@@ -133,6 +133,9 @@ class CONM1(Element):
         self._mass = mass
         self.n = len(element_id)
 
+    def convert(self, mass_scale: float=1.0, **kwargs):
+        self._mass *= mass_scale
+
     def mass_matrix(self) -> np.ndarray:
         return self._mass
 
@@ -315,6 +318,13 @@ class CONM2(Element):
         self.xyz_offset = xyz_offset
         #I11, I21, I22, I31, I32, I33 = I
         self.inertia = inertia
+
+    def convert(self, xyz_scale: float=1.0,
+                mass_scale: float=1.0,
+                mass_inertia_scale: float=1.0, **kwargs):
+        self.xyz_offset *= xyz_scale
+        self._mass *= mass_scale
+        self.inertia *= mass_inertia_scale
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,

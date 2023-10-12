@@ -46,6 +46,10 @@ class RigidElement(VectorizedBaseCard):
         i = np.argsort(self.element_id)
         self.__apply_slice__(self, i)
 
+    def convert(self, alpha_scale: float=1., **kwargs):
+        self.alpha *= alpha_scale
+
+
 def _str_to_int(value: str) -> int:
     if isinstance(value, str):
         if value == '':

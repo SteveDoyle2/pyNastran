@@ -355,6 +355,13 @@ class CBAR(Element):
         self.wa = wa
         self.wb = wb
 
+    def convert(self, xyz_scale: float=1.0,
+                mass_scale: float=1.0, **kwargs):
+        ## TODO: probably wrong for CD=1
+        self.x *= xyz_scale
+        self.wa *= xyz_scale
+        self.wb *= xyz_scale
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -879,6 +886,23 @@ class PBAR(Property):
         self.k = k
         self.nsm = nsm
 
+    def convert(self, xyz_scale: float=1.0,
+                area_scale: float=1.0,
+                area_inertia_scale: float=1.0,
+                nsm_per_length_scale: float=1.0, **kwargs):
+        self.A *= area_scale
+        self.I *= area_inertia_scale
+        self.J *= area_inertia_scale
+
+        self.c *= xyz_scale
+        self.d *= xyz_scale
+        self.e *= xyz_scale
+        self.f *= xyz_scale
+        self.nsm *= nsm_per_length_scale
+
+        ## TODO: probably wrong
+        ##self.k
+
     def __apply_slice__(self, prop: PBAR, i: np.ndarray) -> None:  # ignore[override]
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
@@ -1293,7 +1317,10 @@ class PBARL(Property):
             ndim = self.valid_types[beam_type]
             assert len(dim) == ndim, f'PBARL pid={pid:d} bar_type={beam_type} ndim={ndim:d} len(dims)={dim}'
 
-        self.write()
+    def convert(self, xyz_scale: float=1.0,
+                nsm_per_length_scale: float=1.0, **kwargs):
+        self.dims *= xyz_scale
+        self.nsm *= nsm_per_length_scale
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         mids = hstack_msg([mat.material_id for mat in self.allowed_materials],
@@ -1651,6 +1678,16 @@ class CBARAO(Element):
         self.scale = scale
         self.nstation = nstation
         self.station = np.array(station, dtype=self.model.fdtype)
+
+
+    #def convert(self, xyz_scale: float=1.0,
+                 #**kwargs):
+        #scale : str
+        #    defines what x means
+        #    LE : x is in absolute coordinates along the bar
+        #    FR : x is in fractional
+        #self.dims *= xyz_scale
+        #self.nsm *= nsm_per_length_scale
 
     @property
     def istation(self) -> np.ndarray:

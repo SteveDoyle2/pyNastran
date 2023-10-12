@@ -138,6 +138,13 @@ class CONROD(Element):
         self.nsm = nsm
         self.n = nelements
 
+    def convert(self, area_scale: float=1.,
+                area_inertia_scale: float=1.0,
+                nsm_per_length_scale: float=1.0, **kwargs):
+        self.A *= area_scale
+        self.J *= area_inertia_scale
+        #self.c *= area_scale
+        self.nsm *= nsm_per_length_scale
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -473,6 +480,14 @@ class PROD(Property):
         self.nsm = nsm
         self.n = nproperties
 
+    def convert(self, area_scale: float=1.,
+                area_inertia_scale: float=1.0,
+                nsm_per_length_scale: float=1.0, **kwargs):
+        self.A *= area_scale
+        self.J *= area_inertia_scale
+        #self.c *= area_scale
+        self.nsm *= nsm_per_length_scale
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         mids = hstack_msg([mat.material_id for mat in self.allowed_materials],
                           msg=f'no rod materials for {self.type}; material_id={self.material_id}')
@@ -787,6 +802,12 @@ class PTUBE(Property):
         self.diameter = diameter
         self.t = t
         self.nsm = nsm
+
+    def convert(self, xyz_scale: float=1.,
+                nsm_per_length_scale: float=1.0, **kwargs):
+        self.t *= xyz_scale
+        self.diameter *= xyz_scale
+        self.nsm *= nsm_per_length_scale
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         mids = hstack_msg([mat.material_id for mat in self.allowed_materials],

@@ -111,10 +111,16 @@ class CBEAM(Element):
         self.offt: np.array = np.array([], dtype='|U3')
         self.g0: np.array = np.array([], dtype='int32')
         self.x: np.array = np.zeros((0, 3), dtype='float64')
+
+        # pin flags
         self.pa: np.array = np.array([], dtype='int32')
         self.pb: np.array = np.array([], dtype='int32')
+
+        # offset vectors at A/B
         self.wa: np.array = np.zeros((0, 3), dtype='float64')
         self.wb: np.array = np.zeros((0, 3), dtype='float64')
+
+        # scalar points at end A/B for warping
         self.sa: np.array = np.zeros([], dtype='int32')
         self.sb: np.array = np.zeros([], dtype='int32')
 
@@ -230,6 +236,15 @@ class CBEAM(Element):
         self.sa = sa
         self.sb = sb
         self.n = len(property_id)
+
+    def convert(self, xyz_scale: float=1.0,
+                mass_scale: float=1.0, **kwargs):
+        # easy
+        self.wa *= xyz_scale
+        self.wb *= xyz_scale
+
+        ## TODO: probably wrong for CD=1
+        self.x *= xyz_scale
 
     def __apply_slice__(self, elem: CBEAM, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
@@ -1342,6 +1357,42 @@ class PBEAM(Property):
 
         self.n = len(property_id)
 
+    def convert(self, xyz_scale: float=1.0,
+                area_scale: float=1.0,
+                area_inertia_scale:float=1.0,
+                nsm_per_length_scale: float=1.0, **kwargs):
+        # easy
+        #self.xxb # percent of length
+        self.A *= area_scale
+        self.J *= area_inertia_scale
+        self.I1 *= area_inertia_scale
+        self.I2 *= area_inertia_scale
+        self.I12 *= area_inertia_scale
+
+        self.c1 *= xyz_scale
+        self.c2 *= xyz_scale
+        self.d1 *= xyz_scale
+        self.d2 *= xyz_scale
+        self.e1 *= xyz_scale
+        self.e2 *= xyz_scale
+        self.f1 *= xyz_scale
+        self.f2 *= xyz_scale
+        self._nsm *= nsm_per_length_scale
+
+        # ???
+        self.m1a *= xyz_scale
+        self.m1b *= xyz_scale
+        self.n2a *= xyz_scale
+        self.n2b *= xyz_scale
+
+        #self.k1 = k1
+        #self.k2 = k2
+
+        #self.nsia = nsia
+        #self.nsib = nsib
+        #self.cwa = cwa
+        #self.cwb = cwb
+
     def __apply_slice__(self, prop: PBEAM, i: np.ndarray) -> None:
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
@@ -1929,6 +1980,12 @@ class PBEAML(Property):
         self.dims = dims
         self.so = so
         self._nsm = nsm
+
+    def convert(self, xyz_scale: float=1.0,
+                nsm_per_length_scale: float=1.0, **kwargs):
+        self.xxb *= xyz_scale
+        self.dims *= xyz_scale
+        self._nsm *= nsm_per_length_scale
 
     def __apply_slice__(self, prop: PBEAML, i: np.ndarray) -> None:
         prop.n = len(i)

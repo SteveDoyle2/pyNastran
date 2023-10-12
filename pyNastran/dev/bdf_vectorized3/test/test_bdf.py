@@ -9,6 +9,7 @@ As such, ``test_bdf`` is very useful for debugging models.
 """
 import os
 import sys
+import copy
 import traceback
 import warnings
 from itertools import count, chain
@@ -41,6 +42,7 @@ from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.test.compare import compare_card_count
 from pyNastran.bdf.bdf import BDF as BDF_old #, read_bdf as read_bdf_old
 from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDFv, read_bdf as read_bdfv, map_version
+from pyNastran.dev.bdf_vectorized3.bdf_interface.convert import convert
 
 try:
     import tables
@@ -1245,9 +1247,11 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str, mesh_form: str,
     fem1._get_maps()
     #remove_unused_materials(fem1)
     #remove_unused(fem1)
-    #units_to = ['m', 'kg', 's']
-    #units_from = ['m', 'kg', 's']
-    #convert(fem1, units_to, units=units_from)
+    if not is_nominal:
+        units_to = ['m', 'kg', 's']
+        units_from = ['m', 'kg', 's']
+        fem1b = copy.deepcopy(fem1)
+        convert(fem1b, units_to, units=units_from)
     if run_mass:
         _run_mass(fem1, xref, has_nodes, is_nominal)
     return fem1
