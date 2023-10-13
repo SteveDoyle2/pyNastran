@@ -117,7 +117,6 @@ class MainWindow(GuiCommon, NastranIO):
             'fast',
             'lawgs',
             'obj',
-            'openfoam_hex', 'openfoam_shell', 'openfoam_faces', # openfoam - results
             'panair',  # results
             'shabp',  # results
             'stl',

@@ -64,7 +64,6 @@ def determine_format(input_filename: str,
             #'plot3d',
             'surf', 'lawgs', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen',
-            'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
             'avl', 'vtk',
         ]
         if DEV:
@@ -170,7 +169,6 @@ def run_argparse(argv: list[str]) -> dict[str, str]:
         'Primary Options:\n'
         # plot3d,
         '  -f FORMAT, --format FORMAT  format type (avus, bedge, cart3d, lawgs, nastran,\n'
-        '                                  openfoam_hex, openfoam_shell, openfoam_faces,\n'
         '                                  panair, stl, surf, tetgen, usm3d, ugrid, ugrid3d)\n'
         '  -i INPUT, --input INPUT     path to input file\n'
         '  -o OUTPUT, --output OUTPUT  path to output file\n'
@@ -258,13 +256,13 @@ def run_argparse(argv: list[str]) -> dict[str, str]:
 
     parent_parser.add_argument('-f', '--format', type=str, nargs=1, action=append_action,
                                help='format type (avus, bedge, cart3d, lawgs, nastran, '
-                               'openfoam_hex, openfoam_shell, openfoam_faces, panair, '
+                               'panair, '
                                'stl, surf, tetgen, usm3d, ugrid, ugrid3d, #plot3d)')
 
     # double args
     #parent_parser.add_argument('-f', '--format', type=str,
                                #help='format type (avus, bedge, cart3d, lawgs, nastran, '
-                               #'openfoam_hex, openfoam_shell, openfoam_faces, panair, '
+                               #'panair, '
                                #'stl, surf, tetgen, usm3d, ugrid, ugrid3d, #plot3d)',
                                #action='append')
     parent_parser.add_argument('-g', '--geomscript', type=str,
@@ -463,7 +461,7 @@ def _validate_format(input_formats: list[str]) -> None:
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
-        'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'avl', 'vtk',
+        'avl', 'vtk',
         None,  # I think None is for the null case
     ]
 

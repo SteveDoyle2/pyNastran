@@ -4,7 +4,6 @@ from pyNastran.converters.nastran.test_nastran import TestNastran
 
 from pyNastran.converters.cart3d.test_cart3d import TestCart3d
 from pyNastran.converters.fast.test_fast import TestFast
-from pyNastran.converters.openfoam.test_openfoam import TestOpenFOAM
 from pyNastran.converters.panair.test_panair import TestPanair
 from pyNastran.converters.stl.test_stl import TestSTL
 from pyNastran.converters.tecplot.test_tecplot import TestTecplot

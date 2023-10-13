@@ -141,14 +141,6 @@ if DEV:
         pass
 
     try:
-        from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
-        CLASS_MAP['openfoam_hex'] = OpenFoamIO
-        CLASS_MAP['openfoam_shell'] = OpenFoamIO
-        CLASS_MAP['openfoam_faces'] = OpenFoamIO
-    except ImportError:  # pragma: no cover
-        pass
-
-    try:
         from pyNastran.converters.dev.obj.obj_io import ObjIO
         CLASS_MAP['obj'] = ObjIO
     except ImportError:  # pragma: no cover
