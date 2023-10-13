@@ -116,6 +116,9 @@ class PLOAD(Load):
         self.node_id = node_id
         self.n = nloads
 
+    def convert(self, pressure_scale: float, **kwargs) -> None:
+        self.pressure *= pressure_scale
+
     def __apply_slice__(self, load: PLOAD, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
@@ -297,6 +300,14 @@ class PLOAD1(Load):
         self.pressure = pressure
         self.n = nloads
 
+    def convert(self, force_scale: float=1.0,
+                pressure_scale: float=1.0, **kwargs) -> None:
+        x1 = self.x.min(axis=1)
+        x2 = self.x.max(axis=1)
+        is_fixed = (x1 == x2)
+        is_dist = ~is_fixed
+        self.pressure[is_fixed] *= force_scale
+        self.pressure[is_dist] *= pressure_scale
 
     def __apply_slice__(self, load: PLOAD1, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
@@ -667,6 +678,9 @@ class PLOAD2(Load):
         self.nelement = nelement
         self.n = nloads
 
+    def convert(self, pressure_scale: float=1.0, **kwargs) -> None:
+        self.pressure *= pressure_scale
+
     def __apply_slice__(self, load: PLOAD2, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
@@ -946,6 +960,9 @@ class PLOAD4(Load):
         self.nvector = nvector
         self.nelement = nelement
         self.n = nloads
+
+    def convert(self, pressure_scale: float=1.0, **kwargs) -> None:
+        self.pressure *= pressure_scale
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id

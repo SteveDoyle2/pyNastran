@@ -1228,6 +1228,15 @@ class PCOMPS(Property):
         self.ge = ge
         self.coord_id = coord_id
 
+    def convert(self, xyz_scale: float=1.0,
+                temperature_scale: float=1.0,
+                **kwargs) -> None:
+        #self.sb
+        #self.nb
+        self.tref *= temperature_scale
+        #self.ge # should be non-dimensional
+        self.thickness *= xyz_scale
+
     @property
     def iply(self) -> np.ndarray:
         return make_idim(self.n, self.nply)
@@ -1531,6 +1540,14 @@ class PCOMPLS(Property):
         self.c20 = c20
         #self.model.log.warning(f'saved PCOMPLS; material_id={self.material_id}')
         assert len(self.material_id) > 0, self.material_id
+
+
+    def convert(self, xyz_scale: float=1.0,
+                **kwargs) -> None:
+        #self.sb
+        #self.nb
+        #self.ge # should be non-dimensional
+        self.thickness *= xyz_scale
 
     @property
     def iply(self) -> np.ndarray:

@@ -229,6 +229,19 @@ class MAT1(Material):
         self.Sc = Sc
         self.mcsid = mcsid
 
+    def convert(self, stiffness_scale: float=1.0,
+                density_scale: float=1.0,
+                alpha_scale: float=1.0,
+                temperature_scale: float=1.0,
+                stress_scale: float=1.0, **kwargs) -> None:
+        self.E *= stiffness_scale
+        self.G *= stiffness_scale
+        self.rho *= density_scale
+        self.alpha *= alpha_scale
+        self.Ss *= stress_scale
+        self.St *= stress_scale
+        self.Sc *= stress_scale
+
     def __apply_slice__(self, mat: MAT1, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
         mat.material_id = self.material_id[i]
@@ -438,7 +451,6 @@ class MAT2(Material):
         self.material_id = material_id
         self.G11 = G11
         self.G12 = G12
-        #print(G12.shape, G11.shape)
         self.G13 = G13
         self.G22 = G22
         self.G23 = G23
@@ -456,6 +468,23 @@ class MAT2(Material):
             ge_matrix = np.full((nmaterial, 6), np.nan, dtype='float64')
         self.ge_matrix = ge_matrix
         self.n = len(material_id)
+
+    def convert(self, stiffness_scale: float=1.0,
+                density_scale: float=1.0,
+                alpha_scale: float=1.0,
+                temperature_scale: float=1.0,
+                stress_scale: float=1.0, **kwargs) -> None:
+        self.G11 *= stiffness_scale
+        self.G12 *= stiffness_scale
+        self.G13 *= stiffness_scale
+        self.G22 *= stiffness_scale
+        self.G23 *= stiffness_scale
+        self.G33 *= stiffness_scale
+        self.rho *= density_scale
+        self.alpha *= alpha_scale
+        self.Ss *= stress_scale
+        self.St *= stress_scale
+        self.Sc *= stress_scale
 
     def validate(self):
         assert isinstance(self.material_id, np.ndarray), self.material_id
@@ -1215,6 +1244,24 @@ class MAT8(Material):
         mat.f12 = self.f12[i]
         mat.strn = self.strn[i]
 
+    def convert(self, stiffness_scale: float=1.0,
+                density_scale: float=1.0,
+                alpha_scale: float=1.0,
+                temperature_scale: float=1.0,
+                stress_scale: float=1.0, **kwargs) -> None:
+        self.E11 *= stiffness_scale
+        self.E22 *= stiffness_scale
+        self.G12 *= stiffness_scale
+        self.G13 *= stiffness_scale
+        self.G23 *= stiffness_scale
+        self.rho *= density_scale
+        self.alpha *= alpha_scale
+        self.Xt *= stress_scale
+        self.Xc *= stress_scale
+        self.Yt *= stress_scale
+        self.Yc *= stress_scale
+        self.S *= stress_scale
+
     @property
     def a1(self) -> np.ndarray:
         return self.alpha[:, 0]
@@ -1531,6 +1578,42 @@ class MAT9(Material):
         mat.ge = self.ge[i]
         mat.ge_list = self.ge_list[i, :]
 
+    def convert(self, stiffness_scale: float=1.0,
+                density_scale: float=1.0,
+                alpha_scale: float=1.0,
+                temperature_scale: float=1.0,
+                stress_scale: float=1.0, **kwargs) -> None:
+        self.G11 *= stiffness_scale
+        self.G12 *= stiffness_scale
+        self.G13 *= stiffness_scale
+        self.G14 *= stiffness_scale
+        self.G15 *= stiffness_scale
+        self.G16 *= stiffness_scale
+        self.G22 *= stiffness_scale
+        self.G23 *= stiffness_scale
+        self.G24 *= stiffness_scale
+        self.G25 *= stiffness_scale
+        self.G26 *= stiffness_scale
+
+        self.G33 *= stiffness_scale
+        self.G34 *= stiffness_scale
+        self.G35 *= stiffness_scale
+        self.G36 *= stiffness_scale
+        self.G44 *= stiffness_scale
+        self.G45 *= stiffness_scale
+        self.G46 *= stiffness_scale
+        self.G55 *= stiffness_scale
+        self.G56 *= stiffness_scale
+        self.G66 *= stiffness_scale
+
+        self.rho *= density_scale
+        self.alpha *= alpha_scale
+        #self.Xt *= stress_scale
+        #self.Xc *= stress_scale
+        #self.Yt *= stress_scale
+        #self.Yc *= stress_scale
+        #self.S *= stress_scale
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
@@ -1731,6 +1814,15 @@ class MAT10(Material):
         self.table_id_ge = table_id_ge
         self.table_id_gamma = table_id_gamma
         self.n = len(material_id)
+
+    def convert(self, pressure_scale: float=1.0,
+                velocity_scale: float=1.0,
+                temperature_scale: float=1.0,
+                alpha_scale: float=1.0, **kwargs) -> None:
+        self.bulk *= pressure_scale
+        self.c *= velocity_scale
+        ialpha = (self.is_alpha == 1)
+        self.alpha_gamma[ialpha] *= alpha_scale
 
     #def _save_msc(self, material_id, bulk, rho, c, ge, alpha):
         #nmaterial = len(material_id)
@@ -2045,6 +2137,12 @@ class MAT10C(Material):
         self.rho = rho
         self.c = c
         self.n = len(material_id)
+
+    def convert(self,
+                velocity_scale: float=1.0,
+                density_scale: float=1.0, **kwargs) -> None:
+        self.c *= velocity_scale
+        self.rho *= density_scale
 
     def __apply_slice__(self, mat: MAT10C, i: np.ndarray) -> None:
         mat.n = len(i)
