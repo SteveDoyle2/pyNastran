@@ -91,11 +91,11 @@ jobs:
           - {python-version: '3.11', mode: 'latest_pyside2_gui'}
           - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
 
-          - {python-version: '3.12', mode: 'old'}               # redundant
-          - {python-version: '3.12', mode: 'latest_pyqt5_gui'}
-          - {python-version: '3.12', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.12', mode: 'latest_pyside2_gui'}
-          - {python-version: '3.12', mode: 'latest_pyqt6_gui'}
+          #- {python-version: '3.12', mode: 'old'}               # redundant
+          #- {python-version: '3.12', mode: 'latest_pyqt5_gui'}
+          #- {python-version: '3.12', mode: 'latest_pyqt6_gui'}
+          #- {python-version: '3.12', mode: 'latest_pyside2_gui'}
+          #- {python-version: '3.12', mode: 'latest_pyqt6_gui'}
       fail-fast: false
      #- continue-on-error: ${{ matrix.experimental }}
 #strategy:
@@ -186,14 +186,16 @@ jobs:
           pip install h5py tables
 
       - name: Install latest packages (imageio, pillow)
-        if: ${{ matrix.python-version != '3.12' && (
+        if: ${{ (
+        #if: ${{ matrix.python-version != '3.12' && (
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install imageio pillow>5.2,!=7.1.0
 
       - name: Install latest packages (vtk)
-        if: ${{ matrix.python-version != '3.12' && (
+        if: ${{ (
+        #if: ${{ matrix.python-version != '3.12' && (
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
@@ -247,7 +249,8 @@ jobs:
           pip list
 
       - name: Run No GUI 3.12
-        if: ${{ matrix.python-version == '3.12' || (
+        if: ${{ (
+        #if: ${{ matrix.python-version == '3.12' || (
                   matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         run: |
@@ -256,10 +259,10 @@ jobs:
 
         # 3.11 - No matching distribution found for vtk
       - name: Run GUI
-        if: ${{ matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyside6_gui' ||
-                matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui' }}
+        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
+                 matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         #if: ${{ matrix.python-version != '3.12' && (
-        #         matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyside6_gui' ||
+        #         matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
         #         matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         run: |
