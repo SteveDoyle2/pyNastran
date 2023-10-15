@@ -188,16 +188,19 @@ jobs:
       - name: Install latest packages (imageio, pillow)
         if: ${{ (
         #if: ${{ matrix.python-version != '3.12' && (
-                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
-                matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        #        matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
+        #        matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
+                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install imageio pillow>5.2,!=7.1.0
 
       - name: Install latest packages (vtk)
-        if: ${{ (
         #if: ${{ matrix.python-version != '3.12' && (
-                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
-                matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        #       matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
+        #       matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
+        if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
+                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
           pip install vtk
 
@@ -249,9 +252,9 @@ jobs:
           pip list
 
       - name: Run No GUI 3.12
-        if: ${{ (
         #if: ${{ matrix.python-version == '3.12' || (
-                  matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
+        #          matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
+        if: ${{ (matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         run: |
          python pyNastran/all_tests_no_gui.py
