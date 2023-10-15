@@ -859,12 +859,9 @@ class POINT(VectorizedBaseCard):
         self.cards.append((nid, xyz, cp, comment))
         self.n += 1
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self):
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         if self.debug:
             self.model.log.debug('parse POINT')
 

@@ -8,17 +8,29 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.convert import convert
 #from pyNastran.dev.bdf_vectorized3.mesh_utils.convert import convert
 #if TYPE_CHECKING:  # pragma: no cover
 
-def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=True,
-                   run_convert=True, run_renumber=True, run_mirror=True,
-                   run_save_load=True, run_quality=True, write_saves=True,
-                   run_save_load_hdf5=True, run_mass_properties=True, run_loads=True,
-                   run_test_bdf=True, run_op2_writer=True, run_op2_reader=True,
-                   remove_disabled_cards=True,
-                   run_read_write=True,
+def save_load_deck(model: BDF,
+                   xref: str='standard',
+                   punch: bool=True,
+                   run_remove_unused: bool=True,
+                   run_convert: bool=True,
+                   run_renumber: bool=True,
+                   run_mirror: bool=True,
+                   run_save_load: bool=True,
+                   run_quality: bool=True,
+                   write_saves: bool=True,
+                   run_save_load_hdf5: bool=True,
+                   run_mass_properties: bool=True,
+                   run_loads: bool=True,
+                   run_test_bdf: bool=True,
+                   run_op2_writer: bool=True,
+                   run_op2_reader: bool=True,
+                   remove_disabled_cards: bool=True,
+                   run_read_write: bool=True,
+                   run_geom_check: bool=True,
                    nastran_format: str='nx',
                    op2_log_level: str='warning') -> BDF:
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
-    model.setup(run_geom_check=True)
+    model.setup(run_geom_check=run_geom_check)
     if run_quality:
         model.quality()
 

@@ -76,7 +76,10 @@ class DEFORM(Load):
     def slice_card_by_index(self, i: np.ndarray) -> DEFORM:
         load = DEFORM(self.model)
         self.__apply_slice__(load, i)
-        return load
+        return
+
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        self.enforced *= xyz_scale
 
     def __apply_slice__(self, load: DEFORM, i: np.ndarray) -> None:
         load.n = len(i)
@@ -276,6 +279,7 @@ class SPCD(Load):
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
+        idtype = self.model.idtype
         #ncards = len(self.cards)
         load_ids = []
         all_nodes = []
@@ -288,7 +292,7 @@ class SPCD(Load):
             all_components.extend(componentsi)
             all_enforced.extend(enforcedi)
         load_id = np.array(load_ids, dtype='int32')
-        nodes = np.array(all_nodes, dtype='int32')
+        nodes = np.array(all_nodes, dtype=idtype)
         components = np.array(all_components, dtype='int32')
         enforced = np.array(all_enforced, dtype='float64')
         self._save(load_id, nodes, components, enforced)
@@ -364,8 +368,9 @@ class Load0(Load):
     @Load.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
         load_id = np.zeros(ncards, dtype='int32')
-        node_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype=idtype)
         coord_id = np.zeros(ncards, dtype='int32')
         mag = np.zeros(ncards, dtype='float64')
         xyz = np.zeros((ncards, 3), dtype='float64')
@@ -477,8 +482,9 @@ class Load1(Load):
     @Load.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
         load_id = np.zeros(ncards, dtype='int32')
-        node_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype=idtype)
         mag = np.zeros(ncards, dtype='float64')
         nodes = np.zeros((ncards, 2), dtype='int32')
         assert ncards > 0, ncards
@@ -576,16 +582,14 @@ class Load2(Load):
         self.n += 1
         return self.n
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
+        idtype = self.model.idtype
         load_id = np.zeros(ncards, dtype='int32')
-        node_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype=idtype)
         mag = np.zeros(ncards, dtype='float64')
-        nodes = np.zeros((ncards, 4), dtype='int32')
+        nodes = np.zeros((ncards, 4), dtype=idtype)
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
             (sid, node, magi, nodesi, comment) = card
@@ -644,6 +648,9 @@ class FORCE(Load0):
         load = FORCE(self.model)
         self.__apply_slice__(load, i)
         return load
+
+    def convert(self, force_scale: float=1.0, **kwargs) -> None:
+        self.mag *= force_scale
 
     def __apply_slice__(self, load: FORCE, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
@@ -707,6 +714,9 @@ class MOMENT(Load0):
         self.__apply_slice__(load, i)
         return load
 
+    def convert(self, moment_scale: float=1.0, **kwargs) -> None:
+        self.mag *= moment_scale
+
     def __apply_slice__(self, load: MOMENT, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
@@ -766,6 +776,9 @@ class FORCE1(Load1):
         self.__apply_slice__(load, i)
         return load
 
+    def convert(self, force_scale: float=1.0, **kwargs) -> None:
+        self.mag *= force_scale
+
     def __apply_slice__(self, load: FORCE1, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
@@ -806,6 +819,9 @@ class MOMENT1(Load1):
         self.__apply_slice__(load, i)
         return load
 
+    def convert(self, moment_scale: float=1.0, **kwargs) -> None:
+        self.mag *= moment_scale
+
     def __apply_slice__(self, load: MOMENT1, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
         load.load_id = self.load_id[i]
@@ -844,6 +860,9 @@ class FORCE2(Load2):
         load = FORCE2(self.model)
         self.__apply_slice__(load, i)
         return load
+
+    def convert(self, force_scale: float=1.0, **kwargs) -> None:
+        self.mag *= force_scale
 
     def __apply_slice__(self, load: FORCE2, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
@@ -893,6 +912,9 @@ class MOMENT2(Load2):
         load = MOMENT2(self.model)
         self.__apply_slice__(load, i)
         return load
+
+    def convert(self, moment_scale: float=1.0, **kwargs) -> None:
+        self.mag *= moment_scale
 
     def __apply_slice__(self, load: MOMENT2, i: np.ndarray) -> None:  # ignore[override]
         load.n = len(i)
@@ -953,6 +975,9 @@ class GRAV(Load):
         load = GRAV(self.model)
         self.__apply_slice__(load, i)
         return load
+
+    def convert(self, accel_scale: float=1.0, **kwargs) -> None:
+        self.scale *= accel_scale
 
     def __apply_slice__(self, load: GRAV, i: np.ndarray) -> None:
         load.n = len(i)
@@ -1259,6 +1284,9 @@ class ACCEL1(Load):
         self.__apply_slice__(load, i)
         return load
 
+    def convert(self, accel_scale: float=1.0, **kwargs) -> None:
+        self.scale *= accel_scale
+
     def __apply_slice__(self, load: ACCEL1, i: np.ndarray) -> None:
         load.n = len(i)
         load.load_id = self.load_id[i]
@@ -1322,6 +1350,7 @@ class ACCEL1(Load):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
 
         #: Set identification number
         load_id = np.zeros(ncards, dtype='int32')
@@ -1349,7 +1378,7 @@ class ACCEL1(Load):
             N[icard, :] = Ni
         #assert isinstance(nnodes.tolist()[0], int), nnodes[0]
 
-        nodes = np.array(nodes, dtype='int32')
+        nodes = np.array(nodes, dtype=idtype)
         self._save(load_id, coord_id, scale, nnodes, nodes, N)
         assert len(self.load_id) == self.n
         self.cards = []
@@ -1450,7 +1479,6 @@ class LOAD(Load):
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
             (sid, scalei, scale_factors, load_ids, comment) = card
-
             nloads_actual = len(scale_factors)
 
             load_id[icard] = sid
@@ -1773,7 +1801,7 @@ class SLOAD(Load):
     @Load.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
+        idtype = self.model.idtype
         all_sids = []
         all_nodes = []
         all_mags = []
@@ -1786,7 +1814,7 @@ class SLOAD(Load):
             all_mags.extend(magsi)
 
         load_id = np.array(all_sids, dtype='int32')
-        nodes = np.array(all_nodes, dtype='int32')
+        nodes = np.array(all_nodes, dtype=idtype)
         mags = np.array(all_mags, dtype='float64')
         self._save(load_id, nodes, mags)
         self.sort()
@@ -1861,6 +1889,9 @@ class RFORCE(Load):
         load.racc = self.racc[i]
         load.main_bulk = self.main_bulk[i]
         load.idrf = self.idrf[i]
+
+    #def convert(self, accel_scale: float=1.0, **kwargs) -> None:
+        #self.scale *= accel_scale
 
     def add(self, sid: int, nid: int, scale: float, r123: list[float],
             cid: int=0, method: int=1, racc: float=0.,
@@ -1942,13 +1973,14 @@ class RFORCE(Load):
     @Load.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
 
         #: Set identification number
         load_id = np.zeros(ncards, dtype='int32')
 
         # nid : int
         #     grid point through which the rotation vector acts
-        node_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype=idtype)
 
         # cid : int; default=0
         #     Coordinate system defining the components of the rotation vector.
@@ -2167,13 +2199,14 @@ class RFORCE1(Load):
     @Load.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
 
         #: Set identification number
         load_id = np.zeros(ncards, dtype='int32')
 
         # nid : int
         #     grid point through which the rotation vector acts
-        node_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype=idtype)
 
         # cid : int; default=0
         #     Coordinate system defining the components of the rotation vector.

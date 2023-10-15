@@ -77,6 +77,16 @@ class COORD(VectorizedBaseCard):
         coord = cls.slice_card_by_index(i)
         return coord
 
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        is_xyz = (self.icoord == 2) & (self.coord_type == 'R')
+        is_rtz = (self.icoord == 2) & (self.coord_type == 'C')
+        is_rtp = (self.icoord == 2) & (self.coord_type == 'S')
+        for res in [self.origin, self.z_axis, self.xz_plane, self.e1, self.e2, self.e3]:
+            res[is_xyz, :] *= xyz_scale # xyz
+            res[is_rtz, 0] *= xyz_scale # R
+            res[is_rtz, 2] *= xyz_scale # z
+            res[is_rtp, 0] *= xyz_scale # rho
+
     def __apply_slice__(self, coord: COORD, i: np.ndarray) -> None:
         # general
         coord.n = len(i)

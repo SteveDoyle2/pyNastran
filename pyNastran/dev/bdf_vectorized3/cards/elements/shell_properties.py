@@ -148,13 +148,9 @@ class PSHELL(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
-
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros((ncards, 4), dtype='int32')
         t = np.zeros(ncards, dtype='float64')
@@ -1645,12 +1641,9 @@ class PLPLANE(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         self.property_id = np.zeros(ncards, dtype='int32')
         self.material_id = np.zeros(ncards, dtype='int32')
         self.coord_id = np.zeros(ncards, dtype='int32')

@@ -167,6 +167,14 @@ def array_default_float_nan(ndarray: np.ndarray, default=0.,
     str_array[idefault] = ''
     return str_array
 
+def array_default_floats(ndarray: np.ndarray, defaults: np.ndarray,
+                         size: int=8, is_double: float=False) -> np.ndarray:
+    values_str = array_float(ndarray, size=size, is_double=is_double)
+    defaults_str = array_float(defaults, size=size, is_double=is_double)
+    idefault = (values_str == defaults_str)
+    values_str[idefault] = ''
+    return values_str
+
 def array_default_str(ndarray: np.ndarray, default: str='', size: int=8) -> np.ndarray:
     idefault = np.where(ndarray == default)
     val0 = ndarray.ravel()[0]

@@ -16,7 +16,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
     parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_float, array_default_int, array_default_float)
+    array_str, array_float, array_default_int, array_default_float, array_default_floats)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from .bar import get_bar_vector, safe_normalize, line_length
@@ -745,13 +745,9 @@ class PDAMPT(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self):
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         property_id = np.zeros(ncards, dtype='int32')
 
         #: Identification number of a TABLEDi entry that defines the
@@ -1077,6 +1073,32 @@ class CGAP(Element):
         self.x = x
         self.g0 = g0
 
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        """
+        x is i
+        """
+        icoord = (self.coord_id != -1)
+        ncoord = icoord.sum()
+        is_x = self.is_x
+
+        #xmax = self.x.max(axis=1)
+        #xnan = np.isnan(xmax)
+        nx = is_x.sum()
+        if nx:
+            ga = self.nodes[is_x, 0]
+            grid_ga = self.model.grid.slice_card_by_id(ga, assume_sorted=True, sort_ids=False)
+            cp = grid_ga.cp
+            coords = self.model.coord.slice_card_by_id(cp, assume_sorted=True, sort_ids=False)
+            xi = self.x[is_x, :].copy()
+            ixyz = (coords.coord_type == 'R')
+            irtz = (coords.coord_type == 'C')
+            irtp = (coords.coord_type == 'S')
+            xi[ixyz, :] *= xyz_scale
+            xi[irtz, 0] *= xyz_scale
+            xi[irtz, 2] *= xyz_scale
+            xi[irtp, 0] *= xyz_scale
+            self.x[is_x] = xi
+
     def __apply_slice__(self, elem: CGAP, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
@@ -1297,41 +1319,90 @@ class PGAP(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self):
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.cr = np.zeros(ncards, dtype='float64')
-        self.u0 = np.zeros(ncards, dtype='float64')
-        self.f0 = np.zeros(ncards, dtype='float64')
-        self.ka = np.zeros(ncards, dtype='float64')
-        self.kb = np.zeros(ncards, dtype='float64')
-        self.kt = np.zeros(ncards, dtype='float64')
-        self.mu1 = np.zeros(ncards, dtype='float64')
-        self.mu2 = np.zeros(ncards, dtype='float64')
-        self.tmax = np.zeros(ncards, dtype='float64')
-        self.mar = np.zeros(ncards, dtype='float64')
-        self.trmin = np.zeros(ncards, dtype='float64')
+        property_id = np.zeros(ncards, dtype='int32')
+        u0 = np.zeros(ncards, dtype='float64')
+        f0 = np.zeros(ncards, dtype='float64')
+        ka = np.zeros(ncards, dtype='float64')
+        kb = np.zeros(ncards, dtype='float64')
+        kt = np.zeros(ncards, dtype='float64')
+        mu1 = np.zeros(ncards, dtype='float64')
+        mu2 = np.zeros(ncards, dtype='float64')
+        tmax = np.zeros(ncards, dtype='float64')
+        mar = np.zeros(ncards, dtype='float64')
+        trmin = np.zeros(ncards, dtype='float64')
 
         for icard, card in enumerate(self.cards):
-            (pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin, comment) = card
-            self.property_id[icard] = pid
-            self.u0[icard] = u0
-            self.f0[icard] = f0
-            self.ka[icard] = ka
-            self.kb[icard] = kb
-            self.kt[icard] = kt
-            self.mu1[icard] = mu1
-            self.mu2[icard] = mu2
+            (pid, u0i, f0i, kai, kbi, mu1i, kti, mu2i, tmaxi, mari, trmini, commenti) = card
+            property_id[icard] = pid
+            u0[icard] = u0i
+            f0[icard] = f0i
+            ka[icard] = kai
+            kb[icard] = kbi
+            kt[icard] = kti
+            mu1[icard] = mu1i
+            mu2[icard] = mu2i
 
-            self.tmax[icard] = tmax
-            self.mar[icard] = mar
-            self.trmin[icard] = trmin
+            tmax[icard] = tmaxi
+            mar[icard] = mari
+            trmin[icard] = trmini
+        self._save(property_id, u0, f0, ka, kb, kt, mu1, mu2, tmax, mar, trmin)
         self.cards = []
+
+    def _save(self, property_id, u0, f0, ka, kb, kt, mu1, mu2, tmax, mar, trmin):
+        self.property_id = property_id
+        self.u0 = u0
+        self.f0 = f0
+        self.ka = ka
+        self.kb = kb
+        self.kt = kt
+        self.mu1 = mu1
+        self.mu2 = mu2
+        self.tmax = tmax
+        self.mar = mar
+        self.trmin = trmin
+
+    def convert(self, xyz_scale: float=1.0,
+                force_scale: float=1.0,
+                stiffness_scale: float=1.0, **kwargs) -> None:
+        """
+        u0 : float; default=0.
+            Initial gap opening
+        f0 : float; default=0.
+            Preload
+        ka : float; default=1.e8
+            Axial stiffness for the closed gap
+        kb : float; default=None -> 1e-14 * ka
+            Axial stiffness for the open gap
+        mu1 : float; default=0.
+            Coefficient of static friction for the adaptive gap element
+            or coefficient of friction in the y transverse direction
+            for the nonadaptive gap element
+        kt : float; default=None -> mu1*ka
+            Transverse stiffness when the gap is closed
+        mu2 : float; default=None -> mu1
+            Coefficient of kinetic friction for the adaptive gap element
+            or coefficient of friction in the z transverse direction
+            for the nonadaptive gap element
+        tmax : float; default=0.
+            Maximum allowable penetration used in the adjustment of
+            penalty values. The positive value activates the penalty
+            value adjustment
+        mar : float; default=100.
+            Maximum allowable adjustment ratio for adaptive penalty
+            values KA and KT
+        trmin : float; default=0.001
+            Fraction of TMAX defining the lower bound for the allowable
+            penetration
+
+        """
+        self.u0 *= xyz_scale
+        self.f0 *= force_scale
+        self.ka *= stiffness_scale
+        self.kb *= stiffness_scale
+        self.tmax *= xyz_scale
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
@@ -1343,21 +1414,36 @@ class PGAP(Property):
         print_card = get_print_card_8_16(size)
 
         property_ids = array_str(self.property_id, size=size)
+        u0s = array_default_float(self.u0, default=0.0, size=size, is_double=is_double)
+        f0s = array_default_float(self.f0, default=0.0, size=size, is_double=is_double)
+        mu1s = array_default_float(self.mu1, default=0.0, size=size, is_double=is_double)
+        mars = array_default_float(self.mar, default=100.0, size=size, is_double=is_double)
+        tmaxs = array_default_float(self.tmax, default=0.0, size=size, is_double=is_double)
+        trmins = array_default_float(self.trmin, default=0.001, size=size, is_double=is_double)
+
+        kas = array_default_float(self.ka, default=1e8, size=size, is_double=is_double)
+        kb_default = 1e-14 * self.ka
+        kbs = array_default_floats(self.kb, kb_default, size=size, is_double=is_double)
+
+        kt_default = self.mu1 * self.ka
+        kts = array_default_floats(self.kt, kt_default, size=size, is_double=is_double)
+
         for pid, u0, f0, ka, kb, kt, mu1, mu2, \
-            tmax, mar, trmin in zip_longest(property_ids, self.u0, self.f0, self.ka, self.kb, self.kt,
-                                            self.mu1, self.mu2, self.tmax, self.mar, self.trmin):
-            u0 = set_blank_if_default(u0, 0.)
-            f0 = set_blank_if_default(f0, 0.)
+            tmax, mar, trmin in zip_longest(property_ids, u0s, f0s, kas, kbs, kts,
+                                            mu1s, self.mu2, tmaxs, mars, trmins):
+            #u0 = set_blank_if_default(u0, 0.)
+            #f0 = set_blank_if_default(f0, 0.)
+
             # ka doesn't have a default in MSC 2005r2
             #ka = set_blank_if_default(ka, 1.e8)
-            kb = set_blank_if_default(kb, 1e-14 * ka)
-            kt = set_blank_if_default(kt, mu1 * ka)
+            #kb = set_blank_if_default(kb, 1e-14 * ka)
+            #kt = set_blank_if_default(kt, mu1 * ka)
 
-            mu1 = set_blank_if_default(mu1, 0.)
+            #mu1 = set_blank_if_default(mu1, 0.)
             mu2 = set_blank_if_default(mu2, mu1)
-            tmax = set_blank_if_default(tmax, 0.)
-            mar = set_blank_if_default(mar, 100.)
-            trmin = set_blank_if_default(trmin, 0.001)
+            #tmax = set_blank_if_default(tmax, 0.)
+            #mar = set_blank_if_default(mar, 100.)
+            #trmin = set_blank_if_default(trmin, 0.001)
 
             list_fields = ['PGAP', pid, u0, f0, ka, kb, kt, mu1, mu2,
                            tmax, mar, trmin]

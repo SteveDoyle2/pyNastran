@@ -771,12 +771,9 @@ class PTUBE(Property):
         prop.material_id = self.material_id[i]
         prop.n = len(i)
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         diameter = np.zeros((ncards, 2), dtype='float64')

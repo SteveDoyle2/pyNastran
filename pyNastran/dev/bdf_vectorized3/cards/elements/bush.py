@@ -191,6 +191,44 @@ class CBUSH(Element):
         self.ocid = ocid
         self.ocid_offset = ocid_offset
 
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        """
+        s: float; default=0.5
+            Location of spring damper (0 <= s <= 1.0)
+        si : list[float, float, float]; default=None
+            Components of spring-damper offset in the OCID coordinate system
+            if OCID > 0.
+            None : [None, None, None]
+        """
+        icoord = (self.coord_id != -1)
+        ncoord = icoord.sum()
+
+        is_x = self.is_x
+
+        #xmax = self.x.max(axis=1)
+        #xnan = np.isnan(xmax)
+        nx = is_x.sum()
+        if nx:
+            ga = self.nodes[is_x, 0]
+            grid_ga = self.model.grid.slice_card_by_id(ga, assume_sorted=True, sort_ids=False)
+            cp = grid_ga.cp
+            coords = self.model.coord.slice_card_by_id(cp, assume_sorted=True, sort_ids=False)
+            xi = self.x[is_x, :].copy()
+            ixyz = (coords.coord_type == 'R')
+            irtz = (coords.coord_type == 'C')
+            irtp = (coords.coord_type == 'S')
+            xi[ixyz, :] *= xyz_scale
+            xi[irtz, 0] *= xyz_scale
+            xi[irtz, 2] *= xyz_scale
+            xi[irtp, 0] *= xyz_scale
+            self.x[is_x] = xi
+
+        #if ncoord:
+            #asfd
+            #ib = self.offt
+        self.s *= xyz_scale
+        self.si *= xyz_scale
+
     def __apply_slice__(self, elem: CBUSH, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
@@ -526,6 +564,25 @@ class PBUSH(Property):
             coincident_length[icard] = coincident_lengthi
         self._save(k_fields, b_fields, ge_fields, rcv_fields, _mass, alpha, tref, coincident_length)
         self.cards = []
+
+    def convert(self,
+                xyz_scale: float=1.0,
+                mass_scale: float=1.0,
+                temperature_scale: float=1.0,
+                linear_stiffness_scale: float= 1.0,
+                rotational_stiffness_scale: float= 1.0,
+                linear_damping_scale: float= 1.0,
+                rotational_damping_scale: float= 1.0,
+                alpha_scale: float=1.0, **kwargs) -> None:
+        self._mass *= mass_scale
+        self.k_fields[:, [0, 1, 2]] *= linear_stiffness_scale
+        self.k_fields[:, [3, 4, 5]] *= rotational_stiffness_scale
+
+        self.b_fields[:, [0, 1, 2]] *= linear_damping_scale
+        self.b_fields[:, [3, 4, 5]] *= rotational_damping_scale
+        self.coincident_length *= temperature_scale
+        self.tref *= xyz_scale
+        self.alpha *= alpha_scale
 
     def _save(self, k_fields, b_fields, ge_fields, rcv_fields, _mass, alpha, tref, coincident_length) -> None:
         self.k_fields = k_fields

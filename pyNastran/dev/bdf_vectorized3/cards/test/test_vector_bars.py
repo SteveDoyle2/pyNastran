@@ -189,6 +189,34 @@ class TestBars(unittest.TestCase):
         model.setup()
         #save_load_deck(model)
 
+    def test_cbar_cbarao(self):
+        """modification of test_cbeam_01"""
+        model = BDF(debug=False)
+        pid = 200
+        mid = 6
+        model.add_pbar(pid, mid, A=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
+                       d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
+                       k2=1.e8, comment='pbar')
+
+
+        eid = 100
+        nids = [10, 20]
+        x = None
+        g0 = 30
+        cbar = model.add_cbar(eid, pid, nids, x, g0, comment='cbar')
+        model.add_cbarao(eid, 'LE', [0., 0.4, 0.5, 0.9], comment='cbarao')
+        #cbar.write_card_16(is_double=False)
+
+        E = 1.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [0., 1., 0.])
+        model.add_grid(30, [0., 2., 0.])
+        model.setup()
+        save_load_deck(model)
+
     def test_cbar_g0(self):
         """modification of test_cbeam_01"""
         model = BDF(debug=False)

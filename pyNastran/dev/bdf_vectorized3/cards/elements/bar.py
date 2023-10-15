@@ -285,11 +285,12 @@ class CBAR(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = []
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype='int32')
         nodes = []
         offt = np.full(ncards, '', dtype='|U3')
-        g0 = np.zeros(ncards, dtype='int32')
+        g0 = np.zeros(ncards, dtype=idtype)
         x = np.full((ncards, 3), np.nan, dtype='float64')
 
         pa = np.zeros(ncards, dtype='int32')
@@ -299,7 +300,7 @@ class CBAR(Element):
 
         for icard, card in enumerate(self.cards):
             (eid, pid, nids, xi, g0i, offti, pai, pbi, wai, wbi, comment) = card
-            element_id.append(eid)
+            element_id[icard] = eid
             property_id[icard] = pid
             nodes.append(nids)
 
@@ -1638,6 +1639,17 @@ class CBARAO(Element):
         self.n += 1
         return self.n
 
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        #LE : x is in absolute coordinates along the bar
+        #FR : x is in fractional
+        is_le = (self.scale == 'LE')
+        nle = is_le.sum()
+        if nle:
+            for ile, (istation0, istation1) in zip(is_le, self.istation):
+                if not ile:
+                    continue
+                self.station[istation0:istation1] *= xyz_scale
+
     def __apply_slice__(self, elem: CBARAO, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
         elem.scale = self.scale[i]
@@ -1649,7 +1661,8 @@ class CBARAO(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = []
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
         station: list[float] = []
 
         scale = np.zeros(ncards, dtype='|U2')
@@ -1657,13 +1670,14 @@ class CBARAO(Element):
 
         for icard, card in enumerate(self.cards):
             (eid, scalei, stationi, comment) = card
-            element_id.append(eid)
-            assert scalei in ['FR'], (eid, scalei)
+            element_id[icard] = eid
+            assert scalei in {'FR', 'LE'}, (eid, scalei)
             scale[icard] = scalei
             nstationi = len(stationi)
             nstation[icard] = nstationi
             assert nstationi > 0, stationi
             station.extend(stationi)
+
         self._save(element_id, scale, nstation, station)
         self.sort()
         self.cards = []
@@ -1674,20 +1688,11 @@ class CBARAO(Element):
               station: list[float]) -> None:
         if len(self.element_id) != 0:
             raise NotImplementedError()
-        self.element_id = cast_int_array(element_id)
+        self.element_id = element_id
         self.scale = scale
         self.nstation = nstation
         self.station = np.array(station, dtype=self.model.fdtype)
 
-
-    #def convert(self, xyz_scale: float=1.0,
-                 #**kwargs):
-        #scale : str
-        #    defines what x means
-        #    LE : x is in absolute coordinates along the bar
-        #    FR : x is in fractional
-        #self.dims *= xyz_scale
-        #self.nsm *= nsm_per_length_scale
 
     @property
     def istation(self) -> np.ndarray:

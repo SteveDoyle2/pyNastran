@@ -932,12 +932,9 @@ class PLSOLID(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         self.property_id = np.zeros(ncards, dtype='int32')
         self.material_id = np.zeros(ncards, dtype='int32')
         self.stress_strain = np.zeros(ncards, dtype='|U4')

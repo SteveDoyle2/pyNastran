@@ -336,6 +336,21 @@ class TestDampers(unittest.TestCase):
         model._verify_bdf()
         save_load_deck(model)
 
+    def test_cgap_coord(self):
+        """tests a CGAP/PGAP"""
+        model = BDF(debug=False)
+        eid = 1
+        pid = 2
+        nids = [10, 11]
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [1., 0., 0.])
+        x = [0., 0., 1.]
+        g0 = None
+        model.add_cgap(eid, pid, nids, x, g0, cid=0, comment='')
+        model.add_pgap(pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
+                       kt=None, mu2=None, tmax=0., mar=100., trmin=0.001, comment='')
+        save_load_deck(model)
+
     def test_cgap(self):
         """tests a CGAP/PGAP"""
         model = BDF(debug=False)

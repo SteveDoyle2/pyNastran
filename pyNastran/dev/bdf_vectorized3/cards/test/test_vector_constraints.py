@@ -263,6 +263,21 @@ class TestConstraints(unittest.TestCase):
             check_mpc_spc(model)
             save_load_deck(model)
 
+    def test_spc(self):
+        model = BDF(debug=False, mode='nx')
+        spc_id = 1
+        nodes = [1, 2, 3]
+        components = [123, 456, 123456]
+        enforced = [0., 0., 0.]
+        model.add_spc(spc_id, nodes, components, enforced, comment='spc')
+
+        nodes = [10, 11, 12, 13]
+        components = [4, 5, 3, 125]
+        enforced = [1., 2., 3., 4.]
+        model.add_spc(spc_id, nodes, components, enforced, comment='spc')
+        model.setup(run_geom_check=False)
+        save_load_deck(model, run_geom_check=False)
+
     def test_spcadd(self):
         """tests SPCADD"""
         model = BDF(debug=False)

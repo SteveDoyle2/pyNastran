@@ -2042,12 +2042,9 @@ class CQUAD8(ShellElement):
         element.T = self.T[i, :]
         element.n = len(self.element_id)
 
+    @Element.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if self.n == 0 or len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)

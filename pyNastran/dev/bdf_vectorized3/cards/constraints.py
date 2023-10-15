@@ -18,7 +18,8 @@ from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 from pyNastran.dev.bdf_vectorized3.cards.base_card import get_print_card_8_16
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_default_str, array_str, array_default_int, update_field_size)
+    #array_default_str,
+    array_str, array_default_int, update_field_size)
 from pyNastran.dev.bdf_vectorized3.utils import cast_int_array, print_card_8
 from .grid import parse_node_check
 
@@ -139,7 +140,7 @@ class SPC(VectorizedBaseCard):
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        ncards = len(self.cards)
+        #ncards = len(self.cards)
         idtype = self.model.idtype
         spc_id_ = []
         components_ = []
@@ -168,6 +169,51 @@ class SPC(VectorizedBaseCard):
         self.components = components
         self.enforced = enforced
         self.n = nspcs
+
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        if np.abs(self.enforced).max() == 0.:
+            return
+        nids_list = []
+        components_list = []
+        enforced_list = []
+        rotation_dof_set = set('456')
+        translation_dof_set = set('123')
+        for nidi, compi, enforcedi in zip(self.node_id, self.components, self.enforced):
+            if enforcedi == 0.0:
+                nids_list.append(nidi)
+                components_list.append(compi)
+                enforced_list.append(enforcedi)
+                continue
+
+            comp_str = str(compi)
+            comp_str = ''.join(list(sorted(comp_str)))  # sort the string
+            if comp_str in {'1', '2', '3', '12', '13', '23', '123'}:
+                # pure translation - displacement
+                nids_list.append(nidi)
+                components_list.append(compi)
+                enforced_list.append(enforcedi * xyz_scale)
+            elif comp_str in {'4', '5', '6', '45', '46', '56', '456'}:
+                # pure rotation - radians?
+                nids_list.append(nidi)
+                components_list.append(compi)
+                enforced_list.append(enforcedi)
+            else:
+                dofs = set(comp_str)
+                translation_dofs = dofs.difference(rotation_dof_set)
+                rotation_dofs = dofs.difference(translation_dof_set)
+                if len(translation_dofs):
+                    components_list.append(nidi)
+                    components_list.append(translation_dofs)
+                    enforced_list.append(enforcedi)
+                if len(rotation_dofs):
+                    components_list.append(nidi)
+                    components_list.append(rotation_dofs)
+                    enforced_list.append(enforcedi)
+        spc_id = np.array(self.spc_id, dtype=self.spc_id.dtype)
+        node_id = np.array(self.node_id, dtype=self.node_id.dtype)
+        components = np.array(self.components, dtype=self.components.dtype)
+        enforced = np.array(self.enforced, dtype=self.enforced.dtype)
+        self._save(spc_id, node_id, components, enforced)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -839,7 +885,7 @@ class SPCOFF(VectorizedBaseCard):
             (nidi, componenti, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
-            nnodes = len(nidi)
+            #nnodes = len(nidi)
             node_id.extend(nidi)
             component_list.extend(componenti)
             #if commenti:
@@ -892,9 +938,9 @@ class SPCOFF(VectorizedBaseCard):
 
     def __apply_slice__(self, spcoff: SPCOFF, i: np.ndarray) -> None:
         self._slice_comment(spcoff, i)
-        grid.n = len(i)
-        grid.node_id = self.node_id[i]
-        grid.component = self.component[i]
+        spcoff.n = len(i)
+        spcoff.node_id = self.node_id[i]
+        spcoff.component = self.component[i]
 
 
     def geom_check(self, missing: dict[str, np.ndarray]):

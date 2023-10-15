@@ -287,17 +287,18 @@ class CONM2(Element):
     @Element.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        element_id = []
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
         mass = np.zeros(ncards, dtype='float64')
         coord_id = np.zeros(ncards, dtype='int32')
-        node_id = []
+        node_id = np.zeros(ncards, dtype=idtype)
         xyz_offset = np.zeros((ncards, 3), dtype='float64')
         #I11, I21, I22, I31, I32, I33 = I
         inertia = np.zeros((ncards, 6), dtype='float64')
         for icard, card in enumerate(self.cards):
             (eid, nid, cid, massi, X, I, comment) = card
-            element_id.append(eid)
-            node_id.append(nid)
+            element_id[icard] = eid
+            node_id[icard] = nid
             coord_id[icard] = cid
             mass[icard] = massi
             if X is not None:
@@ -311,10 +312,10 @@ class CONM2(Element):
     def _save(self, element_id, mass, coord_id, node_id, xyz_offset, inertia):
         if len(self.element_id):
             raise RuntimeError()
-        self.element_id = cast_int_array(element_id)
+        self.element_id = element_id
         self._mass = mass
         self.coord_id = coord_id
-        self.node_id = cast_int_array(node_id)
+        self.node_id = node_id
         self.xyz_offset = xyz_offset
         #I11, I21, I22, I31, I32, I33 = I
         self.inertia = inertia

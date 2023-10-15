@@ -1065,6 +1065,7 @@ class TestShells(unittest.TestCase):
         #ctria6.raw_fields()
         #cquad8.raw_fields()
         #pplane.raw_fields()
+        model.setup()
 
         model.validate()
         model._verify_bdf(xref=False)
@@ -1072,7 +1073,6 @@ class TestShells(unittest.TestCase):
         model.cquad8.write(size=8)
         model.pplane.write(size=8)
         model.plplane.write(size=8)
-
 
         mass1 = model.ctria6.mass_breakdown()
         mass2 = model.cquad8.mass_breakdown()

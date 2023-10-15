@@ -1189,7 +1189,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
     def validate(self) -> None:
         """runs some checks on the input data beyond just type checking"""
-        self.setup()
+        pass
+        #self.setup()
         #validate_bdf(self)
         self.log.warning('no validate')
     def _get_rigid(self):

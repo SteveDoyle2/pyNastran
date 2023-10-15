@@ -863,12 +863,9 @@ class CPLSTN4(PlateStrainElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)
@@ -1251,12 +1248,9 @@ class CPLSTS6(PlateStrainElement):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self):
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype=idtype)

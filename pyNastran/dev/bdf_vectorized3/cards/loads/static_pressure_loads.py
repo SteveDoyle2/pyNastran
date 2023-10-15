@@ -92,9 +92,10 @@ class PLOAD(Load):
     @Load.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
         load_id = np.zeros(ncards, dtype='int32')
         pressure = np.zeros(ncards, dtype='float64')
-        node_id = np.zeros((ncards, 4), dtype='int32')
+        node_id = np.zeros((ncards, 4), dtype=idtype)
 
         for icard, card in enumerate(self.cards):
             (sid, pressurei, nodesi, comment) = card
@@ -649,6 +650,7 @@ class PLOAD2(Load):
     @Load.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
         load_id = np.zeros(ncards, dtype='int32')
         pressure = np.zeros(ncards, dtype='float64')
         nelement = np.zeros(ncards, dtype='int32')
@@ -661,7 +663,7 @@ class PLOAD2(Load):
             pressure[icard] = pressurei
             nelement[icard] = len(eids)
             element_ids_.extend(eids)
-        element_ids = np.array(element_ids_, dtype='int32')
+        element_ids = np.array(element_ids_, dtype=idtype)
         self. _save(load_id, pressure, element_ids, nelement)
         self.cards = []
 
@@ -895,10 +897,11 @@ class PLOAD4(Load):
     @Load.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
         load_id = np.zeros(ncards, dtype='int32')
         coord_id = np.full(ncards, -1, dtype='int32')
         pressure = np.zeros((ncards, 4), dtype='float64')
-        nodes_g1_g34 = np.full((ncards, 2), -1, dtype='int32')
+        nodes_g1_g34 = np.full((ncards, 2), -1, dtype=idtype)
 
         surf_or_line = np.full(ncards, '', dtype='|U8')
         line_load_dir = np.full(ncards, '', dtype='|U8')

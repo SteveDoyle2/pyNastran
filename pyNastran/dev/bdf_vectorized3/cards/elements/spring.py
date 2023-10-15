@@ -378,12 +378,9 @@ class CELAS4(Element):
         self.n += 1
         return self.n
 
+    @Element.parse_cards_check
     def parse_cards(self):
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
         k = np.zeros(ncards, dtype='float64')
@@ -568,13 +565,9 @@ class PELAST(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self):
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-
         property_id = np.zeros(ncards, dtype='int32')
 
         #: Identification number of a TABLEDi entry that defines the
