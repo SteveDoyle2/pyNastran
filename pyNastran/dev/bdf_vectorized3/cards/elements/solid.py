@@ -35,8 +35,17 @@ class SolidElement(Element):
         super().__init__(model)
         self.nnode = 0
         self.nnode_base = 0
+
+    @Element.clear_check
+    def clear(self) -> None:
         self.nodes: np.ndarray = np.array([[]], dtype='int32')
         self.property_id: np.ndarray = np.array([], dtype='int32')
+
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        nodes = np.unique(self.nodes.ravel())
+        nodes = nodes[nodes > 0]
+        used_dict['node_id'].append(nodes)
+        used_dict['property_id'].append(self.property_id)
 
     def __apply_slice__(self, elem: SolidElement, i: np.ndarray) -> None:  # ignore[override]
         elem.n = len(i)
@@ -712,9 +721,16 @@ class PSOLID(Property):
     | PSOLID |  2  | 100 |   6   | TWO |  GRID  | REDUCED |      |
     +--------+-----+-----+-------+-----+--------+---------+------+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
+        self.coord_id = np.array([], dtype='int32')
+
+        self.integ = np.array([], dtype='|U8')
+        self.stress = np.array([], dtype='|U8')
+        self.isop = np.array([], dtype='|U8')
+        self.fctn = np.array([], dtype='|U8')
 
     def slice_card_by_property_id(self, property_id: np.ndarray) -> PSOLID:
         """uses a node_ids to extract PSOLIDs"""
@@ -834,6 +850,9 @@ class PSOLID(Property):
         self.fctn = fctn
         self.n = nproperties
 
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         model = self.model
         cid = model.coord.coord_id
@@ -899,9 +918,17 @@ class PLSOLID(Property):
     | PLSOLID |  20 |  21 |     |
     +---------+-----+-----+-----+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
+        self.stress_strain = np.array([], dtype='|U4')
+
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
 
     def __apply_slice__(self, prop: PLSOLID, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
@@ -1004,8 +1031,13 @@ class PLSOLID(Property):
 
 
 class PCOMPS(Property):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+
+    def clear(self) -> None:
+        self.n = 0
+        self.property_id = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
         self.psdir = np.array([], dtype='int32')
         self.sb = np.array([], dtype='float64')
@@ -1225,6 +1257,10 @@ class PCOMPS(Property):
         self.ge = ge
         self.coord_id = coord_id
 
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+        used_dict['coord_id'].append(self.coord_id)
+
     def convert(self, xyz_scale: float=1.0,
                 temperature_scale: float=1.0,
                 **kwargs) -> None:
@@ -1310,9 +1346,30 @@ class PCOMPLS(Property):
     |         | 100  |   175  |   .7   |  77.7  |        |
     +---------+------+--------+--------+--------+--------+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+
+    def clear(self) -> None:
+        self.n = 0
+        self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
+
+        #material_id = np.zeros(ncards, dtype='int32')
+        coord_id = np.array([], dtype='int32')
+        #psdir = np.zeros(ncards, dtype='int32')
+        sb = np.array([], dtype='float64')
+        #nb = np.zeros(ncards, dtype='float64')
+        #tref = np.zeros(ncards, dtype='float64')
+        #ge = np.zeros(ncards, dtype='float64')
+        analysis = np.array([], dtype='|U4')
+        direct = np.array([], dtype='int32')
+
+        self.global_ply_id = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
+        self.thickness = np.array([], dtype='float64')
+        self.theta = np.array([], dtype='float64')
+        self.c8 = np.array([], dtype='|U8')
+        self.c20 = np.array([], dtype='|U8')
 
     def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPLS:
         """uses a node_ids to extract PCOMPLSs"""
@@ -1441,12 +1498,9 @@ class PCOMPLS(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         property_id = np.zeros(ncards, dtype='int32')
         #material_id = np.zeros(ncards, dtype='int32')
         coord_id = np.zeros(ncards, dtype='int32')
@@ -1538,6 +1592,9 @@ class PCOMPLS(Property):
         #self.model.log.warning(f'saved PCOMPLS; material_id={self.material_id}')
         assert len(self.material_id) > 0, self.material_id
 
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+        used_dict['coord_id'].append(self.coord_id)
 
     def convert(self, xyz_scale: float=1.0,
                 **kwargs) -> None:

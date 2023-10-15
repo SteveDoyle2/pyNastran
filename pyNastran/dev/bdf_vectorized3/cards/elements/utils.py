@@ -75,7 +75,8 @@ def get_mass_from_property(property_id: np.ndarray,
             continue
 
         # PBUSH can't have nan mass if it's defined
-        prop_mass = prop.mass().copy()
+        prop_mass_og = prop.mass()
+        prop_mass = prop_mass_og.copy()
         inan = np.where(np.isnan(prop_mass))
         prop_mass[inan] = 0.0
 

@@ -32,10 +32,8 @@ class MAT1(Material):
     +------+-----+-----+-----+-------+-----+------+------+-----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
-        self.cards = []
-        self.n = 0
+    @Material.clear_check
+    def clear(self) -> None:
         self.material_id = np.array([], dtype='int32')
         self.E = np.array([], dtype='float64')
         self.G = np.array([], dtype='float64')
@@ -229,6 +227,9 @@ class MAT1(Material):
         self.Sc = Sc
         self.mcsid = mcsid
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['coord_id'].append(self.mcsid)
+
     def convert(self, stiffness_scale: float=1.0,
                 density_scale: float=1.0,
                 alpha_scale: float=1.0,
@@ -322,6 +323,26 @@ class MAT2(Material):
     +------+-------+-----+-----+------+-----+------+-----+-----+
 
     """
+    @Material.clear_check
+    def clear(self):
+        self.material_id = np.array([], dtype='int32')
+        self.G11 = np.array([], dtype='float64')
+        self.G12 = np.array([], dtype='float64')
+        self.G13 = np.array([], dtype='float64')
+        self.G22 = np.array([], dtype='float64')
+        self.G23 = np.array([], dtype='float64')
+        self.G33 = np.array([], dtype='float64')
+
+        self.rho = np.array([], dtype='float64')
+        self.alpha = np.zeros((0, 3), dtype='float64')
+        self.tref = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+        self.Ss = np.array([], dtype='float64')
+        self.St = np.array([], dtype='float64')
+        self.Sc = np.array([], dtype='float64')
+        self.mcsid = np.array([], dtype='int32')
+        self.ge_matrix = np.zeros((0, 6), dtype='float64')
+
     def add(self, mid: float,
             G11: float, G12: float, G13: float,
             G22: float, G23: float, G33: float, rho: float=0.,
@@ -469,6 +490,10 @@ class MAT2(Material):
         self.ge_matrix = ge_matrix
         self.n = len(material_id)
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        coords = self.mcsid[self.mcsid >= 0]
+        used_dict['coord_id'].append(coords)
+
     def convert(self, stiffness_scale: float=1.0,
                 density_scale: float=1.0,
                 alpha_scale: float=1.0,
@@ -615,6 +640,24 @@ class MAT3(Material):
     +------+-----+----+-----+----+-------+-------+------+-----+
 
     """
+    @Material.clear_check
+    def clear(self):
+        self.material_id = np.array([], dtype='int32')
+        self.ex = np.array([], dtype='float64')
+        self.eth = np.array([], dtype='float64')
+        self.ez = np.array([], dtype='float64')
+        self.nuxth = np.array([], dtype='float64')
+        self.nuthz = np.array([], dtype='float64')
+        self.nuzx = np.array([], dtype='float64')
+        self.gzx = np.array([], dtype='float64')
+
+        self.rho = np.array([], dtype='float64')
+        self.ax = np.array([], dtype='float64')
+        self.ath = np.array([], dtype='float64')
+        self.az = np.array([], dtype='float64')
+        self.tref = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+
     def add(self, mid: int, ex: float, eth: float, ez: float,
             nuxth: float, nuthz: float, nuzx: float,
             rho: float=0.0, gzx: Optional[float]=None,
@@ -779,6 +822,21 @@ class MAT4(Material):
     +------+-----+--------+------+-----+----+-----+------+---------+
 
     """
+    @Material.clear_check
+    def clear(self):
+        self.material_id = np.array([], dtype='int32')
+        self.k = np.array([], dtype='float64')
+        self.rho = np.array([], dtype='float64')
+
+        self.cp = np.array([], dtype='float64')
+        self.H = np.array([], dtype='float64')
+        self.mu = np.array([], dtype='float64')
+        self.hgen = np.array([], dtype='float64')
+        self.ref_enthalpy = np.array([], dtype='float64')
+        self.tch = np.array([], dtype='float64')
+        self.tdelta = np.array([], dtype='float64')
+        self.qlat = np.array([], dtype='float64')
+
     def add(self, mid: int, k: float, cp: float=0.0, rho: float=1.0,
             H: Optional[float]=None, mu: Optional[float]=None, hgen: float=1.0,
             ref_enthalpy: Optional[float]=None, tch: Optional[float]=None, tdelta: Optional[float]=None,
@@ -904,8 +962,8 @@ class MAT5(Material):
     +------+-----+-------+-----+-----+-----+-----+-----+----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Material.clear_check
+    def clear(self) -> None:
         self.kxx = np.zeros(0, dtype='float64')
         self.kxy = np.zeros(0, dtype='float64')
         self.kxz = np.zeros(0, dtype='float64')
@@ -1057,10 +1115,8 @@ class MAT8(Material):
     +------+-----+-----+------+------+-----+-----+-----+-----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
-        self.cards = []
-        self.n = 0
+    @Material.clear_check
+    def clear(self) -> None:
         self.material_id = np.array([], dtype='int32')
         self.E11 = np.array([], dtype='float64')
         self.E22 = np.array([], dtype='float64')
@@ -1365,6 +1421,39 @@ class MAT9(Material):
 
     .. warning:: MSC 2020: gelist is not supported.
     """
+    @Material.clear_check
+    def clear(self) -> None:
+        self.material_id = np.array([], dtype='int32')
+        self.G11 = np.array([], dtype='float64')
+        self.G12 = np.array([], dtype='float64')
+        self.G13 = np.array([], dtype='float64')
+        self.G14 = np.array([], dtype='float64')
+        self.G15 = np.array([], dtype='float64')
+        self.G16 = np.array([], dtype='float64')
+        self.G22 = np.array([], dtype='float64')
+        self.G23 = np.array([], dtype='float64')
+        self.G24 = np.array([], dtype='float64')
+        self.G25 = np.array([], dtype='float64')
+        self.G26 = np.array([], dtype='float64')
+
+        self.G33 = np.array([], dtype='float64')
+        self.G34 = np.array([], dtype='float64')
+        self.G35 = np.array([], dtype='float64')
+        self.G36 = np.array([], dtype='float64')
+
+        self.G44 = np.array([], dtype='float64')
+        self.G45 = np.array([], dtype='float64')
+        self.G46 = np.array([], dtype='float64')
+
+        self.G55 = np.array([], dtype='float64')
+        self.G56 = np.array([], dtype='float64')
+        self.G66 = np.array([], dtype='float64')
+
+        self.rho = np.array([], dtype='float64')
+        self.alpha = np.zeros((0, 6), dtype='float64')
+        self.tref = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+
     def add(self, mid: int,
             G11=0., G12=0., G13=0., G14=0., G15=0., G16=0.,
             G22=0., G23=0., G24=0., G25=0., G26=0.,
@@ -1684,6 +1773,19 @@ class MAT10(Material):
         super().__init__(model)
         self.is_alpha = True
 
+    @Material.clear_check
+    def clear(self) -> None:
+        self.material_id = np.array([], dtype='int32')
+        self.bulk = np.array([], dtype='float64')
+        self.c  = np.array([], dtype='float64')
+        self.rho = np.array([], dtype='float64')
+        self.alpha_gamma = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+        self.table_id_bulk = np.array([], dtype='int32')
+        self.table_id_rho = np.array([], dtype='int32')
+        self.table_id_ge = np.array([], dtype='int32')
+        self.table_id_gamma = np.array([], dtype='int32')
+
     def add(self, mid: int, bulk: float, rho: float, c: float,
             ge: float=0.0,
             gamma: Optional[float]=None,
@@ -1910,6 +2012,31 @@ class MAT11(Material):
     +-------+-----+-----+-----+----+------+------+------+-----+
 
     """
+    @Material.clear_check
+    def clear(self) -> None:
+        self.material_id = np.array([], dtype='int32')
+        self.bulk = np.array([], dtype='float64')
+
+        self.e1 = np.array([], dtype='float64')
+        self.e2 = np.array([], dtype='float64')
+        self.e3 = np.array([], dtype='float64')
+
+        self.nu12 = np.array([], dtype='float64')
+        self.nu13 = np.array([], dtype='float64')
+        self.nu23 = np.array([], dtype='float64')
+
+        self.g12 = np.array([], dtype='float64')
+        self.g13 = np.array([], dtype='float64')
+        self.g23 = np.array([], dtype='float64')
+
+        self.alpha1 = np.array([], dtype='float64')
+        self.alpha2 = np.array([], dtype='float64')
+        self.alpha3 = np.array([], dtype='float64')
+
+        self.tref = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+        self.rho = np.array([], dtype='float64')
+
     def add(self, mid: int, e1: float, e2: float, e3: float,
             nu12: float, nu13: float, nu23: float,
             g12: float, g13: float, g23: float,
@@ -1951,54 +2078,105 @@ class MAT11(Material):
     @Material.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.material_id = np.zeros(ncards, dtype='int32')
-        self.bulk = np.zeros(ncards, dtype='float64')
+        material_id = np.zeros(ncards, dtype='int32')
+        bulk = np.zeros(ncards, dtype='float64')
 
-        self.e1 = np.zeros(ncards, dtype='float64')
-        self.e2 = np.zeros(ncards, dtype='float64')
-        self.e3 = np.zeros(ncards, dtype='float64')
+        e1 = np.zeros(ncards, dtype='float64')
+        e2 = np.zeros(ncards, dtype='float64')
+        e3 = np.zeros(ncards, dtype='float64')
 
-        self.nu12 = np.zeros(ncards, dtype='float64')
-        self.nu13 = np.zeros(ncards, dtype='float64')
-        self.nu23 = np.zeros(ncards, dtype='float64')
+        nu12 = np.zeros(ncards, dtype='float64')
+        nu13 = np.zeros(ncards, dtype='float64')
+        nu23 = np.zeros(ncards, dtype='float64')
 
-        self.g12 = np.zeros(ncards, dtype='float64')
-        self.g13 = np.zeros(ncards, dtype='float64')
-        self.g23 = np.zeros(ncards, dtype='float64')
+        g12 = np.zeros(ncards, dtype='float64')
+        g13 = np.zeros(ncards, dtype='float64')
+        g23 = np.zeros(ncards, dtype='float64')
 
-        self.alpha1 = np.zeros(ncards, dtype='float64')
-        self.alpha2 = np.zeros(ncards, dtype='float64')
-        self.alpha3 = np.zeros(ncards, dtype='float64')
+        alpha1 = np.zeros(ncards, dtype='float64')
+        alpha2 = np.zeros(ncards, dtype='float64')
+        alpha3 = np.zeros(ncards, dtype='float64')
 
-        self.tref = np.zeros(ncards, dtype='float64')
-        self.ge = np.zeros(ncards, dtype='float64')
-        self.rho = np.zeros(ncards, dtype='float64')
-
-        self.ge = np.zeros(ncards, dtype='float64')
+        tref = np.zeros(ncards, dtype='float64')
+        ge = np.zeros(ncards, dtype='float64')
+        rho = np.zeros(ncards, dtype='float64')
 
         for i, card in enumerate(self.cards):
-            (mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rhoi, a1, a2, a3, tref, ge, comment) = card
-            self.material_id[i] = mid
-            self.e1[i] = e1
-            self.e2[i] = e2
-            self.e3[i] = e3
+            (mid, e1i, e2i, e3i, nu12i, nu13i, nu23i,
+             g12i, g13i, g23i, rhoi, a1i, a2i, a3i,
+             trefi, gei, comment) = card
+            material_id[i] = mid
+            e1[i] = e1i
+            e2[i] = e2i
+            e3[i] = e3i
 
-            self.nu12[i] = nu12
-            self.nu13[i] = nu13
-            self.nu23[i] = nu23
+            nu12[i] = nu12i
+            nu13[i] = nu13i
+            nu23[i] = nu23i
 
-            self.g12[i] = g12
-            self.g13[i] = g13
-            self.g23[i] = g23
+            g12[i] = g12i
+            g13[i] = g13i
+            g23[i] = g23i
 
-            self.alpha1[i] = a1
-            self.alpha2[i] = a2
-            self.alpha3[i] = a3
-            self.rho[i] = rhoi
-            self.tref[i] = tref
-            self.ge[i] = ge
+            alpha1[i] = a1i
+            alpha2[i] = a2i
+            alpha3[i] = a3i
+            rho[i] = rhoi
+            tref[i] = trefi
+            ge[i] = gei
+        self._save(
+            material_id, bulk, e1, e2, e3, nu12, nu13, nu23,
+            g12, g13, g23, alpha1, alpha2, alpha3, rho, tref, ge)
         self.sort()
         self.cards = []
+
+    def _save(self, material_id, bulk,
+              e1, e2, e3,
+              nu12, nu13, nu23,
+              g12, g13, g23,
+              alpha1, alpha2, alpha3,
+              rho, tref, ge) -> None:
+        if len(self.material_id) == 0:
+            material_id = np.hstack([self.material_id, material_id])
+            bulk = np.hstack([self.bulk, bulk])
+            e1 = np.hstack([self.e1, e1])
+            e2 = np.hstack([self.e2, e2])
+            e3 = np.hstack([self.e3, e3])
+            nu12 = np.hstack([self.nu12, nu12])
+            nu13 = np.hstack([self.nu13, nu13])
+            nu23 = np.hstack([self.nu23, nu23])
+            g12 = np.hstack([self.g12, g12])
+            g13 = np.hstack([self.g13, g13])
+            g23 = np.hstack([self.g23, g23])
+            alpha1 = np.hstack([self.alpha1, alpha1])
+            alpha2 = np.hstack([self.alpha2, alpha2])
+            alpha3 = np.hstack([self.alpha3, alpha3])
+            rho = np.hstack([self.rho, rho])
+            tref = np.hstack([self.tref, tref])
+            ge = np.hstack([self.ge, ge])
+
+        self.material_id = material_id
+        self.bulk = bulk
+
+        self.e1 = e1
+        self.e2 = e2
+        self.e3 = e3
+
+        self.nu12 = nu12
+        self.nu13 = nu13
+        self.nu23 = nu23
+
+        self.g12 = g12
+        self.g13 = g13
+        self.g23 = g23
+
+        self.alpha1 = alpha1
+        self.alpha2 = alpha2
+        self.alpha3 = alpha3
+
+        self.tref = tref
+        self.rho = rho
+        self.ge = ge
 
     def __apply_slice__(self, mat: MAT11, i: np.ndarray) -> None:
         mat.n = len(i)
@@ -2078,8 +2256,9 @@ class MAT10C(Material):
     per NX 2019.2
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Material.clear_check
+    def clear(self) -> None:
+        self.material_id = np.array([], dtype='int32')
 
     def add(self, mid: int, form: str='REAL',
             rho_real: float=0.0, rho_imag: float=0.0,
@@ -2189,10 +2368,8 @@ class MATORT(Material):
     |        | OPTION |  FILE |   X1  |  Y1 |  Z1  |  X2  |  Y2  |  Z2 |
     +--------+--------+-------+-------+-----+------+------+------+-----+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
-        self.cards = []
-        self.n = 0
+    @Material.clear_check
+    def clear(self) -> None:
         self.material_id = np.array([], dtype='int32')
         self.E1 = np.zeros([], dtype='float64')
         self.E2 = np.zeros([], dtype='float64')
@@ -2390,6 +2567,52 @@ class MATORT(Material):
 
 
 class MATHP(Material):
+    @Material.clear_check
+    def clear(self) -> None:
+        self.material_id = np.array([], dtype='int32')
+        self.a10 = np.array([], dtype='float64')
+        self.a01 = np.array([], dtype='float64')
+        self.d1 = np.array([], dtype='float64')
+        self.rho = np.array([], dtype='float64')
+        self.av = np.array([], dtype='float64')
+        self.tref = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+
+        self.na = np.array([], dtype='int32')
+        self.nd = np.array([], dtype='int32')
+
+        self.a20 = np.array([], dtype='float64')
+        self.a11 = np.array([], dtype='float64')
+        self.a02 = np.array([], dtype='float64')
+        self.d2 = np.array([], dtype='float64')
+
+        self.a30 = np.array([], dtype='float64')
+        self.a21 = np.array([], dtype='float64')
+        self.a12 = np.array([], dtype='float64')
+        self.a03 = np.array([], dtype='float64')
+        self.d3 = np.array([], dtype='float64')
+
+        self.a40 = np.array([], dtype='float64')
+        self.a31 = np.array([], dtype='float64')
+        self.a22 = np.array([], dtype='float64')
+        self.a13 = np.array([], dtype='float64')
+        self.a04 = np.array([], dtype='float64')
+        self.d4 = np.array([], dtype='float64')
+
+        self.a50 = np.array([], dtype='float64')
+        self.a41 = np.array([], dtype='float64')
+        self.a32 = np.array([], dtype='float64')
+        self.a23 = np.array([], dtype='float64')
+        self.a14 = np.array([], dtype='float64')
+        self.a05 = np.array([], dtype='float64')
+        self.d5 = np.array([], dtype='float64')
+
+        self.tab1 = np.array([], dtype='int32')
+        self.tab2 = np.array([], dtype='int32')
+        self.tab3 = np.array([], dtype='int32')
+        self.tab4 = np.array([], dtype='int32')
+        self.tabd = np.array([], dtype='int32')
+
     def add(self, mid: int, a10=0., a01=0., d1=None, rho=0., av=0., tref=0., ge=0., na=1, nd=1,
             a20=0., a11=0., a02=0., d2=0.,
             a30=0., a21=0., a12=0., a03=0., d3=0.,

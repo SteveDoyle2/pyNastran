@@ -204,8 +204,10 @@ class PFAST(Property):
     |PFAST |  7  | 1.1 | 70   |       | 100000. | 46000. | 12300. |     |
     +------+-----+-----+------+-------+---------+--------+--------+-----+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+
+    def clear(self) -> None:
         self.property_id = np.zeros(0, dtype='int32')
         self.diameter = np.zeros(0, dtype='float64')
         self.kt = np.zeros((0, 3), dtype='float64')

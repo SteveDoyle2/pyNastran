@@ -98,6 +98,10 @@ class CMASS1(Element):
         self.nodes = nodes
         self.components = components
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def __apply_slice__(self, elem: CMASS1, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
         elem.property_id = self.property_id[i]
@@ -249,6 +253,9 @@ class CMASS2(Element):
         self.nodes = nodes
         self.components = components
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def __apply_slice__(self, elem: CMASS2, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
         elem._mass = self._mass[i]
@@ -350,6 +357,10 @@ class CMASS3(Element):
         self.property_id = property_id
         self.spoints = spoints
         self.n = len(element_id)
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['spoint_id'].append(self.spoints.ravel())
 
     def mass(self) -> np.ndarray:
         return np.zeros(len(self.element_id), dtype='float64')
@@ -454,6 +465,9 @@ class CMASS4(Element):
         self.spoints = spoints
         self.n = len(element_id)
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['spoint_id'].append(self.spoints.ravel())
+
     def mass(self) -> np.ndarray:
         return np.zeros(len(self.element_id), dtype='float64')
 
@@ -490,6 +504,11 @@ class PMASS(Property):
     | PMASS |   7  | 4.29 |   6  | 13.2 |      |    |      |    |
     +-------+------+------+------+------+------+----+------+----+
     """
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self._mass = np.array([], dtype='float64')
+
     def add(self, pid: int, mass: float, comment: str='') -> int:
         """
         Creates an PMASS card, which defines a mass applied to a single DOF
@@ -538,6 +557,11 @@ class PMASS(Property):
         self.property_id = property_id
         self._mass = mass
         self.n = len(property_id)
+
+    def __apply_slice__(self, prop: PMASS, i: np.ndarray) -> None:
+        prop.property_id = self.property_id[i]
+        prop._mass = self._mass[i]
+        prop.n = len(i)
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,

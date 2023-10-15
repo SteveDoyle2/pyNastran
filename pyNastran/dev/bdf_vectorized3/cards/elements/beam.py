@@ -104,8 +104,13 @@ class BEAMOR(BaseCard):
         return self.comment + print_card_16(card)
 
 class CBEAM(Element):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+        #self.clear()
+
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id: np.array = np.array([], dtype='int32')
         self.property_id: np.array = np.array([], dtype='int32')
         self.nodes: np.array = np.zeros((0, 2), dtype='int32')
         self.offt: np.array = np.array([], dtype='|U3')
@@ -236,6 +241,21 @@ class CBEAM(Element):
         self.sa = sa
         self.sb = sb
         self.n = len(property_id)
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['element_id'].append(self.element_id)
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        g0 = self.g0[self.is_g0]
+        if len(g0):
+            used_dict['node_id'].append(g0)
+
+        sa = self.sa[self.sa != 0]
+        sb = self.sb[self.sb != 0]
+        if len(sa):
+            used_dict['spoint_id'].append(sa)
+        if len(sb):
+            used_dict['spoint_id'].append(sb)
 
     def convert(self, xyz_scale: float=1.0,
                 mass_scale: float=1.0, **kwargs):
@@ -811,6 +831,49 @@ class PBEAM(Property):
     | M1(A) | M2(A) | M1(B) | M2(B) | N1(A)  | N2(A)  | N1(B) | N2(B) |
     +-------+-------+-------+-------+--------+--------+-------+-------+
     """
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id: np.array = np.array([], dtype='int32')
+        self.material_id: np.array = np.array([], dtype='int32')
+        self.nstation = np.array([], dtype='int32')
+
+        self.s1 = np.array([], dtype='float64')
+        self.s2 = np.array([], dtype='float64')
+        self.k1 = np.array([], dtype='float64')
+        self.k2 = np.array([], dtype='float64')
+
+        self.nsia = np.array([], dtype='float64')
+        self.nsib = np.array([], dtype='float64')
+        self.cwa = np.array([], dtype='float64')
+        self.cwb = np.array([], dtype='float64')
+
+        self.m1a = np.array([], dtype='float64')
+        self.m2a = np.array([], dtype='float64')
+        self.m1b = np.array([], dtype='float64')
+        self.m2b = np.array([], dtype='float64')
+        self.n1a = np.array([], dtype='float64')
+        self.n2a = np.array([], dtype='float64')
+        self.n1b = np.array([], dtype='float64')
+        self.n2b = np.array([], dtype='float64')
+
+        self.xxb = np.array([], dtype='float64')
+        self.so = np.array([], dtype='|U4')
+        self.A = np.array([], dtype='float64')
+        self.J = np.array([], dtype='float64')
+        self.I1 = np.array([], dtype='float64')
+        self.I2 = np.array([], dtype='float64')
+        self.I12 = np.array([], dtype='float64')
+        self.nsm = np.array([], dtype='float64')
+
+        self.c1 = np.array([], dtype='float64')
+        self.c2 = np.array([], dtype='float64')
+        self.d1 = np.array([], dtype='float64')
+        self.d2 = np.array([], dtype='float64')
+        self.e1 = np.array([], dtype='float64')
+        self.e2 = np.array([], dtype='float64')
+        self.f1 = np.array([], dtype='float64')
+        self.f2 = np.array([], dtype='float64')
+
     def add(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
             c1=None, c2=None, d1=None, d2=None,
             e1=None, e2=None, f1=None, f2=None,
@@ -1354,8 +1417,10 @@ class PBEAM(Property):
         self.n2a = n2a
         self.n1b = n1b
         self.n2b = n2b
-
         self.n = len(property_id)
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
 
     def convert(self, xyz_scale: float=1.0,
                 area_scale: float=1.0,
@@ -1710,25 +1775,16 @@ class PBEAML(Property):
         "DBOX": 10,  # TODO: was 12???
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, model: BDF):
-        super().__init__(model)
-        #prop.property_id = self.property_id[i]
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
-
-        #self.istation = hslice_by_idim(i, idim, elements)
-        #idim = self.idim
         self.Type = np.array([], dtype='|U8')
         self.group = np.array([], dtype='|U8')
         self._nsm = np.array([], dtype='float64')
-
         self.dims = np.zeros([], dtype='float64')
-
-        #self.idim = np.zeros((0, 2), dtype='int32')  # for all properties
         self.ndim = np.array([], dtype='int32')
-
-        #self.istation = np.zeros((0, 2), dtype='int32')
         self.nstation = np.array([], dtype='int32')
-        #self.ndim =
 
     def slice_card_by_property_id(self, property_id: np.ndarray) -> PBEAML:
         """uses a node_ids to extract GRIDs"""
@@ -1981,6 +2037,9 @@ class PBEAML(Property):
         self.so = so
         self._nsm = nsm
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+
     def convert(self, xyz_scale: float=1.0,
                 nsm_per_length_scale: float=1.0, **kwargs):
         self.xxb *= xyz_scale
@@ -2180,9 +2239,9 @@ class PBCOMP(Property):
     |        | ...  | ... | ... |      |    |     |        |     |
     +--------+------+-----+-----+------+----+-----+--------+-----+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
-        #self.property_id = np.array([], dtype='int32')
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
         self._area = np.array([], dtype='float64')
         self.j = np.array([], dtype='float64')
@@ -2406,6 +2465,11 @@ class PBCOMP(Property):
         geom_check(self,
                    missing,
                    material_id=(mids, self.material_ids.ravel()))
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+        if len(self.material_ids):
+            used_dict['material_id'].append(self.material_ids.ravel())
 
     @property
     def all_materials(self) -> list[MAT1]:

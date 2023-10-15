@@ -204,8 +204,12 @@ def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return v, cd
 
 class CBAR(Element):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='int32')
         self.offt = np.array([], dtype='|U3')
@@ -362,6 +366,14 @@ class CBAR(Element):
         self.x *= xyz_scale
         self.wa *= xyz_scale
         self.wb *= xyz_scale
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['element_id'].append(self.element_id)
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        g0 = self.g0[self.is_g0]
+        if len(g0):
+            used_dict['node_id'].append(g0)
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
@@ -755,6 +767,23 @@ class PBAR(Property):
         #prop = self.slice_card_by_index(iprop)
         #return prop
 
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
+
+        self.A = np.array([], dtype='float64')
+        self.J = np.array([], dtype='float64')
+
+        self.c = np.zeros((0, 2), dtype='float64')
+        self.d = np.zeros((0, 2), dtype='float64')
+        self.e = np.zeros((0, 2), dtype='float64')
+        self.f = np.zeros((0, 2), dtype='float64')
+
+        self.I = np.zeros((0, 3), dtype='float64')
+        self.k = np.zeros((0, 2), dtype='float64')
+        self.nsm = np.array([], dtype='float64')
+
     def add(self, pid: int, mid: int, A: float=0.,
                 i1: float=0., i2: float=0., i12: float=0., j: float=0.,
                 nsm: float=0.,
@@ -886,6 +915,9 @@ class PBAR(Property):
 
         self.k = k
         self.nsm = nsm
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
 
     def convert(self, xyz_scale: float=1.0,
                 area_scale: float=1.0,
@@ -1123,9 +1155,13 @@ class PBARL(Property):
         #'I', 'CHAN', 'T', 'CHAN1', 'T1', 'CHAN2', 'T2', 'L' and 'BOX1'.
         'L' : 4,
     }  # for GROUP="MSCBML0"
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
         #self.model = model
+
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
         self.ndim = np.array([], dtype='int32')
         self.Type = np.array([], dtype='|U8')
@@ -1318,6 +1354,10 @@ class PBARL(Property):
             ndim = self.valid_types[beam_type]
             assert len(dim) == ndim, f'PBARL pid={pid:d} bar_type={beam_type} ndim={ndim:d} len(dims)={dim}'
 
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+
     def convert(self, xyz_scale: float=1.0,
                 nsm_per_length_scale: float=1.0, **kwargs):
         self.dims *= xyz_scale
@@ -1436,6 +1476,12 @@ class PBARL(Property):
 
 
 class PBRSECT(Property):
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
+        self.form = np.array([], dtype='|U8')
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PBRSECT card from ``BDF.add_card(...)``
@@ -1489,14 +1535,14 @@ class PBRSECT(Property):
     @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.material_id = np.zeros(ncards, dtype='int32')
+        property_id = np.zeros(ncards, dtype='int32')
+        material_id = np.zeros(ncards, dtype='int32')
         #self.Type = np.full(ncards, '', dtype='|U8')
         #self.group = np.full(ncards, '', dtype='|U8')
 
         #self.material_id[icard] = mid
         #self.group[icard] = group
-        self.form = np.zeros(ncards, dtype='|U8')
+        form = np.zeros(ncards, dtype='|U8')
         #self.A = np.zeros(ncards, dtype='float64')
         #self.J = np.zeros(ncards, dtype='float64')
 
@@ -1512,9 +1558,9 @@ class PBRSECT(Property):
         for icard, card in enumerate(self.cards):
             (pid, mid, form, nsm, brps, inps, outp, ts, comment) = card
             assert form in {'', 'GS'}, f'PBRSECT pid={pid} form={form}'
-            self.property_id[icard] = pid
-            self.material_id[icard] = mid
-            self.form[icard] = form
+            property_id[icard] = pid
+            material_id[icard] = mid
+            form[icard] = form
             #self.I[icard, :] = [i1, i2, i12]
             #self.J[icard] = j
 
@@ -1525,6 +1571,10 @@ class PBRSECT(Property):
 
             #self.k[icard, :] = [k1, k2]
             #self.nsm[icard] = nsm
+
+        self.property_id = property_id
+        self.material_id = material_id
+        self.form = form
         self.sort()
         self.cards = []
 
@@ -1638,6 +1688,9 @@ class CBARAO(Element):
         self.cards.append((eid, scale, x, comment))
         self.n += 1
         return self.n
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['element_id'].append(self.element_id)
 
     def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
         #LE : x is in absolute coordinates along the bar

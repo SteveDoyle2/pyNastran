@@ -43,9 +43,17 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class PlateStressElement(Element):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+
+    @Element.clear_check
+    def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
+
+    def set_used(self, used_dict: [dict[str, list[np.ndarray]]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        #used_dict['material_id'].append(self.material_id)
+        used_dict['node_id'].append(self.nodes.ravel())
 
     @property
     def all_properties(self) -> list[Any]:
@@ -401,8 +409,11 @@ class CPLSTS4(PlateStressElement):
 
 class PPLANE(Property):
     """NX specific card"""
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+
+    @Property.clear_check
+    def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
@@ -486,12 +497,9 @@ class PPLANE(Property):
         self.n += 1
         return self.n
 
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
-        assert self.n >= 0, self.n
-        if len(self.cards) == 0:
-            return
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')
         formulation_option = np.zeros(ncards, dtype='int32')
@@ -517,6 +525,9 @@ class PPLANE(Property):
         self.thickness = thickness
         self.nsm = nsm
         self.formulation_option = formulation_option
+
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
 
     def __apply_slice__(self, prop: PPLANE, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
@@ -610,7 +621,15 @@ class PPLANE(Property):
 class PlateStrainElement(Element):
     def __init__(self, model: BDF):
         super().__init__(model)
+
+    @Property.clear_check
+    def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
+
+    def set_used(self, used_dict: [dict[str, list[np.ndarray]]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        #used_dict['material_id'].append(self.material_id)
+        used_dict['node_id'].append(self.nodes.ravel())
 
     def __apply_slice__(self, element: PlateStrainElement, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -1192,9 +1211,14 @@ class CPLSTS6(PlateStrainElement):
     +---------+-------+-----+-------+-------+----+----+----+----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Property.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 6), dtype='int32')
+        self.theta = np.array([], dtype='float64')
+        self.tflag = np.array([], dtype='int32')
+        self.thickness = np.zeros((0, 6), dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
             tflag: int=0, thickness=None, comment: str='') -> int:
@@ -1318,7 +1342,7 @@ class CPLSTS6(PlateStrainElement):
         property_id = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
         tflags = array_default_int(self.tflag, size=size, default=0)
-        for eid, pid, (n1, n2, n3, n4, n5, n6), theta, tflag, thickness, in zip_longest(
+        for eid, pid, (n1, n2, n3, n4, n5, n6), theta, tflag, thickness in zip_longest(
             element_id, property_id, nodes, self.theta, tflags, self.thickness):
             list_fields = ['CPLSTN6', eid, pid, n1, n2, n3, n4, n5, n6, '', '',
                            theta, tflag]
@@ -1342,9 +1366,14 @@ class CPLSTS8(PlateStrainElement):
     +---------+-------+-----+-------+-------+----+----+----+----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 8), dtype='int32')
+        self.theta = np.array([], dtype='float64')
+        self.tflag = np.array([], dtype='int32')
+        self.thickness = np.zeros((0, 8), dtype='float64')
 
     def add(self, eid: int, pid: int, nids: list[int], theta: float=0.0,
             tflag: int=0,

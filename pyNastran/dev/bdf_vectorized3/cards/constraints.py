@@ -170,6 +170,9 @@ class SPC(VectorizedBaseCard):
         self.enforced = enforced
         self.n = nspcs
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
     def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
         if np.abs(self.enforced).max() == 0.:
             return
@@ -297,6 +300,9 @@ class SPC1(VectorizedBaseCard):
         idim = self.inode
         spc.node_id = hslice_by_idim(i, idim, self.node_id)
         return spc
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
 
     def add(self, spc_id: int, components: int, nodes: list[int], comment: str='') -> None:
         """
@@ -643,6 +649,9 @@ class SPCADD(ADD):
     def nspcs(self):
         return self.nsids
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['spc_id'].append(self.spc_id)
+
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool = False,
                    write_card_header: bool=False) -> None:
@@ -734,6 +743,9 @@ class MPCADD(ADD):
     @nmpcs.setter
     def nmpcs(self):
         return self.nsids
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['mpc_id'].append(self.mpc_id)
 
     @property
     def is_small_field(self):
@@ -913,6 +925,9 @@ class SPCOFF(VectorizedBaseCard):
         self.n = len(node_id)
         #self.sort()
         #self.cards = []
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
 
     #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
         #inid = self._node_index(node_id)

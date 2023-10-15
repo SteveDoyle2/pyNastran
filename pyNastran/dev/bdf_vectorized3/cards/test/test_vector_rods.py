@@ -22,7 +22,7 @@ class TestRods(unittest.TestCase):
         size = 8
         crod_id = model.crod.add_card(cardi)
         A = 1.0
-        pid = 10
+        pid = 100
         mid = 1
         E = 3.0e7
         G = None
@@ -32,6 +32,8 @@ class TestRods(unittest.TestCase):
 
         crod = model.crod
         crod.write(size, 'dummy')
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(2, [2., 0., 0.])
         model.setup()
         #crod.raw_fields()
         self.assertEqual(crod.element_id, 10)
@@ -39,6 +41,7 @@ class TestRods(unittest.TestCase):
         node_ids = crod.nodes[0]
         assert np.array_equal(node_ids, [10, 2]), node_ids # probably wrong
         assert np.array_equal(crod.get_edge_ids(), [(2, 10)])
+        save_load_deck(model)
 
     def test_prod_nsm(self):
         model = BDF(debug=False)
@@ -75,6 +78,7 @@ class TestRods(unittest.TestCase):
         mat1.rho = np.array([10.0])
         assert prod.mass_per_length() == 21.0, prod.mass_per_length()
         assert prod2.mass_per_length() == 21.0, prod2.mass_per_length()
+        save_load_deck(model)
 
     def test_ptube_nsm(self):
         """tests a PTUBE for the NSM field"""
@@ -143,6 +147,7 @@ class TestRods(unittest.TestCase):
         A = pi * (OD1**2) / 4.
         mass_expected = 2.0 * (rho * A + nsm)
         assert np.allclose(mass, mass_expected), mass
+        model.setup()
         save_load_deck(model)
 
     def test_conrod_01(self):

@@ -95,6 +95,12 @@ class CELAS1(Element):
         self.components = components
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        nodes = self.nodes.ravel()
+        nodes = nodes[nodes > 0]
+        used_dict['node_id'].append(nodes)
+        used_dict['property_id'].append(self.property_id)
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
@@ -221,6 +227,11 @@ class CELAS2(Element):
         self.s = s
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        nodes = self.nodes.ravel()
+        nodes = nodes[nodes > 0]
+        used_dict['node_id'].append(nodes)
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         geom_check(self,
@@ -309,6 +320,12 @@ class CELAS3(Element):
         self.property_id = property_id
         self.spoints = spoints
         self.n = nelements
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        spoints = self.spoints.ravel()
+        spoints = spoints[spoints > 0]
+        used_dict['spoint_id'].append(spoints)
+        used_dict['property_id'].append(self.property_id)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         spoint = self.model.spoint
@@ -403,6 +420,12 @@ class CELAS4(Element):
         self.k = k
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        spoints = self.spoints.ravel()
+        spoints = spoints[spoints > 0]
+        used_dict['spoint_id'].append(spoints)
+
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         spoint = self.model.spoint
         geom_check(self,
@@ -428,6 +451,12 @@ class PELAS(Property):
     Specifies the stiffness, damping coefficient, and stress coefficient of a
     scalar elastic (spring) element (CELAS1 or CELAS3 entry).
     """
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.k = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+        self.s = np.array([], dtype='float64')
+
     def add(self, pid: int, k: float, ge: float=0., s: float=0.,
             comment: str='') -> int:
         """
@@ -532,6 +561,12 @@ class PELAST(Property):
     Specifies the stiffness, damping coefficient, and stress coefficient of a
     scalar elastic (spring) element (CELAS1 or CELAS3 entry).
     """
+    def clear(self) -> None:
+        self.property_id: np.array = np.array([], dtype='int32')
+        self.table_k: np.array = np.array([], dtype='int32')
+        self.table_ge: np.array = np.array([], dtype='int32')
+        self.table_k_nonlinear: np.array = np.array([], dtype='int32')
+
     def add(self, pid: int, tkid: int=0, tgeid: int=0, tknid: int=0,
             comment: str='') -> int:
         """

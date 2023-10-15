@@ -138,6 +138,11 @@ class CONROD(Element):
         self.nsm = nsm
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['element_id'].append(self.element_id)
+        used_dict['material_id'].append(self.material_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def convert(self, area_scale: float=1.,
                 area_inertia_scale: float=1.0,
                 nsm_per_length_scale: float=1.0, **kwargs):
@@ -286,6 +291,11 @@ class CROD(Element):
         self.nodes = nodes
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        #used_dict['element_id'].append(self.element_id)
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
@@ -391,8 +401,9 @@ class PROD(Property):
     | PROD |  1  |  2  | 2.0 | 3.0 | 0.5 | 1.0 |
     +------+-----+-----+-----+-----+-----+-----+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id: np.ndarray = np.array([], dtype='int32')
         self.material_id: np.ndarray = np.array([], dtype='int32')
         self.A: np.ndarray = np.array([], dtype='float64')
         self.J: np.ndarray = np.array([], dtype='float64')
@@ -446,6 +457,9 @@ class PROD(Property):
         prop.c = self.c[i]
         prop.nsm = self.nsm[i]
         prop.n = len(i)
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -592,6 +606,11 @@ class CTUBE(Element):
         self.nodes = nodes
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['element_id'].append(self.element_id)
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
@@ -724,6 +743,14 @@ class PTUBE(Property):
     | PTUBE |  2   |  6  | 6.29 | 0.25 |      |     |
     +-------+------+-----+------+------+------+-----+
     """
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
+        self.diameter = np.zeros((0, 2), dtype='float64')
+        self.t = np.array([], dtype='float64')
+        self.nsm = np.array([], dtype='float64')
+
     def add(self, pid: int, mid: int, OD1: float, t: Optional[float]=None,
             nsm: float=0., OD2: Optional[float]=None, comment: str='') -> int:
         """
@@ -799,6 +826,16 @@ class PTUBE(Property):
         self.diameter = diameter
         self.t = t
         self.nsm = nsm
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+
+    #def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        #property_id = used_dict['property_id']
+        #ncards_removed = len(self.property_id) - len(property_id)
+        #if ncards_removed:
+            #self.slice_card_by_id(property_id, assume_sorted=True, sort_ids=False)
+        #return ncards_removed
 
     def convert(self, xyz_scale: float=1.,
                 nsm_per_length_scale: float=1.0, **kwargs):

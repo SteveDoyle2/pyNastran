@@ -1453,6 +1453,9 @@ class DVPREL1(VectorizedBaseCard):
         self.desvar_id = desvar_id
         self.coefficients = coefficients
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+
     def geom_check(self, missing: dict[str, np.ndarray]) -> None:
         #ptype_to_pids = {}
         for ptype in np.unique(self.property_type):
@@ -1718,6 +1721,9 @@ class DVPREL2(VectorizedBaseCard):
         self.desvar_ids = desvar_ids
         self.labels = labels
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+
     def geom_check(self, missing: dict[str, np.ndarray]) -> None:
         #ptype_to_pids = {}
         for ptype in np.unique(self.property_type):
@@ -1955,6 +1961,9 @@ class DVMREL1(VectorizedBaseCard):
         self.ndesvar = ndesvar
         self.desvar_id = desvar_id
         self.coefficients = coefficients
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
 
     def geom_check(self, missing: dict[str, np.ndarray]) -> None:
         #ptype_to_pids = {}
@@ -2232,6 +2241,9 @@ class DVMREL2(VectorizedBaseCard):
         self.desvar_id = desvar_id
         self.nlabel = nlabel
         self.labels = labels
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
 
     def geom_check(self, missing: dict[str, np.ndarray]) -> None:
         #ptype_to_pids = {}

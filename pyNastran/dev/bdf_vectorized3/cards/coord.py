@@ -77,6 +77,21 @@ class COORD(VectorizedBaseCard):
         coord = cls.slice_card_by_index(i)
         return coord
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        is_cord1 = (self.icoord == 1)
+        is_cord2 = ~is_cord1
+        if is_cord1.sum():
+            used_dict['node_id'].append(self.nodes[is_cord1, :].ravel())
+        if is_cord2.sum():
+            used_dict['coord_id'].append(self.ref_coord_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        coord_id = used_dict['coord_id']
+        ncards_removed = len(self.coord_id) - len(coord_id)
+        if ncards_removed:
+            self.slice_card_by_id(coord_id, assume_sorted=True, sort_ids=False)
+        return ncards_removed
+
     def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
         is_xyz = (self.icoord == 2) & (self.coord_type == 'R')
         is_rtz = (self.icoord == 2) & (self.coord_type == 'C')

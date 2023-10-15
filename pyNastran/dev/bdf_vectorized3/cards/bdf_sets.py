@@ -54,6 +54,10 @@ class ABCOQSET(VectorizedBaseCard):
     def __init__(self, model: BDF):
         super().__init__(model)
         #self._is_sorted = False
+        self.clear()
+
+    def clear(self) -> None:
+        self.n = 0
         self.component = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
 
@@ -200,6 +204,12 @@ class ABCOQSET(VectorizedBaseCard):
         #grid = GRID(self.model)
         #self.__apply_slice__(grid, i)
         #return grid
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        pass
 
     def __apply_slice__(self, grid: ASET, i: np.ndarray) -> None:
         self._slice_comment(grid, i)
@@ -519,6 +529,9 @@ class SUPORT(VectorizedBaseCard):
             return index
         return ielem
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
     def __apply_slice__(self, suport: SUPORT, i: np.ndarray) -> None:
         self._slice_comment(suport, i)
         suport.n = len(i)
@@ -742,6 +755,13 @@ class USET(VectorizedBaseCard):
         self.n = len(node_id)
         #self.sort()
         #self.cards = []
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> None:
+        #used_dict['node_id'].append(self.nodes.ravel())
+        pass
 
     #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
         #inid = self._node_index(node_id)
@@ -1015,6 +1035,13 @@ class SET1(VectorizedBaseCard):
         self.num_ids = num_ids
         self.ids = ids
         self.n = len(set_id)
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        #used_dict['node_id'].append(self.nodes.ravel())
+        pass
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> None:
+        #used_dict['node_id'].append(self.nodes.ravel())
+        pass
 
     def sort(self) -> None:
         usid = np.unique(self.set_id)

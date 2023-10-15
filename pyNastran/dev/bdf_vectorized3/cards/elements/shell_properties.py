@@ -59,10 +59,12 @@ def shell_materials(model: BDF) -> list[Union[MAT1, MAT8]]:
 
 
 class PSHELL(Property):
-    def __init__(self, model: BDF):
-        super().__init__(model)
-        self.property_id = np.array([], dtype='int32')
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
 
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
         self.material_id = np.zeros((0, 4), dtype='int32')
         self.t = np.array([], dtype='float64')
         self.twelveIt3 = np.array([], dtype='float64')
@@ -187,6 +189,11 @@ class PSHELL(Property):
         self.nsm = nsm
         self.z = z
         self.n = len(property_id)
+
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        material_id = np.unique(self.material_id.flatten())
+        material_id = material_id[material_id > 0]
+        used_dict['material_id'].append(material_id)
 
     def convert(self, xyz_scale: float=1.0,
                 nsm_per_area_scale: float=1.0, **kwargs):
@@ -723,6 +730,27 @@ class PCOMP(CompositeProperty):
     |       | 300705 |   .5   |  0.0+0  |  YES  |        |        |        |       |
     +-------+--------+--------+---------+-------+--------+--------+--------+-------+
     """
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.z0 = np.array([], dtype='float64')
+        self.nsm = np.array([], dtype='float64')
+        self.shear_bonding = np.array([], dtype='float64')
+
+        # 'HILL' for the Hill theory.
+        # 'HOFF' for the Hoffman theory.
+        # 'TSAI' for the Tsai-Wu theory.
+        # 'STRN' for the Maximum Strain theory.
+        self.failure_theory = np.array([], dtype='|U8')
+        self.tref = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+        self.lam = np.array([], dtype='|U6')
+
+        self.nlayer = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
+        self.thickness = np.array([], dtype='float64')
+        self.sout = np.array([], dtype='|U4') # YES, NO, YESA
+        self.theta = np.array([], dtype='float64')
 
     def add(self, pid: int, mids: list[int], thicknesses: list[float],
             thetas: Optional[list[float]]=None, souts: Optional[list[str]]=None,
@@ -1083,6 +1111,9 @@ class PCOMP(CompositeProperty):
         prop = self.slice_card_by_index(iprop)
         return prop
 
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+
     def __apply_slice__(self, prop: PCOMP, i: np.ndarray) -> None:  # ignore[override]
         assert self.nlayer.sum() == len(self.thickness)
         prop.property_id = self.property_id[i]
@@ -1320,6 +1351,28 @@ class PCOMP(CompositeProperty):
 
 
 class PCOMPG(CompositeProperty):
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.z0 = np.array([], dtype='float64')
+        self.nsm = np.array([], dtype='float64')
+        self.shear_bonding = np.array([], dtype='float64')
+
+        # 'HILL' for the Hill theory.
+        # 'HOFF' for the Hoffman theory.
+        # 'TSAI' for the Tsai-Wu theory.
+        # 'STRN' for the Maximum Strain theory.
+        self.failure_theory = np.array([], dtype='|U8')
+        self.tref = np.array([], dtype='float64')
+        self.ge = np.array([], dtype='float64')
+        self.lam = np.array([], dtype='|U6')
+
+        self.nlayer = np.array([], dtype='int32')
+        global_ply_id = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
+        self.thickness = np.array([], dtype='float64')
+        self.sout = np.array([], dtype='|U4') # YES, NO, YESA
+        self.theta = np.array([], dtype='float64')
 
     def add(self, pid: int,
             global_ply_ids: list[int], mids: list[int], thicknesses: list[float],
@@ -1595,8 +1648,8 @@ class PLPLANE(Property):
     CTRIA6 entries in solutions 106 and 129. The CQUAD4, CQUAD8, CTRIA3,
     and CTRIA6 entries are treated as hyperelastic plane strain elements.
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Property.clear_check
+    def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
@@ -1661,6 +1714,10 @@ class PLPLANE(Property):
             self.thickness[icard] = thickness
         self.sort()
         self.cards = []
+
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+        used_dict['coord_id'].append(self.coord_id)
 
     def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
@@ -1776,8 +1833,8 @@ class PSHLN1(Property):
     MSC
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Property.clear_check
+    def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.material_id = np.zeros((0, 2), dtype='int32')
         self.coord_id = np.array([], dtype='int32')
@@ -1997,6 +2054,11 @@ class PSHLN1(Property):
         self.integration = integration
         self.integration_h = integration_h
 
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        material_id = self.material_id.flatten()
+        material_id = material_id[material_id > 0]
+        if len(material_id):
+            used_dict['material_id'].append(material_id)
 
     def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:
         prop.n = len(i)
@@ -2088,8 +2150,8 @@ class PSHLN2(Property):
     MSC
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Property.clear_check
+    def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
@@ -2262,44 +2324,64 @@ class PSHLN2(Property):
     @Property.parse_cards_check
     def parse_cards(self):
         ncards = len(self.cards)
-        self.property_id = np.zeros(ncards, dtype='int32')
-        self.material_id = np.zeros(ncards, dtype='int32')
-        self.direct = np.zeros(ncards, dtype='int32')
-        self.analysis = np.zeros(ncards, dtype='|U8')
-        self.thickness = np.zeros(ncards, dtype='float64')
-        self.beh = np.zeros((ncards, 4), dtype='|U8')
-        self.beh_h = np.zeros((ncards, 4), dtype='|U8')
-        self.integration = np.zeros((ncards, 4), dtype='|U8')
-        self.integration_h = np.zeros((ncards, 4), dtype='|U8')
+        property_id = np.zeros(ncards, dtype='int32')
+        material_id = np.zeros(ncards, dtype='int32')
+        direct = np.zeros(ncards, dtype='int32')
+        analysis = np.zeros(ncards, dtype='|U8')
+        thickness = np.zeros(ncards, dtype='float64')
+        beh = np.zeros((ncards, 4), dtype='|U8')
+        beh_h = np.zeros((ncards, 4), dtype='|U8')
+        integration = np.zeros((ncards, 4), dtype='|U8')
+        integration_h = np.zeros((ncards, 4), dtype='|U8')
 
         for icard, card in enumerate(self.cards):
-            (pid, mid, direct, thickness, analysis,
-             behx, integration, behxh, integration_h, comment) = card
+            (pid, mid, directi, thicknessi, analysisi,
+             behx, integrationi, behxh, integration_hi, comment) = card
             if behx is None:
                 behx = [''] * 4
-            if integration is None:
-                integration = [''] * 4
+            if integrationi is None:
+                integrationi = [''] * 4
             if behxh is None:
                 behxh = [''] * 4
-            if integration_h is None:
-                integration_h = [''] * 4
+            if integration_hi is None:
+                integration_hi = [''] * 4
 
-            self.property_id[icard] = pid
-            self.material_id[icard] = mid
-            self.thickness[icard] = thickness
-            self.direct[icard] = direct
-            self.analysis[icard] = analysis
-            self.beh[icard] = [val if val is not None else ''
-                               for val in behx]
-            self.integration[icard] = [val if val is not None else ''
-                                       for val in integration]
-            self.beh_h[icard] = [val if val is not None else ''
-                                 for val in behxh]
-            self.integration_h[icard] = [val if val is not None else ''
-                                         for val in integration_h]
+            property_id[icard] = pid
+            material_id[icard] = mid
+            thickness[icard] = thicknessi
+            direct[icard] = directi
+            analysis[icard] = analysisi
+            beh[icard] = [val if val is not None else ''
+                          for val in behx]
+            integration[icard] = [val if val is not None else ''
+                                  for val in integrationi]
+            beh_h[icard] = [val if val is not None else ''
+                            for val in behxh]
+            integration_h[icard] = [val if val is not None else ''
+                                    for val in integration_hi]
+        self._save(property_id, material_id,
+                   thickness, direct, analysis,
+                   integration, beh_h, integration_h)
         self.sort()
         self.model.log.warning(f'PSHLN2 self.thickness={self.thickness}')
         self.cards = []
+
+    def _save(self, property_id, material_id,
+              thickness, direct, analysis,
+              integration, beh_h, integration_h) -> None:
+        self.property_id = property_id
+        self.material_id = material_id
+        self.thickness = thickness
+        self.direct = direct
+        self.analysis = analysis
+
+        self.integration = integration
+        self.beh_h = beh_h
+        self.integration_h = integration_h
+
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+        used_dict['coord_id'].append(self.coord_id)
 
     def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:
         prop.n = len(i)

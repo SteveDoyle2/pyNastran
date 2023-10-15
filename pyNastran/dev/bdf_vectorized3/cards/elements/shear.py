@@ -53,8 +53,8 @@ class CSHEAR(Element):
         self.n += 1
         return self.n
 
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Property.clear_check
+    def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='int32')
 
@@ -93,6 +93,10 @@ class CSHEAR(Element):
         self.nodes = nodes
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['element_id'].append(self.element_id)
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -165,8 +169,9 @@ class PSHEAR(Property):
     | PSHEAR | PID | MID | T | NSM | F1 | F2 |
     +--------+-----+-----+---+-----+----+----+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
         self.t = np.array([], dtype='float64')
         self.nsm = np.array([], dtype='float64')
@@ -250,6 +255,9 @@ class PSHEAR(Property):
         self.nsm = nsm
         self.f1 = f1
         self.f2 = f2
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         mids = hstack_msg([prop.material_id for prop in self.allowed_materials],

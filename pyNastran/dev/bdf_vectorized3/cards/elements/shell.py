@@ -47,12 +47,18 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class ShellElement(Element):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self) -> None:
         self.nodes = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.tflag = np.array([], dtype='int32')
         self.T = np.array([], dtype='int32')
+
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        nodes = np.unique(self.nodes.flatten())
+        nodes = nodes[nodes > 0]
+        used_dict['node_id'].append(nodes)
 
     def check_types(self):
         assert self.element_id.dtype.name in NUMPY_INTS, self.element_id.dtype.name
@@ -487,8 +493,9 @@ class CTRIA3(ShellElement):
     +--------+-------+-------+----+----+----+------------+---------+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 3), dtype='int32')
         self.mcid = np.array([], dtype='int32')
@@ -632,11 +639,9 @@ class CTRIA3(ShellElement):
         ]
         return headers
 
+    @parse_element_check
     def write_file_8(self, bdf_file: TextIOLike,
                      write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
-
         size = 8
         headers = self.card_headers()
         if write_card_header:
@@ -778,8 +783,9 @@ class CTRIAR(ShellElement):
 
     """
 
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 3), dtype='int32')
         self.mcid = np.array([], dtype='int32')
@@ -1036,8 +1042,9 @@ class CQUAD4(ShellElement):
     +--------+-------+-------+----+----+----+----+------------+---------+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='int32')
         self.mcid = np.array([], dtype='int32')
@@ -1398,8 +1405,9 @@ class CQUADR(ShellElement):
     +--------+-------+-------+----+----+----+----+------------+---------+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='int32')
         self.mcid = np.array([], dtype='int32')
@@ -1624,8 +1632,9 @@ class CTRIA6(ShellElement):
     +--------+------------+---------+----+----+----+----+----+-----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 6), dtype='int32')
         self.mcid = np.array([], dtype='int32')
@@ -1920,8 +1929,9 @@ class CQUAD8(ShellElement):
     +--------+-------+-----+----+----+----+----+------------+-------+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 8), dtype='int32')
         self.mcid = np.array([], dtype='int32')
@@ -2241,12 +2251,17 @@ class CQUAD(ShellElement):
     theta_mcid is an MSC specific variable
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    @Element.clear_check
+    def clear(self):
+        self.element_id = np.array([], dtype='int32')
         self.property_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 9), dtype='int32')
         self.mcid = np.array([], dtype='int32')
         self.theta = np.array([], dtype='float64')
+
+        # fake
+        self.tflag = np.array([], dtype='int32')
+        self.T = np.array([], dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0., comment: str='') -> int:

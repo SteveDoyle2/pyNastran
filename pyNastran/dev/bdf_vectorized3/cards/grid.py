@@ -135,6 +135,12 @@ class SPOINT(XPOINT):
         #spoint.ids = self.ids[i]
         #return spoint
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        pass
+    def remove_unused(self, used_dict: [dict[str, np.ndarray]]) -> int:
+        spoint_id = used_dict['spoint_id']
+        return 0
+
 
 class EPOINT(XPOINT):
     _id_name = 'epoint_id'
@@ -435,6 +441,18 @@ class GRID(VectorizedBaseCard):
         self.n = len(node_id)
         #self.sort()
         #self.cards = []
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        #used_dict['node_id'].append(self.node_id)
+        used_dict['coord_id'].append(self.cp)
+        used_dict['coord_id'].append(self.cd)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        node_id = used_dict['node_id']
+        ncards_removed = len(self.node_id) - len(node_id)
+        if ncards_removed:
+            self.slice_card_by_id(node_id, assume_sorted=True, sort_ids=False)
+        return ncards_removed
 
     def convert(self, xyz_scale: float=1., **kwargs):
         self._xyz_cid0 *= xyz_scale
@@ -813,6 +831,11 @@ class POINT(VectorizedBaseCard):
         self.cp = np.array([], dtype='int32')
         self.xyz = np.zeros((0, 3), dtype='float64')
         self._xyz_cid0 = np.zeros((0, 3), dtype='float64')
+
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['point_id'].append(self.node_id)
+        used_dict['coord_id'].append(self.cp)
 
     def convert(self, xyz_scale: float=1., **kwargs):
         self._xyz_cid0 *= xyz_scale

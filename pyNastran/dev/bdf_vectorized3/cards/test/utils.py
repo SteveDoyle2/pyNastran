@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.bdf_interface.convert import convert
+from pyNastran.dev.bdf_vectorized3.bdf_interface.remove_unused import remove_unused
+
 #from pyNastran.dev.bdf_vectorized3.mesh_utils.convert import convert
 #if TYPE_CHECKING:  # pragma: no cover
 
@@ -51,6 +53,9 @@ def save_load_deck(model: BDF,
         units = ['ft', 'lbm', 's']
         convert(model, units_to, units)
 
+    if run_remove_unused:
+        remove_unused(model)
+
     if run_read_write:
         stringio8 = io.StringIO()
         model.write_bdf(stringio8, close=False)
@@ -59,7 +64,6 @@ def save_load_deck(model: BDF,
         stringio16 = io.StringIO()
         model.write_bdf(stringio16, size=16, close=False)
         stringio16.seek(0)
-
 
         stringio_double = io.StringIO()
         model.write_bdf(stringio_double, size=16, is_double=True, close=False)

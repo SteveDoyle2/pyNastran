@@ -191,6 +191,12 @@ class CBUSH(Element):
         self.ocid = ocid
         self.ocid_offset = ocid_offset
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        coords = np.unique(np.hstack([self.coord_id, self.ocid]))
+        coords = coords[coords >= 0]
+        used_dict['coord_id'].append(coords)
+
     def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
         """
         s: float; default=0.5
@@ -434,6 +440,19 @@ class PBUSH(Property):
     MASS was added <= MSC 2016
     T/ALPHA/TREF/COINL was added in MSC 2021
     """
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+
+        self.k_fields = np.zeros((0, 6), dtype='float64')
+        self.b_fields = np.zeros((0, 6), dtype='float64')
+        self.ge_fields = np.zeros((0, 6), dtype='float64')
+        self.rcv_fields = np.zeros((0, 4), dtype='float64')
+        self._mass = np.array([], dtype='float64')
+        self.alpha = np.array([], dtype='float64')
+        self.tref = np.array([], dtype='float64')
+        self.coincident_length = np.array([], dtype='float64')
+
     def add(self, pid: int, k: list[float], b: list[float], ge: list[float],
             rcv: Optional[list[float]]=None, mass: Optional[float]=None,
             alpha: float=0., tref: float=0., coincident_length=None,
@@ -535,7 +554,7 @@ class PBUSH(Property):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
-        self.property_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
 
         k_fields = np.zeros((ncards, 6), dtype='float64')
         b_fields = np.zeros((ncards, 6), dtype='float64')
@@ -549,7 +568,7 @@ class PBUSH(Property):
             (pid, k_fieldsi, b_fieldsi, ge_fieldsi, rcv_fieldsi,
              massi, alphai, trefi, coincident_lengthi, comment) = card
 
-            self.property_id[icard] = pid
+            property_id[icard] = pid
             if k_fieldsi:
                 k_fields[icard, :] = k_fieldsi
             if b_fieldsi:
@@ -562,7 +581,8 @@ class PBUSH(Property):
             alpha[icard] = alphai
             tref[icard] = trefi
             coincident_length[icard] = coincident_lengthi
-        self._save(k_fields, b_fields, ge_fields, rcv_fields, _mass, alpha, tref, coincident_length)
+        self._save(property_id, k_fields, b_fields, ge_fields, rcv_fields,
+                   _mass, alpha, tref, coincident_length)
         self.cards = []
 
     def convert(self,
@@ -584,7 +604,9 @@ class PBUSH(Property):
         self.tref *= xyz_scale
         self.alpha *= alpha_scale
 
-    def _save(self, k_fields, b_fields, ge_fields, rcv_fields, _mass, alpha, tref, coincident_length) -> None:
+    def _save(self, property_id, k_fields, b_fields, ge_fields, rcv_fields,
+              _mass, alpha, tref, coincident_length) -> None:
+        self.property_id = property_id
         self.k_fields = k_fields
         self.b_fields = b_fields
         self.ge_fields = ge_fields
@@ -695,8 +717,6 @@ class PBUSH(Property):
 
 
 class PBUSHT(Property):
-    #type = 'PBUSHT'
-
     #def __init__(self, pid, k_tables, b_tables,
                  #ge_tables, kn_tables, comment=''):
         #BushingProperty.__init__(self)
@@ -713,6 +733,14 @@ class PBUSHT(Property):
         #self.b_tables = b_tables
         #self.ge_tables = ge_tables
         #self.kn_tables = kn_tables
+
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.k_tables = np.zeros((0, 6), dtype='int32')
+        self.b_tables = np.zeros((0, 6), dtype='int32')
+        self.ge_tables = np.zeros((0, 6), dtype='int32')
+        self.kn_tables = np.zeros((0, 6), dtype='int32')
 
     def add(self, pid: int, k_tables: list[int], b_tables: list[int],
             ge_tables: list[int], kn_tables: list[int], comment: str='') -> int:
@@ -798,6 +826,14 @@ class PBUSHT(Property):
         self.b_tables = b_tables
         self.ge_tables = ge_tables
         self.kn_tables = kn_tables
+
+    def __apply_slice__(self, prop: PBUSHT, i: np.ndarray) -> None:
+        prop.property_id = self.property_id[i]
+        prop.k_tables = self.k_tables[i, :]
+        prop.b_tables = self.b_tables[i, :]
+        prop.ge_tables = self.ge_tables[i, :]
+        prop.kn_tables = self.kn_tables[i, :]
+        prop.n = len(i)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
@@ -960,6 +996,30 @@ class PBUSH1D(Property):
     |         | GENER  |  IDT  |   IDC  |  IDTDU | IDCDU | IDTDV | IDCDV |
     +---------+--------+-------+--------+--------+-------+-------+-------+
     """
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.k = np.array([], dtype='float64')
+        self.c = np.array([], dtype='float64')
+        self.sa = np.array([], dtype='float64')
+        self.se = np.array([], dtype='float64')
+        self.mass = np.array([], dtype='float64')
+
+        self.spring_type = np.array([], dtype='|U8')
+        self.spring_table = np.zeros((0, 4), dtype='int32')
+        self.spring_equation = np.zeros((0, 4), dtype='int32')
+
+        self.damper_type = np.array([], dtype='|U8')
+        self.damper_table = np.zeros((0, 4), dtype='int32')
+        self.damper_equation = np.zeros((0, 4), dtype='int32')
+
+        self.shock_type = np.array([], dtype='|U8')
+        self.shock_table = np.zeros((0, 5), dtype='int32')
+        self.shock_equation = np.zeros((0, 4), dtype='int32')
+
+        # TYPE = EQUAT
+        self.gener_equation = np.zeros((0, 6), dtype='int32')
+
     def add(self, pid: int,
             k: float=0., c: float=0., m: float=0.,
             sa: float=0., se: float=0., optional_vars=None,

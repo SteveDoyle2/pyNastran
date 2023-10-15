@@ -116,6 +116,14 @@ class VectorizedBaseCard:
     def __contains__(self, key) -> bool:
         return key in self._ids
 
+    def clear_check(func):
+        @wraps(func)
+        def wrapper(self):
+            self.n = 0
+            self.cards = []
+            return func(self)
+        return wrapper
+
     def parse_cards_check(func):
         @wraps(func)
         def wrapper(self):
@@ -463,6 +471,8 @@ class Element(VectorizedBaseCard):
         self.cards = []
         self.n: int = 0
         self.element_id: np.ndarray = np.array([], dtype='int32')
+        if hasattr(self, 'clear'):
+            self.clear()
 
     def slice_card_by_element_id(self, element_id: np.ndarray,
                                  sort_ids: bool=False) -> Element:
@@ -475,6 +485,25 @@ class Element(VectorizedBaseCard):
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        return 0
+        #element_id_all = used_dict['element_id']
+        #element_id = np.intersect1d(element_id_all, self.element_id)
+
+        #ncards_removed = len(self.element_id) - len(element_id)
+        #if ncards_removed:
+            #if len(element_id) == 0:
+                #self.clear()
+            #else:
+                #try:
+                    #self.slice_card_by_id(element_id, assume_sorted=True, sort_ids=False)
+                #except IndexError:
+                    #raise RuntimeError(self.get_stats())
+                #except ValueError:
+                    #raise RuntimeError(f'{self.type} element_id is empty...n={self.n}')
+        #return ncards_removed
+
+
 
 class Property(VectorizedBaseCard):
     _id_name = 'property_id'
@@ -483,6 +512,7 @@ class Property(VectorizedBaseCard):
         self.cards = []
         self.n = 0
         self.property_id: np.ndarray = np.array([], dtype='int32')
+        self.clear()
 
     def slice_card_by_property_id(self, property_id: np.ndarray,
                                  sort_ids: bool=False) -> Property:
@@ -493,6 +523,24 @@ class Property(VectorizedBaseCard):
         assert cls_obj.n > 0, cls_obj
         return cls_obj
 
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        property_id_all = used_dict['property_id']
+        property_id = np.intersect1d(property_id_all, self.property_id)
+        removed_id = np.setdiff1d(self.property_id, property_id_all)
+        ncards_removed = len(self.property_id) - len(property_id)
+        if ncards_removed:
+            if len(property_id) == 0:
+                self.model.log.info(f'removing {self.type} removed property_id={removed_id}; ncards={ncards_removed}')
+                self.clear()
+            else:
+                try:
+                    self.slice_card_by_id(property_id, assume_sorted=True, sort_ids=False)
+                except IndexError:
+                    raise RuntimeError(self.get_stats())
+                except ValueError:
+                    raise RuntimeError(f'{self.type} property_id is empty...n={self.n}')
+        return ncards_removed
+
 
 class Material(VectorizedBaseCard):
     _id_name = 'material_id'
@@ -501,6 +549,29 @@ class Material(VectorizedBaseCard):
         self.cards = []
         self.n = 0
         self.material_id: np.ndarray = np.array([], dtype='int32')
+        if hasattr(self, 'clear'):
+            self.clear()
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        pass
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        material_id_all = used_dict['material_id']
+        material_id = np.intersect1d(material_id_all, self.material_id)
+        removed_id = np.setdiff1d(self.material_id, material_id_all)
+        ncards_removed = len(self.material_id) - len(material_id)
+        if ncards_removed:
+            if len(material_id) == 0:
+                self.model.log.info(f'removing {self.type} removed material_id={removed_id}; ncards={ncards_removed}')
+                self.clear()
+            else:
+                try:
+                    self.slice_card_by_id(material_id, assume_sorted=True, sort_ids=False)
+                except IndexError:
+                    raise RuntimeError(self.get_stats())
+                except ValueError:
+                    raise RuntimeError(f'{self.type} material_id is empty...n={self.n}')
+        return ncards_removed
 
     def slice_card_by_material_id(self, material_id: np.ndarray,
                                   sort_ids: bool=False) -> Material:

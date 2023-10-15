@@ -98,6 +98,10 @@ class CDAMP1(Element):
         self.components = components
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
@@ -232,6 +236,9 @@ class CDAMP2(Element):
         self.b = b
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         geom_check(self,
@@ -318,6 +325,10 @@ class CDAMP3(Element):
         self.property_id = property_id
         self.spoints = spoints
         self.n = nelements
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['spoint_id'].append(self.spoints.ravel())
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         spoint = self.model.spoint
@@ -422,6 +433,9 @@ class CDAMP4(Element):
         self.b = b
         self.spoints = spoints
         self.n = nelements
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['spoint_id'].append(self.spoints.ravel())
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         spoint = self.model.spoint
@@ -533,6 +547,10 @@ class PDAMP(Property):
     | PDAMP |  1   | 2.0 |      |    |      |    |      |    |
     +-------+------+-----+------+----+------+----+------+----+
     """
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.b = np.array([], dtype='float64')
+
     def add(self, pid: int, b: float, comment: str='') -> int:
         """
         Creates a PDAMP card
@@ -632,6 +650,11 @@ class PDAMP5(Property):
     | PDAMP5 |  1   | 2   |  2.0 |    |      |    |      |    |
     +--------+------+-----+------+----+------+----+------+----+
     """
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.material_id = np.array([], dtype='int32')
+        self.b = np.array([], dtype='float64')
+
     def add(self, pid: int, mid: int, b: float, comment: str='') -> int:
         """
         Creates a PDAMP card
@@ -719,6 +742,10 @@ class PDAMP5(Property):
 
 
 class PDAMPT(Property):
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.table_b = np.array([], dtype='int32')
+
     def add(self, pid: int, tbid: int, comment: str='') -> int:
         """
         Creates a PDAMPT card
@@ -841,6 +868,10 @@ class CVISC(Element):
         self.nodes = nodes
         self.n = nelements
 
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
@@ -915,6 +946,12 @@ class PVISC(Property):
     | PVISC |  3   | 6.2 | 3.94 |      |     |     |
     +-------+------+-----+------+------+-----+-----+
     """
+
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.cr = np.array([], dtype='float64')
+        self.ce = np.array([], dtype='float64')
+
     def add(self, pid: int, ce: float, cr: float, comment: str='') -> int:
         self.cards.append((pid, ce, cr, comment))
         self.n += 1
@@ -999,9 +1036,18 @@ class CGAP(Element):
     +------+-----+-----+-----+-----+-----+-----+------+-----+
 
     """
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 2), dtype='int32')
+        self.coord_id = np.array([], dtype='int32')
+        self.g0 = np.array([], dtype='int32')
+        self.x = np.zeros((0, 3), dtype='float64')
+
     def add(self, eid: int, pid: int, nids: list[int],
-                 x: Optional[list[int]], g0: Optional[int],
-                 cid: Optional[int]=None, comment: str='') -> int:
+            x: Optional[list[int]], g0: Optional[int],
+            cid: Optional[int]=None, comment: str='') -> int:
         self.cards.append((eid, pid, nids, x, g0, cid, comment))
         self.n += 1
         return self.n
@@ -1098,6 +1144,11 @@ class CGAP(Element):
             xi[irtz, 2] *= xyz_scale
             xi[irtp, 0] *= xyz_scale
             self.x[is_x] = xi
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        coords = self.coord_id[self.coord_id >= 0]
+        used_dict['property_id'].append(self.property_id)
+        used_dict['coord_id'].append(coords)
 
     def __apply_slice__(self, elem: CGAP, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
@@ -1291,6 +1342,21 @@ class PGAP(Property):
     | PGAP |   2  | 0.025 |  2.5  | 1.E6 |      | 1.E6 | 0.25 | 0.25 |
     +------+------+-------+-------+------+------+------+------+------+
     """
+
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.u0 = np.array([], dtype='float64')
+        self.f0 = np.array([], dtype='float64')
+        self.ka = np.array([], dtype='float64')
+        self.kb = np.array([], dtype='float64')
+        self.kt = np.array([], dtype='float64')
+        self.mu1 = np.array([], dtype='float64')
+        self.mu2 = np.array([], dtype='float64')
+        self.tmax = np.array([], dtype='float64')
+        self.mar = np.array([], dtype='float64')
+        self.trmin = np.array([], dtype='float64')
+
     def add(self, pid: int, u0: float=0., f0: float=0.,
             ka: float=1.e8, kb: Optional[float]=None, mu1: float=0.,
             kt: Optional[float]=None, mu2: Optional[float]=None,
@@ -1352,6 +1418,8 @@ class PGAP(Property):
         self.cards = []
 
     def _save(self, property_id, u0, f0, ka, kb, kt, mu1, mu2, tmax, mar, trmin):
+        if len(self.property_id) != 0:
+            asdf
         self.property_id = property_id
         self.u0 = u0
         self.f0 = f0
