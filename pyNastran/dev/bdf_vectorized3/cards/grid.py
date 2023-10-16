@@ -277,6 +277,9 @@ class GRID(VectorizedBaseCard):
     def __init__(self, model: BDF):
         super().__init__(model)
         self._is_sorted = False
+        self.clear()
+
+    def clear(self) -> None:
         self.node_id = np.array([], dtype='int32')
         self.cp = np.array([], dtype='int32')
         self.cd = np.array([], dtype='int32')
@@ -746,7 +749,7 @@ class GRID(VectorizedBaseCard):
         if not self._is_sorted:
             self.sort()
         xyz_cid0 = self._xyz_cid0
-
+        assert xyz_cid0.shape[0] > 0, xyz_cid0.shape
 
         xyz = self.xyz
         #self.model.log.info(f'xyz = {xyz_cid0.shape}')

@@ -16,12 +16,13 @@ def load_h5_node(model: BDF, input_group: Group):
             data = h5_element.read()
             #dtype=[('ID', '<i8'), ('CP', '<i8'), ('X', '<f8', (3,)), ('CD', '<i8'),
             # ('PS', '<i8'), ('SEID', '<i8'), ('DOMAIN_ID', '<i8')])
-            grid.node_id = data['ID']
-            grid.cp = data['CP']
-            grid.cd = data['CD']
-            grid.xyz = data['X']
-            grid.ps = data['PS']
-            grid.seid = data['SEID']
+            node_id = data['ID']
+            cp = data['CP']
+            cd = data['CD']
+            xyz = data['X']
+            ps = data['PS']
+            seid = data['SEID']
+            grid._save(node_id, cp, cd, xyz, ps, seid, comment=None)
             grid.domain_id = data['DOMAIN_ID']
             grid.n = len(grid.node_id)
             grid._xyz_cid0 = np.full((grid.n, 3), np.nan, dtype=grid.xyz.dtype)
@@ -29,7 +30,6 @@ def load_h5_node(model: BDF, input_group: Group):
             grid._xyz_cid0[icp0, :] = grid.xyz[icp0, :]
             grid.write()
         elif name == 'EPOINT':
-            return
             epoint = model.epoint
             data = h5_element.read()
             #dtype([('ID', '<i8'), ('DOMAIN_ID', '<i8')])

@@ -117,12 +117,12 @@ def load_h5_coord(model: BDF, group: Group):
             np.hstack(c2).reshape(ncoord, 1),
             np.hstack(c3).reshape(ncoord, 1),
         ])
-
         coord_save(coord, coord_id, coord_type, icoord, ref_coord_id, nodes, e1, e2, e3)
         coord.write()
     #x = 1
 
-def coord_save(self: COORD, coord_id, coord_type, icoord, ref_coord_id, nodes, e1, e2, e3):
+def coord_save(self: COORD, coord_id, coord_type, icoord,
+               ref_coord_id, nodes, e1, e2, e3):
     ncoord = len(coord_id)
     self.coord_id = coord_id
     self.coord_type = coord_type
@@ -148,6 +148,7 @@ def coord_save(self: COORD, coord_id, coord_type, icoord, ref_coord_id, nodes, e
     self.n = ncoord
     self.is_resolved = (coord_id == 0)
     self.sort()
+    self.model.setup()
     self.write(size=8)
     #self._save(coord_id, ref_coord_id, e1, e2, e3)
     #self.model.log.warning('adding nan coords')

@@ -60,6 +60,21 @@ def load_h5_material(model: BDF, input_group: Group):
             mcsid = data['MCSID']
             mat._save(material_id, G11, G12, G13, G22, G23, G33, rho,
                       alpha, tref, ge, Ss, St, Sc, mcsid, ge_matrix=None)
+        elif name == 'MAT4':
+            mat = model.mat4
+            #('MID', 'K', 'CP', 'RHO', 'H', 'MU', 'HGEN', 'REFENTH', 'TCH', 'TDELTA', 'QLAT', 'DOMAIN_ID')
+            k = data['K']
+            cp = data['CP']
+            rho = data['RHO']
+            H = data['H']
+            mu = data['MU']
+            hgen = data['HGEN']
+            ref_enthalpy = data['REFENTH']
+            tch = data['TCH']
+            tdelta = data['TDELTA']
+            qlat = data['QLAT']
+            mat._save(material_id, k, cp, rho, H, mu, hgen, ref_enthalpy,
+                      tch, tdelta, qlat)
         elif name == 'MAT8':
             mat = model.mat8
             # dtype([('MID', '<i8'), ('E1', '<f8'), ('E2', '<f8'), ('NU12', '<f8'),

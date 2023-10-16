@@ -18,7 +18,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     update_field_size, array_str,
-    array_default_int, array_default_float)
+    array_default_int, array_default_float, array_float_nan)
 from .rod import line_length_nan, line_centroid, line_centroid_with_spoints
 from .bar import get_bar_vector, safe_normalize
 from .utils import get_mass_from_property
@@ -1378,8 +1378,10 @@ class PBUSH1D(Property):
         print_card = get_print_card_8_16(size)
 
         property_id = array_str(self.property_id, size=size)
+        sas = array_float_nan(self.sa, size=size, is_double=False)
+        ses = array_float_nan(self.se, size=size, is_double=False)
         for pid, k, c, mass, sa, se in zip(property_id, self.k, self.c,
-                                           self.mass, self.sa, self.se):
+                                           self.mass, sas, ses):
             list_fields = ['PBUSH1D', pid, k, c, mass, None,
                            sa, se, None]
             self_vars = {}

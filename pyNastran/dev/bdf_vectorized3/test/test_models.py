@@ -25,18 +25,18 @@ class TestModels(unittest.TestCase):
         #test_op2(args2, show_args=False)
 
     def test_h5_transient(self):
-        bdf_filename = MODEL_PATH / 'elements' / 'time_elements.bdf'
+        #bdf_filename = MODEL_PATH / 'elements' / 'time_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
-        args = ['test_bdf', str(bdf_filename), '--skip_nominal', '--quiet']
-        test_bdf(args, show_args=False)
+        #args = ['test_bdf', str(bdf_filename), '--skip_nominal', '--quiet']
+        #test_bdf(args, show_args=False)
 
         args2 = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-        #test_bdf(args2, show_args=False)
+        test_bdf(args2, show_args=False)
 
         args3 = ['test_op2', str(h5_filename), '-ctfo', '--quiet']
         #test_op2(args3, show_args=False)
 
-    def _test_h5_transient_thermal(self):
+    def test_h5_transient_thermal(self):
         h5_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.h5'
 
         args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
@@ -46,42 +46,42 @@ class TestModels(unittest.TestCase):
         #test_op2(args2, show_args=False)
 
     def test_h5_static(self):
-        bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
-        args = ['test_bdf', str(bdf_filename), '--quiet']
-        test_bdf(args, show_args=False)
+        #bdf_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.bdf'
+        #args = ['test_bdf', str(bdf_filename), '--quiet']
+        #test_bdf(args, show_args=False)
 
-        #if IS_PYTABLES:
-            #h5_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.h5'
-            #args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-            #test_bdf(args, show_args=False)
+        if IS_PYTABLES:
+            h5_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.h5'
+            args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
+            test_bdf(args, show_args=False)
         #args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
         #test_op2(args2, show_args=False)
 
-    def _test_h5_modes(self):
+    def test_h5_modes(self):
         h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
         args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
         test_bdf(args, show_args=False)
         args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
-        test_op2(args2, show_args=False)
+        #test_op2(args2, show_args=False)
 
-    def _test_h5_modes_complex(self):
+    def test_h5_modes_complex(self):
         h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
         args1 = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
         test_bdf(args1, show_args=False)
         args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
         #test_op2(args2, show_args=False)
 
-    #def test_h5_buckling(self):
-        #h5_filename = MODEL_PATH / 'sol_101_elements' / 'buckling_solid_shell_bar.h5'
-        #args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-        #test_bdf(args, show_args=False)
-        #args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
+    def _test_h5_buckling(self):
+        h5_filename = MODEL_PATH / 'sol_101_elements' / 'buckling_solid_shell_bar.h5'
+        args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
+        test_bdf(args, show_args=False)
+        args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
         #test_op2(args2, show_args=False)
 
-    #def test_h5_buckling2(self):
-        #h5_filename = MODEL_PATH / 'sol_101_elements' / 'buckling2_solid_shell_bar.h5'
-        #args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-        #test_bdf(args, show_args=False)
+    def _test_h5_buckling2(self):
+        h5_filename = MODEL_PATH / 'sol_101_elements' / 'buckling2_solid_shell_bar.h5'
+        args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
+        test_bdf(args, show_args=False)
 
     #def test_h5_bwb(self):
         #h5_filename = r'C:\NASA\m4\formats\git\pyNastran\models\bwb\bwb_saero_saved.h5'
