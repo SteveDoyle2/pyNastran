@@ -20,7 +20,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int
 #from .rod import line_length, line_centroid, line_centroid_with_spoints
 #from .utils import get_mass_from_property
-if TYPE_CHECKING:
+
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike

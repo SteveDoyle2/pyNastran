@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from .utils import cast_encoding_strip, get_group_name
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
         PELAS, PROD, PTUBE, PVISC, PBUSH1D, PBAR, PSHEAR, PSHELL)
     from pyNastran.dev.bdf_vectorized3.cards.elements.beam import PBEAM
