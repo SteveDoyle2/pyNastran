@@ -220,7 +220,7 @@ jobs:
         run: |
           pip install PyQt5
 
-      - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.11' }}
+      - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.12' }}
         name: Install PyQt6
         run: |
           pip install PyQt6
