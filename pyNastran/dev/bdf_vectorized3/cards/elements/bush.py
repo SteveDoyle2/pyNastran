@@ -16,12 +16,14 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
     parse_element_check, parse_property_check)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import update_field_size, array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    update_field_size, array_str,
+    array_default_int, array_default_float)
 from .rod import line_length_nan, line_centroid, line_centroid_with_spoints
 from .bar import get_bar_vector, safe_normalize
 from .utils import get_mass_from_property
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.utils import hstack_msg, cast_int_array
+from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
@@ -44,8 +46,10 @@ class CBUSH(Element):
     |       |  S  | OCID | S1 | S2 |   S3  |    |    |     |
     +-------+-----+------+----+----+-------+----+----+-----+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+
+    def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int],
@@ -181,9 +185,9 @@ class CBUSH(Element):
               s: np.ndarray,
               coord_id: np.ndarray,
               ocid: np.ndarray, ocid_offset: np.ndarray) -> None:
-        self.element_id = cast_int_array(element_id)
+        self.element_id = element_id
         self.property_id = property_id
-        self.nodes = cast_int_array(nodes)
+        self.nodes = nodes
         self.x = x
         self.g0 = g0
         self.s = s
@@ -273,8 +277,9 @@ class CBUSH(Element):
         nodess = array_str(self.nodes, size=size)
         ocids = array_default_int(self.ocid, default=-1, size=size)
         cids = array_default_int(self.coord_id, default=-1, size=size)
+        ss = array_default_float(self.s, default=0.5, size=size, is_double=False)
         for eid, pid, nodes, g0, x, cid, s, ocid, si in zip(element_ids, property_ids, nodess,
-                                                             self.g0, self.x, cids, self.s, ocids, self.si):
+                                                            self.g0, self.x, cids, ss, ocids, self.si):
             n1, n2 = nodes
 
             if g0 == -1:
@@ -292,7 +297,6 @@ class CBUSH(Element):
             si1, si2, si3 = '', '', ''
             if not np.all(np.isnan(si)):
                 si1, si2, si3 = si
-            s = set_blank_if_default(s, 0.5)
             list_fields = ['CBUSH', eid, pid, n1, n2,
                            x1, x2, x3,
                            cid, s, ocid, si1, si2, si3]
@@ -362,7 +366,7 @@ class CBUSH(Element):
         if np.any(icoord):
             coord_ids = self.coord_id[icoord]
             assert len(coord_ids) == icoord.sum()
-            coords = self.model.coord.slice_card_by_coord_id(coord_ids)
+            coords = self.model.coord.slice_card_by_id(coord_ids)
             ihat = coords.i
             jhat = coords.j
             khat = coords.k

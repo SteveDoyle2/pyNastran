@@ -252,7 +252,11 @@ def _create_alt_axes(self: NastranIO,
     assert not np.isnan(np.max(xyz1)), xyz1
     assert not np.isnan(np.max(xyz2)), xyz2
 
-    v, ihat, jhat, khat, wa, wb = elem.get_axes(xyz1, xyz2)
+    try:
+        v, ihat, jhat, khat, wa, wb = elem.get_axes(xyz1, xyz2)
+    except ValueError:
+        self.log.error(f'failed getting {elem.type} orientation vectors')
+        return
     length = elem.length()
     del v, ihat, wa, wb
 

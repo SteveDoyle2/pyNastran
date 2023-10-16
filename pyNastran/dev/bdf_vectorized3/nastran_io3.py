@@ -173,6 +173,7 @@ class Nastran3:
 
     def load_bdf_geometry(self, bdf_filename: str, name: str='main', plot: bool=True):
         model = BDF(debug=True, log=None, mode='msc')
+        model.idtype = 'int64'
         model.read_bdf(bdf_filename)
         ugrid, form, cases, unused_icase = self._load_geometry_from_model(
             model, name, plot)
@@ -260,16 +261,19 @@ class Nastran3:
 
         gui.isubcase_name_map = {1: ['Nastran', '']}
         cases: Cases = {}
+        quality_form = []
 
         icase = self.gui.get_new_icase()
 
         subcase_id = 1
         geometry_form: list[Form] = []
-        icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeID', node_id)
-        icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'ElementID', element_id)
-        icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeIndex', node_index)
-        icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'ElementIndex', element_index)
         nelements = len(element_id)
+        icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeID', node_id)
+        if nelements:
+            icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'ElementID', element_id)
+        icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeIndex', node_index)
+        if nelements:
+            icase = _add_integer_centroid_gui_result(icase, cases, geometry_form, subcase_id, 'ElementIndex', element_index)
 
         if len(model.grid):
             node_cp = model.grid.cp
@@ -279,18 +283,19 @@ class Nastran3:
             if (node_cd.min(), node_cd.max()) != (0, 0):
                 icase = _add_integer_node_gui_result(icase, cases, geometry_form, subcase_id, 'NodeCd', node_cd)
 
-        icase = _add_integer_centroid_gui_result(
-            icase, cases, geometry_form, subcase_id, 'PropertyID', property_id, mask_value=0)
+        if nelements:
+            icase = _add_integer_centroid_gui_result(
+                icase, cases, geometry_form, subcase_id, 'PropertyID', property_id, mask_value=0)
 
-        uproperty_id = get_property_index(property_id)
-        icase = _add_integer_centroid_gui_result(
-            icase, cases, geometry_form, subcase_id, 'PropertyIndex', uproperty_id)
+            uproperty_id = get_property_index(property_id)
+            icase = _add_integer_centroid_gui_result(
+                icase, cases, geometry_form, subcase_id, 'PropertyIndex', uproperty_id)
 
-        mean_edge_length, icase, quality_form = _set_quality(
-            icase, cases,
-            model, subcase_id, self.gui_elements,
-            element_id, nelements, self.gui_elements)
-        self.mean_edge_length = mean_edge_length
+            mean_edge_length, icase, quality_form = _set_quality(
+                icase, cases,
+                model, subcase_id, self.gui_elements,
+                element_id, nelements, self.gui_elements)
+            self.mean_edge_length = mean_edge_length
 
         form = [
             ('Geometry', None, geometry_form),
@@ -586,22 +591,26 @@ class Nastran3:
         # [number of nodes, nodes]
         assert len(element_ids) == len(property_ids)
 
-        n_nodes = np.hstack(n_nodes_)
-        element_id = np.hstack(element_ids)
-        property_id = np.hstack(property_ids)
-        cell_type = np.hstack(cell_type_)  # 10, 12
-        cell_offset = np.hstack(cell_offset_) # 0, 5
-        #property_id = np.hstack(property_ids)
+        if len(element_ids) == 0:
+            element_id = np.array([], dtype='int32')
+            property_id = np.array([], dtype='int32')
+        else:
+            n_nodes = np.hstack(n_nodes_)
+            element_id = np.hstack(element_ids)
+            property_id = np.hstack(property_ids)
+            cell_type = np.hstack(cell_type_)  # 10, 12
+            cell_offset = np.hstack(cell_offset_) # 0, 5
+            #property_id = np.hstack(property_ids)
 
-        assert len(element_id) == len(property_id)
-        assert len(element_id) == len(cell_type)
-        assert len(element_id) == len(cell_offset)
+            assert len(element_id) == len(property_id)
+            assert len(element_id) == len(cell_type)
+            assert len(element_id) == len(cell_offset)
 
-        nelement_total = len(element_id)
-        #nelement_total = 5 # len(element_id)
-        build_vtk_geometry(
-            nelement_total, ugrid,
-            n_nodes, cell_type, cell_offset)
+            nelement_total = len(element_id)
+            #nelement_total = 5 # len(element_id)
+            build_vtk_geometry(
+                nelement_total, ugrid,
+                n_nodes, cell_type, cell_offset)
         self.gui_elements = gui_elements
         return element_id, property_id
 

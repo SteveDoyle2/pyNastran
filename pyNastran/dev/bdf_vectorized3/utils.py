@@ -23,6 +23,7 @@ def hstack_msg(mylist, msg: str, min_size: int=0) -> np.ndarray:
     return stacked
 
 def cast_int_array(list_ints: Union[list[int], list[list[int]]]) -> np.ndarray:
+    asdf
     try:
         return np.array(list_ints, dtype='int32')
     except OverflowError:

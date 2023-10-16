@@ -99,8 +99,10 @@ class CMASS1(Element):
         self.components = components
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        nodes = self.nodes.ravel()
+        nodes = nodes[nodes > 0]
         used_dict['property_id'].append(self.property_id)
-        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['node_id'].append(nodes)
 
     def __apply_slice__(self, elem: CMASS1, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]
@@ -254,7 +256,9 @@ class CMASS2(Element):
         self.components = components
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
-        used_dict['node_id'].append(self.nodes.ravel())
+        nodes = self.nodes.ravel()
+        nodes = nodes[nodes > 0]
+        used_dict['node_id'].append(nodes)
 
     def __apply_slice__(self, elem: CMASS2, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]

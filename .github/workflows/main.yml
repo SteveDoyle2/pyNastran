@@ -82,20 +82,21 @@ jobs:
 
           - {python-version: '3.10', mode: 'old'}                   # redundant
           - {python-version: '3.10', mode: 'latest_pyqt5_gui'}      # 'pip install imageio pillow' fails
-          - {python-version: '3.10', mode: 'latest_pyqt5_gui'}      # 'pip install imageio pillow' fails
           - {python-version: '3.10', mode: 'latest_pyqt6_gui'}      # 'pip install imageio pillow' fails
+          #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}
 
           - {python-version: '3.11', mode: 'old'}               # redundant
-          - {python-version: '3.11', mode: 'latest_pyqt5_gui'}
-          - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.11', mode: 'latest_pyside2_gui'}
-          - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyqt5_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyqt6_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}
 
           - {python-version: '3.12', mode: 'old'}               # redundant
           - {python-version: '3.12', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.12', mode: 'latest_pyqt6_gui'}
           - {python-version: '3.12', mode: 'latest_pyside2_gui'}
-          - {python-version: '3.12', mode: 'latest_pyqt6_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}
       fail-fast: false
      #- continue-on-error: ${{ matrix.experimental }}
 #strategy:

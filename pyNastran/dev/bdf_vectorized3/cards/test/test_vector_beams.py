@@ -657,7 +657,7 @@ class TestBeams(unittest.TestCase):
             [1., 0., 1.],
             [1., 1., 1.],
         ]
-        coord = model.coord.slice_card_by_coord_id(cid)
+        coord = model.coord.slice_card_by_id(cid)
         for i, xyz in enumerate(xyz_check):
             xyz2a = coord_old.transform_node_to_global_assuming_rectangular(xyz)
             xyz = np.array(xyz).reshape(1, 3)

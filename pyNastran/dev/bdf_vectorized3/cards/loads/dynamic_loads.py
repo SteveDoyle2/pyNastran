@@ -28,7 +28,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, get_print_card_size)
-from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
+#from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
 #from .static_loads import get_loads_by_load_id, get_reduced_loads
 
 if TYPE_CHECKING:
@@ -121,6 +121,7 @@ class DAREA(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
 
         #: Set identification number
         load_id = np.zeros(ncards, dtype='int32')
@@ -128,7 +129,7 @@ class DAREA(VectorizedBaseCard):
 
         #: Identification number of DAREA or SPCD entry set or a thermal load
         #: set (in heat transfer analysis) that defines {A}. (Integer > 0)
-        node_id = []
+        node_id = np.zeros(ncards, dtype=idtype)
         component = np.zeros(ncards, dtype='int32')
         scale = np.zeros(ncards, dtype='float64')
 
@@ -136,7 +137,7 @@ class DAREA(VectorizedBaseCard):
         for icard, card in enumerate(self.cards):
             (sid, nid, componenti, scalei, comment) = card
             load_id[icard] = sid
-            node_id.append(nid)
+            node_id[icard] = nid
             component[icard] = componenti
             scale[icard] = scalei
         self._save(load_id, node_id, component, scale)
@@ -145,7 +146,7 @@ class DAREA(VectorizedBaseCard):
 
     def _save(self, load_id, node_id, component, scale):
         self.load_id = load_id
-        self.node_id = cast_int_array(node_id)
+        self.node_id = node_id
         self.component = component
         self.scale = scale
 

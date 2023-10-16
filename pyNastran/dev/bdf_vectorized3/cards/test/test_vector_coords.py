@@ -189,12 +189,12 @@ class TestCoords(unittest.TestCase):
         card = model.add_card(lines_b, 'CORD2R', is_list=False)
         model.setup()
 
-        cord2r = model.coord.slice_card_by_coord_id(3)
+        cord2r = model.coord.slice_card_by_id(3)
         #print(type(cord2r))
         self.assertEqual(cord2r.coord_id[0], 3)
         self.assertEqual(cord2r.ref_coord_id[0], 0)
 
-        cord2r = model.coord.slice_card_by_coord_id(4)
+        cord2r = model.coord.slice_card_by_id(4)
         #print(type(cord2r))
         icoord = cord2r.index(4)
         self.assertEqual(cord2r.coord_id[icoord], 4)
@@ -555,7 +555,7 @@ class TestCoords(unittest.TestCase):
 
         #size = 8
         bdf_file = StringIO()
-        card = model.coord.slice_card_by_coord_id(2)
+        card = model.coord.slice_card_by_id(2)
         self.assertEqual(card.coord_id, 2)
         self.assertEqual(card.ref_coord_id, -1)
         #card.write_card(bdf_file, size=8, is_double=False)
@@ -587,7 +587,7 @@ class TestCoords(unittest.TestCase):
 
         #size = 8
         bdf_file = StringIO()
-        card = model.coord.slice_card_by_coord_id(2)
+        card = model.coord.slice_card_by_id(2)
         self.assertEqual(card.coord_id[0], 2)
         self.assertEqual(card.ref_coord_id[0], -1)
         card.write(size=8)
@@ -628,7 +628,7 @@ class TestCoords(unittest.TestCase):
 
         msg = '\nexpected=%s \nactual  =%s \ndiff    =%s' % (expected, xyz, diff)
         assert np.allclose(diff, 0.), msg
-        coord = model.coord.slice_card_by_coord_id(7)
+        coord = model.coord.slice_card_by_id(7)
         T = coord.T[0, :, :]
         #self.assertTrue(array_equal(T, coord.beta_n(2)))
 

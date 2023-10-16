@@ -266,7 +266,7 @@ class FakeGUIMethods(GuiVTKCommon):
             self.icase = -1
             self.ncases = 0
 
-        if self.is_groups:
+        if self.is_groups and len(self.element_ids):
             #eids = np.arange(172)
             #eids = []
             #self.hide_elements_mask(eids)

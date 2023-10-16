@@ -47,9 +47,16 @@ def to_dict_array(card, used_dict: dict[str, list[np.ndarray]]) -> dict[str, np.
             used_arrays[key] = np.array([], dtype='int32')
             continue
         try:
-            used_arrays[key] = np.unique(np.hstack(used_list))
+            values = np.unique(np.hstack(used_list))
         except ValueError:
             raise RuntimeError((card.type, key))
+
+        min_value = 1
+        if key == 'coord_id':
+            min_value = 0
+        if len(values):
+            assert values.min() >= min_value, (card.type, key, values.min())
+        used_arrays[key] = values
 
     coord_id = used_arrays['coord_id']
     assert coord_id.min() >= 0, (card.type, coord_id.min())

@@ -71,11 +71,11 @@ class COORD(VectorizedBaseCard):
         self.n = 1
         self.setup()
 
-    @classmethod
-    def slice_card_by_coord_id(cls, coord_id: np.ndarray) -> COORD:
-        i = cls.index(coord_id)
-        coord = cls.slice_card_by_index(i)
-        return coord
+    #@classmethod
+    #def slice_card_by_coord_id(cls, coord_id: np.ndarray) -> COORD:
+        #i = cls.index(coord_id)
+        #coord = cls.slice_card_by_index(i)
+        #return coord
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         is_cord1 = (self.icoord == 1)
@@ -331,12 +331,12 @@ class COORD(VectorizedBaseCard):
         isort = np.argsort(self.coord_id)
         self.__apply_slice__(self, isort)
 
-    def slice_card_by_coord_id(self, coord_id: np.ndarray) -> COORD:
-        assert len(self.coord_id) > 0, self.coord_id
-        i = self.index(coord_id)
-        coord = COORD(self.model)
-        self.__apply_slice__(coord, i)
-        return coord
+    #def slice_card_by_coord_id(self, coord_id: np.ndarray) -> COORD:
+        #assert len(self.coord_id) > 0, self.coord_id
+        #i = self.index(coord_id)
+        #coord = COORD(self.model)
+        #self.__apply_slice__(coord, i)
+        #return coord
 
     def add_cord1r(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> int:
         cardi = (1, 'R', cid), (g1, g2, g3), comment
@@ -600,7 +600,7 @@ class COORD(VectorizedBaseCard):
         if len(self.coord_id) != len(ucoords):
             #print('slicing for unique coords')
             i = self.index(ucoords)
-            #self.slice_card_by_coord_id(ucoords)
+            #self.slice_card_by_id(ucoords)
             self.__apply_slice__(self, i)
 
         np.searchsorted(self.coord_id, self.coord_id)

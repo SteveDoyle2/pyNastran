@@ -20,7 +20,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
     array_str, array_default_int, update_field_size)
-from pyNastran.dev.bdf_vectorized3.utils import cast_int_array, print_card_8
+from pyNastran.dev.bdf_vectorized3.utils import print_card_8
 from .grid import parse_node_check
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -341,19 +341,20 @@ class SPC1(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
         spc_id = np.zeros(ncards, dtype='int32')
         components = np.zeros(ncards, dtype='int32')
         nnodes = np.zeros(ncards, dtype='int32')
-        node_id = []
+        node_id_list = []
         for icard, card in enumerate(self.cards):
             (spc_idi, componentsi, nodesi, comment) = card
             nnodesi = len(nodesi)
             spc_id[icard] = spc_idi
             nnodes[icard] = nnodesi
-            node_id.extend(nodesi)
+            node_id_list.extend(nodesi)
             components[icard] = componentsi
-        node_id_ = cast_int_array(node_id)
-        self._save(spc_id, node_id_, components, nnodes)
+        node_id = np.array(node_id_list, dtype=idtype)
+        self._save(spc_id, node_id, components, nnodes)
         self.cards = []
 
     def _save(self, spc_id, node_id, components, nnodes):

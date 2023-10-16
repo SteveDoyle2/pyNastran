@@ -122,79 +122,98 @@ class TestGuiModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'iSat' / 'iSat_launch_100Hz.dat'
         run_nastran_gui(bdf_filename)
 
-    def _test_contact_1(self):
+    def test_contact_1(self):
         bdf_filename = MODEL_PATH / 'contact' / 'contact.bdf'
-    def _test_contact_2(self):
+        run_nastran_gui(bdf_filename)
+    def test_contact_2(self):
         bdf_filename = MODEL_PATH / 'contact' / '2bars_shell_s-contact.dat'
-    def _test_contact_3(self):
+        run_nastran_gui(bdf_filename)
+    def test_contact_3(self):
         bdf_filename = MODEL_PATH / 'contact' / '2bars_shell_s-contact.dat'
+        run_nastran_gui(bdf_filename)
 
     def test_elements1(self):
         bdf_filename = MODEL_PATH / 'elements' / 'static_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'static_elements.h5'
         run_nastran_gui(bdf_filename)
         #run_nastran_gui(h5_filename)
-    def _test_elements2(self):
+    def test_elements2(self):
         bdf_filename = MODEL_PATH / 'elements' / 'modes_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
+        run_nastran_gui(bdf_filename)
         #run_nastran_gui(h5_filename)
-    def _test_elements3(self):
+    def test_elements3(self):
         bdf_filename = MODEL_PATH / 'elements' / 'time_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
+        run_nastran_gui(bdf_filename)
         #run_nastran_gui(h5_filename)
-    def _test_elements4(self):
+    def test_elements4(self):
         bdf_filename = MODEL_PATH / 'elements' / 'freq_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
+        run_nastran_gui(bdf_filename)
         #run_nastran_gui(h5_filename)
-    def _test_elements5(self):
+    def test_elements5(self):
         bdf_filename = MODEL_PATH / 'elements' / 'freq_elements2.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements2.h5'
+        run_nastran_gui(bdf_filename)
         #run_nastran_gui(h5_filename)
-    def _test_elements6(self):
+    def test_elements6(self):
         bdf_filename = MODEL_PATH / 'elements' / 'loadstep_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'loadstep_elements.h5'
+        run_nastran_gui(bdf_filename)
         #run_nastran_gui(h5_filename)
-    def _test_elements7(self):
+    def test_elements7(self):
         bdf_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
-        run_nastran_gui(h5_filename)
-    def _test_elements8(self):
+        run_nastran_gui(bdf_filename)
+        #run_nastran_gui(h5_filename)
+    def test_elements8(self):
         bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.h5'
-        run_nastran_gui(h5_filename)
+        run_nastran_gui(bdf_filename)
+        #run_nastran_gui(h5_filename)
 
-    def _test_thermal_1(self):
+    def test_thermal_1(self):
         bdf_filename = MODEL_PATH / 'thermal' / 'hd15901.bdf'
-    def _test_thermal_2(self):
+        run_nastran_gui(bdf_filename)
+    def test_thermal_2(self):
         bdf_filename = MODEL_PATH / 'thermal' / 'htflw47.bdf'
-    def _test_thermal_3(self):
+        run_nastran_gui(bdf_filename)
+    def test_thermal_3(self):
         bdf_filename = MODEL_PATH / 'thermal' / 'thermal_elements.bdf'
-    def _test_thermal_4(self):
+        run_nastran_gui(bdf_filename)
+    def test_thermal_4(self):
         bdf_filename = MODEL_PATH / 'thermal' / 'thermal_elements2.bdf'
-    def _test_thermal_5(self):
+        run_nastran_gui(bdf_filename)
+    def test_thermal_5(self):
         bdf_filename = MODEL_PATH / 'thermal' / 'thermal_test_153.bdf'
+        run_nastran_gui(bdf_filename)
 
     #def test_sol200_1(self):
         #bdf_filename = MODEL_PATH / 'sol200' / 'd200obus.bdf'
-    def _test_sol200_2(self):
+    def test_sol200_2(self):
         bdf_filename = MODEL_PATH / 'sol200' / 'model_200.bdf'
-    def _test_transfer_function(self):
+        run_nastran_gui(bdf_filename)
+    def test_transfer_function(self):
         bdf_filename = MODEL_PATH / 'transfer_function' / 'actuator_tf_modeling.bdf'
-    def _test_aero_1(self):
-        h5_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm_msc.h5'
-        run_nastran_gui(h5_filename)
+        run_nastran_gui(bdf_filename)
+    def test_aero_1(self):
+        #h5_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm_msc.h5'
+        #run_nastran_gui(h5_filename)
         bdf_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm.bdf'
         run_nastran_gui(bdf_filename)
-    def _test_aero_2(self):
+    def test_aero_2(self):
         bdf_filename = MODEL_PATH / 'aero' / 'bah_plane' / 'bah_plane.bdf'
         run_nastran_gui(bdf_filename)
 
-    def _test_other_1(self):
+    def test_other_1(self):
         bdf_filename = MODEL_PATH / 'other' / 'ac10707a.bdf'
-    def _test_other_2(self):
+        run_nastran_gui(bdf_filename)
+    def test_other_2(self):
         bdf_filename = MODEL_PATH / 'other' / 'dbxdra2.bdf'
+        run_nastran_gui(bdf_filename)
 
-    def _test_other_3(self):
+    def test_other_3(self):
         # missing GRID card
         #bdf_filename = MODEL_PATH / 'other' / 'ofprand1.bdf'
 
@@ -208,24 +227,29 @@ class TestGuiModels(unittest.TestCase):
         #bdf_filename = MODEL_PATH / 'other' / 'v10111.bdf'
 
         bdf_filename = MODEL_PATH / 'other' / 'ar29sadl.bdf'
+        run_nastran_gui(bdf_filename)
 
         # spoint centroid bug
         #bdf_filename = MODEL_PATH / 'other' / 'randvar2.bdf'
 
         bdf_filename = MODEL_PATH / 'other' / 'v12902.bdf'
+        run_nastran_gui(bdf_filename)
 
         # replication
         #bdf_filename = MODEL_PATH / 'other' / 'mne7a.bdf'
 
         bdf_filename = MODEL_PATH / 'other' / 'sdbush10.bdf'
+        run_nastran_gui(bdf_filename)
 
         bdf_filename = MODEL_PATH / 'other' / 'v10112.bdf'
+        run_nastran_gui(bdf_filename)
 
         # bad deck sections
         #bdf_filename = MODEL_PATH / 'other' / 'cbus129.bdf'
 
         # incorrect cbeam area
         bdf_filename = MODEL_PATH / 'other' / 'api3.bdf'
+        #run_nastran_gui(bdf_filename)
 
         # incorrect cbeam area
         ##bdf_filename = MODEL_PATH / 'other' / 'v10601s.bdf'
@@ -246,6 +270,7 @@ class TestGuiModels(unittest.TestCase):
         #bdf_filename = MODEL_PATH / 'other' / 'see101nd.bdf'
 
         bdf_filename = MODEL_PATH / 'other' / 'see101ta.bdf'
+        run_nastran_gui(bdf_filename)
 
         # CGEN model - no nodes
         #bdf_filename = MODEL_PATH / 'other' / 'gpst17.bdf'
@@ -263,19 +288,24 @@ class TestGuiModels(unittest.TestCase):
         #bdf_filename = MODEL_PATH / 'other' / 'tst1d3.bdf'
 
         bdf_filename = MODEL_PATH / 'other' / 'trncomp12.bdf'
+        run_nastran_gui(bdf_filename)
 
         # EGRID/SPCG
         #bdf_filename = MODEL_PATH / 'other' / 'tr1091x.bdf'
 
         # overflow
         bdf_filename = MODEL_PATH / 'other' / 'sdr11se_s2dclg.bdf'
+        #run_nastran_gui(bdf_filename)
 
         # EIGC parsing
         #bdf_filename = MODEL_PATH / 'other' / 'rot063akd2s_107.bdf'
 
         bdf_filename = MODEL_PATH / 'other' / 'htrussx.bdf'
+        run_nastran_gui(bdf_filename)
 
         bdf_filename = MODEL_PATH / 'nx' / 'contact_model.bdf'
+        run_nastran_gui(bdf_filename)
 
         # missing properties - PCOMPS
         bdf_filename = MODEL_PATH / 'nx' / 'composite_solids' / 'test.bdf'
+        run_nastran_gui(bdf_filename)

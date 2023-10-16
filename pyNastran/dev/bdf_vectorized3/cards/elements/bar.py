@@ -25,7 +25,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import line_mid_mass_per_length, line_length, line_vector_length, line_centroid
 from pyNastran.dev.bdf_vectorized3.cards.elements.utils import get_density_from_material, basic_mass_material_id
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, array_default_str
-from pyNastran.dev.bdf_vectorized3.utils import hstack_msg, cast_int_array
+from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -292,7 +292,7 @@ class CBAR(Element):
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
         property_id = np.zeros(ncards, dtype='int32')
-        nodes = []
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         offt = np.full(ncards, '', dtype='|U3')
         g0 = np.zeros(ncards, dtype=idtype)
         x = np.full((ncards, 3), np.nan, dtype='float64')
@@ -306,7 +306,7 @@ class CBAR(Element):
             (eid, pid, nids, xi, g0i, offti, pai, pbi, wai, wbi, comment) = card
             element_id[icard] = eid
             property_id[icard] = pid
-            nodes.append(nids)
+            nodes[icard, :] = nids
 
             if g0i is None or g0i == -1:
                 g0i = -1
@@ -346,11 +346,11 @@ class CBAR(Element):
             wb = np.vstack([self.wb, wb])
 
         assert len(element_id) == len(property_id), 'B'
-        self.element_id = cast_int_array(element_id)
+        self.element_id = element_id
         self.property_id = property_id
         #print(element_id)
         #print(property_id)
-        self.nodes = cast_int_array(nodes)
+        self.nodes = nodes
         self.offt = offt
         self.g0 = g0
         self.x = x

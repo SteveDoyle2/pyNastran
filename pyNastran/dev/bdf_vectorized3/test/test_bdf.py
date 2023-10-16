@@ -1398,7 +1398,7 @@ def check_for_cd_frame(fem1: BDFs, is_nominal: bool=True) -> None:
             cds2 = [cd for coord_type, cd in zip(fem1.coord.coord_type[icoord], cds)
                     if coord_type != 'R']
             if len(cds2):
-                coord = fem1.coord.slice_card_by_coord_id(cds2)
+                coord = fem1.coord.slice_card_by_id(cds2)
                 #coord_type = np.unique(coord.coord_type)
                 msg = (
                     f'GRID-CD coords={cds2} can cause a problem in the OP2 results processing; '

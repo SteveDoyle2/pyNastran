@@ -17,7 +17,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str # , array_default_int
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.dev.bdf_vectorized3.utils import hstack_msg, cast_int_array
+from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard

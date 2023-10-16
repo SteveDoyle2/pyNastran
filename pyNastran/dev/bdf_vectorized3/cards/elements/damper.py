@@ -99,8 +99,10 @@ class CDAMP1(Element):
         self.n = nelements
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        nodes = self.nodes.ravel()
+        nodes = nodes[nodes > 0]
         used_dict['property_id'].append(self.property_id)
-        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['node_id'].append(nodes)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -869,8 +871,10 @@ class CVISC(Element):
         self.n = nelements
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        nodes = self.nodes.ravel()
+        nodes = nodes[nodes > 0]
         used_dict['property_id'].append(self.property_id)
-        used_dict['node_id'].append(self.nodes.ravel())
+        used_dict['node_id'].append(nodes)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -1223,11 +1227,11 @@ class CGAP(Element):
             k[idefault, :] = khat
 
         if np.any(icoord):
-            print('icoord =', icoord)
+            #print('icoord =', icoord)
             coord_ids = self.coord_id[icoord]
-            print('coord_ids =', coord_ids)
+            #print('coord_ids =', coord_ids)
             assert len(coord_ids) == icoord.sum()
-            coords = self.model.coord.slice_card_by_coord_id(coord_ids)
+            coords = self.model.coord.slice_card_by_id(coord_ids)
             ihat = coords.i
             jhat = coords.j
             khat = coords.k
