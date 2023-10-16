@@ -16,7 +16,7 @@ MODEL_PATH = PKG_PATH / '..' / 'models'
 
 
 class TestModels(unittest.TestCase):
-    def _test_h5_freq(self):
+    def test_h5_freq(self):
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
         test_bdf(args, show_args=False)

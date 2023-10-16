@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 from typing import TYPE_CHECKING
 import numpy as np
 from numpy.lib import recfunctions as rfn  # random numpy package to merge arrays...
@@ -24,6 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def read_h5_geometry(model: BDF, h5_filename: str,
                      root_path: str='/'):
+    assert os.path.exists(h5_filename), h5_filename
     with open_file(h5_filename, mode="r", title="", root_uep="/", filters=None) as h5_file:
         read_geometry_from_h5(model, h5_file, '/NASTRAN/INPUT/')
 
