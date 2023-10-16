@@ -118,4 +118,4 @@ def read_geometry_from_h5(model: BDF, h5_file: File, input_path: str):
                 print(f'INPUT input_group_key={input_group_key!r}')
             #'PARAMETER' (Group), 'PROPERTY' (Group), 'DOMAINS' (Table)]
     model.coord.setup()
-    print('finished loading h5 file')
+    model.log.info('finished loading h5 file')

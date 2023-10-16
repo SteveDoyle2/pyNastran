@@ -71,14 +71,14 @@ class TestModels(unittest.TestCase):
         args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
         #test_op2(args2, show_args=False)
 
-    def _test_h5_buckling(self):
+    def test_h5_buckling(self):
         h5_filename = MODEL_PATH / 'sol_101_elements' / 'buckling_solid_shell_bar.h5'
         args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
         test_bdf(args, show_args=False)
         args2 = ['test_op2', str(h5_filename), '-gctfo', '--quiet']
         #test_op2(args2, show_args=False)
 
-    def _test_h5_buckling2(self):
+    def test_h5_buckling2(self):
         h5_filename = MODEL_PATH / 'sol_101_elements' / 'buckling2_solid_shell_bar.h5'
         args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
         test_bdf(args, show_args=False)

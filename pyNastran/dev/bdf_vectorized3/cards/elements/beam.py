@@ -114,6 +114,7 @@ class CBEAM(Element):
         self.property_id: np.array = np.array([], dtype='int32')
         self.nodes: np.array = np.zeros((0, 2), dtype='int32')
         self.offt: np.array = np.array([], dtype='|U3')
+        self.bit: np.array = np.array([], dtype='int32')
         self.g0: np.array = np.array([], dtype='int32')
         self.x: np.array = np.zeros((0, 3), dtype='float64')
 
@@ -183,7 +184,7 @@ class CBEAM(Element):
         nodes = np.zeros((ncards, 2), dtype=idtype)
         offt = np.full(ncards, '', dtype='|U3')
         bit = np.full(ncards, -1, dtype='int32')
-        g0 = np.full(ncards, -1, dtype=idtype)
+        g0 = np.zeros(ncards, dtype=idtype)
         x = np.full((ncards, 3), np.nan, dtype='float64')
 
         pa = np.zeros(ncards, dtype='int32')
@@ -199,9 +200,10 @@ class CBEAM(Element):
             element_id[icard] = eid
             property_id[icard] = pid
             nodes[icard, :] = nids
-            if g0i is None or g0i == -1:
+            if g0i in {None, 0, -1}:
                 x[icard, :] = xi
             else:
+                assert g0i > 0, card
                 g0[icard] = g0i
             if isinstance(offti, str):
                 offt[icard] = offti
@@ -225,7 +227,9 @@ class CBEAM(Element):
     def _save(self, element_id, property_id, nodes,
               offt, bit,
               g0, x,
-              pa, pb, wa, wb, sa, sb):
+              pa, pb, wa, wb, sa, sb) -> None:
+        if len(self.element_id) != 0:
+            asdf
         self.element_id = element_id
         self.property_id = property_id
         self.nodes = nodes
@@ -271,6 +275,7 @@ class CBEAM(Element):
         elem.property_id = self.property_id[i]
         elem.nodes = self.nodes[i, :]
         elem.offt = self.offt[i]
+        elem.bit = self.bit[i]
         elem.g0 = self.g0[i]
         elem.x = self.x[i, :]
         elem.pa = self.pa[i]
@@ -306,9 +311,11 @@ class CBEAM(Element):
         pbs = array_default_int(self.pb, default=0, size=size)
         was = array_default_float(self.wa, default=0, size=size, is_double=False)
         wbs = array_default_float(self.wb, default=0, size=size, is_double=False)
-        for eid, pid, nodes, g0, x, is_g0, offt, pa, pb, wa, wb in zip_longest(element_ids, property_ids, nodes_,
-                                                                        self.g0, self.x, self.is_g0, offts,
-                                                                        pas, pbs, was, wbs):
+        for eid, pid, nodes, g0, x, is_g0, offt, pa, pb, wa, wb in zip_longest(
+            element_ids, property_ids, nodes_,
+            self.g0, self.x, self.is_g0, offts,
+            pas, pbs, was, wbs):
+
             n1, n2 = nodes
             w1a, w2a, w3a = wa
             w1b, w2b, w3b = wb
@@ -329,7 +336,7 @@ class CBEAM(Element):
 
     @property
     def is_x(self) -> np.ndarray:
-        return (self.g0 == -1)
+        return (self.g0 == 0)
 
     @property
     def is_g0(self) -> np.ndarray:
@@ -796,7 +803,7 @@ class CBEAM(Element):
 
     @property
     def is_offt(self) -> np.ndarray:
-        is_offt = (self.g0 == -1)
+        is_offt = (self.bit == -1)
         return is_offt
 
     @property

@@ -119,7 +119,7 @@ def init_x_g0(card: BDFCard, eid: int):
         g0 = field5
         x = [np.nan, np.nan, np.nan]
     elif isinstance(field5, float):
-        g0 = -1
+        g0 = 0
         x = np.array([field5,
                       double_or_blank(card, 6, 'x2', default=np.nan),
                       double_or_blank(card, 7, 'x3', default=np.nan)], dtype='float64')
@@ -308,8 +308,8 @@ class CBAR(Element):
             property_id[icard] = pid
             nodes[icard, :] = nids
 
-            if g0i is None or g0i == -1:
-                g0i = -1
+            if g0i in {None, 0, -1}:
+                g0i = 0
             else:
                 assert g0i > 0, g0i
                 xi = [np.nan, np.nan, np.nan]
@@ -396,7 +396,7 @@ class CBAR(Element):
             w1b = set_blank_if_default(wb[0], 0.0)
             w2b = set_blank_if_default(wb[1], 0.0)
             w3b = set_blank_if_default(wb[2], 0.0)
-            if g0 == -1:
+            if g0 in {-1, 0}:
                 x1, x2, x3 = x # self.get_x_g0_defaults()
             else:
                 x1 = g0
@@ -496,7 +496,7 @@ class CBAR(Element):
 
     @property
     def is_x(self) -> np.ndarray:
-        return (self.g0 == -1)
+        return (self.g0 == 0)
 
     @property
     def is_g0(self) -> np.ndarray:
