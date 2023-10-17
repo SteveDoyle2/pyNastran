@@ -121,9 +121,9 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import DOPTPRM
-    #DCONADD, TOPVAR, DDVAL, DOPTPRM,
+    #TOPVAR, DDVAL, DOPTPRM,
     #DRESP3,
-    #DVGRID, DSCREEN)
+    #DSCREEN)
 #from .cards.optimization_nx import (
     #DVTREL1, GROUP, DMNCON,
 #)
@@ -796,7 +796,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DVPREL1', 'DVPREL2',
             'DVMREL1', 'DVMREL2',
             #'DOPTPRM',
-            'DLINK', # 'DCONADD', 'DVGRID',
+            'DLINK', 'DCONADD', 'DVGRID',
             #'DSCREEN',
 
             # nx optimization
@@ -2690,7 +2690,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DVMREL1': partial(self._prepare_card, self.dvmrel1),
             'DVMREL2': partial(self._prepare_card, self.dvmrel2),
 
-            #'DCONADD': partial(self._prepare_card, self.dconadd),
+            'DCONADD': partial(self._prepare_card, self.dconadd),
             #'DDVAL' : (DDVAL, add_methods._add_ddval_object),
             #'DSCREEN' : (DSCREEN, add_methods._add_dscreen_object),
 
@@ -4709,7 +4709,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_BCRPARA', 'add_BCTADD',
             #'add_BCTPARA', 'add_BCTSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
             #'add_DIVERG',
-            # 'add_CSSCHD', 'add_DCONADD', 'add_DDVAL',
+            # 'add_CSSCHD', 'add_DDVAL',
             #'add_DELAY', 'add_DEQATN', 'add_DMI',
             #'add_DPHASE', 'add_DRESP', 'add_DTABLE',
             #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',

@@ -389,6 +389,8 @@ class TestOpt(unittest.TestCase):
     def test_dvprel1(self):
         """tests a DESVAR, DVPREL1, DVPREL2, DRESP1, DRESP2, DRESP3, DCONSTR, DSCREEN, DCONADD"""
         model = BDF(debug=False)
+        dconadd = model.dconadd
+
         dvprel1_id = 10
         desvar_id = 12
         desvar_ids = 12
@@ -425,9 +427,9 @@ class TestOpt(unittest.TestCase):
         deqation = 100
         dvids = desvar_id
         labels = None
-        dvprel2 = model.add_dvprel2(dvprel2_id, prop_type, pid, pname_fid, deqation,
-                                    dvids, labels, p_min=None, p_max=p_max,
-                                    validate=True, comment='dvprel2')
+        dvprel2a = model.add_dvprel2(dvprel2_id, prop_type, pid, pname_fid, deqation,
+                                     dvids, labels, p_min=None, p_max=p_max,
+                                     validate=True, comment='dvprel2')
         equation_id = 100
         eqs = ['fstress(x) = x + 10.']
         if 0:
@@ -445,7 +447,6 @@ class TestOpt(unittest.TestCase):
             model.add_deqatn(equation_id, eqs, comment='deqatn')
             default_values = {'CAT': 42.0}
             model.add_dtable(default_values, comment='dtable')
-
 
         #print(deqatn.object_attributes())
         #print(deqatn.func_str)
@@ -514,10 +515,10 @@ class TestOpt(unittest.TestCase):
         dconstr = model.add_dconstr(oid, dresp3_id, lid=-1.e20, uid=1.e20,
                                     lowfq=0., highfq=1.e20)
 
-        oid = 45
+        dconadd_id = 45
         dconstrs = [1001, 1002, 1003]
+        model.add_dconadd(dconadd_id, dconstrs, comment='dconadd')
         if 0:
-            dconadd = model.add_dconadd(oid, dconstrs, comment='dconadd')
             dscreen = model.add_dscreen('DISP', comment='dscreen')
             dscreen.raw_fields()
 
@@ -526,42 +527,43 @@ class TestOpt(unittest.TestCase):
         model.add_grid(101, [0., 0., 0.])
         model.pop_parse_errors()
 
-        model.desvar.write(size=8)
-        model.desvar.write(size=16)
-        model.dvprel1.write(size=8)
-        model.dvprel1.write(size=16)
-        model.dconstr.write(size=8)
-        model.dconstr.write(size=16)
-        model.dresp1.write(size=8)
-        model.dresp1.write(size=16)
-        model.dresp1.write(size=16, is_double=True)
-        model.dresp2.write(size=8)
-        model.dresp2.write(size=16)
-        model.dresp2.write(size=16, is_double=True)
-        if 0:
-            dresp3.write_card(size=8)
-            dresp3.write_card(size=16)
-            dresp3.write_card(size=16, is_double=True)
-            dvprel2.write_card(size=8)
-            dvprel2.write_card(size=16)
-            dvprel2.write_card(size=16, is_double=True)
-            dconadd.write_card(size=8)
-            dconadd.write_card(size=16)
-            dconadd.write_card(size=16, is_double=True)
-            dscreen.write_card(size=8)
-            dscreen.write_card(size=16)
-            dscreen.write_card(size=16, is_double=True)
-
-        model.validate()
-        model._verify_bdf(xref=False)
-        model.cross_reference()
-
         desvar = model.desvar
         dvprel1 = model.dvprel1
         dvprel2 = model.dvprel2
         dconstr = model.dconstr
         dresp1 = model.dresp1
         dresp2 = model.dresp2
+
+        desvar.write(size=8)
+        desvar.write(size=16)
+        dvprel1.write(size=8)
+        dvprel1.write(size=16)
+        dconstr.write(size=8)
+        dconstr.write(size=16)
+        dresp1.write(size=8)
+        dresp1.write(size=16)
+        dresp1.write(size=16, is_double=True)
+        dresp2.write(size=8)
+        dresp2.write(size=16)
+        dresp2.write(size=16, is_double=True)
+        dvprel2.write(size=8)
+        dvprel2.write(size=16)
+        dvprel2.write(size=16, is_double=True)
+        if 0:
+            dresp3.write_card(size=8)
+            dresp3.write_card(size=16)
+            dresp3.write_card(size=16, is_double=True)
+            dscreen.write_card(size=8)
+            dscreen.write_card(size=16)
+            dscreen.write_card(size=16, is_double=True)
+        dconadd.write(size=8)
+        dconadd.write(size=16)
+        dconadd.write(size=16, is_double=True)
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        model.cross_reference()
+
         model.setup()
 
         desvar.write(size=8)
@@ -585,9 +587,9 @@ class TestOpt(unittest.TestCase):
         dvprel2.write(size=8)
         dvprel2.write(size=16)
         dvprel2.write(size=16, is_double=True)
-        #dconadd.write_card(size=8)
-        #dconadd.write_card(size=16)
-        #dconadd.write_card(size=16, is_double=True)
+        dconadd.write(size=8)
+        dconadd.write(size=16)
+        dconadd.write(size=16, is_double=True)
 
         if 0:
             grid.nid = 200
@@ -600,18 +602,16 @@ class TestOpt(unittest.TestCase):
 
         model2 = save_load_deck(model, run_convert=False)
 
-        if 0:
-            # DCONADD (45) is not part of self.dconstrs
-            dconstr_keys = list(model.dconstrs.keys())
-            dconstr_keys.sort()
-            assert dconstr_keys == [42, 45, 1001, 1002, 1003], f'actual={dconstr_keys}'
+        # DCONADD (45) is not part of self.dconstrs
+        dconstr_ids = dconstr.dconstr_id
+        dconadd_ids = dconadd.dconadd_id
+        assert np.array_equal(dconstr_ids, [42, 1001, 1002, 1003])
+        assert np.array_equal(dconadd_ids, [45])
 
-            # 42 is a free DCONSTR
-            dconaddi = model2.dconstrs[45][0]
-            dconstr_subkeys = dconaddi.dconstrs
-            dconstr_subkeys.sort()
-            assert dconaddi.dconstrs == dconstrs, f'model2.dconadds={model2.dconadds}'
-            assert dconstr_subkeys == [1001, 1002, 1003], f'actual={dconstr_subkeys}'
+        # 42 is a free DCONSTR
+        dconaddi = dconadd.slice_card_by_id(45)
+        dconstr_ids = dconaddi.dconstr_ids
+        assert np.array_equal(dconstr_ids, [1001, 1002, 1003])
 
     def test_dvprel1_02(self):
         model = BDF()
@@ -879,14 +879,16 @@ class TestOpt(unittest.TestCase):
         with self.assertRaises(SyntaxError):
             assert break_word_by_trailing_integer('THETA32X')
 
-    def _test_dvgrid(self):
+    def test_dvgrid(self):
         """tests DVGRID"""
+        model = BDF(debug=False)
+        dvgrid = model.dvgrid
+
         desvar_id = 1
         nid = 2
         dxyz = [1., 2., 3.]
         cid = 1
-        model = BDF(debug=False)
-        dvgrid = model.add_dvgrid(desvar_id, nid, dxyz, cid=cid, coeff=1.0, comment='')
+        dvgrida = model.add_dvgrid(desvar_id, nid, dxyz, cid=cid, coeff=1.0, comment='')
         model.add_grid(nid, [0., 0., 0.])
 
         origin = [0., 0., 0.]
@@ -895,7 +897,7 @@ class TestOpt(unittest.TestCase):
         model.add_cord2r(cid, origin, zaxis, xzplane)
         xinit = 0.1
         model.add_desvar(desvar_id, 'DV1', xinit, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
-        dvgrid.raw_fields()
+        #dvgrid.raw_fields()
         model.pop_parse_errors()
         model.cross_reference()
         save_load_deck(model)

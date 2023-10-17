@@ -15,6 +15,7 @@ def remove_unused(model: BDF) -> None:
         'material_id': [],
         'spc_id': [],
         'mpc_id': [],
+        'dconstr_id': [],
     }
     for card in cards:
         if hasattr(card, 'set_used'):
@@ -23,10 +24,10 @@ def remove_unused(model: BDF) -> None:
             log.warning(f'{card.type} does not support set_used for remove_unused')
             #raise RuntimeError(card.type)
         used_arrays = to_dict_array(card, used_dict)
-        for key, datai in used_arrays.items():
-            if len(datai):
-                print(card.type, key, datai)
-        print('')
+        #for key, datai in used_arrays.items():
+            #if len(datai):
+                #print(card.type, key, datai)
+        #print('')
     del used_dict
 
     coord_id = used_arrays['coord_id']

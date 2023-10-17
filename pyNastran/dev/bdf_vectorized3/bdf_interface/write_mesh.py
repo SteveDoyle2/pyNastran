@@ -1159,7 +1159,7 @@ class Writer():
         model.dresp1.write_file(bdf_file, size=size, is_double=is_double)
         model.dresp2.write_file(bdf_file, size=size, is_double=is_double)  # poorly supported
         model.dconstr.write_file(bdf_file, size=size, is_double=is_double)
-        #bdf_file.write(model.dconadd.write(size=size))
+        model.dconadd.write_file(bdf_file, size=size, is_double=is_double)
 
         model.dvcrel1.write_file(bdf_file, size=size, is_double=is_double)
         model.dvcrel2.write_file(bdf_file, size=size, is_double=is_double)

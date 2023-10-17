@@ -544,15 +544,15 @@ def where_not(base_vector: np.ndarray, iwhere: np.ndarray) -> np.ndarray:
 
 
 class ADD(VectorizedBaseCard):
-    def __init__(self, model: BDF):
-        super().__init__(model)
-        self.sid = np.array([], dtype='int32')
-        self.sids = np.array([], dtype='int32')
-        self.nsids = np.array([], dtype='int32')
+    #def __init__(self, model: BDF):
+        #super().__init__(model)
+        #self.sid = np.array([], dtype='int32')
+        #self.sids = np.array([], dtype='int32')
+        #self.nsids = np.array([], dtype='int32')
 
     def clear(self) -> None:
-        self.spc_id = np.array([], dtype='int32')
-        self.spc_ids = np.array([], dtype='int32')
+        self.sid = np.array([], dtype='int32')
+        self.sids = np.array([], dtype='int32')
         self.nsids = np.array([], dtype='int32')
         self.n = 0
 
@@ -611,6 +611,14 @@ class ADD(VectorizedBaseCard):
     @property
     def idim(self) -> np.ndarray:
         return make_idim(self.n, self.nsids)
+
+    def __apply_slice__(self, obj: ADD, i: np.ndarray) -> None:
+        obj.n = len(i)
+        obj.sid = self.sid[i]
+
+        obj.nsids = self.nsids[i]
+        idim = self.idim
+        obj.sids = hslice_by_idim(i, idim, self.sids)
 
 
 class SPCADD(ADD):

@@ -109,6 +109,8 @@ class VectorizedBaseCard:
         self.write_default_fields = True
         self.id = np.array([], dtype='int32')
         self.comment: dict[int, str] = {}
+        if hasattr(self, 'clear'):
+            self.clear()
 
     def __len__(self) -> int:
         return self.n

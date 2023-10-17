@@ -105,7 +105,7 @@ from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DRESP1, DRESP2, DCONSTR,
     DVPREL1, DVPREL2,
     DVMREL1, DVMREL2,
-    DVCREL1, DVCREL2,
+    DVCREL1, DVCREL2, DCONADD,
 )
 from .loads_summation import (
     get_static_loads_by_subcase_id,
@@ -493,7 +493,6 @@ class BDFAttributes:
         #self.monpnt3 = MONPNT3(self)
 
         # optimization
-        #self.dresps = {}
         self.desvar = DESVAR(self)
         self.dlink = DLINK(self)
         self.dvgrid = DVGRID(self)
@@ -507,6 +506,8 @@ class BDFAttributes:
         self.dvmrel2 = DVMREL2(self)
         self.dvcrel1 = DVCREL1(self)
         self.dvcrel2 = DVCREL2(self)
+
+        self.dconadd = DCONADD(self)
 
         # ---------------------------------------------------
         ## unoptimized
@@ -742,7 +743,7 @@ class BDFAttributes:
     def optimization_cards(self) -> list[Any]:
         optimization = [
             self.desvar, self.dlink, self.dvgrid,
-            self.dresp1, self.dresp2, self.dconstr,
+            self.dresp1, self.dresp2, self.dconstr, self.dconadd,
             self.dvprel1, self.dvprel2,
             self.dvmrel1, self.dvmrel2,
             self.dvcrel1, self.dvcrel2,

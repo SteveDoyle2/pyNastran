@@ -3578,8 +3578,7 @@ class AddOptimization(BDFAttributes):
             a comment for the card
 
         """
-        dvgrid = DVGRID(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
-        self._add_methods._add_dvgrid_object(dvgrid)
+        dvgrid = self.dvgrid.add(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
         return dvgrid
 
     def add_ddval(self, oid: int, ddvals: list[int], comment: str='') -> int:

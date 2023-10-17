@@ -17,7 +17,8 @@ def geom_check(self: VectorizedBaseCard,
                set1=None,
                caero=None,
                delay=None,
-               dphase=None,) -> None:
+               dphase=None,
+               dconstr_id=None) -> None:
 
     _geom_check_node(missing, node, filter_node0=filter_node0)
     if node is not None:
@@ -43,6 +44,7 @@ def geom_check(self: VectorizedBaseCard,
     _geom_check(missing, set1, 'set1', 'set1s')
     _geom_check(missing, delay, 'delay', 'delays', filter0=True)
     _geom_check(missing, dphase, 'dphase', 'dphases', filter0=True)
+    _geom_check(missing, dconstr_id, 'dconstr_id', 'dconstr')
 
     if caero is not None:
         all_caero_ids, used_caero_ids = caero

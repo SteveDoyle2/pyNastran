@@ -10,8 +10,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
     string, string_or_blank, integer_double_string_or_blank,
     integer_string_or_blank, integer_double_or_blank, interpret_value)
-from pyNastran.bdf.field_writer_8 import set_blank_if_default # , print_card_8
-#from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
+from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.utils import build_table_lines
 
@@ -23,11 +23,68 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_float, array_default_int, array_default_float, array_default_str)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
+from pyNastran.dev.bdf_vectorized3.cards.constraints import ADD
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+
+class DCONADD(ADD):
+    _id_name = 'dconadd_id'
+    @property
+    def dconadd_id(self):
+        return self.sid
+    @dconadd_id.setter
+    def dconadd_id(self, dconadd_id: np.ndarray):
+        self.sid = dconadd_id
+
+    @property
+    def dconstr_ids(self):
+        return self.sids
+    @dconstr_ids.setter
+    def dconstr_ids(self, dconstr_ids: np.ndarray):
+        self.sids = dconstr_ids
+
+    @property
+    def ndconstrs(self):
+        return self.nsids
+    @ndconstrs.setter
+    def ndconstrs(self):
+        return self.nsids
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['dconstr_id'].append(self.dconstr_ids)
+
+    @property
+    def is_small_field(self):
+        return max(self.dconadd_id.max(), self.dconstr_ids.max()) < 99_999_999
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.dconadd_id) == 0:
+            return
+        if size == 8 and self.is_small_field:
+            print_card = print_card_8
+        else:
+            print_card = print_card_16
+
+        #self.get_reduced_spcs()
+        dconstr_ids = array_str(self.dconstr_ids, size=size)
+        for dconadd_id, idim in zip(self.dconadd_id, self.idim):
+            idim0, idim1 = idim
+            dconstr_idsi = dconstr_ids[idim0:idim1].tolist()
+            list_fields = ['DCONADD', dconadd_id] + dconstr_idsi
+            bdf_file.write(print_card(list_fields))
+        return
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        dconstr_id = np.unique(self.model.dconstr.dconstr_id)
+        geom_check(self,
+                   missing,
+                   dconstr_id=(dconstr_id, self.dconstr_ids),
+                   )
 
 
 class DESVAR(VectorizedBaseCard):
@@ -381,13 +438,39 @@ class DVGRID(VectorizedBaseCard):
     +--------+------+-----+-----+-------+----+----+----+
     """
     _id_name = 'desvar_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+
+    @VectorizedBaseCard.clear_check
+    def clear(self) -> None:
         self.desvar_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
         self.coefficient = np.array([], dtype='float64')
         self.dxyz = np.zeros((0, 3), dtype='float64')
+
+    def add(self, desvar_id: int, nid: int, dxyz,
+            cid: int=0, coeff: float=1.0, comment: str='') -> int:
+        """
+        Creates a DVGRID card
+
+        Parameters
+        ----------
+        dvid : int
+            DESVAR id
+        nid : int
+            GRID/POINT id
+        dxyz : (3, ) float ndarray
+            the amount to move the grid point
+        cid : int; default=0
+            Coordinate system for dxyz
+        coeff : float; default=1.0
+            the dxyz scale factor
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((desvar_id, nid, cid, coeff, dxyz, comment))
+        self.n += 1
+        return self.n
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -442,6 +525,22 @@ class DVGRID(VectorizedBaseCard):
         self.coord_id = coord_id
         self.coefficient = coefficient
         self.dxyz = dxyz
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
+        used_dict['coord_id'].append(self.coord_id)
+
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        """TODO: check the coordinate system..."""
+        self.dxyz *= xyz_scale
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        cid = self.model.coord.coord_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id),
+                   coord=(cid, self.coord_id))
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
