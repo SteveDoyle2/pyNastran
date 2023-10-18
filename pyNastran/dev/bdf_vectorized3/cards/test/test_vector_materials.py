@@ -49,13 +49,15 @@ class TestMaterials(unittest.TestCase):
         """tests MAT1, MATT1"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        mat1 = model.mat1
+        matt1 = model.matt1
+
         mid = 10
         #k = 1000.
         E = 3.0e7
         G = 4.0e6
         nu = 0.2
         mat1_id = model.add_mat1(mid, E, G, nu, comment='mat1')
-        mat1 = model.mat1
         mat1.write(size=16, is_double=False)
         mat1.validate()
 
@@ -69,12 +71,12 @@ class TestMaterials(unittest.TestCase):
         sc_table = 4
         ss_table = 4
         RUN_MATTX = False
-        if RUN_MATTX:
-            matt1_id = model.add_matt1(mid, e_table, g_table, nu_table, rho_table,
-                                    a_table, ge_table, st_table, sc_table, ss_table,
-                                    comment='matt1')
-            matt1.validate()
+        matt1_id = model.add_matt1(mid, e_table, g_table, nu_table, rho_table,
+                                   a_table, ge_table, st_table, sc_table, ss_table,
+                                   comment='matt1')
+        #matt1.validate()
 
+        if RUN_MATTX:
             x = np.linspace(1., 10.)
             y = np.sin(x) + 5.
             tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')
@@ -98,8 +100,7 @@ class TestMaterials(unittest.TestCase):
 
         model.validate()
         model.cross_reference()
-        if RUN_MATTX:
-            matt1.write(size=16, is_double=False)
+        matt1.write(size=16, is_double=False)
 
         save_load_deck(model)
 
@@ -588,7 +589,7 @@ class TestMaterials(unittest.TestCase):
         #mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
                     #rho=0.0, a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='')
 
-    def _test_mats1(self):
+    def test_mats1(self):
         """tests MATS1"""
         log = get_logger(level='warning')
         model = BDF(log=log)

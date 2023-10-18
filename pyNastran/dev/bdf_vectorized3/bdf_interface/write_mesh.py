@@ -634,7 +634,7 @@ class Writer():
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         is_big_materials = hasattr(model, 'big_materials') and model.big_materials
         #is_materials = (self.materials or self.hyperelastic_materials or self.creep_materials or
-                        #self.MATS1 or self.MATS3 or self.MATS8 or self.MATT1 or
+                        #self.MATS3 or self.MATS8 or self.MATT1 or
                         #self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
                         #self.MATT8 or self.MATT9 or self.nxstrats or is_big_materials)
         structural_materials = [
@@ -644,7 +644,7 @@ class Writer():
             #model.mathe, # hyperelastic
             model.mathp,  # hyperelastic
         ]
-        thermal_materials = [model.mat4, model.mat5]
+        thermal_materials = [model.mat4, model.mat5] + model.thermal_material_dep_cards
         is_materials = any([mat.n for mat in structural_materials])
         is_thermal_materials = any([mat.n for mat in thermal_materials])
         if is_materials:
@@ -666,8 +666,9 @@ class Writer():
             model.mat4.write_file(bdf_file, size=size, is_double=is_double)
             model.mat5.write_file(bdf_file, size=size, is_double=is_double)
 
-            #for (unused_mid, material) in sorted(self.materials.items()):
-                #bdf_file.write(material.write_card(size, is_double))
+            model.mats1.write_file(bdf_file, size=size, is_double=is_double)
+            model.matt1.write_file(bdf_file, size=size, is_double=is_double)
+
             #for (unused_mid, material) in sorted(self.hyperelastic_materials.items()):
                 #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.creep_materials.items()):
@@ -680,8 +681,6 @@ class Writer():
             #for (unused_mid, material) in sorted(self.MATS8.items()):
                 #bdf_file.write(material.write_card(size, is_double))
 
-            #for (unused_mid, material) in sorted(self.MATT1.items()):
-                #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.MATT2.items()):
                 #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.MATT3.items()):

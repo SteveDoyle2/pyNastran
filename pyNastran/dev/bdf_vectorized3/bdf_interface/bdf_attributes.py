@@ -83,6 +83,9 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
     MAT8, MAT9, MAT10, MAT11,
     MAT10C, MATORT, MATHP, # MATHE,
 )
+from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
+    MATS1, MATT1,)
+
 
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.constraints import (
@@ -458,6 +461,9 @@ class BDFAttributes:
         #self.mathe = MATHE(self)
         self.mathp = MATHP(self)
 
+        self.mats1 = MATS1(self)
+        self.matt1 = MATT1(self)
+
         self.spc = SPC(self)
         self.spc1 = SPC1(self)
         self.spcoff = SPCOFF(self)
@@ -718,7 +724,9 @@ class BDFAttributes:
 
     @property
     def material_cards(self) -> list[Any]:
-        materials = self.structural_material_cards + self.thermal_material_cards + self.hyperelastic_material_cards
+        materials = (
+            self.structural_material_cards + self.thermal_material_cards +
+            self.hyperelastic_material_cards + self.thermal_material_dep_cards)
         return materials
 
     @property
@@ -727,6 +735,13 @@ class BDFAttributes:
             self.mat1, self.mat2, self.mat3,
             self.mat8, self.mat9, self.mat10, self.mat11,
             self.mat10c, self.matort,
+        ]
+        return materials
+
+    @property
+    def thermal_material_dep_cards(self) -> list[Any]:
+        materials = [
+            self.matt1, self.mats1,
         ]
         return materials
 

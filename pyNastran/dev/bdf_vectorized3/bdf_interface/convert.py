@@ -86,6 +86,7 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'PCOMPS', 'PCOMPLS',
         'RBE1', 'RBE2', 'RBE3', 'RBAR', 'RBAR1', 'RROD',
         'MAT1', 'MAT2', 'MAT8', 'MAT9', 'MAT10', 'MAT10C',
+        'MATT1',
         # loads
         'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
         'COORD', 'SPC', 'DEFORM', 'GRAV', 'ACCEL1',
@@ -105,7 +106,7 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
             #print(card.type)
             card.convert(**scales_dict)
         elif hasattr(card, 'convert'):  # pragma: no cover
-            raise RuntimeError(card.type)
+            raise RuntimeError(f'add {card.type} to the SUPPORTED_CARDS list')
             card.convert(**scales_dict)
         else:
             #raise NotImplementedError(card.type)

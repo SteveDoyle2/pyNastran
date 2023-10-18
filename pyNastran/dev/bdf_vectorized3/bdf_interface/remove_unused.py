@@ -16,6 +16,7 @@ def remove_unused(model: BDF) -> None:
         'spc_id': [],
         'mpc_id': [],
         'dconstr_id': [],
+        'tablem_id': [],
     }
     #for card in model._cards_to_setup:
         #print(card)

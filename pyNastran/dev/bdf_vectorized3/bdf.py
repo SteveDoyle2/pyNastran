@@ -105,7 +105,7 @@ from pyNastran.bdf.cards.dynamic import (
                               #MATG, MATHE, MATHP, MATEV,
                               #CREEP, EQUIV, NXSTRAT)
 #from .cards.material_deps import (
-    #MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
+    #MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from .cards.grid import GRDSET
@@ -678,8 +678,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MATHP', 'MATORT', 'MAT10C', # 'MATEV',
 
             ## Material dependence - MATT1/MATT2/etc.
-            #'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
-            #'MATS1', #'MATS3', 'MATS8',
+            'MATT1', #'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+            'MATS1', #'MATS3', 'MATS8',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
 
@@ -2186,17 +2186,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #'MATHE' : (MATHE, add_methods._add_hyperelastic_material_object),
             #'MATEV' : (MATEV, add_methods._add_structural_material_object),
-
-            #'MATS1' : (MATS1, add_methods._add_material_dependence_object),
-            #'MATS3' : (MATS3, add_methods._add_material_dependence_object),
-            #'MATS8' : (MATS8, add_methods._add_material_dependence_object),
-            #'MATT1' : (MATT1, add_methods._add_material_dependence_object),
-            #'MATT2' : (MATT2, add_methods._add_material_dependence_object),
-            #'MATT3' : (MATT3, add_methods._add_material_dependence_object),
-            #'MATT4' : (MATT4, add_methods._add_material_dependence_object),
-            #'MATT5' : (MATT5, add_methods._add_material_dependence_object),
-            #'MATT8' : (MATT8, add_methods._add_material_dependence_object),
-            #'MATT9' : (MATT9, add_methods._add_material_dependence_object),
             #'NXSTRAT' : (NXSTRAT, add_methods._add_nxstrat_object),
 
             # hasn't been verified, links up to MAT1, MAT2, MAT9 w/ same MID
@@ -2577,6 +2566,18 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MAT11' : partial(self._prepare_card, self.mat11),
             'MAT10C' : partial(self._prepare_card, self.mat10c),
             'MATORT' : partial(self._prepare_card, self.matort),
+
+            'MATS1' : partial(self._prepare_card, self.mats1),
+            #'MATS3' : (MATS3, add_methods._add_material_dependence_object),
+            #'MATS8' : (MATS8, add_methods._add_material_dependence_object),
+
+            'MATT1' : partial(self._prepare_card, self.matt1),
+            #'MATT2' : (MATT2, add_methods._add_material_dependence_object),
+            #'MATT3' : (MATT3, add_methods._add_material_dependence_object),
+            #'MATT4' : (MATT4, add_methods._add_material_dependence_object),
+            #'MATT5' : (MATT5, add_methods._add_material_dependence_object),
+            #'MATT8' : (MATT8, add_methods._add_material_dependence_object),
+            #'MATT9' : (MATT9, add_methods._add_material_dependence_object),
 
             #'MATHE' : partial(self._prepare_card, self.mathe),  # not supported
             'MATHP' : partial(self._prepare_card, self.mathp),

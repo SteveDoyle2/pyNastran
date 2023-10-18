@@ -4669,8 +4669,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_creep_material_object(mat)
         return mat
 
-    def add_mat1(self, mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
-                 Sc=0.0, Ss=0.0, mcsid=0, comment: str='') -> int:
+    def add_mat1(self, mid: int, E: float, G: float, nu: float,
+                 rho: float=0.0, alpha: float=0.0, tref: float=0.0, ge: float=0.0,
+                 St: float=0.0, Sc: float=0.0, Ss: float=0.0,
+                 mcsid: int=0, comment: str='') -> int:
         """
         Creates a MAT1 card
 
@@ -4703,8 +4705,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         If E, G, or nu is None (only 1), it will be calculated
 
         """
-        mat = self.mat1.add(mid, E, G, nu, rho=rho, alpha=a, tref=tref, ge=ge, St=St,
-                            Sc=Sc, Ss=Ss, mcsid=mcsid, comment=comment)
+        mat = self.mat1.add(
+            mid, E, G, nu, rho=rho, alpha=alpha, tref=tref, ge=ge, St=St,
+            Sc=Sc, Ss=Ss, mcsid=mcsid, comment=comment)
         return mat
 
     def add_mat2(self, mid: float, G11: float, G12: float, G13: float,
@@ -4908,20 +4911,22 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                              tab4, tabd, comment=comment)
         return mat
 
-    def add_mats1(self, mid, tid, Type, h, hr, yf, limit1, limit2, comment: str='') -> MATS1:
+    def add_mats1(self, mid: int, tid: int, Type: str,
+                  h: float, hr: float, yf: float, limit1: float, limit2: float,
+                  comment: str='') -> int:
         """Creates a MATS1 card"""
-        mat = MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
-        self._add_methods._add_material_dependence_object(mat)
+        mat = self.mats1.add(mid, tid, Type, h, hr, yf, limit1, limit2,
+                             comment=comment)
         return mat
 
-    def add_matt1(self, mid, e_table=None, g_table=None, nu_table=None, rho_table=None,
+    def add_matt1(self, mid: int, e_table=None, g_table=None, nu_table=None, rho_table=None,
                   a_table=None, ge_table=None, st_table=None, sc_table=None, ss_table=None,
-                  comment: str='') -> MATT1:
+                  comment: str='') -> int:
         """Creates a MATT1 card"""
-        mat = MATT1(mid, e_table, g_table, nu_table, rho_table, a_table,
-                    ge_table, st_table, sc_table, ss_table,
-                    comment=comment)
-        self._add_methods._add_material_dependence_object(mat)
+        mat = self.matt1.add(
+            mid, e_table, g_table, nu_table, rho_table, a_table,
+            ge_table, st_table, sc_table, ss_table,
+            comment=comment)
         return mat
 
     def add_matt2(self, mid, g11_table=None, g12_table=None, g13_table=None, g22_table=None,
