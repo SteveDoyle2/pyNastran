@@ -411,6 +411,7 @@ class Writer():
         model.cbar.write_file(bdf_file, size=size, is_double=is_double)
         model.cbarao.write_file(bdf_file, size=size, is_double=is_double)
         model.cbeam.write_file(bdf_file, size=size, is_double=is_double)
+        model.cbend.write_file(bdf_file, size=size, is_double=is_double)
         model.cshear.write_file(bdf_file, size=size, is_double=is_double)
 
         # shells
@@ -599,6 +600,9 @@ class Writer():
         model.pbeam.write_file(bdf_file, size=size, is_double=is_double)
         model.pbeaml.write_file(bdf_file, size=size, is_double=is_double)
         model.pbcomp.write_file(bdf_file, size=size, is_double=is_double)
+
+        # bend
+        model.pbend.write_file(bdf_file, size=size, is_double=is_double)
 
         # shear
         model.pshear.write_file(bdf_file, size=size, is_double=is_double)

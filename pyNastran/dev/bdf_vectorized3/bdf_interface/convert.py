@@ -80,6 +80,7 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'PROD', 'PTUBE', 'CONROD',
         'CBAR', 'PBAR', 'PBARL', 'CBARAO',
         'CBEAM', 'PBEAM', 'PBEAML',
+        'CBEND', 'PBEND',
         'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR', 'CTRIA6', 'CQUAD8',
         'PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE',
         'PCOMPS', 'PCOMPLS',

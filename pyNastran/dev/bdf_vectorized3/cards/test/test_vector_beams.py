@@ -571,6 +571,7 @@ class TestBeams(unittest.TestCase):
         save_load_deck(model)
 
     def test_cbeam_v_g0(self):
+        """compare CBEAM v/g0 vectors between old and new"""
         model = BDF(debug=False)
         model_old = BDF_old(debug=False)
 
@@ -589,6 +590,18 @@ class TestBeams(unittest.TestCase):
         eid = 1
         pid = 101
         nids = [1, 2]
+        xxb = [0.]
+        so = ['YES']
+        mid = 1
+        area = [1.0]
+        i1 = [1.0]
+        i2 = [1.0]
+        i12 = [1.0]
+        j = [1.0]
+        model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j)
+        model_old.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j)
+        model.add_mat1(mid, 3.0e7, None, 0.3)
+        model_old.add_mat1(mid, 3.0e7, None, 0.3)
 
         offts = ['GGG', 'GOG', 'GBG', 'GGO', 'GOO', 'GGB', 'GBB',
                  'BGG', 'BOG', 'BBG', 'BGO', 'BOO', 'BGB', 'BBB']
@@ -698,10 +711,7 @@ class TestBeams(unittest.TestCase):
             assert np.allclose(wb[i, :], wbi), f'eid={eid}; wb_new={wb[i,:]} expected={wbi}\n{elem}'
             y = 1
             i += 1
-
         x = 1
-
-
 
     def test_cbeam_pbeaml(self):
         """CBEAM/PBEAML"""
@@ -1522,8 +1532,58 @@ class TestBeams(unittest.TestCase):
         pbeam3.write()
         pbeam3.write(size=16)
 
-    def _test_cbend(self):
+    def test_cbend_type1(self):
         model = BDF(debug=False)
+        cbend = model.cbend
+        pbend = model.pbend
+
+        model.add_grid(10, [1., 0., 0.])
+        model.add_grid(11, [.707, .707, 0.])
+        model.add_grid(12, [0., 1., 0.])
+        eid = 2
+        pid = 3
+        nids = [10, 11]
+        g0 = 12
+        geom = 1
+        x = None
+        cbendi = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
+
+        mid = 100
+
+        A = 1.0
+        i1 = 2.0
+        i2 = 3.0
+        j = 4.0
+        pbend1 = pbend.add_beam_type_1(
+            pid, mid, A, i1, i2, j,
+            rb=None, theta_b=None,
+            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+            k1=None, k2=None, nsm=0.,
+            rc=0., zc=0., delta_n=0., comment='pbend1')
+
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+        model.validate()
+        model.cross_reference()
+
+        #model.uncross_reference()
+
+        cbend.write()
+        cbend.write(size=16)
+
+        pbend.write()
+        pbend.write(size=16)
+
+        pbend.write()
+        pbend.write(size=16)
+        assert len(pbend) == 1
+
+        save_load_deck(model, punch=True, run_mass_properties=False)
+
+    def test_cbend_type2(self):
+        model = BDF(debug=False)
+        cbend = model.cbend
+        pbend = model.pbend
+
         model.add_grid(10, [1., 0., 0.])
         model.add_grid(11, [.707, .707, 0.])
         model.add_grid(12, [0., 1., 0.])
@@ -1547,18 +1607,7 @@ class TestBeams(unittest.TestCase):
         #      --   <---- curve A-B
         #
         x = None
-        cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
-
-        A = 1.0
-        i1 = 2.0
-        i2 = 3.0
-        j = 4.0
-        pbend1 = PBEND.add_beam_type_1(
-            pid, mid, A, i1, i2, j,
-            rb=None, theta_b=None,
-            c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
-            k1=None, k2=None, nsm=0.,
-            rc=0., zc=0., delta_n=0., comment='pbend1')
+        cbendi = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
 
         fsi = 1
         rm = 0.2
@@ -1566,11 +1615,11 @@ class TestBeams(unittest.TestCase):
         #p = 0.5
         #rb = 0.6
         #theta_b = 0.7
-        pbend2 = PBEND.add_beam_type_2(
+        pbendi = pbend.add_beam_type_2(
             pid, mid, fsi, rm, t,
             p=None, rb=None, theta_b=None,
             nsm=0., rc=0., zc=0., comment='')
-        model.properties[pid] = pbend1
+        #model.properties[pid] = pbend1
 
         #model.add_pbend(pid, mid, beam_type, A, i1, i2, j,
                         #c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
@@ -1579,18 +1628,19 @@ class TestBeams(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
-        model.uncross_reference()
+        #model.uncross_reference()
 
-        cbend.write_card()
-        cbend.write_card(size=16)
+        cbend.write()
+        cbend.write(size=16)
 
-        pbend1.write_card()
-        pbend1.write_card(size=16)
+        pbend.write()
+        pbend.write(size=16)
 
-        pbend2.write_card()
-        pbend2.write_card(size=16)
+        pbend.write()
+        pbend.write(size=16)
+        assert len(pbend) == 1
 
-        save_load_deck(model, punch=True, run_convert=False)
+        save_load_deck(model, punch=True, run_mass_properties=False)
 
     def _test_pbrsect(self):
         """tests a PBRSECT"""

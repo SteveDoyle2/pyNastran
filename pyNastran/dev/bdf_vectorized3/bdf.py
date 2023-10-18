@@ -79,7 +79,7 @@ from .cards.elements.beam import BEAMOR
 #from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH_OPTISTRUCT
 #from .cards.elements.bars import CBEAM3, CBEND
 #from .cards.elements.beam import CBEAM, BEAMOR
-#from .cards.properties.bars import PBRSECT, PBEND, PBEAM3
+#from .cards.properties.bars import PBRSECT, PBEAM3
 #from .cards.properties.beam import PBCOMP, PBMSECT
 ## CMASS5
 from pyNastran.bdf.cards.constraints import (SPCAX, SPCOFF, SPCOFF1,
@@ -526,7 +526,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self._remove_disabled_cards = False
 
         # file management parameters
-        self.active_filenames = []  # type: list[str]
+        self.active_filenames: list[str] = []
         self.active_filename = None  # type: Optional[str]
         self.include_dir = ''
         self.dumplines = False
@@ -535,10 +535,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
         # list of all read in cards - useful in determining if entire BDF
         # was read & really useful in debugging
-        self.card_count = {}  # type: dict[str, int]
+        self.card_count: dict[str, int] = {}
 
         # stores the card_count of cards that have been rejected
-        self.reject_count = {}  # type: dict[str, int]
+        self.reject_count: dict[str, int] = {}
 
         # allows the BDF variables to be scoped properly (i think...)
         #GetCard.__init__(self)
@@ -554,10 +554,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self._is_dynamic_syntax = False
 
         # lines that were rejected b/c they were for a card that isn't supported
-        self.reject_lines = []  # type: list[list[str]]
+        self.reject_lines: list[list[str]] = []
 
         # cards that were created, but not processed
-        self.reject_cards = []  # type: list[str]
+        self.reject_cards: list[str] = []
 
         self.include_filenames = defaultdict(list) # list[str]
         # self.__init_attributes()
@@ -621,10 +621,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # crack
             #'CRAC2D', 'CRAC3D',
 
-            #  nastran95
-            #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
-            #'CTRSHL', 'CQUAD1',
-
             ## rigid_elements
             'RBAR', 'RBAR1',
             'RBE1', 'RBE2', 'RBE3', 'RROD', # 'RSPLINE', 'RSSCON',
@@ -639,7 +635,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PBUSH', 'PBUSH1D',
             'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PTUBE',
-            'PBEAM', 'PBEAML', 'PBCOMP', # 'PBRSECT', 'PBEND',
+            'PBEAM', 'PBEAML', 'PBCOMP', # 'PBRSECT',
+            'PBEND',
             #'PBMSECT', # not fully supported
             #'PBEAM3',  # v1.3
 
@@ -649,6 +646,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PCOMPS', 'PCOMPLS',
 
             #  nastran 95
+            #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
+            #'CTRSHL', 'CQUAD1',
             #'PTRSHL', 'PQUAD1',
             #'PIHEX', # PQUAD4
 
@@ -2156,9 +2155,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CBEAM3' : (CBEAM3, add_methods._add_element_object),
             #'PBEAM3' : (PBEAM3, add_methods._add_property_object),
 
-            #'CBEND' : (CBEND, add_methods._add_element_object),
-            #'PBEND' : (PBEND, add_methods._add_property_object),
-
             # nastran95
             #'CTRSHL' : (CTRSHL, add_methods._add_element_object),
             #'CQUAD1' : (CQUAD1, add_methods._add_element_object),
@@ -2428,6 +2424,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PBCOMP' : partial(self._prepare_card, self.pbcomp),
             #'PBMSECT' : (PBMSECT, add_methods._add_property_object),
             'POINT' : partial(self._prepare_card, self.point),
+
+            # bend
+            'CBEND' : partial(self._prepare_card, self.cbend),
+            'PBEND' : partial(self._prepare_card, self.pbend),
 
             # shear
             'CSHEAR': partial(self._prepare_card, self.cshear),

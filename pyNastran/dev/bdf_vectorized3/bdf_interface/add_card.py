@@ -1456,12 +1456,12 @@ class Add1dElements(BDFAttributes):
 
         return pbeaml, desvars, dvprels
 
-    def add_cbend(self, eid, pid, nids, g0, x, geom, comment: str='') -> int:
+    def add_cbend(self, eid: int, pid: int, nids, g0, x, geom: int, comment: str='') -> int:
         """Creates a CBEND card"""
         elem = self.cbend.add(eid, pid, nids, g0, x, geom, comment=comment)
         return elem
 
-    def add_pbend(self, pid, mid, beam_type, A, i1, i2, j,
+    def add_pbend(self, pid: int, mid: int, beam_type, A, i1, i2, j,
                   c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
                   nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b,
                   comment: str='') -> int:

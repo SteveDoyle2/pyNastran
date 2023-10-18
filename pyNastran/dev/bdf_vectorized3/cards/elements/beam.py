@@ -10,6 +10,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16,
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, string, blank,
+    integer_or_double,
     integer_or_blank, double_or_blank, string_or_blank,
     integer_double_or_blank, integer_string_or_blank, double_string_or_blank)
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default # init_x_g0,
@@ -32,7 +33,7 @@ from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from ..coord import COORD
     from ..materials import MAT1
 
@@ -103,10 +104,34 @@ class BEAMOR(BaseCard):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
 class CBEAM(Element):
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-        #self.clear()
+    """
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |    9     |
+    +=======+=====+=====+=====+=====+=====+=====+=====+==========+
+    | CBEAM | EID | PID | GA  | GB  | X1  | X2  | X3  | OFFT/BIT |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B      |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |       | SA  | SB  |     |     |     |     |     |          |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+
+    or
+
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |    9     |
+    +=======+=====+=====+=====+=====+=====+=====+=====+==========+
+    | CBEAM | EID | PID | GA  | GB  | G0  |     |     | OFFT/BIT |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B      |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |       | SA  | SB  |     |     |     |     |     |          |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+
+    bit is an MSC specific field
+    NX 2020 added offt
+    """
 
     @Element.clear_check
     def clear(self) -> None:
@@ -810,6 +835,7 @@ class CBEAM(Element):
     def is_bit(self) -> np.ndarray:
         return not self.is_offt
 
+
 class PBEAM(Property):
     """
     Defines the properties of a beam element (CBEAM entry). This element may be
@@ -1206,7 +1232,7 @@ class PBEAM(Property):
         self.n += 1
         return self.n
 
-    @Element.parse_cards_check
+    @Property.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
@@ -2708,3 +2734,1107 @@ def _linearly_interpolate(i: int, x: np.ndarray, y: np.ndarray):
     yi = y[ilow] + (yhigh - ylow) / (xhigh - xlow) * x[i]
     assert isinstance(yi[0], float), yi
     return yi
+
+
+class CBEND(Element):
+    """
+    NX 2020.1
+
+    Defines a curved beam, curved pipe, or elbow element.
+
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |    9     |
+    +=======+=====+=====+=====+=====+=====+=====+=====+==========+
+    | CBEND | EID | PID | GA  | GB  | X1  | X2  | X3  |   GEOM   |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+
+    """
+
+    @Element.clear_check
+    def clear(self) -> None:
+        self.element_id: np.array = np.array([], dtype='int32')
+        self.property_id: np.array = np.array([], dtype='int32')
+        self.nodes: np.array = np.zeros((0, 2), dtype='int32')
+        self.g0: np.array = np.array([], dtype='int32')
+        self.x: np.array = np.zeros((0, 3), dtype='float64')
+        self.geom_flag: np.array = np.array([], dtype='int32')
+
+    def add(self, eid: int, pid: int, nids: list[int],
+            x: Optional[list[float]], g0: Optional[int],
+            geom: str='GGG', comment: str='') -> int:
+        self.cards.append((eid, pid, nids, g0, x, geom, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a CBEND card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        ga = integer(card, 3, 'ga')
+        gb = integer(card, 4, 'gb')
+        x1_g0 = integer_double_or_blank(card, 5, 'x1_g0', 0.0)
+        if isinstance(x1_g0, integer_types):
+            g0 = x1_g0
+            x = None
+        elif isinstance(x1_g0, float):
+            g0 = None
+            x = np.array([double_or_blank(card, 5, 'x1', 0.0),
+                          double_or_blank(card, 6, 'x2', 0.0),
+                          double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            if np.linalg.norm(x) == 0.0:
+                msg = 'G0 vector defining plane 1 is not defined.\n'
+                msg += 'G0 = %s\n' % g0
+                msg += 'X  = %s\n' % x
+                raise RuntimeError(msg)
+        else:
+            raise ValueError('invalid x1/g0=%r on CBEND' % x1_g0)
+        geom = integer(card, 8, 'geom')
+
+        assert len(card) == 9, f'len(CBEND card) = {len(card):d}\ncard={card}'
+        #return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
+        self.cards.append((eid, pid, [ga, gb], g0, x, geom, comment))
+        self.n += 1
+        return self.n
+
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
+        g0 = np.zeros(ncards, dtype=idtype)
+        x = np.full((ncards, 3), np.nan, dtype='float64')
+        geom_flag = np.zeros(ncards, dtype='int32')
+
+        for icard, card in enumerate(self.cards):
+            (eid, pid, nids, g0i, xi, geom_flagi, comment) = card
+            element_id[icard] = eid
+            property_id[icard] = pid
+            nodes[icard, :] = nids
+            if g0i in {None, 0, -1}:
+                x[icard, :] = xi
+            else:
+                assert g0i > 0, card
+                g0[icard] = g0i
+
+            geom_flag[icard] = geom_flagi
+
+        self._save(element_id, property_id, nodes,
+                   g0, x, geom_flag)
+        self.cards = []
+
+    def _save(self, element_id, property_id, nodes,
+              g0, x, geom_flag) -> None:
+        if len(self.element_id) != 0:
+            asdf
+        self.element_id = element_id
+        self.property_id = property_id
+        self.nodes = nodes
+        self.g0 = g0
+        self.x = x
+
+        self.geom_flag = geom_flag
+        self.n = len(property_id)
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['element_id'].append(self.element_id)
+        used_dict['property_id'].append(self.property_id)
+        used_dict['node_id'].append(self.nodes.ravel())
+        g0 = self.g0[self.is_g0]
+        if len(g0):
+            used_dict['node_id'].append(g0)
+
+    def convert(self, xyz_scale: float=1.0,
+                mass_scale: float=1.0, **kwargs):
+        ## TODO: probably wrong for CD=1
+        self.x *= xyz_scale
+
+    def __apply_slice__(self, elem: CBEND, i: np.ndarray) -> None:
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.g0 = self.g0[i]
+        elem.x = self.x[i, :]
+        elem.geom_flag = self.geom_flag[i]
+        elem.n = len(i)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
+                          msg=f'no bend properties for {self.type}')
+        pids.sort()
+        geom_check(self,
+                   missing,
+                   node=(nid, self.nodes),
+                   property_id=(pids, self.property_id))
+
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+
+        element_ids = array_str(self.element_id, size=size)
+        property_ids = array_str(self.property_id, size=size)
+        nodes_ = array_str(self.nodes, size=size)
+        geom_flag = array_str(self.geom_flag, size=size)
+        for eid, pid, nodes, g0, x, is_g0, geom_flagi in zip_longest(
+            element_ids, property_ids, nodes_,
+            self.g0, self.x, self.is_g0, geom_flag):
+
+            n1, n2 = nodes
+            if is_g0:
+                x1 = g0
+                x2 = ''
+                x3 = ''
+            else:
+                x1, x2, x3 = x # self.get_x_g0_defaults()
+
+            list_fields = ['CBEND', eid, pid, n1, n2,
+                           x1, x2, x3, geom_flagi]
+            bdf_file.write(print_card(list_fields))
+        return
+
+    @property
+    def is_x(self) -> np.ndarray:
+        return (self.g0 == 0)
+
+    @property
+    def is_g0(self) -> np.ndarray:
+        return ~self.is_x
+
+    @property
+    def all_properties(self) -> list[PBEND]:
+        model = self.model
+        return [model.pbend]
+
+    @property
+    def allowed_properties(self):
+        all_properties = self.all_properties
+        props = [prop for prop in all_properties if prop.n > 0]
+        assert len(props) > 0, f'{self.type}: all_props={all_properties}'
+        return props
+
+    def mass(self) -> np.ndarray:
+        #pid = self.property_id
+        mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)
+        length = self.length()
+        mass = mass_per_length * length
+        return mass
+
+    def line_vector_length(self) -> tuple[np.ndarray, np.ndarray]:
+        line_vector, length = line_vector_length(self.model, self.nodes)
+        return line_vector, length
+
+    def length(self) -> np.ndarray:
+        length = np.full(self.n, np.nan, dtype='float64')
+        #length = line_length(self.model, self.nodes)
+        #inan = np.isnan(length)
+        #if np.any(inan):
+            #msg = 'CBEAM has nan length\n'
+            #msg += f'eids={self.element_id[inan]}\n'
+            #msg += f'nid1={self.nodes[inan,0]}\n'
+            #msg += f'nid2={self.nodes[inan,1]}\n'
+            #raise RuntimeError(msg)
+        return length
+
+    def centroid(self) -> np.ndarray:
+        centroid = line_centroid(self.model, self.nodes)
+        return centroid
+
+    #def get_bar_vector(self, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        #v, cd = get_bar_vector(self, xyz1)
+        #return v, cd
+
+    def get_xyz(self) -> tuple[np.ndarray, np.ndarray]:
+        grid = self.model.grid
+        xyz = grid.xyz_cid0()
+        nid = grid.node_id
+        inode = np.searchsorted(nid, self.nodes)
+        assert np.array_equal(nid[inode], self.nodes)
+        in1 = inode[:, 0]
+        in2 = inode[:, 1]
+        xyz1 = xyz[in1, :]
+        xyz2 = xyz[in2, :]
+        return xyz1, xyz2
+
+    def get_axes(self, xyz1: np.ndarray, xyz2: np.ndarray,
+                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
+                            np.ndarray, np.ndarray, np.ndarray]:
+        raise NotImplementedError('get_axes')
+
+    def center_of_mass(self) -> np.ndarray:
+        """
+        Geom flag
+         - 1: Curve from 1->2 (A->B) with center at O
+         -    The center of curvature lies on the line AO (or its extension) or vector v.
+
+              O
+             / \
+            /   \
+           /     \
+          1       2
+
+        i' = n1 - n0
+        j = n2 - n0
+        k = i' x j
+        i = k x j
+
+         - 2: The tangent of centroid arc at end A is parallel to line AO or vector v.
+              Point O (or vector v) and the arc AB must be on the same side of the chord AB.
+            - Let point O to be point T
+            - Let point O be the center as before
+
+          https://www.varsitytutors.com/hotmath/hotmath_help/topics/tangent-to-a-circle
+          AT = given
+          OA = given
+          (OA)^2 + (AT)^2 = (OT)^2
+          OT = sqrt(AT^2 - OA^2)
+          i' = n1 - n0
+          j' = n2 - n0
+          k = i' x j'
+          j = k x i' ??? should be close, might have flipped sign...make a simple test that includes plotting
+
+        """
+        #self.check_missing(self.property_id)
+        #log = self.model.log
+
+        xyz1, xyz2 = self.get_xyz()
+        #neids = xyz1.shape[0]
+        centroid = (xyz1 + xyz2) / 2.
+
+        ## TODO: doesn't consider curvature...
+        return centroid
+
+    def area(self) -> np.ndarray:
+        pid = self.property_id
+        area = np.full(len(pid), np.nan, dtype='float64')
+        log = self.model.log
+        for prop in self.allowed_properties:
+            i_lookup, i_all = searchsorted_filter(prop.property_id, pid, msg='')
+            if len(i_lookup) == 0:
+                continue
+            # we're at least using some properties
+            areai = prop.area()
+            area_all = areai[i_all]
+            inan = np.isnan(area_all)
+            if np.any(inan):
+                msg = f'{prop.type} has nan area for property_ids={prop.property_id[inan]}\n'
+                log.warning(msg)
+
+            area[i_lookup] = areai[i_all]
+
+        inan = np.isnan(area)
+        if np.any(inan):
+            msg = 'CBEND has nan area\n'
+            msg += f'eids={self.element_id[inan]}\n'
+            msg += f'pid={self.property_id[inan]}\n'
+            msg += f'all_properties={self.all_properties}'
+            #msg += f'As={self.nodes[inan]}\n'
+            raise RuntimeError(msg)
+        return area
+
+    def volume(self) -> np.ndarray:
+        A = self.area()
+        L = self.length()
+        return A * L
+
+
+class PBEND(Property):
+    """
+    MSC/NX Option A
+
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+    +=======+======+=======+=====+====+====+========+====+========+
+    | PBEND | PID  |  MID  | A   | I1 | I2 |   J    | RB | THETAB |
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |       |  C1  |  C2   | D1  | D2 | E1 |   E2   | F1 |   F2   |
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |       |  K1  |  K2   | NSM | RC | ZC | DELTAN |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
+
+    MSC Option B
+
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+    +=======+======+=======+=====+====+====+========+====+========+
+    | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |       |      |       | NSM | RC | ZC |        |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
+
+    NX Option B
+
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+    +=======+======+=======+=====+====+====+========+====+========+
+    | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |       | SACL | ALPHA | NSM | RC | ZC | FLANGE |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    |       |  KX  |  KY   | KZ  |    | SY |   SZ   |    |        |
+    +-------+------+-------+-----+----+----+--------+----+--------+
+    """
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id: np.array = np.array([], dtype='int32')
+        self.material_id: np.array = np.array([], dtype='int32')
+        self.beam_type: np.array = np.array([], dtype='int32')
+
+        self.nsm = np.array([], dtype='float64')
+
+        #: Bend radius of the line of centroids.
+        self.rb = np.array([], dtype='float64')
+
+        #------------------------------------------------------
+        ## beam_type = 1
+
+        #: Arc angle of element
+        self.theta_b = np.array([], dtype='float64')
+
+        #: Shear stiffness factor K in K*A*G for plane 1 and plane 2.
+        self.k1 = np.array([], dtype='float64')
+        self.k2 = np.array([], dtype='float64')
+
+        self.A = np.array([], dtype='float64')
+        self.J = np.array([], dtype='float64')
+        self.I1 = np.array([], dtype='float64')
+        self.I2 = np.array([], dtype='float64')
+
+        #: The r,z locations from the geometric centroid for stress data recovery.
+        self.c1 = np.array([], dtype='float64')
+        self.c2 = np.array([], dtype='float64')
+        self.d1 = np.array([], dtype='float64')
+        self.d2 = np.array([], dtype='float64')
+        self.e1 = np.array([], dtype='float64')
+        self.e2 = np.array([], dtype='float64')
+        self.f1 = np.array([], dtype='float64')
+        self.f2 = np.array([], dtype='float64')
+
+        #------------------------------------------------------
+        ## beam_type = 2
+
+        # Flag selecting the flexibility and stress intensification factors.
+        # See "Flexibility and stress intensification factors" in the Simcenter
+        # Nastran Element Library. (Integer = 1-6)
+        self.fsi = np.array([], dtype='int32')
+
+        #: Internal pressure.
+        self.p = np.array([], dtype='float64')
+
+        #: Wall thickness of the curved pipe.
+        self.t = np.array([], dtype='float64')
+
+        #: Mean cross-sectional radius of the curved pipe.
+        self.rm = np.array([], dtype='float64')
+
+        self.coincedent_spacing = np.array([], dtype='float64')
+
+        #: For FSI=6, the user defined flexibility factor for the:
+        #  - X: torsional moment
+        #  - Y: out-of-plane bending moment
+        #  - Z: in-plane bending moment
+        self.kx = np.array([], dtype='float64')
+        self.ky = np.array([], dtype='float64')
+        self.kz = np.array([], dtype='float64')
+
+        #: For FSI=6, the user defined stress intensificatation factor for the:
+        #  - Y: out-of-plane bending moment
+        #  - Z: in-plane bending moment
+        self.sy = np.array([], dtype='float64')
+        self.sz = np.array([], dtype='float64')
+
+    #def add(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+            #c1=None, c2=None, d1=None, d2=None,
+            #e1=None, e2=None, f1=None, f2=None,
+            #k1=1., k2=1., s1=0., s2=0.,
+            #nsia=0., nsib=None, cwa=0., cwb=None,
+            #m1a=0., m2a=0., m1b=None, m2b=None,
+            #n1a=0., n2a=0., n1b=None, n2b=None,
+            #comment='') -> int:
+        #self.cards.append((pid, mid,
+                           #xxb, so, area, j, i1, i2, i12, nsm,
+                           #c1, c2, d1, d2, e1, e2, f1, f2,
+                           #s1, s2, k1, k2,
+                           #nsia, nsib, cwa, cwb,
+                           #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b,
+                           #comment))
+        #self.n += 1
+        #return self.n
+
+    def add_beam_type_1(self, pid, mid,
+                        A, i1, i2, j,
+                        rb=None, theta_b=None,
+                        c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+                        k1=None, k2=None,
+                        nsm=0., rc=0., zc=0., delta_n=0., comment=''):
+        """
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+        +=======+======+=======+=====+====+====+========+====+========+
+        | PBEND | PID  |  MID  | A   | I1 | I2 |   J    | RB | THETAB |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |       |  C1  |  C2   | D1  | D2 | E1 |   E2   | F1 |   F2   |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |       |  K1  |  K2   | NSM | RC | ZC | DELTAN |    |        |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+
+        Parameters
+        ----------
+        A : float
+            cross-sectional area
+        i1, i2 : float
+            area moments of inertia for plane 1/2
+        j : float
+            torsional stiffness
+        rb : float; default=None
+            bend radius of the line of centroids
+        theta_b : float; default=None
+            arc angle of element (degrees)
+        c1, c2, d1, d2, e1, e2, f1, f2 : float; default=0.0
+            the r/z locations from the geometric centroid for stress recovery
+        k1, k2 : float; default=None
+            Shear stiffness factor K in K*A*G for plane 1 and plane 2
+        nsm : float; default=0.
+            nonstructural mass per unit length???
+        zc : float; default=None
+            Offset of the geometric centroid in a direction perpendicular to
+            the plane of points GA and GB and vector v.
+        delta_n : float; default=None
+            Radial offset of the neutral axis from the geometric centroid,
+            positive is toward the center of curvature
+        """
+        beam_type = 1
+        fsi = None
+        rm = None
+        t = None
+        p = None
+        centerline_spacing = None
+        alpha = None
+        flange = None
+        kx = None
+        ky = None
+        kz = None
+        sy = None
+        sz = None
+        #return PBEND(pid, mid, beam_type, A, i1, i2, j,
+                     #c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                     #nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment=comment)
+
+        self.cards.append((pid, mid, beam_type,
+                           # type=1
+                           A, i1, i2, j,
+                           c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                           nsm,
+                           # common
+                           rc, zc,
+                           # beam_type=1
+                           delta_n,
+                           # beam_type=2
+                           fsi, rm, t, p,
+                           rb, theta_b,
+                           centerline_spacing, alpha, flange, kx, ky, kz, sy, sz,
+                           comment))
+        self.n += 1
+        return self.n
+
+    def add_beam_type_2(self, pid, mid,
+                        fsi, rm, t, p=None, rb=None, theta_b=None,
+                        nsm=0., rc=0., zc=0., comment=''):
+        """
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |   1   |   2  |   3   |  4  |  5 |  6 |   7    |  7 |    8   |
+        +=======+======+=======+=====+====+====+========+====+========+
+        | PBEND | PID  |  MID  | FSI | RM | T  |   P    | RB | THETAB |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+        |       |      |       | NSM | RC | ZC |        |    |        |
+        +-------+------+-------+-----+----+----+--------+----+--------+
+
+        Parameters
+        ----------
+        fsi : int
+            Flag selecting the flexibility and stress intensification
+            factors. See Remark 3. (Integer = 1, 2, or 3)
+        rm : float
+            Mean cross-sectional radius of the curved pipe
+        t : float
+            Wall thickness of the curved pipe
+        p : float; default=None
+            Internal pressure
+        rb : float; default=None
+            bend radius of the line of centroids
+        theta_b : float; default=None
+            arc angle of element (degrees)
+        nsm : float; default=0.
+            nonstructural mass per unit length???
+        rc : float; default=None
+            Radial offset of the geometric centroid from points GA and GB.
+        zc : float; default=None
+            Offset of the geometric centroid in a direction perpendicular
+            to the plane of points GA and GB and vector v
+        """
+        beam_type = 2
+        A = None
+        i1 = None
+        i2 = None
+        j = None
+        c1 = None
+        c2 = None
+        d1 = None
+        d2 = None
+        e1 = None
+        e2 = None
+        f1 = None
+        f2 = None
+        k1 = None
+        k2 = None
+        delta_n = None
+        centerline_spacing = 0.1
+        alpha = 1.0
+        flange = 5
+
+        kx = 1.0
+        ky = 1.0
+        kz = 1.0
+        sy = 1.0
+        sz = 1.0
+
+        #return PBEND(pid, mid, beam_type, A, i1, i2, j,
+                     #c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                     #nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b, comment=comment)
+        self.cards.append((pid, mid, beam_type,
+                           # type=1
+                           A, i1, i2, j,
+                           c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                           nsm,
+                           # common
+                           rc, zc,
+                           # beam_type=1
+                           delta_n,
+                           # beam_type=2
+                           fsi, rm, t, p,
+                           rb, theta_b,
+                           centerline_spacing, alpha, flange, kx, ky, kz, sy, sz,
+                           comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a PBEND card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+
+        value3 = integer_or_double(card, 3, 'Area/FSI')
+        #print("PBEND: area/fsi=%s" % value3)
+
+        # MSC/NX option A
+        A = None
+        i1 = None
+        i2 = None
+        j = None
+        c1 = None
+        c2 = None
+        d1 = None
+        d2 = None
+        e1 = None
+        e2 = None
+        f1 = None
+        f2 = None
+        k1 = None
+        k2 = None
+        delta_n = None
+
+        # MSC option B
+        rm = None
+        t = None
+        p = None
+
+        # NX option B
+        centerline_spacing = None
+        alpha = None
+        flange = None
+        kx = None
+        ky = None
+        kz = None
+        sy = None
+        sz = None
+        if isinstance(value3, float):
+            fsi = 0
+            beam_type = 1
+            #: Area of the beam cross section
+            A = double(card, 3, 'A')
+
+            #: Area moments of inertia in planes 1 and 2.
+            i1 = double(card, 4, 'I1')
+            i2 = double(card, 5, 'I2')
+
+            #: Torsional stiffness :math:`J`
+            j = double(card, 6, 'J')
+
+            # line2
+            #: The r,z locations from the geometric centroid for stress
+            #: data recovery.
+            c1 = double_or_blank(card, 9, 'c1', default=0.)
+            c2 = double_or_blank(card, 10, 'c2', default=0.)
+            d1 = double_or_blank(card, 11, 'd1', default=0.)
+            d2 = double_or_blank(card, 12, 'd2', default=0.)
+            e1 = double_or_blank(card, 13, 'e1', default=0.)
+            e2 = double_or_blank(card, 14, 'e2', default=0.)
+            f1 = double_or_blank(card, 15, 'f1', default=0.)
+            f2 = double_or_blank(card, 16, 'f2', default=0.)
+
+            # line 3
+            #: Shear stiffness factor K in K*A*G for plane 1.
+            k1 = double_or_blank(card, 17, 'k1')
+            #: Shear stiffness factor K in K*A*G for plane 2.
+            k2 = double_or_blank(card, 18, 'k2')
+
+            #: Nonstructural mass per unit length.
+            nsm = double_or_blank(card, 19, 'nsm', default=0.)
+
+            #: Radial offset of the geometric centroid from points GA and GB.
+            rc = double_or_blank(card, 20, 'rc', default=0.)
+
+            #: Offset of the geometric centroid in a direction perpendicular
+            #: to the plane of points GA and GB and vector v
+            zc = double_or_blank(card, 21, 'zc', default=0.)
+
+            #: Radial offset of the neutral axis from the geometric
+            #: centroid, positive is toward the center of curvature
+            delta_n = double_or_blank(card, 22, 'delta_n', default=0.)
+
+        elif isinstance(value3, int):  # alternate form
+            beam_type = 2
+            #: Flag selecting the flexibility and stress intensification
+            #: factors. See Remark 3. (Integer = 1, 2, or 3)
+            fsi = integer(card, 3, 'fsi')
+            if fsi in [1, 2, 3]:
+                # assuming MSC
+                #: Mean cross-sectional radius of the curved pipe
+                rm = double(card, 4, 'rm')
+
+                #: Wall thickness of the curved pipe
+                t = double(card, 5, 't')
+
+                #: Internal pressure
+                p = double_or_blank(card, 6, 'p')
+
+                # line3
+                # Non-structural mass :math:`nsm`
+                nsm = double_or_blank(card, 11, 'nsm', default=0.)
+                rc = double_or_blank(card, 12, 'rc', default=0.)
+                zc = double_or_blank(card, 13, 'zc', default=0.)
+            elif fsi in [4, 5, 6]:
+                # Non-structural mass :math:`nsm`
+                nsm = double_or_blank(card, 11, 'nsm', default=0.)
+                rc = double_or_blank(card, 12, 'rc', default=0.)
+                zc = double_or_blank(card, 13, 'zc', default=0.)
+
+                #sacl = double_or_blank(card, 9, 'sacl')
+                #alpha = double_or_blank(card, 10, 'alpha', 0.)
+                #flange = integer_or_blank(card, 15, 'flange', 0)
+                #kx = double_or_blank(card, 18, 'kx', 1.0)
+                #ky = double_or_blank(card, 19, 'ky', 1.0)
+                #kz = double_or_blank(card, 20, 'kz', 1.0)
+                #sy = double_or_blank(card, 22, 'sy', 1.0)
+                #sz = double_or_blank(card, 23, 'sz', 1.0)
+            else:
+                assert fsi in [1, 2, 3, 4, 5, 6], 'pid=%s fsi=%s\ncard:%s' % (pid, fsi, card)
+        else:
+            raise RuntimeError('Area/FSI on CBEND must be defined...')
+        assert fsi in [0, 1, 2, 3, 4, 5, 6], 'pid=%s fsi=%s\ncard:%s' % (pid, fsi, card)
+
+        #: Bend radius of the line of centroids
+        rb = double_or_blank(card, 7, 'rb')
+
+        #: Arc angle :math:`\theta_B` of element  (optional)
+        theta_b = double_or_blank(card, 8, 'thetab')
+        assert len(card) <= 23, f'len(PBEND card) = {len(card):d}\ncard={card}'
+        #return PBEND(pid, mid, beam_type, A, i1, i2, j, c1, c2, d1, d2,
+                     #e1, e2, f1, f2, k1, k2, nsm,
+                     #rc, zc, delta_n, fsi, rm, t,
+                     #p, rb, theta_b, comment=comment)
+        self.cards.append((pid, mid, beam_type,
+                           # type=1
+                           A, i1, i2, j,
+                           c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                           nsm,
+                           # common
+                           rc, zc,
+                           # beam_type=1
+                           delta_n,
+                           # beam_type=2
+                           fsi, rm, t, p,
+                           rb, theta_b,
+                           centerline_spacing, alpha, flange, kx, ky, kz, sy, sz,
+                           comment))
+        self.n += 1
+        return self.n
+
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+
+        # common
+        property_id = np.zeros(ncards, dtype=idtype)
+        material_id = np.zeros(ncards, dtype=idtype)
+        nsm = np.zeros(ncards, dtype='float64')
+        beam_type = np.zeros(ncards, dtype='int32')
+        fsi = np.zeros(ncards, dtype='int32')
+        rb = np.zeros(ncards, dtype='float64')
+        theta_b = np.zeros(ncards, dtype='float64')
+
+        # beam_type = 1
+        A = np.zeros(ncards, dtype='float64')
+        J = np.zeros(ncards, dtype='float64')
+        I1 = np.zeros(ncards, dtype='float64')
+        I2 = np.zeros(ncards, dtype='float64')
+
+        k1 = np.zeros(ncards, dtype='float64')
+        k2 = np.zeros(ncards, dtype='float64')
+
+        c1 = np.zeros(ncards, dtype='float64')
+        c2 = np.zeros(ncards, dtype='float64')
+        d1 = np.zeros(ncards, dtype='float64')
+        d2 = np.zeros(ncards, dtype='float64')
+        e1 = np.zeros(ncards, dtype='float64')
+        e2 = np.zeros(ncards, dtype='float64')
+        f1 = np.zeros(ncards, dtype='float64')
+        f2 = np.zeros(ncards, dtype='float64')
+
+        rc = np.zeros(ncards, dtype='float64')
+        zc = np.zeros(ncards, dtype='float64')
+        delta_n = np.zeros(ncards, dtype='float64')
+
+        # beam_type = 2
+        p = np.full(ncards, np.nan, dtype='float64')
+        t = np.full(ncards, np.nan, dtype='float64')
+
+        rm = np.full(ncards, np.nan, dtype='float64')
+        kx = np.full(ncards, np.nan, dtype='float64')
+        ky = np.full(ncards, np.nan, dtype='float64')
+        kz = np.full(ncards, np.nan, dtype='float64')
+        alpha = np.full(ncards, np.nan, dtype='float64')
+        centerline_spacing = np.full(ncards, np.nan, dtype='float64')
+        flange = np.full(ncards, np.nan, dtype='float64')
+        sy = np.full(ncards, np.nan, dtype='float64')
+        sz = np.full(ncards, np.nan, dtype='float64')
+
+        for icard, card in enumerate(self.cards):
+            (pid, mid, beam_typei, areai, i1i, i2i, ji,
+             c1i, c2i, d1i, d2i, e1i, e2i, f1i, f2i,
+             k1i, k2i, nsmi,
+             rci, zci, delta_ni, fsii, rmi, ti,
+             pi, rbi, theta_bi,
+             centerline_spacingi, alphai, flangei, kxi, kyi, kzi, syi, szi,
+             comment) = card
+
+            #assert beam_typei == 1, card
+            # common
+            property_id[icard] = pid
+            material_id[icard] = mid
+            nsm[icard] = nsmi
+            beam_type[icard] = beam_typei
+            rc[icard] = rci
+            zc[icard] = zci
+            rb[icard] = rbi
+
+            # beam_type = 1
+            if beam_typei == 1:
+                A[icard] = areai
+                J[icard] = ji
+                I1[icard] = i1i
+                I2[icard] = i2i
+                theta_b[icard] = theta_bi
+
+                k1[icard] = k1i
+                k2[icard] = k2i
+
+                c1[icard] = c1i
+                c2[icard] = c2i
+                d1[icard] = d1i
+                d2[icard] = d2i
+                e1[icard] = e1i
+                e2[icard] = e2i
+                f1[icard] = f1i
+                f2[icard] = f2i
+            elif beam_typei == 2:
+                fsi[icard] = fsii
+                rm[icard] = rmi
+                p[icard] = pi
+                t[icard] = ti
+
+                delta_n[icard] = delta_ni
+
+                # beam_type = 2
+                rm[icard] = rmi
+
+                flange[icard] = flangei
+                alpha[icard] = alphai
+                centerline_spacing[icard] = centerline_spacingi
+                kx[icard] = kxi
+                ky[icard] = kyi
+                kz[icard] = kzi
+                sy[icard] = syi
+                sz[icard] = szi
+
+        self._save(property_id, material_id, beam_type, nsm,
+                   rb, theta_b, rc, zc,
+                   # beam_type = 1
+                   A, J, I1, I2,
+                   c1, c2, d1, d2, e1, e2, f1, f2,
+                   k1, k2, delta_n,
+                   # beam_type = 2
+                   fsi, rm, t, p,
+                   centerline_spacing, alpha, flange,
+                   kx, ky, kz, sy, sz,
+                   )
+        self.sort()
+
+    def _save(self, property_id, material_id, beam_type, nsm,
+              rb, theta_b, rc, zc,
+              # beam_type = 1
+              A, J, I1, I2,
+              c1, c2, d1, d2, e1, e2, f1, f2,
+              k1, k2, delta_n,
+              # beam_type = 2
+              fsi, rm, t, p,
+              centerline_spacing, alpha, flange,
+              kx, ky, kz, sy, sz) -> None:
+        self.property_id = property_id
+        self.material_id = material_id
+        self.beam_type = beam_type
+        self.rb = rb
+        self.theta_b = theta_b
+        self.rc = rc
+        self.zc = zc
+        self._nsm = nsm
+
+        # beam_type = 1
+        self.A = A
+        self.J = J
+        self.I1 = I1
+        self.I2 = I2
+
+        self.c1 = c1
+        self.c2 = c2
+        self.d1 = d1
+        self.d2 = d2
+        self.e1 = e1
+        self.e2 = e2
+        self.f1 = f1
+        self.f2 = f2
+
+        self.k1 = k1
+        self.k2 = k2
+        self.delta_n = delta_n
+
+        # beam_type = 2
+        self.fsi = fsi
+        self.p = p
+        self.t = t
+        self.rm = rm
+        self.centerline_spacing = centerline_spacing
+        self.alpha = alpha
+        self.flange = flange
+        self.kx = kx
+        self.ky = ky
+        self.kz = kz
+        self.sy = sy
+        self.sz = sz
+        self.n = len(property_id)
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['material_id'].append(self.material_id)
+
+    def convert(self, xyz_scale: float=1.0,
+                area_scale: float=1.0,
+                area_inertia_scale:float=1.0,
+                nsm_per_length_scale: float=1.0,
+                pressure_scale: float=1.0,
+                **kwargs):
+        # common (easy)
+        self.rc *= xyz_scale
+        self.zc *= xyz_scale
+        self.rb *= xyz_scale
+        self._nsm *= nsm_per_length_scale
+
+        # beam_type = 1 (easy)
+        self.A *= area_scale
+        self.J *= area_inertia_scale
+        self.I1 *= area_inertia_scale
+        self.I2 *= area_inertia_scale
+
+        self.c1 *= xyz_scale
+        self.c2 *= xyz_scale
+        self.d1 *= xyz_scale
+        self.d2 *= xyz_scale
+        self.e1 *= xyz_scale
+        self.e2 *= xyz_scale
+        self.f1 *= xyz_scale
+        self.f2 *= xyz_scale
+        self.delta_n *= xyz_scale
+
+        # beam_type = 2 (easy)
+        self.p *= pressure_scale
+        self.t *= xyz_scale
+        self.centerline_spacing *= xyz_scale
+
+        # ???
+        #self.k1 = k1
+        #self.k2 = k2
+
+    def __apply_slice__(self, prop: PBEND, i: np.ndarray) -> None:
+        prop.property_id = self.property_id[i]
+        prop.material_id = self.material_id[i]
+        prop._nsm = self._nsm[i]
+        prop.rc = self.rc[i]
+        prop.zc = self.zc[i]
+
+        prop.rb = self.rb[i]
+        prop.theta_b = self.theta_b[i]
+
+        # beam_type = 1
+        prop.c1 = self.c1[i]
+        prop.c2 = self.c2[i]
+        prop.d1 = self.d1[i]
+        prop.d2 = self.d2[i]
+        prop.e1 = self.e1[i]
+        prop.e2 = self.e2[i]
+        prop.f1 = self.f1[i]
+        prop.f2 = self.f2[i]
+
+        prop.k1 = self.k1[i]
+        prop.k2 = self.k2[i]
+        prop.delta_n = self.delta_n[i]
+
+        # beam_type = 2
+        prop.fsi = self.fsi[i]
+        prop.p = self.p[i]
+        prop.t = self.t[i]
+
+        prop.centerline_spacing = self.centerline_spacing[i]
+        prop.alpha = self.alpha[i]
+        prop.kx = self.kx[i]
+        prop.ky = self.ky[i]
+        prop.kz = self.kz[i]
+        prop.sy = self.sy[i]
+        prop.sz = self.sz[i]
+        prop.n = len(i)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        materials = self.allowed_materials
+        mids = hstack_msg([prop.material_id for prop in materials],
+                          msg=f'no materials for {self.type}; {self.all_materials}')
+        mids = np.unique(mids)
+        geom_check(self,
+                   missing,
+                   material_id=(mids, self.material_id))
+
+    @property
+    def all_materials(self) -> list[MAT1]:
+        return [self.model.mat1]
+
+    @property
+    def allowed_materials(self) -> list[MAT1]:
+        all_materials = self.all_materials
+        materials = [mat for mat in all_materials if mat.n > 0]
+        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={self.model.material_cards}'
+        return materials
+
+    def rho(self) -> np.ndarray:
+        rho = get_density_from_material(self.material_id, self.allowed_materials)
+        return rho
+
+    def mass_per_length(self) -> np.ndarray:
+        mpl = np.full(self.n, np.nan, dtype='float64')
+        raise NotImplementedError('PBEND')
+        return mpl
+
+    @property
+    def is_small_field(self) -> bool:
+        return max(self.property_id.max(),
+                   self.material_id.max(), ) < 99_999_999
+
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+
+        if size == 8 and self.is_small_field:
+            print_card = print_card_8
+        else:
+            print_card = print_card_16
+
+        ps = array_default_float(self.p, default=0., size=size, is_double=False)
+        rbs = array_default_float(self.rb, default=0., size=size, is_double=False)
+        for (pid, mid, beam_type, nsm, rc, zc,
+             # beam_type=1
+             area, j, i1, i2, rb, theta_b,
+             c1, c2, d1, d2, e1, e2, f1, f2,
+             k1, k2, delta_n,
+             # beam_type=2
+             fsi, rm, t, p, rb, theta_b,
+             centerline_spacing, alpha, flange,
+             kx, ky, kz, sy, sz) in zip_longest(self.property_id, self.material_id, self.beam_type,
+                                                self._nsm, self.rc, self.zc,
+                                                # beam_type=1
+                                                self.A, self.J, self.I1, self.I2,
+                                                self.rb, self.theta_b,
+                                                self.c1, self.c2, self.d1, self.d2,
+                                                self.e1, self.e2, self.f1, self.f2,
+                                                self.k1, self.k2,  self.delta_n,
+                                                # beam_type=2
+                                                self.fsi, self.rm, self.t, ps, rbs, self.theta_b,
+                                                self.centerline_spacing, self.alpha, self.flange,
+                                                self.kx, self.ky, self.kz, self.sy, self.sz):
+
+            list_fields = ['PBEND', pid, mid, ]  # other
+            if beam_type == 1:
+                list_fields += [
+                    area, i1, i2, j, rb, theta_b,
+                    c1, c2, d1, d2, e1, e2, f1, f2,
+                    k1, k2, nsm, rc, zc, delta_n]
+                #print("beam_type=0 I1=%s I2=%s; J=%s RM=%s T=%s P=%s" % (
+                    #i1, i2, j, rm, t, p), list_fields)
+            elif beam_type == 2:
+                list_fields += [fsi, rm, t, p, rb, theta_b,
+                                centerline_spacing, alpha, nsm, rc, zc, flange, None, None,
+                                kx, ky, kz, None, sy, sz]
+                #print(f'pid={pid} fsi={fsi} rm={rm} t={t} p={p.strip()} rb={rb.strip()} theta_b={theta_b} nsm={nsm} rc={rc} zc={zc}')
+            elif beam_type == 0:
+                raise RuntimeError(beam_type)
+                # dunno
+                #list_fields += [A, i1, i2, j, rb,
+                                #theta_b, c1, c2, d1, d2,
+                                #e1, e2, f1, f2, k1, k2,
+                                #nsm, rc, zc, delta_n]
+
+            bdf_file.write(print_card(list_fields))
+        #af
+        return
+
+    def area(self) -> np.ndarray:
+        raise NotImplementedError('PBEND')

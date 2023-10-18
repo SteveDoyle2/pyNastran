@@ -19,7 +19,9 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, 
 from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
     CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5,
     PDAMP, PDAMP5, PDAMPT, CVISC, PVISC, CGAP, PGAP)
-from pyNastran.dev.bdf_vectorized3.cards.elements.beam import CBEAM, PBEAM, PBEAML, PBCOMP # , PBMSECT
+from pyNastran.dev.bdf_vectorized3.cards.elements.beam import (
+    CBEAM, PBEAM, PBEAML, PBCOMP, # , PBMSECT
+    CBEND, PBEND)
 from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
     CQUAD4, CTRIA3, CQUAD8, CTRIA6, CTRIAR, CQUADR, CQUAD,
@@ -289,6 +291,9 @@ class BDFAttributes:
         self.pbeaml = PBEAML(self)
         self.pbcomp = PBCOMP(self)
         #self.beam_properties = [self.pbeaml]
+
+        self.cbend = CBEND(self)
+        self.pbend = PBEND(self)
 
         self.cshear = CSHEAR(self)
         self.pshear = PSHEAR(self)
@@ -639,6 +644,7 @@ class BDFAttributes:
             self.crod, self.conrod, self.ctube,
             self.cbar,
             self.cbeam,
+            self.cbend,
             self.cshear,
             #self.caabsf, # acoustic shells
             #self.genel,
@@ -703,7 +709,7 @@ class BDFAttributes:
             self.pvisc, self.pgap,
             self.prod, self.ptube,
             ] + self.bar_property_cards + self.beam_property_cards + [
-            self.pshear,
+            self.pbend, self.pshear,
         ] + self.shell_property_cards + self.nonlinear_shell_property_cards + \
             self.solid_property_cards + [
             self.pmass,
