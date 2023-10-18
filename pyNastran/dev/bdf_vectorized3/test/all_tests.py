@@ -5,12 +5,12 @@ try:
 except ImportError:
     USE_VTK = False
 
-from pyNastran.dev.bdf_vectorized3.test.test_models import *
+from pyNastran.dev.bdf_vectorized3.test.test_vector_models import *
 if USE_VTK:
-    from pyNastran.dev.bdf_vectorized3.test.test_gui_models import *
+    from pyNastran.dev.bdf_vectorized3.test.test_vector_gui_models import *
 
-from pyNastran.dev.bdf_vectorized3.test.bdfv_unit_tests import *
-from pyNastran.dev.bdf_vectorized3.test.test_numpy_utils import *
+from pyNastran.dev.bdf_vectorized3.test.test_vector_bdf_unit_tests import *
+from pyNastran.dev.bdf_vectorized3.test.test_vector_numpy_utils import *
 
 from pyNastran.dev.bdf_vectorized3.cards.test.all_tests import *
 #from pyNastran.dev.bdf_vectorized3.solver.test_solver_springs import *

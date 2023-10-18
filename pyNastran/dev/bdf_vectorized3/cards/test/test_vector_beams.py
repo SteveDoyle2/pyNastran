@@ -1544,9 +1544,13 @@ class TestBeams(unittest.TestCase):
         cbend = model.cbend
         pbend = model.pbend
 
-        model.add_grid(10, [1., 0., 0.])
-        model.add_grid(11, [.707, .707, 0.])
-        model.add_grid(12, [0., 1., 0.])
+        model.add_grid(10, [1., 0., 0.])       # n1
+        model.add_grid(11, [.707, .707, 0.])   # n2
+        model.add_grid(12, [0., 1., 0.])       # n0
+
+        model.add_grid(20, [1., 0., 0.])       # n1
+        model.add_grid(21, [0., 1., 0.])       # n2
+        model.add_grid(22, [0., 0., 0.])       # n0
         eid = 2
         pid = 3
         nids = [10, 11]
@@ -1555,12 +1559,16 @@ class TestBeams(unittest.TestCase):
         x = None
         cbendi = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
 
+        nids = [20, 21]
+        g0 = 22
+        cbendi = model.add_cbend(eid+1, pid, nids, g0, x, geom, comment='cbend')
+
         mid = 100
 
-        A = 1.0
-        i1 = 2.0
-        i2 = 3.0
-        j = 4.0
+        A = 1.1
+        i1 = 2.2
+        i2 = 3.3
+        j = 4.4
         pbend1 = pbend.add_beam_type_1(
             pid, mid, A, i1, i2, j,
             rb=None, theta_b=None,
@@ -1582,6 +1590,10 @@ class TestBeams(unittest.TestCase):
 
         pbend.write()
         pbend.write(size=16)
+
+        length = cbend.length()
+        assert np.allclose(pbend.area(), [A])
+        print(length)
         assert len(pbend) == 1
 
         save_load_deck(model, punch=True, run_mass_properties=False)

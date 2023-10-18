@@ -1456,7 +1456,10 @@ class Add1dElements(BDFAttributes):
 
         return pbeaml, desvars, dvprels
 
-    def add_cbend(self, eid: int, pid: int, nids, g0, x, geom: int, comment: str='') -> int:
+    def add_cbend(self, eid: int, pid: int, nids,
+                  g0: Optional[int],
+                  x: Optional[list[float]],
+                  geom: int, comment: str='') -> int:
         """Creates a CBEND card"""
         elem = self.cbend.add(eid, pid, nids, g0, x, geom, comment=comment)
         return elem

@@ -300,6 +300,7 @@ class VectorizedBaseCard:
         self_ids = self._ids
         assert len(self_ids), self_ids
         i = np.atleast_1d(np.asarray(i, dtype=self_ids.dtype))
+        assert len(i) > 0, i
         if sort_index:
             i.sort()
             imax = i[-1]

@@ -2765,8 +2765,14 @@ class CBEND(Element):
         self.geom_flag: np.array = np.array([], dtype='int32')
 
     def add(self, eid: int, pid: int, nids: list[int],
-            x: Optional[list[float]], g0: Optional[int],
+            g0: Optional[int], x: Optional[list[float]],
             geom: str='GGG', comment: str='') -> int:
+        assert g0 is None or x is None, (g0, x)
+        if g0 is None and not isinstance(x, (list, tuple, np.ndarray)):
+            raise TypeError(f'PBEND eid={eid} x={x} and should be a list[float]')
+        if x is None and not isinstance(g0, integer_types):
+            raise TypeError(f'PBEND eid={eid} g0={g0} and should be an integer')
+
         self.cards.append((eid, pid, nids, g0, x, geom, comment))
         self.n += 1
         return self.n
@@ -2943,7 +2949,77 @@ class CBEND(Element):
         return line_vector, length
 
     def length(self) -> np.ndarray:
-        length = np.full(self.n, np.nan, dtype='float64')
+        nelement = self.n
+        length = np.full(nelement, np.nan, dtype='float64')
+
+        igeom_flag1 = (self.geom_flag == 1)
+        igeom_flag2 = (self.geom_flag == 2)
+        igeom_flag3 = (self.geom_flag == 3)
+        igeom_flag4 = (self.geom_flag == 4)
+        igeom_flag_no = ~(igeom_flag1 | igeom_flag2 | igeom_flag3 | igeom_flag4)
+        if igeom_flag_no.sum():
+            i = np.where(igeom_flag_no)[0]
+            cbends = self.slice_card_by_index(i).write()
+            raise RuntimeError(f'Invalid geom flags (should be [1, 2, 3, 4])\n{cbends}')
+
+        grid = self.model.grid
+        xyz_cid0 = grid.xyz_cid0()
+
+        i = np.full((nelement, 3), np.nan, dtype='float64')
+        j = np.full((nelement, 3), np.nan, dtype='float64')
+        k = np.full((nelement, 3), np.nan, dtype='float64')
+        inode = grid.index(self.nodes)
+
+        inode0 = grid.index(self.g0)
+        inode1 = inode[:, 0]
+        inode2 = inode[:, 1]
+
+        xyz1 = xyz_cid0[inode1, :]
+        xyz2 = xyz_cid0[inode2, :]
+        xyz0 = xyz_cid0[inode0, :]
+        length12 = np.linalg.norm(xyz2 - xyz1, axis=1)
+        if igeom_flag1.sum():
+            xyz1i = xyz1[igeom_flag1, :]
+            xyz2i = xyz2[igeom_flag1, :]
+            xyz0i = xyz0[igeom_flag1, :]
+
+            dxyz10 = xyz1i - xyz0i
+            radius = np.linalg.norm(dxyz10, axis=1)
+            theta = np.arctan2(xyz2i - xyz0i, xyz1i - xyz0i)
+            theta_deg = np.degrees(theta)
+            #iprime1 = xyz1_1 - xyz0_1
+            #j1 = xyz2_1 - xyz0_1
+            #j1_norm = np.linalg.norm(j1, axis=1)
+            #j1 /= j1_norm[:, np.newaxis]
+            #k1 = np.cross(iprime1, j1, axis=1)
+            #k1_norm = np.linalg.norm(k1, axis=1)
+            #k1 /= k1_norm[:, np.newaxis]
+            #i1 = np.cross(k1, j1, axis=1)
+
+            #i[igeom_flag1, :] = i1
+            #j[igeom_flag1, :] = j1
+            #k[igeom_flag1, :] = k1
+            #coord0 = self.model.coord.slice_card_by_id(0)
+            ##for xyz0_1i, xyz1_1i, xyz2_1i in zip(xyz0i, xyz1i, xyz2i):
+                ##coord0.add_cord2c(1, xyz2_1i, xyz0_1i, xyz1_1i)
+            #coord0.parse_cards()
+            #print(i1, j1, k1)
+            chord = 2 * np.sqrt(radius**2 - length12[igeom_flag1]**2)
+            length[igeom_flag1] = chord
+
+        if igeom_flag2.sum():
+            i = np.where(igeom_flag2)[0]
+            cbends = self.slice_card_by_index(i).write()
+            raise RuntimeError(f'Invalid geom flags (should be [1, 2, 3, 4])\n{cbends}')
+        if igeom_flag3.sum():
+            i = np.where(igeom_flag2)[0]
+            cbends = self.slice_card_by_index(i).write()
+            raise RuntimeError(f'Invalid geom flags (should be [1, 2, 3, 4])\n{cbends}')
+        if igeom_flag4.sum():
+            i = np.where(igeom_flag3)[0]
+            cbends = self.slice_card_by_index(i).write()
+            raise RuntimeError(f'Invalid geom flags (should be [1, 2, 3, 4])\n{cbends}')
+
         #length = line_length(self.model, self.nodes)
         #inan = np.isnan(length)
         #if np.any(inan):
@@ -3842,4 +3918,7 @@ class PBEND(Property):
         return
 
     def area(self) -> np.ndarray:
-        raise NotImplementedError('PBEND')
+        area = np.full(self.n, np.nan, dtype='float64')
+        ibeamtype1 = (self.beam_type == 1)
+        area[ibeamtype1] = self.A
+        return area
