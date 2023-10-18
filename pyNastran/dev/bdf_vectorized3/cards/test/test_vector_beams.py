@@ -923,7 +923,7 @@ class TestBeams(unittest.TestCase):
         #model.safe_cross_reference()
         #model.uncross_reference()
 
-    def _test_cbeam_bit(self):
+    def test_cbeam_bit(self):
         """tests an BIT field on the CBEAM"""
         model = BDF(debug=False)
 
@@ -932,32 +932,40 @@ class TestBeams(unittest.TestCase):
 
         eid = 1
         pid = 1
-        bit = 42
         nids = [1, 2]
         x = [0., 0., 1.]
         g0 = None
         bit = None
-        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
-                                pb=0, wa=None, wb=None, sa=0,
-                                sb=0, comment='')
-        with self.assertRaises(RuntimeError):
-            model.cbeam.validate()
-        del model.elements[eid]
-
-        bit = 12
-        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
-                                pb=0, wa=None, wb=None, sa=0,
-                                sb=0, comment='')
-        #with self.assertRaises(AssertionError):
-            #cbeam.raw_fields()
-        del model.elements[eid]
+        cbeami = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=None, pa=0,
+                                 pb=0, wa=None, wb=None, sa=0,
+                                 sb=0, comment='')
+        cbeam = model.cbeam
+        #with self.assertRaises(RuntimeError):
+            #cbeam.validate()
+        #del model.elements[eid]
+        cbeam.clear()
 
         bit = 42.
-        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
-                                pb=0, wa=None, wb=None, sa=0,
-                                sb=0, comment='')
-        assert cbeam.is_offt is False, cbeam.is_offt
-        assert cbeam.is_bit is True, cbeam.is_bit
+        with self.assertRaises(AssertionError):
+            cbeami = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
+                                     pb=0, wa=None, wb=None, sa=0,
+                                     sb=0, comment='')
+        cbeam.clear()
+
+        bit = 12
+        cbeami = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
+                                 pb=0, wa=None, wb=None, sa=0,
+                                 sb=0, comment='')
+        #with self.assertRaises(AssertionError):
+            #cbeam.raw_fields()
+        #del model.elements[eid]
+        cbeam.clear()
+
+
+        #cbeam.parse_cards()
+        #assert cbeam.is_offt is False, cbeam.is_offt
+        #assert cbeam.is_bit is True, cbeam.is_bit
+
         mid = 1
         beam_type = 'BAR'
         dim = [1., 2.]  # area = 2.0
@@ -965,10 +973,9 @@ class TestBeams(unittest.TestCase):
         xxb = [0., 1.]
         dims = [dim, dim]
         model.add_pbeaml(pid, mid, beam_type, xxb, dims, so=None,
-                         nsm=[1.0],
+                         nsm=[1.0, 1.0],
                          group='MSCBML0',
                          comment='')
-
         pid += 1
 
         so = ['YES', 'YESA', 'NO', 'YES']
@@ -1317,7 +1324,7 @@ class TestBeams(unittest.TestCase):
         assert np.allclose(centroid, [0.5, 0., 0.]), centroid
         save_load_deck(model)
 
-    def _test_pbeam_opt(self):
+    def test_pbeam_opt(self):
         """tests a PBEAM with DVPREL1"""
         model = BDF(debug=False)
         pid = 1
@@ -1377,8 +1384,8 @@ class TestBeams(unittest.TestCase):
         model.add_dlink(oid, dependent_desvar, independent_desvars, coeffs,
                         c0=0., cmult=1., comment='')
         model.cross_reference()
-        model.update_model_by_desvars()
-        save_load_deck(model, run_save_load_hdf5=True)
+        #model.update_model_by_desvars()
+        save_load_deck(model)
 
     def test_pbcomp(self):
         """tests a PBCOMP"""

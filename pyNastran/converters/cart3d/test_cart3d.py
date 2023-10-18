@@ -254,7 +254,7 @@ def check_array(points, points2):
     nnodes = points.shape[0]
     msg = ''
     nfailed = 0
-    if not np.array_equal(points, points2):  # pragma no cover
+    if not np.array_equal(points, points2):  # pragma: no cover
         for nid in range(nnodes):
             p1 = points[nid]
             p2 = points2[nid]
@@ -265,7 +265,7 @@ def check_array(points, points2):
                 nfailed += 1
                 if nfailed == 10:
                     break
-    if msg:  # pragma no cover
+    if msg:  # pragma: no cover
         #print(msg)
         raise RuntimeError(msg)
 

@@ -304,7 +304,7 @@ class Nastran3:
             geometry_form.append(('Quality', None, quality_form))
         return form, cases, icase# , nids, eids, data_map_dict
 
-    def _simple_gui(self, ugrid: vtkUnstructuredGrid) -> None:
+    def _simple_gui(self, ugrid: vtkUnstructuredGrid) -> None:  # pragma: no cover
         from pyNastran.gui.vtk_rendering_core import (
             vtkActor, vtkDataSetMapper, vtkRenderer,
             vtkRenderWindow, vtkRenderWindowInteractor)

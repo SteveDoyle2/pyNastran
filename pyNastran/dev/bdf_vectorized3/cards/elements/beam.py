@@ -140,7 +140,11 @@ class CBEAM(Element):
             wa = [0., 0., 0.]
         if wb is None:
             wb = [0., 0., 0.]
-        self.cards.append((eid, pid, nids, g0, x, offt, [pa, pb], wa, wb, sa, sb, comment))
+        if bit:
+            assert isinstance(bit, integer_types), f'offt/bit={bit!r} and should be an integer'
+            self.cards.append((eid, pid, nids, g0, x, bit, [pa, pb], wa, wb, sa, sb, comment))
+        else:
+            self.cards.append((eid, pid, nids, g0, x, offt, [pa, pb], wa, wb, sa, sb, comment))
         self.n += 1
         return self.n
 
@@ -208,6 +212,7 @@ class CBEAM(Element):
             if isinstance(offti, str):
                 offt[icard] = offti
             else:
+                assert isinstance(offti, integer_types), f'offt/bit={offti!r} and should be an integer'
                 bit[icard] = offti
             pa[icard] = pai
             pb[icard] = pbi
