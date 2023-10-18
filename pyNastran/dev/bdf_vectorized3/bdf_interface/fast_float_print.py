@@ -354,7 +354,7 @@ def main_zach():
 def main_new():
     main(get_float_format)
 
-def run():
+def run():  # pragma: no cover
     value = -0.8732806594999999
     out = get_float_format(value)
     print(value, out, len(out))
@@ -390,5 +390,5 @@ def run():
     #main()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     run()

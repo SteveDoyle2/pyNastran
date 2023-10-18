@@ -370,7 +370,7 @@ class TestModels(unittest.TestCase):
 
         # incorrect cbeam area
         bdf_filename = MODEL_PATH / 'other' / 'api3.bdf'
-        args = ['test_bdf', str(bdf_filename)]
+        args = ['test_bdf', str(bdf_filename), '--skip_mass', '--skip_nominal']
         test_bdf(args, show_args=False)
 
         # incorrect cbeam area

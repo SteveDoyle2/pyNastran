@@ -17,7 +17,10 @@ def remove_unused(model: BDF) -> None:
         'mpc_id': [],
         'dconstr_id': [],
     }
+    #for card in model._cards_to_setup:
+        #print(card)
     for card in cards:
+        #print(card.type)
         if hasattr(card, 'set_used'):
             card.set_used(used_dict)
         else:
