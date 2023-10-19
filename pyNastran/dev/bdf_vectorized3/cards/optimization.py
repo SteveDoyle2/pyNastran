@@ -5,7 +5,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.bdf import MAX_INT
-#from pyNastran2.bdf.cards.base_card import BaseCard, _node_ids, expand_thru
+#from pyNastran.dev.bdf_vectorized3.cards.base_card import BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
     string, string_or_blank, integer_double_string_or_blank,
