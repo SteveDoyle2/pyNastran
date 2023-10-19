@@ -2970,13 +2970,18 @@ class CBEND(Element):
         k = np.full((nelement, 3), np.nan, dtype='float64')
         inode = grid.index(self.nodes)
 
-        inode0 = grid.index(self.g0)
         inode1 = inode[:, 0]
         inode2 = inode[:, 1]
 
         xyz1 = xyz_cid0[inode1, :]
         xyz2 = xyz_cid0[inode2, :]
-        xyz0 = xyz_cid0[inode0, :]
+
+        v, cd = get_bar_vector(self, xyz1)
+        cd1 = cd[:, 0]
+        cd1_ref = self.model.coord.slice_card_by_id(cd1, sort_ids=False)
+        xyz0 = cd1_ref.transform_xyz_to_global_assuming_rectangular(v)
+
+        print('xyz0 =', xyz0)
         length12 = np.linalg.norm(xyz2 - xyz1, axis=1)
         if igeom_flag1.sum():
             xyz1i = xyz1[igeom_flag1, :]
@@ -3004,17 +3009,21 @@ class CBEND(Element):
                 ##coord0.add_cord2c(1, xyz2_1i, xyz0_1i, xyz1_1i)
             #coord0.parse_cards()
             #print(i1, j1, k1)
-            chord = 2 * np.sqrt(radius**2 - length12[igeom_flag1]**2)
-            length[igeom_flag1] = chord
+            chord_sq = radius**2 - length12[igeom_flag1]**2
+            chord = np.full(self.element_id.shape, np.nan, dtype=xyz0.dtype)
+            ipos = chord_sq > 0
+            chord = 2 * np.sqrt(chord_sq[ipos])
+            length[igeom_flag1] = chord[ipos]
+
 
         if igeom_flag2.sum():
             i = np.where(igeom_flag2)[0]
             cbends = self.slice_card_by_index(i).write()
             raise RuntimeError(f'Invalid geom flags (should be [1, 2, 3, 4])\n{cbends}')
-        if igeom_flag3.sum():
-            i = np.where(igeom_flag2)[0]
-            cbends = self.slice_card_by_index(i).write()
-            raise RuntimeError(f'Invalid geom flags (should be [1, 2, 3, 4])\n{cbends}')
+        #if igeom_flag3.sum():
+            #i = np.where(igeom_flag2)[0]
+            #cbends = self.slice_card_by_index(i).write()
+            #raise RuntimeError(f'Invalid geom flags (should be [1, 2, 3, 4])\n{cbends}')
         if igeom_flag4.sum():
             i = np.where(igeom_flag3)[0]
             cbends = self.slice_card_by_index(i).write()
@@ -3028,6 +3037,7 @@ class CBEND(Element):
             #msg += f'nid1={self.nodes[inan,0]}\n'
             #msg += f'nid2={self.nodes[inan,1]}\n'
             #raise RuntimeError(msg)
+        print(f'length = {length}')
         return length
 
     def centroid(self) -> np.ndarray:

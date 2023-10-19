@@ -367,6 +367,9 @@ class VectorizedBaseCard:
                 raise IndexError(f'{self.type}: missing {self._id_name}={missing_ids}')
 
             if not np.array_equal(actual_ids, ids):
+                print(self.type)
+                print(f'self.{self._id_name}= {self_ids}')
+                print(f'{self._id_name} = {ids}')
                 raise KeyError(f'{self.type}: expected_{self._id_name}={ids}; actual_{self._id_name}={actual_ids}')
         if inverse:
             i = np.arange(len(self_ids), dtype=self_ids.dtype)

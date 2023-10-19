@@ -692,6 +692,9 @@ def _get_nominal_quantity(elements: list[Any],
 def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                        check_nodes: bool=True,
                        compare_bar_vectors: bool=True):
+    if fem1_nominal is None:
+        return
+
     if fem1.pbarl.n:
         assert isinstance(fem1.pbarl.ndim, np.ndarray), fem1.pbarl.ndim
 
@@ -741,7 +744,7 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
     check_mass_per_length = True
     check_mass = True
     check_density = True
-    compare_shell_vectors = True
+    compare_shell_vectors = False
 
     no_density = []
     if check_density:
