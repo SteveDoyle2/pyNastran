@@ -103,10 +103,11 @@ def read_op2_geom(op2_filename: Optional[Union[str, PurePath]]=None,
     model.set_subcases(subcases)
     model.include_exclude_results(exclude_results=exclude_results,
                                   include_results=include_results)
-
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
                    skip_undefined_matrices=skip_undefined_matrices, combine=combine,
                    encoding=encoding)
+    model.idtype = 'int64'
+    model.fdtype = 'float64'
     if validate:
         model.validate()
     if xref:

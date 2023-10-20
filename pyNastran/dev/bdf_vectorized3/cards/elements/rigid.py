@@ -151,20 +151,26 @@ class RBAR(RigidElement):
         self.cards = []
 
     def _save(self, element_id, nodes, independent_dof, dependent_dof, alpha, tref):
-        if len(self.element_id):
-            asdf
         nelements = len(element_id)
-        self.element_id = element_id
-        self.nodes = nodes
-        self.independent_dof = independent_dof
-        self.dependent_dof = dependent_dof
         if alpha is None:
             alpha = np.zeros(nelements, dtype='float64')
         if tref is None:
             tref = np.zeros(nelements, dtype='float64')
+
+        if len(self.element_id):
+            element_id = np.hstack([self.element_id, element_id])
+            nodes = np.vstack([self.nodes, nodes])
+            independent_dof = np.vstack([self.independent_dof, independent_dof])
+            dependent_dof = np.vstack([self.dependent_dof, dependent_dof])
+            alpha = np.hstack([self.alpha, alpha])
+            tref = np.hstack([self.tref, tref])
+        self.element_id = element_id
+        self.nodes = nodes
+        self.independent_dof = independent_dof
+        self.dependent_dof = dependent_dof
         self.alpha = alpha
         self.tref = tref
-        self.n = nelements
+        self.n = len(element_id)
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,

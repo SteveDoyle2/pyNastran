@@ -270,7 +270,7 @@ class MPT:
         n, ints, floats = get_ints_floats(data, n, nmaterials, 17, size=op2.size, endian=op2._endian)
         material_id = ints[:, 0]
         assert material_id.min() > 0, material_id
-        material.material_id = material_id
+        #material.material_id = material_id
         #(mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
          #tref, ge, St, Sc, Ss, mcsid) = out
 
@@ -293,8 +293,9 @@ class MPT:
                        rho, alpha, tref, ge, Ss, St, Sc,
                        mcsid, ge_matrix=None)
 
-        i = np.where(material.material_id < MID_CAP)[0]
-        material.__apply_slice__(material, i)
+        if material.max_id >= MID_CAP:
+            i = np.where(material.material_id < MID_CAP)[0]
+            material.__apply_slice__(material, i)
         material.write()
         #for unused_i in range(nmaterials):
             #edata = data[n:n+ntotal]

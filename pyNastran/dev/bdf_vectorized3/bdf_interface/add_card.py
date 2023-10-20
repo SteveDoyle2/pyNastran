@@ -6017,7 +6017,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         #return suport
         return self.suport
 
-    def add_suport1(self, conid, nodes: list[int], components: list[int],
+    def add_suport1(self, suport_id, nodes: list[int], components: list[int],
                     comment: str='') -> int:
         """
         Creates a SUPORT card, which defines free-body reaction points.
@@ -6034,8 +6034,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        suport1 = SUPORT1(conid, nodes, components, comment=comment)
-        self._add_methods._add_suport1_object(suport1)
+        suport1 = self.suport.add_set1(suport_id, nodes, components, comment=comment)
         return suport1
 
     def add_eigr(self, sid, method='LAN', f1=None, f2=None, ne=None, nd=None,

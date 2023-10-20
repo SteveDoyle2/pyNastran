@@ -491,6 +491,7 @@ class GEOM3:
         return len(data)
 
     def _read_lseq(self, data: bytes, n: int) -> int:
+        return len(data)
         op2 = self.op2
         ntotal = 20 * self.factor  # 5*4
         nloads = (len(data) - n) // ntotal
@@ -1114,6 +1115,7 @@ class GEOM3:
         TEMPD(5641,65,98) - the marker for Record 33
         .. todo:: add object
         """
+        return len(data)
         op2 = self.op2
         ntotal = 8 * self.factor  # 2*4
         nloads = (len(data) - n) // ntotal

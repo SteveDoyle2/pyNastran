@@ -299,6 +299,8 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             op2_nv.read_op2(op2_filename, combine=combine)
             if not hasattr(op2_nv, 'idtype'):
                 op2_nv.idtype = 'int64'
+                op2_nv.fdtype = 'float64'
+
             if hasattr(op2, 'setup'):
                 op2.setup()
 
@@ -306,6 +308,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             op2.read_op2(op2_filename, combine=combine)
             if not hasattr(op2, 'idtype'):
                 op2.idtype = 'int64'
+                op2.fdtype = 'float64'
             if hasattr(op2, 'setup'):
                 op2.setup()
         elif ext == '.h5':
@@ -351,7 +354,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         #if compare:
             #op2_nv.build_dataframe()
 
-        if write_op2:
+        if write_op2 and 0:
             model = os.path.splitext(op2_filename)[0]
             op2_filename2 = f'{model}.test_op2{name}.op2'
             total_case_count, table_names = op2_write_op2(op2, op2_filename2,
