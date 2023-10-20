@@ -255,7 +255,7 @@ class TestLoads(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.2, a=0.0, tref=0.0, ge=0.0,
+        model.add_mat1(mid, E, G, nu, rho=0.2, alpha=0.0, tref=0.0, ge=0.0,
                        St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
                        comment='')
 
@@ -300,7 +300,7 @@ class TestLoads(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu,
-                       rho=0.1, a=0.0, tref=0.0, ge=0.0,
+                       rho=0.1, alpha=0.0, tref=0.0, ge=0.0,
                        St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
         model.add_cquadr(eid, pid, nids,
                          theta_mcid=0.0, zoffset=0., tflag=0,
@@ -347,7 +347,7 @@ class TestLoads(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu,
-                       rho=0.1, a=0.0, tref=0.0, ge=0.0,
+                       rho=0.1, alpha=0.0, tref=0.0, ge=0.0,
                        St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
 
         model.add_cquadr(eid, pid, nids,  #  eid=10
@@ -437,7 +437,7 @@ class TestLoads(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu,
-                       rho=0.1, a=0.0, tref=0.0, ge=0.0,
+                       rho=0.1, alpha=0.0, tref=0.0, ge=0.0,
                        St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
         model.add_cquadr(eid, pid, nids,
                          theta_mcid=0.0, zoffset=0., tflag=0,
@@ -1174,7 +1174,7 @@ class TestLoads(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.2, a=0.0, tref=0.0, ge=0.0,
+        model.add_mat1(mid, E, G, nu, rho=0.2, alpha=0.0, tref=0.0, ge=0.0,
                        St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
                        comment='')
 
@@ -1190,7 +1190,6 @@ class TestLoads(unittest.TestCase):
                          mid3=None, tst=0.833333,
                          nsm=0.3, z1=None, z2=None,
                          mid4=None, comment='')
-
 
         eid = 4
         pid = 4
@@ -1258,18 +1257,18 @@ class TestLoads(unittest.TestCase):
             1., 1., 1., 1., 1., 1.,
         ]
 
-        if 0:
-            unused_mpc = model.add_mpc(conid, nodes, components, coefficients, comment='mpc')
+        unused_mpc = model.add_mpc(conid, nodes, components, coefficients, comment='mpc')
 
-            conid = 43
-            nodes = [10, 11]
-            components = ['1', '0']
-            coefficients = [1., 1.]
-            unused_mpc = model.add_mpc(conid, nodes, components, coefficients)
-            model.add_spoint(11, comment='spoint')
-            conid = 44
-            sets = [42, 43]
-            unused_mpcadd = model.add_mpcadd(conid, sets, comment='mpcadd')
+        conid = 43
+        nodes = [10, 11]
+        components = ['1', '0']
+        coefficients = [1., 1.]
+        unused_mpc = model.add_mpc(conid, nodes, components, coefficients)
+        model.add_spoint(11, comment='spoint')
+        conid = 44
+        sets = [42, 43]
+        unused_mpcadd = model.add_mpcadd(conid, sets, comment='mpcadd')
+
         model.setup()
         #model.add_spoint([11, 'THRU', 42], comment='spoint3')
         str(model.spoint)

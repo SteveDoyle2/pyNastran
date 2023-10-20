@@ -1010,6 +1010,7 @@ class Writer():
             model.spc.write_file(bdf_file, size=size, is_double=is_double)
             model.spc1.write_file(bdf_file, size=size, is_double=is_double)
             model.spcoff.write_file(bdf_file, size=size, is_double=is_double)
+            model.bndfix.write_file(bdf_file, size=size, is_double=is_double)
 
         if any((card.n for card in model.mpc_cards)):
             bdf_file.write('$MPCs\n')
@@ -1021,13 +1022,6 @@ class Writer():
             bdf_file.write('$CONSTRAINTS\n')
             model.suport.write_file(bdf_file, size=size, is_double=is_double)
 
-        return
-        if self.spcoffs:
-            #bdf_file.write('$SPCs\n')
-            bdf_file.write('$SPCs\n')
-            for (unused_id, spcoffs) in sorted(self.spcoffs.items()):
-                for spc in spcoffs:
-                    bdf_file.write(str(spc))
 
     def _write_contact(self, bdf_file: TextIOLike,
                        size: int=8, is_double: bool=False,

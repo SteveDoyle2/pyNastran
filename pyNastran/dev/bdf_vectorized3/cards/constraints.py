@@ -43,8 +43,7 @@ class SPC(VectorizedBaseCard):
      +-----+-----+----+----+------+----+----+----+
     """
     _id_name = 'spc_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self):
         self.spc_id = np.array([])
 
     def slice_card_by_index(self, i: np.ndarray) -> SPC:
@@ -276,8 +275,7 @@ class SPC1(VectorizedBaseCard):
 
     """
     _id_name = 'spc_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self):
         self.spc_id = np.array([])
 
     def slice_card_by_id(self, spc_id: int) -> SPC1:
@@ -421,8 +419,7 @@ class MPC(VectorizedBaseCard):
     +-----+-----+----+----+-----+----+----+----+-----+
     """
     _id_name = 'mpc_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self):
         self.mpc_id = np.array([])
 
     def add(self, mpc_id: int,
@@ -687,7 +684,7 @@ class SPCADD(ADD):
             #spc_by_spc_id[spc_id] = []
 
         for spc in model.spc_cards:
-            if spc.type in {'SPCADD', 'SPCOFF'}:
+            if spc.type in {'SPCADD', 'SPCOFF', 'BNDFIX'}:
                 continue
 
             uspc_idsi = np.unique(spc.spc_id)
@@ -784,9 +781,9 @@ class MPCADD(ADD):
                    missing,
                    mpc=(mpc_id, self.mpc_ids))
 
-class SPCOFF(VectorizedBaseCard):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+
+class CommonSet(VectorizedBaseCard):
+    def clear(self):
         self.node_id = np.array([], dtype='int32')
         self.component = np.array([], dtype='int32')
 
@@ -823,7 +820,7 @@ class SPCOFF(VectorizedBaseCard):
 
     def add_set_card(self, card: BDFCard, comment: str='') -> int:
         """
-        Adds a SPCOFF card from ``BDF.add_card(...)``
+        Adds a SPCOFF/BNDFIX/BNDFREE card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -849,14 +846,14 @@ class SPCOFF(VectorizedBaseCard):
             component = components_or_blank(card, ifield+1, 'C%i' % igrid, default='0')
             nodes.append(node)
             components.append(component)
-        assert len(card) > 1, f'len(SPCOFF card) = {len(card):d}\ncard={card}'
+        assert len(card) > 1, f'len({self.type} card) = {len(card):d}\ncard={card}'
         self.cards.append((nodes, components, comment))
         self.n += len(nodes)
         return self.n
 
     def add_set1_card(self, card: BDFCard, comment: str='') -> int:
         """
-        Adds a SPCOFF1 card from ``BDF.add_card(...)``
+        Adds a SPCOFF1/BNDFIX1/BNDFREE1 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -871,7 +868,7 @@ class SPCOFF(VectorizedBaseCard):
 
         component = parse_components(card, 1, 'components')  # 246 = y; dx, dz dir
         nodes = card.fields(2)
-        assert len(card) > 2, f'len(SPCOFF1 card) = {len(card):d}\ncard={card}'
+        assert len(card) > 2, f'len({self.type}1 card) = {len(card):d}\ncard={card}'
         #return cls(components, nodes, comment=comment)
         nodes = expand_thru(nodes)
         nnodes = len(nodes)
@@ -884,37 +881,29 @@ class SPCOFF(VectorizedBaseCard):
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        ncards = len(self.cards)
+        #ncards = len(self.cards)
         if self.debug:
             self.model.log.debug(f'parse {self.type}')
 
-        try:
-            node_id, component = self._setup(ncards, self.cards, 'int32')
-        except OverflowError:
-            node_id, component = self._setup(ncards, self.cards, 'int64')
-        self._save(node_id, component)
-        #self.sort()
-        self.cards = []
-
-    def _setup(self, ncards: int, cards: list[Any],
-               idtype: str) -> tuple[np.ndarray, np.ndarray]:
-
-        node_id = []
+        idtype = self.model.idtype
+        node_id_list = []
         component_list = []
         #comment = {}
-        for i, card in enumerate(cards):
+        for i, card in enumerate(self.cards):
             (nidi, componenti, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
             #nnodes = len(nidi)
-            node_id.extend(nidi)
+            node_id_list.extend(nidi)
             component_list.extend(componenti)
             #if commenti:
                 #comment[i] = commenti
                 #comment[nidi] = commenti
-        node_id2 = np.array(node_id, dtype=idtype)
-        component2 = np.array(component_list, dtype=idtype)
-        return node_id2, component2
+        node_id = np.array(node_id_list, dtype=idtype)
+        component = np.array(component_list, dtype=idtype)
+        self._save(node_id, component, comment=None)
+        #self.sort()
+        self.cards = []
 
     def _save(self,
               node_id: np.ndarray,
@@ -985,9 +974,10 @@ class SPCOFF(VectorizedBaseCard):
         for nid, comp in zip(self.node_id, self.component):
             component_to_nodes[comp].append(nid)
 
+        class_name = f'{self.type}1'
         for component, nodes in component_to_nodes.items():
             nodes_collapsed = collapse_thru(nodes, nthru=None)
-            list_fields = ['SPCOFF1', component] + nodes_collapsed
+            list_fields = [class_name, component] + nodes_collapsed
             bdf_file.write(print_card(list_fields))
         return
 
@@ -1005,6 +995,13 @@ class SPCOFF(VectorizedBaseCard):
                 #actual_nids = self.node_id[inids_leftover]
                 #assert np.array_equal(actual_nids, node_id)
         #return inid
+
+class SPCOFF(CommonSet):
+    pass
+class BNDFIX(CommonSet):
+    pass
+class BNDFREE(CommonSet):
+    pass
 
 SPCs = Union[SPC, SPC1]
 

@@ -24,11 +24,11 @@ try:
 except ImportError:
     IS_PANDAS = False
 
-#try:
-    #import h5py
-    #IS_HDF5 = True
-#except ImportError:
-    #IS_HDF5 = False
+try:
+    import tables
+    IS_HDF5 = True
+except ImportError:
+    IS_HDF5 = False
 
 IS_PANDAS = False
 IS_HDF5 = False
@@ -297,11 +297,15 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         #op2.read_bdf(op2.bdf_filename, includeDir=None, xref=False)
         if compare:
             op2_nv.read_op2(op2_filename, combine=combine)
+            if not hasattr(op2_nv, 'idtype'):
+                op2_nv.idtype = 'int64'
             if hasattr(op2, 'setup'):
                 op2.setup()
 
         if ext == '.op2':
             op2.read_op2(op2_filename, combine=combine)
+            if not hasattr(op2, 'idtype'):
+                op2.idtype = 'int64'
             if hasattr(op2, 'setup'):
                 op2.setup()
         elif ext == '.h5':
@@ -478,25 +482,26 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
 
 def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev,
                      xref_safe=False):
-    if write_bdf:
-        assert make_geom, f'write_bdf=False, but make_geom={make_geom!r}; expected make_geom=True'
-        op2._nastran_format = 'msc'
-        op2.executive_control_lines = ['CEND\n']
-        op2.validate()
-        op2.write_bdf(bdf_filename, size=8)
-        op2.log.debug('bdf_filename = %s' % bdf_filename)
-        xref = xref_safe is False
-        if read_bdf:
-            try:
-                op2_bdf.read_bdf(bdf_filename, xref=xref)
-                if xref_safe:
-                    op2_bdf.safe_cross_reference()
-            except Exception:
-                if dev and len(op2_bdf.card_count) == 0:
-                    pass
-                else:
-                    raise
-        #os.remove(bdf_filename)
+    if not write_bdf:
+        return
+    assert make_geom, f'write_bdf=False, but make_geom={make_geom!r}; expected make_geom=True'
+    op2._nastran_format = 'msc'
+    op2.executive_control_lines = ['CEND\n']
+    op2.validate()
+    op2.write_bdf(bdf_filename, size=8)
+    op2.log.debug('bdf_filename = %s' % bdf_filename)
+    xref = xref_safe is False
+    if read_bdf:
+        try:
+            op2_bdf.read_bdf(bdf_filename, xref=xref)
+            if xref_safe:
+                op2_bdf.safe_cross_reference()
+        except Exception:
+            if dev and len(op2_bdf.card_count) == 0:
+                pass
+            else:
+                raise
+    #os.remove(bdf_filename)
 
 def get_test_op2_data(argv) -> dict[str, str]:
     """defines the docopt interface"""

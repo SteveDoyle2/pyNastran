@@ -418,7 +418,7 @@ class GRID(VectorizedBaseCard):
     def _save(self,
               node_id: np.ndarray, cp: np.ndarray, cd: np.ndarray,
               xyz: np.ndarray, ps: np.ndarray, seid: np.ndarray,
-              comment: dict[int, str]) -> None:
+              comment: Optional[dict[int, str]]=None) -> None:
         ncards = len(node_id)
         ncards_existing = len(self.node_id)
 

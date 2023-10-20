@@ -4848,10 +4848,6 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                               c_real=c_real, c_imag=c_imag, comment=comment)
         return mat
 
-    def add_mathe(self, mid: int) -> int:
-        mat = self.mathe.add(mid)
-        return mat
-
     def add_matort(self, mid: int, E1: float, E2: float, E3: float,
                    nu12: float, nu23: float, nu31: float,
                    G12: float, G23: float, G31: float,
@@ -4890,7 +4886,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                   mooney, sussbat, aboyce, gent,
                   rho=0., texp=0., tref=0., ge=0., comment: str='') -> int:
         """Creates a MATHE card"""
-        mat = MATHE(mid, model, bulk, mus, alphas, betas,
+        mat = self.mathe.add(mid, model, bulk, mus, alphas, betas,
                     mooney, sussbat, aboyce, gent,
                     rho=rho, texp=texp, tref=tref, ge=ge, comment=comment)
         self._add_methods._add_hyperelastic_material_object(mat)
@@ -4933,7 +4929,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                   g23_table=None, g33_table=None, rho_table=None,
                   a1_table=None, a2_table=None, a3_table=None, ge_table=None,
                   st_table=None, sc_table=None, ss_table=None,
-                  comment: str='') -> MATT2:
+                  comment: str='') -> int:
         """Creates a MATT2 card"""
         mat = MATT2(mid, g11_table, g12_table, g13_table, g22_table,
                     g23_table, g33_table, rho_table,
@@ -4946,7 +4942,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
     def add_matt3(self, mid, ex_table=None, eth_table=None, ez_table=None,
                   nuth_table=None, nuxz_table=None, rho_table=None,
                   gzx_table=None, ax_table=None, ath_table=None, az_table=None,
-                  ge_table=None, comment: str='') -> MATT3:
+                  ge_table=None, comment: str='') -> int:
         """Creates a MATT3 card"""
         mat = MATT3(mid, ex_table, eth_table, ez_table,
                     nuth_table, nuxz_table, rho_table, gzx_table,
@@ -4955,7 +4951,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         return mat
 
     def add_matt4(self, mid, k_table=None, cp_table=None, h_table=None,
-                  mu_table=None, hgen_table=None, comment: str='') -> MATT4:
+                  mu_table=None, hgen_table=None, comment: str='') -> int:
         """Creates a MATT4 card"""
         mat = MATT4(mid, k_table, cp_table, h_table, mu_table, hgen_table,
                     comment=comment)
@@ -4964,7 +4960,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
     def add_matt5(self, mid, kxx_table=None, kxy_table=None, kxz_table=None,
                   kyy_table=None, kyz_table=None, kzz_table=None, cp_table=None,
-                  hgen_table=None, comment: str='') -> MATT5:
+                  hgen_table=None, comment: str='') -> int:
         """Creates a MATT5 card"""
         mat = MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
                     kyz_table, kzz_table, cp_table,
@@ -4976,7 +4972,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                   g12_table=None, g1z_table=None, g2z_table=None, rho_table=None,
                   a1_table=None, a2_table=None,
                   xt_table=None, xc_table=None, yt_table=None, yc_table=None,
-                  s_table=None, ge_table=None, f12_table=None, comment: str='') -> MATT8:
+                  s_table=None, ge_table=None, f12_table=None, comment: str='') -> int:
         """Creates a MATT8 card"""
         mat = MATT8(mid, e1_table=e1_table, e2_table=e2_table, nu12_table=nu12_table,
                     g12_table=g12_table, g1z_table=g1z_table, g2z_table=g2z_table,
@@ -4995,7 +4991,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                   g66_table=None, rho_table=None,
                   a1_table=None, a2_table=None, a3_table=None,
                   a4_table=None, a5_table=None, a6_table=None,
-                  ge_table=None, comment: str='') -> MATT9:
+                  ge_table=None, comment: str='') -> int:
         mat = MATT9(mid,
                     g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
                     g22_table, g23_table, g24_table, g25_table, g26_table,
@@ -7146,16 +7142,15 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                          cp=cp, cd=cd, xflag=xflag, comment=comment)
         return monitor_point
 
-    def add_bsurfs(self, id, eids, g1s, g2s, g3s, comment: str='') -> BSURFS:
-        """Creates a BSURFS card"""
-        bsurfs = BSURFS(id, eids, g1s, g2s, g3s, comment=comment)
+    def add_bsurfs(self, glue_id, eids, g1s, g2s, g3s, comment: str='') -> int:
+        """Creates a BSURFS card, which defines a contact/glue for solids"""
+        bsurfs = self.bsurfs.add(glue_id, eids, g1s, g2s, g3s, comment=comment)
         self._add_methods._add_bsurfs_object(bsurfs)
         return bsurfs
 
-    def add_bsurf(self, sid, eids, comment: str='') -> BSURF:
-        """Creates a BSURF card"""
-        bsurf = BSURF(sid, eids, comment=comment)
-        self._add_methods._add_bsurf_object(bsurf)
+    def add_bsurf(self, glue_id, eids, comment: str='') -> int:
+        """Creates a BSURF card, which defines a contact/glue for solids"""
+        bsurf = self.bsurf.add(glue_id, eids, comment=comment)
         return bsurf
 
     def add_bctset(self, csid, sids, tids, frictions, min_distances,

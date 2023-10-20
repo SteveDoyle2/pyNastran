@@ -383,6 +383,59 @@ class TestConstraints(unittest.TestCase):
 
         save_load_deck(model, run_remove_unused=False, run_save_load_hdf5=False)
 
+    def test_bndfix(self):
+        """tests BNDFIX/BNDFIX1"""
+        model = BDF(debug=False)
+        bndfix = model.bndfix
+        #spcoff1 = model.spcoff1
+
+        #with self.assertRaises(KeyError):
+            #model.EmptyNodes([1, 2], msg='')
+        #model.add_spcoff()
+
+        # TOD: doesn't support default component=0
+        #card_lines = ['SPCOFF', 1]
+        #model.add_card(card_lines, 'SPCOFF', comment='spcoff', is_list=True, has_none=True)
+        model.setup()
+        bndfix.write(size=8)
+        bndfix.write(size=16)
+        #spcoff.raw_fields()
+        #with self.assertRaises(KeyError):
+            #spcoff.cross_reference(model)
+        model.add_grid(1, [0., 0., 0.])
+        model.setup()
+        #spcoff.cross_reference(model)
+
+        card_lines = ['BNDFIX1', 24, 43]
+        model.add_card(card_lines, 'BNDFIX1', comment='bndfix1', is_list=True, has_none=True)
+
+        card_lines = ['BNDFIX1', 5, 50, 'THRU', 52]
+        model.add_card(card_lines, 'BNDFIX1', comment='bndfix1', is_list=True, has_none=True)
+        model.setup()
+        model.pop_parse_errors()
+
+        bndfix.write(size=8)
+        bndfix.write(size=16)
+        #spcoff1.raw_fields()
+        #model.uncross_reference()
+
+        #with self.assertRaises(KeyError):
+            #spcoff1.cross_reference(model)
+        model.add_grid(43, [0., 0., 0.])
+        #spcoff1.cross_reference(model)
+        #model.uncross_reference()
+
+        model.add_grid(50, [0., 0., 0.])
+        model.add_grid(51, [0., 0., 0.])
+        model.add_grid(52, [0., 0., 0.])
+        model.setup()
+        model.cross_reference()
+        #model.uncross_reference()
+        model.validate()
+        #model.safe_cross_reference()
+
+        save_load_deck(model, run_remove_unused=False, run_save_load_hdf5=False)
+
     def _test_gmspc(self):
         """tests GMSPC"""
         model = BDF(debug=False, log=None, mode='msc')

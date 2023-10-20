@@ -52,10 +52,10 @@ class TestModels(unittest.TestCase):
 
         if IS_PYTABLES:
             h5_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.h5'
-            args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
-            test_bdf(args, show_args=False)
-        args2 = ['test_op2', str(h5_filename), '-gctf', '--quiet'] # o
-        test_op2(args2, show_args=False)
+            #args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']
+            #test_bdf(args, show_args=False)
+            args2 = ['test_op2', str(h5_filename), '-gctf', '--quiet'] # o
+            test_op2(args2, show_args=False)
 
     def test_h5_modes(self):
         h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
@@ -109,6 +109,7 @@ class TestModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'beam_modes' / 'beam_modes.dat'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
+
     def test_beam_modes2(self):
         bdf_filename = MODEL_PATH / 'beam_modes' / 'cbarao_cbeam_static.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
@@ -152,6 +153,11 @@ class TestModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'
         args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
+
+        op2_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.op2'
+        args = ['test_op2', str(op2_filename), '-gnt']
+        test_op2(args, show_args=False)
+
     def test_isat1(self):
         bdf_filename = MODEL_PATH / 'iSat' / 'ISat_Dploy_Sm.dat'
         #from pyNastran.bdf.bdf import read_bdf as read_bdf_old

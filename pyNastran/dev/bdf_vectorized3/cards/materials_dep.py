@@ -104,6 +104,15 @@ class MATT1(Material):
         for i, card in enumerate(self.cards):
             (mid, e_tablei, g_tablei, nu_tablei, rho_tablei, a_tablei,
              ge_tablei, st_tablei, sc_tablei, ss_tablei, comment) = card
+            e_tablei = 0 if e_tablei is None else e_tablei
+            g_tablei = 0 if g_tablei is None else g_tablei
+            nu_tablei = 0 if nu_tablei is None else nu_tablei
+            rho_tablei = 0 if rho_tablei is None else rho_tablei
+            a_tablei = 0 if a_tablei is None else a_tablei
+            ge_tablei = 0 if ge_tablei is None else ge_tablei
+            st_tablei = 0 if st_tablei is None else st_tablei
+            sc_tablei = 0 if sc_tablei is None else sc_tablei
+            ss_tablei = 0 if ss_tablei is None else ss_tablei
             material_id[i] = mid
             e_table[i] = e_tablei
             g_table[i] = g_tablei
@@ -277,6 +286,7 @@ class MATS1(Material):
             h: float, hr: int, yf: int, limit1: float, limit2: float,
             stress_strain_measure: str='', comment: str='') -> int:
         """Creates a MATS1 card"""
+        assert isinstance(Type, str), f'Type={Type!r}'
         self.cards.append((mid, tid, Type, h, hr, yf, limit1, limit2, stress_strain_measure, comment))
         self.n += 1
         return self.n
@@ -345,6 +355,8 @@ class MATS1(Material):
         for i, card in enumerate(self.cards):
             (mid, tid, typei, hi, hri, yfi, limit1i, limit2i, stress_strain_measurei, comment) = card
             tid = 0 if tid is None else tid
+            hri = 1 if hri is None else hri
+            yfi = 1 if yfi is None else yfi
             material_id[i] = mid
             table_id[i] = tid
             Type[i] = typei
