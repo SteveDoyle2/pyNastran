@@ -2386,6 +2386,10 @@ class MAT10C(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
@@ -2955,6 +2959,10 @@ class MATHP(Material):
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
+
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
 
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
