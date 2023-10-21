@@ -110,79 +110,6 @@ class Solver:
         for card_type, values in self.model._type_to_id_map.items():
             self.model.card_count[card_type] = len(values)
 
-    def build_xg(self, dof_map: DOF_MAP,
-                 ndof: int, subcase: Subcase) -> NDArrayNfloat:
-        """
-        Builds the {xg} vector, which has all SPCs in the analysis (cd) frame
-        (called global g by NASTRAN)
-
-        {s} = {sb} + {sg}
-        {sb} = SPC set on SPC/SPC1/SPCADD cards (boundary)
-        {sg} = SPCs from PS field on GRID card (grid)
-
-        """
-        model = self.model
-        xspc = np.full(ndof, np.nan, dtype='float64')
-        #get_parameter(self, param_name, msg='', obj=False)
-        spc_id, unused_options = subcase['SPC']
-        if 'SPC' not in subcase:
-            model.log.warning(f'no spcs...{spc_id}')
-            model.log.warning(str(subcase))
-            return xspc
-        spc_id, unused_options = subcase['SPC']
-        spcs = []
-        #for spc in model.spcs:
-            #if spc.n == 0:
-                #continue
-            #spci = spc.slice_card_by_id(spc_id)
-            #spcs.append(spci)
-        spcs = [spc.slice_card_by_id(spc_id) for spc in model.spcs
-                if spc.n > 0]
-        model.spc1
-        #spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
-
-        spc_set = []
-        sset = np.zeros(ndof, dtype='bool')
-        for spc in spcs:
-            if spc.type == 'SPC1':
-                #print(spc.get_stats())
-                dofs_missed = []
-                for comp, (inode0, inode1) in zip(spc.components, spc.inode):
-                    for dof in str(comp):
-                        dofi = int(dof)
-                        spc_nodes = spc.node_id[inode0:inode1]
-                        for nid in spc_nodes:
-                            try:
-                                idof = dof_map[(nid, dofi)]
-                            except Exception:
-                                dofs_missed.append((nid, dofi))
-                                #print('dof_map =', dof_map)
-                                #print((nid, dofi))
-                                continue
-                            sset[idof] = True
-                            spc_set.append(idof)
-                            xspc[idof] = 0.
-                if dofs_missed:
-                    dof_str = ', '.join(str(dofi) for dofi in dofs_missed)
-                    self.log.warning(f'Missing (nid,dof) pairs:')
-                    self.log.warning(f'  {dof_str}\n{spc.rstrip()}')
-                    #=({nid},{dofi}) doesn't exist...skipping
-                del dofs_missed
-            elif spc.type == 'SPC':
-                for nid, components, enforcedi in zip(spc.nodes, spc.components, spc.enforced):
-                    for component in components:
-                        dofi = int(component)
-                        idof = dof_map[(nid, dofi)]
-                        sset[idof] = True
-                        spc_set.append(idof)
-                        xspc[idof] = enforcedi
-            else:
-                raise NotImplementedError(spc)
-        spc_set = np.array(spc_set, dtype='int32')
-        #print('spc_set =', spc_set, xspc)
-        return spc_set, sset, xspc
-
-
     def build_Fb(self, xg: NDArrayNfloat, sset_b,
                  dof_map: DOF_MAP,
                  ndof: int, subcase: Subcase) -> NDArrayNfloat:
@@ -493,7 +420,7 @@ class Solver:
 
         gset = np.arange(ndof, dtype=idtype)
         #gset_b = np.ones(ndof, dtype='bool')
-        sset, sset_b, xg = self.build_xg(dof_map, ndof, subcase)
+        sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
         #sset_b = np.union1d(sset_b, sset_g)
         #print(sset_g)
         #print(sset_b)
@@ -873,90 +800,16 @@ class Solver:
         #log = model.log
         #write_f06 = True
 
-        dof_map, ps = _get_dof_map(model)
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
+
+        dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
-        Kgg = build_Kgg(model, dof_map,
-                        ndof, ngrid,
-                        ndof_per_grid,
-                        idtype='int32', fdtype=fdtype)
-
-        Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
-
-        Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
-        del Mbb
-
-        gset = np.arange(ndof, dtype=idtype)
-        sset, sset_b, xg = self.build_xg(dof_map, ndof, subcase)
-        aset = np.setdiff1d(gset, sset) # a = g-s
-
-        # aset - analysis set
-        # sset - SPC set
-        xa, xs = partition_vector2(xg, [['a', aset], ['s', sset]])
-        del xg
-        #print(f'xa = {xa}')
-        #print(f'xs = {xs}')
-        #print(Kgg)
-        M = partition_matrix(Mgg, [['a', aset], ['s', sset]])
-        Maa = M['aa']
-
-        K = partition_matrix(Kgg, [['a', aset], ['s', sset]])
-        Kaa = K['aa']
-        #Kss = K['ss']
-        #Kas = K['as']
-        #Ksa = K['sa']
-
-        #[Kaa]{xa} + [Kas]{xs} = {Fa}
-        #[Ksa]{xa} + [Kss]{xs} = {Fs}
-
-        #{xa} = [Kaa]^-1 * ({Fa} - [Kas]{xs})
-        #{Fs} = [Ksa]{xa} + [Kss]{xs}
-
-        # TODO: apply AUTOSPCs correctly
-        #print(Kaa)
-        #print(Kas)
-        #print(Kss)
-        #Maa_, ipositive, inegative, unused_sz_set = remove_rows(Maa, aset)
-        Kaa_, ipositive, unused_inegative, unused_sz_set = remove_rows(Kaa, aset)
-        Maa_ = Maa[ipositive, :][:, ipositive]
-        #Fs = np.zeros(ndof, dtype=fdtype)
-        #print(f'Fg = {Fg}')
-        #print(f'Fa = {Fa}')
-        #print(f'Fs = {Fs}')
-        #Fa_ = Fa[ipositive]
-        # [A]{x} = {b}
-        # [Kaa]{x} = {F}
-        # {x} = [Kaa][F]
-        #print(f'Kaa:\n{Kaa}')
-        #print(f'Fa: {Fa}')
-
-        #print(f'Kaa_:\n{Kaa_}')
-        #print(f'Fa_: {Fa_}')
-        #na = Kaa_.shape[0]
-        ndof_ = Kaa_.shape[0]
-        neigenvalues = 10
-        if ndof_ < neigenvalues:
-            eigenvalues, xa_ = sp.linalg.eigh(Kaa_.toarray(), Maa_)
-        else:
-            #If M is specified, solves ``A * x[i] = w[i] * M * x[i]``
-            eigenvalues, xa_ = sp.sparse.linalg.eigsh(
-                Kaa_, k=neigenvalues, M=Maa_,
-                sigma=None, which='LM', v0=None, ncv=None, maxiter=None, tol=0,
-                return_eigenvectors=True, Minv=None, OPinv=None, mode='normal')
+        out = _run_modes(model, subcase,
+                   node_gridtype, dof_map,
+                   idtype=idtype, fdtype=fdtype)
+        xg_out = out['xg_out']
+        eigenvalues = out['eigenvalues']
         nmodes = len(eigenvalues)
-        model.log.debug(f'eigenvalues = {eigenvalues}')
-        #print(f'xa_ = {xa_} {xa_.shape}')
-        #xa2 = xa_.reshape(nmodes, na, na)
-
-        xg_out = np.full((nmodes, ndof), np.nan, dtype=fdtype)
-        xa_out = np.full((nmodes, len(xa)), np.nan, dtype=fdtype)
-        #xa[ipositive] = xa_
-        xa_out[:, ipositive] = xa_
-        xg = np.arange(ndof, dtype=fdtype)
-        #xg[aset] = xa
-        #xg[sset] = xs
-        xg_out[:, aset] = xa
-        xg_out[:, sset] = xs
 
         isubcase = subcase.id
         mode_cycles = eigenvalues
@@ -1030,6 +883,47 @@ class Solver:
         str(f06_file)
         str(fdtype)
         str(idtype)
+        # https://pyfrf.readthedocs.io/en/latest/Showcase.html
+        #ndof = K.shape[0]
+
+        #end_options = [
+            #'SEMR',  # MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES)
+            #'SEKR',  # STIFFNESS MATRIX REDUCTION STEP
+        #]
+        model = self.model
+        #op2 = self.op2
+        #---------------------------------------------------
+        #title = ''
+        #today = None
+        #page_stamp = self.op2.make_stamp(title, today) # + '\n'
+
+        node_gridtype = _get_node_gridtype(model, idtype=idtype)
+        dof_map, ps = _get_dof_map(model)
+        ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
+
+        out = _run_modes(
+            model, subcase,
+            ndof, node_gridtype, dof_map,
+            idtype=idtype, fdtype=fdtype)
+
+        Kaa = out['Kaa']
+        Maa = out['Maa']
+        omegas = out['omegas']
+        omega_max = omegas.max()
+        #freq_max = 2 * np.pi * omega_max
+        nfreq = 1001
+        #freq = np.linspace(0., 1.5*freq_max, num=nfreq)
+        omegai = np.linspace(0., 1.5*omega_max)
+
+        Caa = np.eye(Kaa.shape)
+        Caa.fill_diag(0.01)
+
+        nfreq = len(omegas)
+        shape = (ndof, ndof, nfreq)
+        tf_matrix = np.zeros(shape, dtype='complex128')  # full system 3x3 TF matrix
+        for i, omegai in enumerate(omegas):
+            tf_matrix[:,:,i] = sp.linalg.inv(Kaa - omegai**2 * Maa + 1j*omegai*Caa)
+        return tf_matrix
 
 
 def partition_matrix(matrix, sets: list[tuple[str, np.ndarray]]) -> dict[tuple[str, str], NDArrayNNfloat]:
@@ -1278,75 +1172,19 @@ def _get_node_gridtype(model: BDF, idtype: str='int32') -> NDArrayN2int:
     return node_gridtype_array
 
 def get_aset(model: BDF) -> set[tuple[int, int]]:
-    aset_map = set()
-    return aset_map
-    for aset in model.asets:
-        if aset.type == 'ASET1':
-            comp = aset.components
-            for nid in aset.ids:
-                for compi in comp:
-                    aset_map.add((nid, int(compi)))
-        elif aset.type == 'ASET':
-            for nid, comp in zip(aset.ids, aset.components):
-                for compi in comp:
-                    aset_map.add((nid, int(compi)))
-        else:
-            raise NotImplementedError(aset)
-    return aset_map
+    return model.aset.set_map
 
 def get_bset(model: BDF) -> set[tuple[int, int]]:
     """creates the b-set"""
-    bset_map = set()
-    return bset_map
-    for bset in model.bsets:
-        if bset.type == 'BSET1':
-            comp = bset.components
-            for nid in bset.ids:
-                for compi in comp:
-                    bset_map.add((nid, int(compi)))
-        elif bset.type == 'BSET':
-            for nid, comp in zip(bset.ids, bset.components):
-                for compi in comp:
-                    bset_map.add((nid, int(compi)))
-        else:
-            raise NotImplementedError(bset)
-    return bset_map
+    return model.bset.set_map
 
 def get_cset(model: BDF) -> set[tuple[int, int]]:
     """creates the c-set"""
-    cset_map = set()
-    return cset_map
-    for cset in model.csets:
-        if cset.type == 'CSET1':
-            comp = cset.components
-            for nid in cset.ids:
-                for compi in comp:
-                    cset_map.add((nid, int(compi)))
-        elif cset.type == 'CSET':
-            for nid, comp in zip(cset.ids, cset.components):
-                for compi in comp:
-                    cset_map.add((nid, int(compi)))
-        else:
-            raise NotImplementedError(cset)
-    return cset_map
+    return model.cset.set_map
 
 def get_omit_set(model: BDF) -> set[tuple[int, int]]:
     """creates the o-set"""
-    omit_set_map = set()
-    return omit_set_map
-    for omit in model.omits:
-        if omit.type == 'OMIT1':
-            comp = omit.components
-            for nid in omit.ids:
-                for compi in comp:
-                    omit_set_map.add((nid, int(compi)))
-        elif omit.type == 'OMIT':
-            for nid, comp in zip(omit.ids, omit.components):
-                for compi in comp:
-                    omit_set_map.add((nid, int(compi)))
-        else:
-            raise NotImplementedError(omit)
-    return omit_set_map
+    return model.omit.set_map
 
 def get_rset(model: BDF) -> set[tuple[int, int]]:
     """creates the r-set"""
@@ -1366,21 +1204,7 @@ def get_rset(model: BDF) -> set[tuple[int, int]]:
 
 def get_qset(model: BDF) -> set[tuple[int, int]]:
     """creates the q-set"""
-    qset_map = set()
-    return qset_map
-    for qset in model.qsets:
-        if qset.type == 'QSET1':
-            comp = qset.components
-            for nid in qset.ids:
-                for compi in comp:
-                    qset_map.add((nid, int(compi)))
-        elif qset.type == 'QSET':
-            for nid, comp in zip(qset.ids, qset.components):
-                for compi in comp:
-                    qset_map.add((nid, int(compi)))
-        else:
-            raise NotImplementedError(qset)
-    return qset_map
+    return model.qset.set_map
 
 def get_residual_structure(model: BDF, dof_map: DOF_MAP,
                            fset: NDArrayNbool, idtype: str='int32') -> NDArrayNbool:
@@ -2027,3 +1851,174 @@ def conm2_fill_Mbb(model: BDF,
         mass_total += mass
         Mbb[i1+3:i1+6, i1+3:i1+6] += I
     return mass_total
+
+def _run_modes(model: BDF, subcase: Subcase,
+               ndof: int,
+               ngrid: int,
+               ndof_per_grid: int,
+               node_gridtype: np.ndarray,
+               dof_map: dict,
+               idtype: str = 'int32',
+               fdtype: str = 'floaat64'):
+    out = {}
+    Kgg = build_Kgg(model, dof_map,
+                    ndof, ngrid,
+                    ndof_per_grid,
+                    idtype='int32', fdtype=fdtype)
+    out['Kgg'] = Kgg
+
+    Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
+
+    Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
+    out['Mgg'] = Mgg
+    del Mbb
+
+    gset = np.arange(ndof, dtype=idtype)
+    sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
+    aset = np.setdiff1d(gset, sset) # a = g-s
+
+    # aset - analysis set
+    # sset - SPC set
+    xa, xs = partition_vector2(xg, [['a', aset], ['s', sset]])
+    del xg
+    #print(f'xa = {xa}')
+    #print(f'xs = {xs}')
+    #print(Kgg)
+    M = partition_matrix(Mgg, [['a', aset], ['s', sset]])
+    Maa = M['aa']
+
+    K = partition_matrix(Kgg, [['a', aset], ['s', sset]])
+    Kaa = K['aa']
+    #Kss = K['ss']
+    #Kas = K['as']
+    #Ksa = K['sa']
+
+    #[Kaa]{xa} + [Kas]{xs} = {Fa}
+    #[Ksa]{xa} + [Kss]{xs} = {Fs}
+
+    #{xa} = [Kaa]^-1 * ({Fa} - [Kas]{xs})
+    #{Fs} = [Ksa]{xa} + [Kss]{xs}
+
+    # TODO: apply AUTOSPCs correctly
+    #print(Kaa)
+    #print(Kas)
+    #print(Kss)
+    #Maa_, ipositive, inegative, unused_sz_set = remove_rows(Maa, aset)
+    Kaa_, ipositive, unused_inegative, unused_sz_set = remove_rows(Kaa, aset)
+    Maa_ = Maa[ipositive, :][:, ipositive]
+    #Fs = np.zeros(ndof, dtype=fdtype)
+    #print(f'Fg = {Fg}')
+    #print(f'Fa = {Fa}')
+    #print(f'Fs = {Fs}')
+    #Fa_ = Fa[ipositive]
+    # [A]{x} = {b}
+    # [Kaa]{x} = {F}
+    # {x} = [Kaa][F]
+    #print(f'Kaa:\n{Kaa}')
+    #print(f'Fa: {Fa}')
+
+    #print(f'Kaa_:\n{Kaa_}')
+    #print(f'Fa_: {Fa_}')
+    #na = Kaa_.shape[0]
+    ndof_ = Kaa_.shape[0]
+    neigenvalues = 10
+    if ndof_ < neigenvalues:
+        eigenvalues, xa_ = sp.linalg.eigh(Kaa_.toarray(), Maa_)
+    else:
+        #If M is specified, solves ``A * x[i] = w[i] * M * x[i]``
+        eigenvalues, xa_ = sp.sparse.linalg.eigsh(
+            Kaa_, k=neigenvalues, M=Maa_,
+            sigma=None, which='LM', v0=None, ncv=None, maxiter=None, tol=0,
+            return_eigenvectors=True, Minv=None, OPinv=None, mode='normal')
+    nmodes = len(eigenvalues)
+    model.log.debug(f'eigenvalues = {eigenvalues}')
+    #print(f'xa_ = {xa_} {xa_.shape}')
+    #xa2 = xa_.reshape(nmodes, na, na)
+
+    xg_out = np.full((nmodes, ndof), np.nan, dtype=fdtype)
+    xa_out = np.full((nmodes, len(xa)), np.nan, dtype=fdtype)
+    #xa[ipositive] = xa_
+    xa_out[:, ipositive] = xa_
+    xg = np.arange(ndof, dtype=fdtype)
+    #xg[aset] = xa
+    #xg[sset] = xs
+    xg_out[:, aset] = xa
+    xg_out[:, sset] = xs
+
+    out['xg_out'] = xg_out
+
+    return out
+
+def _build_xg(model: BDF, dof_map: DOF_MAP,
+              ndof: int, subcase: Subcase) -> NDArrayNfloat:
+    """
+    Builds the {xg} vector, which has all SPCs in the analysis (cd) frame
+    (called global g by NASTRAN)
+
+    {s} = {sb} + {sg}
+    {sb} = SPC set on SPC/SPC1/SPCADD cards (boundary)
+    {sg} = SPCs from PS field on GRID card (grid)
+
+    """
+    log = model.log
+    #model = self.model
+    xspc = np.full(ndof, np.nan, dtype='float64')
+    #get_parameter(self, param_name, msg='', obj=False)
+    spc_id, unused_options = subcase['SPC']
+    if 'SPC' not in subcase:
+        log.warning(f'no spcs...{spc_id}')
+        log.warning(str(subcase))
+        return xspc
+    spc_id, unused_options = subcase['SPC']
+    spcs = []
+    #for spc in model.spcs:
+        #if spc.n == 0:
+            #continue
+        #spci = spc.slice_card_by_id(spc_id)
+        #spcs.append(spci)
+    spcs = [spc.slice_card_by_id(spc_id) for spc in model.spcs
+            if spc.n > 0]
+    model.spc1
+    #spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
+
+    spc_set = []
+    sset = np.zeros(ndof, dtype='bool')
+    for spc in spcs:
+        if spc.type == 'SPC1':
+            #print(spc.get_stats())
+            dofs_missed = []
+            for comp, (inode0, inode1) in zip(spc.components, spc.inode):
+                for dof in str(comp):
+                    dofi = int(dof)
+                    spc_nodes = spc.node_id[inode0:inode1]
+                    for nid in spc_nodes:
+                        try:
+                            idof = dof_map[(nid, dofi)]
+                        except Exception:
+                            dofs_missed.append((nid, dofi))
+                            #print('dof_map =', dof_map)
+                            #print((nid, dofi))
+                            continue
+                        sset[idof] = True
+                        spc_set.append(idof)
+                        xspc[idof] = 0.
+            if dofs_missed:
+                dof_str = ', '.join(str(dofi) for dofi in dofs_missed)
+                log.warning(f'Missing (nid,dof) pairs:')
+                log.warning(f'  {dof_str}\n{spc.rstrip()}')
+                #=({nid},{dofi}) doesn't exist...skipping
+            del dofs_missed
+        elif spc.type == 'SPC':
+            for nid, components, enforcedi in zip(spc.nodes, spc.components, spc.enforced):
+                for component in components:
+                    dofi = int(component)
+                    idof = dof_map[(nid, dofi)]
+                    sset[idof] = True
+                    spc_set.append(idof)
+                    xspc[idof] = enforcedi
+        else:
+            raise NotImplementedError(spc)
+    spc_set = np.array(spc_set, dtype='int32')
+    #print('spc_set =', spc_set, xspc)
+    return spc_set, sset, xspc
+

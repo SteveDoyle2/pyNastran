@@ -86,12 +86,13 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
 from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
     MATS1, MATT1,)
 
-
+from pyNastran.dev.bdf_vectorized3.cards.contact import BSURF, BSURFS
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.constraints import (
     SPC, SPC1, SPCADD,
-    SPCOFF, # SPCOFF1,
-    BNDFIX, # BNDFIX1,
+    SPCOFF,  # SPCOFF1,
+    BNDFIX,  # BNDFIX1,
+    BNDFREE, # BNDFREE1
     MPC, MPCADD)
 from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
     RBAR, RBAR1,
@@ -198,6 +199,10 @@ class BDFAttributes:
         self.pdamp = PDAMP(self)
         self.pdamp5 = PDAMP5(self)
         self.pdampt = PDAMPT(self)
+
+        # contact
+        self.bsurf = BSURF(self)
+        self.bsurfs = BSURFS(self)
 
         # sets
         self.suport = SUPORT(self)
@@ -468,7 +473,8 @@ class BDFAttributes:
         self.spc = SPC(self)
         self.spc1 = SPC1(self)
         self.spcoff = SPCOFF(self)  # SPCOFF1
-        self.bndfix = BNDFIX(self)  # BNDFIX11
+        self.bndfix = BNDFIX(self)  # BNDFIX1
+        self.bndfree = BNDFREE(self)  # BNDFREE1
         self.spcadd = SPCADD(self)
         self.mpc = MPC(self)
         self.mpcadd = MPCADD(self)
@@ -906,7 +912,7 @@ class BDFAttributes:
     @property
     def spc_cards(self) -> list[Any]:
         return [
-            self.spc, self.spc1, self.spcadd, self.spcoff, self.bndfix,
+            self.spc, self.spc1, self.spcadd, self.spcoff, self.bndfix, self.bndfree,
         ]
     @property
     def mpc_cards(self) -> list[Any]:
@@ -918,6 +924,10 @@ class BDFAttributes:
         return [
             self.nsm, self.nsm1, self.nsml, self.nsml1, self.nsmadd,
         ]
+
+    @property
+    def contact_cards(self) -> list[Any]:
+        return [self.bsurf, self.bsurfs]
 
     @property
     def _cards_to_setup(self) -> list[Any]:
@@ -932,7 +942,7 @@ class BDFAttributes:
         self.load_cards + self.dynamic_load_cards + \
         self.plot_element_cards + self.thermal_element_cards + \
         self.thermal_boundary_condition_cards + self.sets + \
-        self.aero_objects + self.dynamic_cards + self.nonstructural_mass_cards
+        self.aero_objects + self.dynamic_cards + self.nonstructural_mass_cards + self.contact_cards
         #for i, card in enumerate(cards):
             #assert isinstance(card.type, str), card
             #print(card.type)

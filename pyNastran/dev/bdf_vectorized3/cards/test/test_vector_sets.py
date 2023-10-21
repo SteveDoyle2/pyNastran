@@ -7,12 +7,63 @@ from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.field_writer_8 import print_int_card_blocks
 from pyNastran.bdf.cards.bdf_sets import (
-    SET1, SET2, SET3, USET, USET1,
+    SET2, SET3,
     SEBSET, SEBSET1, SECSET, SECSET1, SEQSET, SEQSET1, #SEUSET, SEUSET1,
 )
 
 
 class TestSets(unittest.TestCase):
+
+    def test_bsurf(self):
+        model = BDF(debug=False)
+        bsurf = model.bsurf
+
+        lines = ['BSURF,    1100,    100,     101']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bsurf.add_card(card)
+
+        lines = ['BSURF,    1100,    11,THRU,15']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bsurf.add_card(card)
+
+        lines = ['BSURF,    1101,    11,THRU,15,',
+                 ',1,2']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bsurf.add_card(card)
+
+        model.setup()
+        size = 8
+        bsurf.write(size, 'dummy')
+        save_load_deck(model)
+
+    def test_bsurfs(self):
+        model = BDF(debug=False)
+        bsurfs = model.bsurfs
+
+        lines = ['BSURFS,    1100,    100,     101']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bsurfs.add_card(card)
+
+        lines = ['BSURFS,    1100,    11,THRU,15']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bsurfs.add_card(card)
+
+        lines = ['BSURFS,    1101,    11,THRU,15,',
+                 ',1,2']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bsurfs.add_card(card)
+
+        model.setup()
+        size = 8
+        bsurfs.write(size, 'dummy')
+        save_load_deck(model)
+
 
     def test_set1_01(self):
         model = BDF(debug=False)
@@ -171,6 +222,7 @@ class TestSets(unittest.TestCase):
             model.add_grid(nid, [float(nid), 0., 0.])
         aset.validate()
         aset.write()
+        aset.set_map
         save_load_deck(model)
 
     def test_omit(self):
@@ -190,6 +242,7 @@ class TestSets(unittest.TestCase):
 
         omit.validate()
         omit.write()
+        omit.set_map
         #| OMIT1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         #omita = OMIT([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
@@ -224,6 +277,7 @@ class TestSets(unittest.TestCase):
             model.add_grid(nid, [float(nid), 0., 0.])
         bset.validate()
         bset.write()
+        bset.set_map
         save_load_deck(model)
 
     def test_cset(self):
@@ -252,6 +306,7 @@ class TestSets(unittest.TestCase):
             model.add_grid(nid, [float(nid), 0., 0.])
         cset.validate()
         cset.write()
+        cset.set_map
         save_load_deck(model)
 
     def test_qset(self):
@@ -278,6 +333,7 @@ class TestSets(unittest.TestCase):
             model.add_grid(nid, [float(nid), 0., 0.])
         qset.validate()
         qset.write()
+        qset.set_map
         save_load_deck(model)
 
     def test_uset(self):

@@ -223,6 +223,16 @@ class ABCOQSET(VectorizedBaseCard):
                    missing,
                    node=(nid, self.node_id),)
 
+    @property
+    def set_map(self) -> dict[tuple[int, int]]:
+        set_map = set()
+        comps = self.component.astype('|U8')
+        for nid, compi in zip(self.node_id, comps):
+            assert len(compi) == 1, compi
+            comp_int = int(compi)
+            set_map.add((nid, comp_int))
+        return set_map
+
     @parse_node_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,

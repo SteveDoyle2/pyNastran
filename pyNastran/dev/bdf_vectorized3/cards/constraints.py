@@ -684,7 +684,7 @@ class SPCADD(ADD):
             #spc_by_spc_id[spc_id] = []
 
         for spc in model.spc_cards:
-            if spc.type in {'SPCADD', 'SPCOFF', 'BNDFIX'}:
+            if spc.type in {'SPCADD', 'SPCOFF', 'BNDFIX', 'BNDFREE'}:
                 continue
 
             uspc_idsi = np.unique(spc.spc_id)

@@ -236,7 +236,7 @@ class Writer():
         #self._write_tables(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_sets(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_superelements(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_contact(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_contact(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_parametric(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_rejects(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -1022,48 +1022,46 @@ class Writer():
             bdf_file.write('$CONSTRAINTS\n')
             model.suport.write_file(bdf_file, size=size, is_double=is_double)
 
-
     def _write_contact(self, bdf_file: TextIOLike,
                        size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the contact cards sorted by ID"""
-        return
-        is_contact = (self.bcrparas or self.bctadds or self.bctparas
-                      or self.bctsets or self.bsurf or self.bsurfs
-                      or self.bconp or self.blseg or self.bfric
-                      or self.bgadds or self.bgsets or self.bctparms or self.bcbodys or self.bcparas)
+        model = self.model
+        is_contact = max([card.n for card in model.contact_cards])
+        #is_contact = (self.bcrparas or self.bctadds or self.bctparas
+                      #or self.bctsets or self.bsurf or self.bsurfs
+                      #or self.bconp or self.blseg or self.bfric
+                      #or self.bgadds or self.bgsets or self.bctparms or self.bcbodys or self.bcparas)
         if is_contact:
             bdf_file.write('$CONTACT\n')
-            for (unused_id, bcbody) in sorted(self.bcbodys.items()):
-                bdf_file.write(bcbody.write_card(size, is_double))
-            for (unused_id, bcpara) in sorted(self.bcparas.items()):
-                bdf_file.write(bcpara.write_card(size, is_double))
+            #for (unused_id, bcbody) in sorted(self.bcbodys.items()):
+                #bdf_file.write(bcbody.write_card(size, is_double))
+            #for (unused_id, bcpara) in sorted(self.bcparas.items()):
+                #bdf_file.write(bcpara.write_card(size, is_double))
 
-            for (unused_id, bcrpara) in sorted(self.bcrparas.items()):
-                bdf_file.write(bcrpara.write_card(size, is_double))
-            for (unused_id, bctparam) in sorted(self.bctparms.items()):
-                bdf_file.write(bctparam.write_card(size, is_double))
-            for (unused_id, bctadds) in sorted(self.bctadds.items()):
-                bdf_file.write(bctadds.write_card(size, is_double))
-            for (unused_id, bctpara) in sorted(self.bctparas.items()):
-                bdf_file.write(bctpara.write_card(size, is_double))
+            #for (unused_id, bcrpara) in sorted(self.bcrparas.items()):
+                #bdf_file.write(bcrpara.write_card(size, is_double))
+            #for (unused_id, bctparam) in sorted(self.bctparms.items()):
+                #bdf_file.write(bctparam.write_card(size, is_double))
+            #for (unused_id, bctadds) in sorted(self.bctadds.items()):
+                #bdf_file.write(bctadds.write_card(size, is_double))
+            #for (unused_id, bctpara) in sorted(self.bctparas.items()):
+                #bdf_file.write(bctpara.write_card(size, is_double))
 
-            for (unused_id, bctset) in sorted(self.bctsets.items()):
-                bdf_file.write(bctset.write_card(size, is_double))
-            for (unused_id, bsurfi) in sorted(self.bsurf.items()):
-                bdf_file.write(bsurfi.write_card(size, is_double))
-            for (unused_id, bsurfsi) in sorted(self.bsurfs.items()):
-                bdf_file.write(bsurfsi.write_card(size, is_double))
-            for (unused_id, bconp) in sorted(self.bconp.items()):
-                bdf_file.write(bconp.write_card(size, is_double))
-            for (unused_id, blseg) in sorted(self.blseg.items()):
-                bdf_file.write(blseg.write_card(size, is_double))
-            for (unused_id, bfric) in sorted(self.bfric.items()):
-                bdf_file.write(bfric.write_card(size, is_double))
-            for (unused_id, bgadd) in sorted(self.bgadds.items()):
-                bdf_file.write(bgadd.write_card(size, is_double))
-            for (unused_id, bgset) in sorted(self.bgsets.items()):
-                bdf_file.write(bgset.write_card(size, is_double))
+            #for (unused_id, bctset) in sorted(self.bctsets.items()):
+                #bdf_file.write(bctset.write_card(size, is_double))
+            model.bsurf.write_file(bdf_file, size=size)
+            model.bsurfs.write_file(bdf_file, size=size)
+            #for (unused_id, bconp) in sorted(self.bconp.items()):
+                #bdf_file.write(bconp.write_card(size, is_double))
+            #for (unused_id, blseg) in sorted(self.blseg.items()):
+                #bdf_file.write(blseg.write_card(size, is_double))
+            #for (unused_id, bfric) in sorted(self.bfric.items()):
+                #bdf_file.write(bfric.write_card(size, is_double))
+            #for (unused_id, bgadd) in sorted(self.bgadds.items()):
+                #bdf_file.write(bgadd.write_card(size, is_double))
+            #for (unused_id, bgset) in sorted(self.bgsets.items()):
+                #bdf_file.write(bgset.write_card(size, is_double))
 
     def _write_coords(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False,

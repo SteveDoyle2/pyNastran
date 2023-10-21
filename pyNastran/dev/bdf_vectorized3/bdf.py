@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 import sys
 from copy import deepcopy
+from collections import Counter
 from io import StringIO, IOBase
 from pathlib import PurePath
 from functools import partial
@@ -347,7 +348,7 @@ MISSING_CARDS = {
     'TEMPN1',
 
     ## boundaries
-    'BNDFREE', 'BNDFRE1',
+    'BNDFREE', 'BNDFREE1',
     'BNDFIX', 'BNDFIX1',
     'SPCR',
 
@@ -693,6 +694,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SPC', 'SPCADD', 'SPC1', #'SPCAX',
             'SPCOFF', 'SPCOFF1',
             'BNDFIX', 'BNDFIX1',
+            'BNDFREE', 'BNDFREE1',
 
             ## mpcs
             'MPC', 'MPCADD',
@@ -869,17 +871,22 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #: contact
             #'BCBODY',  ## bcbody
             #'BCPARA',  ## bcpara
-            #'BCTPARA',  ## bctpara
-            #'BCRPARA',  ## bcrpara
-            #'BCTPARM', ## bctparm
+
+            # nx-contact
+            #-----------
+            # glue...
             #'BGADD',  ## bgadds
             #'BGSET',  ## bgsets
+            # not glue...
+            #'BCRPARA',  ## bcrpara
+            #'BCTPARA',  ## bctpara
+            #'BCTPARM', ## bctparm
             #'BCTADD',  ## bctadds
             #'BCTSET',  ## bctsets
-            #'BSURF',  ## bsurf
-            #'BSURFS',  ## bsurfs
+            'BSURF',   ## bsurf  - glue surface: shell
+            'BSURFS',  ## bsurfs - glue surface: solid
             #'BCONP', ## bconp
-            #'BLSEG', ## blseg
+            #'BLSEG', ## blseg - glue edge
             #'BFRIC', ## bfric
 
             #'TEMPBC',
@@ -893,7 +900,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CWELD', 'PWELD',
             #'CWELD', 'PWELD', 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
             #'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
-            #'BNDFIX', 'BNDFIX1',
             #'AEFORCE', 'UXVEC', 'GUST2',
 
             # cyclic
@@ -904,11 +910,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'ENDDATA',
         ]
         set_cards_to_read = set(cards_to_read)
-        from collections import Counter
         if len(cards_to_read) != len(set_cards_to_read):  # pragma: no cover
             bad_cards = [key for key, value in Counter(cards_to_read).items()
                          if value > 1]
-            raise RuntimeError(bad_cards)
+            raise RuntimeError(f'duplicate cards in cards_to_read={bad_cards}')
 
         # the list of possible cards that will be parsed
         self.cards_to_read = set_cards_to_read
@@ -2120,8 +2125,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'DVAR' : (Crash, None),
             #'DVSET' : (Crash, None),
             #'DYNRED' : (Crash, None),
-            #'BNDFIX' : (Crash, None),
-            #'BNDFIX1' : (Crash, None),
 
             #'AEFORCE' : (Crash, None),
             #'UXVEC' : (Crash, None),
@@ -2275,8 +2278,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'BCRPARA' : (BCRPARA, add_methods._add_bcrpara_object),
             #'BCTADD' : (BCTADD, add_methods._add_bctadd_object),
             #'BCTPARA' : (BCTPARA, add_methods._add_bctpara_object),
-            #'BSURF' : (BSURF, add_methods._add_bsurf_object),
-            #'BSURFS' : (BSURFS, add_methods._add_bsurfs_object),
 
             # 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
             'BOUTPUT': (Crash, None),
@@ -2608,6 +2609,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SPCOFF1' : partial(self._prepare_card_by_method, self.spcoff.add_set1_card),
             'BNDFIX' : partial(self._prepare_card_by_method, self.bndfix.add_set_card),
             'BNDFIX1' : partial(self._prepare_card_by_method, self.bndfix.add_set1_card),
+            'BNDFREE' : partial(self._prepare_card_by_method, self.bndfree.add_set_card),
+            'BNDFREE1' : partial(self._prepare_card_by_method, self.bndfree.add_set1_card),
+
+            # contact
+            'BSURF' : partial(self._prepare_card_by_method, self.bsurf.add_card),
+            'BSURFS' : partial(self._prepare_card_by_method, self.bsurfs.add_card),
 
             # pseudo-constraint
             'SUPORT': partial(self._prepare_card_by_method, self.suport.add_set_card),
@@ -4711,7 +4718,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
 
             #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
             #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_BCRPARA', 'add_BCTADD',
-            #'add_BCTPARA', 'add_BCTSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
+            #'add_BCTPARA', 'add_BCTSET', 'add_CAERO',
             #'add_DIVERG',
             # 'add_CSSCHD', 'add_DDVAL',
             #'add_DELAY', 'add_DEQATN', 'add_DMI',
