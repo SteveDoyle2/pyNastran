@@ -1488,6 +1488,8 @@ class GEOM4(GeomCommon):
         if not hasattr(op2, 'uset'):
             op2.log.warning('skipping USET in GEOM4')
             return len(data)
+
+        uset = op2.uset
         struct_3i = Struct(mapfmt(op2._endian + b'3i', self.size))
         ntotal = 12 * self.factor
         #self.show_data(data, types='is')
@@ -1505,12 +1507,12 @@ class GEOM4(GeomCommon):
                 comment = 'sid=%s (???)' % sid
                 name = 'U%i' % idi
 
-            usets = op2.add_uset1(sid, [idi], component)
+            op2.add_uset1(sid, [idi], component)
             #set_obj = USET.add_op2_data(out)
             #op2._add_methods._add_uset_object(set_obj)
             n += ntotal
-        op2.increase_card_count('USET', len(usets))
-        usets.parse_cards()
+        op2.increase_card_count('USET', len(uset))
+        uset.parse_cards()
         return n
 
     def _read_seqset1b(self, data: bytes, n: int) -> int:  # pragma: no cover

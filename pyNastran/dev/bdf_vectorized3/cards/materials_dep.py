@@ -12,7 +12,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 #from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, get_print_card_8_16, parse_material_check
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_int, array_float, array_float_nan
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -433,20 +433,23 @@ class MATS1(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self):
+        return max(self.material_id.max(), self.table_id.max())
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.material_id.max()
-        print_card = get_print_card(size, max_int)
+        print_card = get_print_card(size, self.max_id)
 
         material_id = array_str(self.material_id, size=size)
         table_id = array_str(self.table_id, size=size)
         h = array_str(self.h, size=size)
         yf = array_str(self.yf, size=size)
         hr = array_str(self.hr, size=size)
-        limit1 = array_str(self.limit1, size=size)
-        limit2 = array_str(self.limit2, size=size)
+        limit1 = array_float(self.limit1, size=size)
+        limit2 = array_float_nan(self.limit2, size=size)
 
         #tables = np.column_stack([self.e_table, self.g_table, self.nu_table, self.rho_table])
         for mid, table_idi, typei, hi, yfi, hri, limit1i, limit2i, stress_strain_measure \

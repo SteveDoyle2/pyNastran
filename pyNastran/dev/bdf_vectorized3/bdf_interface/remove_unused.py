@@ -58,11 +58,11 @@ def to_dict_array(card, used_dict: dict[str, list[np.ndarray]]) -> dict[str, np.
 
         min_value = 1
         if key == 'coord_id':
-            min_value = 0
+            min_value = -1
         if len(values):
             assert values.min() >= min_value, (card.type, key, values.min())
         used_arrays[key] = values
 
     coord_id = used_arrays['coord_id']
-    assert coord_id.min() >= 0, (card.type, coord_id.min())
+    assert coord_id.min() >= -1, (card.type, coord_id.min())
     return used_arrays

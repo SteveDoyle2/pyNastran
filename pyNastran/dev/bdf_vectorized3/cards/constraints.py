@@ -19,7 +19,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import get_print_card_8_16
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
-    array_str, array_default_int, update_field_size)
+    array_str, array_default_int, update_field_size,
+    get_print_card)
 from pyNastran.dev.bdf_vectorized3.utils import print_card_8
 from .grid import parse_node_check
 
@@ -553,6 +554,10 @@ class ADD(VectorizedBaseCard):
         self.nsids = np.array([], dtype='int32')
         self.n = 0
 
+    @property
+    def max_id(self):
+        return max(self.sid.max(), self.sids.max())
+
     def add(self, sid: int, sets, comment: str='') -> int:
         """Creates an MPCADD card"""
         if isinstance(sets, integer_types):
@@ -663,7 +668,9 @@ class SPCADD(ADD):
                    write_card_header: bool=False) -> None:
         if len(self.spc_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card = get_print_card(size, self.max_id)
+
+        #print_card = get_print_card_8_16(size)
 
         spc_ids = array_str(self.spc_ids, size=size)
         for spc_id, idim in zip(self.spc_id, self.idim):

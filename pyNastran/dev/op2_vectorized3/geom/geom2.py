@@ -5927,7 +5927,7 @@ class GEOM2:
             i = np.arange(npoints, dtype='int32')[~ibig]
             op2.log.warning(f'filtering SPOINT ids={nids[ibig]}')
             nids = nids[i]
-        op2.spoint.ids = nids.tolist()
+        op2.spoint.ids = nids.copy()
         op2.spoint.write()
         #if op2.is_debug_file:
             #op2.binary_debug.write('SPOINT=%s\n' % nids)

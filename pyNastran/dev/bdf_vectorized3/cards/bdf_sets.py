@@ -333,10 +333,14 @@ class SUPORT(VectorizedBaseCard):
 
     def add_set1(self, suport_id: int, nids: list[int], component: list[int],
                   comment: str='') -> int:
-        assert isinstance(component, (str, integer_types)), component
-        nids = expand_thru(nids, set_fields=True, sort_fields=False)
-        nnodes = len(nids)
-        components = [component] * nnodes
+        if isinstance(component, (str, integer_types)):
+            nids = expand_thru(nids, set_fields=True, sort_fields=False)
+            nnodes = len(nids)
+            components = [component] * nnodes
+        else:
+            nnodes = len(nids)
+            assert nnodes == len(component)
+            components = component
         self.cards.append((suport_id, nids, components, comment))
         #if comment:
             #self.comment[nid] = _format_comment(comment)

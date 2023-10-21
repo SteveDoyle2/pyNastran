@@ -10,8 +10,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, get_print_card_8_16, parse_material_check
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str # , array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_material_check
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card_size, array_str # , array_default_int
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -261,12 +261,15 @@ class MAT1(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self):
+        return max(self.material_id.max(), self.mcsid.max())
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.material_id.max(), self.mcsid.max())
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
         for mid, e, g, nu, rho, alpha, tref, ge, Ss, St, Sc, \
             mcsid in zip_longest(self.material_id, self.E, self.G, self.nu, self.rho,
                                  self.alpha, self.tref, self.ge,
@@ -464,11 +467,34 @@ class MAT2(Material):
     def _save(self, material_id, G11, G12, G13, G22, G23, G33,
               rho, alpha, tref, ge, Ss, St, Sc,
               mcsid, ge_matrix):
-        if len(self.material_id) != 0:
-            raise NotImplementedError()
-        #print('calling MAT2 save')
         nmaterial = len(material_id)
         assert nmaterial > 0, nmaterial
+        assert len(G11) > 0
+        assert len(self.material_id) == len(self.G11)
+        assert len(material_id) == len(G11)
+
+        if ge_matrix is None:
+            ge_matrix = np.full((nmaterial, 6), np.nan, dtype='float64')
+
+        if len(self.material_id) != 0:
+            material_id = np.hstack([self.material_id, material_id])
+            G11 = np.hstack([self.G11, G11])
+            G12 = np.hstack([self.G12, G12])
+            G13 = np.hstack([self.G13, G13])
+            G22 = np.hstack([self.G22, G22])
+            G23 = np.hstack([self.G23, G23])
+            G33 = np.hstack([self.G33, G33])
+            rho = np.hstack([self.rho, rho])
+            alpha = np.vstack([self.alpha, alpha])
+            tref = np.hstack([self.tref, tref])
+            ge = np.hstack([self.ge, ge])
+            Ss = np.hstack([self.Ss, Ss])
+            St = np.hstack([self.St, St])
+            Sc = np.hstack([self.Sc, Sc])
+            mcsid = np.hstack([self.mcsid, mcsid])
+            ge_matrix = np.vstack([self.ge_matrix, ge_matrix])
+
+        #print('calling MAT2 save')
         self.material_id = material_id
         self.G11 = G11
         self.G12 = G12
@@ -485,10 +511,9 @@ class MAT2(Material):
         self.St = St
         self.Sc = Sc
         self.mcsid = mcsid
-        if ge_matrix is None:
-            ge_matrix = np.full((nmaterial, 6), np.nan, dtype='float64')
         self.ge_matrix = ge_matrix
         self.n = len(material_id)
+        assert len(self.material_id) == len(self.G11)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         coords = self.mcsid[self.mcsid >= 0]
@@ -571,12 +596,15 @@ class MAT2(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self):
+        return max(self.material_id.max(), self.mcsid.max())
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.material_id.max(), self.mcsid.max())
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
         self.validate()
         #print(self.material_id)
         #print(self.G11)
@@ -779,12 +807,15 @@ class MAT3(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self):
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.material_id.max()
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         material_ids = array_str(self.material_id, size=size)
         for mid, ex, eth, ez, nuxth, nuthz, nuzx, \
@@ -931,12 +962,15 @@ class MAT4(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self):
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.material_id.max()
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
         for mid, k, cp, rho, H, mu, \
             hgen, ref_enthalpy, tch, tdelta, qlat in zip_longest(self.material_id, self.k, self.cp, self.rho, self.H, self.mu,
                                                                  self.hgen, self.ref_enthalpy, self.tch, self.tdelta, self.qlat):
@@ -1072,12 +1106,15 @@ class MAT5(Material):
         k[:, 1, 2] = k[:, 2, 1] = self.kyz
         return k
 
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.material_id.max()
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
         for mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, \
             hgen  in zip_longest(self.material_id,
                                  self.kxx, self.kxy, self.kxz,
@@ -1361,11 +1398,15 @@ class MAT8(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
               size: int=8, is_double: bool=False,
               write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         for mid, e11, e22, g12, g13, g23, nu12, rho, \
             alpha, tref, ge, xt, xc, yt, yc, S, f12, strn, in zip_longest(self.material_id, self.E11, self.E22,
                                                                           self.G12, self.G13, self.G13, self.nu12,
@@ -1706,11 +1747,15 @@ class MAT9(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+              size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
         # TODO: ge_list
         for mid, G11, G12, G13, G14, G15, G16, \
         G22, G23, G24, G25, G26, \
@@ -1975,12 +2020,16 @@ class MAT10(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
-        material_ids = array_str(self.material_id)
+              size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        material_ids = array_str(self.material_id, size=size)
         for mid, bulk, rho, c, ge, gamma, \
             table_bulk, table_rho, table_ge, table_gamma in zip_longest(
                 material_ids, self.bulk, self.rho, self.c, self.ge, self.alpha_gamma,
@@ -2214,12 +2263,16 @@ class MAT11(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
-        material_ids = array_str(self.material_id)
+              size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        material_ids = array_str(self.material_id, size=size)
         for mid, e1, e2, e3, nu12, nu13, nu23, \
             g12, g13, g23, rho, a1, a2, a3, tref, ge in zip_longest(material_ids, self.e1, self.e2, self.e3,
                                                                     self.nu12, self.nu13, self.nu23,
@@ -2333,14 +2386,17 @@ class MAT10C(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        max_int = self.material_id.max()
-        print_card = get_print_card(size, max_int)
+              size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
 
-        material_ids = array_str(self.material_id)
+        material_ids = array_str(self.material_id, size=size)
         for mid, form, rhor, rhoi, cr, ci in zip_longest(
                 material_ids, self.form, self.rho.real, self.rho.imag, self.c.real, self.c.imag):
 
@@ -2524,12 +2580,15 @@ class MATORT(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        max_int = self.material_id.max()
-        print_card = get_print_card(size, max_int)
+              size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for mid, e1, e2, e3, g12, g23, g31, nu12, nu23, nu31, \
             rho, alpha1, alpha2, alpha3, tref, ge, \
@@ -2901,12 +2960,15 @@ class MATHP(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
+
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        max_int = self.material_id.max()
-        print_card = get_print_card(size, max_int)
+              size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
         for (mid, a10, a01, d1, rho, av, tref, ge,
              na, nd,
              a20, a11, a02, d2,

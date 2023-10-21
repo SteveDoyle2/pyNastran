@@ -16,7 +16,9 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
     parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_float, array_default_int, array_default_float, array_default_floats)
+    get_print_card_size,
+    array_str, array_float, array_float_nan,
+    array_default_int, array_default_float, array_default_floats)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from .bar import get_bar_vector, safe_normalize, line_length
@@ -1274,17 +1276,22 @@ class CGAP(Element):
         # we finally have the nodal coordaintes!!!! :)
         return v, ihat, yhat, zhat, wa, wb
 
+    @property
+    def max_id(self):
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max(), self.g0.max(), self.coord_id.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_id = array_str(self.element_id, size=size)
         property_id = array_str(self.property_id, size=size)
         nodes_ = array_default_int(self.nodes, default=0, size=size)
         coord_ids = array_default_int(self.coord_id, default=-1, size=size)
-        xs = array_float(self.x, size=size, is_double=is_double)
+        xs = array_float_nan(self.x, size=size, is_double=is_double)
         for eid, pid, nodes, g0, x, cid in zip_longest(element_id, property_id, nodes_, self.g0, xs, coord_ids):
             ga, gb = nodes
             if g0 == -1:
@@ -1295,6 +1302,7 @@ class CGAP(Element):
                 x3 = ''
 
             list_fields = ['CGAP', eid, pid, ga, gb, x1, x2, x3, cid]
+            assert all(['nan' not in field for field in list_fields]), list_fields
             bdf_file.write(print_card(list_fields))
         return
 

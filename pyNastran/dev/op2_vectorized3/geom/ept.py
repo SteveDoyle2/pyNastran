@@ -1207,9 +1207,8 @@ class EPT:
 
             if is_pbcomp:
                 continue
-            if pid in op2.properties:
-                if op2.properties[pid].type == 'PBCOMP':
-                    continue
+            if pid in op2.pbcomp.property_id:
+                continue
 
             (pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
              c1, c2, d1, d2, e1, e2, f1, f2,
