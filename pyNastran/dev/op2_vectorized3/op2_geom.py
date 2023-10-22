@@ -317,10 +317,10 @@ class OP2Geom(BDF, OP2GeomCommon):
     def is_geometry(self) -> bool:
         return True
 
-    #def read_h5(self, h5_filename: Union[str, PurePath], combine=None):
-        #"""TODO: should support geometry"""
-        #from pyNastran2.op2.op2_interface.h5_pytables.h5_results import read_h5_geometry_result
-        #read_h5_geometry_result(self, h5_filename, root_path='/')
+    def read_h5(self, h5_filename: Union[str, PurePath], combine=None):
+        """TODO: should support geometry"""
+        from pyNastran.dev.op2_vectorized3.op2_interface.h5_pytables.h5_results import read_h5_geometry_result
+        read_h5_geometry_result(self, h5_filename, root_path='/')
 
     def read_op2(self, op2_filename: Optional[Union[str, PurePath]]=None, combine: bool=True,
                  build_dataframe: Optional[bool]=False,

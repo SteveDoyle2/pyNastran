@@ -23,7 +23,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.femutils.utils import hstack_lists
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.nptyping_interface import NDArray3float
     from pyNastran.dev.bdf_vectorized3.bdf import BDF

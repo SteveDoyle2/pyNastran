@@ -35,11 +35,11 @@ def run_nastran_gui(filename: str, load_results: bool=True):
 
 
 class TestGuiModels(unittest.TestCase):
-    def _test_h5_freq(self):
+    def test_h5_freq(self):
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         run_nastran_gui(h5_filename)
 
-    def _test_h5_transient(self):
+    def test_h5_transient(self):
         h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
         run_nastran_gui(h5_filename)
 
@@ -47,11 +47,11 @@ class TestGuiModels(unittest.TestCase):
         h5_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.h5'
         run_nastran_gui(h5_filename)
 
-    def _test_h5_static(self):
+    def test_h5_static(self):
         h5_filename = MODEL_PATH / 'sol_101_elements' / 'static_solid_shell_bar.h5'
         run_nastran_gui(h5_filename)
 
-    def _test_h5_modes(self):
+    def test_h5_modes(self):
         h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
         run_nastran_gui(h5_filename)
 
@@ -79,13 +79,13 @@ class TestGuiModels(unittest.TestCase):
         #h5_filename = r'C:\NASA\m4\formats\git\pyNastran\models\msc\test_model_cfast.h5'
         #run_nastran_gui(h5_filename)
 
-    def _test_beam_modes1(self):
+    def test_beam_modes1(self):
         bdf_filename = MODEL_PATH / 'beam_modes' / 'beam_modes.dat'
         run_nastran_gui(bdf_filename)
-    def _test_beam_modes2(self):
+    def test_beam_modes2(self):
         bdf_filename = MODEL_PATH / 'beam_modes' / 'cbarao_cbeam_static.bdf'
         run_nastran_gui(bdf_filename)
-    def _test_beam_modes3(self):
+    def test_beam_modes3(self):
         bdf_filename = MODEL_PATH / 'beam_modes' / 'cbarao_cbeam_modes.bdf'
         run_nastran_gui(bdf_filename)
 

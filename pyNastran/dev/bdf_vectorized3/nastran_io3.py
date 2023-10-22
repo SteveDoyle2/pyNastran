@@ -33,7 +33,8 @@ from .alt_actor_builder import (
     create_alt_conm2_grids, create_alt_rbe2_grids, create_alt_rbe3_grids,
     create_alt_axes,
     create_monpnt)
-#from pyNastran.dev.op2_vectorized3.op2_geom import OP2, OP2Geom
+from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
+from pyNastran.dev.op2_vectorized3.op2_hdf5 import Results
 from pyNastran.utils import PathLike
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
@@ -85,7 +86,7 @@ class Nastran3:
         self.gui._finish_results_io2(name, form, cases)
 
     def load_h5_results(self, h5_filename: PathLike, plot: bool=True):
-        model = OP2(debug=True, log=None, mode='msc')
+        model = Results(debug=True, log=None, mode='msc')
         model.read_h5(h5_filename)
         self._load_op2_results(model, plot)
 

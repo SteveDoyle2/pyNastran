@@ -12,7 +12,7 @@ except ImportError:
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_nodes import load_h5_node
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_coords import load_h5_coord
-#from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_parameter import load_h5_parameter
+from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_parameter import load_h5_parameter
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_partition import load_h5_partition
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_properties import load_h5_property
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_materials import load_h5_material
@@ -74,9 +74,9 @@ def read_geometry_from_h5(model: BDF, h5_file: File, input_path: str):
             elif name == 'LOAD':
                 log.warning(f'skipping h5group name={name}')
                 continue
-            #elif name == 'PARAMETER':
-                #load_h5_parameter(model, h5_node_)
-                #continue
+            elif name == 'PARAMETER':
+                load_h5_parameter(model, h5_node_)
+                continue
             #elif name == 'PARTITION':
                 #load_h5_partition(model, h5_node_)
                 #continue
