@@ -116,7 +116,7 @@ from pyNastran.bdf.cards.aero.aero import (
     AELINK, AESURFS,
     #CAERO2, CAERO3, CAERO4, CAERO5,
     #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    MONPNT2, MONPNT3, MONDSP1,
+    MONPNT2, MONDSP1,
     #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
 )
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM, TRIM2, DIVERG
@@ -154,7 +154,7 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
                                #TABRND1, TABRNDG,
                                #DTABLE)
 #from .cards.contact import (
-    #BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
+    #BCRPARA, BCTADD, BCTSET, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
     #BCTPARM, BGADD, BGSET, BCBODY)
 #from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
@@ -570,10 +570,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## nodes
             'GRID', 'GRDSET', 'SPOINT',
-            #'EPOINT', 'SEQGP', 'GRIDB',
+            'EPOINT', # 'SEQGP', 'GRIDB',
 
             # points
-            #'POINT',
+            'POINT',
             #'GRIDG'
 
             ## ringfl
@@ -642,7 +642,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PBEAM3',  # v1.3
 
             'PSHELL', 'PCOMP', 'PCOMPG',
-            'PSHEAR', # 'PSHLN1', 'PSHLN2',
+            'PSHEAR', # 'PSHLN1',
+            'PSHLN2',
             'PSOLID', 'PLSOLID', 'PVISC', # 'PRAC2D', 'PRAC3D',
             'PCOMPS', 'PCOMPLS',
 
@@ -680,7 +681,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## Material dependence - MATT1/MATT2/etc.
             'MATT1', #'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
-            'MATS1', #'MATS3', 'MATS8',
+            'MATS1', #'MATS3',
+            'MATS8',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
 
@@ -708,7 +710,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             ## dload_entries
             #'ACSRCE',
-            'TLOAD1', 'TLOAD2', # 'RLOAD1', 'RLOAD2',
+            'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             #'QVECT',
             #'RANDPS', 'RANDT1', # random
 
@@ -751,7 +753,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', ## caeros
             #'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', ## paeros
 
-            #'MONPNT1', 'MONPNT2', 'MONPNT3', 'MONDSP1', ## monitor_points
+            'MONPNT1', 'MONPNT3', # 'MONPNT2', 'MONDSP1', ## monitor_points
             #'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
             #'SPLINE6', 'SPLINE7',
             #'TRIM', 'TRIM2',  ## trims
@@ -876,7 +878,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #-----------
             # glue...
             #'BGADD',  ## bgadds
-            #'BGSET',  ## bgsets
+            'BGSET',  ## bgsets - glue set (points to BSURF/BSURFS)
             # not glue...
             #'BCRPARA',  ## bcrpara
             #'BCTPARA',  ## bctpara
@@ -2541,8 +2543,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DAREA' : partial(self._prepare_card, self.darea),
             'TLOAD1' : partial(self._prepare_card, self.tload1),
             'TLOAD2' : partial(self._prepare_card, self.tload2),
-            #'RLOAD1' : partial(self._prepare_card, self.rload1),
-            #'RLOAD2' : partial(self._prepare_card, self.rload2),
+            'RLOAD1' : partial(self._prepare_card, self.rload1),
+            'RLOAD2' : partial(self._prepare_card, self.rload2),
             #'TIC' : partial(self._prepare_card, self.tic),
             #'QVECT': partial(self._prepare_card, self.qvect),
             #'QHBDY': partial(self._prepare_card, self.qhbdy),
@@ -2570,15 +2572,15 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MATORT' : partial(self._prepare_card, self.matort),
 
             'MATS1' : partial(self._prepare_card, self.mats1),
-            #'MATS3' : (MATS3, add_methods._add_material_dependence_object),
-            #'MATS8' : (MATS8, add_methods._add_material_dependence_object),
+            #'MATS3' : partial(self._prepare_card, self.mats3),
+            #'MATS8' : partial(self._prepare_card, self.mats8),
 
             'MATT1' : partial(self._prepare_card, self.matt1),
             #'MATT2' : (MATT2, add_methods._add_material_dependence_object),
             #'MATT3' : (MATT3, add_methods._add_material_dependence_object),
             #'MATT4' : (MATT4, add_methods._add_material_dependence_object),
             #'MATT5' : (MATT5, add_methods._add_material_dependence_object),
-            #'MATT8' : (MATT8, add_methods._add_material_dependence_object),
+            'MATT8' : partial(self._prepare_card, self.matt8),
             #'MATT9' : (MATT9, add_methods._add_material_dependence_object),
 
             #'MATHE' : partial(self._prepare_card, self.mathe),  # not supported
@@ -2612,9 +2614,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BNDFREE' : partial(self._prepare_card_by_method, self.bndfree.add_set_card),
             'BNDFREE1' : partial(self._prepare_card_by_method, self.bndfree.add_set1_card),
 
-            # contact
+            # nx-contact
             'BSURF' : partial(self._prepare_card_by_method, self.bsurf.add_card),
             'BSURFS' : partial(self._prepare_card_by_method, self.bsurfs.add_card),
+            'BGSET' : partial(self._prepare_card_by_method, self.bgset.add_card),
+            #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
+            #'BCTPARM' : (BCTPARM, add_methods._add_bctparam_object),
+            #'BGADD' : (BGADD, add_methods._add_bgadd_object),
+            #'BCBODY' : (BCBODY, add_methods._add_bcbody_object),
 
             # pseudo-constraint
             'SUPORT': partial(self._prepare_card_by_method, self.suport.add_set_card),
@@ -2682,9 +2689,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # sol 146 - gust
             #'GUST' : partial(self._prepare_card, self.gust),
 
-            #'MONPNT1' : partial(self._prepare_card, self.monpnt1),
+            'MONPNT1' : partial(self._prepare_card, self.monpnt1),
             #'MONPNT2' : (MONPNT2, add_methods._add_monpnt_object),
-            #'MONPNT3' : partial(self._prepare_card, self.monpnt3),
+            'MONPNT3' : partial(self._prepare_card, self.monpnt3),
             #'MONDSP1' : (MONDSP1, add_methods._add_monpnt_object),
 
             # optimization
@@ -4724,7 +4731,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_DELAY', 'add_DEQATN', 'add_DMI',
             #'add_DPHASE', 'add_DRESP', 'add_DTABLE',
             #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
-            #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
+            #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_NLPARM', 'add_NLPCI',
             #'add_PAERO', 'add_PARAM', 'add_PHBDY',
             #'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
             #'add_SEUSET', 'add_SPLINE', 'add_tempd', 'add_TF', 'add_TRIM',

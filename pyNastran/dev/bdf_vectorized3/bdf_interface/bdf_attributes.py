@@ -70,7 +70,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
 from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
     #LSEQ,
     #DLOAD,
-    DAREA, TLOAD1, TLOAD2, # RLOAD1, RLOAD2, TIC, QVECT,
+    DAREA, TLOAD1, TLOAD2, RLOAD1, RLOAD2, # TIC, QVECT,
     #RANDPS, DELAY, DPHASE
 )
 
@@ -84,9 +84,11 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
     MAT10C, MATORT, MATHP, # MATHE,
 )
 from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
-    MATS1, MATT1,)
+    MATS1, # MATS3,
+    #MATS8, # MSC
+    MATT1, MATT8)
 
-from pyNastran.dev.bdf_vectorized3.cards.contact import BSURF, BSURFS
+from pyNastran.dev.bdf_vectorized3.cards.contact import BSURF, BSURFS, BGSET
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.constraints import (
     SPC, SPC1, SPCADD,
@@ -100,12 +102,13 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
     RBE1, RBE2, RBE3,
     #RSSCON,
 )
+from pyNastran.dev.bdf_vectorized3.cards.monitor import MONPNT1, MONPNT3
 #from pyNastran.dev.bdf_vectorized3.cards.aero.aero import (
     #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7,
     #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     #AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, AEPARM, AELINK, AESTAT,
-    #MONPNT1, MONPNT2, MONPNT3,
+    #MONPNT2,
     #GUST, AESURF, AESURFS, CSSCHD, TRIM)
 from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DESVAR, DLINK, DVGRID,
@@ -203,6 +206,7 @@ class BDFAttributes:
         # contact
         self.bsurf = BSURF(self)
         self.bsurfs = BSURFS(self)
+        self.bgset = BGSET(self)
 
         # sets
         self.suport = SUPORT(self)
@@ -216,6 +220,11 @@ class BDFAttributes:
         self.set1 = SET1(self)
         #self.set2 = SET2(self)
         #self.set3 = SET3(self)
+
+        # monitor
+        #self.monpnt2 = MONPNT2(self)  # not supported
+        self.monpnt1 = MONPNT1(self)
+        self.monpnt3 = MONPNT3(self)
 
         # aero geometry
         #self.caero1 = CAERO1(self)
@@ -442,8 +451,8 @@ class BDFAttributes:
         self.darea = DAREA(self)
         self.tload1 = TLOAD1(self)
         self.tload2 = TLOAD2(self)
-        #self.rload1 = RLOAD1(self)
-        #self.rload2 = RLOAD2(self)
+        self.rload1 = RLOAD1(self)
+        self.rload2 = RLOAD2(self)
         #self.tic = TIC(self)  # initial conditions
 
         # dynamic load offset
@@ -468,7 +477,10 @@ class BDFAttributes:
         self.mathp = MATHP(self)
 
         self.mats1 = MATS1(self)
+        #self.mats3 = MATS3(self)
+        #self.mats8 = MATS8(self)
         self.matt1 = MATT1(self)
+        self.matt8 = MATT8(self)
 
         self.spc = SPC(self)
         self.spc1 = SPC1(self)
@@ -504,11 +516,6 @@ class BDFAttributes:
         # nonlinear transient
         self.tstepnls = {}
         self.nlpcis = {}
-
-        # aero
-        #self.monpnt1 = MONPNT1(self)
-        #self.monpnt2 = MONPNT2(self)  # not supported
-        #self.monpnt3 = MONPNT3(self)
 
         # optimization
         self.desvar = DESVAR(self)
@@ -748,7 +755,8 @@ class BDFAttributes:
     @property
     def thermal_material_dep_cards(self) -> list[Any]:
         materials = [
-            self.matt1, self.mats1,
+            self.matt1, self.matt8,
+            self.mats1,
         ]
         return materials
 
@@ -802,7 +810,7 @@ class BDFAttributes:
             #self.dload,
             self.darea,
             self.tload1, self.tload2,
-            #self.rload1, self.rload2,
+            self.rload1, self.rload2,
 
             # random loads
             #self.randps,
@@ -903,7 +911,7 @@ class BDFAttributes:
     @property
     def monitor_point_cards(self) -> list[Any]:
         monitor_points = [
-            #self.monpnt1, self.monpnt3, # self.monpnt2,
+            self.monpnt1, self.monpnt3, # self.monpnt2,
         ]
         return monitor_points
 
@@ -927,7 +935,7 @@ class BDFAttributes:
 
     @property
     def contact_cards(self) -> list[Any]:
-        return [self.bsurf, self.bsurfs]
+        return [self.bsurf, self.bsurfs, self.bgset]
 
     @property
     def _cards_to_setup(self) -> list[Any]:

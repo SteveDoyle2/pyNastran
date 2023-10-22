@@ -19,7 +19,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.bdf.cards.loads.dloads import (
     fix_loadtype_tload1, fix_loadtype_tload2,
-    #fix_loadtype_rload1, fix_loadtype_rload2,
+    fix_loadtype_rload1, fix_loadtype_rload2,
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
@@ -27,7 +27,9 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     parse_load_check, # get_print_card_8_16,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int, get_print_card_size)
+    array_str, array_float,
+    array_default_int, array_default_float,
+    get_print_card_size)
 #from pyNastran.dev.bdf_vectorized3.utils import cast_int_array
 #from .static_loads import get_loads_by_load_id, get_reduced_loads
 
@@ -368,27 +370,30 @@ class TLOAD1(VectorizedBaseCard):
         self.us0 = us0
         self.vs0 = vs0
 
+    @property
+    def max_id(self):
+        return max(self.load_id.max(),
+                   self.excite_id.max(),
+                   self.delay_int.max(),
+                   self.tabled_id.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.load_id.max(),
-                      self.excite_id.max(),
-                      self.delay_int.max(),
-                      self.tabled_id.max())
-        print_card, size = get_print_card_size(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         #array_str, array_default_int
         load_ids = array_str(self.load_id, size=size)
         excite_ids = array_default_int(self.excite_id, default=0, size=size)
-        for sid, excite_id, delay_int, delay_float, \
-            load_type, tabled_id, us0, vs0 in zip_longest(load_ids, excite_ids,
-                                                          self.delay_int, self.delay_float,
-                                                          self.load_type,
-                                                          self.tabled_id, self.us0, self.vs0):
-            us0 = set_blank_if_default(us0, 0.0)
-            vs0 = set_blank_if_default(vs0, 0.0)
-            delay = _write_int_float(delay_int, delay_float)
+        delays = array_int_float(self.delay_int, self.delay_float, size=size, is_double=False)
+        us0s = array_default_float(self.us0, default=0.0, size=size)
+        vs0s = array_default_float(self.vs0, default=0.0, size=size)
+
+        for sid, excite_id, delay, load_type, tabled_id, us0, \
+            vs0 in zip_longest(load_ids, excite_ids,
+                               delays, self.load_type,
+                               self.tabled_id, us0s, vs0s):
             list_fields = ['TLOAD1', sid, excite_id, delay, load_type,
                            tabled_id, us0, vs0]
             bdf_file.write(print_card(list_fields))
@@ -637,11 +642,11 @@ class TLOAD2(VectorizedBaseCard):
         #array_str, array_default_int
         load_ids = array_str(self.load_id, size=size)
         excite_ids = array_default_int(self.excite_id, default=0, size=size)
+        delays = array_int_float(self.delay_int, self.delay_float, size=size, is_double=False)
 
-        for sid, excite_id, delay_int, delay_float, \
-            load_type, T, \
+        for sid, excite_id, delay, load_type, T, \
             frequency, phase, b, c, \
-            us0, vs0 in zip_longest(load_ids, excite_ids, self.delay_int, self.delay_float,
+            us0, vs0 in zip_longest(load_ids, excite_ids, delays,
                                     self.load_type, self.T,
                                     self.frequency, self.phase, self.b, self.c,
                                     self.us0, self.vs0):
@@ -651,7 +656,6 @@ class TLOAD2(VectorizedBaseCard):
             c = set_blank_if_default(c, 0.0)
             b = set_blank_if_default(b, 0.0)
 
-            delay = _write_int_float(delay_int, delay_float)
             us0 = set_blank_if_default(us0, 0.0)
             vs0 = set_blank_if_default(vs0, 0.0)
             list_fields = ['TLOAD2', sid, excite_id, delay, load_type,
@@ -669,6 +673,479 @@ class TLOAD2(VectorizedBaseCard):
             #delay=(model.delay.delay_id, udelay),
         )
 
+
+class RLOAD1(VectorizedBaseCard):
+    r"""
+    Defines a frequency-dependent dynamic load of the form
+    for use in frequency response problems.
+
+    .. math::
+      \left\{ P(f)  \right\}  = \left\{A\right\} [ C(f)+iD(f)]
+         e^{  i \left\{\theta - 2 \pi f \tau \right\} }
+
+    +--------+-----+----------+-------+--------+----+----+------+
+    |   1    |  2  |     3    |   4   |   5    |  6 |  7 |   8  |
+    +========+=====+==========+=======+========+====+====+======+
+    | RLOAD1 | SID | EXCITEID | DELAY | DPHASE | TC | TD | TYPE |
+    +--------+-----+----------+-------+--------+----+----+------+
+    | RLOAD1 |  5  |    3     |       |        | 1  |    |      |
+    +--------+-----+----------+-------+--------+----+----+------+
+
+    NX allows DELAY and DPHASE to be floats
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.load_id = np.array([], dtype='int32')
+
+    def slice_card_by_index(self, i: np.ndarray) -> RLOAD1:
+        load = RLOAD1(self.model)
+        self.__apply_slice__(load, i)
+        return load
+
+    def __apply_slice__(self, load: RLOAD1, i: np.ndarray) -> None:
+        #self.model.log.info(self.dphase_int)
+        #self.model.log.info(i)
+        assert len(i) > 0
+        assert len(self.dphase_int) > 0
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.excite_id = self.excite_id[i]
+        load.load_type = self.load_type[i]
+
+        # ints
+        load.dphase_int = self.dphase_int[i]
+        load.delay_int = self.delay_int[i]
+        load.tabled_c_int = self.tabled_c_int[i]
+        load.tabled_d_int = self.tabled_d_int[i]
+
+        # floats
+        load.dphase_float = self.dphase_float[i]
+        load.delay_float = self.delay_float[i]
+        load.tabled_c_float = self.tabled_c_float[i]
+        load.tabled_d_float = self.tabled_d_float[i]
+
+    def add(self, sid: int, excite_id: int,
+            delay: Union[int, float]=0,
+            dphase: Union[int, float]=0,
+            tc: Union[int, float]=0,
+            td: Union[int, float]=0,
+            load_type='LOAD', comment: str='') -> int:
+        """
+        Creates an RLOAD1 card, which defines a frequency-dependent load
+        based on TABLEDs.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        excite_id : int
+            node id where the load is applied
+        delay : int/float; default=None
+            the delay; if it's 0/blank there is no delay
+            float : delay in units of time
+            int : delay id
+        dphase : int/float; default=None
+            the dphase; if it's 0/blank there is no phase lag
+            float : delay in units of time
+            int : delay id
+        tc : int/float; default=0
+            TABLEDi id that defines C(f) for all degrees of freedom in
+            EXCITEID entry
+        td : int/float; default=0
+            TABLEDi id that defines D(f) for all degrees of freedom in
+            EXCITEID entry
+        load_type : int/str; default='LOAD'
+            the type of load
+            0/LOAD
+            1/DISP
+            2/VELO
+            3/ACCE
+            4, 5, 6, 7, 12, 13 - MSC only
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, excite_id, delay, dphase, tc, td, load_type, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str=''):
+        sid = integer(card, 1, 'sid')
+        excite_id = integer(card, 2, 'excite_id')
+        delay = integer_double_or_blank(card, 3, 'delay', default=0)
+        dphase = integer_double_or_blank(card, 4, 'dphase', default=0)
+        tc = integer_double_or_blank(card, 5, 'tc', default=0)
+        td = integer_double_or_blank(card, 6, 'td', default=0)
+
+        load_type = integer_string_or_blank(card, 7, 'Type', default='LOAD')
+        assert len(card) <= 8, f'len(RLOAD1 card) = {len(card):d}\ncard={card}'
+        load_type_str = fix_loadtype_rload1(load_type)
+
+        self.cards.append((sid, excite_id, delay, dphase, tc, td, load_type_str, comment))
+        self.n += 1
+        return self.n
+
+    def parse_cards(self) -> None:
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+        #: Set identification number
+        self.load_id = np.zeros(ncards, dtype='int32')
+
+
+        #: Identification number of DAREA or SPCD entry set or a thermal load
+        #: set (in heat transfer analysis) that defines {A}. (Integer > 0)
+        self.excite_id = np.zeros(ncards, dtype='int32')
+
+        #: If it is a non-zero integer, it represents the
+        #: identification number of DELAY Bulk Data entry that defines .
+        #: If it is real, then it directly defines the value of that will
+        #: be used for all degrees-of-freedom that are excited by this
+        #: dynamic load entry.  See also Remark 9. (Integer >= 0,
+        #: real or blank)
+        self.delay_int = np.zeros(ncards, dtype='int32')
+        self.delay_float = np.full(ncards, np.nan, dtype='float64')
+
+        #: Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
+        self.load_type = np.zeros(ncards, dtype='|U4')
+
+        self.dphase_int = np.zeros(ncards, dtype='int32')
+        self.dphase_float = np.full(ncards, np.nan, dtype='float64')
+
+        # tc : int/float; default=0
+        #     TABLEDi id that defines C(f) for all degrees of freedom in EXCITEID entry
+        # td : int/float; default=0
+        #     TABLEDi id that defines D(f) for all degrees of freedom in EXCITEID entry
+        self.tabled_c_int = np.zeros(ncards, dtype='int32')
+        self.tabled_d_int = np.full(ncards, np.nan, dtype='float64')
+
+        self.tabled_c_float = np.zeros(ncards, dtype='int32')
+        self.tabled_d_float = np.full(ncards, np.nan, dtype='float64')
+
+        assert ncards > 0, ncards
+        for icard, card in enumerate(self.cards):
+            (sid, excite_id, delay, dphase, tc, td, load_type_str, comment) = card
+            self.load_id[icard] = sid
+            self.excite_id[icard] = excite_id
+            _set_int_float(icard, self.delay_int, self.delay_float, delay)
+            _set_int_float(icard, self.dphase_int, self.dphase_float, dphase)
+            _set_int_float(icard, self.tabled_c_int, self.tabled_c_float, tc)
+            _set_int_float(icard, self.tabled_d_int, self.tabled_d_float, td)
+
+            self.load_type[icard] = load_type_str
+        assert len(self.load_id) == self.n
+        self.cards = []
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.excite_id.max(),
+                   self.delay_int.max(), self.dphase_int.max(),
+                   self.tabled_c_int.max(), self.tabled_d_int.max())
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        #array_str, array_default_int
+        load_ids = array_str(self.load_id, size=size)
+        excite_ids = array_default_int(self.excite_id, default=0, size=size)
+        delays = array_int_float(self.delay_int, self.delay_float, size=size, is_double=False)
+        dphases = array_int_float(self.dphase_int, self.dphase_float, size=size, is_double=False)
+        tcs = array_int_float(self.tabled_c_int, self.tabled_c_float, size=size, is_double=False)
+        tds = array_int_float(self.tabled_d_int, self.tabled_d_float, size=size, is_double=False)
+
+        for sid, excite_id, load_type, delay, dphase, \
+            tc, td in zip_longest(load_ids, excite_ids, self.load_type,
+                                  delays, dphases,
+                                  tcs, tds):
+
+            #dphase = _write_int_float(dphase_int, dphase_float)
+            #delay = _write_int_float(delay_int, delay_float)
+            #tc = _write_int_float(tc_int, tc_float)
+            #td = _write_int_float(td_int, td_float)
+            list_fields = ['RLOAD1', sid, excite_id, delay, dphase,
+                           tc, td, load_type]
+            bdf_file.write(print_card(list_fields))
+        return
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        model = self.model
+        udelay = np.unique(self.delay_int)
+        udphase = np.unique(self.dphase_int)
+
+        geom_check(
+            self,
+            missing,
+            #delay=(model.delay.delay_id, udelay),
+            #dphase=(model.dphase.dphase_id, udphase),
+        )
+
+
+class RLOAD2(VectorizedBaseCard):
+    r"""
+    Defines a frequency-dependent dynamic load of the form
+    for use in frequency response problems.
+
+    .. math:: \left\{ P(f)  \right\}  = \left\{A\right\} * B(f)
+        e^{  i \left\{ \phi(f) + \theta - 2 \pi f \tau \right\} }
+
+    +--------+-----+----------+-------+--------+----+----+------+
+    |   1    |  2  |     3    |   4   |    5   |  6 |  7 |  8   |
+    +========+=====+==========+=======+========+====+====+======+
+    | RLOAD2 | SID | EXCITEID | DELAY | DPHASE | TB | TP | TYPE |
+    +--------+-----+----------+-------+--------+----+----+------+
+    | RLOAD2 |  5  |    3     |       |        | 1  |    |      |
+    +--------+-----+----------+-------+--------+----+----+------+
+
+    NX allows DELAY and DPHASE to be floats
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.load_id = np.array([], dtype='int32')
+
+    def slice_card_by_index(self, i: np.ndarray) -> RLOAD2:
+        load = RLOAD2(self.model)
+        self.__apply_slice__(load, i)
+        return load
+
+    def __apply_slice__(self, load: RLOAD2, i: np.ndarray) -> None:
+        self.model.log.info(self.dphase_int)
+        self.model.log.info(i)
+        assert len(i) > 0
+        assert len(self.dphase_int) > 0
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.excite_id = self.excite_id[i]
+        load.load_type = self.load_type[i]
+
+        # ints
+        load.dphase_int = self.dphase_int[i]
+        load.delay_int = self.delay_int[i]
+        load.tabled_b_int = self.tabled_b_int[i]
+        load.tabled_phi_int = self.tabled_phi_int[i]
+
+        # floats
+        load.dphase_float = self.dphase_float[i]
+        load.delay_float = self.delay_float[i]
+        load.tabled_b_float = self.tabled_b_float[i]
+        load.tabled_phi_float = self.tabled_phi_float[i]
+
+    def add(self, sid: int, excite_id: int,
+            delay: Union[int, float]=0,
+            dphase: Union[int, float]=0,
+            tb: Union[int, float]=0,
+            tphi: Union[int, float]=0,
+            load_type: str='LOAD', comment: str='') -> int:
+        """
+        Creates an RLOAD2 card, which defines a frequency-dependent load
+        based on TABLEDs.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        excite_id : int
+            node id where the load is applied
+        delay : int/float; default=None
+            the delay; if it's 0/blank there is no delay
+            float : delay in units of time
+            int : delay id
+        dphase : int/float; default=None
+            the dphase; if it's 0/blank there is no phase lag
+            float : delay in units of time
+            int : delay id
+        tb : int/float; default=0
+            TABLEDi id that defines B(f) for all degrees of freedom in
+            EXCITEID entry
+        tp : int/float; default=0
+            TABLEDi id that defines phi(f) for all degrees of freedom in
+            EXCITEID entry
+        load_type : int/str; default='LOAD'
+            the type of load
+            0/LOAD
+            1/DISP
+            2/VELO
+            3/ACCE
+            4, 5, 6, 7, 12, 13 - MSC only
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, excite_id, delay, dphase, tb, tphi, load_type))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment:str='') -> None:
+        sid = integer(card, 1, 'sid')
+        excite_id = integer(card, 2, 'excite_id')
+        delay = integer_double_or_blank(card, 3, 'delay', default=0)
+        dphase = integer_double_or_blank(card, 4, 'dphase', default=0)
+        tb = integer_double_or_blank(card, 5, 'tb', default=0)
+        tphi = integer_double_or_blank(card, 6, 'tp', default=0)
+        load_type = integer_string_or_blank(card, 7, 'Type', default='LOAD')
+        load_type_str = fix_loadtype_rload1(load_type)
+
+        assert len(card) <= 8, f'len(RLOAD2 card) = {len(card):d}\ncard={card}'
+        self.cards.append((sid, excite_id, delay, dphase, tb, tphi, load_type_str))
+        self.n += 1
+        return self.n
+
+    def parse_cards(self) -> None:
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+        #excite_id : int
+            #node id where the load is applied
+        #delay : int/float; default=None
+            #the delay; if it's 0/blank there is no delay
+            #float : delay in units of time
+            #int : delay id
+        #dphase : int/float; default=None
+            #the dphase; if it's 0/blank there is no phase lag
+            #float : delay in units of time
+            #int : delay id
+        #tb : int/float; default=0
+            #TABLEDi id that defines B(f) for all degrees of freedom in EXCITEID entry
+        #tp : int/float; default=0
+            #TABLEDi id that defines phi(f) for all degrees of freedom in EXCITEID entry
+        #Type : int/str; default='LOAD'
+            #the type of load
+            #0/LOAD
+            #1/DISP
+            #2/VELO
+            #3/ACCE
+            #4, 5, 6, 7, 12, 13 - MSC only
+
+
+        #: Set identification number
+        load_id = np.zeros(ncards, dtype='int32')
+
+        #: Identification number of DAREA or SPCD entry set or a thermal load
+        #: set (in heat transfer analysis) that defines {A}. (Integer > 0)
+        excite_id = np.zeros(ncards, dtype='int32')
+
+        #: If it is a non-zero integer, it represents the
+        #: identification number of DELAY Bulk Data entry that defines .
+        #: If it is real, then it directly defines the value of that will
+        #: be used for all degrees-of-freedom that are excited by this
+        #: dynamic load entry.  See also Remark 9. (Integer >= 0,
+        #: real or blank)
+        delay_int = np.zeros(ncards, dtype='int32')
+        delay_float = np.full(ncards, np.nan, dtype='float64')
+
+        #: Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
+        load_type = np.zeros(ncards, dtype='|U4')
+
+        dphase_int = np.zeros(ncards, dtype='int32')
+        dphase_float = np.full(ncards, np.nan, dtype='float64')
+
+        # tc : int/float; default=0
+        #     TABLEDi id that defines C(f) for all degrees of freedom in EXCITEID entry
+        # td : int/float; default=0
+        #     TABLEDi id that defines D(f) for all degrees of freedom in EXCITEID entry
+        tabled_b_int = np.zeros(ncards, dtype='int32')
+        tabled_phi_int = np.zeros(ncards, dtype='int32')
+
+        tabled_b_float = np.full(ncards, np.nan, dtype='float64')
+        tabled_phi_float = np.full(ncards, np.nan, dtype='float64')
+
+        #self.tabled_b_id =
+        #tabled_phi_id =
+
+        assert ncards > 0, ncards
+        for icard, card in enumerate(self.cards):
+            (sid, excite_idi, delay, dphase, tb, tphi, load_type_str) = card
+            load_id[icard] = sid
+            excite_id[icard] = excite_idi
+            _set_int_float(icard, delay_int, delay_float, delay)
+            _set_int_float(icard, dphase_int, dphase_float, dphase)
+            _set_int_float(icard, tabled_b_int, tabled_b_float, tb)
+            _set_int_float(icard, tabled_phi_int, tabled_phi_float, tphi)
+            load_type[icard] = load_type_str
+
+        self._save(load_id, excite_id, load_type,
+                   delay_int, delay_float,
+                   dphase_int, dphase_float,
+                   tabled_b_int, tabled_b_float,
+                   tabled_phi_int, tabled_phi_float)
+        assert len(self.load_id) == self.n
+        self.cards = []
+
+    def _save(self, load_id, excite_id, load_type,
+              delay_int, delay_float,
+              dphase_int, dphase_float,
+              tabled_b_int, tabled_b_float,
+              tabled_phi_int, tabled_phi_float):
+        self.load_id = load_id
+        self.excite_id = excite_id
+        self.load_type = load_type
+
+        self.delay_int = delay_int
+        self.delay_float = delay_float
+
+        self.dphase_int = dphase_int
+        self.dphase_float = dphase_float
+
+        self.tabled_b_float = tabled_b_float
+        self.tabled_b_int = tabled_b_int
+
+        self.tabled_phi_int = tabled_phi_int
+        self.tabled_phi_float = tabled_phi_float
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.excite_id.max(),
+                   self.delay_int.max(), self.dphase_int.max(),
+                   self.tabled_b_int.max(), self.tabled_phi_int.max())
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        #array_str, array_default_int
+        load_ids = array_str(self.load_id, size=size)
+        excite_ids = array_default_int(self.excite_id, default=0, size=size)
+
+        delays = array_int_float(self.delay_int, self.delay_float, size=size, is_double=False)
+        dphases = array_int_float(self.dphase_int, self.dphase_float, size=size, is_double=False)
+        tbs = array_int_float(self.tabled_b_int, self.tabled_b_float, size=size, is_double=False)
+        tphis = array_int_float(self.tabled_phi_int, self.tabled_phi_float, size=size, is_double=False)
+
+        for sid, excite_id, load_type, delay, dphase, \
+            tb, tphi in zip_longest(load_ids, excite_ids, self.load_type,
+                                    delays, dphases,
+                                    tbs, tphis):
+
+            #dphase = _write_int_float(dphase_int, dphase_float)
+            #delay = _write_int_float(delay_int, delay_float)
+            #tb = _write_int_float(tb_int, tb_float)
+            #tphi = _write_int_float(tphi_int, tphi_float)
+            list_fields = ['RLOAD2', sid, excite_id, delay, dphase,
+                           tb, tphi, load_type]
+            bdf_file.write(print_card(list_fields))
+        return
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        model = self.model
+        udelay = np.unique(self.delay_int)
+        udphase = np.unique(self.dphase_int)
+
+        geom_check(
+            self,
+            missing,
+            #delay=(model.delay.delay_id, udelay),
+            #dphase=(model.dphase.dphase_id, udphase),
+        )
+
+
 def _set_int_float(i: int, array_int: np.ndarray, array_float: np.ndarray, value: Union[int, float]) -> None:
     if isinstance(value, int):
         array_int[i] = value
@@ -681,3 +1158,11 @@ def _write_int_float(value_int: int, value_float: float) -> Union[int, float]:
     else:
         value = value_float
     return value
+
+def array_int_float(delay_int: np.ndarray, delay_float: np.ndarray,
+                    size: int=8, is_double: bool=False) -> np.ndarray:
+    delay_ids = array_str(delay_int, size=size)
+    delay_floats = array_float(delay_float, size=size, is_double=is_double)
+    idelay_int = (delay_int > 0)
+    delay_floats[idelay_int] = delay_ids[idelay_int]
+    return delay_floats

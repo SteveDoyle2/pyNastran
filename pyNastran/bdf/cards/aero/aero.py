@@ -3945,7 +3945,7 @@ class MONPNT3(BaseCard):
         axes = parse_components(card, 9, 'axes')
         grid_set = integer(card, 10, 'grid_set')
         elem_set = integer_or_blank(card, 11, 'elem_set')
-        cp = integer_or_blank(card, 12, 'cp', 0)
+        cp = integer_or_blank(card, 12, 'cp', default=0)
         xyz = [
             double_or_blank(card, 13, 'x', default=0.0),
             double_or_blank(card, 14, 'y', default=0.0),

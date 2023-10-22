@@ -1498,7 +1498,7 @@ class TestLoads(unittest.TestCase):
                           cid=0, r123=r123, racc=0., main_bulk=0, method=2, comment='')
         save_load_deck(model)
 
-    def _test_loads_nonlinear(self):
+    def test_loads_nonlinear(self):
         """tests a nonlinear variation on a FORCE and PLOAD4"""
         model = BDF()
 
@@ -1525,22 +1525,25 @@ class TestLoads(unittest.TestCase):
         model.add_pload4(pload4_sid, eids, pressures)
 
         table_id = 30000
-        theta = np.linspace(0., 1., num=50, endpoint=True)
-        y = np.sin(theta)
-        x = theta
-        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
-
-
         dload_id = 40000
-        scale = 1.
-        scale_factors = 1.
-        load_ids = [40001]
-        model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
-        #model.add_darea(sid, p, c, scale)
+
+        RUN_TABLE = False
+        if RUN_TABLE:
+            theta = np.linspace(0., 1., num=50, endpoint=True)
+            y = np.sin(theta)
+            x = theta
+            model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+
+            scale = 1.
+            scale_factors = 1.
+            load_ids = [40001]
+            model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
+            #model.add_darea(sid, p, c, scale)
 
         sid = 40001
         excite_id = pload4_sid
-        model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=table_id, td=0, Type='LOAD', comment='rload')
+        model.add_rload1(sid, excite_id, delay=0, dphase=0,
+                         tc=table_id, td=0, load_type='LOAD', comment='rload')
 
         lines = [
             'SUBCASE 1',
@@ -1551,7 +1554,7 @@ class TestLoads(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
-    def _test_loads_nonlinear2(self):
+    def test_loads_nonlinear2(self):
         """tests a nonlinear variation on a FORCE and PLOAD4"""
         model = BDF()
 
@@ -1578,23 +1581,26 @@ class TestLoads(unittest.TestCase):
         #model.add_pload4(pload4_sid, eids, pressures)
 
         table_id = 30000
-        theta = np.linspace(0., 1., num=50, endpoint=True)
-        y = np.sin(theta)
-        x = theta
-        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
-
-
         dload_id = 40000
-        scale = 1.
-        scale_factors = 1.
-        load_ids = [40001]
-        model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
-        #model.add_darea(sid, p, c, scale)
+
+        RUN_TABLE = False
+        if RUN_TABLE:
+            theta = np.linspace(0., 1., num=50, endpoint=True)
+            y = np.sin(theta)
+            x = theta
+            model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+
+            scale = 1.
+            scale_factors = 1.
+            load_ids = [40001]
+            model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
+            #model.add_darea(sid, p, c, scale)
 
         tload_id = 40001
         darea_id = 40002
         excite_id = darea_id
-        model.add_tload1(tload_id, excite_id, table_id, delay=0, Type='LOAD', us0=0.0, vs0=0.0, comment='tload1')
+        model.add_tload1(tload_id, excite_id, table_id, delay=0,
+                         load_type='LOAD', us0=0.0, vs0=0.0, comment='tload1')
 
         nid = 4
         component = 3
@@ -1609,7 +1615,7 @@ class TestLoads(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
-    def _test_loads_nonlinear3(self):
+    def test_loads_nonlinear3(self):
         """tests a nonlinear variation on a FORCE and PLOAD4"""
         model = BDF()
 
@@ -1636,10 +1642,13 @@ class TestLoads(unittest.TestCase):
         #model.add_pload4(pload4_sid, eids, pressures)
 
         table_id = 30000
-        theta = np.linspace(0., 1., num=50, endpoint=True)
-        y = np.sin(theta)
-        x = theta
-        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+
+        RUN_TABLE = False
+        if RUN_TABLE:
+            theta = np.linspace(0., 1., num=50, endpoint=True)
+            y = np.sin(theta)
+            x = theta
+            model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
 
 
         #dload_id = 40000
@@ -1652,7 +1661,8 @@ class TestLoads(unittest.TestCase):
         tload_id = 40001
         darea_id = 40002
         excite_id = darea_id
-        model.add_tload1(tload_id, excite_id, table_id, delay=0, Type='LOAD', us0=0.0, vs0=0.0, comment='tload1')
+        model.add_tload1(tload_id, excite_id, table_id, delay=0,
+                         load_type='LOAD', us0=0.0, vs0=0.0, comment='tload1')
 
         nid = 4
         component = 3
@@ -1710,7 +1720,8 @@ class TestLoads(unittest.TestCase):
         tload_id = 40001
         qvect_id = 40002
         excite_id = qvect_id
-        model.add_tload1(tload_id, excite_id, table_id, delay=0, Type='LOAD', us0=0.0, vs0=0.0, comment='tload1')
+        model.add_tload1(tload_id, excite_id, table_id, delay=0,
+                         load_type='LOAD', us0=0.0, vs0=0.0, comment='tload1')
         #nid = 4
         eids = [eid]
         q0 = 2.0

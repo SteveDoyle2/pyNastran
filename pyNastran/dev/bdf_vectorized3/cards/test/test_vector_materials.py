@@ -442,20 +442,21 @@ class TestMaterials(unittest.TestCase):
         nu12 = 0.3
         mat8_id = model.add_mat8(mid, e11, e22, nu12)
         mat8 = model.mat8
+        matt8 = model.matt8
         mat8.write(size=16, is_double=False)
         mat8.validate()
 
         RUN_MATTX = False
-        if RUN_MATTX:
-            matt8_id = model.add_matt8(
-                mid, e1_table=1, e2_table=2, nu12_table=3,
-                g12_table=4, g1z_table=1, g2z_table=1, rho_table=1,
-                a1_table=1, a2_table=1,
-                xt_table=1, xc_table=1, yt_table=1, yc_table=1,
-                s_table=1, ge_table=1, f12_table=1, comment='matt8')
-            matt8.validate()
-            matt8.write()
+        matt8_id = model.add_matt8(
+            mid, e1_table=1, e2_table=2, nu12_table=3,
+            g12_table=4, g1z_table=1, g2z_table=1, rho_table=1,
+            a1_table=1, a2_table=1,
+            xt_table=1, xc_table=1, yt_table=1, yc_table=1,
+            s_table=1, ge_table=1, f12_table=1, comment='matt8')
+        matt8.validate()
+        matt8.write()
 
+        if RUN_MATTX:
             x = np.linspace(1., 10.)
             y = np.sin(x) + 5.
             tablem1_id = model.add_tablem1(1, x, y, comment='tablem1')

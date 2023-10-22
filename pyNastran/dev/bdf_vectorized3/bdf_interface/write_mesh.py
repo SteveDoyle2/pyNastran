@@ -143,7 +143,7 @@ class WriteMesh(BDFAttributes):
             is_long_ids=is_long_ids)
 
 
-class Writer():
+class Writer:
     def __init__(self, model: BDF):
         self.model = model
 
@@ -176,7 +176,7 @@ class Writer():
         # split out for write_bdf_symmetric
         self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_nonstructural_mass(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        #self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
         self._write_common(bdf_file, loads_size, is_double, is_long_ids=is_long_ids)
         if (enddata is None and 'ENDDATA' in model.card_count) or enddata:
@@ -327,13 +327,12 @@ class Writer():
         if model.spoint.n:
             bdf_file.write('$SPOINTS\n')
             model.spoint.write_file(bdf_file, size=size, is_double=is_double)
-        #if model.epoint.n:
-            #bdf_file.write('$EPOINTS\n')
-            #bdf_file.write(model.epoint.write(size=size))
-        #if self.points:
-            #bdf_file.write('$POINTS\n')
-            #for unused_point_id, point in sorted(self.points.items()):
-                #bdf_file.write(point.write_card(size, is_double))
+        if model.epoint.n:
+            bdf_file.write('$EPOINTS\n')
+            model.epoint.write_file(bdf_file, size=size)
+        if model.point.n:
+            bdf_file.write('$POINTS\n')
+            model.point.write_file(bdf_file, size=size)
 
         #if self._is_axis_symmetric:
             #if self.axic:
@@ -364,9 +363,6 @@ class Writer():
             #if self.grdset:
                 #bdf_file.write(self.grdset.write_card(size))
             model.grid.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
-        #if model.point.n:
-            #bdf_file.write('$ POINTS\n')
-            #bdf_file.write(model.point.write(size=size))
 
     def _write_elements(self, bdf_file: TextIOLike,
                         size: int=8, is_double: bool=False,
@@ -668,6 +664,7 @@ class Writer():
 
             model.mats1.write_file(bdf_file, size=size, is_double=is_double)
             model.matt1.write_file(bdf_file, size=size, is_double=is_double)
+            model.matt8.write_file(bdf_file, size=size, is_double=is_double)
 
             #for (unused_mid, material) in sorted(self.hyperelastic_materials.items()):
                 #bdf_file.write(material.write_card(size, is_double))
@@ -688,8 +685,6 @@ class Writer():
             #for (unused_mid, material) in sorted(self.MATT4.items()):
                 #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.MATT5.items()):
-                #bdf_file.write(material.write_card(size, is_double))
-            #for (unused_mid, material) in sorted(self.MATT8.items()):
                 #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.MATT9.items()):
                 #bdf_file.write(material.write_card(size, is_double))
@@ -766,13 +761,14 @@ class Writer():
                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the aero cards"""
         model = self.model
-        aero_cards = [model.monpnt1, model.monpnt2, model.monpnt3]
+        aero_cards = model.monitor_point_cards
+
         is_aero = any([card.n > 0 for card in aero_cards])
         if is_aero:
             bdf_file.write('$AERO\n')
-            bdf_file.write(model.monpnt1.write(size=size))
-            bdf_file.write(model.monpnt2.write(size=size))
-            bdf_file.write(model.monpnt3.write(size=size))
+            model.monpnt1.write_file(bdf_file, size=size)
+            #model.monpnt2.write_file(bdf_file, size=size)
+            model.monpnt3.write_file(bdf_file, size=size)
 
         #if model.paeros: # or model.caeros or model.splines:
             #for (unused_id, caero) in sorted(model.caeros.items()):
@@ -1011,6 +1007,7 @@ class Writer():
             model.spc1.write_file(bdf_file, size=size, is_double=is_double)
             model.spcoff.write_file(bdf_file, size=size, is_double=is_double)
             model.bndfix.write_file(bdf_file, size=size, is_double=is_double)
+            model.bndfree.write_file(bdf_file, size=size, is_double=is_double)
 
         if any((card.n for card in model.mpc_cards)):
             bdf_file.write('$MPCs\n')
@@ -1029,9 +1026,9 @@ class Writer():
         model = self.model
         is_contact = max([card.n for card in model.contact_cards])
         #is_contact = (self.bcrparas or self.bctadds or self.bctparas
-                      #or self.bctsets or self.bsurf or self.bsurfs
+                      #or self.bctsets or
                       #or self.bconp or self.blseg or self.bfric
-                      #or self.bgadds or self.bgsets or self.bctparms or self.bcbodys or self.bcparas)
+                      #or self.bgadds or self.bctparms or self.bcbodys or self.bcparas)
         if is_contact:
             bdf_file.write('$CONTACT\n')
             #for (unused_id, bcbody) in sorted(self.bcbodys.items()):
@@ -1060,8 +1057,7 @@ class Writer():
                 #bdf_file.write(bfric.write_card(size, is_double))
             #for (unused_id, bgadd) in sorted(self.bgadds.items()):
                 #bdf_file.write(bgadd.write_card(size, is_double))
-            #for (unused_id, bgset) in sorted(self.bgsets.items()):
-                #bdf_file.write(bgset.write_card(size, is_double))
+            model.bgset.write_file(bdf_file, size=size)
 
     def _write_coords(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False,

@@ -4968,18 +4968,17 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_material_dependence_object(mat)
         return mat
 
-    def add_matt8(self, mid, e1_table=None, e2_table=None, nu12_table=None,
+    def add_matt8(self, mid: int, e1_table=None, e2_table=None, nu12_table=None,
                   g12_table=None, g1z_table=None, g2z_table=None, rho_table=None,
                   a1_table=None, a2_table=None,
                   xt_table=None, xc_table=None, yt_table=None, yc_table=None,
                   s_table=None, ge_table=None, f12_table=None, comment: str='') -> int:
         """Creates a MATT8 card"""
-        mat = MATT8(mid, e1_table=e1_table, e2_table=e2_table, nu12_table=nu12_table,
-                    g12_table=g12_table, g1z_table=g1z_table, g2z_table=g2z_table,
-                    rho_table=rho_table, a1_table=a1_table, a2_table=a2_table,
-                    xt_table=xt_table, xc_table=xc_table, yt_table=yt_table, yc_table=yc_table,
-                    s_table=s_table, ge_table=ge_table, f12_table=f12_table, comment=comment)
-        self._add_methods._add_material_dependence_object(mat)
+        mat = self.matt8.add(mid, e1_table=e1_table, e2_table=e2_table, nu12_table=nu12_table,
+                             g12_table=g12_table, g1z_table=g1z_table, g2z_table=g2z_table,
+                             rho_table=rho_table, a1_table=a1_table, a2_table=a2_table,
+                             xt_table=xt_table, xc_table=xc_table, yt_table=yt_table, yc_table=yc_table,
+                             s_table=s_table, ge_table=ge_table, f12_table=f12_table, comment=comment)
         return mat
 
     def add_matt9(self, mid,
@@ -5238,8 +5237,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                                us0=us0, vs0=vs0, comment=comment)
         return load
 
-    def add_rload1(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0,
-                   Type='LOAD', comment: str='') -> int:
+    def add_rload1(self, sid: int, excite_id: int,
+                   delay: Union[int, float]=0,
+                   dphase: Union[int, float]=0,
+                   tc: Union[int, float]=0,
+                   td: Union[int, float]=0,
+                   load_type='LOAD', comment: str='') -> int:
         """
         Creates an RLOAD1 card, which defines a frequency-dependent load
         based on TABLEDs.
@@ -5276,11 +5279,15 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         load = self.rload1.add(sid, excite_id, delay=delay, dphase=dphase, tc=tc, td=td,
-                               Type=Type, comment=comment)
+                               load_type=load_type, comment=comment)
         return load
 
-    def add_rload2(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0,
-                   Type='LOAD', comment: str='') -> int:
+    def add_rload2(self, sid: int, excite_id: int,
+                   delay: Union[int, float]=0,
+                   dphase: Union[int, float]=0,
+                   tb: Union[int, float]=0,
+                   tphi: Union[int, float]=0,
+                   load_type: str='LOAD', comment: str='') -> int:
         """
         Creates an RLOAD2 card, which defines a frequency-dependent load
         based on TABLEDs.
@@ -5302,16 +5309,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         tb : int/float; default=0
             TABLEDi id that defines B(f) for all degrees of freedom in
             EXCITEID entry
-        tc : int/float; default=0
-            TABLEDi id that defines C(f) for all degrees of freedom in
-            EXCITEID entry
-        td : int/float; default=0
-            TABLEDi id that defines D(f) for all degrees of freedom in
-            EXCITEID entry
-        tp : int/float; default=0
+        tphi : int/float; default=0
             TABLEDi id that defines phi(f) for all degrees of freedom in
             EXCITEID entry
-        Type : int/str; default='LOAD'
+        load_type : int/str; default='LOAD'
             the type of load
             0/LOAD
             1/DISP
@@ -5322,8 +5323,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = self.rload2.add(sid, excite_id, delay=delay, dphase=dphase, tb=tb, tp=tp,
-                               Type=Type, comment=comment)
+        load = self.rload2.add(sid, excite_id, delay=delay, dphase=dphase, tb=tb, tphi=tphi,
+                               load_type=load_type, comment=comment)
         return load
 
     def add_rforce(self, sid: int, nid: int, scale: float, r123: list[float],
@@ -7141,10 +7142,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                          cp=cp, cd=cd, xflag=xflag, comment=comment)
         return monitor_point
 
-    def add_bsurfs(self, glue_id, eids, g1s, g2s, g3s, comment: str='') -> int:
+    def add_bsurfs(self, glue_id, eids, comment: str='') -> int:
         """Creates a BSURFS card, which defines a contact/glue for solids"""
-        bsurfs = self.bsurfs.add(glue_id, eids, g1s, g2s, g3s, comment=comment)
-        self._add_methods._add_bsurfs_object(bsurfs)
+        bsurfs = self.bsurfs.add(glue_id, eids, comment=comment)
         return bsurfs
 
     def add_bsurf(self, glue_id, eids, comment: str='') -> int:

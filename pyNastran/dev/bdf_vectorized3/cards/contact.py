@@ -28,8 +28,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
-
-
 class ElementSet(VectorizedBaseCard):
     def clear(self):
         self.sid = np.array([], dtype='int32')
@@ -85,7 +83,6 @@ class ElementSet(VectorizedBaseCard):
         idtype = self.model.idtype
         element_ids = np.array(element_ids_list, dtype=idtype)
         assert len(card) > 2, f'len({self.type} card) = {len(card):d}\ncard={card}'
-        assert 1100 not in element_ids
         self.cards.append((sid, element_ids, comment))
         self.n += 1
         return self.n
@@ -234,3 +231,196 @@ class BSURFS(ElementSet):
                    missing,
                    element_id=(eid, self.element_id),)
 
+
+class BGSET(VectorizedBaseCard):
+    """
+    +-------+------+------+------+---------+----+------+------+----+
+    |   1   |  2   |  3   |   4  |    5    | 6  |  7   |   8  |  9 |
+    +=======+======+======+======+=========+====+======+======+====+
+    | BGSET | GSID | SID1 | TID1 | SDIST1  |    | EXT1 |      |    |
+    +-------+------+------+------+---------+----+------+------+----+
+    |       |      | SID2 | TID2 | SDIST2  |    | EXT2 |      |    |
+    +-------+------+------+------+---------+----+------+------+----+
+    """
+    def clear(self):
+        #self.sid = np.array([], dtype='int32')
+        #self.nelement = np.array([], dtype='int32')
+        #self.element_id = np.array([], dtype='int32')
+        #: GSID Glue set identification number. (Integer > 0)
+        self.glue_id = np.array([], dtype='int32')
+        #: SIDi Source region (contactor) identification number for contact pair i.
+        #: (Integer > 0)
+        self.source_ids = np.array([], dtype='int32')
+
+        #: TIDi Target region identification number for contact pair i. (Integer > 0)
+        self.target_ids = np.array([], dtype='int32')
+
+        #: SDISTi Search distance for glue regions (Real); (Default=10.0)
+        self.search_distance = np.array([], dtype='float64')
+
+        #: EXTi Extension factor for target region (SOLs 402 and 601 only).
+        self.extension = np.array([], dtype='float64')
+
+    def add(self, sid: list[int], element_ids: list[int],
+            comment: str='') -> int:
+        self.cards.append((sid, element_ids, comment))
+        self.n += 1
+        return self.n
+
+    #def remove_unused(self)
+    def add_card(self, card: BDFCard, comment: str=''):
+        """
+        Adds a BGSET card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        glue_id = integer(card, 1, 'glue_id')
+        sids = []
+        tids = []
+        sdists = []
+        exts = []
+
+        nfields = card.nfields
+        i = 2
+        j = 1
+        while i < nfields:
+            #SIDi Source region identification number for glue pair i. (Integer > 0)
+            #TIDi Target region identification number for glue pair i. (Integer > 0)
+            #SDISTi Search distance for glue regions (Real); (Default=10.0)
+            #EXTi Extension factor for target region (SOLs 402 and 601 only).
+
+            sids.append(integer(card, i, 'sid%s' % j))
+            tids.append(integer(card, i + 1, 'tid%s' % j))
+            sdists.append(double_or_blank(card, i + 2, 'fric%s' % j, default=0.0))
+            #if sol == 101:
+            exts.append(double_or_blank(card, i + 4, 'mind%s' % j, default=0.0))
+            #else:
+                #exts.append(None)
+            i += 8
+            j += 1
+        #return BGSET(glue_id, sids, tids, sdists, exts,
+                     #comment=comment, sol=sol)
+
+        assert len(card) > 2, f'len({self.type} card) = {len(card):d}\ncard={card}'
+        self.cards.append((glue_id, sids, tids, sdists, exts, comment))
+        self.n += 1
+        return self.n
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        #ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        fdtype = self.model.fdtype
+        glue_id = np.zeros(ncards, dtype='int32')
+        nsource = np.zeros(ncards, dtype='int32')
+        source_ids = []
+        target_ids = []
+        search_distances = []
+        extensions = []
+
+        #comment = {}
+        for icard, card in enumerate(self.cards):
+            (glue_idi, source_idi, target_idi, search_distancei, extensioni, commenti) = card
+
+            glue_id[icard] = glue_idi
+            source_ids.extend(source_idi)
+            target_ids.extend(target_idi)
+            search_distances.extend(search_distancei)
+            extensions.extend(source_idi)
+
+            nsource[icard] = len(source_idi)
+            #if commenti:
+                #comment[i] = commenti
+                #comment[nidi] = commenti
+
+        source_region = np.array(source_ids, dtype=idtype)
+        target_id = np.array(target_ids, dtype=idtype)
+        search_distance = np.array(search_distances, dtype=fdtype)
+        extension = np.array(extensions, dtype=fdtype)
+        self._save(glue_id, nsource, source_region, target_id, search_distance, extension, comment=None)
+        #self.sort()
+        self.cards = []
+
+    def _save(self,
+              glue_id,
+              nsource,
+              source_ids,
+              target_ids,
+              search_distance,
+              extension: np.ndarray,
+              comment: dict[int, str]=None) -> None:
+        ncards_existing = len(self.glue_id)
+        if ncards_existing != 0:
+            asdf
+            glue_id = np.hstack([self.glue_id, glue_id])
+            #nelement = np.hstack([self.nelement, nelement])
+            #element_ids = np.hstack([self.element_ids, element_ids])
+        #if comment:
+            #self.comment.update(comment)
+        self.glue_id = glue_id
+        self.nsource = nsource
+        self.source_ids = source_ids
+        self.target_ids = target_ids
+        self.search_distance = search_distance
+        self.extension = extension
+        self.n = len(self.glue_id)
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        contact_regions = np.hstack([self.source_ids, self.target_ids])
+        used_dict['contact_region'].append(contact_regions)
+
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        self.search_distance *= xyz_scale
+
+    def __apply_slice__(self, bgset: BGSET, i: np.ndarray) -> None:
+        self._slice_comment(eset, i)
+        bgset.n = len(i)
+
+        isource = self.isource
+        bgset.glue_id = self.glue_id[i]
+        bgset.nsource = self.nsource[i]
+        bgset.source_ids = hslice_by_idim(i, isource, self.source_ids)
+        bgset.target_ids = hslice_by_idim(i, isource, self.target_ids)
+        bgset.search_distance = hslice_by_idim(i, isource, self.search_distance)
+        bgset.extension = hslice_by_idim(i, isource, self.extension)
+
+    @property
+    def isource(self) -> np.ndarray:
+        return make_idim(self.n, self.nsource)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.glue_id.max(), self.source_ids.max(), self.target_ids.max())
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if self.n == 0:
+            return
+        size = update_field_size(self.max_id, size)
+        print_card = get_print_card_8_16(size)
+
+        for glue_id, (isource0, isource1) in zip(self.glue_id, self.isource):
+            target_ids = self.target_ids[isource0:isource1].tolist()
+            source_ids = self.source_ids[isource0:isource1].tolist()
+            extension = self.extension[isource0:isource1].tolist()
+            search_distance = self.search_distance[isource0:isource1].tolist()
+            list_fields = ['BGSET', glue_id]
+            assert len(target_ids) > 0
+            for source_id, target_id, ext, search_dist in zip(target_ids, source_ids, search_distance, extension):
+                list_fields += [source_id, target_id, search_dist, None, ext, None, None, None]
+            bdf_file.write(print_card(list_fields))
+        return

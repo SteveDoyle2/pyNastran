@@ -2,6 +2,7 @@ from collections import Counter
 import numpy as np
 import unittest
 
+from cpylog import SimpleLogger
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -14,56 +15,48 @@ from pyNastran.bdf.cards.bdf_sets import (
 
 class TestSets(unittest.TestCase):
 
-    def test_bsurf(self):
-        model = BDF(debug=False)
-        bsurf = model.bsurf
+    def test_monpnt(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        monpnt1 = model.monpnt1
+        monpnt3 = model.monpnt3
 
-        lines = ['BSURF,    1100,    100,     101']
-        card = model._process_card(lines)
-        card = BDFCard(card)
-        card = bsurf.add_card(card)
+        name = 'test'
+        label = 'test2'
+        axes = '123'
+        comp = 'WING'
+        xyz = [0., 0., 0.]
+        model.add_monpnt1(name, label, axes, comp, xyz, cp=0,
+                          cd=None, comment='monpnt1')
+        #monpnt1.raw_fields()
+        monpnt1.validate()
 
-        lines = ['BSURF,    1100,    11,THRU,15']
-        card = model._process_card(lines)
-        card = BDFCard(card)
-        card = bsurf.add_card(card)
+        RUN_MONPNT2 = False
+        if RUN_MONPNT2:
+            Type = 'CQUAD4'
+            table = 'STRESS'
+            nddl_item = 42
+            eid = 17
+            model.add_monpnt2(name, label, table, Type, nddl_item, eid,
+                              comment='monpnt2')
+            monpnt2 = model.monpnt2
+            #monpnt2.raw_fields()
+            monpnt2.validate()
 
-        lines = ['BSURF,    1101,    11,THRU,15,',
-                 ',1,2']
-        card = model._process_card(lines)
-        card = BDFCard(card)
-        card = bsurf.add_card(card)
+        grid_set = 43
+        elem_set = 44
+        model.add_monpnt3(name, label, axes, grid_set, elem_set,
+                          xyz, cp=0, cd=None,
+                          xflag=None, comment='monpnt3')
+        #monpnt3.raw_fields()
+        monpnt3.validate()
 
-        model.setup()
-        size = 8
-        bsurf.write(size, 'dummy')
+        model._verify_bdf(xref=False)
+        model.cross_reference()
+        model._verify_bdf(xref=True)
+        #model.uncross_reference()
+
         save_load_deck(model)
-
-    def test_bsurfs(self):
-        model = BDF(debug=False)
-        bsurfs = model.bsurfs
-
-        lines = ['BSURFS,    1100,    100,     101']
-        card = model._process_card(lines)
-        card = BDFCard(card)
-        card = bsurfs.add_card(card)
-
-        lines = ['BSURFS,    1100,    11,THRU,15']
-        card = model._process_card(lines)
-        card = BDFCard(card)
-        card = bsurfs.add_card(card)
-
-        lines = ['BSURFS,    1101,    11,THRU,15,',
-                 ',1,2']
-        card = model._process_card(lines)
-        card = BDFCard(card)
-        card = bsurfs.add_card(card)
-
-        model.setup()
-        size = 8
-        bsurfs.write(size, 'dummy')
-        save_load_deck(model)
-
 
     def test_set1_01(self):
         model = BDF(debug=False)
