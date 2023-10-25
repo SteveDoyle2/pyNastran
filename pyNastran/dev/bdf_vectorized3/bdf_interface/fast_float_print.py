@@ -145,7 +145,7 @@ def get_float_format(value: float):
     assert len(field) == 8, field
     return field
 
-def get_field_zach(x: float):
+def get_field_zach(x: float):  # pragma: no cover
     if x == 0:
         field_zach = ' 0.0    '
     if x > 0:
@@ -228,7 +228,7 @@ def compare(x: float, stop_on_error: bool=False):
         if stop_on_error:
             raise RuntimeError(msg)
 
-def main(get_optimal_short_form_float):
+def main(get_optimal_short_form_float):  # pragma: no cover
     #get_optimal_short_form_float = get_field_zach
     #get_optimal_short_form_float = print_float_8
     #get_optimal_short_form_float = get_float_format
@@ -347,11 +347,11 @@ def main(get_optimal_short_form_float):
     s = get_optimal_short_form_float(x)
     # }}}
 
-def main_og():
+def main_og():  # pragma: no cover
     main(print_float_8)
-def main_zach():
+def main_zach():  # pragma: no cover
     main(get_field_zach)
-def main_new():
+def main_new():  # pragma: no cover
     main(get_float_format)
 
 def run():  # pragma: no cover

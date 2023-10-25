@@ -148,10 +148,14 @@ class VectorizedBaseCard:
 
         # new method
         #new_ids = self.node_id[i]
-        new_ids = self._ids[i]
-        common_ids = np.intersect1d(list(self.comment.keys()), new_ids)
-        new_obj.comment = {nid: self.comment[nid] for nid in common_ids}
+        try:
 
+            new_ids = self._ids[i]
+            common_ids = np.intersect1d(list(self.comment.keys()), new_ids)
+            new_obj.comment = {nid: self.comment[nid] for nid in common_ids}
+        except:
+            print(self.comment)
+            raise
         #----
         #old method
         #keys = list(self.comment.keys())
@@ -363,6 +367,7 @@ class VectorizedBaseCard:
             try:
                 actual_ids = self_ids[ielem]
             except IndexError:
+                raise
                 missing_ids = np.setdiff1d(ids, self_ids)
                 raise IndexError(f'{self.type}: missing {self._id_name}={missing_ids}')
 

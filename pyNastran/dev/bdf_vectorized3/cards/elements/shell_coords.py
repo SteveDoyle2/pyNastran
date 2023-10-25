@@ -5,10 +5,10 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
-def _nshell_elements(model: BDF) -> tuple[int, str]:
+def _nelements(element_cards: list[Any]) -> tuple[int, str]:
     ncards = 0
     idtype = 'int32'
-    for elem in model.shell_element_cards:
+    for elem in element_cards:
         ncards += elem.n
         if elem.element_id.dtype.name == 'int64':
             idtype = 'int64'
@@ -17,8 +17,9 @@ def _nshell_elements(model: BDF) -> tuple[int, str]:
 
 def get_shell_element_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                                              np.ndarray, np.ndarray]:
-    ncards, dtype = _nshell_elements(model)
-    if ncards == 0:
+    shell_element_cards = [card for card in model.shell_element_cards
+                           if card.n > 0]
+    if len(shell_element_cards) == 0:
         element_id = np.array([], dtype='int32')
         length = np.array([], dtype='int32')
         centroid = np.zeros((0, 3), dtype='float32')
@@ -26,6 +27,7 @@ def get_shell_element_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndar
         jelement = np.zeros((0, 3), dtype='float32')
         return element_id, length, centroid, ielement, jelement
 
+    ncards, dtype = _nelements(shell_element_cards)
     element_id = np.zeros(ncards, dtype=dtype)
     length = np.full(ncards, np.nan, dtype='float32')
     centroid = np.full((ncards, 3), np.nan, dtype='float32')
@@ -33,9 +35,7 @@ def get_shell_element_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndar
     jelement = np.full((ncards, 3), np.nan, dtype='float32')
     #normal = np.full((n, 3), np.nan, dtype='float32')
     n1 = 0
-    for elem in model.shell_element_cards:
-        if elem.n == 0:
-            continue
+    for elem in shell_element_cards:
         n2 = n1 + elem.n
         dxyzi, centroidi, ielementi, jelementi, normali = elem.element_coordinate_system()
         element_id[n1:n2] = elem.element_id
@@ -49,8 +49,10 @@ def get_shell_element_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndar
 
 def get_shell_material_coordinate_system(model: BDF) -> tuple[np.ndarray, np.ndarray, np.ndarray,
                                                               np.ndarray, np.ndarray]:
-    ncards, dtype = _nshell_elements(model)
-    if ncards == 0:
+
+    shell_element_cards = [card for card in model.shell_element_cards
+                           if card.n > 0]
+    if len(shell_element_cards) == 0:
         element_id = np.array([], dtype='int32')
         length = np.array([], dtype='int32')
         centroid = np.zeros((0, 3), dtype='float32')
@@ -58,6 +60,7 @@ def get_shell_material_coordinate_system(model: BDF) -> tuple[np.ndarray, np.nda
         jelement = np.zeros((0, 3), dtype='float32')
         return element_id, length, centroid, ielement, jelement
 
+    ncards, dtype = _nelements(shell_element_cards)
     element_id = np.zeros(ncards, dtype=dtype)
     length = np.full(ncards, np.nan, dtype='float32')
     centroid = np.full((ncards, 3), np.nan, dtype='float32')
@@ -65,9 +68,7 @@ def get_shell_material_coordinate_system(model: BDF) -> tuple[np.ndarray, np.nda
     jelement = np.full((ncards, 3), np.nan, dtype='float32')
     #normal = np.full((ncards, 3), np.nan, dtype='float32')
     n1 = 0
-    for elem in model.shell_element_cards:
-        if elem.n == 0:
-            continue
+    for elem in shell_element_cards:
         n2 = n1 + elem.n
         dxyzi, centroidi, ielementi, jelementi, normali = elem.material_coordinate_system()
         eids = elem.element_id
@@ -101,7 +102,7 @@ def material_coordinate_system(element,
     neid = ntheta + nmcid # element.n
     #nmcid = len(itheta) - ntheta
 
-    if (ntheta + nmcid == 0):
+    if (ntheta + nmcid == 0):  # pragma: no cover
         raise NotImplementedError((ntheta, nmcid))
 
     imat = np.full((neid, 3), np.nan, dtype=normal.dtype)
@@ -115,7 +116,7 @@ def material_coordinate_system(element,
         jnorm = np.linalg.norm(jmati, axis=1)
         try:
             jmati /= jnorm[:, np.newaxis]
-        except FloatingPointError:
+        except FloatingPointError:  # pragma: no cover
             raise ValueError(f'Cannot project i-axis onto element normal i={i} normal={normali}\n{element}')
         # we do an extra normalization here because
         # we had to project i onto the elemental plane
@@ -151,7 +152,7 @@ def material_coordinate_system(element,
                 imati, jmati = rotate_by_thetad(theta2, imat2, jmat2, normal2)
                 imat[itheta2, :] = imati
                 jmat[itheta2, :] = jmati
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(element.get_stats())
 
     #if np.isnan(imat.max()) or np.isnan(jmat.max()):
@@ -171,7 +172,7 @@ def element_coordinate_system(element,
     jnorm = np.linalg.norm(jmat, axis=1)
     try:
         jmat /= jnorm[:, np.newaxis]
-    except FloatingPointError:
+    except FloatingPointError:  # pragma: no cover
         raise ValueError(f'Cannot project i-axis onto element normal i={imat} normal={normal}\n{element}')
     assert xyz1.shape == imat.shape
     assert xyz1.shape == jmat.shape

@@ -1,10 +1,11 @@
 from __future__ import annotations
+from copy import deepcopy
 from itertools import count
 from typing import Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
-from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # , print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -12,8 +13,10 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_blank, double_or_blank, string_or_blank,
     integer_double_or_blank, integer_string_or_blank,
     blank)
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank, lax_double_or_blank
 from pyNastran.bdf.cards.elements.bars import set_blank_if_default # init_x_g0,
-from pyNastran.bdf.cards.properties.bars import _bar_areaL, to_fields, get_beam_sections, parse_pbrsect_options
+from pyNastran.bdf.cards.properties.bars import (
+    _bar_areaL, to_fields, get_beam_sections, parse_pbrsect_options)
 # PBARL as pbarl, A_I1_I2_I12
 
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -22,9 +25,12 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, make_idim, hslice_by_idim,
     searchsorted_filter, get_print_card_8_16,
     parse_element_check, parse_property_check)
-from pyNastran.dev.bdf_vectorized3.cards.elements.rod import line_mid_mass_per_length, line_length, line_vector_length, line_centroid
-from pyNastran.dev.bdf_vectorized3.cards.elements.utils import get_density_from_material, basic_mass_material_id
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, array_default_str
+from pyNastran.dev.bdf_vectorized3.cards.elements.rod import (
+    line_mid_mass_per_length, line_length, line_vector_length, line_centroid)
+from pyNastran.dev.bdf_vectorized3.cards.elements.utils import (
+    get_density_from_material, basic_mass_material_id)
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_str, array_default_int, array_default_str, array_default_float)
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if TYPE_CHECKING:  # pragma: no cover
@@ -69,14 +75,25 @@ class BAROR(BaseCard):
         #if isinstance(offt, integer_types):
             #raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
 
+    def __deepcopy__(self, memo):
+        copy = type(self)()
+        memo[id(self)] = copy
+        if self.comment:
+            copy.comment = self.comment
+        copy.pid = deepcopy(self.pid, memo)
+        copy.g0 = deepcopy(self.g0, memo)
+        copy.x = deepcopy(self.x, memo)
+        copy.offt = deepcopy(self.offt, memo)
+        return copy
+
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, model: BDF, card: BDFCard, comment: str=''):
         PROPERTY_ID_DEFAULT = 0
         GO_X_DEFAULT = 0
         OFFT_DEFAULT = ''
 
         pid = integer_or_blank(card, 2, 'pid', default=PROPERTY_ID_DEFAULT)
-
+        fdouble_or_blank = force_double_or_blank if model.is_lax_parser else double_or_blank
         # x / g0
         field5 = integer_double_or_blank(card, 5, 'g0_x1', default=0.)
         if isinstance(field5, integer_types):
@@ -87,8 +104,8 @@ class BAROR(BaseCard):
         elif isinstance(field5, float):
             g0 = GO_X_DEFAULT
             x = np.array([field5,
-                          double_or_blank(card, 6, 'x2', default=0.),
-                          double_or_blank(card, 7, 'x3', default=0.)],
+                          fdouble_or_blank(card, 6, 'x2', default=0.),
+                          fdouble_or_blank(card, 7, 'x3', default=0.)],
                           dtype='float64')
         else:
             raise NotImplementedError('BAROR field5 = %r' % field5)
@@ -203,10 +220,8 @@ def get_bar_vector(elem, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         elem.model.log.error(f'{elem.type} element_id={element_id} has nan vectors')
     return v, cd
 
-class CBAR(Element):
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
 
+class CBAR(Element):
     @Element.clear_check
     def clear(self) -> None:
         self.element_id = np.array([], dtype='int32')
@@ -761,12 +776,6 @@ class PBAR(Property):
         do a check for mid -> MAT1      for structural
         do a check for mid -> MAT4/MAT5 for thermal
     """
-    #def slice_card_by_property_id(self, property_id: np.ndarray) -> PBAR:
-        #"""uses a node_ids to extract PBARs"""
-        #iprop = self.index(property_id)
-        #prop = self.slice_card_by_index(iprop)
-        #return prop
-
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -1069,11 +1078,20 @@ class PBAR(Property):
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
+        iis = array_default_float(self.I, default=0.0, size=size)
+        areas = array_default_float(self.A, default=0.0, size=size)
+        js = array_default_float(self.J, default=0.0, size=size)
+        nsms = array_default_float(self.nsm, default=0.0, size=size)
+        cs = array_default_float(self.c, default=0.0, size=size)
+        ds = array_default_float(self.d, default=0.0, size=size)
+        es = array_default_float(self.e, default=0.0, size=size)
+        fs = array_default_float(self.f, default=0.0, size=size)
+        ks = array_default_float(self.k, default=1e8, size=size)
         for pid, mid, A, I, j, nsm, c, d, e, f, k in zip(property_ids, material_ids,
-                                                         self.A, self.I, self.J,
-                                                         self.nsm,
-                                                         self.c, self.d, self.e, self.f,
-                                                         self.k):
+                                                         areas, iis, js,
+                                                         nsms,
+                                                         cs, ds, es, fs,
+                                                         ks):
             c1, c2 = c
             d1, d2 = d
             e1, e2 = e
@@ -1081,26 +1099,26 @@ class PBAR(Property):
             i1, i2, i12 = I
             k1, k2 = k
 
-            i1 = set_blank_if_default(i1, 0.0)
-            i2 = set_blank_if_default(i2, 0.0)
-            i12 = set_blank_if_default(i12, 0.0)
-            j = set_blank_if_default(j, 0.0)
-            nsm = set_blank_if_default(nsm, 0.0)
+            #i1 = set_blank_if_default(i1, 0.0)
+            #i2 = set_blank_if_default(i2, 0.0)
+            #i12 = set_blank_if_default(i12, 0.0)
+            #j = set_blank_if_default(j, 0.0)
+            #nsm = set_blank_if_default(nsm, 0.0)
 
-            c1 = set_blank_if_default(c1, 0.0)
-            c2 = set_blank_if_default(c2, 0.0)
+            #c1 = set_blank_if_default(c1, 0.0)
+            #c2 = set_blank_if_default(c2, 0.0)
 
-            d1 = set_blank_if_default(d1, 0.0)
-            d2 = set_blank_if_default(d2, 0.0)
+            #d1 = set_blank_if_default(d1, 0.0)
+            #d2 = set_blank_if_default(d2, 0.0)
 
-            e1 = set_blank_if_default(e1, 0.0)
-            e2 = set_blank_if_default(e2, 0.0)
+            #e1 = set_blank_if_default(e1, 0.0)
+            #e2 = set_blank_if_default(e2, 0.0)
 
-            f1 = set_blank_if_default(f1, 0.0)
-            f2 = set_blank_if_default(f2, 0.0)
+            #f1 = set_blank_if_default(f1, 0.0)
+            #f2 = set_blank_if_default(f2, 0.0)
 
-            k1 = set_blank_if_default(k1, 1e8)
-            k2 = set_blank_if_default(k2, 1e8)
+            #k1 = set_blank_if_default(k1, 1e8)
+            #k2 = set_blank_if_default(k2, 1e8)
 
             list_fields = ['PBAR', pid, mid, A, i1, i2, j, nsm,
                            None, c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, i12]

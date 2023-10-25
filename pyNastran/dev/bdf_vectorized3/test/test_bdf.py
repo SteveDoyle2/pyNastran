@@ -436,6 +436,7 @@ def run_and_compare_fems(
     assert isinstance(bdf_model, str) and os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDFv(debug=debug, log=log)
     fem1.idtype = 'int64'
+    fem1.is_lax_parser = True
     fem1.run_testing_checks = True
 
     _setup_fem(fem1, debug, log, version,
@@ -1118,6 +1119,9 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str, mesh_form: str,
         ???
 
     """
+    if not is_nominal:
+        fem1.is_lax_parser = True
+
     log = fem1.log
     if crash_cards is None:
         crash_cards = []
@@ -1151,7 +1155,10 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str, mesh_form: str,
                 skin_filename = 'skin_file.bdf'
                 write_skin_solid_faces(fem1, skin_filename, size=16, is_double=False)
                 if os.path.exists(skin_filename):
-                    read_bdfv(skin_filename, log=fem1.log)
+                    modelv = BDFv(log=fem1.log)
+                    modelv.idtype = 'int64'
+                    modelv.is_lax_parser = True
+                    modelv.read_bdf(skin_filename)
                     os.remove(skin_filename)
 
             if limit_mesh_opt:
@@ -1183,8 +1190,10 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str, mesh_form: str,
                 if fem1._nastran_format not in ['optistruct', 'mystran']:
                     log.info(f'fem1.bdf_filename = {fem1.bdf_filename}')
                     log.info('trying read_bdf from the raw filename')
-                    read_bdfv(fem1.bdf_filename, encoding=encoding, xref=False,
-                              debug=fem1.debug, log=fem1.log)
+                    modelv = BDFv(debug=fem1.debug, log=fem1.log)
+                    modelv.idtype = 'int64'
+                    modelv.is_lax_parser = True
+                    modelv.read_bdf(fem1.bdf_filename, encoding=encoding, xref=False)
                 if safe_xref:
                     fem1.safe_cross_reference()
                 elif xref:
@@ -1248,9 +1257,10 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str, mesh_form: str,
     #fem1.write_as_ctria3(out_model)
 
     fem1._get_maps()
+    run_convert = True
     #remove_unused_materials(fem1)
     #remove_unused(fem1)
-    if not is_nominal:
+    if run_convert and not is_nominal:
         units_to = ['m', 'kg', 's']
         units_from = ['m', 'kg', 's']
         fem1b = copy.deepcopy(fem1)

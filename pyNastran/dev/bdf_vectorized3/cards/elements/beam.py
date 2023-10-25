@@ -396,6 +396,9 @@ class CBEAM(Element):
         return line_vector, length
 
     def length(self) -> np.ndarray:
+        missing = np.setdiff1d(self.nodes.flatten(), self.model.grid.node_id)
+        if len(missing):
+            raise RuntimeError(missing)
         length = line_length(self.model, self.nodes)
         inan = np.isnan(length)
         if np.any(inan):

@@ -4,6 +4,7 @@ from .assign_type import double, _get_dtype
 from .bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (
     integer_types, float_types)
+from .assign_type import integer_double_or_blank
 
 def force_integer(card: BDFCard, ifield: int, fieldname: str) -> int:
     """see ``integer``"""
@@ -162,4 +163,12 @@ def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default: O
                 raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                                   'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
+
+def lax_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
+                        default: Optional[float]=None,
+                        end: str='') -> float:
+    value = integer_double_or_blank(card, ifield, fieldname, default=default)
+    if isinstance(value, int):
+        value = float(value)
+    return value
 

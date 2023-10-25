@@ -1,12 +1,12 @@
 # pylint: disable=R0902,R0904,R0914
 from __future__ import annotations
+from copy import deepcopy
 from math import sin, cos, radians, atan2, sqrt, degrees
 from itertools import count
 import warnings
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
-from numpy import array, zeros
 from scipy.sparse import coo_matrix  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -320,7 +320,7 @@ class DTI(BaseCard):
                 return self.write_card(size=16)
             except Exception:
                 print('problem printing %s card' % self.type)
-                print("list_fields = ", list_fields)
+                #print("list_fields = ", list_fields)
                 raise
 
 
@@ -430,6 +430,19 @@ class NastranMatrix(BaseCard):
         assert not isinstance(matrix_form, bool), 'matrix_form=%r type=%s' % (matrix_form, type(matrix_form))
         if finalize:
             self.finalize()
+
+    def __deepcopy__(self, memo):
+        """doesn't copy the label_actors to speed things up?"""
+        #keys = ['name', '_color', 'display', 'line_width', 'point_size', '_opacity',
+                #'_representation', 'is_visible', 'bar_scale', 'is_pickable']
+        cls = self.__class__
+        result = cls.__new__(cls)
+        idi = id(self)
+        memo[idi] = result
+        for key in list(self.__dict__.keys()):
+            value = self.__dict__[key]
+            setattr(result, key, deepcopy(value, memo))
+        return result
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2340,8 +2353,8 @@ def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int,
         assert matrix.GCj.ndim == 1, matrix.GCj.ndim
         rows = matrix.GCi
         cols = matrix.GCj
-        GCj = array(matrix.GCj, dtype='int32') - 1
-        GCi = array(matrix.GCi, dtype='int32') - 1
+        GCj = np.array(matrix.GCj, dtype='int32') - 1
+        GCi = np.array(matrix.GCi, dtype='int32') - 1
         # TODO: matrix size:  is this correct?
         nrows = max(GCi) + 1
         ncols = max(GCj) + 1
@@ -2375,12 +2388,12 @@ def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int,
         #ncols = unique2d(cols).shape[0]
 
     float_dtype = _get_real_dtype(matrix.tin)
-    reals = array(matrix.Real, dtype=float_dtype)
+    reals = np.array(matrix.Real, dtype=float_dtype)
 
     dtype = _get_dtype(matrix.is_complex, matrix.tin)
 
     if matrix.is_complex:
-        complexs = array(matrix.Complex, dtype=float_dtype)
+        complexs = np.array(matrix.Complex, dtype=float_dtype)
         data = reals + 1j * complexs
     else:
         data = reals
@@ -2450,7 +2463,7 @@ def _fill_dense_rectangular_matrix_complex(matrix: DMIG,
                                            rows: dict[Any, int], cols: dict[Any, int],
                                            apply_symmetry: bool) -> np.ndarray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
-    dense_mat = zeros((nrows, ncols), dtype=matrix.tin_dtype)
+    dense_mat = np.zeros((nrows, ncols), dtype=matrix.tin_dtype)
     real_imag = matrix.Real + 1j * matrix.Complex
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         is_diagonal, not_diagonal = _get_diagonal_symmetric(matrix)
@@ -2486,7 +2499,7 @@ def _fill_dense_rectangular_matrix_real(matrix: DMIG,
                                         rows: dict[Any, int], cols: dict[Any, int],
                                         apply_symmetry: bool) -> np.ndarray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
-    dense_mat = zeros((nrows, ncols), dtype=matrix.tin_dtype)
+    dense_mat = np.zeros((nrows, ncols), dtype=matrix.tin_dtype)
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         is_diagonal, not_diagonal = _get_diagonal_symmetric(matrix)
         try:
@@ -2581,7 +2594,7 @@ def _fill_dense_column_matrix_real(matrix: DMIG,
     What does symmetry mean for a column matrix?!!!
     """
     #print('nrows=%s ncols=%s' % (nrows, ncols))
-    dense_mat = zeros((nrows, ncols), dtype=matrix.tin_dtype)
+    dense_mat = np.zeros((nrows, ncols), dtype=matrix.tin_dtype)
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
         raise RuntimeError('What does symmetry mean for a column matrix?!!!')
@@ -2616,7 +2629,7 @@ def _fill_dense_column_matrix_complex(matrix: DMIG,
 
     What does symmetry mean for a column matrix?!!!
     """
-    dense_mat = zeros((nrows, ncols), dtype=matrix.tin_dtype)
+    dense_mat = np.zeros((nrows, ncols), dtype=matrix.tin_dtype)
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
         raise RuntimeError('What does symmetry mean for a column matrix?!!!')
@@ -2680,8 +2693,8 @@ def get_dmi_matrix(matrix: DMI,
         #print(matrix)
         #print('GCi =', matrix.GCi)
         #print('GCj =', matrix.GCj)
-    GCj = array(matrix.GCj, dtype='int32') - 1
-    GCi = array(matrix.GCi, dtype='int32') - 1
+    GCj = np.array(matrix.GCj, dtype='int32') - 1
+    GCi = np.array(matrix.GCi, dtype='int32') - 1
 
     dtype = matrix.tin_dtype
 

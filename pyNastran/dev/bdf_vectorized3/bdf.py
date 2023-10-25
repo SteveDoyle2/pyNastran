@@ -29,7 +29,7 @@ from pickle import load, dump, dumps  # type: ignore
 import numpy as np  # type: ignore
 from cpylog import get_logger2
 
-from pyNastran.utils import object_attributes, check_path
+from pyNastran.utils import object_attributes, check_path, PathLike
 from pyNastran.bdf.utils import parse_patran_syntax
 from pyNastran.bdf.bdf_interface.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck,
@@ -64,7 +64,7 @@ from .cards.elements.beam import BEAMOR
 #from pyNastran.bdf.cards.elements.solid import (
     #CIHEX1, CIHEX2, CHEXA1, CHEXA2,
 #)
-#from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RROD, RSPLINE, RSSCON
+#from pyNastran.bdf.cards.elements.rigid import RBAR1, RSPLINE, RSSCON
 
 #from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     #AXIF, RINGFL,
@@ -77,14 +77,13 @@ from .cards.elements.beam import BEAMOR
 #from .cards.elements.acoustic import (
     #CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
 #from .cards.elements.bush import CBUSH2D
-#from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH_OPTISTRUCT
+#from .cards.properties.bush import PBUSH_OPTISTRUCT
 #from .cards.elements.bars import CBEAM3, CBEND
 #from .cards.elements.beam import CBEAM, BEAMOR
 #from .cards.properties.bars import PBRSECT, PBEAM3
 #from .cards.properties.beam import PBCOMP, PBMSECT
 ## CMASS5
-from pyNastran.bdf.cards.constraints import (SPCAX, SPCOFF, SPCOFF1,
-                                             SUPORT1, SESUP, GMSPC)
+from pyNastran.bdf.cards.constraints import SPCAX, SESUP, GMSPC
 #from .cards.coordinate_systems import (#CORD3G,
                                        #transform_coords_vectorized,
                                        #CORDx)
@@ -96,21 +95,21 @@ from pyNastran.bdf.cards.dynamic import (
     #TIC,
 )
 #from .cards.loads.loads import (
-    #LSEQ, RFORCE, RFORCE1, LOADCYN, LOADCYH)
-#from .cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
+    #LOADCYN, LOADCYH)
+#from .cards.loads.dloads import ACSRCE
 #from .cards.loads.static_loads import CLOAD
 
 #from .cards.loads.random_loads import RANDPS, RANDT1
 
-#from .cards.materials import (MAT9, MAT3D,
-                              #MATG, MATHE, MATHP, MATEV,
+#from .cards.materials import (MAT3D,
+                              #MATG, MATHE, MATEV,
                               #CREEP, EQUIV, NXSTRAT)
 #from .cards.material_deps import (
-    #MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
+    #MATT2, MATT3, MATT4, MATT5, MATT9, MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from .cards.grid import GRDSET
-#from pyNastran.bdf.cards.nodes import GRDSET # EPOINTs, POINT, SEQGP, GRIDB
+#from pyNastran.bdf.cards.nodes import GRDSET # SEQGP, GRIDB
 from pyNastran.bdf.cards.aero.aero import (
     #AESURF,
     AELINK, AESURFS,
@@ -122,7 +121,7 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import DOPTPRM
-    #TOPVAR, DDVAL, DOPTPRM,
+    #TOPVAR, DDVAL,
     #DRESP3,
     #DSCREEN)
 #from .cards.optimization_nx import (
@@ -134,7 +133,7 @@ from pyNastran.bdf.cards.optimization import DOPTPRM
     #CSUPER, CSUPEXT,
 #)
 #from .cards.bdf_sets import (
-    #SET1, SET2, SET3,
+    #SET2, SET3,
     #SEBSET, SECSET, SEQSET, # SEUSET
     #SEBSET1, SECSET1, SEQSET1, # SEUSET1
     #SESET, #SEQSEP
@@ -155,12 +154,10 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
                                #DTABLE)
 #from .cards.contact import (
     #BCRPARA, BCTADD, BCTSET, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
-    #BCTPARM, BGADD, BGSET, BCBODY)
+    #BCTPARM, BGADD, BCBODY)
 #from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
-#from pyNastran.bdf.bdf_methods import BDFMethods
-#from pyNastran.bdf.bdf_interface.get_card import GetCard
 
 from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttributes
 from pyNastran.dev.bdf_vectorized3.bdf_interface.add_card import AddCards
@@ -329,7 +326,6 @@ MISSING_CARDS = {
     'CBUTT',
     'PCOHE',
     'CWELD', 'PWELD',
-
 
     ## rigid_elements
     'RSPINT', 'RSPINR', 'RBE2GS',
@@ -526,9 +522,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self.read_includes = True
         self._remove_disabled_cards = False
 
+        self.is_lax_parser = False
+
         # file management parameters
         self.active_filenames: list[str] = []
-        self.active_filename = None  # type: Optional[str]
+        self.active_filename: Optional[str] = ''
         self.include_dir = ''
         self.dumplines = False
 
@@ -599,7 +597,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # dampers
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC',
             #  misc
-            'CFAST', 'CGAP', 'CSHEAR', #'GENEL',
+            'CFAST', 'CGAP', 'CSHEAR', 'GENEL',
 
             'CBAR', 'CBARAO', 'BAROR',
             'CROD', 'CTUBE', 'CONROD',
@@ -706,7 +704,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'SESUP',
 
             ## dloads
-            #'DLOAD',
+            'DLOAD',
 
             ## dload_entries
             #'ACSRCE',
@@ -715,7 +713,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'RANDPS', 'RANDT1', # random
 
             ## loads
-            'LOAD', # 'CLOAD', 'LSEQ', 'LOADCYN', 'LOADCYH',
+            'LOAD', # 'CLOAD',
+            'LSEQ', # 'LOADCYN', 'LOADCYH',
             'SLOAD',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -1283,10 +1282,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self.active_filename = obj.active_filename
         self.include_dir = obj.include_dir
 
-    def read_h5(self, h5_filename: str):
+    def read_h5(self, h5_filename: PathLike):
         read_h5_geometry(self, h5_filename)
 
-    def read_bdf(self, bdf_filename: Optional[str]=None,
+    def read_bdf(self, bdf_filename: Optional[PathLike]=None,
                  validate: bool=True,
                  xref: bool=True,
                  punch: bool=False,
@@ -1438,7 +1437,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                     del dict_values[value]
             # TODO: redo get_card_ids_by_card_types & card_count
 
-    def _read_bdf_helper(self, bdf_filename: Optional[str], encoding: str,
+    def _read_bdf_helper(self, bdf_filename: Optional[PathLike], encoding: str,
                          punch: bool, read_includes: bool):
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
@@ -1589,7 +1588,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
-        cards_list = []  # type: list[Any]
+        cards_list: list[Any] = []
         cards_dict = defaultdict(list)  # type: dict[str, list[Any]]
         dict_cards = ['BAROR', 'BEAMOR']
         #cards = defaultdict(list)
@@ -2203,7 +2202,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #'SESUP' : (SESUP, add_methods._add_sesuport_object), # pseudo-constraint
 
-            #'LSEQ' : (LSEQ, add_methods._add_lseq_object),
             #'CLOAD' : (CLOAD, add_methods._add_load_combination_object),
             #'LOADCYN' : (LOADCYN, add_methods._add_load_object),
             #'LOADCYH' : (LOADCYH, add_methods._add_load_object),
@@ -2375,7 +2373,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CFAST' : partial(self._prepare_card, self.cfast),
             'PFAST' : partial(self._prepare_card, self.pfast),
 
-            #'GENEL' : partial(self._prepare_card, self.genel),
+            'GENEL' : partial(self._prepare_card, self.genel),
 
             # mass
             'PMASS' : partial(self._prepare_card, self.pmass),
@@ -2518,7 +2516,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'TEMP': partial(self._prepare_card, self.temp),
             #'TEMPD': partial(self._prepare_card, self.tempd),
             #'DTEMP': partial(self._prepare_card, self.dtemp),
-            #'LSEQ': partial(self._prepare_card, self.lseq),
+            'LSEQ': partial(self._prepare_card, self.lseq),
             'SPCD' : partial(self._prepare_card, self.spcd), # enforced displacement; load
             'DEFORM' : partial(self._prepare_card, self.deform),  # enforced displacement
             'RFORCE' : partial(self._prepare_card, self.rforce),
@@ -2539,7 +2537,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'RADM': partial(self._prepare_card, self.radm),
 
             # dynamic loads
-            #'DLOAD' : partial(self._prepare_card, self.dload),
+            'DLOAD' : partial(self._prepare_card, self.dload),
             'DAREA' : partial(self._prepare_card, self.darea),
             'TLOAD1' : partial(self._prepare_card, self.tload1),
             'TLOAD2' : partial(self._prepare_card, self.tload2),
@@ -2856,7 +2854,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
     def _prepare_baror(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
         """adds a BAROR"""
         assert self.baror is None, self.baror
-        self.baror = BAROR.add_card(card_obj, comment=comment)
+        self.baror = BAROR.add_card(self, card_obj, comment=comment)
         return self.baror
     def _prepare_beamor(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
         """adds a BEAMOR"""
@@ -4073,6 +4071,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 list(cards_dict.keys())))
 
         for card_name, cards in sorted(cards_dict.items()):
+            #if card_name == 'GRID':
+                #print(card_name, len(cards))
             try:
                 is_reject = self.is_reject(card_name)
             except ReplicationError as error:
@@ -4428,7 +4428,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                     cards_list.append(class_instance)
         return cards_out
 
-
     def _add_card_hdf5(self, card_lines: list[str], card_name: str,
                        comment='', is_list: bool=True, has_none: bool=True) -> Any:
         """
@@ -4572,8 +4571,20 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
+        bad_attrs = []
         for key, value in self.__dict__.items():
-            setattr(result, key, deepcopy(value, memo))
+            try:
+                memo2 = deepcopy(value, memo)
+            except SyntaxError:
+                #if isinstance(value, dict):
+                    #for keyi, valuei in value.items():
+                        #print(valuei.object_attributes())
+                        #break
+                #raise
+                bad_attrs.append(key)
+            setattr(result, key, memo2)
+        if bad_attrs:
+            raise RuntimeError(f'failed copying {bad_attrs}')
         return result
 
     def __copy__(self):
@@ -4731,7 +4742,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_DELAY', 'add_DEQATN', 'add_DMI',
             #'add_DPHASE', 'add_DRESP', 'add_DTABLE',
             #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
-            #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_NLPARM', 'add_NLPCI',
+            #'add_GUST', 'add_MKAERO', 'add_NLPARM', 'add_NLPCI',
             #'add_PAERO', 'add_PARAM', 'add_PHBDY',
             #'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
             #'add_SEUSET', 'add_SPLINE', 'add_tempd', 'add_TF', 'add_TRIM',
@@ -4742,7 +4753,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_dload', '_add_dload_entry', 'add_element', 'add_hyperelastic_material',
             #'add_load', 'add_mass', 'add_material_dependence', 'add_method',
             #'add_property', 'add_random_table',
-            #'add_rigid_element', 'add_structural_material', 'add_suport', 'add_suport1',
+            #'add_rigid_element', 'add_structural_material',
             #'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element',
             #'add_thermal_load', 'add_thermal_material',
 

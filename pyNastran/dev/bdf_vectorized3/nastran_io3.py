@@ -41,10 +41,10 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
         CTETRA, CPENTA, CHEXA, CPYRAM,
     )
-    #from pyNastran.dev.op2_vectorized3.bdf_interface.bdf_attributes import RBE2, CONM2, GRID
 
 
 class Nastran3:
+    """doesn't have object bleedover like NastranIO"""
     def __init__(self, gui: MainWindow):
         self.gui = gui
         self.data_map = None
@@ -56,7 +56,7 @@ class Nastran3:
         self.bar_lines = {}
         self.include_mass_in_geometry = True
 
-    def get_nastran3_wildcard_geometry_results_functions(self):
+    def get_nastran3_wildcard_geometry_results_functions(self) -> tuple:
         """
         gets the Nastran wildcard loader used in the file load menu
         """
@@ -69,28 +69,35 @@ class Nastran3:
         return data
 
     def load_op2_results(self, op2_filename: str, plot: bool=True) -> None:
+        """loads results from an op2 file"""
         assert isinstance(op2_filename, (str, PurePath)), op2_filename
         model = OP2(debug=True, log=None, mode='msc')
         model.read_op2(op2_filename, combine=True, build_dataframe=False,
                        skip_undefined_matrices=False, encoding=None)
         self._load_op2_results(model, plot)
 
-    def _load_op2_results(self, model: OP2, plot: bool) -> None:
-        name = 'main'
-        cases: Cases = self.result_cases
-        form: Form = self.get_form()
-        icase = len(cases)
-        self._load_results_from_model(model,
-                                      form, cases, icase,
-                                      name, plot)
-        self.gui._finish_results_io2(name, form, cases)
-
-    def load_h5_results(self, h5_filename: PathLike, plot: bool=True):
+    def load_h5_results(self, h5_filename: PathLike, plot: bool=True) -> None:
+        """loads results from an h5 file"""
+        assert isinstance(h5_filename, (str, PurePath)), h5_filename
         model = Results(debug=True, log=None, mode='msc')
         model.read_h5(h5_filename)
         self._load_op2_results(model, plot)
 
-    def load_nastran3_geometry(self, bdf_filename: PathLike, name: str='main', plot: bool=True):
+    def _load_op2_results(self, model: OP2, plot: bool) -> None:
+        """loads results from a filled OP2 object (for op2/h5)"""
+        name = 'main'
+        cases: Cases = self.result_cases
+        form: Form = self.get_form()
+        icase = len(cases)
+        icase = self._load_results_from_model(
+            model,
+            form, cases, icase,
+            name, plot)
+        self.gui._finish_results_io2(name, form, cases)
+
+    def load_nastran3_geometry(self, bdf_filename: PathLike,
+                               name: str='main', plot: bool=True):
+        """loads geometry from a bdf/op2/h5 file"""
         bdf_filename_lower = bdf_filename.lower()
         print(bdf_filename)
         if bdf_filename_lower.endswith('.op2'):
@@ -99,7 +106,9 @@ class Nastran3:
             return self.load_h5_geometry(bdf_filename)
         return self.load_bdf_geometry(bdf_filename)
 
-    def load_nastran3_results(self, results_filename: PathLike, name: str='main', plot: bool=True):
+    def load_nastran3_results(self, results_filename: PathLike,
+                              name: str='main', plot: bool=True) -> vtkUnstructuredGrid:
+        """loads geometry from a op2/h5 file"""
         results_filename_lower = results_filename.lower()
         if results_filename_lower.endswith('.op2'):
             return self.load_op2_results(results_filename)
@@ -107,7 +116,9 @@ class Nastran3:
             return self.load_h5_results(results_filename)
         raise RuntimeError(f'results_filename={results_filename!r} is not supported')
 
-    def load_op2_geometry(self, op2_filename: PathLike, name: str='main', plot: bool=True):
+    def load_op2_geometry(self, op2_filename: PathLike,
+                          name: str='main', plot: bool=True) -> vtkUnstructuredGrid:
+        """loads geometry from an op2 file"""
         assert isinstance(op2_filename, (str, PurePath)), op2_filename
         model = OP2Geom(debug=True, log=None, mode='msc')
         model.read_op2(op2_filename)
@@ -124,7 +135,7 @@ class Nastran3:
 
     def _load_results_from_model(self, model: OP2,
                                  form: Form, cases: Cases, icase: int,
-                                 name: str, plot: bool):
+                                 name: str, plot: bool) -> int:
         #self.xyz_cid0 = model.grid.xyz_cid0() # .astype('float32')
         #self.node_ids = model.grid.node_id
 
@@ -160,8 +171,11 @@ class Nastran3:
                               key, subcase, subcase_form,
                               cases, icase,
                               node_id, xyz_cid0, dim_max)
+        return icase
 
-    def load_h5_geometry(self, h5_filename: str, name: str='main', plot: bool=True):
+    def load_h5_geometry(self, h5_filename: PathLike,
+                         name: str='main', plot: bool=True) -> vtkUnstructuredGrid:
+        """loads a geometry only an h5 file"""
         model = OP2Geom(debug=True, log=None, mode='msc')
         model.read_h5(h5_filename)
         ugrid, form, cases, icase = self._load_geometry_from_model(
@@ -172,7 +186,9 @@ class Nastran3:
         self.gui._finish_results_io2(name, form, cases)
         return ugrid
 
-    def load_bdf_geometry(self, bdf_filename: str, name: str='main', plot: bool=True):
+    def load_bdf_geometry(self, bdf_filename: PathLike,
+                          name: str='main', plot: bool=True):
+        """loads a geometry only an h5 file"""
         model = BDF(debug=True, log=None, mode='msc')
         model.idtype = 'int64'
         model.read_bdf(bdf_filename)
@@ -181,7 +197,8 @@ class Nastran3:
         self.gui._finish_results_io2(name, form, cases)
         return ugrid
 
-    def _load_geometry_from_model(self, model: BDF, name: str, plot: bool):
+    def _load_geometry_from_model(self, model: BDF, name: str, plot: bool,
+                                  ) -> tuple[vtkUnstructuredGrid, Form, Cases, int]:
         self.model = model
         gui = self.gui
         gui.eid_maps[name] = {}
@@ -231,15 +248,13 @@ class Nastran3:
 
         gui.scalar_bar_actor.VisibilityOn()
         gui.scalar_bar_actor.Modified()
-
         return ugrid, form, cases, icase
-
 
     def save_results(self,
                      model: BDF,
                      node_id: np.ndarray,
                      element_id: np.ndarray,
-                     property_id: np.ndarray):
+                     property_id: np.ndarray) -> tuple[Form, Cases, int]:
 
         node_index = np.arange(len(node_id))
         element_index = np.arange(len(element_id))
@@ -371,26 +386,27 @@ class Nastran3:
         cell_type_quad8 = 23
 
         cell_offset0 = 0
-        for element in model.element_cards:
-            nelement = element.n
-            if nelement == 0:
-                continue
-            #print('element')
-            # elements that don't use SPOINTs or
-            basic_elements = {
-                'CONROD', 'CTUBE', 'CROD',
-                'CBEAM', 'CBAR', 'CBUSH',
-                'CBAR', 'CBEAM', 'CSHEAR',
-                'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR',
-            }
-            midside_elements = {
-                'CTRIA6', 'CQUAD8', # 'CQUAD'
-                'CTRIAX6',
-            }
-            solid_elements = {'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM'}
 
-            gui_elements = basic_elements | solid_elements | midside_elements
-            self.gui_elements = gui_elements
+        # elements that don't use SPOINTs or
+        basic_elements = {
+            'CONROD', 'CTUBE', 'CROD',
+            'CBEAM', 'CBAR', 'CBUSH',
+            'CBAR', 'CBEAM', 'CSHEAR',
+            'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR',
+        }
+        midside_elements = {
+            'CTRIA6', 'CQUAD8', # 'CQUAD'
+            'CTRIAX6',
+        }
+        solid_elements = {'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM'}
+
+        gui_elements = basic_elements | solid_elements | midside_elements
+        self.gui_elements = gui_elements
+
+        element_cards = [card for card in model.element_cards if card.n]
+        for element in element_cards:
+            nelement = element.n
+            #print('element')
             etype = element.type
             #print('load', etype, nelement, element.element_id)
             if etype in basic_elements:
@@ -400,7 +416,7 @@ class Nastran3:
                 if etype in {'CONROD'}:
                     cell_type = cell_type_line
                     property_id = np.full(nelement, -1)
-                elif etype in {'CROD', 'CTUBE', 'CBAR', 'CBEAM', 'CBUSH'}:
+                elif etype in {'CROD', 'CTUBE', 'CBAR', 'CBEAM', 'CBUSH', 'CGAP'}:
                     cell_type = cell_type_line
                     property_id = element.property_id
                 elif etype in {'CTRIA3', 'CTRIAR'}:
@@ -660,6 +676,10 @@ def _cell_offset(cell_offset0: int, nelement: int, dnode: int) -> np.ndarray:
     return cell_offseti
 
 def _mean_min_edge_length(min_edge_length: np.ndarray) -> float:
+    """
+    gets the mean edge length for all the elements to size the
+    picker/scale factor
+    """
     ifinite = np.isfinite(min_edge_length)
     mean_edge_length_finite = min_edge_length[ifinite]
     mean_edge_length = 1.
@@ -678,11 +698,15 @@ def _set_quality(icase: int, cases: dict[int, Any],
         #'CBAR', 'CBEAM', 'CBUSH',
         #'CQUAD4', 'CTRIA3', 'CSHEAR',
         #'CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA'}
-    (element_id_quality, taper_ratio, area_ratio, max_skew, aspect_ratio,
-     min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
-     #icard_type,
-    ) = model.quality(cards_to_read=cards_to_read)
-
+    quality_form: Form = []
+    try:
+        (element_id_quality, taper_ratio, area_ratio, max_skew, aspect_ratio,
+         min_theta, max_theta, dideal_theta, min_edge_length, max_warp,
+         #icard_type,
+        ) = model.quality(cards_to_read=cards_to_read)
+    except IndexError:
+        mean_edge_length = 1.0
+        return mean_edge_length, icase, quality_form
     if not np.array_equal(element_id, element_id_quality):
         raise RuntimeError('quality map error')
 
@@ -696,10 +720,10 @@ def _set_quality(icase: int, cases: dict[int, Any],
             if elem.n == 0:
                 continue
             if elem.type in NO_ELEMENT:
-                model.log.info('n {elem.type} {elem.n}')
+                model.log.info(f'n {elem.type} {elem.n}')
                 is_validi = np.zeros(elem.n, dtype='bool')
             else:
-                model.log.info('y {elem.type} {elem.n}')
+                model.log.info('fy {elem.type} {elem.n}')
                 is_validi = np.ones(elem.n, dtype='bool')
             is_valid_list.append(is_validi)
         is_valid_element = np.hstack(is_valid_list)
@@ -713,7 +737,6 @@ def _set_quality(icase: int, cases: dict[int, Any],
 
     mean_edge_length = _mean_min_edge_length(min_edge_length)
 
-    quality_form: Form = []
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'AspectRatio', aspect_ratio)
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'TaperRatio', taper_ratio)
     icase = _add_finite_centroidal_gui_result(icase, cases, quality_form, subcase_id, 'AreaRatio', area_ratio)
@@ -736,6 +759,15 @@ def _load_oug(model: OP2,
               cases: Cases, icase: int,
               node_id: np.ndarray, xyz_cid0: np.ndarray,
               dim_max: float) -> int:
+    """
+    loads:
+     - eigenvector
+     - displacement
+     - velocity
+     - acceleration
+     - temperature
+
+    """
     for (name, results) in name_results:
         if subcase not in results:
             continue
@@ -940,6 +972,13 @@ def _add_integer_centroid_gui_result(icase: int,
                                      result_name: str,
                                      result_array: np.ndarray,
                                      mask_value: Optional[int]=None) -> int:
+    """
+    Parameters
+    ----------
+    mask_value : int
+        a null value for elements without the result
+
+    """
     node_res = GuiResult(subcase_id, header=result_name, title=result_name,
                          location='centroid', scalar=result_array,
                          mask_value=mask_value)
@@ -967,7 +1006,7 @@ def _add_finite_centroidal_gui_result(icase: int,
 
 def get_property_index(property_id: np.ndarray) -> np.ndarray:
     upid = np.unique(property_id)
-    uproperty_id = np.zeros(len(property_id), dtype='int32')
+    uproperty_id = np.zeros(len(property_id), dtype=property_id.dtype)
     for ipid, pid in enumerate(upid):
         uproperty_id[np.where(pid == property_id)] = ipid
     return uproperty_id

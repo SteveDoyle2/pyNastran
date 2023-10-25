@@ -74,7 +74,6 @@ class BaseCard:
         return BaseCard()
 
     def __deepcopy__(self, memo_dict):
-        #raw_fields = self.repr_fields()
         raw_fields = self.raw_fields()
         card = BDFCard(raw_fields)
         return self.add_card(card, comment=self.comment)

@@ -14,7 +14,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO
 from pyNastran.dev.bdf_vectorized3.cards.elements.bush import (
     CBUSH, PBUSH, PBUSHT, CBUSH1D, PBUSH1D, CBUSH2D, PBUSH2D)
 from pyNastran.dev.bdf_vectorized3.cards.elements.fast import CFAST, PFAST
-#from pyNastran.dev.bdf_vectorized3.cards.elements.genel import GENEL
+from pyNastran.dev.bdf_vectorized3.cards.elements.genel import GENEL
 from pyNastran.dev.bdf_vectorized3.cards.elements.spring import CELAS1, CELAS2, CELAS3, CELAS4, PELAS, PELAST
 from pyNastran.dev.bdf_vectorized3.cards.elements.damper import (
     CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5,
@@ -68,8 +68,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.static_pressure_loads import (
 from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
-    #LSEQ,
-    #DLOAD,
+    LSEQ, DLOAD,
     DAREA, TLOAD1, TLOAD2, RLOAD1, RLOAD2, # TIC, QVECT,
     #RANDPS, DELAY, DPHASE
 )
@@ -293,7 +292,7 @@ class BDFAttributes:
         self.pfast = PFAST(self)
 
         # genel
-        #self.genel = GENEL(self)
+        self.genel = GENEL(self)
 
         self.baror = None
         self.cbar = CBAR(self)
@@ -425,7 +424,7 @@ class BDFAttributes:
         #self.temp = TEMP(self)
         #self.tempd = TEMPD(self)  # default temp
         #self.dtemp = DTEMP(self)  # has nodes
-        #self.lseq = LSEQ(self)    # static load sequence
+        self.lseq = LSEQ(self)    # static load sequence
         #self.qvect = QVECT(self)
         self.spcd = SPCD(self)   # enforced displacment; load
         self.deform = DEFORM(self) # encforced displacement; load
@@ -447,7 +446,7 @@ class BDFAttributes:
         #self.radm = RADM(self)
 
         # dynamic loads
-        #self.dload = DLOAD(self)
+        self.dload = DLOAD(self)
         self.darea = DAREA(self)
         self.tload1 = TLOAD1(self)
         self.tload2 = TLOAD2(self)
@@ -667,7 +666,7 @@ class BDFAttributes:
             self.cbend,
             self.cshear,
             #self.caabsf, # acoustic shells
-            #self.genel,
+            self.genel,
         ] + self.shell_element_cards + self.solid_element_cards + \
         axisymmetric_element_cards + [
             self.conm1, self.conm2,
@@ -789,7 +788,7 @@ class BDFAttributes:
     @property
     def load_cards(self) -> list[Any]:
         loads = [
-            self.load, # self.lseq,
+            self.load, self.lseq,
             self.force, self.force1, self.force2,
             self.moment, self.moment1, self.moment2,
             self.pload, self.pload1, self.pload2, self.pload4,
@@ -807,7 +806,7 @@ class BDFAttributes:
     @property
     def dynamic_load_cards(self) -> list[Any]:
         loads = [
-            #self.dload,
+            self.dload,
             self.darea,
             self.tload1, self.tload2,
             self.rload1, self.rload2,

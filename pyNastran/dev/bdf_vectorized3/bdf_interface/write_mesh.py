@@ -453,7 +453,7 @@ class Writer:
         #bdf_file.write(model.chacbr.write(size=size))
 
         # other
-        #bdf_file.write(model.genel.write(size=size))
+        model.genel.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_rejects(self, bdf_file: TextIOLike,
                        size: int=8, is_double: bool=False,
@@ -611,10 +611,10 @@ class Writer:
         model.pcompg.write_file(bdf_file, size=size, is_double=is_double)
 
         # planar shells
-        model.plplane.write_file(bdf_file, size=size)
-        model.pplane.write_file(bdf_file, size=size)
-        model.pshln1.write_file(bdf_file, size=size)
-        model.pshln2.write_file(bdf_file, size=size)
+        model.plplane.write_file(bdf_file, size=size, is_double=is_double)
+        model.pplane.write_file(bdf_file, size=size, is_double=is_double)
+        model.pshln1.write_file(bdf_file, size=size, is_double=is_double)
+        model.pshln2.write_file(bdf_file, size=size, is_double=is_double)
 
         # solid
         model.psolid.write_file(bdf_file, size=size, is_double=is_double)
@@ -652,10 +652,10 @@ class Writer:
             model.mat9.write_file(bdf_file, size=size, is_double=is_double)
             model.mat10.write_file(bdf_file, size=size, is_double=is_double)
             model.mat11.write_file(bdf_file, size=size, is_double=is_double)
-            #bdf_file.write(model.mat10c.write(size=size))
-            #bdf_file.write(model.matort.write(size=size))
-            #bdf_file.write(model.mathe.write(size=size))
-            #bdf_file.write(model.mathp.write(size=size))
+            model.mat10c.write_file(bdf_file, size=size, is_double=is_double)
+            model.matort.write_file(bdf_file, size=size, is_double=is_double)
+            #model.mathe.write_file(bdf_file, size=size, is_double=is_double)
+            model.mathp.write_file(bdf_file, size=size, is_double=is_double)
 
         if is_thermal_materials:
             bdf_file.write('$THERMAL_MATERIALS\n')
@@ -917,7 +917,7 @@ class Writer:
             #bdf_file.write(model.qvect.write(size=size))
 
             # static load sequence
-            #bdf_file.write(model.lseq.write(size=size))
+            model.lseq.write_file(bdf_file, size=size, is_double=is_double)
 
             # rotational forces - static
             model.rforce.write_file(bdf_file, size=size, is_double=is_double)
@@ -929,12 +929,12 @@ class Writer:
             bdf_file.write(model.delay.write(size=size))
 
         if any(load.n for load in model.dynamic_load_cards):
-            #bdf_file.write(model.dload.write(size=size))
-            bdf_file.write(model.darea.write(size=size))
-            bdf_file.write(model.tload1.write(size=size))
-            bdf_file.write(model.tload2.write(size=size))
-            #bdf_file.write(model.rload1.write(size=size))
-            #bdf_file.write(model.rload2.write(size=size))
+            model.dload.write_file(bdf_file, size=size, is_double=is_double)
+            model.darea.write_file(bdf_file, size=size, is_double=is_double)
+            model.tload1.write_file(bdf_file, size=size, is_double=is_double)
+            model.tload2.write_file(bdf_file, size=size, is_double=is_double)
+            model.rload1.write_file(bdf_file, size=size, is_double=is_double)
+            model.rload2.write_file(bdf_file, size=size, is_double=is_double)
 
             # random loads
             #bdf_file.write(model.randps.write(size=size))
@@ -964,35 +964,8 @@ class Writer:
                             #print(f'failed printing load...type={load.type} key={key!r}')
                             #raise
 
-            #for unused_key, tempd in sorted(self.tempds.items()):
-                #bdf_file.write(tempd.write_card(size, is_double))
             #for unused_key, cyjoin in sorted(self.cyjoin.items()):
                 #bdf_file.write(cyjoin.write_card(size, is_double))
-        self._write_dloads(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
-
-    def _write_dloads(self, bdf_file: TextIOLike,
-                      size: int=8, is_double: bool=False,
-                      is_long_ids: Optional[bool]=None) -> None:
-        """Writes the dload cards sorted by ID"""
-        return
-        size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        if self.dloads or self.dload_entries:
-            bdf_file.write('$DLOADS\n')
-            for (key, loadcase) in sorted(self.dloads.items()):
-                for load in loadcase:
-                    try:
-                        bdf_file.write(load.write_card(size, is_double))
-                    except Exception:
-                        print(f'failed printing load...type={load.type} key={key!r}')
-                        raise
-
-            for (key, loadcase) in sorted(self.dload_entries.items()):
-                for load in loadcase:
-                    try:
-                        bdf_file.write(load.write_card(size, is_double))
-                    except Exception:
-                        print(f'failed printing load...type={load.type} key={key!r}')
-                        raise
 
     def _write_constraints(self, bdf_file: TextIOLike,
                            size: int=8, is_double: bool=False,
@@ -1047,8 +1020,8 @@ class Writer:
 
             #for (unused_id, bctset) in sorted(self.bctsets.items()):
                 #bdf_file.write(bctset.write_card(size, is_double))
-            model.bsurf.write_file(bdf_file, size=size)
-            model.bsurfs.write_file(bdf_file, size=size)
+            model.bsurf.write_file(bdf_file, size=size, is_double=is_double)
+            model.bsurfs.write_file(bdf_file, size=size, is_double=is_double)
             #for (unused_id, bconp) in sorted(self.bconp.items()):
                 #bdf_file.write(bconp.write_card(size, is_double))
             #for (unused_id, blseg) in sorted(self.blseg.items()):
@@ -1057,7 +1030,7 @@ class Writer:
                 #bdf_file.write(bfric.write_card(size, is_double))
             #for (unused_id, bgadd) in sorted(self.bgadds.items()):
                 #bdf_file.write(bgadd.write_card(size, is_double))
-            model.bgset.write_file(bdf_file, size=size)
+            model.bgset.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_coords(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False,

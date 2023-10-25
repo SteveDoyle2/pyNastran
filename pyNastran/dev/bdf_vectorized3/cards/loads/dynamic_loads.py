@@ -1,5 +1,5 @@
 from __future__ import annotations
-#from collections import defaultdict
+from collections import defaultdict
 from itertools import zip_longest
 from typing import Union, TYPE_CHECKING
 import numpy as np
@@ -11,19 +11,19 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default # , set_string8_bl
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 #from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, # integer_or_blank,
-    double_or_blank,
+    integer, double,
+    integer_or_blank, double_or_blank,
     components_or_blank, integer_string_or_blank, integer_double_or_blank,
     #integer_or_string, modal_components_or_blank,
 )
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.bdf.cards.loads.dloads import (
     fix_loadtype_tload1, fix_loadtype_tload2,
-    fix_loadtype_rload1, fix_loadtype_rload2,
+    fix_loadtype_rload1, # fix_loadtype_rload2,
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, # make_idim, hslice_by_idim,
+    VectorizedBaseCard, make_idim, # hslice_by_idim,
     parse_load_check, # get_print_card_8_16,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -37,6 +37,200 @@ if TYPE_CHECKING:
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+
+
+class DLOAD(VectorizedBaseCard):
+    """
+    +------+-----+------+------+----+-----+----+----+----+
+    |   1  |  2  |  3   |  4   | 5  |  6  | 7  | 8  | 9  |
+    +======+=====+======+======+====+=====+====+====+====+
+    | LOAD | SID |  S   |  S1  | L1 | S2  | L2 | S3 | L3 |
+    +------+-----+------+------+----+-----+----+----+----+
+    |      | S4  |  L4  | etc. |    |     |    |    |    |
+    +------+-----+------+------+----+-----+----+----+----+
+    | LOAD | 101 | -0.5 | 1.0  | 3  | 6.2 | 4  |    |    |
+    +------+-----+------+------+----+-----+----+----+----+
+
+    """
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
+        self.nloads = np.array([], dtype='int32')
+        self.load_ids = np.array([], dtype='int32')
+        self.scale_factors = np.array([], dtype='float64')
+
+    def add(self, sid: int, scale: float,
+            scale_factors: list[float], load_ids: list[int],
+            comment: str='') -> int:
+        """
+        Creates a DLOAD card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number. See Remarks 1. and 4. (Integer > 0)
+        scale : float
+            Scale factor. See Remarks 2. and 8. (Real)
+        Si : list[float]
+            Scale factors. See Remarks 2., 7. and 8. (Real)
+        load_ids : list[int]
+            Load set identification numbers of RLOAD1, RLOAD2, TLOAD1,
+            TLOAD2, and ACSRCE entries. See Remarks 3. and 7. (Integer > 0)
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if isinstance(scale_factors, float) and isinstance(load_ids, int):
+            scale_factors = [scale_factors]
+            load_ids = [load_ids]
+        elif isinstance(scale_factors, float):
+            scale_factors = [scale_factors] * len(load_ids)
+        else:
+            load_ids = [load_ids] * len(scale_factors)
+
+            scale_factors
+        self.cards.append((sid, scale, scale_factors, load_ids, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> None:
+        sid = integer(card, 1, 'sid')
+        scale = double(card, 2, 'scale')
+
+        scale_factors = []
+        load_ids = []
+
+        # alternating of scale factor & load set ID
+        nload_fields = len(card) - 3
+        assert nload_fields % 2 == 0, 'card=%s' % card
+        for iload in range(nload_fields // 2):
+            n = 2 * iload + 3
+            scale_factors.append(double(card, n, 'scale_factor'))
+            load_ids.append(integer(card, n + 1, 'load_id'))
+
+        assert len(card) > 3, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
+        self.cards.append((sid, scale, scale_factors, load_ids, comment))
+        self.n += 1
+        return self.n
+
+    def parse_cards(self) -> None:
+        if self.n == 0:
+            return
+        nloads = len(self.cards)
+        if nloads == 0:
+            return
+        self.load_id = np.zeros(nloads, dtype='int32')
+        self.scale = np.zeros(nloads, dtype='float64')
+        self.nloads = np.zeros(nloads, dtype='int32')
+
+        all_load_ids = []
+        all_scale_factors = []
+        assert nloads > 0, nloads
+        for icard, card in enumerate(self.cards):
+            (sid, scale, scale_factors, load_ids, comment) = card
+            nloads_actual = len(scale_factors)
+
+            self.load_id[icard] = sid
+            self.scale[icard] = scale
+            self.nloads[icard] = nloads_actual
+            all_load_ids.extend(load_ids)
+            all_scale_factors.extend(scale_factors)
+        self.load_ids = np.array(all_load_ids, dtype='int32')
+        self.scale_factors = np.array(all_scale_factors, dtype='float64')
+        self.model.log.debug('load_id=%s scale=%s nloads=%s all_load_ids=%s all_scale_factors=%s' % (
+            self.load_id, self.scale, self.nloads, all_load_ids, all_scale_factors))
+        self.cards = []
+
+    @property
+    def iload(self) -> np.ndarray:
+        return make_idim(self.n, self.nloads)
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        max_int = max(self.load_id.max(), self.load_ids.max())
+        print_card, size = get_print_card_size(size, max_int)
+
+        for sid, scale, iloadi in zip(self.load_id, self.scale, self.iload):
+            iload0, iload1 = iloadi
+            list_fields = ['DLOAD', sid, scale]
+            scale_factors = self.scale_factors[iload0:iload1]
+            load_ids = self.load_ids[iload0:iload1]
+            for (scale_factor, load_id) in zip_longest(scale_factors, load_ids):
+                list_fields += [scale_factor, load_id]
+            #if len(load_ids) != len(scale_factors):
+                #msg = 'nload_ids=%s nscale_factors=%s and arent the same\n' % (
+                    #len(load_ids), len(scale_factors))
+                #msg = 'load_ids=%s\n' % (load_ids)
+                #msg += 'scale_factors=%s\n' % (scale_factors)
+                #msg += print_card_8(list_fields)
+                #msg += str(self.get_stats())
+                #raise IndexError(msg)
+            bdf_file.write(print_card(list_fields))
+        return
+
+    def get_loads_by_load_id(self) -> dict[int, Loads]:
+        model = self.model
+        """"""
+        #uload_ids = np.unique(self.load_ids)
+        loads_by_load_id = defaultdict(list)
+
+        for load in model.dynamic_load_cards:
+            if load.type in {'DLOAD'}:
+                continue
+            #print(load)
+            uload_idsi = np.unique(load.load_id)
+            for uload_id in uload_idsi:
+                i = np.where(uload_id == load.load_id)[0]
+                if len(i) == 0:
+                    continue
+                loadi = load.slice_card_by_index(i)
+
+                loads_by_load_id[uload_id].append(loadi)
+        return dict(loads_by_load_id)
+
+    def get_reduced_loads(self,
+                          remove_missing_loads: bool=False,
+                          filter_zero_scale_factors: bool=False,
+                          stop_on_failure: bool=True) -> dict[int, Loads]:
+        """
+        Parameters
+        ----------
+        resolve_load_card : bool; default=False
+            ???
+        remove_missing_loads: bool; default=False
+            LOAD cards can reference loads (e.g., GRAV) that don't exist
+            Nastran sometimes ignores these loads leading to potentially incorrect results
+        filter_zero_scale_factors: bool; default=False
+            remove loads that are 0.0
+        """
+        reduced_loads = {}
+        if self.n == 0:
+            return reduced_loads
+
+        stop_on_failure = True
+        loads_by_load_id = self.get_loads_by_load_id()
+        log = self.model.log
+        for sid, global_scale, iload in zip(self.load_id, self.scale_factors, self.iload):
+            reduced_loadsi = []
+            #print(self.load_id, self.scale_factors, self.iload, iload)
+            iload0, iload1 = iload
+            if global_scale == 0. and filter_zero_scale_factors:
+                continue
+            scale_factors = global_scale * self.scale_factors[iload0:iload1]
+            load_ids = self.load_ids[iload0:iload1]
+            for (scale_factor, load_id) in zip_longest(scale_factors, load_ids):
+                if scale_factor == 0. and filter_zero_scale_factors:
+                    continue
+                loads_found = loads_by_load_id[load_id]
+                if len(loads_found) == 0:
+                    msg = f'No referenced loads found for load_id={load_id} on DLOAD load_id={sid}'
+                    log.error(msg)
+                    if stop_on_failure:
+                        raise RuntimeError(msg)
+                reduced_loadsi.append((scale_factor, loads_found))
+            reduced_loads[sid] = reduced_loadsi
+        return reduced_loads
 
 
 class DAREA(VectorizedBaseCard):
@@ -400,8 +594,8 @@ class TLOAD1(VectorizedBaseCard):
         return
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        model = self.model
-        udelay = np.unique(self.delay_int)
+        #model = self.model
+        #udelay = np.unique(self.delay_int)
 
         geom_check(
             self,
@@ -664,8 +858,8 @@ class TLOAD2(VectorizedBaseCard):
         return
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        model = self.model
-        udelay = np.unique(self.delay_int)
+        #model = self.model
+        #udelay = np.unique(self.delay_int)
 
         geom_check(
             self,
@@ -873,9 +1067,9 @@ class RLOAD1(VectorizedBaseCard):
         return
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        model = self.model
-        udelay = np.unique(self.delay_int)
-        udphase = np.unique(self.dphase_int)
+        #model = self.model
+        #udelay = np.unique(self.delay_int)
+        #udphase = np.unique(self.dphase_int)
 
         geom_check(
             self,
@@ -1134,9 +1328,9 @@ class RLOAD2(VectorizedBaseCard):
         return
 
     def geom_check(self, missing: dict[str, np.ndarray]):
-        model = self.model
-        udelay = np.unique(self.delay_int)
-        udphase = np.unique(self.dphase_int)
+        #model = self.model
+        #udelay = np.unique(self.delay_int)
+        #udphase = np.unique(self.dphase_int)
 
         geom_check(
             self,
@@ -1144,6 +1338,171 @@ class RLOAD2(VectorizedBaseCard):
             #delay=(model.delay.delay_id, udelay),
             #dphase=(model.dphase.dphase_id, udphase),
         )
+
+
+class LSEQ(VectorizedBaseCard):  # Requires LOADSET in case control deck
+    """
+    Defines a sequence of static load sets
+
+    .. todo:: how does this work...
+    +------+-----+----------+-----+-----+
+    |   1  |  2  |     3    |  4  |  5  |
+    +======+=====+==========+=====+=====+
+    | LSEQ | SID | EXCITEID | LID | TID |
+    +------+-----+----------+-----+-----+
+
+    ACSRCE : If there is no LOADSET Case Control command, then EXCITEID
+             may reference DAREA and SLOAD entries. If there is a LOADSET
+             Case Control command, then EXCITEID may reference DAREA
+             entries as well as SLOAD entries specified by the LID field
+             in the selected LSEQ entry corresponding to EXCITEID.
+
+    DAREA :  Refer to RLOAD1, RLOAD2, TLOAD1, TLOAD2, or ACSRCE entries
+             for the formulas that define the scale factor Ai in dynamic
+             analysis.
+
+    DPHASE :
+
+    SLOAD :  In the static solution sequences, the load set ID (SID) is
+             selected by the Case Control command LOAD. In the dynamic
+             solution sequences, SID must be referenced in the LID field
+             of an LSEQ entry, which in turn must be selected by the Case
+             Control command LOADSET.
+
+    LSEQ LID : Load set identification number of a set of static load
+               entries such as those referenced by the LOAD Case Control
+               command.
+
+
+    LSEQ,  SID, EXCITEID, LID, TID
+
+    #--------------------------------------------------------------
+    # F:\\Program Files\\Siemens\\NXNastran\\nxn10p1\\nxn10p1\\nast\\tpl\\cube_iter.dat
+
+    DLOAD       1001     1.0     1.0   55212
+    sid = 1001
+    load_id = [55212] -> RLOAD2.SID
+
+    RLOAD2,     SID, EXCITEID, DELAYID, DPHASEID,   TB,     TP,  TYPE
+    RLOAD2     55212   55120              55122   55123   55124
+    EXCITEID = 55120 -> DAREA.SID
+    DPHASEID = 55122 -> DPHASE.SID
+
+    DARA        SID      NID    COMP  SCALE
+    DAREA      55120     913    3     9.9E+9
+    SID = 55120 -> RLOAD2.SID
+
+    DPHASE      SID     POINTID   C1    TH1
+    DPHASE     55122     913       3   -90.0
+    SID = 55122
+    POINTID = 913 -> GRID.NID
+
+    GRID       NID       X     Y     Z
+    GRID       913      50.  0.19  -39.9
+    """
+    def __init__(self, model: BDF):
+        super().__init__(model)
+        self.lseq_id = np.array([], dtype='int32')
+        self.excite_id = np.array([], dtype='int32')
+        self.load_id = np.array([], dtype='int32')
+        self.temperature_id = np.array([], dtype='int32')
+
+    def slice_card_by_index(self, i: np.ndarray) -> LSEQ:
+        load = LSEQ(self.model)
+        self.__apply_slice__(load, i)
+        return load
+
+    def __apply_slice__(self, load: LSEQ, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.lseq_id = self.lseq_id[i]
+        load.excite_id = self.excite_id[i]
+        load.load_id = self.load_id[i]
+        load.temp_id = self.temp_id[i]
+
+    def add_card(self, card: BDFCard, comment: str=''):
+        lseq_id = integer(card, 1, 'sid')
+        excite_id = integer(card, 2, 'excite_id')
+        load_id = integer_or_blank(card, 3, 'lid', default=0)
+        temp_id = integer_or_blank(card, 4, 'tid', default=0)
+        if max(load_id, temp_id) == 0:
+            msg = 'LSEQ load_id/temp_id must not be None; load_id=%s temp_id=%s' % (load_id, temp_id)
+            raise RuntimeError(msg)
+        assert len(card) <= 5, f'len(LSEQ card) = {len(card):d}\ncard={card}'
+        self.cards.append((lseq_id, excite_id, load_id, temp_id, comment))
+        self.n += 1
+
+    def parse_cards(self) -> None:
+        if self.n == 0:
+            return
+        ncards = len(self.cards)
+        if ncards == 0:
+            return
+        lseq_id = np.zeros(ncards, dtype='int32')
+        excite_id = np.zeros(ncards, dtype='int32')
+        load_id = np.zeros(ncards, dtype='int32')
+        temperature_id = np.zeros(ncards, dtype='int32')
+
+        assert ncards > 0, ncards
+        for icard, card in enumerate(self.cards):
+            (lseq_idi, excite_idi, load_idi, temp_idi, comment) = card
+            lseq_id[icard] = lseq_idi
+            excite_id[icard] = excite_idi
+            load_id[icard] = load_idi
+            temperature_id[icard] = temp_idi
+        self._save(lseq_id, excite_id, load_id, temperature_id)
+        assert len(self.load_id) == self.n, f'nloads={len(self.load_id)} n={self.n}'
+        self.cards = []
+
+    def _save(self, lseq_id, excite_id, load_id, temperature_id):
+        if len(self.lseq_id) == 0:
+            lseq_id = np.hstack([self.lseq_id, lseq_id])
+            excite_id = np.hstack([self.excite_id, excite_id])
+            load_id = np.hstack([self.load_id, load_id])
+            temperature_id = np.hstack([self.temperature_id, temperature_id])
+        nloads = len(lseq_id)
+        self.lseq_id = lseq_id
+        self.excite_id = excite_id
+        self.load_id = load_id
+        self.temp_id = temperature_id
+        self.n = nloads
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(),
+                   self.load_id.max(), self.excite_id.max(),
+                   self.temp_id.max(), )
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        #self.get_loads()
+        lseq_ids = array_str(self.lseq_id, size=size)
+        load_ids = array_str(self.load_id, size=size)
+        excite_ids = array_str(self.excite_id, size=size)
+        load_ids = array_default_int(self.load_id, default=0, size=size)
+        temp_ids = array_default_int(self.temp_id, default=0, size=size)
+        for lseq_id, excite_id, load_id, temp_id in zip_longest(lseq_ids, excite_ids, load_ids, temp_ids):
+            list_fields = ['LSEQ', lseq_id, excite_id, load_id, temp_id]
+            bdf_file.write(print_card(list_fields))
+        return
+
+    #def get_loads_by_load_id(self) -> dict[int, Loads]:
+        #return get_loads_by_load_id(self)
+
+    #def get_reduced_loads(self,
+                          #remove_missing_loads: bool=False,
+                          #filter_zero_scale_factors: bool=False,
+                          #stop_on_failure: bool=True) -> dict[int, Loads]:
+        #return get_reduced_loads(
+            #self, remove_missing_loads=remove_missing_loads,
+            #filter_zero_scale_factors=filter_zero_scale_factors,
+            #stop_on_failure=stop_on_failure)
+    #def get_loads(self):
+        #dynamic_loads = self.model.dynamic_loads
+        #for card in
 
 
 def _set_int_float(i: int, array_int: np.ndarray, array_float: np.ndarray, value: Union[int, float]) -> None:

@@ -170,6 +170,7 @@ class TestDynamic(unittest.TestCase):
         model = BDF(debug=False)
         tload1 = model.tload1
         tload2 = model.tload2
+        dload = model.dload
 
         model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                                 nxref_errors=0, stop_on_xref_error=True)
@@ -220,15 +221,15 @@ class TestDynamic(unittest.TestCase):
         components = 2
         delays = 1.5
 
+        sid = 1
+        scale = 1.0
+        scale_factors = 1.
+        load_ids = 2
+        dloadi = model.add_dload(sid, scale, scale_factors, load_ids,
+                                 comment='dload')
+
         if RUN_DELAY:
             delay = model.add_delay(delay_id, nodes, components, delays)
-
-            sid = 1
-            scale = 1.0
-            scale_factors = 1.
-            load_ids = 2
-            dload = model.add_dload(sid, scale, scale_factors, load_ids,
-                                    comment='dload')
 
             x1 = 0.1
             x = np.linspace(0., 1.)
@@ -253,12 +254,12 @@ class TestDynamic(unittest.TestCase):
         tload2.write()
         tload2.write(size=16)
 
-        if RUN_DELAY:
-            dload.validate()
-            dload.raw_fields()
-            dload.write_card()
-            dload.write_card(size=16)
+        dload.validate()
+        #dload.raw_fields()
+        dload.write()
+        dload.write(size=16)
 
+        if RUN_DELAY:
             #tabled2.validate()
             #tabled2.raw_fields()
             tabled2.write()
@@ -303,6 +304,7 @@ class TestDynamic(unittest.TestCase):
         """tests DLOAD, RLOAD1, TABLED2 cards"""
         model = BDF(debug=False)
         rload1 = model.rload1
+        dload = model.dload
         #model.case_control_deck = CaseControlDeck(['DLOAD=2', 'BEGIN BULK'])
         sid = 2
         excite_id = 20
@@ -324,19 +326,20 @@ class TestDynamic(unittest.TestCase):
         model.add_darea(excite_id, nid, c, scale, comment='darea')
         model.add_grid(nid, [0., 0., 0.])
 
+
+        sid = 1
+        scale = 1.0
+        scale_factors = 1.
+        load_ids = 2
+        dloadi = model.add_dload(sid, scale, scale_factors, load_ids,
+                                comment='dload')
+
         if RUN_DELAY:
             delay_id = 2
             nodes = 100
             components = 2
             delays = 1.5
             delayi = model.add_delay(delay_id, nodes, components, delays)
-
-            sid = 1
-            scale = 1.0
-            scale_factors = 1.
-            load_ids = 2
-            dloadi = model.add_dload(sid, scale, scale_factors, load_ids,
-                                    comment='dload')
 
             x1 = 0.1
             x = np.linspace(0., 1.)
@@ -353,16 +356,16 @@ class TestDynamic(unittest.TestCase):
         rload1.write()
         rload1.write(size=16)
 
+        dload.validate()
+        #dload.raw_fields()
+        dload.write()
+        dload.write(size=16)
+
         if RUN_DELAY:
             delay.validate()
             #delay.raw_fields()
             delay.write()
             delay.write(size=16)
-
-            dload.validate()
-            #dload.raw_fields()
-            dload.write()
-            dload.write(size=16)
 
             tabled2.validate()
             tabled2.raw_fields()
@@ -410,6 +413,7 @@ class TestDynamic(unittest.TestCase):
         """tests DLOAD, RLOAD2, TABLED2 cards"""
         model = BDF(debug=False)
         rload2 = model.rload2
+        dload = model.dload
         #model.case_control_deck = CaseControlDeck(['DLOAD=2', 'BEGIN BULK'])
 
         sid = 3
@@ -433,19 +437,19 @@ class TestDynamic(unittest.TestCase):
         excite_id = 30
         model.add_darea(excite_id, nid, c, scale, comment='darea')
 
+        sid = 1
+        scale = 1.0
+        scale_factors = 1.
+        load_ids = 3
+        dloadi = model.add_dload(sid, scale, scale_factors, load_ids,
+                                 comment='dload')
+
         if RUN_DELAY:
             delay_id = 2
             nodes = 100
             components = 2
             delays = 1.5
             delay = model.add_delay(delay_id, nodes, components, delays)
-
-            sid = 1
-            scale = 1.0
-            scale_factors = 1.
-            load_ids = 3
-            dload = model.add_dload(sid, scale, scale_factors, load_ids,
-                                    comment='dload')
 
         model.pop_parse_errors()
 
@@ -454,16 +458,16 @@ class TestDynamic(unittest.TestCase):
         rload2.write()
         rload2.write(size=16)
 
+        dload.validate()
+        #dload.raw_fields()
+        dload.write()
+        dload.write(size=16)
+
         if RUN_DELAY:
             delay.validate()
             #delay.raw_fields()
             delay.write()
             delay.write(size=16)
-
-            dload.validate()
-            #dload.raw_fields()
-            dload.write()
-            dload.write(size=16)
 
         model.validate()
         model.cross_reference()
@@ -911,7 +915,7 @@ class TestDynamic(unittest.TestCase):
         model.setup(run_geom_check=True)
         save_load_deck(model, run_convert=False)
 
-    def _test_dynamic1(self):
+    def test_dynamic1(self):
         """
         xref test for:
          - DLOAD -> DAREA -> NID
@@ -977,7 +981,7 @@ GRID,30
         #   value of 4.0. D(f) for this same RLOAD entry is defined by
         #   the TABLED1 entry having TID = 41.
 
-    def _test_dynamic2(self):
+    def test_dynamic2(self):
         """
         xref test for:
          - LOADSET -> LSEQ   -> FORCE, PLOAD

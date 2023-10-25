@@ -5054,7 +5054,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_load_combination_object(load)
         return load
 
-    def add_lseq(self, sid, excite_id, lid, tid=None, comment: str='') -> int:
+    def add_lseq(self, sid: int, excite_id: int,
+                 lid: int=0, tid: int=0,
+                 comment: str='') -> int:
         """
         Creates a LSEQ card
 
@@ -5097,7 +5099,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         sload = self.sload.add(sid, nids, mags, comment=comment)
         return sload
 
-    def add_dload(self, sid, scale, scale_factors, load_ids, comment: str='') -> int:
+    def add_dload(self, sid: int, scale: float,
+                  scale_factors: list[float], load_ids: list[int],
+                  comment: str='') -> int:
         """
         Creates a DLOAD card
 

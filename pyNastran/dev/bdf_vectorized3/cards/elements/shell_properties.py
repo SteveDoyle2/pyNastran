@@ -8,7 +8,7 @@ import numpy as np
 #from pyNastran.bdf.field_writer_16 import print_field_16, print_card_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, # string, # double,
+    integer, string, # double,
     integer_or_blank, double_or_blank,
     #integer_double_or_blank,
     string_or_blank, # blank,

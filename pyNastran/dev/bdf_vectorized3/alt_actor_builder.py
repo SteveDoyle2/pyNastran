@@ -1,10 +1,8 @@
 from __future__ import annotations
-#import os
 from itertools import count
 from typing import TYPE_CHECKING
 
 import numpy as np
-#import vtk
 from pyNastran.gui.vtk_common_core import vtkUnsignedCharArray, vtkPoints, VTK_ID_TYPE
 from pyNastran.gui.vtk_interface import vtkUnstructuredGrid, vtkCellArray, vtkVertex
 
@@ -31,10 +29,10 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.shell_coords import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.op2_vectorized3.bdf import BDF
-    from pyNastran.dev.op2_vectorized3.bdf_interface.bdf_attributes import AECOMP, AECOMPL, SET1
-    #from pyNastran.dev.op2_vectorized3.op2_geom import OP2Geom
+    from pyNastran.dev.op2_vectorized3.bdf_interface.bdf_attributes import (
+        AECOMP, AECOMPL, SET1, RBE2, RBE3 #, GRID
+    )
     from pyNastran.gui.main_window import MainWindow
-    from pyNastran.dev.op2_vectorized3.bdf_interface.bdf_attributes import RBE2, RBE3 #, GRID
     from .nastran_io3 import Nastran3 as NastranIO
 
 
@@ -48,7 +46,7 @@ def create_alt_conm2_grids(gui: MainWindow,
         mass_total, cg, inertia = model.inertia_sum()
     except Exception as e:
         model.log.error(f'cannot build mass actors\n{str(e)}')
-        raise
+        #raise
         mass_total = 0.
 
     if mass_total != 0.0:
@@ -58,24 +56,29 @@ def create_alt_conm2_grids(gui: MainWindow,
         #print('inertia =', inertia)
         _build_dot(gui, name, cg)
 
-    if element.n > 0:
+    if element.n == 0:
+        return
+
+    try:
         mass = element.mass()
         centroid = element.centroid()
+    except AssertionError:
+        return
 
-        # total - cg & all
-        conm2_mass_total = mass.sum()
-        cg_mass_total = (mass[:, np.newaxis] * centroid).sum(axis=0) / conm2_mass_total
-        assert len(cg_mass_total) == 3, cg_mass_total
-        name = f'All CONM2s CG mass={conm2_mass_total:g} xyz=[{cg_mass_total[0]:g}, {cg_mass_total[1]:g}, {cg_mass_total[2]:g}]'
-        _build_dot(gui, name, cg_mass_total)
+    # total - cg & all
+    conm2_mass_total = mass.sum()
+    cg_mass_total = (mass[:, np.newaxis] * centroid).sum(axis=0) / conm2_mass_total
+    assert len(cg_mass_total) == 3, cg_mass_total
+    name = f'All CONM2s CG mass={conm2_mass_total:g} xyz=[{cg_mass_total[0]:g}, {cg_mass_total[1]:g}, {cg_mass_total[2]:g}]'
+    _build_dot(gui, name, cg_mass_total)
 
-        name = f'All CONM2s mass={conm2_mass_total:g}'
-        _build_dots(gui, name, centroid)
+    name = f'All CONM2s mass={conm2_mass_total:g}'
+    _build_dots(gui, name, centroid)
 
-        # individual
-        for eid, nid, massi, xyzi in zip(element.element_id, element.node_id, mass, centroid):
-            name = f'CONM2 {eid} nid={nid} mass={massi:g}  xyz=[{xyzi[0]:g}, {xyzi[1]:g}, {xyzi[2]:g}]'
-            _build_dot(gui, name, xyzi)
+    # individual
+    for eid, nid, massi, xyzi in zip(element.element_id, element.node_id, mass, centroid):
+        name = f'CONM2 {eid} nid={nid} mass={massi:g}  xyz=[{xyzi[0]:g}, {xyzi[1]:g}, {xyzi[2]:g}]'
+        _build_dot(gui, name, xyzi)
 
 def create_alt_rbe3_grids(gui: MainWindow,
                           model: BDF,
@@ -93,7 +96,10 @@ def create_alt_rbe3_grids(gui: MainWindow,
 
     name = f'RBE3 Reference dependents'
     inid_all_dependent = np.searchsorted(grid_id, elem.ref_grid)
-    ref_xyz_dependents = xyz_cid0[inid_all_dependent, :]
+    try:
+        ref_xyz_dependents = xyz_cid0[inid_all_dependent, :]
+    except IndexError:
+        return
     _build_dots(gui, name, ref_xyz_dependents, color=RED_FLOAT)
 
     all_dep_nodes = elem.dependent_nodes
@@ -170,6 +176,18 @@ def create_alt_axes(self: NastranIO,
                     model: BDF,
                     grid_id: np.ndarray,
                     xyz_cid0: np.ndarray):
+    """
+    creates:
+     - shell element coordinate systems
+     - shell material coordinate systems
+
+    creates orientation vectors for:
+     - CBAR
+     - CBEAM
+     - CBUSH
+     - CGAP
+
+    """
     assert gui is not None
     if not hasattr(gui, 'bar_eids') or gui.bar_eids is None:
         gui.bar_eids = {}
@@ -178,17 +196,25 @@ def create_alt_axes(self: NastranIO,
     #from pyNastran.utils import object_attributes
     #print('gui attrs', object_attributes(gui))
     #print('gui type = ', type(gui))
-    _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbush, 'CBUSH')
-    _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cgap, 'CGAP')
-    _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbar, 'CBAR')
-    _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbeam, 'CBEAM')
-    _create_shell_axes(self, gui, model, grid_id, xyz_cid0)
+    try:
+        _create_shell_axes(self, gui, model, grid_id, xyz_cid0)
+        _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbar, 'CBAR')
+        _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbeam, 'CBEAM')
+        _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cbush, 'CBUSH')
+        _create_alt_axes(self, gui, model, grid_id, xyz_cid0, model.cgap, 'CGAP')
+    except IndexError:
+        pass
 
 def _create_shell_axes(self: NastranIO,
                        gui: MainWindow,
                        model: BDF,
                        grid_id: np.ndarray,
                        xyz_cid0: np.ndarray) -> None:
+    """
+    creates:
+     - shell element coordinate systems
+     - shell material coordinate systems
+    """
     name_func = [
         ('eleement', get_shell_material_coordinate_system),
         ('material', get_shell_element_coordinate_system),
@@ -235,6 +261,12 @@ def _create_alt_axes(self: NastranIO,
                      xyz_cid0: np.ndarray,
                      elem, card_name: str) -> None:
     """
+    creates orientation vectors for:
+     - CBAR
+     - CBEAM
+     - CBUSH
+     - CGAP
+
     Parameters
     ----------
     self : NastranIO
@@ -358,7 +390,10 @@ def create_alt_rbe2_grids(gui: MainWindow,
         return
 
     i_independent = np.searchsorted(grid_id, elem.independent_node)
-    xyz_independents = xyz_cid0[i_independent, :]
+    try:
+        xyz_independents = xyz_cid0[i_independent, :]
+    except IndexError:
+        return
 
     name = f'RBE2 independents'
     _build_dots(gui, name, xyz_independents, color=BLUE_FLOAT)
@@ -695,7 +730,7 @@ def create_monpnt1(gui: MainWindow,
                     #name, label, aecomp_name, xyz_global)
             elif list_type == 'CAERO':
                 log.warning(f'skipping MONPNT1={name!r} because AECOMP={aecomp_name!r} has a list_type=CAERO') # \nkeys={keys}
-            else:
+            else:  # pragma: no cover
                 log.warning(f'skipping MONPNT1={name!r} because AECOMP={aecomp_name!r} has a list_type={list_type!r}') # \nkeys={keys}
                 raise RuntimeError(f'skipping MONPNT1={name!r} because AECOMP={aecomp_name!r} has a list_type={list_type!r}') # \nkeys={keys}
         elif aecomp_name in all_aecompl_names:
@@ -719,7 +754,7 @@ def create_monpnt1(gui: MainWindow,
                 log.warning(f'skipping MONPNT1={name!r} because AECOMPs={aecomp_names} has a list_type=AELIST') # \nkeys={keys}
             elif list_type == 'CAERO':
                 log.warning(f'skipping MONPNT1={name!r} because AECOMPs={aecomp_names} has a list_type=CAERO') # \nkeys={keys}
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(f'skipping MONPNT1={name!r} because AECOMPs={aecomp_names} has a list_type={list_type!r}') # \nkeys={keys}
 
         else:  # pragma: no cover
@@ -752,7 +787,7 @@ def get_aecomp_from_aecompl(aecomp_name: str,
             elif label in all_aecompl_names:
                 assert label not in used_aecompl_names, f'AECOMPL label={label!r} was already used; circular reference'
                 aecompls.append(label)
-            else:
+            else:  # pragma: no cover
                 raise RuntimeError(label)
 
         all_labels = []
@@ -873,7 +908,7 @@ def _build_dot(gui: MainWindow, name: str, xyzi: np.ndarray,
 
 
 def _build_dots(gui: MainWindow, name: str, xyzs: np.ndarray,
-                point_size: int=3, color=RED_FLOAT, is_visible: bool=False):
+                point_size: int=3, color=RED_FLOAT, is_visible: bool=False) -> None:
     assert len(xyzs.shape) == 2, xyzs.shape
     gui.create_alternate_vtk_grid(
         name, color=color, point_size=point_size, opacity=1.0,
@@ -898,7 +933,7 @@ def _build_lines(gui: MainWindow, name: str,
                  nodes_index: np.ndarray,
                  line_width: int=3, color=RED_FLOAT,
                  representation: str = 'wire',
-                 is_visible: bool=True):
+                 is_visible: bool=True) -> None:
     assert len(xyzs.shape) == 2, xyzs.shape
     assert len(nodes_index.shape) == 2, nodes_index.shape
     nelement = nodes_index.shape[0]
@@ -925,7 +960,7 @@ def _build_quads(gui: MainWindow, name: str,
                  line_width: int=3, color=RED_FLOAT,
                  opacity: float=1.0,
                  is_visible: bool=True,
-                 representation: str='wire+surf'):
+                 representation: str='wire+surf') -> None:
     assert len(xyzs.shape) == 2, xyzs.shape
     assert len(nodes_index.shape) == 2, nodes_index.shape
     assert nodes_index.shape[1] == 4, nodes_index.shape
@@ -951,7 +986,7 @@ def _build_vtk_data_from_dnode(alt_grid: vtkUnstructuredGrid,
                                xyz: np.ndarray,
                                nnodes: np.ndarray,
                                nodes_index: np.ndarray,
-                               nelement: int, cell_typei: int, dnode: int):
+                               nelement: int, cell_typei: int, dnode: int) -> None:
     points = numpy_to_vtk_points(xyz)
 
     cell_type = np.ones(nelement, dtype='int64') * cell_typei
