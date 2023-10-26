@@ -78,7 +78,7 @@ def _geom_check_node(missing: dict[str, np.ndarray],
 def _geom_check(missing: dict[str, np.ndarray],
                 group: list[np.ndarray, np.ndarray],
                 name: str,
-                names: str, filter0=True):
+                names: str, filter0: bool=True):
     """
     _geom_check(missing, coord, 'coord_id', 'coords')
     """
@@ -90,8 +90,11 @@ def _geom_check(missing: dict[str, np.ndarray],
             if len(used_ids) == 0:
                 return
 
-        assert len(all_ids) > 0, f'{name}: no ids: {all_ids}'
-        iset, umissing = find_missing(all_ids, used_ids, names)
+        if len(all_ids) == 0:
+            #log.warning(f'{name}: no ids: {all_ids}')
+            umissing = np.unique(used_ids)
+        else:
+            iset, umissing = find_missing(all_ids, used_ids, names)
         if len(umissing):
             missing[name] = umissing
 

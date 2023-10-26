@@ -4,6 +4,7 @@ import unittest
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, BDFCard
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 
+HAS_CONTACT = False
 
 class TestContact(unittest.TestCase):
 
@@ -57,6 +58,56 @@ class TestContact(unittest.TestCase):
         bsurfs.write(size, 'dummy')
         save_load_deck(model)
 
+    def test_bcprop(self):
+        model = BDF(debug=False)
+        bcprop = model.bcprop
+
+        lines = ['BCPROP,    1100,    100,     101']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bcprop.add_card(card)
+
+        lines = ['BCPROP,    1100,    11,THRU,15']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bcprop.add_card(card)
+
+        lines = ['BCPROP,    1101,    11,THRU,15,',
+                 ',1,2']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bcprop.add_card(card)
+
+        model.setup()
+        size = 8
+        bcprop.write(size, 'dummy')
+        save_load_deck(model)
+
+    def test_bcprops(self):
+        model = BDF(debug=False)
+        bcprops = model.bcprops
+
+        lines = ['BCPROPS,    1100,    100,     101']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bcprops.add_card(card)
+
+        lines = ['BCPROPS,    1100,    11,THRU,15']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bcprops.add_card(card)
+
+        lines = ['BCPROPS,    1101,    11,THRU,15,',
+                 ',1,2']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        card = bcprops.add_card(card)
+
+        model.setup()
+        size = 8
+        bcprops.write(size, 'dummy')
+        save_load_deck(model)
+
     def test_contact_01(self):
         """checks the BSURF cards"""
         model = BDF(debug=False)
@@ -99,13 +150,13 @@ class TestContact(unittest.TestCase):
         frictions = [0.11, 0.22]
         min_distances = [0.001, 0.001]
         max_distances = [0.1, 0.2]
-        HAS_CONTACT = False
-        if HAS_CONTACT:
-            bctset = model.add_bctset(contact_set_id, source_ids, target_ids, frictions,
-                                      min_distances, max_distances,
-                                      comment='bctset')
-            bctset.raw_fields()
 
+        bctseti = model.add_bctset(contact_set_id, source_ids, target_ids, frictions,
+                                   min_distances, max_distances,
+                                   comment='bctset')
+        #bctset.raw_fields()
+
+        if HAS_CONTACT:
             contract_region = 100
             surface = 'BOT'
             contact_type = 'RIGID'
@@ -114,20 +165,22 @@ class TestContact(unittest.TestCase):
             bcrpara = model.add_bcrpara(contract_region, surface, offset, contact_type,
                                         master_grid_point, comment='bcrpara')
             bcrpara.raw_fields()
-        model.setup()
-        model.validate()
 
-        if HAS_CONTACT:
             contact_region = 102
             params = {'cat' : 111, 'dog' : 222, 'frog' : 0.}
             bctpara = model.add_bctpara(contact_region, params, comment='bctpara')
             bctpara.raw_fields()
             str(bctpara)
 
-            contact_region = 300
-            contact_sets = [301, 302]
-            bctadd = model.add_bctadd(contact_region, contact_sets, comment='bctadd')
-            bctadd.raw_fields()
+        model.setup()
+        model.validate()
+
+        contact_region = 300
+        contact_sets = [301, 302]
+        bctaddi = model.add_bctadd(contact_region, contact_sets, comment='bctadd')
+        #bctadd.raw_fields()
+        model.setup()
+
         save_load_deck(model)
 
     def _test_contact_3(self):
@@ -172,19 +225,54 @@ class TestContact(unittest.TestCase):
         |       |      | SID2 | TID2 | SDIST2  |    | EXT2 |      |    |
         """
         model = BDF(debug=True, log=None, mode='msc')
-        gsid = 1
-        sids = [1, 2, 3]
-        tids = [10, 20, 30]
+        glue_id = 1
+        source_ids = [1, 2, 3]
+        target_ids = [10, 20, 30]
         sdists = [100., 200., 300.]
         exts = [0.01, 0.02, 0.03]
         card = [
             'BGSET',
-            gsid, sids[0], tids[0], sdists[0], None, exts[0], None, None,
-            None, sids[1], tids[1], sdists[1], None, exts[1], None, None,
-            None, sids[2], tids[2], sdists[2], None, exts[2], None, None,
+            glue_id, source_ids[0], target_ids[0], sdists[0], None, exts[0], None, None,
+            None,    source_ids[1], target_ids[1], sdists[1], None, exts[1], None, None,
+            None,     source_ids[2], target_ids[2], sdists[2], None, exts[2], None, None,
         ]
-        card = model.add_card(card, 'BGSET', comment='comment', ifile=None, is_list=True, has_none=True)
+        card2 = [
+            'BGADD', 100, glue_id,
+        ]
+
+        card = model.add_card(card, 'BGSET', comment='bgset', ifile=None, is_list=True, has_none=True)
+        model.add_card(card2, 'BGADD', comment='bgadd', ifile=None, is_list=True, has_none=True)
         model.setup()
+        save_load_deck(model)
+        #bgset = model.add_bgset
+
+    def test_contact_bctset(self):
+        """
+        |    1   |   2   |  3   |   4   |   5   |   6   |   7   |   8   |
+        | BCTSET | CSID  | SID1 | TID1  | FRIC1 | MIND1 | MAXD1 |  DID  |
+        |        |       | SID2 | TID2  | FRIC2 | MIND2 | MAXD2 |       |
+        """
+        model = BDF(debug=True, log=None, mode='msc')
+        contact_id = 1
+        desc_id = 42
+        source_ids = [1, 2, 3]
+        target_ids = [10, 20, 30]
+        max_sdists = [0., 2., 3.]
+        min_sdists = [0., 200., 300.]
+        frictions = [0.0, 0.02, 0.03]
+        card = [
+            'BCTSET',
+            contact_id, source_ids[0], target_ids[0], frictions[0], max_sdists[0], min_sdists[0], desc_id, None,
+            None,       source_ids[1], target_ids[1], frictions[1], max_sdists[1], min_sdists[1], None, None,
+            None,       source_ids[2], target_ids[2], frictions[2], max_sdists[2], min_sdists[2], None, None,
+        ]
+        card2 = [
+            'BCTADD', 100, contact_id,
+        ]
+        card = model.add_card(card, 'BCTSET', comment='bctset', ifile=None, is_list=True, has_none=True)
+        model.add_card(card2, 'BCTADD', comment='bctadd', ifile=None, is_list=True, has_none=True)
+        model.setup()
+
         save_load_deck(model)
         #bgset = model.add_bgset
 

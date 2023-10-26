@@ -110,7 +110,7 @@ jobs:
           #env:
           # COVERAGE_RUN='coverage run'
           # CODECOV='codecov'
-          # NUMPY='numpy scipy matplotlib h5py vtk pyqt5 'pandas>=1.0,<2.0' imageio pillow>5.2,!=7.1.0'
+          # NUMPY='numpy scipy matplotlib h5py vtk pyqt5 'pandas>=1.0' imageio pillow>5.2,!=7.1.0'
           # LIB='libblas-dev liblapack-dev'
 
     #--------------------------------------------------------------------------------------------------
@@ -120,7 +120,7 @@ jobs:
       #env:
       #- COVERAGE_RUN='coverage run'
       #- CODECOV='codecov'
-      #- NUMPY='numpy scipy matplotlib h5py vtk pyqt5 'pandas>=1.0,<2.0' imageio pillow>5.2,!=7.1.0'
+      #- NUMPY='numpy scipy matplotlib h5py vtk pyqt5 'pandas>=1.0' imageio pillow>5.2,!=7.1.0'
       ##- LIB='libblas-dev liblapack-dev'
       #- LIBH5='libhdf5-dev'
     #--------------------------------------------------------------------------------------------------
@@ -177,7 +177,7 @@ jobs:
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
         run: |
-          pip install 'pandas>=1.0,<2.0' matplotlib
+          pip install 'pandas>=1.0' matplotlib
 
       - name: Install latest packages (h5py)
         if: ${{  matrix.python-version != '3.12' && (matrix.mode == 'latest' ||
@@ -194,7 +194,8 @@ jobs:
         if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
-          pip install imageio pillow>5.2,!=7.1.0,<10.1.0
+        run: |
+          pip install imageio<2.31.6 pillow>5.2,!=7.1.0
 
       - name: Install latest packages (vtk)
         #if: ${{ matrix.python-version != '3.12' && (

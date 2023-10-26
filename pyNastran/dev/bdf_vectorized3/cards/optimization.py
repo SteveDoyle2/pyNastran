@@ -56,10 +56,6 @@ class DCONADD(ADD):
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['dconstr_id'].append(self.dconstr_ids)
 
-    @property
-    def is_small_field(self):
-        return max(self.dconadd_id.max(), self.dconstr_ids.max()) < 99_999_999
-
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -71,8 +67,9 @@ class DCONADD(ADD):
             print_card = print_card_16
 
         #self.get_reduced_spcs()
+        dconadd_ids = array_str(self.dconadd_id, size=size)
         dconstr_ids = array_str(self.dconstr_ids, size=size)
-        for dconadd_id, idim in zip(self.dconadd_id, self.idim):
+        for dconadd_id, idim in zip(dconadd_ids, self.idim):
             idim0, idim1 = idim
             dconstr_idsi = dconstr_ids[idim0:idim1].tolist()
             list_fields = ['DCONADD', dconadd_id] + dconstr_idsi

@@ -87,7 +87,9 @@ from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
     #MATS8, # MSC
     MATT1, MATT8)
 
-from pyNastran.dev.bdf_vectorized3.cards.contact import BSURF, BSURFS, BGSET
+from pyNastran.dev.bdf_vectorized3.cards.contact import (
+    BSURF, BSURFS, BCPROP, BCPROPS,
+    BGSET, BCTSET, BGADD, BCTADD)
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.constraints import (
     SPC, SPC1, SPCADD,
@@ -203,9 +205,15 @@ class BDFAttributes:
         self.pdampt = PDAMPT(self)
 
         # contact
-        self.bsurf = BSURF(self)
-        self.bsurfs = BSURFS(self)
-        self.bgset = BGSET(self)
+        self.bsurf = BSURF(self)      # source/target_id to shell eid
+        self.bsurfs = BSURFS(self)    # source/target_id to solid eid
+        self.bcprop = BCPROP(self)    # source/target_id to shell pid
+        self.bcprops = BCPROPS(self)  # source/target_id to solid pid
+
+        self.bgset = BGSET(self)    # glue_id to source/target_id
+        self.bctset = BCTSET(self)  # contact_id to source/target_ids
+        self.bgadd = BGADD(self)    # add glue_ids
+        self.bctadd = BCTADD(self)  # add contact_ids
 
         # sets
         self.suport = SUPORT(self)
@@ -934,7 +942,9 @@ class BDFAttributes:
 
     @property
     def contact_cards(self) -> list[Any]:
-        return [self.bsurf, self.bsurfs, self.bgset]
+        return [self.bsurf, self.bsurfs, self.bcprop, self.bcprops,
+                self.bgset, self.bctset,
+                self.bgadd, self.bctadd]
 
     @property
     def _cards_to_setup(self) -> list[Any]:

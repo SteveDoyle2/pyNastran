@@ -70,7 +70,7 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'LOAD', 'DLOAD',
         'SPC1', 'SPCOFF',
         'CELAS1', 'CELAS3', 'CDAMP1', 'CDAMP3', 'CBUSH1D',
-        'BSURF', 'BSURFS',
+        'BSURF', 'BSURFS', 'BCPROP', 'BCPROPS', 'BGADD', 'BCTADD',
     }
     #HARD_CARDS = {
         #'PELAS',
@@ -93,7 +93,7 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'COORD', 'SPC', 'DEFORM', 'GRAV', 'ACCEL1',
         'FORCE', 'FORCE1', 'FORCE2',
         'MOMENT', 'MOMENT1', 'MOMENT2',
-        'DVGRID', 'BGSET',
+        'DVGRID', 'BGSET', 'BCTSET',
     }
     cards = [card for card in model._cards_to_setup
              if card.n and card.type not in CARDS_TO_SKIP]

@@ -153,8 +153,8 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
                                #TABRND1, TABRNDG,
                                #DTABLE)
 #from .cards.contact import (
-    #BCRPARA, BCTADD, BCTSET, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
-    #BCTPARM, BGADD, BCBODY)
+    #BCRPARA, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
+    #BCTPARM, BCBODY)
 #from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
@@ -876,16 +876,19 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # nx-contact
             #-----------
             # glue...
-            #'BGADD',  ## bgadds
-            'BGSET',  ## bgsets - glue set (points to BSURF/BSURFS)
+            'BGADD',  ## bgadds
+            'BGSET',  ## bgset  - glue set (points to BSURF/BSURFS/BCPROP/BCPROPS)
+
             # not glue...
             #'BCRPARA',  ## bcrpara
             #'BCTPARA',  ## bctpara
             #'BCTPARM', ## bctparm
-            #'BCTADD',  ## bctadds
-            #'BCTSET',  ## bctsets
-            'BSURF',   ## bsurf  - glue surface: shell
-            'BSURFS',  ## bsurfs - glue surface: solid
+            'BCTADD',  ## bctadd
+            'BCTSET',   ## bctset  - contact_id to source/target_ids
+            'BSURF',    ## bsurf   - source/target_id to shell eid
+            'BSURFS',   ## bsurfs  - source/target_id to solid eid
+            'BCPROP',   ## bcprop  - source/target_id to shell pid
+            'BCPROPS',  ## bcprops - source/target_id to solid pid
             #'BCONP', ## bconp
             #'BLSEG', ## blseg - glue edge
             #'BFRIC', ## bfric
@@ -2089,14 +2092,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # nx contact
             #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
             #'BCTPARM' : (BCTPARM, add_methods._add_bctparam_object),
-            #'BGADD' : (BGADD, add_methods._add_bgadd_object),
-            #'BGSET' : (BGSET, add_methods._add_bgset_object),
             #'BCBODY' : (BCBODY, add_methods._add_bcbody_object),
-
-            #'BOLT', 'BOLTFOR',
-            'BOLT' : (Crash, None),
-            'BOLTFOR' : (Crash, None),
-
 
             # nx bolts
             'BOLT' : (Crash, None),
@@ -2215,7 +2211,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             'DOPTPRM' : (DOPTPRM, add_methods._add_doptprm_object),
             #'TOPVAR' : (TOPVAR, add_methods._add_topvar_object),
-            # BCTSET
 
             #'PCONV' : (PCONV, add_methods._add_convection_property_object),
             #'PCONVM' : (PCONVM, add_methods._add_convection_property_object),
@@ -2276,7 +2271,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'EIGP' : (EIGP, add_methods._add_cmethod_object),
 
             #'BCRPARA' : (BCRPARA, add_methods._add_bcrpara_object),
-            #'BCTADD' : (BCTADD, add_methods._add_bctadd_object),
             #'BCTPARA' : (BCTPARA, add_methods._add_bctpara_object),
 
             # 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
@@ -2310,7 +2304,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'SEUSET' : (SEUSET, add_methods._add_seuset_object),
             #'SEUSET1' : (SEUSET1, add_methods._add_seuset_object),
 
-            # BCTSET
             #'ROTORG' : (ROTORG, add_methods._add_rotor_object),
             #'ROTORD' : (ROTORD, add_methods._add_rotor_object),
 
@@ -2615,10 +2608,20 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # nx-contact
             'BSURF' : partial(self._prepare_card_by_method, self.bsurf.add_card),
             'BSURFS' : partial(self._prepare_card_by_method, self.bsurfs.add_card),
+            'BCPROP' : partial(self._prepare_card_by_method, self.bcprop.add_card),
+            'BCPROPS' : partial(self._prepare_card_by_method, self.bcprops.add_card),
+
+            # nx glue contact
             'BGSET' : partial(self._prepare_card_by_method, self.bgset.add_card),
+            'BGADD' : partial(self._prepare_card_by_method, self.bgadd.add_card),
+
+            # nx general contact
+            'BCTSET' : partial(self._prepare_card_by_method, self.bctset.add_card),
+            'BCTADD' : partial(self._prepare_card_by_method, self.bctadd.add_card),
+
+            # ??? contact
             #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
             #'BCTPARM' : (BCTPARM, add_methods._add_bctparam_object),
-            #'BGADD' : (BGADD, add_methods._add_bgadd_object),
             #'BCBODY' : (BCBODY, add_methods._add_bcbody_object),
 
             # pseudo-constraint
@@ -2668,8 +2671,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'SPLINE4': partial(self._prepare_card, self.spline4),
             #'SPLINE5': partial(self._prepare_card, self.spline5),
 
-            #'AELIST': partial(self._prepare_card, self.aelist),  # aesurf boxes
-            #'AEFACT' : partial(self._prepare_card, self.aefact),  #  caero paneling
+            #'AELIST': partial(self._prepare_card, self.aelist),    # aesurf boxes
+            #'AEFACT' : partial(self._prepare_card, self.aefact),   # caero paneling
             #'AELINK': partial(self._prepare_card, self.aelink),    # control surface linkage
             #'AECOMP': partial(self._prepare_card, self.aecomp),    # monpntx set1/aelist ids
             #'AECOMPL': partial(self._prepare_card, self.aecompl),  # groups AECOMP/AECOMPLs
@@ -2735,7 +2738,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BEAMOR' : self._prepare_beamor,
             #'BDYOR': self._prepare_bdyor,
 
-            #'BCTSET' : self._prepare_bctset,
             #'ACMODL' : self._prepare_acmodl,
         }
         ncards_supported = len(self._card_parser_prepare) + len(self._card_parser)
@@ -2839,12 +2841,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         """adds a CBAR"""
         i = func(card_obj, comment=comment)
         return i
-
-    def _prepare_bctset(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
-        """adds a BCTSET"""
-        bctset = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
-        self._add_methods._add_bctset_object(bctset)
-        return bctset
 
     def _prepare_grdset(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
         """adds a GRDSET"""
@@ -4735,8 +4731,8 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
 
             #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
-            #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_BCRPARA', 'add_BCTADD',
-            #'add_BCTPARA', 'add_BCTSET', 'add_CAERO',
+            #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_BCRPARA',
+            #'add_BCTPARA', 'add_CAERO',
             #'add_DIVERG',
             # 'add_CSSCHD', 'add_DDVAL',
             #'add_DELAY', 'add_DEQATN', 'add_DMI',
@@ -4746,7 +4742,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_PAERO', 'add_PARAM', 'add_PHBDY',
             #'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
             #'add_SEUSET', 'add_SPLINE', 'add_tempd', 'add_TF', 'add_TRIM',
-            #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
+            #'add_TSTEP', 'add_TSTEPNL',
 
             #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
             #'add_convection_property', x'add_creep_material',

@@ -557,6 +557,9 @@ class ADD(VectorizedBaseCard):
     @property
     def max_id(self):
         return max(self.sid.max(), self.sids.max())
+    @property
+    def is_small_field(self) -> bool:
+        return self.max_id < 99_999_999
 
     def add(self, sid: int, sets, comment: str='') -> int:
         """Creates an MPCADD card"""
@@ -759,10 +762,6 @@ class MPCADD(ADD):
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['mpc_id'].append(self.mpc_id)
-
-    @property
-    def is_small_field(self):
-        return max(self.mpc_id.max(), self.mpc_ids.max()) < 99_999_999
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,

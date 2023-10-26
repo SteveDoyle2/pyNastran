@@ -7146,28 +7146,32 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                          cp=cp, cd=cd, xflag=xflag, comment=comment)
         return monitor_point
 
-    def add_bsurfs(self, glue_id, eids, comment: str='') -> int:
-        """Creates a BSURFS card, which defines a contact/glue for solids"""
-        bsurfs = self.bsurfs.add(glue_id, eids, comment=comment)
-        return bsurfs
-
-    def add_bsurf(self, glue_id, eids, comment: str='') -> int:
-        """Creates a BSURF card, which defines a contact/glue for solids"""
+    def add_bsurf(self, glue_id: int, eids: list[int], comment: str='') -> int:
+        """Creates a BSURF card, which defines a contact/glue source/target for shells"""
         bsurf = self.bsurf.add(glue_id, eids, comment=comment)
         return bsurf
 
-    def add_bctset(self, csid, sids, tids, frictions, min_distances,
-                   max_distances, comment: str='', sol=101) -> BCTSET:
-        """Creates a BCTSET card"""
-        bctset = BCTSET(csid, sids, tids, frictions, min_distances,
-                        max_distances, comment=comment, sol=sol)
-        self._add_methods._add_bctset_object(bctset)
+    def add_bsurfs(self, glue_id: int, eids: list[int], comment: str='') -> int:
+        """Creates a BSURFS card, which defines a contact/glue source/target for solids"""
+        bsurfs = self.bsurfs.add(glue_id, eids, comment=comment)
+        return bsurfs
+
+    def add_bctset(self, contact_id: int, source_ids: list[int],
+                   target_ids: list[int],
+                   frictions: list[float],
+                   min_distances: list[float],
+                   max_distances: list[float],
+                   desc_id: int=0,
+                   comment: str='') -> int:
+        """Creates a BCTSET card, which defines a generalized contact set"""
+        bctset = self.bctset.add(contact_id, source_ids, target_ids,
+                                 frictions, min_distances,
+                                 max_distances, desc_id=desc_id, comment=comment)
         return bctset
 
-    def add_bctadd(self, csid, contact_sets, comment: str='') -> BCTADD:
+    def add_bctadd(self, contact_id: int, contact_sets: list[int], comment: str='') -> int:
         """Creates a BCTADD card"""
-        bctadd = BCTADD(csid, contact_sets, comment=comment)
-        self._add_methods._add_bctadd_object(bctadd)
+        bctadd = self.bctadd.add(contact_id, contact_sets, comment=comment)
         return bctadd
 
     def add_bctpara(self, csid, params, comment: str='') -> BCTPARA:

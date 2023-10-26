@@ -998,10 +998,9 @@ class Writer:
         """Writes the contact cards sorted by ID"""
         model = self.model
         is_contact = max([card.n for card in model.contact_cards])
-        #is_contact = (self.bcrparas or self.bctadds or self.bctparas
-                      #or self.bctsets or
+        #is_contact = (self.bcrparas or self.bctparas
                       #or self.bconp or self.blseg or self.bfric
-                      #or self.bgadds or self.bctparms or self.bcbodys or self.bcparas)
+                      #or self.bctparms or self.bcbodys or self.bcparas)
         if is_contact:
             bdf_file.write('$CONTACT\n')
             #for (unused_id, bcbody) in sorted(self.bcbodys.items()):
@@ -1013,24 +1012,29 @@ class Writer:
                 #bdf_file.write(bcrpara.write_card(size, is_double))
             #for (unused_id, bctparam) in sorted(self.bctparms.items()):
                 #bdf_file.write(bctparam.write_card(size, is_double))
-            #for (unused_id, bctadds) in sorted(self.bctadds.items()):
-                #bdf_file.write(bctadds.write_card(size, is_double))
             #for (unused_id, bctpara) in sorted(self.bctparas.items()):
                 #bdf_file.write(bctpara.write_card(size, is_double))
 
-            #for (unused_id, bctset) in sorted(self.bctsets.items()):
-                #bdf_file.write(bctset.write_card(size, is_double))
+            # general contact
+            model.bctset.write_file(bdf_file, size=size, is_double=is_double)
+            model.bctadd.write_file(bdf_file, size=size, is_double=is_double)
+
+            # glue contact
+            model.bgset.write_file(bdf_file, size=size, is_double=is_double)
+            model.bgadd.write_file(bdf_file, size=size, is_double=is_double)
+
+            # surfaces/solids
             model.bsurf.write_file(bdf_file, size=size, is_double=is_double)
             model.bsurfs.write_file(bdf_file, size=size, is_double=is_double)
+            model.bcprop.write_file(bdf_file, size=size, is_double=is_double)
+            model.bcprops.write_file(bdf_file, size=size, is_double=is_double)
+
             #for (unused_id, bconp) in sorted(self.bconp.items()):
                 #bdf_file.write(bconp.write_card(size, is_double))
             #for (unused_id, blseg) in sorted(self.blseg.items()):
                 #bdf_file.write(blseg.write_card(size, is_double))
             #for (unused_id, bfric) in sorted(self.bfric.items()):
                 #bdf_file.write(bfric.write_card(size, is_double))
-            #for (unused_id, bgadd) in sorted(self.bgadds.items()):
-                #bdf_file.write(bgadd.write_card(size, is_double))
-            model.bgset.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_coords(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False,

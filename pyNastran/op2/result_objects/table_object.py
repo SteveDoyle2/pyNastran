@@ -1839,12 +1839,55 @@ def pandas_extract_rows(data_frame, ugridtype_str, index_names):
             #print(eig.loc)
             #item = eig['Item']
             #print(item)
-            try:
-                eig = eig.replace({'Item' : {'t1' : letter}}).set_index(index_names)
-            except (TypeError, NotImplementedError):
-                print(f'skipping pandas cleanup due to issue with complex {letter} points')
-                return data_frame
-                #continue
+            #
+            # It looks like the error message was changed between pandas 1.5.3 and 2.0.
+            # Same issue though.
+            #
+            # This may be a solution:
+            # https://stackoverflow.com/questions/38663150/pivot-table-error1-ndim-categorical-are-not-supported-at-this-time
+
+            # code
+            #eig_replace = eig.replace({'Item' : {'t1' : letter}}).set_index(index_names)
+            #eig = eig_replace.set_index(index_names)
+            #
+            # pandas 1.5.3
+            # Freq NodeID Item 9.999999747378752e-06      10.0      20.0      30.0      40.0
+            # 0       100   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 1       101   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 2       102   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # eig_replace:
+            #     Freq NodeID Item 9.999999747378752e-06      10.0      20.0      30.0      40.0
+            # 0       100   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 1       101   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 2       102   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # NotImplementedError: > 1 ndim Categorical are not supported at this time
+            #
+            # pandas=2.1.1
+            # Freq NodeID Item 9.999999747378752e-06      10.0      20.0      30.0      40.0
+            # 0       100   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 1       101   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 2       102   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # eig_replace:
+            #     Freq NodeID Item 9.999999747378752e-06      10.0      20.0      30.0      40.0
+            # 0       100   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 1       101   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            # 2       102   t1              0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
+            #ValueError: Length mismatch: Expected axis has 3 elements, new values have 1 elements
+            #
+            eig_replace = eig.replace({'Item' : {'t1' : letter}})
+            if pd.__version__ < '2.0':
+                try:
+                    eig = eig_replace.set_index(index_names)
+                except (TypeError, NotImplementedError):
+                    print(f'skipping pandas cleanup due to issue with complex {letter} points')
+                    return data_frame
+            else:
+                try:
+                    eig = eig_replace.set_index(index_names)
+                except (ValueError):
+                    print(f'skipping pandas cleanup due to issue with complex {letter} points')
+                    return data_frame
+
         elif dim == 6:
             eig = data_frame.xs(letter, level=1)
         else:
