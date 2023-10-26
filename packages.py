@@ -401,7 +401,8 @@ def _add_pillow(all_reqs, install_requires):
 
 def _add_imageio(found_numpy, all_reqs, install_requires):
     # pip messes up dependency resolution if you use newer versions of numpy
-    imageio_str_ver = '>= 2.2.0, <3'
+    #imageio_str_ver = '>= 2.2.0, <3'
+    imageio_str_ver = '>= 2.2.0, <2.31.6'
 
     try:
         import imageio
