@@ -194,7 +194,6 @@ jobs:
         if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         run: |
-        run: |
           pip install imageio<2.31.6 pillow>5.2,!=7.1.0
 
       - name: Install latest packages (vtk)
