@@ -657,7 +657,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #  nastran 95
             'PTRSHL', 'PQUAD1',
-            #'PIHEX', # PQUAD4
+            'PIHEX', # PQUAD4
 
             # axixsymmetric
             'CCONEAX', # element
