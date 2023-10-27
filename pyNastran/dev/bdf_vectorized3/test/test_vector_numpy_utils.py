@@ -8,6 +8,9 @@ class TestNumpyExtensions(unittest.TestCase):
     def test_print_float_8(self):
         compare_print_float_8 = partial(compare, stop_on_error=True)
 
+        value = -50000.0
+        s = compare_print_float_8(value)
+
         value = -2.0
         s = compare_print_float_8(value)
 

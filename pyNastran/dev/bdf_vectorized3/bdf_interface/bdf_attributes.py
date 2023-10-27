@@ -51,7 +51,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
 from pyNastran.dev.bdf_vectorized3.cards.elements.cmass import PMASS, CMASS1, CMASS2, CMASS3, CMASS4
 from pyNastran.dev.bdf_vectorized3.cards.elements.nsm import NSMADD, NSM, NSM1, NSML, NSML1
 #from pyNastran.dev.bdf_vectorized3.cards.elements.thermal import CHBDYE, CHBDYP, CHBDYG, CONV, PCONV, CONVM, PCONVM, PHBDY
-from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL
+from pyNastran.dev.bdf_vectorized3.cards.elements.plot import PLOTEL, PLOTEL3, PLOTEL4, PLOTEL6, PLOTEL8
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
     LOAD, SLOAD,
@@ -185,6 +185,10 @@ class BDFAttributes:
 
         # plot
         self.plotel = PLOTEL(self)
+        self.plotel3 = PLOTEL3(self)
+        self.plotel4 = PLOTEL4(self)
+        self.plotel6 = PLOTEL6(self)
+        self.plotel8 = PLOTEL8(self)
 
         # spring
         self.celas1 = CELAS1(self)
@@ -621,6 +625,8 @@ class BDFAttributes:
     def plot_element_cards(self) -> list[Any]:
         elements = [
             self.plotel,
+            self.plotel3, self.plotel4,
+            self.plotel6, self.plotel8,
         ]
         return elements
 

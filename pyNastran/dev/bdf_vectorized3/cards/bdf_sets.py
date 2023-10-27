@@ -365,7 +365,7 @@ class SUPORT(VectorizedBaseCard):
         for i in range(nterms):
             nstart = 1 + 2 * i
             nid = integer(card, nstart, 'ID%s' % n)
-            component_str = fcomponents_or_blank(card, nstart + 1, 'component%s' % n, '0')
+            component_str = fcomponents_or_blank(card, nstart + 1, 'component%s' % n, default='0')
             component = int(component_str)
             nodes.append(nid)
             components.append(component)
@@ -385,7 +385,7 @@ class SUPORT(VectorizedBaseCard):
         suport_id = integer(card, 1, 'suport_id')
 
         nfields = len(card)
-        assert len(card) > 2
+        assert len(card) > 2, card
         nterms = int((nfields - 1.) / 2.)
         n = 1
         nodes = []

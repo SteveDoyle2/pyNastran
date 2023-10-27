@@ -65,6 +65,12 @@ def get_float_format(value: float):
             assert len(field) == 8, f'{field!r}; n={len(field)}'
             #print(f'value = {value!r}')
             return field
+        elif abs_value < 100000.:
+            magnitude = int(math.floor(math.log10(abs_value)))
+            format_string = "-%6." + str(5 - magnitude) + "f"
+            field = format_string % abs_value
+            assert len(field) == 8, f'{field!r}; n={len(field)}'
+            return field
 
         magnitude = int(math.floor(math.log10(abs_value)))
         format_string = "-%6." + str(5 - magnitude) + "f."

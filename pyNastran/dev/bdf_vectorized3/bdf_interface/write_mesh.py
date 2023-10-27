@@ -373,6 +373,10 @@ class Writer:
 
         # plot
         model.plotel.write_file(bdf_file, size=size, is_double=is_double)
+        model.plotel3.write_file(bdf_file, size=size, is_double=is_double)
+        model.plotel4.write_file(bdf_file, size=size, is_double=is_double)
+        model.plotel6.write_file(bdf_file, size=size, is_double=is_double)
+        model.plotel8.write_file(bdf_file, size=size, is_double=is_double)
 
         # celas
         model.celas1.write_file(bdf_file, size=size, is_double=is_double)

@@ -65,7 +65,8 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
     CARDS_TO_SKIP = {
         'SPOINT', 'EPOINT', 'CTUBE', 'CROD',
         'SET1', 'ASET', 'BSET', 'CSET', 'OMIT', 'QSET', 'USET', 'SUPORT',
-        'PLOTEL', 'SPCADD', 'MPCADD', 'DCONADD', 'NSMADD',
+        'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
+        'SPCADD', 'MPCADD', 'DCONADD', 'NSMADD',
         'CQUAD', 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'PSOLID', 'PLSOLID',
         'LOAD', 'DLOAD',
         'SPC1', 'SPCOFF',

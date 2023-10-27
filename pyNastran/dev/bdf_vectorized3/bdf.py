@@ -625,7 +625,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RBE1', 'RBE2', 'RBE3', 'RROD', # 'RSPLINE', 'RSSCON',
 
             ## plotels
-            'PLOTEL',
+            'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
 
             ## properties
             'PMASS',
@@ -2332,6 +2332,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
         self._card_parser_prepare = {
             'PLOTEL': partial(self._prepare_card, self.plotel),
+            'PLOTEL3': partial(self._prepare_card, self.plotel3),
+            'PLOTEL4': partial(self._prepare_card, self.plotel4),
+            'PLOTEL6': partial(self._prepare_card, self.plotel6),
+            'PLOTEL8': partial(self._prepare_card, self.plotel8),
+
             'GRID': partial(self._prepare_card, self.grid),
             'SPOINT': partial(self._prepare_card, self.spoint),
             'EPOINT': partial(self._prepare_card, self.epoint),
@@ -3078,7 +3083,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                                   comment=comment)
         return card_obj
 
-    def add_card_fields(self, card_lines, card_name, comment='', has_none=True):
+    def add_card_fields(self, card_lines: list[str], card_name: str,
+                        comment: str='', has_none: bool=True):
         """
         Adds a card object to the BDF object.
 
@@ -3105,7 +3111,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                                                  is_list=True, has_none=has_none)
         self._add_card_helper(card_obj, card, card_name, comment)
 
-    def add_card_lines(self, card_lines, card_name, comment='', has_none=True):
+    def add_card_lines(self, card_lines: list[str], card_name: str, comment: str='', has_none=True):
         """
         Adds a card object to the BDF object.
 
@@ -3127,7 +3133,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                                                  is_list=False, has_none=has_none)
         self._add_card_helper(card_obj, card, card_name, comment)
 
-    def _get_npoints_nids_allnids(self):
+    def _get_npoints_nids_allnids(self) -> np.ndarray:
         """helper method for get_xyz_in_coord"""
         return self.nodes.nids
 

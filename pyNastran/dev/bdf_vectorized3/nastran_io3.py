@@ -442,7 +442,8 @@ class Nastran3:
         materials_dict2 = {}
         for flag, material_id in materials_dict.items():
             mid_col_max = material_id.max(axis=0)
-            material_id2 = material_id[:, mid_col_max > 0]
+            imat = (mid_col_max > 0)
+            material_id2 = material_id[:, imat]
             materials_dict2[flag] = material_id2
         del materials_dict
 
@@ -471,7 +472,8 @@ class Nastran3:
                     raise RuntimeError(flag)
 
                 material_idi = material_id[:, ilayer]
-                if material_idi.min() == -1:
+                material_idi[material_idi == 0] = -1
+                if material_idi.max() == -1:
                     continue
                 icase = _add_integer_centroid_gui_result(
                     icase, cases, materials_form, subcase_id,

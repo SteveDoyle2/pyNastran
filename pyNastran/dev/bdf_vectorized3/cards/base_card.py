@@ -388,6 +388,7 @@ class VectorizedBaseCard:
         if np.array_equal(uid, self_ids):
             return
         i = np.argsort(self_ids)
+        assert len(i) > 0, self_ids
         self.__apply_slice__(self, i)
 
     @abstractmethod
