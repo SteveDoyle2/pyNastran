@@ -523,7 +523,6 @@ class Property(VectorizedBaseCard):
         self.cards = []
         self.n = 0
         self.property_id: np.ndarray = np.array([], dtype='int32')
-        self.clear()
 
     def slice_card_by_property_id(self, property_id: np.ndarray,
                                  sort_ids: bool=False) -> Property:
@@ -547,7 +546,8 @@ class Property(VectorizedBaseCard):
                 try:
                     self.slice_card_by_id(property_id, assume_sorted=True, sort_ids=False)
                 except IndexError:
-                    raise RuntimeError(self.get_stats())
+                    print(self.get_stats())
+                    raise
                 except ValueError:
                     raise RuntimeError(f'{self.type} property_id is empty...n={self.n}')
         return ncards_removed

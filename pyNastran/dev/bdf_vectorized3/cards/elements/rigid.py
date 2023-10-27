@@ -553,9 +553,9 @@ class RBE1(RigidElement):
             all_independent_dofs.extend(Cmi)
             alpha[icard] = alphai
 
-        dependent_node = np.array(all_dependent_nodes, dtype='int32')
+        dependent_node = np.array(all_dependent_nodes, dtype=idtype)
         dependent_dof = np.array(all_dependent_dofs, dtype='int32')
-        independent_node = np.array(all_independent_nodes, dtype='int32')
+        independent_node = np.array(all_independent_nodes, dtype=idtype)
         independent_dof = np.array(all_independent_dofs, dtype='int32')
         self._save(element_id,
                    ndependent, dependent_node, dependent_dof,
@@ -731,7 +731,7 @@ class RBE2(RigidElement):
             independent_dof[icard] = cm
             alpha[icard] = alphai
             tref[icard] = trefi
-        dependent_nodes = np.array(dependent_nodes, dtype='int32')
+        dependent_nodes = np.array(dependent_nodes, dtype=idtype)
 
         self._save(element_id, independent_node, independent_dof, dependent_nodes, nnode, alpha, tref)
         self.sort()

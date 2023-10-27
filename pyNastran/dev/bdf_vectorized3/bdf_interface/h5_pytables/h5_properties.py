@@ -580,24 +580,24 @@ def _load_h5_pcomp(model: BDF, group: Group):
     domain_id = identity['DOMAIN_ID']
     nproperties = len(property_id)
 
-    prop.property_id = property_id
-    prop.nlayer = identity['NPLIES']
-    prop.z0 = identity['Z0']
-    prop.nsm = identity['NSM']
-    prop.shear_bonding = identity['SB']
+    property_id = property_id
+    nlayer = identity['NPLIES']
+    z0 = identity['Z0']
+    nsm = identity['NSM']
+    shear_bonding = identity['SB']
 
     ## TODO: better cast int to string
     int_to_str_map_ft = {
         0: '',
     }
-    prop.failure_theory = np.array([int_to_str_map_ft[souti] for souti in identity['FT']], dtype='|U8')
+    failure_theory = np.array([int_to_str_map_ft[souti] for souti in identity['FT']], dtype='|U8')
 
-    prop.tref = identity['TREF']
-    prop.ge = identity['GE']
+    tref = identity['TREF']
+    ge = identity['GE']
 
-    prop.material_id = ply['MID']
-    prop.thickness = ply['T']
-    prop.theta = ply['THETA']
+    material_id = ply['MID']
+    thickness = ply['T']
+    theta = ply['THETA']
 
     ## TODO: better cast int to string
     int_to_str_map_sout = {
@@ -607,8 +607,20 @@ def _load_h5_pcomp(model: BDF, group: Group):
     sout = np.array([int_to_str_map_sout[souti] for souti in ply['SOUT']], dtype='|U8')
     prop.sout = sout
 
-    prop.domain_id = domain_id
+    # identity
+    #dtype=[('PID', '<i8'), ('NPLIES', '<i8'), ('Z0', '<f8'), ('NSM', '<f8'),
+           #('SB', '<f8'), ('FT', '<i8'), ('TREF', '<f8'), ('GE', '<f8'),
+           #('PLY_POS', '<i8'), ('PLY_LEN', '<i8'), ('DOMAIN_ID', '<i8')])
+
+    nprop = len(property_id)
+    lam = np.full(nprop, '', dtype='|U6')
     prop.n = nproperties
+    prop._save(
+        property_id, nlayer, material_id, thickness,
+        sout, theta, z0, nsm, shear_bonding, failure_theory,
+        tref, ge, lam)
+
+    prop.domain_id = domain_id
     prop.write()
     x = 1
 

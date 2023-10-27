@@ -152,6 +152,7 @@ class SPC(VectorizedBaseCard):
             node_id_.extend(nodesi)
             enforced_.extend(enforcedi)
             components_.extend(componentsi)
+
         spc_id = np.array(spc_id_, dtype=idtype)
         node_id = np.array(node_id_, dtype=idtype)
         components = np.array(components_, dtype='int32')
@@ -224,13 +225,16 @@ class SPC(VectorizedBaseCard):
                    missing,
                    node=(nid, self.node_id),
                    )
+    @property
+    def max_id(self) -> int:
+        return max(self.spc_id.max(), self.node_id.max())
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         if len(self.spc_id) == 0:
             return
-        print_card = get_print_card_8_16(size)
+        print_card = get_print_card(size, self.max_id)
 
         spc_str = array_str(self.spc_id, size=size)
         node_str = array_str(self.node_id, size=size)
@@ -384,12 +388,12 @@ class SPC1(VectorizedBaseCard):
         print_card = get_print_card_8_16(size)
 
         spc_str = array_str(self.spc_id, size=size)
-        #node_str = array_str(self.node_id, size=size)
+        node_str = array_str(self.node_id, size=size)
         components_str = array_default_int(self.components, default=0, size=size)
 
         for spc_id, components, inode in zip(spc_str, components_str, self.inode):
             inode0, inode1 = inode
-            nodes = self.node_id[inode0 : inode1].tolist()
+            nodes = node_str[inode0 : inode1].tolist()
             assert len(nodes) > 0, nodes
             list_fields = ['SPC1', spc_id, components] + nodes
             bdf_file.write(print_card(list_fields))
@@ -470,6 +474,7 @@ class MPC(VectorizedBaseCard):
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
         ncards = len(self.cards)
+        idtype = self.model.idtype
         self.mpc_id = np.zeros(ncards, dtype='int32')
         self.idim = np.zeros((ncards, 2), dtype='int32')
         all_nodes = []
@@ -487,7 +492,7 @@ class MPC(VectorizedBaseCard):
             all_components.extend(components)
             all_coefficients.extend(coefficients)
             idim0 = idim1
-        self.node_id = np.array(all_nodes, dtype='int32')
+        self.node_id = np.array(all_nodes, dtype=idtype)
         self.components = np.array(all_components, dtype='int32')
         self.coefficients = np.array(all_coefficients, dtype='float64')
         #assert len(self.mpc_id) == len(self.node_id)

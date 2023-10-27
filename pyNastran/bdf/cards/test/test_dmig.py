@@ -1,6 +1,6 @@
 import unittest
-
 import os
+import copy
 import numpy as np
 
 import pyNastran
@@ -23,6 +23,7 @@ class TestDTI(unittest.TestCase):
             'temp_stress' : 'temp_str',
         }
         dti = model.add_dti('UNITS', fields, comment='dti,units')
+        dti2 = copy.deepcopy(dti)
         dti.raw_fields()
         #print(dti.write_card())
         save_load_deck(model)
@@ -38,6 +39,7 @@ class TestDTI(unittest.TestCase):
             'temp_stress' : None,
         }
         dti = model.add_dti('UNITS', fields, comment='dti,units')
+        dti2 = copy.deepcopy(dti)
         dti.raw_fields()
         #print(dti.write_card())
         save_load_deck(model)

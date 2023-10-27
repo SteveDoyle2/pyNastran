@@ -923,7 +923,7 @@ class PLOAD4(Load):
             nelement[icard] = len(eids)
             element_ids.extend(eids)
 
-        element_ids_array = np.array(element_ids, dtype='int32')
+        element_ids_array = np.array(element_ids, dtype=idtype)
         self._save(load_id, element_ids_array, coord_id, pressure, nodes_g1_g34,
                    surf_or_line, line_load_dir, nvector, nelement)
         self.cards = []

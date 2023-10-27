@@ -231,6 +231,28 @@ class DTI(BaseCard):
                     #print(h5_group)
                     #print(irecord, fields)
 
+    def __deepcopy__(self, memo: dict[str, Any]):
+        """performs a deepcopy"""
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        bad_attrs = []
+        for key, value in self.__dict__.items():
+            try:
+                memo2 = deepcopy(value, memo)
+            except SyntaxError:
+                if isinstance(value, dict):
+                    for keyi, valuei in value.items():
+                        self.log.warn(valuei)
+                        #print(valuei.object_attributes())
+                        #break
+                #raise
+                bad_attrs.append(key)
+            setattr(result, key, memo2)
+        if bad_attrs:
+            raise RuntimeError(f'failed copying {bad_attrs}')
+        return result
+
     def __init__(self, name: str, fields: dict[int, list], comment=''):
         """
         Creates a DTI card

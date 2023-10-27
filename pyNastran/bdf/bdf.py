@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 import sys
 from copy import deepcopy
+from collections import Counter
 from io import StringIO, IOBase
 from pathlib import PurePath
 from functools import wraps
@@ -357,7 +358,6 @@ MISSING_CARDS = {
     'PCOHE',
     'CWELD', 'PWELD',
 
-
     ## rigid_elements
     'RSPINT', 'RSPINR', 'RBE2GS',
 
@@ -375,7 +375,7 @@ MISSING_CARDS = {
     'TEMPN1',
 
     ## boundaries
-    'BNDFREE', 'BNDFRE1',
+    'BNDFREE', 'BNDFREE1',
     'BNDFIX', 'BNDFIX1',
     'SPCR',
 
@@ -463,8 +463,8 @@ MISSING_CARDS = {
     'NTHICK', 'TIM2PSD', 'WETSURF', 'WETELME', 'BCNURBS',
     'BCTRIM', 'IMPGEOM', 'IMPCASE', 'SPCD2', 'SPRBCK', 'BCRGSRF', 'BCNURB2',
     'CAXISYM', 'RADC', 'VIEWEX',
-    'ACLOAD', 'PBARN1'
-    , 'TABL3D1', 'AEGRID', 'AEQUAD4', 'SPBLND1', 'CONCTL',
+    'ACLOAD', 'PBARN1',
+    'TABL3D1', 'AEGRID', 'AEQUAD4', 'SPBLND1', 'CONCTL',
     'MAT1F', 'HYDROS', 'HYDROC', 'DVLREL1', 'DTABLE2', 'DVPSURF', 'PFASTT',
     'FRFRELS', 'FRFCONN', 'FRFXIT1', 'FBALOAD', 'MATS8', 'METADATA',
     'PRIM1', 'PRIM7', 'CONV3', 'GRIDA', 'MAT10F', 'RADCOL', 'SPLINRB',
@@ -552,10 +552,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         # list of all read in cards - useful in determining if entire BDF
         # was read & really useful in debugging
-        self.card_count = {}  # type: dict[str, int]
+        self.card_count: dict[str, int] = {}
 
         # stores the card_count of cards that have been rejected
-        self.reject_count = {}  # type: dict[str, int]
+        self.reject_count: dict[str, int] = {}
 
         # allows the BDF variables to be scoped properly (i think...)
         GetCard.__init__(self)
@@ -571,10 +571,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._is_dynamic_syntax = False
 
         # lines that were rejected b/c they were for a card that isn't supported
-        self.reject_lines = []  # type: list[list[str]]
+        self.reject_lines: list[list[str]] = []
 
         # cards that were created, but not processed
-        self.reject_cards = []  # type: list[str]
+        self.reject_cards: list[str] = []
 
         self.include_filenames = defaultdict(list) # list[str]
         # self.__init_attributes()
@@ -652,10 +652,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PBEAM3',  # v1.3
 
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
-            'PTRSHL', 'PQUAD1',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
-            'PIHEX', 'PCOMPS', 'PCOMPLS',
-            # PQUAD4
+            'PCOMPS', 'PCOMPLS',
+
+            #  nastran 95
+            'PTRSHL', 'PQUAD1',
+            #'PIHEX', # PQUAD4
 
             # axixsymmetric
             'CCONEAX', # element
@@ -907,11 +909,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'ENDDATA',
         ]
         set_cards_to_read = set(cards_to_read)
-        from collections import Counter
         if len(cards_to_read) != len(set_cards_to_read):  # pragma: no cover
             bad_cards = [key for key, value in Counter(cards_to_read).items()
                          if value > 1]
-            raise RuntimeError(bad_cards)
+            raise RuntimeError(f'duplicate cards in cards_to_read={bad_cards}')
 
         # the list of possible cards that will be parsed
         self.cards_to_read = set_cards_to_read
@@ -1286,7 +1287,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.active_filename = obj.active_filename
         self.include_dir = obj.include_dir
 
-    def read_bdf(self, bdf_filename: Optional[str]=None,
+    def read_bdf(self, bdf_filename: Optional[PathLike]=None,
                  validate: bool=True,
                  xref: bool=True,
                  punch: bool=False,
@@ -1438,7 +1439,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     del dict_values[value]
             # TODO: redo get_card_ids_by_card_types & card_count
 
-    def _read_bdf_helper(self, bdf_filename: Optional[str], encoding: str,
+    def _read_bdf_helper(self, bdf_filename: Optional[PathLike], encoding: str,
                          punch: bool, read_includes: bool):
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
@@ -1968,7 +1969,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             the card_name -> 'GRID'
 
         """
-        assert '=' not in card_name, card_name
+        if '=' in card_name:
+            raise ReplicationError('unparsed replication format')
+
         if card_name.startswith('='):
             return False
         elif card_name in self.cards_to_read:
@@ -3128,7 +3131,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return card_obj
 
     def add_card(self, card_lines: list[str], card_name: str,
-                 comment: str='', ifile=None, is_list: bool=True, has_none: bool=True) -> Any:
+                 comment: str='', ifile=None,
+                 is_list: bool=True, has_none: bool=True) -> Any:
         """
         Adds a card object to the BDF object.
 
@@ -3145,7 +3149,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             True :  input is list of card_lines -> ['GRID, 1,, 3.0, 4.0, 5.0']
         has_none : bool; default=True
             can there be trailing Nones in the card data (e.g. ['GRID', 1, 2, 3.0, 4.0, 5.0, None])
-            can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
+            can there be trailing Nones in the card data (e.g. ['GRID', 1, 2, 3.0, 4.0, 5.0, '])
 
         Returns
         -------
@@ -3317,7 +3321,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             raise ValueError(msg)
         return npoints, nids, all_nodes
 
-    def get_xyz_in_coord(self, cid=0, fdtype='float64', sort_ids=True):
+    def get_xyz_in_coord(self, cid: int=0, fdtype: str='float64', sort_ids: bool=True):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -4246,7 +4250,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 list(cards_dict.keys())))
 
         for card_name, cards in sorted(cards_dict.items()):
-            if self.is_reject(card_name):
+            try:
+                is_reject = self.is_reject(card_name)
+            except ReplicationError as error:
+                card_strs = [f'{icard}: {str(card)}' for icard, (comment, card, ifile) in enumerate(cards)]
+                msg = '\n'.join(card_strs)
+                raise ReplicationError('Unparsable Replication:\n' + msg) from error
+
+            if is_reject:
                 self.log.info(f'    rejecting card_name = {card_name}')
                 for comment, card_lines, unused_ifile_iline in cards:
                     self.increase_card_count(card_name)
@@ -4594,7 +4605,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                                                          is_list=False, has_none=False)
                     cards_list.append(class_instance)
         return cards_out
-
 
     def _add_card_hdf5(self, card_lines: list[str], card_name: str,
                        comment='', is_list: bool=True, has_none: bool=True) -> Any:

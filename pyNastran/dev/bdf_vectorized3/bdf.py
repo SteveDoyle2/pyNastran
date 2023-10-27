@@ -335,7 +335,7 @@ MISSING_CARDS = {
     'MATDT01', 'MATDIGI', 'MATUSR', 'MATTC',
     'MATORT', 'MATTORT', 'MATTHE', 'MATPLCY',
     'MATSMA', 'MAT8A', 'MATTEP',
-    'MATPOR', 'MATDMG',
+    'MATPOR', # 'MATDMG',
     'MAT2F', 'MAT8F',
 
     ## loads
@@ -1078,8 +1078,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             try:
                 setattr(self, key, val)
             except AttributeError:  # pragma: no cover
-                raise AttributeError('key=%r val=%s\nupdate ~line 860 of bdf.py and '
-                                     'add the new key (%s)' % (key, val, key))
+                raise AttributeError(f'key={key!r} val={val}\nupdate ~line 1050 of bdf.py and '
+                                     f'add the new key ({key})')
 
         self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
         #self.log.debug('done loading!')
@@ -1149,7 +1149,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
         Parameters
         ----------
-        cards : list[str]; Set[str]
+        cards : list[str]; set[str]
             a list/set of cards that should not be read
 
         .. python ::
@@ -1272,14 +1272,16 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         #print(obj.include_lines)
         self.active_filenames = []
         self.reject_lines = []
-        self.include_filenames = defaultdict(list)
+        include_filenames = defaultdict(list)
         for ifile, include_lines_filename_pairs in obj.include_lines.items():
             assert len(include_lines_filename_pairs) > 0, include_lines_filename_pairs
             for include_lines, bdf_filename2 in include_lines_filename_pairs:
                 #print(ifile, include_lines)
-                self.include_filenames[ifile].append(bdf_filename2)
+                include_filenames [ifile].append(bdf_filename2)
                 if not save_file_structure and not obj.read_includes:
                     self.reject_lines += include_lines
+
+        self.include_filenames: dict[int, list[str]] = dict(include_filenames)
         #print('-------------ssett (end)----------')
         self.active_filenames += obj.active_filenames
         self.active_filename = obj.active_filename
@@ -1614,6 +1616,24 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             comment = ''
             if '$' in line:
                 line, comment = line.split('$', 1)
+                strip_comment = comment.strip()
+                if strip_comment.lower().startswith('group:'):
+                    #'group: name="ULFuseCanardAtch MainFuseStruct Fixed Gridpoints"; nodes=1'
+                    strip_comment2 = strip_comment.split(':', 1)[1].strip()
+                    if ';' in strip_comment2:
+                        group = ModelGroup.create_from_line(strip_comment2)
+                        name = group.name
+                        if name in self.model_groups:
+                            og_group = self.model_groups[name]
+                            #print(og_group)
+                            og_group.union(group)
+                            #print('->', og_group)
+                            del og_group
+                            continue
+                        self.model_groups[name] = group
+                    else:
+                        self.log.warning(f'unknown group={strip_comment}')
+
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
@@ -2878,7 +2898,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self._add_methods._add_deqatn_object(deqatn)
         return deqatn
 
-    def _prepare_dti(self, unused_card_name, card_obj, comment=''):
+    def _prepare_dti(self, unused_card_name, card_obj, comment='') -> DTI:
         """adds a DTI"""
         name = string(card_obj, 1, 'name')
         if name == 'UNITS':
@@ -2888,7 +2908,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self._add_methods._add_dti_object(dti)
         return dti
 
-    def _prepare_dmig(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmig(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIG:
         """adds a DMIG"""
         name = string(card_obj, 1, 'name')
         field2 = integer_or_string(card_obj, 2, 'flag')
@@ -2910,7 +2930,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                 self._dmig_temp[name].append((card_obj, comment))
         return dmig
 
-    def _prepare_dmix(self, class_obj, add_method, card_obj, comment=''):
+    def _prepare_dmix(self, class_obj, add_method, card_obj, comment='') -> Union[DMI, DMIJ, DMIJI, DMIK]:
         """adds a DMI, DMIJ, DMIJI, or DMIK"""
         field2 = integer(card_obj, 2, 'flag')
         if field2 == 0:
@@ -2922,23 +2942,23 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             self._dmig_temp[name].append((card_obj, comment))
         return dmix
 
-    def _prepare_dmiax(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmiax(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIAX:
         """adds a DMIAX"""
         return self._prepare_dmix(DMIAX, self._add_methods._add_dmiax_object, card_obj, comment=comment)
 
-    def _prepare_dmi(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmi(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMI:
         """adds a DMI"""
         return self._prepare_dmix(DMI, self._add_methods._add_dmi_object, card_obj, comment=comment)
 
-    def _prepare_dmij(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmij(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIJ:
         """adds a DMIJ"""
         return self._prepare_dmix(DMIJ, self._add_methods._add_dmij_object, card_obj, comment=comment)
 
-    def _prepare_dmik(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmik(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIK:
         """adds a DMIK"""
         return self._prepare_dmix(DMIK, self._add_methods._add_dmik_object, card_obj, comment=comment)
 
-    def _prepare_dmiji(self, unused_card: list[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmiji(self, unused_card: list[str], card_obj: BDFCard, comment='') -> DMIJI:
         """adds a DMIJI"""
         return self._prepare_dmix(DMIJI, self._add_methods._add_dmiji_object, card_obj, comment=comment)
 
@@ -4214,8 +4234,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                         except UnicodeEncodeError:
                             break
                     n = 20
-                    i0 = len(lines) - n
                     i = 0
+                    i0 = len(lines) - n
                     for i, line in enumerate(lines[-n:-1]):
                         self.log.debug(f'Line {i0+i}: {line.strip()!r}')
                     self.log.error(f'Line {i0+i+1}: {lines[-1].strip()!r}')
@@ -4572,11 +4592,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             try:
                 memo2 = deepcopy(value, memo)
             except SyntaxError:
-                #if isinstance(value, dict):
-                    #for keyi, valuei in value.items():
+                if isinstance(value, dict):
+                    for keyi, valuei in value.items():
+                        self.log.warn(valuei)
                         #print(valuei.object_attributes())
                         #break
-                #raise
+                raise
                 bad_attrs.append(key)
             setattr(result, key, memo2)
         if bad_attrs:
@@ -4997,6 +5018,7 @@ def map_update(fem: BDF, version: str):
 #else:  # pragma: no cover
     #msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, nasa95, mystran]'
     #raise NotImplementedError(msg)
+
 
 def main():  # pragma: no cover
     """shows off how unicode works because it's overly complicated"""

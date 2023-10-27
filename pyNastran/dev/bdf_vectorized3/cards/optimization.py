@@ -5,7 +5,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
 #from pyNastran.bdf import MAX_INT
-#from pyNastran.dev.bdf_vectorized3.cards.base_card import BaseCard, _node_ids, expand_thru
+from pyNastran.dev.bdf_vectorized3.cards.base_card import hslice_by_idim #, BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
     string, string_or_blank, integer_double_string_or_blank,
@@ -769,7 +769,8 @@ class DRESP1(VectorizedBaseCard):
             iatti[icard, :] = [atti0, atti1]
             atti1 = atti0
 
-        atti = np.array(attis, dtype='int32')
+        idtype = self.model.idtype
+        atti = np.array(attis, dtype=idtype)
         ##xinit = np.clip(xinit, xlb, xub)
 
         self._save(dresp_id, label, response_type, property_type, region,
@@ -1543,11 +1544,27 @@ class DVPREL1(VectorizedBaseCard):
         self.field_num = field_num
         self.p_min = p_min
         self.p_max = p_max
-        self.c0 = np.array([], dtype='float64')
+        self.c0 = c0
 
         self.ndesvar = ndesvar
         self.desvar_id = desvar_id
         self.coefficients = coefficients
+
+    def __apply_slice__(self, opt: DVPREL1, i: np.ndarray) -> None:
+        opt.dvprel_id = self.dvprel_id[i]
+        opt.property_id = self.property_id[i]
+        opt.property_type = self.property_type[i]
+        opt.property_name = self.property_name[i]
+        opt.field_num = self.field_num[i]
+        opt.p_min = self.p_min[i]
+        opt.p_max = self.p_max[i]
+        opt.c0 = self.c0[i]
+
+        idesvar = self.idesvar
+        opt.desvar_id = hslice_by_idim(i, idesvar, self.desvar_id)
+        opt.coefficients = hslice_by_idim(i, idesvar, self.coefficients)
+        opt.ndesvar = self.ndesvar[i]
+        opt.n = len(i)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['property_id'].append(self.property_id)
@@ -1568,7 +1585,7 @@ class DVPREL1(VectorizedBaseCard):
             )
 
     @property
-    def idim(self) -> np.ndarray:
+    def idesvar(self) -> np.ndarray:
         return make_idim(self.n, self.ndesvar)
 
     def write_file(self, bdf_file: TextIOLike, size: int=8,
@@ -1584,12 +1601,12 @@ class DVPREL1(VectorizedBaseCard):
 
         for dvprel_id, pid, prop_type, \
             prop_name, field_num, \
-            p_min, p_max, c0, idim in zip_longest(dvprel_ids, property_ids, self.property_type,
+            p_min, p_max, c0, idesvar in zip_longest(dvprel_ids, property_ids, self.property_type,
                                                   self.property_name, self.field_num,
-                                                  self.p_max, self.p_min, self.c0, self.idim):
-            idim0, idim1 = idim
-            desvars = desvar_ids[idim0:idim1]
-            coeffs = self.coefficients[idim0:idim1]
+                                                  self.p_max, self.p_min, self.c0, self.idesvar):
+            idesvar0, idesvar1 = idesvar
+            desvars = desvar_ids[idesvar0:idesvar1]
+            coeffs = self.coefficients[idesvar0:idesvar1]
             pname_fid = prop_name if prop_name else field_num
             p_max = set_blank_if_default(p_max, 1e20)
             c0 = set_blank_if_default(c0, 0.)

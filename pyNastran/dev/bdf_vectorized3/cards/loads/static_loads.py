@@ -486,7 +486,7 @@ class Load1(Load):
         load_id = np.zeros(ncards, dtype='int32')
         node_id = np.zeros(ncards, dtype=idtype)
         mag = np.zeros(ncards, dtype='float64')
-        nodes = np.zeros((ncards, 2), dtype='int32')
+        nodes = np.zeros((ncards, 2), dtype=idtype)
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
             sid, node, magi, g12, comment = card

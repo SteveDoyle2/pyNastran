@@ -2361,20 +2361,23 @@ class PSHLN2(Property):
                                     for val in integration_hi]
         self._save(property_id, material_id,
                    thickness, direct, analysis,
-                   integration, beh_h, integration_h)
+                   beh, integration,
+                   beh_h, integration_h)
         self.sort()
         self.model.log.warning(f'PSHLN2 self.thickness={self.thickness}')
         self.cards = []
 
     def _save(self, property_id, material_id,
               thickness, direct, analysis,
-              integration, beh_h, integration_h) -> None:
+              beh, integration,
+              beh_h, integration_h) -> None:
         self.property_id = property_id
         self.material_id = material_id
         self.thickness = thickness
         self.direct = direct
         self.analysis = analysis
 
+        self.beh = beh
         self.integration = integration
         self.beh_h = beh_h
         self.integration_h = integration_h

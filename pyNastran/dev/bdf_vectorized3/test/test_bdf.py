@@ -1484,6 +1484,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
     assert isinstance(ierror, int), ierror
 
     fem2 = BDFv(debug=debug, log=log)
+    fem2.idtype = 'int64'
     if not quiet:
         fem2.log.info('starting fem2')
     if skip_cards:
@@ -2181,15 +2182,15 @@ def _check_case_parameters(subcase: Subcase,
         ierror = check_sol(sol, subcase, allowed_sols, 'CMETHOD', log, ierror, nerrors,
                            require_sol=False)
 
-    if 'RMETHOD' in subcase:
-        unused_rmethod_id = subcase.get_parameter('RMETHOD')[0]
-        if method_id in fem.methods:
-            unused_method = fem.methods[method_id]
-        #elif method_id in fem.cMethods:
-            #method = fem.cMethods[method_id]
+    if 'RMETHOD' in subcase and 0:
+        rmethod_id = subcase.get_parameter('RMETHOD')[0]
+        if rmethod_id in fem.rotord:
+            rotord = fem.rotord[rmethod_id]
+        #elif rmethod_id in fem.cMethods:
+            #method = fem.cMethods[rmethod_id]
         else:
-            method_ids = list(fem.methods.keys())
-            raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
+            rotord_ids = fem.rotord.rotor_id
+            raise RuntimeError('RMETHOD = %s not in method_ids=%s' % (rmethod_id, rotord_ids))
 
         allowed_sols = [101, 110, 111]
         ierror = check_sol(sol, subcase, allowed_sols, 'RMETHOD', log, ierror, nerrors,
@@ -2545,69 +2546,6 @@ def check_mass(fem1: BDFs, quiet: bool=False):
     assert np.allclose(mass1, mass2), f'reference_point=[10., 10., 10.]; mass1={mass1} mass2={mass2}'
     assert np.allclose(cg1, cg2), f'reference_point=[10., 10., 10.]; mass={mass1} cg1={cg1} cg2={cg2}'
     assert np.allclose(inertia1, inertia2, atol=1e-5), f'reference_point=[10., 10., 10.]; mass={mass1} cg={cg1} inertia1={inertia1} inertia2={inertia2}'
-
-
-#def get_matrix_stats(fem1: BDFs, unused_fem2: BDFs) -> None:
-    #"""Verifies the dmig.get_matrix() method works."""
-    #for (unused_key, dmig) in sorted(fem1.dmigs.items()):
-        #try:
-            #if isinstance(dmig, NastranMatrix):
-                #dmig.get_matrix()
-            #else:
-                #print("statistics not available - "
-                      #"dmig.type=%s matrix.name=%s" % (dmig.type, dmig.name))
-        #except Exception:
-            #print("*stats - dmig.type=%s name=%s  matrix=\n%s"
-                  #% (dmig.type, dmig.name, str(dmig)))
-            #raise
-
-    #for (unused_key, dmi) in sorted(fem1.dmis.items()):
-        #try:
-            #if isinstance(dmi, NastranMatrix):
-                #dmi.get_matrix()
-            #else:
-                #print("statistics not available - "
-                      #"dmi.type=%s matrix.name=%s" % (dmi.type, dmi.name))
-        #except Exception:
-            #print("*stats - dmi.type=%s name=%s  matrix=\n%s"
-                  #% (dmi.type, dmi.name, str(dmi)))
-            #raise
-
-    #for (unused_key, dmij) in sorted(fem1.dmij.items()):
-        #try:
-            #if isinstance(dmij, NastranMatrix):
-                #dmij.get_matrix()
-            #else:
-                #print("statistics not available - "
-                      #"dmij.type=%s matrix.name=%s" % (dmij.type, dmij.name))
-        #except Exception:
-            #print("*stats - dmij.type=%s name=%s  matrix=\n%s"
-                  #% (dmij.type, dmij.name, str(dmij)))
-            #raise
-
-    #for (unused_key, dmiji) in sorted(fem1.dmijis.items()):
-        #try:
-            #if isinstance(dmiji, NastranMatrix):
-                #dmiji.get_matrix()
-            #else:
-                #print("statistics not available - "
-                      #"dmiji.type=%s matrix.name=%s" % (dmiji.type, dmiji.name))
-        #except Exception:
-            #print("*stats - dmiji.type=%s name=%s  matrix=\n%s"
-                  #% (dmiji.type, dmiji.name, str(dmiji)))
-            #raise
-
-    #for (unused_key, dmik) in sorted(fem1.dmiks.items()):
-        #try:
-            #if isinstance(dmik, NastranMatrix):
-                #dmik.get_matrix()
-            #else:
-                #print("statistics not available - "
-                      #"dmik.type=%s matrix.name=%s" % (dmik.type, dmik.name))
-        #except Exception:
-            #print("*stats - dmik.type=%s name=%s  matrix=\n%s"
-                  #% (dmik.type, dmik.name, str(dmik)))
-            #raise
 
 def compare(fem1: BDFs, fem2: BDFs, xref=True, check=True, print_stats=True, quiet=False):
     """compares two fem objects"""
