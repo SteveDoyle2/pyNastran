@@ -1,8 +1,11 @@
+from copy import deepcopy
 import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
-def remove_unused(model: BDF) -> None:
+def remove_unused(model: BDF, inplace: bool=False) -> BDF:
+    if not inplace:
+        model = deepcopy(model)
     log = model.log
     cards = [card for card in model._cards_to_setup if card.n > 0]
     used_dict = {
@@ -13,13 +16,14 @@ def remove_unused(model: BDF) -> None:
         'element_id': [],
         'property_id': [],
         'material_id': [],
-        'spc_id': [],
-        'mpc_id': [],
-        'dconstr_id': [],
-        'tablem_id': [],
-        'contact_set_id': [],
-        'glue_id': [],
-        'contact_id': [],
+        'spc_id': [],          # SPCADD -> SPC
+        'mpc_id': [],          # MPCADD -> MPC
+        'dconstr_id': [],      # DCONADD -> DCONSTR
+        'tablem_id': [],       # MATTx  -> TABLEMx
+        'tabled_id': [],       # TLOADx -> TABLEDx
+        'contact_set_id': [],  # BCTADD -> BCTSET
+        'glue_id': [],         # BGADD  -> BGSET
+        'contact_id': [],      # BGSET/BCTSET -> BSURF/BSURFS
     }
     #for card in model._cards_to_setup:
         #print(card)
@@ -38,7 +42,7 @@ def remove_unused(model: BDF) -> None:
     del used_dict
 
     coord_id = used_arrays['coord_id']
-    property_id = used_arrays['property_id']
+    #property_id = used_arrays['property_id']
     assert len(coord_id) > 0, coord_id
     for card in cards:
         if hasattr(card, 'remove_unused'):
@@ -46,6 +50,7 @@ def remove_unused(model: BDF) -> None:
         else:
             log.error(f'{card.type} does not support remove_unused')
             #raise RuntimeError(card.type)
+    return model
 
 def to_dict_array(card, used_dict: dict[str, list[np.ndarray]]) -> dict[str, np.ndarray]:
     assert isinstance(used_dict['coord_id'], list), card.type

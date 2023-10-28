@@ -983,7 +983,7 @@ def line_mid_mass_per_length(material_id: np.ndarray,
     assert len(mass_per_length) == nproperties
     return mass_per_length
 
-def line_vector_length(model, nodes: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def line_vector_length(model: BDF, nodes: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     xyz = model.grid.xyz_cid0()
     nid = model.grid.node_id
     inode = np.searchsorted(nid, nodes)
@@ -1009,10 +1009,10 @@ def line_length_nan(model: BDF, nodes: np.ndarray, default_node: int=-1) -> np.n
         length = line_length(model, nodes)
     return length
 
-def line_length(model, nodes: np.ndarray) -> np.ndarray:
+def line_length(model: BDF, nodes: np.ndarray) -> np.ndarray:
     return line_vector_length(model, nodes)[1]
 
-def line_centroid_with_spoints(model, nodes: np.ndarray) -> np.ndarray:
+def line_centroid_with_spoints(model: BDF, nodes: np.ndarray) -> np.ndarray:
     grid = model.grid
     xyz = grid.xyz_cid0().copy()
     nid = grid.node_id
@@ -1032,7 +1032,7 @@ def line_centroid_with_spoints(model, nodes: np.ndarray) -> np.ndarray:
     assert centroid.shape[0] == nodes.shape[0]
     return centroid
 
-def line_centroid(model, nodes: np.ndarray) -> np.ndarray:
+def line_centroid(model: BDF, nodes: np.ndarray) -> np.ndarray:
     grid = model.grid
     xyz = grid.xyz_cid0()
     nid = grid.node_id
@@ -1045,3 +1045,17 @@ def line_centroid(model, nodes: np.ndarray) -> np.ndarray:
     centroid = (xyz1 + xyz2) / 2.
     assert centroid.shape[0] == nodes.shape[0]
     return centroid
+
+def e_g_nu_from_property_id(property_id: np.ndarray,
+                            allowed_properties: list[Property]) -> np.ndarray:
+    npid = len(property_id)
+    e_g_nu = np.full((npid, 3), np.nan, dtype='float64')
+    for prop in allowed_properties:
+        i_lookup, i_all = searchsorted_filter(prop.property_id, property_id, msg='')
+        if len(i_lookup) == 0:
+            continue
+
+        # we're at least using some properties
+        e_g_nui = prop.e_g_nu()
+        e_g_nu[i_lookup] = e_g_nui[i_all]
+    return e_g_nu

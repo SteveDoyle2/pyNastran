@@ -4931,12 +4931,13 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                   st_table=None, sc_table=None, ss_table=None,
                   comment: str='') -> int:
         """Creates a MATT2 card"""
-        mat = MATT2(mid, g11_table, g12_table, g13_table, g22_table,
-                    g23_table, g33_table, rho_table,
-                    a1_table, a2_table, a3_table, ge_table,
-                    st_table, sc_table, ss_table,
-                    comment=comment)
-        self._add_methods._add_material_dependence_object(mat)
+        mat = self.matt2.add(mid,
+                             g11_table, g22_table, g33_table,
+                             g12_table, g13_table, g23_table,
+                             rho_table,
+                             a1_table, a2_table, a3_table,
+                             st_table, sc_table, ss_table, ge_table,
+                             comment=comment)
         return mat
 
     def add_matt3(self, mid, ex_table=None, eth_table=None, ez_table=None,

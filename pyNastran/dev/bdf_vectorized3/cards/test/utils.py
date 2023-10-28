@@ -54,7 +54,7 @@ def save_load_deck(model: BDF,
         convert(model, units_to, units)
 
     if run_remove_unused:
-        remove_unused(model)
+        remove_unused(model, inplace=True)
 
     if run_read_write:
         stringio8 = io.StringIO()

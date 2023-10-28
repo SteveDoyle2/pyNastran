@@ -25,7 +25,7 @@ from pyNastran.op2.op2_interface.op2_classes import (
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 #from pyNastran.bdf.mesh_utils.loads import get_ndof
 
-from .recover.static_force import recover_force_101
+#from .recover.static_force import recover_force_101
 #from .recover.static_stress import recover_stress_101
 #from .recover.static_strain import recover_strain_101
 #from .recover.strain_energy import recover_strain_energy_101
@@ -37,6 +37,8 @@ class Solver:
     """defines the Nastran knockoff class"""
     def __init__(self, model: BDF):
         self.model = model
+        model.setup(run_geom_check=True)
+
         self.superelement_id = 0
         self.op2 = OP2(log=model.log, mode='nx')
         self.log = model.log
@@ -162,7 +164,7 @@ class Solver:
                     Fb[fi:fi+3] = mxyzi
             elif load.type == 'SPCD':
                 for nid, components, enforced in zip(load.nodes, load.components, load.enforced):
-                    for component in components:
+                    for component in str(components):
                         dof = int(component)
                         fi = dof_map[(nid, dof)]
                         #print(f'(nid, dof) = ({nid}, {dof}) => {fi}')
@@ -805,8 +807,9 @@ class Solver:
         dof_map, ps = _get_dof_map(model)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
         out = _run_modes(model, subcase,
-                   node_gridtype, dof_map,
-                   idtype=idtype, fdtype=fdtype)
+                         ngrid, ndof_per_grid, ndof,
+                         node_gridtype, dof_map,
+                         idtype=idtype, fdtype=fdtype)
         xg_out = out['xg_out']
         eigenvalues = out['eigenvalues']
         nmodes = len(eigenvalues)
@@ -851,6 +854,8 @@ class Solver:
         #raise NotImplementedError(subcase)
 
     def run_sol_111(self, subcase: Subcase, f06_file,
+                    page_stamp: str, title: str='', subtitle: str='', label: str='',
+                    page_num: int=1,
                     idtype: str='int32', fdtype: str='float64'):
         """
         frequency
@@ -903,26 +908,41 @@ class Solver:
 
         out = _run_modes(
             model, subcase,
-            ndof, node_gridtype, dof_map,
+            ngrid, ndof_per_grid, ndof,
+            node_gridtype, dof_map,
             idtype=idtype, fdtype=fdtype)
 
+        aset = out['aset']
         Kaa = out['Kaa']
         Maa = out['Maa']
-        omegas = out['omegas']
+        eigenvalues = out['eigenvalues']
+        omegas = np.sqrt(np.abs(eigenvalues))
         omega_max = omegas.max()
         #freq_max = 2 * np.pi * omega_max
         nfreq = 1001
         #freq = np.linspace(0., 1.5*freq_max, num=nfreq)
         omegai = np.linspace(0., 1.5*omega_max)
 
-        Caa = np.eye(Kaa.shape)
-        Caa.fill_diag(0.01)
+        ndof_a = Kaa.shape[0]
+        Caa = np.eye(ndof_a)
+        np.fill_diagonal(Caa, 0.01)
 
-        nfreq = len(omegas)
+        #nfreq = len(omegas)
         shape = (ndof, ndof, nfreq)
         tf_matrix = np.zeros(shape, dtype='complex128')  # full system 3x3 TF matrix
+        tf_mask = np.ones((ndof, ndof, nfreq), dtype='bool')
+        tf_mask[~aset, :, :] = 0
+        tf_mask[:, ~aset, :] = 0
+        tf_matrix_a = np.ones((ndof_a, ndof_a, nfreq), dtype='complex128')
+        #tf_matrix_a = np.ma.masked_array(tf_matrix, tf_mask)
         for i, omegai in enumerate(omegas):
-            tf_matrix[:,:,i] = sp.linalg.inv(Kaa - omegai**2 * Maa + 1j*omegai*Caa)
+            res = sp.linalg.inv(Kaa - omegai**2 * Maa + 1j*omegai*Caa)
+            tf_matrix_a[:,:,i] = res
+
+        tf_matrix = np.zeros(shape, dtype='complex128')  # full system 3x3 TF matrix
+        tf_matrix.ravel()[tf_mask.ravel()] = tf_matrix_a.ravel()
+
+        # TODO: save tf_matrix to ACCEL response
         return tf_matrix
 
 
@@ -1477,7 +1497,7 @@ def build_Mbb(model: BDF,
     # has possibility of mass
     has_mass = False
 
-    for elem in model.elements:
+    for elem in model.element_cards:
         etype = elem.type
         if etype in NO_MASS:
             continue
@@ -1514,9 +1534,9 @@ def build_Mbb(model: BDF,
         elif etype in ['CBAR', 'CBEAM']:
             # TODO: verify
             # TODO: add rotary inertia
-            mass = elem.Mass()
-            if mass == 0.0:
-                log.warning(f'  no mass for {etype} eid={eid}')
+            mass = elem.mass()
+            if mass.sum() == 0.0:
+                log.warning(f'  no mass for {etype} eid={elem.element_id}')
                 continue
             nid1, nid2 = elem.nodes
             i1 = dof_map[(nid1, 1)]
@@ -1853,9 +1873,9 @@ def conm2_fill_Mbb(model: BDF,
     return mass_total
 
 def _run_modes(model: BDF, subcase: Subcase,
-               ndof: int,
                ngrid: int,
                ndof_per_grid: int,
+               ndof: int,
                node_gridtype: np.ndarray,
                dof_map: dict,
                idtype: str = 'int32',
@@ -1873,22 +1893,29 @@ def _run_modes(model: BDF, subcase: Subcase,
     out['Mgg'] = Mgg
     del Mbb
 
-    gset = np.arange(ndof, dtype=idtype)
+    #gset = np.arange(ndof, dtype=idtype)
+    gset = np.ones(ndof, dtype='bool')
     sset, sset_b, xg = _build_xg(model, dof_map, ndof, subcase)
-    aset = np.setdiff1d(gset, sset) # a = g-s
+    #aset = np.setdiff1d(gset, sset) # a = g-s
+    aset = gset & ~sset_b # a = g-s
+    out['aset'] = aset
 
     # aset - analysis set
     # sset - SPC set
-    xa, xs = partition_vector2(xg, [['a', aset], ['s', sset]])
-    del xg
+    xa, xs = partition_vector2(xg, [['a', aset], ['s', sset_b]])
+    out['xg'] = xg
+
+    #del xg
     #print(f'xa = {xa}')
     #print(f'xs = {xs}')
     #print(Kgg)
-    M = partition_matrix(Mgg, [['a', aset], ['s', sset]])
+    M = partition_matrix(Mgg, [['a', aset], ['s', sset_b]])
     Maa = M['aa']
+    out['Maa'] = Maa
 
-    K = partition_matrix(Kgg, [['a', aset], ['s', sset]])
+    K = partition_matrix(Kgg, [['a', aset], ['s', sset_b]])
     Kaa = K['aa']
+    out['Kaa'] = Kaa
     #Kss = K['ss']
     #Kas = K['as']
     #Ksa = K['sa']
@@ -1921,9 +1948,17 @@ def _run_modes(model: BDF, subcase: Subcase,
     #print(f'Fa_: {Fa_}')
     #na = Kaa_.shape[0]
     ndof_ = Kaa_.shape[0]
-    neigenvalues = 10
-    if ndof_ < neigenvalues:
-        eigenvalues, xa_ = sp.linalg.eigh(Kaa_.toarray(), Maa_)
+
+    method_id, options = subcase['METHOD']
+    assert isinstance(method_id, int), method_id
+    method = model.methods[method_id]
+    if method.type == 'EIGRL':
+        neigenvalues = method.nd  # nroots
+    #neigenvalues = 10
+
+    Kaa_dense = Kaa_.toarray()
+    if ndof_ <= neigenvalues:
+        eigenvalues, xa_ = sp.linalg.eigh(Kaa_dense, Maa_)
     else:
         #If M is specified, solves ``A * x[i] = w[i] * M * x[i]``
         eigenvalues, xa_ = sp.sparse.linalg.eigsh(
@@ -1932,6 +1967,7 @@ def _run_modes(model: BDF, subcase: Subcase,
             return_eigenvectors=True, Minv=None, OPinv=None, mode='normal')
     nmodes = len(eigenvalues)
     model.log.debug(f'eigenvalues = {eigenvalues}')
+    out['eigenvalues'] = eigenvalues
     #print(f'xa_ = {xa_} {xa_.shape}')
     #xa2 = xa_.reshape(nmodes, na, na)
 
@@ -1976,8 +2012,8 @@ def _build_xg(model: BDF, dof_map: DOF_MAP,
             #continue
         #spci = spc.slice_card_by_id(spc_id)
         #spcs.append(spci)
-    spcs = [spc.slice_card_by_id(spc_id) for spc in model.spcs
-            if spc.n > 0]
+    spc_cards = [spc for spc in model.spc_cards if spc.n > 0]
+    spcs = [spc.slice_card_by_id(spc_id, sort_ids=True) for spc in spc_cards]
     model.spc1
     #spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
 
@@ -2009,8 +2045,8 @@ def _build_xg(model: BDF, dof_map: DOF_MAP,
                 #=({nid},{dofi}) doesn't exist...skipping
             del dofs_missed
         elif spc.type == 'SPC':
-            for nid, components, enforcedi in zip(spc.nodes, spc.components, spc.enforced):
-                for component in components:
+            for nid, components, enforcedi in zip(spc.node_id, spc.components, spc.enforced):
+                for component in str(components):
                     dofi = int(component)
                     idof = dof_map[(nid, dofi)]
                     sset[idof] = True

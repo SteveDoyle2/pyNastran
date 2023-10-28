@@ -22,8 +22,10 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     parse_element_check, parse_property_check,
     get_print_card_8_16
 )
-from .rod import line_pid_mass_per_length, line_length, line_vector_length, line_centroid
-from .bar import apply_bar_default, init_x_g0, get_bar_vector, split_offt_vector
+from .rod import line_pid_mass_per_length, line_length, line_vector_length, line_centroid, e_g_nu_from_property_id
+from .bar import (apply_bar_default, init_x_g0, get_bar_vector, split_offt_vector,
+                  inertia_from_property_id, k_from_property_id,
+                  e_g_nu_from_isotropic_material)
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     array_str, array_default_int, array_default_float, array_default_str)
@@ -412,6 +414,20 @@ class CBEAM(Element):
     def centroid(self) -> np.ndarray:
         centroid = line_centroid(self.model, self.nodes)
         return centroid
+
+    def e_g_nu(self) -> np.ndarray:
+        e_g_nu = e_g_nu_from_property_id(self.property_id, self.allowed_properties)
+        return e_g_nu
+
+    def inertia(self) -> np.ndarray:
+        inertia = inertia_from_property_id(self.property_id,
+                                           self.allowed_properties)
+        return inertia
+
+    def k(self) -> np.ndarray:
+        k1_k2 = k_from_property_id(self.property_id,
+                                   self.allowed_properties)
+        return k1_k2
 
     def get_bar_vector(self, xyz1: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         v, cd = get_bar_vector(self, xyz1)
@@ -1759,6 +1775,15 @@ class PBEAM(Property):
     def istation(self) -> np.ndarray:
         return make_idim(self.n, self.nstation)
 
+    @property
+    def k(self) -> np.ndarray:
+        return np.column_stack([self.k1, self.k2])
+
+    def e_g_nu(self) -> np.ndarray:
+        """calculates E, G, nu"""
+        e_g_nu = e_g_nu_from_isotropic_material(self.material_id, self.allowed_materials)
+        return e_g_nu
+
     def area(self) -> np.ndarray:
         nproperties = len(self.property_id)
         areas = np.zeros(nproperties, dtype='float64')
@@ -1771,6 +1796,28 @@ class PBEAM(Property):
             areas[i] = areasi
         assert len(areas) == nproperties
         return areas
+
+    def inertia(self) -> np.ndarray:
+        """i1, i2, i12, j"""
+        nproperties = len(self.property_id)
+        inertias = np.zeros((nproperties, 4), dtype='float64')
+        for i, istation in zip(count(), self.istation):
+            istation0, istation1 = istation
+            assert istation1 > istation0
+            xxb = self.xxb[istation0:istation1]
+            i1si = self.I1[istation0:istation1]
+            i2si = self.I2[istation0:istation1]
+            i12si = self.I12[istation0:istation1]
+            jsi = self.J[istation0:istation1]
+
+            i1i = integrate_positive_unit_line(xxb, i1si)
+            i2i = integrate_positive_unit_line(xxb, i2si)
+            i12i = integrate_positive_unit_line(xxb, i12si)
+            ji = integrate_positive_unit_line(xxb, jsi)
+
+            inertias[i, :] = [i1i, i2i, i12i, ji]
+        assert len(inertias) == nproperties
+        return inertias
 
     def to_old_card(self) -> list[Any]:
         from pyNastran.bdf.bdf import BDF

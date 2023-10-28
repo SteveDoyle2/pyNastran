@@ -117,7 +117,7 @@ class TestSolids(unittest.TestCase):
         volume = 2.0
         self.check_solid(model, eid, 'CHEXA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, volume)
 
-    def _test_solid_02(self):
+    def test_solid_02(self):
         """tests CHEXA, CTETRA, CPENTA, PLSOLID, MATHP"""
         mid = 2
         pid = 4

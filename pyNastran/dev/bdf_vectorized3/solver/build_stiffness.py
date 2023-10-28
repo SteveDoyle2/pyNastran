@@ -6,7 +6,7 @@ import numpy as np
 import scipy.sparse as sci_sparse
 
 #from pyNastran.dev.solver.stiffness.shells import build_kbb_cquad4, build_kbb_cquad8
-from .utils import lambda1d, DOF_MAP
+from pyNastran.dev.solver.utils import lambda1d, DOF_MAP
 #from pyNastran.bdf.cards.elements.bars import get_bar_vector, get_bar_yz_transform
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArrayNNfloat
@@ -52,7 +52,7 @@ def build_Kgg(model: BDF, dof_map: DOF_MAP,
                                   #all_nids, xyz_cid0, idtype='int32', fdtype='float64')
     #nelements += build_kbb_cquad8(model, Kbb, dof_map,
                                   #all_nids, xyz_cid0, idtype='int32', fdtype='float64')
-    assert nelements > 0, [elem for elem in model.elements if elem.n]
+    assert nelements > 0, [elem for elem in model.element_cards if elem.n]
     Kbb2 = Kbb.tocsc()
 
     #Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid, inplace=False)
@@ -192,15 +192,37 @@ def _build_kbbi_celas34(Kbb, dof_map: DOF_MAP,
 
 def _build_kbb_cbar(model, Kbb, dof_map: DOF_MAP, fdtype: str='float64') -> int:
     """fill the CBAR Kbb matrix using an Euler-Bernoulli beam"""
-    eids = model._type_to_id_map['CBAR']
-    nelements = len(eids)
+    elem: CBAR = model.cbar
+    nelements = elem.n
     if nelements == 0:
         return nelements
 
-    for eid in eids:
-        elem = model.elements[eid]  # type: CBAR
-        nid1, nid2 = elem.nodes
-        is_passed, K = ke_cbar(model, elem, fdtype=fdtype)
+    #area = np.zeros(nelements, dtype='float64')
+    #i = np.zeros((nelements, 3), dtype='float64')
+    #j = np.zeros(nelements, dtype='float64')
+    #nsm = np.zeros(nelements, dtype='float64')
+
+    area = elem.area()
+    inertia = elem.inertia()
+    xyz1, xyz2 = elem.get_xyz()
+    length = np.linalg.norm(xyz2 - xyz1, axis=1)
+    assert len(length) == nelements
+    v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
+    k = elem.k()
+    e_g_nus = elem.e_g_nu()
+    for eid, (nid1, nid2), areai, (i1, i2, i12, j), pa, pb, ihati, jhati, khati, lengthi, ki, e_g_nu in zip(elem.element_id, elem.nodes,
+                                                                                                            area, inertia,
+                                                                                                            elem.pa, elem.pb,
+                                                                                                            ihat, yhat, zhat, length,
+                                                                                                            k, e_g_nus):
+        e, g, nu = e_g_nu
+        #nid1, nid2 = elem.nodes
+        #is_passed, K = ke_cbar(model, elem, fdtype=fdtype)
+        k1, k2 = ki
+        is_passed, K = ke_cbar(model, xyz1, xyz2, lengthi,
+                               ihati, jhati, khati,
+                               areai, i1, i2, i12, j,
+                               pa, pb, k1, k2, e, g,)
         assert is_passed
 
         i1 = dof_map[(nid1, 1)]
@@ -221,21 +243,30 @@ def _build_kbb_cbar(model, Kbb, dof_map: DOF_MAP, fdtype: str='float64') -> int:
                     Kbb[i1, i2] += ki
     return nelements
 
-def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
+def ke_cbar(model: BDF,
+            #v, ihat, jhat, khat, wa, wb
+            xyz1: np.ndarray, xyz2: np.ndarray, length: float,
+            ihat: np.ndarray, jhat: np.ndarray, khat: np.ndarray,
+            area: float,
+            i1: float, i2: float, i12: float, j: float,
+            pa: int, pb: int,
+            k1: float, k2: float,
+            E: float, G: float,
+            fdtype: str='float64'):
     """get the elemental stiffness matrix in the basic frame"""
-    pid_ref = elem.pid_ref
-    mat = pid_ref.mid_ref
+    #pid_ref = elem.pid_ref
+    #mat = pid_ref.mid_ref
 
     #is_passed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
     #T = np.vstack([ihat, jhat, khat])
     #z = np.zeros((3, 3), dtype='float64')
-    prop = elem.pid_ref
-    mat = prop.mid_ref
-    I1 = prop.I11()
-    I2 = prop.I22()
-    unused_I12 = prop.I12()
-    pa = elem.pa
-    pb = elem.pb
+    #prop = elem.pid_ref
+    #mat = prop.mid_ref
+    #I1 = prop.I11()
+    #I2 = prop.I22()
+    #unused_I12 = prop.I12()
+    #pa = elem.pa
+    #pb = elem.pb
     #J = prop.J()
     #E = mat.E()
     #G = mat.G()
@@ -245,15 +276,14 @@ def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
         #[T, z],
         #[z, T],
     #])
-    is_failed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
-    assert is_failed is False
+    #is_failed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
+    #assert is_failed is False
     #print(wa, wb)
-    xyz1 = elem.nodes_ref[0].get_position() + wa
-    xyz2 = elem.nodes_ref[1].get_position() + wb
+    #xyz1 = elem.nodes_ref[0].get_position() + wa
+    #xyz2 = elem.nodes_ref[1].get_position() + wb
     dxyz = xyz2 - xyz1
     L = np.linalg.norm(dxyz)
-    pid_ref = elem.pid_ref
-    mat = pid_ref.mid_ref
+    #pid_ref = elem.pid_ref
     T = np.vstack([ihat, jhat, khat])
     z = np.zeros((3, 3), dtype=fdtype)
     Teb = np.block([
@@ -262,11 +292,12 @@ def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
         [z, z, T, z],
         [z, z, z, T],
     ])
-    k1 = pid_ref.k1
-    k2 = pid_ref.k2
-    Ke = _beami_stiffness(pid_ref, mat, L, I1, I2, k1=k1, k2=k2, pa=pa, pb=pb)
+    Ke = _beami_stiffness(
+        area, j,
+        E, G,
+        length, i1, i2, k1=k1, k2=k2, pa=pa, pb=pb)
     K = Teb.T @ Ke @ Teb
-    is_passed = not is_failed
+    is_passed = True
     return is_passed, K
 
 def _build_kbb_crod(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
@@ -462,24 +493,40 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
     """TODO: Timoshenko beam, warping, I12"""
     str(all_nids)
     str(xyz_cid0)
-    eids = np.array(model._type_to_id_map['CBEAM'], dtype=idtype)
-    nelements = len(eids)
+    elem = model.cbeam
+    nelements = len(elem)
     if nelements == 0:
         return nelements
 
-    for eid in eids:
-        elem = model.elements[eid]
-        nid1, nid2 = elem.nodes
-        xyz1 = elem.nodes_ref[0].get_position()
-        xyz2 = elem.nodes_ref[1].get_position()
+    area = elem.area()
+    inertia = elem.inertia()
+    xyz1, xyz2 = elem.get_xyz()
+    length = np.linalg.norm(xyz2 - xyz1, axis=1)
+    assert len(length) == nelements
+    v, ihat, yhat, zhat, wa, wb = elem.get_axes(xyz1, xyz2)
+    k = elem.k()
+    e_g_nus = elem.e_g_nu()
+
+    for eid, (nid1, nid2), areai, (i1, i2, i12, j), pa, pb, ihati, jhati, khati, lengthi, ki, e_g_nu in zip(elem.element_id, elem.nodes,
+                                                                                                            area, inertia,
+                                                                                                            elem.pa, elem.pb,
+                                                                                                            ihat, yhat, zhat, length,
+                                                                                                            k, e_g_nus):
+        e, g, nu = e_g_nu
+        #nid1, nid2 = elem.nodes
+        #is_passed, K = ke_cbar(model, elem, fdtype=fdtype)
+        k1, k2 = ki
+        is_passed, K = ke_cbar(model, xyz1, xyz2, lengthi,
+                               ihati, jhati, khati,
+                               areai, i1, i2, i12, j,
+                               pa, pb, k1, k2, e, g,)
         dxyz = xyz2 - xyz1
         L = np.linalg.norm(dxyz)
-        pid_ref = elem.pid_ref
-        mat = pid_ref.mid_ref
-        is_failed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
+        #is_failed, (v, ihat, jhat, khat, wa, wb) = elem.get_axes(model)
         #print(wa, wb, ihat, jhat, khat)
-        assert is_failed is False
-        T = np.vstack([ihat, jhat, khat])
+        #assert is_failed is False
+
+        T = np.vstack([ihati, jhati, khati])
         z = np.zeros((3, 3), dtype=fdtype)
         Teb = np.block([
             [T, z, z, z],
@@ -487,13 +534,10 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
             [z, z, T, z],
             [z, z, z, T],
         ])
-        Iy = pid_ref.I11()
-        Iz = pid_ref.I22()
-        k1 = pid_ref.k1
-        k2 = pid_ref.k2
-        pa = elem.pa
-        pb = elem.pb
-        Ke = _beami_stiffness(pid_ref, mat, L, Iy, Iz, pa, pb, k1=k1, k2=k2)
+        Ke = _beami_stiffness(areai, j,
+                              e, g,
+                              lengthi, i1, i2,
+                              pa, pb, k1=k1, k2=k2)
         K = Teb.T @ Ke @ Teb
         i1 = dof_map[(nid1, 1)]
         j1 = dof_map[(nid2, 1)]
@@ -508,17 +552,17 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
                     Kbb[i1, i2] += ki
     return nelements
 
-def _beami_stiffness(prop: Union[PBAR, PBARL, PBEAM, PBEAML],
-                     mat: MAT1,
+def _beami_stiffness(A: float, J: float,
+                     E: float, G: float,
                      L: float, Iy: float, Iz: float,
                      pa: int, pb: int,
                      k1: Optional[float]=None,
                      k2: Optional[float]=None):
     """gets the ith Euler-Bernoulli beam stiffness"""
-    E = mat.E()
-    G = mat.G()
-    A = prop.Area()
-    J = prop.J()
+    #E = mat.E()
+    #G = mat.G()
+    #A = prop.Area()
+    #J = prop.J()
 
     kaxial = E * A / L
     ktorsion = G * J / L

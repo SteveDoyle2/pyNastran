@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import zip_longest
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import numpy as np
 #from pyNastran.bdf.field_writer_8 import print_card_8 # , print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
@@ -11,12 +11,12 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 #from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
-from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, get_print_card_8_16, parse_material_check
+from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_material_check #get_print_card_8_16,
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, array_str, array_default_int, array_float, array_float_nan
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
 
@@ -206,13 +206,21 @@ class MATT1(Material):
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
+    @property
+    def max_id(self):
+        tables = np.hstack([self.material_id,
+                            self.e_table, self.g_table, self.nu_table,
+                            self.rho_table,
+                            self.alpha_table,
+                            self.st_table, self.sc_table, self.ss_table,
+                            self.ge_table, ])
+        return tables.max()
 
     @parse_material_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.material_id.max()
-        print_card = get_print_card(size, max_int)
+        print_card = get_print_card(size, self.max_id)
 
         material_id = array_str(self.material_id, size=size)
         e_table = array_default_int(self.e_table, default=0, size=size)
@@ -463,6 +471,315 @@ class MATS1(Material):
 
 #MATS8 #  MSC card
 
+class MATT2(Material):
+    """
+    Specifies temperature-dependent material properties on MAT2 entry
+    fields via TABLEMi entries.
+
+    +-------+-------+--------+--------+--------+--------+--------+--------+--------+
+    |   1   |   2   |    3   |   4    |   5    |    6   |    7   |    8   |   9    |
+    +=======+=======+========+========+========+========+========+========+========+
+    | MATT2 |  MID  | T(G12) | T(G13) | T(G13) | T(G22) | T(G23) | T(G33) | T(RHO) |
+    +-------+-------+--------+--------+--------+--------+--------+--------+--------+
+    |       | T(A1) | T(A2)  | T(A3)  |        | T(GE)  | T(ST)  | T(SC)  |  T(SS) |
+    +-------+-------+--------+--------+--------+--------+--------+--------+--------+
+
+    """
+    @Material.clear_check
+    def clear(self) -> None:
+        self.material_id = np.array([], dtype='int32')
+        self.g11_table = np.array([], dtype='int32')
+        self.g22_table = np.array([], dtype='int32')
+        self.g33_table = np.array([], dtype='int32')
+        self.g12_table = np.array([], dtype='int32')
+        self.g13_table = np.array([], dtype='int32')
+        self.g23_table = np.array([], dtype='int32')
+        self.rho_table = np.array([], dtype='int32')
+        self.a1_table = np.array([], dtype='int32')
+        self.a2_table = np.array([], dtype='int32')
+        self.a3_table = np.array([], dtype='int32')
+        self.st_table = np.array([], dtype='int32')
+        self.sc_table = np.array([], dtype='int32')
+        self.ss_table = np.array([], dtype='int32')
+        self.ge_table = np.array([], dtype='int32')
+
+    def add(self, mid: int,
+            g11_table=None, g22_table=None, g33_table=None,
+            g12_table=None, g13_table=None, g23_table=None,
+            rho_table=None,
+            a1_table=None, a2_table=None, a3_table=None,
+            st_table=None, sc_table=None, ss_table=None,
+            ge_table=None, comment: str='') -> int:
+        """Creates a MATT2 card"""
+        self.cards.append((mid,
+                           g11_table, g22_table, g33_table,
+                           g12_table, g13_table, g23_table,
+                           rho_table,
+                           a1_table, a2_table, a3_table,
+                           st_table, sc_table, ss_table,
+                           ge_table, comment))
+        self.n += 1
+        return self.n
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a MATT2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        mid = integer(card, 1, 'mid')
+        g11_table = integer_or_blank(card, 2, 'T(G11)', default=0)
+        g12_table = integer_or_blank(card, 3, 'T(G12)', default=0)
+        g13_table = integer_or_blank(card, 4, 'T(G13)', default=0)
+        g22_table = integer_or_blank(card, 5, 'T(G22)', default=0)
+        g23_table = integer_or_blank(card, 6, 'T(G23)', default=0)
+        g33_table = integer_or_blank(card, 7, 'T(G33)', default=0)
+        rho_table = integer_or_blank(card, 8, 'T(rho)', default=0)
+        a1_table = integer_or_blank(card, 9, 'T(A1)', default=0)
+        a2_table = integer_or_blank(card, 10, 'T(A2)', default=0)
+        a3_table = integer_or_blank(card, 11, 'T(A3)', default=0)
+        ge_table = integer_or_blank(card, 13, 'T(ge)', default=0)
+        st_table = integer_or_blank(card, 14, 'T(st)', default=0)
+        sc_table = integer_or_blank(card, 15, 'T(sc)', default=0)
+        ss_table = integer_or_blank(card, 16, 'T(ss)', default=0)
+
+        assert len(card) <= 17, f'len(MATT2 card) = {len(card):d}\ncard={card}'
+        #return MATT2(mid, g11_table, g12_table, g13_table, g22_table, g23_table,
+                     #g33_table, rho_table, a1_table,
+                     #a2_table, a3_table, ge_table,
+                     #st_table, sc_table, ss_table,
+                     #comment=comment)
+        self.cards.append((mid,
+                           g11_table, g22_table, g33_table,
+                           g12_table, g13_table, g23_table,
+                           rho_table,
+                           a1_table, a2_table, a3_table,
+                           st_table, sc_table, ss_table,
+                           ge_table, comment))
+        self.n += 1
+        return self.n
+
+    @Material.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        material_id = np.zeros(ncards, dtype=idtype)
+
+        g11_table = np.zeros(ncards, dtype=idtype)
+        g22_table = np.zeros(ncards, dtype=idtype)
+        g33_table = np.zeros(ncards, dtype=idtype)
+        g12_table = np.zeros(ncards, dtype=idtype)
+        g13_table = np.zeros(ncards, dtype=idtype)
+        g23_table = np.zeros(ncards, dtype=idtype)
+        rho_table = np.zeros(ncards, dtype=idtype)
+        a1_table = np.zeros(ncards, dtype=idtype)
+        a2_table = np.zeros(ncards, dtype=idtype)
+        a3_table = np.zeros(ncards, dtype=idtype)
+        st_table = np.zeros(ncards, dtype=idtype)
+        sc_table = np.zeros(ncards, dtype=idtype)
+        ss_table = np.zeros(ncards, dtype=idtype)
+        ge_table = np.zeros(ncards, dtype=idtype)
+        for i, card in enumerate(self.cards):
+            (mid,
+             g11_tablei, g22_tablei, g33_tablei,
+             g12_tablei, g13_tablei, g23_tablei,
+             rho_tablei,
+             a1_tablei, a2_tablei, a3_tablei,
+             st_tablei, sc_tablei, ss_tablei,
+             ge_tablei, comment) = card
+
+            g11_tablei = 0 if g11_tablei is None else g11_tablei
+            g22_tablei = 0 if g22_tablei is None else g22_tablei
+            g33_tablei = 0 if g33_tablei is None else g33_tablei
+
+            g12_tablei = 0 if g12_tablei is None else g12_tablei
+            g13_tablei = 0 if g13_tablei is None else g13_tablei
+            g23_tablei = 0 if g23_tablei is None else g23_tablei
+            rho_tablei = 0 if rho_tablei is None else rho_tablei
+
+            a1_tablei = 0 if a1_tablei is None else a1_tablei
+            a2_tablei = 0 if a2_tablei is None else a2_tablei
+            a3_tablei = 0 if a3_tablei is None else a3_tablei
+
+            st_tablei = 0 if st_tablei is None else st_tablei
+            sc_tablei = 0 if sc_tablei is None else sc_tablei
+            ss_tablei = 0 if ss_tablei is None else ss_tablei
+
+            ge_tablei = 0 if ge_tablei is None else ge_tablei
+            material_id[i] = mid
+            g11_table[i] = g11_tablei
+            g22_table[i] = g12_tablei
+            g33_table[i] = g13_tablei
+
+            g12_table[i] = g12_tablei
+            g13_table[i] = g13_tablei
+            g23_table[i] = g23_tablei
+
+            rho_table[i] = rho_tablei
+            a1_table[i] = a1_tablei
+            a2_table[i] = a2_tablei
+            a3_table[i] = a3_tablei
+
+            st_table[i] = st_tablei
+            sc_table[i] = sc_tablei
+            ss_table[i] = ss_tablei
+            ge_table[i] = ge_tablei
+        self._save(material_id,
+                   g11_table, g22_table, g33_table,
+                   g12_table, g13_table, g23_table,
+                   rho_table,
+                   a1_table, a2_table, a3_table,
+                   st_table, sc_table, ss_table,
+                   ge_table)
+        self.sort()
+        self.cards = []
+
+    def _save(self, material_id,
+              g11_table, g22_table, g33_table,
+              g12_table, g13_table, g23_table,
+              rho_table,
+              a1_table, a2_table, a3_table,
+              st_table, sc_table, ss_table,
+              ge_table):
+        if len(self.material_id):
+            asdf
+            #material_id = np.hstack([self.material_id, material_id])
+            #E = np.hstack([self.E, E])
+
+        self.material_id = material_id
+        self.g11_table = g11_table
+        self.g22_table = g22_table
+        self.g33_table = g33_table
+        self.g12_table = g12_table
+        self.g13_table = g13_table
+        self.g23_table = g23_table
+        self.rho_table = rho_table
+        self.a1_table = a1_table
+        self.a2_table = a2_table
+        self.a3_table = a3_table
+        self.st_table = st_table
+        self.sc_table = sc_table
+        self.ss_table = ss_table
+        self.ge_table = ge_table
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        table0 = np.hstack([
+            self.g11_table, self.g22_table, self.g33_table,
+            self.g12_table, self.g13_table, self.g23_table,
+            self.rho_table,
+            self.a1_table, self.a2_table, self.a3_table,
+            self.ge_table, self.st_table, self.ss_table, ])
+        utable0 = np.unique(table0)
+        table = np.setdiff1d(utable0, [0])
+        used_dict['tablem_id'].append(table)
+
+    #def convert(self, stiffness_scale: float=1.0,
+                #density_scale: float=1.0,
+                #alpha_scale: float=1.0,
+                #temperature_scale: float=1.0,
+                #stress_scale: float=1.0, **kwargs) -> None:
+        #tables0 = [
+            #(self.e_table, stiffness_scale),
+            #(self.g_table, stiffness_scale),
+            #(self.rho_table, density_scale),
+            ## nu - nope
+            #(self.alpha_table, alpha_scale),
+            #(self.st_table, stress_scale),
+            #(self.sc_table, stress_scale),
+            #(self.ss_table, stress_scale),
+        #]
+        #table_ids = {}
+        #for table0, scale in tables0:
+            #utable0 = np.unique(table0)
+            #table = np.setdiff1d(utable0, [0])
+            #if table:
+                #table_ids[scale].append(table)
+            #model.tablem
+
+    def __apply_slice__(self, mat: MATT1, i: np.ndarray) -> None:  # ignore[override]
+        mat.n = len(i)
+        mat.material_id = self.material_id[i]
+        mat.g11_table = self.g11_table[i]
+        mat.g22_table = self.g22_table[i]
+        mat.g33_table = self.g33_table[i]
+        mat.g12_table = self.g12_table[i]
+        mat.g13_table = self.g13_table[i]
+        mat.g23_table = self.g23_table[i]
+        mat.rho_table = self.rho_table[i]
+
+        mat.a1_table = self.a1_table[i]
+        mat.a2_table = self.a2_table[i]
+        mat.a3_table = self.a3_table[i]
+
+        mat.st_table = self.st_table[i]
+        mat.sc_table = self.sc_table[i]
+        mat.ss_table = self.ss_table[i]
+        mat.ge_table = self.ge_table[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @property
+    def max_id(self):
+        tables = np.hstack([self.material_id,
+                            self.g11_table, self.g22_table, self.g33_table,
+                            self.g12_table, self.g13_table, self.g23_table,
+                            self.rho_table,
+                            self.a1_table, self.a2_table, self.a3_table,
+                            self.st_table, self.sc_table, self.ss_table,
+                            self.ge_table, ])
+        return tables.max()
+
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card(size, self.max_id)
+
+        material_id = array_str(self.material_id, size=size)
+        g11_table = array_default_int(self.g11_table, default=0, size=size)
+        g22_table = array_default_int(self.g22_table, default=0, size=size)
+        g33_table = array_default_int(self.g33_table, default=0, size=size)
+        g12_table = array_default_int(self.g12_table, default=0, size=size)
+        g13_table = array_default_int(self.g13_table, default=0, size=size)
+        g23_table = array_default_int(self.g23_table, default=0, size=size)
+        rho_table = array_default_int(self.rho_table, default=0, size=size)
+        a1_table = array_default_int(self.a1_table, default=0, size=size)
+        a2_table = array_default_int(self.a2_table, default=0, size=size)
+        a3_table = array_default_int(self.a3_table, default=0, size=size)
+        st_table = array_default_int(self.st_table, default=0, size=size)
+        sc_table = array_default_int(self.sc_table, default=0, size=size)
+        ss_table = array_default_int(self.ss_table, default=0, size=size)
+        ge_table = array_default_int(self.ge_table, default=0, size=size)
+
+        for (mid,
+             g11_tablei, g22_tablei, g33_tablei,
+             g12_tablei, g13_tablei, g23_tablei,
+             rho_tablei,
+             a1_tablei, a2_tablei, a3_tablei,
+             st_tablei, sc_tablei, ss_tablei, ge_tablei) in zip_longest(
+                 material_id,
+                 g11_table, g22_table, g33_table,
+                 g12_table, g13_table, g23_table, rho_table,
+                 a1_table, a2_table, a3_table,
+                 st_table, sc_table, ss_table,
+                 ge_table):
+
+            list_fields = [
+                'MATT2', mid, g11_tablei, g12_tablei,
+                g13_tablei, g22_tablei, g23_tablei,
+                g33_tablei, rho_tablei, a1_tablei,
+                a2_tablei, a3_tablei, None, ge_tablei,
+                st_tablei, sc_tablei, ss_tablei]
+            bdf_file.write(print_card(list_fields))
+        return
+
 class MATT8(Material):
     """
     Specifies temperature-dependent material properties on MAT2 entry
@@ -675,14 +992,22 @@ class MATT8(Material):
     def __apply_slice__(self, mat: MATT1, i: np.ndarray) -> None:  # ignore[override]
         mat.n = len(i)
         mat.material_id = self.material_id[i]
-        mat.table_id = self.table_id[i]
-        mat.Type = self.Type[i]
-        mat.h = self.h[i]
-        mat.hr = self.hr[i]
-        mat.yf = self.yf[i]
-        mat.limit1 = self.limit1[i]
-        mat.limit2 = self.limit2[i]
-        mat.stress_strain_measure = self.stress_strain_measure[i]
+        mat.e1_table = self.e1_table[i]
+        mat.e2_table = self.e2_table[i]
+        mat.nu12_table = self.nu12_table[i]
+        mat.g12_table = self.g12_table[i]
+        mat.g1z_table = self.g1z_table[i]
+        mat.g2z_table = self.g2z_table[i]
+        mat.rho_table = self.rho_table[i]
+        mat.a1_table = self.a1_table[i]
+        mat.a2_table = self.a2_table[i]
+        mat.xt_table = self.xt_table[i]
+        mat.xc_table = self.xc_table[i]
+        mat.yt_table = self.yt_table[i]
+        mat.yc_table = self.yc_table[i]
+        mat.s_table = self.s_table[i]
+        mat.ge_table = self.ge_table[i]
+        mat.f12_table = self.f12_table[i]
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass

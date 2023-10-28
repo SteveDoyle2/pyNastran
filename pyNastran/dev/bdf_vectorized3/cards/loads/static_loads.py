@@ -245,8 +245,16 @@ class SPCD(Load):
                      SPCD card.
 
         """
-        if isinstance(nodes, integer_types):
+        if isinstance(nodes, integer_types) and isinstance(components, (str, integer_types)) and isinstance(enforced, float_types):
             nodes = [nodes]
+            components = [components]
+            enforced = [enforced]
+        elif isinstance(nodes, integer_types):
+            asdf
+        elif isinstance(components, (str, integer_types)):
+            asdf
+        elif isinstance(enforced, float_types):
+            asdf
         nnodes = len(nodes)
 
         if isinstance(spc_id, integer_types):

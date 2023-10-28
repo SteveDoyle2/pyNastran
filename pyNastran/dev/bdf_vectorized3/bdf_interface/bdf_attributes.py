@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Set, Optional, Any
 from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import SET1 # , SET2, SET3
-from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT, USET, SUPORT
+from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT, USET, SUPORT, SEBSET, SECSET, SEQSET
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, EPOINT, SPOINT, GRDSET, POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
@@ -85,7 +85,7 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
 from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
     MATS1, # MATS3,
     #MATS8, # MSC
-    MATT1, MATT8)
+    MATT1, MATT2, MATT8)
 
 from pyNastran.dev.bdf_vectorized3.cards.contact import (
     BSURF, BSURFS, BCPROP, BCPROPS,
@@ -223,6 +223,10 @@ class BDFAttributes:
         self.qset = QSET(self)  # QSET, QSET1
         self.omit = OMIT(self)  # OMIT, OMIT1
         self.uset = USET(self)  # USET, USET1
+
+        self.sebset = SEBSET(self)
+        self.secset = SECSET(self)
+        self.seqset = SEQSET(self)
 
         self.set1 = SET1(self)
         #self.set2 = SET2(self)
@@ -487,6 +491,7 @@ class BDFAttributes:
         #self.mats3 = MATS3(self)
         #self.mats8 = MATS8(self)
         self.matt1 = MATT1(self)
+        self.matt2 = MATT2(self)
         self.matt8 = MATT8(self)
 
         self.spc = SPC(self)
@@ -877,6 +882,15 @@ class BDFAttributes:
         return sets
 
     @property
+    def seset_cards(self) -> list[Any]:
+        """handles SEBSET/SEBSET1, ..."""
+        sesets = [
+            #self.sebset, self.secset, self.seqset,
+            #self.seuset,
+        ]
+        return sesets
+
+    @property
     def aero_elements(self) -> list[Any]:
         elements = [
             #self.caero1, self.caero2, self.caero3, self.caero4, self.caero5,
@@ -958,7 +972,7 @@ class BDFAttributes:
         self.property_cards + self.material_cards + self.optimization_cards + \
         self.load_cards + self.dynamic_load_cards + \
         self.plot_element_cards + self.thermal_element_cards + \
-        self.thermal_boundary_condition_cards + self.sets + \
+        self.thermal_boundary_condition_cards + self.sets + self.seset_cards + \
         self.aero_objects + self.dynamic_cards + self.nonstructural_mass_cards + self.contact_cards
         #for i, card in enumerate(cards):
             #assert isinstance(card.type, str), card

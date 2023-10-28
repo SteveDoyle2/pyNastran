@@ -1009,7 +1009,8 @@ class PLSOLID(Property):
             #return [mat for mat in [model.mat1, model.mat9, model.mat10, model.mat11] if mat.n > 0]
 
         #Identification number of a MATHP or MATHE entry.
-        materials = [model.mathp, model.mathe]
+        materials = [model.mathp, #model.mathe,
+                     ]
 
         #3. For SOL 106, MID must refer to a MATHP entry.
         return materials

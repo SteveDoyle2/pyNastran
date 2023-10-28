@@ -710,6 +710,11 @@ class Writer:
         #bdf_file.write(model.set2.write(size=size))  #  faked
         #bdf_file.write(model.set3.write(size=size))
 
+        model.sebset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.secset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        model.seqset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+        #model.seuset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+
     def _write_superelements(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                              is_long_ids: Optional[bool]=None) -> None:
         """

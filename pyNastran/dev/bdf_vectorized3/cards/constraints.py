@@ -47,7 +47,7 @@ class SPC(VectorizedBaseCard):
     def clear(self):
         self.spc_id = np.array([])
 
-    def slice_card_by_index(self, i: np.ndarray) -> SPC:
+    def slice_card_by_index(self, i: np.ndarray, **kwargs) -> SPC:
         spc = SPC(self.model)
         self.__apply_slice__(spc, i)
         return spc
@@ -279,7 +279,7 @@ class SPC1(VectorizedBaseCard):
     def clear(self):
         self.spc_id = np.array([])
 
-    def slice_card_by_id(self, spc_id: int) -> SPC1:
+    def slice_card_by_id(self, spc_id: int, **kwargs) -> SPC1:
         i = np.where(spc_id == self.spc_id)[0]
         spc = SPC1(self.model)
         self.__apply_slice__(spc, i)

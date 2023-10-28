@@ -146,6 +146,7 @@ class TestMaterials(unittest.TestCase):
         """tests MAT2, MATT2"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        matt2 = model.matt2
         mid = 10
         G11 = G22 = G12 = G13 = G22 = G23 = G33 = 1.0
         #nuxth = nuthz = nuzx = 0.3
@@ -172,14 +173,14 @@ class TestMaterials(unittest.TestCase):
         sc_table = 13
         ss_table = 14
         RUN_MATTX = False
-        if RUN_MATTX:
-            matt2_id = model.add_matt2(mid, g11_table, g12_table, g13_table, g22_table,
-                                    g23_table, g33_table, rho_table,
-                                    a1_table, a2_table, a3_table,
-                                    ge_table, st_table, sc_table, ss_table,
-                                    comment='matt2')
-            matt2.validate()
+        matt2_id = model.add_matt2(mid, g11_table, g12_table, g13_table, g22_table,
+                                   g23_table, g33_table, rho_table,
+                                   a1_table, a2_table, a3_table,
+                                   ge_table, st_table, sc_table, ss_table,
+                                   comment='matt2')
+        #matt2.validate()
 
+        if RUN_MATTX:
             x = np.linspace(1., 10.)
             y = np.sin(x) + 5.
             for tid in [1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
@@ -204,8 +205,7 @@ class TestMaterials(unittest.TestCase):
 
         model.validate()
         model.cross_reference()
-        if RUN_MATTX:
-            matt2.write(size=16, is_double=False)
+        matt2.write(size=16, is_double=False)
         save_load_deck(model)
 
     def test_mat3_01(self):
@@ -288,7 +288,7 @@ class TestMaterials(unittest.TestCase):
         RUN_MATTX = False
         if RUN_MATTX:
             matt4_id = model.add_matt4(mid, k_table, cp_table, h_table, mu_table,
-                                    hgen_table, comment='matt4')
+                                       hgen_table, comment='matt4')
             matt4.validate()
             matt4.write()
 
@@ -353,8 +353,8 @@ class TestMaterials(unittest.TestCase):
         RUN_MATTX = False
         if RUN_MATTX:
             matt5_id = model.add_matt5(mid, kxx_table, kxy_table, kxz_table,
-                                    kyy_table, kyz_table, kzz_table, cp_table, hgen_table,
-                                    comment='matt5')
+                                       kyy_table, kyz_table, kzz_table, cp_table, hgen_table,
+                                       comment='matt5')
             matt5.validate()
             matt5.write()
 
@@ -883,8 +883,8 @@ class TestMaterials(unittest.TestCase):
         epl = 7.
         gpl = 8.
         matg_id = model.add_matg(mid, idmem, behav, tabld, tablu, yprs, epl, gpl,
-                              gap=0., tab_yprs=None, tab_epl=None, tab_gpl=None, tab_gap=None,
-                              comment='matg')
+                                 gap=0., tab_yprs=None, tab_epl=None, tab_gpl=None, tab_gap=None,
+                                 comment='matg')
         matg.validate()
         #matg.raw_fields()
         save_load_deck(model, run_convert=False, run_op2_writer=False, run_remove_unused=False)

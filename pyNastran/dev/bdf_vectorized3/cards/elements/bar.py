@@ -26,7 +26,9 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     searchsorted_filter, get_print_card_8_16,
     parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import (
-    line_mid_mass_per_length, line_length, line_vector_length, line_centroid)
+    line_mid_mass_per_length, line_length, line_vector_length, line_centroid,
+    e_g_nu_from_property_id,
+)
 from pyNastran.dev.bdf_vectorized3.cards.elements.utils import (
     get_density_from_material, basic_mass_material_id)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -334,8 +336,10 @@ class CBAR(Element):
 
             pa[icard] = pai
             pb[icard] = pbi
-            wa[icard, :] = wai
-            wb[icard, :] = wbi
+            if wai is not None:
+                wa[icard, :] = wai
+            if wbi is not None:
+                wb[icard, :] = wbi
         self._save(element_id, property_id, nodes, g0, x,
                    offt, pa, pb, wa, wb)
         baror = self.model.baror
@@ -488,6 +492,20 @@ class CBAR(Element):
             areai = prop.area()
             area[i_lookup] = areai[i_all]
         return area
+
+    def inertia(self) -> np.ndarray:
+        inertia = inertia_from_property_id(self.property_id,
+                                           self.allowed_properties)
+        return inertia
+
+    def k(self) -> np.ndarray:
+        k1_k2 = k_from_property_id(self.property_id,
+                                   self.allowed_properties)
+        return k1_k2
+
+    def e_g_nu(self) -> np.ndarray:
+        e_g_nu = e_g_nu_from_property_id(self.property_id, self.allowed_properties)
+        return e_g_nu
 
     def line_vector_length(self) -> tuple[np.ndarray, np.ndarray]:
         line_vector, length = line_vector_length(self.model, self.nodes)
@@ -657,6 +675,7 @@ class CBAR(Element):
         # rotate wa
         # wa defines the offset at end A
         wa = self.wa.copy()  # we're going to be inplace hacking it, so copy :)
+        assert not np.isnan(np.max(wa)), wa
 
         if np.any(is_rotate_wa_g):
             icd1_vector = (is_rotate_wa_g) & (cd1 != 0)
@@ -1143,6 +1162,42 @@ class PBAR(Property):
 
     def area(self) -> np.ndarray:
         return self.A
+
+    def inertia(self) -> np.ndarray:
+        inertia = np.column_stack([self.i1, self.i2, self.i12, self.j])
+        return inertia
+
+    def e_g_nu(self) -> np.ndarray:
+        """calculates E, G, nu"""
+        e_g_nu = e_g_nu_from_isotropic_material(self.material_id, self.allowed_materials)
+        return e_g_nu
+
+def e_g_nu_from_isotropic_material(material_id: np.ndarray,
+                                   allowed_materials: list[Material]) -> np.ndarray:
+    """calculates E, G, nu"""
+
+    assert len(allowed_materials) > 0, allowed_materials
+    nmaterials = len(material_id)
+    if nmaterials == 0:
+        raise RuntimeError(f'material_id={material_id}')
+
+    material_id_check = np.zeros(nmaterials, dtype='int32')
+    e_g_nu = np.full((nmaterials, 3), np.nan, dtype='float64')
+    for mat in allowed_materials:
+        mat_material_ids = mat.material_id
+
+        i_lookup, i_all = searchsorted_filter(mat_material_ids, material_id)
+        if len(i_all) == 0:
+            continue
+
+        material_id_check[i_lookup] = mat_material_ids[i_all]
+        assert mat.type == 'MAT1', mat.type
+        e_g_nu[i_lookup, 0] = mat.E[i_all]
+        e_g_nu[i_lookup, 1] = mat.G[i_all]
+        e_g_nu[i_lookup, 2] = mat.nu[i_all]
+
+    assert len(e_g_nu) == nmaterials
+    return e_g_nu
 
 
 class PBARL(Property):
@@ -1930,3 +1985,36 @@ def apply_bar_default(bar: Union[CBAR, CBEAM],
             else:
                 data[ibad] = default_value
     assert bar.property_id.min() > 0, bar.property_id
+
+
+def inertia_from_property_id(property_id: np.ndarray,
+                             allowed_properties: list[Property]) -> np.ndarray:
+    npid = len(property_id)
+    inertia = np.full((npid, 4), np.nan, dtype='float64')
+    for prop in allowed_properties:
+        i_lookup, i_all = searchsorted_filter(prop.property_id, property_id, msg='')
+        if len(i_lookup) == 0:
+            continue
+
+        # we're at least using some properties
+        inertiai = prop.inertia()
+        inertia[i_lookup] = inertiai[i_all]
+    return inertia
+
+def k_from_property_id(property_id: np.ndarray,
+                       allowed_properties: list[Property]) -> np.ndarray:
+    npid = len(property_id)
+    k1_k2 = np.full((npid, 2), np.nan, dtype='float64')
+    for prop in allowed_properties:
+        i_lookup, i_all = searchsorted_filter(prop.property_id, property_id, msg='')
+        if len(i_lookup) == 0:
+            continue
+
+        # we're at least using some properties
+        if prop.type in {'PBAR', 'PBEAM'}:
+            k1_k2i = prop.k
+        else:
+            k1_k2i = prop.k()
+        k1_k2[i_lookup] = k1_k2i[i_all]
+    return k1_k2
+
