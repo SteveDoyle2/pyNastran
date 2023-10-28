@@ -923,17 +923,32 @@ class CBUSH1D(Element):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
-        self.element_id = np.zeros(ncards, dtype=idtype)
-        self.property_id = np.zeros(ncards, dtype=idtype)
-        self.nodes = np.zeros((ncards, 2), dtype=idtype)
-        self.coord_id = np.full(ncards, -1, dtype='int32')
+        element_id = np.zeros(ncards, dtype=idtype)
+        property_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 2), dtype=idtype)
+        coord_id = np.full(ncards, -1, dtype='int32')
         for icard, card in enumerate(self.cards):
-            (eid, pid, nodes, cid, comment) = card
-            self.element_id[icard] = eid
-            self.property_id[icard] = pid
-            self.nodes[icard, :] = nodes
-            self.coord_id[icard] = cid
+            (eid, pid, nodesi, cid, comment) = card
+            element_id[icard] = eid
+            property_id[icard] = pid
+            nodes[icard, :] = nodesi
+            coord_id[icard] = cid
+        self._save(element_id, property_id, nodes, coord_id)
         self.cards = []
+
+    def _save(self, element_id, property_id, nodes, coord_id) -> None:
+        if len(self.element_id) != 0:
+            asdf
+        self.element_id = element_id
+        self.property_id = property_id
+        self.nodes = nodes
+        self.coord_id = coord_id
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['property_id'].append(self.property_id)
+        coords = np.unique(self.coord_id)
+        coords = coords[coords >= 0]
+        used_dict['coord_id'].append(coords)
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -1117,8 +1132,9 @@ class PBUSH1D(Property):
             sa[icard] = sai
             se[icard] = sei
 
+            self.model.log.info(f'PBUSH pid={pid}')
             for key, values in optional_vars.items():
-                self.model.log.info(f'PBUSH1D {key} values ={values}')
+                self.model.log.info(f'  {key} values={values}')
                 if key == 'SPRING':
                     spring_typei, *spring_data = values
                     spring_type[icard] = spring_typei
@@ -1190,23 +1206,23 @@ class PBUSH1D(Property):
                    #gener_idtdu, gener_idcdu, gener_idtdv, gener_idcdv,
                    )
         self.sort()
+        assert len(self.property_id) > 0, self.property_id
         self.cards = []
 
     def _save(self, property_id, k, c, sa, se, mass,
               spring_type, spring_table, spring_equation,
               damper_type, damper_table, damper_equation,
               shock_type, shock_table, shock_equation,
-              #gener_idt, gener_idc,
-              #gener_idtdu, gener_idcdu, gener_idtdv, gener_idcdv,
               gener_equation,
               ):
+        if len(self.property_id) != 0:
+            asdf
         self.property_id = property_id
         self.k = k
         self.c = c
         self.sa = sa
         self.se = se
         self.mass = mass
-        self.property_id = property_id
 
         self.spring_type = spring_type
         self.spring_table = spring_table
@@ -1228,6 +1244,29 @@ class PBUSH1D(Property):
         #self.gener_idtdv = gener_idtdv
         #self.gener_idcdv = gener_idcdv
         self.n = len(property_id)
+
+    def __apply_slice__(self, prop: PBUSH1D, i: np.ndarray) -> None:
+        prop.property_id = self.property_id[i]
+        prop.k = self.k[i]
+        prop.c = self.c[i]
+        prop.sa = self.sa[i]
+        prop.se = self.se[i]
+        prop.mass = self.mass[i]
+
+        prop.spring_type = self.spring_type[i]
+        prop.spring_table = self.spring_table[i, :]
+        prop.spring_equation = self.spring_equation[i, :]
+
+        prop.damper_type = self.damper_type[i]
+        prop.damper_table = self.damper_table[i, :]
+        prop.damper_equation = self.damper_equation[i, :]
+
+        prop.shock_type = self.shock_type[i]
+        prop.shock_table = self.shock_table[i, :]
+        prop.shock_equation = self.shock_equation[i, :]
+
+        prop.gener_equation = self.gener_equation[i, :]
+        prop.n = len(i)
 
     @staticmethod
     def _read_spring(card, istart: int) -> tuple[str, int, int, int, int]:

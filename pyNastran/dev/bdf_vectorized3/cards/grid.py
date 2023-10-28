@@ -741,8 +741,22 @@ class GRID(VectorizedBaseCard):
                 #ids_unique1 = ids_sorted[inode1] # high node
                 #ids_unique2 = ids_sorted[inode2] # low  node
 
-                if not self.is_equal_by_index(iarg[inode1], iarg[inode2]):
-                    raise RuntimeError('bad duplicates')
+                iarg1 = iarg[inode1]
+                iarg2 = iarg[inode2]
+                if not self.is_equal_by_index(iarg1, iarg2):
+                    node1 = self.slice_card_by_index(iarg1)
+                    node2 = self.slice_card_by_index(iarg2)
+                    dxyz = node1.xyz - node2.xyz
+                    dcp = node1.cp - node2.cp
+                    dcd = node1.cd - node2.cd
+                    msg = (f'arg1={iarg1}\n'
+                           f'arg2={iarg2}\n'
+                           f'node1:\n{node1.write()}'
+                           f'node2:\n{node2.write()}'
+                           f'dxyz:\n{dxyz}\n'
+                           f'dcp={dcp}\n'
+                           f'dcd={dcd}\n')
+                    raise RuntimeError(msg)
 
                 # now that we know all the nodes are unique
                 # (i.e., 2x node_id=1 is OK, but they have the same xyz),

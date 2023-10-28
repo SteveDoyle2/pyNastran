@@ -56,6 +56,9 @@ class Nastran3:
         self.bar_lines = {}
         self.include_mass_in_geometry = True
 
+        #
+        self.card_index = {}
+
     def get_nastran3_wildcard_geometry_results_functions(self) -> tuple:
         """
         gets the Nastran wildcard loader used in the file load menu
@@ -313,12 +316,171 @@ class Nastran3:
                 element_id, nelements, self.gui_elements)
             self.mean_edge_length = mean_edge_length
 
+            icase = self.material_ids(model, icase, cases, geometry_form,
+                                      element_id, property_id)
+
         form = [
             ('Geometry', None, geometry_form),
         ]
         if len(quality_form):
             geometry_form.append(('Quality', None, quality_form))
+
         return form, cases, icase# , nids, eids, data_map_dict
+
+    def material_ids(self, model: BDF,
+                     icase: int,
+                     cases: Cases,
+                     form: Form,
+                     element_ids: np.ndarray,
+                     property_ids: np.ndarray) -> int:
+        cards = (
+            ('Rod', False, [model.conrod], []),
+            ('Rod', True, [model.crod], [model.prod]),
+            ('Rod', True, [model.cbar], model.bar_property_cards),
+            ('Rod', True, [model.cbeam], model.beam_property_cards),
+            ('Shell', True, model.shell_element_cards, model.shell_property_cards),
+            ('Solid', True, model.solid_element_cards, model.solid_property_cards),
+        )
+        #beams = [model.cbeam if model.cbeam.n > 0]
+        #solids = [card for card in model.solid_element_cards if card.n > 0]
+        #shells = [card for card in model.shell_element_cards if card.n > 0]
+        idtype = element_ids.dtype
+        materials_dict = {}
+        neid = len(element_ids)
+        for (base_flag, is_pid, element_cards, property_cards) in cards:
+            element_cards2 = [card for card in element_cards if card.n > 0]
+            property_cards2 = [card for card in property_cards if card.n > 0]
+
+            for card in element_cards2:
+                flag = base_flag
+                etype = card.type
+                if etype not in self.card_index:
+                    continue
+
+                i0, i1 = self.card_index[etype]
+                #eids = element_ids[i0:i1]
+                pids = property_ids[i0:i1]
+                if is_pid:
+                    if flag in materials_dict:
+                        material_id = materials_dict[flag]
+                    else:
+                        if flag == 'Rod':
+                            material_id = np.full(neid, 0, dtype=idtype)
+                        elif flag == 'Shell':
+                            #material_id = np.array([], dtype=idtype)
+                            pass
+                            #pshell_material_id = np.full((neid, 4), 0, dtype=idtype)
+                            #pcomp_material_id = np.full((neid, 4), 0, dtype=idtype)
+                        elif flag == 'Solid':
+                            material_id = np.full(neid, 0, dtype=idtype)
+                        else:
+                            raise RuntimeError(flag)
+
+                    for card in property_cards2:
+                        card_pids = card.property_id
+                        index_pid = np.array([(i, pid) for i, pid in enumerate(pids)
+                                              if pid in card_pids])
+                        if index_pid.shape[0] == 0:
+                            continue
+                        index = index_pid[:, 0]
+                        pidsi = index_pid[:, 1]
+                        cardi = card.slice_card_by_id(pidsi)
+                        ptype = card.type
+                        if flag in {'Rod'}:
+                            material_idi = cardi.material_id
+                            material_id[index] = material_idi
+                        elif flag == 'Solid' and ptype in {'PSOLID', 'PLSOLID'}:
+                            material_idi = cardi.material_id
+                            material_id[index] = material_idi
+
+                        elif ptype in {'PCOMP', 'PCOMPG', 'PCOMPS'}:
+                            upids = np.unique(cardi.property_id)
+                            ucard = card.slice_card_by_id(upids)
+                            #nlayer = ucard.nlayer.max()
+                            nlayer = card.nlayer.max()
+                            #print('nlayer =', nlayer)
+                            if ptype in {'PCOMP', 'PCOMPG'}:
+                                flag = 'Shell - Composite'
+                            elif ptype == 'PCOMPS':
+                                flag = 'Solid - Composite'
+                            else:
+                                raise RuntimeError(ptype)
+
+                            if flag in materials_dict:
+                                material_id = materials_dict[flag]
+                            else:
+                                # hack...
+                                material_id = np.full((neid, nlayer), -1, dtype=idtype)
+
+                            # Presumably the unique number of layers is small, so we
+                            # iterate on that. We can then reshape the material_id once
+                            # we slice off the unwanted rows
+                            for ilayer in np.unique(ucard.nlayer):
+                                ipid = np.where(ilayer == cardi.nlayer)[0]
+                                ieid = index[ipid]
+                                npid = len(ipid)
+                                pids_layer = cardi.property_id[ipid]
+                                cardii = card.slice_card_by_id(pids_layer)
+                                material_id_rect = cardii.material_id.reshape(npid, ilayer)
+                                material_id[ieid, :ilayer] = material_id_rect
+                        elif ptype == 'PSHELL':
+                            flag = 'Shell - PSHELL'
+                            if flag in materials_dict:
+                                material_id = materials_dict[flag]
+                            else:
+                                # hack...
+                                material_id = np.full((neid, 4), -1, dtype=idtype)
+                            material_idi = cardi.material_id
+                            material_id[index] = material_idi
+                        else:  # pragma: no cover
+                            raise RuntimeError(flag)
+                        materials_dict[flag] = material_id
+                        if base_flag == 'Shell':
+                            del material_id
+                    print(f'finished {etype} {flag}')
+
+        materials_dict2 = {}
+        for flag, material_id in materials_dict.items():
+            mid_col_max = material_id.max(axis=0)
+            imat = (mid_col_max > 0)
+            material_id2 = material_id[:, imat]
+            materials_dict2[flag] = material_id2
+        del materials_dict
+
+        subcase_id = 0
+        pshell_result_name_map = {
+            0: 'MID1 - Membrane',
+            1: 'MID2 - Bending',
+            2: 'MID3 - Shear',
+            3: 'MID4 - Membrane/Bending',
+        }
+        for flag, material_id in materials_dict2.items():
+            #print(flag, material_id)
+            materials_form = []
+            if material_id.ndim == 1:
+                material_id = material_id.reshape((neid, 1))
+
+            nlayer = material_id.shape[1]
+            for ilayer in range(nlayer):
+                if flag in {'Rod', 'Solid'}:
+                    result_name = 'Material'
+                elif 'Composite' in flag:
+                    result_name = f'Material Layer {ilayer+1}'
+                elif 'PSHELL' in flag:
+                    result_name = pshell_result_name_map[ilayer]
+                else:  #  pragma: no cover
+                    raise RuntimeError(flag)
+
+                material_idi = material_id[:, ilayer]
+                material_idi[material_idi == 0] = -1
+                if material_idi.max() == -1:
+                    continue
+                icase = _add_integer_centroid_gui_result(
+                    icase, cases, materials_form, subcase_id,
+                    result_name, material_idi, mask_value=-1)
+            if len(materials_form):
+                form.append((flag, None, materials_form))
+        return icase
 
     def _simple_gui(self, ugrid: vtkUnstructuredGrid) -> None:  # pragma: no cover
         from pyNastran.gui.vtk_rendering_core import (
@@ -404,6 +566,7 @@ class Nastran3:
         self.gui_elements = gui_elements
 
         element_cards = [card for card in model.element_cards if card.n]
+        nelement0 = 0
         for element in element_cards:
             nelement = element.n
             #print('element')
@@ -590,9 +753,12 @@ class Nastran3:
                 model.log.warning(f'  dropping {element}')
                 continue
                 #raise NotImplementedError(element.type)
+            self.card_index[etype] = (nelement0, nelement0 + nelement)
+            nelement0 += nelement
             del nelement # , dnode
 
-            if 0:
+            if 0:  # pragma: no cover
+                #  testing to make sure things work...useful when they don't :/
                 # [number of nodes, nodes]
                 n_nodes = np.hstack(n_nodes_)
                 element_id = np.hstack(element_ids)
@@ -604,7 +770,6 @@ class Nastran3:
                 assert len(element_id) == len(property_id)
                 assert len(element_id) == len(cell_type)
                 assert len(element_id) == len(cell_offset)
-
         # [number of nodes, nodes]
         assert len(element_ids) == len(property_ids)
 

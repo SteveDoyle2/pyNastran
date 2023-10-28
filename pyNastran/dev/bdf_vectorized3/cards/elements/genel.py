@@ -246,45 +246,59 @@ class GENEL(Element):
         self.cards.append((eid, ul, ud, k, z, s, comment))
         self.n += 1
 
+    @Element.parse_cards_check
     def parse_cards(self):
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
-        self.element_id = np.zeros(ncards, dtype='int32')
-        self.nul = np.zeros(ncards, dtype='int32')
-        self.nud = np.zeros(ncards, dtype='int32')
-        self.nk = np.zeros(ncards, dtype='int32')
-        self.ns = np.zeros(ncards, dtype='int32')
-        self.nz = np.zeros(ncards, dtype='int32')
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nul = np.zeros(ncards, dtype='int32')
+        nud = np.zeros(ncards, dtype='int32')
+        nk = np.zeros(ncards, dtype='int32')
+        ns = np.zeros(ncards, dtype='int32')
+        nz = np.zeros(ncards, dtype='int32')
 
-        ul = []
-        ud = []
-        k = []
-        s = []
-        z = []
+        ul_list = []
+        ud_list = []
+        k_list = []
+        s_list = []
+        z_list = []
         for icard, card in enumerate(self.cards):
             (eid, uli, udi, ki, zi, si, comment) = card
-            self.ns[icard] = len(si)
-            self.nud[icard] = len(udi)
-            self.nul[icard] = len(uli)
-            self.nz[icard] = len(zi)
-            self.nk[icard] = len(ki)
+            ns[icard] = len(si)
+            nud[icard] = len(udi)
+            nul[icard] = len(uli)
+            nz[icard] = len(zi)
+            nk[icard] = len(ki)
             #print(len(ki), len(si), len(zi))
 
-            self.element_id[icard] = eid
-            k.append(ki)
-            s.append(si)
-            z.append(zi)
-            ul.append(uli)
-            ud.append(udi)
-        self.k = hstack_empty(k, dtype_default='float64')
-        self.z = hstack_empty(z, dtype_default='float64')
-        self.s = hstack_empty(s, dtype_default='float64')
-        self.ul = vstack_empty(ul, default_shape=(0, 2), dtype_default='int32')
-        self.ud = vstack_empty(ud, default_shape=(0, 2), dtype_default='int32')
+            element_id[icard] = eid
+            k_list.append(ki)
+            s_list.append(si)
+            z_list.append(zi)
+            ul_list.append(uli)
+            ud_list.append(udi)
+        k = hstack_empty(k_list, dtype_default='float64')
+        z = hstack_empty(z_list, dtype_default='float64')
+        s = hstack_empty(s_list, dtype_default='float64')
+        ul = vstack_empty(ul_list, default_shape=(0, 2), dtype_default='int32')
+        ud = vstack_empty(ud_list, default_shape=(0, 2), dtype_default='int32')
+        self._save(element_id, ns, nud, nul, nz, nk, k, z, s, ul, ud)
         self.cards = []
+
+    def _save(self, element_id, ns, nud, nul, nz, nk, k, z, s, ul, ud) -> None:
+        if len(self.element_id) != 0:
+           asdf
+        self.element_id = element_id
+        self.ns = ns
+        self.nud = nud
+        self.nul = nul
+        self.nz = nz
+        self.nk = nk
+        self.k = k
+        self.z = z
+        self.s = s
+        self.ul = ul
+        self.ud = ud
 
     #def cross_reference(self, model: BDF) -> None:
         #"""

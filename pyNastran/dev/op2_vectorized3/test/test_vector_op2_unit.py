@@ -774,9 +774,10 @@ class TestOP2(unittest.TestCase):
                 stop_on_failure=True, dev=False,
                 build_pandas=IS_PANDAS, log=log)
 
-    def _test_bdf_op2_other_05(self):
+    def test_bdf_op2_other_05(self):
         """checks ar29sadl.bdf, which is an CBUSH1D problem"""
         log = get_logger(level='warning')
+        #log = get_logger(level='debug')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'ar29sadl.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'ar29sadl.op2')
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)

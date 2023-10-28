@@ -569,30 +569,30 @@ class TestDynamic(unittest.TestCase):
         #print(nlpci)
         save_load_deck(model)
 
-    #def test_rotord(self):
-        #"""tests ROTORD"""
-        #model = BDF(debug=False)
-        #sid = 42
-        #rstart = 10.0
-        #rstep = 11.0
-        #numstep = 10
-        #rids = []
-        #rsets = [31]
-        #rspeeds = [None]
-        #rcords = []
-        #w3s = []
-        #w4s = []
-        #rforces = []
-        #brgsets = []
-        #rotord = model.add_rotord(
-            #sid, rstart, rstep, numstep,
-            #rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
-            #refsys='ROT', cmout=0.0, runit='RPM',
-            #funit='RPM', zstein='NO', orbeps=1.e-6,
-            #roprt=0, sync=1, etype=1, eorder=1.0,
-            #threshold=0.02, maxiter=10, comment='rotord')
-        #rotord.validate()
-        #save_load_deck(model)
+    def _test_rotord(self):
+        """tests ROTORD"""
+        model = BDF(debug=False)
+        sid = 42
+        rstart = 10.0
+        rstep = 11.0
+        numstep = 10
+        rids = []
+        rsets = [31]
+        rspeeds = [None]
+        rcords = []
+        w3s = []
+        w4s = []
+        rforces = []
+        brgsets = []
+        rotord = model.add_rotord(
+            sid, rstart, rstep, numstep,
+            rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
+            refsys='ROT', cmout=0.0, runit='RPM',
+            funit='RPM', zstein='NO', orbeps=1.e-6,
+            roprt=0, sync=1, etype=1, eorder=1.0,
+            threshold=0.02, maxiter=10, comment='rotord')
+        rotord.validate()
+        save_load_deck(model)
 
     def _test_loadcyn(self):
         """tests LOADCYN"""

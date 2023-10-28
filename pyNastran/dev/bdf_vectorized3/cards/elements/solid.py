@@ -918,9 +918,6 @@ class PLSOLID(Property):
     | PLSOLID |  20 |  21 |     |
     +---------+-----+-----+-----+
     """
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -1032,9 +1029,6 @@ class PLSOLID(Property):
 
 
 class PCOMPS(Property):
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-
     def clear(self) -> None:
         self.n = 0
         self.property_id = np.array([], dtype='int32')
@@ -1064,7 +1058,6 @@ class PCOMPS(Property):
     def __apply_slice__(self, prop: PCOMPS, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
         prop.property_id = self.property_id[i]
-        #prop.material_id = self.material_id[i]
 
         prop.coord_id = self.coord_id[i]
         prop.psdir = self.psdir[i]
@@ -1073,25 +1066,16 @@ class PCOMPS(Property):
         prop.tref = self.tref[i]
         prop.ge = self.ge[i]
 
-        #self.property_id = property_id
-        #self.global_ply_id = global_ply_id
-        #self.material_id = material_id
-        #self.thickness = thickness
-        #self.theta = theta
-        #self.failure_theory = failure_theory
-        #self.interlaminar_failure_theory = interlaminar_failure_theory
-        #self.sout = sout
+        ilayer = self.ilayer
+        prop.global_ply_id = hslice_by_idim(i, ilayer, self.global_ply_id)
+        prop.material_id = hslice_by_idim(i, ilayer, self.material_id)
+        prop.thickness = hslice_by_idim(i, ilayer, self.thickness)
+        prop.theta = hslice_by_idim(i, ilayer, self.theta)
+        prop.failure_theory = hslice_by_idim(i, ilayer, self.failure_theory)
+        prop.interlaminar_failure_theory = hslice_by_idim(i, ilayer, self.interlaminar_failure_theory)
+        prop.sout = hslice_by_idim(i, ilayer, self.sout)
 
-        iply = self.iply
-        prop.global_ply_id = hslice_by_idim(i, iply, self.global_ply_id)
-        prop.material_id = hslice_by_idim(i, iply, self.material_id)
-        prop.thickness = hslice_by_idim(i, iply, self.thickness)
-        prop.theta = hslice_by_idim(i, iply, self.theta)
-        prop.failure_theory = hslice_by_idim(i, iply, self.failure_theory)
-        prop.interlaminar_failure_theory = hslice_by_idim(i, iply, self.interlaminar_failure_theory)
-        prop.sout = hslice_by_idim(i, iply, self.sout)
-
-        prop.nply = self.nply[i]
+        prop.nlayer = self.nlayer[i]
 
     def add(self, pid: int,
             global_ply_ids: list[int],
@@ -1188,7 +1172,7 @@ class PCOMPS(Property):
         tref = np.zeros(ncards, dtype='float64')
         ge = np.zeros(ncards, dtype='float64')
 
-        nply = np.zeros(ncards, dtype='int32')
+        nlayer = np.zeros(ncards, dtype='int32')
         all_global_ply_ids = []
         all_mids = []
         all_thicknesses = []
@@ -1208,7 +1192,7 @@ class PCOMPS(Property):
             nb[icard] = nbi
             tref[icard] = trefi
             ge[icard] = gei
-            nply[icard] = len(global_ply_ids)
+            nlayer[icard] = len(global_ply_ids)
 
             all_global_ply_ids.extend(global_ply_ids)
             all_mids.extend(mids)
@@ -1228,14 +1212,14 @@ class PCOMPS(Property):
         interlaminar_failure_theory = np.array(all_interlaminar_failure_theories, dtype='|U8')
         sout = np.array(all_souts, dtype='|U3')
 
-        self._save(property_id, global_ply_id, material_id, thickness, theta, nply,
+        self._save(property_id, global_ply_id, material_id, thickness, theta, nlayer,
                    failure_theory, interlaminar_failure_theory, sout,
                    sb, nb, psdir, tref, ge, coord_id)
 
         self.sort()
         self.cards = []
 
-    def _save(self, property_id, global_ply_id, material_id, thickness, theta, nply,
+    def _save(self, property_id, global_ply_id, material_id, thickness, theta, nlayer,
               failure_theory, interlaminar_failure_theory, sout,
               sb, nb, psdir, tref, ge, coord_id):
         if len(self.property_id) != 0:
@@ -1245,7 +1229,7 @@ class PCOMPS(Property):
         self.material_id = material_id
         self.thickness = thickness
         self.theta = theta
-        self.nply = nply
+        self.nlayer = nlayer
 
         self.failure_theory = failure_theory
         self.interlaminar_failure_theory = interlaminar_failure_theory
@@ -1272,8 +1256,8 @@ class PCOMPS(Property):
         self.thickness *= xyz_scale
 
     @property
-    def iply(self) -> np.ndarray:
-        return make_idim(self.n, self.nply)
+    def ilayer(self) -> np.ndarray:
+        return make_idim(self.n, self.nlayer)
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
@@ -1281,9 +1265,9 @@ class PCOMPS(Property):
                    write_card_header: bool=False) -> None:
         print_card = get_print_card_8_16(size)
 
-        for pid, cordm, psdir, sb, nb, tref, ge, iply in zip(self.property_id, self.coord_id,
-                                                             self.psdir, self.sb, self.nb, self.tref, self.ge, self.iply):
-            iply0, iply1 = iply
+        for pid, cordm, psdir, sb, nb, tref, ge, ilayer in zip(self.property_id, self.coord_id,
+                                                               self.psdir, self.sb, self.nb, self.tref, self.ge, self.ilayer):
+            iply0, iply1 = ilayer
 
             if np.isnan(sb):
                 sb = None

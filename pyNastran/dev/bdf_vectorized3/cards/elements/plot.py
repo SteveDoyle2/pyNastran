@@ -28,23 +28,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
 
-class PLOTEL(Element):
-    """
-    Defines a 1D dummy element used for plotting.
-
-    This element is not used in the model during any of the solution
-    phases of a problem. It is used to simplify plotting of
-    structures with large numbers of colinear grid points, where the
-    plotting of each grid point along with the elements connecting
-    them would result in a confusing plot.
-
-    +--------+-----+-----+-----+
-    |   1    |  2  |  3  |  4  |
-    +========+=====+=====+=====+
-    | PLOTEL | EID | G1  | G2  |
-    +--------+-----+-----+-----+
-
-    """
+class PlotElement(Element):
     def add(self, eid: int, nodes: list[int], comment: str='') -> int:
         """
         Adds a PLOTEL card
@@ -63,6 +47,50 @@ class PLOTEL(Element):
         self.n += 1
         return self.n
 
+    def _save(self, element_id, nodes):
+        nelements = len(element_id)
+        self.element_id = element_id
+        self.nodes = nodes
+        self.n = nelements
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.nodes))
+
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card_8_16(size)
+
+        element_id = array_str(self.element_id, size=size)
+        nodes = array_str(self.nodes, size=size).tolist()
+
+        for eid, nodesi in zip(element_id, nodes):
+            list_fields = [self.type, eid] + nodesi
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class PLOTEL(PlotElement):
+    """
+    Defines a 1D dummy element used for plotting.
+
+    This element is not used in the model during any of the solution
+    phases of a problem. It is used to simplify plotting of
+    structures with large numbers of colinear grid points, where the
+    plotting of each grid point along with the elements connecting
+    them would result in a confusing plot.
+
+    +--------+-----+-----+-----+
+    |   1    |  2  |  3  |  4  |
+    +========+=====+=====+=====+
+    | PLOTEL | EID | G1  | G2  |
+    +--------+-----+-----+-----+
+
+    """
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """adds a PLOTEL"""
         #['PLOTEL', '3101', '3101', '3102', None, '3102', '3102', '3103']
@@ -103,33 +131,6 @@ class PLOTEL(Element):
         self._save(element_id, nodes)
         self.cards = []
 
-    def _save(self, element_id, nodes):
-        nelements = len(element_id)
-        self.element_id = element_id
-        self.nodes = nodes
-        self.n = nelements
-
-    def geom_check(self, missing: dict[str, np.ndarray]):
-        nid = self.model.grid.node_id
-        geom_check(self,
-                   missing,
-                   node=(nid, self.nodes))
-
-    @parse_element_check
-    def write_file(self, bdf_file: TextIOLike, size: int=8,
-                   is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
-
-        element_id = array_str(self.element_id, size=size)
-        nodes = array_str(self.nodes, size=size)
-
-        for eid, nodesi in zip(element_id, nodes):
-            n1, n2 = nodesi
-            list_fields = ['PLOTEL', eid, n1, n2]
-            bdf_file.write(print_card(list_fields))
-        return
-
     #@property
     #def allowed_properties(self):
         #return [prop for prop in [self.model.prod]
@@ -152,3 +153,216 @@ class PLOTEL(Element):
     def centroid(self) -> np.ndarray:
         centroid = line_centroid(self.model, self.nodes)
         return centroid
+
+class PLOTEL3(PlotElement):
+    """
+    Defines a 2D dummy element used for plotting.
+
+    This element is not used in the model during any of the solution
+    phases of a problem. It is used to simplify plotting of
+    structures with large numbers of colinear grid points, where the
+    plotting of each grid point along with the elements connecting
+    them would result in a confusing plot.
+
+    +---------+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |
+    +=========+=====+=====+=====+=====+
+    | PLOTEL3 | EID | G1  | G2  | G3  |
+    +---------+-----+-----+-----+-----+
+
+    """
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """adds a PLOTEL3"""
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+            integer(card, 4, 'g3'),
+        ]
+        assert len(card) <= 5, f'len(PLOTEL3 card) = {len(card):d}\ncard={card}'
+        self.cards.append((eid, nodes, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 3), dtype=idtype)
+
+        for icard, card_comment in enumerate(self.cards):
+            eid, nodesi, comment = card_comment
+            element_id[icard] = eid
+            nodes[icard, :] = nodesi
+        self._save(element_id, nodes)
+        self.cards = []
+
+    #@property
+    #def allowed_properties(self):
+        #return [prop for prop in [self.model.prod]
+                #if prop.n > 0]
+
+    #def mass(self) -> np.ndarray:
+        #mass_per_length = line_pid_mass_per_length(self.property_id, self.allowed_properties)
+        #length = self.length()
+        #mass = mass_per_length * length
+        #return mass
+
+    #def area(self) -> np.ndarray:
+        #area = line_pid_area(self.property_id, self.allowed_properties)
+        #return area
+
+    #def length(self) -> np.ndarray:
+        #length = line_length(self.model, self.nodes)
+        #return length
+
+    #def centroid(self) -> np.ndarray:
+        #centroid = line_centroid(self.model, self.nodes)
+        #return centroid
+
+class PLOTEL4(PlotElement):
+    """
+    Defines a 2D dummy element used for plotting.
+
+    This element is not used in the model during any of the solution
+    phases of a problem. It is used to simplify plotting of
+    structures with large numbers of colinear grid points, where the
+    plotting of each grid point along with the elements connecting
+    them would result in a confusing plot.
+
+    +---------+-----+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |  6  |
+    +=========+=====+=====+=====+=====+=====+
+    | PLOTEL4 | EID | G1  | G2  | G3  | G4  |
+    +---------+-----+-----+-----+-----+-----+
+
+    """
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """adds a PLOTEL4"""
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+            integer(card, 4, 'g3'),
+            integer(card, 5, 'g4'),
+        ]
+        assert len(card) <= 6, f'len(PLOTEL4 card) = {len(card):d}\ncard={card}'
+        self.cards.append((eid, nodes, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 4), dtype=idtype)
+
+        for icard, card_comment in enumerate(self.cards):
+            eid, nodesi, comment = card_comment
+            element_id[icard] = eid
+            nodes[icard, :] = nodesi
+        self._save(element_id, nodes)
+        self.cards = []
+
+
+class PLOTEL6(PlotElement):
+    """
+    Defines a 2D dummy element used for plotting.
+
+    This element is not used in the model during any of the solution
+    phases of a problem. It is used to simplify plotting of
+    structures with large numbers of colinear grid points, where the
+    plotting of each grid point along with the elements connecting
+    them would result in a confusing plot.
+
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
+    +=========+=====+=====+=====+=====+=====+=====+=====+
+    | PLOTEL6 | EID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+
+    """
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """adds a PLOTEL6"""
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+            integer(card, 4, 'g3'),
+            integer(card, 5, 'g4'),
+            integer(card, 6, 'g5'),
+            integer(card, 7, 'g6'),
+        ]
+        assert len(card) <= 8, f'len(PLOTEL6 card) = {len(card):d}\ncard={card}'
+        self.cards.append((eid, nodes, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 6), dtype=idtype)
+
+        for icard, card_comment in enumerate(self.cards):
+            eid, nodesi, comment = card_comment
+            element_id[icard] = eid
+            nodes[icard, :] = nodesi
+        self._save(element_id, nodes)
+        self.cards = []
+
+
+class PLOTEL8(PlotElement):
+    """
+    Defines a 2D dummy element used for plotting.
+
+    This element is not used in the model during any of the solution
+    phases of a problem. It is used to simplify plotting of
+    structures with large numbers of colinear grid points, where the
+    plotting of each grid point along with the elements connecting
+    them would result in a confusing plot.
+
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
+    +=========+=====+=====+=====+=====+=====+=====+=====+
+    | PLOTEL8 | EID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+    |         | G7  | G8  |     |     |     |     |     |
+    +---------+-----+-----+-----+-----+-----+-----+-----+
+
+    """
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """adds a PLOTEL8"""
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+            integer(card, 4, 'g3'),
+            integer(card, 5, 'g4'),
+            integer(card, 6, 'g5'),
+            integer(card, 7, 'g6'),
+            integer(card, 8, 'g7'),
+            integer(card, 9, 'g8'),
+        ]
+        assert len(card) <= 10, f'len(PLOTEL8 card) = {len(card):d}\ncard={card}'
+        self.cards.append((eid, nodes, comment))
+        self.n += 1
+        return self.n - 1
+
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        element_id = np.zeros(ncards, dtype=idtype)
+        nodes = np.zeros((ncards, 8), dtype=idtype)
+
+        for icard, card_comment in enumerate(self.cards):
+            eid, nodesi, comment = card_comment
+            element_id[icard] = eid
+            nodes[icard, :] = nodesi
+        self._save(element_id, nodes)
+        self.cards = []
+

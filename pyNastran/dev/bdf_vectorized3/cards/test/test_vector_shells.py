@@ -1663,6 +1663,16 @@ class TestShells(unittest.TestCase):
         assert np.allclose(jmat, jmat_expected), jmat
         assert np.allclose(normal, normal_expected), normal
 
+    def test_pshln2(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 2
+        model.add_pshln2(pid, mid, direct=1, thickness=1.0, analysis='ISH',
+                         behx=None, integration=None, behxh=None, integration_h=None, comment='')
+        model.setup()
+        model.pshln2.write()
+        save_load_deck(model)
+
 class TestAxisymmetricShells(unittest.TestCase):
     def test_cquadx4(self):
         """tests a CQUADX4"""

@@ -7,6 +7,16 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.fast_float_print import print_f
 class TestNumpyExtensions(unittest.TestCase):
     def test_print_float_8(self):
         compare_print_float_8 = partial(compare, stop_on_error=True)
+
+        value = -50000.0
+        s = compare_print_float_8(value)
+
+        value = -2.0
+        s = compare_print_float_8(value)
+
+        value=-180000.0 # ; field_old='-180000.' field_new='- 180000'
+        s = compare_print_float_8(value)
+
         value = -4.32693081e-05# ; field_old='-4.327-5' field_new='-.000043'
         s = compare_print_float_8(value)
         value = -3.755427e-06# ; field_old='-3.755-6' field_new='-.000004'

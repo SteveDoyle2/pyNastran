@@ -152,8 +152,6 @@ def material_coordinate_system(element,
                 imati, jmati = rotate_by_thetad(theta2, imat2, jmat2, normal2)
                 imat[itheta2, :] = imati
                 jmat[itheta2, :] = jmati
-    else:  # pragma: no cover
-        raise RuntimeError(element.get_stats())
 
     #if np.isnan(imat.max()) or np.isnan(jmat.max()):
         #raise RuntimeError('imat/jmat is nan')

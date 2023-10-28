@@ -2154,9 +2154,14 @@ class PSHLN2(Property):
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
         self.material_id = np.array([], dtype='int32')
-        self.coord_id = np.array([], dtype='int32')
-        self.stress_strain_output_location = np.array([], dtype='|U4')
         self.thickness = np.array([], dtype='float64')
+        self.direct = np.array([], dtype='int32')
+        self.analysis = np.array([], dtype='|U8')
+        self.beh = np.zeros((0, 4), dtype='|U8')
+        self.beh_h = np.zeros((0, 4), dtype='|U8')
+        self.integration = np.zeros((0, 4), dtype='|U8')
+        self.integration_h = np.zeros((0, 4), dtype='|U8')
+
 
     #def add(self, pid: int, mid1: int=None, t: float=None,
             #mid2: int=None, twelveIt3: float=1.0,
@@ -2361,35 +2366,43 @@ class PSHLN2(Property):
                                     for val in integration_hi]
         self._save(property_id, material_id,
                    thickness, direct, analysis,
-                   integration, beh_h, integration_h)
+                   beh, integration,
+                   beh_h, integration_h)
         self.sort()
         self.model.log.warning(f'PSHLN2 self.thickness={self.thickness}')
         self.cards = []
 
     def _save(self, property_id, material_id,
               thickness, direct, analysis,
-              integration, beh_h, integration_h) -> None:
+              beh, integration,
+              beh_h, integration_h) -> None:
         self.property_id = property_id
         self.material_id = material_id
         self.thickness = thickness
         self.direct = direct
         self.analysis = analysis
 
+        self.beh = beh
         self.integration = integration
         self.beh_h = beh_h
         self.integration_h = integration_h
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
-        used_dict['coord_id'].append(self.coord_id)
+        #used_dict['coord_id'].append(self.coord_id)
 
     def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:
         prop.n = len(i)
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
-        prop.coord_id = self.coord_id[i]
-        prop.stress_strain_output_location = self.stress_strain_output_location[i]
         prop.thickness = self.thickness[i]
+        prop.direct = self.direct[i]
+        prop.analysis = self.analysis[i]
+
+        prop.beh = self.beh[i, :]
+        prop.integration = self.integration[i, :]
+        prop.beh_h = self.beh_h[i, :]
+        prop.integration_h = self.integration_h[i, :]
 
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
@@ -2417,7 +2430,7 @@ class PSHLN2(Property):
             property_ids, material_ids, directs, self.analysis, self.thickness,
             self.beh, self.integration, self.beh_h, self.integration_h):
             list_fields = ['PSHLN2', pid, mid, direct, thickness, analysis, None, None, None]
-            values = (beh, integration, beh_h, integration_h)
+            #values = (beh, integration, beh_h, integration_h)
             for code, behx, intx, behxh, intxh in zip(codes, beh, integration, beh_h, integration_h):
                 if behx == '' and intx == '' and behx == '' and intxh == '':
                     continue
