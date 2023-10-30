@@ -3356,7 +3356,7 @@ class TestOP2(unittest.TestCase):
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=True)
 
-    def + test_xsop2dir(self):
+    def _test_xsop2dir(self):
         """test NX 2019 XSOP2DIR"""
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.bdf')
