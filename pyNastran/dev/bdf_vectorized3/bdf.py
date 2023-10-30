@@ -90,9 +90,8 @@ from pyNastran.bdf.cards.constraints import SPCAX, SESUP, GMSPC
 #from .cards.coordinate_systems.msgmesh import CGEN, GMCORD, GMLOAD
 #from .cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
-    DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
+    FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD,
-    #TIC,
 )
 #from .cards.loads.loads import (
     #LOADCYN, LOADCYH)
@@ -134,15 +133,14 @@ from pyNastran.bdf.cards.optimization import DOPTPRM
 #)
 #from .cards.bdf_sets import (
     #SET2, SET3,
-    #SEBSET, SECSET, SEQSET, # SEUSET
-    #SEBSET1, SECSET1, SEQSET1, # SEUSET1
+    # SEUSET,  SEUSET1
     #SESET, #SEQSEP
     #RADSET,
 #)
 from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPRM
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS, DMIAX
 #from .bdf.cards.elements.thermal import BDYOR
-#from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
+#from .cards.thermal.loads import (TEMP, TEMPD, TEMPB3,
                                   #TEMPRB, QVOL, QVECT)
 #from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                     #PHBDY, CONV, CONVM, TEMPBC)
@@ -513,7 +511,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             valid_modes = {'msc', 'nx', 'mystran', 'nasa95', 'zona'}
 
         """
-        #super().__init__()
+        self.log = get_logger2(log=log, debug=debug)
+        super().__init__()
         #AddCards.__init__(self)
         #WriteMesh.__init__(self)
         #BDFAttributes.__init__(self)
@@ -529,8 +528,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self.active_filename: Optional[str] = ''
         self.include_dir = ''
         self.dumplines = False
-
-        self.log = get_logger2(log=log, debug=debug)
 
         # list of all read in cards - useful in determining if entire BDF
         # was read & really useful in debugging
@@ -765,25 +762,25 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # temperature cards
             #'TEMP', 'TEMPD', 'TEMPB3', 'TEMPAX',
-            #'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
+            'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
             #'CHBDYE', 'CHBDYG', 'CHBDYP', 'BDYOR',
             #'PCONV', 'PCONVM', 'PHBDY',
-            #'RADBC', 'CONV',
-            #'RADM', 'VIEW', 'VIEW3D',  # TODO: not validated
+            'RADBC', # 'CONV',
+            'RADM', # 'VIEW', 'VIEW3D',  # TODO: not validated
 
             #'RADCAV', ## radcavs
 
             # ---- dynamic cards ---- #
             'DAREA',  ## darea
-            #'DPHASE',  ## dphases
-            #'DELAY',  ## delays
+            'DPHASE',  ## dphase
+            'DELAY',  ## delay
             'NLPARM',  ## nlparms
             #'ROTORG', 'ROTORD', ## rotors
             'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
             'TSTEPNL', 'TSTEP1',  ## tstepnls
             #'TF',  ## transfer_functions
-            #'TIC', ## initial conditions - sid (set ID)
+            'TIC', ## initial conditions - sid (set ID)
 
             ## frequencies
             #'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5',
@@ -825,9 +822,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # super-element sets
             #'SESET',  ## se_sets
 
-            #'SEBSET', 'SEBSET1',  ## se_bsets
-            #'SECSET', 'SECSET1',  ## se_csets
-            #'SEQSET', 'SEQSET1',  ## se_qsets
+            'SEBSET', 'SEBSET1',  ## se_bsets
+            'SECSET', 'SECSET1',  ## se_csets
+            'SEQSET', 'SEQSET1',  ## se_qsets
             #'SEUSET', 'SEUSET1',  ## se_usets
             #'SEQSEP',
 
@@ -2310,15 +2307,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #'SESET' : (SESET, add_methods._add_seset_object),
 
-            #'SEBSET' : (SEBSET, add_methods._add_sebset_object),
-            #'SEBSET1' : (SEBSET1, add_methods._add_sebset_object),
-
-            #'SECSET' : (SECSET, add_methods._add_secset_object),
-            #'SECSET1' : (SECSET1, add_methods._add_secset_object),
-
-            #'SEQSET' : (SEQSET, add_methods._add_seqset_object),
-            #'SEQSET1' : (SEQSET1, add_methods._add_seqset_object),
-
             #'SESUP' : (SESUP, add_methods._add_sesup_object),  # pseudo-constraint
 
             #'SEUSET' : (SEUSET, add_methods._add_seuset_object),
@@ -2546,13 +2534,13 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PRESAX' : (PRESAX, add_methods._add_load_object),  # axisymmetric
 
             # thermal loads
-            #'QBDY1': partial(self._prepare_card, self.qbdy1),
-            #'QBDY2': partial(self._prepare_card, self.qbdy2),
-            #'QBDY3': partial(self._prepare_card, self.qbdy3),
-            #'QVOL': partial(self._prepare_card, self.qvol),
-            #'TEMPBC': partial(self._prepare_card, self.tempbc),
-            #'RADBC': partial(self._prepare_card, self.radbc),
-            #'RADM': partial(self._prepare_card, self.radm),
+            'QBDY1': partial(self._prepare_card, self.qbdy1),
+            'QBDY2': partial(self._prepare_card, self.qbdy2),
+            'QBDY3': partial(self._prepare_card, self.qbdy3),
+            'QVOL': partial(self._prepare_card, self.qvol),
+            'TEMPBC': partial(self._prepare_card, self.tempbc),
+            'RADBC': partial(self._prepare_card, self.radbc),
+            'RADM': partial(self._prepare_card, self.radm),
 
             # dynamic loads
             'DLOAD' : partial(self._prepare_card, self.dload),
@@ -2561,13 +2549,13 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'TLOAD2' : partial(self._prepare_card, self.tload2),
             'RLOAD1' : partial(self._prepare_card, self.rload1),
             'RLOAD2' : partial(self._prepare_card, self.rload2),
-            #'TIC' : partial(self._prepare_card, self.tic),
+            'TIC' : partial(self._prepare_card, self.tic),
             #'QVECT': partial(self._prepare_card, self.qvect),
-            #'QHBDY': partial(self._prepare_card, self.qhbdy),
+            'QHBDY': partial(self._prepare_card, self.qhbdy),
 
             # offset
-            #'DPHASE': partial(self._prepare_card, self.dphase),
-            #'DELAY': partial(self._prepare_card, self.delay),
+            'DPHASE': partial(self._prepare_card, self.dphase),
+            'DELAY': partial(self._prepare_card, self.delay),
 
 
             # random laods
@@ -2670,6 +2658,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             'USET': partial(self._prepare_card_by_method, self.uset.add_set_card),
             'USET1': partial(self._prepare_card_by_method, self.uset.add_set1_card),
+
+            'SEBSET': partial(self._prepare_card_by_method, self.sebset.add_set_card),
+            'SECSET': partial(self._prepare_card_by_method, self.secset.add_set_card),
+            'SEQSET': partial(self._prepare_card_by_method, self.seqset.add_set_card),
+
+            'SEBSET1': partial(self._prepare_card_by_method, self.sebset.add_set1_card),
+            'SECSET1': partial(self._prepare_card_by_method, self.secset.add_set1_card),
+            'SEQSET1': partial(self._prepare_card_by_method, self.seqset.add_set1_card),
 
             # aero
             #'CAERO1': partial(self._prepare_card, self.caero1),
@@ -4742,6 +4738,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
 
     if bdf_filename and not isinstance(bdf_filename, StringIO):
         check_path(bdf_filename, 'bdf_filename')
+
     model.read_bdf(bdf_filename=bdf_filename, validate=validate,
                    xref=xref, punch=punch, read_includes=True,
                    save_file_structure=save_file_structure,

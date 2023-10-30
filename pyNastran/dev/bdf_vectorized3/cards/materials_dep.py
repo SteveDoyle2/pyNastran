@@ -9,6 +9,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string, integer, double,
     integer_or_blank, double_or_blank, string_or_blank,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 #from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_material_check #get_print_card_8_16,
@@ -290,6 +291,14 @@ class MATS1(Material):
     @Material.clear_check
     def clear(self) -> None:
         self.material_id = np.array([], dtype='int32')
+        self.table_id = np.array([], dtype='int32')
+        self.Type = np.array([], dtype='|U8')
+        self.hardening_slope = np.array([], dtype='float64')
+        self.hr = np.array([], dtype='int32')
+        self.yf = np.array([], dtype='int32')
+        self.limit1 = np.array([], dtype='float64')
+        self.limit2 = np.array([], dtype='float64')
+        self.stress_strain_measure = np.array([], dtype='|U8')
 
     def add(self, mid: int, tid: int, Type: str,
             h: float, hr: int, yf: int, limit1: float, limit2: float,
@@ -313,14 +322,14 @@ class MATS1(Material):
 
         """
         mid = integer(card, 1, 'mid')
-        tid = integer_or_blank(card, 2, 'tid')
+        tid = integer_or_blank(card, 2, 'tables1_id')
         Type = string(card, 3, 'Type')
 
         if Type not in {'NLELAST', 'PLASTIC', 'PLSTRN'}:
             raise ValueError('MATS1 Type must be [NLELAST, PLASTIC, PLSTRN]; Type=%r' % Type)
         if Type == 'NLELAST':
             # should we even read these?
-            h = None
+            hardening_slope = None
             hr = None
             yf = None
             limit1 = None
@@ -331,7 +340,8 @@ class MATS1(Material):
             #limit1 = blank(card, 7, 'yf')
             #limit2 = blank(card, 8, 'yf')
         else:
-            h = double_or_blank(card, 4, 'H')
+            fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+            hardening_slope = fdouble_or_blank(card, 4, 'H', default=0.0)
             yf = integer_or_blank(card, 5, 'yf', default=1)
             hr = integer_or_blank(card, 6, 'hr', default=1)
             limit1 = double(card, 7, 'limit1')
@@ -344,7 +354,8 @@ class MATS1(Material):
         stress_strain_measure = string_or_blank(card, 10, 'stress/strain measure', default='')
         assert len(card) <= 9, f'len(MATS1 card) = {len(card):d}\ncard={card}'
         #return MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
-        self.cards.append((mid, tid, Type, h, hr, yf, limit1, limit2, stress_strain_measure, comment))
+        self.cards.append((mid, tid, Type, hardening_slope, hr, yf,
+                           limit1, limit2, stress_strain_measure, comment))
         self.n += 1
         return self.n
 
@@ -354,7 +365,7 @@ class MATS1(Material):
         material_id = np.zeros(ncards, dtype='int32')
         table_id = np.zeros(ncards, dtype='int32')
         Type = np.zeros(ncards, dtype='|U8')
-        h = np.zeros(ncards, dtype='float64')
+        hardening_slope = np.zeros(ncards, dtype='float64')
         hr = np.zeros(ncards, dtype='int32')
         yf = np.zeros(ncards, dtype='int32')
         limit1 = np.zeros(ncards, dtype='float64')
@@ -362,24 +373,27 @@ class MATS1(Material):
         stress_strain_measure = np.zeros(ncards, dtype='|U8')
 
         for i, card in enumerate(self.cards):
-            (mid, tid, typei, hi, hri, yfi, limit1i, limit2i, stress_strain_measurei, comment) = card
+            (mid, tid, typei, hardening_slopei, hri, yfi,
+             limit1i, limit2i, stress_strain_measurei, comment) = card
             tid = 0 if tid is None else tid
             hri = 1 if hri is None else hri
             yfi = 1 if yfi is None else yfi
             material_id[i] = mid
             table_id[i] = tid
             Type[i] = typei
-            h[i] = hi
+            hardening_slope[i] = hardening_slopei
             hr[i] = hri
             yf[i] = yfi
             limit1[i] = limit1i
             limit2[i] = limit2i
             stress_strain_measure[i] = stress_strain_measurei
-        self._save(material_id, table_id, Type, h, hr, yf, limit1, limit2, stress_strain_measure)
+        self._save(material_id, table_id, Type, hardening_slope, hr, yf,
+                   limit1, limit2, stress_strain_measure)
         self.sort()
         self.cards = []
 
-    def _save(self, material_id, table_id, Type, h, hr, yf, limit1, limit2, stress_strain_measure):
+    def _save(self, material_id, table_id, Type, hardening_slope, hr, yf,
+              limit1, limit2, stress_strain_measure):
         if len(self.material_id):
             asdf
             #material_id = np.hstack([self.material_id, material_id])
@@ -387,7 +401,7 @@ class MATS1(Material):
         self.material_id = material_id
         self.table_id = table_id
         self.Type = Type
-        self.h = h
+        self.hardening_slope = hardening_slope
         self.hr = hr
         self.yf = yf
         self.limit1 = limit1
@@ -432,7 +446,7 @@ class MATS1(Material):
         mat.material_id = self.material_id[i]
         mat.table_id = self.table_id[i]
         mat.Type = self.Type[i]
-        mat.h = self.h[i]
+        mat.hardening_slope = self.hardening_slope[i]
         mat.hr = self.hr[i]
         mat.yf = self.yf[i]
         mat.limit1 = self.limit1[i]
@@ -454,7 +468,7 @@ class MATS1(Material):
 
         material_id = array_str(self.material_id, size=size)
         table_id = array_str(self.table_id, size=size)
-        h = array_str(self.h, size=size)
+        hardening_slope = array_float(self.hardening_slope, size=size)
         yf = array_str(self.yf, size=size)
         hr = array_str(self.hr, size=size)
         limit1 = array_float(self.limit1, size=size)
@@ -463,7 +477,7 @@ class MATS1(Material):
         #tables = np.column_stack([self.e_table, self.g_table, self.nu_table, self.rho_table])
         for mid, table_idi, typei, hi, yfi, hri, limit1i, limit2i, stress_strain_measure \
             in zip_longest(material_id, table_id, self.Type,
-                           h, yf, hr, limit1, limit2, self.stress_strain_measure):
+                           hardening_slope, yf, hr, limit1, limit2, self.stress_strain_measure):
             list_fields = ['MATS1', mid, table_idi, typei,
                            hi, yfi, hri, limit1i, limit2i, stress_strain_measure]
             bdf_file.write(print_card(list_fields))

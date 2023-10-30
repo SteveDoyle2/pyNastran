@@ -171,13 +171,14 @@ class TestDynamic(unittest.TestCase):
         tload1 = model.tload1
         tload2 = model.tload2
         dload = model.dload
+        delay = model.delay
 
         model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                                 nxref_errors=0, stop_on_xref_error=True)
 
         sid = 2
         excite_id = 20
-        delay = 0
+        #delay = 0
         tid = 42
         model.add_tload1(sid, excite_id, tid, delay=0, load_type='LOAD',
                          us0=0.0, vs0=0.0, comment='tload1')
@@ -228,9 +229,8 @@ class TestDynamic(unittest.TestCase):
         dloadi = model.add_dload(sid, scale, scale_factors, load_ids,
                                  comment='dload')
 
+        delayi = model.add_delay(delay_id, nodes, components, delays)
         if RUN_DELAY:
-            delay = model.add_delay(delay_id, nodes, components, delays)
-
             x1 = 0.1
             x = np.linspace(0., 1.)
             y = np.sin(x)
@@ -238,11 +238,10 @@ class TestDynamic(unittest.TestCase):
 
         model.pop_parse_errors()
 
-        if RUN_DELAY:
-            delay.validate()
-            #delay.raw_fields()
-            delay.write()
-            delay.write(size=16)
+        #delay.validate()
+        #delay.raw_fields()
+        delay.write()
+        delay.write(size=16)
 
         #tload1.validate()
         #tload1.raw_fields()
@@ -305,10 +304,11 @@ class TestDynamic(unittest.TestCase):
         model = BDF(debug=False)
         rload1 = model.rload1
         dload = model.dload
+        delay = model.delay
         #model.case_control_deck = CaseControlDeck(['DLOAD=2', 'BEGIN BULK'])
         sid = 2
         excite_id = 20
-        delay = 0
+        delayi = 0
         tid = 42
         rload1i = model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=0,
                                    td=0, load_type='LOAD', comment='rload1')
@@ -332,24 +332,22 @@ class TestDynamic(unittest.TestCase):
         scale_factors = 1.
         load_ids = 2
         dloadi = model.add_dload(sid, scale, scale_factors, load_ids,
-                                comment='dload')
+                                 comment='dload')
+
+        delay_id = 2
+        nodes = 100
+        components = 2
+        delays = 1.5
+        delayi = model.add_delay(delay_id, nodes, components, delays)
 
         if RUN_DELAY:
-            delay_id = 2
-            nodes = 100
-            components = 2
-            delays = 1.5
-            delayi = model.add_delay(delay_id, nodes, components, delays)
-
             x1 = 0.1
             x = np.linspace(0., 1.)
             y = np.sin(x)
             tabled2i = model.add_tabled2(tid, x1, x, y, comment='tabled2')
 
-
         model.setup()
         model.pop_parse_errors()
-
 
         rload1.validate()
         #rload1.raw_fields()
@@ -361,12 +359,11 @@ class TestDynamic(unittest.TestCase):
         dload.write()
         dload.write(size=16)
 
+        #delay.validate()
+        #delay.raw_fields()
+        delay.write()
+        delay.write(size=16)
         if RUN_DELAY:
-            delay.validate()
-            #delay.raw_fields()
-            delay.write()
-            delay.write(size=16)
-
             tabled2.validate()
             tabled2.raw_fields()
             tabled2.write_card()
@@ -414,6 +411,7 @@ class TestDynamic(unittest.TestCase):
         model = BDF(debug=False)
         rload2 = model.rload2
         dload = model.dload
+        delay = model.delay
         #model.case_control_deck = CaseControlDeck(['DLOAD=2', 'BEGIN BULK'])
 
         sid = 3
@@ -444,12 +442,11 @@ class TestDynamic(unittest.TestCase):
         dloadi = model.add_dload(sid, scale, scale_factors, load_ids,
                                  comment='dload')
 
-        if RUN_DELAY:
-            delay_id = 2
-            nodes = 100
-            components = 2
-            delays = 1.5
-            delay = model.add_delay(delay_id, nodes, components, delays)
+        delay_id = 2
+        nodes = 100
+        components = 2
+        delays = 1.5
+        delayi = model.add_delay(delay_id, nodes, components, delays)
 
         model.pop_parse_errors()
 
@@ -463,11 +460,10 @@ class TestDynamic(unittest.TestCase):
         dload.write()
         dload.write(size=16)
 
-        if RUN_DELAY:
-            delay.validate()
-            #delay.raw_fields()
-            delay.write()
-            delay.write(size=16)
+        #delay.validate()
+        #delay.raw_fields()
+        delay.write()
+        delay.write(size=16)
 
         model.validate()
         model.cross_reference()
@@ -508,25 +504,28 @@ class TestDynamic(unittest.TestCase):
         #print(outs)
         save_load_deck(model, run_renumber=False, run_convert=False)
 
-    def _test_ascre(self):
+    def test_ascre(self):
         """tests ASCRE, DELAY, DPHASE, TABLED2"""
         model = BDF(debug=False)
         sid = 1
         excite_id = 2
-        rho = 1.0
-        b = 2.0
-        acsrce = model.add_acsrce(sid, excite_id, rho, b, delay=0, dphase=0, power=0,
-                                  comment='acsrce')
-        acsrce.raw_fields()
-        sid = 3
-        excite_id = 4
-        rho = 1.0
-        b = 2.0
+        TEST_DYNAMIC = False
+        if TEST_DYNAMIC:
+            rho = 1.0
+            b = 2.0
+            acsrce = model.add_acsrce(sid, excite_id, rho, b, delay=0, dphase=0, power=0,
+                                      comment='acsrce')
+            acsrce.raw_fields()
         delay = 3
         dphase = 4
         power = 5
-        unused_acsrce2 = model.add_acsrce(sid, excite_id, rho, b, delay=delay,
-                                          dphase=dphase, power=power)
+        if TEST_DYNAMIC:
+            sid = 3
+            excite_id = 4
+            rho = 1.0
+            b = 2.0
+            unused_acsrce2 = model.add_acsrce(sid, excite_id, rho, b, delay=delay,
+                                              dphase=dphase, power=power)
         nodes = 4
         components = 5
         delays = 6.0
@@ -537,17 +536,18 @@ class TestDynamic(unittest.TestCase):
         phase_leads = 2.0
         delay = model.add_dphase(sid, nodes, components, phase_leads)
 
-        tid = power
-        x1 = 1.
-        x = np.linspace(0., 1.) + 10.
-        y = np.sin(x) + 2.
-        model.add_tabled2(tid, x1, x, y, comment='tabled2')
+        if TEST_DYNAMIC:
+            tid = power
+            x1 = 1.
+            x = np.linspace(0., 1.) + 10.
+            y = np.sin(x) + 2.
+            model.add_tabled2(tid, x1, x, y, comment='tabled2')
         model.add_grid(4, [0., 0., 0.])
 
         model.validate()
         model.pop_parse_errors()
         model.cross_reference()
-        model.pop_xref_errors()
+        #model.pop_xref_errors()
 
         save_load_deck(model, run_convert=False)
 
@@ -791,36 +791,37 @@ class TestDynamic(unittest.TestCase):
         model.add_tload2(
             tload_id, excite_id, delay=delay_id, load_type='LOAD', T1=0.15, T2=0.5,
             frequency=10., phase=dphase_id, c=0., b=0., us0=0., vs0=0., comment='')
+
+        delay = 0.15
+        phase = 45.
+        nodes = [1]
+        components = [1]
+        delays = [delay]
+        model.add_delay(delay_id, nodes, components, delays, comment='')
+        nodes = [1]
+        components = [1]
+        phase_leads = [phase]
+        model.add_dphase(dphase_id, nodes, components, phase_leads, comment='')
+
+        nodes = [1]
+        components = [2]
+        delays = [delay]
+        model.add_delay(delay_id, nodes, components, delays, comment='')
+        nodes = [1]
+        components = [2]
+        phase_leads = [phase]
+        model.add_dphase(dphase_id, nodes, components, phase_leads, comment='')
+
+        nodes = [1]
+        components = [3]
+        delays = [delay]
+        model.add_delay(delay_id, nodes, components, delays, comment='')
+        nodes = [1]
+        components = [3]
+        phase_leads = [phase]
+        model.add_dphase(dphase_id, nodes, components, phase_leads, comment='')
+
         if RUN_DELAY:
-            delay = 0.15
-            phase = 45.
-            nodes = [1]
-            components = [1]
-            delays = [delay]
-            model.add_delay(delay_id, nodes, components, delays, comment='')
-            nodes = [1]
-            components = [1]
-            phase_leads = [phase]
-            model.add_dphase(dphase_id, nodes, components, phase_leads, comment='')
-
-            nodes = [1]
-            components = [2]
-            delays = [delay]
-            model.add_delay(delay_id, nodes, components, delays, comment='')
-            nodes = [1]
-            components = [2]
-            phase_leads = [phase]
-            model.add_dphase(dphase_id, nodes, components, phase_leads, comment='')
-
-            nodes = [1]
-            components = [3]
-            delays = [delay]
-            model.add_delay(delay_id, nodes, components, delays, comment='')
-            nodes = [1]
-            components = [3]
-            phase_leads = [phase]
-            model.add_dphase(dphase_id, nodes, components, phase_leads, comment='')
-
             model.cross_reference()
             loads = tload2.get_load_at_time(time, scale=1.)
             val = 0.5 ** 0.5 # sqrt(1/2)

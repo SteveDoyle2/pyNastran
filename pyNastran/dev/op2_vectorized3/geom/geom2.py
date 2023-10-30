@@ -4177,6 +4177,8 @@ class GEOM2:
 
     def _read_cquadx(self, data: bytes, n: int) -> int:
         """CQUADX(9008,90,508)  - the marker for Record 76"""
+        if 'CQUADX' not in self.op2.card_count:
+            return len(data)
         return self._run_cquad_44(self.op2.cquadx, data, n)
 
     def _read_crbar(self, data: bytes, n: int) -> int:
@@ -4841,6 +4843,8 @@ class GEOM2:
         Common method for reading CTRIAX3
         """
         card_name = 'CTRIAX'
+        if 'CTRIAX' not in self.op2.card_count:
+            return len(data)
         card_obj = self.op2.ctriax
         methods = {
             32 : self._read_ctriax3fd_32,
@@ -5406,6 +5410,8 @@ class GEOM2:
     def _read_ctriax(self, data: bytes, n: int) -> int:
         """common method for reading CTRIAXs"""
         card_name = 'CTRIAX'
+        if 'CTRIAX' not in self.op2.card_count:
+            return len(data)
         card_obj = self.op2.ctriax
         methods = {
             32 : self._read_ctriax_8,
@@ -5527,6 +5533,8 @@ class GEOM2:
     def _read_ctriax6(self, data: bytes, n: int) -> int:  # 101
         """(6108, 61, 107)"""
         op2 = self.op2
+        if 'CTRIAX6' not in op2.cards_to_read:
+            return len(data)
         ntotal = 44 * self.factor  # 11*4
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0

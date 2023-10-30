@@ -251,7 +251,7 @@ class ABCOQSET(VectorizedBaseCard):
             class_name = self.type[0] + 'SET1'
         elif self.type in {'OMIT', 'OMIT1'}:
             class_name = 'OMIT1'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.type)
 
         for comp, nids in comp_to_nids.items():
@@ -289,7 +289,7 @@ class SuperBCQSET(VectorizedBaseCard):
     | SEBSET | 100  | 16  |  2 |  23 | 3516 |  1  | 4   |     |
     +--------+------+-----+----+-----+------+-----+-----+-----+
     """
-    _id_name = 'node_id'
+    _id_name = 'seid'
     def __init__(self, model: BDF):
         super().__init__(model)
         #self._is_sorted = False
@@ -392,10 +392,13 @@ class SuperBCQSET(VectorizedBaseCard):
         component_list = []
         #comment = {}
         for i, card in enumerate(self.cards):
-            (seid, nidi, componenti, commenti) = card
+            (seidi, nidi, componenti, commenti) = card
             assert isinstance(nidi, list), nidi
             assert isinstance(componenti, list), componenti
-            nnode = len(node_id_list)
+            seid[i] = seidi
+            nnodei = len(nidi)
+            assert nnodei > 0, (seidi, nidi, componenti)
+            nnode[i] = nnodei
             node_id_list.extend(nidi)
             component_list.extend(componenti)
             #if commenti:
@@ -423,6 +426,10 @@ class SuperBCQSET(VectorizedBaseCard):
             component = np.hstack([self.component, component])
         #if comment:
             #self.comment.update(comment)
+
+        assert len(seid) == len(nnode)
+        assert len(component) == len(node_id)
+        assert nnode.min() > 0, nnode
         self.seid = seid
         self.nnode = nnode
         self.node_id = node_id
@@ -497,7 +504,7 @@ class SuperBCQSET(VectorizedBaseCard):
         size = update_field_size(max_int, size)
         print_card = get_print_card(size, max_int)
 
-        seid_comp_to_nids = defaultdict(defaultdict(list))
+        seid_comp_to_nids = defaultdict(lambda : defaultdict(list))
         for seid, nid, comp in zip_longest(self.seid, self.node_id, self.component):
             seid_comp_to_nids[seid][comp].append(nid)
 
@@ -505,7 +512,7 @@ class SuperBCQSET(VectorizedBaseCard):
         if self.type in {'SEBSET', 'SECSET', 'SEQSET',
                          'SEBSET1', 'SECSET1', 'SEQSET1'}:
             class_name = self.type[0] + 'SET1'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.type)
 
         for seid, comp_to_nids in seid_comp_to_nids.items():

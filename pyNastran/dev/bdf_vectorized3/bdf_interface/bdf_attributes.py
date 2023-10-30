@@ -69,12 +69,13 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
     LSEQ, DLOAD,
-    DAREA, TLOAD1, TLOAD2, RLOAD1, RLOAD2, # TIC, QVECT,
-    #RANDPS, DELAY, DPHASE
+    DAREA, TLOAD1, TLOAD2, RLOAD1, RLOAD2, TIC, # QVECT,
+    #RANDPS,
+    DELAY, DPHASE
 )
 
-#from pyNastran.dev.bdf_vectorized3.cards.loads.thermal_loads import (
-    #QHBDY, QBDY1, QBDY2, QBDY3, QVOL, TEMPBC, RADBC, RADM)
+from pyNastran.dev.bdf_vectorized3.cards.loads.thermal_loads import (
+    QHBDY, QBDY1, QBDY2, QBDY3, QVOL, TEMPBC, RADBC, RADM)
 
 from pyNastran.dev.bdf_vectorized3.cards.materials import (
     MAT1,
@@ -452,14 +453,14 @@ class BDFAttributes:
 
         # other thermal...
         #self.dtemp = DTEMP(self)
-        #self.qhbdy = QHBDY(self)
-        #self.qbdy1 = QBDY1(self)
-        #self.qbdy2 = QBDY2(self)
-        #self.qbdy3 = QBDY3(self)
-        #self.qvol = QVOL(self)
-        #self.tempbc = TEMPBC(self)
-        #self.radbc = RADBC(self)
-        #self.radm = RADM(self)
+        self.qhbdy = QHBDY(self)
+        self.qbdy1 = QBDY1(self)
+        self.qbdy2 = QBDY2(self)
+        self.qbdy3 = QBDY3(self)
+        self.qvol = QVOL(self)
+        self.tempbc = TEMPBC(self)
+        self.radbc = RADBC(self)
+        self.radm = RADM(self)
 
         # dynamic loads
         self.dload = DLOAD(self)
@@ -468,11 +469,11 @@ class BDFAttributes:
         self.tload2 = TLOAD2(self)
         self.rload1 = RLOAD1(self)
         self.rload2 = RLOAD2(self)
-        #self.tic = TIC(self)  # initial conditions
+        self.tic = TIC(self)  # initial conditions
 
         # dynamic load offset
-        #self.dphase = DPHASE(self)
-        #self.delay = DELAY(self)
+        self.dphase = DPHASE(self)
+        self.delay = DELAY(self)
 
         # random loads
         #self.randps = RANDPS(self)
@@ -815,7 +816,7 @@ class BDFAttributes:
             self.sload,
             #self.temp, self.tempd,
             #self.dtemp, # has nodes
-            #self.qhbdy, self.qbdy1, self.qbdy2, self.qbdy3, self.qvol, self.qvect,
+            self.qhbdy, self.qbdy1, self.qbdy2, self.qbdy3, self.qvol, # self.qvect,
             self.spcd, self.deform,
             self.rforce, self.rforce1,
             #self.ploadx1,
@@ -838,7 +839,7 @@ class BDFAttributes:
     @property
     def dynamic_cards(self) -> list[Any]:
         cards = [
-            #self.tic, self.delay, self.dphase,
+            self.tic, self.delay, self.dphase,
         ]
         return cards
 
@@ -878,7 +879,7 @@ class BDFAttributes:
         return boundary_conditions
 
     @property
-    def sets(self) -> list[Any]:
+    def set_cards(self) -> list[Any]:
         """handles ASET/ASET1, ..."""
         sets = [
             self.set1, # self.set2, self.set3,
@@ -891,7 +892,7 @@ class BDFAttributes:
     def seset_cards(self) -> list[Any]:
         """handles SEBSET/SEBSET1, ..."""
         sesets = [
-            #self.sebset, self.secset, self.seqset,
+            self.sebset, self.secset, self.seqset,
             #self.seuset,
         ]
         return sesets
@@ -978,7 +979,7 @@ class BDFAttributes:
         self.property_cards + self.material_cards + self.optimization_cards + \
         self.load_cards + self.dynamic_load_cards + \
         self.plot_element_cards + self.thermal_element_cards + \
-        self.thermal_boundary_condition_cards + self.sets + self.seset_cards + \
+        self.thermal_boundary_condition_cards + self.set_cards + self.seset_cards + \
         self.aero_objects + self.dynamic_cards + self.nonstructural_mass_cards + self.contact_cards
         #for i, card in enumerate(cards):
             #assert isinstance(card.type, str), card

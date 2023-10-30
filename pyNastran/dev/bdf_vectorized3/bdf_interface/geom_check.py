@@ -105,7 +105,7 @@ def find_missing(all_nodes_sorted: np.ndarray, my_nodes: np.ndarray,
 
     unids = np.unique(all_nodes_sorted)
     if not np.array_equal(unids, all_nodes_sorted):
-        raise RuntimeError(f'all_nodes_sorted={all_nodes_sorted} is not unique')
+        raise RuntimeError(f'all_{name}_sorted={all_nodes_sorted} is not unique')
     inode = np.searchsorted(all_nodes_sorted, my_nodes)
     if my_nodes.ndim == 1:
         nnodes = len(all_nodes_sorted)

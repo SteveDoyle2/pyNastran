@@ -149,12 +149,10 @@ class TestSuperelements(unittest.TestCase):
         model.add_omit([7, 8], '456', comment='omit')
         model.add_omit1([7, 8], '123', comment='omit1')
 
-        RUN_SESETS = False
-        if RUN_SESETS:
-            model.add_sebset(103, [5, 6], '456', comment='sebset')
-            model.add_sebset1(103, [5, 6], '123', comment='sebset1')
-            model.add_secset(103, [5, 6], '456', comment='secset')
-            model.add_secset1(103, [5, 6], '123', comment='secset1')
+        model.add_sebset(103, [5, 6], '456', comment='sebset')
+        model.add_sebset1(103, [5, 6], '123', comment='sebset1')
+        model.add_secset(103, [5, 6], '456', comment='secset')
+        model.add_secset1(103, [5, 6], '123', comment='secset1')
 
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0., 0., 0.])

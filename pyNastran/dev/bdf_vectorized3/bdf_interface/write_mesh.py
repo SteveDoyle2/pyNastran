@@ -278,7 +278,11 @@ class Writer:
 
             for line in model.executive_control_lines:
                 msg += line + '\n'
-            bdf_file.write(msg)
+        elif model.sol is not None:
+            msg += '$EXECUTIVE CONTROL DECK\n'
+            msg += f'SOL {model.sol}\n'
+            msg += 'CEND\n'
+        bdf_file.write(msg)
 
     def _write_case_control_deck(self, bdf_file: TextIOLike) -> None:
         """Writes the Case Control Deck."""
@@ -918,11 +922,11 @@ class Writer:
 
             # thermal loads
             #bdf_file.write(model.dtemp.write(size=size))  # has nodes
-            #bdf_file.write(model.qhbdy.write(size=size))
-            #bdf_file.write(model.qbdy1.write(size=size))
-            #bdf_file.write(model.qbdy2.write(size=size))
-            #bdf_file.write(model.qbdy3.write(size=size))
-            #bdf_file.write(model.qvol.write(size=size))
+            model.qhbdy.write_file(bdf_file, size=size, is_double=is_double)
+            model.qbdy1.write_file(bdf_file, size=size, is_double=is_double)
+            model.qbdy2.write_file(bdf_file, size=size, is_double=is_double)
+            model.qbdy3.write_file(bdf_file, size=size, is_double=is_double)
+            model.qvol.write_file(bdf_file, size=size, is_double=is_double)
             #bdf_file.write(model.qvect.write(size=size))
 
             # static load sequence
@@ -933,9 +937,9 @@ class Writer:
             model.rforce1.write_file(bdf_file, size=size, is_double=is_double)
 
         if any(card.n for card in model.dynamic_cards):
-            bdf_file.write(model.tic.write(size=size))
-            bdf_file.write(model.dphase.write(size=size))
-            bdf_file.write(model.delay.write(size=size))
+            model.tic.write_file(bdf_file, size=size, is_double=is_double)
+            model.dphase.write_file(bdf_file, size=size, is_double=is_double)
+            model.delay.write_file(bdf_file, size=size, is_double=is_double)
 
         if any(load.n for load in model.dynamic_load_cards):
             model.dload.write_file(bdf_file, size=size, is_double=is_double)

@@ -23,7 +23,8 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
 )
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    hslice_by_idim, make_idim, searchsorted_filter, get_print_card_8_16, parse_load_check)
+    hslice_by_idim, make_idim, searchsorted_filter, get_print_card_8_16,
+    parse_load_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_float, array_str, array_default_int, array_default_float
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from .static_loads import Load

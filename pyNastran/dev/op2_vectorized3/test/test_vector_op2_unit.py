@@ -672,7 +672,7 @@ class TestOP2(unittest.TestCase):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-    def _test_bdf_op2_other_01(self):
+    def test_bdf_op2_other_01(self):
         """checks ofprand1.bdf which tests nonlinear elements"""
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
@@ -799,7 +799,7 @@ class TestOP2(unittest.TestCase):
                 stop_on_failure=True, dev=False,
                 build_pandas=IS_PANDAS, log=log)
 
-    def _test_bdf_op2_other_06(self):
+    def test_bdf_op2_other_06(self):
         """checks randvar2.bdf, which is an CTRIAX problem"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'randvar2.bdf')
@@ -811,7 +811,10 @@ class TestOP2(unittest.TestCase):
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         #model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(
+            model,
+            run_mass_properties=False,
+            run_remove_unused=False)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -847,7 +850,7 @@ class TestOP2(unittest.TestCase):
                 stop_on_failure=True, dev=False,
                 build_pandas=IS_PANDAS, log=log)
 
-    def _test_bdf_op2_other_08(self):
+    def test_bdf_op2_other_08(self):
         """checks randvar2.bdf, which is an CTRIAX problem"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'mne7a.bdf')
@@ -857,9 +860,9 @@ class TestOP2(unittest.TestCase):
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log)
+        #model = read_bdf(bdf_filename, debug=False, log=log)
         #model.safe_cross_reference()
-        save_load_deck(model, run_convert=False)
+        #save_load_deck(model, run_convert=False)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -895,7 +898,7 @@ class TestOP2(unittest.TestCase):
                 stop_on_failure=True, dev=False,
                 build_pandas=IS_PANDAS, log=log)
 
-    def _test_bdf_op2_other_10(self):
+    def test_bdf_op2_other_10(self):
         """checks v10112.bdf, which is an ??? problem"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10112.bdf')
@@ -991,7 +994,7 @@ class TestOP2(unittest.TestCase):
                 stop_on_failure=True, dev=False,
                 build_pandas=IS_PANDAS, log=log)
 
-    def _test_bdf_op2_other_14(self):
+    def test_bdf_op2_other_14(self):
         """checks sbuckl2a.bdf, which is an buckling elgenvalues example"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'sbuckl2a.bdf')
@@ -1001,9 +1004,9 @@ class TestOP2(unittest.TestCase):
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log)
+        #model = read_bdf(bdf_filename, debug=False, log=log)
         #model.safe_cross_reference()
-        save_load_deck(model)
+        #save_load_deck(model)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -1287,7 +1290,11 @@ class TestOP2(unittest.TestCase):
         model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         #model.safe_cross_reference()
 
-        save_load_deck(model, run_test_bdf=False, run_convert=False)
+        save_load_deck(model,
+                       run_test_bdf=False,
+                       run_convert=False,
+                       #run_mass_properties=False,
+                       )
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
@@ -1331,7 +1338,7 @@ class TestOP2(unittest.TestCase):
                 build_pandas=False, log=log)
 
     def _test_bdf_op2_other_26(self):
-        """checks tr1091x.bdf, which tests RealBendForceArray"""
+        """checks tr1091x.bdf, which tests RealBendForceArray, CGEN"""
         log = get_logger(level='info')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.op2')
@@ -1366,7 +1373,7 @@ class TestOP2(unittest.TestCase):
                 build_pandas=False, log=log)
 
     def _test_bdf_op2_other_27(self):
-        """checks ac10804.bdf, which tests ComplexPlateStressArray"""
+        """checks ac10804.bdf, which tests ComplexPlateStressArray, CGEN"""
         log = get_logger(level='info')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.op2')
@@ -1401,7 +1408,10 @@ class TestOP2(unittest.TestCase):
                 build_pandas=False, log=log)
 
     def _test_bdf_op2_other_28(self):
-        """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""
+        """
+        checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray,
+        which has a big int
+        """
         log = get_logger(level='info')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'sdr11se_s2dclg.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'sdr11se_s2dclg.op2')
@@ -2912,7 +2922,7 @@ class TestOP2(unittest.TestCase):
                 #write_f06=write_f06,
                 #debug=debug, stopOnFailure=True)
 
-    def _test_op2_good_sine_02(self):
+    def test_op2_good_sine_02(self):
         """tests freq_sine/good_sine.op2"""
         folder = os.path.abspath(os.path.join(MODEL_PATH))
         bdf_filename = os.path.join(folder, 'freq_sine', 'good_sine.dat')
@@ -3346,7 +3356,7 @@ class TestOP2(unittest.TestCase):
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=True)
 
-    def _test_xsop2dir(self):
+    def + test_xsop2dir(self):
         """test NX 2019 XSOP2DIR"""
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.bdf')
@@ -3406,8 +3416,8 @@ class TestOP2(unittest.TestCase):
 
 def _verify_ids(bdf, op2, isubcase=1):
     """helper function for tests"""
-    types = ['CQUAD4', 'CTRIA3', 'CHEXA', 'CPENTA', 'CTETRA', 'CROD', 'CONROD', 'CTUBE']
-    out = bdf.get_card_ids_by_card_types(types)
+    #types = ['CQUAD4', 'CTRIA3', 'CHEXA', 'CPENTA', 'CTETRA', 'CROD', 'CONROD', 'CTUBE']
+    #out = bdf.get_card_ids_by_card_types(types)
 
     card_type = 'CQUAD4'
     if op2.cquad4_stress:

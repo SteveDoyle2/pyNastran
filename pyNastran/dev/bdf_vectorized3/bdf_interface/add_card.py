@@ -6420,37 +6420,35 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         assert uset is not None
         return uset
 
-    def add_uset1(self, name, ids, components, comment: str='') -> Union[USET, USET1]:
+    def add_uset1(self, name, ids, components, comment: str='') -> int:
         """.. seealso:: ``add_uset``"""
         return self.add_uset(name, ids, components, comment=comment)
 
-    def add_sebset(self, seid, ids, components, comment: str='') -> Union[SEBSET, SEBSET1]:
+    def add_sebset(self, seid: int, ids: list[int], components: int | list[int], comment: str='') -> int:
         """Creates an SEBSET/SEBSET1 card"""
         if isinstance(components, integer_string_types):
-            sebset = SEBSET1(seid, ids, components, comment=comment)
+            sebset = self.sebset.add_set1(seid, ids, components, comment=comment)
         else:
-            sebset = SEBSET(seid, ids, components, comment=comment)
-        self._add_methods._add_sebset_object(sebset)
+            sebset = self.sebset.add_set(seid, ids, components, comment=comment)
         return sebset
 
-    def add_sebset1(self, seid, ids, components, comment: str='') -> Union[SEBSET, SEBSET1]:
+    def add_sebset1(self, seid, ids, components, comment: str='') -> int:
         """.. seealso:: ``add_secset``"""
         return self.add_sebset(seid, ids, components, comment=comment)
 
-    def add_secset(self, seid, ids, components, comment: str='') -> Union[SECSET, SECSET1]:
+    def add_secset(self, seid: int, ids: list[int], components: int | list[int], comment: str='') -> int:
         """Creates an SECSET/SECSET1 card"""
         if isinstance(components, integer_string_types):
-            secset = SECSET1(seid, ids, components, comment=comment)
+            secset = self.sebset.add_set1(seid, ids, components, comment=comment)
         else:
-            secset = SECSET(seid, ids, components, comment=comment)
-        self._add_methods._add_secset_object(secset)
+            secset = self.secset.add_set(seid, ids, components, comment=comment)
         return secset
 
-    def add_secset1(self, seid, ids, components, comment: str='') -> Union[SECSET, SECSET1]:
+    def add_secset1(self, seid: int, ids: list[int], components: int, comment: str='') -> int:
         """.. seealso:: ``add_secset``"""
         return self.add_secset(seid, ids, components, comment=comment)
 
-    def add_seqset(self, seid, ids, components, comment: str='') -> Union[SEQSET, SEQSET1]:
+    def add_seqset(self, seid, ids, components, comment: str='') -> int:
         """Creates an SEQSET card"""
         if isinstance(components, integer_string_types):
             seqset = SEQSET1(seid, ids, components, comment=comment)
@@ -6459,7 +6457,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_seqset_object(seqset)
         return seqset
 
-    def add_seqset1(self, seid, ids, components, comment: str='') -> Union[SEQSET, SEQSET1]:
+    def add_seqset1(self, seid, ids, components, comment: str='') -> int:
         """.. seealso:: ``add_secset``"""
         return self.add_seqset(seid, ids, components, comment=comment)
 
@@ -7555,7 +7553,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         tempd = self.tempd.add(sid, temperature, comment=comment)
         return tempd
 
-    def add_qhbdy(self, sid, flag, q0, grids, af=None, comment: str='') -> int:
+    def add_qhbdy(self, sid: int, flag: int, q0: float, grids: list[int],
+                  af: Optional[float]=None, comment: str='') -> int:
         """
         Creates a QHBDY card
 
@@ -7579,17 +7578,19 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         load = self.qhbdy.add(sid, flag, q0, grids, af=af, comment=comment)
         return load
 
-    def add_qbdy1(self, sid, qflux, eids, comment: str='') -> int:
+    def add_qbdy1(self, sid: int, qflux: float, eids: list[int],
+                  comment: str='') -> int:
         """Creates a QBDY1 card"""
         load = self.qbdy1.add(sid, qflux, eids, comment=comment)
         return load
 
-    def add_qbdy2(self, sid, eid, qfluxs, comment: str='') -> int:
+    def add_qbdy2(self, sid: int, eid: int, qfluxs: list[float], comment: str='') -> int:
         """Creates a QBDY1 card"""
         load = self.qbdy2.add(sid, eid, qfluxs, comment=comment)
         return load
 
-    def add_qbdy3(self, sid, Q0, cntrlnd, eids, comment: str='') -> int:
+    def add_qbdy3(self, sid: int, q0, cntrlnd: int, eids: list[int],
+                  comment: str='') -> int:
         """
         Creates a QBDY3 card
 
@@ -7608,10 +7609,12 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = self.qbdy3.add(sid, Q0, cntrlnd, eids, comment=comment)
+        load = self.qbdy3.add(sid, q0, cntrlnd, eids, comment=comment)
         return load
 
-    def add_qvol(self, sid, qvol, control_point, elements, comment: str='') -> int:
+    def add_qvol(self, sid: int, qvol: float,
+                 control_point: int, elements: list[int],
+                 comment: str='') -> int:
         """Creates a QVOL card"""
         load = self.qvol.add(sid, qvol, control_point, elements, comment=comment)
         return load

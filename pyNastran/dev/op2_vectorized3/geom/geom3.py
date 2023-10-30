@@ -948,6 +948,8 @@ class GEOM3:
         7 THETA RS Angle between surface traction and inward normal
         """
         op2 = self.op2
+        if 'PLOADX1' not in op2.cards_to_read:
+            return len(data)
         ntotal = 28 * self.factor  # 7*4
         nloads = (len(data) - n) // ntotal
 
