@@ -752,10 +752,13 @@ class GRID(VectorizedBaseCard):
                     msg = (f'arg1={iarg1}\n'
                            f'arg2={iarg2}\n'
                            f'node1:\n{node1.write()}'
-                           f'node2:\n{node2.write()}'
-                           f'dxyz:\n{dxyz}\n'
-                           f'dcp={dcp}\n'
-                           f'dcd={dcd}\n')
+                           f'node2:\n{node2.write()}')
+                    if np.abs(dxyz).max() > 0.0:
+                        msg += f'dxyz:\n{dxyz}\n'
+                    if np.abs(dcp).max() > 0:
+                        msg += f'dcp={dcp}\n'
+                    if np.abs(dcd).max() > 0:
+                        msg += f'dcd={dcd}\n'
                     raise RuntimeError(msg)
 
                 # now that we know all the nodes are unique

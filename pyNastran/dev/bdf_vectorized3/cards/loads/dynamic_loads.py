@@ -92,7 +92,7 @@ class DLOAD(VectorizedBaseCard):
             scale_factors
         self.cards.append((sid, scale, scale_factors, load_ids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> None:
         sid = integer(card, 1, 'sid')
@@ -112,7 +112,7 @@ class DLOAD(VectorizedBaseCard):
         assert len(card) > 3, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
         self.cards.append((sid, scale, scale_factors, load_ids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def parse_cards(self) -> None:
         if self.n == 0:
@@ -286,7 +286,7 @@ class DAREA(VectorizedBaseCard):
         """
         self.cards.append((sid, nid, component, scale, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         # sid : int
@@ -314,7 +314,7 @@ class DAREA(VectorizedBaseCard):
             self.cards.append((sid, nid, component, scale, comment))
             self.n += 1
         assert len(card) <= 8, f'len(DAREA card) = {len(card):d}\ncard={card}'
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -479,7 +479,7 @@ class TLOAD1(VectorizedBaseCard):
         """
         self.cards.append((sid, excite_id, delay, load_type, tabled_id, us0, vs0, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -495,7 +495,7 @@ class TLOAD1(VectorizedBaseCard):
         load_type_str = fix_loadtype_tload1(load_type)
         self.cards.append((sid, excite_id, delay, load_type_str, tabled_id, us0, vs0, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -715,7 +715,7 @@ class TLOAD2(VectorizedBaseCard):
         self.cards.append((sid, excite_id, delay, load_type, [T1, T2],
                            frequency, phase, b, c, us0, vs0, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -736,7 +736,7 @@ class TLOAD2(VectorizedBaseCard):
         self.cards.append((sid, excite_id, delay, load_type_str, [T1, T2],
                            frequency, phase, b, c, us0, vs0, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -968,9 +968,9 @@ class RLOAD1(VectorizedBaseCard):
         """
         self.cards.append((sid, excite_id, delay, dphase, tc, td, load_type, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str=''):
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', default=0)
@@ -984,21 +984,17 @@ class RLOAD1(VectorizedBaseCard):
 
         self.cards.append((sid, excite_id, delay, dphase, tc, td, load_type_str, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         #: Set identification number
-        self.load_id = np.zeros(ncards, dtype='int32')
-
+        load_id = np.zeros(ncards, dtype='int32')
 
         #: Identification number of DAREA or SPCD entry set or a thermal load
         #: set (in heat transfer analysis) that defines {A}. (Integer > 0)
-        self.excite_id = np.zeros(ncards, dtype='int32')
+        excite_id = np.zeros(ncards, dtype='int32')
 
         #: If it is a non-zero integer, it represents the
         #: identification number of DELAY Bulk Data entry that defines .
@@ -1006,38 +1002,61 @@ class RLOAD1(VectorizedBaseCard):
         #: be used for all degrees-of-freedom that are excited by this
         #: dynamic load entry.  See also Remark 9. (Integer >= 0,
         #: real or blank)
-        self.delay_int = np.zeros(ncards, dtype='int32')
-        self.delay_float = np.full(ncards, np.nan, dtype='float64')
+        delay_int = np.zeros(ncards, dtype='int32')
+        delay_float = np.full(ncards, np.nan, dtype='float64')
 
         #: Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
-        self.load_type = np.zeros(ncards, dtype='|U4')
+        load_type = np.zeros(ncards, dtype='|U4')
 
-        self.dphase_int = np.zeros(ncards, dtype='int32')
-        self.dphase_float = np.full(ncards, np.nan, dtype='float64')
+        dphase_int = np.zeros(ncards, dtype='int32')
+        dphase_float = np.full(ncards, np.nan, dtype='float64')
 
         # tc : int/float; default=0
         #     TABLEDi id that defines C(f) for all degrees of freedom in EXCITEID entry
         # td : int/float; default=0
         #     TABLEDi id that defines D(f) for all degrees of freedom in EXCITEID entry
-        self.tabled_c_int = np.zeros(ncards, dtype='int32')
-        self.tabled_d_int = np.full(ncards, np.nan, dtype='float64')
+        tabled_c_int = np.zeros(ncards, dtype='int32')
+        tabled_d_int = np.full(ncards, np.nan, dtype='float64')
 
-        self.tabled_c_float = np.zeros(ncards, dtype='int32')
-        self.tabled_d_float = np.full(ncards, np.nan, dtype='float64')
+        tabled_c_float = np.zeros(ncards, dtype='int32')
+        tabled_d_float = np.full(ncards, np.nan, dtype='float64')
 
         assert ncards > 0, ncards
         for icard, card in enumerate(self.cards):
-            (sid, excite_id, delay, dphase, tc, td, load_type_str, comment) = card
-            self.load_id[icard] = sid
-            self.excite_id[icard] = excite_id
-            _set_int_float(icard, self.delay_int, self.delay_float, delay)
-            _set_int_float(icard, self.dphase_int, self.dphase_float, dphase)
-            _set_int_float(icard, self.tabled_c_int, self.tabled_c_float, tc)
-            _set_int_float(icard, self.tabled_d_int, self.tabled_d_float, td)
+            (sid, excite_idi, delay, dphase, tc, td, load_type_str, comment) = card
+            load_id[icard] = sid
+            excite_id[icard] = excite_idi
+            _set_int_float(icard, delay_int, delay_float, delay)
+            _set_int_float(icard, dphase_int, dphase_float, dphase)
+            _set_int_float(icard, tabled_c_int, tabled_c_float, tc)
+            _set_int_float(icard, tabled_d_int, tabled_d_float, td)
 
-            self.load_type[icard] = load_type_str
+            load_type[icard] = load_type_str
+        self._save(load_id, excite_id, load_type,
+                   delay_int, delay_float,
+                   dphase_int, dphase_float,
+                   tabled_c_int, tabled_c_float,
+                   tabled_d_int, tabled_d_float)
         assert len(self.load_id) == self.n
         self.cards = []
+
+    def _save(self, load_id, excite_id, load_type,
+              delay_int, delay_float,
+              dphase_int, dphase_float,
+              tabled_c_int, tabled_c_float,
+              tabled_d_int, tabled_d_float) -> None:
+        assert len(self.load_id) == 0
+        self.load_id = load_id
+        self.excite_id = excite_id
+        self.load_type = load_type
+        self.delay_int = delay_int
+        self.delay_float = delay_float
+        self.dphase_int = dphase_int
+        self.dphase_float = dphase_float
+        self.tabled_c_int = tabled_c_int
+        self.tabled_c_float = tabled_c_float
+        self.tabled_d_int = tabled_d_int
+        self.tabled_d_float = tabled_d_float
 
     @property
     def max_id(self) -> int:
@@ -1585,11 +1604,11 @@ class TIC(VectorizedBaseCard):
         return
 
     def add(self, sid: int, nid: int, components: int=0,
-            u0: float=0.0, v0: float=0.0, comment: str=''):
-
+            u0: float=0.0, v0: float=0.0, comment: str='') -> int:
         assert isinstance(components, int), components
         self.cards.append((sid, nid, components, u0, v0, comment))
         self.n += 1
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -1603,6 +1622,7 @@ class TIC(VectorizedBaseCard):
 
         self.cards.append((sid, nid, comp, u0, v0, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self):

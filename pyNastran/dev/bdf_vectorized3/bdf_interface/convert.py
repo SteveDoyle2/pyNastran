@@ -66,8 +66,9 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'SPOINT', 'EPOINT', 'CTUBE', 'CROD',
         'SET1', 'ASET', 'BSET', 'CSET', 'OMIT', 'QSET', 'USET', 'SUPORT',
         'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
+        'PLOTTET', 'PLOTPEN', 'PLOTPYR', 'PLOTHEX',
         'SPCADD', 'MPCADD', 'DCONADD', 'NSMADD',
-        'CQUAD', 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'PSOLID', 'PLSOLID',
+        'CQUAD', 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CHEXCZ', 'PSOLID', 'PLSOLID',
         'LOAD', 'DLOAD',
         'SPC1', 'SPCOFF',
         'CELAS1', 'CELAS3', 'CDAMP1', 'CDAMP3', 'CBUSH1D',
@@ -95,6 +96,7 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'FORCE', 'FORCE1', 'FORCE2',
         'MOMENT', 'MOMENT1', 'MOMENT2',
         'DVGRID', 'BGSET', 'BCTSET',
+        'TEMP', 'TEMPD',
     }
     cards = [card for card in model._cards_to_setup
              if card.n and card.type not in CARDS_TO_SKIP]

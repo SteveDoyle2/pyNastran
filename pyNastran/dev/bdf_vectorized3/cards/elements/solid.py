@@ -31,8 +31,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class SolidElement(Element):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self):
         self.nnode = 0
         self.nnode_base = 0
 
@@ -143,8 +142,7 @@ class SolidElement(Element):
 
 
 class CTETRA(SolidElement):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self):
         self.nodes = np.zeros((0, 10), dtype='int32')
         self.nnode = 10
         self.nnode_base = 4
@@ -340,8 +338,7 @@ class CPENTA(SolidElement):
     +--------+-----+-----+----+----+----+----+----+----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self):
         self.nodes = np.zeros((0, 15), dtype='int32')
         self.nnode = 15
         self.nnode_base = 6
@@ -481,8 +478,7 @@ class CPENTA(SolidElement):
 
 
 class CPYRAM(SolidElement):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self):
         self.nodes = np.zeros((0, 13), dtype='int32')
         self.nnode = 13
         self.nnode_base = 5
@@ -596,10 +592,8 @@ class CPYRAM(SolidElement):
         out = pyram_quality(self)
         return out
 
-
-class CHEXA(SolidElement):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+class SolidHex(SolidElement):
+    def clear(self):
         self.nodes = np.zeros((0, 20), dtype='int32')
         self.nnode_base = 8
         self.nnode = 20
@@ -672,11 +666,11 @@ class CHEXA(SolidElement):
 
         if midside_nodes.shape[1] == 0:
             for eid, pid, nodes in zip(self.element_id, self.property_id, base_nodes):
-                msg = print_card(['CHEXA', eid, pid] + nodes.tolist())
+                msg = print_card([self.type, eid, pid] + nodes.tolist())
                 bdf_file.write(msg)
         else:
             for eid, pid, nodes in zip(self.element_id, self.property_id, self.nodes):
-                msg = print_card(['CHEXA', eid, pid] + nodes.tolist())
+                msg = print_card([self.type, eid, pid] + nodes.tolist())
                 bdf_file.write(msg)
         return
 
@@ -707,6 +701,11 @@ class CHEXA(SolidElement):
     def quality(self) -> Quality:
         out = chexa_quality(self)
         return out
+
+class CHEXCZ(SolidHex):
+    pass
+class CHEXA(SolidHex):
+    pass
 
 
 class PSOLID(Property):
@@ -1020,7 +1019,7 @@ class PLSOLID(Property):
         model = self.model
         all_materials = self.all_materials
         materials = [mat for mat in all_materials if mat.n > 0]
-        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={model.materials}'
+        assert len(materials) > 0, f'{self.type}: all_allowed_materials={all_materials}\nall_materials={model.material_cards}'
         return materials
 
     def rho(self) -> np.ndarray:
@@ -1331,9 +1330,6 @@ class PCOMPLS(Property):
     |         | 100  |   175  |   .7   |  77.7  |        |
     +---------+------+--------+--------+--------+--------+
     """
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-
     def clear(self) -> None:
         self.n = 0
         self.property_id = np.array([], dtype='int32')
@@ -1649,8 +1645,7 @@ class PCOMPLS(Property):
         return rho
 
 class CHACBR(SolidElement):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self):
         self.nodes = np.zeros((0, 20), dtype='int32')
         self.nnode_base = 8
         self.nnode = 20
@@ -1766,8 +1761,7 @@ class CHACBR(SolidElement):
 
 
 class CHACAB(SolidElement):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self):
         self.nodes = np.zeros((0, 20), dtype='int32')
         self.nnode_base = 8
         self.nnode = 20

@@ -2320,7 +2320,7 @@ class PSHLN2(Property):
         behxh = [beh3h, beh4h, beh6h, beh8h]
         integration = [int3, int4, int6, int8]
         integration_h = [int3h, int4h, int6h, int8h]
-        assert len(card) <= 20, f'len(PSHLN2 card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 38, f'len(PSHLN2 card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, direct, thickness, analysis,
                            behx, integration, behxh, integration_h, comment))
         self.n += 1

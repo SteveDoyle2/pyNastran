@@ -1461,8 +1461,8 @@ class DVPREL1(VectorizedBaseCard):
         for i in range(0, nfields, 2):
             desvar_id = end_fields[i]
             coeff = end_fields[i + 1]
-            assert isinstance(desvar_id, integer_types), card
-            assert isinstance(coeff, float_types), card
+            assert isinstance(desvar_id, integer_types), f'card={card} desvar_id={desvar_id} coeff={coeff}'
+            assert isinstance(coeff, float_types), f'card={card} desvar_id={desvar_id} coeff={coeff}'
             desvar_ids.append(desvar_id)
             coeffs.append(coeff)
 

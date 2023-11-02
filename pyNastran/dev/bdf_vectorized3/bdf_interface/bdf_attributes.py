@@ -45,6 +45,7 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.plate_stress_strain import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.solid import (
     CTETRA, CHEXA, CPENTA, CPYRAM,
     PSOLID, PLSOLID, PCOMPS, PCOMPLS,
+    CHEXCZ,
     #CHACAB, CHACBR,
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.mass import CONM1, CONM2
@@ -57,7 +58,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.static_loads import (
     LOAD, SLOAD,
     FORCE, FORCE1, FORCE2,
     MOMENT, MOMENT1, MOMENT2,
-    #TEMP, TEMPD, DTEMP, DTEMP,
+    TEMP, TEMPD, # DTEMP, DTEMP,
     SPCD, DEFORM,
     RFORCE, RFORCE1,
     GRAV, ACCEL, ACCEL1,
@@ -389,6 +390,8 @@ class BDFAttributes:
         self.pcompls = PCOMPLS(self)
         #self.solid_properties = []
 
+        self.chexcz = CHEXCZ(self)
+
         # mass
         self.pmass = PMASS(self)
         self.cmass1 = CMASS1(self)
@@ -438,8 +441,8 @@ class BDFAttributes:
         self.grav = GRAV(self)
         self.accel = ACCEL(self)
         self.accel1 = ACCEL1(self)
-        #self.temp = TEMP(self)
-        #self.tempd = TEMPD(self)  # default temp
+        self.temp = TEMP(self)
+        self.tempd = TEMPD(self)  # default temp
         #self.dtemp = DTEMP(self)  # has nodes
         self.lseq = LSEQ(self)    # static load sequence
         #self.qvect = QVECT(self)
@@ -662,6 +665,7 @@ class BDFAttributes:
     def solid_element_cards(self) -> list[Any]:
         elements = [
             self.ctetra, self.cpenta, self.chexa, self.cpyram,
+            self.chexcz,
         ]
         return elements
 
@@ -814,7 +818,7 @@ class BDFAttributes:
             self.pload, self.pload1, self.pload2, self.pload4,
             self.grav, self.accel, self.accel1,
             self.sload,
-            #self.temp, self.tempd,
+            self.temp, self.tempd,
             #self.dtemp, # has nodes
             self.qhbdy, self.qbdy1, self.qbdy2, self.qbdy3, self.qvol, # self.qvect,
             self.spcd, self.deform,

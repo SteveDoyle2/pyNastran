@@ -456,6 +456,8 @@ class Writer:
         model.chexa.write_file(bdf_file, size=size, is_double=is_double)
         model.cpyram.write_file(bdf_file, size=size, is_double=is_double)
 
+        model.chexcz.write_file(bdf_file, size=size, is_double=is_double)
+
         # acoustic solids
         #bdf_file.write(model.chacab.write(size=size))
         #bdf_file.write(model.chacbr.write(size=size))
@@ -613,8 +615,6 @@ class Writer:
 
         # shell
         model.pshell.write_file(bdf_file, size=size, is_double=is_double)
-        model.pshln1.write_file(bdf_file, size=size, is_double=is_double)
-        model.pshln2.write_file(bdf_file, size=size, is_double=is_double)
         model.pcomp.write_file(bdf_file, size=size, is_double=is_double)
         model.pcompg.write_file(bdf_file, size=size, is_double=is_double)
 
@@ -912,8 +912,8 @@ class Writer:
             model.pload2.write_file(bdf_file, size=size, is_double=is_double)
             model.pload4.write_file(bdf_file, size=size, is_double=is_double)
             model.sload.write_file(bdf_file, size=size, is_double=is_double)
-            #bdf_file.write(model.tempd.write(size=size))  # default temp
-            #bdf_file.write(model.temp.write(size=size))
+            model.tempd.write_file(bdf_file, size=size, is_double=is_double)  # default temp
+            model.temp.write_file(bdf_file, size=size, is_double=is_double)
             model.spcd.write_file(bdf_file, size=size, is_double=is_double)
             model.deform.write_file(bdf_file, size=size, is_double=is_double)
 
@@ -1065,6 +1065,8 @@ class Writer:
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the dynamic cards sorted by ID"""
         model = self.model
+        model.tic.write_file(bdf_file, size=size, is_double=is_double, write_card_header=is_double)
+        #model.tf.write_file(bdf_file, size=size, is_double=is_double, write_card_header=is_double)
 
         #bdf_file.write(model.tic.write(size=size))
         is_dynamic = (
@@ -1091,12 +1093,8 @@ class Writer:
             for (unused_id, freqs) in sorted(model.frequencies.items()):
                 for freq in freqs:
                     bdf_file.write(freq.write_card(size, is_double))
-            #for (unused_id, delay) in sorted(model.delays.items()):
-                #bdf_file.write(delay.write_card(size, is_double))
             #for (unused_id, rotor) in sorted(model.rotors.items()):
                 #bdf_file.write(rotor.write_card(size, is_double))
-            #for (unused_id, tic) in sorted(model.tics.items()):
-                #bdf_file.write(tic.write_card(size, is_double))
 
             #for (unused_id, tfs) in sorted(model.transfer_functions.items()):
                 #for transfer_function in tfs:
@@ -1133,6 +1131,7 @@ class Writer:
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the optimization cards sorted by ID"""
         model = self.model
+        #model.ddval.write_file(bdf_file, size=size, is_double=is_double)
         model.desvar.write_file(bdf_file, size=size, is_double=is_double)
         model.dlink.write_file(bdf_file, size=size, is_double=is_double)
         model.dvgrid.write_file(bdf_file, size=size, is_double=is_double)

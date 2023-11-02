@@ -60,6 +60,7 @@ class ElementPropertySet(VectorizedBaseCard):
         if self.debug:
             self.model.log.debug(f'adding card {card}')
 
+        idtype = self.model.idtype
         sid = integer(card, 1, 'sid')
         nfields = len(card) - 1
         nrows = (nfields // 8)
@@ -73,6 +74,8 @@ class ElementPropertySet(VectorizedBaseCard):
                 fieldsi = card[ifield+1:ifield+8]
             else:
                 fieldsi = card[ifield:ifield+8]
+            # need to make sure THRU is capitalized
+            fieldsi = [field.upper() if isinstance(field, str) else field for field in fieldsi]
 
             #print(f'{irow:d}/{nrows:d} = {fieldsi}')
             if 'THRU' in fieldsi:
@@ -85,7 +88,6 @@ class ElementPropertySet(VectorizedBaseCard):
                     ids_list.append(fieldi)
             ifield += 8
 
-        idtype = self.model.idtype
         ids = np.array(ids_list, dtype=idtype)
         assert len(card) > 2, f'len({self.type} card) = {len(card):d}\ncard={card}'
         self.cards.append((sid, ids, comment))

@@ -1064,7 +1064,9 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
             raise RuntimeError(msg)
     return mass
 
-def _get_cbeam_mass_no_nsm(model, elem, mass, cg, inertia, reference_point):
+def _get_cbeam_mass_no_nsm(model: BDF, elem: CBEAM,
+                           mass: float, cg: np.ndarray, inertia: np.ndarray,
+                           reference_point: np.ndarray) -> float:
     """helper method for mass_properties"""
     prop = elem.pid_ref
     xyz1, xyz2 = elem.get_node_positions()

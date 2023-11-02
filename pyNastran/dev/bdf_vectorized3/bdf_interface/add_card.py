@@ -7230,7 +7230,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_bcrpara_object(bcrpara)
         return bcrpara
 
-    def add_tic(self, sid, nodes, components, u0=0., v0=0., comment: str='') -> TIC:
+    def add_tic(self, sid: int, nodes: list[int], components: list[int],
+                u0: float=0., v0: float=0., comment: str='') -> int:
         """
         Creates a TIC card
 
@@ -7251,7 +7252,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
 
         """
         tic = self.tic.add(sid, nodes, components, u0=u0, v0=v0, comment=comment)
-        return self.tic
+        return tic
 
     def add_tstep1(self, sid, tend, ninc, nout, comment: str='') -> TSTEP1:
         """Creates a TSTEP1 card"""
