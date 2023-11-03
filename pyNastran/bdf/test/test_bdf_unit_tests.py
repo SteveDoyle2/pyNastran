@@ -60,7 +60,7 @@ class TestBDFUnit(Tester):
         model2.log.debug('model2')
 
         #model2.cross_reference()
-        #mass = mass_properties(model2)[0]  # fails because of missing cross-reference, comment to reach next line
+        mass = mass_properties(model2)[0]  # fails because of missing cross-reference, comment to reach next line
         model3 = model2.__deepcopy__({})  # fails while deep-copying
         model3.log.debug('model3')
 

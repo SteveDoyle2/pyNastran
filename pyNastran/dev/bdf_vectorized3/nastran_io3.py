@@ -345,6 +345,8 @@ class Nastran3:
         #solids = [card for card in model.solid_element_cards if card.n > 0]
         #shells = [card for card in model.shell_element_cards if card.n > 0]
         idtype = element_ids.dtype
+        fdtype = model.fdtype
+
         materials_dict = {}
         neid = len(element_ids)
         for (base_flag, is_pid, element_cards, property_cards) in cards:
@@ -360,92 +362,125 @@ class Nastran3:
                 i0, i1 = self.card_index[etype]
                 #eids = element_ids[i0:i1]
                 pids = property_ids[i0:i1]
-                if is_pid:
-                    if flag in materials_dict:
-                        material_id = materials_dict[flag]
+                if not is_pid:
+                    continue
+
+                if flag in materials_dict:
+                    material_dicti = materials_dict[flag]
+                else:
+                    if flag == 'Rod':
+                        material_id = np.full(neid, 0, dtype=idtype)
+                    elif flag == 'Shell':
+                        #material_id = np.array([], dtype=idtype)
+                        pass
+                        #pshell_material_id = np.full((neid, 4), 0, dtype=idtype)
+                        #pcomp_material_id = np.full((neid, 4), 0, dtype=idtype)
+                    elif flag == 'Solid':
+                        material_id = np.full(neid, 0, dtype=idtype)
                     else:
-                        if flag == 'Rod':
-                            material_id = np.full(neid, 0, dtype=idtype)
-                        elif flag == 'Shell':
-                            #material_id = np.array([], dtype=idtype)
-                            pass
-                            #pshell_material_id = np.full((neid, 4), 0, dtype=idtype)
-                            #pcomp_material_id = np.full((neid, 4), 0, dtype=idtype)
-                        elif flag == 'Solid':
-                            material_id = np.full(neid, 0, dtype=idtype)
+                        raise RuntimeError(flag)
+
+                    if flag != 'Shell':
+                        material_dicti = {
+                            'mid': material_id,
+                        }
+                for card in property_cards2:
+                    card_pids = card.property_id
+                    index_pid = np.array([(i, pid) for i, pid in enumerate(pids)
+                                          if pid in card_pids])
+                    if index_pid.shape[0] == 0:
+                        continue
+                    index = index_pid[:, 0]
+                    pidsi = index_pid[:, 1]
+                    cardi = card.slice_card_by_id(pidsi)
+                    ptype = card.type
+                    if flag in {'Rod'}:
+                        material_idi = cardi.material_id
+                        material_id[index] = material_idi
+                    elif flag == 'Solid' and ptype in {'PSOLID', 'PLSOLID'}:
+                        material_idi = cardi.material_id
+                        material_id[index] = material_idi
+
+                    elif ptype in {'PCOMP', 'PCOMPG', 'PCOMPS'}:
+                        upids = np.unique(cardi.property_id)
+                        ucard = card.slice_card_by_id(upids)
+                        #nlayer = ucard.nlayer.max()
+                        nlayer = card.nlayer.max()
+                        #print('nlayer =', nlayer)
+                        if ptype in {'PCOMP', 'PCOMPG'}:
+                            flag = 'Shell - Composite'
+                        elif ptype == 'PCOMPS':
+                            flag = 'Solid - Composite'
                         else:
-                            raise RuntimeError(flag)
+                            raise RuntimeError(ptype)
 
-                    for card in property_cards2:
-                        card_pids = card.property_id
-                        index_pid = np.array([(i, pid) for i, pid in enumerate(pids)
-                                              if pid in card_pids])
-                        if index_pid.shape[0] == 0:
-                            continue
-                        index = index_pid[:, 0]
-                        pidsi = index_pid[:, 1]
-                        cardi = card.slice_card_by_id(pidsi)
-                        ptype = card.type
-                        if flag in {'Rod'}:
-                            material_idi = cardi.material_id
-                            material_id[index] = material_idi
-                        elif flag == 'Solid' and ptype in {'PSOLID', 'PLSOLID'}:
-                            material_idi = cardi.material_id
-                            material_id[index] = material_idi
+                        if flag in materials_dict:
+                            material_dicti = materials_dict[flag]
+                        else:
+                            # hack...
+                            material_id = np.full((neid, nlayer), -1, dtype=idtype)
+                            thickness = np.full((neid, nlayer), np.nan, dtype=fdtype)
+                            theta = np.full((neid, nlayer), np.nan, dtype=fdtype)
+                            material_dicti = {
+                                'mid': material_id,
+                                't': thickness,
+                                'theta': theta,
+                            }
+                        material_id = material_dicti['mid']
+                        thickness = material_dicti['t']
+                        theta = material_dicti['theta']
 
-                        elif ptype in {'PCOMP', 'PCOMPG', 'PCOMPS'}:
-                            upids = np.unique(cardi.property_id)
-                            ucard = card.slice_card_by_id(upids)
-                            #nlayer = ucard.nlayer.max()
-                            nlayer = card.nlayer.max()
-                            #print('nlayer =', nlayer)
-                            if ptype in {'PCOMP', 'PCOMPG'}:
-                                flag = 'Shell - Composite'
-                            elif ptype == 'PCOMPS':
-                                flag = 'Solid - Composite'
-                            else:
-                                raise RuntimeError(ptype)
+                        # Presumably the unique number of layers is small, so we
+                        # iterate on that. We can then reshape the material_id once
+                        # we slice off the unwanted rows
+                        for ilayer in np.unique(ucard.nlayer):
+                            ipid = np.where(ilayer == cardi.nlayer)[0]
+                            ieid = index[ipid]
+                            npid = len(ipid)
+                            pids_layer = cardi.property_id[ipid]
+                            cardii = card.slice_card_by_id(pids_layer)
+                            material_id_rect = cardii.material_id.reshape(npid, ilayer)
+                            thickness_rect = cardii.thickness.reshape(npid, ilayer)
+                            theta_rect = cardii.theta.reshape(npid, ilayer)
+                            material_id[ieid, :ilayer] = material_id_rect
+                            thickness[ieid, :ilayer] = thickness_rect
+                            theta[ieid, :ilayer] = theta_rect
+                        del material_id, cardii, ieid, ipid, npid
+                        del material_id_rect, thickness_rect
+                    elif ptype == 'PSHELL':
+                        flag = 'Shell - PSHELL'
+                        if flag in materials_dict:
+                            material_dicti = materials_dict[flag]
+                        else:
+                            # hack...
+                            material_id = np.full((neid, 4), -1, dtype=idtype)
+                            thickness = np.full(neid, np.nan, dtype=fdtype)
+                            material_dicti = {
+                                'mid': material_id,
+                                't': thickness,
+                            }
+                        material_id = material_dicti['mid']
+                        thickness = material_dicti['t']
+                        material_idi = cardi.material_id
+                        material_id[index] = material_idi
+                        thickness[index] = cardi.total_thickness()
+                        del material_id, material_idi, thickness, index
 
-                            if flag in materials_dict:
-                                material_id = materials_dict[flag]
-                            else:
-                                # hack...
-                                material_id = np.full((neid, nlayer), -1, dtype=idtype)
+                    else:  # pragma: no cover
+                        raise RuntimeError(flag)
+                    materials_dict[flag] = material_dicti
+                    #if base_flag == 'Shell':
+                        #del material_id
+                del material_dicti
+                print(f'finished {etype} {flag}')
 
-                            # Presumably the unique number of layers is small, so we
-                            # iterate on that. We can then reshape the material_id once
-                            # we slice off the unwanted rows
-                            for ilayer in np.unique(ucard.nlayer):
-                                ipid = np.where(ilayer == cardi.nlayer)[0]
-                                ieid = index[ipid]
-                                npid = len(ipid)
-                                pids_layer = cardi.property_id[ipid]
-                                cardii = card.slice_card_by_id(pids_layer)
-                                material_id_rect = cardii.material_id.reshape(npid, ilayer)
-                                material_id[ieid, :ilayer] = material_id_rect
-                        elif ptype == 'PSHELL':
-                            flag = 'Shell - PSHELL'
-                            if flag in materials_dict:
-                                material_id = materials_dict[flag]
-                            else:
-                                # hack...
-                                material_id = np.full((neid, 4), -1, dtype=idtype)
-                            material_idi = cardi.material_id
-                            material_id[index] = material_idi
-                        else:  # pragma: no cover
-                            raise RuntimeError(flag)
-                        materials_dict[flag] = material_id
-                        if base_flag == 'Shell':
-                            del material_id
-                    print(f'finished {etype} {flag}')
-
-        materials_dict2 = {}
-        for flag, material_id in materials_dict.items():
-            mid_col_max = material_id.max(axis=0)
-            imat = (mid_col_max > 0)
-            material_id2 = material_id[:, imat]
-            materials_dict2[flag] = material_id2
-        del materials_dict
+        #materials_dict2 = {}
+        #for flag, material_dict in materials_dict.items():
+            #mid_col_max = material_id.max(axis=0)
+            #imat = (mid_col_max > 0)
+            #material_id2 = material_id[:, imat]
+            #materials_dict2[flag] = material_id2
+        #del materials_dict
 
         subcase_id = 0
         pshell_result_name_map = {
@@ -454,7 +489,16 @@ class Nastran3:
             2: 'MID3 - Shear',
             3: 'MID4 - Membrane/Bending',
         }
-        for flag, material_id in materials_dict2.items():
+
+        for flag, material_dicti in materials_dict.items():
+            material_id = material_dicti['mid']
+
+            if 'Shell' in flag:
+                mid_col_max = material_id.max(axis=0)
+                imat = (mid_col_max > 0)
+                #material_id2 = material_id[:, imat]
+                #materials_dict2[flag] = material_id2
+
             #print(flag, material_id)
             materials_form = []
             if material_id.ndim == 1:
@@ -466,7 +510,15 @@ class Nastran3:
                     result_name = 'Material'
                 elif 'Composite' in flag:
                     result_name = f'Material Layer {ilayer+1}'
+
                 elif 'PSHELL' in flag:
+                    if ilayer == 1:
+                        result_namei = 'Total Thickness'
+                        resulti = material_dicti['t']
+                        icase = _add_finite_centroidal_gui_result(
+                            icase, cases, materials_form, subcase_id,
+                            result_namei, resulti)
+
                     result_name = pshell_result_name_map[ilayer]
                 else:  #  pragma: no cover
                     raise RuntimeError(flag)
@@ -478,6 +530,21 @@ class Nastran3:
                 icase = _add_integer_centroid_gui_result(
                     icase, cases, materials_form, subcase_id,
                     result_name, material_idi, mask_value=-1)
+
+            if 'Composite' in flag:
+                for ilayer in range(nlayer):
+                    result_namei = f'Thickness Layer {ilayer+1}'
+                    resulti = material_dicti['t'][:, ilayer]
+                    icase = _add_finite_centroidal_gui_result(
+                        icase, cases, materials_form, subcase_id,
+                        result_namei, resulti)
+                for ilayer in range(nlayer):
+                    result_namei = f'Theta {ilayer+1}'
+                    resulti = material_dicti['theta'][:, ilayer]
+                    icase = _add_finite_centroidal_gui_result(
+                        icase, cases, materials_form, subcase_id,
+                        result_namei, resulti)
+
             if len(materials_form):
                 form.append((flag, None, materials_form))
         return icase

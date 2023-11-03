@@ -467,6 +467,7 @@ class Element(BaseCard):
         """returns the positions of multiple node objects"""
         if nodes is None:
             nodes = self.nodes_ref
+            assert nodes is not None, 'cross-referencing is required'
 
         nnodes = len(nodes)
         positions = np.empty((nnodes, 3), dtype='float64')

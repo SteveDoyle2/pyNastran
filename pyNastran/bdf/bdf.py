@@ -4793,13 +4793,25 @@ class BDF(BDF_):
         memo[id(self)] = result
         for key, value in self.__dict__.items():
             setattr(result, key, deepcopy(value, memo))
+        if result._xref:
+            result.cross_reference(
+                xref=True, xref_nodes=True, xref_elements=True, xref_nodes_with_elements=False,
+                xref_properties=True, xref_masses=True, xref_materials=True, xref_loads=True,
+                xref_constraints=True, xref_aero=True, xref_sets=True, xref_optimization=True,
+                word='')
         return result
 
     def __copy__(self):
         """performs a copy"""
-        newone = type(self)()
-        newone.__dict__.update(self.__dict__)
-        return newone
+        result = type(self)()
+        result.__dict__.update(self.__dict__)
+        #if result._xref:
+        #    result.cross_reference(
+        #        xref=True, xref_nodes=True, xref_elements=True, xref_nodes_with_elements=False,
+        #        xref_properties=True, xref_masses=True, xref_materials=True, xref_loads=True,
+        #        xref_constraints=True, xref_aero=True, xref_sets=True, xref_optimization=True,
+        #        word='')
+        return result
 
     def _add_superelements(self, superelement_lines, superelement_ilines):
         for superelement_id, superelement_line in sorted(superelement_lines.items()):

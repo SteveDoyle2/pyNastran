@@ -453,11 +453,14 @@ MISSING_CARDS = {
     'FREQV', 'VATVFS', 'PMIC', 'MAT10C', 'ALOAD', 'ELAR', 'ATVBULK', 'AMLREG',
     'ATVFS', 'BOLTLD', 'BCTPAR2', 'MATFT', 'PLOTEL4', 'CYCADD', 'MATT11'
 }
-OBJ_CARDS = {'PARAM', 'MDLPRM', 'TSTEP', 'TSTEP1', 'TSTEPNL',
-             'NLPCI', 'NLPARM',
-             'AERO', 'AEROS',
-             'EIGR', 'EIGRL', 'EIGB',
-             'EIGC', 'EIGP', 'NXSTRAT'}
+OBJ_CARDS = {
+    'PARAM', 'MDLPRM', 'TSTEP', 'TSTEP1', 'TSTEPNL',
+    'NLPCI', 'NLPARM',
+    'AERO', 'AEROS',
+    'EIGR', 'EIGRL', 'EIGB',
+    'EIGC', 'EIGP', 'NXSTRAT',
+    'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5',
+}
 
 
 def load_bdf_object(obj_filename:str, xref: bool=True, log=None, debug: bool=True):
@@ -785,7 +788,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'TIC', ## initial conditions - sid (set ID)
 
             ## frequencies
-            #'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5',
+            'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5',
 
             # direct matrix input cards
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', 'DTI',
