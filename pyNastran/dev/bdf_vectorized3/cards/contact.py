@@ -24,7 +24,7 @@ from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
     array_str,
     array_default_int, array_default_float,
-    update_field_size)
+    get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.utils import print_card_8
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -162,8 +162,7 @@ class ElementPropertySet(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if self.n == 0:
             return
-        size = update_field_size(self.max_id, size)
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         set_to_ids = defaultdict(list)
         for sid, (i0, i1) in zip(self.sid, self.i_id):
@@ -460,8 +459,7 @@ class BGSET(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if self.n == 0:
             return
-        size = update_field_size(self.max_id, size)
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for glue_id, (isource0, isource1) in zip(self.glue_id, self.isource):
             target_ids = self.target_ids[isource0:isource1].tolist()
@@ -699,8 +697,7 @@ class BCTSET(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if self.n == 0:
             return
-        size = update_field_size(self.max_id, size)
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         contact_ids = array_str(self.contact_id, size=size)
         desc_ids = array_default_int(self.desc_id, size=size)

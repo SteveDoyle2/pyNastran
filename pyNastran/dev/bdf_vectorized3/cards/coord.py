@@ -916,6 +916,10 @@ class COORD(VectorizedBaseCard):
             unresolved_cids.remove(cid)
         return nresolved
 
+    @property
+    def max_id(self) -> int:
+        return max(self.coord_id.max(), self.nodes.max(), self.ref_coord_id.max())
+
     #@parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -923,8 +927,7 @@ class COORD(VectorizedBaseCard):
         if len(self.coord_id) == 0:
             return ''
 
-        max_int = max(self.coord_id.max(), self.nodes.max(), self.ref_coord_id.max())
-        print_card, size = get_print_card_size(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         class_name = self.type
         nodes = array_str(self.nodes, size=size)

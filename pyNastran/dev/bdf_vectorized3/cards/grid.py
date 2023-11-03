@@ -19,7 +19,7 @@ from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank,
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_float, array_default_int
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, parse_node_check #get_print_card_8_16,
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, update_field_size, MAX_8_CHAR_INT
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card, get_print_card_size, update_field_size
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 from pyNastran.femutils.coord_transforms import (

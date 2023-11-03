@@ -17,7 +17,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property, get_print_card_8_16,
     parse_element_check, parse_property_check)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    update_field_size, array_str,
+    get_print_card_size, array_str,
     array_default_int, array_default_float, array_float_nan)
 from .rod import line_length_nan, line_centroid, line_centroid_with_spoints
 from .bar import get_bar_vector, safe_normalize
@@ -650,13 +650,15 @@ class PBUSH(Property):
                    #node=(nid, self.nodes),
                    #property_id=(pids, self.property_id))
 
+    @property
+    def max_id(self) -> int:
+        return self.property_id.max()
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.property_id.max()
-        size = update_field_size(max_int, size)
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         #RCV was added <= MSC 2016
         #MASS was added <= MSC 2016

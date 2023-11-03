@@ -1817,6 +1817,7 @@ def check_case(sol: int,
         pass
     elif sol in {128, 'SENLHARM'}:
         # rotordynamics
+        pass
     elif sol in {401, 'NLSTEP'}:
         pass
     elif sol in {402, 'NLSTPKIN'}:

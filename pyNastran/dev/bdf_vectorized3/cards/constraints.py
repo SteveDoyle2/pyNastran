@@ -19,8 +19,8 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import get_print_card_8_16
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
-    array_str, array_default_int, update_field_size,
-    get_print_card)
+    array_str, array_default_int,
+    get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.utils import print_card_8
 from .grid import parse_node_check
 
@@ -234,7 +234,7 @@ class SPC(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         if len(self.spc_id) == 0:
             return
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         spc_str = array_str(self.spc_id, size=size)
         node_str = array_str(self.node_id, size=size)
@@ -676,7 +676,7 @@ class SPCADD(ADD):
                    write_card_header: bool=False) -> None:
         if len(self.spc_id) == 0:
             return
-        print_card = get_print_card(size, self.max_id)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         #print_card = get_print_card_8_16(size)
 
@@ -973,13 +973,15 @@ class CommonSet(VectorizedBaseCard):
                    missing,
                    node=(nid, self.node_id),)
 
+    @property
+    def max_id(self) -> int:
+        return self.node_id.max()
+
     @parse_node_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.node_id.max()
-        size = update_field_size(max_int, size)
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         component_to_nodes = defaultdict(list)
         for nid, comp in zip(self.node_id, self.component):

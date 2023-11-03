@@ -146,12 +146,15 @@ class DLOAD(VectorizedBaseCard):
     def iload(self) -> np.ndarray:
         return make_idim(self.n, self.nloads)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.load_ids.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.load_id.max(), self.load_ids.max())
-        print_card, size = get_print_card_size(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for sid, scale, iloadi in zip(self.load_id, self.scale, self.iload):
             iload0, iload1 = iloadi
@@ -348,12 +351,15 @@ class DAREA(VectorizedBaseCard):
         self.component = component
         self.scale = scale
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.node_id.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = max(self.load_id.max(), self.node_id.max())
-        print_card, size = get_print_card_size(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         #array_str, array_default_int
         load_ids = array_str(self.load_id, size=size)

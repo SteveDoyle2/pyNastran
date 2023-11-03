@@ -13,8 +13,8 @@ from pyNastran.bdf.cards.elements.bars import set_blank_if_default
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     Element, Property,
     parse_element_check, parse_property_check,
-    searchsorted_filter, get_print_card_8_16)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str # , array_default_int
+    searchsorted_filter, )
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, get_print_card_size # , array_default_int
 from .utils import get_density_from_material
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
@@ -162,11 +162,15 @@ class CONROD(Element):
                    node=(nid, self.nodes),
                    material_id=(mids, self.material_id))
 
+    @property
+    def max_id(self):
+        return max(self.element_id.max(), self.material_id.max(), self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for eid, mid, nodes, A, j, c, nsm in zip_longest(self.element_id, self.material_id, self.nodes,
                                                          self.A, self.J, self.c, self.nsm):
@@ -306,11 +310,15 @@ class CROD(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @property
+    def max_id(self):
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for eid, pid, nodes in zip_longest(self.element_id, self.property_id, self.nodes):
             n1, n2 = nodes
@@ -510,11 +518,15 @@ class PROD(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
+    @property
+    def max_id(self):
+        return max(self.property_id.max(), self.material_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for pid, mid, A, j, nsm, c in zip_longest(self.property_id, self.material_id,
                                                   self.A, self.J, self.nsm, self.c):
@@ -621,11 +633,15 @@ class CTUBE(Element):
                    node=(nid, self.nodes),
                    property_id=(pids, self.property_id))
 
+    @property
+    def max_id(self):
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         for eid, pid, nodes in zip_longest(self.element_id, self.property_id, self.nodes):
             n1, n2 = nodes
@@ -851,13 +867,15 @@ class PTUBE(Property):
                    missing,
                    material_id=(mids, self.material_id))
 
+    @property
+    def max_id(self):
+        return max(self.property_id.max(), self.material_id.max())
+
     @parse_property_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.property_id) == 0:
-            return
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         property_id = array_str(self.property_id, size=size)
         material_id = array_str(self.material_id, size=size)

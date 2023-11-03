@@ -609,6 +609,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # solids
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+            'CHEXCZ',
 
             # acoustic
             #'CHACAB', 'CAABSF', 'CHACBR',
@@ -675,7 +676,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MATHP', 'MATORT', 'MAT10C', # 'MATEV',
 
             ## Material dependence - MATT1/MATT2/etc.
-            'MATT1', #'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+            'MATT1', 'MATT2', # 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
             'MATS1', #'MATS3',
             'MATS8',
             # 'MATHE'
@@ -729,7 +730,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PRESAX',
 
             #thermal
-            #'QVOL',
+            'QVOL',
 
             # aero cards
             #'AERO',  ## aero
@@ -761,7 +762,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CORD2R', 'CORD2C', 'CORD2S',
 
             # temperature cards
-            #'TEMP', 'TEMPD', 'TEMPB3', 'TEMPAX',
+            'TEMP', 'TEMPD', # 'TEMPB3', 'TEMPAX',
             'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
             #'CHBDYE', 'CHBDYG', 'CHBDYP', 'BDYOR',
             #'PCONV', 'PCONVM', 'PHBDY',
@@ -2479,6 +2480,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CPENTA' : partial(self._prepare_card, self.cpenta),
             'CHEXA' : partial(self._prepare_card, self.chexa),
             'CPYRAM' : partial(self._prepare_card, self.cpyram),
+            'CHEXCZ' : partial(self._prepare_card, self.chexcz),
             'PSOLID': partial(self._prepare_card, self.psolid),
             'PLSOLID': partial(self._prepare_card, self.plsolid),
             'PCOMPS': partial(self._prepare_card, self.pcomps),
@@ -2519,8 +2521,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'ACCEL' : partial(self._prepare_card, self.accel),
             'ACCEL1' : partial(self._prepare_card, self.accel1),
             'SLOAD': partial(self._prepare_card, self.sload),
-            #'TEMP': partial(self._prepare_card, self.temp),
-            #'TEMPD': partial(self._prepare_card, self.tempd),
+            'TEMP': partial(self._prepare_card, self.temp),
+            'TEMPD': partial(self._prepare_card, self.tempd),
             #'DTEMP': partial(self._prepare_card, self.dtemp),
             'LSEQ': partial(self._prepare_card, self.lseq),
             'SPCD' : partial(self._prepare_card, self.spcd), # enforced displacement; load
@@ -4759,13 +4761,13 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_BCTPARA', 'add_CAERO',
             #'add_DIVERG',
             # 'add_CSSCHD', 'add_DDVAL',
-            #'add_DELAY', 'add_DEQATN', 'add_DMI',
-            #'add_DPHASE', 'add_DRESP', 'add_DTABLE',
+            #''add_DEQATN', 'add_DMI',
+            #'add_DTABLE',
             #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
             #'add_GUST', 'add_MKAERO', 'add_NLPARM', 'add_NLPCI',
             #'add_PAERO', 'add_PARAM', 'add_PHBDY',
             #'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
-            #'add_SEUSET', 'add_SPLINE', 'add_tempd', 'add_TF', 'add_TRIM',
+            #'add_SEUSET', 'add_SPLINE', 'add_TF', 'add_TRIM',
             #'add_TSTEP', 'add_TSTEPNL',
 
             #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',

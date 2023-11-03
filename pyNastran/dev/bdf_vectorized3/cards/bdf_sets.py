@@ -18,7 +18,7 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     VectorizedBaseCard, parse_node_check, get_print_card_8_16,
     hslice_by_idim, make_idim)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    get_print_card, update_field_size, array_str, array_default_int)
+    get_print_card_size, array_str, array_default_int)
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 
 
@@ -233,13 +233,16 @@ class ABCOQSET(VectorizedBaseCard):
                 set_map.add((nid, comp_int))
         return set_map
 
+    @property
+    def max_id(self) -> int:
+        return self.node_id.max()
+
     @parse_node_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         max_int = self.node_id.max()
-        size = update_field_size(max_int, size)
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         comp_to_nids = defaultdict(list)
         for nid, comp in zip_longest(self.node_id, self.component):
@@ -496,13 +499,15 @@ class SuperBCQSET(VectorizedBaseCard):
                 set_map.add((nid, comp_int))
         return set_map
 
+    @property
+    def max_id(self) -> int:
+        return self.node_id.max()
+
     @parse_node_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.node_id.max()
-        size = update_field_size(max_int, size)
-        print_card = get_print_card(size, max_int)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         seid_comp_to_nids = defaultdict(lambda : defaultdict(list))
         for seid, nid, comp in zip_longest(self.seid, self.node_id, self.component):
@@ -828,13 +833,15 @@ class SUPORT(VectorizedBaseCard):
                    missing,
                    node=(nid, self.node_id),)
 
+    @property
+    def max_id(self) -> int:
+        return self.node_id.max()
+
     @parse_node_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.node_id.max()
-        size = update_field_size(max_int, size)
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         suport_id_to_nid_comp = defaultdict(list)
         for suport_idi, nid, comp in zip_longest(self.suport_id, self.node_id, self.component):
@@ -1137,13 +1144,15 @@ class USET(VectorizedBaseCard):
                    missing,
                    node=(nid, self.node_id),)
 
+    @property
+    def max_id(self) -> int:
+        return self.node_id.max()
+
     @parse_node_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        max_int = self.node_id.max()
-        size = update_field_size(max_int, size)
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         name_to_nid_comp = defaultdict(list)
         for name in np.unique(self.name):
@@ -1353,15 +1362,17 @@ class SET1(VectorizedBaseCard):
     def inid(self) -> np.ndarray:
         return make_idim(self.n, self.num_ids)
 
+    @property
+    def max_id(self) -> int:
+        return self.set_id.max()
+
     #@parse_node_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
         if len(self.set_id) == 0:
             return
-        max_int = self.set_id.max()
-        size = update_field_size(max_int, size)
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         set_ids = array_str(self.set_id, size=size)
         ids_ = array_str(self.ids, size=size).tolist()
