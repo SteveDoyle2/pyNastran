@@ -102,7 +102,8 @@ from pyNastran.bdf.cards.dynamic import (
 
 #from .cards.materials import (MAT3D,
                               #MATG, MATHE, MATEV,
-                              #CREEP, EQUIV, NXSTRAT)
+                              #CREEP, EQUIV)
+from pyNastran.bdf.cards.materials import NXSTRAT
 #from .cards.material_deps import (
     #MATT2, MATT3, MATT4, MATT5, MATT9, MATS1)
 
@@ -456,7 +457,7 @@ OBJ_CARDS = {'PARAM', 'MDLPRM', 'TSTEP', 'TSTEP1', 'TSTEPNL',
              'NLPCI', 'NLPARM',
              'AERO', 'AEROS',
              'EIGR', 'EIGRL', 'EIGB',
-             'EIGC', 'EIGP', }
+             'EIGC', 'EIGP', 'NXSTRAT'}
 
 
 def load_bdf_object(obj_filename:str, xref: bool=True, log=None, debug: bool=True):
@@ -638,8 +639,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PBEAM3',  # v1.3
 
             'PSHELL', 'PCOMP', 'PCOMPG',
-            'PSHEAR', # 'PSHLN1',
-            'PSHLN2',
+            'PSHEAR', 'PSHLN1', 'PSHLN2',
             'PSOLID', 'PLSOLID', 'PVISC', # 'PRAC2D', 'PRAC3D',
             'PCOMPS', 'PCOMPLS',
 
@@ -676,14 +676,15 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MATHP', 'MATORT', 'MAT10C', # 'MATEV',
 
             ## Material dependence - MATT1/MATT2/etc.
-            'MATT1', 'MATT2', # 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+            'MATT1', 'MATT2', # 'MATT3', 'MATT4', 'MATT5',
+            'MATT8', 'MATT9',
             'MATS1', #'MATS3',
             'MATS8',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
 
             ## nxstrats
-            #'NXSTRAT',
+            'NXSTRAT',
 
             ## thermal_materials
             'MAT4', 'MAT5',
@@ -827,6 +828,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SECSET', 'SECSET1',  ## se_csets
             'SEQSET', 'SEQSET1',  ## se_qsets
             #'SEUSET', 'SEUSET1',  ## se_usets
+            'RELEASE',
             #'SEQSEP',
 
             #------------------------------------------------------------------
@@ -2205,7 +2207,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #'MATHE' : (MATHE, add_methods._add_hyperelastic_material_object),
             #'MATEV' : (MATEV, add_methods._add_structural_material_object),
-            #'NXSTRAT' : (NXSTRAT, add_methods._add_nxstrat_object),
+            'NXSTRAT' : (NXSTRAT, add_methods._add_nxstrat_object),
 
             # hasn't been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             #'CREEP' : (CREEP, add_methods._add_creep_material_object),
@@ -2587,7 +2589,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'MATT4' : (MATT4, add_methods._add_material_dependence_object),
             #'MATT5' : (MATT5, add_methods._add_material_dependence_object),
             'MATT8' : partial(self._prepare_card, self.matt8),
-            #'MATT9' : (MATT9, add_methods._add_material_dependence_object),
+            'MATT9' : partial(self._prepare_card, self.matt9),
 
             #'MATHE' : partial(self._prepare_card, self.mathe),  # not supported
             'MATHP' : partial(self._prepare_card, self.mathp),
@@ -2668,6 +2670,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'SEBSET1': partial(self._prepare_card_by_method, self.sebset.add_set1_card),
             'SECSET1': partial(self._prepare_card_by_method, self.secset.add_set1_card),
             'SEQSET1': partial(self._prepare_card_by_method, self.seqset.add_set1_card),
+
+            'RELEASE': partial(self._prepare_card_by_method, self.release.add_card),
 
             # aero
             #'CAERO1': partial(self._prepare_card, self.caero1),
@@ -4766,7 +4770,7 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
             #'add_GUST', 'add_MKAERO', 'add_NLPARM', 'add_NLPCI',
             #'add_PAERO', 'add_PARAM', 'add_PHBDY',
-            #'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
+            #'add_SESET', 'add_SET',
             #'add_SEUSET', 'add_SPLINE', 'add_TF', 'add_TRIM',
             #'add_TSTEP', 'add_TSTEPNL',
 

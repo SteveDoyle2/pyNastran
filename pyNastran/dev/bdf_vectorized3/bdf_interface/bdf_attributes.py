@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Set, Optional, Any
 from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import SET1 # , SET2, SET3
-from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT, USET, SUPORT, SEBSET, SECSET, SEQSET
+from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT, USET, SUPORT, SEBSET, SECSET, SEQSET, RELEASE
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, EPOINT, SPOINT, GRDSET, POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
@@ -87,7 +87,7 @@ from pyNastran.dev.bdf_vectorized3.cards.materials import (
 from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
     MATS1, # MATS3,
     #MATS8, # MSC
-    MATT1, MATT2, MATT8)
+    MATT1, MATT2, MATT8, MATT9)
 
 from pyNastran.dev.bdf_vectorized3.cards.contact import (
     BSURF, BSURFS, BCPROP, BCPROPS,
@@ -233,10 +233,13 @@ class BDFAttributes:
         self.sebset = SEBSET(self)
         self.secset = SECSET(self)
         self.seqset = SEQSET(self)
+        self.release = RELEASE(self)
 
         self.set1 = SET1(self)
         #self.set2 = SET2(self)
         #self.set3 = SET3(self)
+
+        self.nxstrats: dict[int, NXSTRAT] = {}
 
         # monitor
         #self.monpnt2 = MONPNT2(self)  # not supported
@@ -501,6 +504,7 @@ class BDFAttributes:
         self.matt1 = MATT1(self)
         self.matt2 = MATT2(self)
         self.matt8 = MATT8(self)
+        self.matt9 = MATT9(self)
 
         self.spc = SPC(self)
         self.spc1 = SPC1(self)
@@ -778,7 +782,7 @@ class BDFAttributes:
     @property
     def thermal_material_dep_cards(self) -> list[Any]:
         materials = [
-            self.matt1, self.matt8,
+            self.matt1, self.matt8, self.matt9,
             self.mats1,
         ]
         return materials
@@ -896,7 +900,7 @@ class BDFAttributes:
     def seset_cards(self) -> list[Any]:
         """handles SEBSET/SEBSET1, ..."""
         sesets = [
-            self.sebset, self.secset, self.seqset,
+            self.sebset, self.secset, self.seqset, self.release,
             #self.seuset,
         ]
         return sesets

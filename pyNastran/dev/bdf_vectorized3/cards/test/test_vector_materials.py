@@ -488,6 +488,7 @@ class TestMaterials(unittest.TestCase):
         """tests MAT9"""
         log = get_logger(level='warning')
         model = BDF(log=log)
+        matt9 = model.matt9
         mid = 10
         #e11 = 3.0e7
         #e22 = 6.0e7
@@ -504,22 +505,22 @@ class TestMaterials(unittest.TestCase):
         mat9.rho
         mat9.validate()
 
-        RUN_MATTX = False
-        if RUN_MATTX:
-            matt9_id = model.add_matt9(
-                mid,
-                g11_table=1, g12_table=1, g13_table=1, g14_table=1, g15_table=1, g16_table=1,
-                g22_table=1, g23_table=1, g24_table=1, g25_table=1, g26_table=1,
-                g33_table=1, g34_table=1, g35_table=1, g36_table=1,
-                g44_table=1, g45_table=1, g46_table=1,
-                g55_table=1, g56_table=1, g66_table=1,
-                rho_table=2,
-                a1_table=3, a2_table=3, a3_table=3, a4_table=3, a5_table=3, a6_table=3,
-                ge_table=4, comment='')
-            matt9.validate()
+        matt9_id = model.add_matt9(
+            mid,
+            g11_table=1, g12_table=1, g13_table=1, g14_table=1, g15_table=1, g16_table=1,
+            g22_table=1, g23_table=1, g24_table=1, g25_table=1, g26_table=1,
+            g33_table=1, g34_table=1, g35_table=1, g36_table=1,
+            g44_table=1, g45_table=1, g46_table=1,
+            g55_table=1, g56_table=1, g66_table=1,
+            rho_table=2,
+            a1_table=3, a2_table=3, a3_table=3, a4_table=3, a5_table=3, a6_table=3,
+            ge_table=4, comment='')
+        #matt9.validate()
 
+        #if RUN_MATTX:
         model.validate()
         model.cross_reference()
+        matt9.write()
         #matt8.write(size=16, is_double=False)
         save_load_deck(model)
 
@@ -889,7 +890,7 @@ class TestMaterials(unittest.TestCase):
         #matg.raw_fields()
         save_load_deck(model, run_convert=False, run_op2_writer=False, run_remove_unused=False)
 
-    def _test_nxstrat(self):
+    def test_nxstrat(self):
         """tests the NXSTRAT"""
         params = {
             #'AUTO' : 1,

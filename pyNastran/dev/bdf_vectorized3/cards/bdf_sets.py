@@ -560,6 +560,232 @@ class SECSET(SuperBCQSET):
 class SEQSET(SuperBCQSET):
     pass
 
+
+class RELEASE(VectorizedBaseCard):
+    _id_name = 'seid'
+
+    def clear(self) -> None:
+        self.n = 0
+        self.seid = np.array([], dtype='int32')
+        self.component = np.array([], dtype='int32')
+        self.node_id = np.array([], dtype='int32')
+
+    #def add_set(self, seid: int, nids: list[int], components: list[int],
+                 #comment: str='') -> int:
+        #assert isinstance(nids, (list, np.ndarray, tuple))
+        #assert isinstance(components, (list, np.ndarray, tuple))
+        #nnodes = len(nids)
+        #ncomp = len(components)
+        #assert nnodes == ncomp, (nnodes, ncomp)
+        #self.cards.append((seid, nids, components, comment))
+        ##if comment:
+            ##self.comment[nid] = _format_comment(comment)
+        #self.n += nnodes
+        #return self.n
+
+    #def add_set1
+    def add(self, seid: int,
+            component: int,
+            nids: list[int],
+            comment: str='') -> int:
+        assert isinstance(component, (str, integer_types)), component
+        nids = expand_thru(nids, set_fields=True, sort_fields=False)
+        nnodes = len(nids)
+        components = [component] * nnodes
+        self.cards.append((seid, nids, components, comment))
+        #if comment:
+            #self.comment[nid] = _format_comment(comment)
+        self.n += nnodes
+        return self.n - 1
+
+    ##def add_card(self, card: BDFCard, comment: str=''):
+        #card_name = card[0].upper()
+        ##new_name0 = card_name[:-1] if card.endswith('1') else card_name
+        #msg = f'add_card(...) has been removed for {card_name}.  Use add_set_card or add_set1_card'
+        #raise AttributeError(msg)
+
+    #def add_set_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, comment: str=''):
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        seid = integer(card, 1, 'seid')
+        ids = []
+        components = []
+
+        nfields = len(card)
+        nterms = nfields // 2 - 1
+        delta = nfields % 2
+        assert delta == 0, 'The number of fields must be even; nfields=%s\ncard=%s' % (nfields, card)
+        for n in range(nterms):
+            i = n * 2 + 2
+            idi = integer(card, i, 'ID' + str(n))
+            component = parse_components_or_blank(card, i + 1, 'component' + str(n))
+            ids.append(idi)
+            components.append(component)
+
+        self.cards.append((seid, ids, components, comment))
+        self.n += len(ids)
+        return self.n - 1
+
+    #def add_set1_card(self, card: BDFCard, comment: str='') -> int:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        seid = integer(card, 1, 'seid')
+        components_str = fcomponents_or_blank(card, 2, 'components', default='0')
+        component = int(components_str)
+
+        nfields = len(card)
+        ids = []
+        i = 1
+        for ifield in range(3, nfields):
+            idi = integer_string_or_blank(card, ifield, 'ID%d' % i)
+            if idi:
+                i += 1
+                ids.append(idi)
+        ids = expand_thru(ids)
+        components = [component] * len(ids)
+        #return cls(seid, ids, components, comment=comment)
+
+        self.cards.append((seid, ids, components, comment))
+        self.n += len(ids)
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        idtype = self.model.idtype
+        ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+
+        seid = np.zeros(ncards, dtype='int32')
+        nnode = np.zeros(ncards, dtype='int32')
+        node_id_list = []
+        component_list = []
+        #comment = {}
+        for i, card in enumerate(self.cards):
+            (seidi, nidi, componenti, commenti) = card
+            assert isinstance(nidi, list), nidi
+            assert isinstance(componenti, list), componenti
+            seid[i] = seidi
+            nnodei = len(nidi)
+            assert nnodei > 0, (seidi, nidi, componenti)
+            nnode[i] = nnodei
+            node_id_list.extend(nidi)
+            component_list.extend(componenti)
+            #if commenti:
+                #comment[i] = commenti
+                #comment[nidi] = commenti
+
+        node_id = np.array(node_id_list, dtype=idtype)
+        component = np.array(component_list, dtype='int32')
+        self._save(seid, nnode, node_id, component)
+        self.sort()
+        self.cards = []
+
+    def _save(self,
+              seid: np.ndarray,
+              nnode: np.ndarray,
+              node_id: np.ndarray,
+              component: np.ndarray,
+              comment: dict[int, str]=None) -> None:
+        #ncards = len(node_id)
+        ncards_existing = len(self.node_id)
+
+        if ncards_existing != 0:
+            adsf
+            node_id = np.hstack([self.node_id, node_id])
+            component = np.hstack([self.component, component])
+        #if comment:
+            #self.comment.update(comment)
+
+        assert len(seid) == len(nnode)
+        assert len(component) == len(node_id)
+        assert nnode.min() > 0, nnode
+        self.seid = seid
+        self.nnode = nnode
+        self.node_id = node_id
+        self.component = component
+        self.n = len(seid)
+        #self.sort()
+        #self.cards = []
+
+    #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
+        #inid = self._node_index(node_id)
+        #return self.slice_card(inid)
+
+    #def slice_card_by_node_id(self, node_id: np.ndarray) -> GRID:
+        #"""uses a node_ids to extract GRIDs"""
+        #inid = self.index(node_id)
+        ##assert len(self.node_id) > 0, self.node_id
+        ##i = np.searchsorted(self.node_id, node_id)
+        #grid = self.slice_card_by_index(inid)
+        #return grid
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
+    def remove_unused(self, used_dict: dict[str, np.ndarray]) -> int:
+        pass
+
+    @property
+    def inode(self) -> np.ndarray:
+        return make_idim(self.n, self.nnode)
+
+    def __apply_slice__(self, set_card: SuperBCQSET, i: np.ndarray) -> None:
+        self._slice_comment(set_card, i)
+        set_card.n = len(i)
+        set_card.seid = self.seid[i]
+
+        inode = self.inode
+        set_card.node_id = hslice_by_idim(i, inode, self.node_id)
+        set_card.component = hslice_by_idim(i, inode, self.component)
+        set_card.nnode = self.nnode[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id),)
+
+    @property
+    def set_map(self) -> dict[tuple[int, int]]:
+        set_map = set()
+        comps = self.component.astype('|U8')
+        for nid, compi in zip(self.node_id, comps):
+            for compii in compi:
+                comp_int = int(compii)
+                set_map.add((nid, comp_int))
+        return set_map
+
+    @property
+    def max_id(self) -> int:
+        return self.node_id.max()
+
+    @parse_node_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        seid_comp_to_nids = defaultdict(lambda : defaultdict(list))
+        for seid, (inode0, inode1) in zip_longest(self.seid, self.inode):
+            nids = self.node_id[inode0:inode1]
+            comps = self.component[inode0:inode1]
+            for nid, comp in zip(nids, comps):
+                seid_comp_to_nids[seid][comp].append(nid)
+
+        for seid, comp_to_nids in seid_comp_to_nids.items():
+            assert seid is not None
+            for comp, nids in comp_to_nids.items():
+                node_id = array_str(np.array(nids), size=size).tolist()
+                list_fields = ['RELEASE', seid, comp, ] + node_id
+                bdf_file.write(print_card(list_fields))
+        return
+
+
 class SUPORT(VectorizedBaseCard):
     """
     Defines determinate reaction degrees-of-freedom in a free body.

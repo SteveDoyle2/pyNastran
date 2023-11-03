@@ -636,11 +636,7 @@ class Writer:
         """Writes the materials in a sorted order"""
         model = self.model
         #size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        is_big_materials = hasattr(model, 'big_materials') and model.big_materials
-        #is_materials = (self.materials or self.hyperelastic_materials or self.creep_materials or
-                        #self.MATS3 or self.MATS8 or self.MATT1 or
-                        #self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
-                        #self.MATT8 or self.MATT9 or self.nxstrats or is_big_materials)
+
         structural_materials = [
             model.mat1, model.mat2, model.mat3,
             model.mat8, model.mat9, model.mat10, model.mat11,
@@ -673,14 +669,21 @@ class Writer:
             model.mats1.write_file(bdf_file, size=size, is_double=is_double)
             model.matt1.write_file(bdf_file, size=size, is_double=is_double)
             model.matt8.write_file(bdf_file, size=size, is_double=is_double)
+            model.matt9.write_file(bdf_file, size=size, is_double=is_double)
 
+        #is_big_materials = hasattr(model, 'big_materials') and model.big_materials
+        is_materials_dict = len(model.nxstrats)
+        #is_materials = (self.materials or self.hyperelastic_materials or self.creep_materials or
+                        #self.MATS3 or self.MATS8 or
+                        #self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
+                        #self.nxstrats or is_big_materials)
+
+        if is_materials_dict:
             #for (unused_mid, material) in sorted(self.hyperelastic_materials.items()):
                 #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.creep_materials.items()):
                 #bdf_file.write(material.write_card(size, is_double))
 
-            #for (unused_mid, material) in sorted(self.MATS1.items()):
-                #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.MATS3.items()):
                 #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.MATS8.items()):
@@ -694,10 +697,8 @@ class Writer:
                 #bdf_file.write(material.write_card(size, is_double))
             #for (unused_mid, material) in sorted(self.MATT5.items()):
                 #bdf_file.write(material.write_card(size, is_double))
-            #for (unused_mid, material) in sorted(self.MATT9.items()):
-                #bdf_file.write(material.write_card(size, is_double))
-            #for (unused_sid, nxstrat) in sorted(self.nxstrats.items()):
-                #bdf_file.write(nxstrat.write_card(size, is_double))
+            for (unused_sid, nxstrat) in sorted(model.nxstrats.items()):
+                bdf_file.write(nxstrat.write_card(size, is_double))
 
             #if is_big_materials:
                 #for unused_mid, mat in sorted(self.big_materials.items()):
@@ -722,6 +723,8 @@ class Writer:
         model.secset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.seqset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         #model.seuset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
+
+        model.release.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
     def _write_superelements(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                              is_long_ids: Optional[bool]=None) -> None:

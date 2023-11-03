@@ -385,7 +385,7 @@ class MATDMG(MaterialDependence):
         litk = double(card, 20, 'LITK')
         bigk = double(card, 21, 'BIGK')
         expn = double(card, 22, 'EXPN')
-        
+
         tau = double(card, 23, 'TAU')
         adel = double(card, 24, 'ADEL')
 
@@ -1956,9 +1956,9 @@ class MATT9(MaterialDependenceThermal):
         self.mid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a MATT8 card from ``BDF.add_card(...)``
+        Adds a MATT9 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -2049,39 +2049,14 @@ class MATT9(MaterialDependenceThermal):
     def raw_fields(self):
         list_fields = [
             'MATT9', self.mid,
-            self.g11_table,
-            self.g12_table,
-            self.g13_table,
-            self.g14_table,
-            self.g15_table,
-            self.g16_table,
-
-            self.g22_table,
-            self.g23_table,
-            self.g24_table,
-            self.g25_table,
-            self.g26_table,
-
-            self.g33_table,
-            self.g34_table,
-            self.g35_table,
-            self.g36_table,
-
-            self.g44_table,
-            self.g45_table,
-            self.g46_table,
-
-            self.g55_table,
-            self.g56_table,
-            self.g66_table,
-
+            self.g11_table, self.g12_table, self.g13_table, self.g14_table, self.g15_table, self.g16_table,
+            self.g22_table, self.g23_table, self.g24_table, self.g25_table, self.g26_table,
+            self.g33_table, self.g34_table, self.g35_table, self.g36_table,
+            self.g44_table, self.g45_table, self.g46_table,
+            self.g55_table, self.g56_table, self.g66_table,
             self.rho_table,
-            self.a1_table,
-            self.a2_table,
-            self.a3_table,
-            self.a4_table,
-            self.a5_table,
-            self.a6_table,
+            self.a1_table, self.a2_table, self.a3_table,
+            self.a4_table, self.a5_table, self.a6_table,
             self.ge_table,
         ]
         return list_fields

@@ -63,6 +63,15 @@ class CaseControlDeck:
         del state['log']
         return state
 
+    def __deepcopy__(self, memo: dict[int, Any]) -> CaseControlDeck:
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for key, value in self.__dict__.items():
+            #print(key, value)
+            setattr(result, key, copy.deepcopy(value, memo))
+        return result
+
     def __init__(self, lines: list[str], log: Optional[Any]=None) -> None:
         """
         Creates the CaseControlDeck from a set of lines
@@ -130,7 +139,7 @@ class CaseControlDeck:
         #self.debug = True
 
         #: stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
-        self.reject_lines = []  # type: list[str]
+        self.reject_lines: list[str] = []
         self.begin_bulk = ['BEGIN', 'BULK']
 
         # allows BEGIN BULK to be turned off
@@ -138,7 +147,7 @@ class CaseControlDeck:
         self._begin_count = 0
 
         self.lines = lines
-        self.subcases = {0: Subcase(id=0)}  # type: dict[int, Subcase]
+        self.subcases: dict[int, Subcase] = {0: Subcase(id=0)}
         try:
             self._read(self.lines)
         except Exception:
@@ -150,10 +159,11 @@ class CaseControlDeck:
 
     def object_methods(self, mode: str='public', keys_to_skip=None,
                        filter_properties: bool=False) -> list[str]:
-        return object_attributes(obj, mode=mode, keys_to_skip=keys_to_skip,
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip,
                                  filter_properties=filter_properties)
 
-    def object_stats(self, mode: str='public', keys_to_skip=None, filter_properties: bool=False) -> str:
+    def object_stats(self, mode: str='public', keys_to_skip=None,
+                     filter_properties: bool=False) -> str:
         return object_stats(self, mode=mode, keys_to_skip=keys_to_skip,
                             filter_properties=filter_properties)
 

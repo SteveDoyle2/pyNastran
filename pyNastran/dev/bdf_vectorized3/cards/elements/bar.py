@@ -77,7 +77,7 @@ class BAROR(BaseCard):
         #if isinstance(offt, integer_types):
             #raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: dict[str, Any]):
         copy = type(self)()
         memo[id(self)] = copy
         if self.comment:

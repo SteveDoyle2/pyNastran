@@ -56,7 +56,15 @@ class AddMethods():
                     model_mdlprm_dict[key] = value
         #model._type_to_id_map[param.type].append(key)
 
-        # SOL 101
+
+    def _add_nxstrat_object(self, nxstrat: NXSTRAT) -> None:
+        key = nxstrat.sid
+        assert key not in self.model.nxstrats, 'nxstrats=%s nxstrat=%s' % (self.model.nxstrats, nxstrat)
+        assert key > 0
+        self.model.nxstrats[key] = nxstrat
+        self.model._type_to_id_map[nxstrat.type].append(key)
+
+    # SOL 101
     def _add_suport1_object(self, suport1: SUPORT1) -> None:
         """adds a SUPORT1"""
         key = suport1.conid

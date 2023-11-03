@@ -2046,6 +2046,8 @@ class PSHLN1(Property):
         self.cards = []
 
     def _save(self, property_id, material_id, analysis, beh, beh_h, integration, integration_h) -> None:
+        if len(self.property_id) != 0:
+            asdf
         self.property_id = property_id
         self.material_id = material_id
         self.analysis = analysis
@@ -2060,7 +2062,7 @@ class PSHLN1(Property):
         if len(material_id):
             used_dict['material_id'].append(material_id)
 
-    def __apply_slice__(self, prop: PLPLANE, i: np.ndarray) -> None:
+    def __apply_slice__(self, prop: PSHLN1, i: np.ndarray) -> None:
         prop.n = len(i)
         prop.property_id = self.property_id[i]
         prop.material_id = self.material_id[i]
@@ -2078,7 +2080,7 @@ class PSHLN1(Property):
 
         property_ids = array_str(self.property_id, size=size)
         material_ids = array_str(self.material_id, size=size)
-        directs = array_default_int(self.direct, default=1, size=size)
+        #directs = array_default_int(self.direct, default=1, size=size)
         #inan = np.isnan(self.thickness)
 
         #self.property_id = np.zeros(ncards, dtype='int32')
@@ -2092,10 +2094,10 @@ class PSHLN1(Property):
         #self.integration_h = np.zeros((ncards, 2), dtype='|U8')
 
         codes = ['C3', 'C4', 'C6', 'C8']
-        for pid, (mid1, mid2), direct, analysis, beh, integration, beh_h, integration_h in zip_longest(
-            property_ids, material_ids, directs, self.analysis, self.thickness,
+        for pid, (mid1, mid2), analysis, beh, integration, beh_h, integration_h in zip_longest(
+            property_ids, material_ids, self.analysis,
             self.beh, self.integration, self.beh_h, self.integration_h):
-            list_fields = ['PSHLN2', pid, mid1, mid2, None, analysis, None, None, None]
+            list_fields = ['PSHLN1', pid, mid1, mid2, analysis, None, None, None, None]
             values = (beh, integration, beh_h, integration_h)
             for code, behx, intx, behxh, intxh in zip(codes, beh, integration, beh_h, integration_h):
                 if behx == '' and intx == '' and behx == '' and intxh == '':

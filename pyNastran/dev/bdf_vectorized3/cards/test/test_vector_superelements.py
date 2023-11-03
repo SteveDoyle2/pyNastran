@@ -154,6 +154,11 @@ class TestSuperelements(unittest.TestCase):
         model.add_secset(103, [5, 6], '456', comment='secset')
         model.add_secset1(103, [5, 6], '123', comment='secset1')
 
+        model.add_seqset(103, [5, 6], '456', comment='seqset')
+        model.add_seqset1(103, [5, 6], '123', comment='seqset1')
+
+        model.add_release(103, '123', [5, 6], comment='release')
+
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0., 0., 0.])
         model.add_grid(3, [0., 0., 0.])

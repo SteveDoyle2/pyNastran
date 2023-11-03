@@ -11,6 +11,7 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttrib
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR
 
 from pyNastran.bdf.cards.dmig import DMIG, DMIG_UACCEL, DMI, DMIJ, DMIJI, DMIK, DMIAX, DTI, DTI_UNITS
+from pyNastran.bdf.cards.materials import NXSTRAT
 from pyNastran.bdf.cards.methods import EIGRL
 from pyNastran.bdf.cards.dynamic import (
     FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
@@ -4945,28 +4946,26 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                   gzx_table=None, ax_table=None, ath_table=None, az_table=None,
                   ge_table=None, comment: str='') -> int:
         """Creates a MATT3 card"""
-        mat = MATT3(mid, ex_table, eth_table, ez_table,
-                    nuth_table, nuxz_table, rho_table, gzx_table,
-                    ax_table, ath_table, az_table, ge_table, comment=comment)
-        self._add_methods._add_material_dependence_object(mat)
+        mat = self.matt3.add(mid, ex_table, eth_table, ez_table,
+                             nuth_table, nuxz_table, rho_table, gzx_table,
+                             ax_table, ath_table, az_table, ge_table, comment=comment)
         return mat
 
     def add_matt4(self, mid, k_table=None, cp_table=None, h_table=None,
                   mu_table=None, hgen_table=None, comment: str='') -> int:
         """Creates a MATT4 card"""
-        mat = MATT4(mid, k_table, cp_table, h_table, mu_table, hgen_table,
-                    comment=comment)
-        self._add_methods._add_material_dependence_object(mat)
+        mat = self.matt4.add(mid, k_table, cp_table, h_table, mu_table, hgen_table,
+                             comment=comment)
         return mat
 
     def add_matt5(self, mid, kxx_table=None, kxy_table=None, kxz_table=None,
                   kyy_table=None, kyz_table=None, kzz_table=None, cp_table=None,
                   hgen_table=None, comment: str='') -> int:
         """Creates a MATT5 card"""
-        mat = MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
-                    kyz_table, kzz_table, cp_table,
-                    hgen_table, comment=comment)
-        self._add_methods._add_material_dependence_object(mat)
+        mat = self.matt5.add(
+            mid, kxx_table, kxy_table, kxz_table, kyy_table,
+            kyz_table, kzz_table, cp_table,
+            hgen_table, comment=comment)
         return mat
 
     def add_matt8(self, mid: int, e1_table=None, e2_table=None, nu12_table=None,
@@ -4982,7 +4981,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                              s_table=s_table, ge_table=ge_table, f12_table=f12_table, comment=comment)
         return mat
 
-    def add_matt9(self, mid,
+    def add_matt9(self, mid: int,
                   g11_table=None, g12_table=None, g13_table=None, g14_table=None,
                   g15_table=None, g16_table=None, g22_table=None, g23_table=None,
                   g24_table=None, g25_table=None, g26_table=None, g33_table=None,
@@ -4992,16 +4991,16 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
                   a1_table=None, a2_table=None, a3_table=None,
                   a4_table=None, a5_table=None, a6_table=None,
                   ge_table=None, comment: str='') -> int:
-        mat = MATT9(mid,
-                    g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
-                    g22_table, g23_table, g24_table, g25_table, g26_table,
-                    g33_table, g34_table, g35_table, g36_table,
-                    g44_table, g45_table, g46_table,
-                    g55_table, g56_table,
-                    g66_table, rho_table,
-                    a1_table, a2_table, a3_table, a4_table, a5_table, a6_table,
-                    ge_table, comment=comment)
-        self._add_methods._add_material_dependence_object(mat)
+        mat = self.matt9.add(
+            mid,
+            g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
+            g22_table, g23_table, g24_table, g25_table, g26_table,
+            g33_table, g34_table, g35_table, g36_table,
+            g44_table, g45_table, g46_table,
+            g55_table, g56_table,
+            g66_table, rho_table,
+            a1_table, a2_table, a3_table, a4_table, a5_table, a6_table,
+            ge_table, comment=comment)
         return mat
 
     def add_nxstrat(self, sid, params, comment: str='') -> NXSTRAT:
@@ -6451,10 +6450,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
     def add_seqset(self, seid, ids, components, comment: str='') -> int:
         """Creates an SEQSET card"""
         if isinstance(components, integer_string_types):
-            seqset = SEQSET1(seid, ids, components, comment=comment)
+            seqset = self.seqset.add_set1(seid, ids, components, comment=comment)
         else:
-            seqset = SEQSET(seid, ids, components, comment=comment)
-        self._add_methods._add_seqset_object(seqset)
+            seqset = self.seqset.add_set(seid, ids, components, comment=comment)
         return seqset
 
     def add_seqset1(self, seid, ids, components, comment: str='') -> int:
@@ -8107,9 +8105,8 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
     #---------------------------------------------------------------------
     # superelements.py
 
-    def add_release(self, seid, comp, nids, comment: str='') -> RELEASE:
-        release = RELEASE(seid, comp, nids, comment=comment)
-        self._add_methods._add_release_object(release)
+    def add_release(self, seid, comp: int, nids: list[int], comment: str='') -> int:
+        release = self.release.add(seid, comp, nids, comment=comment)
         return release
 
     def add_sebndry(self, seid_a, seid_b, ids, comment: str='') -> SEBNDRY:
