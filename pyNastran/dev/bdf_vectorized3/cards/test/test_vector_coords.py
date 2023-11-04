@@ -757,7 +757,7 @@ def compare_coords(model: BDF, model_old: BDF_Old):
     assert len(model.coord.coord_id) == len(model_old.coords)
     coord = model.coord
     for i, cid in enumerate(coord.coord_id):
-        coord_old = model_old.coords[cid]  # type: CORD2R
+        coord_old: CORD2R = model_old.coords[cid]
         assert np.allclose(coord.k[i, :], coord_old.k), f'k: cid={cid} actual={coord.k[i,:]}; expected={coord_old.k}'
         assert np.allclose(coord.j[i, :], coord_old.j), f'j: cid={cid} actual={coord.j[i,:]}; expected={coord_old.j}'
         assert np.allclose(coord.i[i, :], coord_old.i), f'i: cid={cid} actual={coord.i[i,:]}; expected={coord_old.i}'

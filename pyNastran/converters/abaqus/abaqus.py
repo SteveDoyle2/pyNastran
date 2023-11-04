@@ -5,9 +5,11 @@ from io import StringIO
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
-    Assembly, Part, Elements, Step, cast_nodes)
+    Assembly, Part, Elements, Step, cast_nodes,
+    ShellSection, SolidSection)
 import pyNastran.converters.abaqus.reader as reader
 from pyNastran.converters.abaqus.reader_utils import print_data, clean_lines
+
 
 def read_abaqus(abaqus_inp_filename, encoding=None,
                 log=None, debug=False):
@@ -15,6 +17,7 @@ def read_abaqus(abaqus_inp_filename, encoding=None,
     model = Abaqus(log=log, debug=debug)
     model.read_abaqus_inp(abaqus_inp_filename, encoding=encoding)
     return model
+
 
 class Abaqus:
     """defines the abaqus reader"""
@@ -27,12 +30,12 @@ class Abaqus:
         self.amplitudes = {}
         self.assembly = None
         self.initial_conditions = {}
-        self.steps = []  #  type: list[Step]
+        self.steps: list[Step] = []
         self.heading = None
         self.preprint = None
 
-        self.shell_sections = []  # list[ShellSection]
-        self.solid_sections = []  # list[SolidSection]
+        self.shell_sections: list[ShellSection] = []
+        self.solid_sections: list[SolidSection] = []
         self.log = get_logger2(log, debug)
 
     def read_abaqus_inp(self, abaqus_inp_filename: str, encoding: str=None):

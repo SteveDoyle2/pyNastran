@@ -186,7 +186,7 @@ class TestShells(unittest.TestCase):
         #self.assertEqual(ctria3.Rho(), rho)
 
         # pcomp
-        pcomp = model.Property(pid + 1)[0] # type: PCOMP
+        pcomp: PCOMP = model.Property(pid + 1)[0]
         self.assertEqual(pcomp.property_id, pid + 1)
         self.assertEqual(pcomp.nplies, 4)
         self.assertEqual(pcomp.nplies_total, 4)
@@ -1606,7 +1606,7 @@ class TestShells(unittest.TestCase):
         self._make_cquad4(model, rho, nu, G, E, t, nsm)
 
         eid = 10
-        elem = model.Element(eid)[0]  # type: CQUAD4
+        elem: CQUAD4 = model.Element(eid)[0]
 
         #['grid', n1, 0, 0., 0., 0.],
         #['grid', n2, 0, 2., 0., 0.],

@@ -29,7 +29,7 @@ class PreferencesObject(BaseGui):
 
         camera = self.gui.GetCamera()
         min_clip, max_clip = camera.GetClippingRange()
-        settings = self.gui.settings  # type: Settings
+        settings: Settings = self.gui.settings
         data = {
             'font_size' : settings.font_size,
             'annotation_size' : settings.annotation_size, # int

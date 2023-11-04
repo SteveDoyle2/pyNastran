@@ -277,8 +277,7 @@ class GRIDv:
         if comment:
             self.comment[nid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
-        # type: (Any, str) -> GRID
+    def add_card(self, card, comment: str=''):
         """
         Adds a GRID card from ``BDF.add_card(...)``
 

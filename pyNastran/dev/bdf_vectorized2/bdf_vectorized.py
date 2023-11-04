@@ -552,8 +552,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.read_includes = True
 
         # file management parameters
-        self.active_filenames = []  # type: list[str]
-        self.active_filename = None  # type: Optional[str]
+        self.active_filenames: list[str] = []
+        self.active_filename: Optional[str] = None
         self.include_dir = ''
         self.dumplines = False
 
@@ -562,10 +562,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         # list of all read in cards - useful in determining if entire BDF
         # was read & really useful in debugging
-        self.card_count = {}  # type: dict[str, int]
+        self.card_count: dict[str, int] = {}
 
         # stores the card_count of cards that have been rejected
-        self.reject_count = {}  # type: dict[str, int]
+        self.reject_count: dict[str, int] = {}
 
         # allows the BDF variables to be scoped properly (i think...)
         GetCard.__init__(self)
@@ -581,10 +581,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._is_dynamic_syntax = False
 
         # lines that were rejected b/c they were for a card that isn't supported
-        self.reject_lines = []  # type: list[list[str]]
+        self.reject_lines: list[list[str]] = []
 
         # cards that were created, but not processed
-        self.reject_cards = []  # type: list[str]
+        self.reject_cards: list[str] = []
 
         self.include_filenames = defaultdict(list)
         # self.__init_attributes()

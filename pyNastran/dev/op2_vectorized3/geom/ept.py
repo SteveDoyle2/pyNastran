@@ -3451,7 +3451,7 @@ class EPT:
         ntotal = 28 * self.factor # 7*4
 
         nproperties = (len(data) - n) // ntotal
-        prop = op2.psolid  # type: PSOLID
+        prop: PSOLID = op2.psolid
         n, ints, floats, strings = get_ints_floats_strings(
             data, n, nproperties, 7, size=op2.size, endian=op2._uendian)
 

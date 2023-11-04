@@ -46,7 +46,7 @@ def add_vectorized_elements(model, nelements: int, idtype: str, log):
     #if len(model.cquad):
         #model.cquad.quality()
 
-    nids_list = []  # type: list[int]
+    nids_list: list[int] = []
     unused_ieid = 0
     unused_cell_offset = 0
 

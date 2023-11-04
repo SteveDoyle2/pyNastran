@@ -2124,6 +2124,13 @@ class PBEAML(Property):
         self.dims = dims
         self.so = so
         self._nsm = nsm
+        #ndims = ndim.sum()
+        nstations = self.nstation.sum()
+        assert nstations == len(self.xxb), (self.xxb, self.xxb)
+        assert nstations == len(self.so), (self.xxb, self.so)
+        assert nstations == len(self._nsm), (self.xxb, self._nsm)
+        #assert nx == len(self.so), (self.xxb, self.so)
+
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)

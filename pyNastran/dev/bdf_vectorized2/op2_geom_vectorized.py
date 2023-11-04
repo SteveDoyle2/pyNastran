@@ -771,8 +771,7 @@ class OP2Geom(OP2GeomCommon, BDF):
     def _add_tstepnl_object(self, card, allow_overwrites=True):
         pass
 
-    def _add_coord_object(self, coord, allow_overwrites=False):
-        # type: (Any, bool) -> None
+    def _add_coord_object(self, coord, allow_overwrites: bool=False) -> None:
         """adds a CORDx object"""
         key = coord.cid
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)

@@ -155,7 +155,7 @@ def _build_kbb_cbar(model, Kbb, dof_map: DOF_MAP, fdtype: str='float64') -> int:
         return nelements
 
     for eid in eids:
-        elem = model.elements[eid]  # type: CBAR
+        elem: CBAR = model.elements[eid]
         nid1, nid2 = elem.nodes
         is_passed, K = ke_cbar(model, elem, fdtype=fdtype)
         assert is_passed

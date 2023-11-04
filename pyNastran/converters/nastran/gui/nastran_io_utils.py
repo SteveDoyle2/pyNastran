@@ -2590,7 +2590,7 @@ def build_normals_quality(settings: Settings,
      - MaterialCoord
      - MaterialTheta
     """
-    nastran_settings = settings.nastran_settings  # type: NastranSettings
+    nastran_settings: NastranSettings = settings.nastran_settings
     colormap = settings.colormap
     #ielement = 0
     #nelements = self.element_ids.shape[0]

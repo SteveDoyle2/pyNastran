@@ -351,7 +351,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if key in model.cbar_force:
             found_force = True
-            case = model.cbar_force[key]  # type: np.ndarray
+            case: np.ndarray = model.cbar_force[key]
             if case.element_type == 34:
                 ## CBAR-34
                 if case.is_real:
@@ -760,7 +760,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                    header_dict: HeaderDict,
                                    keys_map: KeysMap) -> int:
         """Creates the time accurate force objects"""
-        nastran_settings = self.settings.nastran_settings  # type: NastranSettings
+        nastran_settings: NastranSettings = self.settings.nastran_settings
         if nastran_settings.force:
             for itime, unused_dt in enumerate(times):
                 try:
@@ -813,7 +813,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                     keys_map: KeysMap) -> int:
         """Creates the time accurate strain objects"""
         log = self.log
-        nastran_settings = self.settings.nastran_settings  # type: NastranSettings
+        nastran_settings: NastranSettings = self.settings.nastran_settings
         if nastran_settings.strain:
             for itime, unused_dt in enumerate(times):
                 try:

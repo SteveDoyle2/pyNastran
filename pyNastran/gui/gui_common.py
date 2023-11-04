@@ -1683,20 +1683,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             pass
         elif animate_in_gui:
             msg = (
-                'make_gif(%r, %s, istep=%s,\n'
-                '         min_value=%s, max_value=%s,\n'
-                '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n%s'
+                f'make_gif({gif_filename!r}, {scale}, istep={istep},\n'
+                f'         min_value={min_value}, max_value={max_value},\n'
+                f'         animate_scale={animate_scale}, animate_phase={animate_phase},\n'
+                f'         animate_time={animate_time},\n{icase_msg}'
                 #'         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
                 #'         icase_start=%s, icase_end=%s, icase_delta=%s,\n'
-                "         time=%s, animation_profile=%r,\n"
-                '         fps=%s, stop_animation=%s, animate_in_gui=%s)\n' % (
-                    gif_filename, scale, istep, min_value, max_value,
-                    animate_scale, animate_phase, animate_time,
-                    icase_msg,
-                    #icase_fringe, icase_disp, icase_vector,
-                    #icase_start, icase_end, icase_delta,
-                    time, animation_profile,
-                    fps, stop_animation, animate_in_gui)
+                f'         time={time}, animation_profile={animation_profile!r},\n'
+                f'         nrepeat={nrepeat}, magnify={magnify},\n'
+                f'         make_images={make_images}, delete_images={delete_images}, make_gif={make_gif},\n'
+                f'         fps={fps}, stop_animation={stop_animation}, animate_in_gui={animate_in_gui})\n'
             )
             self.log_command(msg)
             # onesided has no advantages for in-gui animations and creates confusion
@@ -1730,19 +1726,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if not is_failed:
             msg = (
-                'make_gif(%r, %s, istep=%s,\n'
-                '         min_value=%s, max_value=%s,\n'
-                '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n%s'
-                "         time=%s, animation_profile=%r,\n"
-                '         nrepeat=%s, fps=%s, magnify=%s,\n'
-                '         make_images=%s, delete_images=%s, make_gif=%s, stop_animation=%s,\n'
-                '         animate_in_gui=%s)\n' % (
-                    gif_filename, scale, istep, min_value, max_value,
-                    animate_scale, animate_phase, animate_time,
-                    icase_msg,
-                    time, animation_profile,
-                    nrepeat, fps, magnify, make_images, delete_images, make_gif, stop_animation,
-                    animate_in_gui)
+                f'make_gif({gif_filename!r}, {scale}, istep={istep},\n'
+                f'         min_value={min_value}, max_value={max_value},\n'
+                f'         animate_scale={animate_scale}, animate_phase={animate_phase},\n'
+                f'         animate_time={animate_time},\n{icase_msg}\n'
+                f"         time={time}, animation_profile={animation_profile!r},\n"
+                f'         nrepeat={nrepeat}, fps={fps}, magnify={magnify},\n'
+                f'         make_images={make_images}, delete_images={delete_images},\n'
+                f'         make_gif={make_gif},\n'
+                f'         stop_animation={stop_animation},\n'
+                f'         animate_in_gui={animate_in_gui})\n'
             )
             self.log_command(msg)
 
@@ -1781,9 +1774,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             self.mouse_actions.setup_mouse_buttons(mode='default', force=True)
         return is_failed
 
-    def animation_update(self, icase_fringe0, icase_disp0, icase_vector0,
-                         icase_fringe, icase_disp, icase_vector, scale, phase,
-                         animate_fringe, unused_animate_vector,
+    def animation_update(self,
+                         icase_fringe0: int, icase_disp0: int, icase_vector0: int,
+                         icase_fringe: int, icase_disp: int, icase_vector: int,
+                         scale: float, phase: float,
+                         animate_fringe: bool, unused_animate_vector: bool,
                          normalized_frings_scale,
                          min_value, max_value):
         """applies the animation update callback"""

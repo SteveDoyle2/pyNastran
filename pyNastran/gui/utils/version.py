@@ -27,7 +27,7 @@ def get_data_from_website(target_url: str) -> tuple[Optional[list[str]], bool]:
         #print(help(urllib))
         #raise
 
-    lines = [] # type: list[str]
+    lines: list[str] = []
     if not is_failed:
         data = data_bytes.read().decode('utf-8')
         lines = data.split('\n')  # basically data.readlines()

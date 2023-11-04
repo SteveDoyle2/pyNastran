@@ -62,7 +62,7 @@ class ShearMomentTorqueObject(BaseGui):
             gui.log.error('Select a Grid Point Forces result.')
             return
 
-        gpforce = obj.gpforce_array  # type: RealGridPointForcesArray
+        gpforce: RealGridPointForcesArray = obj.gpforce_array
         data = {
             'font_size' : settings.font_size,
             'cids' : cids,
@@ -108,7 +108,7 @@ class ShearMomentTorqueObject(BaseGui):
         #self.out_data['clicked_ok'] = True
 
         model_name = data['model_name']
-        gpforce = data['gpforce']  # type: RealGridPointForcesArray
+        gpforce: RealGridPointForcesArray = data['gpforce']
         nplanes = data['nplanes']
         #model = self.models[model_name]
 

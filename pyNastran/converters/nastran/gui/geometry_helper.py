@@ -179,7 +179,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         if ugrid is None:
             return
 
-        gui = self.gui  # type: MainWindow
+        gui: MainWindow = self.gui
         def update_grid_function(unused_nid_map,
                                  ugrid: vtkUnstructuredGrid,
                                  points: vtkPoints,

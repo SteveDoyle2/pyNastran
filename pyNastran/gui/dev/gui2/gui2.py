@@ -102,8 +102,8 @@ class MainWindow2(QMainWindow):
         # TODO: what is this for?
         self.title = ''
 
-        self.cases = {} # type: dict[int, Any]
-        self.form = []  # type: list[Any]
+        self.cases: dict[int, Any] = {}
+        self.form: list[Any] = []
         # -----------------------------------------
         self.name = 'main'
         self.model_type = None
@@ -128,7 +128,7 @@ class MainWindow2(QMainWindow):
         settings = QtCore.QSettings()
         self.settings.load(settings)
 
-        self.actions = {}  # type: dict[str, QAction]
+        self.actions: dict[str, QAction] = {}
         self.load_actions = LoadActions(self)
         self.view_actions = ViewActions(self)
         self.tool_actions = ToolActions(self)
@@ -462,9 +462,9 @@ class MainWindow2(QMainWindow):
             ('toolbar', self.toolbar, toolbar_tools),
         ]
 
-        self.actions = self._setup_actions(
+        self.actions: dict[str, QAction] = self._setup_actions(
             help, self.view_actions,
-            base_actions=self.actions)  # type: dict[str, QAction]
+            base_actions=self.actions)
         #self.actions['pulldown'] =
 
         #self.combo = QtGui.QComboBox()
@@ -575,11 +575,11 @@ class MainWindow2(QMainWindow):
             actor = self.geometry_actors[filename]
             self.rend.RemoveActor(actor)
             del self.geometry_actors[filename]
-        #self.models = {}  # type: dict[str, Any]
-        #self.grid_mappers = {} # type: dict[str, Any]
-        #self.main_grids = {} #  type: dict[str, vtkUnstructuredGrid]
-        #self.alt_grids = {} # type: dict[str, vtkUnstructuredGrid]
-        #self.geometry_actors = {} # type: dict[str, vtkLODActor]
+        #self.models: dict[str, Any] = {}
+        #self.grid_mappers: dict[str, Any] = {}
+        #self.main_grids: dict[str, vtkUnstructuredGrid] = {}
+        #self.alt_grids: dict[str, vtkUnstructuredGrid] = {}
+        #self.geometry_actors: dict[str, vtkLODActor] = {}
 
     def _reset_model(self, name: str) -> None:
         """resets the grids; sets up alt_grids"""

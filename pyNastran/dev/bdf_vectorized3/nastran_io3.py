@@ -75,6 +75,7 @@ class Nastran3:
         """loads results from an op2 file"""
         assert isinstance(op2_filename, (str, PurePath)), op2_filename
         model = OP2(debug=True, log=None, mode='msc')
+        model.read_matpool = False
         model.read_op2(op2_filename, combine=True, build_dataframe=False,
                        skip_undefined_matrices=False, encoding=None)
         self._load_op2_results(model, plot)
@@ -83,14 +84,16 @@ class Nastran3:
         """loads results from an h5 file"""
         assert isinstance(h5_filename, (str, PurePath)), h5_filename
         model = Results(debug=True, log=None, mode='msc')
+        model.read_matpool = False
         model.read_h5(h5_filename)
         self._load_op2_results(model, plot)
 
     def _load_op2_results(self, model: OP2, plot: bool) -> None:
         """loads results from a filled OP2 object (for op2/h5)"""
         name = 'main'
-        cases: Cases = self.result_cases
-        form: Form = self.get_form()
+        gui = self.gui
+        cases: Cases = gui.result_cases
+        form: Form = gui.get_form()
         icase = len(cases)
         icase = self._load_results_from_model(
             model,
@@ -124,7 +127,9 @@ class Nastran3:
         """loads geometry from an op2 file"""
         assert isinstance(op2_filename, (str, PurePath)), op2_filename
         model = OP2Geom(debug=True, log=None, mode='msc')
+        idtype = model.idtype
         model.read_op2(op2_filename)
+        model.idtype = idtype
         model.setup(run_geom_check=False)
 
         ugrid, form, cases, icase = self._load_geometry_from_model(

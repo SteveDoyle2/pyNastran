@@ -2311,7 +2311,7 @@ class GEOM2:
         op2 = self.op2
         nelements = (len(data) - n) // 16
 
-        element = op2.cmass3  # type: CMASS3
+        element: CMASS3 = op2.cmass3
 
         n, ints = get_ints(data, n, nelements, 4, size=op2.size, endian=op2._endian)
         element_id = ints[:, 0]
@@ -2343,7 +2343,7 @@ class GEOM2:
         nelements = (len(data) - n) // 16
 
         n, ints, floats = get_ints_floats(data, n, nelements, 4, size=op2.size, endian=op2._endian)
-        element = op2.cmass4  # type: CMASS4
+        element: CMASS4 = op2.cmass4
         element_id = ints[:, 0]
         mass = floats[:, 1]
         spoints = ints[:, [2, 3]]

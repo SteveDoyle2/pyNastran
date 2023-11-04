@@ -26,9 +26,9 @@ class ModifyMenu(PyDialog):
 
         self._default_font_size = data['font_size']
 
-        model = data['model']  # type: BDF
-        obj = data['obj']  # type: Any
-        variables = data['variables']  # type: list[str]
+        model: BDF = data['model']
+        obj: Any = data['obj']
+        variables: list[str] = data['variables']
         self.obj = obj
         self.variables = variables
         self.update_function_name = data['update_function_name']

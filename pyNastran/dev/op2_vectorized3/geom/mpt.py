@@ -853,7 +853,7 @@ class MPT:
         assert nmaterials > 0, nmaterials
 
         n, ints, floats = get_ints_floats(data, n, nmaterials, 5, size=op2.size, endian=op2._endian)
-        material = op2.mat10  # type: MAT10
+        material: MAT10 = op2.mat10
         material_id = ints[:, 0]
         #assert material_id.min() > 0, material_id
         #(mid, bulk, rho, c, ge) = out

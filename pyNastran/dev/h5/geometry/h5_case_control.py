@@ -215,7 +215,7 @@ def load_case_control(geom_model: BDF, hdf5_case_control):
             if len(value) == 0:
                 continue
             options = []
-            subcase = subcases[sid] # type: Subcase
+            subcase: Subcase = subcases[sid]
             assert isinstance(value, str), value
             subcase.add(name_str, value, options, 'STRING-type')
 
@@ -273,7 +273,7 @@ def load_case_control(geom_model: BDF, hdf5_case_control):
             #else:
                 #raise RuntimeError((name_str, sid, value, media, fmt))
 
-            subcase = subcases[sid] # type: Subcase
+            subcase: Subcase = subcases[sid]
             subcase.add(name_str, value, options, 'STRESS-type')
 
 
@@ -288,7 +288,7 @@ def load_case_control(geom_model: BDF, hdf5_case_control):
                 if value == default:
                     continue
                 # SPC = 1
-                subcase = subcases[sid] # type: Subcase
+                subcase: Subcase = subcases[sid]
                 options = []
                 subcase.add(updated_name, value, options, 'STRESS-type')
             elif name in special_names:
@@ -315,7 +315,7 @@ def _load_special_names(special_names, hdf5_case_control,
     for name_str in special_names:
         values = hdf5_case_control[name_str]
         for sid, data in zip(sids, values):
-            subcase = subcases[sid] # type: Subcase
+            subcase: Subcase = subcases[sid]
             data_type = 'STRESS-type'
 
             options = []

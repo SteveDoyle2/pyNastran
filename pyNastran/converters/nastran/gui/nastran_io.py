@@ -1017,6 +1017,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             model = OP2Geom_(make_geom=True, debug=False, log=log,
                              debug_file=None)
             model.clear_results()
+            model.read_matpool = False
             model.read_op2(op2_filename=bdf_filename)
         else:  # read the bdf/punch
             from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDF_
@@ -1255,7 +1256,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
     def update_caeros(self, obj):
         """the update call for the ModifyMenu"""
-        model = self.model # type: BDF
+        model: BDF = self.model
         xref_errors = {}
         model._uncross_reference_aero()
         model._cross_reference_aero(check_caero_element_ids=False)
@@ -1314,7 +1315,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
     def _set_subcases_unvectorized(self, model, form, cases, icase, xref_nodes, xref_loads):
         """helper for ``load_nastran_geometry_unvectorized``"""
-        settings = self.gui.settings  # type: Settings
+        settings: Settings = self.gui.settings
         colormap = settings.colormap
         form0 = form[2]
         assert icase is not None
@@ -2402,8 +2403,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         TDOO: Not quite done on:
                - ???
         """
-        settings = self.gui.settings  # type: Settings
-        nastran_settings = settings.nastran_settings  # type: NastranSettings
+        settings: Settings = self.gui.settings
+        nastran_settings: NastranSettings = settings.nastran_settings
         log = self.log
 
         elements, nelements, unused_superelements = get_elements_nelements_unvectorized(model)
@@ -2886,8 +2887,8 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             use for ???
         """
         grid = self.gui.grid
-        settings = self.gui.settings  # type: Settings
-        nastran_settings = settings.nastran_settings  # type: NastranSettings
+        settings: Settings = self.gui.settings
+        nastran_settings: NastranSettings = settings.nastran_settings
 
         if IS_TESTING:
             self._map_elements3(nid_map, model, j, dim_max,
@@ -3702,6 +3703,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
             model = OP2(log=log, mode=mode, debug=True)
             model.IS_TESTING = False
+            model.read_matpool = False
 
             #if 0:  # pragma: no cover
                 #model._results.saved = set()
@@ -3729,6 +3731,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             return None
         elif ext == '.h5' and IS_H5PY:
             model = OP2(log=log, debug=True)
+            model.read_matpool = False
             hdf5_filename = results_filename
             model.load_hdf5_filename(hdf5_filename, combine=False)
         #elif ext == '.pch':
