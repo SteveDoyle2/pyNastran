@@ -330,8 +330,7 @@ class SPCD(Load):
 
 
 class Load0(Load):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.node_id = np.array([], dtype='int32')
         self.coord_id = np.array([], dtype='int32')
         self.mag = np.array([], dtype='float64')
@@ -446,8 +445,8 @@ class Load0(Load):
         return
 
 class Load1(Load):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 2), dtype='float64')
         self.mag = np.array([], dtype='float64')
@@ -546,8 +545,8 @@ class Load1(Load):
 
 
 class Load2(Load):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
         self.nodes = np.zeros((0, 4), dtype='float64')
         self.mag = np.array([], dtype='float64')
@@ -1442,8 +1441,8 @@ class LOAD(Load):
     +------+-----+------+------+----+-----+----+----+----+
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
         self.nloads = np.array([], dtype='int32')
         self.load_ids = np.array([], dtype='int32')
         self.scale_factors = np.array([], dtype='float64')
@@ -1742,19 +1741,31 @@ class TEMP(Load):
     +------+-----+----+-------+----+-------+----+----+
 
     """
-    def slice_card_by_index(self, i: np.ndarray) -> TEMP:
-        load = TEMP(self.model)
-        self.__apply_slice__(load, i)
-        return load
+    def add(self, sid: int, temperature_dict: dict[int, float],
+            comment: str='') -> int:
+        """
+        Creates a TEMP card
 
-    def __apply_slice__(self, load: DTEMP, i: np.ndarray) -> None:
-        load.n = len(i)
-        load.load_id = self.load_id[i]
-        load.nnodes = self.load_id[i]
-        load.node_id = self.node_id[i]
-        load.temperature = self.temperature[i]
+        Parameters
+        ----------
+        sid : int
+            Load set identification number
+        temperatures : dict[nid] : temperature
+            nid : int
+                node id
+            temperature : float
+                the nodal temperature
+        comment : str; default=''
+            a comment for the card
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+        """
+        node = list(temperature_dict.keys())
+        temperature = list(temperature_dict.values())
+        self.cards.append((sid, node, temperature, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
 
         nfields = len(card)
@@ -1776,13 +1787,13 @@ class TEMP(Load):
         assert len(card) >= 2, f'len(TEMP card) = {len(card):d}\ncard={card}'
         self.cards.append((sid, node, temperature, comment))
         self.n += 1
+        return self.n - 1
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
+        idtype = self.model.idtype
+
         #: Set identification number
         load_id = np.zeros(ncards, dtype='int32')
         nnodes = np.zeros(ncards, dtype='int32')
@@ -1798,11 +1809,18 @@ class TEMP(Load):
             nnodes[icard] = ntemps_actual
             node_ids.extend(node)
             temperatures.extend(temperature)
-        node_id = np.array(node_ids, dtype='int32')
+        node_id = np.array(node_ids, dtype=idtype)
         temperature = np.array(temperatures, dtype='float64')
         self._save(load_id, node_id, temperature, nnodes)
         assert len(self.load_id) == self.n
         self.cards = []
+
+    def __apply_slice__(self, load: TEMP, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.nnodes = self.load_id[i]
+        load.node_id = self.node_id[i]
+        load.temperature = self.temperature[i]
 
     def _save(self, load_id, node_id, temperature, nnodes):
         assert len(self.load_id) == 0, self.load_id
@@ -1812,6 +1830,12 @@ class TEMP(Load):
         self.temperature = temperature
         self.nnodes = nnodes
         self.n = nloads
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nid, self.node_id), filter_node0=False)
 
     def convert(self, temperature_scale: float=1.0, **kwargs) -> None:
         self.temperature *= temperature_scale
@@ -1859,13 +1883,31 @@ class TEMPD(Load):
         #self.__apply_slice__(load, i)
         #return load
 
+    def add(self, load_id: int, temperature: float, comment: str='') -> int:
+        """
+        Creates a TEMPD card
+
+        Parameters
+        ----------
+        load_id : int
+            Load set identification number. (Integer > 0)
+        temperature : float
+            default temperature
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((load_id, temperature, comment))
+        self.n += 1
+        return self.n - 1
+
     def add_card(self, card: BDFCard, comment: str='') -> int:
         #fdouble_or_blank = lax_double_or_blank if self.model.is_lax_parser else double_or_blank
         #sid = force_integer(card, 1, 'sid')
         #sid = integer(card, 1, 'sid')
 
         nfields = len(card)
-        assert nfields <= 8, 'len(card)=%i card=%s' % (len(card), card)
+        assert nfields <= 9, 'len(card)=%i card=%s' % (len(card), card)
 
         ntemps = (nfields - 1) // 2
         assert (nfields - 1) % 2 == 0, card
@@ -1906,6 +1948,9 @@ class TEMPD(Load):
         load.load_id = self.load_id[i]
         load.temperature = self.temperature[i]
 
+    def geom_check(self, missing: dict[str, np.ndarray]) -> None:
+        pass
+
     def convert(self, temperature_scale: float=1.0, **kwargs) -> None:
         self.temperature *= temperature_scale
 
@@ -1922,7 +1967,7 @@ class TEMPD(Load):
         temperatures = array_float(self.temperature, size=size, is_double=False)
         for sid, temperature in zip(load_ids, temperatures):
             list_fields = ['TEMPD', sid, temperature]
-        bdf_file.write(print_card(list_fields))
+            bdf_file.write(print_card(list_fields))
         return
 
 
@@ -2073,8 +2118,8 @@ class SLOAD(Load):
 
 
 class RFORCE(Load):
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
 
     def slice_card_by_index(self, i: np.ndarray) -> RFORCE:
         load = RFORCE(self.model)
@@ -2307,8 +2352,8 @@ class RFORCE1(Load):
     |         | RACC | MB | GROUPID |   |    |    |    |        |
     +---------+------+----+---------+---+----+----+----+--------+
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
 
     def slice_card_by_index(self, i: np.ndarray) -> RFORCE1:
         load = RFORCE1(self.model)

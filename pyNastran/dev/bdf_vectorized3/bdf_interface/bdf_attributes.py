@@ -4,10 +4,13 @@ from itertools import zip_longest
 import numpy as np
 from typing import TYPE_CHECKING, Set, Optional, Any
 
+from pyNastran.bdf.cards.params import PARAM, MDLPRM
 from pyNastran.bdf.cards.dmig import DMI, DMIG, DMIG_UACCEL, DMIAX, DMIJ, DMIJI, DMIK
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
-from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import SET1 # , SET2, SET3
-from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import ASET, BSET, CSET, QSET, OMIT, USET, SUPORT, SEBSET, SECSET, SEQSET, RELEASE
+from pyNastran.dev.bdf_vectorized3.cards.bdf_sets import (
+    ASET, BSET, CSET, QSET, OMIT, USET, SUPORT,
+    SEBSET, SECSET, SEQSET, SESET, RELEASE,
+    SET1, SET3, RADSET) # , SET2
 from pyNastran.dev.bdf_vectorized3.cards.grid import GRID, EPOINT, SPOINT, GRDSET, POINT
 from pyNastran.dev.bdf_vectorized3.cards.elements.rod import CROD, PROD, CONROD, CTUBE, PTUBE
 from pyNastran.dev.bdf_vectorized3.cards.elements.bar import BAROR, CBAR, CBARAO, PBAR, PBARL, PBRSECT
@@ -26,11 +29,12 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.shear import CSHEAR, PSHEAR
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell import (
     CQUAD4, CTRIA3, CQUAD8, CTRIA6, CTRIAR, CQUADR, CQUAD,
     # SNORM,
-    #CAABSF, # acoustic shells
+    CAABSF, # acoustic shells
 )
 from pyNastran.dev.bdf_vectorized3.cards.elements.shell_properties import (
     PSHELL, PCOMP, PCOMPG,
     PLPLANE, PSHLN1, PSHLN2,
+    PAABSF,
 )
 #from pyNastran.dev.bdf_vectorized3.cards.elements.shell_axi import (
     #CTRIAX, CTRIAX6,
@@ -70,19 +74,20 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
     LSEQ, DLOAD,
-    DAREA, TLOAD1, TLOAD2, RLOAD1, RLOAD2, TIC, # QVECT,
-    #RANDPS,
-    DELAY, DPHASE
+    DAREA, TLOAD1, TLOAD2, RLOAD1, RLOAD2, TIC, QVECT,
+    RANDPS, DELAY, DPHASE
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.thermal_loads import (
     QHBDY, QBDY1, QBDY2, QBDY3, QVOL, TEMPBC, RADBC, RADM)
 
+from pyNastran.bdf.cards.materials import NXSTRAT
+
 from pyNastran.dev.bdf_vectorized3.cards.materials import (
     MAT1,
     MAT2, MAT3, MAT4, MAT5,
     MAT8, MAT9, MAT10, MAT11,
-    MAT10C, MATORT, MATHP, # MATHE,
+    MAT10C, MATORT, MATHP, MATHE,
 )
 from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
     MATS1, # MATS3,
@@ -230,6 +235,7 @@ class BDFAttributes:
         self.omit = OMIT(self)  # OMIT, OMIT1
         self.uset = USET(self)  # USET, USET1
 
+        self.seset = SESET(self)
         self.sebset = SEBSET(self)
         self.secset = SECSET(self)
         self.seqset = SEQSET(self)
@@ -237,7 +243,7 @@ class BDFAttributes:
 
         self.set1 = SET1(self)
         #self.set2 = SET2(self)
-        #self.set3 = SET3(self)
+        self.set3 = SET3(self)
 
         self.nxstrats: dict[int, NXSTRAT] = {}
 
@@ -315,7 +321,7 @@ class BDFAttributes:
         # genel
         self.genel = GENEL(self)
 
-        self.baror = None
+        self.baror: Optional[BAROR] = None
         self.cbar = CBAR(self)
         self.cbarao = CBARAO(self)
         self.pbar = PBAR(self)
@@ -380,7 +386,8 @@ class BDFAttributes:
         #self.ctrax6 = CTRAX6(self)
 
         # acoustic shells?
-        #self.caabsf = CAABSF(self)
+        self.caabsf = CAABSF(self)
+        self.paabsf = PAABSF(self)
 
         # solid elements
         self.ctetra = CTETRA(self)
@@ -448,7 +455,6 @@ class BDFAttributes:
         self.tempd = TEMPD(self)  # default temp
         #self.dtemp = DTEMP(self)  # has nodes
         self.lseq = LSEQ(self)    # static load sequence
-        #self.qvect = QVECT(self)
         self.spcd = SPCD(self)   # enforced displacment; load
         self.deform = DEFORM(self) # encforced displacement; load
         self.rforce = RFORCE(self)    # rotational force
@@ -459,6 +465,7 @@ class BDFAttributes:
 
         # other thermal...
         #self.dtemp = DTEMP(self)
+        self.qvect = QVECT(self)
         self.qhbdy = QHBDY(self)
         self.qbdy1 = QBDY1(self)
         self.qbdy2 = QBDY2(self)
@@ -467,6 +474,9 @@ class BDFAttributes:
         self.tempbc = TEMPBC(self)
         self.radbc = RADBC(self)
         self.radm = RADM(self)
+
+        # radiation
+        self.radset = RADSET(self)
 
         # dynamic loads
         self.dload = DLOAD(self)
@@ -482,7 +492,7 @@ class BDFAttributes:
         self.delay = DELAY(self)
 
         # random loads
-        #self.randps = RANDPS(self)
+        self.randps = RANDPS(self)
 
         self.mat1 = MAT1(self)
         self.mat2 = MAT2(self)
@@ -495,7 +505,7 @@ class BDFAttributes:
         self.mat11 = MAT11(self)
         self.mat10c = MAT10C(self)
         self.matort = MATORT(self)
-        #self.mathe = MATHE(self)
+        self.mathe = MATHE(self)
         self.mathp = MATHP(self)
 
         self.mats1 = MATS1(self)
@@ -693,7 +703,7 @@ class BDFAttributes:
             self.cbeam,
             self.cbend,
             self.cshear,
-            #self.caabsf, # acoustic shells
+            self.caabsf, # acoustic shells
             self.genel,
         ] + self.shell_element_cards + self.solid_element_cards + \
         axisymmetric_element_cards + [
@@ -747,20 +757,23 @@ class BDFAttributes:
 
     @property
     def property_cards(self) -> list[Any]:
-        properties = [
+        acoustic_property_cards = [self.paabsf]
+        zero_d_properties = [
             self.pelas, self.pelast,
             self.pdamp, self.pdampt,
             self.pbush, self.pbusht,
             self.pbush1d, # self.pbush2d,
             self.pfast,
             self.pvisc, self.pgap,
-            self.prod, self.ptube,
-            ] + self.bar_property_cards + self.beam_property_cards + [
-            self.pbend, self.pshear,
-        ] + self.shell_property_cards + self.nonlinear_shell_property_cards + \
-            self.solid_property_cards + [
             self.pmass,
         ]
+        line_properties = [
+            self.prod, self.ptube, self.pbend,
+        ] + self.bar_property_cards + self.beam_property_cards
+        shell_properties = [self.pshear] + \
+            self.shell_property_cards + self.nonlinear_shell_property_cards
+        properties = zero_d_properties + line_properties + shell_properties + \
+            self.solid_property_cards + acoustic_property_cards
         return properties
 
     @property
@@ -824,7 +837,8 @@ class BDFAttributes:
             self.sload,
             self.temp, self.tempd,
             #self.dtemp, # has nodes
-            self.qhbdy, self.qbdy1, self.qbdy2, self.qbdy3, self.qvol, # self.qvect,
+            self.qhbdy, self.qbdy1, self.qbdy2, self.qbdy3,
+            self.qvol, self.qvect,
             self.spcd, self.deform,
             self.rforce, self.rforce1,
             #self.ploadx1,
@@ -882,7 +896,8 @@ class BDFAttributes:
         boundary_conditions = [
             #self.conv, self.pconv,
             #self.convm, self.pconvm,
-            #self.tempbc, self.radbc, self.radm,
+            #self.tempbc,
+            self.radbc, self.radm, self.radset,
         ]
         return boundary_conditions
 
@@ -890,7 +905,8 @@ class BDFAttributes:
     def set_cards(self) -> list[Any]:
         """handles ASET/ASET1, ..."""
         sets = [
-            self.set1, # self.set2, self.set3,
+            self.set1, # self.set2,
+            self.set3,
             self.aset, self.bset, self.cset, self.qset,
             self.omit, self.uset,
         ]
@@ -901,6 +917,7 @@ class BDFAttributes:
         """handles SEBSET/SEBSET1, ..."""
         sesets = [
             self.sebset, self.secset, self.seqset, self.release,
+            self.seset,
             #self.seuset,
         ]
         return sesets

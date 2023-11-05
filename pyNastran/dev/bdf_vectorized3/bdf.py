@@ -75,7 +75,7 @@ from .cards.elements.beam import BEAMOR
 
 #from .cards.properties.shell import PTRSHL
 #from .cards.elements.acoustic import (
-    #CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
+    #CHACAB, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
 #from .cards.elements.bush import CBUSH2D
 #from .cards.properties.bush import PBUSH_OPTISTRUCT
 #from .cards.elements.bars import CBEAM3, CBEND
@@ -98,7 +98,7 @@ from pyNastran.bdf.cards.dynamic import (
 #from .cards.loads.dloads import ACSRCE
 #from .cards.loads.static_loads import CLOAD
 
-#from .cards.loads.random_loads import RANDPS, RANDT1
+#from .cards.loads.random_loads import RANDT1
 
 #from .cards.materials import (MAT3D,
                               #MATG, MATHE, MATEV,
@@ -133,16 +133,14 @@ from pyNastran.bdf.cards.optimization import DOPTPRM
     #CSUPER, CSUPEXT,
 #)
 #from .cards.bdf_sets import (
-    #SET2, SET3,
+    #SET2,
     # SEUSET,  SEUSET1
-    #SESET, #SEQSEP
-    #RADSET,
+    #SEQSEP
 #)
 from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPRM
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS, DMIAX
 #from .bdf.cards.elements.thermal import BDYOR
-#from .cards.thermal.loads import (TEMP, TEMPD, TEMPB3,
-                                  #TEMPRB, QVOL, QVECT)
+#from .cards.thermal.loads import (TEMPB3, TEMPRB)
 #from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                     #PHBDY, CONV, CONVM, TEMPBC)
 #from .cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
@@ -559,7 +557,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         # cards that were created, but not processed
         self.reject_cards: list[str] = []
 
-        self.include_filenames = defaultdict(list) # list[str]
+        self.include_filenames = defaultdict(list)
         # self.__init_attributes()
 
         cards_to_read = [
@@ -616,8 +614,10 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CHEXCZ',
 
             # acoustic
-            #'CHACAB', 'CAABSF', 'CHACBR',
-            #'PACABS', 'PAABSF', 'PACBAR', 'ACMODL',
+            #'CHACAB',
+            'CAABSF', # 'CHACBR',
+            #'PACABS',
+            'PAABSF', #'PACBAR', 'ACMODL',
 
             # crack
             #'CRAC2D', 'CRAC3D',
@@ -675,7 +675,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MAT1', 'MAT2', 'MAT3',
             'MAT8', 'MAT9',
             'MAT10', 'MAT11', # 'MAT3D',
-            #'MATG', 'MATHE',
+            #'MATG',
+            #'MATHE',
             'MATHP', 'MATORT', 'MAT10C', # 'MATEV',
 
             ## Material dependence - MATT1/MATT2/etc.
@@ -683,7 +684,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MATT8', 'MATT9',
             'MATS1', #'MATS3',
             'MATS8',
-            # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
 
             ## nxstrats
@@ -711,8 +711,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             ## dload_entries
             #'ACSRCE',
             'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-            #'QVECT',
-            #'RANDPS', 'RANDT1', # random
+            'QVECT',
+            'RANDPS', # 'RANDT1', # random
 
             ## loads
             'LOAD', # 'CLOAD',
@@ -808,7 +808,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'DVTREL1', 'GROUP', 'DMNCON',
 
             # sets
-            'SET1', # 'SET3',  ## sets
+            'SET1', 'SET3',  ## sets
+            #'SET2',
 
             'ASET', 'ASET1',  ## aset
             'OMIT', 'OMIT1',  ## omit
@@ -817,7 +818,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'QSET', 'QSET1',  ## qset
             'USET', 'USET1',  ## uset
 
-            #'RADSET',  # radset
+            'RADSET',  # radset
 
             # superelements
             #'SETREE', 'SENQSET', 'SEBULK', 'SEBNDRY', 'SEELT', 'SELOC', 'SEMPLN',
@@ -825,12 +826,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'SELOAD', 'RELEASE',
 
             # super-element sets
-            #'SESET',  ## se_sets
+            'SESET',  ## se_set
 
-            'SEBSET', 'SEBSET1',  ## se_bsets
-            'SECSET', 'SECSET1',  ## se_csets
-            'SEQSET', 'SEQSET1',  ## se_qsets
-            #'SEUSET', 'SEUSET1',  ## se_usets
+            'SEBSET', 'SEBSET1',  ## se_bset
+            'SECSET', 'SECSET1',  ## se_cset
+            'SEQSET', 'SEQSET1',  ## se_qset
+            #'SEUSET', 'SEUSET1',  ## se_uset
             'RELEASE',
             #'SEQSEP',
 
@@ -2208,7 +2209,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'EQUIV' : (EQUIV, add_methods._add_structural_material_object),
             #'MATG' : (MATG, add_methods._add_structural_material_object),
 
-            #'MATHE' : (MATHE, add_methods._add_hyperelastic_material_object),
             #'MATEV' : (MATEV, add_methods._add_structural_material_object),
             'NXSTRAT' : (NXSTRAT, add_methods._add_nxstrat_object),
 
@@ -2308,11 +2308,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'RADMTX' : (RADMTX, add_methods._add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
             #'RADMT' : (Crash, None),
 
-            # radset
-            #'RADSET' : (RADSET, add_methods._add_radset_object),
-
-            #'SESET' : (SESET, add_methods._add_seset_object),
-
             #'SESUP' : (SESUP, add_methods._add_sesup_object),  # pseudo-constraint
 
             #'SEUSET' : (SEUSET, add_methods._add_seuset_object),
@@ -2343,7 +2338,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # sets
             'SET1': partial(self._prepare_card, self.set1),
-            #'SET3': partial(self._prepare_card, self.set3),
+            #'SET2': partial(self._prepare_card, self.set2),
+            'SET3': partial(self._prepare_card, self.set3),
 
             # spring
             'CELAS1' : partial(self._prepare_card, self.celas1),
@@ -2477,9 +2473,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CTRAX3' : partial(self._prepare_card, self.ctrax3),
             #'CTRAX6' : partial(self._prepare_card, self.ctrax6),
 
-            # acoustic shells?
-            #'CAABSF': partial(self._prepare_card, self.caabsf),
-
             # solids
             'CTETRA' : partial(self._prepare_card, self.ctetra),
             'CPENTA' : partial(self._prepare_card, self.cpenta),
@@ -2491,10 +2484,13 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PCOMPS': partial(self._prepare_card, self.pcomps),
             'PCOMPLS': partial(self._prepare_card, self.pcompls),
 
+            # acoustic shells?
+            'CAABSF': partial(self._prepare_card, self.caabsf),
+            'PAABSF': partial(self._prepare_card, self.paabsf),
+
             #'CHACAB' : partial(self._prepare_card, self.chacab),
             #'CHACBR' : partial(self._prepare_card, self.chacbr),
             #'PACABS': (PACABS, add_methods._add_acoustic_property_object),
-            #'PAABSF': (PAABSF, add_methods._add_acoustic_property_object),
             #'PACBAR': (PACBAR, add_methods._add_acoustic_property_object),
 
             # thermal elements
@@ -2549,6 +2545,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RADBC': partial(self._prepare_card, self.radbc),
             'RADM': partial(self._prepare_card, self.radm),
 
+            # radiation
+            'RADSET' : partial(self._prepare_card, self.radset),
+
             # dynamic loads
             'DLOAD' : partial(self._prepare_card, self.dload),
             'DAREA' : partial(self._prepare_card, self.darea),
@@ -2557,16 +2556,15 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RLOAD1' : partial(self._prepare_card, self.rload1),
             'RLOAD2' : partial(self._prepare_card, self.rload2),
             'TIC' : partial(self._prepare_card, self.tic),
-            #'QVECT': partial(self._prepare_card, self.qvect),
+            'QVECT': partial(self._prepare_card, self.qvect),
             'QHBDY': partial(self._prepare_card, self.qhbdy),
 
             # offset
             'DPHASE': partial(self._prepare_card, self.dphase),
             'DELAY': partial(self._prepare_card, self.delay),
 
-
             # random laods
-            #'RANDPS': partial(self._prepare_card, self.randps),
+            'RANDPS': partial(self._prepare_card, self.randps),
             #'ACSRCE' : (ACSRCE, add_methods._add_dload_entry),
             #'RANDT1' : (RANDT1, add_methods._add_dload_entry), # random
 
@@ -2594,7 +2592,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MATT8' : partial(self._prepare_card, self.matt8),
             'MATT9' : partial(self._prepare_card, self.matt9),
 
-            #'MATHE' : partial(self._prepare_card, self.mathe),  # not supported
+            #'MATHE' : partial(self._prepare_card, self.mathe),  # MOONEY only; no OGDEN, ABOYCE, ...
             'MATHP' : partial(self._prepare_card, self.mathp),
 
             # thermal materials
@@ -2666,6 +2664,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'USET': partial(self._prepare_card_by_method, self.uset.add_set_card),
             'USET1': partial(self._prepare_card_by_method, self.uset.add_set1_card),
 
+            'SESET': partial(self._prepare_card_by_method, self.seset.add_card),
             'SEBSET': partial(self._prepare_card_by_method, self.sebset.add_set_card),
             'SECSET': partial(self._prepare_card_by_method, self.secset.add_set_card),
             'SEQSET': partial(self._prepare_card_by_method, self.seqset.add_set_card),
@@ -4768,23 +4767,18 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'add_BCTPARA', 'add_CAERO',
             #'add_DIVERG',
             # 'add_CSSCHD', 'add_DDVAL',
-            #''add_DEQATN', 'add_DMI',
-            #'add_DTABLE',
-            #'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
+            #'add_DEQATN', 'add_DTABLE',
+            #'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
             #'add_GUST', 'add_MKAERO', 'add_NLPARM', 'add_NLPCI',
             #'add_PAERO', 'add_PARAM', 'add_PHBDY',
-            #'add_SESET', 'add_SET',
-            #'add_SEUSET', 'add_SPLINE', 'add_TF', 'add_TRIM',
+            #'add_SET', 'add_SEUSET', 'add_SPLINE', 'add_TF', 'add_TRIM',
             #'add_TSTEP', 'add_TSTEPNL',
 
             #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
             #'add_convection_property', x'add_creep_material',
-            #'add_dload', '_add_dload_entry', 'add_element', 'add_hyperelastic_material',
-            #'add_load', 'add_mass', 'add_material_dependence', 'add_method',
-            #'add_property', 'add_random_table',
-            #'add_rigid_element', 'add_structural_material',
+            #'add_material_dependence', 'add_method',
+            #'add_random_table',
             #'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element',
-            #'add_thermal_load', 'add_thermal_material',
 
             #'set_as_msc',
             #'set_as_nx',

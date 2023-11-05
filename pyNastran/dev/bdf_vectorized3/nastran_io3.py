@@ -49,6 +49,7 @@ class Nastran3:
         self.gui = gui
         self.data_map = None
         self.model = BDF(debug=True, log=None, mode='msc')
+        #self.model.is_lax_parser = True
 
         # the set of element types that are supported
         self.gui_elements: set[str] = set([])
@@ -198,6 +199,7 @@ class Nastran3:
                           name: str='main', plot: bool=True):
         """loads a geometry only an h5 file"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.is_lax_parser = True
         model.idtype = 'int64'
         model.read_bdf(bdf_filename)
         ugrid, form, cases, unused_icase = self._load_geometry_from_model(

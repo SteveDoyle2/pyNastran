@@ -3828,9 +3828,10 @@ def oef_csolid_imag_16(self, data: bytes,
     return n
 
 def shock_response_prefix(thermal: int) -> str:
-    #if thermal == 0:
-        #prefix = 'abs.'
-    if thermal == 2:
+    prefix = ''
+    if thermal == 0:
+        pass
+    elif thermal == 2:
         prefix = 'abs.'  # Scaled response spectra ABS
     elif thermal == 4:
         #D:\NASA\git\examples\move_tpl\ms103.op2

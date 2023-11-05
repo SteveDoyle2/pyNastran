@@ -8,7 +8,7 @@ from cpylog import get_logger
 
 import pyNastran
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, read_bdf
-#from pyNastran.op2.op2 import OP2, read_op2
+from pyNastran.dev.op2_vectorized3.op2_geom import OP2 # , read_op2
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 
@@ -20,7 +20,7 @@ class TestOpt(unittest.TestCase):
     The cards tested are:
      * DEQATN
     """
-    def _test_opt_1(self):
+    def test_opt_1(self):
         """tests SOL 200"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'sol200', 'model_200.bdf')
@@ -40,7 +40,7 @@ class TestOpt(unittest.TestCase):
                 #dresp.calculate(op2, subcase_id)
         os.remove('temp.debug')
 
-    def _test_opt_2(self):
+    def test_opt_2(self):
         """tests updating model based on DESVARs"""
         model = BDF(debug=False)
         model.add_grid(1, [0., 0., 0.])
@@ -149,13 +149,16 @@ class TestOpt(unittest.TestCase):
 
         model.validate()
         model.cross_reference()
-        model.update_model_by_desvars()
+        RUN_OPT = False
+        if RUN_OPT:
+            model.update_model_by_desvars()
 
-        assert model.properties[pid_pshell].t == tnew, 't=%s tnew=%s' % (model.properties[pid_pshell].t, tnew)
-        assert model.materials[mid].e == enew, 'E=%s enew=%s' % (model.materials[mid].e, enew)
-        assert model.Mass(eid_conm2).mass == mass_new, 'mass=%s mass_new=%s' % (model.Mass(eid_conm2).mass, mass_new)
-        assert model.Mass(eid_conm2).X[0] == x1_new, 'X1=%s x1_new=%s' % (model.Mass(eid_conm2).mass, x1_new)
-        assert model.properties[pid_pcomp].thicknesses[0] == tpcomp_new, 't=%s tnew=%s' % (model.properties[pid_pcomp].thicknesses[0], tpcomp_new)
+            assert model.properties[pid_pshell].t == tnew, 't=%s tnew=%s' % (model.properties[pid_pshell].t, tnew)
+            assert model.materials[mid].e == enew, 'E=%s enew=%s' % (model.materials[mid].e, enew)
+            assert model.Mass(eid_conm2).mass == mass_new, 'mass=%s mass_new=%s' % (model.Mass(eid_conm2).mass, mass_new)
+            assert model.Mass(eid_conm2).X[0] == x1_new, 'X1=%s x1_new=%s' % (model.Mass(eid_conm2).mass, x1_new)
+            assert model.properties[pid_pcomp].thicknesses[0] == tpcomp_new, 't=%s tnew=%s' % (model.properties[pid_pcomp].thicknesses[0], tpcomp_new)
+        save_load_deck(model)
 
     def _test_ddval(self):
         """tests a DDVAL"""

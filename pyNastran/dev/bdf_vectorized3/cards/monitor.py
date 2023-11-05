@@ -110,12 +110,9 @@ class MONPNT1(VectorizedBaseCard):
         self.cards.append((name, label, axes, comp, cp, xyz, cd, comment))
         self.n += 1
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self):
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         name = np.zeros(ncards, dtype='|U8')
         label = np.zeros(ncards, dtype='|U72')
         comp = np.zeros(ncards, dtype='|U8')

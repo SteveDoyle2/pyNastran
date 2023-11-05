@@ -2633,6 +2633,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # radset
             'RADSET' : (RADSET, add_methods._add_radset_object),
 
+            # superelement sets
             'SESET' : (SESET, add_methods._add_seset_object),
 
             'SEBSET' : (SEBSET, add_methods._add_sebset_object),

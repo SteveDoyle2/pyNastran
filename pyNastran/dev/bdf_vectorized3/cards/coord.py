@@ -38,8 +38,7 @@ class COORD(VectorizedBaseCard):
         transform_global_xyz_to_local_coord_id
     """
     _id_name = 'coord_id'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.cards1: list = []
         self.cards2: list = []
         self.coord_type = np.array(['R'], dtype='|U1')
@@ -495,11 +494,12 @@ class COORD(VectorizedBaseCard):
         dn = self.n - ncoords
         i0 = len(self.icoord)
         if dn:
+            idtype = self.model.idtype
             self.coord_type = np.hstack([self.coord_type, np.zeros(ncoords, dtype='|U1')])
             self.icoord = np.hstack([self.icoord, np.zeros(ncoords, dtype='int8')])
 
             #self.coord_id1 = np.hstack([self.coord_id, np.zeros(ncoords1, dtype='int32')])
-            self.nodes = np.vstack([self.nodes, np.full((ncoords, 3), -1, dtype='int32')])
+            self.nodes = np.vstack([self.nodes, np.full((ncoords, 3), -1, dtype=idtype)])
 
             self.coord_id = np.hstack([self.coord_id, np.full(ncoords, -1, dtype='int32')])
             self.ref_coord_id = np.hstack([self.ref_coord_id, np.full(ncoords, -1, dtype='int32')])
@@ -527,7 +527,7 @@ class COORD(VectorizedBaseCard):
             self.coord_type = np.zeros(ncoords, dtype='|U1')
             self.icoord = np.zeros(ncoords, dtype='int8')
 
-            self.nodes = np.full((ncoords, 3), -1, dtype='int32')
+            self.nodes = np.full((ncoords, 3), -1, dtype=idtype)
             self.coord_id = np.full(ncoords, -1, dtype='int32')
             self.ref_coord_id = np.full(ncoords, -1, dtype='int32')
 

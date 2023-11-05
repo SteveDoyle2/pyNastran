@@ -44,6 +44,9 @@ SORT2_TABLES_BYTES = [
     b'OSTR2', b'OSTR2C', b'OSTRVM2',
     b'OEF2', b'OEFNO2',
 
+    # shock
+    b'DOES1',
+
     # random
     b'OEFATO2', b'OEFCRM2', b'OEFPSD2',
     b'OESATO2', b'OESCRM2', b'OESPSD2C', b'OESPSD2',

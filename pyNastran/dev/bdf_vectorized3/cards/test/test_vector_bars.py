@@ -709,8 +709,8 @@ class TestBars(unittest.TestCase):
 
         cbend.validate()
         cbend.raw_fields()
-        cbend.write_card()
-        cbend.write_card(size=16)
+        cbend.write()
+        cbend.write(size=16)
 
         model.validate()
         model._verify_bdf(xref=False)

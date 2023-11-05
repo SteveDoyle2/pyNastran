@@ -229,7 +229,7 @@ class Writer:
                             #is_long_ids=is_long_ids)
         #self._write_gust(bdf_file, size, is_double, write_aero_in_gust, is_long_ids=is_long_ids)
 
-        #self._write_thermal(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_thermal(bdf_file, size, is_double, is_long_ids=is_long_ids)
         #self._write_thermal_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_constraints(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_optimization(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -330,7 +330,7 @@ class Writer:
         model = self.model
         if model.spoint.n:
             bdf_file.write('$SPOINTS\n')
-            model.spoint.write_file(bdf_file, size=size, is_double=is_double)
+            model.spoint.write_file(bdf_file, size=size)
         if model.epoint.n:
             bdf_file.write('$EPOINTS\n')
             model.epoint.write_file(bdf_file, size=size)
@@ -457,6 +457,10 @@ class Writer:
         model.cpyram.write_file(bdf_file, size=size, is_double=is_double)
 
         model.chexcz.write_file(bdf_file, size=size, is_double=is_double)
+
+        # acoustic shells
+        model.caabsf.write_file(bdf_file, size=size, is_double=is_double)
+        model.paabsf.write_file(bdf_file, size=size, is_double=is_double)
 
         # acoustic solids
         #bdf_file.write(model.chacab.write(size=size))
@@ -658,7 +662,7 @@ class Writer:
             model.mat11.write_file(bdf_file, size=size, is_double=is_double)
             model.mat10c.write_file(bdf_file, size=size, is_double=is_double)
             model.matort.write_file(bdf_file, size=size, is_double=is_double)
-            #model.mathe.write_file(bdf_file, size=size, is_double=is_double)
+            model.mathe.write_file(bdf_file, size=size, is_double=is_double)
             model.mathp.write_file(bdf_file, size=size, is_double=is_double)
 
         if is_thermal_materials:
@@ -717,8 +721,9 @@ class Writer:
 
         model.set1.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         #bdf_file.write(model.set2.write(size=size))  #  faked
-        #bdf_file.write(model.set3.write(size=size))
+        model.set3.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
 
+        model.seset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.sebset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.secset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
         model.seqset.write_file(bdf_file, size=size, is_double=is_double, write_card_header=False)
@@ -738,15 +743,17 @@ class Writer:
 
         """
         pass
+
     def _write_tables(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the TABLEx cards sorted by ID"""
         pass
+
     def _write_thermal(self, bdf_file: TextIOLike, size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the thermal cards"""
         model = self.model
-        is_thermal = any([card.n > 0 for card in model.thermal_elements])
+        is_thermal = any([card.n > 0 for card in model.thermal_element_cards])
         if is_thermal:
             bdf_file.write('$THERMAL_ELEMENTS\n')
             bdf_file.write(model.chbdye.write(size=size))
@@ -754,17 +761,17 @@ class Writer:
             bdf_file.write(model.chbdyg.write(size=size))
             bdf_file.write(model.phbdy.write(size=size))
 
-        is_thermal = any([card.n > 0 for card in model.thermal_boundary_conditions])
-        if is_thermal:
+        is_thermal = any([card.n > 0 for card in model.thermal_boundary_condition_cards])
+        if is_thermal and 0:
             bdf_file.write(model.conv.write(size=size))
             bdf_file.write(model.pconv.write(size=size))
             bdf_file.write(model.convm.write(size=size))
             bdf_file.write(model.pconvm.write(size=size))
 
-            bdf_file.write(model.tempbc.write(size=size))
-            bdf_file.write(model.radbc.write(size=size))
-            bdf_file.write(model.radm.write(size=size))
-
+        bdf_file.write(model.tempbc.write(size=size))
+        bdf_file.write(model.radbc.write(size=size))
+        bdf_file.write(model.radm.write(size=size))
+        bdf_file.write(model.radset.write(size=size))
 
     def _write_thermal_materials(self, bdf_file: TextIOLike,
                                  size: int=8, is_double: bool=False,
@@ -930,7 +937,7 @@ class Writer:
             model.qbdy2.write_file(bdf_file, size=size, is_double=is_double)
             model.qbdy3.write_file(bdf_file, size=size, is_double=is_double)
             model.qvol.write_file(bdf_file, size=size, is_double=is_double)
-            #bdf_file.write(model.qvect.write(size=size))
+            model.qvect.write_file(bdf_file, size=size, is_double=is_double)
 
             # static load sequence
             model.lseq.write_file(bdf_file, size=size, is_double=is_double)
@@ -953,7 +960,7 @@ class Writer:
             model.rload2.write_file(bdf_file, size=size, is_double=is_double)
 
             # random loads
-            #bdf_file.write(model.randps.write(size=size))
+            model.randps.write_file(bdf_file, size=size, is_double=is_double)
 
             #for (key, load_combinations) in sorted(self.load_combinations.items()):
                 #for load_combination in load_combinations:

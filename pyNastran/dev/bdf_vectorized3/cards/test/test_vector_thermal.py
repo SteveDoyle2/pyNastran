@@ -18,9 +18,8 @@ class TestThermal(unittest.TestCase):
         radm = model.radm
         radbc = model.radbc
         qvol = model.qvol
-        #qvect = model.qvect
+        qvect = model.qvect
         qhbdy = model.qhbdy
-        qvol = model.qvol
         qbdy1 = model.qbdy1
         qbdy2 = model.qbdy2
         qbdy3 = model.qbdy3
@@ -142,20 +141,19 @@ class TestThermal(unittest.TestCase):
         #radbc.raw_fields()
 
         sid = 43
-        qvol = 17.
+        qvol_val = 17.
         control_point = 1001
         elements = [1, 2]
-        qvoli = model.add_qvol(sid, qvol, control_point, elements, comment='qvol')
+        qvoli = model.add_qvol(sid, qvol_val, control_point, elements, comment='qvol')
         #qvol.raw_fields()
 
-        if RUN_THRMAL:
-            q0 = 18.
-            t_source = 19.
-            eids = [2]
-            qvecti = model.add_qvect(sid, q0, eids, t_source, ce=0,
-                                    vector_tableds=None, control_id=0,
-                                    comment='qvect')
-            qvecti.raw_fields()
+        q0 = 18.
+        t_source = 19.
+        eids = [2]
+        qvecti = model.add_qvect(sid, q0, eids, t_source, ce=0,
+                                 vector_tableds=None, control_id=0,
+                                 comment='qvect')
+        #qvecti.raw_fields()
 
         q0 = 15.8
         flag = 'POINT'
@@ -179,19 +177,27 @@ class TestThermal(unittest.TestCase):
         qbdy3i = model.add_qbdy3(sid, q0, cntrlnd, eids, comment='qbdy3')
         #qbdy3i.raw_fields()
 
-        if RUN_THRMAL:
-            temperature = 13.3
-            model.add_tempd(sid, temperature, comment='tempd')
+        temperature = 13.3
+        model.add_tempd(sid, temperature, comment='tempd')
 
-            fields = ['TEMPD', 101, 1., 102, 2., 103, 3., 104, 4.]
-            model.add_card(fields, 'TEMPD')
+        fields = ['TEMPD', 101, 1., 102, 2., 103, 3., 104, 4.]
+        model.add_card(fields, 'TEMPD')
 
-            temperatures = {
-                15 : 37.,
-                16 : 38.,
-            }
-            model.add_temp(sid, temperatures)
+        temperatures = {
+            15 : 37.,
+            16 : 38.,
+        }
+        model.add_temp(sid, temperatures)
         model.setup()
+
+        radm.write()
+        radbc.write()
+        qvol.write()
+        qvect.write()
+        qhbdy.write()
+        qbdy1.write()
+        qbdy2.write()
+        qbdy3.write()
         #-------------------------
         bdf_filename = StringIO()
         bdf_filename2 = StringIO()
@@ -231,7 +237,7 @@ class TestThermal(unittest.TestCase):
         model2.setup()
         save_load_deck(model, punch=False, run_renumber=False, run_test_bdf=False)
 
-    def _test_thermal_2(self):
+    def test_thermal_2(self):
         """tests TABLEHT, TABLEH1"""
         model = BDF(debug=False, log=None, mode='msc')
         model.sol = 159
@@ -245,76 +251,77 @@ class TestThermal(unittest.TestCase):
         NO = 40
         model.add_tstep(sid, N, DT, NO)
 
-        tid = 101
-        x = [1., 2., 3.]
-        y = [10., 20., 30.]
-        model.add_tableh1(tid, x, y, comment='tableh1')
+        if RUN_THRMAL:
+            tid = 101
+            x = [1., 2., 3.]
+            y = [10., 20., 30.]
+            model.add_tableh1(tid, x, y, comment='tableh1')
 
-        tid = 101
-        model.add_tableh1(tid, x, y, comment='tableh1')
+            tid = 101
+            model.add_tableh1(tid, x, y, comment='tableh1')
 
-        tid = 110
-        tableh1 = model.add_tableh1(tid, x, y, comment='tableh1')
-        tableh1.raw_fields()
+            tid = 110
+            tableh1 = model.add_tableh1(tid, x, y, comment='tableh1')
+            tableh1.raw_fields()
 
-        tid_tableht = 85
-        x = [10., 25., 40.]
-        y = [101, 102, 110]
+            tid_tableht = 85
+            x = [10., 25., 40.]
+            y = [101, 102, 110]
 
-        #This table is referenced only by PCONV entries that define
-        #free convection boundary condition properties.
-        tableht = model.add_tableht(tid_tableht, x, y, comment='tableht')
-        tableht.raw_fields()
+            #This table is referenced only by PCONV entries that define
+            #free convection boundary condition properties.
+            tableht = model.add_tableht(tid_tableht, x, y, comment='tableht')
+            tableht.raw_fields()
 
-        pconv_id = 100
-        mid = None
-        pconv = model.add_pconv(pconv_id, mid, form=0, expf=0.0, ftype=0,
-                                tid=tid_tableht, chlen=None, gidin=None,
-                                ce=0, e1=None, e2=None, e3=None, comment='pconv')
-        pconv.raw_fields()
+            pconv_id = 100
+            mid = None
+            pconv = model.add_pconv(pconv_id, mid, form=0, expf=0.0, ftype=0,
+                                    tid=tid_tableht, chlen=None, gidin=None,
+                                    ce=0, e1=None, e2=None, e3=None, comment='pconv')
+            pconv.raw_fields()
 
-        # Every surface to which free convection is to be applied must
-        # reference a PCONV entry. PCONV is referenced on the CONV Bulk Data entry.
-        eid = 1
-        ta = 1
-        conv = model.add_conv(eid, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
-        conv.raw_fields()
+            # Every surface to which free convection is to be applied must
+            # reference a PCONV entry. PCONV is referenced on the CONV Bulk Data entry.
+            eid = 1
+            ta = 1
+            conv = model.add_conv(eid, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+            conv.raw_fields()
 
-        conv = model.add_conv(2, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
-        conv = model.add_conv(3, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+            conv = model.add_conv(2, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+            conv = model.add_conv(3, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
 
-        # CHBDYG, CHBDYE, or CHBDYP surface element identification number.
-        eid_fem = 1
-        eid_conv = 1
-        side = 3 # TODO: 1-6
-        chbdye = model.add_chbdye(eid_fem, eid_conv, side, iview_front=0, iview_back=0,
-                                  rad_mid_front=0, rad_mid_back=0, comment='chbdye')
+            # CHBDYG, CHBDYE, or CHBDYP surface element identification number.
+            eid_fem = 1
+            eid_conv = 1
+            side = 3 # TODO: 1-6
+            chbdye = model.add_chbdye(eid_fem, eid_conv, side, iview_front=0, iview_back=0,
+                                      rad_mid_front=0, rad_mid_back=0, comment='chbdye')
 
-        eid_fem = 2
-        nodes = [1, 2, 3]
-        surface_type = 'AREA3'
-        chbdyg = model.add_chbdyg(eid_fem, surface_type, nodes,
-                                  iview_front=0, iview_back=0,
-                                  rad_mid_front=0, rad_mid_back=0, comment='chbdyg')
+            eid_fem = 2
+            nodes = [1, 2, 3]
+            surface_type = 'AREA3'
+            chbdyg = model.add_chbdyg(eid_fem, surface_type, nodes,
+                                      iview_front=0, iview_back=0,
+                                      rad_mid_front=0, rad_mid_back=0, comment='chbdyg')
 
-        eid_fem = 3
-        pid_phybdy = 10
-        g1 = 1
-        g2 = None
-        surface_type = 'POINT'
-        chbdyp = model.add_chbdyp(eid_fem, pid_phybdy, surface_type, g1, g2,
-                                  g0=0, gmid=None, ce=0,
-                                  iview_front=0, iview_back=0,
-                                  rad_mid_front=0, rad_mid_back=0,
-                                  e1=None, e2=None, e3=None, comment='chbdyp')
-        phbdy = model.add_phbdy(pid_phybdy, af=None, d1=None, d2=None, comment='phbdy')
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
-        model.add_grid(3, [0., 1., 0.])
+            eid_fem = 3
+            pid_phybdy = 10
+            g1 = 1
+            g2 = None
+            surface_type = 'POINT'
+            chbdyp = model.add_chbdyp(eid_fem, pid_phybdy, surface_type, g1, g2,
+                                      g0=0, gmid=None, ce=0,
+                                      iview_front=0, iview_back=0,
+                                      rad_mid_front=0, rad_mid_back=0,
+                                      e1=None, e2=None, e3=None, comment='chbdyp')
+            phbdy = model.add_phbdy(pid_phybdy, af=None, d1=None, d2=None, comment='phbdy')
+            model.add_grid(1, [0., 0., 0.])
+            model.add_grid(2, [1., 0., 0.])
+            model.add_grid(3, [0., 1., 0.])
 
-        chbdye.raw_fields()
-        chbdyg.raw_fields()
-        chbdyp.raw_fields()
+            chbdye.raw_fields()
+            chbdyg.raw_fields()
+            chbdyp.raw_fields()
 
         model.validate()
         save_load_deck(model)

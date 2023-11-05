@@ -95,6 +95,13 @@ class CELAS1(Element):
         self.components = components
         self.n = nelements
 
+    def __apply_slice__(self, elem: CELAS1, i: np.ndarray) -> None:  # ignore[override]
+        elem.element_id = self.element_id[i]
+        elem.property_id = self.property_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.components = self.components[i, :]
+        elem.n = len(i)
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         nodes = self.nodes.ravel()
         nodes = nodes[nodes > 0]
@@ -226,6 +233,15 @@ class CELAS2(Element):
         self.ge = ge
         self.s = s
         self.n = nelements
+
+    def __apply_slice__(self, elem: CELAS2, i: np.ndarray) -> None:  # ignore[override]
+        elem.element_id = self.element_id[i]
+        elem.nodes = self.nodes[i, :]
+        elem.components = self.components[i, :]
+        elem.k = self.k[i]
+        elem.ge = self.ge[i]
+        elem.s = self.s[i]
+        elem.n = len(i)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         nodes = self.nodes.ravel()

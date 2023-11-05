@@ -7,10 +7,10 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.field_writer_8 import print_int_card_blocks
-from pyNastran.bdf.cards.bdf_sets import (
-    SET2, SET3,
-    SEBSET, SEBSET1, SECSET, SECSET1, SEQSET, SEQSET1, #SEUSET, SEUSET1,
-)
+#from pyNastran.bdf.cards.bdf_sets import (
+    #SET2, SET3,
+    #SEBSET, SEBSET1, SECSET, SECSET1, SEQSET, SEQSET1, #SEUSET, SEUSET1,
+#)
 
 
 class TestSets(unittest.TestCase):
@@ -72,7 +72,7 @@ class TestSets(unittest.TestCase):
         set1.write(size, 'dummy')
         #card.raw_fields()
 
-        card2 = model.add_set1(1100, [100, 101], is_skin=False, comment='')
+        unused_card2 = model.add_set1(1100, [100, 101], is_skin=False, comment='')
         model.setup()
         set1.write(size, 'dummy')
         save_load_deck(model)
@@ -112,8 +112,8 @@ class TestSets(unittest.TestCase):
         set1 = model.set1
         sid = 10
         ids = [1, 2, 3, 4, 5]
-        set1a = model.add_set1(sid, ids, is_skin=False, comment='set1')
-        set1b = set1.add_card(BDFCard(['SET1', sid] + ids))
+        unused_set1a = model.add_set1(sid, ids, is_skin=False, comment='set1')
+        unused_set1b = set1.add_card(BDFCard(['SET1', sid] + ids))
         model.setup()
         #set1a.write_card()
         #set1b.write_card()
@@ -153,24 +153,28 @@ class TestSets(unittest.TestCase):
         self.assertEqual(spline2.setg_ref, set2)
         self.assertEqual(set2.macro_ref, caero)
 
-    def _test_set3_01(self):
+    def test_set3_01(self):
         """checks the SET3 card"""
         model = BDF(debug=False)
+        set3 = model.set3
         sid = 10
         ids = [1, 2, 3, 4, 5]
         desc = 'ELEM'
-        set3a = SET3(sid, desc, ids, comment='set3')
-        model.sets[sid] = set3a
-        model.add_card(BDFCard(['SET3', sid+1, desc] + ids), 'SET3', comment='set3')
-        set3b = model.sets[sid]
-        set3a.write_card()
-        set3a.validate()
-        set3b.validate()
+        unused_set3a = model.add_set3(sid, desc, ids, comment='set3')
+        #model.set3[sid] = set3a
+        set3.add_card(BDFCard(['SET3', sid+1, desc] + ids), comment='set3')
+        model.setup(run_geom_check=True)
+        unused_set3b = set3.slice_card_by_id(sid+1)
+        set3.write(size=8)
+        set3.write(size=16)
+        #set3a.validate()
+        #set3b.validate()
         save_load_deck(model)
 
-    def _test_set3_02(self):
+    def test_set3_02(self):
         """checks the SET3 card"""
         model = BDF()
+        set3 = model.set3
 
         # list of grid IDs
         grid_list = [1, 2, 3, 4, 5, 6, 7, 13, 15,
@@ -181,34 +185,118 @@ class TestSets(unittest.TestCase):
 
         # Add nastran card to BDF object
         model.add_card(card_lines, 'SET3', comment='set3-1', is_list=True)
-        fields = model.sets[1].raw_fields()
+        model.setup(run_geom_check=True)
+        set3b = model.set3.slice_card_by_id(1)
+        fields = set3b.write().split()
+        # .raw_fields()
         thru_count = Counter(fields)['THRU']
         assert thru_count in [0, 1], fields
-        str(model.sets[1])
+        #str(model.sets[1])
+        set3.write(size=8)
+        set3.write(size=16)
 
-        set3a = SET3(2, 'GRID', grid_list, comment='set3-2')
-        fields = model.sets[1].raw_fields()
+        set3a = model.add_set3(2, 'GRID', grid_list, comment='set3-2')
+        model.setup(run_geom_check=True)
+        fields = model.set3.slice_card_by_id(1).write().split()
+        # .raw_fields()
         thru_count = Counter(fields)['THRU']
         assert thru_count in [0, 1], fields
         str(set3a)
 
+    def test_set3_03(self):
+        model = BDF()
+        card_lines = [
+            'SET3, 2, ELEM, 20, THRU, 33, 36, THRU, 44',
+            '49, THRU, 62, 91, THRU, 110',
+        ]
+        model.add_card(card_lines, 'SET3', is_list=False)
+        model.setup()
+        print(model.set3.write())
+        save_load_deck(model)
+
+    def test_radset_02(self):
+        """checks the RADSET card"""
+        model = BDF()
+        radset = model.radset
+
+        # list of grid IDs
+        cavity_ids = [1, 2, 3, 4, 5, 6, 7, 13, 15,
+                     20, 21, 22, 23, 30, 31, 32, 33]
+
+        # Define the card lines
+        card_lines = ['RADSET'] + cavity_ids
+
+        # Add nastran card to BDF object
+        model.add_card(card_lines, 'RADSET', comment='radset-1', is_list=True)
+        model.setup(run_geom_check=True)
+        unused_radsetb = radset.slice_card_by_id(1)
+        fields = radset.write().split()
+        # .raw_fields()
+        thru_count = Counter(fields)['THRU']
+        assert thru_count in [0, 1], fields
+        #str(model.sets[1])
+        radset.write(size=8)
+        radset.write(size=16)
+
+        unused_radseta = model.add_radset(cavity_ids, comment='radset-2')
+        model.setup(run_geom_check=True)
+        fields = radset.slice_card_by_id(1).write().split()
+        # .raw_fields()
+        #thru_count = Counter(fields)['THRU']
+        #assert thru_count in [0, 1], fields
+        str(radset)
+
+    def test_radset_02(self):
+        """checks the RADSET card"""
+        model = BDF()
+        seset = model.seset
+
+        # list of grid IDs
+        node_ids = [1, 2, 3, 4, 5, 6, 7, 13, 15,
+                    20, 21, 22, 23, 30, 31, 32, 33]
+
+        # Define the card lines
+        card_lines = ['SESET', 1] + node_ids
+
+        # Add nastran card to BDF object
+        model.add_card(card_lines, 'SESET', comment='seset-1', is_list=True)
+        model.setup(run_geom_check=True)
+        unused_sesetb = seset.slice_card_by_id(1)
+        fields = seset.write().split()
+        # .raw_fields()
+        thru_count = Counter(fields)['THRU']
+        #assert thru_count in [0, 1], fields
+        assert thru_count == 3, seset.write()
+        #str(model.sets[1])
+        seset.write(size=8)
+        seset.write(size=16)
+
+        seid = 2
+        unused_seseta = model.add_seset(seid, node_ids, comment='seset')
+        model.setup(run_geom_check=True)
+        fields = seset.slice_card_by_id(1).write().split()
+        # .raw_fields()
+        #thru_count = Counter(fields)['THRU']
+        #assert thru_count in [0, 1], fields
+        str(seset)
+
     def test_aset(self):
         """checks the ASET/ASET1 cards"""
         model = BDF(debug=False)
-        add_methods = model._add_methods
+        #add_methods = model._add_methods
         aset = model.aset
-        aset1a = aset.add_set1([1, 'THRU', 10], 4, comment='aset')
+        unused_aset1a = aset.add_set1([1, 'THRU', 10], 4, comment='aset')
         card = BDFCard(['ASET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
-        aset1b = aset.add_set1_card(card, comment='aset1')
+        unused_aset1b = aset.add_set1_card(card, comment='aset1')
         aset.write()
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
-        aseta = aset.add_set([1, 2, 3, 4, 5],
-                             [5, 4, 3, 2, 1])
+        unused_aseta = aset.add_set([1, 2, 3, 4, 5],
+                                    [5, 4, 3, 2, 1])
         card = BDFCard(['ASET',
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        asetb = aset.add_set_card(card)
+        unused_asetb = aset.add_set_card(card)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -221,13 +309,13 @@ class TestSets(unittest.TestCase):
     def test_omit(self):
         """checks the OMIT/OMIT1 cards"""
         model = BDF(debug=False)
-        add_methods = model._add_methods
+        #add_methods = model._add_methods
         omit = model.omit
-        omit1a = omit.add_set1([1, 'THRU', 10], 4, comment='omit1')
+        unused_omit1a = omit.add_set1([1, 'THRU', 10], 4, comment='omit1')
         model.setup()
         assert np.array_equal(omit.component, np.ones(10)*4)
         card = BDFCard(['OMIT1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
-        omit1b = omit.add_set1_card(card, comment='omit1')
+        unused_omit1b = omit.add_set1_card(card, comment='omit1')
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -250,20 +338,20 @@ class TestSets(unittest.TestCase):
     def test_bset(self):
         """checks the BSET/BSET1 cards"""
         model = BDF(debug=False)
-        add_methods = model._add_methods
+        #add_methods = model._add_methods
         bset = model.bset
-        bset1a = bset.add_set1([1, 'THRU', 10], 4, comment='bset1')
+        unused_bset1a = bset.add_set1([1, 'THRU', 10], 4, comment='bset1')
         card = BDFCard(['BSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
-        bset1b = bset.add_set1_card(card, comment='bset1')
+        unused_bset1b = bset.add_set1_card(card, comment='bset1')
         bset.write()
         #| BSET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
-        bseta = bset.add_set([1, 2, 3, 4, 5],
-                             [5, 4, 3, 2, 1], comment='bset')
+        unused_bseta = bset.add_set([1, 2, 3, 4, 5],
+                                    [5, 4, 3, 2, 1], comment='bset')
         card = BDFCard(['BSET',
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        bsetb = bset.add_set_card(card, comment='bset')
+        unused_bsetb = bset.add_set_card(card, comment='bset')
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -276,21 +364,21 @@ class TestSets(unittest.TestCase):
     def test_cset(self):
         """checks the CSET/CSET1 cards"""
         model = BDF(debug=False)
-        add_methods = model._add_methods
+        #add_methods = model._add_methods
         cset = model.cset
-        cset1a = cset.add_set1([1, 'THRU', 10], 4, comment='cset')
+        unused_cset1a = cset.add_set1([1, 'THRU', 10], 4, comment='cset')
         card = BDFCard(['CSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
 
-        cset1b = cset.add_set1_card(card, comment='cset1')
+        unused_cset1b = cset.add_set1_card(card, comment='cset1')
         cset.write()
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
-        cseta = cset.add_set([1, 2, 3, 4, 5],
+        unused_cseta = cset.add_set([1, 2, 3, 4, 5],
                              [5, 4, 3, 2, 1], comment='cset')
         card = BDFCard(['CSET',
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        csetb = cset.add_set_card(card, comment='cset')
+        unused_csetb = cset.add_set_card(card, comment='cset')
         model.add_cset([1, 2, 3], '42', comment='cset')
         model.add_cset1([1, 2, 3], [1, 2, 3], comment='cset1')
 
@@ -305,25 +393,50 @@ class TestSets(unittest.TestCase):
     def test_qset(self):
         """checks the QSET/QSET1 cards"""
         model = BDF(debug=False)
-        add_methods = model._add_methods
+        #add_methods = model._add_methods
         qset = model.qset
-        qset1a = qset.add_set1([1, 'THRU', 10], 4, comment='qset')
+        unused_qset1a = qset.add_set1([1, 'THRU', 10], 4, comment='qset')
         card = BDFCard(['QSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
 
-        qset1b = qset.add_set1_card(card, comment='qset1')
+        unused_qset1b = qset.add_set1_card(card, comment='qset1')
         qset.write()
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
-        qseta = qset.add_set([1, 2, 3, 4, 5],
-                             [5, 4, 3, 2, 1], comment='qset')
+        unused_qseta = qset.add_set([1, 2, 3, 4, 5],
+                                    [5, 4, 3, 2, 1], comment='qset')
         card = BDFCard(['QSET',
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        qsetb = qset.add_set_card(card, comment='qset')
+        unused_qsetb = qset.add_set_card(card, comment='qset')
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
             model.add_grid(nid, [float(nid), 0., 0.])
+        qset.validate()
+        qset.write()
+        qset.set_map
+        save_load_deck(model)
+
+    def test_qset_add_card(self):
+        """checks the QSET/QSET1 cards"""
+        model = BDF(debug=False)
+        #add_methods = model._add_methods
+        qset = model.qset
+        unused_qset1a = model.add_qset1([1, 'THRU', 10], 4, comment='qset')
+        model.setup()
+
+        qset.write()
+        #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
+
+        unused_qseta = model.add_qset([1, 2, 3, 4, 5],
+                                      [5, 4, 3, 2, 1], comment='qset')
+        model.setup()
+
+        nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        for nid in nids:
+            model.add_grid(nid, [float(nid), 0., 0.])
+
+        model.setup()
         qset.validate()
         qset.write()
         qset.set_map
@@ -334,7 +447,7 @@ class TestSets(unittest.TestCase):
         model = BDF(debug=False)
         #add_methods = model._add_methods
         uset = model.uset
-        uset1a = model.add_uset1('MYSET1', [1, 'THRU', 10], 4, comment='uset')
+        unused_uset1a = model.add_uset1('MYSET1', [1, 'THRU', 10], 4, comment='uset')
         model.setup()
         fields = ['USET1', 'MYSET2', 5,
                   1, 2, 3, 4, 5, 6, 7, 8, 10, 9]
@@ -344,7 +457,7 @@ class TestSets(unittest.TestCase):
         #add_methods._add_uset_object(uset1b)
         uset.write()
 
-        useta = model.add_uset(
+        unused_useta = model.add_uset(
             'MYSET3',
             [1, 2, 3, 4, 5],
             [5, 4, 3, 2, 1], comment='uset')
@@ -364,26 +477,32 @@ class TestSets(unittest.TestCase):
         uset.write()
         save_load_deck(model)
 
-    def _test_sebset(self):
+    def test_sebset(self):
         """checks the SEBSET/SEBSET1 cards"""
         model = BDF(debug=False)
-        add_methods = model._add_methods
+        sebset = model.sebset
+        #add_methods = model._add_methods
         seid = 42
-        bset1a = SEBSET1(seid, [1, 'THRU', 10], 4, comment='bset1')
-        bset1b = SEBSET1.add_card(BDFCard(['SEBSET1', seid, 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]),
-                                comment='sebset1')
+        unused_bset1a = model.add_sebset(seid, [1, 'THRU', 10], 4, comment='bset1')
+        card = BDFCard(['SEBSET1', seid, 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
+        unused_bset1b = model.sebset.add_set1_card(card, comment='sebset1')
         sebset.write()
         #| BSET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
-        sebseta = SEBSET(seid,
-                         [1, 2, 3, 4, 5],
-                         [5, 4, 3, 2, 1], comment='sebset')
-        sebsetb = SEBSET.add_card(BDFCard(['SEBSET', seid,
-                                       1, 2, 3, 4, 5,
-                                       5, 4, 3, 2, 1]), comment='sebset')
-        assert len(sebseta.components) == 5, sebseta.components
-        add_methods._add_sebset_object(sebseta)
-        add_methods._add_sebset_object(sebsetb)
+        seid = 50
+        unused_sebseta_id = model.add_sebset(seid,
+                                             [1, 2, 3, 4, 5],
+                                             [5, 4, 3, 2, 1], comment='sebset')
+        card = BDFCard(['SEBSET', seid + 1,
+                        1, 2, 3, 4, 5,
+                        5, 4, 3, 2, 1])
+        unused_sebsetb_id = model.sebset.add_set1_card(card, comment='sebset')
+        model.setup()
+        sebseta = sebset.slice_card_by_id(seid)
+        unused_sebsetb = sebset.slice_card_by_id(seid+1)
+        assert len(sebseta.component) == 5, sebseta.component
+        #add_methods._add_sebset_object(sebseta)
+        #add_methods._add_sebset_object(sebsetb)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         for nid in nids:
@@ -392,28 +511,24 @@ class TestSets(unittest.TestCase):
         sebset.write()
         save_load_deck(model)
 
-    def _test_secset(self):
+    def test_secset(self):
         """checks the SECSET/SECSET1 cards"""
         model = BDF(debug=False)
-        add_methods = model._add_methods
+        secset = model.secset
         seid = 171
-        secset1a = SECSET1(seid, [1, 'THRU', 10], 4, comment='cset')
-        secset1b = SECSET1.add_card(BDFCard(['SECSET1', seid, 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]),
-                                    comment='secset1')
-        secset1.write()
-        add_methods._add_secset_object(secset1a)
-        add_methods._add_secset_object(secset1b)
+        unused_secset1a = model.add_secset1(seid, [1, 'THRU', 10], 4, comment='cset')
+        card = BDFCard(['SECSET1', seid, 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9])
+        unused_secset1b = secset.add_set1_card(card, comment='secset1')
+        secset.write()
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
-        secseta = SECSET(seid,
-                         [1, 2, 3, 4, 5],
-                         [5, 4, 3, 2, 1], comment='secset')
+        unused_secseta = model.add_secset(seid,
+                                          [1, 2, 3, 4, 5],
+                                          [5, 4, 3, 2, 1], comment='secset')
         card = BDFCard(['SECSET', seid,
                         1, 2, 3, 4, 5,
                         5, 4, 3, 2, 1])
-        secsetb = SECSET.add_card(card, comment='secset')
-        add_methods._add_secset_object(secseta)
-        add_methods._add_secset_object(secsetb)
+        unused_secsetb = secset.add_set_card(card, comment='secset')
         model.add_secset(seid, [1, 2, 3], '42', comment='secset')
         model.add_secset1(seid, [1, 2, 3], [1, 2, 3], comment='secset1')
 
@@ -424,24 +539,25 @@ class TestSets(unittest.TestCase):
         secset.write()
         save_load_deck(model)
 
-    def _test_seqset(self):
+    def test_seqset(self):
         """checks the QSET/QSET1 cards"""
         model = BDF(debug=False)
-        add_methods = model._add_methods
+        seqset = model.seqset
         seid = 42
-        seqset1a = SEQSET1(seid, [1, 'THRU', 10], 4, comment='qset')
+        unused_seqset1a = model.add_seqset1(seid, [1, 'THRU', 10], 4, comment='qset')
         model.add_card(['SEQSET1', seid, 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9],
                        'SEQSET1', comment='seqset1')
-        add_methods._add_seqset_object(seqset1a)
-        seqset1a.write()
+        seqset.write()
         #| SEQSET1 | SEID |  C  | ID1 | THRU | ID2 |
 
-        seqseta = SEQSET(seid, [1, 2, 3, 4, 5], [5, 4, 3, 2, 1], comment='seqset')
+        unused_seqseta = model.add_seqset(
+            seid,
+            [1, 2, 3, 4, 5],
+            [5, 4, 3, 2, 1], comment='seqset')
         fields = ['SEQSET', seid,
                   1, 2, 3, 4, 5,
                   5, 4, 3, 2, 1]
         model.add_card(fields, 'SEQSET', comment='seqset')
-        add_methods._add_seqset_object(seqseta)
         #add_methods._add_seqset_object(seqsetb)
 
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]

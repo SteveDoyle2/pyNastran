@@ -1869,9 +1869,9 @@ class RADSET(ABCQSet1):
         #self.ids_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
-        Adds a USET1 card from ``BDF.add_card(...)``
+        Adds a RADSET card from ``BDF.add_card(...)``
 
         Parameters
         ----------

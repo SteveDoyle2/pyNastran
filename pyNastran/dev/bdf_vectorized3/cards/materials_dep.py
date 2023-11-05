@@ -1027,6 +1027,9 @@ class MATT8(Material):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    #def convert(self, stiffness_scale: float=1.0, **kwargs) -> dict[int, np.ndarray]:
+        #scale[('tablem', stiffness_scale)] = self.e1_table
+
     @property
     def max_id(self):
         tables = np.hstack([self.material_id, self.e1_table, self.e2_table, self.nu12_table,

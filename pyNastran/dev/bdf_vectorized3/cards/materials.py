@@ -11,7 +11,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.materials import mat1_E_G_nu, get_G_default, set_blank_if_default
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import Material, parse_material_check
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import get_print_card_size, array_str # , array_default_int
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    get_print_card_size, array_str,
+    array_default_int, array_default_float)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -2451,9 +2453,17 @@ class MATORT(Material):
             rho: float=0.0,
             alpha1: float=0.0, alpha2: float=0.0, alpha3: float=0.0,
             tref: float=0.0, ge: float=0.0,
+            iyield: int=1, ihard: int=1, sy: float=0.0,
+            y1: float=0.0, y2: float=0.0, y3: float=0.0,
+            yshear1: float=0.0, yshear2: float=0.0, yshear3: float=0.0,
+            option: str='ELEM',
             comment: str=''):
         self.cards.append((mid, E1, E2, E3, nu12, nu23, nu31, rho, G12, G23, G31,
-                           alpha1, alpha2, alpha3, tref, ge, comment))
+                           alpha1, alpha2, alpha3, tref, ge,
+                           iyield, ihard, sy, y1, y2, y3,
+                           yshear1, yshear2, yshear3,
+                           option,
+                           comment))
         self.n += 1
         return self.n
 
@@ -2472,7 +2482,7 @@ class MATORT(Material):
         nu23 = double_or_blank(card, 6, 'nu23')
         nu31 = double_or_blank(card, 7, 'nu31')
         rho = double_or_blank(card, 8, 'rho', default=0.)
-
+        #-------------------------
         G12 = double_or_blank(card, 9, 'G12')
         G23 = double_or_blank(card, 10, 'G23')
         G31 = double_or_blank(card, 11, 'G31')
@@ -2483,9 +2493,32 @@ class MATORT(Material):
 
         tref = double_or_blank(card, 15, 'tref', default=0.0)
         ge = double_or_blank(card, 16, 'ge', default=0.0)
-        assert len(card) <= 18, f'len(MATORT card) = {len(card):d}\ncard={card}'
+        #--------------------
+        #|        |  IYLD  | IHARD |   SY  |     |  Y1  |  Y2  |  Y3  | N/A |
+        iyield = integer_or_blank(card, 17, 'iyield', default=1)
+        ihard = integer_or_blank(card, 18, 'ihard', default=1)
+        sy = double_or_blank(card, 19, 'sy', default=0.0)
+        #
+        y1 = double_or_blank(card, 21, 'y1', default=0.0)
+        y2 = double_or_blank(card, 22, 'y2', default=0.0)
+        y3 = double_or_blank(card, 23, 'y3', default=0.0)
+        #24
+        #--------------------
+        #|        |  Yshr1 | Yshr2 | Yshr3 | N/A | N/A  |  N/A |  N/A | N/A |
+        yshear1 = double_or_blank(card, 25, 'yshear1', default=0.0)
+        yshear2 = double_or_blank(card, 26, 'yshear2', default=0.0)
+        yshear3 = double_or_blank(card, 27, 'yshear3', default=0.0)
+        #--------------------
+        # 33
+        option = string_or_blank(card, 33, 'option', default='ELEM')
+        #|        | OPTION |  FILE |   X1  |  Y1 |  Z1  |  X2  |  Y2  |  Z2 |
+        assert len(card) <= 34, f'len(MATORT card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, E1, E2, E3, nu12, nu23, nu31, rho, G12, G23, G31,
-                           alpha1, alpha2, alpha3, tref, ge, comment))
+                           alpha1, alpha2, alpha3, tref, ge,
+                           iyield, ihard, sy, y1, y2, y3,
+                           yshear1, yshear2, yshear3,
+                           option,
+                           comment))
         self.n += 1
         return self.n
 
@@ -2510,34 +2543,67 @@ class MATORT(Material):
         tref = np.zeros(ncards, dtype='float64')
         ge = np.zeros(ncards, dtype='float64')
 
-        for i, card in enumerate(self.cards):
+        iyield = np.zeros(ncards, dtype='int32')
+        ihard = np.zeros(ncards, dtype='int32')
+        sy = np.zeros(ncards, dtype='float64')
+        y1 = np.zeros(ncards, dtype='float64')
+        y2 = np.zeros(ncards, dtype='float64')
+        y3 = np.zeros(ncards, dtype='float64')
+        yshear1 = np.zeros(ncards, dtype='float64')
+        yshear2 = np.zeros(ncards, dtype='float64')
+        yshear3 = np.zeros(ncards, dtype='float64')
+        option = np.zeros(ncards, dtype='|U8')
+
+        for icard, card in enumerate(self.cards):
             (mid, E1i, E2i, E3i, nu12i, nu23i, nu31i, rhoi, G12i, G23i, G31i,
-             alpha1i, alpha2i, alpha3i, trefi, gei, comment) = card
-            material_id[i] = mid
-            E1[i] = E1i
-            E2[i] = E2i
-            E3[i] = E3i
-            G12[i] = G12i
-            G23[i] = G23i
-            G31[i] = G31i
+             alpha1i, alpha2i, alpha3i, trefi, gei,
+             iyieldi, ihardi, syi, y1i, y2i, y3i,
+             yshear1i, yshear2i, yshear3i,
+             optioni,
+             comment) = card
+            material_id[icard] = mid
+            E1[icard] = E1i
+            E2[icard] = E2i
+            E3[icard] = E3i
+            G12[icard] = G12i
+            G23[icard] = G23i
+            G31[icard] = G31i
 
-            nu12[i] = nu12i
-            nu23[i] = nu23i
-            nu31[i] = nu31i
+            nu12[icard] = nu12i
+            nu23[icard] = nu23i
+            nu31[icard] = nu31i
 
-            rho[i] = rhoi
-            alpha1[i] = alpha1i
-            alpha2[i] = alpha2i
-            alpha3[i] = alpha3i
-            tref[i] = trefi
-            ge[i] = gei
+            rho[icard] = rhoi
+            alpha1[icard] = alpha1i
+            alpha2[icard] = alpha2i
+            alpha3[icard] = alpha3i
+            tref[icard] = trefi
+            ge[icard] = gei
+
+            iyield[icard] = iyieldi
+            ihard[icard] = ihardi
+            sy[icard] = syi
+            y1[icard] = y1i
+            y2[icard] = y2i
+            y3[icard] = y3i
+            yshear1[icard] = yshear1i
+            yshear2[icard] = yshear2i
+            yshear3[icard] = yshear3i
+            option[icard] = optioni
+
         self._save(material_id, E1, E2, E3, nu12, nu23, nu31, G12, G23, G31,
-                   rho, alpha1, alpha2, alpha3, tref, ge)
+                   rho, alpha1, alpha2, alpha3, tref, ge,
+                   iyield, ihard, sy, y1, y2, y3,
+                   yshear1, yshear2, yshear3,
+                   option,)
         self.sort()
         self.cards = []
 
     def _save(self, material_id, E1, E2, E3, nu12, nu23, nu31, G12, G23, G31,
-                   rho, alpha1, alpha2, alpha3, tref, ge):
+                   rho, alpha1, alpha2, alpha3, tref, ge,
+                   iyield, ihard, sy, y1, y2, y3,
+                   yshear1, yshear2, yshear3,
+                   option,):
         assert len(self.material_id) == 0, self.material_id
         self.material_id = material_id
         self.E1 = E1
@@ -2555,6 +2621,18 @@ class MATORT(Material):
         self.alpha3 = alpha3
         self.tref = tref
         self.ge = ge
+
+        self.iyield = iyield
+        self.ihard = ihard
+        self.sy = sy
+        self.y1 = y1
+        self.y2 = y2
+        self.y3 = y3
+        self.yshear1 = yshear1
+        self.yshear2 = yshear2
+        self.yshear3 = yshear3
+        self.option = option
+
         assert len(self.material_id) > 0, self.material_id
         #self.model.log.warning('saved MATORT')
 
@@ -2577,6 +2655,17 @@ class MATORT(Material):
         mat.tref = self.tref[i]
         mat.ge = self.ge[i]
 
+        mat.iyield = self.iyield[i]
+        mat.ihard = self.ihard[i]
+        mat.sy = self.sy[i]
+        mat.y1 = self.y1[i]
+        mat.y2 = self.y2[i]
+        mat.y3 = self.y3[i]
+        mat.yshear1 = self.yshear1[i]
+        mat.yshear2 = self.yshear2[i]
+        mat.yshear3 = self.yshear3[i]
+        mat.option = self.option[i]
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
@@ -2590,22 +2679,49 @@ class MATORT(Material):
               write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
+        rhos = array_default_float(self.rho, default=0., size=size, is_double=False)
+        alpha1s = array_default_float(self.alpha1, default=0., size=size, is_double=False)
+        alpha2s = array_default_float(self.alpha2, default=0., size=size, is_double=False)
+        alpha3s = array_default_float(self.alpha3, default=0., size=size, is_double=False)
+        trefs = array_default_float(self.tref, default=0., size=size, is_double=False)
+        ges = array_default_float(self.ge, default=0., size=size, is_double=False)
+
+        iyields = array_default_int(self.iyield, default=1, size=size, is_double=False)
+        ihards = array_default_int(self.ihard, default=1, size=size, is_double=False)
+        sys = array_default_float(self.sy, default=0., size=size, is_double=False)
+        y1s = array_default_float(self.y1, default=0., size=size, is_double=False)
+        y2s = array_default_float(self.y2, default=0., size=size, is_double=False)
+        y3s = array_default_float(self.y3, default=0., size=size, is_double=False)
+
+        yshear1s = array_default_float(self.yshear1, default=0., size=size, is_double=False)
+        yshear2s = array_default_float(self.yshear2, default=0., size=size, is_double=False)
+        yshear3s = array_default_float(self.yshear3, default=0., size=size, is_double=False)
         for mid, e1, e2, e3, g12, g23, g31, nu12, nu23, nu31, \
             rho, alpha1, alpha2, alpha3, tref, ge, \
+            iyield, ihard, sy, y1, y2, y3, \
+            yshear1, yshear2, yshear3, \
+            option \
             in zip_longest(self.material_id, self.E1, self.E2, self.E3,
                            self.G12, self.G23, self.G31,
                            self.nu12, self.nu23, self.nu31, self.rho,
-                           self.alpha1, self.alpha2, self.alpha3, self.tref, self.ge):
+                           alpha1, alpha2, alpha3, tref, ge,
+                           iyields, ihards, sys, y1s, y2s, y3s,
+                           yshear1s, yshear2s, yshear3s,
+                           self.option,):
 
-            rho = set_blank_if_default(rho, 0.)
-            a1 = set_blank_if_default(alpha1, 0.)
-            a2 = set_blank_if_default(alpha2, 0.)
-            a3 = set_blank_if_default(alpha3, 0.)
-            tref = set_blank_if_default(tref, 0.)
-            ge = set_blank_if_default(ge, 0.)
+            #rho = set_blank_if_default(rho, 0.)
+            #a1 = set_blank_if_default(alpha1, 0.)
+            #a2 = set_blank_if_default(alpha2, 0.)
+            #a3 = set_blank_if_default(alpha3, 0.)
+            #tref = set_blank_if_default(tref, 0.)
+            #ge = set_blank_if_default(ge, 0.)
 
             list_fields = ['MATORT', mid, e1, e2, e3, nu12, nu23, nu31, rho,
-                           g12, g23, g31, a1, a2, a3, tref, ge]
+                           g12, g23, g31, a1, a2, a3, tref, ge,
+                           iyield, ihard, sy, None, y1, y2, y3, None,
+                           yshear1, yshear2, yshear3, None, None, None, None, None,
+                           option,
+                           ]
             bdf_file.write(print_card(list_fields))
         return
 
@@ -3031,3 +3147,238 @@ class MATHP(Material):
                 bdf_file.write(print_card(list_fields))
         return
 
+
+class MATHE(Material):
+    """
+    +-------+-----+-------+-----+-----+-----+------+
+    |   1   |  2  |   3   |     |  5  |  6  |   7  |
+    +=======+=====+=======+=====+=====+=====+======+
+    | MATHE | MID | Model |     |  K  | RHO | TEXP |
+    +-------+-----+-------+-----+-----+-----+------+
+    |       | C10 |  C01  |     |     |     |      |
+    +-------+-----+-------+-----+-----+-----+------+
+    |       | C20 |  C11  | C02 |     |     |      |
+    +-------+-----+-------+-----+-----+-----+------+
+    |       | C30 |  C21  | C12 | C03 |     |      |
+    +-------+-----+-------+-----+-----+-----+------+
+    """
+    @Material.clear_check
+    def clear(self) -> None:
+        self.material_id = np.array([], dtype='int32')
+        self.model = np.array([], dtype='|U8')
+        self.k = np.array([], dtype='float64')
+        self.rho = np.array([], dtype='float64')
+        self.texp = np.array([], dtype='float64')
+        self.c10 = np.array([], dtype='float64')
+        self.c01 = np.array([], dtype='float64')
+
+        self.c20 = np.array([], dtype='float64')
+        self.c11 = np.array([], dtype='float64')
+        self.c02 = np.array([], dtype='float64')
+
+        self.c20 = np.array([], dtype='float64')
+        self.c11 = np.array([], dtype='float64')
+        self.c02 = np.array([], dtype='float64')
+
+        self.c30 = np.array([], dtype='float64')
+        self.c21 = np.array([], dtype='float64')
+        self.c12 = np.array([], dtype='float64')
+        self.c03 = np.array([], dtype='float64')
+
+    def add_mooney(self, mid: int, k: float,
+                   rho=0., texp=0.,
+                   c10=0., c01=0.,
+                   c20=0., c11=0., c02=0.,
+                   c30=0., c21=0., c12=0., c03=0., comment: str=''):
+        ##HyperelasticMaterial.__init__(self)
+        #if comment:
+            #self.comment = comment
+
+        model = 'MOONEY'
+        self.cards.append((mid, model, rho, texp,
+                           c10, c01,
+                           c20, c11, c02,
+                           c30, c21, c12, c03,
+                           comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a MATHE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #+-------+-----+-------+-----+-----+-----+------+
+        #|   1   |  2  |   3   |     |  5  |  6  |   7  |
+        #+=======+=====+=======+=====+=====+=====+======+
+        #| MATHE | MID | Model |     |  K  | RHO | TEXP |
+        #|       | C10 |  C01  |     |     |     |      |
+        #|       | C20 |  C11  | C02 |     |     |      |
+        #|       | C30 |  C21  | C12 | C03 |     |      |
+        #+-------+-----+-------+-----+-----+-----+------+
+        mid = integer(card, 1, 'mid')
+        model = string_or_blank(card, 2, 'model', default='MOONEY')
+        k = double(card, 4, 'k')
+        rho = double_or_blank(card, 5, 'rho', default=0.)
+        texp = double_or_blank(card, 6, 'texp', default=0.)
+
+        # mooney
+        if model == 'MOONEY':
+            c10 = double_or_blank(card, 9, 'c10', default=0.)
+            c01 = double_or_blank(card, 10, 'c01', default=0.)
+
+            c20 = double_or_blank(card, 17, 'c20', default=0.)
+            c11 = double_or_blank(card, 18, 'c11', default=0.)
+            c02 = double_or_blank(card, 19, 'c02', default=0.)
+
+            c30 = double_or_blank(card, 25, 'c30', default=0.)
+            c21 = double_or_blank(card, 26, 'c21', default=0.)
+            c12 = double_or_blank(card, 27, 'c12', default=0.)
+            c03 = double_or_blank(card, 28, 'c03', default=0.)
+            assert len(card) <= 29, f'len(MATHE card) = {len(card):d}\ncard={card}'
+        else:  # pragma: no cover
+            raise NotImplementedError((model, card))
+        self.cards.append((mid, model, k, rho, texp,
+                           c10, c01,
+                           c20, c11, c02,
+                           c30, c21, c12, c03))
+        self.n += 1
+        return self.n - 1
+
+    @Material.parse_cards_check
+    def parse_cards(self):
+        ncards = len(self.cards)
+        material_id = np.zeros(ncards, dtype='int32')
+        model = np.array([], dtype='|U8')
+        k = np.zeros(ncards, dtype='float64')
+        rho = np.zeros(ncards, dtype='float64')
+        texp = np.zeros(ncards, dtype='float64')
+        c10 = np.zeros(ncards, dtype='float64')
+        c01 = np.zeros(ncards, dtype='float64')
+
+        c20 = np.zeros(ncards, dtype='float64')
+        c11 = np.zeros(ncards, dtype='float64')
+        c02 = np.zeros(ncards, dtype='float64')
+
+        c20 = np.zeros(ncards, dtype='float64')
+        c11 = np.zeros(ncards, dtype='float64')
+        c02 = np.zeros(ncards, dtype='float64')
+
+        c30 = np.zeros(ncards, dtype='float64')
+        c21 = np.zeros(ncards, dtype='float64')
+        c12 = np.zeros(ncards, dtype='float64')
+        c03 = np.zeros(ncards, dtype='float64')
+
+        for icard, card in enumerate(self.cards):
+            (mid, modeli, ki, rhoi, texpi,
+             c10i, c01i,
+             c20i, c11i, c02i,
+             c30i, c21i, c12i, c03i, comment) = card
+
+            material_id[i] = mid
+            k[icard] = ki
+            model[icard] = modeli
+            if model == 'MOONEY':
+                c10[icard] = c10i
+                c01[icard] = c01i
+
+                c20[icard] = c20i
+                c11[icard] = c11i
+                c02[icard] = c02i
+
+                c30[icard] = c30i
+                c21[icard] = c21i
+                c12[icard] = c12i
+                c03[icard] = c03i
+            else:  # pragma: no cover
+                raise RuntimeError(model)
+
+            rho[i] = rhoi
+            texp[i] = texpi
+        self._save(material_id, model, rho, texp,
+              c10, c01,
+              c20, c11, c02,
+              c30, c21, c12, c03)
+        self.sort()
+        self.cards = []
+
+    def _save(self, material_id, model, k, rho, texp,
+              c10, c01,
+              c20, c11, c02,
+              c30, c21, c12, c03):
+        assert len(self.material_id) == 0, self.material_id
+        self.material_id = material_id
+
+        self.model = model
+        self.k = k
+        self.rho = rho
+        self.texp = texp
+        self.c10 = c10
+        self.c01 = c01
+
+        self.c20 = c20
+        self.c11 = c11
+        self.c02 = c02
+
+        self.c30 = c30
+        self.c21 = c21
+        self.c12 = c12
+        self.c03 = c03
+        assert len(self.material_id) > 0, self.material_id
+        #self.model.log.warning('saved MATORT')
+
+    def __apply_slice__(self, mat: MATHE, i: np.ndarray) -> None:
+        mat.n = len(i)
+        mat.material_id = self.material_id[i]
+
+        mat.rho = self.rho[i]
+        mat.texp = self.texp[i]
+
+        mat.c10 = self.c10[i]
+        mat.c01 = self.c01[i]
+
+        mat.c20 = self.c20[i]
+        mat.c11 = self.c11[i]
+        mat.c02 = self.c02[i]
+
+        mat.c30 = self.c30[i]
+        mat.c21 = self.c21[i]
+        mat.c12 = self.c12[i]
+        mat.c03 = self.c03[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @property
+    def max_id(self) -> int:
+        return self.material_id.max()
+
+    @parse_material_check
+    def write_file(self, bdf_file: TextIOLike,
+              size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        for (mid, model, k, rho, texp,
+             c10, c01,
+             c20, c11, c02,
+             c30, c21, c12, c03) in zip_longest(
+                 self.material_id, self.model, self.k, self.rho, self.texp,
+                 self.c10, self.c01,
+                 self.c20, self.c11, self.c02,
+                 self.c30, self.c21, self.c12, self.c03):
+                if model == 'MOONEY':
+                    list_fields = ['MATHE', mid, model, None, k, rho, texp, None, None,
+                                   c10, c01, None, None, None, None, None, None,
+                                   c20, c11, c02, None, None, None, None, None,
+                                   c30, c21, c12, c03]
+                else:  # pragma: no cover
+                    raise RuntimeError(model)
+                bdf_file.write(print_card(list_fields))
+        return

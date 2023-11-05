@@ -1677,7 +1677,7 @@ class TestLoads(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
-    def _test_loads_nonlinear_thermal1(self):
+    def test_loads_nonlinear_thermal1(self):
         """tests a nonlinear variation on a FORCE and PLOAD4"""
         model = BDF()
 
@@ -1703,12 +1703,13 @@ class TestLoads(unittest.TestCase):
         #pressures = 100.
         #model.add_pload4(pload4_sid, eids, pressures)
 
+        RUN_THERMAL = False
         table_id = 30000
-        theta = np.linspace(0., 1., num=50, endpoint=True)
-        y = np.sin(theta)
-        x = theta
-        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
-
+        if RUN_THERMAL:
+            theta = np.linspace(0., 1., num=50, endpoint=True)
+            y = np.sin(theta)
+            x = theta
+            model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
 
         #dload_id = 40000
         #scale = 1.
@@ -1725,7 +1726,8 @@ class TestLoads(unittest.TestCase):
         #nid = 4
         eids = [eid]
         q0 = 2.0
-        model.add_qvect(qvect_id, q0, eids, t_source=None, ce=0, vector_tableds=None, control_id=0, comment='qvect')
+        model.add_qvect(qvect_id, q0, eids, t_source=None, ce=0,
+                        vector_tableds=None, control_id=0, comment='qvect')
         lines = [
             'SUBCASE 1',
             '  DLOAD = %s' % tload_id,

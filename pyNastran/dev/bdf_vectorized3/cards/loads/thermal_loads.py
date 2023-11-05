@@ -804,7 +804,9 @@ class RADM(VectorizedBaseCard):
     def clear(self) -> None:
         self.rad_mid = np.array([], dtype='int32')
 
-    def add(self, radmid, absorb, emissivity, comment='') -> int:
+    def add(self, radmid: int, absorb: float, emissivity: list[float], comment: str='') -> int:
+        if isinstance(emissivity, float_types):
+            emissivity = [emissivity]
         self.cards.append((radmid, absorb, emissivity, comment))
         self.n += 1
         return self.n - 1
@@ -825,6 +827,7 @@ class RADM(VectorizedBaseCard):
         radmid = integer(card, 1, 'radmid')
         absorb = double_or_blank(card, 2, 'absorb')
         emissivity = fields(double, card, 'emissivity', i=3, j=nfields)
+        assert isinstance(emissivity, list), emissivity
         self.cards.append((radmid, absorb, emissivity, comment))
         self.n += 1
         return self.n - 1

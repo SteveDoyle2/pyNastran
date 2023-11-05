@@ -881,6 +881,7 @@ def setup_harmonic_case_control(model: BDF, extra_case_lines=None):
         '  LOAD = 2',
         '  SPC = 3',
         '  METHOD = 103',
+        '  FREQUENCY = 100',
     ]
     if extra_case_lines is not None:
         lines += extra_case_lines
@@ -896,6 +897,7 @@ class TestHarmonic(unittest.TestCase):
         mid = 3
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [2., 0., 0.])
 
         eid = 10
         pid = 20
@@ -912,19 +914,27 @@ class TestHarmonic(unittest.TestCase):
         k = 1e6
         model.add_celas2(eid, k, nids, c1=1, c2=1, ge=0., s=0., comment='')
 
+        eid += 1
+        nids = [2, 3]
+        model.add_celas2(eid, k, nids, c1=1, c2=1, ge=0., s=0., comment='')
+
         #E = 3.0e7
         #G = None
         #nu = 0.3
         #model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
                        #St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
 
-        eid = 11
+        eid += 1
         nid = 2
         mass = 2.0
         model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
 
+        eid += 1
+        nid = 3
+        model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
+
         sid = 103
-        nmodes = 1
+        nmodes = 2
         model.add_eigrl(sid, v1=None, v2=None, nd=nmodes, msglvl=0,
                         maxset=None, shfscl=None, norm=None, options=None, values=None, comment='')
 
@@ -942,7 +952,30 @@ class TestHarmonic(unittest.TestCase):
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
 
+        freq_id = 100
+        f1 = 1.
+        df = 1.
+        ndf = 2000
+        model.add_freq1(freq_id, f1, df, ndf=ndf, comment='')
 
+        freqs = [1000.5, 0.5]
+        model.add_freq(freq_id, freqs)
+
+        f1 = 20.
+        f2 = 40.
+        model.add_freq2(freq_id, f1, f2, nf=6, comment='')
+
+        f1 = 10.
+        f2 = 2000.
+        model.add_freq3(freq_id, f1, f2, Type='LINEAR', nef=10, cluster=1.0, comment='')
+
+        f1 = 500.
+        model.add_freq3(freq_id, f1, f2=None, Type='LINEAR', nef=10, cluster=1.0, comment='')
+
+        model.add_freq4(freq_id, f1=1., f2=2000., fspread=0.1, nfm=3, comment='')
+
+        fractions = [0.6, 0.8, 0.9, 0.95, 1.0, 1.05, 1.1, 1.2]
+        model.add_freq5(freq_id, fractions, f1=20., f2=200., comment='')
 
         setup_harmonic_case_control(model)
         solver = Solver(model)

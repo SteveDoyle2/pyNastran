@@ -20,8 +20,10 @@ from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     #hslice_by_idim, make_idim,
     searchsorted_filter)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int, # get_print_card,
-    print_card_8_comment, print_card_16_comment)
+    array_str, array_default_int,
+    print_card_8_comment, print_card_16_comment,
+    get_print_card_size,
+)
 from .utils import expanded_mass_material_id
 
 from .shell_coords import element_coordinate_system, material_coordinate_system
@@ -1186,10 +1188,9 @@ class CQUAD4(ShellElement):
                    theta_mcid, 'zoffset', 'blank', 'tflag', 'T1', 'T2', 'T3', 'T4']
         return headers
 
+    @parse_element_check
     def write_file_8(self, bdf_file: TextIOLike,
                      write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
 
         headers = self.card_headers()
         if write_card_header:
@@ -1253,11 +1254,10 @@ class CQUAD4(ShellElement):
                 bdf_file.write(msg)
         return
 
+    @parse_element_check
     def write_file_16(self, bdf_file: TextIOLike,
                       is_double: bool=False,
                       write_card_header: bool=False) -> None:
-        if len(self.element_id) == 0:
-            return
         print_card = print_card_16
         headers = self.card_headers(size=16)
         if write_card_header:
@@ -2426,6 +2426,159 @@ class CQUAD(ShellElement):
 
     def quality(self):
         return quad_quality_nodes(self.model.grid, self.base_nodes)
+
+
+class CAABSF(Element):
+    """
+    Frequency-Dependent Acoustic Absorber Element
+
+    Defines a frequency-dependent acoustic absorber element in coupled
+    fluid-structural analysis.
+
+    +--------+-------+-------+----+----+----+----+
+    |   1    |   2   |   3   |  4 |  5 |  6 | 7  |
+    +========+=======+=======+====+====+====+====+
+    | CAABSF |  EID  |  PID  | N1 | N2 | N3 | N4 |
+    +--------+-------+-------+----+----+----+----+
+    """
+    type = 'CAABSF'
+    def clear(self) -> None:
+        self.element_id = np.array([], dtype='int32')
+        self.property_id = np.array([], dtype='int32')
+        self.nodes = np.zeros((0, 4), dtype='int32')
+
+    def add(self, eid: int, pid: int, nodes: list[int],
+            comment: str='') -> int:
+        self.cards.append((eid, pid, nodes, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a CHACAB card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        nids = [
+            integer(card, 3, 'nid1'),
+            integer_or_blank(card, 4, 'nid2', default=0),
+            integer_or_blank(card, 5, 'nid3', default=0),
+            integer_or_blank(card, 6, 'nid4', default=0),
+        ]
+        assert len(card) <= 7, f'len(CAABSF card) = {len(card):d}\ncard={card}'
+        self.cards.append((eid, pid, nids, comment))
+        self.n += 1
+        return self.n - 1
+
+    def parse_cards(self):
+        assert self.n >= 0, self.n
+        if self.n == 0 or len(self.cards) == 0:
+            return
+        ncards = len(self.cards)
+        assert ncards > 0, ncards
+        element_id = np.zeros(ncards, dtype='int32')
+        property_id = np.zeros(ncards, dtype='int32')
+        nodes = np.zeros((ncards, 4), dtype='int32')
+
+        for icard, card in enumerate(self.cards):
+            (eid, pid, nids, comment) = card
+            element_id[icard] = eid
+            property_id[icard] = pid
+            nodes[icard, :] = nids
+        self._save(element_id, property_id, nodes)
+        self.sort()
+        self.cards = []
+
+    def _save(self, element_id, property_id, nodes):
+        assert element_id.min() >= 0, element_id
+        assert property_id.min() >= 0, property_id
+        assert nodes.min() >= 0, nodes
+        nelements = len(element_id)
+        self.element_id = element_id
+        self.property_id = property_id
+        self.nodes = nodes
+        self.n = nelements
+
+    def __apply_slice__(self, element: CAABSF, i: np.ndarray) -> None:
+        element.element_id = self.element_id[i]
+        element.property_id = self.property_id[i]
+        element.nodes = self.nodes[i, :]
+        #element.tflag = self.tflag[i]
+        #element.mcid = self.mcid[i]
+        #element.theta = self.theta[i]
+        #element.zoffset = self.zoffset[i]
+        #element.T = self.T[i, :]
+        element.n = len(self.element_id)
+
+    def set_from_op2(self, element_id, property_id, nodes):
+        nelements = len(element_id)
+        assert element_id.min() > 0, element_id
+        assert property_id.min() > 0, property_id
+        self.element_id = element_id
+        self.property_id = property_id
+        self.nodes = nodes
+        self.n = nelements
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nid = self.model.grid.node_id
+        #pids = hstack_msg([prop.property_id for prop in self.allowed_properties],
+                          #msg=f'no shell properties for {self.type}')
+        #for prop in self.allowed_properties:
+            #print(prop.write(size=8))
+        #assert len(pids) > 0, self.allowed_properties
+        #pids.sort()
+
+        geom_check(self,
+                   missing,
+                   node=(nid, self.nodes), filter_node0=False,
+                   #property_id=(pids, self.property_id),
+                   )
+
+    def area(self) -> np.ndarray:
+        area = quad_area(self.model.grid, self.nodes)
+        return area
+
+    #def centroid(self) -> np.ndarray:
+        #"""centroid ignores density"""
+        #centroid = quad_centroid(self.model.grid, self.nodes)
+        #return centroid
+
+    #def center_of_mass(self) -> np.ndarray:
+        #"""center_of_mass considers density"""
+        #return self.centroid()
+
+    #def normal(self) -> np.ndarray:
+        #normal = self.area_centroid_normal()[2]
+        #return normal
+    #def area_centroid_normal(self) -> np.ndarray:
+        #normal = quad_area_centroid_normal(self.model.grid, self.nodes)
+        #return normal
+
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(), self.nodes.max())
+
+    @parse_element_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        element_ids = array_str(self.element_id, size=size)
+        property_ids = array_str(self.property_id, size=size)
+        nodes = array_str(self.nodes, size=size).tolist()
+        #nodes = array_default_int(self.nodes, default=0, size=size).tolist()
+        for eid, pid, nodesi in zip_longest(element_ids, property_ids, nodes):
+            list_fields = ['CAABSF', eid, pid] + nodesi
+            bdf_file.write(print_card(list_fields))
 
 
 def _save_quad(element: CQUAD4 | CQUADR,

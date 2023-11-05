@@ -836,7 +836,7 @@ class OUG:
                                        b'OUG1', b'OCRUG', b'OUGV1PAT', b'OUXY1', b'OUXY2',
                                        b'OUG1F',
                                        b'OUGF1', b'OUGF2',
-                                       b'BOUGF1', ], op2.table_name
+                                       b'BOUGF1', b'OUPV1'], op2.table_name
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=op2.random_code,
@@ -945,7 +945,7 @@ class OUG:
             assert op2.thermal == 0, op2.code_information()
             pass
         elif op2.table_name == b'OUPV1':
-            assert op2.thermal in {2, 4, 8}, op2.code_information() # should 0 be here?
+            assert op2.thermal in {0, 2, 4, 8}, op2.code_information() # should 0 be here?
             result_name0 = 'accelerations'
             prefix, postfix = get_shock_prefix_postfix(op2.thermal)
             result_name = prefix + result_name0 + postfix
@@ -1458,7 +1458,9 @@ class OUG:
 def get_shock_prefix_postfix(thermal: int) -> tuple[str, str]:
     prefix = ''
     postfix = ''
-    if thermal == 2:
+    if thermal == 0:
+        pass
+    elif thermal == 2:
         prefix = 'abs.'
     elif thermal == 4:
         prefix = 'srss.'

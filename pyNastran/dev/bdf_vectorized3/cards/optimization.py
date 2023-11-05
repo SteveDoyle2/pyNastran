@@ -204,7 +204,14 @@ class DESVAR(VectorizedBaseCard):
         self.cards = []
 
     def _save(self, desvar_id, label, xinit, xlb, xub, delx, ddval):
-        assert len(self.desvar_id) == 0
+        if len(self.desvar_id) != 0:
+            desvar_id = np.hstack([self.desvar_id, desvar_id])
+            label = np.hstack([self.label, label])
+            xinit = np.hstack([self.xinit, xinit])
+            xlb = np.hstack([self.xlb, xlb])
+            xub = np.hstack([self.xub, xub])
+            delx = np.hstack([self.delx, delx])
+            ddval = np.hstack([self.ddval, ddval])
         self.desvar_id = desvar_id
         self.label = label
         self.xinit = xinit
@@ -1461,8 +1468,8 @@ class DVPREL1(VectorizedBaseCard):
         for i in range(0, nfields, 2):
             desvar_id = end_fields[i]
             coeff = end_fields[i + 1]
-            assert isinstance(desvar_id, integer_types), f'card={card} desvar_id={desvar_id} coeff={coeff}'
-            assert isinstance(coeff, float_types), f'card={card} desvar_id={desvar_id} coeff={coeff}'
+            assert isinstance(desvar_id, integer_types), f'desvar_id={desvar_id} coeff={coeff}; card={card}'
+            assert isinstance(coeff, float_types), f'desvar_id={desvar_id} coeff={coeff}; card={card}'
             desvar_ids.append(desvar_id)
             coeffs.append(coeff)
 
@@ -1536,7 +1543,16 @@ class DVPREL1(VectorizedBaseCard):
               p_min, p_max, c0, ndesvar,
               desvar_id, coefficients) -> None:
         if len(self.dvprel_id) != 0:
-            asdf
+             dvprel_id = np.hstack([self.dvprel_id, dvprel_id])
+             property_id = np.hstack([self.property_id, property_id])
+             property_type = np.hstack([self.property_type, property_type])
+             field_num = np.hstack([self.field_num, field_num])
+             p_min = np.hstack([self.p_min, p_min])
+             p_max = np.hstack([self.p_max, p_max])
+             c0 = np.hstack([self.c0, c0])
+             ndesvar = np.hstack([self.ndesvar, ndesvar])
+             desvar_id = np.hstack([self.desvar_id, desvar_id])
+             coefficients = np.hstack([self.coefficients, coefficients])
         self.dvprel_id = dvprel_id
         self.property_id = property_id
         self.property_type = property_type

@@ -755,6 +755,49 @@ class FREQ3(FREQ):
     def validate(self):
         assert self.freq_type in ['LINEAR', 'LOG'], 'freq_type=%r' % self.freq_type
 
+    def get_frequencies(self, natural_freq: np.ndarray) -> np.ndarray:
+        f1 = self.f1
+        f2 = self.f2
+        freq_type = self.freq_type
+        cluster = 1 / self.cluster
+        nef = self.nef
+        if f1 == f2:
+            return np.array([f1], dtype='float64')
+
+        natural_freq2 = np.unique(np.hstack([[f1, f2], natural_freq]))
+        ifreq = (f1 <= natural_freq2) & (natural_freq2 <= f2)
+        natural_freq3 = natural_freq2[ifreq]
+        #f1_plus_f2 = 0.5 * (f1s + f2s)
+        #f2_minus_f1 = 0.5 * (f2s - f1s)
+        #nef = 11
+        #cluster = 1 / 0.25
+        k = np.arange(nef, dtype='int32')
+        zeta = -1 + 2 * k / (nef - 1)
+        zeta2 = np.abs(zeta) ** cluster * np.sign(zeta)
+
+        #f1s = [10.]
+        #f2s = [20.]
+
+        frequencies_list = []
+        if freq_type == 'LINEAR':
+            f1s = natural_freq3[:-1]
+            f2s = natural_freq3[1:]
+            for f1, f2 in zip(f1s, f2s):
+                fhat = 0.5 * (f1 + f2) + 0.5 * (f2 - f1) * zeta2
+                frequencies_list.append(fhat)
+        elif freq_type == 'LOG':
+            f1s = np.log10(natural_freq3[:-1])
+            f2s = np.log10(natural_freq3[1:])
+            for f1, f2 in zip(f1s, f2s):
+                flog_hat = 0.5 * (f1 + f2) + 0.5 * (f2 - f1) * zeta2
+                fhat = 10 ** flog_hat
+                frequencies_list.append(fhat)
+        else:  # pragma: no cover
+            raise RuntimeError(self.get_stats())
+
+        frequencies = np.unique(np.hstack(frequencies_list))
+        return frequencies
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -770,10 +813,10 @@ class FREQ3(FREQ):
         """
         sid = integer(card, 1, 'sid')
         f1 = double(card, 2, 'f1')
-        f2 = double_or_blank(card, 3, 'f2', f1)
+        f2 = double_or_blank(card, 3, 'f2', default=f1)
         freq_type = string_or_blank(card, 4, 'Type', 'LINEAR')
-        nef = integer_or_blank(card, 5, 'nef', 10)
-        cluster = double_or_blank(card, 6, 'cluster', 1.0)
+        nef = integer_or_blank(card, 5, 'nef', default=10)
+        cluster = double_or_blank(card, 6, 'cluster', default=1.0)
         return FREQ3(sid, f1, f2=f2, freq_type=freq_type, nef=nef, cluster=cluster,
                      comment=comment)
 
@@ -858,6 +901,22 @@ class FREQ4(FREQ):
         assert len(card) <= 6, f'len(FREQ card) = {len(card):d}\ncard={card}'
         return FREQ4(sid, f1=f1, f2=f2, fspread=fspread, nfm=nfm, comment=comment)
 
+    def get_frequencies(self, natural_freq: np.ndarray) -> np.ndarray:
+        # 21 equally spaced bands for each mode
+        num = self.nfm
+        f1 = self.f1
+        f2 = self.f2
+        fspread = self.fspread
+        frequencies_list = []
+        for natural_freqi in natural_freq:
+            if not(f1 <= natural_freqi <= f2):
+                continue
+            f1i = (1 - fspread) * natural_freqi
+            f2i = (1 + fspread) * natural_freqi
+            freqs = np.linspace(f1i, f2i, num=num)
+            frequencies_list.append(freqs)
+        return np.unique(np.hstack(frequencies_list))
+
     def raw_fields(self):
         list_fields = ['FREQ4', self.sid, self.f1, self.f2, self.fspread, self.nfm]
         return list_fields
@@ -931,8 +990,18 @@ class FREQ5(FREQ):
     def validate(self):
         assert len(self.fractions) > 0, 'FREQ5: fractions=%s' % self.fractions
 
-    #def get_freqs(self):
-        #raise NameError()
+    def get_frequencies(self, natural_freq: np.ndarray) -> np.ndarray:
+        """
+        #f1     : 20.0
+        #f2     : 200.0
+        #fractions : [0.6, 0.8, 0.9, 0.95, 1.0, 1.05, 1.1, 1.2]
+        """
+        fractions = np.unique(self.fractions)
+        freqsi = fractions[:, np.newaxis] * natural_freq[np.newaxis, :]
+        freqsi2 = np.unique(freqsi)
+        ifreq = (self.f1 <= freqsi2) & (freqsi2 <= self.f2)
+        frequencies = freqsi2[ifreq]
+        return frequencies
 
     @classmethod
     def add_card(cls, card, comment=''):

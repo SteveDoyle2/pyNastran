@@ -3,7 +3,7 @@ import copy
 from datetime import date
 from collections import defaultdict
 from itertools import count
-from typing import Union, Any
+from typing import Union, TextIO, Any
 
 import numpy as np
 import scipy as sp
@@ -64,9 +64,9 @@ class Solver:
         model.write_bdf('junk.bdf')
         sol = model.sol
         solmap = {
-            101 : self.run_sol_101,  # static
-            103 : self.run_sol_103,  # modes
-            111 : self.run_sol_111,  # modal frequency response
+            101 : self.run_sol_101_statics,  # static
+            103 : self.run_sol_103_modes,  # modes
+            111 : self.run_sol_111_harmonic,  # modal frequency response
         }
         model.cross_reference()
         self._update_card_count()
@@ -306,11 +306,11 @@ class Solver:
         #print(udofs, idofs)
         return constraints
 
-    def run_sol_101(self, subcase: Subcase,
-                    f06_file,
-                    page_stamp: str, title: str='', subtitle: str='', label: str='',
-                    page_num: int=1,
-                    idtype: str='int32', fdtype: str='float64') -> Any:
+    def run_sol_101_statics(self, subcase: Subcase,
+                            f06_file: TextIO,
+                            page_stamp: str, title: str='', subtitle: str='', label: str='',
+                            page_num: int=1,
+                            idtype: str='int32', fdtype: str='float64') -> Any:
         """
         Runs a SOL 101
 
@@ -671,7 +671,7 @@ class Solver:
         self.log.info('finished')
         return end_options
 
-    def _save_displacment(self, f06_file,
+    def _save_displacment(self, f06_file: TextIO,
                           subcase: Subcase, itime: int, ntimes: int,
                           node_gridtype: NDArrayN2int,
                           xg: NDArrayNfloat,
@@ -692,7 +692,7 @@ class Solver:
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
         return page_num
 
-    def _save_spc_forces(self, f06_file,
+    def _save_spc_forces(self, f06_file: TextIO,
                          subcase: Subcase, itime: int, ntimes: int,
                          node_gridtype: NDArrayN2int, fspc: NDArrayNfloat,
                          ngrid: int, ndof_per_grid: int,
@@ -712,7 +712,7 @@ class Solver:
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
         return page_num
 
-    def _save_applied_load(self, f06_file,
+    def _save_applied_load(self, f06_file: TextIO,
                            subcase: Subcase, itime: int, ntimes: int,
                            node_gridtype: NDArrayN2int,
                            Fg: NDArrayNfloat,
@@ -738,7 +738,7 @@ class Solver:
         fdtype = 'float32'
         return idtype, fdtype
 
-    def _save_static_table(self, f06_file,
+    def _save_static_table(self, f06_file: TextIO,
                            subcase: Subcase, itime: int, ntimes: int,
                            node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,
                            obj: Union[RealSPCForcesArray],
@@ -779,10 +779,10 @@ class Solver:
             slot[isubcase] = spc_forces
         return page_num
 
-    def run_sol_103(self, subcase: Subcase, f06_file,
-                    page_stamp: str, title: str='', subtitle: str='', label: str='',
-                    page_num: int=1,
-                    idtype: str='int32', fdtype: str='float64'):
+    def run_sol_103_modes(self, subcase: Subcase, f06_file: TextIO,
+                          page_stamp: str, title: str='', subtitle: str='', label: str='',
+                          page_num: int=1,
+                          idtype: str='int32', fdtype: str='float64'):
         """
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
         [M]{xdd} + [K]{x} = {F}
@@ -853,10 +853,10 @@ class Solver:
         return end_options
         #raise NotImplementedError(subcase)
 
-    def run_sol_111(self, subcase: Subcase, f06_file,
-                    page_stamp: str, title: str='', subtitle: str='', label: str='',
-                    page_num: int=1,
-                    idtype: str='int32', fdtype: str='float64'):
+    def run_sol_111_harmonic(self, subcase: Subcase, f06_file: TextIO,
+                             page_stamp: str, title: str='', subtitle: str='', label: str='',
+                             page_num: int=1,
+                             idtype: str='int32', fdtype: str='float64'):
         """
         frequency
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
@@ -917,11 +917,10 @@ class Solver:
         Maa = out['Maa']
         eigenvalues = out['eigenvalues']
         omegas = np.sqrt(np.abs(eigenvalues))
-        omega_max = omegas.max()
-        #freq_max = 2 * np.pi * omega_max
-        nfreq = 1001
-        #freq = np.linspace(0., 1.5*freq_max, num=nfreq)
-        omegai = np.linspace(0., 1.5*omega_max)
+
+        freqs = get_frequencies(model, subcase, omegas)
+        nfreq = len(freqs)
+        omegai = 2 * np.pi * freqs
 
         ndof_a = Kaa.shape[0]
         Caa = np.eye(ndof_a)
@@ -936,7 +935,8 @@ class Solver:
         tf_matrix_a = np.ones((ndof_a, ndof_a, nfreq), dtype='complex128')
         #tf_matrix_a = np.ma.masked_array(tf_matrix, tf_mask)
         for i, omegai in enumerate(omegas):
-            res = sp.linalg.inv(Kaa - omegai**2 * Maa + 1j*omegai*Caa)
+            mat = -omegai**2*Maa + 1j*omegai*Caa + Kaa
+            res = sp.linalg.inv(mat)
             tf_matrix_a[:,:,i] = res
 
         tf_matrix = np.zeros(shape, dtype='complex128')  # full system 3x3 TF matrix
@@ -1366,7 +1366,7 @@ def xg_to_xb(model, xg: NDArrayNfloat, ngrid: int, ndof_per_grid: int,
 def write_oload(Fb: NDArrayNfloat,
                 dof_map: DOF_MAP,
                 isubcase: int, ngrid: int, ndof_per_grid: int,
-                f06_file, page_stamp: str, page_num: int, log) -> int:
+                f06_file: TextIO, page_stamp: str, page_num: int, log) -> int:
     """writes the OLOAD RESULTANT table"""
     str(ngrid)
     str(dof_map)
@@ -1971,10 +1971,13 @@ def _run_modes(model: BDF, subcase: Subcase,
     #print(f'xa_ = {xa_} {xa_.shape}')
     #xa2 = xa_.reshape(nmodes, na, na)
 
+    ndof_a = len(xa)
     xg_out = np.full((nmodes, ndof), np.nan, dtype=fdtype)
-    xa_out = np.full((nmodes, len(xa)), np.nan, dtype=fdtype)
+    xa_out = np.full((nmodes, ndof_a), np.nan, dtype=fdtype)
     #xa[ipositive] = xa_
-    xa_out[:, ipositive] = xa_
+    for imode in range(nmodes):
+        xa_out[imode, ipositive] = xa_[:, imode]
+    #xa_out[:, ipositive] = xa_
     xg = np.arange(ndof, dtype=fdtype)
     #xg[aset] = xa
     #xg[sset] = xs
@@ -2057,4 +2060,34 @@ def _build_xg(model: BDF, dof_map: DOF_MAP,
     spc_set = np.array(spc_set, dtype='int32')
     #print('spc_set =', spc_set, xspc)
     return spc_set, sset, xspc
+
+
+def get_frequencies(model: BDF, subcase: Subcase,
+                    omega_ns: np.ndarray) -> np.ndarray:
+
+    is_freqs = (len(model.frequencies) == 0)
+    is_frequency = ('FREQUENCY' not in subcase)
+    natural_freq = np.unique(omega_ns) / (2 * np.pi)
+    del omega_ns
+
+    if is_freqs or is_frequency:
+        nfreq = 1001
+        #freq_max = 2 * np.pi * omega_max
+        fmax_default = 1.5 * natural_freq.max()
+
+        #freq = np.linspace(0., 1.5*freq_max, num=nfreq)
+        frequencies = np.linspace(1., fmax_default, num=nfreq)
+    else:
+        freq_id, unused_options = subcase['FREQUENCY']
+        frequencies_list = []
+        for freq in model.frequencies[freq_id]:
+            if freq.type in {'FREQ', 'FREQ1', 'FREQ2'}:
+                frequencies_list.append(freq.freqs)
+            elif freq.type in {'FREQ3', 'FREQ4', 'FREQ5'}:
+                freqi = freq.get_frequencies(natural_freq)
+                frequencies_list.append(freqi)
+            else:  # pragma: no cover
+                raise RuntimeError(freq)
+        frequencies = np.unique(np.hstack(frequencies_list))
+    return frequencies
 

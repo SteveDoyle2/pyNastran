@@ -18,6 +18,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     #integer_or_string,
     modal_components_or_blank,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.bdf.cards.loads.dloads import (
     fix_loadtype_tload1, fix_loadtype_tload2,
@@ -1222,12 +1223,9 @@ class RLOAD2(VectorizedBaseCard):
         self.n += 1
         return self.n
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         #excite_id : int
             #node id where the load is applied
         #delay : int/float; default=None
@@ -1467,12 +1465,9 @@ class LSEQ(VectorizedBaseCard):  # Requires LOADSET in case control deck
         self.cards.append((lseq_id, excite_id, load_id, temp_id, comment))
         self.n += 1
 
+    @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        if self.n == 0:
-            return
         ncards = len(self.cards)
-        if ncards == 0:
-            return
         lseq_id = np.zeros(ncards, dtype='int32')
         excite_id = np.zeros(ncards, dtype='int32')
         load_id = np.zeros(ncards, dtype='int32')
@@ -1635,8 +1630,9 @@ class TIC(VectorizedBaseCard):
         ncards = len(self.cards)
         if self.debug:
             self.model.log.debug('parse TIC')
+        idtype = self.model.idtype
         tic_id = np.zeros(ncards, dtype='int32')
-        node_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype=idtype)
         component = np.zeros(ncards, dtype='int32')
         u0 = np.zeros(ncards, dtype='float64')
         v0 = np.zeros(ncards, dtype='float64')
@@ -1984,8 +1980,9 @@ class DPHASE(VectorizedBaseCard):
         ncards = len(self.cards)
         if self.debug:
             self.model.log.debug('parse DPHASE')
+        idtype = self.model.idtype
         dphase_id = np.zeros(ncards, dtype='int32')
-        node_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype=idtype)
         component = np.zeros(ncards, dtype='int32')
         phase_lead = np.zeros(ncards, dtype='float64')
 
@@ -2025,6 +2022,347 @@ class DPHASE(VectorizedBaseCard):
         #node_id = np.atleast_1d(np.asarray(node_id, dtype=self.node_id.dtype))
         #inid = np.searchsorted(self.node_id, node_id)
         #return inid
+
+
+class QVECT(VectorizedBaseCard):
+    """
+    Thermal Vector Flux Load
+
+    Defines thermal vector flux from a distant source into a face of one
+    or more CHBDYi boundary condition surface elements.
+
+    +-------+------+------+-------+-----+---------+---------+---------+---------+
+    |   1   |   2  |   3  |   4   |  5  |     6   |    7    |    8    |    9    |
+    +=======+======+======+=======+=====+=========+=========+=========+=========+
+    | QVECT | SID  |  Q0  | TSOUR | CE  | E1/TID1 | E2/TID2 | E3/TID3 | CNTRLND |
+    +-------+------+------+-------+-----+---------+---------+---------+---------+
+    |       | EID1 | EID2 |  etc. |     |         |         |         |         |
+    +-------+------+------+-------+-----+---------+---------+---------+---------+
+
+    """
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
+
+    #def slice_card_by_index(self, i: np.ndarray) -> QVECT:
+        #load = QVECT(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
+
+    def add(self, sid: int, q0: float, eids: list[int],
+            t_source: float=None,
+            ce: int=0,
+            vector_tableds: list[Union[int, float]]=0.0,
+            control_id: int=0, comment: str='') -> int:
+        """
+        Creates a QVECT card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number. (Integer > 0)
+        q0 : float; default=None
+            Magnitude of thermal flux vector into face
+        t_source : float; default=None
+            Temperature of the radiant source
+        ce : int; default=0
+            Coordinate system identification number for thermal vector flux
+        vector_tableds : list[int/float, int/float, int/float]
+            vector : float; default=0.0
+                directional cosines in coordinate system CE) of
+                the thermal vector flux
+            tabled : int
+                TABLEDi entry identification numbers defining the
+                components as a function of time
+        control_id : int; default=0
+            Control point
+        eids : list[int] or THRU
+            Element identification number of a CHBDYE, CHBDYG, or
+            CHBDYP entry
+        comment : str; default=''
+            a comment for the card
+
+        """
+
+    def add_card(self, card: BDFCard, comment: str=''):
+        sid = integer(card, 1, 'sid')
+        q0 = double(card, 2, 'q0')
+        t_source = double_or_blank(card, 3, 't_source')
+        ce = integer_or_blank(card, 4, 'ce', default=0)
+        vector_tableds = [
+            integer_double_or_blank(card, 5, 'e1_tabled1', default=0.0),
+            integer_double_or_blank(card, 6, 'e2_tabled2', default=0.0),
+            integer_double_or_blank(card, 7, 'e3_tabled3', default=0.0),
+        ]
+        control_id = integer_or_blank(card, 8, 'control_id', default=0)
+
+        i = 1
+        eids = []
+        for ifield in range(9, len(card)):
+            eid = integer_or_string(card, ifield, 'eid_%d' % i)
+            eids.append(eid)
+            assert eid != 0, card
+            i += 1
+        elements = expand_thru_by(eids)
+        self.cards.append((sid, q0, t_source, control_id, ce, vector_tableds, elements, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+
+        #: Set identification number
+        load_id = np.zeros(ncards, dtype='int32')
+        control_id = np.zeros(ncards, dtype='int32')
+        nelement = np.zeros(ncards, dtype='int32')
+        q0 = np.full(ncards, np.nan, dtype='float64')
+        t_source = np.full(ncards, np.nan, dtype='float64')
+        ce = np.full(ncards, np.nan, dtype='int32')
+        vector = np.full((ncards, 3), np.nan, dtype='float64')
+        tableds = np.full((ncards, 3), 0, dtype='int32')
+
+        assert ncards > 0, ncards
+        all_elements = []
+        for icard, card in enumerate(self.cards):
+            (sid, q0i, t_sourcei, control_idi, cei, vector_tabledsi, elementsi, comment) = card
+            load_id[icard] = sid
+            q0[icard] = q0i
+            t_source[icard] = t_sourcei
+            nelement[icard] = len(elementsi)
+            control_id[icard] = control_idi
+            ce[icard] = cei
+            for i, vector_tabled in enumerate(vector_tabledsi):
+                if isinstance(vector_tabled, int):
+                    tableds[icard, i] = vector_tabled
+                else:
+                    vector[icard, i] = vector_tabled
+            all_elements.extend(elementsi)
+
+        elements = np.array(all_elements, dtype='int32')
+        self._save(load_id, q0, t_source, control_id, ce, vector, tableds,
+                   elements, nelement)
+        assert len(self.load_id) == self.n
+        self.cards = []
+
+    def _save(self, load_id, q0, t_source, control_id, ce, vector, tableds,
+              element, nelement):
+        if len(self.load_id) != 0:
+            adf
+            self.load_id
+        nloads = len(load_id)
+        self.load_id = load_id
+        self.q0 = q0
+        self.t_source = t_source
+        self.control_id = control_id
+        self.ce = ce
+        self.vector = vector
+        self.tableds = tableds
+        self.element = element
+        assert len(nelement) > 0, nelement
+        self.nelement = nelement
+        self.n = nloads
+
+    def __apply_slice__(self, load: QVECT, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.control_id = self.control_id[i]
+        load.q0 = self.q0[i]
+        load.t_source = self.t_source[i]
+        load.ce = self.ce[i]
+        load.vector = self.vector[i, :]
+        load.tableds = self.tableds[i, :]
+
+        load.element = hslice_by_idim(i, self.ielement, self.element)
+        load.nelement = self.nelement[i]
+
+    @property
+    def ielement(self) -> np.ndarray:
+        return make_idim(self.n, self.nelement)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(),
+                   self.control_id.max(),
+                   self.element.max(),)
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        #array_str, array_default_int
+
+        load_ids = array_str(self.load_id, size=size)
+        control_id = array_default_int(self.control_id, size=size)
+        for sid, q0, t_source, ce, vector, tableds, \
+            control_id, (ieid0, ieid1) in zip_longest(load_ids, self.q0, self.t_source,
+                                                      self.ce, self.vector, self.tableds,
+                                                      control_id, self.ielement):
+            element_ids = self.element[ieid0:ieid1].tolist()
+            eids = collapse_thru_by(element_ids)
+            vector_tableds = []
+            for vectori, tabled in zip(vector, tableds):
+                if tabled == 0:
+                    vector_tableds.append(vectori)
+                else:
+                    vector_tableds.append(tabled)
+            list_fields = [
+                'QVECT', sid, q0, t_source, ce
+                ] + vector_tableds + [control_id] + eids
+            bdf_file.write(print_card(list_fields))
+        return
+
+    def sum_forces_moments(self) -> np.ndarray:
+        nloads = len(self.load_id)
+        force_moment = np.zeros((nloads, 6), dtype='float64')
+        return force_moment
+
+
+class RANDPS(VectorizedBaseCard):
+    r"""
+    Power Spectral Density Specification
+
+    Defines load set power spectral density factors for use in random analysis
+    having the frequency dependent form:
+
+    .. math:: S_{jk}(F) = (X+iY)G(F)
+    """
+
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
+
+    #def slice_card_by_index(self, i: np.ndarray) -> RANDPS:
+        #load = RANDPS(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
+
+    def add_card(self, card: BDFCard, comment: str=''):
+        """
+        Adds a RANDPS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        j = integer(card, 2, 'j')
+        k = integer(card, 3, 'k')
+        fdouble_or_blank = force_double_or_blank if self.model.is_lax_parser else double_or_blank
+        x = fdouble_or_blank(card, 4, 'x', default=0.0)
+        y = fdouble_or_blank(card, 5, 'y', default=0.0)
+        tabrnd1_id = integer_or_blank(card, 6, 'tid', default=0)
+        assert len(card) <= 7, f'len(RANDPS card) = {len(card):d}\ncard={card}'
+        self.cards.append((sid, j, k, x, y, tabrnd1_id, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+
+        # sid : int
+        #     random analysis set id
+        #     defined by RANDOM in the case control deck
+        # j : int
+        #     Subcase id of the excited load set
+        # k : int
+        #     Subcase id of the applied load set
+        #     k > j
+        # x / y : float; default=0.0
+        #     Components of the complex number
+        # tid : int; default=0
+        #     TABRNDi id that defines G(F)
+        # comment : str; default=''
+        #     a comment for the card
+
+        #: Set identification number
+        load_id = np.zeros(ncards, dtype='int32')
+        subcase_excite_load = np.zeros(ncards, dtype='int32')
+        subcase_applied_load = np.zeros(ncards, dtype='int32')
+        xy = np.zeros((ncards, 2), dtype='float64')
+        tabrnd1_id = np.zeros(ncards, dtype='int32')
+
+        assert ncards > 0, ncards
+        for icard, card in enumerate(self.cards):
+            (sid, subcase_excite_loadi, subcase_applied_loadi,
+             x, y, tabrnd1_idi, comment) = card
+            load_id[icard] = sid
+            subcase_excite_load[icard] = subcase_excite_loadi
+            subcase_applied_load[icard] = subcase_applied_loadi
+            xy[icard] = [x, y]
+            tabrnd1_id[icard] = tabrnd1_idi
+
+        self._save(load_id, subcase_excite_load, subcase_applied_load, xy, tabrnd1_id)
+        assert len(self.load_id) == self.n
+        self.cards = []
+
+    def _save(self, load_id,
+              subcase_excite_load, subcase_applied_load,
+              xy, tabrnd1_id) -> None:
+        if len(self.load_id) != 0:
+            sadf
+        self.load_id = load_id
+        self.subcase_excite_load = subcase_excite_load
+        self.subcase_applied_load = subcase_applied_load
+        self.xy = xy
+        self.tabrnd1_id = tabrnd1_id
+
+    def __apply_slice__(self, load: RANDPS, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.subcase_excite_load = self.subcase_excite_load[i]
+        load.subcase_applied_load = self.subcase_applied_load[i]
+        load.xy = self.xy[i, :]
+        load.tabrnd1_id = self.tabrnd1_id[i]
+
+    @property
+    def x(self) -> np.ndarray:
+        return self.xy[:, 0]
+    @property
+    def y(self) -> np.ndarray:
+        return self.xy[:, 1]
+
+    @x.setter
+    def x(self, x: np.ndarray) -> None:
+        self.xy[:, 0] = x
+    @y.setter
+    def y(self, y: np.ndarray) -> None:
+        self.xy[:, 1] = y
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(),
+                   self.subcase_excite_load.max(),
+                   self.subcase_applied_load.max(),
+                   self.tabrnd1_id.max(),)
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+        #array_str, array_default_int
+
+        load_ids = array_str(self.load_id, size=size)
+        subcase_excite_loads = array_str(self.subcase_excite_load, size=size)
+        subcase_applied_loads = array_str(self.subcase_applied_load, size=size)
+        tabrnd1_id = array_default_int(self.tabrnd1_id, default=0, size=size)
+        for sid, subcase_excite_load, subcase_applied_load, \
+            x, y, tabrnd1_id in zip_longest(load_ids, subcase_excite_loads,
+                                            subcase_applied_loads,
+                                            self.x, self.y, tabrnd1_id):
+            list_fields = ['RANDPS', sid, subcase_excite_load, subcase_applied_load,
+                           x, y, tabrnd1_id]
+            bdf_file.write(print_card(list_fields))
+        return
+
+    #def sum_forces_moments(self) -> np.ndarray:
+        #nloads = len(self.load_id)
+        #force_moment = np.zeros((nloads, 6), dtype='float64')
+        #return force_moment
 
 
 def _set_int_float(i: int, array_int: np.ndarray, array_float: np.ndarray, value: Union[int, float]) -> None:

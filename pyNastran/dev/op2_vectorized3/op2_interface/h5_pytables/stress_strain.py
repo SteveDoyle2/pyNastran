@@ -36,7 +36,9 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.utils import get_gr
 from .utils import break_domain_by_case, get_analysis_code_times # get_name
 if TYPE_CHECKING:
     import pandas as pd
+    import h5py
     from pyNastran.dev.op2_vectorized3.op2_geom import OP2
+    GroupData = tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 
 def read_elemental_force(model: OP2, domains: np.ndarray,
                          elemental: Node, elemental_index: Node):
@@ -1775,7 +1777,7 @@ def _complex_shell_stress(result_name: str,
     EID = group['EID']
     nelements = len(EID)
     nlength = index['LENGTH'].sum()
-    nueid = len(np.unique(EID))
+    #nueid = len(np.unique(EID))
 
     #element_node = np.zeros((nelements, 2), dtype=EID.dtype)
     #element_node[:, 0] = EID
@@ -1938,8 +1940,15 @@ def _complex_shell_stress(result_name: str,
     return iresult
 
 def _get_data_by_group_element(basename: str,
-                               domains_df: pd.Dataframe, index: Group,
-                               EID, DATA: np.ndarray) -> dict[Any, Any]:
+                               domains_df: pd.Dataframe,
+                               index: Group,
+                               EID: np.ndarray,
+                               DATA: np.ndarray) -> tuple[
+                                   pd.Series, pd.Series, pd.Series,
+                                   dict[int,
+                                        dict[int,
+                                             dict[int,
+                                                  tuple[int, np.ndarray, np.ndarray]]]]]:
     INDEX_DOMAIN = index['DOMAIN_ID']
     INDEX_POSITION = index['POSITION']
     INDEX_LENGTH = index['LENGTH']
@@ -2019,7 +2028,7 @@ def _get_data_by_group_element(basename: str,
             datai = DATA[i0:i1]
             #print(elementi[:, 0])
             #op2.displacements[subcasei]
-
+            #DataByGroup =
             data_by_group[subcasei][analysis_codei][itime] = (idomaini, elementi, datai)
 
             #results[iresult] = RealVectorTable(
@@ -2032,7 +2041,7 @@ def _get_data_by_group_element(basename: str,
             #iresult += 1
     return mode, eigr, eigi, data_by_group
 
-def get_idomain(grouped_dfi: pd.DataFrame, INDEX_DOMAIN: np.ndarray) -> np.ndarray:
+def get_idomain(grouped_dfi: pd.DataFrame, INDEX_DOMAIN: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     no_domain = True
     indexi, dfi = grouped_dfi
     DOMAINs = dfi['ID']
@@ -2065,7 +2074,9 @@ def get_idomain(grouped_dfi: pd.DataFrame, INDEX_DOMAIN: np.ndarray) -> np.ndarr
 
 def _get_data_by_group_fiber_element(basename: str,
                                      domains_df: pd.Dataframe, index: Group,
-                                     EID, FIBER, DATA: np.ndarray) -> dict[Any, Any]:
+                                     EID: np.ndarray,
+                                     FIBER: np.ndarray,
+                                     DATA: np.ndarray) -> dict[int, dict[int, dict[int, GroupData]]]:
     INDEX_DOMAIN = index['DOMAIN_ID']
     INDEX_POSITION = index['POSITION']
     INDEX_LENGTH = index['LENGTH']
@@ -2087,7 +2098,7 @@ def _get_data_by_group_fiber_element(basename: str,
     #DOMAIN_ID = domains_df['ID']
     grouped_df = break_domain_by_case(domains_df, INDEX_DOMAIN)
     for grouped_dfi in grouped_df:
-        domains = grouped_dfi[1]['ID'].values
+        domains: np.ndarray = grouped_dfi[1]['ID'].values
         no_domain, idomain, dfi = get_idomain(grouped_dfi, INDEX_DOMAIN)
         if no_domain:
             continue
@@ -2172,7 +2183,8 @@ def _get_data_by_group_fiber_element(basename: str,
     assert ntotal == total_length, f'total_length={total_length} ntotal={ntotal}'
     return mode, eigr, eigi, data_by_group
 
-def _preallocate_data_by_group(subcase, analysis_code):
+def _preallocate_data_by_group(subcase: pd.Series,
+                               analysis_code: int) -> dict[int, dict[int, dict[Any, Any]]]:
     data_by_group = {}
     #data_by_group[subcase][analysis_codei]
     for subcasei in subcase:

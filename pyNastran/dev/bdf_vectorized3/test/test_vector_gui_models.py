@@ -55,7 +55,7 @@ class TestGuiModels(unittest.TestCase):
         h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
         run_nastran_gui(h5_filename)
 
-    def _test_h5_modes_complex(self):
+    def test_h5_modes_complex(self):
         h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
         run_nastran_gui(h5_filename)
 
@@ -136,27 +136,27 @@ class TestGuiModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'elements' / 'static_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'static_elements.h5'
         run_nastran_gui(bdf_filename)
-        #run_nastran_gui(h5_filename)
+        run_nastran_gui(h5_filename)
     def test_elements2(self):
         bdf_filename = MODEL_PATH / 'elements' / 'modes_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
         run_nastran_gui(bdf_filename)
-        #run_nastran_gui(h5_filename)
+        run_nastran_gui(h5_filename)
     def test_elements3(self):
         bdf_filename = MODEL_PATH / 'elements' / 'time_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
         run_nastran_gui(bdf_filename)
-        #run_nastran_gui(h5_filename)
+        run_nastran_gui(h5_filename)
     def test_elements4(self):
         bdf_filename = MODEL_PATH / 'elements' / 'freq_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         run_nastran_gui(bdf_filename)
-        #run_nastran_gui(h5_filename)
+        run_nastran_gui(h5_filename)
     def test_elements5(self):
         bdf_filename = MODEL_PATH / 'elements' / 'freq_elements2.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements2.h5'
         run_nastran_gui(bdf_filename)
-        #run_nastran_gui(h5_filename)
+        run_nastran_gui(h5_filename)
     def test_elements6(self):
         bdf_filename = MODEL_PATH / 'elements' / 'loadstep_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'loadstep_elements.h5'
@@ -166,12 +166,12 @@ class TestGuiModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
         run_nastran_gui(bdf_filename)
-        #run_nastran_gui(h5_filename)
+        run_nastran_gui(h5_filename)
     def test_elements8(self):
         bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
         h5_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.h5'
         run_nastran_gui(bdf_filename)
-        #run_nastran_gui(h5_filename)
+        run_nastran_gui(h5_filename)
 
     def test_thermal_1(self):
         bdf_filename = MODEL_PATH / 'thermal' / 'hd15901.bdf'
@@ -189,8 +189,8 @@ class TestGuiModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'thermal' / 'thermal_test_153.bdf'
         run_nastran_gui(bdf_filename)
 
-    #def test_sol200_1(self):
-        #bdf_filename = MODEL_PATH / 'sol200' / 'd200obus.bdf'
+    def test_sol200_1(self):
+        bdf_filename = MODEL_PATH / 'sol200' / 'd200obus.bdf'
     def test_sol200_2(self):
         bdf_filename = MODEL_PATH / 'sol200' / 'model_200.bdf'
         run_nastran_gui(bdf_filename)
@@ -198,7 +198,7 @@ class TestGuiModels(unittest.TestCase):
         bdf_filename = MODEL_PATH / 'transfer_function' / 'actuator_tf_modeling.bdf'
         run_nastran_gui(bdf_filename)
     def test_aero_1(self):
-        #h5_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm_msc.h5'
+        h5_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm_msc.h5'
         #run_nastran_gui(h5_filename)
         bdf_filename = MODEL_PATH / 'aero' / 'freedlm' / 'freedlm.bdf'
         run_nastran_gui(bdf_filename)

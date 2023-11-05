@@ -98,7 +98,7 @@ class TestDynamic(unittest.TestCase):
         #print(model.dphases[42])
         save_load_deck(model)
 
-    def _test_freq(self):
+    def test_freq(self):
         """tests FREQ, FREQ1, FREQ2, FREQ4"""
         model = BDF(debug=False)
         sid = 101

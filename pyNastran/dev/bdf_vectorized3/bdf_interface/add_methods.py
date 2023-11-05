@@ -65,15 +65,6 @@ class AddMethods():
         self.model._type_to_id_map[nxstrat.type].append(key)
 
     # SOL 101
-    def _add_suport1_object(self, suport1: SUPORT1) -> None:
-        """adds a SUPORT1"""
-        key = suport1.conid
-        if key in self.model.suport1:
-            self.model.suport1[key].add_suport1_to_set(suport1)
-        else:
-            assert suport1.conid > 0
-            self.model.suport1[key] = suport1
-            self.model._type_to_id_map[suport1.type].append(key)
 
     # SOL 103
     def _add_method_object(self, method: Union[EIGR, EIGRL, EIGB],

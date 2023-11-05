@@ -22,6 +22,33 @@ from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 #except ImportError:
 IS_MATPLOTLIB = False
 
+
+class TestAcoustic(unittest.TestCase):
+    def test_caabsf(self):
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        caabsf = model.caabsf
+        paabsf = model.paabsf
+
+        eid = 2
+        pid = 10
+        nodes = [1, 2, 3, 4]
+        idi = model.add_caabsf(eid, pid, nodes, comment='caabsf')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_paabsf(pid, table_reactance_real=None, table_reactance_imag=None,
+                         s=1.0, a=1.0, b=0.0, k=0.0, rhoc=1.0, comment='')
+        model.setup()
+
+        assert len(caabsf.write(size=8)) > 0
+        assert len(caabsf.write(size=16)) > 0
+        assert len(paabsf.write(size=8)) > 0
+        assert len(paabsf.write(size=16)) > 0
+
+        save_load_deck(model)
+
 class TestShells(unittest.TestCase):
     def test_pshell(self):
         log = get_logger(level='warning')

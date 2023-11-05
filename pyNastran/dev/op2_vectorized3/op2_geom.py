@@ -11,8 +11,7 @@ Defines:
 """
 from __future__ import annotations
 from pickle import dump
-from pathlib import PurePath
-from typing import Optional, Union, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
@@ -34,6 +33,7 @@ from pyNastran.dev.op2_vectorized3.geom.edom import EDOM
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
+from pyNastran.utils import PathLike
 
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger

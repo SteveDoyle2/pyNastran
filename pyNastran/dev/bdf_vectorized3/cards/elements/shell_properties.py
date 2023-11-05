@@ -59,9 +59,6 @@ def shell_materials(model: BDF) -> list[Union[MAT1, MAT8]]:
 
 
 class PSHELL(Property):
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-
     @Property.clear_check
     def clear(self) -> None:
         self.property_id = np.array([], dtype='int32')
@@ -466,6 +463,193 @@ class PSHELL(Property):
         # nu12 = -S12 / E1
         nu_xy = -S[0, 1] / Ex
         return Ex, Ey, Gxy, nu_xy
+
+
+class PAABSF(Property):
+    """
+    +--------+-----+--------+--------+---+---+---+---+------+
+    |    1   |  2  |    3   |    4   | 5 | 6 | 7 | 8 |   9  |
+    +========+=====+========+========+===+===+===+===+=======
+    | PAABSF | PID | TZREID | TZIMID | S | A | B | K | RHOC |
+    +--------+-----+--------+--------+---+---+---+---+------+
+    """
+    @Property.clear_check
+    def clear(self) -> None:
+        self.property_id = np.array([], dtype='int32')
+        self.table_reactance_real = np.array([], dtype='int32')
+        self.table_reactance_imag = np.array([], dtype='int32')
+        self.s = np.array([], dtype='float64')
+        self.a = np.array([], dtype='float64')
+        self.b = np.array([], dtype='float64')
+        self.k = np.array([], dtype='float64')
+        self.rho_c = np.array([], dtype='float64')
+
+    def add(self, pid: int,
+            table_reactance_real: int=0,
+            table_reactance_imag: int=0,
+            s: float=1.0, a: float=1.0, b: float=0.0,
+            k: float=0.0, rhoc: float=1.0,
+            comment: str=''):
+        """
+        Creates a PAABSF card
+
+        Parameters
+        ----------
+        pid : int
+            Property identification number of a CAABSF. (Integer > 0)
+        TZREID : int; default=None
+            TABLEDi id that defines the resistance as a function of
+            frequency. The real part of the impedence.
+        TZIMID : int; default=None
+            TABLEDi id that defines the reactance as a function of
+            frequency. The imaginary part of the impedance.
+        S : float; default=1.0
+            Impedance scale factor.
+        A : float; default=1.0
+            Area factor when 1 or 2 grid points are specified on the
+            CAABSF entry.
+        B : float; default=0.0
+            Equivalent structural damping coefficient.
+        K : float; default=0.0
+            Equivalent structural stiffness coefficient.
+        RHOC : float; default=1.0
+            Constant used in data recovery for calculating an absorption
+            coefficient. RHO is the media density, and C is the speed of
+            sound in the media.
+
+        """
+        table_reactance_real = 0 if table_reactance_real is None else table_reactance_real
+        table_reactance_imag = 0 if table_reactance_imag is None else table_reactance_imag
+        self.cards.append((pid, table_reactance_real, table_reactance_imag, s, a, b, k, rhoc))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a PAABSF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        pid = integer(card, 1, 'pid')
+        table_reactance_real = integer_or_blank(card, 2, 'tzreid', default=0)
+        table_reactance_imag = integer_or_blank(card, 3, 'tzimid', default=0)
+        s = double_or_blank(card, 4, 's', default=1.0)
+        a = double_or_blank(card, 5, 'a', default=1.0)
+        b = double_or_blank(card, 6, 'b', default=0.0)
+        k = double_or_blank(card, 7, 'k', default=0.0)
+        rhoc = double_or_blank(card, 8, 'rhoc', default=1.0)
+        assert len(card) <= 9, f'len(PAABSF card) = {len(card):d}\ncard={card}'
+        #return PAABSF(pid, tzreid, tzimid, s, a, b, k, rhoc, comment=comment)
+        self.cards.append((pid, table_reactance_real, table_reactance_imag, s, a, b, k, rhoc))
+        self.n += 1
+        return self.n - 1
+
+    @Property.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        property_id = np.zeros(ncards, dtype='int32')
+        table_reactance_real = np.zeros(ncards, dtype='int32')
+        table_reactance_imag = np.zeros(ncards, dtype='int32')
+        s = np.zeros(ncards, dtype='float64')
+        a = np.zeros(ncards, dtype='float64')
+        b = np.zeros(ncards, dtype='float64')
+        k = np.zeros(ncards, dtype='float64')
+        rho_c = np.zeros(ncards, dtype='float64')
+
+        for icard, card in enumerate(self.cards):
+            (pid, table_reactance_reali, table_reactance_imagi, si, ai, bi, ki, rhoci) = card
+
+            property_id[icard] = pid
+            table_reactance_real[icard] = table_reactance_reali
+            table_reactance_imag[icard] = table_reactance_imagi
+            s[icard] = si
+            a[icard] = ai
+            b[icard] = bi
+            k[icard] = ki
+            rho_c[icard] = rhoci
+        self._save(property_id, table_reactance_real, table_reactance_imag, s, a, b, k, rho_c)
+        self.sort()
+        self.cards = []
+
+    def _save(self, property_id,
+              table_reactance_real, table_reactance_imag,
+              s, a, b, k, rho_c) -> None:
+        if len(self.property_id) != 0:
+            raise NotImplementedError()
+        self.property_id = property_id
+        self.table_reactance_real = table_reactance_real
+        self.table_reactance_imag = table_reactance_imag
+        self.s = s
+        self.a = a
+        self.b = b
+        self.k = k
+        self.rho_c = rho_c
+        self.n = len(property_id)
+
+    def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
+        tableds = np.unique(np.hstack([
+            self.table_reactance_real,
+            self.table_reactance_imag]))
+        tableds = tableds[tableds > 0]
+        used_dict['tabled_id'].append(tableds)
+
+    #def convert(self, xyz_scale: float=1.0,
+                #nsm_per_area_scale: float=1.0, **kwargs):
+        #self.t *= xyz_scale
+        #self.z *= xyz_scale
+        #self.nsm *= nsm_per_area_scale
+
+    def __apply_slice__(self, prop: PAABSF, i: np.ndarray) -> None:  # ignore[override]
+        prop.n = len(i)
+        prop.property_id = self.property_id[i]
+        prop.table_reactance_real = self.table_reactance_real[i]
+        prop.table_reactance_imags = self.table_reactance_imags[i]
+        prop.s = self.s[i]
+        prop.a = self.a[i]
+        prop.b = self.b[i]
+        prop.k = self.k[i]
+        prop.rho_c = self.rho_c[i]
+
+    #def geom_check(self, missing: dict[str, np.ndarray]):
+        #mids = hstack_msg([mat.material_id for mat in self.allowed_materials],
+                          #msg=f'no shell materials for {self.type}')
+        #mids = np.unique(mids)
+        #material_ids = np.unique(self.material_id.ravel())
+        #if -1 == material_ids[0]:
+            #material_ids = material_ids[1:]
+        #geom_check(self,
+                   #missing,
+                   #material_id=(mids, material_ids))
+
+    @property
+    def max_id(self) -> int:
+        return max(self.property_id.max(),
+                   self.table_reactance_real.max(),
+                   self.table_reactance_imag.max())
+
+    @parse_property_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card = get_print_card(size, self.max_id)
+
+        for pid, table_real, table_imag, s, a, b, k, rhoc in zip_longest(self.property_id,
+                                                                         self.table_reactance_real, self.table_reactance_real,
+                                                                         self.s, self.a, self.b, self.k, self.rho_c):
+            list_fields = [
+                'PAABSF', pid, table_real, table_imag, s, a, b, k, rhoc]
+            msg = print_card(list_fields)
+            bdf_file.write(msg)
+        return
 
 
 def nonlinear_thickness(property_id: np.ndarray,

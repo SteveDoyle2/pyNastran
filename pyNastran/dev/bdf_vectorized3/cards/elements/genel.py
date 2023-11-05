@@ -384,7 +384,9 @@ class GENEL(Element):
 
     @property
     def max_id(self) -> int:
-        return max(self.element_id.max(), self.ul.max(), self.ud.max())
+        ul_max = 0 if len(self.ud) == 0 else self.ud.max()
+        ud_max = 0 if len(self.ul) == 0 else self.ul.max()
+        return max(self.element_id.max(), ul_max, ud_max)
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
@@ -425,24 +427,27 @@ class GENEL(Element):
             kz_nones = _get_genel_offset(n_kz) * [None]
 
             ud_line = []
-            ud_nodes = ud[:, 0]
-            ud_dofs = ud[:, 1]
-            ud_nodes_dofs = []
-            for ud_node, ud_dof in zip(ud_nodes, ud_dofs):
-                ud_nodes_dofs.extend([ud_node, ud_dof])
-            ud_line = ['UD', None] + ud_nodes_dofs + ud_nones
+            if len(ud):
+                ud_nodes = ud[:, 0]
+                ud_dofs = ud[:, 1]
+                ud_nodes_dofs = []
+                for ud_node, ud_dof in zip(ud_nodes, ud_dofs):
+                    ud_nodes_dofs.extend([ud_node, ud_dof])
+                ud_line = ['UD', None] + ud_nodes_dofs + ud_nones
 
             #print('s = %r' % self.s, self.s is not None)
             s_line = []
             if ns:
                 s_line = ['S'] + s.tolist()
 
-            ul_nodes = ul[:, 0]
-            ul_dofs = ul[:, 1]
-            ul_nodes_dofs = []
-            for ul_node, ul_dof in zip(ul_nodes, ul_dofs):
-                ul_nodes_dofs.extend([ul_node, ul_dof])
-            ul_line = ul_nodes_dofs + ul_nones
+            ul_line = []
+            if len(ul):
+                ul_nodes = ul[:, 0]
+                ul_dofs = ul[:, 1]
+                ul_nodes_dofs = []
+                for ul_node, ul_dof in zip(ul_nodes, ul_dofs):
+                    ul_nodes_dofs.extend([ul_node, ul_dof])
+                ul_line = ul_nodes_dofs + ul_nones
 
             list_fields = ['GENEL', eid, None] + (
                 ul_line +

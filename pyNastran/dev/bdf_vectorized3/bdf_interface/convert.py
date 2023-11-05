@@ -74,6 +74,7 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'SPC1', 'SPCOFF',
         'CELAS1', 'CELAS3', 'CDAMP1', 'CDAMP3', 'CBUSH1D',
         'BSURF', 'BSURFS', 'BCPROP', 'BCPROPS', 'BGADD', 'BCTADD',
+        'SESET',
     }
     #HARD_CARDS = {
         #'PELAS',
