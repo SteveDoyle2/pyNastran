@@ -71,21 +71,21 @@ class TestDampers(unittest.TestCase):
         """tests CDAMP1, CDAMP2, PDAMP, PDAMPT, GRID"""
         log = get_logger(level='warning')
         model = BDF(log=log)
-        eid = 1
-        pid = 2
+        cdamp_eid = 1
+        pdamp_pid = 2
         nids = [3, 4]
         c1 = 1
         c2 = 1
-        cpdamp1_id = model.add_cdamp1(eid, pid, nids, c1, c2, comment='cdamp1')
+        cpdamp1_id = model.add_cdamp1(cdamp_eid, pdamp_pid, nids, c1, c2, comment='cdamp1')
 
         b = 1.0e7
-        pdamp_id = model.add_pdamp(pid, b, comment='pdamp')
+        pdamp_id = model.add_pdamp(pdamp_pid, b, comment='pdamp')
 
         tbid = 10
-        pdampt_id = model.add_pdampt(pid, tbid, comment='pdampt')
+        pdampt_id = model.add_pdampt(pdamp_pid, tbid, comment='pdampt')
 
-        eid = 5
-        cdamp2_id = model.add_cdamp2(eid, b, nids, comment='cdamp2')
+        cdamp_eid = 5
+        cdamp2_id = model.add_cdamp2(cdamp_eid, b, nids, comment='cdamp2')
         #cdamp1.raw_fields()
         #pdamp.raw_fields()
         #pdampt.raw_fields()
@@ -129,67 +129,67 @@ class TestDampers(unittest.TestCase):
         """tests the CDAMP4, PDAMP, CDAMP4, SPOINT"""
         log = get_logger(level='warning')
         model = BDF(log=log)
-        eid = 3
-        pid = 2
+        cdamp_eid = 3
+        pdamp_pid = 2
         s1 = 3
         s2 = 4
-        cdamp3_id = model.add_cdamp3(eid, pid, [s1, s2], comment='cdamp3')
+        cdamp3_id = model.add_cdamp3(cdamp_eid, pdamp_pid, [s1, s2], comment='cdamp3')
 
         bdamp = 1.0e3
-        pdamp_id = model.add_pdamp(pid, bdamp, comment='pdamp')
+        pdamp_id = model.add_pdamp(pdamp_pid, bdamp, comment='pdamp')
         spoints_id = model.add_spoint([3, 4, 5], comment='spoints')
 
-        eid = 4
+        cdamp_eid = 4
         bdamp = 2.0e3
         s1 = 3
         s2 = 4
-        cdamp4_id = model.add_cdamp4(eid, bdamp, [s1, s2], comment='cdamp4')
+        cdamp4_id = model.add_cdamp4(cdamp_eid, bdamp, [s1, s2], comment='cdamp4')
 
         # two new CDAMP4s defined on one line
         bdamp2 = 3.0e3
         fields = ['CDAMP4', 104, bdamp, s1, s2, 105, bdamp2, s1, s2]
         model.add_card(fields, 'CDAMP4')
 
-        eid = 6
-        pid = 6
+        cvisc_eid = 6
+        pvisc_pid = 6
         ce = 1.
         cr = 1.
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(11, [0., 0., 0.])
         nids = [10, 11]
-        pvisc_id = model.add_pvisc(pid, ce, cr, comment='pvisc')
-        cvisc_id = model.add_cvisc(eid, pid, nids, comment='cvisc')
+        pvisc_id = model.add_pvisc(pvisc_pid, ce, cr, comment='pvisc')
+        cvisc_id = model.add_cvisc(cvisc_eid, pvisc_pid, nids, comment='cvisc')
 
-        eid = 7
-        pid = 7
+        cgap_eid = 7
+        pgap_pid = 7
         x = [1., 2., 3.]
         g0 = None
-        cgap_id = model.add_cgap(eid, pid, nids, x, g0, cid=None, comment='cgap')
-        pgap_id = model.add_pgap(pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
+        cgap_id = model.add_cgap(cgap_eid, pgap_pid, nids, x, g0, cid=None, comment='cgap')
+        pgap_id = model.add_pgap(pgap_pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
                                  kt=None, mu2=None,
                                  tmax=0., mar=100., trmin=0.001,
                                  comment='pgap')
 
-        eid = 8
-        pid = 8
+        cbush_eid = 8
+        pbush_pid = 8
         k = [1.0]
         b = [2.0]
         ge = [0.01]
-        cbush_id = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
+        cbush_id = model.add_cbush(cbush_eid, pbush_pid, nids, x, g0, cid=None, s=0.5,
                                    ocid=-1, si=None, comment='cbush')
-        pbush_id = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
+        pbush_id = model.add_pbush(pbush_pid, k, b, ge, rcv=None, mass=None,
                                    comment='pbush')
 
-        eid = 9
-        pid = 9
+        pbush_eid = 9
+        pbush_pid = 9
         k = 1.
         c = 2.
         m = 3.
         sa = 4.
         se = 5.
         #optional_vars = None
-        cbush1d_id = model.add_cbush1d(eid, pid, nids, cid=None, comment='cbush1d')
-        pbush1d_id = model.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
+        cbush1d_id = model.add_cbush1d(cbush_eid, pbush_pid, nids, cid=None, comment='cbush1d')
+        pbush1d_id = model.add_pbush1d(pbush_pid, k=k, c=c, m=m, sa=sa, se=se,
                                        optional_vars=None, comment='pbush1d')
 
         card_lines = [
@@ -199,6 +199,7 @@ class TestDampers(unittest.TestCase):
         ]
         model.add_card_lines(card_lines, 'PBUSH1D', comment='', has_none=True)
         prop = model.Property(204)
+        pbush1d_pid = 204
         str(prop)
 
         mid = 10
@@ -241,35 +242,35 @@ class TestDampers(unittest.TestCase):
                 ('B1', 1.0), ('B2', 1.0), ('B3', 1.0), ('B4', 1.0), ('B5', 1.0), ('B6', 1.0),
                 #('M1', 1.0), ('M2', 1.0), ('M3', 1.0), ('M4', 1.0), ('M5', 1.0), ('M6', 1.0),
             ]
-            i = make_dvprel_optimization(model, params, 'PBUSH', pbush_id, i=1)
+            i = make_dvprel_optimization(model, params, 'PBUSH', pbush_pid, i=1)
 
             params = [(5, 1.0)]
-            i = make_dvprel_optimization(model, params, 'PGAP', pgap_id, i)
+            i = make_dvprel_optimization(model, params, 'PGAP', pgap_pid, i)
 
             params = [('K', 1.0), ('C', 1.0), ('M', 1.0)]
-            i = make_dvprel_optimization(model, params, 'PBUSH1D', pbush1d_id, i)
+            i = make_dvprel_optimization(model, params, 'PBUSH1D', pbush1d_pid, i)
 
             params = [('CE1', 1.0)]
-            i = make_dvprel_optimization(model, params, 'PVISC', pvisc_id, i)
+            i = make_dvprel_optimization(model, params, 'PVISC', pvisc_pid, i)
 
-            params = [('B1', 1.0), (3, 1.0)]
-            i = make_dvprel_optimization(model, params, 'PDAMP', pdamp_id, i)
+            params = [('B1', 1.0), ('C1', 3/ 1.0)]
+            i = make_dvprel_optimization(model, params, 'PDAMP', pdamp_pid, i)
 
             #-----------------------------------------
             if run_opt_dvc:
                 params = []
-                i = make_dvcrel_optimization(model, params, 'CVISC', cvisc_id, i)
+                i = make_dvcrel_optimization(model, params, 'CVISC', cvisc_eid, i)
 
                 params = [('X1', 1.0), ('X2', 2.0), ('X3', 3.0),
                           ('S1', 1.0), ('S2', 2.0), ('S3', 3.0),
                           ('S', 1.0), ]
-                i = make_dvcrel_optimization(model, params, 'CBUSH', cbush_id, i)
+                i = make_dvcrel_optimization(model, params, 'CBUSH', cbush_eid, i)
 
                 params = []
                 i = make_dvcrel_optimization(model, params, 'CBUSH1D', cbush_id, i)
 
                 params = []
-                i = make_dvcrel_optimization(model, params, 'CGAP', cgap_id, i)
+                i = make_dvcrel_optimization(model, params, 'CGAP', cgap_eid, i)
 
         model.setup()
         model.spoint.write()

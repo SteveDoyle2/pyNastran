@@ -55,7 +55,7 @@ class MATT1(Material):
         self.cards.append((mid, e_table, g_table, nu_table, rho_table, a_table,
                            ge_table, st_table, sc_table, ss_table, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -86,7 +86,7 @@ class MATT1(Material):
         self.cards.append((mid, e_table, g_table, nu_table, rho_table, a_table,
                            ge_table, st_table, sc_table, ss_table, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -307,7 +307,7 @@ class MATS1(Material):
         assert isinstance(Type, str), f'Type={Type!r}'
         self.cards.append((mid, tid, Type, h, hr, yf, limit1, limit2, stress_strain_measure, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -357,7 +357,7 @@ class MATS1(Material):
         self.cards.append((mid, tid, Type, hardening_slope, hr, yf,
                            limit1, limit2, stress_strain_measure, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -533,7 +533,7 @@ class MATT2(Material):
                            st_table, sc_table, ss_table,
                            ge_table, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -577,7 +577,7 @@ class MATT2(Material):
                            st_table, sc_table, ss_table,
                            ge_table, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -827,7 +827,7 @@ class MATT8(Material):
                            xc_table, yt_table, yc_table,
                            s_table, ge_table, f12_table, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -873,7 +873,7 @@ class MATT8(Material):
                            xc_table, yt_table, yc_table,
                            s_table, ge_table, f12_table, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:

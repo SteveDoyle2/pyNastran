@@ -43,6 +43,12 @@ class TestOpt(unittest.TestCase):
     def test_opt_2(self):
         """tests updating model based on DESVARs"""
         model = BDF(debug=False)
+        modtrak_id = 100
+        low_range = 3
+        high_range = 6
+        mt_filter = 0.9
+        model.add_modtrak(modtrak_id, low_range, high_range, mt_filter, comment='modtrak')
+
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -393,6 +399,7 @@ class TestOpt(unittest.TestCase):
         """tests a DESVAR, DVPREL1, DVPREL2, DRESP1, DRESP2, DRESP3, DCONSTR, DSCREEN, DCONADD"""
         model = BDF(debug=False)
         dconadd = model.dconadd
+        dscreen = model.dscreen
 
         dvprel1_id = 10
         desvar_id = 12
@@ -521,9 +528,8 @@ class TestOpt(unittest.TestCase):
         dconadd_id = 45
         dconstrs = [1001, 1002, 1003]
         model.add_dconadd(dconadd_id, dconstrs, comment='dconadd')
-        if 0:
-            dscreen = model.add_dscreen('DISP', comment='dscreen')
-            dscreen.raw_fields()
+        dscreeni = model.add_dscreen('DISP', comment='dscreen')
+        #dscreen.raw_fields()
 
         #print(dresp3)
         grid = model.add_grid(100, [0., 0., 0.])
@@ -556,9 +562,9 @@ class TestOpt(unittest.TestCase):
             dresp3.write_card(size=8)
             dresp3.write_card(size=16)
             dresp3.write_card(size=16, is_double=True)
-            dscreen.write_card(size=8)
-            dscreen.write_card(size=16)
-            dscreen.write_card(size=16, is_double=True)
+        dscreen.write(size=8)
+        dscreen.write(size=16)
+        dscreen.write(size=16, is_double=True)
         dconadd.write(size=8)
         dconadd.write(size=16)
         dconadd.write(size=16, is_double=True)

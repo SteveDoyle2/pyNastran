@@ -95,7 +95,7 @@ class CBUSH(Element):
         """
         self.cards.append((eid, pid, nids, cid, g0, x, s, ocid, si, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -141,7 +141,7 @@ class CBUSH(Element):
         assert len(card) <= 14, f'len(CBUSH card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, [ga, gb], cid, g0, x, s, ocid, si, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -491,7 +491,7 @@ class PBUSH(Property):
         self.cards.append((pid, k, b, ge, rcv,
                            mass, alpha, tref, coincident_length, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         k_fields = []
@@ -552,7 +552,7 @@ class PBUSH(Property):
         self.cards.append((pid, k_fields, b_fields, ge_fields, rcv_fields,
                            mass, alpha, tref, coincident_length, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -752,7 +752,7 @@ class PBUSHT(Property):
             ge_tables: list[int], kn_tables: list[int], comment: str='') -> int:
         self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -797,7 +797,7 @@ class PBUSHT(Property):
                 raise ValueError(param)
         self.cards.append((pid, k_tables, b_tables, ge_tables, kn_tables, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
         #return PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
                       #comment=comment)
 
@@ -908,7 +908,7 @@ class CBUSH1D(Element):
             cid = -1
         self.cards.append((eid, pid, nids, cid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -919,7 +919,7 @@ class CBUSH1D(Element):
         assert len(card) <= 6, f'len(CBUSH1D card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, [ga, gb], cid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -1051,7 +1051,7 @@ class PBUSH1D(Property):
             optional_vars = {}
         self.cards.append((pid, k, c, m, sa, se, optional_vars, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -1090,7 +1090,7 @@ class PBUSH1D(Property):
                        #optional_vars=optional_vars, comment=comment)
         self.cards.append((pid, k, c, m, sa, se, optional_vars, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:

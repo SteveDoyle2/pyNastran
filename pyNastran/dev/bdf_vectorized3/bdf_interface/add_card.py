@@ -4088,13 +4088,14 @@ class AddOptimization(BDFAttributes):
         self._add_methods._add_doptprm_object(doptprm)
         return doptprm
 
-    def add_dscreen(self, rtype: str, trs=-0.5, nstr=20, comment: str='') -> DSCREEN:
+    def add_dscreen(self, response_type: str, trs: float=-0.5, nstr: int=20,
+                    comment: str='') -> int:
         """
         Creates a DSCREEN object
 
         Parameters
         ----------
-        rtype : str
+        response_type : str
             Response type for which the screening criteria apply
         trs : float
             Truncation threshold
@@ -4105,8 +4106,7 @@ class AddOptimization(BDFAttributes):
             a comment for the card
 
         """
-        dscreen = DSCREEN(rtype, trs=trs, nstr=nstr, comment=comment)
-        self._add_methods._add_dscreen_object(dscreen)
+        dscreen = self.dscreen.add(response_type, trs=trs, nstr=nstr, comment=comment)
         return dscreen
     # ------------------------------------------
     # nx optimization
@@ -4587,17 +4587,16 @@ class AddContact(BDFAttributes):
         self._add_methods._add_blseg_object(blseg)
         return blseg
 
-    def add_bconp(self, contact_id, slave, master, sfac, fric_id, ptype, cid,
-                  comment: str='') -> BCONP:
+    def add_bconp(self, contact_id: int, slave: int, master: int,
+                  fric_id: int, sfac: float=1.0, ptype: int=1, cid: int=0,
+                  comment: str='') -> int:
         """Creates a BCONP card"""
-        bconp = BCONP(contact_id, slave, master, sfac, fric_id, ptype,
-                      cid, comment=comment)
-        self._add_methods._add_bconp_object(bconp)
+        bconp = self.bconp.add(contact_id, slave, master, sfac, fric_id, ptype,
+                               cid, comment=comment)
         return bconp
 
-    def add_bfric(self, friction_id, mu1, fstiff=None, comment: str=''):
-        bfric = BFRIC(friction_id, mu1, fstiff=fstiff, comment=comment)
-        self._add_methods._add_bfric_object(bfric)
+    def add_bfric(self, friction_id: int, mu1: float, fstiff: float=None, comment: str=''):
+        bfric = self.bfric.add(friction_id, mu1, fstiff=fstiff, comment=comment)
         return bfric
 
     def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX',
@@ -6457,8 +6456,11 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         dload = self.randt1.add(sid, n, t0, tmax, comment=comment)
         return dload
 
-    def add_acsrce(self, sid, excite_id, rho, b, delay=0, dphase=0, power=0,
-                   comment: str='') -> ACSRCE:
+    def add_acsrce(self, sid: int, excite_id: int, rho: float, b: float,
+                   delay: Union[int, float]=0,
+                   dphase: Union[int, float]=0,
+                   power: Union[int, float]=0,
+                   comment: str='') -> int:
         """
         Creates an ACSRCE card
 
@@ -6490,9 +6492,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             a comment for the card
 
         """
-        load = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=power,
-                      comment=comment)
-        self._add_methods._add_dload_entry(load)
+        load = self.acsrce.add(
+            sid, excite_id, rho, b,
+            delay=delay, dphase=dphase, power=power,
+            comment=comment)
         return load
 
     def add_loadcyn(self, sid, scale, segment_id, scales, load_ids,
@@ -7760,11 +7763,15 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_freq_object(freq)
         return freq
 
-    def add_tf(self, sid: int, nid0: int,
-               c, b0, b1, b2, nids, components, a, comment: str='') -> TF:
+    def add_tf(self, tf_id: int,
+               nid0: int, component: int,
+               b0: float, b1: float, b2: float,
+               nids: list[int], components: list[int],
+               a: list[tuple[float, float, float]],
+               comment: str='') -> int:
         """Creates a TF card"""
-        tf = TF(sid, nid0, c, b0, b1, b2, nids, components, a, comment=comment)
-        self._add_methods._add_tf_object(tf)
+        tf = self.tf.add(tf_id, nid0, component, b0, b1, b2,
+                         nids, components, a, comment=comment)
         return tf
 
     def add_group(self, group_id: int, nodes, elements, properties, comment: str='') -> GROUP:
@@ -7785,9 +7792,9 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         self._add_methods._add_dmncon_object(dmncon)
         return dmncon
     # ------------------------------------------
-    def add_modtrak(self) -> MODTRAK:
-        modtrak = MODTRAK()
-        self._add_methods._add_modtrak_object(modtrak)
+    def add_modtrak(self, modtrak_id: int, low_range: int, high_range: int,
+                    mt_filter: float, comment: str='') -> int:
+        modtrak = self.modtrak.add(modtrak_id, low_range, high_range, mt_filter, comment=comment)
         return modtrak
 
     def add_mondsp1(self, name, label, axes, aecomp_name, xyz,

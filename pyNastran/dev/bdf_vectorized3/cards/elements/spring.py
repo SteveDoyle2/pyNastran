@@ -51,7 +51,7 @@ class CELAS1(Element):
         """
         self.cards.append((eid, pid, nids, c1, c2, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -65,7 +65,7 @@ class CELAS1(Element):
         assert len(card) <= 7, f'len(CELAS1 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, c1, c2, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -184,7 +184,7 @@ class CELAS2(Element):
         """
         self.cards.append((eid, k, nids, c1, c2, ge, s, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -198,7 +198,7 @@ class CELAS2(Element):
         assert len(card) <= 9, f'len(CELAS2 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, k, nids, c1, c2, ge, s, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -300,7 +300,7 @@ class CELAS3(Element):
         """
         self.cards.append((eid, pid, nids[0], nids[1], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -311,7 +311,7 @@ class CELAS3(Element):
         assert len(card) <= 5, f'len(CELAS3 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, s1, s2, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -399,7 +399,7 @@ class CELAS4(Element):
         """
         self.cards.append((eid, k, nids[0], nids[1], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -409,10 +409,10 @@ class CELAS4(Element):
         assert len(card) <= 5, f'len(CELAS4 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, k, s1, s2, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
@@ -494,7 +494,7 @@ class PELAS(Property):
         """
         self.cards.append((pid, k, ge, s, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -512,7 +512,7 @@ class PELAS(Property):
             self.cards.append((pid, k, ge, s, comment))
             self.n += 1
         assert len(card) <= 7, f'len(PELAS card) = {len(card):d}\ncard={card}'
-        return self.n
+        return self.n - 1
 
         #i = len(self.cards) - 1
         #return i
@@ -604,7 +604,7 @@ class PELAST(Property):
         """
         self.cards.append((pid, tkid, tgeid, tknid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -614,10 +614,10 @@ class PELAST(Property):
         assert len(card) <= 5, f'len(PELAST card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, tkid, tgeid, tknid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         property_id = np.zeros(ncards, dtype='int32')
 

@@ -37,10 +37,12 @@ from pyNastran.dev.op2_vectorized3.op2_hdf5 import OP2, OP2Geom
 from pyNastran.dev.op2_vectorized3.op2_hdf5 import Results
 from pyNastran.utils import PathLike
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.gui.main_window import MainWindow
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
         CTETRA, CPENTA, CHEXA, CPYRAM,
     )
+    SolidElement = Union[CTETRA, CPENTA, CHEXA, CPYRAM],
 
 
 class Nastran3:
@@ -566,7 +568,6 @@ class Nastran3:
         geom_actor = vtkActor()
         geom_actor.SetMapper(grid_mapper)
 
-
         # Setup renderer
         renderer = vtkRenderer()
         renderer.AddActor(geom_actor)
@@ -665,14 +666,14 @@ class Nastran3:
                 elif etype == 'CSHEAR':
                     cell_type = cell_type_quad4
                     property_id = element.property_id
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError(element)
 
                 element_id = element.element_id
                 assert len(element_id) == len(property_id), etype
                 nodesi = element.nodes
 
-                if 0:
+                if 0:  # pragma: no cover
                     pids_to_filter = [2, 70, 71,
                                       60, 61, # skin
 
@@ -684,7 +685,7 @@ class Nastran3:
                                       #901,  # cb
                                       222]  # ribs
                     pids_to_filter = []
-                    i = filter_property_ids(etype, property_id, pids_to_filter)
+                    i = filter_property_ids(etype, property_id, pids_to_filter, log)
                     #nelement = len(i)
                     element_id = element_id[i]
                     nelement = len(element_id)
@@ -733,7 +734,7 @@ class Nastran3:
 
                 log.debug(f'{etype} nelement={nelement} nfull={nfull} npartial={npartial}')
                 if nfull:
-                    if etype in {'CTRIA6'}:
+                    if etype == 'CTRIA6':
                         cell_type = cell_type_tri6
                         nodes = element.nodes
                     elif etype == 'CTRIAX6':
@@ -742,7 +743,7 @@ class Nastran3:
                     elif etype == 'CQUAD8':
                         cell_type = cell_type_quad8
                         nodes = element.nodes
-                    else:
+                    else:  # pragma: no cover
                         raise NotImplementedError(f'full {etype}')
                     cell_offset0 = _save_element(
                         is_full, grid_id, cell_type, cell_offset0,
@@ -754,7 +755,7 @@ class Nastran3:
                         cell_offset_)
 
                 if npartial:
-                    if etype in {'CTRIA6'}:
+                    if etype == 'CTRIA6':
                         cell_type = cell_type_tri3
                         nodes = element.nodes[:, :3]
                     elif etype == 'CTRIAX6':
@@ -763,7 +764,7 @@ class Nastran3:
                     elif etype == 'CQUAD8':
                         cell_type = cell_type_quad8
                         nodes = element.nodes[:, :4]
-                    else:
+                    else:  # pragma: no cover
                         raise NotImplementedError(f'full {etype}')
                     is_full = np.arange(element.n, dtype='int32')
                     cell_offset0 = _save_element(
@@ -932,7 +933,7 @@ def _set_quality(icase: int, cases: dict[int, Any],
                  element_id: np.ndarray,
                  nelements: int,
                  cards_to_read) -> tuple[float, int, Form]:
-
+    log = model.log
     #cards_to_read = {
         #'CBAR', 'CBEAM', 'CBUSH',
         #'CQUAD4', 'CTRIA3', 'CSHEAR',
@@ -959,10 +960,10 @@ def _set_quality(icase: int, cases: dict[int, Any],
             if elem.n == 0:
                 continue
             if elem.type in NO_ELEMENT:
-                model.log.info(f'n {elem.type} {elem.n}')
+                log.info(f'n {elem.type} {elem.n}')
                 is_validi = np.zeros(elem.n, dtype='bool')
             else:
-                model.log.info('fy {elem.type} {elem.n}')
+                log.info('fy {elem.type} {elem.n}')
                 is_validi = np.ones(elem.n, dtype='bool')
             is_valid_list.append(is_validi)
         is_valid_element = np.hstack(is_valid_list)
@@ -1123,7 +1124,8 @@ def get_vector_scales(t123: np.ndarray, ntimes: int, dim_max: float,
 
 def filter_property_ids(etype: str,
                         property_id: np.ndarray,
-                        pids_to_filter: list[int]):
+                        pids_to_filter: list[int],
+                        log: SimpleLogger):
     #i = np.where((property_id != 2) & (property_id != 71))[0]
     if len(pids_to_filter) == 0:
         # I think None causes issues b/c it will change the shape of the array
@@ -1140,10 +1142,10 @@ def filter_property_ids(etype: str,
     #print("i =", i)
     ni = len(i)
     if nproperties != ni:
-        print(f'filtering {etype} from {nproperties} to {ni} because pids_to_filter')
+        log.warning(f'filtering {etype} from {nproperties} to {ni} because pids_to_filter')
     return i
 
-def _create_solid_vtk_arrays(element: CTETRA | CPENTA | CHEXA | CPYRAM,
+def _create_solid_vtk_arrays(element: SolidElement,
                              grid_id: np.ndarray, cell_offset0: int,
                              ) -> tuple[int, np.ndarray, np.ndarray, np.ndarray]:
     """solids"""

@@ -32,7 +32,9 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.rod import (
 from pyNastran.dev.bdf_vectorized3.cards.elements.utils import (
     get_density_from_material, basic_mass_material_id)
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int, array_default_str, array_default_float)
+    array_str, array_default_int, array_default_str, array_default_float,
+    get_print_card_size,
+)
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if TYPE_CHECKING:  # pragma: no cover
@@ -246,7 +248,7 @@ class CBAR(Element):
         assert x is None or g0 is None, f'pid={pid} x={x} g0={g0}'
         self.cards.append((eid, pid, nids, x, g0, offt, pa, pb, wa, wb, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         PROPERTY_ID_DEFAULT = 0
@@ -288,7 +290,7 @@ class CBAR(Element):
         assert len(card) <= 17, f'len(CBAR card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, [ga, gb], x, g0, offt, pa, pb, wa, wb, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, elem: CBAR, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
@@ -394,27 +396,36 @@ class CBAR(Element):
         if len(g0):
             used_dict['node_id'].append(g0)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max(), self.g0.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         element_ids = array_str(self.element_id, size=size)
         property_ids = array_str(self.property_id, size=size)
         nodes = array_str(self.nodes, size=size)
         pas = array_default_int(self.pa, default=0, size=size)
         pbs = array_default_int(self.pb, default=0, size=size)
+        was = array_default_float(self.wa, default=0.0, size=size, is_double=False)
+        wbs = array_default_float(self.wb, default=0.0, size=size, is_double=False)
         for eid, pid, nodes, g0, x, offt, pa, pb, wa, wb in zip(element_ids, property_ids, nodes,
-                                                                self.g0, self.x, self.offt, pas, pbs, self.wa, self.wb):
+                                                                self.g0, self.x, self.offt, pas, pbs, was, wbs):
             n1, n2 = nodes
-            w1a = set_blank_if_default(wa[0], 0.0)
-            w2a = set_blank_if_default(wa[1], 0.0)
-            w3a = set_blank_if_default(wa[2], 0.0)
+            w1a, w2a, w3a = wa
+            #w1a = set_blank_if_default(wa[0], 0.0)
+            #w2a = set_blank_if_default(wa[1], 0.0)
+            #w3a = set_blank_if_default(wa[2], 0.0)
 
-            w1b = set_blank_if_default(wb[0], 0.0)
-            w2b = set_blank_if_default(wb[1], 0.0)
-            w3b = set_blank_if_default(wb[2], 0.0)
+            w1b, w2b, w3b = wb
+            #w1b = set_blank_if_default(wb[0], 0.0)
+            #w2b = set_blank_if_default(wb[1], 0.0)
+            #w3b = set_blank_if_default(wb[2], 0.0)
             if g0 in {-1, 0}:
                 x1, x2, x3 = x # self.get_x_g0_defaults()
             else:
@@ -427,6 +438,7 @@ class CBAR(Element):
 
             list_fields = ['CBAR', eid, pid, n1, n2,
                            x1, x2, x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
+            #print(list_fields)
             bdf_file.write(print_card(list_fields))
         return
 
@@ -823,7 +835,7 @@ class PBAR(Property):
         self.cards.append((pid, mid, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
                            e1, e2, f1, f2, k1, k2, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -865,7 +877,7 @@ class PBAR(Property):
         self.cards.append((pid, mid, A, i1, i2, i12, j, nsm, c1, c2, d1, d2,
                            e1, e2, f1, f2, k1, k2, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1317,7 +1329,7 @@ class PBARL(Property):
 
         self.cards.append((pid, mid, group, bar_type, dim, nsm, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -1369,7 +1381,7 @@ class PBARL(Property):
         assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
         self.cards.append((pid, mid, group, bar_type, dim, nsm, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1603,7 +1615,7 @@ class PBRSECT(Property):
         self.cards.append((pid, mid, form, nsm, brps, inps, outp, ts, comment))
         self.n += 1
         #return PBRSECT(pid, mid, form, options, comment=comment)
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1721,7 +1733,7 @@ class CBARAO(Element):
         assert isinstance(scale, str), scale
         self.cards.append((eid, scale, x, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1760,7 +1772,7 @@ class CBARAO(Element):
         assert nstation > 0, x
         self.cards.append((eid, scale, x, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['element_id'].append(self.element_id)

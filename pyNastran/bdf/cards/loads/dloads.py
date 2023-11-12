@@ -27,6 +27,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.loads.loads import DynamicLoad, LoadCombination, BaseCard
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class ACSRCE(BaseCard):
@@ -55,8 +56,10 @@ class ACSRCE(BaseCard):
         return ACSRCE(sid, excite_id, rho, b,
                       delay=0, dphase=0, power=0, comment='')
 
-    def __init__(self, sid, excite_id, rho, b,
-                 delay=0, dphase=0, power=0, comment=''):
+    def __init__(self, sid: int, excite_id: int, rho: float, b: float,
+                 delay: Union[int, float]=0,
+                 dphase: Union[int, float]=0,
+                 power: Union[int, float]=0, comment=''):
         """
         Creates an ACSRCE card
 
@@ -104,7 +107,7 @@ class ACSRCE(BaseCard):
         #self.delays_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a ACSRCE card from ``BDF.add_card(...)``
 
@@ -117,9 +120,9 @@ class ACSRCE(BaseCard):
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id') # DAREA, FBALOAD, SLOAD
-        delay = integer_double_or_blank(card, 3, 'delay', 0) # DELAY, FBADLAY
-        dphase = integer_double_or_blank(card, 4, 'dphase', 0) # DPHASE, FBAPHAS
-        power = integer_double_or_blank(card, 5, 'power/tp/rp', 0) # TABLEDi/power
+        delay = integer_double_or_blank(card, 3, 'delay', default=0) # DELAY, FBADLAY
+        dphase = integer_double_or_blank(card, 4, 'dphase', default=0) # DPHASE, FBAPHAS
+        power = integer_double_or_blank(card, 5, 'power/tp/rp', default=0) # TABLEDi/power
         rho = double(card, 6, 'rho')
         b = double(card, 7, 'bulk modulus')
 
@@ -254,7 +257,7 @@ class ACSRCE(BaseCard):
             return self.power_ref.tid
         return self.power
 
-    def get_load_at_freq(self, freq):
+    def get_load_at_freq(self, freq: float) -> float:
         r"""
         ..math ::
           C = \sqrt(B ⁄ ρ)
@@ -275,7 +278,9 @@ class ACSRCE(BaseCard):
         else:
             #print('dphase\n', self.dphase_ref)
             theta = self.dphase_ref.interpolate(freq)
-        strength = A / (2.* pi * freq) * np.sqrt(8*pi*C*Pf / self.rho) ** (ei*(theta + 2*pi*freq*tau))
+
+        omega = 2.* pi * freq
+        strength = A / omega * np.sqrt(8*pi*C*Pf / self.rho) ** (ei*(theta + omega*tau))
 
         return 0.0
 

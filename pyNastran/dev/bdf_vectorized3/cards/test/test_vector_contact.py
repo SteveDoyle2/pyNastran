@@ -4,7 +4,7 @@ import unittest
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, BDFCard
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 
-HAS_CONTACT = False
+RUN_CONTACT = False
 
 class TestContact(unittest.TestCase):
 
@@ -156,7 +156,7 @@ class TestContact(unittest.TestCase):
                                    comment='bctset')
         #bctset.raw_fields()
 
-        if HAS_CONTACT:
+        if RUN_CONTACT:
             contract_region = 100
             surface = 'BOT'
             contact_type = 'RIGID'
@@ -183,7 +183,7 @@ class TestContact(unittest.TestCase):
 
         save_load_deck(model)
 
-    def _test_contact_3(self):
+    def test_contact_3(self):
         """
         tests:
          - BLSEG
@@ -200,22 +200,26 @@ class TestContact(unittest.TestCase):
         cid = 9
 
         line_id = master
-        model.add_blseg(line_id, nodes, comment='blseg_master')
+        if RUN_CONTACT:
+            model.add_blseg(line_id, nodes, comment='blseg_master')
 
         line_id = slave
-        blseg = model.add_blseg(line_id, nodes, comment='blseg_slave')
+        if RUN_CONTACT:
+            blseg = model.add_blseg(line_id, nodes, comment='blseg_slave')
         bconp = model.add_bconp(contact_id, slave, master, sfac, friction_id, ptype, cid,
                                 comment='bconp')
         mu1 = 0.2
-        bfric = model.add_bfric(friction_id, mu1, fstiff=None, comment='bfric')
+        bfrici = model.add_bfric(friction_id, mu1, fstiff=None, comment='bfric')
+
         model.add_grid(2, [0., 0., 0.])
         model.add_grid(3, [0., 0., 0.])
         origin = [0., 0., 0.]
         zaxis = [0., 0., 1]
         xzplane = [1., 0., 0.]
         model.add_cord2r(9, origin, zaxis, xzplane, rid=0, setup=True, comment='')
-        blseg.raw_fields()
-        bconp.raw_fields()
+        if RUN_CONTACT:
+            blseg.raw_fields()
+        #bconp.raw_fields()
         save_load_deck(model)
 
     def test_contact_bgset(self):

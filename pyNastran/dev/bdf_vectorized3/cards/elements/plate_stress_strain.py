@@ -187,7 +187,7 @@ class CPLSTS3(PlateStressElement):
                            tflag, [T1, T2, T3],
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -330,7 +330,7 @@ class CPLSTS4(PlateStressElement):
                            tflag, [T1, T2, T3, T4],
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -472,7 +472,7 @@ class PPLANE(Property):
             formulation_option: int=0, comment: str='') -> int:
         self.cards.append((pid, mid, t, nsm, formulation_option, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -495,7 +495,7 @@ class PPLANE(Property):
         formulation_option = integer_or_blank(card, 5, 'formulation_option', default=0)
         self.cards.append((pid, mid, t, nsm, formulation_option, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -723,7 +723,7 @@ class CPLSTN3(PlateStrainElement):
         """Creates a CPLSTN3 card"""
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -750,7 +750,7 @@ class CPLSTN3(PlateStrainElement):
         theta = double_or_blank(card, 6, 'theta', default=0.0)
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -851,7 +851,7 @@ class CPLSTN4(PlateStrainElement):
         """Creates a CPLSTN4 card"""
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -880,10 +880,10 @@ class CPLSTN4(PlateStrainElement):
         assert len(card) <= 8, f'len(CPLSTS4 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
@@ -972,7 +972,7 @@ class CPLSTN6(PlateStrainElement):
         """Creates a CPLSTN6 card"""
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1002,7 +1002,7 @@ class CPLSTN6(PlateStrainElement):
         theta = double_or_blank(card, 9, 'theta', default=0.0)
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -1095,7 +1095,7 @@ class CPLSTN8(PlateStrainElement):
         """Creates a CPLSTN8 card"""
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1127,10 +1127,10 @@ class CPLSTN8(PlateStrainElement):
         theta = double_or_blank(card, 11, 'theta', default=0.0)
         self.cards.append((eid, pid, nids, theta, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
@@ -1227,7 +1227,7 @@ class CPLSTS6(PlateStrainElement):
             thickness = np.full(6, np.nan, dtype='float64')
         self.cards.append((eid, pid, nids, theta, tflag, thickness, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1270,10 +1270,10 @@ class CPLSTS6(PlateStrainElement):
             thickness = np.full(6, np.nan, dtype='float64')
         self.cards.append((eid, pid, nids, theta, tflag, thickness, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
@@ -1383,7 +1383,7 @@ class CPLSTS8(PlateStrainElement):
             thickness = np.full(8, np.nan, dtype='float64')
         self.cards.append((eid, pid, nids, theta, tflag, thickness, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1428,7 +1428,7 @@ class CPLSTS8(PlateStrainElement):
             thickness = np.full(8, np.nan, dtype='float64')
         self.cards.append((eid, pid, nids, theta, tflag, thickness, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:

@@ -19,7 +19,8 @@ from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16,
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int, array_default_float)
+    array_str, array_default_int, array_default_float,
+    get_print_card_size)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -111,7 +112,7 @@ class RBAR(RigidElement):
         cmb = _str_to_int(cmb)
         self.cards.append((eid, nids, [cna, cnb], [cma, cmb], alpha, tref, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -126,7 +127,7 @@ class RBAR(RigidElement):
         assert len(card) <= 10, f'len(RBAR card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, [ga, gb], [cna, cnb], [cma, cmb], alpha, tref, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @RigidElement.parse_cards_check
     def parse_cards(self) -> None:
@@ -232,7 +233,7 @@ class RROD(RigidElement):
             cmb = int(cmb)
         self.cards.append((eid, nids, [cma, cmb], alpha, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -256,7 +257,7 @@ class RROD(RigidElement):
         #return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
         self.cards.append((eid, [ga, gb], [cma, cmb], alpha, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @RigidElement.parse_cards_check
     def parse_cards(self) -> None:
@@ -349,7 +350,7 @@ class RBAR1(RigidElement):
             #cmb = int(cmb)
         self.cards.append((eid, nids, cb, alpha, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -372,7 +373,7 @@ class RBAR1(RigidElement):
         #return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
         self.cards.append((eid, [ga, gb], cb, alpha, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @RigidElement.parse_cards_check
     def parse_cards(self) -> None:
@@ -463,7 +464,7 @@ class RBE1(RigidElement):
             alpha: float=0., comment: str='') -> int:
         self.cards.append((eid, alpha, Gni, Cni, Gmi, Cmi, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -519,7 +520,7 @@ class RBE1(RigidElement):
             i += 2
         self.cards.append((eid, alpha, Gni, Cni, Gmi, Cmi, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @RigidElement.parse_cards_check
     def parse_cards(self) -> None:
@@ -587,11 +588,17 @@ class RBE1(RigidElement):
     def iindependent(self) -> np.ndarray:
         return make_idim(self.n, self.nindependent)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(),
+                   self.independent_node.max(),
+                   self.dependent_node.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         eids = array_str(self.element_id)
         #ind_nodes = array_default_int(self.independent_dof, default=0, size=size)
@@ -673,7 +680,7 @@ class RBE2(RigidElement):
             alpha: float=0.0, tref: float=0.0, comment: str='') -> int:
         self.cards.append((eid, gn, cm, Gmi, alpha, tref, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -707,10 +714,10 @@ class RBE2(RigidElement):
             Gmi.append(gmi)
         self.cards.append((eid, gn, cm, Gmi, alpha, tref, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @RigidElement.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
@@ -851,7 +858,7 @@ class RBE3(RigidElement):
                            weights, Gijs, comps,
                            Gmi, Cmi, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -956,7 +963,7 @@ class RBE3(RigidElement):
                            weights, Gijs, comps,
                            Gmi, Cmi, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @RigidElement.parse_cards_check
     def parse_cards(self) -> None:

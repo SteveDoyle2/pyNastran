@@ -58,7 +58,7 @@ class XPOINT(VectorizedBaseCard):
             ids = [ids]
         self.cards.append((ids, comment))
         self.n += len(ids)
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -70,11 +70,11 @@ class XPOINT(VectorizedBaseCard):
             ids.append(field)
         self.cards.append((ids, comment))
         self.n += len(ids)
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
-        #ncards = len(self.cards)
+        idtype = self.model.idtype
         if self.debug:
             self.model.log.debug(f'parse {self.type}')
 
@@ -85,10 +85,7 @@ class XPOINT(VectorizedBaseCard):
             ids.extend(idsi2)
             self.comment[i] = comment
 
-        try:
-            self.ids = np.array(ids, dtype='int32')
-        except OverflowError:
-            self.ids = np.array(ids, dtype='int64')
+        self.ids = np.array(ids, dtype=idtype)
         self._sort()
         self.cards = []
 
@@ -298,7 +295,7 @@ class GRID(VectorizedBaseCard):
         if comment:
             self.comment[nid] = _format_comment(comment)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -343,7 +340,7 @@ class GRID(VectorizedBaseCard):
         if comment:
             self.comment[nid] = comment
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -959,7 +956,7 @@ class POINT(VectorizedBaseCard):
         self.n += 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         if self.debug:
             self.model.log.debug('parse POINT')

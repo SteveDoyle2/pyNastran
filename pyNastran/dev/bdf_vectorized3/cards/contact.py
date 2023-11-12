@@ -10,8 +10,8 @@ from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.bdf.cards.collpase_card import collapse_thru, collapse_thru_packs
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, #double,
-    double_or_blank,
+    integer, double,
+    integer_or_blank, double_or_blank,
     #components_or_blank, parse_components,
 )
 #from pyNastran.bdf.field_writer_8 import print_card_8
@@ -22,7 +22,7 @@ from .constraints import ADD
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
     #array_default_str,
-    array_str,
+    array_str, array_float,
     array_default_int, array_default_float,
     get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.utils import print_card_8
@@ -43,7 +43,7 @@ class ElementPropertySet(VectorizedBaseCard):
             comment: str='') -> int:
         self.cards.append((sid, ids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str=''):
         """
@@ -92,7 +92,7 @@ class ElementPropertySet(VectorizedBaseCard):
         assert len(card) > 2, f'len({self.type} card) = {len(card):d}\ncard={card}'
         self.cards.append((sid, ids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -314,7 +314,7 @@ class BGSET(VectorizedBaseCard):
             comment: str='') -> int:
         self.cards.append((sid, element_ids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     #def remove_unused(self)
     def add_card(self, card: BDFCard, comment: str=''):
@@ -362,7 +362,7 @@ class BGSET(VectorizedBaseCard):
         assert len(card) > 2, f'len({self.type} card) = {len(card):d}\ncard={card}'
         self.cards.append((glue_id, sids, tids, sdists, exts, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -529,7 +529,7 @@ class BCTSET(VectorizedBaseCard):
                            min_distances, max_distances,
                            desc_id, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     #def remove_unused(self)
     def add_card(self, card: BDFCard, comment: str=''):
@@ -583,7 +583,7 @@ class BCTSET(VectorizedBaseCard):
                            min_distances, max_distances,
                            desc_id, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -829,3 +829,288 @@ class BCTADD(ADD):
                    #missing,
                    #dconstr_id=(dconstr_id, self.dconstr_ids),
                    #)
+
+
+class BCONP(VectorizedBaseCard):
+    """
+    3D Contact Region Definition by Shell Elements (SOLs 101, 601 and 701)
+
+    Defines a 3D contact region by shell element IDs.
+
+    +-------+----+-------+--------+-----+------+--------+-------+-----+
+    |   1   |  2 |   3   |   4    |  5  |   6  |   7    |   8   |  9  |
+    +=======+====+=======+========+=====+======+========+=======+=====+
+    | BCONP | ID | SLAVE | MASTER |     | SFAC | FRICID | PTYPE | CID |
+    +-------+----+-------+--------+-----+------+--------+-------+-----+
+    | BCONP | 95 |   10  |   15   |     |  1.0 |   33   |   1   |     |
+    +-------+----+-------+--------+-----+------+--------+-------+-----+
+
+    """
+    _id_name = 'contact_id'
+    def clear(self):
+        self.contact_id = np.array([], dtype='int32')
+        self.slave_id = np.array([], dtype='int32')
+        self.master_id = np.array([], dtype='int32')
+        self.sfac = np.array([], dtype='float64')
+        self.friction_id = np.array([], dtype='int32')
+        self.ptype = np.array([], dtype='int32')
+        self.coord_id = np.array([], dtype='int32')
+
+    def add(self, contact_id: int, slave: int, master: int,
+            fric_id: int, sfac: float=1.0, ptype: int=1, cid: int=0,
+            comment: str='') -> int:
+        """Creates a BCONP card"""
+        self.cards.append((contact_id, slave, master, sfac, fric_id, ptype, cid, comment))
+        self.n += 1
+        return self.n - 1
+
+    #def remove_unused(self)
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a BCONP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        contact_id = integer(card, 1, 'contact_id')
+        slave = integer(card, 2, 'slave')
+        master = integer(card, 3, 'master')
+        sfac = double_or_blank(card, 5, 'sfac', default=1.0)
+        friction_id = integer_or_blank(card, 6, 'fric_id')
+        ptype = integer_or_blank(card, 7, 'ptype', default=1)
+        cid = integer_or_blank(card, 8, 'cid', default=0)
+        #return BCONP(contact_id, slave, master, sfac, friction_id, ptype, cid,
+                     #comment=comment)
+        self.cards.append((contact_id, slave, master, sfac, friction_id, ptype, cid, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        #ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+
+        ncards = len(self.cards)
+        idtype = self.model.idtype
+        fdtype = self.model.fdtype
+        contact_id = np.zeros(ncards, dtype='int32')
+        slave_id = np.zeros(ncards, dtype='int32')
+        master_id = np.zeros(ncards, dtype='int32')
+        sfac = np.zeros(ncards, dtype='float64')
+        friction_id = np.zeros(ncards, dtype='int32')
+        ptype = np.zeros(ncards, dtype='int32')
+        coord_id = np.zeros(ncards, dtype='int32')
+
+        #comment = {}
+        for icard, card in enumerate(self.cards):
+            (contact_idi, slave_idi, master_idi, sfaci, friction_idi, ptypei, cid, commenti) = card
+
+            contact_id[icard] = contact_idi
+            slave_id[icard] = slave_idi
+            master_id[icard] = master_idi
+            ptype[icard] = ptypei
+            sfac[icard] = sfaci
+            friction_id[icard] = friction_idi
+            coord_id[icard] = cid
+            #if commenti:
+                #comment[i] = commenti
+                #comment[nidi] = commenti
+
+        self._save(contact_id, slave_id, master_id, sfac, friction_id, ptype, coord_id)
+        self.sort()
+        self.cards = []
+
+    def _save(self, contact_id, slave_id, master_id, sfac, friction_id, ptype, coord_id) -> None:
+        ncards_existing = len(self.contact_id)
+        if ncards_existing != 0:
+            asdf
+            contact_id = np.hstack([self.contact_id, contact_id])
+        #if comment:
+            #self.comment.update(comment)
+        self.contact_id = contact_id
+        self.slave_id = slave_id
+        self.master_id = master_id
+        self.sfac = sfac
+        self.friction_id = friction_id
+        self.ptype = ptype
+        self.coord_id = coord_id
+        self.n = len(self.contact_id)
+
+    #def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        #asd
+        #contact_regions = np.hstack([self.source_ids, self.target_ids])
+        #used_dict['contact_set_id'].append(contact_regions)
+
+    def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        pass
+        #self.search_distance *= xyz_scale
+
+    def __apply_slice__(self, bconp: BCONP, i: np.ndarray) -> None:
+        #self._slice_comment(bconp, i)
+        bconp.n = len(i)
+
+        bconp.contact_id = self.contact_id[i]
+        bconp.slave_id = self.slave_id[i]
+        bconp.master_id = self.master_id[i]
+        bconp.sfac = self.sfac[i]
+        bconp.friction_id = self.friction_id[i]
+        bconp.ptype = self.ptype[i]
+        bconp.coord_id = self.coord_id[i]
+
+    @property
+    def max_id(self) -> int:
+        return max(self.contact_id.max(), self.slave_id.max(),
+                   self.master_id.max(), self.coord_id.max())
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if self.n == 0:
+            return
+        print_card, size = get_print_card_size(size, self.max_id)
+        contact_ids = array_str(self.contact_id, size=size)
+        slave_ids = array_str(self.slave_id, size=size)
+        master_ids = array_str(self.master_id, size=size)
+        sfacs = array_default_float(self.sfac, default=1., size=size, is_double=False)
+        friction_ids = array_str(self.friction_id, size=size)
+        ptypes = array_str(self.ptype, size=size)
+        coord_ids = array_str(self.coord_id, size=size)
+
+        for contact_id, slave_id, master_id, sfac, friction_id, ptype, cid in zip(
+            contact_ids, slave_ids, master_ids, sfacs, friction_ids, ptypes, coord_ids):
+            list_fields = [
+                'BCONP', contact_id, slave_id, master_id, None, sfac,
+                friction_id, ptype, cid]
+            bdf_file.write(print_card(list_fields))
+        return
+
+class BFRIC(VectorizedBaseCard):
+    """
+    Slideline Contact Friction
+    Defines frictional properties between two bodies in contact.
+
+    +-------+------+-------+-------+-------+
+    |   1   |   2  |   3   |   4   |   5   |
+    +=======+======+=======+=======+=======+
+    | BFRIC | FID  | FSTIF |       |  MU1  |
+    +-------+------+-------+-------+-------+
+
+    """
+    _id_name = 'friction_id'
+    def clear(self):
+        self.friction_id = np.array([], dtype='int32')
+        self.fstiff = np.array([], dtype='float64')
+        self.mu1 = np.array([], dtype='float64')
+
+    def add(self, friction_id: int, mu1: float, fstiff: float=None, comment: str='') -> int:
+        """Creates a BFRIC card"""
+        self.cards.append((friction_id, fstiff, mu1, comment))
+        self.n += 1
+        return self.n - 1
+
+    #def remove_unused(self)
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a BCONP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        friction_id = integer(card, 1, 'friction_id')
+        fstiff = double_or_blank(card, 2, 'fstiff')
+        #
+        mu1 = double(card, 4, 'mu1')
+        #return BFRIC(friction_id, mu1, fstiff=fstiff, comment=comment)
+        self.cards.append((friction_id, fstiff, mu1, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+
+        #idtype = self.model.idtype
+        #fdtype = self.model.fdtype
+        friction_id = np.zeros(ncards, dtype='int32')
+        fstiff = np.zeros(ncards, dtype='float64')
+        mu1 = np.zeros(ncards, dtype='float64')
+
+        #comment = {}
+        for icard, card in enumerate(self.cards):
+            (friction_idi, fstiffi, mu1i, commenti) = card
+
+            friction_id[icard] = friction_idi
+            fstiff[icard] = fstiffi
+            mu1[icard] = mu1i
+            #if commenti:
+                #comment[i] = commenti
+                #comment[nidi] = commenti
+
+        self._save(friction_id, fstiff, mu1)
+        self.sort()
+        self.cards = []
+
+    def _save(self, friction_id, fstiff, mu1) -> None:
+        ncards_existing = len(self.friction_id)
+        if ncards_existing != 0:
+            friction_id = np.hstack([self.friction_id, friction_id])
+            fstiff = np.hstack([self.fstiff, fstiff])
+            mu1 = np.hstack([self.mu1, mu1])
+        #if comment:
+            #self.comment.update(comment)
+        self.friction_id = friction_id
+        self.fstiff = fstiff
+        self.mu1 = mu1
+        self.n = len(self.friction_id)
+
+    #def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        #asd
+        #contact_regions = np.hstack([self.source_ids, self.target_ids])
+        #used_dict['contact_set_id'].append(contact_regions)
+
+    #def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        #pass
+        #self.search_distance *= xyz_scale
+
+    def __apply_slice__(self, bfric: BFRIC, i: np.ndarray) -> None:
+        #self._slice_comment(bfric, i)
+        bfric.n = len(i)
+        bfric.friction_id = self.friction_id[i]
+        bfric.fstiff = self.fstiff[i]
+        bfric.mu1 = self.mu1[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        pass
+
+    @property
+    def max_id(self) -> int:
+        return self.friction_id.max()
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if self.n == 0:
+            return
+        print_card, size = get_print_card_size(size, self.max_id)
+        friction_ids = array_str(self.friction_id, size=size)
+        fstiffs = array_float(self.fstiff, size=size, is_double=False)
+        mu1s = array_float(self.mu1, size=size, is_double=False)
+
+        for friction_id, fstiff, mu1 in zip(friction_ids, fstiffs, mu1s):
+            list_fields = [
+                'BFRIC', friction_id, fstiff, None, mu1]
+            bdf_file.write(print_card(list_fields))
+        return

@@ -247,7 +247,7 @@ class GENEL(Element):
         self.n += 1
 
     @Element.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)

@@ -8,7 +8,7 @@ from pyNastran.dev.bdf_vectorized3.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 
 #ROOT_PATH = pyNastran.__path__[0]
-RUN_DELAY = False
+TEST_DYNAMIC = False
 
 class TestDynamic(unittest.TestCase):
     """
@@ -230,7 +230,7 @@ class TestDynamic(unittest.TestCase):
                                  comment='dload')
 
         delayi = model.add_delay(delay_id, nodes, components, delays)
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             x1 = 0.1
             x = np.linspace(0., 1.)
             y = np.sin(x)
@@ -258,7 +258,7 @@ class TestDynamic(unittest.TestCase):
         dload.write()
         dload.write(size=16)
 
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             #tabled2.validate()
             #tabled2.raw_fields()
             tabled2.write()
@@ -275,7 +275,7 @@ class TestDynamic(unittest.TestCase):
         unused_outs = model.get_bdf_stats(return_type='list')
         unused_outs = model.get_bdf_stats(return_type='string')
 
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             time = 0.5
             out1 = tload1.get_load_at_time(time, scale=1.)
             out2 = tload2.get_load_at_time(time, scale=1.)
@@ -340,7 +340,7 @@ class TestDynamic(unittest.TestCase):
         delays = 1.5
         delayi = model.add_delay(delay_id, nodes, components, delays)
 
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             x1 = 0.1
             x = np.linspace(0., 1.)
             y = np.sin(x)
@@ -363,7 +363,7 @@ class TestDynamic(unittest.TestCase):
         #delay.raw_fields()
         delay.write()
         delay.write(size=16)
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             tabled2.validate()
             tabled2.raw_fields()
             tabled2.write_card()
@@ -381,7 +381,7 @@ class TestDynamic(unittest.TestCase):
         unused_outs = model.get_bdf_stats(return_type='list')
         unused_outs = model.get_bdf_stats(return_type='string')
 
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             freq = 0.5
             out1 = rload1.get_load_at_freq(freq, scale=1.)
             #out2 = rload2.get_load_at_time(freq, scale=1.)
@@ -477,7 +477,7 @@ class TestDynamic(unittest.TestCase):
         unused_outs = model.get_bdf_stats(return_type='list')
         unused_outs = model.get_bdf_stats(return_type='string')
 
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             freq = 0.5
             out1 = rload2.get_load_at_freq(freq, scale=1.)
             #out2 = rload2.get_load_at_time(freq, scale=1.)
@@ -509,23 +509,22 @@ class TestDynamic(unittest.TestCase):
         model = BDF(debug=False)
         sid = 1
         excite_id = 2
-        TEST_DYNAMIC = False
-        if TEST_DYNAMIC:
-            rho = 1.0
-            b = 2.0
-            acsrce = model.add_acsrce(sid, excite_id, rho, b, delay=0, dphase=0, power=0,
+        rho = 1.0
+        b = 2.0
+        acsrce_id1 = model.add_acsrce(sid, excite_id, rho, b, delay=0, dphase=0, power=0,
                                       comment='acsrce')
-            acsrce.raw_fields()
+        #acsrce.raw_fields()
         delay = 3
         dphase = 4
         power = 5
-        if TEST_DYNAMIC:
-            sid = 3
-            excite_id = 4
-            rho = 1.0
-            b = 2.0
-            unused_acsrce2 = model.add_acsrce(sid, excite_id, rho, b, delay=delay,
-                                              dphase=dphase, power=power)
+
+        sid = 3
+        excite_id = 4
+        rho = 1.0
+        b = 2.0
+        unused_acsrce2 = model.add_acsrce(sid, excite_id, rho, b, delay=delay,
+                                          dphase=dphase, power=power)
+
         nodes = 4
         components = 5
         delays = 6.0
@@ -536,6 +535,7 @@ class TestDynamic(unittest.TestCase):
         phase_leads = 2.0
         delay = model.add_dphase(sid, nodes, components, phase_leads)
 
+        TEST_DYNAMIC = False
         if TEST_DYNAMIC:
             tid = power
             x1 = 1.
@@ -686,7 +686,7 @@ class TestDynamic(unittest.TestCase):
                         cid=0, comment='')
 
         tabled2_id = 100
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             x1 = 0.
             x = t = np.linspace(0., 1., num=11)
             y = np.sin(t)
@@ -702,7 +702,7 @@ class TestDynamic(unittest.TestCase):
         model.setup()
         #model.cross_reference()
 
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             time = np.linspace(0., 1., num=11)
             loads = tload1a.get_load_at_time(time, scale=1.)
             loads_expected = y
@@ -730,7 +730,7 @@ class TestDynamic(unittest.TestCase):
             tload_id, excite_id, delay=0, load_type='LOAD', T1=0., T2=None,
             frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment='')
         num = 11
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             time = np.linspace(0., 1., num=num, dtype='float64')
             loads = tload2.get_load_at_time(time, scale=1.)
             loads_expected = np.ones(num)
@@ -741,7 +741,7 @@ class TestDynamic(unittest.TestCase):
         model.add_tload2(
             tload_id, excite_id, delay=0, load_type='LOAD', T1=0., T2=0.5,
             frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment='')
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             loads = tload2.get_load_at_time(time, scale=1.)
             assert np.allclose(loads, [1., 1., 1., 1., 1., 1., 0., 0., 0., 0., 0.])
 
@@ -749,7 +749,7 @@ class TestDynamic(unittest.TestCase):
         model.add_tload2(
             tload_id, excite_id, delay=0, load_type='LOAD', T1=0.15, T2=0.5,
             frequency=0., phase=0., c=0., b=0., us0=0., vs0=0., comment='')
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             loads = tload2.get_load_at_time(time, scale=1.)
             assert np.allclose(loads, [0., 0., 1., 1., 1., 1., 0., 0., 0., 0., 0.])
 
@@ -757,7 +757,7 @@ class TestDynamic(unittest.TestCase):
         model.add_tload2(
             tload_id, excite_id, delay=0, load_type='LOAD', T1=0.15, T2=0.5,
             frequency=2., phase=0., c=0., b=0., us0=0., vs0=0., comment='')
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             loads = tload2.get_load_at_time(time, scale=1.)
             val = -0.8090169943749472
             val2 = 0.30901699437494723
@@ -767,7 +767,7 @@ class TestDynamic(unittest.TestCase):
         model.add_tload2(
             tload_id, excite_id, delay=0, load_type='LOAD', T1=0.15, T2=0.5,
             frequency=10., phase=45., c=0., b=0., us0=0., vs0=0., comment='')
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             loads = tload2.get_load_at_time(time, scale=1.)
             val = 0.5 ** 0.5 # sqrt(1/2)
             assert np.allclose(loads, [0., 0., val, val, val, val, 0., 0., 0., 0., 0.])
@@ -776,7 +776,7 @@ class TestDynamic(unittest.TestCase):
         model.add_tload2(
             tload_id, excite_id, delay=0, load_type='LOAD', T1=0.15, T2=0.5,
             frequency=10., phase=45., c=3., b=5., us0=0., vs0=0., comment='')
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             loads = tload2.get_load_at_time(time, scale=1.)
             #print(loads)
             loads_expected = np.array([0.0, 0.0, 0.0004122984191627603, 0.004226260954591647, 0.02404021442968808, 0.09903227290017788, 0.0, 0.0, 0.0, 0.0, 0.0], dtype='float64')
@@ -821,7 +821,7 @@ class TestDynamic(unittest.TestCase):
         phase_leads = [phase]
         model.add_dphase(dphase_id, nodes, components, phase_leads, comment='')
 
-        if RUN_DELAY:
+        if TEST_DYNAMIC:
             model.cross_reference()
             loads = tload2.get_load_at_time(time, scale=1.)
             val = 0.5 ** 0.5 # sqrt(1/2)
@@ -915,6 +915,32 @@ class TestDynamic(unittest.TestCase):
         #model.cross_reference()
         model.setup(run_geom_check=True)
         save_load_deck(model, run_convert=False)
+
+    def test_transfer_function(self):
+        model = BDF(debug=False, log=None, mode='msc')
+        tf = model.tf
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [2., 0., 0.])
+        tf_id = 10
+        nid0 = 1
+        component = 3
+        b0 = 1.
+        b1 = 2.
+        b2 = 3.
+        nids = [2, 3]
+        components = [4, 5]
+        a = [
+            (10., 11., 12.),
+            (13., 14., 15.),
+        ]
+        model.add_tf(tf_id, nid0, component, b0, b1, b2, nids, components, a)
+        model.setup()
+
+        tf.write(size=8)
+        tf.write(size=16)
+        save_load_deck(model)
 
     def test_dynamic1(self):
         """

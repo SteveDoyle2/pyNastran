@@ -43,6 +43,13 @@ class TestOpt(unittest.TestCase):
     def test_opt_2(self):
         """tests updating model based on DESVARs"""
         model = BDF(debug=False)
+
+        modtrak_id = 100
+        low_range = 3
+        high_range = 6
+        mt_filter = 0.9
+        model.add_modtrak(modtrak_id, low_range, high_range, mt_filter, comment='modtrak')
+
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -155,6 +162,7 @@ class TestOpt(unittest.TestCase):
         assert model.Mass(eid_conm2).mass == mass_new, 'mass=%s mass_new=%s' % (model.Mass(eid_conm2).mass, mass_new)
         assert model.Mass(eid_conm2).X[0] == x1_new, 'X1=%s x1_new=%s' % (model.Mass(eid_conm2).mass, x1_new)
         assert model.properties[pid_pcomp].thicknesses[0] == tpcomp_new, 't=%s tnew=%s' % (model.properties[pid_pcomp].thicknesses[0], tpcomp_new)
+        save_load_deck(model)
 
     def test_ddval(self):
         """tests a DDVAL"""

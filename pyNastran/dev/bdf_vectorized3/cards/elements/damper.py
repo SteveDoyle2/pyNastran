@@ -58,7 +58,7 @@ class CDAMP1(Element):
         """
         self.cards.append((eid, pid, nids, [c1, c2], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -72,7 +72,7 @@ class CDAMP1(Element):
         assert len(card) <= 7, f'len(CDAMP1 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, [c1, c2], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -200,7 +200,7 @@ class CDAMP2(Element):
         """
         self.cards.append((eid, b, nids, (c1, c2), comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -212,7 +212,7 @@ class CDAMP2(Element):
         assert len(card) <= 7, f'len(CDAMP2 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, b, nids, (c1, c2), comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -294,7 +294,7 @@ class CDAMP3(Element):
         """
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -305,7 +305,7 @@ class CDAMP3(Element):
         assert len(card) <= 5, f'len(CDAMP3 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, (s1, s2), comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -395,7 +395,7 @@ class CDAMP4(Element):
         """
         self.cards.append((eid, b, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -412,7 +412,7 @@ class CDAMP4(Element):
             self.cards.append((eid, b, [s1, s2], comment))
             self.n += 1
         assert len(card) <= 9, f'len(CDAMP4 card) = {len(card):d}\ncard={card}'
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -490,7 +490,7 @@ class CDAMP5(Element):
         """
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -500,7 +500,7 @@ class CDAMP5(Element):
         assert len(card) <= 5, f'len(CDAMP5 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -571,7 +571,7 @@ class PDAMP(Property):
         """
         self.cards.append((pid, b, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> list[int]:
         """adds a PDAMP"""
@@ -677,7 +677,7 @@ class PDAMP5(Property):
         """
         self.cards.append((pid, mid, b, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> list[int]:
         """adds a PDAMP"""
@@ -689,7 +689,7 @@ class PDAMP5(Property):
         self.n += 1
 
         assert len(card) <= 4, f'len(PDAMP5 card) = {len(card):d}\ncard={card}'
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -766,7 +766,7 @@ class PDAMPT(Property):
         """
         self.cards.append((pid, tbid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -774,10 +774,10 @@ class PDAMPT(Property):
         assert len(card) <= 3, f'len(PDAMPT card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, tbid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         property_id = np.zeros(ncards, dtype='int32')
 
@@ -836,7 +836,7 @@ class CVISC(Element):
         """
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -847,7 +847,7 @@ class CVISC(Element):
         assert len(card) <= 6, f'len(CVISC card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -961,7 +961,7 @@ class PVISC(Property):
     def add(self, pid: int, ce: float, cr: float, comment: str='') -> int:
         self.cards.append((pid, ce, cr, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         ioffset = 0
@@ -980,7 +980,7 @@ class PVISC(Property):
             assert len(card) <= 8, f'len(PVISC card) = {len(card):d}\ncard={card}'
             self.cards.append((pid, ce, cr, ''))
             self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1056,7 +1056,7 @@ class CGAP(Element):
             cid: Optional[int]=None, comment: str='') -> int:
         self.cards.append((eid, pid, nids, x, g0, cid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -1083,7 +1083,7 @@ class CGAP(Element):
 
         self.cards.append((eid, pid, [ga, gb], x, g0, cid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -1376,7 +1376,7 @@ class PGAP(Property):
             comment: str='') -> int:
         self.cards.append((pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         #assert isinstance(card, BDFCard), card
@@ -1395,10 +1395,10 @@ class PGAP(Property):
         self.cards.append((pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin, comment))
         #i = len(self.cards) - 1
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         property_id = np.zeros(ncards, dtype='int32')
         u0 = np.zeros(ncards, dtype='float64')

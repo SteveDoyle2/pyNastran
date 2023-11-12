@@ -109,7 +109,7 @@ class DEFORM(Load):
         """
         self.cards.append((sid, eid, deformation, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -139,7 +139,7 @@ class DEFORM(Load):
             deformation = double(card, 7, 'D3')
             self.cards.append((sid, eid, deformation, comment))
             self.n += 1
-        return self.n
+        return self.n - 1
 
 
     @Load.parse_cards_check
@@ -262,7 +262,7 @@ class SPCD(Load):
             spc_id = [spc_id] * nnodes
         self.cards.append((spc_id, nodes, components, enforced, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -284,7 +284,7 @@ class SPCD(Load):
                         double_or_blank(card, 7, 'D2', default=0.0)]
         self.cards.append((sids, nodes, components, enforced, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -371,7 +371,7 @@ class Load0(Load):
         assert len(card) <= 8, 'len(%s card) = %d\ncard=%s' % (self.type, len(card), card)
         self.cards.append((sid, node, cid, mag, xyz, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -474,7 +474,7 @@ class Load1(Load):
         """
         self.cards.append((sid, node, mag, [g1, g2], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -485,7 +485,7 @@ class Load1(Load):
         assert len(card) == 6, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
         self.cards.append((sid, node, mag, [g1, g2], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -575,7 +575,7 @@ class Load2(Load):
         """
         self.cards.append((sid, node, mag, [g1, g2, g3, g4], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -588,7 +588,7 @@ class Load2(Load):
         assert len(card) == 8, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
         self.cards.append((sid, node, mag, [g1, g2, g3, g4], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1018,7 +1018,7 @@ class GRAV(Load):
         """
         self.cards.append((sid, cid, scale, N, mb, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -1033,7 +1033,7 @@ class GRAV(Load):
                                                     #'N=%s' % str(self.N))
         self.cards.append((sid, cid, scale, N, main_bulk, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -1173,7 +1173,7 @@ class ACCEL(Load):
         """
         self.cards.append((sid, N, direction, locs, vals, cid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1211,7 +1211,7 @@ class ACCEL(Load):
         #return ACCEL(sid, N, direction, locs, vals, cid=cid, comment=comment)
         self.cards.append((sid, N, direction, locs, vals, cid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1328,7 +1328,7 @@ class ACCEL1(Load):
         """
         self.cards.append((sid, scale, N, nodes, cid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1353,7 +1353,7 @@ class ACCEL1(Load):
         #return ACCEL1(sid, scale, N, nodes, cid=cid, comment=comment)
         self.cards.append((sid, scale, N, nodes, cid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1453,7 +1453,7 @@ class LOAD(Load):
         assert len(scale_factors) == len(load_ids), f'sid={sid:d} scale_factors={scale_factors} load_ids={load_ids}'
         self.cards.append((sid, scale, scale_factors, load_ids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -1473,7 +1473,7 @@ class LOAD(Load):
         assert len(card) > 3, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
         self.cards.append((sid, scale, scale_factors, load_ids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -2028,7 +2028,7 @@ class SLOAD(Load):
         assert len(nodes) == len(mags)
         self.cards.append((sid, nodes, mags, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -2048,7 +2048,7 @@ class SLOAD(Load):
             mags.append(double(card, j + 1, f'mag{i:d}'))
         self.cards.append((sid, nodes, mags, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -2105,11 +2105,16 @@ class SLOAD(Load):
         force[:, 0] = self.mags
         return force_moment
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(),
+                   self.nodes.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         load_ids = array_str(self.load_id, size=size)
         for sid, node, mag in zip(load_ids, self.nodes, self.mags):
             list_fields = ['SLOAD', sid, node, mag]
@@ -2191,7 +2196,7 @@ class RFORCE(Load):
         self.cards.append((sid, nid, cid, scale, r123,
                            method, racc, main_bulk, idrf, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2220,7 +2225,7 @@ class RFORCE(Load):
         self.cards.append((sid, nid, cid, scale, [r1, r2, r3],
                            method, racc, main_bulk, idrf, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -2416,7 +2421,7 @@ class RFORCE1(Load):
         self.cards.append((sid, nid, cid, scale, r123,
                            method, racc, main_bulk, group_id, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2446,7 +2451,7 @@ class RFORCE1(Load):
         assert len(card) <= 12, f'len(RFORCE1 card) = {len(card):d}\ncard={card}'
         self.cards.append((sid, nid, cid, scale, r123, method, racc, main_bulk, group_id, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:

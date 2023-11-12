@@ -36,10 +36,10 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.shell_properties import (
     PLPLANE, PSHLN1, PSHLN2,
     PAABSF,
 )
-#from pyNastran.dev.bdf_vectorized3.cards.elements.shell_axi import (
-    #CTRIAX, CTRIAX6,
-    #CQUADX, CQUADX4, CQUADX8,
-    #CTRAX3, CTRAX6)
+from pyNastran.dev.bdf_vectorized3.cards.elements.shell_axi import (
+    CTRIAX, CTRIAX6,
+    CQUADX, CQUADX4, CQUADX8,
+    CTRAX3, CTRAX6)
 
 from pyNastran.dev.bdf_vectorized3.cards.elements.plate_stress_strain import (
     PPLANE,
@@ -75,7 +75,7 @@ from pyNastran.dev.bdf_vectorized3.cards.loads.types import Loads as StaticLoad
 from pyNastran.dev.bdf_vectorized3.cards.loads.dynamic_loads import (
     LSEQ, DLOAD,
     DAREA, TLOAD1, TLOAD2, RLOAD1, RLOAD2, TIC, QVECT,
-    RANDPS, DELAY, DPHASE
+    RANDPS, DELAY, DPHASE, TF, ACSRCE,
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.loads.thermal_loads import (
@@ -96,7 +96,8 @@ from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
 
 from pyNastran.dev.bdf_vectorized3.cards.contact import (
     BSURF, BSURFS, BCPROP, BCPROPS,
-    BGSET, BCTSET, BGADD, BCTADD)
+    BGSET, BCTSET, BGADD, BCTADD,
+    BCONP, BFRIC)
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.constraints import (
     SPC, SPC1, SPCADD,
@@ -124,6 +125,8 @@ from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DVPREL1, DVPREL2,
     DVMREL1, DVMREL2,
     DVCREL1, DVCREL2, DCONADD,
+    DSCREEN, # DDVAL,
+    MODTRAK,
 )
 from .loads_summation import (
     get_static_loads_by_subcase_id,
@@ -220,6 +223,9 @@ class BDFAttributes:
         self.bsurfs = BSURFS(self)    # source/target_id to solid eid
         self.bcprop = BCPROP(self)    # source/target_id to shell pid
         self.bcprops = BCPROPS(self)  # source/target_id to solid pid
+
+        self.bconp = BCONP(self)      # sideline contact
+        self.bfric = BFRIC(self)      # friction for BCONP
 
         self.bgset = BGSET(self)    # glue_id to source/target_id
         self.bctset = BCTSET(self)  # contact_id to source/target_ids
@@ -376,14 +382,14 @@ class BDFAttributes:
         self.cplstn8 = CPLSTN8(self)
 
         # axisymmetric shells
-        #self.cquadx = CQUADX(self)
-        #self.cquadx4 = CQUADX4(self)
-        #self.cquadx8 = CQUADX8(self)
-        #self.ctriax = CTRIAX(self)
-        #self.ctriax6 = CTRIAX6(self)
+        self.cquadx = CQUADX(self)
+        self.cquadx4 = CQUADX4(self)
+        self.cquadx8 = CQUADX8(self)
+        self.ctriax = CTRIAX(self)
+        self.ctriax6 = CTRIAX6(self)
 
-        #self.ctrax3 = CTRAX3(self)
-        #self.ctrax6 = CTRAX6(self)
+        self.ctrax3 = CTRAX3(self)
+        self.ctrax6 = CTRAX6(self)
 
         # acoustic shells?
         self.caabsf = CAABSF(self)
@@ -486,6 +492,7 @@ class BDFAttributes:
         self.rload1 = RLOAD1(self)
         self.rload2 = RLOAD2(self)
         self.tic = TIC(self)  # initial conditions
+        self.tf = TF(self)  # transfer function
 
         # dynamic load offset
         self.dphase = DPHASE(self)
@@ -493,6 +500,7 @@ class BDFAttributes:
 
         # random loads
         self.randps = RANDPS(self)
+        self.acsrce = ACSRCE(self)
 
         self.mat1 = MAT1(self)
         self.mat2 = MAT2(self)
@@ -552,6 +560,7 @@ class BDFAttributes:
         self.nlpcis = {}
 
         # optimization
+        self.modtrak = MODTRAK(self)
         self.desvar = DESVAR(self)
         self.dlink = DLINK(self)
         self.dvgrid = DVGRID(self)
@@ -567,6 +576,8 @@ class BDFAttributes:
         self.dvcrel2 = DVCREL2(self)
 
         self.dconadd = DCONADD(self)
+        #self.ddval = DDVAL(self)
+        self.dscreen = DSCREEN(self)
 
         # ---------------------------------------------------
         ## unoptimized
@@ -823,6 +834,8 @@ class BDFAttributes:
             self.dvprel1, self.dvprel2,
             self.dvmrel1, self.dvmrel2,
             self.dvcrel1, self.dvcrel2,
+            self.dscreen,
+            self.modtrak,
         ]
         return optimization
 
@@ -854,14 +867,14 @@ class BDFAttributes:
             self.rload1, self.rload2,
 
             # random loads
-            #self.randps,
+            self.randps, self.acsrce,
         ]
         return loads
 
     @property
     def dynamic_cards(self) -> list[Any]:
         cards = [
-            self.tic, self.delay, self.dphase,
+            self.tic, self.delay, self.dphase, self.tf,
         ]
         return cards
 
@@ -990,7 +1003,8 @@ class BDFAttributes:
     def contact_cards(self) -> list[Any]:
         return [self.bsurf, self.bsurfs, self.bcprop, self.bcprops,
                 self.bgset, self.bctset,
-                self.bgadd, self.bctadd]
+                self.bgadd, self.bctadd,
+                self.bconp, self.bfric]
 
     @property
     def _cards_to_setup(self) -> list[Any]:

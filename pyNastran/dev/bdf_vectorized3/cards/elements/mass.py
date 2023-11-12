@@ -73,7 +73,7 @@ class CONM1(Element):
         """
         self.cards.append((eid, nid, cid, mass_matrix, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         m = np.zeros((6, 6), dtype='float64')
@@ -104,7 +104,7 @@ class CONM1(Element):
         m[5, 5] = double_or_blank(card, 24, 'M66', default=0.)
         self.cards.append((eid, nid, cid, m, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -248,7 +248,7 @@ class CONM2(Element):
         """
         self.cards.append((eid, nid, cid, mass, X, I, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -273,7 +273,7 @@ class CONM2(Element):
         assert len(card) <= 15, f'len(CONM2 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, nid, cid, mass, X, I, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, elem: CONM2, i: np.ndarray) -> None:
         elem.element_id = self.element_id[i]

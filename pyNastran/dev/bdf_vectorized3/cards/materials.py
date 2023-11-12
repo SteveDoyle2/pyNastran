@@ -102,7 +102,7 @@ class MAT1(Material):
         #self.Ss = np.hstack([self.Ss, [Ss]])
         #self.mcsid = np.hstack([self.mcsid, [mcsid]])
         #self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
@@ -127,7 +127,7 @@ class MAT1(Material):
         self.cards.append((mid, E, G, nu, rho, alpha, tref, ge, St, Sc, Ss,
                            mcsid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_op2_data(self, data, comment: str=''):
         """
@@ -160,7 +160,7 @@ class MAT1(Material):
         self.cards.append((mid, E, G, nu, rho, alpha, tref, ge, St, Sc, Ss,
                            mcsid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -377,7 +377,7 @@ class MAT2(Material):
                            [a1, a2, a3], tref, ge, St, Sc, Ss,
                            mcsid, ge_matrix, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
@@ -416,7 +416,7 @@ class MAT2(Material):
         self.cards.append((mid, G11, G12, G13, G22, G23, G33, rho,
                            [a1, a2, a3], tref, ge, St, Sc, Ss, mcsid, ge_matrix, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -698,7 +698,7 @@ class MAT3(Material):
         self.cards.append((mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
                            ax, ath, az, tref, ge, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
@@ -720,7 +720,7 @@ class MAT3(Material):
         self.cards.append((mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
                            ax, ath, az, tref, ge, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -877,7 +877,7 @@ class MAT4(Material):
         """Creates a MAT4 card"""
         self.cards.append((mid, k, cp, rho, H, mu, hgen, ref_enthalpy, tch, tdelta, qlat, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
@@ -894,7 +894,7 @@ class MAT4(Material):
         assert len(card) <= 12, f'len(MAT4 card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, k, cp, rho, H, mu, hgen, ref_enthalpy, tch, tdelta, qlat, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -1016,7 +1016,7 @@ class MAT5(Material):
         """Creates a MAT5 card"""
         self.cards.append((mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
@@ -1033,10 +1033,10 @@ class MAT5(Material):
         assert len(card) <= 11, f'len(MAT5 card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, kxx, kxy, kxz, kyy, kyz, kzz, cp, rho, hgen, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         material_id = np.zeros(ncards, dtype='int32')
         kxx = np.zeros(ncards, dtype='float64')
@@ -1209,7 +1209,7 @@ class MAT8(Material):
         self.cards.append((mid, e11, e22, nu12, g12, g1z, g2z, rho, [a1, a2], tref,
                            xt, xc, yt, yc, s, ge, f12, strn, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
@@ -1237,7 +1237,7 @@ class MAT8(Material):
         self.cards.append((mid, e11, e22, nu12, g12, g1z, g2z, rho, [a1, a2], tref,
                            xt, xc, yt, yc, s, ge, f12, strn, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -1512,7 +1512,7 @@ class MAT9(Material):
                            G44, G45, G46,
                            G55, G56, G66, rho, A, tref, ge, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
@@ -1553,7 +1553,7 @@ class MAT9(Material):
                            G44, G45, G46,
                            G55, G56, G66, rho, alpha, tref, ge, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -1879,7 +1879,7 @@ class MAT10(Material):
         self.cards.append((mid, bulk, rho, c, ge, alpha_gamma,
                            table_bulk, table_rho, table_ge, table_gamma, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
@@ -1897,7 +1897,7 @@ class MAT10(Material):
         self.cards.append((mid, bulk, rho, c, ge, alpha_gamma,
                            tid_bulk, tid_rho, tid_ge, tid_gamma, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
     def parse_cards(self) -> None:
@@ -2098,7 +2098,7 @@ class MAT11(Material):
         self.cards.append((mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
                            rho, a1, a2, a3, tref, ge, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         mid = integer(card, 1, 'mid')
@@ -2322,7 +2322,7 @@ class MAT10C(Material):
         assert form in {'REAL', 'IMAG'}, f'form={form!r}'
         self.cards.append((mid, form, rho_real, rho_imag, c_real, c_imag, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         #ID Material identification number. (Integer > 0)
@@ -2344,10 +2344,10 @@ class MAT10C(Material):
         assert len(card) <= 7, f'len(MAT10C card) = {len(card):d}\ncard={card}'
         self.cards.append((mid, form, rho_real, rho_imag, c_real, c_imag, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         material_id = np.zeros(ncards, dtype='int32')
         form = np.zeros(ncards, dtype='|U4')
@@ -2465,7 +2465,7 @@ class MATORT(Material):
                            option,
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         #| MATORT |   MID  |   E1  |   E2  |  E3 | NU12 | NU23 | NU31 | RHO |
@@ -2520,10 +2520,10 @@ class MATORT(Material):
                            option,
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         material_id = np.zeros(ncards, dtype='int32')
         E1 = np.zeros(ncards, dtype='float64')
@@ -2686,8 +2686,8 @@ class MATORT(Material):
         trefs = array_default_float(self.tref, default=0., size=size, is_double=False)
         ges = array_default_float(self.ge, default=0., size=size, is_double=False)
 
-        iyields = array_default_int(self.iyield, default=1, size=size, is_double=False)
-        ihards = array_default_int(self.ihard, default=1, size=size, is_double=False)
+        iyields = array_default_int(self.iyield, default=1, size=size)
+        ihards = array_default_int(self.ihard, default=1, size=size)
         sys = array_default_float(self.sy, default=0., size=size, is_double=False)
         y1s = array_default_float(self.y1, default=0., size=size, is_double=False)
         y2s = array_default_float(self.y2, default=0., size=size, is_double=False)
@@ -2704,7 +2704,7 @@ class MATORT(Material):
             in zip_longest(self.material_id, self.E1, self.E2, self.E3,
                            self.G12, self.G23, self.G31,
                            self.nu12, self.nu23, self.nu31, self.rho,
-                           alpha1, alpha2, alpha3, tref, ge,
+                           alpha1s, alpha2s, alpha3s, trefs, ges,
                            iyields, ihards, sys, y1s, y2s, y3s,
                            yshear1s, yshear2s, yshear3s,
                            self.option,):
@@ -2717,28 +2717,13 @@ class MATORT(Material):
             #ge = set_blank_if_default(ge, 0.)
 
             list_fields = ['MATORT', mid, e1, e2, e3, nu12, nu23, nu31, rho,
-                           g12, g23, g31, a1, a2, a3, tref, ge,
+                           g12, g23, g31, alpha1, alpha2, alpha3, tref, ge,
                            iyield, ihard, sy, None, y1, y2, y3, None,
                            yshear1, yshear2, yshear3, None, None, None, None, None,
                            option,
                            ]
             bdf_file.write(print_card(list_fields))
         return
-
-    #def s33(self):
-        #"""
-        #ei2 = [
-            #[  1 / e, -nu / e,    0.],
-            #[-nu / e,   1 / e,    0.],
-            #[     0.,      0., 1 / g],
-        #]
-        #"""
-        #nmaterial = len(self.material_id)
-        #s33 = np.zeros((nmaterial, 3, 3), dtype='float64')
-        #s33[:, 0, 0] = s33[:, 1, 1] = 1 / self.E
-        #s33[:, 1, 0] = s33[:, 0, 1] = -self.nu / self.E
-        #s33[:, 2, 2] = 1 / self.G
-        #return s33
 
 
 class MATHP(Material):
@@ -2806,7 +2791,7 @@ class MATHP(Material):
                            a32, a23, a14, a05, d5, tab1, tab2,
                            tab3, tab4, tabd, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2875,10 +2860,10 @@ class MATHP(Material):
                            a32, a23, a14, a05, d5, tab1, tab2,
                            tab3, tab4, tabd, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Material.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         material_id = np.zeros(ncards, dtype='int32')
         a10 = np.zeros(ncards, dtype='float64')
@@ -3253,7 +3238,7 @@ class MATHE(Material):
         return self.n - 1
 
     @Material.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         material_id = np.zeros(ncards, dtype='int32')
         model = np.array([], dtype='|U8')

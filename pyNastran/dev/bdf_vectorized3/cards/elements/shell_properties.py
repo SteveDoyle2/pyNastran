@@ -116,7 +116,7 @@ class PSHELL(Property):
                            mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4,
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -145,7 +145,7 @@ class PSHELL(Property):
                            mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4,
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1014,7 +1014,7 @@ class PCOMP(CompositeProperty):
         #self.sout = np.hstack([self.sout, souts])
         #self.nlayer = np.hstack([self.nlayer, len(thicknesses)])
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         #print(card.write_card(size=16))
@@ -1086,7 +1086,7 @@ class PCOMP(CompositeProperty):
         self.cards.append((pid, nsm, shear_bonding, ft, tref, ge, lam, z0,
                            mids, thicknesses, thetas, souts, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1579,7 +1579,7 @@ class PCOMPG(CompositeProperty):
             comment)
         self.cards.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, prop: PCOMPG, i: np.ndarray) -> None:  # ignore[override]
         prop.n = len(i)
@@ -1664,7 +1664,7 @@ class PCOMPG(CompositeProperty):
             comment)
         self.cards.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1846,7 +1846,7 @@ class PLPLANE(Property):
         """Creates a PLPLANE card"""
         self.cards.append((pid, mid, cid, stress_strain_output_location, thickness, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1876,7 +1876,7 @@ class PLPLANE(Property):
         assert len(card) <= 6, f'len(PLPLANE card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, cid, stress_strain_output_location, thickness, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -2097,7 +2097,7 @@ class PSHLN1(Property):
         self.cards.append((pid, (mid1, mid2), analysis,
                            behx, integration, behxh, integration_h, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2188,10 +2188,10 @@ class PSHLN1(Property):
         self.cards.append((pid, (mid1, mid2), analysis,
                            behx, integration, behxh, integration_h, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros((ncards, 2), dtype='int32')
@@ -2417,7 +2417,7 @@ class PSHLN2(Property):
         self.cards.append((pid, mid, direct, thickness, analysis,
                            behx, integration, behxh, integration_h, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2510,10 +2510,10 @@ class PSHLN2(Property):
         self.cards.append((pid, mid, direct, thickness, analysis,
                            behx, integration, behxh, integration_h, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         property_id = np.zeros(ncards, dtype='int32')
         material_id = np.zeros(ncards, dtype='int32')

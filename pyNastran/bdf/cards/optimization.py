@@ -3463,7 +3463,7 @@ class DSCREEN(OptConstraint):
                          #'CEIG', 'LAMA', 'EIGN', 'VOLUME', 'DRESP3', 'WEIGHT'], str(self)
 
     @classmethod
-    def add_card(cls, card, comment: str=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DSCREEN card from ``BDF.add_card(...)``
 

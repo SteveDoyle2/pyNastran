@@ -6,16 +6,16 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default # , set_string8_blank_if_default
-#from pyNastran.bdf.cards.base_card import expand_thru_by # expand_thru # BaseCard, expand_thru_by #  _node_ids,
+from pyNastran.bdf.cards.base_card import expand_thru_by # expand_thru # BaseCard, expand_thru_by #  _node_ids,
 #from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_field_8
 #from pyNastran.bdf.field_writer_16 import print_card_16, print_scientific_16, print_field_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
-#from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double,
     integer_or_blank, double_or_blank,
     components_or_blank, integer_string_or_blank, integer_double_or_blank,
-    #integer_or_string,
+    integer_or_string,
     modal_components_or_blank,
 )
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
@@ -26,7 +26,7 @@ from pyNastran.bdf.cards.loads.dloads import (
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, make_idim, # hslice_by_idim,
+    VectorizedBaseCard, make_idim, hslice_by_idim,
     parse_load_check, # get_print_card_8_16,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -1546,63 +1546,9 @@ class TIC(VectorizedBaseCard):
     entry may not be used for heat transfer analysis.
 
     """
-    #def __init__(self, model: BDF):
-        #super().__init__(model)
-        #self._is_sorted = False
     def clear(self) -> None:
         self.tic_id = np.array([], dtype='int32')
         self.node_id = np.array([], dtype='int32')
-
-    #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
-        #inid = self._node_index(node_id)
-        #return self.slice_card(inid)
-
-    #def slice_card_by_node_id(self, node_id: np.ndarray) -> TIC:
-        #"""uses a node_ids to extract GRIDs"""
-        #inid = self.index(node_id)
-        ##assert len(self.node_id) > 0, self.node_id
-        ##i = np.searchsorted(self.node_id, node_id)
-        #tic = self.slice_card_by_index(inid)
-        #return grid
-
-    def slice_card_by_index(self, i: np.ndarray) -> TIC:
-        """uses a node_index to extract TICs"""
-        #assert self.xyz.shape == self._xyz_cid0.shape
-        assert len(self.node_id) > 0, self.node_id
-        i = np.atleast_1d(np.asarray(i, dtype=self.node_id.dtype))
-        i.sort()
-        tic = TIC(self.model)
-        self.__apply_slice__(tic, i)
-        return tic
-
-    def __apply_slice__(self, tic: TIC, i: np.ndarray) -> None:
-        tic.n = len(i)
-        tic._is_sorted = self._is_sorted
-        tic.node_id = self.node_id[i]
-        tic.tic_id = self.tic_id[i]
-        tic.component = self.component[i]
-        tic.u0 = self.u0[i]
-        tic.v0 = self.v0[i]
-
-    @property
-    def max_id(self) -> int:
-        return max(self.tic_id.max(), self.node_id.max(),)
-
-    def write_file(self, bdf_file: TextIOLike,
-                   size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> None:
-        if len(self.tic_id) == 0:
-            return
-
-        print_card, size = get_print_card_size(size, self.max_id)
-        tic_ids = array_str(self.tic_id, size=size)
-        node_id = array_str(self.node_id, size=size)
-        components = array_default_int(self.component, size=size, default=0)
-
-        for sid, nid, comp, u0, v0 in zip_longest(tic_ids, node_id, components, self.u0, self.v0):
-            list_fields = ['TIC', sid, nid, comp, u0, v0]
-            bdf_file.write(print_card(list_fields))
-        return
 
     def add(self, sid: int, nid: int, components: int=0,
             u0: float=0.0, v0: float=0.0, comment: str='') -> int:
@@ -1626,7 +1572,7 @@ class TIC(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         if self.debug:
             self.model.log.debug('parse TIC')
@@ -1685,6 +1631,277 @@ class TIC(VectorizedBaseCard):
             missing,
             node=(model.grid.node_id, unode),
         )
+
+    #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
+        #inid = self._node_index(node_id)
+        #return self.slice_card(inid)
+
+    #def slice_card_by_node_id(self, node_id: np.ndarray) -> TIC:
+        #"""uses a node_ids to extract GRIDs"""
+        #inid = self.index(node_id)
+        ##assert len(self.node_id) > 0, self.node_id
+        ##i = np.searchsorted(self.node_id, node_id)
+        #tic = self.slice_card_by_index(inid)
+        #return grid
+
+    def slice_card_by_index(self, i: np.ndarray) -> TIC:
+        """uses a node_index to extract TICs"""
+        #assert self.xyz.shape == self._xyz_cid0.shape
+        assert len(self.node_id) > 0, self.node_id
+        i = np.atleast_1d(np.asarray(i, dtype=self.node_id.dtype))
+        i.sort()
+        tic = TIC(self.model)
+        self.__apply_slice__(tic, i)
+        return tic
+
+    def __apply_slice__(self, tic: TIC, i: np.ndarray) -> None:
+        tic.n = len(i)
+        tic._is_sorted = self._is_sorted
+        tic.node_id = self.node_id[i]
+        tic.tic_id = self.tic_id[i]
+        tic.component = self.component[i]
+        tic.u0 = self.u0[i]
+        tic.v0 = self.v0[i]
+
+    @property
+    def max_id(self) -> int:
+        return max(self.tic_id.max(), self.node_id.max(),)
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.tic_id) == 0:
+            return
+
+        print_card, size = get_print_card_size(size, self.max_id)
+        tic_ids = array_str(self.tic_id, size=size)
+        node_id = array_str(self.node_id, size=size)
+        components = array_default_int(self.component, size=size, default=0)
+
+        for sid, nid, comp, u0, v0 in zip_longest(tic_ids, node_id, components, self.u0, self.v0):
+            list_fields = ['TIC', sid, nid, comp, u0, v0]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class TF(VectorizedBaseCard):
+    """
+    Defines a dynamic transfer function of the form:
+        (B0 + B1 p + B2 *p2)*ud  sum(A0_i + A1_i*p + A2_i*p2)*ui = 0
+
+    +----+-----+-----+------+------+------+--------+----+----+
+    |  1 |  2  |  3  |   4  |   5  |   6  |    7   |  8 |  9 |
+    +====+=====+=====+======+======+======+========+====+====+
+    | TF | SID | GD  |  CD  |  B0  |  B1  |   B2   |    |    |
+    +----+-----+-----+------+------+------+--------+----+----+
+    |    | G_1 | C_1 | A0_1 | A1_1 | A2_1 |  etc.  |    |    |
+    +----+-----+-----+------+------+------+--------+----+----+
+
+    """
+    def clear(self) -> None:
+        self.tf_id = np.array([], dtype='int32')
+        self.node_id = np.array([], dtype='int32')
+        self.component = np.array([], dtype='int32')
+        self.b = np.zeros((0, 3), dtype='float64')
+
+        self.a = np.zeros((0, 3), dtype='float64')
+
+    def add(self, tf_id: int,
+            nid: int, component: int,
+            b0: float, b1: float, b2: float,
+            nids: list[int], components: list[int],
+            a: list[tuple[float, float, float]],
+            comment: str='') -> int:
+        """Creates a TF card"""
+        assert isinstance(component, int), component
+        nnids = len(nids)
+        assert nnids == len(components), f'nnids={nnids} ncomponents={len(components)}'
+        assert nnids == len(a), f'nnids={nnids} na={len(a)}'
+
+        self.cards.append((tf_id, nid, component, (b0, b1, b2),
+                           a, nids, components, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a TF card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if self.debug:
+            self.model.log.debug(f'adding card {card}')
+
+        sid = integer(card, 1, 'sid')
+        nid0 = integer(card, 2, 'nid0')
+        # component 0 means an SPOINT/EPOINT
+        comp = components_or_blank(card, 3, 'components_0', default='0')
+        b0 = double_or_blank(card, 4, 'b0', default=0.)
+        b1 = double_or_blank(card, 5, 'b1', default=0.)
+        b2 = double_or_blank(card, 6, 'b2', default=0.)
+
+        nfields = len(card) - 9
+        nrows = nfields // 8
+        if nfields % 8 > 0:
+            nrows += 1
+
+        nids = []
+        components = []
+        a = []
+        for irow in range(nrows):
+            j = irow * 8 + 9
+            #ifield = irow + 1
+            nid = integer(card, j, 'grid_%i' % (irow + 1))
+            component = components_or_blank(card, j + 1, 'components_%i' % (irow + 1), '0')
+            a0 = double_or_blank(card, j + 2, 'a0_%i' % (irow + 1), 0.)
+            a1 = double_or_blank(card, j + 3, 'a1_%i' % (irow + 1), 0.)
+            a2 = double_or_blank(card, j + 4, 'a2_%i' % (irow + 1), 0.)
+            nids.append(nid)
+            components.append(component)
+            a.append([a0, a1, a2])
+        #return TF(sid, nid0, comp, [b0, b1, b2], nids, components, a,
+                  #comment=comment)
+
+        self.cards.append((sid, nid0, comp, (b0, b1, b2),
+                           a, nids, components, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+        #idtype = self.model.idtype
+
+        tf_id = np.zeros(ncards, dtype='int32')
+        node_id = np.zeros(ncards, dtype='int32')
+        component = np.zeros(ncards, dtype='int32')
+        b = np.zeros((ncards, 3), dtype='float64')
+        #a = np.zeros((ncards, 3), dtype='float64')
+
+        a_list = []
+        components_list = []
+        nodes_list = []
+        nnode = np.zeros(ncards, dtype='int32')
+        for icard, card in enumerate(self.cards):
+            (sid, nid0, comp, bi,
+             ai, nidsi, componentsi, comment) = card
+            tf_id[icard] = sid
+            node_id[icard] = nid0
+            component[icard] = comp
+            b[icard] = bi
+
+            for aii in ai:
+                assert len(aii) == 3, ai
+                a_list.append(aii)
+            nnode[icard] = len(nidsi)
+            nodes_list.extend(nidsi)
+            components_list.extend(componentsi)
+            #self.comment[icard] = comment
+        a = np.array(a_list, dtype='float64')
+        nodes = np.array(nodes_list, dtype='int32')
+        components = np.array(components_list, dtype='int32')
+        self._save(tf_id, node_id, component, b,
+                   a, components, nodes, nnode)
+        #self.sort()
+        self.cards = []
+
+    def _save(self, tf_id, node_id, component, b,
+              a, components, nodes, nnode):
+        assert len(self.tf_id) == 0, self.tf_id
+        self.tf_id = tf_id
+        self.node_id = node_id
+        self.component = component
+        self.b = b
+
+        self.a = a
+        self.components = components
+        self.nodes = nodes
+        self.nnode = nnode
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        model = self.model
+        nodes = np.hstack([self.node_id, self.nodes.ravel()])
+        unode = np.unique(nodes)
+
+        geom_check(
+            self,
+            missing,
+            node=(model.grid.node_id, unode),
+        )
+
+    def __apply_slice__(self, tf: TF, i: np.ndarray) -> None:
+        tf.n = len(i)
+        #tf._is_sorted = self._is_sorted
+
+        tf.tf_id = self.tf_id[i]
+        tf.node_id = self.node_id[i]
+        tf.component = self.component[i]
+        tf.b = self.b[i, :]
+        #asdf
+        #tf.nnode = self.nnode[i]
+        inode = self.inode
+        tf.nodes = hslice_by_idim(i, inode, self.nodes)
+        tf.components = hslice_by_idim(i, inode, self.components)
+        tf.a = hslice_by_idim(i, inode, self.a)
+        tf.nnode = self.nnode[i]
+
+    @property
+    def inode(self) -> np.ndarray:
+        return make_idim(self.n, self.nnode)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.tf_id.max(), self.node_id.max(), self.nodes.max(),)
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.tf_id) == 0:
+            return
+
+        print_card, size = get_print_card_size(size, self.max_id)
+        tf_ids = array_str(self.tf_id, size=size)
+        node_id = array_str(self.node_id, size=size)
+        #component = array_default_int(self.component, size=size, default=0)
+
+        #self.a = a
+        #self.self.components = components
+        #self.self.nodes = nodes
+        #self.self.nnode = nnode
+        bb_ = array_float(self.b, size=size, is_double=False)
+        component = array_str(self.component, size=size)
+
+        nids_ = array_str(self.nodes, size=size)
+        aa_ = array_float(self.b, size=size, is_double=False)
+        components_ = array_str(self.components, size=size)
+        for tf_id, nid, comp, (b0, b1, b2), (inode0, inode1) in zip_longest(tf_ids, node_id, component,
+                                                                            bb_, self.inode):
+            list_fields = ['TF', tf_id, nid, comp, b0, b1, b2, None, None]
+
+            nidsi = nids_[inode0:inode1]
+            componentsi = components_[inode0:inode1]
+            aa = aa_[inode0:inode1, :]
+
+            nidsi = self.nodes[inode0:inode1]
+            componentsi = self.components[inode0:inode1]
+            aa = self.a[inode0:inode1, :]
+            for nid1, comp1, (a0, a1, a2) in zip(nidsi, componentsi, aa):
+                list_fields += [nid1, comp1, a0, a1, a2, None, None, None]
+
+            #list_fields = ['TF', self.sid, self.nid0, self.c, self.b0, self.b1, self.b2, None, None]
+            #for grid, c, (a0, a1, a2) in zip(self.nids, self.components, aa):
+                #list_fields += [grid, c, a0, a1, a2, None, None, None]
+
+            bdf_file.write(print_card(list_fields))
+        return
 
 
 class DELAY(VectorizedBaseCard):
@@ -1799,7 +2016,7 @@ class DELAY(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         if self.debug:
             self.model.log.debug('parse DELAY')
@@ -1976,7 +2193,7 @@ class DPHASE(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         if self.debug:
             self.model.log.debug('parse DPHASE')
@@ -2217,6 +2434,226 @@ class QVECT(VectorizedBaseCard):
         force_moment = np.zeros((nloads, 6), dtype='float64')
         return force_moment
 
+
+class ACSRCE(VectorizedBaseCard):
+    r"""
+    Defines acoustic source as a function of power vs. frequency.
+
+    +--------+-----+----------+---------------+-----------------+-------+-----+---+
+    |   1    |  2  |    3     |       4       |        5        |   6   |  7  | 8 |
+    +========+=====+==========+===============+=================+=======+=====+===+
+    | ACSRCE | SID | EXCITEID | DELAYI/DELAYR | DPHASEI/DPHASER | TP/RP | RHO | B |
+    +--------+-----+----------+---------------+-----------------+-------+-----+---+
+
+    ..math ::
+      C = \sqrt(B ⁄ ρ)
+      Source Strength = {A} * 1/(2πf)  * \sqrt( 8πC P(f) / ρ) ^ (ei(θ + 2πfτ))
+
+    """
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
+
+    def add(self, sid: int, excite_id: int, rho: float, b: float,
+            delay: Union[int, float]=0,
+            dphase: Union[int, float]=0,
+            power: Union[int, float]=0,
+            comment: str='') -> int:
+        """
+        Creates an ACSRCE card
+
+        Parameters
+        ----------
+        sid : int
+            load set id number (referenced by DLOAD)
+        excite_id : int
+            Identification number of a DAREA or SLOAD entry that lists
+            each degree of freedom to apply the excitation and the
+            corresponding scale factor, A, for the excitation
+        rho : float
+            Density of the fluid
+        b : float
+            Bulk modulus of the fluid
+        delay : int; default=0
+            Time delay, τ.
+        dphase : int / float; default=0
+            the dphase; if it's 0/blank there is no phase lag
+            float : delay in units of time
+            int : delay id
+        power : int; default=0
+            Power as a function of frequency, P(f).
+            float : value of P(f) used over all frequencies for all
+                    degrees of freedom in EXCITEID entry.
+            int : TABLEDi entry that defines P(f) for all degrees of
+                  freedom in EXCITEID entry.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((sid, excite_id,
+                           delay, dphase, power, rho, b, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a ACSRCE card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        excite_id = integer(card, 2, 'excite_id') # DAREA, FBALOAD, SLOAD
+        delay = integer_double_or_blank(card, 3, 'delay', default=0) # DELAY, FBADLAY
+        dphase = integer_double_or_blank(card, 4, 'dphase', default=0) # DPHASE, FBAPHAS
+        power = integer_double_or_blank(card, 5, 'power/tp/rp', default=0) # TABLEDi/power
+        rho = double(card, 6, 'rho')
+        b = double(card, 7, 'bulk modulus')
+
+        assert len(card) <= 8, 'len(ACSRCE card) = %i\n%s' % (len(card), card)
+        #return ACSRCE(sid, excite_id, rho, b,
+                      #delay=delay, dphase=dphase, power=power, comment=comment)
+        self.cards.append((sid, excite_id,
+                           delay, dphase, power, rho, b, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+
+        #: Set identification number
+        load_id = np.zeros(ncards, dtype='int32')
+        excite_id = np.zeros(ncards, dtype='int32')
+
+        delay_float = np.zeros(ncards, dtype='float64')
+        delay_int = np.zeros(ncards, dtype='int32')
+
+        dphase_int = np.zeros(ncards, dtype='int32')
+        dphase_float = np.zeros(ncards, dtype='float64')
+
+        power_int = np.zeros(ncards, dtype='int32')
+        power_float = np.zeros(ncards, dtype='float64')
+
+        rho = np.zeros(ncards, dtype='float64')
+        b = np.zeros(ncards, dtype='float64')
+
+        assert ncards > 0, ncards
+        for icard, card in enumerate(self.cards):
+            (sid, excite_idi,
+             delay, dphase, power, rhoi, bi, comment) = card
+            load_id[icard] = sid
+            excite_id[icard] = excite_idi
+            _set_int_float(icard, delay_int, delay_float, delay)
+            _set_int_float(icard, dphase_int, dphase_float, dphase)
+            _set_int_float(icard, delay_int, delay_float, delay)
+            _set_int_float(icard, power_int, power_float, power)
+
+            b[icard] = bi
+            rho[icard] = rhoi
+
+        self._save(load_id, excite_id, b, rho,
+                   delay_int, delay_float,
+                   dphase_int, dphase_float,
+                   power_int, power_float)
+        assert len(self.load_id) == self.n
+        self.cards = []
+
+    def _save(self, load_id, excite_id, b, rho,
+              delay_int, delay_float,
+              dphase_int, dphase_float,
+              power_int, power_float,) -> None:
+        if len(self.load_id) != 0:
+            sadf
+        self.load_id = load_id
+        self.excite_id = excite_id
+        self.b = b
+        self.rho = rho
+
+        self.power_int = power_int
+        self.delay_int = delay_int
+        self.dphase_int = dphase_int
+
+        self.power_float = power_float
+        self.delay_float = delay_float
+        self.dphase_float = dphase_float
+
+    def __apply_slice__(self, load: ACSRCE, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.excite_id = self.excite_id[i]
+        load.b = self.b[i]
+        load.rho = self.rho[i]
+
+        load.power_int = self.power_int[i]
+        load.delay_int = self.delay_int[i]
+        load.dphase_int = self.dphase_int[i]
+
+        load.power_float = self.power_float[i]
+        load.delay_float = self.delay_float[i, :]
+        load.dphase_float = self.dphase_float[i]
+
+    def get_load_at_freq(self, freq: np.ndarray) -> np.ndarray:  # pragma: no cover
+        r"""
+        ..math ::
+          C = \sqrt(B ⁄ ρ)
+          Source_strength = {A} * 1/(2πf)  * \sqrt( 8πC P(f) / ρ) ^ (ei(θ + 2πfτ))
+        """
+        assert isinstance(freq, np.ndarray), freq
+
+        C = np.sqrt(self.b / self.rho)
+        ei = np.exp(1) * 1.j
+        A = 0.0
+        pi = np.pi
+
+        if self.delay in [0, 0.]:
+            tau = 0.
+        else:
+            #print('delay\n', self.delay_ref)
+            tau = self.delay_ref.value
+
+        Pf = self.power_ref.interpolate(freq)
+        if self.dphase in [0, 0.]:
+            theta = 0.
+        else:
+            #print('dphase\n', self.dphase_ref)
+            theta = self.dphase_ref.interpolate(freq)
+
+        omega = 2 * pi * freq[:, np.newaxis]
+        strength = A / omega * np.sqrt(8*pi*C*Pf / self.rho) ** (ei*(theta + omega*tau))
+        return strength
+
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(), self.excite_id.max(),
+                   self.delay_int.max(), self.dphase_int.max(),
+                   self.power_int.max())
+
+    @parse_load_check
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
+
+        load_ids = array_str(self.load_id, size=size)
+        excite_ids = array_str(self.excite_id, size=size)
+
+        delays = array_int_float(self.delay_int, self.delay_float, size=size, is_double=False)
+        dphases = array_int_float(self.dphase_int, self.dphase_float, size=size, is_double=False)
+        powers = array_int_float(self.power_int, self.power_float, size=size, is_double=False)
+        bs = array_float(self.b, size=size, is_double=False)
+        rhos = array_float(self.rho, size=size, is_double=False)
+        for sid, excite_id, delay, dphase, power, b, rho in zip_longest(load_ids, excite_ids,
+                                                                        delays, dphases, powers,
+                                                                        bs, rhos):
+            list_fields = ['ACSRCE', sid, excite_id, delay, dphase,
+                           power, rho, b]
+            bdf_file.write(print_card(list_fields))
+        return
 
 class RANDPS(VectorizedBaseCard):
     r"""

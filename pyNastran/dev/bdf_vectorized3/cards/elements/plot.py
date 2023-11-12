@@ -45,7 +45,7 @@ class PlotElement(Element):
         """
         self.cards.append((eid, nodes, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def _save(self, element_id, nodes):
         nelements = len(element_id)

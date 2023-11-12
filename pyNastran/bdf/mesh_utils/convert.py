@@ -1667,7 +1667,7 @@ def _convert_optimization(model: BDF,
 
     for unused_key, dvcrel in model.dvcrels.items():
         if dvcrel.type == 'DVCREL1':
-            scale = _convert_dvcrel1(dvcrel, xyz_scale)
+            scale = _convert_dvcrel1(dvcrel, xyz_scale, mass_scale)
             desvars = dvcrel.dvids_ref
             assert len(desvars) == 1, len(desvars)
             _convert_desvars(desvars, scale)
@@ -1679,7 +1679,13 @@ def _convert_optimization(model: BDF,
         _convert_desvars(desvars, scale)
 
     for unused_key, dvmrel in model.dvmrels.items():
-        raise NotImplementedError(dvmrel)
+        if dvmrel.type == 'DVMREL1':
+            scale = _convert_dvmrel1(dvmrel, xyz_scale, mass_scale, force_scale, time_scale)
+            desvars = dvmrel.dvids_ref
+            assert len(desvars) == 1, len(desvars)
+            _convert_desvars(desvars, scale)
+        else:  # pragma: no cover
+            raise NotImplementedError(dvprel)
 
     for unused_key, dvprel in model.dvprels.items():
         if dvprel.type == 'DVPREL1':
@@ -1687,7 +1693,7 @@ def _convert_optimization(model: BDF,
             desvars = dvprel.dvids_ref
             assert len(desvars) == 1, len(desvars)
             _convert_desvars(desvars, scale)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(dvprel)
         if dvprel.p_max != 1e20:
             dvprel.p_max *= scale
@@ -1738,16 +1744,50 @@ def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> Non
         print(msg)
         raise NotImplementedError(msg)
 
-def _convert_dvcrel1(dvcrel: Union[DVCREL1, DVCREL2], xyz_scale: float) -> float:
+def _convert_dvcrel1(dvcrel: Union[DVCREL1, DVCREL2], xyz_scale: float, mass_scale: float) -> float:
     """helper for ``_convert_optimization``"""
     element_type = dvcrel.element_type
     if element_type == 'CBUSH':
-        if dvcrel.cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3']:
+        if dvcrel.cp_name in {'X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3'}:
             scale = xyz_scale
-        else:
+        else:  # pragma: no cover
+            raise NotImplementedError(dvcrel)
+    elif element_type == 'CONM2':
+        if dvcrel.cp_name in ['M']:
+            scale = mass_scale
+        elif dvcrel.cp_name in {'X1', 'X2', 'X3'}:
+            scale = xyz_scale
+        else:  # pragma: no cover
             raise NotImplementedError(dvcrel)
     else:
         raise NotImplementedError(dvcrel)
+    return scale
+
+def _convert_dvmrel1(dvmrel, xyz_scale: float,
+                     mass_scale: float,
+                     force_scale: float,
+                     time_scale: float) -> float:
+    """helper for ``_convert_optimization``"""
+    mat_type = dvmrel.mat_type
+    var_to_change = dvmrel.mp_name
+
+    #area_scale = xyz_scale ** 2
+    #inertia_scale = xyz_scale ** 4
+    #velocity_scale = xyz_scale / time_scale
+    pressure_scale = force_scale / xyz_scale ** 2
+    #stress_scale = force_scale / xyz_scale ** 2
+    #stiffness_scale = force_scale / xyz_scale
+
+    scale = 1.
+    if mat_type == 'MAT1':
+        if var_to_change == 'E':
+            scale = pressure_scale
+        #elif var_to_change in [6, 8]: # 12I/t^3, ts/t
+            #scale = 1.
+        else:  # pragma: no cover
+            raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvmrel))
+    else:  # pragma: no cover
+        raise NotImplementedError('cannot convert %r\n%s' % (prop_type, dvprel))
     return scale
 
 def _convert_dvprel1(dvprel, xyz_scale: float,

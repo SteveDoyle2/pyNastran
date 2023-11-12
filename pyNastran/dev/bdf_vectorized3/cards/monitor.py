@@ -55,7 +55,7 @@ class MONPNT1(VectorizedBaseCard):
     def add(self, name: str, label: str, axes: str, aecomp_name: str,
             xyz: list[float],
             cp: int=0,
-            cd: Optional[int]=None, comment: str='') -> MONPNT1:
+            cd: Optional[int]=None, comment: str='') -> int:
         """
         Creates a MONPNT1 card
 
@@ -91,8 +91,9 @@ class MONPNT1(VectorizedBaseCard):
             cd = -1
         self.cards.append((name, label, axes, aecomp_name, cp, xyz, cd, comment))
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         name = string(card, 1, 'name')
         label_fields = [labeli for labeli in card[2:8] if labeli is not None]
         label = ''.join(label_fields).strip()
@@ -109,9 +110,10 @@ class MONPNT1(VectorizedBaseCard):
         cd = integer_or_blank(card, 15, 'cd', default=cp)
         self.cards.append((name, label, axes, comp, cp, xyz, cd, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         name = np.zeros(ncards, dtype='|U8')
         label = np.zeros(ncards, dtype='|U72')
@@ -225,7 +227,7 @@ class MONPNT3(VectorizedBaseCard):
     def add(self, name: str, label: str, axes: str,
             grid_set: int, elem_set: int, xyz: list[float],
             cp: int=0, cd: Optional[int]=None,
-            xflag='', comment: str='') -> MONPNT3:
+            xflag='', comment: str='') -> int:
         """Creates a MONPNT3 card"""
         if cd is None:
             # ew can do this because this is MSC-specific
@@ -233,8 +235,9 @@ class MONPNT3(VectorizedBaseCard):
         self.cards.append((name, label, axes, grid_set, elem_set, xyz,
                            cp, cd, xflag, comment))
         self.n += 1
+        return self.n - 1
 
-    def add_card(self, card: BDFCard, comment: str='') -> None:
+    def add_card(self, card: BDFCard, comment: str='') -> int:
         name = string(card, 1, 'name')
 
         label_fields = [labeli for labeli in card[2:8] if labeli is not None]
@@ -257,9 +260,10 @@ class MONPNT3(VectorizedBaseCard):
         self.cards.append((name, label, axes, grid_set, elem_set, xyz,
                            cp, cd, xflag, comment))
         self.n += 1
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         name = np.zeros(ncards, dtype='|U8')
         label = np.zeros(ncards, dtype='|U72')

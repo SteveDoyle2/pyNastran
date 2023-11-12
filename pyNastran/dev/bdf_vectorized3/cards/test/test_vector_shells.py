@@ -2,6 +2,7 @@
 import os
 from io import StringIO
 import unittest
+from typing import Union
 import numpy as np
 from numpy import array
 
@@ -1786,13 +1787,13 @@ class TestAxisymmetricShells(unittest.TestCase):
 
         #psolid.raw_fields()
         model.psolid.write(size=8)
-        model.psolid.write_card(size=16)
-        model.psolid.write_card(size=16, is_double=True)
+        model.psolid.write(size=16)
+        model.psolid.write(size=16, is_double=True)
 
         #plsolid.raw_fields()
         model.plsolid.write(size=8)
-        model.plsolid.write_card(size=16)
-        model.plsolid.write_card(size=16, is_double=True)
+        model.plsolid.write(size=16)
+        model.plsolid.write(size=16, is_double=True)
 
         model._verify_bdf(xref=False)
 
@@ -1807,9 +1808,9 @@ class TestAxisymmetricShells(unittest.TestCase):
         model.ctrax6.write(size=8)
 
         #pcomp.raw_fields()
-        model.pcomp.write_card(size=8)
-        model.pcomp.write_card(size=16)
-        model.pcomp.write_card(size=16, is_double=True)
+        model.pcomp.write(size=8)
+        model.pcomp.write(size=16)
+        model.pcomp.write(size=16, is_double=True)
         save_load_deck(model, run_convert=False)
 
 
@@ -1871,15 +1872,18 @@ def make_dvcrel_optimization(model: BDF, params, element_type: str, eid: int,
         model.add_desvar(j, 'v%s' % name, desvar_value)
     return j + 1
 
-def make_dvprel_optimization(model: BDF, params, prop_type: str, pid: int,
+def make_dvprel_optimization(model: BDF,
+                             params: list[tuple[Union[str, int], float]],
+                             prop_type: str, pid: int,
                              i: int=1) -> int:
     """makes a series of DVPREL1 and a DESVAR"""
     j = i
+    assert pid > 0, pid
     for ii, (name, desvar_value) in enumerate(params):
         j = i + ii
-        dvids = [j]
+        desvar_ids = [j]
         coeffs = [1.0]
-        model.add_dvprel1(j, prop_type, pid, name, dvids, coeffs,
+        model.add_dvprel1(j, prop_type, pid, name, desvar_ids, coeffs,
                           p_min=None, p_max=1e20,
                           c0=0.0, validate=True,
                           comment='')

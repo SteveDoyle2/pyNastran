@@ -25,7 +25,9 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     hslice_by_idim, make_idim, searchsorted_filter, get_print_card_8_16,
     parse_load_check)
-from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_float, array_str, array_default_int, array_default_float
+from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
+    array_float, array_str, array_default_int, array_default_float,
+    get_print_card_size)
 from pyNastran.dev.bdf_vectorized3.utils import hstack_msg
 from .static_loads import Load
 
@@ -76,7 +78,7 @@ class PLOAD(Load):
         """
         self.cards.append((sid, pressure, nodes, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -88,7 +90,7 @@ class PLOAD(Load):
         assert len(card) <= 7, f'len(PLOAD card) = {len(card):d}\ncard={card}'
         self.cards.append((sid, pressure, nodes, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -252,7 +254,7 @@ class PLOAD1(Load):
         p2 = p2 if p2 is not None else p1
         self.cards.append((sid, eid, load_type, scale, [x1, x2], [p1, p2], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -266,7 +268,7 @@ class PLOAD1(Load):
         assert len(card) <= 9, f'len(PLOAD1 card) = {len(card):d}\ncard={card}'
         self.cards.append((sid, eid, load_type, scale, [x1, x2], [p1, p2], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -630,7 +632,7 @@ class PLOAD2(Load):
         """
         self.cards.append((sid, pressure, eids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -646,7 +648,7 @@ class PLOAD2(Load):
             assert len(eids) <= 6, f'A maximum of 6 eids may be on the PLOAD2; n={len(eids)}\ncard={card}'
         self.cards.append((sid, pressure, eids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -849,7 +851,7 @@ class PLOAD4(Load):
         self.cards.append((sid, eid, pressures, eids, g1, g34,
                            cid, nvector, surf_or_line, line_load_dir, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'sid')
@@ -893,7 +895,7 @@ class PLOAD4(Load):
         self.cards.append((sid, eid, pressures, eids, g1, g34,
                            cid, [n1, n2, n3], surf_or_line, line_load_dir, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Load.parse_cards_check
     def parse_cards(self) -> None:
@@ -1027,11 +1029,18 @@ class PLOAD4(Load):
     def ielement(self) -> np.ndarray:
         return make_idim(self.n, self.nelement)
 
+    @property
+    def max_id(self) -> int:
+        return max(self.load_id.max(),
+                   self.element_ids.max(),
+                   self.coord_id.max(),
+                   self.nodes_g1_g34.max())
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
-                   write_card_header: bool=False) -> str:
-        print_card = get_print_card_8_16(size)
+                   write_card_header: bool=False) -> None:
+        print_card, size = get_print_card_size(size, self.max_id)
         assert self.nvector is not None
         #nvectors = array_default_float(self.nvector)
         for load_id, cid, pressures, g1_g34, nvector, \
@@ -1648,7 +1657,6 @@ def get_solid_face_area(element_type: str, element: Union[CTETRA, CHEXA, CPENTA,
     if np.any(np.isnan(mean_pressure)):
         raise RuntimeError(f'there is nan pressure; mean_pressure={mean_pressure}')
     return area, centroid, normal, mean_pressure
-
 
 
 def _tri_area(nids: np.ndarray, xyz_cid0: np.ndarray, face):

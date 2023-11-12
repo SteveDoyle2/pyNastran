@@ -84,6 +84,87 @@ class DCONADD(ADD):
                    )
 
 
+class MODTRAK(VectorizedBaseCard):
+    """
+    MODTRAK SID LOWRNG HIGHRNG MTFILTER
+    MODTRAK 100   1      26      0.80
+    """
+    _id_name = 'modtrak_id'
+    def clear(self) -> None:
+        self.modtrak_id = np.array([], dtype='int32')
+        self.low_range = np.array([], dtype='int32')
+        self.high_range = np.array([], dtype='int32')
+        self.mt_filter = np.array([], dtype='float64')
+
+    def add(self, modtrak_id: int, low_range: int, high_range: int,
+            mt_filter: float, comment: str='') -> int:
+        self.cards.append((modtrak_id, low_range, high_range, mt_filter, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        modtrak_id = integer(card, 1, 'sid')
+        low_range = integer_or_blank(card, 2, 'low_range', default=0)
+        high_range = integer(card, 3, 'high_range')
+        mt_filter = double_or_blank(card, 4, 'mt_filter', default=0.9)
+        #return MODTRAK(sid, low_range, high_range, mt_filter, comment=comment)
+        assert len(card) <= 5, f'len(MODTRAK card) = {len(card):d}\ncard={card}'
+        self.cards.append((modtrak_id, low_range, high_range, mt_filter, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        modtrak_id = np.zeros(ncards, dtype='int32')
+        low_range = np.zeros(ncards, dtype='int32')
+        high_range = np.zeros(ncards, dtype='int32')
+        mt_filter = np.zeros(ncards, dtype='float64')
+        for icard, card in enumerate(self.cards):
+            modtrak_idi, low_rangei, high_rangei, mt_filteri, comment = card
+            modtrak_id[icard] = modtrak_idi
+            low_range[icard] = low_rangei
+            high_range[icard] = high_rangei
+            mt_filter[icard] = mt_filteri
+        self._save(modtrak_id, low_range, high_range, mt_filter)
+        self.cards = []
+
+    def _save(self, modtrak_id, low_range, high_range, mt_filter):
+        if len(self.modtrak_id) != 0:
+            asfd
+            modtrak_id = np.hstack([self.modtrak_id, modtrak_id])
+        self.modtrak_id = modtrak_id
+        self.low_range = low_range
+        self.high_range = high_range
+        self.mt_filter = mt_filter
+
+    #def geom_check(self, missing: dict[str, np.ndarray]):
+        #pass
+
+    #def index(self, desvar_id: np.ndarray) -> np.ndarray:
+        #assert len(self.desvar_id) > 0, self.desvar_id
+        #desvar_id = np.atleast_1d(np.asarray(desvar_id, dtype=self.desvar_id.dtype))
+        #idesvar = np.searchsorted(self.desvar_id, desvar_id)
+        #return idesvar
+
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.modtrak_id) == 0:
+            return
+        print_card = get_print_card_8_16(size)
+
+        modtrak_ids = array_str(self.modtrak_id, size=size)
+        low_ranges = array_str(self.low_range, size=size)
+        high_ranges = array_str(self.high_range, size=size)
+        mt_filters = array_float(self.mt_filter, size=size, is_double=False)
+
+        for modtrak_id, low_range, high_range, mt_filter in zip_longest(modtrak_ids, low_ranges, high_ranges, mt_filters):
+            list_fields = ['MODTRAK', modtrak_id, low_range, high_range, mt_filter]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
 class DESVAR(VectorizedBaseCard):
     """
     +--------+-----+-------+-------+-----+-----+-------+-------+
@@ -137,7 +218,7 @@ class DESVAR(VectorizedBaseCard):
         """
         self.cards.append((desvar_id, label, xinit, xlb, xub, delx, ddval, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         desvar_id = integer(card, 1, 'desvar_id')
@@ -150,7 +231,7 @@ class DESVAR(VectorizedBaseCard):
         assert len(card) <= 8, f'len(DESVAR card) = {len(card):d}\ncard={card}'
         self.cards.append((desvar_id, label, xinit, xlb, xub, delx, ddval, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -324,7 +405,7 @@ class DLINK(VectorizedBaseCard):
         self.cards.append((dlink_id, dependent_desvar, independent_desvars, coeffs,
                            c0, cmult, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -359,7 +440,7 @@ class DLINK(VectorizedBaseCard):
         self.cards.append((dlink_id, dependent_desvar, independent_desvars, coeffs,
                            c0, cmult, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -474,7 +555,7 @@ class DVGRID(VectorizedBaseCard):
         """
         self.cards.append((desvar_id, nid, cid, coeff, dxyz, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -499,7 +580,7 @@ class DVGRID(VectorizedBaseCard):
         ]
         self.cards.append((desvar_id, nid, cid, coeff, dxyz, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -670,7 +751,7 @@ class DRESP1(VectorizedBaseCard):
         self.cards.append((dresp_id, label, response_type, property_type, region,
                            atta, attb, atti, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -709,7 +790,7 @@ class DRESP1(VectorizedBaseCard):
         self.cards.append((dresp_id, label, response_type, property_type, region,
                            atta, attb, atti_list, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1017,7 +1098,7 @@ class DRESP2(VectorizedBaseCard):
             dresp_id, label, dequation, region, params,
             method, c1, c2, c3, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1068,7 +1149,7 @@ class DRESP2(VectorizedBaseCard):
             dresp_id, label, dequation, region, params,
             method, c1, c2, c3, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1276,7 +1357,7 @@ class DCONSTR(VectorizedBaseCard):
         """
         self.cards.append((dconstr_id, dresp_id, lid, uid, lowfq, highfq, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         dconstr_id = integer(card, 1, 'dconstr_id')
@@ -1288,7 +1369,7 @@ class DCONSTR(VectorizedBaseCard):
         assert len(card) <= 7, f'len(DCONSTR card) = {len(card):d}\ncard={card}'
         self.cards.append((dconstr_id, dresp_id, lid, uid, lowfq, highfq, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1427,9 +1508,11 @@ class DVPREL1(VectorizedBaseCard):
         card = (oid, prop_type, pid, pname_fid, desvar_ids, coeffs,
                 p_min, p_max, c0,
                 comment)
+        assert oid > 0, oid
+        assert pid > 0, pid
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1488,7 +1571,7 @@ class DVPREL1(VectorizedBaseCard):
                 comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1565,6 +1648,7 @@ class DVPREL1(VectorizedBaseCard):
         self.ndesvar = ndesvar
         self.desvar_id = desvar_id
         self.coefficients = coefficients
+        assert self.property_id.min() > 0, self.property_id
 
     def __apply_slice__(self, opt: DVPREL1, i: np.ndarray) -> None:
         opt.dvprel_id = self.dvprel_id[i]
@@ -1714,7 +1798,7 @@ class DVPREL2(VectorizedBaseCard):
         self.cards.append((dvprel_id, prop_type, pid, deqation, pname_fid,
                            p_min, p_max, desvars, labels, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1789,7 +1873,7 @@ class DVPREL2(VectorizedBaseCard):
         self.cards.append((dvprel_id, prop_type, pid, dequation, pname_fid,
                            p_min, p_max, desvars, labels, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1984,7 +2068,7 @@ class DVMREL1(VectorizedBaseCard):
                 mp_min, mp_max, c0, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2039,7 +2123,7 @@ class DVMREL1(VectorizedBaseCard):
                 mp_min, mp_max, c0, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -2227,7 +2311,7 @@ class DVMREL2(VectorizedBaseCard):
                 mp_min, mp_max, deqatn_id, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2312,7 +2396,7 @@ class DVMREL2(VectorizedBaseCard):
                 mp_min, mp_max, deqatn_id, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -2507,7 +2591,7 @@ class DVCREL1(VectorizedBaseCard):
                 cp_min, cp_max, c0, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2556,7 +2640,7 @@ class DVCREL1(VectorizedBaseCard):
                 cp_min, cp_max, c0, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -2741,7 +2825,7 @@ class DVCREL2(VectorizedBaseCard):
                 cp_min, cp_max, deqatn_id, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2815,7 +2899,7 @@ class DVCREL2(VectorizedBaseCard):
                 cp_min, cp_max, deqatn_id, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -2940,3 +3024,112 @@ class DVCREL2(VectorizedBaseCard):
         return
 
 
+class DSCREEN(VectorizedBaseCard):
+    """
+    +---------+-------+-------+------+
+    |    1    |   2   |   3   |   4  |
+    +=========+=======+=======+======+
+    | DSCREEN | RTYPE |  TRS  | NSTR |
+    +---------+-------+-------+------+
+    | DSCREEN |  DISP | -0.3  | NSTR |
+    +---------+-------+-------+------+
+
+    """
+    _id_name = 'dscreen_id'
+    def clear(self) -> None:
+        self.dscreen_id = np.array([], dtype='int32')
+        self.response_type = np.array([], dtype='|U8')
+        self.trs = np.array([], dtype='float64')
+        self.nstr = np.array([], dtype='int32')
+
+    def add(self, response_type: str, trs: float=-0.5, nstr: int=20,
+            comment: str='') -> int:
+        """
+        Creates a DSCREEN object
+
+        Parameters
+        ----------
+        response_type : str
+            Response type for which the screening criteria apply
+        trs : float
+            Truncation threshold
+        nstr : int
+            Maximum number of constraints to be retained per region per
+            load case
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((response_type, trs, nstr, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a DSCREEN card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        response_type = string(card, 1, 'rtype')
+        trs = double_or_blank(card, 2, 'trs', default=-0.5)
+        nstr = integer_or_blank(card, 3, 'nstr', default=20)
+        assert len(card) <= 4, f'len(DSCREEN card) = {len(card):d}\ncard={card}'
+        #return DSCREEN(response_type, trs=trs, nstr=nstr, comment=comment)
+        self.cards.append((response_type, trs, nstr, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        #dscreen_id = np.zeros(ncards, dtype='int32')
+        #: user-defined name for printing purposes
+        response_type = np.zeros(ncards, dtype='|U8')
+        trs = np.zeros(ncards, dtype='float64')
+        nstr = np.zeros(ncards, dtype='int32')
+        for icard, card in enumerate(self.cards):
+            response_typei, trsi, nstri, comment = card
+            response_type[icard] = response_typei
+            trs[icard] = trsi
+            nstr[icard] = nstri
+
+        self._save(response_type, trs, nstr)
+        self.cards = []
+
+    def _save(self, response_type, trs, nstr):
+        if len(self.response_type) != 0:
+            asdf
+        #self.desvar_id = desvar_id
+        self.response_type = response_type
+        self.trs = trs
+        self.nstr = nstr
+
+    #def geom_check(self, missing: dict[str, np.ndarray]):
+        #pass
+
+    #def index(self, desvar_id: np.ndarray) -> np.ndarray:
+        #assert len(self.desvar_id) > 0, self.desvar_id
+        #desvar_id = np.atleast_1d(np.asarray(desvar_id, dtype=self.desvar_id.dtype))
+        #idesvar = np.searchsorted(self.desvar_id, desvar_id)
+        #return idesvar
+
+    def write_file(self, bdf_file: TextIOLike, size: int=8,
+                   is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if len(self.response_type) == 0:
+            return
+        print_card = get_print_card_8_16(size)
+
+        trss = array_float(self.trs, size=size, is_double=is_double)
+        nstrs = array_str(self.nstr, size=size)
+
+        for response_typei, trsi, nstri in zip_longest(self.response_type, trss, nstrs):
+            list_fields = ['DSCREEN', response_typei, trsi, nstri]
+            bdf_file.write(print_card(list_fields))
+        return

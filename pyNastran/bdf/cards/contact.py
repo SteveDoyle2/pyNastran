@@ -108,7 +108,7 @@ class BFRIC(BaseCard):
         self.mu1 = mu1
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         friction_id = integer(card, 1, 'friction_id')
         fstiff = double_or_blank(card, 2, 'fstiff')
         #
@@ -548,7 +548,7 @@ class BCONP(BaseCard):
         self.master_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BCONP card from ``BDF.add_card(...)``
 
@@ -563,10 +563,10 @@ class BCONP(BaseCard):
         contact_id = integer(card, 1, 'contact_id')
         slave = integer(card, 2, 'slave')
         master = integer(card, 3, 'master')
-        sfac = double_or_blank(card, 5, 'sfac', 1.0)
+        sfac = double_or_blank(card, 5, 'sfac', default=1.0)
         friction_id = integer_or_blank(card, 6, 'fric_id')
-        ptype = integer_or_blank(card, 7, 'ptype', 1)
-        cid = integer_or_blank(card, 8, 'cid', 0)
+        ptype = integer_or_blank(card, 7, 'ptype', default=1)
+        cid = integer_or_blank(card, 8, 'cid', default=0)
         return BCONP(contact_id, slave, master, sfac, friction_id, ptype, cid,
                      comment=comment)
 

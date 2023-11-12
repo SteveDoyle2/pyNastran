@@ -582,7 +582,7 @@ class RELEASE(VectorizedBaseCard):
         ##if comment:
             ##self.comment[nid] = _format_comment(comment)
         #self.n += nnodes
-        #return self.n
+        #return self.n - 1
 
     #def add_set1
     def add(self, seid: int,
@@ -599,37 +599,6 @@ class RELEASE(VectorizedBaseCard):
         self.n += nnodes
         return self.n - 1
 
-    ##def add_card(self, card: BDFCard, comment: str=''):
-        #card_name = card[0].upper()
-        ##new_name0 = card_name[:-1] if card.endswith('1') else card_name
-        #msg = f'add_card(...) has been removed for {card_name}.  Use add_set_card or add_set1_card'
-        #raise AttributeError(msg)
-
-    #def add_set_card(self, card: BDFCard, comment: str='') -> int:
-    def add_card(self, card: BDFCard, comment: str=''):
-        if self.debug:
-            self.model.log.debug(f'adding card {card}')
-
-        seid = integer(card, 1, 'seid')
-        ids = []
-        components = []
-
-        nfields = len(card)
-        nterms = nfields // 2 - 1
-        delta = nfields % 2
-        assert delta == 0, 'The number of fields must be even; nfields=%s\ncard=%s' % (nfields, card)
-        for n in range(nterms):
-            i = n * 2 + 2
-            idi = integer(card, i, 'ID' + str(n))
-            component = parse_components_or_blank(card, i + 1, 'component' + str(n))
-            ids.append(idi)
-            components.append(component)
-
-        self.cards.append((seid, ids, components, comment))
-        self.n += len(ids)
-        return self.n - 1
-
-    #def add_set1_card(self, card: BDFCard, comment: str='') -> int:
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
             self.model.log.debug(f'adding card {card}')
@@ -830,7 +799,7 @@ class SUPORT(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
-        return self.n
+        return self.n - 1
 
     def add_set1(self, suport_id: int, nids: list[int], component: list[int],
                   comment: str='') -> int:
@@ -846,7 +815,7 @@ class SUPORT(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str=''):
         card_name = card[0].upper()
@@ -877,7 +846,7 @@ class SUPORT(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = comment
         self.n += len(nodes)
-        return self.n
+        return self.n - 1
 
     def add_set1_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -905,7 +874,7 @@ class SUPORT(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = comment
         self.n += len(nodes)
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1132,7 +1101,7 @@ class USET(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
-        return self.n
+        return self.n - 1
 
     def add_set1(self, name: str, nids: list[int], component: list[int],
                   comment: str='') -> int:
@@ -1144,7 +1113,7 @@ class USET(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str=''):
         card_name = card[0].upper()
@@ -1170,7 +1139,7 @@ class USET(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = comment
         self.n += len(nodes)
-        return self.n
+        return self.n - 1
 
     def add_set1_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1208,7 +1177,7 @@ class USET(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = comment
         self.n += len(nodes)
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -1446,7 +1415,7 @@ class RADSET(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         #ncards = len(self.cards)
         idtype = self.model.idtype
 
@@ -1593,7 +1562,7 @@ class SET1(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
 
@@ -1782,7 +1751,7 @@ class SET3(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
 
@@ -1911,7 +1880,7 @@ class SESET(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
 

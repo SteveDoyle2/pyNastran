@@ -51,7 +51,7 @@ class CSHEAR(Element):
         """
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.clear_check
     def clear(self) -> None:
@@ -67,7 +67,7 @@ class CSHEAR(Element):
                 integer(card, 6, 'n4'),]
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -210,7 +210,7 @@ class PSHEAR(Property):
         #self.n += 1
         self.cards.append((pid, mid, t, nsm, f1, f2, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -222,7 +222,7 @@ class PSHEAR(Property):
         assert len(card) <= 7, f'len(PSHEAR card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, t, nsm, f1, f2, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:

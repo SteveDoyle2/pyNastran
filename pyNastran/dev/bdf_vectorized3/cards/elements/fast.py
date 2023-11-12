@@ -42,7 +42,7 @@ class CFAST(Element):
         gs = 0 if gs is None else gs
         self.cards.append((eid, pid, fast_type, ids, [ga, gb], gs, [xs, ys, zs], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -87,7 +87,7 @@ class CFAST(Element):
         self.cards.append((eid, pid, fast_type, [ida, idb],
                            [ga, gb], gs, [xs, ys, zs], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -255,7 +255,7 @@ class PFAST(Property):
                            mass, ge,
                            mcid, mflag, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -293,7 +293,7 @@ class PFAST(Property):
                            mass, ge,
                            mcid, mflag, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:

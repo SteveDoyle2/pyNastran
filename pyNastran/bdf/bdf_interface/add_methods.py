@@ -1190,7 +1190,7 @@ class AddMethods:
 
     def _add_modtrak_object(self, modtrak: MODTRAK) -> None:
         """adds an MODTRAK object"""
-        # only one CYAX card allowed
+        # only one MODTRAK card allowed
         assert self.model.modtrak is None, '\nmodtrak=\n%s old=\n%s' % (modtrak, self.model.modtrak)
         self.model.modtrak = modtrak
 

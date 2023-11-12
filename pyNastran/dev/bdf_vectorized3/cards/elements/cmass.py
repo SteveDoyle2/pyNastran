@@ -45,7 +45,7 @@ class CMASS1(Element):
         """
         self.cards.append((eid, pid, nids, [c1, c2], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -68,10 +68,10 @@ class CMASS1(Element):
         assert len(card) <= 7, f'len(CMASS1 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, [n1, n2], [c1, c2], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         idtype = self.model.idtype
         element_id = np.zeros(ncards, dtype=idtype)
@@ -214,7 +214,7 @@ class CMASS2(Element):
         """
         self.cards.append((eid, mass, nids, [c1, c2], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -226,7 +226,7 @@ class CMASS2(Element):
         assert len(card) <= 7, f'len(CMASS2 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, mass, [n1, n2], [c1, c2], comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -312,7 +312,7 @@ class CMASS3(Element):
         """
         self.cards.append((eid, pid, *nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -333,7 +333,7 @@ class CMASS3(Element):
         assert len(card) <= 5, f'len(CMASS3 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, s1, s2, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -425,7 +425,7 @@ class CMASS4(Element):
         """
         self.cards.append((eid, mass, *nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -442,7 +442,7 @@ class CMASS4(Element):
             self.cards.append((eid, mass, s1, s2, comment))
             self.n += 1
         assert len(card) <= 9, f'len(CMASS4 card) = {len(card):d}\ncard={card}'
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -529,7 +529,7 @@ class PMASS(Property):
         """
         self.cards.append((pid, mass, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         for icard, j in enumerate([1, 3, 5, 7]):
@@ -541,7 +541,7 @@ class PMASS(Property):
                 comment = ''
                 self.n += 1
         assert len(card) <= 9, f'len(PMASS card) = {len(card):d}\ncard={card}'
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:

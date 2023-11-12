@@ -341,19 +341,19 @@ class COORD(VectorizedBaseCard):
         cardi = (1, 'R', cid), (g1, g2, g3), comment
         self.cards1.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_cord1c(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> int:
         cardi = (1, 'C', cid), (g1, g2, g3), comment
         self.cards1.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_cord1s(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> int:
         cardi = (1, 'S', cid), (g1, g2, g3), comment
         self.cards1.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_cord1r_bdf(self, card: BDFCard, icard: int, comment: str='') -> int:
         ncoord = icard * 5
@@ -365,7 +365,7 @@ class COORD(VectorizedBaseCard):
         cardi = (1, 'R', cid), (grid_origin, grid_zaxis, grid_xzplane), comment
         self.cards1.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_cord1c_bdf(self, card: BDFCard, icard: int, comment: str='') -> int:
         ncoord = icard * 5
@@ -377,7 +377,7 @@ class COORD(VectorizedBaseCard):
         cardi = (1, 'C', cid), (grid_origin, grid_zaxis, grid_xzplane), comment
         self.cards1.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_cord1s_bdf(self, card: BDFCard, icard: int, comment: str='') -> int:
         ncoord = icard * 5
@@ -389,7 +389,7 @@ class COORD(VectorizedBaseCard):
         cardi = (1, 'S', cid), (grid_origin, grid_zaxis, grid_xzplane), comment
         self.cards1.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_cord2r(self, cid: int,
                    origin: np.ndarray | list[float],
@@ -421,7 +421,7 @@ class COORD(VectorizedBaseCard):
         cardi = (2, 'R', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_cord2c(self, cid: int,
                    origin: np.ndarray | list[float],
@@ -432,7 +432,7 @@ class COORD(VectorizedBaseCard):
         cardi = (2, 'C', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_cord2s(self, cid: int,
                    origin: np.ndarray | list[float],
@@ -443,7 +443,7 @@ class COORD(VectorizedBaseCard):
         cardi = (2, 'S', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     #def _add_cord2(self, coordtype: str, card: BDFCard, comment: str='') -> int:
         #assert isinstance(coordtype, str), coordtype
@@ -458,21 +458,21 @@ class COORD(VectorizedBaseCard):
         cardi = (2, 'R', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_cord2c_bdf(self, card: BDFCard, comment: str='') -> int:
         cid, rid, origin, zaxis, xzplane = _parse_cord2x(card, 'CORD2C')
         cardi = (2, 'C', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_cord2s_bdf(self, card: BDFCard, comment: str='') -> int:
         cid, rid, origin, zaxis, xzplane = _parse_cord2x(card, 'CORD2S')
         cardi = (2, 'S', cid), (rid, origin, zaxis, xzplane), comment
         self.cards2.append(cardi)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     #def add_cord2r(self, card: BDFCard, comment: str='') -> int:
         #return self._add_cord2('R', card, comment)
@@ -754,8 +754,9 @@ class COORD(VectorizedBaseCard):
             return nresolved
         coord1_cids_to_resolve.sort()
         inids = np.searchsorted(self.coord_id, coord1_cids_to_resolve)
-        for cid, i in zip(coord1_cids_to_resolve, inids):
+        for cidi, i in zip(coord1_cids_to_resolve, inids):
             cid = self.coord_id[i]
+            assert cid == cidi
             #rid = self.ref_coord_id[i]
             coord_type = self.coord_type[i]
             icoord = self.icoord[i]
@@ -796,7 +797,8 @@ class COORD(VectorizedBaseCard):
             self.xyz_to_global_transform[cid] = beta
             self.is_resolved[i] = True
             resolved.add(cid)
-            unresolved_cids.remove(cid)
+            if cid in unresolved_cids:
+                unresolved_cids.remove(cid)
             nresolved += 1
         return nresolved
 

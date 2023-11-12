@@ -1778,11 +1778,11 @@ def check_case(sol: int,
     elif sol in {159, 'NLTCSH'}:  # thermal transient
         assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), msg
 
-    elif sol == 144:
+    elif sol in {144, 'AESTAT'}:
         ierror = _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors)
-    elif sol == 145:
+    elif sol in {145, 'SEFLUTTER'}:
         ierror = _check_flutter_case(fem2, log, sol, subcase, ierror, nerrors)
-    elif sol == 146:
+    elif sol in {146, 'SEAERO'}:
         ierror = _check_gust_case(fem2, log, sol, subcase, ierror, nerrors)
 
     elif sol in {153, 'NLSCSH'}:
@@ -1797,7 +1797,7 @@ def check_case(sol: int,
         else:
             assert any(subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)')), 'sol=%s\n%s' % (sol, subcase)
 
-    elif sol == 159: #  nonlinear transient; heat?
+    elif sol in {159, 'NLTCSH'}: #  nonlinear transient; heat?
         if 'NLPARM' not in subcase:
             msg = (
                 'A NLPARM card is required for NONLINEAR_TRANSIENT? '
@@ -1818,11 +1818,11 @@ def check_case(sol: int,
     elif sol in {128, 'SENLHARM'}:
         # rotordynamics
         pass
+    elif sol in {187, 'RESDDAM'}:  ## DDAM
+        pass
     elif sol in {401, 'NLSTEP'}:
         pass
     elif sol in {402, 'NLSTPKIN'}:
-        pass
-    elif sol in {187, 'RESDDAM'}:  ## DDAM
         pass
     elif sol in {21, 26, 27, 28, 30, 31, 38, 39,
                  47, 48, 61, 63, 67, 68,

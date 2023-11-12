@@ -515,7 +515,7 @@ class CTRIA3(ShellElement):
                             tflag, T1, T2, T3,
                             comment)))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -553,7 +553,7 @@ class CTRIA3(ShellElement):
                             tflag, T1, T2, T3,
                             comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -834,7 +834,7 @@ class CTRIAR(ShellElement):
                            tflag, [T1, T2, T3],
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -867,7 +867,7 @@ class CTRIAR(ShellElement):
                 comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, element: CTRIAR, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -1064,7 +1064,7 @@ class CQUAD4(ShellElement):
             tflag, T1, T2, T3, T4,
             comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         if self.debug:
@@ -1099,7 +1099,7 @@ class CQUAD4(ShellElement):
             tflag, T1, T2, T3, T4,
             comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -1476,7 +1476,7 @@ class CQUADR(ShellElement):
         #self.T = np.vstack([self.T, np.array([T1, T2, T3, T4], dtype='float64')])
         self.cards.append((eid, pid, nids, theta_mcid, zoffset, tflag, [T1, T2, T3, T4]))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -1497,7 +1497,7 @@ class CQUADR(ShellElement):
         assert len(card) <= 15, f'len(CQUADR card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, theta_mcid, zoffset, tflag, [T1, T2, T3, T4]))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -1545,11 +1545,16 @@ class CQUADR(ShellElement):
         itflag = (self.tflag == 0)
         self.T[itflag] *= xyz_scale
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max(), self.mcid.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
 
         #remove_tflag = (
             #np.all(self.tflag == 0) and
@@ -1694,7 +1699,7 @@ class CTRIA6(ShellElement):
                 tflag, T1, T2, T3, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -1743,7 +1748,7 @@ class CTRIA6(ShellElement):
                 tflag, T1, T2, T3, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, element: CTRIA6, i: np.ndarray) -> None:  # ignore[override]
         assert element.type == 'CTRIA6'
@@ -1991,7 +1996,7 @@ class CQUAD8(ShellElement):
                 tflag, T1, T2, T3, T4, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2039,7 +2044,7 @@ class CQUAD8(ShellElement):
                 tflag, T1, T2, T3, T4, comment)
         self.cards.append(card)
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, element: CQUAD8, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -2154,11 +2159,16 @@ class CQUAD8(ShellElement):
         itflag = (self.tflag == 0)
         self.T[itflag] *= xyz_scale
 
+    @property
+    def max_id(self) -> int:
+        return max(self.element_id.max(), self.property_id.max(),
+                   self.nodes.max(), self.mcid.max())
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        print_card = get_print_card_8_16(size)
+        print_card, size = get_print_card_size(size, self.max_id)
         #remove_tflag = (
             #np.all(self.tflag == 0) and
             #np.all(np.isnan(self.T))
@@ -2288,7 +2298,7 @@ class CQUAD(ShellElement):
         """
         self.cards.append((eid, pid, nids, theta_mcid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2322,7 +2332,7 @@ class CQUAD(ShellElement):
 
         self.cards.append((eid, pid, nids, theta_mcid, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, element: CQUAD, i: np.ndarray) -> None:  # ignore[override]
         element.element_id = self.element_id[i]
@@ -2478,12 +2488,9 @@ class CAABSF(Element):
         self.n += 1
         return self.n - 1
 
-    def parse_cards(self):
-        assert self.n >= 0, self.n
-        if self.n == 0 or len(self.cards) == 0:
-            return
+    @Element.parse_cards_check
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
-        assert ncards > 0, ncards
         element_id = np.zeros(ncards, dtype='int32')
         property_id = np.zeros(ncards, dtype='int32')
         nodes = np.zeros((ncards, 4), dtype='int32')

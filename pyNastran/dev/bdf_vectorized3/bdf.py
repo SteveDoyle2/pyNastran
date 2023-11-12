@@ -91,7 +91,7 @@ from pyNastran.bdf.cards.constraints import SPCAX, SESUP, GMSPC
 #from .cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
-    TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD,
+    TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, ROTORG, ROTORD,
 )
 #from .cards.loads.loads import (
     #LOADCYN, LOADCYH)
@@ -107,7 +107,7 @@ from pyNastran.bdf.cards.materials import NXSTRAT
 #from .cards.material_deps import (
     #MATT2, MATT3, MATT4, MATT5, MATT9, MATS1)
 
-from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
+from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from .cards.grid import GRDSET
 #from pyNastran.bdf.cards.nodes import GRDSET # SEQGP, GRIDB
 from pyNastran.bdf.cards.aero.aero import (
@@ -150,7 +150,7 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
                                #TABRND1, TABRNDG,
                                #DTABLE)
 #from .cards.contact import (
-    #BCRPARA, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
+    #BCRPARA, BCPARA, BCTPARA, BLSEG,
     #BCTPARM, BCBODY)
 #from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
@@ -573,11 +573,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'POINT',
             #'GRIDG'
 
-            ## ringfl
-            #'RINGFL',
-            ## ringaxs
-            'RINGAX', 'POINTAX',
-
             ## masses
             'CONM1', 'CONM2',
             'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
@@ -603,7 +598,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CBEAM', 'CBEAM3', 'CBEND', 'BEAMOR',
             'CTRIA3', 'CTRIA6', 'CTRIAR',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
-            #'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
+            'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
             #'SNORM',
 
             'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', # plate strain
@@ -646,19 +641,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'PSOLID', 'PLSOLID', 'PVISC', # 'PRAC2D', 'PRAC3D',
             'PCOMPS', 'PCOMPLS',
 
-            #  nastran 95
-            #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
-            #'CTRSHL', 'CQUAD1',
-            #'PTRSHL', 'PQUAD1',
-            #'PIHEX', # PQUAD4
-
-            # axixsymmetric
-            #'CCONEAX', # element
-            #'PCONEAX', # property
-            #'AXIC', # axic
-            #'AXIF', # axif
-            #'FORCEAX', # loads
-
             ## pdampt
             'PDAMPT',
 
@@ -693,7 +675,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MAT4', 'MAT5',
 
             ## spcs
-            'SPC', 'SPCADD', 'SPC1', #'SPCAX',
+            'SPC', 'SPCADD', 'SPC1',
             'SPCOFF', 'SPCOFF1',
             'BNDFIX', 'BNDFIX1',
             'BNDFREE', 'BNDFREE1',
@@ -709,10 +691,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DLOAD',
 
             ## dload_entries
-            #'ACSRCE',
             'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             'QVECT',
-            'RANDPS', # 'RANDT1', # random
+            'ACSRCE', 'RANDPS', # 'RANDT1', # random
 
             ## loads
             'LOAD', # 'CLOAD',
@@ -722,16 +703,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-            #'PLOADX1',
             'RFORCE', 'RFORCE1',
             'SPCD', 'DEFORM',
-
-            # msgmesh
-            #'GMLOAD',  # loads
-            #'GMCORD',  # coords
-
-            # axisymmetric
-            #'PRESAX',
 
             #thermal
             'QVOL',
@@ -753,13 +726,15 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'AESURFS', ## aesurfs
             #'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', ## caeros
             #'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', ## paeros
+            #'AEFORCE', 'UXVEC', 'GUST2',
 
-            'MONPNT1', 'MONPNT3', # 'MONPNT2', 'MONDSP1', ## monitor_points
             #'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
             #'SPLINE6', 'SPLINE7',
             #'TRIM', 'TRIM2',  ## trims
             #'CSSCHD',  ## csschds
             #'DIVERG',  ## divergs
+
+            'MONPNT1', 'MONPNT3', # 'MONPNT2', 'MONDSP1', ## monitor_points
 
             ## coords
             'CORD1R', 'CORD1C', 'CORD1S',
@@ -784,7 +759,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'NLPCI',  ## nlpcis
             'TSTEP',  ## tsteps
             'TSTEPNL', 'TSTEP1',  ## tstepnls
-            #'TF',  ## transfer_functions
+            'TF',  ## transfer_functions
             'TIC', ## initial conditions - sid (set ID)
 
             ## frequencies
@@ -802,7 +777,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DVMREL1', 'DVMREL2',
             #'DOPTPRM',
             'DLINK', 'DCONADD', 'DVGRID',
-            #'DSCREEN',
+            'DSCREEN',
 
             # nx optimization
             #'DVTREL1', 'GROUP', 'DMNCON',
@@ -823,7 +798,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # superelements
             #'SETREE', 'SENQSET', 'SEBULK', 'SEBNDRY', 'SEELT', 'SELOC', 'SEMPLN',
             #'SECONCT', 'SELABEL', 'SEEXCLD', 'CSUPER', 'CSUPEXT',
-            #'SELOAD', 'RELEASE',
+            #'SELOAD',
 
             # super-element sets
             'SESET',  ## se_set
@@ -836,10 +811,36 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'SEQSEP',
 
             #------------------------------------------------------------------
+            # axixsymmetric
+            #'CCONEAX', # element
+            #'PCONEAX', # property
+            #'AXIC', # axic
+            #'AXIF', # axif
+
+            #'FORCEAX', # loads
+            #'PRESAX', # loads
+            #'PLOADX1',
+            #'SPCAX', # spcs
+
+            #------------------------------------------------------------------
             ## parametric
             #'PSET', 'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE',
             #'GMSPC',  # spcs
 
+            # msgmesh
+            #'GMLOAD',  # loads
+            #'GMCORD',  # coords
+
+            #  nastran 95
+            #'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
+            #'CTRSHL', 'CQUAD1',
+            #'PTRSHL', 'PQUAD1',
+            #'PIHEX', # PQUAD4
+
+            # ringfl
+            #'RINGFL',
+            # ringaxs
+            #'RINGAX', 'POINTAX',
             #------------------------------------------------------------------
             ## tables
             #'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
@@ -871,7 +872,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'EIGC', 'EIGP',
 
             # : modtrak
-            #'MODTRAK',
+            'MODTRAK',
 
             #: contact
             #'BCBODY',  ## bcbody
@@ -893,9 +894,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BSURFS',   ## bsurfs  - source/target_id to solid eid
             'BCPROP',   ## bcprop  - source/target_id to shell pid
             'BCPROPS',  ## bcprops - source/target_id to solid pid
-            #'BCONP', ## bconp
+            'BCONP', ## bconp
             #'BLSEG', ## blseg - glue edge
-            #'BFRIC', ## bfric
+            'BFRIC', ## bfric
 
             #'TEMPBC',
             #'RADMT',
@@ -907,8 +908,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'PANEL', 'SWLDPRM',
             #'CWELD', 'PWELD',
             #'CWELD', 'PWELD', 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
-            #'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
-            #'AEFORCE', 'UXVEC', 'GUST2',
+            #'CYSYM', 'CYJOIN',
+            # 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
 
             # cyclic
             #'CYJOIN', 'CYAX',
@@ -2108,11 +2109,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             #'PANEL' : (Crash, None),
 
-            #'BCONP' : (BCONP, add_methods._add_bconp_object),
-            #'BLSEG' : (BLSEG, add_methods._add_blseg_object),
-            #'BFRIC' : (BFRIC, add_methods._add_bfric_object),
-            #'MODTRAK' : (MODTRAK, add_methods._add_modtrak_object),
-
             # nx contact
             #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
             #'BCTPARM' : (BCTPARM, add_methods._add_bctparam_object),
@@ -2257,8 +2253,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'TSTEP1' : (TSTEP1, add_methods._add_tstepnl_object),
             'TSTEPNL' : (TSTEPNL, add_methods._add_tstepnl_object),
 
-            #'TF' : (TF, add_methods._add_tf_object),
-
             # nx_opt
             #'DVTREL1' : (DVTREL1, add_methods._add_dvtrel_object), # dvtrels
             #'GROUP' : (GROUP, add_methods._add_group_object), # group
@@ -2335,6 +2329,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CORD2R': self._prepare_cord2r,
             'CORD2C': self._prepare_cord2c,
             'CORD2S': self._prepare_cord2s,
+
+            'MODTRAK' : partial(self._prepare_card, self.modtrak),
 
             # sets
             'SET1': partial(self._prepare_card, self.set1),
@@ -2465,13 +2461,13 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'CPLSTN8' : partial(self._prepare_card, self.cplstn8),
 
             # axisymmetric shells
-            #'CQUADX': partial(self._prepare_card, self.cquadx),
-            #'CQUADX4' : partial(self._prepare_card, self.cquadx4),
-            #'CQUADX8' : partial(self._prepare_card, self.cquadx8),
-            #'CTRIAX': partial(self._prepare_card, self.ctriax),
-            #'CTRIAX6' : partial(self._prepare_card, self.ctriax6),
-            #'CTRAX3' : partial(self._prepare_card, self.ctrax3),
-            #'CTRAX6' : partial(self._prepare_card, self.ctrax6),
+            'CQUADX': partial(self._prepare_card, self.cquadx),
+            'CQUADX4' : partial(self._prepare_card, self.cquadx4),
+            'CQUADX8' : partial(self._prepare_card, self.cquadx8),
+            'CTRIAX': partial(self._prepare_card, self.ctriax),
+            'CTRIAX6' : partial(self._prepare_card, self.ctriax6),
+            'CTRAX3' : partial(self._prepare_card, self.ctrax3),
+            'CTRAX6' : partial(self._prepare_card, self.ctrax6),
 
             # solids
             'CTETRA' : partial(self._prepare_card, self.ctetra),
@@ -2556,6 +2552,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'RLOAD1' : partial(self._prepare_card, self.rload1),
             'RLOAD2' : partial(self._prepare_card, self.rload2),
             'TIC' : partial(self._prepare_card, self.tic),
+            'TF' : partial(self._prepare_card, self.tf),
             'QVECT': partial(self._prepare_card, self.qvect),
             'QHBDY': partial(self._prepare_card, self.qhbdy),
 
@@ -2565,7 +2562,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # random laods
             'RANDPS': partial(self._prepare_card, self.randps),
-            #'ACSRCE' : (ACSRCE, add_methods._add_dload_entry),
+            'ACSRCE': partial(self._prepare_card, self.acsrce),
             #'RANDT1' : (RANDT1, add_methods._add_dload_entry), # random
 
             # materials
@@ -2641,6 +2638,9 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
             #'BCTPARM' : (BCTPARM, add_methods._add_bctparam_object),
             #'BCBODY' : (BCBODY, add_methods._add_bcbody_object),
+            'BCONP' : partial(self._prepare_card, self.bconp),
+            'BFRIC' : partial(self._prepare_card, self.bfric),
+            #'BLSEG' : (BLSEG, add_methods._add_blseg_object),
 
             # pseudo-constraint
             'SUPORT': partial(self._prepare_card_by_method, self.suport.add_set_card),
@@ -2739,8 +2739,8 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DVMREL2': partial(self._prepare_card, self.dvmrel2),
 
             'DCONADD': partial(self._prepare_card, self.dconadd),
-            #'DDVAL' : (DDVAL, add_methods._add_ddval_object),
-            #'DSCREEN' : (DSCREEN, add_methods._add_dscreen_object),
+            #'DDVAL': partial(self._prepare_card, self.ddval),
+            'DSCREEN': partial(self._prepare_card, self.dscreen),
 
             #'DTABLE' : (DTABLE, add_methods._add_dtable_object),
             #'DRESP3' : (DRESP3, add_methods._add_dresp_object),

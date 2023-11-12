@@ -1484,6 +1484,43 @@ MDLPRM_INT_KEYS_1 = {
     # undefined in MSC
     'RBEDOF', 'NLDIAG', 'ITRFMT', 'NLSPCD', 'MRCONV', 'LA3FLG', 'TIMADJ',
 }
+MDLPRM_INT_KEYS_1_DEFAULT = {
+    # ...more
+    'GNLSTN': 0,
+    'HDF5': -1,
+    'H5GM34': -1,
+    'H5MDL': 1,
+    'H5MTX': 1,
+    'H5NORDOF': 0,
+    'IGNSHBDN': 0,
+    'INTOUT': 0,
+    'LMT2MPC': 0,
+    'MLTSPLIN': 0,
+    'MPCF129': 0,
+    'NSGRDS4': 0,
+    'PRDIDPVT': 1,
+    'PRDITRFN': 0,
+
+    'QR6ROT': 0,
+    'QRSHEAR': 0,
+
+    'RDBOTH': 0,
+    'RELAXF': 0,
+    'RSTIGNDP': 0,
+
+    'SHRTOQ4': 0,
+    'TWBRBML': 0,
+}
+MDLPRM_STR_KEYS_1_DEFAULT = {
+    'PRTELAS': 'NO',
+    'PRTFAST': 'NO',
+    'PRTSEAM': 'NO',
+    'PRTWELD': 'NO',
+    'SHEARP': 'GARVEY',
+}
+MDLPRM_FLOAT_KEYS_1_DEFAULT = {
+    'SPBLNDX': 1.0,
+}
 MDLPRM_STR_KEYS_1 = {'COMPN1', 'SHEARP', 'OFFDEF',
                      'PRTELAS', 'PRTFAST', 'PRTMASS', 'PRTSEAM', 'PRTWELD'}
 MDLPRM_FLOAT_KEYS_1 = {
@@ -1555,11 +1592,17 @@ class MDLPRM(BaseCard):
                 ifield += 2
                 continue
             elif key in MDLPRM_INT_KEYS_1:
-                value = integer_or_blank(card, ifield+1, 'value')
+                default = MDLPRM_INT_KEYS_1_DEFAULT.get(key, None)
+                value = integer_or_blank(card, ifield+1, 'value', default=default)
+                assert isinstance(value, integer_types), f'MDLPRM key={key!r} value={value!r} must be an integer; card={card}'
             elif key in MDLPRM_STR_KEYS_1:
-                value = string(card, ifield+1, key)
+                default = MDLPRM_STR_KEYS_1_DEFAULT.get(key, None)
+                value = string_or_blank(card, ifield+1, key, default=default)
+                assert isinstance(value, str), f'MDLPRM key={key!r} value={value!r} must be a string; card={card}'
             elif key in MDLPRM_FLOAT_KEYS_1:
-                value = double(card, ifield+1, key)
+                default = MDLPRM_FLOAT_KEYS_1_DEFAULT.get(key, None)
+                value = double_or_blank(card, ifield+1, key, default=default)
+                assert isinstance(value, float_types), f'MDLPRM key={key!r} value={value!r} must be an float; card={card}'
             else:
                 raise RuntimeError(f'MDLPRM key={key!r} is not supported; value={card.field(ifield+1)}')
             mdlprm_dict[key] = value

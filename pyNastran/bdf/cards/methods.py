@@ -1147,7 +1147,7 @@ class MODTRAK(BaseCard):
     MODTRAK SID LOWRNG HIGHRNG MTFILTER
     MODTRAK 100   1      26      0.80
     """
-    def __init__(self, sid, low_range, high_range, mt_filter, comment=''):
+    def __init__(self, sid: int, low_range: int, high_range: int, mt_filter: float, comment: str=''):
         BaseCard.__init__(self)
         self.sid = sid
         self.low_range = low_range
@@ -1160,6 +1160,7 @@ class MODTRAK(BaseCard):
         low_range = integer_or_blank(card, 2, 'low_range', default=0)
         high_range = integer(card, 3, 'high_range')
         mt_filter = double_or_blank(card, 4, 'mt_filter', default=0.9)
+        assert len(card) <= 5, f'len(MODTRAK card) = {len(card):d}\ncard={card}'
         return MODTRAK(sid, low_range, high_range, mt_filter, comment=comment)
 
     def raw_fields(self) -> list[Any]:

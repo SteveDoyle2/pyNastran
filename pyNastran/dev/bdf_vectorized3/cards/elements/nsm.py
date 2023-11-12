@@ -72,7 +72,7 @@ class NSMi(VectorizedBaseCard):
 
         self.cards.append((sid, nsm_type, pid_eids, values, comment))
         #return cls(sid, nsm_type, pid_eid, value, comment=comment)
-        return self.n
+        return self.n - 1
 
     def add(self, sid: int, nsm_type: str, pid_eid: int, value: float,
             comment: str='') -> int:
@@ -113,7 +113,7 @@ class NSMi(VectorizedBaseCard):
         #self.cards.append((sid, nsm_type, pidi, valuei, comment))
         #comment = ''
         #self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -249,7 +249,7 @@ class NSM1i(VectorizedBaseCard):
         """
         self.cards.append((sid, nsm_type, ids, value, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -286,7 +286,7 @@ class NSM1i(VectorizedBaseCard):
 
         #return cls(sid, nsm_type, pid_eid, value, comment=comment)
         assert len(card) <= 9, f'len(NSM1 card) = {len(card):d}\ncard={card}'
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, elem: NSMi, i: np.ndarray) -> None:
         elem.nsm_id = self.nsm_id[i]

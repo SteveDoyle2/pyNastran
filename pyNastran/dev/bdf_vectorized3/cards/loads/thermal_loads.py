@@ -116,7 +116,7 @@ class QHBDY(Load):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         #: Load set identification number. (Integer > 0)
         load_id = np.zeros(ncards, dtype='int32')
@@ -239,7 +239,7 @@ class QBDY1(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         #: Load set identification number. (Integer > 0)
         load_id = np.zeros(ncards, dtype='int32')
@@ -357,7 +357,7 @@ class QBDY2(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         #: Load set identification number. (Integer > 0)
         load_id = np.zeros(ncards, dtype='int32')
@@ -478,7 +478,7 @@ class QBDY3(Load):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         #: Load set identification number. (Integer > 0)
         load_id = np.zeros(ncards, dtype='int32')
@@ -606,7 +606,7 @@ class QVOL(Load):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         #: Load set identification number. (Integer > 0)
         load_id = np.zeros(ncards, dtype='int32')
@@ -728,7 +728,7 @@ class TEMPBC(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         spc_id = np.zeros(ncards, dtype='int32')
         bc_type = np.zeros(ncards, dtype='|U4')
@@ -833,7 +833,7 @@ class RADM(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         rad_mid = np.zeros(ncards, dtype='int32')
         absorptivity = np.zeros(ncards, dtype='float64')
@@ -919,7 +919,7 @@ class RADBC(VectorizedBaseCard):
         return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
-    def parse_cards(self):
+    def parse_cards(self) -> None:
         ncards = len(self.cards)
         if self.debug:
             self.model.log.debug(f'parse {self.type}')

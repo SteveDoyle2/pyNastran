@@ -68,7 +68,7 @@ class CONROD(Element):
         """
         self.cards.append((eid, nodes, mid, A, j, c, nsm, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -82,7 +82,7 @@ class CONROD(Element):
         assert len(card) <= 9, 'len(CONROD card) = %i\ncard=%s' % (len(card), str(card))
         self.cards.append((eid, nodes, mid, A, j, c, nsm, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, elem: CONROD, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
@@ -253,7 +253,7 @@ class CROD(Element):
         """
         self.cards.append((eid, pid, nodes, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -263,7 +263,7 @@ class CROD(Element):
         assert len(card) == 5, 'len(CROD card) = %i\ncard=%s' % (len(card), str(card))
         self.cards.append((eid, pid, nodes, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, elem: CROD, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
@@ -443,7 +443,7 @@ class PROD(Property):
         """
         self.cards.append((pid, mid, A, j, c, nsm, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -455,7 +455,7 @@ class PROD(Property):
         assert len(card) <= 7, f'len(PROD card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, A, j, c, nsm, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, prop: PROD, i: np.ndarray) -> None:  # ignore[override]
         prop.property_id = self.property_id[i]
@@ -575,7 +575,7 @@ class CTUBE(Element):
         """
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         eid = integer(card, 1, 'eid')
@@ -585,7 +585,7 @@ class CTUBE(Element):
         assert len(card) == 5, 'len(CTUBE card) = %i\ncard=%s' % (len(card), str(card))
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, elem: CTUBE, i: np.ndarray) -> None:  # ignore[override]
         elem.element_id = self.element_id[i]
@@ -792,7 +792,7 @@ class PTUBE(Property):
         """
         self.cards.append((pid, mid, OD1, OD2, t, nsm, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -804,7 +804,7 @@ class PTUBE(Property):
         assert len(card) <= 7, f'len(PTUBE card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, OD1, OD2, t, nsm, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def __apply_slice__(self, prop: PTUBE, i: np.ndarray) -> None:  # ignore[override]
         prop.property_id = self.property_id[i]

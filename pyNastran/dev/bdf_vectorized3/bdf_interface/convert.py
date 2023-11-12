@@ -97,8 +97,11 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         'COORD', 'SPC', 'DEFORM', 'GRAV', 'ACCEL1',
         'FORCE', 'FORCE1', 'FORCE2',
         'MOMENT', 'MOMENT1', 'MOMENT2',
-        'DVGRID', 'BGSET', 'BCTSET',
         'TEMP', 'TEMPD',
+        # optimization
+        'DVGRID',
+        # contact
+        'BGSET', 'BCTSET', 'BCONP',
     }
     cards = [card for card in model._cards_to_setup
              if card.n and card.type not in CARDS_TO_SKIP]

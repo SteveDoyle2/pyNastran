@@ -430,13 +430,13 @@ class Writer:
         #bdf_file.write(model.snorm.write(size=size), is_double=is_double)
 
         # axisymmetric shells
-        #bdf_file.write(model.ctriax.write(size=size))
-        #bdf_file.write(model.ctriax6.write(size=size))
-        #bdf_file.write(model.cquadx.write(size=size))
-        #bdf_file.write(model.cquadx4.write(size=size))
-        #bdf_file.write(model.cquadx8.write(size=size))
-        #bdf_file.write(model.ctrax3.write(size=size))
-        #bdf_file.write(model.ctrax6.write(size=size))
+        model.ctriax.write_file(bdf_file, size=size, is_double=is_double)
+        model.ctriax6.write_file(bdf_file, size=size, is_double=is_double)
+        model.cquadx.write_file(bdf_file, size=size, is_double=is_double)
+        model.cquadx4.write_file(bdf_file, size=size, is_double=is_double)
+        model.cquadx8.write_file(bdf_file, size=size, is_double=is_double)
+        model.ctrax3.write_file(bdf_file, size=size, is_double=is_double)
+        model.ctrax6.write_file(bdf_file, size=size, is_double=is_double)
 
         # plate stress
         model.cplsts3.write_file(bdf_file, size=size, is_double=is_double)
@@ -948,6 +948,7 @@ class Writer:
 
         if any(card.n for card in model.dynamic_cards):
             model.tic.write_file(bdf_file, size=size, is_double=is_double)
+            model.tf.write_file(bdf_file, size=size, is_double=is_double)
             model.dphase.write_file(bdf_file, size=size, is_double=is_double)
             model.delay.write_file(bdf_file, size=size, is_double=is_double)
 
@@ -961,6 +962,7 @@ class Writer:
 
             # random loads
             model.randps.write_file(bdf_file, size=size, is_double=is_double)
+            model.acsrce.write_file(bdf_file, size=size, is_double=is_double)
 
             #for (key, load_combinations) in sorted(self.load_combinations.items()):
                 #for load_combination in load_combinations:
@@ -1051,13 +1053,11 @@ class Writer:
             model.bsurfs.write_file(bdf_file, size=size, is_double=is_double)
             model.bcprop.write_file(bdf_file, size=size, is_double=is_double)
             model.bcprops.write_file(bdf_file, size=size, is_double=is_double)
+            model.bconp.write_file(bdf_file, size=size, is_double=is_double)
 
-            #for (unused_id, bconp) in sorted(self.bconp.items()):
-                #bdf_file.write(bconp.write_card(size, is_double))
             #for (unused_id, blseg) in sorted(self.blseg.items()):
                 #bdf_file.write(blseg.write_card(size, is_double))
-            #for (unused_id, bfric) in sorted(self.bfric.items()):
-                #bdf_file.write(bfric.write_card(size, is_double))
+            model.bfric.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_coords(self, bdf_file: TextIOLike,
                       size: int=8, is_double: bool=False,
@@ -1141,6 +1141,7 @@ class Writer:
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the optimization cards sorted by ID"""
         model = self.model
+        model.modtrak.write_file(bdf_file, size=size, is_double=is_double)
         #model.ddval.write_file(bdf_file, size=size, is_double=is_double)
         model.desvar.write_file(bdf_file, size=size, is_double=is_double)
         model.dlink.write_file(bdf_file, size=size, is_double=is_double)
@@ -1159,5 +1160,7 @@ class Writer:
 
         model.dvmrel1.write_file(bdf_file, size=size, is_double=is_double)
         model.dvmrel2.write_file(bdf_file, size=size, is_double=is_double)
+
+        model.dscreen.write_file(bdf_file, size=size, is_double=is_double)
         if model.doptprm is not None:
             bdf_file.write(model.doptprm.write_card(size, is_double))

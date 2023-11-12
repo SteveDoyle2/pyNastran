@@ -1920,10 +1920,10 @@ class TF(BaseCard):
             j = irow * 8 + 9
             #ifield = irow + 1
             nid = integer(card, j, 'grid_%i' % (irow + 1))
-            component = components_or_blank(card, j + 1, 'components_%i' % (irow + 1), '0')
-            a0 = double_or_blank(card, j + 2, 'a0_%i' % (irow + 1), 0.)
-            a1 = double_or_blank(card, j + 3, 'a1_%i' % (irow + 1), 0.)
-            a2 = double_or_blank(card, j + 4, 'a2_%i' % (irow + 1), 0.)
+            component = components_or_blank(card, j + 1, 'components_%i' % (irow + 1), default='0')
+            a0 = double_or_blank(card, j + 2, 'a0_%i' % (irow + 1), default=0.)
+            a1 = double_or_blank(card, j + 3, 'a1_%i' % (irow + 1), default=0.)
+            a2 = double_or_blank(card, j + 4, 'a2_%i' % (irow + 1), default=0.)
             nids.append(nid)
             components.append(component)
             a.append([a0, a1, a2])

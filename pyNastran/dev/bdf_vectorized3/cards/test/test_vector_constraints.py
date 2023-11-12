@@ -42,7 +42,7 @@ class TestConstraints(unittest.TestCase):
 
         card = ['SUPORT', '2', '432']
         cardi = BDFCard(card)
-        icon = suport.add_set_card(cardi) - 1 # default
+        icon = suport.add_set_card(cardi) # default
         model.setup()
         self.assertEqual(suport.node_id[icon], 2)
         self.assertEqual(suport.component[icon], 234)
@@ -51,7 +51,7 @@ class TestConstraints(unittest.TestCase):
 
         card = ['SUPORT', '3', '4325', 4]
         cardi = BDFCard(card)
-        icon = suport.add_set_card(cardi) - 1 # default
+        icon = suport.add_set_card(cardi) # default
         model.setup()
         self.assertEqual(suport.node_id[icon-1], 3)
         self.assertEqual(suport.node_id[icon], 4)
@@ -62,7 +62,7 @@ class TestConstraints(unittest.TestCase):
 
         card = ['SUPORT', '2', None, 3]
         cardi = BDFCard(card)
-        icon = suport.add_set_card(cardi) - 1 # default
+        icon = suport.add_set_card(cardi) # default
         model.setup()
         self.assertEqual(suport.node_id[icon-1], 2)
         self.assertEqual(suport.node_id[icon], 3)
@@ -73,7 +73,7 @@ class TestConstraints(unittest.TestCase):
 
         card = ['SUPORT', '2', '432', 3, '1325']
         cardi = BDFCard(card)
-        icon = suport.add_set_card(cardi) - 1 # default
+        icon = suport.add_set_card(cardi) # default
         model.setup()
         self.assertEqual(suport.node_id[icon-1], 2)
         self.assertEqual(suport.node_id[icon], 3)

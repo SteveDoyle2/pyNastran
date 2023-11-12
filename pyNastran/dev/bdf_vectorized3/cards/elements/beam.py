@@ -173,7 +173,7 @@ class CBEAM(Element):
         else:
             self.cards.append((eid, pid, nids, g0, x, offt, [pa, pb], wa, wb, sa, sb, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         PROPERTY_ID_DEFAULT = 0
@@ -204,7 +204,7 @@ class CBEAM(Element):
         assert len(card) <= 19, f'len(CBEAM card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, [ga, gb], g0, x, offt, [pa, pb], wa, wb, sa, sb, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -947,7 +947,7 @@ class PBEAM(Property):
                            m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b,
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'property_id')
@@ -1254,7 +1254,7 @@ class PBEAM(Property):
                            comment))
 
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1905,7 +1905,7 @@ class PBEAML(Property):
         assert nstation == len(nsm), f'pid={pid} nstation={nstation} nsm={nsm}'
         self.cards.append((pid, mid, beam_type, group, xxb, so, nsm, ndim, dims, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -1998,7 +1998,7 @@ class PBEAML(Property):
         assert nstationi == len(nsm), f'pid={pid} nstation={nstationi} nsm={nsm}'
         self.cards.append((pid, mid, beam_type, group, xxb, so, nsm, ndim, dims, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -2407,7 +2407,7 @@ class PBCOMP(Property):
                            k1, k2, m1, m2, n1, n2,
                            symopt, y, z, c, mids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         pid = integer(card, 1, 'pid')
@@ -2455,7 +2455,7 @@ class PBCOMP(Property):
                            k1, k2, m1, m2, n1, n2,
                            symopt, y, z, c, mids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -2832,7 +2832,7 @@ class CBEND(Element):
 
         self.cards.append((eid, pid, nids, g0, x, geom, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -2872,7 +2872,7 @@ class CBEND(Element):
         #return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
         self.cards.append((eid, pid, [ga, gb], g0, x, geom, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -3320,7 +3320,7 @@ class PBEND(Property):
                            #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b,
                            #comment))
         #self.n += 1
-        #return self.n
+        #return self.n - 1
 
     def add_beam_type_1(self, pid, mid,
                         A, i1, i2, j,
@@ -3396,7 +3396,7 @@ class PBEND(Property):
                            centerline_spacing, alpha, flange, kx, ky, kz, sy, sz,
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_beam_type_2(self, pid, mid,
                         fsi, rm, t, p=None, rb=None, theta_b=None,
@@ -3477,7 +3477,7 @@ class PBEND(Property):
                            centerline_spacing, alpha, flange, kx, ky, kz, sy, sz,
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -3638,7 +3638,7 @@ class PBEND(Property):
                            centerline_spacing, alpha, flange, kx, ky, kz, sy, sz,
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:

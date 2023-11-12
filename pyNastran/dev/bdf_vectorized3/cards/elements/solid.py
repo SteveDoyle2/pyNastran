@@ -67,7 +67,7 @@ class SolidElement(Element):
     @property
     def allowed_properties(self) -> list[Any]:
         model = self.model
-        allowed_properties = [model.psolid, model.plsolid, model.pcomps, model.pcompls]
+        allowed_properties = [model.psolid, model.plsolid, model.pcomps]
         return [prop for prop in allowed_properties if prop.n > 0]
 
     def mass_breakdown(self) -> np.ndarray:
@@ -163,7 +163,7 @@ class CTETRA(SolidElement):
         assert len(card) <= 13, f'len(CTETRA card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -366,7 +366,7 @@ class CPENTA(SolidElement):
         assert len(card) <= 18, f'len(CPENTA card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -502,7 +502,7 @@ class CPYRAM(SolidElement):
         assert len(card) <= 16, f'len(CPYRAM13 1card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -622,7 +622,7 @@ class SolidHex(SolidElement):
         assert len(card) <= 23, f'len(CHEXA20 card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -705,7 +705,11 @@ class SolidHex(SolidElement):
 class CHEXCZ(SolidHex):
     pass
 class CHEXA(SolidHex):
-    pass
+    @property
+    def allowed_properties(self) -> list[Any]:
+        model = self.model
+        allowed_properties = [model.psolid, model.plsolid, model.pcomps, model.pcompls]
+        return [prop for prop in allowed_properties if prop.n > 0]
 
 
 class PSOLID(Property):
@@ -773,7 +777,7 @@ class PSOLID(Property):
 
         self.cards.append((pid, mid, cordm, integ, stress, isop, fctn, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -953,7 +957,7 @@ class PLSOLID(Property):
         assert len(card) <= 4, f'len(PLSOLID card) = {len(card):d}\ncard={card}'
         self.cards.append((pid, mid, stress_strain, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1048,34 +1052,6 @@ class PCOMPS(Property):
         self.interlaminar_failure_theory = np.array([], dtype='|U8')
         self.sout = np.array([], dtype='|U8')
 
-    def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPS:
-        """uses a node_ids to extract PCOMPSs"""
-        iprop = self.index(property_id)
-        prop = self.slice_card_by_index(iprop)
-        return prop
-
-    def __apply_slice__(self, prop: PCOMPS, i: np.ndarray) -> None:  # ignore[override]
-        prop.n = len(i)
-        prop.property_id = self.property_id[i]
-
-        prop.coord_id = self.coord_id[i]
-        prop.psdir = self.psdir[i]
-        prop.sb = self.sb[i]
-        prop.nb = self.nb[i]
-        prop.tref = self.tref[i]
-        prop.ge = self.ge[i]
-
-        ilayer = self.ilayer
-        prop.global_ply_id = hslice_by_idim(i, ilayer, self.global_ply_id)
-        prop.material_id = hslice_by_idim(i, ilayer, self.material_id)
-        prop.thickness = hslice_by_idim(i, ilayer, self.thickness)
-        prop.theta = hslice_by_idim(i, ilayer, self.theta)
-        prop.failure_theory = hslice_by_idim(i, ilayer, self.failure_theory)
-        prop.interlaminar_failure_theory = hslice_by_idim(i, ilayer, self.interlaminar_failure_theory)
-        prop.sout = hslice_by_idim(i, ilayer, self.sout)
-
-        prop.nlayer = self.nlayer[i]
-
     def add(self, pid: int,
             global_ply_ids: list[int],
             mids: list[int],
@@ -1158,7 +1134,7 @@ class PCOMPS(Property):
                            global_ply_ids, mids, thicknesses, thetas,
                            failure_theories, interlaminar_failure_theories, souts))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1240,6 +1216,34 @@ class PCOMPS(Property):
         self.tref = tref
         self.ge = ge
         self.coord_id = coord_id
+
+    #def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPS:
+        #"""uses a node_ids to extract PCOMPSs"""
+        #iprop = self.index(property_id)
+        #prop = self.slice_card_by_index(iprop)
+        #return prop
+
+    def __apply_slice__(self, prop: PCOMPS, i: np.ndarray) -> None:  # ignore[override]
+        prop.n = len(i)
+        prop.property_id = self.property_id[i]
+
+        prop.coord_id = self.coord_id[i]
+        prop.psdir = self.psdir[i]
+        prop.sb = self.sb[i]
+        prop.nb = self.nb[i]
+        prop.tref = self.tref[i]
+        prop.ge = self.ge[i]
+
+        ilayer = self.ilayer
+        prop.global_ply_id = hslice_by_idim(i, ilayer, self.global_ply_id)
+        prop.material_id = hslice_by_idim(i, ilayer, self.material_id)
+        prop.thickness = hslice_by_idim(i, ilayer, self.thickness)
+        prop.theta = hslice_by_idim(i, ilayer, self.theta)
+        prop.failure_theory = hslice_by_idim(i, ilayer, self.failure_theory)
+        prop.interlaminar_failure_theory = hslice_by_idim(i, ilayer, self.interlaminar_failure_theory)
+        prop.sout = hslice_by_idim(i, ilayer, self.sout)
+
+        prop.nlayer = self.nlayer[i]
 
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
@@ -1352,30 +1356,6 @@ class PCOMPLS(Property):
         self.c8 = np.array([], dtype='|U8')
         self.c20 = np.array([], dtype='|U8')
 
-    def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPLS:
-        """uses a node_ids to extract PCOMPLSs"""
-        iprop = self.index(property_id)
-        prop = self.slice_card_by_index(iprop)
-        return prop
-
-    #def __apply_slice__(self, prop: PCOMPLS, i: np.ndarray) -> None:
-        #prop.n = len(i)
-        #prop.property_id = self.property_id[i]
-        ##prop.material_id = self.material_id[i]
-
-        #prop.coord_id = self.coord_id[i]
-        #prop.sb = self.sb[i]
-        #prop.tref = self.tref[i]
-        #prop.ge = self.ge[i]
-
-        #iply = self.iply
-        #prop.global_ply_id = hslice_by_idim(i, iply, self.global_ply_id)
-        #prop.material_id = hslice_by_idim(i, iply, self.material_id)
-        #prop.thickness = hslice_by_idim(i, iply, self.thickness)
-        #prop.theta = hslice_by_idim(i, iply, self.theta)
-
-        #prop.nply = self.nply[i]
-
     def add_card(self, card: BDFCard, comment: str='') -> int:
         """
         Adds a PCOMPLS card from ``BDF.add_card(...)``
@@ -1468,6 +1448,11 @@ class PCOMPLS(Property):
             iply += 1
             ifield += 8
         assert len(card) <= ifield, f'len(PCOMPLS card) = {len(card):d}\ncard={card}'
+        if len(c8) == 0:
+            c8 = ['', '', '', '']
+        if len(c20) == 0:
+            c20 = ['', '', '', '']
+
         #return PCOMPLS(pid, global_ply_ids, mids, thicknesses, thetas,
                        #direct=direct, cordm=cordm, sb=sb, analysis=analysis,
                        #c8=c8, c20=c20,
@@ -1477,7 +1462,7 @@ class PCOMPLS(Property):
                            c8, c20,
                            comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Property.parse_cards_check
     def parse_cards(self) -> None:
@@ -1502,9 +1487,10 @@ class PCOMPLS(Property):
         #all_interlaminar_failure_theories = []
         #all_souts = []
 
-        c8_list = []
-        c20_list = []
+        c8 = np.zeros((ncards, 4), dtype='|U8')
+        c20 = np.zeros((ncards, 4), dtype='|U8')
         for icard, card in enumerate(self.cards):
+            #print(card)
             (pid, global_ply_idi, midi, thicknessi, thetai,
              directi, cordmi, sbi, analysisi,
              c8i, c20i, comment) = card
@@ -1516,8 +1502,8 @@ class PCOMPLS(Property):
             direct[icard] = directi
             #print('8:', c8i)
             #print('20:', c20i)
-            c8_list.extend(c8i)
-            c20_list.extend(c20i)
+            c8[icard, :] = c8i
+            c20[icard, :] = c20i
             #self.nb[icard] = nb
             #self.tref[icard] = tref
             #self.ge[icard] = ge
@@ -1535,8 +1521,6 @@ class PCOMPLS(Property):
         material_id = np.array(all_mids, dtype='int32')
         thickness = np.array(all_thicknesses, dtype='float64')
         theta = np.array(all_thetas, dtype='float64')
-        c8 = np.array(c8_list, dtype='|U8')
-        c20 = np.array(c20_list, dtype='|U8')
         #failure_theory = np.array(all_failure_theories, dtype='|U8')
         #interlaminar_failure_theory = np.array(all_interlaminar_failure_theories, dtype='|U8')
 
@@ -1573,6 +1557,31 @@ class PCOMPLS(Property):
         #self.model.log.warning(f'saved PCOMPLS; material_id={self.material_id}')
         assert len(self.material_id) > 0, self.material_id
 
+    #def slice_card_by_property_id(self, property_id: np.ndarray) -> PCOMPLS:
+        #"""uses a node_ids to extract PCOMPLSs"""
+        #iprop = self.index(property_id)
+        #prop = self.slice_card_by_index(iprop)
+        #return prop
+
+    def __apply_slice__(self, prop: PCOMPLS, i: np.ndarray) -> None:
+        prop.n = len(i)
+        prop.property_id = self.property_id[i]
+
+        prop.coord_id = self.coord_id[i]
+        prop.sb = self.sb[i]
+        #prop.tref = self.tref[i]
+        #prop.ge = self.ge[i]
+        prop.c8 = self.c8[i, :]
+        prop.c20 = self.c20[i, :]
+
+        iply = self.iply
+        prop.global_ply_id = hslice_by_idim(i, iply, self.global_ply_id)
+        prop.material_id = hslice_by_idim(i, iply, self.material_id)
+        prop.thickness = hslice_by_idim(i, iply, self.thickness)
+        prop.theta = hslice_by_idim(i, iply, self.theta)
+
+        prop.nply = self.nply[i]
+
     def set_used(self, used_dict: [str, list[np.ndarray]]) -> None:
         used_dict['material_id'].append(self.material_id)
         used_dict['coord_id'].append(self.coord_id)
@@ -1599,24 +1608,26 @@ class PCOMPLS(Property):
         coord_ids = array_default_int(self.coord_id, default=0, size=size)
         sbs = array_float_nan(self.sb, size=size, is_double=False)
 
-        for pid, mid, cordm, direct, analysis, sb, iply in zip(property_ids, material_ids, coord_ids,
-                                                               self.direct, self.analysis, sbs, self.iply):
+        for pid, mid, cordm, direct, analysis, sb, iply, c8, c20 in zip(property_ids, material_ids, coord_ids,
+                                                                        self.direct, self.analysis, sbs,
+                                                                        self.iply, self.c8, self.c20):
             iply0, iply1 = iply
             global_ply_ids = self.global_ply_id[iply0:iply1]
             mids = self.material_id[iply0:iply1]
             thicknesses = self.thickness[iply0:iply1]
             thetas = self.theta[iply0:iply1]
-            c8 = self.c8[iply0:iply1]
-            c20 = self.c20[iply0:iply1]
+            #c8 = self.c8[iply0:iply1, :]
+            #c20 = self.c20[iply0:iply1, :]
             #failure_theories = self.failure_theory[iply0:iply1]
             #interlaminar_failure_theories = self.interlaminar_failure_theory[iply0:iply1]
             #souts = self.sout[iply0:iply1]
             list_fields = ['PCOMPLS', pid, direct, cordm, sb, analysis, None, None, None]
-            print('c8 =', c8)
-            print('c20 =', c20)
-            if len(c8):
+
+            c8_ = [val for val in c8 if len(val)]
+            c20_ = [val for val in c20 if len(val)]
+            if len(c8_):
                 list_fields += ['C8'] + c8.tolist() + [None, None, None]
-            if len(c20):
+            if len(c20_):
                 list_fields += ['C20'] + c20.tolist() + [None, None, None]
 
             for glply, mid, t, theta in zip(global_ply_ids,
@@ -1674,7 +1685,7 @@ class CHACBR(SolidElement):
         assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:
@@ -1790,7 +1801,7 @@ class CHACAB(SolidElement):
         assert len(card) <= 23, f'len(CHACAB card) = {len(card):d}\ncard={card}'
         self.cards.append((eid, pid, nids, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @Element.parse_cards_check
     def parse_cards(self) -> None:

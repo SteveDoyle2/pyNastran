@@ -108,7 +108,7 @@ class SPC(VectorizedBaseCard):
         assert nnodes == len(enforced)
         self.cards.append((spc_id, nodes, components, enforced, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         spc_idi = integer(card, 1, 'sid')
@@ -469,7 +469,7 @@ class MPC(VectorizedBaseCard):
             i += 1
         self.cards.append((mpc_id, nodes, components, coefficients, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -572,7 +572,7 @@ class ADD(VectorizedBaseCard):
             sets = [sets]
         self.cards.append((sid, sets, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str='') -> int:
         sid = integer(card, 1, 'conid')
@@ -582,7 +582,7 @@ class ADD(VectorizedBaseCard):
 
         self.cards.append((sid, sets, comment))
         self.n += 1
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
@@ -810,7 +810,7 @@ class CommonSet(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
-        return self.n
+        return self.n - 1
 
     def add_set1(self, suport_id: int, nids: list[int], component: list[int],
                   comment: str='') -> int:
@@ -822,7 +822,7 @@ class CommonSet(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = _format_comment(comment)
         self.n += nnodes
-        return self.n
+        return self.n - 1
 
     def add_card(self, card: BDFCard, comment: str=''):
         card_name = card[0].upper()
@@ -860,7 +860,7 @@ class CommonSet(VectorizedBaseCard):
         assert len(card) > 1, f'len({self.type} card) = {len(card):d}\ncard={card}'
         self.cards.append((nodes, components, comment))
         self.n += len(nodes)
-        return self.n
+        return self.n - 1
 
     def add_set1_card(self, card: BDFCard, comment: str='') -> int:
         """
@@ -888,7 +888,7 @@ class CommonSet(VectorizedBaseCard):
         #if comment:
             #self.comment[nid] = comment
         self.n += nnodes
-        return self.n
+        return self.n - 1
 
     @VectorizedBaseCard.parse_cards_check
     def parse_cards(self) -> None:
