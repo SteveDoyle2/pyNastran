@@ -14,22 +14,30 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string, string_or_blank, parse_components,
 )
 #from pyNastran.bdf.cards.elements.bars import set_blank_if_default
-
 #from pyNastran.bdf.cards.base_card import expand_thru
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard # , make_idim, hslice_by_idim
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import array_str, array_default_int, array_float, get_print_card_size
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
-from pyNastran.femutils.utils import hstack_lists
+#from pyNastran.femutils.utils import hstack_lists
 
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-    from pyNastran.nptyping_interface import NDArray3float
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    #from pyNastran.nptyping_interface import NDArray3float
+    #from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from pyNastran.dev.bdf_vectorized3.types import TextIOLike
 
-
+ELEMENT_TYPES = {
+    'CELAS1', 'CELAS2', 'CELAS3',
+    'CBUSH', 'CBUSH1D', 'CGAP',
+    'CONROD', 'CROD', 'CTUBE',
+    'CBAR', 'CBEAM', 'CBEND',
+    'CQUAD4', 'CTRIA3', 'CSHEAR', # 'CQUAD144',
+    'CHEXA', 'CPYRAM', 'CPENTA', 'CTETRA',
+    'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',
+    'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',
+}
 class MONPNT1(VectorizedBaseCard):
     """
     +---------+---------+------+-----+-----+-------+------+----+----+
@@ -45,8 +53,7 @@ class MONPNT1(VectorizedBaseCard):
     +---------+---------+------+-----+-----+-------+------+----+----+
     """
     _id_name = 'name'
-    def __init__(self, model: BDF):
-        super().__init__(model)
+    def clear(self) -> None:
         self.name = np.array([], dtype='int32')
 
     #def __len__(self) -> int:
@@ -202,6 +209,137 @@ class MONPNT1(VectorizedBaseCard):
             msg += '        %-8s%-8s%-8s%-8s%-8s%-8s%-8s\n' % (
                 axes, comp, cp, x, y, z,
                 cd)
+            bdf_file.write(msg)
+        return
+
+
+class MONPNT2(VectorizedBaseCard):
+    """NX/MSC Nastran card"""
+    _id_name = 'name'
+    def clear(self) -> None:
+        self.name = np.array([], dtype='int32')
+        self.label = np.array([], dtype='|U72')
+        self.table = np.array([], dtype='|U8')
+        self.element_type = np.array([], dtype='|U8')
+        self.nddl_item = np.array([], dtype='int32')
+        self.element_id = np.array([], dtype='int32')
+
+    def add(self, name: str, label: str, table: str, element_type: str,
+            nddl_item: int, eid: int, comment: str='') -> int:
+        """Creates a MONPNT2 card
+
+         Parameters
+         ----------
+         nddl_item : str (nx)
+             ???
+         """
+        self.cards.append((name, label, table, element_type, nddl_item, eid, comment))
+        self.n += 1
+        return self.n - 1
+
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        name = string(card, 1, 'name')
+
+        label_fields = [labeli for labeli in card[2:8] if labeli is not None]
+        label = ''.join(label_fields).strip()
+        assert len(label) <= 56, label
+
+        table = string(card, 9, 'table')
+        element_type = string(card, 10, 'type')
+        nddl_item = string(card, 11, 'comp/nddl_item')  #  nx = string
+        #nddl_item = integer_or_string(card, 11, 'comp/nddl_item')
+        #nddl_item = integer_or_blank(card, 11, 'nddl_item')
+        eid = integer_or_blank(card, 12, 'eid')
+        #return MONPNT2(name, label, table, Type, nddl_item, eid, comment=comment)
+        self.cards.append((name, label, table, element_type, nddl_item, eid, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        """
+        Table   Item
+        ------  ------
+        STRESS  CQUAD4
+        """
+        ncards = len(self.cards)
+        name = np.zeros(ncards, dtype='|U8')
+        label = np.zeros(ncards, dtype='|U72')
+        table = np.zeros(ncards, dtype='|U8')
+        element_type = np.zeros(ncards, dtype='|U8')
+        nddl_item = np.zeros(ncards, dtype='|U8')
+        element_id = np.zeros(ncards, dtype='int32')
+
+        #table_int = np.zeros(ncards, dtype='int32')
+        #nddl_item_int = np.zeros(ncards, dtype='int32')
+
+        for icard, card in enumerate(self.cards):
+            (namei, labeli, tablei, element_typei, nddl_itemi, eid, comment) = card
+            name[icard] = namei
+            label[icard] = labeli
+            table[icard] = tablei
+            element_type[icard] = element_typei
+            assert tablei in {'STRESS', 'FORCE', 'STRAIN'}, card
+            assert element_typei in ELEMENT_TYPES, card
+            nddl_item[icard] = nddl_itemi
+            element_id[icard] = eid
+        self._save(name, label, table, element_type, nddl_item, element_id)
+        self.sort()
+        self.cards = []
+
+    def _save(self, name, label, table, element_type, nddl_item, element_id):
+        assert len(self.name) == 0, self.name
+        self.name = name
+        self.label = label
+        self.table = table
+        self.element_type = element_type
+        self.nddl_item = nddl_item
+        self.element_id = element_id
+
+    def __apply_slice__(self, monitor: MONPNT2, i: np.ndarray) -> None:  # ignore[override]
+        monitor.n = len(i)
+        monitor.name = self.name[i]
+        monitor.label = self.label[i]
+        monitor.table = self.table[i]
+        monitor.element_type = self.element_type[i]
+        monitor.nddl_item = self.nddl_item[i]
+        monitor.element_id = self.element_id[i]
+
+    #def geom_check(self, missing: dict[str, np.ndarray]):
+        ##mids = hstack_msg([prop.material_id for prop in self.allowed_materials],
+                          ##msg=f'no materials for {self.type}')
+        ##mids.sort()
+        #coords = self.model.coord.coord_id
+        ##all_aecomp_names = self.model.aecomp.name
+        ##aecomp_names = np.unique(self.comp)
+        #ucoords = np.unique(np.hstack([self.cp, self.cd]))
+        #geom_check(self,
+                   #missing,
+                   #coord=(coords, ucoords),
+                   ##aecomp=(all_aecomp_names, aecomp_names),
+                   #)
+
+    @property
+    def max_id(self) -> int:
+        return self.element_id.max()
+
+    def write_file(self, bdf_file: TextIOLike,
+              size: int=8, is_double: bool=False,
+              write_card_header: bool=False) -> None:
+        if len(self.name) == 0:
+            return None
+        size = 8
+        print_card, size = get_print_card_size(size, self.max_id)
+        assert size == 8, size
+
+        for name, label, table, element_type, nddl_item, eid in zip(self.name, self.label, self.table, self.element_type,
+                                                            self.nddl_item, self.element_id):
+            msg = 'MONPNT2 %-8s%s\n' % (name, label)
+            msg += ('        %-8s%-8s%-8s%-8s\n' % (
+                table, element_type, nddl_item, eid
+            ))
+            #card = self.repr_fields()
+            #return self.comment + msg.rstrip() + '\n'
             bdf_file.write(msg)
         return
 
@@ -369,5 +507,3 @@ class MONPNT3(VectorizedBaseCard):
                     #))
             bdf_file.write(msg.rstrip('\n ') + '\n')
         return
-
-#MONPNT2 = MONPNT1

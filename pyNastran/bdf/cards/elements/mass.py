@@ -906,7 +906,8 @@ class CONM1(PointMassElement):
         """hdf5 helper function"""
         self.mass_matrix = np.asarray(self.mass_matrix)
 
-    def __init__(self, eid, nid, mass_matrix, cid=0, comment=''):
+    def __init__(self, eid: int, nid: int, mass_matrix: np.ndarray,
+                 cid: int=0, comment: str=''):
         """
         Creates a CONM1 card
 
@@ -944,7 +945,7 @@ class CONM1(PointMassElement):
         self.cid_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a CONM2 card from ``BDF.add_card(...)``
 
@@ -986,7 +987,7 @@ class CONM1(PointMassElement):
         return CONM1(eid, nid, m, cid=cid, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment: str=''):
         """
         Adds a CONM1 card from the OP2
 
@@ -1024,31 +1025,31 @@ class CONM1(PointMassElement):
         m[5, 5] = m6f  # M66
         return CONM1(eid, nid, m, cid=cid, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool):
         eid = self.eid
         assert isinstance(eid, integer_types), 'eid=%r' % eid
 
-    @staticmethod
-    def Mass():
-        return 0.0
+    def Mass(self) -> float:
+        mass = (self.mass_matrix[0, 0] + self.mass_matrix[1, 1] + self.mass_matrix[2, 2]) / 3.
+        return mass
 
     @staticmethod
-    def Centroid():
+    def Centroid() -> np.ndarray:
         return np.zeros(3, dtype='float64')
 
-    def center_of_mass(self):
+    def center_of_mass(self) -> np.ndarray:
         return self.Centroid()
 
     @property
-    def node_ids(self):
+    def node_ids(self) -> list[int]:
         return [self.Nid()]
 
-    def Nid(self):
+    def Nid(self) -> int:
         if self.nid_ref is not None:
             return self.nid_ref.nid
         return self.nid
 
-    def Cid(self):
+    def Cid(self) -> int:
         if self.cid_ref is not None:
             return self.cid_ref.cid
         return self.cid

@@ -115,7 +115,7 @@ from pyNastran.bdf.cards.aero.aero import (
     AELINK, AESURFS,
     #CAERO2, CAERO3, CAERO4, CAERO5,
     #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    MONPNT2, MONDSP1,
+    MONDSP1,
     #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
 )
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, TRIM, TRIM2, DIVERG
@@ -149,9 +149,8 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
                                #TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
                                #TABRND1, TABRNDG,
                                #DTABLE)
-#from .cards.contact import (
-    #BCRPARA, BCPARA, BCTPARA, BLSEG,
-    #BCTPARM, BCBODY)
+from pyNastran.bdf.cards.contact import (
+    BCRPARA, BCPARA, BCTPARA, BLSEG, BCTPARM, BCBODY)
 #from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
@@ -458,6 +457,10 @@ OBJ_CARDS = {
     'EIGR', 'EIGRL', 'EIGB',
     'EIGC', 'EIGP', 'NXSTRAT',
     'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5',
+    # contact
+    'BCTPARA', 'BCTPARM',
+    # optimization
+    'DOPTPRM',
 }
 
 
@@ -734,7 +737,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'CSSCHD',  ## csschds
             #'DIVERG',  ## divergs
 
-            'MONPNT1', 'MONPNT3', # 'MONPNT2', 'MONDSP1', ## monitor_points
+            'MONPNT1', 'MONPNT2', 'MONPNT3', # 'MONDSP1', ## monitor_points
 
             ## coords
             'CORD1R', 'CORD1C', 'CORD1S',
@@ -775,7 +778,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'DVCREL1', 'DVCREL2',
             'DVPREL1', 'DVPREL2',
             'DVMREL1', 'DVMREL2',
-            #'DOPTPRM',
+            'DOPTPRM',
             'DLINK', 'DCONADD', 'DVGRID',
             'DSCREEN',
 
@@ -883,11 +886,11 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # glue...
             'BGADD',  ## bgadds
             'BGSET',  ## bgset  - glue set (points to BSURF/BSURFS/BCPROP/BCPROPS)
+            'BEDGE',
 
             # not glue...
-            #'BCRPARA',  ## bcrpara
-            #'BCTPARA',  ## bctpara
-            #'BCTPARM', ## bctparm
+            'BCRPARA',  ## bcrpara
+            'BCTPARM', ## bctparm
             'BCTADD',  ## bctadd
             'BCTSET',   ## bctset  - contact_id to source/target_ids
             'BSURF',    ## bsurf   - source/target_id to shell eid
@@ -895,7 +898,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'BCPROP',   ## bcprop  - source/target_id to shell pid
             'BCPROPS',  ## bcprops - source/target_id to solid pid
             'BCONP', ## bconp
-            #'BLSEG', ## blseg - glue edge
+            'BLSEG', ## blseg - glue edge
             'BFRIC', ## bfric
 
             #'TEMPBC',
@@ -2111,7 +2114,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # nx contact
             #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
-            #'BCTPARM' : (BCTPARM, add_methods._add_bctparam_object),
+            'BCTPARM' : (BCTPARM, add_methods._add_bctparm_object),
             #'BCBODY' : (BCBODY, add_methods._add_bcbody_object),
 
             # nx bolts
@@ -2286,9 +2289,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'EIGRL' : (EIGRL, add_methods._add_method_object),
             'EIGC' : (EIGC, add_methods._add_cmethod_object),
             'EIGP' : (EIGP, add_methods._add_cmethod_object),
-
-            #'BCRPARA' : (BCRPARA, add_methods._add_bcrpara_object),
-            #'BCTPARA' : (BCTPARA, add_methods._add_bctpara_object),
 
             # 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
             'BOUTPUT': (Crash, None),
@@ -2589,7 +2589,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             'MATT8' : partial(self._prepare_card, self.matt8),
             'MATT9' : partial(self._prepare_card, self.matt9),
 
-            #'MATHE' : partial(self._prepare_card, self.mathe),  # MOONEY only; no OGDEN, ABOYCE, ...
+            'MATHE' : partial(self._prepare_card, self.mathe),  # MOONEY only; no OGDEN, ABOYCE, ...
             'MATHP' : partial(self._prepare_card, self.mathp),
 
             # thermal materials
@@ -2629,6 +2629,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             # nx glue contact
             'BGSET' : partial(self._prepare_card_by_method, self.bgset.add_card),
             'BGADD' : partial(self._prepare_card_by_method, self.bgadd.add_card),
+            'BEDGE' : partial(self._prepare_card, self.bedge),
 
             # nx general contact
             'BCTSET' : partial(self._prepare_card_by_method, self.bctset.add_card),
@@ -2636,11 +2637,12 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
             # ??? contact
             #'BCPARA' : (BCPARA, add_methods._add_bcpara_object),
-            #'BCTPARM' : (BCTPARM, add_methods._add_bctparam_object),
             #'BCBODY' : (BCBODY, add_methods._add_bcbody_object),
             'BCONP' : partial(self._prepare_card, self.bconp),
             'BFRIC' : partial(self._prepare_card, self.bfric),
-            #'BLSEG' : (BLSEG, add_methods._add_blseg_object),
+            'BLSEG' : partial(self._prepare_card, self.blseg),
+            'BCRPARA' : partial(self._prepare_card, self.bcrpara),
+            'BCTPARA' : (BCTPARA, add_methods._add_bctpara_object),
 
             # pseudo-constraint
             'SUPORT': partial(self._prepare_card_by_method, self.suport.add_set_card),
@@ -2720,7 +2722,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
             #'GUST' : partial(self._prepare_card, self.gust),
 
             'MONPNT1' : partial(self._prepare_card, self.monpnt1),
-            #'MONPNT2' : (MONPNT2, add_methods._add_monpnt_object),
+            'MONPNT2' : partial(self._prepare_card, self.monpnt2),
             'MONPNT3' : partial(self._prepare_card, self.monpnt3),
             #'MONDSP1' : (MONDSP1, add_methods._add_monpnt_object),
 
@@ -4763,9 +4765,8 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
             #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
 
             #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
-            #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_BCRPARA',
-            #'add_BCTPARA', 'add_CAERO',
-            #'add_DIVERG',
+            #'add_AEROS', 'add_AESTAT', 'add_AESURF',
+            #'add_CAERO', 'add_DIVERG',
             # 'add_CSSCHD', 'add_DDVAL',
             #'add_DEQATN', 'add_DTABLE',
             #'add_FLFACT', 'add_FLUTTER', 'add_FREQ',

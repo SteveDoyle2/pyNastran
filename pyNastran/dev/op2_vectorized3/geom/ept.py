@@ -2136,7 +2136,7 @@ class EPT:
         return n2
 
     def _read_pcomp_64_bit(self, data: bytes, n: int) -> tuple[int, list[PCOMP]]:
-        """
+        r"""
         PCOMP(2706,27,287) - the marker for Record 22
 
         1  PID   I  Property identification number

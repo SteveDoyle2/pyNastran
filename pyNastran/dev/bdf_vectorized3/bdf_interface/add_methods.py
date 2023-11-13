@@ -241,3 +241,16 @@ class AddMethods():
             key = list(dti.fields.keys())[0]
             assert key not in old_dti.fields, 'key=%i old_fields=%s fields=%s' % (key, old_dti.fields, dti.fields)
             old_dti.fields[key] = dti.fields[key]
+
+    def _add_bctpara_object(self, card: BCTPARA, allow_overwrites: bool=False) -> None:
+        """adds an BCTPARA object"""
+        key = card.csid
+        self.model.bctpara[key] = card
+        self.model._type_to_id_map[card.type].append(key)
+
+    def _add_bctparm_object(self, card: BCTPARM, allow_overwrites: bool=False) -> None:
+        """adds an BCTPARM object"""
+        key = card.csid
+        self.model.bctparm[key] = card
+        self.model._type_to_id_map[card.type].append(key)
+

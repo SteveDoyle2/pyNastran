@@ -3855,7 +3855,7 @@ class MONPNT2(BaseCard):
         assert self.table in ['STRESS', 'FORCE', 'STRAIN'], self.table
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         name = string(card, 1, 'name')
 
         label_fields = [labeli for labeli in card[2:8] if labeli is not None]

@@ -1735,6 +1735,7 @@ class TestLoads(unittest.TestCase):
         cc = CaseControlDeck(lines, log=model.log)
         model.case_control_deck = cc
         model.validate()
+        model.setup(run_geom_check=True)
         model.cross_reference()
 
 if __name__ == '__main__':  # pragma: no cover

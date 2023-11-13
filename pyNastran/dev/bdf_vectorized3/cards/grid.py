@@ -658,7 +658,7 @@ class GRID(VectorizedBaseCard):
         #self.xyz = np.zeros((0, 3), dtype='float64')
 
     def sort2(self) -> None:  #  pragma: no cover
-        """
+        r"""
         test_bdfv C:\MSC.Software\msc_nastran_docs_2020\tpl6\avl\ship_hull103.dat --skip_mass --skip_nominal
 
         large problem, but it's tricky...

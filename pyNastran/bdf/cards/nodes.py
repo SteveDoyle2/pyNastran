@@ -1182,24 +1182,24 @@ class GRID(BaseCard):
         nid = integer(card, 1, 'nid')
 
         #: Grid point coordinate system
-        cp = integer_or_blank(card, 2, 'cp', 0)
+        cp = integer_or_blank(card, 2, 'cp', default=0)
 
         #: node location in local frame
         xyz = [
-            double_or_blank(card, 3, 'x1', 0.),
-            double_or_blank(card, 4, 'x2', 0.),
-            double_or_blank(card, 5, 'x3', 0.)]
+            double_or_blank(card, 3, 'x1', default=0.),
+            double_or_blank(card, 4, 'x2', default=0.),
+            double_or_blank(card, 5, 'x3', default=0.)]
 
         if nfields > 6:
             #: Analysis coordinate system
-            cd = integer_or_blank(card, 6, 'cd', 0)
+            cd = integer_or_blank(card, 6, 'cd', default=0)
 
             #: SPC constraint
-            ps = components_or_blank(card, 7, 'ps', '')
+            ps = components_or_blank(card, 7, 'ps', default='')
             #u(integer_or_blank(card, 7, 'ps', ''))
 
             #: Superelement ID
-            seid = integer_or_blank(card, 8, 'seid', 0)
+            seid = integer_or_blank(card, 8, 'seid', default=0)
             assert len(card) <= 9, f'len(GRID card) = {len(card):d}\ncard={card}'
         else:
             cd = 0

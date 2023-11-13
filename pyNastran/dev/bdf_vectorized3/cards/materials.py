@@ -3150,7 +3150,7 @@ class MATHE(Material):
     @Material.clear_check
     def clear(self) -> None:
         self.material_id = np.array([], dtype='int32')
-        self.model = np.array([], dtype='|U8')
+        self.hyperelastic_model = np.array([], dtype='|U8')
         self.k = np.array([], dtype='float64')
         self.rho = np.array([], dtype='float64')
         self.texp = np.array([], dtype='float64')
@@ -3179,8 +3179,8 @@ class MATHE(Material):
         #if comment:
             #self.comment = comment
 
-        model = 'MOONEY'
-        self.cards.append((mid, model, rho, texp,
+        hyperelastic_model = 'MOONEY'
+        self.cards.append((mid, hyperelastic_model, k, rho, texp,
                            c10, c01,
                            c20, c11, c02,
                            c30, c21, c12, c03,
@@ -3209,13 +3209,13 @@ class MATHE(Material):
         #|       | C30 |  C21  | C12 | C03 |     |      |
         #+-------+-----+-------+-----+-----+-----+------+
         mid = integer(card, 1, 'mid')
-        model = string_or_blank(card, 2, 'model', default='MOONEY')
+        hyperelastic_model = string_or_blank(card, 2, 'model', default='MOONEY')
         k = double(card, 4, 'k')
         rho = double_or_blank(card, 5, 'rho', default=0.)
         texp = double_or_blank(card, 6, 'texp', default=0.)
 
         # mooney
-        if model == 'MOONEY':
+        if hyperelastic_model == 'MOONEY':
             c10 = double_or_blank(card, 9, 'c10', default=0.)
             c01 = double_or_blank(card, 10, 'c01', default=0.)
 
@@ -3230,10 +3230,10 @@ class MATHE(Material):
             assert len(card) <= 29, f'len(MATHE card) = {len(card):d}\ncard={card}'
         else:  # pragma: no cover
             raise NotImplementedError((model, card))
-        self.cards.append((mid, model, k, rho, texp,
+        self.cards.append((mid, hyperelastic_model, k, rho, texp,
                            c10, c01,
                            c20, c11, c02,
-                           c30, c21, c12, c03))
+                           c30, c21, c12, c03, comment))
         self.n += 1
         return self.n - 1
 
@@ -3241,7 +3241,7 @@ class MATHE(Material):
     def parse_cards(self) -> None:
         ncards = len(self.cards)
         material_id = np.zeros(ncards, dtype='int32')
-        model = np.array([], dtype='|U8')
+        hyperelastic_model = np.zeros(ncards, dtype='|U8')
         k = np.zeros(ncards, dtype='float64')
         rho = np.zeros(ncards, dtype='float64')
         texp = np.zeros(ncards, dtype='float64')
@@ -3267,10 +3267,10 @@ class MATHE(Material):
              c20i, c11i, c02i,
              c30i, c21i, c12i, c03i, comment) = card
 
-            material_id[i] = mid
+            material_id[icard] = mid
             k[icard] = ki
-            model[icard] = modeli
-            if model == 'MOONEY':
+            hyperelastic_model[icard] = modeli
+            if modeli == 'MOONEY':
                 c10[icard] = c10i
                 c01[icard] = c01i
 
@@ -3283,25 +3283,25 @@ class MATHE(Material):
                 c12[icard] = c12i
                 c03[icard] = c03i
             else:  # pragma: no cover
-                raise RuntimeError(model)
+                raise RuntimeError(modeli)
 
-            rho[i] = rhoi
-            texp[i] = texpi
-        self._save(material_id, model, rho, texp,
+            rho[icard] = rhoi
+            texp[icard] = texpi
+        self._save(material_id, hyperelastic_model, k, rho, texp,
               c10, c01,
               c20, c11, c02,
               c30, c21, c12, c03)
         self.sort()
         self.cards = []
 
-    def _save(self, material_id, model, k, rho, texp,
+    def _save(self, material_id, hyperelastic_model, k, rho, texp,
               c10, c01,
               c20, c11, c02,
               c30, c21, c12, c03):
         assert len(self.material_id) == 0, self.material_id
         self.material_id = material_id
 
-        self.model = model
+        self.hyperelastic_model = hyperelastic_model
         self.k = k
         self.rho = rho
         self.texp = texp
@@ -3322,7 +3322,8 @@ class MATHE(Material):
     def __apply_slice__(self, mat: MATHE, i: np.ndarray) -> None:
         mat.n = len(i)
         mat.material_id = self.material_id[i]
-
+        mat.hyperelastic_model = self.hyperelastic_model[i]
+        mat.k = self.k[i]
         mat.rho = self.rho[i]
         mat.texp = self.texp[i]
 
@@ -3354,7 +3355,7 @@ class MATHE(Material):
              c10, c01,
              c20, c11, c02,
              c30, c21, c12, c03) in zip_longest(
-                 self.material_id, self.model, self.k, self.rho, self.texp,
+                 self.material_id, self.hyperelastic_model, self.k, self.rho, self.texp,
                  self.c10, self.c01,
                  self.c20, self.c11, self.c02,
                  self.c30, self.c21, self.c12, self.c03):

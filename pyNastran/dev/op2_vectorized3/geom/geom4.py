@@ -184,16 +184,10 @@ class GEOM4(GeomCommon):
 
     def _read_aset(self, data: bytes, n: int) -> int:
         """ASET(5561,76,215) - Record 1"""
-        if not hasattr(self.op2, 'aset'):
-            self.op2.log.warning('skipping ASET in GEOM4')
-            return len(data)
         return self._read_xset(data, n, 'ASET', ASET, self.op2._add_methods._add_aset_object)
 
     def _read_qset(self, data: bytes, n: int) -> int:
         """QSET(610, 6, 316) - Record 21"""
-        if not hasattr(self.op2, 'qset'):
-            self.op2.log.warning('skipping QSET in GEOM4')
-            return len(data)
         return self._read_xset(data, n, 'QSET', QSET, self.op2._add_methods._add_qset_object)
 
     def _read_aset1(self, data: bytes, n: int) -> int:
@@ -204,9 +198,6 @@ class GEOM4(GeomCommon):
                12345, 0, 1, 2, 3, -1,
                12345, 0, 8, 9)
         """
-        if not hasattr(self.op2, 'aset1'):
-            self.op2.log.warning('skipping ASET1 in GEOM4')
-            return len(data)
         return self._read_xset1(data, n, 'ASET1', ASET1, self.op2._add_methods._add_aset_object)
 
     def _read_xset(self, data, n, card_name, cls, add_method):
@@ -374,27 +365,15 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_bset(self, data: bytes, n: int) -> int:
-        if not hasattr(self.op2, 'bset'):
-            self.op2.log.warning('skipping BSET in GEOM4')
-            return len(data)
         return self._read_xset(data, n, 'BSET', BSET, self.op2._add_methods._add_bset_object)
 
     def _read_bset1(self, data: bytes, n: int) -> int:
-        if not hasattr(self.op2, 'bset1'):
-            self.op2.log.warning('skipping BSET1 in GEOM4')
-            return len(data)
         return self._read_xset1(data, n, 'BSET1', BSET1, self.op2._add_methods._add_bset_object)
 
     def _read_cset(self, data: bytes, n: int) -> int:
-        if not hasattr(self.op2, 'cset'):
-            self.op2.log.warning('skipping CSET in GEOM4')
-            return len(data)
         return self._read_xset(data, n, 'CSET', CSET, self.op2._add_methods._add_cset_object)
 
     def _read_cset1(self, data: bytes, n: int) -> int:
-        if not hasattr(self.op2, 'cset1'):
-            self.op2.log.warning('skipping CSET1 in GEOM4')
-            return len(data)
         return self._read_xset1(data, n, 'CSET1', CSET1, self.op2._add_methods._add_cset_object)
 
     def _read_cyax(self, data: bytes, n: int) -> int:
@@ -489,16 +468,10 @@ class GEOM4(GeomCommon):
 
     def _read_omit1(self, data: bytes, n: int) -> int:
         """OMIT1(4951,63,92) - Record 19"""
-        if not hasattr(self.op2, 'omit1'):
-            self.op2.log.warning('skipping OMIT1 in GEOM4')
-            return len(data)
         return self._read_xset1(data, n, 'OMIT1', OMIT1, self.op2._add_methods._add_omit_object)
 
     def _read_qset1(self, data: bytes, n: int) -> int:
         """QSET1(610,6,316) - Record 22"""
-        if not hasattr(self.op2, 'qset1'):
-            self.op2.log.warning('skipping QSET1 in GEOM4')
-            return len(data)
         return self._read_xset1(data, n, 'QSET1', QSET1, self.op2._add_methods._add_qset_object)
 
     def _read_rbar(self, data: bytes, n: int) -> int:
@@ -919,9 +892,6 @@ class GEOM4(GeomCommon):
              6, 0, 0, 600, -1)
 
         """
-        if not hasattr(self.op2, 'seqset1'):
-            self.op2.log.warning('skipping SEQSET1 in GEOM4')
-            return len(data)
         nbytes = self._read_superxset1(
             data, n,
             'SEQSET1', SEQSET1, self.op2._add_methods._add_seqset_object,
@@ -947,9 +917,7 @@ class GEOM4(GeomCommon):
         op2 = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
-        if not hasattr(self, 'spcoff'):
-            op2.log.warning('skipping SPCOFF in GEOM4')
-            return len(data)
+
         struct_3if = Struct(op2._endian + b'iiif')
         for unused_i in range(nentries):
             edata = data[n:n + 16]
@@ -1102,9 +1070,6 @@ class GEOM4(GeomCommon):
         End THRUFLAG
 
         """
-        if not hasattr(self, 'spcoff1'):
-            self.op2.log.warning('skipping SPCOFF1 in GEOM4')
-            return len(data)
         #nentries = 0
         #nints = (len(data) - n) // 4
         idata = np.frombuffer(data[n:], self.op2.idtype).copy()
@@ -1401,10 +1366,6 @@ class GEOM4(GeomCommon):
         ntotal = 8 * self.factor  # 2*4
         nentries = (len(data) - n) // ntotal
 
-        #if not hasattr(op2, 'suport'):
-            #op2.log.warning('skipping SUPORT in GEOM4')
-            #return len(data)
-
         struct_2i = Struct(op2._endian + mapfmt(b'2i', self.size))
         for unused_i in range(nentries):
             out = list(struct_2i.unpack(data[n:n + ntotal]))
@@ -1422,10 +1383,6 @@ class GEOM4(GeomCommon):
         op2 = self.op2
         nfields = (len(data) - n) // 4 - 2
         out = unpack(op2._endian + b'%ii' % nfields, data[n:n+nfields*4])
-
-        #if not hasattr(op2, 'suport1'):
-            #op2.log.warning('skipping SUPORT1 in GEOM4')
-            #return len(data)
 
         i = 0
         nsuports = 0
@@ -1485,9 +1442,6 @@ class GEOM4(GeomCommon):
 
         """
         op2 = self.op2
-        if not hasattr(op2, 'uset'):
-            op2.log.warning('skipping USET in GEOM4')
-            return len(data)
 
         uset = op2.uset
         struct_3i = Struct(mapfmt(op2._endian + b'3i', self.size))
@@ -1551,9 +1505,6 @@ class GEOM4(GeomCommon):
 
         """
         op2 = self.op2
-        if not hasattr(op2, 'uset1'):
-            op2.log.warning('skipping USET1 in GEOM4')
-            return len(data)
         assert self.factor == 1, self.factor
         nentries = 0
         size = self.size

@@ -6,6 +6,7 @@ import numpy as np
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import expand_thru, _format_comment
+from pyNastran.bdf.cards.collpase_card import collapse_thru, collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, string, parse_components,
     integer_or_string, fields,
@@ -1762,6 +1763,13 @@ class SET3(VectorizedBaseCard):
         all_ids = []
         for icard, card in enumerate(self.cards):
             sid, desci, idsi, comment = card
+            if desci == 'ELEM':
+                desci = 'ELEMENT'
+            elif desci == 'RBEIN':
+                desci = 'RBEin'
+            elif desci == 'RBEEX':
+                desci = 'RBEex'
+
             set_id[icard] = sid
             desc[icard] = desci
             ids2 = split_set3_ids(idsi)
@@ -1957,7 +1965,6 @@ class SESET(VectorizedBaseCard):
 
         seids = array_str(self.seid, size=size)
         #ids_ = array_str(self.node_id, size=size).tolist()
-        from pyNastran.bdf.cards.collpase_card import collapse_thru, collapse_thru_packs
         for seid, inid in zip(seids, self.inid):
             inid0, inid1 = inid
             #ids = ids_[inid0:inid1]
@@ -1978,7 +1985,7 @@ class SESET(VectorizedBaseCard):
                 for pack in doubles:
                     field_packs.append(['SESET', seid] + pack)
             for list_fields in field_packs:
-                assert len(list_fields) < 10, list_fields
+                #assert len(list_fields) < 10, print_card(list_fields)
                 bdf_file.write(print_card(list_fields))
         return
 

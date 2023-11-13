@@ -38,6 +38,6 @@ def get_bdf_model(bdf_filename: BDF_FILETYPE,
     #elif isinstance(bdf_filename, StringIO):
         #model = BDF(log=log, debug=debug)
         #model.read_bdf(bdf_filename, xref=xref)
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError(bdf_filename)
     return model

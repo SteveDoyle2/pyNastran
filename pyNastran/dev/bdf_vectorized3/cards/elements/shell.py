@@ -297,16 +297,16 @@ class ShellElement(Element):
                 #print('pids in pshell', self.model.pshell.property_id)
                 i = np.where(iprop == iprops)[0]
                 pids = self.property_id[i]
-                print('iprop =', iprop, type(iprop))
-                print('pids =', pids, type(pids))
+                #print('iprop =', iprop, type(iprop))
+                #print('pids =', pids, type(pids))
                 propcard = allowed_properties[iprop]
                 prop = propcard.slice_card_by_property_id(pids)
                 log.warning(prop.write(size=8))
 
-        thickness = shell_thickness(self.model,
-                                    self.tflag, self.T,
-                                    self.property_id, self.allowed_properties)
-        inan = np.isnan(thickness)
+        #thickness = shell_thickness(self.model,
+                                    #self.tflag, self.T,
+                                    #self.property_id, self.allowed_properties)
+        #inan = np.isnan(thickness)
         if inan.sum():
             self.model.log.error(thickness[inan])
         assert thickness.sum() > 0., thickness
@@ -1128,6 +1128,7 @@ class CQUAD4(ShellElement):
                 theta[icard] = theta_mcid
             else:
                 mcid[icard] = theta_mcid
+            # setting None as a float -> nan
             T[icard, :] = [T1, T2, T3, T4]
 
         self._save(element_id, property_id, nodes,
@@ -2270,8 +2271,8 @@ class CQUAD(ShellElement):
         self.theta = np.array([], dtype='float64')
 
         # fake
-        self.tflag = np.array([], dtype='int32')
-        self.T = np.array([], dtype='int32')
+        self.tflag = None
+        self.T = None
 
     def add(self, eid: int, pid: int, nids: list[int],
             theta_mcid: int|float=0., comment: str='') -> int:

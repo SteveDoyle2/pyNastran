@@ -78,11 +78,13 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
     size = [8]
     is_double = [False]
     post = -1
+    run_nominal = True
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
                                      check=check,
                                      nastran=nastran,
                                      size=size, is_double=is_double, post=post,
                                      encoding='latin1', crash_cards=crash_cards,
+                                     run_nominal=run_nominal,
                                      dev=True, pickle_obj=True)
     ntotal = len(files)
     nfailed = len(failed_files)

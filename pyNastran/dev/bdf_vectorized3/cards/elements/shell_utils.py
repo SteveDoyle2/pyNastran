@@ -297,38 +297,85 @@ def shell_thickness(model: BDF,
                     allowed_properties: list[Union[PCOMP, PSHELL, PLPLANE]]) -> np.ndarray:
     log = model.log
     thickness = np.full(len(property_id), np.nan, dtype='float64')
+
+    if T is not None:
+        if T.min() == T.max() and tflag.min() == tflag.max():
+            # shortcutting T/tflag
+            ti = T[0, 0]
+            tflagi = tflag[0]
+            tflag0_default = (tflagi == 0 and (ti == 0.0 or np.isnan(ti)))
+            tflag1_default = (tflagi == 1 and ti == 1.0)
+            if tflag0_default or tflag1_default:
+                T = None
+                tflag = None
+        else:
+            nproperties, nnode = T.shape
+
     assert len(allowed_properties) > 0, allowed_properties
+
     for prop in allowed_properties:
         ilookup, iall = searchsorted_filter(prop.property_id, property_id)
         if len(iall) == 0:
+            # no properties are used for the given element
             continue
         ti = prop.total_thickness()
         ti_all = ti[iall]
 
         # set the thickness, even if it's nan
         thickness[ilookup] = ti_all
-        if prop.type != 'PSHELL':
+        if prop.type != 'PSHELL' or T is None:
             continue
 
-        inan = np.isnan(ti_all)
-        if not np.any(inan):
-            continue
+        #inan = np.isnan(ti_all)
+        #if not np.any(inan):
+            #continue
 
         #print('inan', inan)
-        tflag_nan = tflag[ilookup]
-        t_nan = T[ilookup, :]
-        #print('tflag_nan', tflag_nan)
-        #print('t_nan', t_nan)
+        tflagi = tflag[ilookup]
+        Ti = T[ilookup, :].copy()
+        #total_thicknessi = T[ilookup, :].copy()
+        #print('tflagi', tflagi)
+        #print('Ti', Ti)
 
-        i0 = (tflag_nan == 0)
+        i0 = (tflagi == 0)
         i1 = ~i0
         if i0.sum():
-            mean_thickness = t_nan[i0, :].mean(axis=1)
-            ti_all[i0] = mean_thickness
+            # tflag=0 -> T is actual thickness
+            # set nan values to PSHELL thickness -> t
+            Ti0 = Ti[i0, :].copy()
+            inan0 = np.isnan(Ti0) | (Ti0 == 0.0)
+            ti_all0 = ti_all[i0]
+            total_thickness0 = np.column_stack([ti_all0] * nnode)
+            Ti0[inan0] = total_thickness0[inan0]
+            thickness_mean = Ti0.mean(axis=1)
+            thickness0 = thickness_mean
+            #irow0, icol0 = np.where(np.isnan(Ti0)
+            #Ti0[inan0] = 2
+            #mean_thickness = Ti[i0, :].mean(axis=1)
+            ti_all[i0] = thickness0
+
         if i1.sum():
-            scale = t_nan[i1, :].mean(axis=1)
+            # tflag=1 -> T is relative thickness
+            # set nan values to PSHELL thickness -> 1.0
+
+
+            # find the blanks and set them to 1.0
+            #n1 = i1.sum()
+            Ti1 = Ti[i1, :].copy()
+            inan1 = np.isnan(Ti1) | (Ti0 == 0.0)
+            #ti_all1 = np.ones(n1)# ti_all[i1]
+            #relative_thickness1 = np.ones((n1, nnode))
+            Ti1[inan1] = 1.
+            thickness_mean = Ti1.mean(axis=1)
+
+
+            Ti1[inan1] = 1.
+            scale = Ti1.mean(axis=1)
+            #mean_thickness = ti[i1] * Ti1_mean
+
+            #scale = Ti[i1, :].mean(axis=1)
             ti_all[i1] *= scale
-            raise RuntimeError('tflag=1')
+
         #log.error(ti_all)
         # tflag=0: Thickness of element at grid points G1 through G4
         # TFLAG=1:Tthickness becomes a product of Ti and the thickness

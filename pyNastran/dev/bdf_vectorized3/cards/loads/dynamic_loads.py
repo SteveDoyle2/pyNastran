@@ -26,7 +26,8 @@ from pyNastran.bdf.cards.loads.dloads import (
 )
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
-    VectorizedBaseCard, make_idim, hslice_by_idim,
+    VectorizedBaseCard, make_idim,
+    hslice_by_idim, vslice_by_idim,
     parse_load_check, # get_print_card_8_16,
 )
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
@@ -1704,6 +1705,8 @@ class TF(VectorizedBaseCard):
         self.component = np.array([], dtype='int32')
         self.b = np.zeros((0, 3), dtype='float64')
 
+        self.nodes = np.array([], dtype='int32')
+        self.components = np.array([], dtype='int32')
         self.a = np.zeros((0, 3), dtype='float64')
 
     def add(self, tf_id: int,
@@ -1848,9 +1851,9 @@ class TF(VectorizedBaseCard):
         #asdf
         #tf.nnode = self.nnode[i]
         inode = self.inode
-        tf.nodes = hslice_by_idim(i, inode, self.nodes)
-        tf.components = hslice_by_idim(i, inode, self.components)
-        tf.a = hslice_by_idim(i, inode, self.a)
+        tf.nodes = vslice_by_idim(i, inode, self.nodes)
+        tf.components = vslice_by_idim(i, inode, self.components)
+        tf.a = vslice_by_idim(i, inode, self.a)
         tf.nnode = self.nnode[i]
 
     @property
@@ -1859,7 +1862,12 @@ class TF(VectorizedBaseCard):
 
     @property
     def max_id(self) -> int:
-        return max(self.tf_id.max(), self.node_id.max(), self.nodes.max(),)
+        tf_id = self.tf_id.max()
+        node_id = self.node_id.max()
+        nodes = 1
+        if len(self.nodes):
+            nodes = self.nodes.max()
+        return max(tf_id, node_id, nodes)
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -1886,20 +1894,20 @@ class TF(VectorizedBaseCard):
                                                                             bb_, self.inode):
             list_fields = ['TF', tf_id, nid, comp, b0, b1, b2, None, None]
 
-            nidsi = nids_[inode0:inode1]
-            componentsi = components_[inode0:inode1]
-            aa = aa_[inode0:inode1, :]
+            if inode0 != inode1:
+                nidsi = nids_[inode0:inode1]
+                componentsi = components_[inode0:inode1]
+                aa = aa_[inode0:inode1, :]
 
-            nidsi = self.nodes[inode0:inode1]
-            componentsi = self.components[inode0:inode1]
-            aa = self.a[inode0:inode1, :]
-            for nid1, comp1, (a0, a1, a2) in zip(nidsi, componentsi, aa):
-                list_fields += [nid1, comp1, a0, a1, a2, None, None, None]
+                nidsi = self.nodes[inode0:inode1]
+                componentsi = self.components[inode0:inode1]
+                aa = self.a[inode0:inode1, :]
+                for nid1, comp1, (a0, a1, a2) in zip(nidsi, componentsi, aa):
+                    list_fields += [nid1, comp1, a0, a1, a2, None, None, None]
 
-            #list_fields = ['TF', self.sid, self.nid0, self.c, self.b0, self.b1, self.b2, None, None]
-            #for grid, c, (a0, a1, a2) in zip(self.nids, self.components, aa):
-                #list_fields += [grid, c, a0, a1, a2, None, None, None]
-
+                #list_fields = ['TF', self.sid, self.nid0, self.c, self.b0, self.b1, self.b2, None, None]
+                #for grid, c, (a0, a1, a2) in zip(self.nids, self.components, aa):
+                    #list_fields += [grid, c, a0, a1, a2, None, None, None]
             bdf_file.write(print_card(list_fields))
         return
 
@@ -2334,7 +2342,7 @@ class QVECT(VectorizedBaseCard):
         nelement = np.zeros(ncards, dtype='int32')
         q0 = np.full(ncards, np.nan, dtype='float64')
         t_source = np.full(ncards, np.nan, dtype='float64')
-        ce = np.full(ncards, np.nan, dtype='int32')
+        ce = np.zeros(ncards, dtype='int32')
         vector = np.full((ncards, 3), np.nan, dtype='float64')
         tableds = np.full((ncards, 3), 0, dtype='int32')
 
@@ -2395,6 +2403,23 @@ class QVECT(VectorizedBaseCard):
     @property
     def ielement(self) -> np.ndarray:
         return make_idim(self.n, self.nelement)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        model = self.model
+        all_node_ids = self.model.grid.node_id
+        all_coord_ids = self.model.coord.coord_id
+        uce = np.unique(self.ce)
+        utabled = np.unique(self.tableds)
+        uthermal_element = np.unique(self.element)
+        unode = np.unique(self.control_id)
+
+        geom_check(
+            self,
+            missing,
+            node=(all_node_ids, unode),
+            coord=(all_coord_ids, uce),
+            #thermal_element=(all_thermal_elements, uthermal_element),
+        )
 
     @property
     def max_id(self) -> int:

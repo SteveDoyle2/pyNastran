@@ -897,8 +897,9 @@ class BCRPARA(BaseCard):
         crid = 1
         return BCRPARA(crid, offset=None, surf='TOP', Type='FLEX', grid_point=0, comment='')
 
-    def __init__(self, crid, offset=None, surf='TOP', Type='FLEX', grid_point=0,
-                 comment=''):
+    def __init__(self, crid: int, offset: Optional[float]=None,
+                 surf: str='TOP', Type: str='FLEX', grid_point: int=0,
+                 comment: str=''):
         """
         Creates a BCRPARA card
 
@@ -950,7 +951,7 @@ class BCRPARA(BaseCard):
         self.grid_point = grid_point
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a BCRPARA card from ``BDF.add_card(...)``
 
@@ -963,10 +964,10 @@ class BCRPARA(BaseCard):
 
         """
         crid = integer(card, 1, 'crid')
-        surf = string_or_blank(card, 2, 'surf', 'TOP')
-        offset = double_or_blank(card, 3, 'offset', None)
-        Type = string_or_blank(card, 4, 'type', 'FLEX')
-        grid_point = integer_or_blank(card, 5, 'grid_point', 0)
+        surf = string_or_blank(card, 2, 'surf', default='TOP')
+        offset = double_or_blank(card, 3, 'offset', default=None)
+        Type = string_or_blank(card, 4, 'type', default='FLEX')
+        grid_point = integer_or_blank(card, 5, 'grid_point', default=0)
         return BCRPARA(crid, surf=surf, offset=offset, Type=Type,
                        grid_point=grid_point, comment=comment)
 

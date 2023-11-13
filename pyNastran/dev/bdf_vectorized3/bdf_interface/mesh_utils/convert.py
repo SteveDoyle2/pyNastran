@@ -63,17 +63,26 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
 
     }
     CARDS_TO_SKIP = {
-        'SPOINT', 'EPOINT', 'CTUBE', 'CROD',
+        'SPOINT', 'EPOINT',
+        # elements/properties
+        'CTUBE', 'CROD',
+        'CELAS1', 'CELAS3', 'CDAMP1', 'CDAMP3', 'CBUSH1D',
+        'CQUAD', 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CHEXCZ', 'PSOLID', 'PLSOLID',
+        # sets
         'SET1', 'ASET', 'BSET', 'CSET', 'OMIT', 'QSET', 'USET', 'SUPORT',
         'SEBSET', 'SECSET', 'SEQSET', 'RELEASE',
+        # plotting
         'PLOTEL', 'PLOTEL3', 'PLOTEL4', 'PLOTEL6', 'PLOTEL8',
         'PLOTTET', 'PLOTPEN', 'PLOTPYR', 'PLOTHEX',
+        # constraints
         'SPCADD', 'MPCADD', 'DCONADD', 'NSMADD',
-        'CQUAD', 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CHEXCZ', 'PSOLID', 'PLSOLID',
-        'LOAD', 'DLOAD',
         'SPC1', 'SPCOFF',
-        'CELAS1', 'CELAS3', 'CDAMP1', 'CDAMP3', 'CBUSH1D',
+        # loads
+        'LOAD', 'DLOAD',
+        #  contact
         'BSURF', 'BSURFS', 'BCPROP', 'BCPROPS', 'BGADD', 'BCTADD',
+        'BLSEG'
+        # superelements
         'SESET',
     }
     #HARD_CARDS = {
@@ -101,7 +110,7 @@ def convert(model: BDF, units_to: list[str], units: list[str]) -> None:
         # optimization
         'DVGRID',
         # contact
-        'BGSET', 'BCTSET', 'BCONP',
+        'BGSET', 'BCTSET', 'BCONP', 'BEDGE',
     }
     cards = [card for card in model._cards_to_setup
              if card.n and card.type not in CARDS_TO_SKIP]

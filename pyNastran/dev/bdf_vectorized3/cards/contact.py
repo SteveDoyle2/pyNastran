@@ -8,12 +8,14 @@ import numpy as np
 #from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.bdf.cards.collpase_card import collapse_thru, collapse_thru_packs
-from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard, hslice_by_idim, make_idim
+from pyNastran.dev.bdf_vectorized3.cards.base_card import (
+    VectorizedBaseCard, hslice_by_idim, vslice_by_idim, make_idim)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double,
-    integer_or_blank, double_or_blank,
+    integer_or_blank, double_or_blank, string_or_blank,
     #components_or_blank, parse_components,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import lax_double_or_blank
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
@@ -33,7 +35,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
-class ElementPropertySet(VectorizedBaseCard):
+class ElementPropertyNodeSet(VectorizedBaseCard):
     def clear(self):
         self.sid = np.array([], dtype='int32')
         self.n_ids = np.array([], dtype='int32')
@@ -198,7 +200,8 @@ class ElementPropertySet(VectorizedBaseCard):
                 #assert np.array_equal(actual_nids, node_id)
         #return inid
 
-class PropertySet(ElementPropertySet):
+
+class PropertySet(ElementPropertyNodeSet):
     @property
     def nproperty(self) -> np.ndarray:
         return self.n_ids
@@ -222,7 +225,8 @@ class PropertySet(ElementPropertySet):
     def iproperty(self) -> np.ndarray:
         return self.i_id
 
-class ElementSet(ElementPropertySet):
+
+class ElementSet(ElementPropertyNodeSet):
     @property
     def nelement(self) -> np.ndarray:
         return self.n_ids
@@ -277,6 +281,39 @@ class BCPROPS(PropertySet):
         geom_check(self,
                    missing,
                    property_id=(pid, self.property_id),)
+
+
+class NodeSet(ElementPropertyNodeSet):
+    @property
+    def nnode(self) -> np.ndarray:
+        return self.n_ids
+
+    @nnode.setter
+    def nnode(self, nnode: np.ndarray) -> None:
+        self.n_ids = nnode
+
+    @property
+    def node_id(self) -> np.ndarray:
+        return self.ids
+
+    @node_id.setter
+    def node_id(self, node_id: np.ndarray) -> None:
+        self.ids = node_id
+
+    def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        used_dict['node_id'].append(self.node_id)
+
+    @property
+    def inode(self) -> np.ndarray:
+        return self.i_id
+
+class BLSEG(NodeSet):
+    """Defines a glue or contact edge region or a curve for slideline contact via grid numbers."""
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nids = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nids, self.node_id),)
 
 
 class BGSET(VectorizedBaseCard):
@@ -877,11 +914,13 @@ class BCONP(VectorizedBaseCard):
             a comment for the card
 
         """
+        fdouble_or_blank = lax_double_or_blank if self.model.is_lax_parser else double_or_blank
+
         contact_id = integer(card, 1, 'contact_id')
         slave = integer(card, 2, 'slave')
         master = integer(card, 3, 'master')
-        sfac = double_or_blank(card, 5, 'sfac', default=1.0)
-        friction_id = integer_or_blank(card, 6, 'fric_id')
+        sfac = fdouble_or_blank(card, 5, 'sfac', default=1.0)
+        friction_id = integer_or_blank(card, 6, 'fric_id', default=0)
         ptype = integer_or_blank(card, 7, 'ptype', default=1)
         cid = integer_or_blank(card, 8, 'cid', default=0)
         #return BCONP(contact_id, slave, master, sfac, friction_id, ptype, cid,
@@ -910,6 +949,7 @@ class BCONP(VectorizedBaseCard):
         #comment = {}
         for icard, card in enumerate(self.cards):
             (contact_idi, slave_idi, master_idi, sfaci, friction_idi, ptypei, cid, commenti) = card
+            print(card)
 
             contact_id[icard] = contact_idi
             slave_id[icard] = slave_idi
@@ -990,6 +1030,7 @@ class BCONP(VectorizedBaseCard):
             bdf_file.write(print_card(list_fields))
         return
 
+
 class BFRIC(VectorizedBaseCard):
     """
     Slideline Contact Friction
@@ -1027,8 +1068,10 @@ class BFRIC(VectorizedBaseCard):
             a comment for the card
 
         """
+        fdouble_or_blank = lax_double_or_blank if self.model.is_lax_parser else double_or_blank
+
         friction_id = integer(card, 1, 'friction_id')
-        fstiff = double_or_blank(card, 2, 'fstiff')
+        fstiff = fdouble_or_blank(card, 2, 'fstiff', default=np.nan)  # default=program selected
         #
         mu1 = double(card, 4, 'mu1')
         #return BFRIC(friction_id, mu1, fstiff=fstiff, comment=comment)
@@ -1112,5 +1155,391 @@ class BFRIC(VectorizedBaseCard):
         for friction_id, fstiff, mu1 in zip(friction_ids, fstiffs, mu1s):
             list_fields = [
                 'BFRIC', friction_id, fstiff, None, mu1]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class BCRPARA(VectorizedBaseCard):
+    """
+    +---------+------+------+--------+------+-----+---+---+---+----+
+    |    1    |   2  |   3  |   4    |   5  |  6  | 7 | 8 | 9 | 10 |
+    +=========+======+======+========+======+=====+===+===+===+====+
+    | BCRPARA | CRID | SURF | OFFSET | TYPE | GP  |   |   |   |    |
+    +---------+------+------+--------+------+-----+---+---+---+----+
+    """
+    _id_name = 'contact_region_id'
+    def clear(self):
+        #: CRID Contact region ID. (Integer > 0)
+        self.contact_region_id = np.array([], dtype='int32')
+
+        #: SURF Indicates the contact side. See Remark 1. (Character = "TOP" or
+        #: "BOT"; Default = "TOP")
+        self.surf = np.array([], dtype='|U8')
+
+        #: Offset distance for the contact region. See Remark 2. (Real > 0.0,
+        #: Default =OFFSET value in BCTPARA entry)
+        self.offset = np.array([], dtype='float64')
+
+        #: Indicates whether a contact region is a rigid surface if it is used as a
+        #: target region. See Remarks 3 and 4. (Character = "RIGID" or "FLEX",
+        #: Default = "FLEX"). This is not supported for SOL 101.
+        self.surface_type = np.array([], dtype='|U8')
+
+        #: Control grid point for a target contact region with TYPE=RIGID or
+        #: when the rigid-target algorithm is used. The grid point may be
+        #: used to control the motion of a rigid surface. (Integer > 0)
+        #: This is not supported for SOL 101.
+        self.grid_point = np.array([], dtype='int32')
+
+    def add(self, contact_region_id: int, offset: Optional[float]=None,
+            surf: str='TOP', surface_type: str='FLEX', grid_point: int=0,
+            comment: str='') -> int:
+        """Creates a BFRIC card
+
+        Creates a BCRPARA card
+
+
+        Parameters
+        ----------
+        crid : int
+            CRID Contact region ID.
+        offset : float; default=None
+            Offset distance for the contact region (Real > 0.0).
+            None : OFFSET value in BCTPARA entry
+        surf : str; default='TOP'
+            SURF Indicates the contact side. See Remark 1.  {'TOP', 'BOT'; )
+        Type : str; default='FLEX'
+            Indicates whether a contact region is a rigid surface if it
+            is used as a target region. {'RIGID', 'FLEX'}.
+            This is not supported for SOL 101.
+        grid_point : int; default=0
+            Control grid point for a target contact region with TYPE=RIGID
+            or when the rigid-target algorithm is used.  The grid point
+            may be used to control the motion of a rigid surface.
+            (Integer > 0).  This is not supported for SOL 101.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        self.cards.append((contact_region_id, offset, surf, surface_type, grid_point, comment))
+        self.n += 1
+        return self.n - 1
+
+    #def remove_unused(self)
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a BCONP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        """
+        Adds a BCRPARA card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        contact_region_id = integer(card, 1, 'crid')
+        surf = string_or_blank(card, 2, 'surf', default='TOP')
+        offset = double_or_blank(card, 3, 'offset', default=None)
+        surface_type = string_or_blank(card, 4, 'type', default='FLEX')
+        grid_point = integer_or_blank(card, 5, 'grid_point', default=0)
+        #return BCRPARA(crid, surf=surf, offset=offset, Type=Type,
+                       #grid_point=grid_point, comment=comment)
+        self.cards.append((contact_region_id, offset, surf,
+                           surface_type, grid_point, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+
+        #idtype = self.model.idtype
+        #fdtype = self.model.fdtype
+        contact_region_id = np.zeros(ncards, dtype='int32')
+        offset = np.zeros(ncards, dtype='float64')
+        surf = np.zeros(ncards, dtype='|U8')
+        surface_type = np.zeros(ncards, dtype='|U8')
+        grid_point = np.zeros(ncards, dtype='int32')
+
+        #comment = {}
+        for icard, card in enumerate(self.cards):
+            (contact_region_idi, offseti, surfi,
+             surface_typei, grid_pointi, commenti) = card
+
+            contact_region_id[icard] = contact_region_idi
+            offset[icard] = offseti
+            surf[icard] = surfi
+            surface_type[icard] = surface_typei
+            grid_point[icard] = grid_pointi
+            #if commenti:
+                #comment[i] = commenti
+                #comment[nidi] = commenti
+
+        self._save(contact_region_id, offset, surf, surface_type, grid_point)
+        self.sort()
+        self.cards = []
+
+    def _save(self, contact_region_id, offset, surf, surface_type, grid_point) -> None:
+        ncards_existing = len(self.contact_region_id)
+        if ncards_existing != 0:
+            contact_region_id = np.hstack([self.contact_region_id, contact_region_id])
+            offset = np.hstack([self.offset, offset])
+            surf = np.hstack([self.surf, surf])
+            surface_type = np.hstack([self.surface_type, surface_type])
+            grid_point = np.hstack([self.grid_point, grid_point])
+        #if comment:
+            #self.comment.update(comment)
+        self.contact_region_id = contact_region_id
+        self.offset = offset
+        self.surf = surf
+        self.surface_type = surface_type
+        self.grid_point = grid_point
+        self.n = len(self.contact_region_id)
+
+    #def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        #asd
+        #contact_regions = np.hstack([self.source_ids, self.target_ids])
+        #used_dict['contact_set_id'].append(contact_regions)
+
+    #def convert(self, xyz_scale: float=1.0, **kwargs) -> None:
+        #pass
+        #self.search_distance *= xyz_scale
+
+    def __apply_slice__(self, bcrpara: BCRPARA, i: np.ndarray) -> None:
+        #self._slice_comment(bcrpara, i)
+        bcrpara.n = len(i)
+        bcrpara.contact_region_id = self.contact_region_id[i]
+        bcrpara.surf = self.surf[i]
+        bcrpara.offset = self.offset[i]
+        bcrpara.surface_type = self.surface_type[i]
+        bcrpara.grid_point = self.grid_point[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        nids = self.model.grid.node_id
+        geom_check(self,
+                   missing,
+                   node=(nids, self.grid_point), filter_node0=True)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.contact_region_id.max(), self.grid_point.max())
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if self.n == 0:
+            return
+        print_card, size = get_print_card_size(size, self.max_id)
+        contact_ids = array_str(self.contact_region_id, size=size)
+        offsets = array_float(self.offset, size=size, is_double=False)
+        grid_points = array_str(self.grid_point, size=size)
+
+        for contact_id, surf, offset, surface_type, grid_point in zip(contact_ids, self.surf,
+                                                                      offsets, self.surface_type, grid_points):
+            list_fields = ['BCRPARA', contact_id, surf, offset, surface_type, grid_point]
+            bdf_file.write(print_card(list_fields))
+        return
+
+
+class BEDGE(VectorizedBaseCard):
+    """
+    Defines a Region of Element Edges
+    Defines a region of element edges for:
+     - glue (BGSET entry)
+     - contact (BCTSET entry)
+     - fluid pressure load (PLOADFP entry)
+     - wetted edges for a Co-simulation (CSMSET entry)
+
+    +-------+------+-------+--------+--------+-------+------+--------+--------+
+    |   1   |   2  |   3   |    4   |    5   |   6   |   7  |   8    |    9   |
+    +=======+======+=======+========+========+=======+======+========+========+
+    | BEDGE |  ID  |  EID1 | GID1,1 | GID1,2 |       | EID2 | GID2,1 | GID2,2 |
+    +-------+------+-------+--------+--------+-------+------+--------+--------+
+    |       |      |  EID3 | GID3,1 | GID3,2 | -etc- |      |        |        |
+    +-------+------+-------+--------+--------+-------+------+--------+--------+
+
+    """
+    _id_name = 'bedge_id'
+    def clear(self):
+        self.bedge_id = np.array([], dtype='int32')
+        self.elements = np.array([], dtype='int32')
+        self.nelement = np.array([], dtype='int32')
+        self.nodes = np.array([], dtype='int32')
+
+    def add(self, bedge_id: int,
+            eids: list[int],
+            grids: list[tuple[int, int]],
+            comment: str='') -> int:
+        """Creates a BEDGE card"""
+        self.cards.append((bedge_id, eids, grids, comment))
+        self.n += 1
+        return self.n - 1
+
+    #def remove_unused(self)
+    def add_card(self, card: BDFCard, comment: str='') -> int:
+        """
+        Adds a BCONP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #|   1   |   2  |   3   |    4   |    5   |   6   |   7  |   8    |    9   |
+        #| BEDGE |  ID  |  EID1 | GID1,1 | GID1,2 |       | EID2 | GID2,1 | GID2,2 |
+        #|       |      |  EID3 | GID3,1 | GID3,2 | -etc- |      |        |        |
+        bedge_id = integer(card, 1, 'bedge_id')
+        nfields = len(card) - 1
+
+        nlines = nfields // 8
+        if nfields % 8:
+            nlines += 1
+
+        ifield = 1
+        eids = []
+        nids = []
+        neids = 1
+        for iline in range(nlines):
+            i0 = iline * 8 + ifield
+            eid = integer_or_blank(card, i0, f'eid_{neids}', default=0)
+            if eid:
+                nid1 = integer(card, i0+1, f'nid1_{neids}')
+                nid2 = integer(card, i0+2, f'nid2_{neids}')
+                eids.append(eid)
+                nids.append((nid1, nid2))
+            neids += 1
+
+            i0 += 4
+            eid = integer_or_blank(card, i0, f'eid_{neids}', default=0)
+            if eid:
+                nid1 = integer(card, i0+1, f'nid1_{neids}')
+                nid2 = integer(card, i0+2, f'nid2_{neids}')
+                eids.append(eid)
+                nids.append((nid1, nid2))
+            neids += 1
+
+        self.cards.append((bedge_id, eids, nids, comment))
+        self.n += 1
+        return self.n - 1
+
+    @VectorizedBaseCard.parse_cards_check
+    def parse_cards(self) -> None:
+        ncards = len(self.cards)
+        if self.debug:
+            self.model.log.debug(f'parse {self.type}')
+
+        #idtype = self.model.idtype
+        #fdtype = self.model.fdtype
+        bedge_id = np.zeros(ncards, dtype='int32')
+        nelement = np.zeros(ncards, dtype='int32')
+
+        #comment = {}
+        element_list = []
+        nodes_list = []
+        for icard, card in enumerate(self.cards):
+            (bedge_idi, eidsi, nidsi, commenti) = card
+            bedge_id[icard] = bedge_idi
+            nelement[icard] = len(eidsi)
+            element_list.extend(eidsi)
+            nodes_list.extend(nidsi)
+            #if commenti:
+                #comment[i] = commenti
+                #comment[nidi] = commenti
+
+        element_id = np.array(element_list, dtype='int32')
+        nodes = np.array(nodes_list, dtype='int32')
+        assert nodes.ndim == 2, nodes.shape
+        self._save(bedge_id, nelement, element_id, nodes)
+        self.sort()
+        self.cards = []
+
+    def _save(self, bedge_id, nelement, element_id, nodes) -> None:
+        ncards_existing = len(self.bedge_id)
+        if ncards_existing != 0:
+            bedge_id = np.hstack([self.bedge_id, bedge_id])
+            nelement = np.hstack([self.nelement, nelement])
+            element_id = np.hstack([self.element_id, element_id])
+            nodes = np.hstack([self.nodes, nodes])
+        #if comment:
+            #self.comment.update(comment)
+        self.bedge_id = bedge_id
+        ielement = self.ielement
+        self.nelement = nelement
+        self.element_id = element_id
+        self.nodes = nodes
+        self.n = len(self.bedge_id)
+
+    #def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
+        #asd
+        #contact_regions = np.hstack([self.source_ids, self.target_ids])
+        #used_dict['contact_set_id'].append(contact_regions)
+
+    def convert(self, **kwargs) -> None:
+        pass
+
+    def __apply_slice__(self, bedge: BEDGE, i: np.ndarray) -> None:
+        #self._slice_comment(bedge, i)
+        bedge.bedge_id = self.bedge_id[i]
+        ielement = self.ielement
+        bedge.element_id = hslice_by_idim(i, ielement, self.element_id)
+        bedge.nodes = vslice_by_idim(i, ielement, self.nodes)
+        bedge.element_id = self.element_id[i]
+        bedge.n = len(i)
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        """
+        Defines a region of element edges for:
+         - glue (BGSET entry)
+         - contact (BCTSET entry)
+         - fluid pressure load (PLOADFP entry)
+         - wetted edges for a Co-simulation (CSMSET entry)
+        """
+        nids = self.model.grid.node_id
+        unids = np.unique(self.nodes.ravel())
+        geom_check(self,
+                   missing,
+                   node=(nids, unids))
+
+    @property
+    def ielement(self) -> np.ndarray:
+        return make_idim(self.n, self.nelement)
+
+    @property
+    def max_id(self) -> int:
+        return max(self.bedge_id.max(), self.element_id.max(), self.nodes.max())
+
+    def write_file(self, bdf_file: TextIOLike,
+                   size: int=8, is_double: bool=False,
+                   write_card_header: bool=False) -> None:
+        if self.n == 0:
+            return
+        print_card, size = get_print_card_size(size, self.max_id)
+        bedge_ids = array_str(self.bedge_id, size=size).tolist()
+        element_id_ = array_str(self.element_id, size=size).tolist()
+        nodes_ = array_str(self.nodes, size=size)
+
+        for bedge_id, (ieid0, ieid1) in zip(bedge_ids, self.ielement):
+            list_fields = ['BEDGE', bedge_id]
+            element_id = element_id_[ieid0:ieid1]
+            nodes = nodes_[ieid0:ieid1, :].tolist()
+            for eid, (nid1, nid2) in zip(element_id, nodes):
+                list_fields.extend([eid, nid1, nid2, None])
             bdf_file.write(print_card(list_fields))
         return

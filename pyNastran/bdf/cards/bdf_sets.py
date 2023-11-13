@@ -1433,6 +1433,7 @@ class SET3(Set):
 
         #:  Identifiers of grids points, elements, points or properties.
         #:  (Integer > 0)
+        ids = [idi for idi in ids if idi is not None]
         self.ids = expand_thru(ids, set_fields=False, sort_fields=False)
         self.ids_ref = None
         self.xref_type = None
@@ -1491,7 +1492,7 @@ class SET3(Set):
         """
         sid = integer(card, 1, 'sid')
         desc = string(card, 2, 'desc')
-        ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
+        ids = fields(integer_string_or_blank, card, 'ID', i=3, j=len(card))
         return SET3(sid, desc, ids, comment=comment)
 
     def union(self, set3):

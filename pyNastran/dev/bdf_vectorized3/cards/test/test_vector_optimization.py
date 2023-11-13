@@ -180,7 +180,7 @@ class TestOpt(unittest.TestCase):
         model.cross_reference()
         save_load_deck(model)
 
-    def _test_doptprm(self):
+    def test_doptprm(self):
         """tests a doptprm"""
         #DOPTPRM    CONV1  .00001  DELOBJ .000001  DESMAX     100      P1       1
         #              P2      13

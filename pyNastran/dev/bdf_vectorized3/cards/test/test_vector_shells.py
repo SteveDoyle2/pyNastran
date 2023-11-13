@@ -176,7 +176,8 @@ class TestShells(unittest.TestCase):
         self.assertEqual(ctria3.mass(), mass)
         self.assertAlmostEqual(ctria3.mass_per_area(), mass / A)
         self.assertEqual(ctria3.area(), A)
-        self.assertAlmostEqual(ctria3.total_thickness(), t)
+        thicknessi = ctria3.total_thickness()
+        assert np.allclose(thicknessi, t)
         self.assertEqual(ctria3.mass_per_area(), mass / A)
         self.assertEqual(ctria3.zoffset, z0_elem)
         #self.assertEqual(ctria3.mass_material_id(), mid)
@@ -282,6 +283,46 @@ class TestShells(unittest.TestCase):
 
         model = BDF(debug=False)
         self._make_ctria3(model, rho, nu, G, E, t, nsm)
+
+    def test_pshell_02_tflag0(self):
+        """"""
+        model = BDF(debug=True, log=None, mode='msc')
+        card_lines = ["PSHELL  1       1       .050    1               1"]
+        model.add_card_lines(card_lines, 'PSHELL', comment='', has_none=True)
+        card_lines = [
+            "CQUAD4  1       1       1       2       10      9                       +M00000",
+            "+M00000                  0.0     0.0     .041    .041",
+        ]
+        model.add_card_lines(card_lines, 'CQUAD4', comment='', has_none=True)
+
+        mid = 1
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, alpha=0.0, tref=0.0,
+                       ge=0.0, St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(10, [1., 1., 0.])
+        model.add_grid(9, [0., 1., 0.])
+
+        model.setup(run_geom_check=True)
+        cquad4 = model.cquad4
+        pshell = model.pshell
+        assert np.allclose(pshell.t, 0.05)
+
+        #The continuation is optional. If it is not supplied, then
+        # T1 through T4 will be set equal to the value of T on the
+        # PSHELL entry.
+
+        #print(cquad4.get_stats())
+        total_thickness = cquad4.total_thickness()
+        #print('total_thickness=', total_thickness)
+        #tlow = 0.041 / 2
+        tavg = (0.041 + 0.05) / 2.
+        #T      : array([[0., 0., 0.041, 0.041]])
+        #tflag  : array([0], dtype=int8)
+        assert np.allclose(tavg, total_thickness), (tavg, total_thickness)
 
     def test_cquad4_01(self):
         """CQUAD4/PSHELL"""
@@ -1235,6 +1276,7 @@ class TestShells(unittest.TestCase):
         str(model.cquad4)
 
         eid = 5
+        # relative
         cquad4 = model.add_cquad4(eid, pid, [1, 2, 3, 4],
                                   tflag=1, T1=2., T2=2., T3=2., T4=2.)
         str(model.cquad4)
@@ -1245,6 +1287,7 @@ class TestShells(unittest.TestCase):
         str(model.ctria3)
 
         eid = 7
+        # relative
         ctria3_id = model.add_ctria3(eid, pid, [1, 2, 3],
                                      tflag=1, T1=2., T2=2., T3=2.)
         str(model.ctria3)

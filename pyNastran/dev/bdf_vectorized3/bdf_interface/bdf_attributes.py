@@ -97,7 +97,7 @@ from pyNastran.dev.bdf_vectorized3.cards.materials_dep import (
 from pyNastran.dev.bdf_vectorized3.cards.contact import (
     BSURF, BSURFS, BCPROP, BCPROPS,
     BGSET, BCTSET, BGADD, BCTADD,
-    BCONP, BFRIC)
+    BCONP, BFRIC, BLSEG, BCRPARA, BEDGE)
 from pyNastran.dev.bdf_vectorized3.cards.coord import COORD
 from pyNastran.dev.bdf_vectorized3.cards.constraints import (
     SPC, SPC1, SPCADD,
@@ -111,13 +111,12 @@ from pyNastran.dev.bdf_vectorized3.cards.elements.rigid import (
     RBE1, RBE2, RBE3,
     #RSSCON,
 )
-from pyNastran.dev.bdf_vectorized3.cards.monitor import MONPNT1, MONPNT3
+from pyNastran.dev.bdf_vectorized3.cards.monitor import MONPNT1, MONPNT2, MONPNT3
 #from pyNastran.dev.bdf_vectorized3.cards.aero.aero import (
     #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5, CAERO7,
     #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
     #AECOMP, AECOMPL, AELIST, AEFACT, FLFACT, AEPARM, AELINK, AESTAT,
-    #MONPNT2,
     #GUST, AESURF, AESURFS, CSSCHD, TRIM)
 from pyNastran.dev.bdf_vectorized3.cards.optimization import (
     DESVAR, DLINK, DVGRID,
@@ -223,6 +222,11 @@ class BDFAttributes:
         self.bsurfs = BSURFS(self)    # source/target_id to solid eid
         self.bcprop = BCPROP(self)    # source/target_id to shell pid
         self.bcprops = BCPROPS(self)  # source/target_id to solid pid
+        self.blseg = BLSEG(self)
+        self.bcrpara = BCRPARA(self)
+        self.bedge = BEDGE(self)
+        self.bctpara = {}
+        self.bctparm = {}
 
         self.bconp = BCONP(self)      # sideline contact
         self.bfric = BFRIC(self)      # friction for BCONP
@@ -254,8 +258,8 @@ class BDFAttributes:
         self.nxstrats: dict[int, NXSTRAT] = {}
 
         # monitor
-        #self.monpnt2 = MONPNT2(self)  # not supported
         self.monpnt1 = MONPNT1(self)
+        self.monpnt2 = MONPNT2(self)
         self.monpnt3 = MONPNT3(self)
 
         # aero geometry
@@ -821,7 +825,7 @@ class BDFAttributes:
     @property
     def hyperelastic_material_cards(self) -> list[Any]:
         materials = [
-            #self.mathe,
+            self.mathe,
             self.mathp,
         ]
         return materials
@@ -977,7 +981,7 @@ class BDFAttributes:
     @property
     def monitor_point_cards(self) -> list[Any]:
         monitor_points = [
-            self.monpnt1, self.monpnt3, # self.monpnt2,
+            self.monpnt1, self.monpnt2, self.monpnt3,
         ]
         return monitor_points
 
@@ -1004,7 +1008,7 @@ class BDFAttributes:
         return [self.bsurf, self.bsurfs, self.bcprop, self.bcprops,
                 self.bgset, self.bctset,
                 self.bgadd, self.bctadd,
-                self.bconp, self.bfric]
+                self.bconp, self.bfric, self.blseg, self.bcrpara, self.bedge]
 
     @property
     def _cards_to_setup(self) -> list[Any]:

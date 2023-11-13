@@ -31,17 +31,15 @@ class TestSets(unittest.TestCase):
         #monpnt1.raw_fields()
         monpnt1.validate()
 
-        RUN_MONPNT2 = False
-        if RUN_MONPNT2:
-            Type = 'CQUAD4'
-            table = 'STRESS'
-            nddl_item = 42
-            eid = 17
-            model.add_monpnt2(name, label, table, Type, nddl_item, eid,
-                              comment='monpnt2')
-            monpnt2 = model.monpnt2
-            #monpnt2.raw_fields()
-            monpnt2.validate()
+        Type = 'CQUAD4'
+        table = 'STRESS'
+        nddl_item = 'SX1'
+        eid = 17
+        model.add_monpnt2(name, label, table, Type, nddl_item, eid,
+                          comment='monpnt2')
+        monpnt2 = model.monpnt2
+        #monpnt2.raw_fields()
+        #monpnt2.validate()
 
         grid_set = 43
         elem_set = 44

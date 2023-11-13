@@ -657,7 +657,11 @@ class PlateStrainElement(Element):
     def total_thickness(self) -> np.ndarray:
         #print(self.tflag)
         #print(self.T)
-        thickness = shell_thickness(self.property_id, self.allowed_properties)
+        T = None
+        tflag = None
+        thickness = shell_thickness(
+            self.model, tflag, T,
+            self.property_id, self.allowed_properties)
         inan = np.isnan(thickness)
         if np.any(inan):
             log = self.model.log

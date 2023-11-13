@@ -645,7 +645,7 @@ class Writer:
             model.mat1, model.mat2, model.mat3,
             model.mat8, model.mat9, model.mat10, model.mat11,
             model.mat10c, model.matort,
-            #model.mathe, # hyperelastic
+            model.mathe, # hyperelastic
             model.mathp,  # hyperelastic
         ]
         thermal_materials = [model.mat4, model.mat5] + model.thermal_material_dep_cards
@@ -671,6 +671,7 @@ class Writer:
             model.mat5.write_file(bdf_file, size=size, is_double=is_double)
 
             model.mats1.write_file(bdf_file, size=size, is_double=is_double)
+
             model.matt1.write_file(bdf_file, size=size, is_double=is_double)
             model.matt8.write_file(bdf_file, size=size, is_double=is_double)
             model.matt9.write_file(bdf_file, size=size, is_double=is_double)
@@ -790,7 +791,7 @@ class Writer:
         if is_aero:
             bdf_file.write('$AERO\n')
             model.monpnt1.write_file(bdf_file, size=size)
-            #model.monpnt2.write_file(bdf_file, size=size)
+            model.monpnt2.write_file(bdf_file, size=size)
             model.monpnt3.write_file(bdf_file, size=size)
 
         #if model.paeros: # or model.caeros or model.splines:
@@ -827,7 +828,6 @@ class Writer:
         model = self.model
         if model.aeros or len(model.trim) or model.divergs or len(model.csschd):
             bdf_file.write('$STATIC AERO\n')
-            model.csschd.write(size=size)
             model.trim.write(size=size)
             model.trim2.write(size=size)
             model.csschd.write(size=size)
@@ -1022,29 +1022,27 @@ class Writer:
                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the contact cards sorted by ID"""
         model = self.model
-        is_contact = max([card.n for card in model.contact_cards])
-        #is_contact = (self.bcrparas or self.bctparas
-                      #or self.bconp or self.blseg or self.bfric
-                      #or self.bctparms or self.bcbodys or self.bcparas)
-        if is_contact:
+        is_contacta = max([card.n for card in model.contact_cards])
+        is_contactb = model.bctparm or model.bctpara
+        # or self.bcbodys or self.bcparas
+        if is_contacta or is_contactb:
             bdf_file.write('$CONTACT\n')
+            # msc contact
             #for (unused_id, bcbody) in sorted(self.bcbodys.items()):
                 #bdf_file.write(bcbody.write_card(size, is_double))
-            #for (unused_id, bcpara) in sorted(self.bcparas.items()):
-                #bdf_file.write(bcpara.write_card(size, is_double))
 
-            #for (unused_id, bcrpara) in sorted(self.bcrparas.items()):
-                #bdf_file.write(bcrpara.write_card(size, is_double))
-            #for (unused_id, bctparam) in sorted(self.bctparms.items()):
-                #bdf_file.write(bctparam.write_card(size, is_double))
-            #for (unused_id, bctpara) in sorted(self.bctparas.items()):
-                #bdf_file.write(bctpara.write_card(size, is_double))
+            model.bcrpara.write_file(bdf_file, size=size, is_double=is_double)
+            for (unused_id, bctparam) in sorted(model.bctparm.items()):
+                bdf_file.write(bctparam.write_card(size, is_double))
+            for (unused_id, bctpara) in sorted(model.bctpara.items()):
+                bdf_file.write(bctpara.write_card(size, is_double))
 
             # general contact
             model.bctset.write_file(bdf_file, size=size, is_double=is_double)
             model.bctadd.write_file(bdf_file, size=size, is_double=is_double)
 
             # glue contact
+            model.bedge.write_file(bdf_file, size=size, is_double=is_double)
             model.bgset.write_file(bdf_file, size=size, is_double=is_double)
             model.bgadd.write_file(bdf_file, size=size, is_double=is_double)
 
@@ -1054,9 +1052,7 @@ class Writer:
             model.bcprop.write_file(bdf_file, size=size, is_double=is_double)
             model.bcprops.write_file(bdf_file, size=size, is_double=is_double)
             model.bconp.write_file(bdf_file, size=size, is_double=is_double)
-
-            #for (unused_id, blseg) in sorted(self.blseg.items()):
-                #bdf_file.write(blseg.write_card(size, is_double))
+            model.blseg.write_file(bdf_file, size=size, is_double=is_double)
             model.bfric.write_file(bdf_file, size=size, is_double=is_double)
 
     def _write_coords(self, bdf_file: TextIOLike,
@@ -1083,7 +1079,7 @@ class Writer:
             model.nlparms or model.frequencies or
             model.methods or model.cMethods or
             model.tsteps or model.tstepnls or
-            #model.transfer_functions or model.rotors
+            #model.rotors
             model.nlpcis
         )
         if is_dynamic:
@@ -1105,10 +1101,6 @@ class Writer:
                     bdf_file.write(freq.write_card(size, is_double))
             #for (unused_id, rotor) in sorted(model.rotors.items()):
                 #bdf_file.write(rotor.write_card(size, is_double))
-
-            #for (unused_id, tfs) in sorted(model.transfer_functions.items()):
-                #for transfer_function in tfs:
-                    #bdf_file.write(transfer_function.write_card(size, is_double))
 
     def _write_dmigs(self, bdf_file: TextIOLike,
                      size: int=8, is_double: bool=False,

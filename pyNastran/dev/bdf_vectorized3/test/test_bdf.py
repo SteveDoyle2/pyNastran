@@ -42,7 +42,7 @@ from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.test.compare import compare_card_count
 from pyNastran.bdf.bdf import BDF as BDF_old #, read_bdf as read_bdf_old
 from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDFv, read_bdf as read_bdfv, map_version
-from pyNastran.dev.bdf_vectorized3.bdf_interface.convert import convert
+from pyNastran.dev.bdf_vectorized3.bdf_interface.mesh_utils.convert import convert
 
 try:
     import tables
@@ -93,6 +93,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                       post: Union[int, list[int], None]=None,
                       is_double: Union[bool, list[bool], None]=None,
                       sum_load: bool=True,
+                      run_nominal: bool=True,
                       dev: bool=True,
                       crash_cards: Optional[list[str]]=None,
                       pickle_obj: bool=True, quiet: bool=False) -> list[str]:
@@ -207,7 +208,7 @@ def run_lots_of_files(filenames: list[str], folder: str='',
                         crash_cards=crash_cards,
                         limit_mesh_opt=True,
                         run_extract_bodies=False,
-                        run_nominal=False,
+                        run_nominal=run_nominal,
                         pickle_obj=pickle_obj,
                         hdf5=write_hdf5, quiet=quiet, log=log)
                     del fem1
@@ -700,7 +701,15 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
         assert isinstance(fem1.pbarl.ndim, np.ndarray), fem1.pbarl.ndim
 
     log = fem1.log
-    if check_nodes:
+    nnodes = (
+        fem1.card_count.get('GRID', 0) +
+        fem1.card_count.get('GRIDB', 0) +
+        fem1.card_count.get('GRIDG', 0) +
+        fem1.card_count.get('EGRID', 0) +
+        fem1.card_count.get('SPOINT', 0) +
+        fem1.card_count.get('EPOINT', 0)
+    )
+    if check_nodes and nnodes > 0:
         xyz_cid0 = fem1.grid.xyz_cid0()
         nids = fem1.grid.node_id
         xyz_cid0_dict = {nid: xyz_cid0[i, : ] for i, nid in zip(count(), nids)}
@@ -1835,6 +1844,10 @@ def check_case(sol: int,
                  'PARAMS', 'PRINT68', 'TABTSTB', 'TSTGINO', 'UPWARD', 'USERDMAP',
                  'U24'}:
         pass
+    elif sol == 'NONLIN':
+        _assert_has_spc(subcase, fem2)
+        ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'METHOD'), subcase, msg,
+                                          RuntimeError, log, ierror, nerrors)
     else:
         msg = f'SOL = {sol!r}\n'
         msg += str(subcase)
@@ -2144,7 +2157,7 @@ def _check_case_parameters(subcase: Subcase,
             if tstep_id not in fem.tsteps:
                 raise RuntimeError(_tstep_msg(fem, subcase, tstep_id))
 
-    if 'TSTEPNL' in subcase and 0:
+    if 'TSTEPNL' in subcase:
         tstepnl_id = subcase.get_parameter('TSTEPNL')[0]
         assert tstepnl_id in fem.tstepnls, _tstep_msg(fem, subcase, tstepnl_id, tstep_type='nl')
 
@@ -2156,7 +2169,7 @@ def _check_case_parameters(subcase: Subcase,
         subcase, fem, sol,
         ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
 
-    if 'METHOD' in subcase:
+    if 'METHOD' in subcase: # or 'CMETHOD' in subcase:
         method_id = subcase.get_parameter('METHOD')[0]
         if method_id in fem.methods:
             unused_method = fem.methods[method_id]
@@ -2172,7 +2185,7 @@ def _check_case_parameters(subcase: Subcase,
         ierror = check_sol(sol, subcase, allowed_sols, 'METHOD', log, ierror, nerrors,
                            require_sol=False)
 
-    if 'CMETHOD' in subcase and 0:
+    if 'CMETHOD' in subcase:
         cmethod_id = subcase.get_parameter('CMETHOD')[0]
         if cmethod_id in fem.cMethods:
             unused_method = fem.cMethods[cmethod_id]

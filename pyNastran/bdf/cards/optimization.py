@@ -1229,7 +1229,7 @@ class DOPTPRM(OptConstraint):
         self.params = {key : value if not np.isnan(value) else None
                        for key, value in zip(keys, values)}
 
-    def __init__(self, params, comment=''):
+    def __init__(self, params: dict[str, Any], comment: str=''):
         """
         Design Optimization Parameters
         Overrides default values of parameters used in design optimization
@@ -1248,7 +1248,7 @@ class DOPTPRM(OptConstraint):
         self.params = params
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a DOPTPRM card from ``BDF.add_card(...)``
 
@@ -1284,7 +1284,7 @@ class DOPTPRM(OptConstraint):
             params[param] = val
         return DOPTPRM(params, comment=comment)
 
-    def raw_fields(self):
+    def raw_fields(self) -> list[Union[int, float, str]]:
         list_fields = ['DOPTPRM']
         for param, val in sorted(self.params.items()):
             list_fields += [param, val]

@@ -1657,7 +1657,7 @@ def _check_case_parameters(subcase: Subcase,
         subcase, fem, sol,
         ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
 
-    if 'METHOD' in subcase:
+    if 'METHOD' in subcase: # or 'CMETHOD' in subcase:
         method_id = subcase.get_int_parameter('METHOD')[0]
         if method_id in fem.methods:
             unused_method = fem.methods[method_id]

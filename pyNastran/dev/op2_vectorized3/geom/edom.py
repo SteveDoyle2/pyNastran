@@ -431,7 +431,7 @@ class EDOM(GeomCommon):
         return n
 
     def _read_dconstr_28(self, card_obj: DCONSTR, data: bytes, n: int) ->  tuple[int, list[DCONSTR]]:
-        """
+        r"""
         Record – DCONSTR(4106,41,362) - MSC
 
         Word Name Type Description

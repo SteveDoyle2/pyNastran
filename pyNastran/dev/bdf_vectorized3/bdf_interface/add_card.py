@@ -15,7 +15,8 @@ from pyNastran.bdf.cards.materials import NXSTRAT
 from pyNastran.bdf.cards.methods import EIGRL
 from pyNastran.bdf.cards.dynamic import (
     FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
-    TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
+    TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, ROTORG, ROTORD)
+from pyNastran.bdf.cards.optimization import DOPTPRM
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -25,6 +26,7 @@ from pyNastran.bdf.cards.aero.static_loads import AEROS #, AESTAT
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.params import MDLPRM, PARAM
 from pyNastran.dev.bdf_vectorized3.bdf import DTI_UNITS
+from pyNastran.bdf.cards.contact import BCTPARA, BCTPARM
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping_interface import NDArray3float, NDArray66float
     from pyNastran.dev.bdf_vectorized3.bdf import PARAM # BDF,
@@ -4575,16 +4577,21 @@ class AddContact(BDFAttributes):
         bctadd = self.bctadd.add(contact_id, contact_sets, comment=comment)
         return bctadd
 
-    def add_bctpara(self, csid, params, comment: str='') -> BCTPARA:
+    def add_bctpara(self, csid, params: dict[str, Any], comment: str='') -> BCTPARA:
         """Creates a BCTPARA card"""
         bctpara = BCTPARA(csid, params, comment=comment)
         self._add_methods._add_bctpara_object(bctpara)
         return bctpara
 
-    def add_blseg(self, line_id, nodes, comment: str='') -> BLSEG:
+    def add_bctparm(self, contact_id, params: dict[str, Any], comment: str='') -> BCTPARM:
+        """Creates a BCTPARA card"""
+        bctpara = BCTPARM(contact_id, params, comment=comment)
+        self._add_methods._add_bctparm_object(bctpara)
+        return bctpara
+
+    def add_blseg(self, line_id: int, nodes: list[int], comment: str='') -> int:
         """Creates a BLSEG card"""
-        blseg = BLSEG(line_id, nodes, comment=comment)
-        self._add_methods._add_blseg_object(blseg)
+        blseg = self.blseg.add(line_id, nodes, comment=comment)
         return blseg
 
     def add_bconp(self, contact_id: int, slave: int, master: int,
@@ -4599,8 +4606,12 @@ class AddContact(BDFAttributes):
         bfric = self.bfric.add(friction_id, mu1, fstiff=fstiff, comment=comment)
         return bfric
 
-    def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX',
-                    grid_point=0, comment: str='') -> BCRPARA:
+    def add_bcrpara(self, contact_region_id: int,
+                    surf: str='TOP',
+                    offset: Optional[float]=None,
+                    surface_type: str='FLEX',
+                    grid_point: int=0,
+                    comment: str='') -> int:
         """
         Creates a BCRPARA card
 
@@ -4613,7 +4624,7 @@ class AddContact(BDFAttributes):
             None : OFFSET value in BCTPARA entry
         surf : str; default='TOP'
             SURF Indicates the contact side. See Remark 1.  {'TOP', 'BOT'; )
-        Type : str; default='FLEX'
+        surface_type : str; default='FLEX'
             Indicates whether a contact region is a rigid surface if it
             is used as a target region. {'RIGID', 'FLEX'}.
             This is not supported for SOL 101.
@@ -4626,9 +4637,18 @@ class AddContact(BDFAttributes):
             a comment for the card
 
         """
-        bcrpara = BCRPARA(crid, surf=surf, offset=offset, Type=Type,
-                          grid_point=grid_point, comment=comment)
-        self._add_methods._add_bcrpara_object(bcrpara)
+        bcrpara = self.bcrpara.add(
+            contact_region_id, surf=surf, offset=offset,
+            surface_type=surface_type, grid_point=grid_point,
+            comment=comment)
+        return bcrpara
+
+    def add_bedge(self, bedge_id: int,
+            eids: list[int],
+            grids: list[tuple[int, int]],
+            comment: str='') -> int:
+        """Creates a BEDGE card"""
+        bcrpara = self.bedge.add(bedge_id, eids, grids, comment)
         return bcrpara
 
 class AddSuperelements(BDFAttributes):
@@ -7877,10 +7897,10 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
             comment=comment)
         return self.monpnt1
 
-    def add_monpnt2(self, name: str, label: str, table, Type, nddl_item, eid,
-                    comment: str='') -> int:
+    def add_monpnt2(self, name: str, label: str, table: int, element_type: str,
+                    nddl_item: int, eid: int, comment: str='') -> int:
         """Creates a MONPNT2 card"""
-        monitor_point = self.monpnt2.add(name, label, table, Type, nddl_item, eid,
+        monitor_point = self.monpnt2.add(name, label, table, element_type, nddl_item, eid,
                                          comment=comment)
         return monitor_point
 

@@ -7,6 +7,26 @@ from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 RUN_CONTACT = False
 
 class TestContact(unittest.TestCase):
+    def test_params(self):
+        model = BDF(debug=False)
+        key_values = {
+            'REFINE': 2,
+        }
+        model.add_bctparm(100, key_values)
+        model.add_bctpara(101, key_values)
+        save_load_deck(model)
+
+    def test_glue(self):
+        model = BDF(debug=False)
+        bedge_id = 42
+        eids = [1, 2]
+        nids = [
+            (11, 12),
+            (21, 22)
+        ]
+        model.add_bedge(bedge_id, eids, nids)
+        model.setup()
+        save_load_deck(model)
 
     def test_bsurf(self):
         model = BDF(debug=False)
@@ -156,16 +176,16 @@ class TestContact(unittest.TestCase):
                                    comment='bctset')
         #bctset.raw_fields()
 
-        if RUN_CONTACT:
-            contract_region = 100
-            surface = 'BOT'
-            contact_type = 'RIGID'
-            offset = .1012
-            master_grid_point = 101
-            bcrpara = model.add_bcrpara(contract_region, surface, offset, contact_type,
-                                        master_grid_point, comment='bcrpara')
-            bcrpara.raw_fields()
+        contract_region = 100
+        surface = 'BOT'
+        contact_type = 'RIGID'
+        offset = .1012
+        master_grid_point = 101
+        bcrparai = model.add_bcrpara(contract_region, surface, offset, contact_type,
+                                     master_grid_point, comment='bcrpara')
+        #bcrpara.raw_fields()
 
+        if RUN_CONTACT:
             contact_region = 102
             params = {'cat' : 111, 'dog' : 222, 'frog' : 0.}
             bctpara = model.add_bctpara(contact_region, params, comment='bctpara')
@@ -200,14 +220,12 @@ class TestContact(unittest.TestCase):
         cid = 9
 
         line_id = master
-        if RUN_CONTACT:
-            model.add_blseg(line_id, nodes, comment='blseg_master')
+        model.add_blseg(line_id, nodes, comment='blseg_master')
 
         line_id = slave
-        if RUN_CONTACT:
-            blseg = model.add_blseg(line_id, nodes, comment='blseg_slave')
-        bconp = model.add_bconp(contact_id, slave, master, sfac, friction_id, ptype, cid,
-                                comment='bconp')
+        blsegi = model.add_blseg(line_id, nodes, comment='blseg_slave')
+        bconpi = model.add_bconp(contact_id, slave, master, sfac, friction_id, ptype, cid,
+                                 comment='bconp')
         mu1 = 0.2
         bfrici = model.add_bfric(friction_id, mu1, fstiff=None, comment='bfric')
 
@@ -217,8 +235,7 @@ class TestContact(unittest.TestCase):
         zaxis = [0., 0., 1]
         xzplane = [1., 0., 0.]
         model.add_cord2r(9, origin, zaxis, xzplane, rid=0, setup=True, comment='')
-        if RUN_CONTACT:
-            blseg.raw_fields()
+        #blseg.raw_fields()
         #bconp.raw_fields()
         save_load_deck(model)
 
