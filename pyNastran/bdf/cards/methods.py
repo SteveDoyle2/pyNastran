@@ -788,12 +788,15 @@ class EIGR(Method):
         elif method == 'INV':
             ne = integer(card, 5, 'ne')
             nd = integer_or_blank(card, 6, 'nd', 3 * ne)
-        elif method in ['GIV', 'MGIV', 'HOU', 'MHOU']:
-            nd = integer_or_blank(card, 6, 'nd', 0)
+        elif method in {'GIV', 'MGIV', 'AGIV',
+                        'HOU', 'MHOU', 'AHOU'}:
+            # AHOU = automatic selection of HOU or MHOU
+            # AGIV = automatic selection of GIV or MGIV
+            nd = integer_or_blank(card, 6, 'nd', default=0)
         else:
             nd = integer(card, 6, 'nd')
         crit = double_or_blank(card, 8, 'crit')
-        norm = string_or_blank(card, 9, 'norm', 'MASS')
+        norm = string_or_blank(card, 9, 'norm', default='MASS')
 
         if norm == 'POINT':
             G = integer(card, 10, 'G')

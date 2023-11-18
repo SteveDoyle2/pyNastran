@@ -3650,7 +3650,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         assert 0 in cps_to_check, cps_to_check
 
         nodes = self.grid
-        coord2 = self.coord.slice_card_by_coord_id(cid)
+        coord2 = self.coord.slice_card_by_id(cid)
         #assert in_place is False, 'in_place=%s' % in_place
         if in_place:
             xyz_cid0 = xyz_cp
@@ -3768,53 +3768,6 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
                        'xyz_cid_correct:\n%s'% (xyz_cid, xyz_cid_correct))
                 raise ValueError(msg)
         return xyz_cid
-
-    def _transform(self, cps_to_check0, icp_transform,
-                   nids, xyz_cp, xyz_cid0, xyz_cid0_correct,
-                   unused_in_place, do_checks):
-        """
-        Transforms coordinates in a vectorized way
-        Helper method for ``transform_xyzcp_to_xyz_cid``
-
-        Parameters
-        ----------
-        cps_to_check0 : list[int]
-            the Cps to check
-        icp_transform : dict{int cp : (n,) int ndarray}
-            Dictionary from coordinate id to index of the nodes in
-            ``self.point_ids`` that their input (`CP`) in that
-            coordinate system.
-        nids : (n, ) int ndarray
-            the GRID/SPOINT/EPOINT ids corresponding to xyz_cp
-        xyz_cp : (n, 3) float ndarray
-            points in the CP coordinate system
-        xyz_cid : (n, 3) float ndarray
-            points in the CID coordinate system
-        xyz_cid_correct : (n, 3) float ndarray
-            points in the CID coordinate system
-        unused_in_place : bool, default=False
-            If true the original xyz_cp is modified, otherwise a
-            new one is created.
-        do_checks : bool; default=False
-            internal value for testing
-            True : makes use of xyz_cid_correct
-            False : xyz_cid_correct is unused
-
-        Returns
-        -------
-        nids_checked : (nnodes_checked,) int ndarray
-           the node ids that were checked
-        cps_checked : list[int]
-            the Cps that were checked
-        cps_to_check : list[int]
-            the Cps that are unreferenceable given the current information
-
-        """
-        nids_checked, cps_checked, cps_to_check = transform_coords_vectorized(
-            cps_to_check0, icp_transform,
-            nids, xyz_cp, xyz_cid0, xyz_cid0_correct,
-            self.coords, do_checks)
-        return nids_checked, cps_checked, cps_to_check
 
     def get_displacement_index(self) -> tuple[Any, Any, dict[int, Any]]:
         """

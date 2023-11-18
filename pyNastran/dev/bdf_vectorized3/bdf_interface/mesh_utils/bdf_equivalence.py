@@ -63,7 +63,7 @@ def get_bdf_model(bdf_filename: BDF_FILETYPE,
     elif isinstance(bdf_filename, BDF):
         model = bdf_filename
         if xref:
-            model.cross_reference(xref=xref)
+            model.cross_reference(run_geom_check=xref)
     #elif isinstance(bdf_filename, StringIO):
         #model = BDF(log=log, debug=debug)
         #model.read_bdf(bdf_filename, xref=xref)
@@ -227,11 +227,13 @@ def _eq_nodes_setup(bdf_filename,
         nids, all_nids = _eq_nodes_setup_node_set(
             model, node_set, all_node_set,
             renumber_nodes=renumber_nodes, idtype=idtype)
+        #print(f'sub-set:\n{model.grid.write()}')
     else:
         nids, all_nids = _eq_nodes_setup_node(
             model, renumber_nodes=renumber_nodes, idtype=idtype)
+        #print(f'all-set:\n{model.grid.write()}')
 
-    nodes_xyz = model.grid.xyz_cid0()
+    nodes_xyz = model.grid.slice_card_by_id(nids).xyz_cid0()
     inew = _check_for_referenced_nodes(model, node_set, nids, all_nids, nodes_xyz)
 
     #assert np.array_equal(nids[inew], nids_new), 'some nodes are not defined'
@@ -273,7 +275,15 @@ def _eq_nodes_setup_node_set(model: BDF,
 
 def _eq_nodes_setup_node(model: BDF, renumber_nodes: bool=False,
                          idtype: str='int32') -> tuple[NDArrayNint, NDArrayNint]:
-    """helper function for ``_eq_nodes_setup`` that doesn't handle node sets"""
+    """helper function for ``_eq_nodes_setup`` that doesn't handle node sets
+
+    Returns
+    -------
+    nids : (nnode,) int array
+        ???
+    all_nids : (nnode,) int array
+        all the GRID ids
+    """
     inode = 0
     assert renumber_nodes is False, renumber_nodes
     if renumber_nodes:
@@ -335,69 +345,112 @@ def _eq_nodes_find_pairs(nids: NDArrayNint,
     return nid_pairs
 
 
-def _eq_nodes_final(nid_pairs, model: BDF, tol: float,
-                    all_node_set: NDArrayNint, debug: bool=False) -> None:
+def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
+                    model: BDF,
+                    tol: float,
+                    all_node_set: NDArrayNint,
+                    debug: bool=False) -> None:
     """apply nodal equivalencing to model"""
+    if len(nid_pairs) == 0:
+        return
     #log = model.log
     #log.info('_eq_nodes_final')
-    if len(all_node_set) == 0:
-        # node_sets is None
-        for (nid1, nid2) in nid_pairs:
-            node1 = model.nodes[nid1]
-            node2 = model.nodes[nid2]
+    grid = model.grid
 
-            xyz1 = node1.get_position()
-            xyz2 = node2.get_position()
-            distance = norm(xyz1 - xyz2)
-            if distance > tol:
-                continue
-            _update_grid(node1, node2)
-        return
+    node_id = grid.node_id
+    xyz_cid0 = grid.xyz_cid0()
+    idtype = model.idtype
+    nid_pairs2i = [(nid1, nid2) if nid1 < nid2 else (nid2, nid1)
+                   for (nid1, nid2) in nid_pairs]
+    nid_pairs_array = np.array(nid_pairs2i, dtype=idtype)
+    inode = np.searchsorted(node_id, nid_pairs_array)
 
-    for (nid1, nid2) in nid_pairs:
-        node1 = model.nodes[nid1]
-        node2 = model.nodes[nid2]
+    # update the nodes
+    nid_old_to_new = {}
+    for i1, i2 in inode:
+        xyz1 = xyz_cid0[i1, :]
+        xyz2 = xyz_cid0[i2, :]
+        dxyz = xyz2 - xyz1
+        normi = np.linalg.norm(dxyz)
+        #assert len(normi) == len(nid_pairs_array)
+        if normi <= tol:
+            #iupdate = (normi <= tol)
+            for nid1, nid2 in nid_pairs_array:
+                nid_new = grid.node_id[i1]
+                nid_old = grid.node_id[i2]
+                grid.node_id[i2] = nid_new
+                grid.xyz[i2, :] = grid.xyz[i1, :]
+                grid.cp[i2] = grid.cp[i1]
+                grid.cd[i2] = grid.cd[i1]
+                grid.seid[i2] = grid.seid[i1]
+                grid.ps[i2] = grid.ps[i1]
+                nid_old_to_new[nid2] = nid1
+    #print(f'reduced-set:\n{model.grid.write()}')
 
-        xyz1 = node1.get_position()
-        xyz2 = node2.get_position()
-        distance = norm(xyz1 - xyz2)
+    # =0: node_sets is None -> no sets are used
+    if len(all_node_set) != 0:
+        for nid1, nid2 in nid_old_to_new.items():
+            assert nid1 in all_node_set, 'nid1=%s all_node_set=%s' % (nid1, all_node_set)
+            assert nid2 in all_node_set, 'nid2=%s all_node_set=%s' % (nid2, all_node_set)
 
-        #print('  irow=%s->n1=%s icol=%s->n2=%s' % (irow, nid1, icol, nid2))
-        if distance > tol:
-            #print('  *n1=%-4s xyz=%s\n  *n2=%-4s xyz=%s\n  *distance=%s\n' % (
-               #nid1, xyz1.tolist(),
-               #nid2, xyz2.tolist(),
-               #distance))
-            continue
+    #if np.any(iupdate):
+        #print(grid.write())
+        #inode_update = inode[iupdate, :]
+        #for i1, i2 in inode_update:
+            #grid.node_id[i2] = grid.node_id[i1]
+            #grid.xyz[i2, :] = grid.xyz[i1, :]
+            #grid.cp[i2] = grid.cp[i1]
+            #grid.cd[i2] = grid.cd[i1]
+            #grid.seid[i2] = grid.seid[i1]
+            #grid.ps[i2] = grid.ps[i1]
+        #print('---------------\nnew:')
+        #print(grid.write())
 
-        assert nid1 in all_node_set, 'nid1=%s all_node_set=%s' % (nid1, all_node_set)
-        assert nid2 in all_node_set, 'nid2=%s all_node_set=%s' % (nid2, all_node_set)
-        #print('  n1=%-4s xyz=%s\n  n2=%-4s xyz=%s\n  distance=%s\n' % (
-            #nid1, str(node1.xyz),
-            #nid2, str(node2.xyz),
-            #distance))
-
-        # if hasattr(node2, 'new_node_id'):
-        # else:
-        #if xyz1[1] < 1.0:
-            #print('  *n1=%-4s xyz=%s\n  *n2=%-4s xyz=%s\n  *distance=%s\n' % (
-               #nid1, xyz1.tolist(),
-               #nid2, xyz2.tolist(),
-               #distance))
-        _update_grid(node1, node2)
-
-        # node2.new_nid = node1.nid
-        #skip_nodes.append(nid2)
+    update_cards(model, nid_old_to_new)
     return
 
-def _update_grid(node1: GRID, node2: GRID):
-    """helper method for _eq_nodes_final"""
-    node2.nid = node1.nid
-    node2.xyz = node1.xyz
-    node2.cp = node1.cp
-    assert node2.cd == node1.cd
-    assert node2.ps == node1.ps
-    assert node2.seid == node1.seid
+
+def update_cards(model: BDF,
+                 nid_old_to_new: dict[int, int]) -> None:
+    skip_cards = {
+        'GRID',
+        'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10',
+        'MATT1', 'MATT2', 'MATT8',
+        'PELAS', 'PDAMP',
+        'PROD', 'PBAR',
+        'PSHELL', 'PSOLID', 'PLSOLID',
+    }
+    grid = model.grid
+    ids = np.unique(grid.node_id)
+
+    nids_to_remove_list = list(nid_old_to_new.keys())
+    nids_to_remove = np.unique(nids_to_remove_list)
+
+    nids_to_keep = np.setdiff1d(ids, nids_to_remove)
+    reverse_index = grid.index(nids_to_keep, assume_sorted=False, check_index=True)
+    grid.__apply_slice__(grid, reverse_index)
+    #grid.slice_card_by_id(ids, assume_sorted=True, sort_ids=False)
+
+    print(f'final-set:\n{model.grid.write()}')
+
+    unid = np.unique(model.grid.node_id)
+    assert len(unid) == len(model.grid)
+
+    supported_cards = {}
+    cards = [card for card in model._cards_to_setup if card.n > 0]
+    for card in cards:
+        if card.type in skip_cards:
+            continue
+        card.equivalence_nodes(nid_old_to_new)
+
+#def _update_grid(node1: GRID, node2: GRID):
+    #"""helper method for _eq_nodes_final"""
+    #node2.nid = node1.nid
+    #node2.xyz = node1.xyz
+    #node2.cp = node1.cp
+    #assert node2.cd == node1.cd
+    #assert node2.ps == node1.ps
+    #assert node2.seid == node1.seid
     #node1.cp_ref = None
     #node2.cp_ref = None
 

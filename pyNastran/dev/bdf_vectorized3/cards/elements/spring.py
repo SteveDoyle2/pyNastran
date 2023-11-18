@@ -182,6 +182,8 @@ class CELAS2(Element):
             a comment for the card
 
         """
+        nids = [0 if nid is None else nid
+                for nid in nids]
         self.cards.append((eid, k, nids, c1, c2, ge, s, comment))
         self.n += 1
         return self.n - 1

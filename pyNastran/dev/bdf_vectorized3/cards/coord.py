@@ -1143,6 +1143,13 @@ class COORD(VectorizedBaseCard):
         assert coord_type == 'R', coord_type
         return xyz_cid
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        for i, icoord, nodes in zip(count(), self.icoord, self.nodes):
+            if icoord == 2:
+                continue
+            asdf
+
 def axes_to_coord_vectors(origin, zaxis, xzplane, msg: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     kaxis = zaxis - origin
     ik = xzplane - origin

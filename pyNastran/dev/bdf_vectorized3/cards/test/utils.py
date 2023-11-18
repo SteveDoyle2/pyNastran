@@ -30,6 +30,7 @@ def save_load_deck(model: BDF,
                    remove_disabled_cards: bool=True,
                    run_read_write: bool=True,
                    run_geom_check: bool=True,
+                   run_equivalence: bool=True,
                    nastran_format: str='nx',
                    op2_log_level: str='warning') -> BDF:
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
@@ -80,6 +81,14 @@ def save_load_deck(model: BDF,
         model4.read_bdf(stringio_double, punch=model.punch)
 
     if run_equivalence:
-        model2 = model.copy()
-        bdf_equivalence
+        model2 = BDF(debug=False, log=model.log)
+        model2.read_bdf(stringio8, punch=model.punch)
+        bdf_filename_out = None
+
+        tol = 0.0
+        model_eq = bdf_equivalence_nodes(
+            model2, bdf_filename_out, tol,
+            renumber_nodes=False, neq_max=4, xref=True, node_set=None, size=8, is_double=False,
+            remove_collapsed_elements=False, avoid_collapsed_elements=False,
+            crash_on_collapse=False, log=None, debug=True, method='new')
     return model

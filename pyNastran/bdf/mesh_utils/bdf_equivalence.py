@@ -331,7 +331,14 @@ def _check_for_referenced_nodes(model: BDF,
                                 nids: NDArrayNint,
                                 all_nids: NDArrayNint,
                                 nodes_xyz: NDArrayN3float) -> Optional[NDArrayNint]:
-    """helper function for ``_eq_nodes_setup``"""
+    """helper function for ``_eq_nodes_setup``
+
+    Parameters
+    ----------
+    nodes_xyz : (nnode, 3) float array
+        the xyz for nids
+
+    """
     if node_set is not None:
         assert nodes_xyz.shape[0] == len(nids)
 
