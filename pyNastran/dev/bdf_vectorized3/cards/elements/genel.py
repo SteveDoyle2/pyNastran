@@ -300,6 +300,13 @@ class GENEL(Element):
         self.ul = ul
         self.ud = ud
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        for nodes in (self.ul.ravel()[::2], self.ud[:, 0].ravel()[::2]):
+            for i, nid1 in enumerate(nodes):
+                nid2 = nid_old_to_new.get(nid1, nid1)
+                nodes[i] = nid2
+
     #def cross_reference(self, model: BDF) -> None:
         #"""
         #Cross links the card so referenced cards can be extracted directly

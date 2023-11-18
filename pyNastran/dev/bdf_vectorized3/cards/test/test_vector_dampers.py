@@ -308,7 +308,7 @@ class TestDampers(unittest.TestCase):
         ge_tables = [2]
         kn_tables = [2]
         pbusht_id = model.add_pbusht(pid, k_tables, b_tables, ge_tables, kn_tables,
-                                  comment='')
+                                     comment='')
         #pbusht.raw_fields()
         model.validate()
         model._verify_bdf()

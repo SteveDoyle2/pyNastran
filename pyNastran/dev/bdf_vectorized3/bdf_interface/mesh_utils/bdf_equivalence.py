@@ -413,12 +413,26 @@ def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
 def update_cards(model: BDF,
                  nid_old_to_new: dict[int, int]) -> None:
     skip_cards = {
-        'GRID',
+        'GRID', 'SPOINT', 'EPOINT',
         'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10',
         'MATT1', 'MATT2', 'MATT8',
-        'PELAS', 'PDAMP',
-        'PROD', 'PBAR',
-        'PSHELL', 'PSOLID', 'PLSOLID',
+        'MATS1',
+        'PELAS', 'PELAST',
+        'PDAMP', 'PDAMPT',
+        'PBUSH', 'PBUSHT',
+        'PMASS', 'PGAP', 'PVISC',
+        'PROD', 'PTUBE',
+        'PBAR', 'PBARL',
+        'PBEAM', 'PBEAML', 'PBCOMP', 'PBEND', 'PBEAM3',
+        'PSHELL', 'PCOMP', 'PSHEAR',
+        'PSOLID', 'PLSOLID',
+        'BCONP', 'BFRIC',
+        'SPCADD', # 'MPCADD',
+        'DESVAR', 'DVPREL1', 'DVMREL1', 'DVPREL2', 'DVMREL2',
+        'DCONSTR', 'DCONADD', 'DSCREEN',
+        'GRAV', 'PLOAD1', 'PLOAD2', 'SLOAD',
+        # time/freq/random loads
+        'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'RANDPS', 'DLOAD',
     }
     grid = model.grid
     ids = np.unique(grid.node_id)
@@ -431,7 +445,7 @@ def update_cards(model: BDF,
     grid.__apply_slice__(grid, reverse_index)
     #grid.slice_card_by_id(ids, assume_sorted=True, sort_ids=False)
 
-    print(f'final-set:\n{model.grid.write()}')
+    #print(f'final-set:\n{model.grid.write()}')
 
     unid = np.unique(model.grid.node_id)
     assert len(unid) == len(model.grid)
@@ -441,7 +455,11 @@ def update_cards(model: BDF,
     for card in cards:
         if card.type in skip_cards:
             continue
-        card.equivalence_nodes(nid_old_to_new)
+        try:
+            card.equivalence_nodes(nid_old_to_new)
+        except AttributeError:
+            print(card.get_stats())
+            raise
 
 #def _update_grid(node1: GRID, node2: GRID):
     #"""helper method for _eq_nodes_final"""

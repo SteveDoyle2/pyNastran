@@ -120,6 +120,13 @@ class PLOAD(Load):
         self.node_id = node_id
         self.n = nloads
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     def convert(self, pressure_scale: float, **kwargs) -> None:
         self.pressure *= pressure_scale
 
@@ -966,6 +973,15 @@ class PLOAD4(Load):
         self.nvector = nvector
         self.nelement = nelement
         self.n = nloads
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes_g1_g34.ravel()
+        for i, nid1 in enumerate(nodes):
+            if nid1 == -1:
+                continue
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def convert(self, pressure_scale: float=1.0, **kwargs) -> None:
         self.pressure *= pressure_scale

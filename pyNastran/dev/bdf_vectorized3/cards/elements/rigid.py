@@ -173,6 +173,13 @@ class RBAR(RigidElement):
         self.tref = tref
         self.n = len(element_id)
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -294,6 +301,13 @@ class RROD(RigidElement):
         self.alpha = alpha
         self.n = nelements
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -409,6 +423,13 @@ class RBAR1(RigidElement):
             alpha = np.zeros(nelements, dtype='float64')
         self.alpha = alpha
         self.n = nelements
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     @parse_element_check
     def write_file(self, bdf_file: TextIOLike,
@@ -579,6 +600,13 @@ class RBE1(RigidElement):
         self.independent_dof = independent_dof
         self.tref = tref
         self.alpha = alpha
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        for nodes in (self.dependent_node, self.independent_node):
+            for i, nid1 in enumerate(nodes):
+                nid2 = nid_old_to_new.get(nid1, nid1)
+                nodes[i] = nid2
 
     @property
     def idependent(self) -> np.ndarray:
@@ -761,6 +789,13 @@ class RBE2(RigidElement):
         self.nnode = nnode
         self.alpha = alpha
         self.tref = tref
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        for nodes in (self.independent_node, self.dependent_nodes):
+            for i, nid1 in enumerate(nodes):
+                nid2 = nid_old_to_new.get(nid1, nid1)
+                nodes[i] = nid2
 
     @property
     def idim(self) -> np.ndarray:
@@ -1072,6 +1107,14 @@ class RBE3(RigidElement):
         self.ndependent = ndependent
         self.dependent_nodes = dependent_nodes
         self.dependent_dofs = dependent_dofs
+
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        for nodes in (self.ref_grid, self.independent_nodes, self.dependent_nodes):
+            for i, nid1 in enumerate(nodes):
+                nid2 = nid_old_to_new.get(nid1, nid1)
+                nodes[i] = nid2
 
     @property
     def iweight(self) -> np.ndarray:

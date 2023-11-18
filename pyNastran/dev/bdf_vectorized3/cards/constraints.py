@@ -171,6 +171,13 @@ class SPC(VectorizedBaseCard):
         self.enforced = enforced
         self.n = nspcs
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['node_id'].append(self.node_id)
 
@@ -367,6 +374,13 @@ class SPC1(VectorizedBaseCard):
         self.components = components
         self.nnodes = nnodes
         self.n = nspcs
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def clear(self) -> None:
         self.spc_id = np.array([], dtype='int32')
@@ -934,6 +948,13 @@ class CommonSet(VectorizedBaseCard):
         self.n = len(node_id)
         #self.sort()
         #self.cards = []
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id # .ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['node_id'].append(self.node_id)

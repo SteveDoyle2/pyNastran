@@ -353,6 +353,13 @@ class DAREA(VectorizedBaseCard):
         self.component = component
         self.scale = scale
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     @property
     def max_id(self) -> int:
         return max(self.load_id.max(), self.node_id.max())
@@ -1604,6 +1611,13 @@ class TIC(VectorizedBaseCard):
         self.u0 = u0
         self.v0 = v0
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     #def sort(self) -> None:
         #iarg = np.argsort(self.node_id)
         #uarg = np.unique(iarg)
@@ -2051,6 +2065,13 @@ class DELAY(VectorizedBaseCard):
         self.component = component
         self.delay = delay
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     #def sort(self) -> None:
         #iarg = np.argsort(self.node_id)
         #uarg = np.unique(iarg)
@@ -2228,6 +2249,13 @@ class DPHASE(VectorizedBaseCard):
         self.node_id = node_id
         self.component = component
         self.phase_lead = phase_lead
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     #def sort(self) -> None:
         #iarg = np.argsort(self.node_id)

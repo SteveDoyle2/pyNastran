@@ -315,6 +315,13 @@ class SPCD(Load):
         self.enforced = enforced
         self.n = nloads
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     @parse_load_check
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
@@ -408,6 +415,13 @@ class Load0(Load):
         self.mag = mag
         self.xyz = xyz
         self.n = nloads
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -516,6 +530,15 @@ class Load1(Load):
         self.nodes = nodes
         self.n = nloads
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            if nid1 == 0:
+                continue
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         geom_check(self,
@@ -618,6 +641,13 @@ class Load2(Load):
         self.mag = mag
         self.nodes = nodes
         self.n = nloads
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
@@ -1303,6 +1333,13 @@ class ACCEL1(Load):
         load.coord_id = self.coord_id[i]
         load.scale = self.scale[i]
         load.N = self.N[i, :]
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def add(self, sid: int, scale: float,
             N: list[float], nodes: list[int],

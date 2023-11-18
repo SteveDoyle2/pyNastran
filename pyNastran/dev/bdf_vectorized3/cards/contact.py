@@ -307,6 +307,13 @@ class NodeSet(ElementPropertyNodeSet):
     def inode(self) -> np.ndarray:
         return self.i_id
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
 class BLSEG(NodeSet):
     """Defines a glue or contact edge region or a curve for slideline contact via grid numbers."""
     def geom_check(self, missing: dict[str, np.ndarray]):

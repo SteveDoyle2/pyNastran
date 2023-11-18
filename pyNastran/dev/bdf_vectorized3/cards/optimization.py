@@ -900,6 +900,23 @@ class DRESP1(VectorizedBaseCard):
         self.iatti = iatti
         self.atti = atti
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        grid_flags = {
+            'FRACCL', 'FRDISP', 'FRSPCF', 'FRVELO',
+            'PRES',
+            'PSDACCL', 'PSDDISP', 'PSDVELO',
+            'RMSACCL', 'RMSDISP', 'RMSVELO', 'SPCFORCE',
+            'TACCL', 'TDISP', 'TSPCF', 'TVELO'}
+        for response_type, (iatti0, iatti1) in zip(self.response_type, self.iatti):
+            if response_type in grid_flags:
+                iatti0, iatti1 = iatti
+                nodes = self.atti[iatti0:iatti1]
+
+                for i, nid1 in enumerate(nodes):
+                    nid2 = nid_old_to_new.get(nid1, nid1)
+                    nodes[i] = nid2
+
     def write_file(self, bdf_file: TextIOLike, size: int=8,
                    is_double: bool=False,
                    write_card_header: bool=False) -> None:
@@ -1247,6 +1264,28 @@ class DRESP2(VectorizedBaseCard):
         self.param_type = param_type
         self.nparam_values = nparam_values
         self.param_values = param_values
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        #self.model.log.warning('skipping DRESP2 nodal equivalence')
+        iparam_value = 0
+        for iparam in self.iparam:
+            iparam0, iparam1 = iparam
+            param_types = self.param_type[iparam0:iparam1]
+            nparam_values = self.nparam_values[iparam0:iparam1]
+
+            for param_type, nvalues in zip(param_types, nparam_values):
+                if param_type in {'DRESP1', 'DESVAR', 'DVPREL1', 'DVPREL2', 'DVMREL1', 'DVMREL2'}:
+                    continue
+                values_list2 = self.param_values[iparam_value:iparam_value + nvalues]
+                #print(values_list2)
+                for i, nid1 in enumerate(values_list2):
+                    if i % 2 == 0:
+                        nid2 = nid_old_to_new.get(nid1, nid1)
+                        #nodes[i] = nid2
+                        values_list2[i] = nid2
+                #print(values_list2)
+                iparam_value += nvalues
 
     @property
     def iparam(self) -> np.ndarray:

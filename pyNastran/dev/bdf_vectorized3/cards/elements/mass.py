@@ -133,6 +133,13 @@ class CONM1(Element):
         self._mass = mass
         self.n = len(element_id)
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     def convert(self, mass_scale: float=1.0, **kwargs):
         self._mass *= mass_scale
 
@@ -319,6 +326,13 @@ class CONM2(Element):
         self.xyz_offset = xyz_offset
         #I11, I21, I22, I31, I32, I33 = I
         self.inertia = inertia
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def convert(self, xyz_scale: float=1.0,
                 mass_scale: float=1.0,

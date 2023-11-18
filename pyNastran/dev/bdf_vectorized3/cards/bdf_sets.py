@@ -1,5 +1,5 @@
 from __future__ import annotations
-from itertools import zip_longest
+from itertools import zip_longest, count
 from collections import defaultdict
 from typing import Any, TYPE_CHECKING
 import numpy as np
@@ -183,6 +183,15 @@ class ABCOQSET(VectorizedBaseCard):
         self.n = len(node_id)
         #self.sort()
         #self.cards = []
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, comp, nid1 in zip(count(), self.component, nodes):
+            if comp == 0:
+                continue
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     #def slice_by_node_id(self, node_id: np.ndarray) -> GRID:
         #inid = self._node_index(node_id)
@@ -694,6 +703,13 @@ class RELEASE(VectorizedBaseCard):
         ##i = np.searchsorted(self.node_id, node_id)
         #grid = self.slice_card_by_index(inid)
         #return grid
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['node_id'].append(self.node_id)

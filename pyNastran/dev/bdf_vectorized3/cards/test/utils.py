@@ -80,7 +80,7 @@ def save_load_deck(model: BDF,
         model4 = BDF(debug=False, log=model.log)
         model4.read_bdf(stringio_double, punch=model.punch)
 
-    if run_equivalence:
+    if run_read_write and run_equivalence and len(model.grid):
         model2 = BDF(debug=False, log=model.log)
         model2.read_bdf(stringio8, punch=model.punch)
         bdf_filename_out = None
