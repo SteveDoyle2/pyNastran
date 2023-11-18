@@ -13,8 +13,6 @@ from __future__ import annotations
 from itertools import combinations
 from typing import Union, Optional, Any, TYPE_CHECKING
 import numpy as np
-from numpy import (array, unique, arange, searchsorted,
-                   setdiff1d, intersect1d, asarray)
 from numpy.linalg import norm  # type: ignore
 import scipy
 import scipy.spatial
@@ -150,14 +148,16 @@ def bdf_equivalence_nodes(bdf_filename: str,
     # list of ndarrays
     #return node_set
 
-def _simplify_node_set(node_set: Optional[Union[list[int], set[int], list[NDArrayNint]]],
+def _simplify_node_set(node_set: Optional[Union[list[int],
+                                                set[int],
+                                                list[NDArrayNint]]],
                        idtype: str='int32') -> Optional[list[NDArrayNint]]:  # pragma: no cover
     """
     accepts multiple forms of the node_set parameter
      - list[int]
      - set[int]
-     - list[int ndarray]
      - int ndarray
+     - list[int ndarray]
 
      """
     if node_set is None:
@@ -165,7 +165,7 @@ def _simplify_node_set(node_set: Optional[Union[list[int], set[int], list[NDArra
     if isinstance(node_set, np.ndarray):
         return [node_set]
     elif isinstance(node_set, set):
-        node_set_array = asarray(list(node_set), dtype=idtype)
+        node_set_array = np.asarray(list(node_set), dtype=idtype)
         node_set_array.sort()
         return [node_set_array]
 
@@ -197,8 +197,9 @@ def _bdf_equivalence_nodes(bdf_filename: str, tol: float,
                            node_set: Optional[list[NDArrayNint]]=None,
                            log: Optional[SimpleLogger]=None,
                            debug: bool=True, method: str='new',
-                           idtype: str='int32', fdtype: str='float64') -> tuple[BDF,
-                                                                                list[tuple[int, int]]]:
+                           idtype: str='int32',
+                           fdtype: str='float64') -> tuple[BDF,
+                                                           list[tuple[int, int]]]:
     """helper for bdf_equivalence_nodes"""
     all_node_set = get_all_node_set(node_set)
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
@@ -259,36 +260,37 @@ def _eq_nodes_setup(bdf_filename,
     #assert np.array_equal(nids[inew], nids_new), 'some nodes are not defined'
     return nodes_xyz, model, nids, inew
 
-def _get_xyz_cid0(model: BDF, nids: NDArrayNint, fdtype: str='float32') -> NDArrayN3float:
+def _get_xyz_cid0(model: BDF, nids: NDArrayNint,
+                  fdtype: str='float32') -> NDArrayN3float:
     """gets xyz_cid0"""
     coord_ids = model.coord_ids
     needs_get_position = (coord_ids == [0])
 
     if needs_get_position:
-        nodes_xyz = array([model.nodes[nid].get_position()
-                           for nid in nids], dtype=fdtype)
+        nodes_xyz = np.array([model.nodes[nid].get_position()
+                              for nid in nids], dtype=fdtype)
     else:
-        nodes_xyz = array([model.nodes[nid].xyz
-                           for nid in nids], dtype=fdtype)
+        nodes_xyz = np.array([model.nodes[nid].xyz
+                              for nid in nids], dtype=fdtype)
     return nodes_xyz
 
 def _eq_nodes_setup_node_set(model: BDF,
                              node_set: list[NDArrayNint],
                              all_node_set: NDArrayNint,
                              renumber_nodes: bool=False,
-                             idtype:str='int32') -> tuple[NDArrayNint, NDArrayNint]:
+                             idtype: str='int32') -> tuple[NDArrayNint, NDArrayNint]:
     """helper function for ``_eq_nodes_setup`` that handles node_sets"""
     if len(node_set) > 1:
         model.log.warning(f'multi node_sets; n={len(node_set)}')
 
     node_list = list(model.nodes.keys())
-    all_nids = array(node_list, dtype=idtype)
+    all_nids = np.array(node_list, dtype=idtype)
     #all_nids.sort()
 
     # B - A
     # these are all the nodes that are requested from all_node_set that are missing
     #   thus len(diff_nodes) == 0
-    diff_nodes = setdiff1d(all_node_set, all_nids)
+    diff_nodes = np.setdiff1d(all_node_set, all_nids)
     if len(diff_nodes) != 0:
         msg = ('The following nodes cannot be found, but are included'
                ' in the reduced set; nids=%s' % diff_nodes)
@@ -298,7 +300,7 @@ def _eq_nodes_setup_node_set(model: BDF,
     # the nodes to analyze are the union of all the nodes and the desired set
     # which is basically the same as:
     #   nids = unique(all_node_set)
-    nids = intersect1d(all_nids, all_node_set, assume_unique=True)  # the new values
+    nids = np.intersect1d(all_nids, all_node_set, assume_unique=True)  # the new values
 
     if renumber_nodes:
         raise NotImplementedError('node_set is not None & renumber_nodes=True')
@@ -317,11 +319,11 @@ def _eq_nodes_setup_node(model: BDF, renumber_nodes: bool=False,
             node.nid = inode + 1
             inode += 1
         nnodes = len(model.nodes)
-        nids = arange(1, inode + 1, dtype=idtype)
+        nids = np.arange(1, inode + 1, dtype=idtype)
         assert nids[-1] == nnodes
     else:
         nodes_list = list(model.nodes.keys())
-        nids = array(nodes_list, dtype=idtype)
+        nids = np.array(nodes_list, dtype=idtype)
         nids.sort()
     all_nids = nids
     return nids, all_nids
@@ -362,13 +364,14 @@ def _check_for_referenced_nodes(model: BDF,
         for unused_eid, element in sorted(model.masses.items()):
             spoint_epoint_nid_set.update(element.node_ids)
 
-        nids_new = spoint_epoint_nid_set - set(model.spoints) - set(model.epoints)
-
+        nids_new: set[Optional[int]] = (
+            spoint_epoint_nid_set - set(model.spoints) - set(model.epoints)
+        )
         if None in nids_new:
             nids_new.remove(None)
 
         # autosorts the data
-        nids_new = unique(list(nids_new))
+        nids_new = np.unique(list(nids_new))
         assert isinstance(nids_new[0], integer_types), type(nids_new[0])
 
         missing_nids = list(set(nids_new) - set(all_nids))
@@ -379,7 +382,7 @@ def _check_for_referenced_nodes(model: BDF,
             raise RuntimeError(msg)
 
         # get the node_id mapping for the kdtree
-        inew = searchsorted(nids, nids_new, side='left')
+        inew = np.searchsorted(nids, nids_new, side='left')
         # print('nids_new =', nids_new)
     else:
         inew = None
@@ -435,8 +438,11 @@ def _eq_nodes_find_pairs(nids: NDArrayNint,
     return nid_pairs
 
 
-def _eq_nodes_final(nid_pairs, model: BDF, tol: float,
-                    all_node_set: NDArrayNint, debug: bool=False) -> None:
+def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
+                    model: BDF,
+                    tol: float,
+                    all_node_set: NDArrayNint,
+                    debug: bool=False) -> None:
     """apply nodal equivalencing to model"""
     #log = model.log
     #log.info('_eq_nodes_final')
@@ -490,7 +496,7 @@ def _eq_nodes_final(nid_pairs, model: BDF, tol: float,
         #skip_nodes.append(nid2)
     return
 
-def _update_grid(node1: GRID, node2: GRID):
+def _update_grid(node1: GRID, node2: GRID) -> None:
     """helper method for _eq_nodes_final"""
     node2.nid = node1.nid
     node2.xyz = node1.xyz
@@ -634,7 +640,7 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
 
     # check the closest 10 nodes for equality
     if method == 'new' and is_not_node_set:
-        kdt, nid_pairs = _eq_nodes_build_tree_new(
+        nid_pairs = _eq_nodes_build_tree_new(
             kdt, nodes_xyz,
             nids, all_node_set,
             nnodes, is_not_node_set,
@@ -693,7 +699,7 @@ def _eq_nodes_build_tree_new(kdt: KDTree,
         log.warning(f'diff_bad = {diff_bad}')
         log.warning(f'diff_missed = {diff_missed}')
 
-    return kdt, nid_pairs
+    return nid_pairs
 
 def _get_tree(nodes_xyz: NDArrayN3float, msg: str='') -> KDTree:
     """gets the kdtree"""

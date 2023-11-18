@@ -1843,17 +1843,6 @@ class TF(VectorizedBaseCard):
         self.nodes = nodes
         self.nnode = nnode
 
-    def geom_check(self, missing: dict[str, np.ndarray]):
-        model = self.model
-        nodes = np.hstack([self.node_id, self.nodes.ravel()])
-        unode = np.unique(nodes)
-
-        geom_check(
-            self,
-            missing,
-            node=(model.grid.node_id, unode),
-        )
-
     def __apply_slice__(self, tf: TF, i: np.ndarray) -> None:
         tf.n = len(i)
         #tf._is_sorted = self._is_sorted
@@ -1869,6 +1858,24 @@ class TF(VectorizedBaseCard):
         tf.components = vslice_by_idim(i, inode, self.components)
         tf.a = vslice_by_idim(i, inode, self.a)
         tf.nnode = self.nnode[i]
+
+    def geom_check(self, missing: dict[str, np.ndarray]):
+        model = self.model
+        nodes = np.hstack([self.node_id, self.nodes.ravel()])
+        unode = np.unique(nodes)
+
+        geom_check(
+            self,
+            missing,
+            node=(model.grid.node_id, unode),
+        )
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     @property
     def inode(self) -> np.ndarray:

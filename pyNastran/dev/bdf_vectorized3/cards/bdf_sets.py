@@ -974,6 +974,13 @@ class SUPORT(VectorizedBaseCard):
         #self.__apply_slice__(grid, i)
         #return grid
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     def index(self, ids: np.ndarray,
               assume_sorted: bool=True,
               check_index: bool=True,
@@ -1257,6 +1264,13 @@ class USET(VectorizedBaseCard):
         self.n = len(node_id)
         #self.sort()
         #self.cards = []
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['node_id'].append(self.node_id)
@@ -1643,6 +1657,13 @@ class SET1(VectorizedBaseCard):
     def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
+    #def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        #"""helper for bdf_equivalence_nodes"""
+        #nodes = self.node_id
+        #for i, nid1 in enumerate(nodes):
+            #nid2 = nid_old_to_new.get(nid1, nid1)
+            #nodes[i] = nid2
+
     @property
     def inid(self) -> np.ndarray:
         return make_idim(self.n, self.num_ids)
@@ -1953,14 +1974,21 @@ class SESET(VectorizedBaseCard):
         i = np.argsort(self.seid)
         self.__apply_slice__(self, i)
 
+    #def geom_check(self, missing: dict[str, np.ndarray]):
+        #pass
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['node_id'].append(self.node_id)
         pass
     def remove_unused(self, used_dict: dict[str, np.ndarray]) -> None:
         used_dict['node_id'].append(self.node_id)
-        pass
-
-    def geom_check(self, missing: dict[str, np.ndarray]):
         pass
 
     @property

@@ -554,6 +554,13 @@ class MPC(VectorizedBaseCard):
                    spoint=(all_spoint_ids, spoint_id),
                    )
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
 def where_not(base_vector: np.ndarray, iwhere: np.ndarray) -> np.ndarray:
     mask = np.full(base_vector.shape, True, dtype='bool')
     mask[iwhere] = False

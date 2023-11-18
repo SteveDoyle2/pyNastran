@@ -1778,6 +1778,12 @@ class TEMP(Load):
     +------+-----+----+-------+----+-------+----+----+
 
     """
+    def clear(self) -> None:
+        self.load_id = np.array([], dtype='int32')
+        self.node_id = np.array([], dtype='int32')
+        self.temperature = np.array([], dtype='float64')
+        self.nnodes = np.array([], dtype='int32')
+
     def add(self, sid: int, temperature_dict: dict[int, float],
             comment: str='') -> int:
         """
@@ -1852,13 +1858,6 @@ class TEMP(Load):
         assert len(self.load_id) == self.n
         self.cards = []
 
-    def __apply_slice__(self, load: TEMP, i: np.ndarray) -> None:
-        load.n = len(i)
-        load.load_id = self.load_id[i]
-        load.nnodes = self.load_id[i]
-        load.node_id = self.node_id[i]
-        load.temperature = self.temperature[i]
-
     def _save(self, load_id, node_id, temperature, nnodes):
         assert len(self.load_id) == 0, self.load_id
         nloads = len(load_id)
@@ -1868,11 +1867,25 @@ class TEMP(Load):
         self.nnodes = nnodes
         self.n = nloads
 
+    def __apply_slice__(self, load: TEMP, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.nnodes = self.load_id[i]
+        load.node_id = self.node_id[i]
+        load.temperature = self.temperature[i]
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         geom_check(self,
                    missing,
                    node=(nid, self.node_id), filter_node0=False)
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def convert(self, temperature_scale: float=1.0, **kwargs) -> None:
         self.temperature *= temperature_scale
@@ -2035,12 +2048,6 @@ class SLOAD(Load):
         #self.__apply_slice__(load, i)
         #return load
 
-    def __apply_slice__(self, load: SLOAD, i: np.ndarray) -> None:
-        load.n = len(i)
-        load.load_id = self.load_id[i]
-        load.nodes = self.nodes
-        load.mags = self.mags
-
     def add(self, sid: int, nodes: list[int], mags: list[float],
             comment: str='') -> int:
         """
@@ -2128,6 +2135,12 @@ class SLOAD(Load):
                    missing,
                    spoint=(spoint, used_spoints), )
 
+    def __apply_slice__(self, load: SLOAD, i: np.ndarray) -> None:
+        load.n = len(i)
+        load.load_id = self.load_id[i]
+        load.nodes = self.nodes
+        load.mags = self.mags
+
     def sum_forces_moments(self) -> np.ndarray:
         #spoint = self.model.spoint
         #xyz_cid0 = grid.xyz_cid0()
@@ -2162,30 +2175,19 @@ class SLOAD(Load):
 class RFORCE(Load):
     def clear(self) -> None:
         self.load_id = np.array([], dtype='int32')
+        self.node_id = np.array([], dtype='int32')
+        self.coord_id = np.array([], dtype='int32')
+        self.scale = np.array([], dtype='float64')
+        self.r = np.zeros((0, 3), dtype='float64')
+        self.method = np.array([], dtype='int32')
+        self.racc = np.array([], dtype='float64')
+        self.main_bulk = np.array([], dtype='int32')
+        self.idrf = np.array([], dtype='int32')
 
-    def slice_card_by_index(self, i: np.ndarray) -> RFORCE:
-        load = RFORCE(self.model)
-        self.__apply_slice__(load, i)
-        return load
-
-    def __apply_slice__(self, load: RFORCE, i: np.ndarray) -> None:
-        #self.model.log.info(self.dphase_int)
-        #self.model.log.info(i)
-        assert len(i) > 0
-        load.n = len(i)
-
-        load.load_id = self.load_id[i]
-        load.node_id = self.node_id[i]
-        load.coord_id = self.coord_id[i]
-        load.scale = self.scale[i]
-        load.r = self.r[i, :]
-        load.method = self.method[i]
-        load.racc = self.racc[i]
-        load.main_bulk = self.main_bulk[i]
-        load.idrf = self.idrf[i]
-
-    #def convert(self, accel_scale: float=1.0, **kwargs) -> None:
-        #self.scale *= accel_scale
+    #def slice_card_by_index(self, i: np.ndarray) -> RFORCE:
+        #load = RFORCE(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
 
     def add(self, sid: int, nid: int, scale: float, r123: list[float],
             cid: int=0, method: int=1, racc: float=0.,
@@ -2348,6 +2350,32 @@ class RFORCE(Load):
         self.idrf = idrf
         assert isinstance(self.r, np.ndarray), type(self.r)
 
+    def __apply_slice__(self, load: RFORCE, i: np.ndarray) -> None:
+        #self.model.log.info(self.dphase_int)
+        #self.model.log.info(i)
+        assert len(i) > 0
+        load.n = len(i)
+
+        load.load_id = self.load_id[i]
+        load.node_id = self.node_id[i]
+        load.coord_id = self.coord_id[i]
+        load.scale = self.scale[i]
+        load.r = self.r[i, :]
+        load.method = self.method[i]
+        load.racc = self.racc[i]
+        load.main_bulk = self.main_bulk[i]
+        load.idrf = self.idrf[i]
+
+    #def convert(self, accel_scale: float=1.0, **kwargs) -> None:
+        #self.scale *= accel_scale
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     def geom_check(self, missing: dict[str, np.ndarray]):
         nid = self.model.grid.node_id
         cid = self.model.coord.coord_id
@@ -2396,6 +2424,14 @@ class RFORCE1(Load):
     """
     def clear(self) -> None:
         self.load_id = np.array([], dtype='int32')
+        self.node_id = np.array([], dtype='int32')
+        self.coord_id = np.array([], dtype='int32')
+        self.scale = np.array([], dtype='float64')
+        self.r = np.zeros((0, 3), dtype='float64')
+        self.method = np.array([], dtype='int32')
+        self.racc = np.array([], dtype='float64')
+        self.main_bulk = np.array([], dtype='int32')
+        self.group_id = np.array([], dtype='int32')
 
     def slice_card_by_index(self, i: np.ndarray) -> RFORCE1:
         load = RFORCE1(self.model)
@@ -2574,6 +2610,13 @@ class RFORCE1(Load):
         self.racc = racc
         self.main_bulk = main_bulk
         self.group_id = group_id
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.node_id
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     def geom_check(self, missing: dict[str, np.ndarray]) -> None:
         nid = self.model.grid.node_id

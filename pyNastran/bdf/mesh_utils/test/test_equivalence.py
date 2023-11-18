@@ -7,9 +7,9 @@ import numpy as np
 from cpylog import SimpleLogger
 
 import pyNastran
+from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
-from pyNastran.dev.bdf_vectorized3.bdf import BDF, read_bdf
-from pyNastran.dev.bdf_vectorized3.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
@@ -18,8 +18,8 @@ BWB_PATH = MODEL_PATH / 'bwb'
 np.set_printoptions(edgeitems=3, infstr='inf',
                     linewidth=75, nanstr='nan', precision=3,
                     suppress=True, threshold=1000, formatter=None)
-DIRNAME = PKG_PATH / 'bdf' / 'mesh_utils' / 'test'
-assert DIRNAME.exists(), DIRNAME
+DIRNAME = Path(os.path.dirname(__file__))
+
 
 class TestEquiv(unittest.TestCase):
 
@@ -47,12 +47,13 @@ class TestEquiv(unittest.TestCase):
             bdf_file.write(msg)
 
         model = read_bdf(bdf_filename, log=log)
-        #out = model.get_displacement_index_xyz_cp_cd()
-        #icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        out = model.get_displacement_index_xyz_cp_cd()
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
 
-        #nids = nid_cp_cd[:, 0]
-        nids = model.grid.node_id
-        xyz_cid0 = model.grid.xyz_cid0()
+        nids = nid_cp_cd[:, 0]
+        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+                xyz_cp, nids, icp_transform,
+                cid=0)
         nodes_xyz = xyz_cid0
 
         #'GRID,2,,0.,0.,0.5\n'
@@ -96,8 +97,6 @@ class TestEquiv(unittest.TestCase):
         )
         bdf_filename = DIRNAME / 'nonunique.bdf'
         bdf_filename_out = DIRNAME / 'unique.bdf'
-        if bdf_filename_out.exists():
-            os.remove(bdf_filename_out)
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
@@ -107,18 +106,17 @@ class TestEquiv(unittest.TestCase):
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=None, crash_on_collapse=False,
                               log=log, debug=False, method='old')
-        model = read_bdf(bdf_filename_out, xref=False)
         model = save_check_nodes(bdf_filename_out, log, nnodes=3, skip_cards=['CTRIA3'])
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1, 2, 10]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 2, 10], node_ids
 
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=None, crash_on_collapse=False,
                               log=log, debug=False, method='new')
         model = save_check_nodes(bdf_filename_out, log, nnodes=3, skip_cards=['CTRIA3'])
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1, 2, 10]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 2, 10], node_ids
 
         os.remove(bdf_filename)
 
@@ -151,11 +149,55 @@ class TestEquiv(unittest.TestCase):
         )
         bdf_filename = DIRNAME / 'nonunique.bdf'
         bdf_filename_out = DIRNAME / 'unique.bdf'
-        if bdf_filename_out.exists():
-            os.remove(bdf_filename_out)
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
+
+        tol = 0.2
+        # Collapse 5/6 and 20/3; Put a 40 and 20 to test non-sequential IDs
+        bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                              renumber_nodes=False, neq_max=4, xref=True,
+                              node_set=None, crash_on_collapse=False,
+                              log=log, debug=False, method='old')
+        model = save_check_nodes(bdf_filename_out, log, nnodes=4)
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 5, 40], node_ids
+
+        bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                              renumber_nodes=False, neq_max=4, xref=True,
+                              node_set=None, crash_on_collapse=False,
+                              log=log, debug=False, method='new')
+        model = save_check_nodes(bdf_filename_out, log, nnodes=4)
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 5, 40], node_ids
+
+        tol = 0.009
+        # Don't collapse anything because the tolerance is too small
+        bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                              renumber_nodes=False, neq_max=4, xref=True,
+                              node_set=None, crash_on_collapse=False,
+                              log=log, debug=False, method='old')
+        model = save_check_nodes(bdf_filename_out, log, nnodes=6)
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 5, 6, 20, 40], node_ids
+
+        bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                              renumber_nodes=False, neq_max=4, xref=True,
+                              node_set=None, crash_on_collapse=False,
+                              log=log, debug=False, method='new')
+        model = save_check_nodes(bdf_filename_out, log, nnodes=6)
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 5, 6, 20, 40], node_ids
+
+        tol = 0.2
+        node_set = [2, 3]
+        # Node 2 is not defined, so crash
+        with self.assertRaises(RuntimeError):
+            # node 2 is not defined because it should be node 20
+            bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                                  renumber_nodes=False, neq_max=4, xref=True,
+                                  node_set=node_set, crash_on_collapse=False,
+                                  log=log, debug=False)
 
         tol = 0.2
         node_list = [20, 3]
@@ -165,8 +207,8 @@ class TestEquiv(unittest.TestCase):
                               node_set=node_list, crash_on_collapse=False,
                               log=log, debug=False, method='old')
         model = save_check_nodes(bdf_filename_out, log, nnodes=5)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1, 3, 5, 6, 40]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 5, 6, 40], node_ids
 
         tol = 0.2
         node_list = [20, 3]
@@ -176,8 +218,8 @@ class TestEquiv(unittest.TestCase):
                               node_set=node_list, crash_on_collapse=False,
                               log=log, debug=False, method='new')
         model = save_check_nodes(bdf_filename_out, log, nnodes=5)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1, 3, 5, 6, 40]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 5, 6, 40], node_ids
 
         tol = 0.2
         node_set = {20, 3}
@@ -187,16 +229,16 @@ class TestEquiv(unittest.TestCase):
                               node_set=node_set, crash_on_collapse=False,
                               log=log, debug=False, method='old')
         model = save_check_nodes(bdf_filename_out, log, nnodes=5)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1, 3, 5, 6, 40]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 5, 6, 40], node_ids
 
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=node_set, crash_on_collapse=False,
                               log=log, debug=False, method='new')
         model = save_check_nodes(bdf_filename_out, log, nnodes=5)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1, 3, 5, 6, 40]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 5, 6, 40], node_ids
 
         tol = 0.2
         aset = np.array([20, 3, 4], dtype='int32')
@@ -211,16 +253,16 @@ class TestEquiv(unittest.TestCase):
                               #log=log,
                               debug=False, method='old')
         model = save_check_nodes(bdf_filename_out, log, nnodes=5)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1, 3, 5, 6, 40]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 5, 6, 40], node_ids
 
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=node_set, crash_on_collapse=False, debug=False,
                               method='new')
         model = save_check_nodes(bdf_filename_out, log, nnodes=5)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1, 3, 5, 6, 40]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 5, 6, 40], node_ids
 
 
     def test_eq3(self):
@@ -280,16 +322,16 @@ class TestEquiv(unittest.TestCase):
                               node_set=None, crash_on_collapse=False,
                               log=log, debug=False, method='old')
         model = save_check_nodes(bdf_filename_out, log, nnodes=11)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [5971, 5972, 5973, 5987, 5988, 5989, 6003, 6004, 6005, 10476, 10561]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [5971, 5972, 5973, 5987, 5988, 5989, 6003, 6004, 6005, 10476, 10561], node_ids
 
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=None, crash_on_collapse=False,
                               log=log, debug=False, method='new')
         model = save_check_nodes(bdf_filename_out, log, nnodes=11)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [5971, 5972, 5973, 5987, 5988, 5989, 6003, 6004, 6005, 10476, 10561]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [5971, 5972, 5973, 5987, 5988, 5989, 6003, 6004, 6005, 10476, 10561], node_ids
 
         os.remove(bdf_filename)
 
@@ -327,8 +369,6 @@ class TestEquiv(unittest.TestCase):
         )
         bdf_filename = DIRNAME / 'nonunique.bdf'
         bdf_filename_out = DIRNAME / 'unique.bdf'
-        if bdf_filename_out.exists():
-            os.remove(bdf_filename_out)
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
@@ -340,18 +380,15 @@ class TestEquiv(unittest.TestCase):
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=node_set, crash_on_collapse=False,
                               log=log, debug=False, method='old')
-        model = read_bdf(bdf_filename_out)
 
         model = save_check_nodes(bdf_filename_out, log, nnodes=6)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1, 3, 4, 5, 6, 20]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1, 3, 4, 5, 6, 20], node_ids
         os.remove(bdf_filename)
 
     def test_eq5(self):
         log = SimpleLogger(level='info')
         bdf_filename_out = DIRNAME / 'eq5.bdf'
-        if bdf_filename_out.exists():
-            os.remove(bdf_filename_out)
 
         model = BDF(debug=True, log=log, mode='msc')
         for nid in range(1, 11):
@@ -370,9 +407,9 @@ class TestEquiv(unittest.TestCase):
                               renumber_nodes=False, neq_max=4, xref=True,
                               node_set=node_set, crash_on_collapse=False,
                               log=log, debug=False, method='old')
-        model = save_check_nodes(bdf_filename_out, log, nnodes=1)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1]), node_ids
+        model = save_check_nodes(bdf_filename_out, log, nnodes=6)
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [5, 6, 7, 8, 9, 10], node_ids
         del model
 
         model2 = BDF(debug=True, log=log, mode='msc')
@@ -384,8 +421,8 @@ class TestEquiv(unittest.TestCase):
                               node_set=node_set, crash_on_collapse=False,
                               log=log, debug=True, method='new')
         model = save_check_nodes(bdf_filename_out, log, nnodes=1)
-        node_ids = model.grid.node_id
-        assert np.array_equal(node_ids, [1]), node_ids
+        node_ids = list(sorted(model.nodes))
+        assert node_ids == [1], node_ids
 
     def test_multi_eq1(self):
         model = BDF(debug=False)
@@ -417,21 +454,15 @@ class TestEquiv(unittest.TestCase):
                               node_set=node_set, crash_on_collapse=False,
                               log=log, debug=True, method='new')
         model2 = read_bdf(bdf_filename_out, debug=None)
-        assert len(model2.grid) == 3, model2.grid
+        assert len(model2.nodes) == 3, model2.nodes
 
-def save_check_nodes(bdf_filename, log: SimpleLogger, nnodes: int, skip_cards=None):
+def save_check_nodes(bdf_filename, log, nnodes, skip_cards=None):
     model = BDF(log=log, debug=False)
     model.disable_cards(skip_cards)
     model.read_bdf(bdf_filename)
-
-    grid = model.grid
-    msg = 'nnodes=%s\n' % len(grid)
-    for nid, xyz in zip(grid.node_id, grid.xyz):
-        msg += 'nid=%s xyz=%s\n' % (nid, xyz)
-    assert len(grid) == nnodes, msg
+    msg = 'nnodes=%s\n' % len(model.nodes)
+    for nid, node in sorted(model.nodes.items()):
+        msg += 'nid=%s xyz=%s\n' % (nid, node.xyz)
+    assert len(model.nodes) == nnodes, msg
     os.remove(bdf_filename)
     return model
-
-
-if __name__ == '__main__':  # pragma: no cover
-    unittest.main()

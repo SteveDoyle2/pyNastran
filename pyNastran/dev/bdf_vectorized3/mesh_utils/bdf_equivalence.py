@@ -33,13 +33,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import GRID
 
-#SCIPY_VERSION = int_version('scipy', scipy.__version__)
-#import scipy.spatial
-#if SCIPY_VERSION > [1, 6, 0]:
-    #KDTree = scipy.spatial.KDTree
-#else:
-    #KDTree = scipy.spatial.cKDTree
-
 
 BDF_FILETYPE = Union[BDF, str, StringIO, PurePath]
 def get_bdf_model(bdf_filename: BDF_FILETYPE,
@@ -174,9 +167,11 @@ def _bdf_equivalence_nodes(bdf_filename: str, tol: float,
                            renumber_nodes: bool=False, neq_max: int=4, xref: bool=True,
                            node_set: Optional[list[NDArrayNint]]=None,
                            log: Optional[SimpleLogger]=None,
-                           debug: bool=True, method: str='new',
-                           idtype: str='int32', fdtype: str='float64') -> tuple[BDF,
-                                                                                list[tuple[int, int]]]:
+                           debug: bool=True,
+                           method: str='new',
+                           idtype: str='int32',
+                           fdtype: str='float64') -> tuple[BDF,
+                                                           list[tuple[int, int]]]:
     """helper for bdf_equivalence_nodes"""
     all_node_set = get_all_node_set(node_set)
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
@@ -419,20 +414,24 @@ def update_cards(model: BDF,
         'MATS1',
         'PELAS', 'PELAST',
         'PDAMP', 'PDAMPT',
-        'PBUSH', 'PBUSHT',
+        'PBUSH', 'PBUSHT', 'PBUSH1D',
         'PMASS', 'PGAP', 'PVISC',
         'PROD', 'PTUBE',
         'PBAR', 'PBARL',
         'PBEAM', 'PBEAML', 'PBCOMP', 'PBEND', 'PBEAM3',
         'PSHELL', 'PCOMP', 'PSHEAR',
         'PSOLID', 'PLSOLID',
+        'CBARAO', 'CELAS3', 'CELAS4',
         'BCONP', 'BFRIC',
-        'SPCADD', # 'MPCADD',
+        'SPCADD', 'MPCADD', 'SET1',
         'DESVAR', 'DVPREL1', 'DVMREL1', 'DVPREL2', 'DVMREL2',
         'DCONSTR', 'DCONADD', 'DSCREEN',
-        'GRAV', 'PLOAD1', 'PLOAD2', 'SLOAD',
+        'GRAV', 'PLOAD1', 'PLOAD2', 'SLOAD', 'LOAD', 'TEMPD',
         # time/freq/random loads
         'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'RANDPS', 'DLOAD',
+        'LSEQ',
+        # acoustic
+        'PAABSF',
     }
     grid = model.grid
     ids = np.unique(grid.node_id)
@@ -449,6 +448,9 @@ def update_cards(model: BDF,
 
     unid = np.unique(model.grid.node_id)
     assert len(unid) == len(model.grid)
+
+    if len(model.set1):
+        raise NotImplementedError('SET1 requires a node/element flag from another card')
 
     supported_cards = {}
     cards = [card for card in model._cards_to_setup if card.n > 0]
@@ -479,7 +481,8 @@ def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
                                  log: SimpleLogger,
                                  inew: NDArrayNint,
                                  node_set: Optional[NDArrayNint]=None,
-                                 neq_max: int=4, method: str='new',
+                                 neq_max: int=4,
+                                 method: str='new',
                                  debug: bool=False) -> list[tuple[int, int]]:
     """
     Helper for equivalencing
@@ -563,7 +566,9 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
                          log: SimpleLogger,
                          inew=None,
                          node_set: Optional[NDArrayNint]=None,
-                         neq_max: int=4, method: str='new', msg: str='',
+                         neq_max: int=4,
+                         method: str='new',
+                         msg: str='',
                          debug: bool=False) -> tuple[KDTree,
                                                      list[tuple[int, int]]]:
     """
@@ -605,7 +610,7 @@ def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
 
     # check the closest 10 nodes for equality
     if method == 'new' and is_not_node_set:
-        kdt, nid_pairs = _eq_nodes_build_tree_new(
+        nid_pairs = _eq_nodes_build_tree_new(
             kdt, nodes_xyz,
             nids, all_node_set,
             nnodes, is_not_node_set,
@@ -643,7 +648,7 @@ def _eq_nodes_build_tree_new(kdt: KDTree,
                              tol: float,
                              log: SimpleLogger,
                              inew=None, node_set=None, neq_max: int=4, msg: str='',
-                             debug: float=False) -> tuple[Any, list[tuple[int, int]]]:
+                             debug: float=False) -> list[tuple[int, int]]:
     assert isinstance(nnodes, int), nnodes
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
     slots = np.where(ieq[:, :] < nnodes)
@@ -664,7 +669,7 @@ def _eq_nodes_build_tree_new(kdt: KDTree,
         log.warning(f'diff_bad = {diff_bad}')
         log.warning(f'diff_missed = {diff_missed}')
 
-    return kdt, nid_pairs
+    return nid_pairs
 
 def _get_tree(nodes_xyz: NDArrayN3float, msg: str='') -> KDTree:
     """gets the kdtree"""

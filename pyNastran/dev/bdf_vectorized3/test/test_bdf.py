@@ -43,7 +43,7 @@ from pyNastran.bdf.test.compare import compare_card_count
 from pyNastran.bdf.bdf import BDF as BDF_old #, read_bdf as read_bdf_old
 from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDFv, read_bdf as read_bdfv, map_version
 from pyNastran.dev.bdf_vectorized3.mesh_utils.convert import convert
-
+from pyNastran.dev.bdf_vectorized3.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 try:
     import tables
     IS_PYTABLES = True
@@ -56,7 +56,7 @@ BDFs = Union[BDF_old, BDFv]
 #from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 #from pyNastran.bdf.mesh_utils.mass_properties import (
     #mass_properties, mass_properties_nsm)  #, mass_properties_breakdown
-#from pyNastran.bdf.mesh_utils.forces_moments import get_temperatures_array
+from pyNastran.dev.bdf_vectorized3.mesh_utils.forces_moments import get_temperatures_array
 #from pyNastran.bdf.mesh_utils.mpc_dependency import (
     #get_mpc_node_ids, get_mpc_node_ids_c1,
     #get_dependent_nid_to_components, get_mpcs)
@@ -67,7 +67,6 @@ BDFs = Union[BDF_old, BDFv]
 
 #from pyNastran.bdf.cards.dmig import NastranMatrix
 #from pyNastran.bdf.bdf_interface.compare_card_content import compare_card_content
-#from pyNastran.bdf.mesh_utils.convert import convert
 #from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
 import pyNastran.bdf.test
@@ -266,26 +265,36 @@ def run_lots_of_files(filenames: list[str], folder: str='',
     return failed_files
 
 
-def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
-            mesh_form='separate', is_folder=False, print_stats=False,
-            encoding=None, sum_load=True,
-            size=8, is_double=False,
-            hdf5=False,
-            stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False,
+def run_bdf(folder, bdf_filename,
+            debug: bool=False, xref: bool=True,
+            check: bool=True, punch: bool=False,
+            mesh_form: str='separate',
+            is_folder: bool=False,
+            print_stats: bool=False,
+            encoding=None, sum_load: bool=True,
+            size: int=8, is_double: bool=False,
+            hdf5: bool=False,
+            stop: bool=False, nastran: str='',
+            post: int=-1, dynamic_vars=None,
+            quiet: bool=False,
+            dumplines: bool=False,
+            dictsort: bool=False,
             limit_mesh_opt: bool=False,
-            run_extract_bodies=False,
-            run_skin_solids=True,
+            run_extract_bodies: bool=False,
+            run_skin_solids: bool=True,
+            run_equivalence: bool=True,
             run_nominal: bool=True,
             run_loads: bool=True,
             run_mass: bool=True,
             skip_cards: Optional[list[str]]=None,
             save_file_structure: bool=False,
-            nerrors=0, dev: bool=False, crash_cards=None,
+            nerrors: int=0, dev: bool=False,
+            crash_cards=None,
             safe_xref: bool=False, pickle_obj: bool=False,
             version: Optional[str]=None,
             validate_case_control: bool=True,
-            stop_on_failure: bool=True, log=None, name: str=''):
+            stop_on_failure: bool=True,
+            log=None, name: str=''):
     """
     Runs a single BDF
 
@@ -378,6 +387,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
         run_extract_bodies=run_extract_bodies,
         run_skin_solids=run_skin_solids,
+        run_equivalence=run_equivalence,
         run_loads=run_loads,
         run_mass=run_mass,
 
@@ -422,6 +432,7 @@ def run_and_compare_fems(
         safe_xref: bool=True,
         run_extract_bodies: bool=False,
         run_skin_solids: bool=True,
+        run_equivalence: bool=True,
         run_loads: bool=True,
         run_mass: bool=True,
         skip_cards: Optional[list[str]]=None,
@@ -466,6 +477,7 @@ def run_and_compare_fems(
             size, is_double,
             run_extract_bodies=run_extract_bodies,
             run_skin_solids=run_skin_solids,
+            run_equivalence=run_equivalence,
             run_loads=run_loads,
             run_mass=run_mass,
             run_geom_check=run_geom_check,
@@ -524,6 +536,9 @@ def run_and_compare_fems(
         check_large_field(bdf_model, nastran_cmd, post, size, is_double)
 
     except KeyboardInterrupt:
+        print(f'stopping on {bdf_model}')
+        sys.stdout.flush()
+        sys.stderr.flush()
         sys.exit('KeyboardInterrupt...sys.exit()')
     except IOError:  # only temporarily uncomment this when running lots of tests
         if not dev:
@@ -1078,11 +1093,13 @@ def run_nastran(bdf_model: str, nastran: str, post: int=-1,
         raise RuntimeError('%s failed2' % op2_model2)
     return op2_model2
 
-def run_fem1(fem1: BDFs, bdf_model: str, out_model: str, mesh_form: str,
+def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
+             mesh_form: str,
              xref: bool, punch: bool, sum_load: bool,
              size: int, is_double: bool,
              run_extract_bodies: bool=False,
              run_skin_solids: bool=True,
+             run_equivalence: bool=True,
              run_loads: bool=True,
              run_mass: bool=True,
              run_geom_check: bool=True,
@@ -1122,6 +1139,8 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str, mesh_form: str,
         ???
     run_extract_bodies : bool; default=False
         isolate the fem bodies; typically 1 body; code is still buggy
+    run_equivalence : bool; default=True
+        nodal equivalence; throw results in the trash
     encoding : str; default=None
         the file encoding
     crash_cards : ???
@@ -1265,6 +1284,18 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str, mesh_form: str,
         raise NotImplementedError(msg)
     #fem1.write_as_ctria3(out_model)
 
+    if run_equivalence and 0:
+        bdf_filename_out = None
+        tol = 1.
+        bdf_equivalence_nodes(
+            out_model, bdf_filename_out, tol,
+            renumber_nodes=False, neq_max=4,
+            xref=True, node_set=None,
+            size=8, is_double=False,
+            remove_collapsed_elements=False,
+            avoid_collapsed_elements=False,
+            crash_on_collapse=False,
+            log=log, debug=True, method='new')
     fem1._get_maps()
     run_convert = True
     #remove_unused_materials(fem1)
@@ -2212,21 +2243,20 @@ def _check_case_parameters(subcase: Subcase,
         ierror = check_sol(sol, subcase, allowed_sols, 'RMETHOD', log, ierror, nerrors,
                            require_sol=False)
 
-    return ierror
-    nid_map = fem.nid_map
-    if 'TEMPERATURE(LOAD)' in subcase and 0:
+    if 'TEMPERATURE(LOAD)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(LOAD)')[0]
-        get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
-    if 'TEMPERATURE(BOTH)' in subcase and 0:
+        get_temperatures_array(fem, loadcase_id, fdtype='float32')
+    if 'TEMPERATURE(BOTH)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(BOTH)')[0]
-        get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
-    if 'TEMPERATURE(INITIAL)' in subcase and 0:
+        get_temperatures_array(fem, loadcase_id, fdtype='float32')
+    if 'TEMPERATURE(INITIAL)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(INITIAL)')[0]
-        get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
-    if 'TEMPERATURE(MATERIAL)' in subcase and 0:
+        get_temperatures_array(fem, loadcase_id, fdtype='float32')
+    if 'TEMPERATURE(MATERIAL)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(MATERIAL)')[0]
-        get_temperatures_array(fem, loadcase_id, nid_map=nid_map, fdtype='float32')
+        get_temperatures_array(fem, loadcase_id, fdtype='float32')
 
+    return ierror
     if 'LOAD' in subcase:
         cid_new = 0
         cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
@@ -2665,6 +2695,8 @@ def test_bdf_argparse(argv=None):
                                help='skip loads calcuations (default=False)')
     parent_parser.add_argument('--skip_mass', action='store_true',
                                help='skip mass calcuations (default=False)')
+    parent_parser.add_argument('--skip_equivalence', action='store_true',
+                               help='skip nodal equivalencing (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
                                help='prints debug messages (default=False)')
     # --------------------------------------------------------------------------
@@ -2767,7 +2799,7 @@ def get_test_bdf_usage_args_examples(encoding):
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
         f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}]\n'
-        '              [--skip_nominal] [--skip_loads] [--skip_mass]\n'
+        '              [--skip_nominal] [--skip_loads] [--skip_mass] [--skip_equivalence]\n'
     )
     usage = (
         "Usage:\n"
@@ -2804,6 +2836,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --skip_nominal_bar  skip the nominal model bar comparison (default=False)\n'
         '  --skip_loads   skip the loads summation calculations (default=False)\n'
         '  --skip_mass    skip the mass properties calculations (default=False)\n'
+        '  --skip_equivalence  skips the nodal equivalencing (default=False)\n'
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
         f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n'
         '  -q, --quiet        prints debug messages (default=False)\n'
@@ -2853,6 +2886,7 @@ def main(argv=None, show_args: bool=True) -> None:
     data['run_nominal'] = not data['skip_nominal']
     data['run_loads'] = not data['skip_loads']
     data['run_mass'] = not data['skip_mass']
+    data['run_equivalence'] = not data['skip_equivalence']
     if data['skip_cards']:
         data['skip_cards'] = data['skip_cards'].split(',')
 
@@ -2903,6 +2937,7 @@ def main(argv=None, show_args: bool=True) -> None:
             run_nominal=data['run_nominal'],
             run_loads=data['run_loads'],
             run_mass=data['run_mass'],
+            run_equivalence=data['run_equivalence'],
             skip_cards=data['skip_cards'],
             pickle_obj=data['pickle'],
             safe_xref=data['safe'],
