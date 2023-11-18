@@ -4,9 +4,9 @@ import io
 from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
-from pyNastran.dev.bdf_vectorized3.bdf_interface.mesh_utils.convert import convert
-from pyNastran.dev.bdf_vectorized3.bdf_interface.mesh_utils.remove_unused import remove_unused
-from pyNastran.dev.bdf_vectorized3.bdf_interface.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
+from pyNastran.dev.bdf_vectorized3.mesh_utils.convert import convert
+from pyNastran.dev.bdf_vectorized3.mesh_utils.remove_unused import remove_unused
+from pyNastran.dev.bdf_vectorized3.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 
 #from pyNastran.dev.bdf_vectorized3.mesh_utils.convert import convert
 #if TYPE_CHECKING:  # pragma: no cover

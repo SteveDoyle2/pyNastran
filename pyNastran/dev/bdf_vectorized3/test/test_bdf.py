@@ -42,7 +42,7 @@ from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.test.compare import compare_card_count
 from pyNastran.bdf.bdf import BDF as BDF_old #, read_bdf as read_bdf_old
 from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDFv, read_bdf as read_bdfv, map_version
-from pyNastran.dev.bdf_vectorized3.bdf_interface.mesh_utils.convert import convert
+from pyNastran.dev.bdf_vectorized3.mesh_utils.convert import convert
 
 try:
     import tables
