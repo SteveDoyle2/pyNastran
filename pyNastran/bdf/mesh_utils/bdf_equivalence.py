@@ -18,6 +18,7 @@ import scipy
 import scipy.spatial
 
 from pyNastran.nptyping_interface import NDArrayNint, NDArrayN3float
+from pyNastran.femutils.utils import unique2d
 from pyNastran.utils import int_version
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf import BDF
@@ -426,41 +427,48 @@ def _eq_nodes_find_pairs(nids: NDArrayNint,
     #skip_nodes = []
     nid_pairs = []
     if node_set is None:
-        for (irow, icol) in zip(irows, icols):
-            inid2 = ieq[irow, icol]
-            nid1 = nids[irow]
-            nid2 = nids[inid2]
-            if nid1 == nid2:
-                continue
-            nid_pairs.append((nid1, nid2))
+        inids2 = ieq[irows, icols]
+        nids1 = nids[irows]
+        nids2 = nids[inids2]
+        is_unique = (nids1 != nids2)
+        nid1_nid2 = np.column_stack([
+            nids1[is_unique],
+            nids2[is_unique],
+        ])
+        nid_pairs.append(nid1_nid2)
     else:
-        for (irow, icol) in zip(irows, icols):
-            inid2 = ieq[irow, icol]
-            nid1 = nids[irow]
-            nid2 = nids[inid2]
-            if nid1 == nid2:
+        #node_set is not None
+        inids2 = ieq[irows, icols]
+        nids1 = nids[irows]
+        nids2 = nids[inids2]
+        is_unique = (nids1 != nids2)
+        nid1_nid2 = np.column_stack([
+            nids1[is_unique],
+            nids2[is_unique],
+        ])
+        for nid1, nid2 in nid1_nid2:
+            if nid1 not in all_node_set and nid2 not in all_node_set:
                 continue
-            if node_set is not None:
-                if nid1 not in all_node_set and nid2 not in all_node_set:
-                    continue
-                for seti in node_set:
-                    if nid1 in seti and nid2 in seti:
-                        nid_pairs.append((nid1, nid2))
-                        #print(f'({nid1}, {nid2})')
-                        break
+            for seti in node_set:
+                if nid1 in seti and nid2 in seti:
+                    nid_pairs.append((nid1, nid2))
+                    #print(f'({nid1}, {nid2})')
+                    break
+
     if len(nid_pairs) == 0:
         return []
         #return np.array([], dtype='int32')
 
-    nid_pairs_array = np.array(nid_pairs)
-    nid_pairs_array2 = np.column_stack([
-        nid_pairs_array.min(axis=1),
-        nid_pairs_array.max(axis=1),
-    ])
-    assert nid_pairs_array.shape == nid_pairs_array2.shape
-    #if len(nid_pairs) > 20000:
+    nid_pairs_array = np.vstack(nid_pairs)
+    nid_pairs_array.sort(axis=1) #  inplace sort [min, max]
+    #assert nid_pairs_array.shape == nid_pairs_array2.shape
+
+    nid_pairs_array2 = unique2d(nid_pairs_array).tolist()
+    nid_pairs_3 = [tuple(nid_pair) for nid_pair in nid_pairs_array2]
+    #if len(nid_pairs) > 2_000:
         #asdf
-    return nid_pairs
+    #return nid_pairs_array3
+    return nid_pairs_3
 
 
 def _eq_nodes_final(nid_pairs: list[tuple[int, int]],
@@ -608,15 +616,18 @@ def _nodes_xyz_nids_to_nid_pairs_new(kdt: KDTree,
     if nsets > 1:
         # nid_pairs was simply the set of all potential connections
         # now we filter connections that aren't part of an explicit set
-        nid_pairs2 = []
+        nid_pairs2 = set([])
         for pair in nid_pairs:
             for seti in node_set:
                 nid1, nid2 = pair
                 if nid1 in seti and nid2 in seti:
-                    nid_pairs2.append(pair)
+                    nid_pairs2.add(pair)
                     break
-        return nid_pairs2
-    return list(nid_pairs)
+        #return nid_pairs2
+        nid_pairs = nid_pairs2
+    nid_pairs3 = unique2d(nid_pairs2).tolist()
+    nid_pairs4 = [tuple(nid_pair) for nid_pair in nid_pairs3]
+    return nid_pairs4
 
 def _eq_nodes_build_tree(nodes_xyz: NDArrayN3float,
                          nids: NDArrayNint,
@@ -721,8 +732,9 @@ def _eq_nodes_build_tree_new(kdt: KDTree,
     nid_pairs_expected = _eq_nodes_find_pairs(nids, slots, ieq, log, all_node_set, node_set=node_set)
     if is_not_node_set:
         #log.info('creating new pairs')
-        nid_pairs = _nodes_xyz_nids_to_nid_pairs_new(kdt, nids, all_node_set,
-                                                     node_set, tol, log)
+        nid_pairs = _nodes_xyz_nids_to_nid_pairs_new(
+            kdt, nids, all_node_set,
+            node_set, tol, log)
     else:  # pragma: no cover
         raise NotImplementedError(f'node_set = {node_set}')
 

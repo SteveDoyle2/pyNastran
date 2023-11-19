@@ -10,18 +10,15 @@ defines:
 
 """
 from __future__ import annotations
-from itertools import combinations
 from pathlib import PurePath
 from io import StringIO
 from typing import Union, Optional, TYPE_CHECKING
 import numpy as np
-#from numpy.linalg import norm  # type: ignore
 
 from pyNastran.nptyping_interface import NDArrayNint, NDArrayN3float
 #from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 from pyNastran.bdf.mesh_utils.bdf_equivalence import (
     get_all_node_set,
-    _get_tree, _eq_nodes_find_pairs,
     _simplify_node_set, _check_for_referenced_nodes,
     _nodes_xyz_nids_to_nid_pairs,
 )
@@ -389,7 +386,9 @@ def update_cards(model: BDF,
         'SPCADD', 'MPCADD', 'SET1',
         'DESVAR', 'DVPREL1', 'DVMREL1', 'DVPREL2', 'DVMREL2',
         'DCONSTR', 'DCONADD', 'DSCREEN',
-        'GRAV', 'PLOAD1', 'PLOAD2', 'SLOAD', 'LOAD', 'TEMPD',
+        'GRAV', 'PLOAD1', 'PLOAD2', 'SLOAD', 'LOAD',
+        # thermal
+        'RADM', 'TEMPD', 'RADSET',
         # time/freq/random loads
         'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2', 'RANDPS', 'ACSRCE',
         'DLOAD', 'LSEQ',

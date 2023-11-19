@@ -4841,7 +4841,7 @@ class AddThermal(BDFAttributes):
         return tempd
 
     def add_qhbdy(self, sid: int, flag: int, q0: float, grids: list[int],
-                  af: Optional[float]=None, comment: str='') -> int:
+                  area_factor: Optional[float]=None, comment: str='') -> int:
         """
         Creates a QHBDY card
 
@@ -4854,7 +4854,7 @@ class AddThermal(BDFAttributes):
         q0 : float
             Magnitude of thermal flux into face. Q0 is positive for heat
             into the surface
-        af : float; default=None
+        area_factor : float; default=None
             Area factor depends on type
         grids : list[int]
             Grid point identification of connected grid points
@@ -4862,7 +4862,7 @@ class AddThermal(BDFAttributes):
             a comment for the card
 
         """
-        load = self.qhbdy.add(sid, flag, q0, grids, af=af, comment=comment)
+        load = self.qhbdy.add(sid, flag, q0, grids, area_factor=area_factor, comment=comment)
         return load
 
     def add_qbdy1(self, sid: int, qflux: float, eids: list[int],

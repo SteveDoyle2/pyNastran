@@ -158,7 +158,7 @@ class TestThermal(unittest.TestCase):
         q0 = 15.8
         flag = 'POINT'
         grids = [-1]
-        qhbdyi = model.add_qhbdy(sid, flag, q0, grids, af=None, comment='qhbdy')
+        qhbdyi = model.add_qhbdy(sid, flag, q0, grids, area_factor=None, comment='qhbdy')
         #qhbdy.raw_fields()
 
         qflux = 20.

@@ -10,7 +10,10 @@ from pyNastran.op2.test.op2_test import get_failed_files, get_all_files
 from pyNastran.utils.dev import get_files_of_type
 
 
-def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True,
+def run(regenerate=True, run_nastran=False, debug=False,
+        sum_load: bool=True,
+        run_nominal: bool=True,
+        xref: bool=True,
         crash_cards=None):
     """Runs the full BDF test suite"""
     if crash_cards is None:
@@ -78,7 +81,6 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
     size = [8]
     is_double = [False]
     post = -1
-    run_nominal = True
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
                                      check=check,
                                      nastran=nastran,
@@ -104,7 +106,7 @@ def main():
 
     #is_release = False
     msg = (
-        'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C] [--safe]\n'
+        'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C] [--safe] [--skip_nominal]\n'
         '        bdf_test -h | --help\n'
         '        bdf_test -v | --version\n'
         '\n'
@@ -119,6 +121,7 @@ def main():
         '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
         '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
         '                       (default=False -> on)\n'
+        '  --skip_nominal       obvious\n'
         '  --safe               Use safe cross-reference (default=False)\n' % ver
     )
     if len(sys.argv) == 0:
@@ -130,11 +133,14 @@ def main():
     run_nastran = data['--run_nastran']
     sum_load = not data['--sum_loads']
     xref = not data['--xref']
+    run_nominal = not data['--skip_nominal']
 
     crash_cards = []
     if data['--crash_cards']:
         crash_cards = data['--crash_cards'].split(',')
-    run(regenerate=regenerate, run_nastran=run_nastran, sum_load=sum_load,
+    run(regenerate=regenerate, run_nastran=run_nastran,
+        sum_load=sum_load,
+        run_nominal=run_nominal,
         xref=xref, crash_cards=crash_cards)
 
 if __name__ == '__main__':  # pragma: no cover

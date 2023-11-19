@@ -51,7 +51,7 @@ class QHBDY(Load):
         #return load
 
     def add(self, sid: int, flag: int, q0: float, grids: list[int],
-            af: Optional[float]=None, comment: str='') -> int:
+            area_factor: Optional[float]=None, comment: str='') -> int:
         """
         Creates a QHBDY card
 
@@ -64,7 +64,7 @@ class QHBDY(Load):
         q0 : float
             Magnitude of thermal flux into face. Q0 is positive for heat
             into the surface
-        af : float; default=None
+        area_factor : float; default=None
             Area factor depends on type
         grids : list[int]
             Grid point identification of connected grid points
@@ -72,7 +72,7 @@ class QHBDY(Load):
             a comment for the card
 
         """
-        self.cards.append((sid, flag, q0, af, grids, comment))
+        self.cards.append((sid, flag, q0, area_factor, grids, comment))
         self.n += 1
         return self.n - 1
 
@@ -173,6 +173,13 @@ class QHBDY(Load):
         load.area_factor = self.area_factor[i]
         load.grids = hslice_by_idim(i, self.inode, self.grids)
         load.ngrid = self.ngrid[i]
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.grids
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     @property
     def inode(self) -> np.ndarray:
@@ -429,6 +436,10 @@ class QBDY3(Load):
     """
     def clear(self) -> None:
         self.load_id = np.array([], dtype='int32')
+        self.q0 = np.array([], dtype='float64')
+        self.control_node = np.array([], dtype='int32')
+        self.elements = np.array([], dtype='int32')
+        self.nelement = np.array([], dtype='int32')
 
     #def slice_card_by_index(self, i: np.ndarray) -> PLOAD1:
         #load = PLOAD1(self.model)
@@ -529,6 +540,13 @@ class QBDY3(Load):
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.control_node
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     @property
     def ielement(self) -> np.ndarray:
         return make_idim(self.n, self.nelement)
@@ -570,6 +588,10 @@ class QVOL(Load):
     """
     def clear(self) -> None:
         self.load_id = np.array([], dtype='int32')
+        self.qvol = np.array([], dtype='float64')
+        self.control_node = np.array([], dtype='int32')
+        self.elements = np.array([], dtype='int32')
+        self.nelement = np.array([], dtype='int32')
 
     #def slice_card_by_index(self, i: np.ndarray) -> PLOAD1:
         #load = PLOAD1(self.model)
@@ -662,6 +684,13 @@ class QVOL(Load):
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.control_node
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     @property
     def ielement(self) -> np.ndarray:
         return make_idim(self.n, self.nelement)
@@ -693,7 +722,7 @@ class TEMPBC(VectorizedBaseCard):
     def __init__(self, model: BDF):
         super().__init__(model)
         self.spc_id = np.array([], dtype='int32')
-        self.control_node = np.array([], dtype='int32')
+        #self.control_node = np.array([], dtype='int32')
         self.temperature = np.array([], dtype='float64')
         self.nodes = np.array([], dtype='int32')
         self.nnode = np.zeros((0, 2), dtype='int32')
@@ -753,10 +782,10 @@ class TEMPBC(VectorizedBaseCard):
         self._save(spc_id, bc_type, nnode, nodes, temperature)
         self.cards = []
 
-    def slice_card_by_index(self, i: np.ndarray) -> TEMPBC:
-        load = TEMPBC(self.model)
-        self.__apply_slice__(load, i)
-        return load
+    #def slice_card_by_index(self, i: np.ndarray) -> TEMPBC:
+        #load = TEMPBC(self.model)
+        #self.__apply_slice__(load, i)
+        #return load
 
     def __apply_slice__(self, load: TEMPBC, i: np.ndarray) -> None:
         load.spc_id = self.spc_id[i]
@@ -765,6 +794,13 @@ class TEMPBC(VectorizedBaseCard):
         load.temperature = hslice_by_idim(i, self.inode, self.temperature)
         load.nodes = hslice_by_idim(i, self.inode, self.nodes)
         load.nnode = self.nnode[i]
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     @property
     def inode(self) -> np.ndarray:
@@ -890,9 +926,12 @@ class RADBC(VectorizedBaseCard):
     conditions
 
     """
-    def __init__(self, model: BDF):
-        super().__init__(model)
-        self.spc_id = np.array([], dtype='int32')
+    def clear(self) -> None:
+        self.node_id = np.array([], dtype='int32')
+        self.factor_ambient = np.array([], dtype='float64')
+        self.control_node = np.array([], dtype='int32')
+        self.elements = np.array([], dtype='int32')
+        self.nelement = np.array([], dtype='int32')
 
     #def slice_card_by_index(self, i: np.ndarray) -> RADBC:
         #load = RADBC(self.model)
@@ -965,23 +1004,30 @@ class RADBC(VectorizedBaseCard):
         load.elements = hslice_by_idim(i, self.ielement, self.elements)
         load.nelement = self.nelement[i]
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.control_node
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     @property
     def ielement(self) -> np.ndarray:
         return make_idim(self.n, self.nelement)
 
     @property
     def max_id(self) -> int:
-        return max(self.rad_mid.max(), self.node_id.max(), self.control_node.max(), self.elements.max())
+        return max(self.node_id.max(), self.control_node.max(), self.elements.max())
 
     def write_file(self, bdf_file: TextIOLike,
                    size: int=8, is_double: bool=False,
                    write_card_header: bool=False) -> None:
-        if len(self.spc_id) == 0:
+        if len(self.node_id) == 0:
             return ''
         print_card, size = get_print_card_size(size, self.max_id)
-        #spc_ids = array_str(self.spc_id, size=size)
-        control_node = array_default_int(self.control_node, default=0, size=size)
-        for nid, famb, (ielement0, ielement1), control_nodei in zip(self.node_id, self.factor_ambient, self.ielement, control_node):
+        node_ids = array_str(self.node_id, size=size)
+        control_nodes = array_default_int(self.control_node, default=0, size=size)
+        for nid, famb, (ielement0, ielement1), control_nodei in zip(node_ids, self.factor_ambient, self.ielement, control_nodes):
             eids = self.elements[ielement0:ielement1].tolist()
             eids2 = collapse_thru_by(eids)
             list_fields = ['RADBC', nid, famb, control_nodei] + eids2
