@@ -1341,6 +1341,13 @@ class BCRPARA(VectorizedBaseCard):
                    missing,
                    node=(nids, self.grid_point), filter_node0=True)
 
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.grid_point
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
+
     @property
     def max_id(self) -> int:
         return max(self.contact_region_id.max(), self.grid_point.max())
@@ -1492,6 +1499,13 @@ class BEDGE(VectorizedBaseCard):
         self.element_id = element_id
         self.nodes = nodes
         self.n = len(self.bedge_id)
+
+    def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
+        """helper for bdf_equivalence_nodes"""
+        nodes = self.nodes.ravel()
+        for i, nid1 in enumerate(nodes):
+            nid2 = nid_old_to_new.get(nid1, nid1)
+            nodes[i] = nid2
 
     #def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         #asd

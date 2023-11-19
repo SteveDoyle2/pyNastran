@@ -522,8 +522,6 @@ class Element(VectorizedBaseCard):
 
     def equivalence_nodes(self, nid_old_to_new: dict[int, int]) -> None:
         """helper for bdf_equivalence_nodes"""
-        if self.type in {'CMASS3', 'CMASS4'}:
-            return
         nodes = self.nodes.ravel()
         for i, nid1 in enumerate(nodes):
             nid2 = nid_old_to_new.get(nid1, nid1)

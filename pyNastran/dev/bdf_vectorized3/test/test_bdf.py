@@ -1284,7 +1284,8 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
         raise NotImplementedError(msg)
     #fem1.write_as_ctria3(out_model)
 
-    if run_equivalence and 0:
+    is_vectorized = not is_nominal
+    if is_vectorized and run_equivalence and len(fem1.grid):
         bdf_filename_out = None
         tol = 1.
         bdf_equivalence_nodes(
@@ -1295,7 +1296,9 @@ def run_fem1(fem1: BDFs, bdf_model: str, out_model: str,
             remove_collapsed_elements=False,
             avoid_collapsed_elements=False,
             crash_on_collapse=False,
-            log=log, debug=True, method='new')
+            log=log, debug=True,
+            method='new',
+        )
     fem1._get_maps()
     run_convert = True
     #remove_unused_materials(fem1)
@@ -2988,6 +2991,7 @@ def main(argv=None, show_args: bool=True) -> None:
             run_nominal=data['run_nominal'],
             run_loads=data['run_loads'],
             run_mass=data['run_mass'],
+            run_equivalence=data['run_equivalence'],
             skip_cards=data['skip_cards'],
             pickle_obj=data['pickle'],
             safe_xref=data['safe'],

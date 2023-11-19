@@ -1,7 +1,8 @@
 import numpy as np
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
-def get_temperatures_array(model: BDF, loadcase_id: int, fdtype: str='float32') -> np.ndarray:
+def get_temperatures_array(model: BDF, loadcase_id: int,
+                           fdtype: str='float32') -> np.ndarray:
     ngrid = len(model.grid)
     nspoint = len(model.spoint)
     ndof = ngrid + nspoint

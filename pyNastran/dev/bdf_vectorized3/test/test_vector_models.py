@@ -147,7 +147,8 @@ class TestModels(unittest.TestCase):
         test_bdf(args, show_args=False)
     def test_bwb(self):
         bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
-        args = ['test_bdf', str(bdf_filename), '--quiet', '--skip_equivalence']
+        #args = ['test_bdf', str(bdf_filename), '--quiet', '--skip_equivalence']
+        args = ['test_bdf', str(bdf_filename), '--quiet']
         test_bdf(args, show_args=False)
     def test_solid_bending(self):
         bdf_filename = MODEL_PATH / 'solid_bending' / 'solid_bending.bdf'

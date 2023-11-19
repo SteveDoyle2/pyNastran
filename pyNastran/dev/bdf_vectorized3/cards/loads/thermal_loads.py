@@ -803,6 +803,9 @@ class RADM(VectorizedBaseCard):
     """
     def clear(self) -> None:
         self.rad_mid = np.array([], dtype='int32')
+        self.absorptivity = np.array([], dtype='float64')
+        self.nemissivity = np.array([], dtype='int32')
+        self.emissivity = np.array([], dtype='float64')
 
     def add(self, radmid: int, absorb: float, emissivity: list[float], comment: str='') -> int:
         if isinstance(emissivity, float_types):
